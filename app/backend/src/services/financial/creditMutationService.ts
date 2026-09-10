@@ -10,6 +10,8 @@ import {
   type TransactionType,
 } from '../../types';
 import { withAuditSequence } from '../common/auditSequence';
+import { resolveFinancialWriteCycle } from '../cycle/canonicalCycleIdentity';
+import { runFinancialWriteTransaction } from '../cycle/financialWriteTransaction';
 
 const FINANCIAL_AUDIT_EVENT = 'financial_transaction';
 // Paired mutations may wait for the per-cycle gapless audit-sequence lock.
@@ -30,6 +32,8 @@ export interface CreditMutationInput {
   breakdown: FinancialBreakdown;
   auditContext?: JsonRecord;
   timestamp?: Date;
+  /** Settlement alone may write the cycle already claimed by Serialized_Cycle_Cutover. */
+  cycleAssignment?: 'current' | 'closing';
 }
 
 export interface CreditMutationResult {
@@ -258,67 +262,79 @@ async function applyInsideTransaction(
   input: CreditMutationInput,
 ): Promise<CreditMutationResult> {
   const beforeLock = await findExistingFinancialEvent(tx, input.financialEventId);
-  if (beforeLock) return resultFromExisting(beforeLock, input);
+  if (beforeLock) {
+    // The cycle argument is advisory at this boundary; a retry must compare
+    // against the retained canonical cycle rather than a stale caller value.
+    return resultFromExisting(beforeLock, { ...input, cycleNumber: beforeLock.ledger.cycleNumber });
+  }
 
-  const lockedUser = await lockUserForSpending(tx, input.userId);
-  const afterLock = await findExistingFinancialEvent(tx, input.financialEventId);
-  if (afterLock) return resultFromExisting(afterLock, input);
+  const canonicalCycleNumber = await resolveFinancialWriteCycle(tx, {
+    allowClosingCycle: input.cycleAssignment === 'closing',
+  });
+  const canonicalInput: CreditMutationInput = {
+    ...input,
+    cycleNumber: canonicalCycleNumber,
+  };
 
-  const balanceAfter = lockedUser.currency + input.amount;
+  const lockedUser = await lockUserForSpending(tx, canonicalInput.userId);
+  const afterLock = await findExistingFinancialEvent(tx, canonicalInput.financialEventId);
+  if (afterLock) return resultFromExisting(afterLock, canonicalInput);
+
+  const balanceAfter = lockedUser.currency + canonicalInput.amount;
   await tx.user.update({
-    where: { id: input.userId },
+    where: { id: canonicalInput.userId },
     data: { currency: balanceAfter },
   });
 
   let result: CreditMutationResult | undefined;
-  await withAuditSequence(input.cycleNumber, 1, async (startSequence, sequenceTx) => {
+  await withAuditSequence(canonicalInput.cycleNumber, 1, async (startSequence, sequenceTx) => {
     const ledger = await sequenceTx.financialLedger.create({
       data: {
-        cycleNumber: input.cycleNumber,
-        userId: input.userId,
-        robotId: input.robotId ?? null,
-        transactionType: input.transactionType,
-        amount: input.amount,
+        cycleNumber: canonicalInput.cycleNumber,
+        userId: canonicalInput.userId,
+        robotId: canonicalInput.robotId ?? null,
+        transactionType: canonicalInput.transactionType,
+        amount: canonicalInput.amount,
         balanceAfter,
-        description: input.description,
-        metadata: toJson(input.breakdown),
-        financialEventId: input.financialEventId,
+        description: canonicalInput.description,
+        metadata: toJson(canonicalInput.breakdown),
+        financialEventId: canonicalInput.financialEventId,
       },
     });
 
     const payload: FinancialAuditPayload = {
-      financialEventId: input.financialEventId,
-      transactionType: input.transactionType,
-      amount: input.amount,
+      financialEventId: canonicalInput.financialEventId,
+      transactionType: canonicalInput.transactionType,
+      amount: canonicalInput.amount,
       balanceAfter,
-      description: input.description,
-      breakdown: input.breakdown,
+      description: canonicalInput.description,
+      breakdown: canonicalInput.breakdown,
     };
     const audit = await sequenceTx.auditLog.create({
       data: {
-        cycleNumber: input.cycleNumber,
+        cycleNumber: canonicalInput.cycleNumber,
         eventType: FINANCIAL_AUDIT_EVENT,
-        eventTimestamp: input.timestamp ?? new Date(),
+        eventTimestamp: canonicalInput.timestamp ?? new Date(),
         sequenceNumber: startSequence,
-        userId: input.userId,
-        robotId: input.robotId ?? null,
+        userId: canonicalInput.userId,
+        robotId: canonicalInput.robotId ?? null,
         payload: toJson(payload),
-        metadata: input.auditContext === undefined ? undefined : toJson(input.auditContext),
-        financialEventId: input.financialEventId,
+        metadata: canonicalInput.auditContext === undefined ? undefined : toJson(canonicalInput.auditContext),
+        financialEventId: canonicalInput.financialEventId,
       },
       select: { id: true },
     });
 
     result = {
       created: true,
-      financialEventId: input.financialEventId,
+      financialEventId: canonicalInput.financialEventId,
       ledgerId: ledger.id,
       auditLogId: audit.id,
-      userId: input.userId,
-      robotId: input.robotId ?? null,
-      cycleNumber: input.cycleNumber,
-      transactionType: input.transactionType,
-      amount: input.amount,
+      userId: canonicalInput.userId,
+      robotId: canonicalInput.robotId ?? null,
+      cycleNumber: canonicalInput.cycleNumber,
+      transactionType: canonicalInput.transactionType,
+      amount: canonicalInput.amount,
       balanceBefore: lockedUser.currency,
       balanceAfter,
     };
@@ -341,7 +357,7 @@ async function rereadAfterUniqueRace(
         `Financial event ${input.financialEventId} lost a uniqueness race but cannot be reread`,
       );
     }
-    return resultFromExisting(existing, input);
+    return resultFromExisting(existing, { ...input, cycleNumber: existing.ledger.cycleNumber });
   }, FINANCIAL_MUTATION_TRANSACTION_OPTIONS);
 }
 
@@ -351,7 +367,13 @@ export async function applyCreditMutation(
 ): Promise<CreditMutationResult> {
   assertMutationInput(input);
   try {
-    return await prisma.$transaction(
+    if (input.cycleAssignment === 'closing') {
+      return await prisma.$transaction(
+        (tx) => applyInsideTransaction(tx, input),
+        FINANCIAL_MUTATION_TRANSACTION_OPTIONS,
+      );
+    }
+    return await runFinancialWriteTransaction(
       (tx) => applyInsideTransaction(tx, input),
       FINANCIAL_MUTATION_TRANSACTION_OPTIONS,
     );

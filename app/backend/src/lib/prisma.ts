@@ -1,9 +1,41 @@
 import { PrismaClient } from '../../generated/prisma';
 import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool, type PoolClient } from 'pg';
 import dotenv from 'dotenv';
 import { getConfig } from '../config/env';
 
 dotenv.config();
+
+type PrismaStatementObserver = (sql: string) => void;
+
+const statementObservers = new Set<PrismaStatementObserver>();
+
+function queryText(query: unknown): string {
+  if (typeof query === 'string') return query;
+  if (typeof query !== 'object' || query === null || !('text' in query)) return '';
+  return typeof query.text === 'string' ? query.text : '';
+}
+
+function instrumentClient(client: PoolClient): void {
+  const originalQuery = client.query.bind(client) as unknown as (...args: unknown[]) => unknown;
+  client.query = ((...args: unknown[]): unknown => {
+    const sql = queryText(args[0]);
+    for (const observer of statementObservers) observer(sql);
+    return originalQuery(...args);
+  }) as typeof client.query;
+}
+
+/**
+ * Observe SQL statement text emitted through the Prisma PostgreSQL adapter.
+ * Values are deliberately unavailable so performance diagnostics cannot expose
+ * tokens, player identities, source identities, or financial payloads.
+ */
+export function observePrismaStatements(observer: PrismaStatementObserver): () => void {
+  statementObservers.add(observer);
+  return (): void => {
+    statementObservers.delete(observer);
+  };
+}
 
 // Use a singleton pattern to ensure only one Prisma Client instance
 // This is especially important for tests to avoid "too many connections" errors
@@ -26,12 +58,16 @@ function createPrismaClient(): PrismaClient {
   // pool starvation from runaway queries. Default 30s; configurable via DB_STATEMENT_TIMEOUT_MS.
   const statementTimeoutMs = parseInt(process.env.DB_STATEMENT_TIMEOUT_MS || '30000', 10);
 
-  const adapter = new PrismaPg({
+  const pool = new Pool({
     connectionString: databaseUrl,
     max: poolMax,
     idleTimeoutMillis: 30_000,
     options: `-c statement_timeout=${statementTimeoutMs}`,
   });
+  if (nodeEnv === 'test') {
+    pool.on('connect', instrumentClient);
+  }
+  const adapter = new PrismaPg(pool, { disposeExternalPool: true });
   return new PrismaClient({
     adapter,
     log: nodeEnv === 'development' ? ['error', 'warn'] : ['error'],

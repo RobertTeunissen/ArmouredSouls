@@ -6,7 +6,7 @@ import {
   calculateRepairQuote,
   calculateRepairBayDiscountPercent,
 } from '../../shared/utils/repairCost';
-import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
+import { runFinancialWriteTransaction } from '../cycle/financialWriteTransaction';
 import {
   applyRepairCreditMutationInTransaction,
   buildRepairOperationId,
@@ -57,9 +57,7 @@ export interface AdminRecalculateHPResult {
  */
 export async function repairAllRobotsAdmin(deductCosts: boolean): Promise<AdminRepairResult> {
   logger.info('[Admin] Auto-repairing all robots...');
-  const cycleNumber = await getCurrentCycleNumber();
-
-  const result = await prisma.$transaction(async (tx) => {
+  const result = await runFinancialWriteTransaction(async (tx, financialCycleNumber) => {
     const where = { currentHP: { lt: prisma.robot.fields.maxHP } };
     const initialRobots = await tx.robot.findMany({ where });
     if (initialRobots.length === 0) {
@@ -103,7 +101,7 @@ export async function repairAllRobotsAdmin(deductCosts: boolean): Promise<AdminR
       const repairBayLevel = facilityByUser.get(userId)?.level ?? 0;
       const activeRobotCount = robotCountByUser.get(userId) ?? 0;
       const repairBayDiscount = calculateRepairBayDiscountPercent({ repairBayLevel, activeRobotCount });
-      const operationId = buildRepairOperationId('admin', cycleNumber, userId, userRobots);
+      const operationId = buildRepairOperationId('admin', financialCycleNumber, userId, userRobots);
 
       for (const robot of userRobots) {
         const attributeTotal = calculateAttributeSum(robot);
@@ -123,7 +121,7 @@ export async function repairAllRobotsAdmin(deductCosts: boolean): Promise<AdminR
         if (deductCosts) {
           const financialResult = await applyRepairCreditMutationInTransaction({
             tx,
-            cycleNumber,
+            cycleNumber: financialCycleNumber,
             operationId,
             userId,
             robotId: robot.id,

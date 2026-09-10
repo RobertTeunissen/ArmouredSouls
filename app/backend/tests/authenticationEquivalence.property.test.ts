@@ -67,7 +67,11 @@ describe('Authentication Equivalence - Property Tests', () => {
             // to 20 chars, cutting into `@t.co` once the suffix grew, so
             // registration correctly returned 400 and this suite failed on 201.
             const suffix = `${Date.now()}${runIndex++}`;
-            const { username: uniqueUsername, email: uniqueEmail } = uniqueRegistration(
+            const {
+              username: uniqueUsername,
+              email: uniqueEmail,
+              stableName: uniqueStableName,
+            } = uniqueRegistration(
               { username, email },
               suffix,
             );
@@ -79,7 +83,7 @@ describe('Authentication Equivalence - Property Tests', () => {
                 username: uniqueUsername,
                 email: uniqueEmail,
                 password,
-                stableName: `s_${uniqueUsername}`.slice(0, 30),
+                stableName: uniqueStableName,
               });
 
             expect(registerResponse.status).toBe(201);

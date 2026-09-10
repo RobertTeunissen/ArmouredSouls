@@ -18,7 +18,7 @@ import {
 } from '../battle/battlePostCombat';
 import standingsService from '../standings/standingsService';
 import { calculateStreamingRevenueBatch } from '../economy/streamingRevenueService';
-import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
+import { runFinancialWriteTransaction } from '../cycle/financialWriteTransaction';
 import { prepareRobotForCombat } from '../../utils/robotCalculations';
 import { getTuningBonusesBatch } from '../tuning-pool';
 import { calculateGrandMeleeRewards, GRAND_MELEE_BASE_MULTIPLIER, GRAND_MELEE_CREDIT_MULTIPLIER } from './grandMeleeRewards';
@@ -429,7 +429,6 @@ async function processGrandMeleeBattle(
   }
 
   // 12. Calculate streaming revenue with single batch query
-  const cycleNumber = await getCurrentCycleNumber();
   const streamingCalcMap = await calculateStreamingRevenueBatch(
     preparedParticipants.map(p => ({ robotId: p.robot.id, userId: p.robot.userId })),
   );
@@ -468,13 +467,13 @@ async function processGrandMeleeBattle(
     }
   });
 
-  await prisma.$transaction(async (tx) => {
+  await runFinancialWriteTransaction(async (tx, financialCycleNumber) => {
     for (const [userId, credits] of creditsByUser) {
       await awardCreditsWithLedger(
         userId,
         credits,
         'battle_income',
-        cycleNumber,
+        financialCycleNumber,
         'Grand Melee battle reward',
         undefined,
         { battleId: battle.id, placementMode: 'grand_melee' },
@@ -495,7 +494,7 @@ async function processGrandMeleeBattle(
     }
 
     for (const [userId, prestige] of prestigeByUser) {
-      await awardPrestigeToUser(userId, prestige, cycleNumber, {
+      await awardPrestigeToUser(userId, prestige, financialCycleNumber, {
         source: 'battle',
         mode: 'grand_melee',
         battleId: battle.id,
@@ -516,7 +515,7 @@ async function processGrandMeleeBattle(
       await awardBattleStreamingRevenue(
         participant.robot.userId,
         streamingCalc,
-        cycleNumber,
+        financialCycleNumber,
         battle.id,
         'grand_melee',
         tx,

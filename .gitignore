@@ -50,6 +50,9 @@ coverage/
 .pytest_cache/
 htmlcov/
 
+# Generated review artifacts
+semantic-review/
+
 # Build outputs
 dist/
 build/

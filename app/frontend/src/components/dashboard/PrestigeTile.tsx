@@ -66,6 +66,7 @@ export function PrestigeTile({ data }: { data: OverviewRowData }): React.ReactEl
     <DashboardTile
       title="Prestige"
       periodNote="This cycle, compared with last"
+      clickThrough={{ label: 'Explore prestige context', to: '/income?tab=overview#prestige-power-heading' }}
       isLoading={isLoading}
       error={error}
       content={content}

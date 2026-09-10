@@ -12,7 +12,7 @@ import fc from 'fast-check';
 import {
   SENSITIVE_ROBOT_FIELDS,
   sanitizeRobotForPublic,
-} from '../src/routes/robots';
+} from '../src/services/robot/robotSanitizer';
 
 /**
  * Arbitrary that generates a robot-like object with all sensitive fields populated

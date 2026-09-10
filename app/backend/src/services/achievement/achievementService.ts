@@ -18,9 +18,9 @@ import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { getAchievementsByTriggerType } from '../../config/achievements';
 import { eventLogger } from '../common/eventLogger';
-import { getCurrentCycle } from '../analytics/cycleAnalyticsService';
 import { applyCreditMutationInTransaction } from '../financial/creditMutationService';
 import { applyPrestigeAwardInTransaction } from '../financial/prestigeService';
+import { runFinancialWriteTransaction } from '../cycle/financialWriteTransaction';
 import { buildAchievementRewardEventId, buildAchievementPrestigeEventId } from '../financial/financialEventIdentity';
 import { buildAchievementRewardBreakdown } from '../financial/financialBreakdowns';
 
@@ -134,15 +134,14 @@ class AchievementService implements IAchievementService {
           const effectiveRobotId = achievement.scope === 'robot' ? robotId : null;
 
           try {
-            const { cycleNumber } = await getCurrentCycle();
-            await prisma.$transaction(async (tx) => {
+            const cycleNumber = await runFinancialWriteTransaction(async (tx, financialCycleNumber) => {
               const unlock = await tx.userAchievement.create({
                 data: { userId, achievementId: achievement.id, robotId: effectiveRobotId },
               });
 
               const financialEventId = buildAchievementRewardEventId(unlock.id, userId);
-              const creditResult = await applyCreditMutationInTransaction(tx, {
-                cycleNumber,
+              await applyCreditMutationInTransaction(tx, {
+                cycleNumber: financialCycleNumber,
                 userId,
                 robotId: effectiveRobotId ?? undefined,
                 transactionType: 'achievement_reward',
@@ -166,7 +165,7 @@ class AchievementService implements IAchievementService {
               if (achievement.rewardPrestige > 0) {
                 const prestigeEventId = buildAchievementPrestigeEventId(unlock.id, userId);
                 await applyPrestigeAwardInTransaction(tx, {
-                  cycleNumber,
+                  cycleNumber: financialCycleNumber,
                   userId,
                   amount: achievement.rewardPrestige,
                   source: 'achievement',
@@ -194,7 +193,7 @@ class AchievementService implements IAchievementService {
                 });
               }
 
-              return { unlock, creditResult };
+              return financialCycleNumber;
             });
 
             // Log the compatibility achievement event after the required pair commits.

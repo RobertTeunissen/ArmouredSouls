@@ -1,5 +1,5 @@
-import * as nsfwjs from 'nsfwjs';
-import * as tf from '@tensorflow/tfjs-node';
+import type { NSFWJS, PredictionType } from 'nsfwjs';
+import type { Tensor3D } from '@tensorflow/tfjs-node';
 import logger from '../../config/logger';
 
 export interface ModerationResult {
@@ -31,7 +31,8 @@ interface ModerationThresholds {
 }
 
 class ContentModerationService {
-  private model: nsfwjs.NSFWJS | null = null;
+  private model: NSFWJS | null = null;
+  private tensorflow: Pick<typeof import('@tensorflow/tfjs-node'), 'tensor3d'> | null = null;
   private modelLoaded = false;
   private initializationPromise: Promise<void> | null = null;
   private status: ModerationAvailabilityStatus = 'starting';
@@ -67,6 +68,7 @@ class ContentModerationService {
   /** Marks moderation unavailable when this deployment intentionally does not load it. */
   disable(): void {
     this.model = null;
+    this.tensorflow = null;
     this.modelLoaded = false;
     this.setStatus('unavailable');
   }
@@ -78,7 +80,16 @@ class ContentModerationService {
   private async loadModel(): Promise<void> {
     try {
       logger.info('Loading nsfwjs content moderation model...');
-      this.model = await nsfwjs.load();
+      // Load native dependencies only when moderation starts. A missing binding is
+      // therefore handled by this fail-closed lifecycle instead of crashing every
+      // route or test that imports the application.
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const tensorflow = require('@tensorflow/tfjs-node') as typeof import('@tensorflow/tfjs-node');
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const nsfwjs = require('nsfwjs') as typeof import('nsfwjs');
+      const model = await nsfwjs.load();
+      this.tensorflow = tensorflow;
+      this.model = model;
       this.modelLoaded = true;
       this.setStatus('ready');
       logger.info('Content moderation model loaded successfully');
@@ -91,6 +102,7 @@ class ContentModerationService {
 
   private markUnavailable(): void {
     this.model = null;
+    this.tensorflow = null;
     this.modelLoaded = false;
     this.setStatus('unavailable');
   }
@@ -101,7 +113,8 @@ class ContentModerationService {
   }
 
   async classifyImage(buffer: Buffer): Promise<ModerationResult> {
-    if (!this.model || !this.modelLoaded) {
+    const tensorflow = this.tensorflow;
+    if (!this.model || !tensorflow || !this.modelLoaded) {
       // Fail closed, unconditionally. `imageUploadHandlers.ts` turns
       // `moderation_unavailable` into a 503, so a stable with no working model cannot
       // upload rather than uploading unchecked.
@@ -124,7 +137,7 @@ class ContentModerationService {
       };
     }
 
-    let imageTensor: tf.Tensor3D | null = null;
+    let imageTensor: Tensor3D | null = null;
     try {
       // Use sharp to decode image to raw RGB pixels, then create tensor
       const sharp = (await import('sharp')).default;
@@ -133,7 +146,7 @@ class ContentModerationService {
         .removeAlpha()
         .raw()
         .toBuffer({ resolveWithObject: true });
-      imageTensor = tf.tensor3d(
+      imageTensor = tensorflow.tensor3d(
         new Uint8Array(data),
         [info.height, info.width, info.channels],
       );
@@ -183,7 +196,7 @@ class ContentModerationService {
   }
 
   private predictionsToScores(
-    predictions: nsfwjs.PredictionType[],
+    predictions: PredictionType[],
   ): ModerationResult['scores'] {
     const scores: ModerationResult['scores'] = {
       neutral: 0,

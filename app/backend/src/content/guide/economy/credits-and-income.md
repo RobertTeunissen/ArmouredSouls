@@ -1,8 +1,8 @@
 ---
-title: "Credits & Income Sources"
-description: "Understanding the Credits (₡) currency system, your starting balance, and all the ways to earn income in Armoured Souls."
+title: "Credits, Income & the Finance Center"
+description: "Understand Credits, earned income, investments, costs, and how the Finance Center explains each financial cycle."
 order: 1
-lastUpdated: "2026-03-11"
+lastUpdated: "2026-09-08"
 relatedArticles:
   - economy/battle-rewards
   - economy/merchandising
@@ -13,101 +13,167 @@ relatedArticles:
 
 ## Overview
 
-**Credits (₡)** are the sole currency in Armoured Souls. Everything — robots, weapons, attribute upgrades, facilities, repairs, and operating costs — is denominated in Credits. Managing your credit flow is the difference between a thriving stable and bankruptcy.
+**Credits (₡)** are the currency used for robots, weapons, attributes, facilities, repairs, and operating costs. Every new player starts with **₡3,000,000**. After that, your stable earns Credits through battles, streaming, merchandising, and achievement rewards. Selling a weapon also returns Credits, but a sale is an investment proceed rather than earned income.
 
-Every new player starts with **₡3,000,000** (three million Credits). From there, your income depends on how well your robots fight, how famous your stable becomes, and which facilities you've invested in.
+Good financial decisions start with two different questions:
+
+- **Revenue:** How many Credits did the stable earn?
+- **Net cash movement:** After sales, purchases, repairs, and operating costs, how much did the balance actually change?
+
+The **Finance Center** at `/income` is the read-only report that answers both questions for a selected financial cycle.
+
+```callout-info
+The Finance Center introduced by Spec #54 now replaces the legacy player reports. `/finances` and `/cycle-summary` remain compatibility redirects to `/income` and its History tab.
+```
+
+Its core read-only concepts are Revenue_Growth, Full_Damage_Repair_Reference, Prestige_Milestone_Forecast, and Robot_Deployment_View; the headings below use player-facing spacing for those same concepts.
 
 ![Income sources overview](/images/guide/economy/income-sources-overview.png)
 
 ## Starting Balance
 
-Your initial ₡3,000,000 is a one-time grant. There are no further handouts — once it's spent, your stable must sustain itself through earned income. See the [Starting Budget Guide](/guide/getting-started/starting-budget) for advice on how to allocate this wisely.
+Your starting ₡3,000,000 is a one-time opening balance, not cycle income. See the [Starting Budget Guide](/guide/getting-started/starting-budget) for help planning your first purchases.
 
-```callout-info
-Bankruptcy happens when your balance drops to zero or below after daily costs are deducted. Always keep a reserve to cover a few cycles of operating expenses and repairs.
+Keep enough Credits available for operating costs and repairs. A large purchase can make a profitable cycle look cash-negative even when battle and passive revenue were healthy, which is why the Finance Center separates operating results from investment purchases.
+
+## Ways Credits Enter Your Balance
+
+### Battle and bye income
+
+Every scheduled mode can award Credits. Wins pay more than losses, and rewards grow with tier and team size where applicable. A bye pays only that mode’s participation floor. It does not count as a fought match and does not generate streaming revenue, Fame, or Prestige.
+
+Prestige increases base battle Credits with a smooth multiplier, capped at 1.50×. The Finance Center reports the amount that was actually awarded at the time; it does not recalculate an old battle using your current Prestige.
+
+See [Battle Rewards](/guide/economy/battle-rewards) for mode and tier details.
+
+### Streaming revenue
+
+Streaming revenue is earned **per robot, per fought battle** when the robot is eligible. It depends on that robot’s battle activity and Fame plus its stable’s Streaming Studio level. It is credited with the battle, not during daily settlement.
+
+Streaming rewards breadth: more eligible robots fighting means more opportunities to stream. A bye never produces streaming revenue.
+
+See [Streaming Revenue](/guide/economy/streaming-revenue) for the full calculation.
+
+### Merchandising income
+
+Merchandising is stable-level passive income paid at settlement through the Merchandising Hub. It scales with **Prestige per roster capacity**, not raw Prestige alone:
+
+```text
+prestige per roster capacity = stable Prestige ÷ (Roster Expansion level + 1)
 ```
 
-## Income Sources
+This rewards concentrated rosters. Increasing roster capacity without increasing Prestige spreads the same Prestige across more available slots. The Finance Center explains the stored settlement amount rather than applying today’s roster or facility levels to an older cycle.
 
-There are three ways to earn Credits in Armoured Souls:
+See [Merchandising](/guide/economy/merchandising) for details.
 
-### 1. Battle Winnings
+### Achievement rewards
 
-Your primary income source. Every time one of your robots fights in a league battle or tournament, you earn Credits based on the outcome. Winning pays more than losing, but even a loss generates some income.
+Some achievements award Credits. These are earned Credits and appear separately from battle, streaming, and merchandising income. Prestige awarded by an achievement is progression, not money, and never enters a Credits total.
 
-Battle rewards scale dramatically with league tier — a Champion-tier robot earns 15–30 times more per battle than a Bronze-tier robot. Your stable's Prestige level also applies a bonus multiplier to all battle winnings.
+### Weapon-sale proceeds
 
-See the [Battle Rewards Guide](/guide/economy/battle-rewards) for the full tier-by-tier breakdown.
+Selling a weapon adds Credits to your balance, but it is shown as an **investment proceed**, not earned revenue. This distinction keeps Revenue Growth focused on actual earning power instead of making a cycle look stronger because equipment was sold.
 
-```callout-tip
-Battle winnings are your bread and butter, especially in the early game. The more robots you have fighting, the more income streams you generate — but each robot also costs credits to maintain and repair.
-```
+## Ways Credits Leave Your Balance
 
-### 2. Merchandising Income
+### Running costs
 
-As your stable gains **Prestige**, you unlock passive income from merchandising. Think of it as your stable's brand generating revenue from fans and sponsors.
+- **Automatic repairs** prepare damaged robots for scheduled events.
+- **Manual repairs** apply the manual repair discount.
+- **Facility operating costs** are charged at settlement and shown by stored facility component.
 
-Merchandising income is calculated daily during the cycle. The key factors:
+An automatic repair may happen before a bye if the robot already had damage. The repair remains a separate cost; it was not caused by the bye reward.
 
-- **Prestige level** — Higher Prestige means significantly more merchandising income. A Legendary-prestige stable earns far more than a Novice one.
-- **Merchandising Hub facility** — Owning and upgrading this facility amplifies your merchandising revenue.
+### Investment purchases
 
-Merchandising is entirely passive — it flows in every cycle without any action on your part, as long as you have some Prestige. It starts small but becomes a meaningful income stream as your stable's reputation grows.
+The Finance Center itemises robot creation, facility upgrades, weapon purchases, Weapon Refinement, and attribute upgrades. These purchases reduce the balance but are not running costs.
 
-See the [Merchandising Guide](/guide/economy/merchandising) for details on how Prestige drives this income.
+## Financial Cycles and Periods
 
-### 3. Streaming Revenue
+A financial cycle is bounded by settlement, not by a rolling 24-hour or seven-day window.
 
-Your robots can generate income through streaming — broadcasting their battles to fans. Streaming revenue depends on:
+**Cycle 1 begins when the season rolls over.** It remains open through both preparation days and the first competitive day, then closes at the first competitive settlement. During preparation it is labelled:
 
-- **Number of battles** — More battles means more content to stream, which means more revenue.
-- **Fame** — Robots with higher Fame attract larger audiences, increasing streaming income.
-- **Streaming Studio facility** — This facility is required to unlock streaming revenue and amplifies it at higher levels.
+**Cycle 1 · Preparation · Provisional**
 
-Unlike merchandising (which is stable-level), streaming revenue is generated per-robot based on each robot's individual Fame and battle activity.
+Preparation purchases and achievement Credit rewards therefore stay together in Cycle 1; preparation midnights do not create Cycle 2 or a cycle 0.
 
-See the [Streaming Revenue Guide](/guide/economy/streaming-revenue) for the full breakdown.
+Finance Center periods are:
 
-```callout-tip
-Streaming revenue rewards active play. The more your robots fight and the more famous they become, the more streaming income they generate. It pairs well with a multi-robot strategy.
-```
+- Current Cycle;
+- Last Completed Cycle;
+- Last Seven Completed Cycles;
+- a bounded completed-cycle range; and
+- Season to Date.
 
-## Income Timing
+**Current Cycle** and **Season to Date** include activity through the shown **as of** time and can still change. Season to Date includes completed cycles plus the current partial cycle. Completed cycles are historical. If retained evidence cannot prove an amount or boundary, the report names the limitation rather than estimating it.
 
-All income is processed automatically each day through scheduled jobs:
+Times are formatted using your browser’s locale and timezone. Cycle boundaries remain controlled in UTC.
 
-- **Repairs** run before battles, so your robots always fight at full HP
-- **League battles** are resolved and battle winnings credited immediately per battle
-- **Tournament rounds** are resolved and tournament rewards credited immediately per battle
-- **Merchandising and streaming revenue** are calculated and credited
-- **Operating costs** are deducted
+## Reading the Finance Statement
 
-These jobs run independently on a daily schedule. The order is designed so that repairs always complete before any battles take place.
+The statement separates:
 
-Your net income for the day is the total of all earnings minus all expenses. You can review this in your stable's Financial Report.
+- **Earned Credits:** battle/bye income, streaming, merchandising, and achievement rewards;
+- **Investment proceeds:** weapon sales;
+- **Running costs:** manual repairs, automatic repairs, and facility operation;
+- **Investment purchases:** robots, facilities, weapons, refinements, and attributes;
+- **Net cash movement:** every included addition minus every included cost; and
+- **Closing/current balance:** the balance after that movement.
 
-See the [Daily Financial Cycle](/guide/economy/daily-financial-cycle) for a visual breakdown of how money flows in and out each day.
+A completed statement checks that its opening balance plus every recorded movement equals its closing balance. Current-cycle figures are checked through the report’s **as of** time. A limitation is an explanation, not a hidden amount.
 
-## Balancing Income and Expenses
+## Revenue Growth
 
-Earning Credits is only half the equation. Your stable also has ongoing expenses and capital investments:
+Revenue Growth compares **earned Credits**, not total cash movement.
 
-- **Facility operating costs** — Every facility charges a daily fee to keep running
-- **Repair costs** — Damaged robots need repairs after battles, and costs scale with damage severity and robot attribute totals
-- **Facility purchases and upgrades** — Building and leveling up facilities requires significant upfront investment
-- **Attribute upgrades** — One-time costs, but they add up quickly at higher levels
-- **New robots and weapons** — Capital investments that expand your stable's roster and loadout options
+For two completed cycles, it compares one complete cycle with the complete cycle immediately before it. For Current Cycle, it compares partial earnings through **as of** with a complete prior cycle. That current comparison is labelled **provisional and asymmetric** because one side is still in progress.
 
-The goal is to keep your income consistently above your expenses. If you're spending more than you earn, you'll eventually run out of Credits.
+Weapon sales and investment purchases do not enter Revenue Growth. A strong revenue result can still accompany negative net cash movement if the stable made large investments.
 
-```callout-warning
-Watch your cash flow after every cycle. If your expenses are creeping up toward your income, it's time to either cut costs (fewer facilities, lower yield thresholds) or boost income (promote robots to higher tiers, invest in Prestige).
-```
+## Full-Damage Repair Reference
 
-## What's Next?
+The full-damage repair reference is a theoretical scenario: what automatic and manual repair paths would cost if every active robot needed repair from full repairable damage. It shows the active robot count, Repair Bay discount context, and manual saving.
 
-- [Battle Rewards](/guide/economy/battle-rewards) — Tier-by-tier reward scaling and Prestige bonuses
-- [Operating Costs & Repairs](/guide/economy/repair-costs) — All the ways Credits flow out of your stable
-- [Merchandising](/guide/economy/merchandising) — How Prestige drives passive income
-- [Streaming Revenue](/guide/economy/streaming-revenue) — How Fame and battles generate streaming income
-- [Daily Financial Cycle](/guide/economy/daily-financial-cycle) — Visual overview of the complete money flow
+It is **not a charge**, not your robots’ current damage, and not advice to repair or upgrade anything. Actual repair spend appears separately from repairs that were really charged.
+
+## Prestige Context and Forecast
+
+Prestige is progression, not Credits. The Finance Center can explain its battle multiplier, merchandising effect, the next facility gate, and recent Prestige gain without adding Prestige to income.
+
+The milestone forecast uses positive Prestige awards from the latest available completed cycles, up to seven cycles. It estimates how many completed cycles the remaining gap would take at that historical average pace. It is not a calendar date, guaranteed win rate, revenue promise, or facility recommendation. If there is no next gate, no completed history, or no positive pace, the forecast says it is unavailable.
+
+## Robot Deployment
+
+Robot Deployment shows five direct measures for each robot:
+
+1. fought matches;
+2. battle/bye income;
+3. streaming revenue;
+4. actual repair spend; and
+5. direct net.
+
+A bye can pay income but is not a fought match. Stable-wide merchandising, facility costs, and investment purchases are not divided among robots, so direct net remains based on evidence that can be attributed to that robot.
+
+Expandable event pages include battle, bye, streaming, and repair details plus deployment exposure. The loaded page is only part of the selected period: its subtotal may differ from the full-period headline. The full-period total stays unchanged while you move between pages, and all pages together make up the itemised detail.
+
+Finance Center is read-only. Its Robot Deployment action opens **Manage subscriptions**; repairs, facilities, and team changes stay on their existing pages.
+
+## Daily Timing
+
+Scheduled events run at their own UTC slots:
+
+- automatic repairs happen before an applicable scheduled event;
+- battle and tournament income is credited with the result;
+- streaming is credited per eligible robot after a fought battle; and
+- merchandising income and facility operating costs are recorded at settlement.
+
+See [Daily Financial Cycle](/guide/economy/daily-financial-cycle) for the schedule and [Operating Costs & Repairs](/guide/economy/repair-costs) for repair rules.
+
+## What’s Next?
+
+- [Battle Rewards](/guide/economy/battle-rewards) — Mode and tier rewards plus Prestige multiplier
+- [Operating Costs & Repairs](/guide/economy/repair-costs) — Actual repair charges and operating costs
+- [Merchandising](/guide/economy/merchandising) — Prestige per roster capacity
+- [Streaming Revenue](/guide/economy/streaming-revenue) — Per-robot, per-battle income
+- [Daily Financial Cycle](/guide/economy/daily-financial-cycle) — When financial events happen

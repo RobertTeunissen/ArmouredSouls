@@ -136,7 +136,6 @@ describe('Bug Condition: Mobile Responsiveness Defects', () => {
 
     const AFFECTED_PAGE_FILES = [
       'LeagueStandingsPage.tsx',
-      'FinancialReportPage.tsx',
       'HallOfRecordsPage.tsx',
       'DashboardPage.tsx',
       'TournamentDetailPage.tsx',

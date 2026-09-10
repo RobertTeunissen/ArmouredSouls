@@ -375,6 +375,7 @@ jobs:
           # run, which read as flake. No E2E test asserts rate limiting; it is
           # covered by backend unit tests.
           RATE_LIMIT_MAX_REQUESTS: 5000
+          USER_ECONOMIC_RATE_LIMIT_MAX: 5000
           LOGIN_RATE_LIMIT_MAX: 1000
         run: |
           node dist/index.js &

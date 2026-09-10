@@ -32,12 +32,13 @@ type View = 'register' | 'login';
  */
 function FrontPage() {
   const [view, setView] = useState<View>('login');
+  const [isRoutingAfterAuth, setIsRoutingAfterAuth] = useState(false);
   const navigate = useNavigate();
   const { user, loading, refreshUser } = useAuth();
 
-  // If the user is already authenticated (e.g. returning to the site with a
-  // valid token in localStorage), skip the login screen and go to the dashboard.
-  if (!loading && user) {
+  // A successful login refreshes AuthContext before the onboarding decision is
+  // available. Suppress the returning-user redirect during that brief rerender.
+  if (!loading && user && !isRoutingAfterAuth) {
     return <Navigate to="/dashboard" replace />;
   }
 
@@ -59,12 +60,19 @@ function FrontPage() {
    * @param _user - The user profile (unused; profile is refreshed from the server)
    */
   const handleSuccess = async (token: string, _user: UserProfile) => {
+    setIsRoutingAfterAuth(true);
+
     // Persist token first so subsequent API calls (including refreshUser)
     // include it in the Authorization header.
     localStorage.setItem('token', token);
     // Refresh from server rather than using the _user param directly, so
     // AuthContext always holds the canonical server-side profile data.
-    await refreshUser();
+    try {
+      await refreshUser();
+    } catch (error) {
+      setIsRoutingAfterAuth(false);
+      throw error;
+    }
 
     // Check onboarding status and redirect new players to the tutorial
     try {

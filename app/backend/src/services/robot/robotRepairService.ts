@@ -15,7 +15,7 @@ import {
   applyManualRepairDiscount,
   calculateRepairBayDiscountPercent,
 } from '../../shared/utils/repairCost';
-import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
+import { runFinancialWriteTransaction } from '../cycle/financialWriteTransaction';
 import {
   applyRepairCreditMutationInTransaction,
   buildRepairOperationId,
@@ -66,10 +66,8 @@ export async function repairAllRobots(userId: number): Promise<RepairAllResult> 
     throw new RobotError(RobotErrorCode.ROBOT_NOT_FOUND, 'User not found', 404);
   }
 
-  const cycleNumber = await getCurrentCycleNumber();
-
   try {
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await runFinancialWriteTransaction(async (tx, financialCycleNumber) => {
       // Lock before reading the damaged roster so overlapping manual requests
       // cannot quote the same robot and then charge it twice.
       const lockedUser = await lockUserForSpending(tx, userId);
@@ -115,7 +113,7 @@ export async function repairAllRobots(userId: number): Promise<RepairAllResult> 
 
       const operationId = buildRepairOperationId(
         'manual',
-        cycleNumber,
+        financialCycleNumber,
         userId,
         quotedRobots.map(({ robot }) => robot),
       );
@@ -136,7 +134,7 @@ export async function repairAllRobots(userId: number): Promise<RepairAllResult> 
         const charge = chargedByRobotId.get(entry.robot.id) ?? 0;
         const financialResult = await applyRepairCreditMutationInTransaction({
           tx,
-          cycleNumber,
+          cycleNumber: financialCycleNumber,
           operationId,
           userId,
           robotId: entry.robot.id,

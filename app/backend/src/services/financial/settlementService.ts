@@ -24,6 +24,7 @@ import {
   validateFinancialBreakdown,
 } from '../../types';
 import { lockUserForSpending } from '../../lib/creditGuard';
+import { getActiveFinancialCycleNumber } from '../cycle/canonicalCycleIdentity';
 
 const SETTLEMENT_USER_SELECT = {
   id: true,
@@ -47,9 +48,6 @@ const SETTLEMENT_ROBOT_SELECT = {
   userId: true,
   totalBattles: true,
   fame: true,
-  currentHP: true,
-  maxHP: true,
-  repairQuoteCredits: true,
 } as const;
 
 type SettlementRobot = Prisma.RobotGetPayload<{ select: typeof SETTLEMENT_ROBOT_SELECT }>;
@@ -83,8 +81,6 @@ export interface SettlementFacts {
   rosterCostPerAdditionalRobot: number;
   totalBattles: number;
   totalFame: number;
-  repairQuoteTotal: number;
-  damagedRobotCount: number;
 }
 
 export interface SettlementComponentResult {
@@ -122,7 +118,7 @@ export interface SettlementResult {
 export function calculateSettlementFacts(
   user: Pick<SettlementUser, 'prestige'>,
   facilities: readonly Pick<SettlementFacility, 'facilityType' | 'level'>[],
-  robots: readonly Pick<SettlementRobot, 'totalBattles' | 'fame' | 'currentHP' | 'maxHP' | 'repairQuoteCredits'>[],
+  robots: readonly Pick<SettlementRobot, 'totalBattles' | 'fame'>[],
 ): SettlementFacts {
   const merchandisingHubLevel = facilities.find(
     (facility) => facility.facilityType === 'merchandising_hub',
@@ -162,7 +158,6 @@ export function calculateSettlementFacts(
     (total, component) => total + component.cost,
     0,
   );
-  const damagedRobots = robots.filter((robot) => robot.currentHP < robot.maxHP);
 
   return {
     merchandisingHubLevel,
@@ -177,11 +172,6 @@ export function calculateSettlementFacts(
     rosterCostPerAdditionalRobot,
     totalBattles: robots.reduce((total, robot) => total + robot.totalBattles, 0),
     totalFame: robots.reduce((total, robot) => total + robot.fame, 0),
-    repairQuoteTotal: damagedRobots.reduce(
-      (total, robot) => total + (robot.repairQuoteCredits || 0),
-      0,
-    ),
-    damagedRobotCount: damagedRobots.length,
   };
 }
 
@@ -221,12 +211,9 @@ function buildDailySummary(
         level: component.facilityType === 'roster_expansion' ? undefined : component.level,
       })),
     },
-    repairCosts: {
-      // This is the existing informational quote summary. It is never used as
-      // a mutation source; Repair_Spend remains robot_repair audit rows.
-      total: facts.repairQuoteTotal,
-      robotsRepaired: 0,
-    },
+    // Actual repair spend is recorded separately from `robot_repair` audit
+    // evidence; settlement has no repair component.
+    repairCosts: { total: 0, robotsRepaired: 0 },
     totalCosts,
     endingBalance,
     balanceChange: endingBalance - startingBalance,
@@ -448,6 +435,7 @@ async function settleUserInTransaction(
     description: `Settlement passive income for cycle ${cycleNumber}`,
     financialEventId: passiveIncomeEventId,
     breakdown: passiveBreakdown,
+    cycleAssignment: 'closing',
   });
   const operatingResult = await creditMutationService.applyInTransaction(tx, {
     cycleNumber,
@@ -457,6 +445,7 @@ async function settleUserInTransaction(
     description: `Settlement operating costs for cycle ${cycleNumber}`,
     financialEventId: operatingCostsEventId,
     breakdown: operatingBreakdown,
+    cycleAssignment: 'closing',
   });
 
   await eventLogger.logSettlementComponentInTransaction(tx, {
@@ -561,11 +550,7 @@ export async function settleCycle(options: SettlementOptions): Promise<Settlemen
 
 /** Return the current cycle identity for an administrative compatibility call. */
 export async function getCurrentSettlementCycleNumber(): Promise<number> {
-  const cycleMetadata = await prisma.cycleMetadata.findUnique({
-    where: { id: 1 },
-    select: { totalCycles: true },
-  });
-  return cycleMetadata?.totalCycles ?? 0;
+  return getActiveFinancialCycleNumber();
 }
 
 export class SettlementService {

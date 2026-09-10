@@ -20,6 +20,11 @@ const mockTx = {
     update: (...args: unknown[]) => mockRobotUpdate(...args),
   },
   facility: { findMany: (...args: unknown[]) => mockFacilityFindMany(...args) },
+  cycleMetadata: {
+    findUnique: jest.fn().mockResolvedValue({ totalCycles: 0, featureFlags: {} }),
+  },
+  season: { findFirst: jest.fn().mockResolvedValue(null) },
+  $executeRaw: jest.fn().mockResolvedValue(0),
   $queryRaw: jest.fn().mockResolvedValue([{ id: 1, currency: 100000 }]),
 };
 
@@ -44,6 +49,11 @@ jest.mock('../../../src/lib/creditGuard', () => ({
 jest.mock('../../../src/services/financial/repairMutationService', () => ({
   applyRepairCreditMutationInTransaction: jest.fn().mockResolvedValue({ created: true, balanceAfter: 100000 }),
   buildRepairOperationId: jest.fn().mockReturnValue('test-repair-operation'),
+}));
+
+jest.mock('../../../src/services/battle/baseOrchestrator', () => ({
+  __esModule: true,
+  getCurrentCycleNumber: jest.fn().mockResolvedValue(1),
 }));
 
 jest.mock('../../../src/config/logger', () => ({

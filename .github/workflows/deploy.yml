@@ -343,6 +343,7 @@ jobs:
           # recover inside a run. Raised so the limiter stops deciding which
           # test fails.
           RATE_LIMIT_MAX_REQUESTS: 5000
+          USER_ECONOMIC_RATE_LIMIT_MAX: 5000
           LOGIN_RATE_LIMIT_MAX: 1000
         run: |
           node dist/index.js &

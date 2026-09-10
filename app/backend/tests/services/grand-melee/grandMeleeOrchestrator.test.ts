@@ -35,6 +35,13 @@ const mockPrisma = {
   user: {
     update: jest.fn().mockResolvedValue({}),
   },
+  cycleMetadata: {
+    findUnique: jest.fn().mockResolvedValue({ totalCycles: 4, featureFlags: {} }),
+  },
+  season: {
+    findFirst: jest.fn().mockResolvedValue(null),
+  },
+  $executeRaw: jest.fn().mockResolvedValue(0),
   $transaction: jest.fn(),
 };
 

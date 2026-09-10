@@ -1,17 +1,21 @@
+import { Server } from 'node:http';
 import * as fc from 'fast-check';
-import express, { Request, Response } from 'express';
+import express, { Express, Request, Response } from 'express';
 import request from 'supertest';
 
 const NUM_RUNS = 10;
 
-/**
- * Creates a minimal Express app that mimics the health endpoint behavior.
- * The `prismaQueryFn` parameter controls whether the DB check succeeds or fails.
- */
-function createHealthApp(options: {
+interface HealthAppOptions {
   prismaQueryFn: () => Promise<unknown>;
   environment: string;
-}) {
+}
+
+/**
+ * Creates a minimal Express app that mimics the health endpoint behavior.
+ * The mutable options object lets the property tests vary dependencies while
+ * reusing one listening server for the lifetime of this test file.
+ */
+function createHealthApp(options: HealthAppOptions): Express {
   const app = express();
 
   app.get('/api/health', async (_req: Request, res: Response) => {
@@ -23,7 +27,7 @@ function createHealthApp(options: {
         timestamp: new Date().toISOString(),
         environment: options.environment,
       });
-    } catch (error) {
+    } catch {
       res.status(503).json({
         status: 'error',
         database: 'disconnected',
@@ -39,6 +43,29 @@ function createHealthApp(options: {
 const REQUIRED_FIELDS = ['status', 'database', 'timestamp', 'environment'] as const;
 
 describe('Health Endpoint - Property Tests', () => {
+  const options: HealthAppOptions = {
+    prismaQueryFn: async () => [{ '?column?': 1 }],
+    environment: 'test',
+  };
+  const app = createHealthApp(options);
+  let server: Server;
+
+  beforeAll(() => {
+    server = app.listen(0);
+  });
+
+  afterAll(async () => {
+    await new Promise<void>((resolve, reject) => {
+      server.close((error) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve();
+      });
+    });
+  });
+
   describe('Property 8: Health endpoint response structure', () => {
     /**
      * **Validates: Requirements 12.1, 12.3**
@@ -52,12 +79,10 @@ describe('Health Endpoint - Property Tests', () => {
 
       await fc.assert(
         fc.asyncProperty(envGen, async (environment) => {
-          const app = createHealthApp({
-            prismaQueryFn: async () => [{ '?column?': 1 }],
-            environment,
-          });
+          options.prismaQueryFn = async () => [{ '?column?': 1 }];
+          options.environment = environment;
 
-          const res = await request(app).get('/api/health');
+          const res = await request(server).get('/api/health');
 
           expect(res.status).toBe(200);
           for (const field of REQUIRED_FIELDS) {
@@ -82,12 +107,10 @@ describe('Health Endpoint - Property Tests', () => {
 
       await fc.assert(
         fc.asyncProperty(envGen, errorGen, async (environment, dbError) => {
-          const app = createHealthApp({
-            prismaQueryFn: async () => { throw dbError; },
-            environment,
-          });
+          options.prismaQueryFn = async () => { throw dbError; };
+          options.environment = environment;
 
-          const res = await request(app).get('/api/health');
+          const res = await request(server).get('/api/health');
 
           expect(res.status).toBe(503);
           for (const field of REQUIRED_FIELDS) {
@@ -106,14 +129,12 @@ describe('Health Endpoint - Property Tests', () => {
 
       await fc.assert(
         fc.asyncProperty(dbStateGen, async (dbConnected) => {
-          const app = createHealthApp({
-            prismaQueryFn: dbConnected
-              ? async () => [{ '?column?': 1 }]
-              : async () => { throw new Error('DB down'); },
-            environment: 'test',
-          });
+          options.prismaQueryFn = dbConnected
+            ? async () => [{ '?column?': 1 }]
+            : async () => { throw new Error('DB down'); };
+          options.environment = 'test';
 
-          const res = await request(app).get('/api/health');
+          const res = await request(server).get('/api/health');
 
           expect(typeof res.body.timestamp).toBe('string');
           const parsed = new Date(res.body.timestamp);
@@ -128,14 +149,12 @@ describe('Health Endpoint - Property Tests', () => {
 
       await fc.assert(
         fc.asyncProperty(dbStateGen, async (dbConnected) => {
-          const app = createHealthApp({
-            prismaQueryFn: dbConnected
-              ? async () => [{ '?column?': 1 }]
-              : async () => { throw new Error('unreachable'); },
-            environment: 'production',
-          });
+          options.prismaQueryFn = dbConnected
+            ? async () => [{ '?column?': 1 }]
+            : async () => { throw new Error('unreachable'); };
+          options.environment = 'production';
 
-          const res = await request(app).get('/api/health');
+          const res = await request(server).get('/api/health');
 
           if (dbConnected) {
             expect(res.status).toBe(200);

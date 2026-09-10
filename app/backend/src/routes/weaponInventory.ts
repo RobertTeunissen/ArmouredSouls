@@ -26,10 +26,10 @@ import {
 import { ROBOT_ATTRIBUTES } from '../shared/utils/robotAttributes';
 import type { Weapon } from '../../generated/prisma';
 import { applyCreditMutationInTransaction } from '../services/financial/creditMutationService';
+import { runFinancialWriteTransaction } from '../services/cycle/financialWriteTransaction';
 import { getIdempotencyKey, idempotencyHeadersSchema } from '../utils/idempotency';
 import { createEconomicRequestIdentity, findCompletedEconomicRequest, findEconomicRequestReplay, buildEconomicRequestAuditContext } from '../services/financial/economicRequestReplayService';
 import { buildPurchaseBreakdown } from '../services/financial/financialBreakdowns';
-import { getCurrentCycleNumber } from '../services/battle/baseOrchestrator';
 
 const router = express.Router();
 
@@ -295,7 +295,7 @@ router.post('/purchase', authenticateToken, validateRequest({ body: purchaseBody
   }
 
   // Purchase weapon in a transaction with row-level locking
-  const result = await prisma.$transaction(async (tx) => {
+  const result = await runFinancialWriteTransaction(async (tx, financialCycleNumber) => {
     const lockedUser = await lockUserForSpending(tx, userId);
     const replayInTransaction = await findEconomicRequestReplay<{ weaponInventory: unknown; currency: number; message: string }>(tx, identity);
     if (replayInTransaction) {
@@ -339,7 +339,7 @@ router.post('/purchase', authenticateToken, validateRequest({ body: purchaseBody
       message: 'Weapon purchased successfully',
     };
     const financialResult = await applyCreditMutationInTransaction(tx, {
-      cycleNumber: await getCurrentCycleNumber(),
+      cycleNumber: financialCycleNumber,
       userId,
       transactionType: 'weapon_purchase',
       amount: -finalCost,
@@ -486,7 +486,7 @@ router.delete(
 
     await verifyWeaponOwnership(prisma, inventoryId, userId);
 
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await runFinancialWriteTransaction(async (tx, financialCycleNumber) => {
       // 1. Lock user row first (existing convention for credit-affecting endpoints)
       const lockedUser = await lockUserForSpending(tx, userId);
       const replayInTransaction = await findEconomicRequestReplay<{ salePrice: number; currency: number; weaponName: string; message: string }>(tx, identity);
@@ -566,7 +566,7 @@ router.delete(
         message: `Sold ${weaponMeta?.name ?? 'Weapon'} for ₡${salePrice.toLocaleString()}`,
       };
       const financialResult = await applyCreditMutationInTransaction(tx, {
-        cycleNumber: await getCurrentCycleNumber(),
+        cycleNumber: financialCycleNumber,
         userId,
         transactionType: 'weapon_sale',
         amount: salePrice,
@@ -733,7 +733,7 @@ router.post(
 
     await verifyWeaponOwnership(prisma, inventoryId, userId);
 
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await runFinancialWriteTransaction(async (tx, financialCycleNumber) => {
       // 1. Lock user row first (matches Spec #33 lock acquisition order)
       const lockedUser = await lockUserForSpending(tx, userId);
       const replayInTransaction = await findEconomicRequestReplay<{ weaponInventory: unknown; currency: number; cost: number; message: string }>(tx, identity);
@@ -925,7 +925,7 @@ router.post(
         message: `Refined ${weapon.name}: ${tier}${targetAttribute ? ` ${targetAttribute} +${magnitudeForStorage}` : ''}`,
       };
       const financialResult = await applyCreditMutationInTransaction(tx, {
-        cycleNumber: await getCurrentCycleNumber(),
+        cycleNumber: financialCycleNumber,
         userId,
         transactionType: 'weapon_refinement',
         amount: -cost,

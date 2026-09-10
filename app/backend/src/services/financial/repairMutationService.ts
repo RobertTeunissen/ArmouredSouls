@@ -104,7 +104,7 @@ export async function applyRepairCreditMutationInTransaction(
 
   if (result.created) {
     await eventLogger.logRobotRepairInTransaction(input.tx, {
-      cycleNumber: input.cycleNumber,
+      cycleNumber: result.cycleNumber,
       userId: input.userId,
       robotId: input.robotId,
       creditsCharged: input.charge,

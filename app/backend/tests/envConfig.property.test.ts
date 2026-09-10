@@ -276,6 +276,7 @@ describe('Environment Config Loading - Property Tests', () => {
           (secret) => {
             process.env.NODE_ENV = 'production';
             process.env.JWT_SECRET = secret;
+            process.env.FINANCE_REPORT_REFERENCE_SECRET = 'independent-finance-report-reference-secret';
             process.env.CORS_ORIGIN = 'https://example.com';
             process.env.DATABASE_URL = 'postgresql://user:pass@localhost:5432/db';
 
@@ -288,6 +289,17 @@ describe('Environment Config Loading - Property Tests', () => {
         ),
         { numRuns: NUM_RUNS }
       );
+    });
+
+    test('startup fails when the independent Finance Center reference secret is absent in production', () => {
+      process.env.NODE_ENV = 'production';
+      process.env.JWT_SECRET = 'non-default-secret-for-testing';
+      process.env.DATABASE_URL = 'postgresql://user:pass@localhost:5432/db';
+      process.env.CORS_ORIGIN = 'https://example.com';
+      delete process.env.FINANCE_REPORT_REFERENCE_SECRET;
+
+      expect(() => loadEnvConfig()).toThrow('process.exit called');
+      expect(mockExit).toHaveBeenCalledWith(1);
     });
 
     test('startup succeeds with any JWT_SECRET when NODE_ENV is not production', () => {
@@ -470,6 +482,38 @@ describe('Environment Config Loading - Property Tests', () => {
           }
         ),
         { numRuns: NUM_RUNS }
+      );
+    });
+
+    test('USER_ECONOMIC_RATE_LIMIT_MAX is coerced to a positive number', () => {
+      fc.assert(
+        fc.property(
+          fc.integer({ min: 1, max: 10000 }),
+          (maxRequests) => {
+            process.env.USER_ECONOMIC_RATE_LIMIT_MAX = String(maxRequests);
+            process.env.NODE_ENV = 'development';
+
+            const config = loadEnvConfig();
+            expect(config.userEconomicRateLimitMax).toBe(maxRequests);
+          },
+        ),
+        { numRuns: NUM_RUNS },
+      );
+    });
+
+    test('USER_ECONOMIC_RATE_LIMIT_MAX defaults to 100 for invalid values', () => {
+      fc.assert(
+        fc.property(
+          fc.constantFrom('invalid', '', '0', '-5'),
+          (value) => {
+            process.env.USER_ECONOMIC_RATE_LIMIT_MAX = value;
+            process.env.NODE_ENV = 'development';
+
+            const config = loadEnvConfig();
+            expect(config.userEconomicRateLimitMax).toBe(100);
+          },
+        ),
+        { numRuns: NUM_RUNS },
       );
     });
 

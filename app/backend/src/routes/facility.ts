@@ -12,10 +12,10 @@ import { AuthError, AuthErrorCode } from '../errors/authErrors';
 import { EconomyError, EconomyErrorCode } from '../errors/economyErrors';
 import { validateRequest } from '../middleware/schemaValidator';
 import { applyCreditMutationInTransaction } from '../services/financial/creditMutationService';
+import { runFinancialWriteTransaction } from '../services/cycle/financialWriteTransaction';
 import { getIdempotencyKey, idempotencyHeadersSchema } from '../utils/idempotency';
 import { createEconomicRequestIdentity, findCompletedEconomicRequest, findEconomicRequestReplay, buildEconomicRequestAuditContext } from '../services/financial/economicRequestReplayService';
 import { buildPurchaseBreakdown } from '../services/financial/financialBreakdowns';
-import { getCurrentCycleNumber } from '../services/battle/baseOrchestrator';
 import { securityMonitor } from '../services/security/securityMonitor';
 import { achievementService, type UnlockedAchievement } from '../services/achievement';
 // Spec #46 R11: Training Facility discount is roster-dependent.
@@ -252,7 +252,7 @@ router.post('/upgrade', authenticateToken, validateRequest({ body: upgradeBodySc
     }
 
     // Perform upgrade in a transaction with row-level locking
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await runFinancialWriteTransaction(async (tx, financialCycleNumber) => {
       // Acquire exclusive row lock — blocks concurrent purchases for this user
       const lockedUser = await lockUserForSpending(tx, userId);
       const replayInTransaction = await findEconomicRequestReplay<{ facility: unknown; currency: number; message: string }>(tx, identity);
@@ -315,7 +315,7 @@ router.post('/upgrade', authenticateToken, validateRequest({ body: upgradeBodySc
         message: 'Facility upgraded successfully',
       };
       const financialResult = await applyCreditMutationInTransaction(tx, {
-        cycleNumber: await getCurrentCycleNumber(),
+        cycleNumber: financialCycleNumber,
         userId,
         transactionType: 'facility_upgrade',
         amount: -upgradeCost,

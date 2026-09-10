@@ -71,17 +71,11 @@ const robots = [
     userId: 7,
     totalBattles: 12,
     fame: 40,
-    currentHP: 90,
-    maxHP: 100,
-    repairQuoteCredits: 125,
   },
   {
     userId: 7,
     totalBattles: 8,
     fame: 20,
-    currentHP: 100,
-    maxHP: 100,
-    repairQuoteCredits: 0,
   },
 ];
 
@@ -131,7 +125,6 @@ describe('Settlement_Service', () => {
       expect.objectContaining({ facilityType: 'streaming_studio', cost: 200 }),
       expect.objectContaining({ facilityType: 'roster_expansion', cost: 500 }),
     ]);
-    expect(facts.repairQuoteTotal).toBe(125);
     expect(facts.totalBattles).toBe(20);
     expect(facts.totalFame).toBe(60);
   });

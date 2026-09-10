@@ -1,13 +1,14 @@
 # Product Requirements Document: Prestige and Fame System
 
-**Last Updated**: April 2, 2026  
-**Status**: ✅ Implemented (core earning + benefits active)  
+**Last Updated**: September 8, 2026
+**Status**: ✅ Implemented core earning/benefits and Finance Center forecast; release and verification evidence tracked separately
 **Owner**: Robert Teunissen  
 **Epic**: Economy System — Reputation
 
 ---
 
 ## Version History
+- v2.1 (September 8, 2026) — Added Spec #54 Finance Center reporting boundaries, corrected merchandising to Prestige per roster capacity, and defined the completed-cycle milestone forecast. Clarified that Prestige resets at Season Rollover.
 - v2.0 (April 2, 2026) — Consolidated with `PRD_FAME_SYSTEM.md` (deleted). Full audit against codebase. Corrected prestige bonus tiers to match actual code (+10%/+20%/+30%/+40%/+50%, not +5%/+10%/+15%/+20%). Marked prestige gates as ✅ implemented (they are enforced in facility routes). Removed ~800 lines of aspirational content (milestone tables, API endpoints, UI mockups, implementation phases) that aren't built. Added KotH prestige/fame section. Updated file paths for service consolidation.
 - v1.0 (February 3, 2026) — Initial PRD
 
@@ -17,10 +18,10 @@
 
 Prestige and Fame are dual reputation systems that form the backbone of player progression:
 
-- **Prestige** (stable-level): Permanent reputation that unlocks facilities, tournaments, and boosts income. Earned from battle wins. Never spent.
-- **Fame** (robot-level): Individual robot reputation that affects streaming revenue. Earned from individual robot victories with performance bonuses.
+- **Prestige** (stable-level): Season-scoped reputation that unlocks facilities and boosts battle and merchandising income. It is earned from qualifying wins and achievements, is never spent, and is archived then reset at Season Rollover.
+- **Fame** (robot-level): Individual robot reputation that affects streaming revenue. Earned from individual robot victories with performance bonuses and reset with the robot at Season Rollover.
 
-Both are awarded automatically by the battle orchestrators after each battle via shared helpers in `battlePostCombat.ts`.
+Both are awarded automatically by the battle orchestrators after each battle via shared helpers in `battlePostCombat.ts`. Finance Center reports stored awards as progression evidence; neither Prestige nor Fame is a Credits amount.
 
 ---
 
@@ -62,7 +63,11 @@ Zone dominance bonus: if uncontested zone score > 75% of total score, prestige i
 
 Applied via `getPrestigeMultiplier()` in `utils/economyCalculations.ts`:
 
-Smooth scaling formula: `min(1.50, 1 + prestige / 50,000)`
+```text
+battle_credit_multiplier = min(1.50, 1 + prestige / 50,000)
+```
+
+The multiplier applies to the base Credits awarded for a battle. Prestige itself is not converted into Credits or added as a second income line. Finance Center explains the stored award and multiplier facts captured for that event; it never recalculates an older payout using current Prestige or current formula code.
 
 | Prestige | Bonus |
 |---|---|
@@ -74,15 +79,36 @@ Smooth scaling formula: `min(1.50, 1 + prestige / 50,000)`
 
 #### Merchandising Income Scaling
 
+Merchandising uses **Prestige per roster capacity**, not raw Prestige. Roster capacity is the `roster_expansion` facility level plus one:
+
+```text
+roster_capacity = roster_expansion_level + 1
+prestige_per_slot = prestige / roster_capacity
+merchandising_income = merchandising_hub_base × (1 + prestige_per_slot / 10,000)
 ```
-merchandising_income = (merchandising_hub_level × ₡5,000) × (1 + prestige / 10,000)
-```
+
+The facility’s shared calculation owns the exact base and rounding. Normalising Prestige by capacity is deliberate: stable Prestige accrues once per winning robot and therefore tends to grow with roster breadth, while Merchandising Hub rewards concentrated brand strength. Finance Center reads the stored settlement amount and facts for historical cycles instead of recomputing them from today’s roster or facilities.
+
+See the [Finance Center PRD](../prd_pages/PRD_INCOME_DASHBOARD.md) and [reporting contract](../implementation_notes/finance-center-reporting-contract.md).
 
 #### Facility Unlock Gates (✅ Enforced)
 
 Prestige requirements are checked and enforced in `routes/facility.ts` when upgrading. If the player doesn't have enough prestige, the upgrade is rejected with a 403 error.
 
 Prestige thresholds are defined in `config/facilities.ts` using the universal `PRESTIGE_GATES_10` curve shared by all facilities: L4: 1,000 · L5: 3,000 · L6: 5,000 · L7: 10,000 · L8: 15,000 · L9: 25,000 · L10: 50,000. Levels 1–3 are free.
+
+#### Finance Center Milestone Forecast (Spec #54)
+
+The Finance Center’s Prestige milestone forecast is a read-only historical estimate. It uses:
+
+1. the latest available **up to seven completed cycles** in the active season;
+2. only positive stored `prestige_change` awards in those cycles;
+3. `averagePerCompletedCycle = positivePrestigeAwarded / completedCyclesSampled`; and
+4. `estimatedCycles = ceil((nextGatePrestige - currentPrestige) / averagePerCompletedCycle)`.
+
+Current-cycle awards do not enter the completed sample. The panel exposes sample size, awarded total, average pace, remaining Prestige, and the ceiling-rounded estimate. It returns a named unavailable state when there is no completed history, no positive pace, or no next gate.
+
+The forecast never predicts a calendar date, promised battle result, guaranteed Credits, or facility-purchase recommendation. It never adds Prestige to Revenue Growth, balance, net movement, or ROI. The Finance Center forecast is implemented; release and blocking-verification evidence are tracked separately in the [reporting contract](../implementation_notes/finance-center-reporting-contract.md), which does not treat unrecorded evidence as a passing test result.
 
 ### Prestige Rank Titles
 
@@ -260,7 +286,9 @@ These are documented design ideas, not current features:
 
 - [STABLE_SYSTEM.md](STABLE_SYSTEM.md) — Facility prestige requirements, merchandising/streaming formulas, operating costs
 - [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) — `User.prestige` and `Robot.fame` fields
-- [PRD_ECONOMY_SYSTEM.md](PRD_ECONOMY_SYSTEM.md) — Credit rewards, income streams
+- [PRD_ECONOMY_SYSTEM.md](PRD_ECONOMY_SYSTEM.md) — Credit rewards and income streams
+- [Finance Center PRD](../prd_pages/PRD_INCOME_DASHBOARD.md) — Player-facing Prestige earning power and forecast
+- [Finance Center Reporting Contract](../implementation_notes/finance-center-reporting-contract.md) — Stored-award and completed-sample evidence boundary
 - [BATTLE_SIMULATION_ARCHITECTURE.md](BATTLE_SIMULATION_ARCHITECTURE.md) — How orchestrators award prestige/fame post-combat
 
 ## Season Reset (Spec #45)

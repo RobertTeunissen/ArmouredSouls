@@ -135,6 +135,7 @@ describe('Requirement 3: Prestige_Tile', () => {
     expect(screen.getByText('1,500')).toBeInTheDocument();
     expect(screen.getByText('40')).toBeInTheDocument();
     expect(screen.getByText(/vs 55/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Explore prestige context' })).toBeInTheDocument();
   });
 
   it('renders a zero cycle figure as 0, because a known zero is not an absent figure', () => {
@@ -339,7 +340,7 @@ describe('Requirement 6: Credits_Tile', () => {
     // state, which would hide both.
     renderRow(baseData({ error: 'nope', cycleProgress: null }));
     expect(screen.getByText('₡250,000')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Full breakdown' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Open Finance Center' })).toBeInTheDocument();
     expect(screen.getByText(/could not be loaded/)).toBeInTheDocument();
   });
 

@@ -27,6 +27,12 @@ import { cycleLogger } from '../../utils/cycleLogger';
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { settlementService } from '../financial/settlementService';
+import {
+  abortSerializedCycleCutover,
+  beginSerializedCycleCutover,
+  completeSerializedCycleCutover,
+  getActiveFinancialCycleNumber,
+} from '../cycle/canonicalCycleIdentity';
 
 /** Options accepted by the bulk cycle executor (mirrors req.body fields). */
 export interface BulkCycleOptions {
@@ -220,6 +226,45 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
     });
   }
 
+  const { getCurrentSeason, advancePreparationCycle } = await import('../season/seasonService');
+  const seasonAtStart = await getCurrentSeason();
+  if (seasonAtStart.phase === 'preparation') {
+    // Manual execution shares the scheduler's preparation boundary: it moves
+    // preparation state only and never runs matches, settlement, or cutover.
+    const preparationResults: CycleResult[] = [];
+    for (let i = 0; i < cycleCount; i += 1) {
+      const cycleStart = Date.now();
+      const advanced = await advancePreparationCycle();
+      preparationResults.push({
+        cycle: cycleMetadata.totalCycles + 1,
+        reservedSlotsFired: [],
+        duration: Date.now() - cycleStart,
+        settlement: {
+          userGeneration: null,
+          finances: { skipped: true, reason: 'preparation_phase' },
+          cycleCounters: { preparationCyclesCompleted: advanced.preparationCyclesCompleted },
+          snapshot: null,
+          orphanCleanup: null,
+          endOfCycleBalances: null,
+        },
+      });
+    }
+    const duration = Date.now() - startTime;
+    return {
+      success: true,
+      cyclesCompleted: cycleCount,
+      totalCyclesInSystem: cycleMetadata.totalCycles,
+      includeTournaments: false,
+      includeKoth: false,
+      includeDailyFinances: false,
+      generateUsersPerCycleEnabled: false,
+      totalDuration: duration,
+      averageCycleDuration: cycleCount === 0 ? 0 : Math.round(duration / cycleCount),
+      results: preparationResults,
+      timestamp: new Date().toISOString(),
+    };
+  }
+
   // cycles=0 means "run only the tournament step without a full cycle"
   if (cycleCount === 0 && includeTournaments) {
     logger.info('[Admin] Running tournament-only execution (cycles=0)...');
@@ -246,12 +291,15 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
 
   logger.info(`[Admin] Running ${cycleCount} bulk cycles (includeTournaments: ${includeTournaments}, generateUsersPerCycle: ${generateUsersPerCycle})...`);
 
-  let currentCycleNumber = cycleMetadata.totalCycles;
+  let currentCycleNumber = cycleMetadata.totalCycles + 1;
   const cycleResults: CycleResult[] = [];
 
   for (let i = 1; i <= cycleCount; i++) {
     const cycleStart = Date.now();
-    currentCycleNumber++;
+    // `totalCycles` is completed-only. Battle slots run on the active cycle
+    // without pre-publishing completion to other financial writers.
+    currentCycleNumber = await getActiveFinancialCycleNumber();
+    let claimedClosingCycle: number | null = null;
 
     // Start cycle logging
     cycleLogger.startCycle(currentCycleNumber);
@@ -260,14 +308,8 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
     logger.info(`\n[Admin] === Cycle ${currentCycleNumber} (${i}/${cycleCount}) ===`);
 
     try {
-      // Advance cycle number in DB so getCurrentCycleNumber() returns the
-      // correct value when called by battle orchestrators during this cycle.
-      await prisma.cycleMetadata.update({
-        where: { id: 1 },
-        data: { totalCycles: currentCycleNumber },
-      });
-
-      // Log cycle start
+      // Log cycle start. `totalCycles` remains unchanged until closing
+      // evidence and snapshot creation have completed.
       await eventLogger.logCycleStart(currentCycleNumber, 'manual');
 
       let stepNumber = 0;
@@ -865,19 +907,22 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
       let totalOperatingCosts = 0;
       let financesUsersProcessed = 0;
 
-      if (includeDailyFinances) {
-        const settlementResult = await settlementService.settleCycle({
-          cycleNumber: currentCycleNumber,
-          includeAdmins: true,
-        });
-        financesUsersProcessed = settlementResult.usersProcessed;
-        totalPassiveIncome = settlementResult.totalPassiveIncome;
-        totalOperatingCosts = settlementResult.totalOperatingCosts;
-
-        logger.info(`[Admin] Passive income: ₡${totalPassiveIncome.toLocaleString()}, Operating costs: ₡${totalOperatingCosts.toLocaleString()}`);
-      } else {
-        logger.info(`[Admin] Skipping daily finances (includeDailyFinances=false)`);
+      // Claim the active financial cycle before writing its settlement rows.
+      // Full-cycle execution cannot omit settlement: zero-value component rows
+      // are required closing evidence for a modern no-activity cycle.
+      claimedClosingCycle = await beginSerializedCycleCutover();
+      if (claimedClosingCycle !== currentCycleNumber) {
+        throw new Error(`Canonical cycle identity changed during admin execution: expected ${currentCycleNumber}, got ${claimedClosingCycle}`);
       }
+      const settlementResult = await settlementService.settleCycle({
+        cycleNumber: claimedClosingCycle,
+        includeAdmins: true,
+      });
+      financesUsersProcessed = settlementResult.usersProcessed;
+      totalPassiveIncome = settlementResult.totalPassiveIncome;
+      totalOperatingCosts = settlementResult.totalOperatingCosts;
+
+      logger.info(`[Admin] Passive income: ₡${totalPassiveIncome.toLocaleString()}, Operating costs: ₡${totalOperatingCosts.toLocaleString()}`);
 
       await eventLogger.logCycleStepComplete(
         currentCycleNumber,
@@ -888,56 +933,64 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
           usersProcessed: financesUsersProcessed,
           totalPassiveIncome,
           totalOperatingCosts,
-          skipped: !includeDailyFinances,
+          skipped: false,
         }
       );
 
-      // 10.3 Finalize Cycle Counters
+      // 10.3 Log end-of-cycle balances before creating the completion proof.
+      stepNumber++;
+      logger.info(`[Admin] Step ${stepNumber}: Log End-of-Cycle Balances`);
+      const balancesStart = Date.now();
+      const endOfCycleUsers = await prisma.user.findMany({
+        where: {},
+        select: { id: true, username: true, stableName: true, currency: true },
+        orderBy: { id: 'asc' },
+      });
+      for (const user of endOfCycleUsers) {
+        await eventLogger.logCycleEndBalance(currentCycleNumber, user.id, user.username, user.stableName, user.currency);
+      }
+      await eventLogger.logCycleStepComplete(
+        currentCycleNumber,
+        'log_end_of_cycle_balances',
+        stepNumber,
+        Date.now() - balancesStart,
+        { usersLogged: endOfCycleUsers.length },
+      );
+
+      // 10.4 Write the final completion event and its snapshot. A snapshot
+      // failure is a close failure, never a completed cycle without evidence.
+      stepNumber++;
+      logger.info(`[Admin] Step ${stepNumber}: Create Cycle Snapshot`);
+      const snapshotStart = Date.now();
+      await eventLogger.logCycleComplete(currentCycleNumber, Date.now() - cycleStart);
+      const { cycleSnapshotService } = await import('../cycle/cycleSnapshotService');
+      await cycleSnapshotService.createSnapshot(currentCycleNumber);
+      const snapshotResult = { created: true };
+      await eventLogger.logCycleStepComplete(
+        currentCycleNumber,
+        'create_cycle_snapshot',
+        stepNumber,
+        Date.now() - snapshotStart,
+        {},
+      );
+
+      // 10.5 Advance the completed count last, then update non-financial tier
+      // residency. This is the shared scheduled/admin cutover boundary.
       stepNumber++;
       logger.info(`[Admin] Step ${stepNumber}: Finalize Cycle Counters`);
       const cycleCountersStart = Date.now();
-
-      await prisma.cycleMetadata.update({
-        where: { id: 1 },
-        data: { lastCycleAt: new Date() },
-      });
-
-      // Increment cyclesInTier on all standings (Spec #40 — unified standings)
-      await prisma.standing.updateMany({
-        where: {},
-        data: { cyclesInTier: { increment: 1 } },
-      });
+      await completeSerializedCycleCutover(claimedClosingCycle);
+      claimedClosingCycle = null;
+      await prisma.standing.updateMany({ where: {}, data: { cyclesInTier: { increment: 1 } } });
       await eventLogger.logCycleStepComplete(
         currentCycleNumber,
         'increment_cycle_counters',
         stepNumber,
         Date.now() - cycleCountersStart,
-        {}
+        {},
       );
 
-      // 10.4 Create Cycle Snapshot
-      stepNumber++;
-      logger.info(`[Admin] Step ${stepNumber}: Create Cycle Snapshot`);
-      const snapshotStart = Date.now();
-      let snapshotResult = null;
-      try {
-        const { cycleSnapshotService } = await import('../cycle/cycleSnapshotService');
-        await cycleSnapshotService.createSnapshot(currentCycleNumber);
-        logger.info(`[Admin] Cycle snapshot created for cycle ${currentCycleNumber}`);
-        snapshotResult = { created: true };
-        await eventLogger.logCycleStepComplete(
-          currentCycleNumber,
-          'create_cycle_snapshot',
-          stepNumber,
-          Date.now() - snapshotStart,
-          {}
-        );
-      } catch (snapshotError) {
-        logger.error(`[Admin] Failed to create cycle snapshot:`, snapshotError);
-        snapshotResult = { error: snapshotError instanceof Error ? snapshotError.message : String(snapshotError) };
-      }
-
-      // 10.5 Orphan Image Cleanup
+      // 10.6 Orphan cleanup is operational maintenance, not closing evidence.
       stepNumber++;
       logger.info(`[Admin] Step ${stepNumber}: Orphan Image Cleanup`);
       const orphanStart = Date.now();
@@ -949,46 +1002,11 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
           'orphan_image_cleanup',
           stepNumber,
           Date.now() - orphanStart,
-          { filesDeleted: orphanResult.filesDeleted, bytesReclaimed: orphanResult.bytesReclaimed }
+          { filesDeleted: orphanResult.filesDeleted, bytesReclaimed: orphanResult.bytesReclaimed },
         );
       } catch (orphanError) {
         logger.error(`[Admin] Failed to run orphan image cleanup:`, orphanError);
       }
-
-      // 10.6 Log End-of-Cycle Balances
-      stepNumber++;
-      logger.info(`[Admin] Step ${stepNumber}: Log End-of-Cycle Balances`);
-      logger.info(`[Admin] === End of Cycle ${currentCycleNumber} Balances ===`);
-      const balancesStart = Date.now();
-      const endOfCycleUsers = await prisma.user.findMany({
-        where: {},
-        select: { id: true, username: true, stableName: true, currency: true },
-        orderBy: { id: 'asc' },
-      });
-
-      for (const user of endOfCycleUsers) {
-        logger.info(`[Balance] User ${user.id} | Stable: ${user.stableName || user.username} | Balance: ₡${user.currency.toLocaleString()}`);
-
-        await eventLogger.logCycleEndBalance(
-          currentCycleNumber,
-          user.id,
-          user.username,
-          user.stableName,
-          user.currency
-        );
-      }
-      logger.info(`[Admin] ===================================`);
-      await eventLogger.logCycleStepComplete(
-        currentCycleNumber,
-        'log_end_of_cycle_balances',
-        stepNumber,
-        Date.now() - balancesStart,
-        { usersLogged: endOfCycleUsers.length }
-      );
-
-      // Log cycle complete
-      const cycleDuration = Date.now() - cycleStart;
-      await eventLogger.logCycleComplete(currentCycleNumber, cycleDuration);
 
       // Display Cycle Summary
       logger.info(`[Admin] === Cycle ${currentCycleNumber} Summary ===`);
@@ -1042,7 +1060,7 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
         team3v3TournamentBlock: team3v3TournamentResult,
         settlement: {
           userGeneration: userGenerationSummary,
-          finances: { totalPassiveIncome, totalOperatingCosts, usersProcessed: financesUsersProcessed, skipped: !includeDailyFinances },
+          finances: { totalPassiveIncome, totalOperatingCosts, usersProcessed: financesUsersProcessed, skipped: false },
           cycleCounters: { updated: true },
           snapshot: snapshotResult,
           orphanCleanup: orphanResult,
@@ -1055,6 +1073,13 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
       // End cycle logging
       cycleLogger.endCycle();
     } catch (error) {
+      if (claimedClosingCycle !== null) {
+        try {
+          await abortSerializedCycleCutover(claimedClosingCycle);
+        } catch (abortError) {
+          logger.error(`[Admin] Failed to abort financial cutover for cycle ${claimedClosingCycle}:`, abortError);
+        }
+      }
       logger.error(`[Admin] Error in cycle ${currentCycleNumber}:`, error);
       cycleLogger.log('ERROR', `Cycle ${currentCycleNumber} failed`, { error: error instanceof Error ? error.message : String(error) });
       cycleLogger.endCycle();

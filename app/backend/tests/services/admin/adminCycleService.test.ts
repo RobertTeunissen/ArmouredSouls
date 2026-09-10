@@ -178,6 +178,18 @@ jest.mock('../../../src/lib/prisma', () => ({
   },
 }));
 
+jest.mock('../../../src/services/cycle/canonicalCycleIdentity', () => ({
+  getActiveFinancialCycleNumber: jest.fn().mockResolvedValue(6),
+  beginSerializedCycleCutover: jest.fn().mockResolvedValue(6),
+  completeSerializedCycleCutover: jest.fn().mockResolvedValue(undefined),
+  abortSerializedCycleCutover: jest.fn().mockResolvedValue(undefined),
+}));
+
+jest.mock('../../../src/services/season/seasonService', () => ({
+  getCurrentSeason: jest.fn().mockResolvedValue({ phase: 'competitive' }),
+  advancePreparationCycle: jest.fn().mockResolvedValue({ preparationCyclesCompleted: 1 }),
+}));
+
 describe('Admin Cycle Service — executeBulkCycles', () => {
   beforeEach(() => {
     jest.clearAllMocks();

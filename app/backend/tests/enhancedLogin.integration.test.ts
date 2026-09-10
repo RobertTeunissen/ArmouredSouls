@@ -1,3 +1,4 @@
+import type { Server } from 'node:http';
 import request from 'supertest';
 import prisma from '../src/lib/prisma';
 import express from 'express';
@@ -36,13 +37,15 @@ describe('Enhanced Login Endpoint Integration', () => {
   const testUsername = `login_${suffix}`.substring(0, 20);
   const testEmail = `log_${suffix.substring(0, 6)}@t.co`;
   const testPassword = 'securePass1';
-  let testUserId: number;
+  let testUserId: number | null = null;
+  let server: Server;
 
   beforeAll(async () => {
     await prisma.$connect();
+    server = app.listen(0);
 
     // Register a user to test login against
-    const response = await request(app)
+    const response = await request(server)
       .post('/api/auth/register')
       .send({ username: testUsername, email: testEmail, password: testPassword, stableName: `Stb_${suffix}`.substring(0, 30) });
 
@@ -51,14 +54,24 @@ describe('Enhanced Login Endpoint Integration', () => {
   });
 
   afterAll(async () => {
-    // Clean up the test user
-    await prisma.user.deleteMany({ where: { id: testUserId } });
-    await prisma.$disconnect();
+    try {
+      await new Promise<void>((resolve, reject) => {
+        server.close((error) => (error ? reject(error) : resolve()));
+      });
+    } finally {
+      try {
+        if (testUserId !== null) {
+          await prisma.user.deleteMany({ where: { id: testUserId } });
+        }
+      } finally {
+        await prisma.$disconnect();
+      }
+    }
   });
 
   describe('Login with username', () => {
     it('should return 200 with token and user profile when logging in with username', async () => {
-      const response = await request(app)
+      const response = await request(server)
         .post('/api/auth/login')
         .send({ identifier: testUsername, password: testPassword });
 
@@ -82,7 +95,7 @@ describe('Enhanced Login Endpoint Integration', () => {
 
   describe('Login with email', () => {
     it('should return 200 with token and user profile when logging in with email', async () => {
-      const response = await request(app)
+      const response = await request(server)
         .post('/api/auth/login')
         .send({ identifier: testEmail, password: testPassword });
 
@@ -104,7 +117,7 @@ describe('Enhanced Login Endpoint Integration', () => {
 
   describe('Invalid credentials handling', () => {
     it('should return 401 with "Invalid credentials" for non-existent identifier', async () => {
-      const response = await request(app)
+      const response = await request(server)
         .post('/api/auth/login')
         .send({ identifier: 'nonexistent_user_xyz', password: testPassword });
 
@@ -113,7 +126,7 @@ describe('Enhanced Login Endpoint Integration', () => {
     });
 
     it('should return 401 with "Invalid credentials" for correct identifier but wrong password', async () => {
-      const response = await request(app)
+      const response = await request(server)
         .post('/api/auth/login')
         .send({ identifier: testUsername, password: 'wrongPassword123' });
 
@@ -122,7 +135,7 @@ describe('Enhanced Login Endpoint Integration', () => {
     });
 
     it('should return 401 with "Invalid credentials" for correct email but wrong password', async () => {
-      const response = await request(app)
+      const response = await request(server)
         .post('/api/auth/login')
         .send({ identifier: testEmail, password: 'wrongPassword123' });
 
@@ -133,7 +146,7 @@ describe('Enhanced Login Endpoint Integration', () => {
 
   describe('Missing fields handling', () => {
     it('should return 400 when identifier is missing', async () => {
-      const response = await request(app)
+      const response = await request(server)
         .post('/api/auth/login')
         .send({ password: testPassword });
 
@@ -142,7 +155,7 @@ describe('Enhanced Login Endpoint Integration', () => {
     });
 
     it('should return 400 when password is missing', async () => {
-      const response = await request(app)
+      const response = await request(server)
         .post('/api/auth/login')
         .send({ identifier: testUsername });
 
@@ -151,7 +164,7 @@ describe('Enhanced Login Endpoint Integration', () => {
     });
 
     it('should return 400 when both fields are missing', async () => {
-      const response = await request(app)
+      const response = await request(server)
         .post('/api/auth/login')
         .send({});
 
@@ -162,7 +175,7 @@ describe('Enhanced Login Endpoint Integration', () => {
 
   describe('Backward compatibility', () => {
     it('should accept login with "username" field instead of "identifier"', async () => {
-      const response = await request(app)
+      const response = await request(server)
         .post('/api/auth/login')
         .send({ username: testUsername, password: testPassword });
 

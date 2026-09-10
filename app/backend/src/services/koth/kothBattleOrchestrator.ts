@@ -43,7 +43,7 @@ import {
 import standingsService from '../standings/standingsService';
 import { CombatMessageGenerator } from '../battle/combatMessageGenerator';
 import { calculateStreamingRevenueBatch } from '../economy/streamingRevenueService';
-import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
+import { runFinancialWriteTransaction } from '../cycle/financialWriteTransaction';
 import { prepareRobotForCombat } from '../../utils/robotCalculations';
 import { getTuningBonusesBatch } from '../tuning-pool';
 import { defer } from '../common/deferredWork';
@@ -422,7 +422,6 @@ async function processKothBattle(
 
   // 11. One atomic financial transaction for stable battle income, per-robot
   // streaming, stable prestige, and fame. KotH must not combine these deltas.
-  const cycleNumber = await getCurrentCycleNumber();
   const streamingCalcMap = await calculateStreamingRevenueBatch(
     preparedParticipants.map((participant) => ({
       robotId: participant.robot.id,
@@ -463,13 +462,13 @@ async function processKothBattle(
     }
   });
 
-  await prisma.$transaction(async (tx) => {
+  await runFinancialWriteTransaction(async (tx, financialCycleNumber) => {
     for (const [userId, credits] of creditsByUser) {
       await awardCreditsWithLedger(
         userId,
         credits,
         'battle_income',
-        cycleNumber,
+        financialCycleNumber,
         'KotH battle reward',
         undefined,
         { battleId: battle.id, placementMode: 'koth' },
@@ -490,7 +489,7 @@ async function processKothBattle(
     }
 
     for (const [userId, prestige] of prestigeByUser) {
-      await awardPrestigeToUser(userId, prestige, cycleNumber, {
+      await awardPrestigeToUser(userId, prestige, financialCycleNumber, {
         source: 'battle',
         mode: 'koth',
         battleId: battle.id,
@@ -511,7 +510,7 @@ async function processKothBattle(
       await awardBattleStreamingRevenue(
         participant.robot.userId,
         streamingCalc,
-        cycleNumber,
+        financialCycleNumber,
         battle.id,
         'koth',
         tx,

@@ -469,6 +469,7 @@ function buildBattleBreakdown(
     finalAmount: amount,
     sourceEventId,
     transactionType: 'battle_income',
+    ...(options.battleId === undefined ? {} : { battleId: options.battleId }),
     mode: options.mode ?? 'unknown',
     tier: options.tier ?? 'unknown',
     outcome: options.outcome ?? 'unknown',

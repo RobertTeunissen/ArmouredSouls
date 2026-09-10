@@ -14,6 +14,11 @@ const mockTransactionClient = {
     findMany: (...args: unknown[]) => mockRobotFindMany(...args),
     update: jest.fn().mockResolvedValue({}),
   },
+  cycleMetadata: {
+    findUnique: jest.fn().mockResolvedValue({ totalCycles: 0, featureFlags: {} }),
+  },
+  season: { findFirst: jest.fn().mockResolvedValue(null) },
+  $executeRaw: jest.fn().mockResolvedValue(0),
 };
 
 jest.mock('../../../src/lib/prisma', () => ({
@@ -33,6 +38,11 @@ jest.mock('../../../src/lib/creditGuard', () => ({
 jest.mock('../../../src/services/financial/repairMutationService', () => ({
   applyRepairCreditMutationInTransaction: (...args: unknown[]) => mockApplyRepairCreditMutationInTransaction(...args),
   buildRepairOperationId: (...args: unknown[]) => mockBuildRepairOperationId(...args),
+}));
+
+jest.mock('../../../src/services/battle/baseOrchestrator', () => ({
+  __esModule: true,
+  getCurrentCycleNumber: jest.fn().mockResolvedValue(1),
 }));
 
 jest.mock('../../../src/config/logger', () => ({

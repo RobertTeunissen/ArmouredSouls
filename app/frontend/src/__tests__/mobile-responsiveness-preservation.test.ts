@@ -192,7 +192,6 @@ describe('Preservation: Desktop Layout and Functionality Unchanged (≥1024px)',
       // Representative pages that have desktop horizontal layouts
       const LAYOUT_PAGES = [
         'DashboardPage.tsx',
-        'FinancialReportPage.tsx',
         'BattleHistoryPage.tsx',
       ];
 

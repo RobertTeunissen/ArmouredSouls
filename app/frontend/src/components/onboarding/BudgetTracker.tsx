@@ -6,7 +6,7 @@
 
 import { useEffect, useState } from 'react';
 import { useOnboarding } from '../../contexts/OnboardingContext';
-import { formatCurrency } from '../../utils/financialApi';
+import { formatCurrency } from '../../utils/formatters';
 import { api } from '../../utils/api';
 
 interface UserCredits { currency: number }
