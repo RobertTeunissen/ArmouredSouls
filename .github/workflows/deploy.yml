@@ -710,7 +710,7 @@ jobs:
             # Select ACC explicitly. The ecosystem default is deliberately
             # production-safe, so omitting --env acceptance would activate
             # production-only fail-fast checks and crash-loop before listen.
-            NODE_ENV=acceptance pm2 restart ecosystem.config.js --env acceptance --update-env
+            NODE_ENV=acceptance pm2 startOrReload ecosystem.config.js --env acceptance --update-env
 
       - name: Health check (30s deadline)
         uses: appleboy/ssh-action@v1
@@ -1075,7 +1075,7 @@ jobs:
           script: |
             cd /opt/armouredsouls
             pm2 flush
-            NODE_ENV=production pm2 restart ecosystem.config.js --env production --update-env
+            NODE_ENV=production pm2 startOrReload ecosystem.config.js --env production --update-env
 
       - name: Health check (30s deadline)
         uses: appleboy/ssh-action@v1
