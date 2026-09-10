@@ -57,6 +57,7 @@ async function createService(): Promise<any> {
   mockDecodeImage.mockReturnValue({ dispose: mockDispose });
 
   let service: any;
+  let initializationPromise: Promise<void> | undefined;
 
   jest.isolateModules(() => {
     jest.doMock('nsfwjs', () => ({ load: mockLoad }));
@@ -88,9 +89,10 @@ async function createService(): Promise<any> {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const mod = require('../contentModerationService');
     service = mod.contentModerationService;
+    initializationPromise = service.initialize();
   });
 
-  await service.initialize();
+  await initializationPromise;
   return service;
 }
 

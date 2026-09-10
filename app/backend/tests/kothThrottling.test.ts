@@ -66,8 +66,12 @@ const mockPrisma = {
     findMany: jest.fn().mockResolvedValue([]),
   },
   cycleMetadata: {
-    findUnique: jest.fn().mockResolvedValue({ id: 1, currentCycle: 1, totalCycles: 1 }),
+    findUnique: jest.fn().mockResolvedValue({ totalCycles: 0, featureFlags: {} }),
   },
+  season: {
+    findFirst: jest.fn().mockResolvedValue(null),
+  },
+  $executeRaw: jest.fn().mockResolvedValue(0),
   $transaction: jest.fn(),
 };
 

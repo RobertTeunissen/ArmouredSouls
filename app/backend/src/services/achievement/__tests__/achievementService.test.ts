@@ -14,7 +14,7 @@
 const mockPrisma = {
   userAchievement: {
     findMany: jest.fn().mockResolvedValue([]),
-    create: jest.fn().mockResolvedValue({}),
+    create: jest.fn().mockResolvedValue({ id: 1 }),
     count: jest.fn().mockResolvedValue(0),
     groupBy: jest.fn().mockResolvedValue([]),
   },
@@ -53,6 +53,11 @@ const mockPrisma = {
   teamBattleMember: {
     findMany: jest.fn().mockResolvedValue([]),
   },
+  cycleMetadata: {
+    findUnique: jest.fn().mockResolvedValue({ totalCycles: 0, featureFlags: {} }),
+  },
+  season: { findFirst: jest.fn().mockResolvedValue(null) },
+  $executeRaw: jest.fn().mockResolvedValue(0),
   $queryRawUnsafe: jest.fn().mockResolvedValue([{ count: BigInt(0) }]),
   $executeRawUnsafe: jest.fn().mockResolvedValue(0),
   $transaction: jest.fn(),
@@ -117,7 +122,7 @@ beforeEach(() => {
 
   // Reset default mock implementations
   mockPrisma.userAchievement.findMany.mockResolvedValue([]);
-  mockPrisma.userAchievement.create.mockResolvedValue({});
+  mockPrisma.userAchievement.create.mockResolvedValue({ id: 1 });
   mockPrisma.userAchievement.count.mockResolvedValue(0);
   mockPrisma.userAchievement.groupBy.mockResolvedValue([]);
   mockPrisma.user.findUnique.mockResolvedValue(null);

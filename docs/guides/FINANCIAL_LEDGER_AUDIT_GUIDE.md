@@ -1,10 +1,10 @@
 # Financial Ledger and Audit Guide
 
-**Status**: Spec #53 capture contract and operator guidance  
-**Scope**: Deployed financial capture, audit pairing, reconciliation, and legacy-history compatibility
-**Related work**: Backlog Item #59 / Financial Ledger Coverage
+**Status**: Spec #53 deployed capture contract plus Spec #54 report-consumer contract
+**Scope**: Financial capture, audit pairing, report reconciliation, canonical cycle closure, and legacy-history compatibility
+**Related work**: Finance Center at `/income`; [Finance Center Reporting Contract](../implementation_notes/finance-center-reporting-contract.md)
 
-This guide documents the accounting and audit contract for new economy events. The contract is active with the deployed backend version: no ACC-specific activation, cycle selection, or post-deploy command is required. It does not redesign financial pages, change player-visible reward formulas, or reconstruct historical records.
+This guide documents both sides of the financial evidence boundary. Spec #53’s capture contract and Spec #54’s Finance Center read/cutover contract are implemented without an ACC-specific activation, cycle selection, or post-deploy command. Neither contract changes reward/repair arithmetic or reconstructs historical records.
 
 ## 1. Balance and record model
 
@@ -259,7 +259,8 @@ Existing domain `passive_income` and `operating_costs` audit events and cycle sn
 | Reporting or operational question | `Canonical_Source` |
 |---|---|
 | Deployed paired-capture credit amount, balance, taxonomy, breakdown, or pair | `FinancialLedger` plus paired `AuditLog` `financial_transaction`, joined by `financialEventId` |
-| Repair spend and `repairType` | `AuditLog` `robot_repair` rows with `creditsCharged` and `repairType` |
+| Reconciled signed repair movement | Complete `repair_cost` `FinancialLedger` plus paired `financial_transaction`; count the ledger amount once |
+| Repair spend display, count and `repairType` | Linked `AuditLog` `robot_repair` row with `creditsCharged` and `repairType`, after `sourceEventId`/owner/robot/period/amount validation |
 | Prestige awards and current-season growth points | `AuditLog` `prestige_change` rows with `sourceEventId` |
 | Subscription state and changes | Booking Office records and existing subscription audit records |
 | Account creation, reset, rollover, and archive history | Existing lifecycle/audit and archive records |
@@ -289,16 +290,74 @@ Reconciliation is read-only. It validates identified paired evidence and reports
 
 If a required paired write fails, the enclosing transaction fails: verify that `User.currency` rolled back, inspect the identity or sequence error, and retry only with the same immutable source facts. Never create a compensating ledger row, add a second balance adjustment, or alter historical evidence.
 
-## 12. Release verification
+## 12. Finance Center report-consumer contract (Spec #54)
 
-The normal blocking release checks remain required: lint, build, test typecheck/tier verification, backend unit/integration/heavy tests, frontend lint/build/unit tests, and E2E. They verify the deployed writer; they do not unlock a separate operational phase.
+The Finance Center is the implemented player report consumer of the capture contract above. Its version 1 API and UI behavior, cutover details, and verification evidence are maintained in [`finance-center-reporting-contract.md`](../implementation_notes/finance-center-reporting-contract.md). The named report concepts are Revenue_Growth, Full_Damage_Repair_Reference, Prestige_Milestone_Forecast, and Robot_Deployment_View.
 
-## 13. Explicit non-scope
+### Canonical cycle ownership and closure
 
-This guide does not change player-facing rules or presentation:
+Under Spec #54, `CycleMetadata.totalCycles` is the completed financial-cycle count and active cycle is `totalCycles + 1`. Financial Cycle 1 starts at the retained Season Rollover instant, remains active through both preparation days and the first competitive/match day, contains preparation spending and achievement Credit rewards, and closes only at the first competitive settlement. Preparation midnights do not settle, close, or renumber it.
 
-- No file under `app/backend/src/content/guide/` is modified for this capture-only work. `app/backend/tests/guide/content-validation.test.ts` remains a blocking regression check.
-- `Income_Dashboard`, `Cycle_Summary`, financial-page components, charts, filters, navigation, and layouts are unchanged.
-- The later `Financial_Page_Follow_On` must consume paired financial records, stored `Financial_Breakdown`, repair-source boundaries, and prestige records. It must not reconstruct historical money from battle payloads or current formulas.
+Scheduled and admin closure use one Serialized Cycle Cutover. Once closing balance capture starts, no current-economy writer may commit to that cycle. Settlement writes paired `passive_income` and `operating_costs` (including zero values), then `cycle_end_balance`, `cycle_complete`, and `CycleSnapshot`, and advances the completed count last. A blocked writer resumes after advancement and resolves the next active cycle. The canonical cutover service and scheduled/admin race tests enforce this ordering.
 
-For domain formulas and lifecycle rules, see [`PRD_ECONOMY_SYSTEM.md`](../game-systems/PRD_ECONOMY_SYSTEM.md), [`PRD_CYCLE_SYSTEM.md`](../game-systems/PRD_CYCLE_SYSTEM.md), [`PRD_AUDIT_SYSTEM.md`](../architecture/PRD_AUDIT_SYSTEM.md), and [`PRD_SEASON_SYSTEM.md`](../game-systems/PRD_SEASON_SYSTEM.md).
+### Consistent report read and sequence order
+
+Every version 1 success envelope is assembled from one database-consistent read view and exposes one server `asOf`. Ledger rows, paired/domain audits, boundaries, snapshots, and Current Cycle `User.currency` confirmation in that envelope all come from that same cutoff.
+
+A report selects only complete non-null-identity financial pairs and orders them by paired audit `(cycleNumber, sequenceNumber)`. Sequence numbers restart per cycle, so timestamp order and a bare sequence number are invalid for a range. It derives opening from the earliest ordered `balanceAfter - amount`, signed movement by counting each ledger amount once, and closing from the final ordered `balanceAfter`. It proves:
+
+```text
+opening + signed movement = closing
+opening + earned Credits + investment proceeds - running costs - investment purchases = closing
+```
+
+For every completed cycle in a selection, derived closing is checked against that cycle’s `cycle_end_balance` and snapshot stable balance. These are boundary checks, not financial lines. `User.currency` confirms Current Cycle only and never repairs a historical gap.
+
+Null-identity legacy rows, missing pairs or boundaries, snapshot/end-balance disagreement, administrative anomalies, and inconsistent cycle identity produce typed non-monetary limitations. They are not reconstructed from timestamps, current state, current formulas, or snapshot aggregates.
+
+### Classification and stored facts
+
+Earned Credits consist only of `battle_income`, `streaming_revenue`, `passive_income`, and `achievement_reward`. Positive `weapon_sale` is investment proceeds, not earned revenue and not negative purchase spend. Robot creation, facilities, weapons, Weapon Refinement, and attributes are investment purchases. Prestige remains nonfinancial.
+
+Operating-cost itemisation reads the stored `operating_costs` Financial_Breakdown written at settlement. It never recomputes historical components from current facility levels. Zero-valued settlement rows make a modern no-activity cycle explicit.
+
+### Repair single-contribution rule
+
+The phrase “`robot_repair` is the repair-spend canonical source” answers the domain question: what was charged manually or automatically, to which robot, and how many times? Finance Statement cash reconciliation still includes the linked signed `repair_cost` ledger amount exactly once.
+
+The join requires `robot_repair.sourceEventId === financialEventId`, equal stable, robot, period and subtype, and `creditsCharged === abs(ledger.amount)`. The domain row supplies positive amount/subtype/count for display; it is never added as another movement. A mismatch produces `repair_link_mismatch`. `repairQuoteCredits` remains estimate-only.
+
+### Battle allocation evidence
+
+`BattleParticipant.credits` is persisted per-robot battle/bye allocation evidence. Since team, tag-team, placement and bye ledger awards may be stable-aggregated, a report joins participants to the related complete `battle_income` record, restricts participants to robots owned by the ledger stable, and verifies their sum equals that stable’s award before exposing per-robot amounts. It does not require every ledger row to carry `robotId`, divide stable awards, or include an opposing stable’s allocation. Failure produces `battle_allocation_mismatch` and excludes unsupported attribution.
+
+### Public response boundary
+
+Finance Center uses versioned authenticated envelopes. Version `1` means response-schema compatibility, not season. Stable identity comes from JWT; robot detail is ownership-checked and returns generic `403 Access denied` for absent/non-owned IDs.
+
+Raw `financialEventId`, audit IDs/payloads, security payloads, tokens and unnecessary internal IDs never enter player responses, caches, or diagnostics. The report boundary replaces internal source identity with an opaque Player-Safe Source Reference that is stable across refreshes/pages, collision-free within authenticated stable and active season, non-reversible, display/log safe, and never authorization. `FINANCE_REPORT_REFERENCE_SECRET` supplies its independent HMAC key in production; the reporting contract records the implementation and key-lifecycle boundary.
+
+### Season and cache boundary
+
+Live Finance Center ranges are active-season only. Season Rollover purges live ledger, audit, snapshot, battle, and analytics evidence; cross-season facts come only from archive tables and are not reconstructed into a live statement.
+
+Cache keys include authenticated stable, active season, exact normalized period, resource, and page/page-size/order where applicable. Only sanitized envelopes may be cached. Current-inclusive entries retain their original `asOf` and use a short TTL; completed history may be immutable. Exact TTL/invalidation and the database read mechanism are implementation evidence recorded in the reporting contract rather than invented here.
+
+## 13. Release verification
+
+The normal blocking release checks remain required: lint, build, test typecheck/tier verification, backend unit/integration/heavy tests, frontend lint/build/unit tests, and E2E. Finance Center adds blocking coverage for canonical preparation Cycle 1, serialized scheduled/admin cutover races, one-cutoff sequence reconciliation, sale polarity, stored facility itemisation, repair linkage, battle-allocation conservation, source-reference security, cache isolation, pagination invariance, performance budgets, local time, and responsive/keyboard behavior.
+
+No test may be retired until its named replacement contract coverage passes. No `continue-on-error`, `|| true`, unguarded pipe, or advisory bypass is acceptable.
+
+## 14. Scope boundary and references
+
+Spec #53’s deployed capture contract remains unchanged by the reporting work. Spec #54 changes the player report, navigation, cycle ownership/cutover, and read model; it does not change Credit amounts, repair/reward formulas, the closed taxonomy, prestige gates, subscriptions, teams, or facility arithmetic. Historical rows are never backfilled or relabelled.
+
+For the page/API/limitations/migration/test record, see:
+
+- [`finance-center-reporting-contract.md`](../implementation_notes/finance-center-reporting-contract.md)
+- [`PRD_INCOME_DASHBOARD.md`](../prd_pages/PRD_INCOME_DASHBOARD.md)
+- [`PRD_ECONOMY_SYSTEM.md`](../game-systems/PRD_ECONOMY_SYSTEM.md)
+- [`PRD_CYCLE_SYSTEM.md`](../game-systems/PRD_CYCLE_SYSTEM.md)
+- [`PRD_AUDIT_SYSTEM.md`](../architecture/PRD_AUDIT_SYSTEM.md)
+- [`PRD_SEASON_SYSTEM.md`](../game-systems/PRD_SEASON_SYSTEM.md)

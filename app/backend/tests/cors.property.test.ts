@@ -8,6 +8,7 @@ const originalEnv = process.env;
 
 beforeEach(() => {
   process.env = { ...originalEnv };
+  process.env.FINANCE_REPORT_REFERENCE_SECRET = 'test-finance-report-reference-secret';
 });
 
 afterAll(() => {

@@ -17,6 +17,7 @@ import OnboardingPage from './pages/OnboardingPage';
 import { useAchievementToasts } from './hooks/useAchievementToasts';
 import AchievementToast from './components/AchievementToast';
 import AppErrorBoundary from './components/AppErrorBoundary';
+import { LegacyCycleSummaryRedirect, LegacyFinancesRedirect } from './components/finance/LegacyFinanceRedirects';
 
 // Lazy-loaded player pages (infrequently visited)
 const HallOfRecordsPage = React.lazy(() => import('./pages/HallOfRecordsPage'));
@@ -26,8 +27,7 @@ const BattleDetailPage = React.lazy(() => import('./pages/BattleDetailPage'));
 const BattleHistoryPage = React.lazy(() => import('./pages/BattleHistoryPage'));
 const AchievementsPage = React.lazy(() => import('./pages/AchievementsPage'));
 const PracticeArenaPage = React.lazy(() => import('./pages/PracticeArenaPage'));
-const CycleSummaryPage = React.lazy(() => import('./pages/CycleSummaryPage'));
-const FinancialReportPage = React.lazy(() => import('./pages/FinancialReportPage'));
+const FinanceCenterPage = React.lazy(() => import('./pages/FinanceCenterPage'));
 const StableViewPage = React.lazy(() => import('./pages/StableViewPage'));
 const TeamBattlesPage = React.lazy(() => import('./pages/TeamBattlesPage'));
 const LeaderboardsFamePage = React.lazy(() => import('./pages/LeaderboardsFamePage'));
@@ -115,8 +115,8 @@ function AppRoutes() {
       <Route path="/leaderboards/fame" element={<ProtectedRoute><LeaderboardsFamePage /></ProtectedRoute>} />
       <Route path="/leaderboards/prestige" element={<ProtectedRoute><LeaderboardsPrestigePage /></ProtectedRoute>} />
       <Route path="/leaderboards/losses" element={<ProtectedRoute><LeaderboardsLossesPage /></ProtectedRoute>} />
-      <Route path="/income" element={<ProtectedRoute><FinancialReportPage /></ProtectedRoute>} />
-      <Route path="/finances" element={<Navigate to="/income" replace />} />
+      <Route path="/income" element={<ProtectedRoute><FinanceCenterPage /></ProtectedRoute>} />
+      <Route path="/finances" element={<LegacyFinancesRedirect />} />
       <Route path="/hall-of-records" element={<ProtectedRoute><HallOfRecordsPage /></ProtectedRoute>} />
       <Route path="/seasons" element={<ProtectedRoute><SeasonArchivePage /></ProtectedRoute>} />
       <Route path="/tournaments" element={<ProtectedRoute><TournamentsPage /></ProtectedRoute>} />
@@ -125,7 +125,7 @@ function AppRoutes() {
       <Route path="/tag-teams/standings" element={<Navigate to="/team-battles" replace />} />
       <Route path="/team-battles" element={<ProtectedRoute><TeamBattlesPage /></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-      <Route path="/cycle-summary" element={<ProtectedRoute><CycleSummaryPage /></ProtectedRoute>} />
+      <Route path="/cycle-summary" element={<LegacyCycleSummaryRedirect />} />
       <Route path="/achievements" element={<ProtectedRoute><AchievementsPage /></ProtectedRoute>} />
       <Route path="/guide" element={<ProtectedRoute><GuidePage /></ProtectedRoute>} />
       <Route path="/guide/:sectionSlug" element={<ProtectedRoute><GuidePage /></ProtectedRoute>} />

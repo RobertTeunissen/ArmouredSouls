@@ -9,8 +9,7 @@
  * composable building blocks rather than a single monolithic pipeline.
  */
 
-import prisma from '../../lib/prisma';
-import logger from '../../config/logger';
+import { getActiveFinancialCycleNumber } from '../cycle/canonicalCycleIdentity';
 
 // ─── Shared Types ────────────────────────────────────────────────────
 
@@ -49,19 +48,9 @@ export interface BattleRecordRef {
 // ─── Shared Helpers ──────────────────────────────────────────────────
 
 /**
- * Get the current cycle number from metadata.
- * Returns the CURRENT cycle number (same as totalCycles in cycleMetadata).
- * The settlement job increments totalCycles when closing a cycle,
- * so totalCycles always represents the active cycle number.
- * Returns 1 if metadata doesn't exist (e.g., during tests or first cycle).
+ * Return the canonical active financial cycle. CycleMetadata.totalCycles is the
+ * number of completed cycles, so every current writer belongs to +1.
  */
 export async function getCurrentCycleNumber(): Promise<number> {
-  try {
-    const metadata = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
-    return metadata?.totalCycles || 1;
-  } catch (error) {
-    // If cycleMetadata table doesn't exist or query fails, return 1 (first cycle)
-    logger.warn('[BaseOrchestrator] Could not fetch cycle number, defaulting to 1:', error);
-    return 1;
-  }
+  return getActiveFinancialCycleNumber();
 }

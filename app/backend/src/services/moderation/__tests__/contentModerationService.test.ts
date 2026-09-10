@@ -32,7 +32,11 @@ let mockDecodeImage: jest.Mock;
  * Creates a fresh, isolated ContentModerationService instance.
  * Each call gets its own module scope so the singleton doesn't leak between tests.
  */
-async function createService(options?: { failLoad?: boolean; initialize?: boolean }) {
+async function createService(options?: {
+  failLoad?: boolean;
+  failNativeRuntime?: boolean;
+  initialize?: boolean;
+}) {
   mockClassify = jest.fn();
   mockDispose = jest.fn();
   mockLoad = jest.fn();
@@ -47,13 +51,20 @@ async function createService(options?: { failLoad?: boolean; initialize?: boolea
   mockDecodeImage.mockReturnValue({ dispose: mockDispose });
 
   let service: any;
+  let initializationPromise: Promise<void> | undefined;
 
   jest.isolateModules(() => {
     // Set up mocks inside the isolated scope
     jest.doMock('nsfwjs', () => ({ load: mockLoad }));
-    jest.doMock('@tensorflow/tfjs-node', () => ({
-      tensor3d: () => ({ dispose: mockDispose }),
-    }));
+    if (options?.failNativeRuntime) {
+      jest.doMock('@tensorflow/tfjs-node', () => {
+        throw new Error('Native TensorFlow runtime unavailable');
+      });
+    } else {
+      jest.doMock('@tensorflow/tfjs-node', () => ({
+        tensor3d: () => ({ dispose: mockDispose }),
+      }));
+    }
     jest.doMock('sharp', () => {
       const mockSharp = () => ({
         resize: () => mockSharp(),
@@ -79,13 +90,18 @@ async function createService(options?: { failLoad?: boolean; initialize?: boolea
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const mod = require('../contentModerationService');
     service = mod.contentModerationService;
+    if (options?.initialize !== false) {
+      initializationPromise = service.initialize();
+    }
   });
 
-  if (options?.initialize !== false) {
+  if (initializationPromise) {
     if (options?.failLoad) {
-      await expect(service.initialize()).rejects.toThrow('Model load failed');
+      await expect(initializationPromise).rejects.toThrow('Model load failed');
+    } else if (options?.failNativeRuntime) {
+      await expect(initializationPromise).rejects.toThrow('Native TensorFlow runtime unavailable');
     } else {
-      await service.initialize();
+      await initializationPromise;
     }
   }
   return service;
@@ -238,6 +254,17 @@ describe('ContentModerationService', () => {
   });
 
   describe('model unavailable (fail-closed)', () => {
+    it('should load without the native runtime and fail closed when initialization cannot import it', async () => {
+      const service = await createService({ failNativeRuntime: true });
+
+      expect(service.getAvailability().status).toBe('unavailable');
+      await expect(service.classifyImage(Buffer.from('test'))).resolves.toEqual(expect.objectContaining({
+        safe: false,
+        robotLikely: false,
+        reason: 'moderation_unavailable',
+      }));
+    });
+
     it('should return safe: false with reason moderation_unavailable when model fails to load', async () => {
       const service = await createService({ failLoad: true });
 

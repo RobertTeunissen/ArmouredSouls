@@ -22,8 +22,12 @@ vi.mock('react-router-dom', () => ({
 }));
 
 const mockRefreshUser = vi.fn();
+let mockAuthenticatedUser: { id: number; username: string } | null = null;
+let mockAuthLoading = false;
 vi.mock('../../contexts/AuthContext', () => ({
   useAuth: () => ({
+    user: mockAuthenticatedUser,
+    loading: mockAuthLoading,
     refreshUser: mockRefreshUser,
   }),
 }));
@@ -51,6 +55,8 @@ vi.mock('../../utils/apiClient', () => ({
 describe('FrontPage - Onboarding Redirect on Login', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
+    mockAuthenticatedUser = null;
+    mockAuthLoading = false;
     mockRefreshUser.mockResolvedValue(undefined);
 
     // FrontPage uses LoginForm which calls apiClient.post directly
@@ -75,6 +81,37 @@ describe('FrontPage - Onboarding Redirect on Login', () => {
     });
 
     render(<FrontPage />);
+    const user = userEvent.setup();
+
+    await user.type(screen.getByLabelText(/username or email/i), 'newplayer');
+    await user.type(screen.getByLabelText(/password/i), 'pass123');
+    await user.click(screen.getByRole('button', { name: /login/i }));
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith('/onboarding');
+    });
+    expect(mockNavigate).not.toHaveBeenCalledWith('/dashboard');
+  });
+
+  it('should keep the onboarding decision in control when refreshUser rerenders with an authenticated user', async () => {
+    mockGetTutorialState.mockResolvedValue({
+      currentStep: 1,
+      hasCompletedOnboarding: false,
+      onboardingSkipped: false,
+      strategy: null,
+      choices: {},
+      startedAt: null,
+      completedAt: null,
+    });
+
+    let rerenderFrontPage: ReturnType<typeof render>['rerender'] = () => undefined;
+    mockRefreshUser.mockImplementation(async () => {
+      mockAuthenticatedUser = { id: 1, username: 'newplayer' };
+      rerenderFrontPage(<FrontPage />);
+    });
+
+    const renderResult = render(<FrontPage />);
+    rerenderFrontPage = renderResult.rerender;
     const user = userEvent.setup();
 
     await user.type(screen.getByLabelText(/username or email/i), 'newplayer');

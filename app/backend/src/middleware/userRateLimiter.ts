@@ -9,14 +9,16 @@
  * @module middleware/userRateLimiter
  * @see Requirements 6.4, 6.6
  */
-import rateLimit from 'express-rate-limit';
+import rateLimit, { type RateLimitRequestHandler } from 'express-rate-limit';
+import { getConfig, type EnvConfig } from '../config/env';
 import { AuthRequest } from './auth';
 import { securityMonitor } from '../services/security/securityMonitor';
 
 /**
  * Create a per-user rate limiter for economic transaction endpoints.
  *
- * - 100 requests per 1-minute window per authenticated user
+ * - 100 requests per 1-minute window per authenticated user by default
+ * - The validated `USER_ECONOMIC_RATE_LIMIT_MAX` override supports high-volume E2E runs
  * - On limit exceeded: tracks violation via securityMonitor and returns 429
  * - Includes standard `Retry-After` header via `standardHeaders: true`
  *
@@ -25,10 +27,12 @@ import { securityMonitor } from '../services/security/securityMonitor';
  * here because the shared per-IP bucket punished the wrong people: players behind
  * one NAT address pooled their Booking Office traffic and locked each other out.
  */
-export function createUserEconomicLimiter() {
+export function createUserEconomicLimiter(
+  config: Pick<EnvConfig, 'userEconomicRateLimitMax'> = getConfig(),
+): RateLimitRequestHandler {
   return rateLimit({
     windowMs: 60 * 1000, // 1 minute
-    max: 100,
+    max: config.userEconomicRateLimitMax,
     standardHeaders: true,
     legacyHeaders: false,
     validate: false,

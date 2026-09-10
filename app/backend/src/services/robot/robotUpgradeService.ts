@@ -250,9 +250,9 @@ import prisma from '../../lib/prisma';
 import { lockUserForSpending } from '../../lib/creditGuard';
 import { calculateMaxHP, calculateMaxShield } from '../../utils/robotCalculations';
 import { applyCreditMutationInTransaction } from '../financial/creditMutationService';
+import { runFinancialWriteTransaction } from '../cycle/financialWriteTransaction';
 import { createEconomicRequestIdentity, findEconomicRequestReplay, buildEconomicRequestAuditContext } from '../financial/economicRequestReplayService';
 import { buildPurchaseBreakdown } from '../financial/financialBreakdowns';
-import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
 
 const FACILITY_TYPES = [
   'training_facility',
@@ -315,7 +315,7 @@ export async function executeUpgradeTransaction(
     throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Insufficient credits', 400, { required: totalCost, current: user.currency });
   }
 
-  const txResult = await prisma.$transaction(async (tx) => {
+  const txResult = await runFinancialWriteTransaction(async (tx, financialCycleNumber) => {
     await lockUserForSpending(tx, userId);
     const replay = await findEconomicRequestReplay<{ robot: unknown; currency: number; totalCost: number; upgradeOperations: UpgradeOperation[] }>(tx, identity);
     if (replay) {
@@ -392,7 +392,7 @@ export async function executeUpgradeTransaction(
       upgradeOperations: fresh.upgradeOperations,
     };
     const financialResult = await applyCreditMutationInTransaction(tx, {
-      cycleNumber: await getCurrentCycleNumber(),
+      cycleNumber: financialCycleNumber,
       userId,
       robotId,
       transactionType: 'attribute_upgrade',

@@ -1,5 +1,5 @@
 import * as fc from 'fast-check';
-import { sanitizeRobotForPublic, SENSITIVE_ROBOT_FIELDS } from '../src/routes/robots';
+import { sanitizeRobotForPublic, SENSITIVE_ROBOT_FIELDS } from '../src/services/robot/robotSanitizer';
 import { positiveIntParam } from '../src/utils/securityValidation';
 
 describe('Stable Sanitization - Property Tests', () => {

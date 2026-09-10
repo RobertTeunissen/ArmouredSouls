@@ -34,7 +34,6 @@ export const implementedPages = new Set([
   '/seasons',
   '/income',
   '/profile',
-  '/cycle-summary',
   '/system-health',
   '/guide',
   '/practice-arena',
@@ -67,8 +66,7 @@ export const allPages: Record<string, NavCategory> = {
       { path: '/booking-office', label: '📋 Booking Office' },
       { path: '/team-battles', label: 'Team Management' },
       { path: '/weapon-shop', label: 'Weapon Shop' },
-      { path: '/income', label: 'Income Dashboard' },
-      { path: '/cycle-summary', label: 'Cycle Summary' },
+      { path: '/income', label: 'Finance Center' },
     ]
   },
   social: {

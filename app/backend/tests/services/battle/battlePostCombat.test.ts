@@ -46,6 +46,10 @@ jest.mock('../../../src/services/financial/prestigeService', () => ({
   applyPrestigeAwardInTransaction: (...args: unknown[]) => mockApplyPrestigeAwardInTransaction(...args),
 }));
 
+jest.mock('../../../src/services/battle/baseOrchestrator', () => ({
+  getCurrentCycleNumber: jest.fn().mockResolvedValue(1),
+}));
+
 jest.mock('../../../src/config/logger', () => ({
   __esModule: true,
   default: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },

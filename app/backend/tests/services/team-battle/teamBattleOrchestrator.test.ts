@@ -407,6 +407,11 @@ describe('teamBattleOrchestrator', () => {
       // Transaction mock: execute the callback and return a battle record
       mockTransaction.mockImplementation(async (cb: (...args: unknown[]) => unknown) => {
         const tx = {
+          $executeRaw: jest.fn().mockResolvedValue(0),
+          cycleMetadata: {
+            findUnique: jest.fn().mockResolvedValue({ totalCycles: 41, featureFlags: {} }),
+          },
+          season: { findFirst: jest.fn().mockResolvedValue(null) },
           battle: { create: jest.fn().mockResolvedValue({ id: 99 }), update: jest.fn() },
           battleParticipant: { createMany: jest.fn(), updateMany: jest.fn() },
           robot: { update: jest.fn() },
@@ -444,6 +449,11 @@ describe('teamBattleOrchestrator', () => {
       let createdBattleData: any = null;
       mockTransaction.mockImplementation(async (cb: (...args: unknown[]) => unknown) => {
         const tx = {
+          $executeRaw: jest.fn().mockResolvedValue(0),
+          cycleMetadata: {
+            findUnique: jest.fn().mockResolvedValue({ totalCycles: 41, featureFlags: {} }),
+          },
+          season: { findFirst: jest.fn().mockResolvedValue(null) },
           battle: {
             create: jest.fn().mockImplementation(({ data }) => {
               createdBattleData = data;
@@ -471,6 +481,11 @@ describe('teamBattleOrchestrator', () => {
       let createdBattleData: any = null;
       mockTransaction.mockImplementation(async (cb: (...args: unknown[]) => unknown) => {
         const tx = {
+          $executeRaw: jest.fn().mockResolvedValue(0),
+          cycleMetadata: {
+            findUnique: jest.fn().mockResolvedValue({ totalCycles: 41, featureFlags: {} }),
+          },
+          season: { findFirst: jest.fn().mockResolvedValue(null) },
           battle: {
             create: jest.fn().mockImplementation(({ data }) => {
               createdBattleData = data;
@@ -497,6 +512,11 @@ describe('teamBattleOrchestrator', () => {
       let participantData: any[] = [];
       mockTransaction.mockImplementation(async (cb: (...args: unknown[]) => unknown) => {
         const tx = {
+          $executeRaw: jest.fn().mockResolvedValue(0),
+          cycleMetadata: {
+            findUnique: jest.fn().mockResolvedValue({ totalCycles: 41, featureFlags: {} }),
+          },
+          season: { findFirst: jest.fn().mockResolvedValue(null) },
           battle: { create: jest.fn().mockResolvedValue({ id: 99 }), update: jest.fn() },
           battleParticipant: {
             createMany: jest.fn().mockImplementation(({ data }) => {
@@ -544,6 +564,11 @@ describe('teamBattleOrchestrator', () => {
           throw new Error('Simulation failed for match 1');
         }
         const tx = {
+          $executeRaw: jest.fn().mockResolvedValue(0),
+          cycleMetadata: {
+            findUnique: jest.fn().mockResolvedValue({ totalCycles: 41, featureFlags: {} }),
+          },
+          season: { findFirst: jest.fn().mockResolvedValue(null) },
           battle: { create: jest.fn().mockResolvedValue({ id: 100 }), update: jest.fn() },
           battleParticipant: { createMany: jest.fn(), updateMany: jest.fn() },
           robot: { update: jest.fn() },
@@ -624,6 +649,11 @@ describe('teamBattleOrchestrator', () => {
 
       mockTransaction.mockImplementation(async (cb: (...args: unknown[]) => unknown) => {
         const tx = {
+          $executeRaw: jest.fn().mockResolvedValue(0),
+          cycleMetadata: {
+            findUnique: jest.fn().mockResolvedValue({ totalCycles: 41, featureFlags: {} }),
+          },
+          season: { findFirst: jest.fn().mockResolvedValue(null) },
           battle: { create: jest.fn().mockResolvedValue({ id: 99 }), update: jest.fn() },
           battleParticipant: { createMany: jest.fn(), updateMany: jest.fn() },
           robot: { update: jest.fn() },
@@ -645,6 +675,11 @@ describe('teamBattleOrchestrator', () => {
 
       mockTransaction.mockImplementation(async (cb: (...args: unknown[]) => unknown) => {
         const tx = {
+          $executeRaw: jest.fn().mockResolvedValue(0),
+          cycleMetadata: {
+            findUnique: jest.fn().mockResolvedValue({ totalCycles: 41, featureFlags: {} }),
+          },
+          season: { findFirst: jest.fn().mockResolvedValue(null) },
           battle: { create: jest.fn().mockResolvedValue({ id: 99 }), update: jest.fn() },
           battleParticipant: { createMany: jest.fn(), updateMany: jest.fn() },
           robot: { update: jest.fn() },
@@ -665,6 +700,11 @@ describe('teamBattleOrchestrator', () => {
 
       mockTransaction.mockImplementation(async (cb: (...args: unknown[]) => unknown) => {
         const tx = {
+          $executeRaw: jest.fn().mockResolvedValue(0),
+          cycleMetadata: {
+            findUnique: jest.fn().mockResolvedValue({ totalCycles: 41, featureFlags: {} }),
+          },
+          season: { findFirst: jest.fn().mockResolvedValue(null) },
           battle: { create: jest.fn().mockResolvedValue({ id: 99 }), update: jest.fn() },
           battleParticipant: { createMany: jest.fn(), updateMany: jest.fn() },
           robot: { update: jest.fn() },
@@ -692,6 +732,11 @@ describe('teamBattleOrchestrator', () => {
 
       mockTransaction.mockImplementation(async (cb: (...args: unknown[]) => unknown) => {
         const tx = {
+          $executeRaw: jest.fn().mockResolvedValue(0),
+          cycleMetadata: {
+            findUnique: jest.fn().mockResolvedValue({ totalCycles: 41, featureFlags: {} }),
+          },
+          season: { findFirst: jest.fn().mockResolvedValue(null) },
           battle: { create: jest.fn().mockResolvedValue({ id: 99 }), update: jest.fn() },
           battleParticipant: { createMany: jest.fn(), updateMany: jest.fn() },
           robot: { update: jest.fn() },
@@ -752,6 +797,11 @@ describe('teamBattleOrchestrator', () => {
 
       mockTransaction.mockImplementation(async (cb: (...args: unknown[]) => unknown) => {
         const tx = {
+          $executeRaw: jest.fn().mockResolvedValue(0),
+          cycleMetadata: {
+            findUnique: jest.fn().mockResolvedValue({ totalCycles: 41, featureFlags: {} }),
+          },
+          season: { findFirst: jest.fn().mockResolvedValue(null) },
           battle: { create: jest.fn().mockResolvedValue({ id: 99 }), update: jest.fn() },
           battleParticipant: { createMany: jest.fn(), updateMany: jest.fn() },
           robot: { update: jest.fn() },

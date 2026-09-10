@@ -4,7 +4,7 @@ import { calculateRepairQuote, calculateRepairBayDiscountPercent } from '../../s
 import logger from '../../config/logger';
 import { resolveRobotIdsForEvent } from './repairScope';
 import type { SubscribableEventType } from '../subscription/eventRegistry';
-import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
+import { runFinancialWriteTransaction } from '../cycle/financialWriteTransaction';
 import { lockUserForSpending } from '../../lib/creditGuard';
 import {
   applyRepairCreditMutationInTransaction,
@@ -86,9 +86,8 @@ async function repairUserRobots(
   userId: number,
   scopedRobotIds: number[] | null,
   deductCosts: boolean,
-  cycleNumber: number,
 ): Promise<InternalRepairSummary> {
-  return prisma.$transaction(async (tx): Promise<InternalRepairSummary> => {
+  return runFinancialWriteTransaction(async (tx, financialCycleNumber): Promise<InternalRepairSummary> => {
     await lockUserForSpending(tx, userId);
 
     const where = {
@@ -117,7 +116,7 @@ async function repairUserRobots(
     const activeRobotCount = robotCounts[0]?._count.id ?? 0;
     const repairBayDiscount = calculateRepairBayDiscountPercent({ repairBayLevel, activeRobotCount });
     const userRobots = [...robots].sort((a, b) => a.id - b.id);
-    const operationId = buildRepairOperationId('automatic', cycleNumber, userId, userRobots);
+    const operationId = buildRepairOperationId('automatic', financialCycleNumber, userId, userRobots);
     const logEvents: RepairLogEvent[] = [];
     let totalBaseCost = 0;
     let totalFinalCost = 0;
@@ -142,7 +141,7 @@ async function repairUserRobots(
       if (deductCosts) {
         const financialResult = await applyRepairCreditMutationInTransaction({
           tx,
-          cycleNumber,
+          cycleNumber: financialCycleNumber,
           operationId,
           userId,
           robotId: robot.id,
@@ -162,7 +161,7 @@ async function repairUserRobots(
           auditContext: {
             operationType: 'automatic_repair',
             eventType: 'pre_battle',
-            cycleNumber,
+            cycleNumber: financialCycleNumber,
             repairType: 'automatic',
           },
         });
@@ -224,7 +223,10 @@ async function repairRobots(
     return emptySummary(deductCosts);
   }
 
-  const actualCycleNumber = cycleNumber ?? await getCurrentCycleNumber();
+  // Financial identities are rebuilt from the authoritative cycle resolved
+  // inside each fresh transaction attempt. The optional argument remains for
+  // compatibility with cycle runners but cannot select an accounting cycle.
+  void cycleNumber;
   const where = {
     ...(robotIds !== null ? { id: { in: robotIds } } : {}),
     currentHP: { lt: prisma.robot.fields.maxHP },
@@ -251,7 +253,6 @@ async function repairRobots(
       userId,
       robotIds === null ? null : robotIdsByUser.get(userId) ?? [],
       deductCosts,
-      actualCycleNumber,
     );
     result.robotsRepaired += userResult.robotsRepaired;
     result.totalBaseCost += userResult.totalBaseCost;

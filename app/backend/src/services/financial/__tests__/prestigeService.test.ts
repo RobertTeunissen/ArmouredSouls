@@ -16,6 +16,10 @@ jest.mock('../../../lib/prisma', () => ({ __esModule: true, default: mockPrisma 
 jest.mock('../../common/auditSequence', () => ({
   withAuditSequence: jest.fn(),
 }));
+jest.mock('../../cycle/canonicalCycleIdentity', () => ({
+  ...jest.requireActual('../../cycle/canonicalCycleIdentity'),
+  resolveFinancialWriteCycle: jest.fn().mockResolvedValue(8),
+}));
 
 import { withAuditSequence } from '../../common/auditSequence';
 import { FinancialErrorCode } from '../../../errors';

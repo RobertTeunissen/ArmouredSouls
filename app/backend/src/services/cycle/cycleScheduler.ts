@@ -33,6 +33,11 @@ import { JobContext } from '../notifications/integration';
 import { buildSuccessMessage, buildErrorMessage, getActiveIntegrations, dispatchNotification } from '../notifications/notification-service';
 import { SCHEDULER_JOB_NAMES, type SchedulerJobName } from './schedulerJobNames';
 import { settlementService } from '../financial/settlementService';
+import {
+  abortSerializedCycleCutover,
+  beginSerializedCycleCutover,
+  completeSerializedCycleCutover,
+} from './canonicalCycleIdentity';
 
 const eventLogger = new EventLogger();
 
@@ -305,109 +310,75 @@ export async function executeSettlement(): Promise<JobContext> {
     return { jobName: 'settlement' };
   }
 
-  // Get or create cycle metadata (singleton pattern)
-  let cycleMetadata = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
-  if (!cycleMetadata) {
-    cycleMetadata = await prisma.cycleMetadata.create({
-      data: { id: 1, totalCycles: 0 },
+  // Claim the active cycle once all in-flight financial writers have committed.
+  // From this point, non-settlement writers fail closed rather than attaching
+  // money to balances already captured for this closing cycle.
+  const closingCycle = await beginSerializedCycleCutover();
+  let totalPassiveIncome: number;
+  let totalOperatingCosts: number;
+  let endOfCycleUsers: Array<{ id: number; username: string; stableName: string | null; currency: number }>;
+
+  try {
+    await eventLogger.logCycleStart(closingCycle, 'scheduled');
+
+    // Settlement owns the two zero-capable financial component rows and is the
+    // sole writer allowed to retain the claimed closing identity.
+    logger.info('Daily Settlement: Processing passive income and operating costs');
+    const settlementResult = await settlementService.settleCycle({
+      cycleNumber: closingCycle,
+      includeAdmins: true,
     });
+    totalPassiveIncome = settlementResult.totalPassiveIncome;
+    totalOperatingCosts = settlementResult.totalOperatingCosts;
+    logger.info(`Daily Settlement: Passive income credited — ₡${totalPassiveIncome.toLocaleString()}`);
+    logger.info(`Daily Settlement: Operating costs debited — ₡${totalOperatingCosts.toLocaleString()}`);
+
+    // Capture every closing balance before publishing a completed cycle.
+    logger.info('Daily Settlement: Logging end-of-cycle balances');
+    endOfCycleUsers = await prisma.user.findMany({
+      where: {},
+      select: { id: true, username: true, stableName: true, currency: true },
+      orderBy: { id: 'asc' },
+    });
+    await eventLogger.logEventBatch(
+      closingCycle,
+      endOfCycleUsers.map((user) => ({
+        eventType: EventType.CYCLE_END_BALANCE,
+        payload: { username: user.username, stableName: user.stableName, balance: user.currency },
+        userId: user.id,
+      })),
+    );
+
+    // The complete marker is evidence consumed by the snapshot service.
+    await eventLogger.logCycleComplete(closingCycle, Date.now() - settlementStart);
+    const { cycleSnapshotService } = await import('./cycleSnapshotService');
+    await cycleSnapshotService.createSnapshot(closingCycle);
+
+    // Completed count is deliberately the final close-evidence mutation.
+    await completeSerializedCycleCutover(closingCycle);
+  } catch (error) {
+    await abortSerializedCycleCutover(closingCycle);
+    throw error;
   }
-  const currentCycleNumber = cycleMetadata.totalCycles;
 
-  // Log cycle start event (required for snapshot creation)
-  await eventLogger.logCycleStart(currentCycleNumber, 'scheduled');
+  // Increment tier residency only after the financial cycle is complete.
+  await prisma.standing.updateMany({ where: {}, data: { cyclesInTier: { increment: 1 } } });
+  logger.info(`Daily Settlement: Cycle ${closingCycle} closed with ${endOfCycleUsers.length} balances captured`);
 
-  // Step 1: Calculate and record both settlement components for all users.
-  // Settlement_Service owns the formulas, paired financial mutations, zero
-  // component policy, and compatibility domain audit rows.
-  logger.info('Daily Settlement: Processing passive income and operating costs');
-  const settlementResult = await settlementService.settleCycle({
-    cycleNumber: currentCycleNumber,
-    includeAdmins: true,
-  });
-  const totalPassiveIncome = settlementResult.totalPassiveIncome;
-  const totalOperatingCosts = settlementResult.totalOperatingCosts;
-  logger.info(`Daily Settlement: Passive income credited — ₡${totalPassiveIncome.toLocaleString()}`);
-  logger.info(`Daily Settlement: Operating costs debited — ₡${totalOperatingCosts.toLocaleString()}`);
-
-
-  // Check for bankrupt users and award daily_finances achievements
+  // Check for bankrupt users after closure. Achievement failures remain isolated
+  // from the completed financial evidence and resolve to the newly active cycle.
   try {
     const { achievementService } = await import('../achievement');
-    const bankruptUsers = await prisma.user.findMany({
-      where: {
-        currency: { lt: 0 },
-      },
-      select: { id: true },
-    });
+    const bankruptUsers = await prisma.user.findMany({ where: { currency: { lt: 0 } }, select: { id: true } });
     for (const user of bankruptUsers) {
       try {
-        await achievementService.checkAndAward(user.id, null, {
-          type: 'daily_finances',
-          data: { bankrupt: true },
-        });
-      } catch (err) {
-        logger.error(`[Settlement] Achievement check failed for bankrupt user ${user.id}: ${err}`);
+        await achievementService.checkAndAward(user.id, null, { type: 'daily_finances', data: { bankrupt: true } });
+      } catch (error) {
+        logger.error(`[Settlement] Achievement check failed for bankrupt user ${user.id}: ${error}`);
       }
     }
-  } catch (err) {
-    logger.error(`[Settlement] Bankrupt achievement check failed: ${err}`);
-  }
-
-  // Step 3: Log end-of-cycle balances for all users (batch insert)
-  logger.info('Daily Settlement: Step 3 — Logging end-of-cycle balances');
-  const endOfCycleUsers = await prisma.user.findMany({
-    where: {},
-    select: { id: true, username: true, stableName: true, currency: true },
-    orderBy: { id: 'asc' },
-  });
-
-  await eventLogger.logEventBatch(
-    currentCycleNumber,
-    endOfCycleUsers.map(user => ({
-      eventType: EventType.CYCLE_END_BALANCE,
-      payload: {
-        username: user.username,
-        stableName: user.stableName,
-        balance: user.currency,
-      },
-      userId: user.id,
-    })),
-  );
-  logger.info(`Daily Settlement: Balances logged for ${endOfCycleUsers.length} users`);
-
-  // Step 4: Increment cycle counters (cycleMetadata.totalCycles + 1, lastCycleAt, robot/tagTeam counters)
-  logger.info('Daily Settlement: Step 4 — Incrementing cycle counters');
-  const newCycleNumber = currentCycleNumber + 1;
-
-  await prisma.cycleMetadata.update({
-    where: { id: 1 },
-    data: {
-      totalCycles: newCycleNumber,
-      lastCycleAt: new Date(),
-    },
-  });
-
-  // Increment cyclesInTier on all standings (Spec #40 — unified standings)
-  await prisma.standing.updateMany({
-    where: {},
-    data: { cyclesInTier: { increment: 1 } },
-  });
-
-  logger.info(`Daily Settlement: Cycle counters incremented — now at cycle ${newCycleNumber}`);
-
-  // Step 5: Create analytics snapshot
-  logger.info('Daily Settlement: Step 5 — Creating analytics snapshot');
-  try {
-    // Log cycle complete event (required for snapshot creation)
-    const settlementDuration = Date.now() - settlementStart;
-    await eventLogger.logCycleComplete(currentCycleNumber, settlementDuration);
-
-    const { cycleSnapshotService } = await import('./cycleSnapshotService');
-    await cycleSnapshotService.createSnapshot(currentCycleNumber);
-    logger.info(`Daily Settlement: Analytics snapshot created for cycle ${currentCycleNumber}`);
-  } catch (snapshotError) {
-    logger.error(`Daily Settlement: Failed to create analytics snapshot — ${snapshotError instanceof Error ? snapshotError.message : String(snapshotError)}`);
+  } catch (error) {
+    logger.error(`[Settlement] Bankrupt achievement check failed: ${error}`);
   }
 
   // Step 6: Flush practice arena daily stats
@@ -423,7 +394,7 @@ export async function executeSettlement(): Promise<JobContext> {
   logger.info('Daily Settlement: Step 7 — Auto-generating users');
   try {
     const { generateBattleReadyUsers } = await import('../../utils/userGeneration');
-    const userGenSummary = await generateBattleReadyUsers(currentCycleNumber);
+    const userGenSummary = await generateBattleReadyUsers(closingCycle);
     logger.info(`Daily Settlement: Generated ${userGenSummary.usersCreated} users, ${userGenSummary.robotsCreated} robots`);
   } catch (userGenError) {
     logger.error(`Daily Settlement: Failed to auto-generate users — ${userGenError instanceof Error ? userGenError.message : String(userGenError)}`);

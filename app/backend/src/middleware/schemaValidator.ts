@@ -95,6 +95,18 @@ function describeIssue(issue: ZodIssue, input: unknown): string {
   return issue.message;
 }
 
+function setValidatedQuery(req: Request, query: unknown): void {
+  // Express 5 exposes `req.query` through a read-only accessor. Defining an
+  // own property preserves Zod coercion/stripping for downstream handlers
+  // without assigning to that accessor (which otherwise throws at runtime).
+  Object.defineProperty(req, 'query', {
+    configurable: true,
+    enumerable: true,
+    value: query,
+    writable: false,
+  });
+}
+
 /**
  * Returns Express middleware that validates request data against the provided Zod schemas.
  * On failure, throws AppError with code VALIDATION_ERROR, a human-readable message
@@ -127,6 +139,7 @@ export function validateRequest(schemas: ValidationSchemas) {
           })),
         });
       }
+      setValidatedQuery(req, result.data);
     }
 
     if (schemas.headers) {

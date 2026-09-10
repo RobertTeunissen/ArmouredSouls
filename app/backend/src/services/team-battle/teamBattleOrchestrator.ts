@@ -39,6 +39,7 @@ import {
   updateRobotCombatStats,
 } from '../battle/battlePostCombat';
 import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
+import { runFinancialWriteTransaction } from '../cycle/financialWriteTransaction';
 import { prepareRobotForCombat } from '../../utils/robotCalculations';
 import { getTuningBonusesBatch } from '../tuning-pool';
 import standingsService from '../standings/standingsService';
@@ -346,7 +347,7 @@ async function executeSingleTeamBattle(
   );
 
   // R7.11: Use Prisma interactive transaction for reward distribution
-  const battle = await prisma.$transaction(async (tx) => {
+  const battle = await runFinancialWriteTransaction(async (tx, financialCycleNumber) => {
     // Create Battle record
     const battleRecord = await tx.battle.create({
       data: {
@@ -408,7 +409,7 @@ async function executeSingleTeamBattle(
       match.team1.stableId,
       team1Reward,
       'battle_income',
-      cycleNumber,
+      financialCycleNumber,
       'Team battle reward',
       undefined,
       { battleId: battleRecord.id, teamSize },
@@ -430,7 +431,7 @@ async function executeSingleTeamBattle(
         match.team2.stableId,
         team2Reward,
         'battle_income',
-        cycleNumber,
+        financialCycleNumber,
         'Team battle reward',
         undefined,
         { battleId: battleRecord.id, teamSize },
@@ -454,14 +455,14 @@ async function executeSingleTeamBattle(
     const team2Prestige = calculateTeamBattlePrestige(match.teamBattleLeague, team2Won, isDraw);
 
     // Award stable-level prestige through the same transaction; it is not a credit row.
-    await awardPrestigeToUser(match.team1.stableId, team1Prestige, cycleNumber, {
+    await awardPrestigeToUser(match.team1.stableId, team1Prestige, financialCycleNumber, {
       source: 'battle',
       mode: teamMode,
       battleId: battleRecord.id,
       tx,
     });
     if (match.team2) {
-      await awardPrestigeToUser(match.team2.stableId, team2Prestige, cycleNumber, {
+      await awardPrestigeToUser(match.team2.stableId, team2Prestige, financialCycleNumber, {
         source: 'battle',
         mode: teamMode,
         battleId: battleRecord.id,

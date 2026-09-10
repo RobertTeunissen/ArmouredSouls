@@ -104,6 +104,7 @@ export type PlacementRewardComponent =
 
 export interface BattleIncomeBreakdown extends FinancialBreakdownBase {
   transactionType: 'battle_income';
+  battleId?: number;
   mode: string;
   tier: number | string;
   outcome: string;

@@ -316,14 +316,14 @@ describe('Requirements 13 and 14: click-through', () => {
     renderTile(
       <DashboardTile
         title="Credits"
-        clickThrough={{ label: 'Full breakdown', to: '/income' }}
+        clickThrough={{ label: 'Open Finance Center', to: '/income' }}
         isLoading={false}
         error={null}
         content={<span>x</span>}
       />,
     );
 
-    await userEvent.click(screen.getByRole('button', { name: 'Full breakdown' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Open Finance Center' }));
     expect(mockNavigate).toHaveBeenCalledExactlyOnceWith('/income');
   });
 
@@ -332,14 +332,14 @@ describe('Requirements 13 and 14: click-through', () => {
     renderTile(
       <DashboardTile
         title="Credits"
-        clickThrough={{ label: 'Full breakdown', to: '/income' }}
+        clickThrough={{ label: 'Open Finance Center', to: '/income' }}
         isLoading={false}
         error={null}
         content={<span>x</span>}
       />,
     );
 
-    const button = screen.getByRole('button', { name: 'Full breakdown' });
+    const button = screen.getByRole('button', { name: 'Open Finance Center' });
     button.focus();
     await userEvent.keyboard('{Enter}');
     await userEvent.keyboard(' ');
@@ -350,13 +350,13 @@ describe('Requirements 13 and 14: click-through', () => {
     renderTile(
       <DashboardTile
         title="Credits"
-        clickThrough={{ label: 'Full breakdown', to: '/income' }}
+        clickThrough={{ label: 'Open Finance Center', to: '/income' }}
         isLoading={false}
         error={null}
         content={<span>x</span>}
       />,
     );
-    const button = screen.getByRole('button', { name: 'Full breakdown' });
+    const button = screen.getByRole('button', { name: 'Open Finance Center' });
     // Tailwind's `11` step is 2.75rem = 44px.
     expect(button.className).toContain('min-h-11');
     expect(button.className).toContain('min-w-11');

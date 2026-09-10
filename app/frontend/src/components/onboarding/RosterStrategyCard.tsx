@@ -12,7 +12,7 @@
  * Requirements: 4.1-4.8, 8.1-8.9
  */
 
-import { formatCurrency } from '../../utils/financialApi';
+import { formatCurrency } from '../../utils/formatters';
 
 export type RosterStrategy = '1_mighty' | '2_average' | '3_flimsy';
 

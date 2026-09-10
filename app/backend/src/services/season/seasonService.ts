@@ -255,7 +255,6 @@ export async function advancePreparationCycle(): Promise<PreparationAdvanceResul
           preparationCyclesCompleted: nextCompleted,
           phase: 'competitive',
           competitiveCyclesCompleted: 0,
-          startedAt: new Date(),
         }
       : { preparationCyclesCompleted: nextCompleted },
   });

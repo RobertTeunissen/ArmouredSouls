@@ -1,6 +1,7 @@
 // Feature: user-registration-module, Property 6: Duplicate Email Rejection
 import * as fc from 'fast-check';
 import request from 'supertest';
+import { createServer, type Server } from 'node:http';
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -22,11 +23,17 @@ app.use('/api/auth', authRoutes);
 // body. That is why these suites saw 400 but no `body.error` or `body.code`.
 app.use(errorHandler);
 
+const server: Server = createServer(app);
+
 // Test configuration
 const NUM_RUNS = 10;
 
 describe('Duplicate Email Rejection - Property Tests', () => {
   const createdUserIds: number[] = [];
+
+  beforeAll(async () => {
+    await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+  });
 
   afterEach(async () => {
     // Clean up all created users after each test
@@ -42,6 +49,9 @@ describe('Duplicate Email Rejection - Property Tests', () => {
   });
 
   afterAll(async () => {
+    await new Promise<void>((resolve, reject) => {
+      server.close((error) => error ? reject(error) : resolve());
+    });
     await prisma.$disconnect();
   });
 
@@ -82,7 +92,7 @@ describe('Duplicate Email Rejection - Property Tests', () => {
             if (uniqueUsername1 === uniqueUsername2) return;
 
             // Step 1: Register a user with the email
-            const firstResponse = await request(app)
+            const firstResponse = await request(server)
               .post('/api/auth/register')
               .send({
                 username: uniqueUsername1,
@@ -99,7 +109,7 @@ describe('Duplicate Email Rejection - Property Tests', () => {
             }
 
             // Step 2: Attempt to register again with a DIFFERENT username but the SAME email
-            const secondResponse = await request(app)
+            const secondResponse = await request(server)
               .post('/api/auth/register')
               .send({
                 username: uniqueUsername2,

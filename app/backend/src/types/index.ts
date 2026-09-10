@@ -13,3 +13,4 @@ export * from './weaponInventoryTypes';
 export * from './seasonArchiveTypes';
 export * from './financialTypes';
 export * from './prestigeTypes';
+export * from './financeReport';

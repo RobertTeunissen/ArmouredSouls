@@ -2,7 +2,7 @@ import prisma from '../src/lib/prisma';
 import { withAuditSequence } from '../src/services/common/auditSequence';
 import { applyCreditMutation } from '../src/services/financial/creditMutationService';
 import { applyPrestigeAward } from '../src/services/financial/prestigeService';
-import { settleCycle } from '../src/services/financial/settlementService';
+import { getCurrentSettlementCycleNumber, settleCycle } from '../src/services/financial/settlementService';
 import type { BattleIncomeBreakdown, PrestigeAwardBreakdown } from '../src/types';
 
 function battleBreakdown(eventId: string, amount: number): BattleIncomeBreakdown {
@@ -50,7 +50,7 @@ describe('Spec 53 financial pairing and identity integration', () => {
   let cycleNumber: number;
 
   beforeAll(async () => {
-    cycleNumber = Math.floor(Date.now() / 1000);
+    cycleNumber = await getCurrentSettlementCycleNumber();
     const user = await prisma.user.create({
       data: {
         username: `spec53_${Date.now()}_${Math.floor(Math.random() * 10_000)}`,
@@ -63,9 +63,9 @@ describe('Spec 53 financial pairing and identity integration', () => {
   });
 
   afterAll(async () => {
-    await prisma.auditLog.deleteMany({ where: { cycleNumber } });
-    await prisma.financialLedger.deleteMany({ where: { cycleNumber } });
     if (userId !== undefined) {
+      await prisma.auditLog.deleteMany({ where: { userId } });
+      await prisma.financialLedger.deleteMany({ where: { userId } });
       await prisma.user.delete({ where: { id: userId } });
     }
   });

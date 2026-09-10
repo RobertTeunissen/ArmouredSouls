@@ -106,12 +106,14 @@ const EnvSchema = z
 
     // ── Authentication ─────────────────────────────────────────────────
     JWT_SECRET: z.string().default('default-dev-secret'),
+    FINANCE_REPORT_REFERENCE_SECRET: z.string().optional(),
     JWT_EXPIRATION: z.string().default('24h'),
     BCRYPT_SALT_ROUNDS: numericString(10, { min: 4, max: 31 }),
 
     // ── Rate limiting ─────────────────────────────────────────────────
     RATE_LIMIT_WINDOW_MS: numericString(60_000, { min: 1 }),
     RATE_LIMIT_MAX_REQUESTS: numericString(30, { min: 1 }),
+    USER_ECONOMIC_RATE_LIMIT_MAX: numericString(100, { min: 1 }),
     LOGIN_RATE_LIMIT_WINDOW_MS: numericString(900_000, { min: 1 }),
     LOGIN_RATE_LIMIT_MAX: numericString(10, { min: 1 }),
 
@@ -162,6 +164,14 @@ const EnvSchema = z
       });
     }
 
+    if (!env.FINANCE_REPORT_REFERENCE_SECRET) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['FINANCE_REPORT_REFERENCE_SECRET'],
+        message: 'FINANCE_REPORT_REFERENCE_SECRET must be set in production. Generate with: openssl rand -hex 32',
+      });
+    }
+
     if (
       env.JWT_SECRET === 'default-dev-secret' ||
       env.JWT_SECRET === 'dev-secret-change-in-production'
@@ -191,12 +201,14 @@ export interface EnvConfig {
   logLevel: 'debug' | 'info' | 'warn' | 'error';
   databaseUrl: string;
   jwtSecret: string;
+  financeReportReferenceSecret: string | undefined;
   jwtExpiration: string;
   bcryptSaltRounds: number;
   corsOrigins: string[];
   schedulerEnabled: boolean;
   rateLimitWindowMs: number;
   rateLimitMaxRequests: number;
+  userEconomicRateLimitMax: number;
   loginRateLimitWindowMs: number;
   loginRateLimitMax: number;
   leagueSchedule: string;
@@ -237,6 +249,7 @@ const toEnvConfig = (parsed: z.infer<typeof EnvSchema>): EnvConfig => ({
   logLevel: parsed.LOG_LEVEL,
   databaseUrl: parsed.DATABASE_URL,
   jwtSecret: parsed.JWT_SECRET,
+  financeReportReferenceSecret: parsed.FINANCE_REPORT_REFERENCE_SECRET || undefined,
   jwtExpiration: parsed.JWT_EXPIRATION,
   bcryptSaltRounds: parsed.BCRYPT_SALT_ROUNDS,
   corsOrigins:
@@ -251,6 +264,7 @@ const toEnvConfig = (parsed: z.infer<typeof EnvSchema>): EnvConfig => ({
   schedulerEnabled: parsed.SCHEDULER_ENABLED,
   rateLimitWindowMs: parsed.RATE_LIMIT_WINDOW_MS,
   rateLimitMaxRequests: parsed.RATE_LIMIT_MAX_REQUESTS,
+  userEconomicRateLimitMax: parsed.USER_ECONOMIC_RATE_LIMIT_MAX,
   loginRateLimitWindowMs: parsed.LOGIN_RATE_LIMIT_WINDOW_MS,
   loginRateLimitMax: parsed.LOGIN_RATE_LIMIT_MAX,
   leagueSchedule: parsed.LEAGUE_SCHEDULE,

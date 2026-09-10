@@ -3,6 +3,8 @@ import prisma from '../../lib/prisma';
 import { FinancialError, FinancialErrorCode } from '../../errors';
 import { canonicalizeFinancialFacts } from './creditMutationService';
 import { withAuditSequence } from '../common/auditSequence';
+import { resolveFinancialWriteCycle } from '../cycle/canonicalCycleIdentity';
+import { runFinancialWriteTransaction } from '../cycle/financialWriteTransaction';
 import {
   validatePrestigeAwardBreakdown,
   type PrestigeAuditPayload,
@@ -167,60 +169,63 @@ async function applyInsideTransaction(
   const beforeLock = await findExisting(tx, input.sourceEventId);
   if (beforeLock) return resultFromExisting(beforeLock, input);
 
+  const cycleNumber = await resolveFinancialWriteCycle(tx);
+  const canonicalInput: PrestigeAwardInput = { ...input, cycleNumber };
+
   const rows = await tx.$queryRaw<Array<{ id: number; prestige: number }>>`
-    SELECT id, prestige FROM "users" WHERE id = ${input.userId} FOR UPDATE
+    SELECT id, prestige FROM "users" WHERE id = ${canonicalInput.userId} FOR UPDATE
   `;
   if (rows.length === 0) {
-    throw new FinancialError(FinancialErrorCode.INVALID_EVENT_IDENTITY, `User ${input.userId} not found`, 404);
+    throw new FinancialError(FinancialErrorCode.INVALID_EVENT_IDENTITY, `User ${canonicalInput.userId} not found`, 404);
   }
   const prestigeBefore = rows[0].prestige;
 
-  const afterLock = await findExisting(tx, input.sourceEventId);
-  if (afterLock) return resultFromExisting(afterLock, input);
+  const afterLock = await findExisting(tx, canonicalInput.sourceEventId);
+  if (afterLock) return resultFromExisting(afterLock, canonicalInput);
 
-  const prestigeAfter = prestigeBefore + input.amount;
+  const prestigeAfter = prestigeBefore + canonicalInput.amount;
   await tx.user.update({
-    where: { id: input.userId },
+    where: { id: canonicalInput.userId },
     data: { prestige: prestigeAfter },
   });
 
-  const eventTimestamp = input.timestamp ?? new Date();
+  const eventTimestamp = canonicalInput.timestamp ?? new Date();
   let result: PrestigeAwardResult | undefined;
-  await withAuditSequence(input.cycleNumber, 1, async (startSequence, sequenceTx) => {
+  await withAuditSequence(canonicalInput.cycleNumber, 1, async (startSequence, sequenceTx) => {
     const payload: PrestigeAuditPayload = {
       eventTimestamp: eventTimestamp.toISOString(),
-      cycleNumber: input.cycleNumber,
-      userId: input.userId,
-      amount: input.amount,
-      source: input.source,
-      sourceEventId: input.sourceEventId,
-      mode: input.mode ?? null,
-      battleId: input.battleId ?? null,
-      achievementId: input.achievementId ?? null,
+      cycleNumber: canonicalInput.cycleNumber,
+      userId: canonicalInput.userId,
+      amount: canonicalInput.amount,
+      source: canonicalInput.source,
+      sourceEventId: canonicalInput.sourceEventId,
+      mode: canonicalInput.mode ?? null,
+      battleId: canonicalInput.battleId ?? null,
+      achievementId: canonicalInput.achievementId ?? null,
       resultingPrestige: prestigeAfter,
-      breakdown: input.breakdown,
+      breakdown: canonicalInput.breakdown,
     };
     const audit = await sequenceTx.auditLog.create({
       data: {
-        cycleNumber: input.cycleNumber,
+        cycleNumber: canonicalInput.cycleNumber,
         eventType: PRESTIGE_AUDIT_EVENT,
         eventTimestamp,
         sequenceNumber: startSequence,
-        userId: input.userId,
+        userId: canonicalInput.userId,
         payload: toJson(payload),
-        metadata: input.auditContext === undefined ? undefined : toJson(input.auditContext),
-        sourceEventId: input.sourceEventId,
+        metadata: canonicalInput.auditContext === undefined ? undefined : toJson(canonicalInput.auditContext),
+        sourceEventId: canonicalInput.sourceEventId,
       },
       select: { id: true },
     });
 
     result = {
       created: true,
-      sourceEventId: input.sourceEventId,
+      sourceEventId: canonicalInput.sourceEventId,
       auditLogId: audit.id,
-      cycleNumber: input.cycleNumber,
-      userId: input.userId,
-      amount: input.amount,
+      cycleNumber: canonicalInput.cycleNumber,
+      userId: canonicalInput.userId,
+      amount: canonicalInput.amount,
       prestigeBefore,
       prestigeAfter,
       eventTimestamp,
@@ -254,7 +259,7 @@ export async function applyPrestigeAward(
 ): Promise<PrestigeAwardResult> {
   assertInput(input);
   try {
-    return await prisma.$transaction((tx) => applyInsideTransaction(tx, input));
+    return await runFinancialWriteTransaction((tx) => applyInsideTransaction(tx, input));
   } catch (error) {
     if (isUniqueConstraintError(error)) return rereadAfterUniqueRace(input);
     throw error;

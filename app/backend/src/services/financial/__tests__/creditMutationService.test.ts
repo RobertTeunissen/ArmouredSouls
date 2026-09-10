@@ -13,6 +13,10 @@ const mockPrisma = {
 jest.mock('../../../lib/prisma', () => ({ __esModule: true, default: mockPrisma }));
 jest.mock('../../../lib/creditGuard', () => ({ lockUserForSpending: jest.fn() }));
 jest.mock('../../common/auditSequence', () => ({ withAuditSequence: jest.fn() }));
+jest.mock('../../cycle/canonicalCycleIdentity', () => ({
+  ...jest.requireActual('../../cycle/canonicalCycleIdentity'),
+  resolveFinancialWriteCycle: jest.fn().mockResolvedValue(1),
+}));
 
 import { lockUserForSpending } from '../../../lib/creditGuard';
 import { withAuditSequence } from '../../common/auditSequence';

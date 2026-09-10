@@ -9,9 +9,9 @@ import { lockUserForSpending } from '../../lib/creditGuard';
 import { RobotError, RobotErrorCode } from '../../errors/robotErrors';
 import { assignLeagueInstance } from '../league/leagueInstanceService';
 import { applyCreditMutationInTransaction } from '../financial/creditMutationService';
+import { runFinancialWriteTransaction } from '../cycle/financialWriteTransaction';
 import { createEconomicRequestIdentity, findEconomicRequestReplay, buildEconomicRequestAuditContext } from '../financial/economicRequestReplayService';
 import { buildPurchaseBreakdown } from '../financial/financialBreakdowns';
-import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
 
 export const ROBOT_CREATION_COST = 500000;
 
@@ -84,7 +84,7 @@ export async function checkRosterCapacity(userId: number) {
  */
 export async function createRobotTransaction(userId: number, trimmedName: string, requestKey: string) {
   const identity = createEconomicRequestIdentity(userId, 'robot_creation', requestKey, { name: trimmedName });
-  return prisma.$transaction(async (tx) => {
+  return runFinancialWriteTransaction(async (tx, financialCycleNumber) => {
     await lockUserForSpending(tx, userId);
     const replay = await findEconomicRequestReplay<{ robot: unknown; currency: number; message: string }>(tx, identity);
     if (replay) {
@@ -163,7 +163,7 @@ export async function createRobotTransaction(userId: number, trimmedName: string
       ],
     });
 
-    const cycleNumber = await getCurrentCycleNumber();
+    const cycleNumber = financialCycleNumber;
     const financialEventId = identity.financialEventId;
     const coreResponse = {
       robot,

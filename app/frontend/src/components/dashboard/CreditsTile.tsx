@@ -117,7 +117,7 @@ export function CreditsTile({ data }: { data: OverviewRowData }): React.ReactEle
     <DashboardTile
       title="Credits"
       periodNote="This cycle, compared with last"
-      clickThrough={{ label: 'Full breakdown', to: '/income' }}
+      clickThrough={{ label: 'Open Finance Center', to: '/income' }}
       isLoading={isLoading}
       error={null}
       content={content}

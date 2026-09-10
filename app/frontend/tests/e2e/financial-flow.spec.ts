@@ -2,8 +2,8 @@ import { test, expect } from '@playwright/test';
 import { navigateToProtectedPage } from './helpers/navigate';
 
 /**
- * E2E tests for financial flows: facility upgrades, robot attribute upgrades,
- * and the income dashboard.
+ * E2E tests for financial mutation flows: facility and robot attribute upgrades.
+ * Finance Center reporting is covered separately in finance-center.spec.ts.
  *
  * Validates: Requirements 7.1, 7.2, 7.3, 7.4, 7.5
  *
@@ -22,6 +22,8 @@ test.describe('Financial Flow', () => {
 
     // Wait for facilities to load (loading state disappears)
     await expect(page.getByText('Loading facilities...')).toBeHidden({ timeout: 15000 });
+    await expect(page.getByText('Failed to load facilities')).toHaveCount(0);
+    await expect(page.locator('[id^="facility-"]').first()).toBeVisible();
 
     // Find the first enabled "Upgrade" button
     const upgradeButtons = page.getByRole('button', { name: 'Upgrade' });
@@ -57,6 +59,8 @@ test.describe('Financial Flow', () => {
 
     await expect(page.getByRole('heading', { name: /Stable Facilities/i })).toBeVisible();
     await expect(page.getByText('Loading facilities...')).toBeHidden({ timeout: 15000 });
+    await expect(page.getByText('Failed to load facilities')).toHaveCount(0);
+    await expect(page.locator('[id^="facility-"]').first()).toBeVisible();
 
     // Look for the "Insufficient credits" text indicator on any facility card
     // OR verify that upgrade buttons are disabled when the user can't afford them
@@ -69,8 +73,8 @@ test.describe('Financial Flow', () => {
     } else {
       // If no "Insufficient credits" text, check that at least one upgrade button is disabled
       // (the user may have enough credits for all visible facilities, or all are maxed)
-      const disabledUpgradeButtons = page.getByRole('button', { name: 'Upgrade' }).filter({
-        has: page.locator('[disabled]'),
+      const disabledUpgradeButtons = page.locator('button:disabled').filter({
+        hasText: /^Upgrade$/,
       });
       const maxLevelText = page.getByText('Maximum Level Reached');
 
@@ -140,63 +144,6 @@ test.describe('Financial Flow', () => {
     await page.waitForLoadState('networkidle');
   });
 
-  test('income dashboard displays financial health indicator, current balance, and daily income/expense breakdown', async ({ page }) => {
-    // Req 7.4 — income dashboard shows financial health, balance, and breakdown
-    await navigateToProtectedPage(page, '/income');
-
-    // Verify the page heading
-    await expect(page.getByRole('heading', { name: /Income Dashboard/i })).toBeVisible({ timeout: 10000 });
-
-    // Wait for loading to finish
-    await expect(page.getByText('Loading financial report...')).toBeHidden({ timeout: 15000 });
-
-    // Verify the Financial Health section is displayed
-    await expect(page.getByRole('heading', { name: 'Financial Health' })).toBeVisible();
-
-    // Verify the financial health indicator shows one of the valid states
-    const healthIndicator = page.getByText(/EXCELLENT|GOOD|STABLE|WARNING|CRITICAL/i);
-    await expect(healthIndicator.first()).toBeVisible();
-
-    // Verify the Current Balance is displayed
-    await expect(page.getByText('Current Balance', { exact: true })).toBeVisible();
-
-    // Verify the balance amount is shown (₡ followed by a number)
-    await expect(page.getByText(/₡[\d,]+/).first()).toBeVisible();
-
-    // Verify the daily income/expense breakdown is visible
-    await expect(page.getByText('DAILY STABLE REPORT')).toBeVisible();
-
-    // Verify revenue streams section heading
-    await expect(page.getByRole('heading', { name: 'REVENUE STREAMS:' })).toBeVisible();
-
-    // Verify operating costs section heading
-    await expect(page.getByRole('heading', { name: 'OPERATING COSTS:' })).toBeVisible();
-
-    // Verify net income is displayed
-    await expect(page.getByText('NET INCOME:', { exact: true })).toBeVisible();
-  });
-
-  test('switching to per-robot tab on income dashboard displays per-robot financial data', async ({ page }) => {
-    // Req 7.5 — per-robot tab shows per-robot financial data
-    await navigateToProtectedPage(page, '/income');
-
-    // Verify the page loaded
-    await expect(page.getByRole('heading', { name: /Income Dashboard/i })).toBeVisible({ timeout: 10000 });
-    await expect(page.getByText('Loading financial report...')).toBeHidden({ timeout: 15000 });
-
-    // Click the "Per-Robot Breakdown" tab
-    const perRobotTab = page.getByRole('button', { name: /Per-Robot Breakdown/i });
-    await expect(perRobotTab).toBeVisible();
-    await perRobotTab.click();
-
-    // Verify per-robot financial data is displayed
-    // The PerRobotBreakdown component shows "Robot Profitability Ranking" heading
-    await expect(page.getByText('Robot Profitability Ranking')).toBeVisible({ timeout: 5000 });
-
-    // Verify summary metrics are shown
-    await expect(page.getByText('Total Revenue')).toBeVisible();
-    await expect(page.getByText('Total Costs')).toBeVisible();
-    await expect(page.getByText('Total Net Income')).toBeVisible();
-    await expect(page.getByText('Average ROI')).toBeVisible();
-  });
+  // Finance Center report, history, robot, redirect, responsive, and accessibility
+  // coverage lives in finance-center.spec.ts. Mutation flows above remain here.
 });
