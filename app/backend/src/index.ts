@@ -30,7 +30,10 @@ import seasonsRoutes from './routes/seasons';
 import imagesRoutes from './routes/images';
 import adminSeasonsRoutes from './routes/adminSeasons';
 import { loadEnvConfig } from './config/env';
-import { initScheduler } from './services/cycle/cycleScheduler';
+import {
+  initScheduler,
+  resumeInterruptedSettlement,
+} from './services/cycle/cycleScheduler';
 import { registerSubscribableEvent } from './services/subscription/eventRegistry';
 import {
   contentModerationService,
@@ -287,6 +290,14 @@ import { runStartupSelfTest } from './utils/startupSelfTest';
       team3v3TournamentSchedule: config.team3v3TournamentSchedule,
       grandMeleeSchedule: config.grandMeleeSchedule,
     });
+    if (config.schedulerEnabled) {
+      void resumeInterruptedSettlement().catch((error: unknown) => {
+        logger.error(
+          `Failed to inspect interrupted settlement state: `
+          + `${error instanceof Error ? error.message : String(error)}`,
+        );
+      });
+    }
 
     // Initialize daily health report (independent of scheduler)
     initDailyHealthReport();

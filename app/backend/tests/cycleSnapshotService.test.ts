@@ -153,4 +153,151 @@ describe('CycleSnapshotService', () => {
       where: { cycleNumber: cycleWithSteps },
     });
   });
+
+  it('should preserve aggregation across an audit-log page boundary', async () => {
+    const pagedCycle = testCycleNumber + 4;
+    const pagedUserId = 700001;
+    const pagedRobotId = 500001;
+    await eventLogger.logCycleStart(pagedCycle, 'manual');
+    await eventLogger.logEventBatch(
+      pagedCycle,
+      Array.from({ length: 205 }, () => ({
+        eventType: EventType.BATTLE_COMPLETE,
+        payload: {
+          credits: 3,
+          prestige: 2,
+          streamingRevenue: 1,
+          result: 'win' as const,
+          damageDealt: 4,
+          eloChange: 1,
+          fame: 1,
+          destroyed: false,
+        },
+        userId: pagedUserId,
+        robotId: pagedRobotId,
+      })),
+    );
+    await eventLogger.logCycleComplete(pagedCycle, 100);
+
+    const snapshot = await cycleSnapshotService.createSnapshot(pagedCycle);
+    const stableMetric = snapshot.stableMetrics.find(
+      (metric) => metric.userId === pagedUserId,
+    );
+    const robotMetric = snapshot.robotMetrics.find(
+      (metric) => metric.robotId === pagedRobotId,
+    );
+
+    expect(stableMetric).toMatchObject({
+      battlesParticipated: 205,
+      totalCreditsEarned: 615,
+      totalPrestigeEarned: 410,
+      streamingIncome: 205,
+    });
+    expect(robotMetric).toMatchObject({
+      battlesParticipated: 205,
+      wins: 205,
+      damageDealt: 820,
+      creditsEarned: 615,
+    });
+    const persistedSnapshot = await cycleSnapshotService.getSnapshot(pagedCycle);
+    expect(persistedSnapshot?.stableMetrics).toContainEqual(
+      expect.objectContaining({
+        userId: pagedUserId,
+        totalCreditsEarned: 615,
+      }),
+    );
+
+    await prisma.cycleSnapshot.deleteMany({ where: { cycleNumber: pagedCycle } });
+    await prisma.auditLog.deleteMany({ where: { cycleNumber: pagedCycle } });
+  });
+
+  it('should carry opponent groups and repair evidence across page boundaries', async () => {
+    const boundaryCycle = testCycleNumber + 5;
+    const userId = 700002;
+    const robotA = 500002;
+    const robotB = 500003;
+    const fillerEvents = Array.from({ length: 199 }, (_, index) => ({
+      eventType: EventType.BATTLE_COMPLETE,
+      battleId: index + 1,
+      payload: { result: 'draw' as const, damageDealt: 1, destroyed: false },
+      userId,
+      robotId: 600000 + index,
+    }));
+
+    await eventLogger.logCycleStart(boundaryCycle, 'manual');
+    await eventLogger.logEventBatch(boundaryCycle, [
+      ...fillerEvents,
+      {
+        eventType: EventType.BATTLE_COMPLETE,
+        battleId: 999999,
+        payload: { result: 'win' as const, damageDealt: 11, destroyed: false },
+        userId,
+        robotId: robotA,
+      },
+      {
+        eventType: EventType.BATTLE_COMPLETE,
+        battleId: 999999,
+        payload: { result: 'loss' as const, damageDealt: 13, destroyed: true },
+        userId,
+        robotId: robotB,
+      },
+    ]);
+    await eventLogger.logEventBatch(
+      boundaryCycle,
+      Array.from({ length: 205 }, () => ({
+        eventType: EventType.ROBOT_REPAIR,
+        payload: { creditsCharged: 1, repairType: 'automatic' },
+        userId,
+        robotId: robotA,
+      })),
+    );
+    await eventLogger.logEvent(
+      boundaryCycle,
+      EventType.CYCLE_END_BALANCE,
+      { balance: 9999 },
+      { userId },
+    );
+    await eventLogger.logCycleComplete(boundaryCycle, 100);
+
+    const snapshot = await cycleSnapshotService.createSnapshot(boundaryCycle);
+    const stableMetric = snapshot.stableMetrics.find((metric) => metric.userId === userId);
+    const robotAMetric = snapshot.robotMetrics.find((metric) => metric.robotId === robotA);
+    const robotBMetric = snapshot.robotMetrics.find((metric) => metric.robotId === robotB);
+
+    expect(stableMetric).toMatchObject({
+      cycleRepairCreditsPaid: 205,
+      balance: 9999,
+    });
+    expect(robotAMetric).toMatchObject({
+      repairCosts: 205,
+      damageReceived: 13,
+      kills: 1,
+    });
+    expect(robotBMetric).toMatchObject({
+      damageReceived: 11,
+      kills: 0,
+    });
+
+    await expect(cycleSnapshotService.createSnapshot(boundaryCycle)).resolves.toBeDefined();
+    await expect(prisma.cycleSnapshot.count({ where: { cycleNumber: boundaryCycle } }))
+      .resolves.toBe(1);
+    const persistedSnapshot = await cycleSnapshotService.getSnapshot(boundaryCycle);
+    expect(persistedSnapshot?.stableMetrics).toContainEqual(
+      expect.objectContaining({
+        userId,
+        cycleRepairCreditsPaid: 205,
+        balance: 9999,
+      }),
+    );
+    expect(persistedSnapshot?.robotMetrics).toContainEqual(
+      expect.objectContaining({
+        robotId: robotA,
+        repairCosts: 205,
+        damageReceived: 13,
+      }),
+    );
+
+    await prisma.cycleSnapshot.deleteMany({ where: { cycleNumber: boundaryCycle } });
+    await prisma.auditLog.deleteMany({ where: { cycleNumber: boundaryCycle } });
+  });
 });

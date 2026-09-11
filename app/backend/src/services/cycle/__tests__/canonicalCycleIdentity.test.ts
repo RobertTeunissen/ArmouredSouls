@@ -17,6 +17,8 @@ const state: { metadata: MetadataState | null; season: SeasonState } = {
   season: null,
 };
 
+const mockUserFindFirst = jest.fn();
+
 const mockTx = {
   $executeRaw: jest.fn().mockResolvedValue(0),
   cycleMetadata: {
@@ -31,12 +33,16 @@ const mockTx = {
       return state.metadata;
     }),
   },
+  user: {
+    findFirst: mockUserFindFirst,
+  },
   season: {
     findFirst: jest.fn(async () => state.season),
   },
 };
 
 const mockPrisma = {
+  cycleMetadata: mockTx.cycleMetadata,
   $transaction: jest.fn(async (callback: (tx: typeof mockTx) => Promise<unknown>) => callback(mockTx)),
 };
 
@@ -47,6 +53,7 @@ import {
   beginSerializedCycleCutover,
   completeSerializedCycleCutover,
   FinancialCycleCutoverInProgressError,
+  getSerializedCycleCutoverUserIdWatermark,
   resolveCanonicalCycleIdentity,
   resolveFinancialWriteCycle,
 } from '../canonicalCycleIdentity';
@@ -72,6 +79,7 @@ describe('canonical cycle identity', () => {
     jest.clearAllMocks();
     state.metadata = null;
     state.season = null;
+    mockUserFindFirst.mockResolvedValue({ id: 42 });
   });
 
   it('should derive the active cycle as totalCycles plus one', async () => {
@@ -154,6 +162,7 @@ describe('canonical cycle identity', () => {
           retained_flag: 'preserve me',
           finance_cycle_closing: true,
           finance_cycle_closing_number: 5,
+          finance_cycle_closing_user_watermark: 42,
         },
       },
     });
@@ -163,6 +172,7 @@ describe('canonical cycle identity', () => {
         retained_flag: 'preserve me',
         finance_cycle_closing: true,
         finance_cycle_closing_number: 5,
+        finance_cycle_closing_user_watermark: 42,
       },
     });
   });
@@ -177,6 +187,26 @@ describe('canonical cycle identity', () => {
       FinancialCycleCutoverInProgressError,
     );
     expect(mockTx.cycleMetadata.update).not.toHaveBeenCalled();
+  });
+
+  it('should reuse the durable cycle identity when explicitly resuming after process exit', async () => {
+    setMetadata(4, {
+      finance_cycle_closing: true,
+      finance_cycle_closing_number: 5,
+      finance_cycle_closing_user_watermark: 42,
+    });
+
+    await expect(beginSerializedCycleCutover({ resumeExisting: true })).resolves.toBe(5);
+    expect(mockTx.cycleMetadata.update).not.toHaveBeenCalled();
+  });
+
+  it('should preserve the original user watermark when later registrations exist on resume', async () => {
+    setMetadata(4);
+    await beginSerializedCycleCutover();
+    mockUserFindFirst.mockResolvedValue({ id: 99 });
+
+    await expect(beginSerializedCycleCutover({ resumeExisting: true })).resolves.toBe(5);
+    await expect(getSerializedCycleCutoverUserIdWatermark(5)).resolves.toBe(42);
   });
 
   it('should clear only matching cutover flags without advancing completion when aborting', async () => {

@@ -5,6 +5,7 @@ const FINANCE_CYCLE_LOCK_NAMESPACE = 4;
 const FINANCE_CYCLE_LOCK_KEY = 1;
 const CLOSING_FLAG = 'finance_cycle_closing';
 const CLOSING_CYCLE_FLAG = 'finance_cycle_closing_number';
+const CLOSING_USER_WATERMARK_FLAG = 'finance_cycle_closing_user_watermark';
 
 interface CycleClient {
   cycleMetadata: Prisma.TransactionClient['cycleMetadata'];
@@ -113,19 +114,47 @@ export async function resolveFinancialWriteCycle(
 }
 
 /** Claim the active cycle after all in-flight financial writers have committed. */
-export async function beginSerializedCycleCutover(): Promise<number> {
+export async function beginSerializedCycleCutover(
+  options: { resumeExisting?: boolean } = {},
+): Promise<number> {
   return prisma.$transaction(async (tx) => {
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(${FINANCE_CYCLE_LOCK_NAMESPACE}, ${FINANCE_CYCLE_LOCK_KEY})`;
     const metadata = await ensureMetadata(tx);
     const flags = asFlags(metadata.featureFlags);
     if (flags[CLOSING_FLAG] === true) {
       const existing = flags[CLOSING_CYCLE_FLAG];
-      if (Number.isInteger(existing)) {
+      if (!Number.isInteger(existing)) {
+        throw new Error('Financial cycle cutover marker is malformed');
+      }
+      if (options.resumeExisting !== true) {
         throw new FinancialCycleCutoverInProgressError(Number(existing));
       }
-      throw new Error('Financial cycle cutover marker is malformed');
+
+      // Upgrade a pre-watermark marker once, under the same exclusive lock.
+      // New registrations after this point remain outside the closing cohort.
+      if (!Number.isInteger(flags[CLOSING_USER_WATERMARK_FLAG])) {
+        const lastUser = await tx.user.findFirst({
+          select: { id: true },
+          orderBy: { id: 'desc' },
+        });
+        await tx.cycleMetadata.update({
+          where: { id: 1 },
+          data: {
+            featureFlags: {
+              ...flags,
+              [CLOSING_USER_WATERMARK_FLAG]: lastUser?.id ?? 0,
+            } as Prisma.InputJsonValue,
+          },
+        });
+      }
+      return Number(existing);
     }
+
     const closingCycle = metadata.totalCycles + 1;
+    const lastUser = await tx.user.findFirst({
+      select: { id: true },
+      orderBy: { id: 'desc' },
+    });
     await tx.cycleMetadata.update({
       where: { id: 1 },
       data: {
@@ -133,11 +162,29 @@ export async function beginSerializedCycleCutover(): Promise<number> {
           ...flags,
           [CLOSING_FLAG]: true,
           [CLOSING_CYCLE_FLAG]: closingCycle,
+          [CLOSING_USER_WATERMARK_FLAG]: lastUser?.id ?? 0,
         } as Prisma.InputJsonValue,
       },
     });
     return closingCycle;
   });
+}
+
+/** Read the immutable stable cohort captured with the durable close marker. */
+export async function getSerializedCycleCutoverUserIdWatermark(
+  closingCycle: number,
+): Promise<number | null> {
+  const metadata = await ensureMetadata(prisma);
+  const flags = asFlags(metadata.featureFlags);
+  if (flags[CLOSING_FLAG] !== true || flags[CLOSING_CYCLE_FLAG] !== closingCycle) {
+    throw new Error(`Financial cycle ${closingCycle} is not the claimed closing cycle`);
+  }
+  const storedWatermark = flags[CLOSING_USER_WATERMARK_FLAG];
+  if (!Number.isInteger(storedWatermark) || Number(storedWatermark) < 0) {
+    throw new Error(`Financial cycle ${closingCycle} has a malformed user watermark`);
+  }
+  const watermark = Number(storedWatermark);
+  return watermark === 0 ? null : watermark;
 }
 
 /** Advance completed count last and reopen the writer side for the next cycle. */
@@ -152,7 +199,12 @@ export async function completeSerializedCycleCutover(
     if (flags[CLOSING_FLAG] !== true || flags[CLOSING_CYCLE_FLAG] !== closingCycle) {
       throw new Error(`Financial cycle ${closingCycle} is not the claimed closing cycle`);
     }
-    const { [CLOSING_FLAG]: _closing, [CLOSING_CYCLE_FLAG]: _cycle, ...remainingFlags } = flags;
+    const {
+      [CLOSING_FLAG]: _closing,
+      [CLOSING_CYCLE_FLAG]: _cycle,
+      [CLOSING_USER_WATERMARK_FLAG]: _watermark,
+      ...remainingFlags
+    } = flags;
     await tx.cycleMetadata.update({
       where: { id: 1 },
       data: {
@@ -170,7 +222,12 @@ export async function abortSerializedCycleCutover(closingCycle: number): Promise
     const metadata = await ensureMetadata(tx);
     const flags = asFlags(metadata.featureFlags);
     if (flags[CLOSING_FLAG] !== true || flags[CLOSING_CYCLE_FLAG] !== closingCycle) return;
-    const { [CLOSING_FLAG]: _closing, [CLOSING_CYCLE_FLAG]: _cycle, ...remainingFlags } = flags;
+    const {
+      [CLOSING_FLAG]: _closing,
+      [CLOSING_CYCLE_FLAG]: _cycle,
+      [CLOSING_USER_WATERMARK_FLAG]: _watermark,
+      ...remainingFlags
+    } = flags;
     await tx.cycleMetadata.update({
       where: { id: 1 },
       data: { featureFlags: remainingFlags as Prisma.InputJsonValue },

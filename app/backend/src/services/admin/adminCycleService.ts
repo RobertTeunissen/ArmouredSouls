@@ -27,11 +27,13 @@ import { cycleLogger } from '../../utils/cycleLogger';
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { settlementService } from '../financial/settlementService';
+import { logCycleEndBalances } from '../cycle/cycle-closing-evidence';
 import {
   abortSerializedCycleCutover,
   beginSerializedCycleCutover,
   completeSerializedCycleCutover,
   getActiveFinancialCycleNumber,
+  getSerializedCycleCutoverUserIdWatermark,
 } from '../cycle/canonicalCycleIdentity';
 
 /** Options accepted by the bulk cycle executor (mirrors req.body fields). */
@@ -914,9 +916,14 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
       if (claimedClosingCycle !== currentCycleNumber) {
         throw new Error(`Canonical cycle identity changed during admin execution: expected ${currentCycleNumber}, got ${claimedClosingCycle}`);
       }
+      const maximumUserId = await getSerializedCycleCutoverUserIdWatermark(
+        claimedClosingCycle,
+      );
       const settlementResult = await settlementService.settleCycle({
         cycleNumber: claimedClosingCycle,
         includeAdmins: true,
+        maximumUserId: maximumUserId ?? undefined,
+        resultMode: 'totals',
       });
       financesUsersProcessed = settlementResult.usersProcessed;
       totalPassiveIncome = settlementResult.totalPassiveIncome;
@@ -941,20 +948,22 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
       stepNumber++;
       logger.info(`[Admin] Step ${stepNumber}: Log End-of-Cycle Balances`);
       const balancesStart = Date.now();
-      const endOfCycleUsers = await prisma.user.findMany({
-        where: {},
-        select: { id: true, username: true, stableName: true, currency: true },
-        orderBy: { id: 'asc' },
-      });
-      for (const user of endOfCycleUsers) {
-        await eventLogger.logCycleEndBalance(currentCycleNumber, user.id, user.username, user.stableName, user.currency);
+      const endOfCycleUserCount = await logCycleEndBalances(
+        currentCycleNumber,
+        maximumUserId,
+      );
+      if (endOfCycleUserCount !== financesUsersProcessed) {
+        throw new Error(
+          `Cycle ${currentCycleNumber} closing cohort changed: settled `
+          + `${financesUsersProcessed}, captured ${endOfCycleUserCount}`,
+        );
       }
       await eventLogger.logCycleStepComplete(
         currentCycleNumber,
         'log_end_of_cycle_balances',
         stepNumber,
         Date.now() - balancesStart,
-        { usersLogged: endOfCycleUsers.length },
+        { usersLogged: endOfCycleUserCount },
       );
 
       // 10.4 Write the final completion event and its snapshot. A snapshot
@@ -1064,7 +1073,7 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
           cycleCounters: { updated: true },
           snapshot: snapshotResult,
           orphanCleanup: orphanResult,
-          endOfCycleBalances: { usersLogged: endOfCycleUsers.length },
+          endOfCycleBalances: { usersLogged: endOfCycleUserCount },
         },
         reservedSlotsFired,
         duration: Date.now() - cycleStart,

@@ -28,16 +28,20 @@ import { executeScheduledGrandMeleeBattles } from '../grand-melee/grandMeleeBatt
 import { runGrandMeleeMatchmaking } from '../grand-melee/grandMeleeMatchmakingService';
 import prisma from '../../lib/prisma';
 import { practiceArenaMetrics } from '../practice-arena/practiceArenaMetrics';
-import { EventLogger, EventType } from '../common/eventLogger';
+import { EventLogger } from '../common/eventLogger';
 import { JobContext } from '../notifications/integration';
 import { buildSuccessMessage, buildErrorMessage, getActiveIntegrations, dispatchNotification } from '../notifications/notification-service';
 import { SCHEDULER_JOB_NAMES, type SchedulerJobName } from './schedulerJobNames';
 import { settlementService } from '../financial/settlementService';
+import { formatProcessMemoryUsage } from '../../utils/process-memory';
 import {
   abortSerializedCycleCutover,
   beginSerializedCycleCutover,
   completeSerializedCycleCutover,
+  getSerializedCycleCutoverUserIdWatermark,
+  resolveCanonicalCycleIdentity,
 } from './canonicalCycleIdentity';
+import { logCycleEndBalances } from './cycle-closing-evidence';
 
 const eventLogger = new EventLogger();
 
@@ -313,45 +317,44 @@ export async function executeSettlement(): Promise<JobContext> {
   // Claim the active cycle once all in-flight financial writers have committed.
   // From this point, non-settlement writers fail closed rather than attaching
   // money to balances already captured for this closing cycle.
-  const closingCycle = await beginSerializedCycleCutover();
+  const closingCycle = await beginSerializedCycleCutover({ resumeExisting: true });
   let totalPassiveIncome: number;
   let totalOperatingCosts: number;
-  let endOfCycleUsers: Array<{ id: number; username: string; stableName: string | null; currency: number }>;
+  let endOfCycleUserCount: number;
 
   try {
+    const maximumUserId = await getSerializedCycleCutoverUserIdWatermark(closingCycle);
     await eventLogger.logCycleStart(closingCycle, 'scheduled');
 
     // Settlement owns the two zero-capable financial component rows and is the
     // sole writer allowed to retain the claimed closing identity.
-    logger.info('Daily Settlement: Processing passive income and operating costs');
+    logger.info(`Daily Settlement: Processing passive income and operating costs — ${formatProcessMemoryUsage()}`);
     const settlementResult = await settlementService.settleCycle({
       cycleNumber: closingCycle,
       includeAdmins: true,
+      maximumUserId: maximumUserId ?? undefined,
+      resultMode: 'totals',
     });
     totalPassiveIncome = settlementResult.totalPassiveIncome;
     totalOperatingCosts = settlementResult.totalOperatingCosts;
     logger.info(`Daily Settlement: Passive income credited — ₡${totalPassiveIncome.toLocaleString()}`);
     logger.info(`Daily Settlement: Operating costs debited — ₡${totalOperatingCosts.toLocaleString()}`);
 
-    // Capture every closing balance before publishing a completed cycle.
-    logger.info('Daily Settlement: Logging end-of-cycle balances');
-    endOfCycleUsers = await prisma.user.findMany({
-      where: {},
-      select: { id: true, username: true, stableName: true, currency: true },
-      orderBy: { id: 'asc' },
-    });
-    await eventLogger.logEventBatch(
-      closingCycle,
-      endOfCycleUsers.map((user) => ({
-        eventType: EventType.CYCLE_END_BALANCE,
-        payload: { username: user.username, stableName: user.stableName, balance: user.currency },
-        userId: user.id,
-      })),
-    );
+    // Capture every closing balance before publishing a completed cycle. The
+    // helper pages users and audit batches so no full stable list is retained.
+    logger.info(`Daily Settlement: Logging end-of-cycle balances — ${formatProcessMemoryUsage()}`);
+    endOfCycleUserCount = await logCycleEndBalances(closingCycle, maximumUserId);
+    if (endOfCycleUserCount !== settlementResult.usersProcessed) {
+      throw new Error(
+        `Cycle ${closingCycle} closing cohort changed: settled `
+        + `${settlementResult.usersProcessed}, captured ${endOfCycleUserCount}`,
+      );
+    }
 
     // The complete marker is evidence consumed by the snapshot service.
     await eventLogger.logCycleComplete(closingCycle, Date.now() - settlementStart);
     const { cycleSnapshotService } = await import('./cycleSnapshotService');
+    logger.info(`Daily Settlement: Creating cycle snapshot — ${formatProcessMemoryUsage()}`);
     await cycleSnapshotService.createSnapshot(closingCycle);
 
     // Completed count is deliberately the final close-evidence mutation.
@@ -363,7 +366,7 @@ export async function executeSettlement(): Promise<JobContext> {
 
   // Increment tier residency only after the financial cycle is complete.
   await prisma.standing.updateMany({ where: {}, data: { cyclesInTier: { increment: 1 } } });
-  logger.info(`Daily Settlement: Cycle ${closingCycle} closed with ${endOfCycleUsers.length} balances captured`);
+  logger.info(`Daily Settlement: Cycle ${closingCycle} closed with ${endOfCycleUserCount} balances captured`);
 
   // Check for bankrupt users after closure. Achievement failures remain isolated
   // from the completed financial evidence and resolve to the newly active cycle.
@@ -400,7 +403,7 @@ export async function executeSettlement(): Promise<JobContext> {
     logger.error(`Daily Settlement: Failed to auto-generate users — ${userGenError instanceof Error ? userGenError.message : String(userGenError)}`);
   }
 
-  logger.info(`Daily Settlement: Completed — passive income ₡${totalPassiveIncome.toLocaleString()}, operating costs ₡${totalOperatingCosts.toLocaleString()}, ${endOfCycleUsers.length} users processed`);
+  logger.info(`Daily Settlement: Completed — passive income ₡${totalPassiveIncome.toLocaleString()}, operating costs ₡${totalOperatingCosts.toLocaleString()}, ${endOfCycleUserCount} users processed`);
 
   // Refresh achievement rarity cache after settlement
   try {
@@ -823,6 +826,19 @@ export async function runJob(jobName: JobState['name'], handler: () => Promise<J
 // --- Scheduler initialization ---
 
 const scheduledTasks: ScheduledTask[] = [];
+
+/** Resume a durable close marker left behind by an uncatchable process exit. */
+export async function resumeInterruptedSettlement(): Promise<boolean> {
+  const identity = await resolveCanonicalCycleIdentity();
+  if (!identity.isClosing || identity.closingCycle === null) return false;
+
+  logger.warn(
+    `Scheduler: resuming interrupted financial cycle ${identity.closingCycle} `
+    + `— ${formatProcessMemoryUsage()}`,
+  );
+  await runJob('settlement', executeSettlement);
+  return true;
+}
 
 export function initScheduler(config: SchedulerConfig): void {
   if (!config.enabled) {

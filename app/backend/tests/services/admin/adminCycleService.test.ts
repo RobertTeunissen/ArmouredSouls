@@ -136,6 +136,10 @@ jest.mock('../../../src/services/cycle/cycleSnapshotService', () => ({
   },
 }));
 
+jest.mock('../../../src/services/cycle/cycle-closing-evidence', () => ({
+  logCycleEndBalances: jest.fn().mockResolvedValue(0),
+}));
+
 jest.mock('../../../src/utils/economyCalculations', () => ({
   calculateDailyPassiveIncome: jest.fn().mockResolvedValue({ total: 0, merchandising: 0 }),
   calculateFacilityOperatingCost: jest.fn().mockReturnValue(0),
@@ -180,6 +184,7 @@ jest.mock('../../../src/lib/prisma', () => ({
 
 jest.mock('../../../src/services/cycle/canonicalCycleIdentity', () => ({
   getActiveFinancialCycleNumber: jest.fn().mockResolvedValue(6),
+  getSerializedCycleCutoverUserIdWatermark: jest.fn().mockResolvedValue(null),
   beginSerializedCycleCutover: jest.fn().mockResolvedValue(6),
   completeSerializedCycleCutover: jest.fn().mockResolvedValue(undefined),
   abortSerializedCycleCutover: jest.fn().mockResolvedValue(undefined),

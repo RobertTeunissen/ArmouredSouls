@@ -1,22 +1,35 @@
-import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
-import type { Prisma, AuditLog } from '../../../generated/prisma';
-import type { StableMetric, RobotMetric, StepDuration, CycleEventPayload } from '../../types/snapshotTypes';
+import type { Prisma } from '../../../generated/prisma';
+import prisma from '../../lib/prisma';
+import type {
+  CycleEventPayload,
+  RobotMetric,
+  StableMetric,
+  StepDuration,
+} from '../../types/snapshotTypes';
+import { formatProcessMemoryUsage } from '../../utils/process-memory';
 import { readRepairChargedCredits } from '../economy/repairPayloadKeys';
 
-/**
- * CycleSnapshotService
- * 
- * Responsibility: Aggregate events per cycle for efficient historical queries
- * 
- * This service creates pre-aggregated snapshots of cycle data by:
- * 1. Querying the Battle table for battle-related metrics
- * 2. Querying the AuditLog table for gap events (passive income, operating costs, etc.)
- * 3. Computing aggregated metrics per stable (user) and per robot
- * 4. Storing the snapshot in the CycleSnapshot table
- * 
- * Requirements: 10.1, 10.5
- */
+const AUDIT_LOG_PAGE_SIZE = 200;
+
+const SNAPSHOT_EVENT_SELECT = {
+  sequenceNumber: true,
+  eventType: true,
+  userId: true,
+  robotId: true,
+  battleId: true,
+  payload: true,
+} as const;
+
+type SnapshotAuditEvent = Prisma.AuditLogGetPayload<{
+  select: typeof SNAPSHOT_EVENT_SELECT;
+}>;
+
+interface BattleMetricEvent {
+  robotId: number;
+  damageDealt: number;
+  destroyed: boolean;
+}
 
 interface CycleSnapshot {
   cycleNumber: number;
@@ -29,39 +42,78 @@ interface CycleSnapshot {
   stepDurations: StepDuration[];
 }
 
-/** Fields that can be selectively fetched to avoid overfetching large JSON columns */
+interface AggregatedCycleMetrics {
+  stableMetrics: StableMetric[];
+  robotMetrics: RobotMetric[];
+}
+
+/** Fields that can be selectively fetched to avoid overfetching large JSON columns. */
 export type SnapshotField = 'stableMetrics' | 'robotMetrics' | 'stepDurations';
 
-/** Snapshot with only the requested JSON fields populated (scalars always included) */
-export type PartialSnapshot = Pick<CycleSnapshot, 'cycleNumber' | 'triggerType' | 'startTime' | 'endTime' | 'duration'> &
-  Partial<Pick<CycleSnapshot, 'stableMetrics' | 'robotMetrics' | 'stepDurations'>>;
+/** Snapshot with only the requested JSON fields populated (scalars always included). */
+export type PartialSnapshot = Pick<
+  CycleSnapshot,
+  'cycleNumber' | 'triggerType' | 'startTime' | 'endTime' | 'duration'
+> & Partial<Pick<CycleSnapshot, 'stableMetrics' | 'robotMetrics' | 'stepDurations'>>;
 
+function createStableMetric(userId: number): StableMetric {
+  return {
+    userId,
+    battlesParticipated: 0,
+    totalCreditsEarned: 0,
+    totalPrestigeEarned: 0,
+    cycleRepairCreditsPaid: 0,
+    merchandisingIncome: 0,
+    streamingIncome: 0,
+    operatingCosts: 0,
+    weaponPurchases: 0,
+    facilityPurchases: 0,
+    robotPurchases: 0,
+    attributeUpgrades: 0,
+    totalPurchases: 0,
+    achievementRewards: 0,
+    netProfit: 0,
+    balance: 0,
+  };
+}
+
+function createRobotMetric(robotId: number): RobotMetric {
+  return {
+    robotId,
+    battlesParticipated: 0,
+    wins: 0,
+    losses: 0,
+    draws: 0,
+    damageDealt: 0,
+    damageReceived: 0,
+    creditsEarned: 0,
+    repairCosts: 0,
+    kills: 0,
+    destructions: 0,
+    eloChange: 0,
+    fameChange: 0,
+  };
+}
+
+/** Aggregate cycle audit evidence into the permanent CycleSnapshot JSON documents. */
 export class CycleSnapshotService {
-  /**
-   * Create a snapshot for a completed cycle
-   * Aggregates data from Battle table and AuditLog gap events
-   */
   async createSnapshot(cycleNumber: number): Promise<CycleSnapshot> {
-    logger.info(`[CycleSnapshotService] Creating snapshot for cycle ${cycleNumber}`);
+    logger.info(
+      `[CycleSnapshotService] cycle=${cycleNumber} started ${formatProcessMemoryUsage()}`,
+    );
 
-    // Get cycle timing from audit log events
     const cycleStartEvent = await prisma.auditLog.findFirst({
-      where: {
-        cycleNumber,
-        eventType: 'cycle_start',
-      },
+      where: { cycleNumber, eventType: 'cycle_start' },
     });
-
     const cycleCompleteEvent = await prisma.auditLog.findFirst({
-      where: {
-        cycleNumber,
-        eventType: 'cycle_complete',
-      },
+      where: { cycleNumber, eventType: 'cycle_complete' },
     });
 
     if (!cycleStartEvent || !cycleCompleteEvent) {
-      // Tolerate missing events — use current time as fallback (bulk cycles, manual triggers)
-      logger.warn(`[CycleSnapshot] Cycle ${cycleNumber} missing ${!cycleStartEvent ? 'start' : 'complete'} event — using fallback timestamps`);
+      logger.warn(
+        `[CycleSnapshot] Cycle ${cycleNumber} missing `
+        + `${!cycleStartEvent ? 'start' : 'complete'} event — using fallback timestamps`,
+      );
     }
 
     const startTime = cycleStartEvent?.eventTimestamp ?? new Date();
@@ -71,38 +123,55 @@ export class CycleSnapshotService {
       ? ((cycleStartEvent.payload as unknown as CycleEventPayload).triggerType || 'manual')
       : 'manual';
 
-    // Aggregate stable metrics
-    const stableMetrics = await this.aggregateStableMetrics(cycleNumber);
-
-    // Aggregate robot metrics
-    const robotMetrics = await this.aggregateRobotMetrics(cycleNumber);
-
-    // Get step durations
+    const { stableMetrics, robotMetrics } = await this.aggregateCycleMetrics(cycleNumber);
+    logger.info(
+      `[CycleSnapshotService] cycle=${cycleNumber} metricsAggregated `
+      + `stables=${stableMetrics.length} robots=${robotMetrics.length} `
+      + formatProcessMemoryUsage(),
+    );
     const stepDurations = await this.getStepDurations(cycleNumber);
 
-    // Calculate summary statistics
-    const totalBattles = robotMetrics.reduce((sum, m) => sum + m.battlesParticipated, 0) / 2; // Divide by 2 since each battle involves 2 robots
-    const totalCreditsTransacted = stableMetrics.reduce((sum, m) => sum + m.totalCreditsEarned, 0);
-    const totalPrestigeAwarded = stableMetrics.reduce((sum, m) => sum + m.totalPrestigeEarned, 0);
+    const totalBattles = robotMetrics.reduce(
+      (sum, metric) => sum + metric.battlesParticipated,
+      0,
+    ) / 2;
+    const totalCreditsTransacted = stableMetrics.reduce(
+      (sum, metric) => sum + metric.totalCreditsEarned,
+      0,
+    );
+    const totalPrestigeAwarded = stableMetrics.reduce(
+      (sum, metric) => sum + metric.totalPrestigeEarned,
+      0,
+    );
 
-    // Store snapshot in database
-    const _snapshot = await prisma.cycleSnapshot.create({
-      data: {
-        cycleNumber,
-        triggerType,
-        startTime,
-        endTime,
-        durationMs: duration,
-        stableMetrics: stableMetrics as unknown as Prisma.InputJsonValue,
-        robotMetrics: robotMetrics as unknown as Prisma.InputJsonValue,
-        stepDurations: stepDurations as unknown as Prisma.InputJsonValue,
-        totalBattles: Math.floor(totalBattles),
-        totalCreditsTransacted: BigInt(totalCreditsTransacted),
-        totalPrestigeAwarded,
-      },
+    logger.info(
+      `[CycleSnapshotService] cycle=${cycleNumber} insertingSnapshot `
+      + formatProcessMemoryUsage(),
+    );
+    const snapshotData = {
+      cycleNumber,
+      triggerType,
+      startTime,
+      endTime,
+      durationMs: duration,
+      stableMetrics: stableMetrics as unknown as Prisma.InputJsonValue,
+      robotMetrics: robotMetrics as unknown as Prisma.InputJsonValue,
+      stepDurations: stepDurations as unknown as Prisma.InputJsonValue,
+      totalBattles: Math.floor(totalBattles),
+      totalCreditsTransacted: BigInt(totalCreditsTransacted),
+      totalPrestigeAwarded,
+    };
+    await prisma.cycleSnapshot.upsert({
+      where: { cycleNumber },
+      create: snapshotData,
+      update: snapshotData,
+      // Avoid deserializing the three large JSON documents back into Node.
+      select: { id: true },
     });
 
-    logger.info(`[CycleSnapshotService] Snapshot created for cycle ${cycleNumber}`);
+    logger.info(
+      `[CycleSnapshotService] cycle=${cycleNumber} complete ${formatProcessMemoryUsage()}`,
+    );
 
     return {
       cycleNumber,
@@ -116,497 +185,319 @@ export class CycleSnapshotService {
     };
   }
 
-  /**
-   * Aggregate stable (user) metrics from Battle table and AuditLog gap events
-   */
-  private async aggregateStableMetrics(cycleNumber: number): Promise<StableMetric[]> {
-      // Use audit log as SINGLE source of truth - all data comes from events
-      // NEW: Each battle_complete event represents ONE robot's battle
-      
-      // Get battle_complete events - each event is for one robot
-      const battleCompleteEvents = await prisma.auditLog.findMany({
+  private async forEachAuditLogPage(
+    cycleNumber: number,
+    eventTypes: readonly string[],
+    consumer: (events: readonly SnapshotAuditEvent[]) => void | Promise<void>,
+  ): Promise<number> {
+    let afterSequenceNumber: number | undefined;
+    let eventsProcessed = 0;
+
+    while (true) {
+      const events = await prisma.auditLog.findMany({
         where: {
           cycleNumber,
-          eventType: 'battle_complete',
+          eventType: eventTypes.length === 1
+            ? eventTypes[0]
+            : { in: [...eventTypes] },
+          ...(afterSequenceNumber === undefined
+            ? {}
+            : { sequenceNumber: { gt: afterSequenceNumber } }),
         },
+        select: SNAPSHOT_EVENT_SELECT,
+        orderBy: { sequenceNumber: 'asc' },
+        take: AUDIT_LOG_PAGE_SIZE,
       });
+      if (events.length === 0) break;
 
-      logger.info(`[CycleSnapshotService] Found ${battleCompleteEvents.length} battle_complete events for cycle ${cycleNumber}`);
+      await consumer(events);
+      eventsProcessed += events.length;
+      afterSequenceNumber = events[events.length - 1].sequenceNumber;
+      if (events.length < AUDIT_LOG_PAGE_SIZE) break;
+    }
 
-      // Get passive income and operating costs from audit log
-      const passiveIncomeEvents = await prisma.auditLog.findMany({
-        where: {
-          cycleNumber,
-          eventType: 'passive_income',
-        },
-      });
+    return eventsProcessed;
+  }
 
-      const operatingCostsEvents = await prisma.auditLog.findMany({
-        where: {
-          cycleNumber,
-          eventType: 'operating_costs',
-        },
-      });
+  private async aggregateCycleMetrics(cycleNumber: number): Promise<AggregatedCycleMetrics> {
+    const stableMetricsMap = new Map<number, StableMetric>();
+    const robotMetricsMap = new Map<number, RobotMetric>();
 
-      // Build metrics per user
-      const metricsMap = new Map<number, StableMetric>();
+    const getStableMetric = (userId: number): StableMetric => {
+      let metric = stableMetricsMap.get(userId);
+      if (!metric) {
+        metric = createStableMetric(userId);
+        stableMetricsMap.set(userId, metric);
+      }
+      return metric;
+    };
+    const getRobotMetric = (robotId: number): RobotMetric => {
+      let metric = robotMetricsMap.get(robotId);
+      if (!metric) {
+        metric = createRobotMetric(robotId);
+        robotMetricsMap.set(robotId, metric);
+      }
+      return metric;
+    };
 
-      // Helper to get or create metric for a user
-      const getOrCreateMetric = (userId: number): StableMetric => {
-        let metric = metricsMap.get(userId);
-        if (!metric) {
-          metric = {
-            userId,
-            battlesParticipated: 0,
-            totalCreditsEarned: 0,
-            totalPrestigeEarned: 0,
-            // Spec #48 Requirement 17 criteria 9 and 11: new writes carry the
-            // renamed key ONLY, never both, so a partially migrated row cannot
-            // double a repair total.
-            cycleRepairCreditsPaid: 0,
-            merchandisingIncome: 0,
-            streamingIncome: 0,
-            operatingCosts: 0,
-            weaponPurchases: 0,
-            facilityPurchases: 0,
-            robotPurchases: 0,
-            attributeUpgrades: 0,
-            totalPurchases: 0,
-            achievementRewards: 0,
-            netProfit: 0,
-            balance: 0,
-          };
-          metricsMap.set(userId, metric);
+    const battleEventCount = await this.forEachAuditLogPage(
+      cycleNumber,
+      ['battle_complete'],
+      (events) => {
+        for (const event of events) {
+          const payload = event.payload as unknown as CycleEventPayload;
+          if (event.userId !== null) {
+            const stableMetric = getStableMetric(event.userId);
+            stableMetric.battlesParticipated++;
+            stableMetric.totalCreditsEarned += payload.credits || 0;
+            stableMetric.totalPrestigeEarned += payload.prestige || 0;
+            stableMetric.streamingIncome += payload.streamingRevenue || 0;
+          }
+          if (event.robotId !== null) {
+            const robotMetric = getRobotMetric(event.robotId);
+            robotMetric.battlesParticipated++;
+            if (payload.result === 'win') robotMetric.wins++;
+            if (payload.result === 'loss') robotMetric.losses++;
+            if (payload.result === 'draw') robotMetric.draws++;
+            robotMetric.damageDealt += payload.damageDealt || 0;
+            robotMetric.creditsEarned += payload.credits || 0;
+            robotMetric.eloChange += payload.eloChange || 0;
+            robotMetric.fameChange += payload.fame || 0;
+            if (payload.destroyed) robotMetric.destructions++;
+          }
         }
-        return metric;
-      };
+      },
+    );
+    logger.info(
+      `[CycleSnapshotService] cycle=${cycleNumber} battleEvents=${battleEventCount} `
+      + formatProcessMemoryUsage(),
+    );
 
-      // Process battle_complete events - MUCH SIMPLER NOW!
-      // Each event is for ONE robot, with userId and robotId in columns
-      battleCompleteEvents.forEach((event: AuditLog) => {
-        if (!event.userId) {
-          logger.info(`[CycleSnapshotService] WARNING: battle_complete event ${event.id} has no userId`);
-          return; // Skip invalid events
+    const balanceMap = new Map<number, number>();
+    const supportingEventTypes = [
+      'passive_income',
+      'operating_costs',
+      'robot_repair',
+      'weapon_purchase',
+      'facility_purchase',
+      'facility_upgrade',
+      'robot_purchase',
+      'attribute_upgrade',
+      'cycle_end_balance',
+      'achievement_unlock',
+    ] as const;
+
+    const supportingEventCount = await this.forEachAuditLogPage(
+      cycleNumber,
+      supportingEventTypes,
+      async (events) => {
+        const attributeUpgradeEvents: SnapshotAuditEvent[] = [];
+
+        for (const event of events) {
+          const payload = event.payload as unknown as CycleEventPayload;
+          if (event.eventType === 'attribute_upgrade') {
+            attributeUpgradeEvents.push(event);
+            continue;
+          }
+          if (event.eventType === 'cycle_end_balance') {
+            if (event.userId !== null) balanceMap.set(event.userId, payload.balance || 0);
+            continue;
+          }
+          if (event.userId === null) continue;
+
+          const stableMetric = getStableMetric(event.userId);
+          switch (event.eventType) {
+            case 'passive_income':
+              stableMetric.merchandisingIncome += payload.merchandising || 0;
+              stableMetric.streamingIncome += payload.streaming || 0;
+              break;
+            case 'operating_costs':
+              stableMetric.operatingCosts += payload.totalCost || 0;
+              break;
+            case 'robot_repair': {
+              const charged = readRepairChargedCredits(
+                event.payload as unknown as Record<string, unknown>,
+              );
+              if (charged === null) break;
+              stableMetric.cycleRepairCreditsPaid += charged;
+              if (event.robotId !== null) {
+                const robotMetric = robotMetricsMap.get(event.robotId);
+                if (robotMetric) robotMetric.repairCosts += charged;
+              }
+              break;
+            }
+            case 'weapon_purchase':
+              stableMetric.weaponPurchases += payload.cost || 0;
+              break;
+            case 'facility_purchase':
+            case 'facility_upgrade':
+              stableMetric.facilityPurchases += payload.cost || 0;
+              break;
+            case 'robot_purchase':
+              stableMetric.robotPurchases += payload.cost || 0;
+              break;
+            case 'achievement_unlock':
+              stableMetric.achievementRewards += payload.rewardCredits || 0;
+              break;
+          }
         }
-        
-        const metric = getOrCreateMetric(event.userId);
-        const payload = event.payload as unknown as CycleEventPayload;
-        
-        // Debug logging
-        logger.info(`[CycleSnapshotService] Processing battle_complete for user ${event.userId}: credits=${payload.credits}, streaming=${payload.streamingRevenue}, prestige=${payload.prestige}`);
-        
-        // Aggregate data from this battle
-        metric.battlesParticipated++;
-        metric.totalCreditsEarned += payload.credits || 0;
-        metric.totalPrestigeEarned += payload.prestige || 0;
-        metric.streamingIncome += payload.streamingRevenue || 0;
-        // Spec #48 Requirement 9 criterion 2: a read of a `repairCost` field off the
-        // `battle_complete` payload, accumulating into the old `totalRepairCosts`
-        // metric, used to sit here. No orchestrator has ever written that field, so it
-        // contributed nothing — and the moment one did, every stable's repair total would have
-        // silently doubled, because the `robot_repair` loop below already counts the
-        // whole of it. Repair spend comes from Repair_Spend_Source only.
-      });
 
-      // Add passive income (merchandising and streaming)
-      passiveIncomeEvents.forEach((event: AuditLog) => {
-        if (!event.userId) return;
-        const metric = getOrCreateMetric(event.userId);
-        const payload = event.payload as unknown as CycleEventPayload;
-        metric.merchandisingIncome += payload.merchandising || 0;
-        metric.streamingIncome += payload.streaming || 0;
-      });
+        const robotIds = [
+          ...new Set(
+            attributeUpgradeEvents
+              .map((event) => event.robotId)
+              .filter((robotId): robotId is number => robotId !== null),
+          ),
+        ];
+        if (robotIds.length === 0) return;
 
-      // Add operating costs
-      operatingCostsEvents.forEach((event: AuditLog) => {
-        if (!event.userId) return;
-        const metric = getOrCreateMetric(event.userId);
-        const payload = event.payload as unknown as CycleEventPayload;
-        metric.operatingCosts += payload.totalCost || 0;
-      });
-
-      // Add repair costs from audit log (if not already in battle_complete)
-      const repairEvents = await prisma.auditLog.findMany({
-        where: {
-          cycleNumber,
-          eventType: 'robot_repair',
-        },
-      });
-
-      // Repair_Spend_Source is the ONLY contributor to the per-cycle repair total.
-      // Read through the resolver so a row written before Spec #48's key rename
-      // still reports its true amount, and so a malformed row is skipped rather
-      // than poisoning the sum with NaN (Requirement 9 criterion 10).
-      repairEvents.forEach((event: AuditLog) => {
-        if (!event.userId) return;
-        const metric = getOrCreateMetric(event.userId);
-        const charged = readRepairChargedCredits(
-          event.payload as unknown as Record<string, unknown>,
-        );
-        if (charged === null) return;
-        metric.cycleRepairCreditsPaid += charged;
-      });
-
-      // Add purchase costs (weapons, facilities, robots, attribute upgrades)
-      const weaponPurchaseEvents = await prisma.auditLog.findMany({
-        where: {
-          cycleNumber,
-          eventType: 'weapon_purchase',
-        },
-      });
-
-      const facilityPurchaseEvents = await prisma.auditLog.findMany({
-        where: {
-          cycleNumber,
-          eventType: { in: ['facility_purchase', 'facility_upgrade'] },
-        },
-      });
-
-      const robotPurchaseEvents = await prisma.auditLog.findMany({
-        where: {
-          cycleNumber,
-          eventType: 'robot_purchase',
-        },
-      });
-
-      const attributeUpgradeEvents = await prisma.auditLog.findMany({
-        where: {
-          cycleNumber,
-          eventType: 'attribute_upgrade',
-        },
-      });
-
-      // Aggregate weapon purchases
-      weaponPurchaseEvents.forEach((event: AuditLog) => {
-        if (!event.userId) return;
-        const metric = getOrCreateMetric(event.userId);
-        const payload = event.payload as unknown as CycleEventPayload;
-        metric.weaponPurchases += payload.cost || 0;
-      });
-
-      // Aggregate facility purchases
-      facilityPurchaseEvents.forEach((event: AuditLog) => {
-        if (!event.userId) return;
-        const metric = getOrCreateMetric(event.userId);
-        const payload = event.payload as unknown as CycleEventPayload;
-        metric.facilityPurchases += payload.cost || 0;
-      });
-
-      // Aggregate robot purchases
-      robotPurchaseEvents.forEach((event: AuditLog) => {
-        if (!event.userId) return;
-        const metric = getOrCreateMetric(event.userId);
-        const payload = event.payload as unknown as CycleEventPayload;
-        metric.robotPurchases += payload.cost || 0;
-      });
-
-      // Aggregate attribute upgrades (batch robot ownership lookup to avoid N+1)
-      const robotIds = [
-        ...new Set(
-          attributeUpgradeEvents
-            .map((e) => e.robotId)
-            .filter((id): id is number => id != null)
-        ),
-      ];
-
-      const robotOwnerMap = new Map<number, number>();
-      if (robotIds.length > 0) {
         const robots = await prisma.robot.findMany({
           where: { id: { in: robotIds } },
           select: { id: true, userId: true },
         });
-        for (const robot of robots) {
-          robotOwnerMap.set(robot.id, robot.userId);
-        }
-      }
-
-      for (const event of attributeUpgradeEvents) {
-        if (!event.robotId) continue;
-
-        const userId = robotOwnerMap.get(event.robotId);
-        if (userId == null) continue;
-
-        const metric = getOrCreateMetric(userId);
-        const payload = event.payload as unknown as CycleEventPayload;
-        metric.attributeUpgrades += payload.cost || 0;
-      }
-
-      // Calculate total purchases and net profit, and fetch end-of-cycle balances from audit log
-      // NEW: Read balances from cycle_end_balance events (logged before snapshot creation)
-      const cycleEndBalanceEvents = await prisma.auditLog.findMany({
-        where: {
-          cycleNumber,
-          eventType: 'cycle_end_balance',
-        },
-      });
-
-      // Aggregate achievement rewards
-      const achievementUnlockEvents = await prisma.auditLog.findMany({
-        where: {
-          cycleNumber,
-          eventType: 'achievement_unlock',
-        },
-      });
-
-      achievementUnlockEvents.forEach((event: AuditLog) => {
-        if (!event.userId) return;
-        const metric = getOrCreateMetric(event.userId);
-        const payload = event.payload as unknown as CycleEventPayload;
-        metric.achievementRewards += payload.rewardCredits || 0;
-      });
-
-      // Create map of userId -> balance from cycle_end_balance events
-      const balanceMap = new Map<number, number>();
-      cycleEndBalanceEvents.forEach((event: AuditLog) => {
-        if (event.userId && event.payload) {
+        const robotOwnerMap = new Map(robots.map((robot) => [robot.id, robot.userId]));
+        for (const event of attributeUpgradeEvents) {
+          if (event.robotId === null) continue;
+          const userId = robotOwnerMap.get(event.robotId);
+          if (userId === undefined) continue;
           const payload = event.payload as unknown as CycleEventPayload;
-          balanceMap.set(event.userId, payload.balance || 0);
+          getStableMetric(userId).attributeUpgrades += payload.cost || 0;
         }
-      });
+      },
+    );
 
-      logger.info(`[CycleSnapshotService] Found ${cycleEndBalanceEvents.length} cycle_end_balance events for cycle ${cycleNumber}`);
-      
-      metricsMap.forEach(metric => {
-        metric.totalPurchases = 
-          metric.weaponPurchases +
-          metric.facilityPurchases +
-          metric.robotPurchases +
-          metric.attributeUpgrades;
+    await this.aggregateOpponentMetrics(cycleNumber, robotMetricsMap);
 
-        metric.netProfit = 
-          metric.totalCreditsEarned +
-          metric.merchandisingIncome +
-          metric.streamingIncome +
-          metric.achievementRewards -
-          metric.cycleRepairCreditsPaid -
-          metric.operatingCosts -
-          metric.totalPurchases;
-        
-        // Store the user's balance at the end of this cycle FROM AUDIT LOG
-        metric.balance = balanceMap.get(metric.userId) || 0;
-      });
-
-      return Array.from(metricsMap.values());
+    for (const metric of stableMetricsMap.values()) {
+      metric.totalPurchases = metric.weaponPurchases
+        + metric.facilityPurchases
+        + metric.robotPurchases
+        + metric.attributeUpgrades;
+      metric.netProfit = metric.totalCreditsEarned
+        + metric.merchandisingIncome
+        + metric.streamingIncome
+        + metric.achievementRewards
+        - metric.cycleRepairCreditsPaid
+        - metric.operatingCosts
+        - metric.totalPurchases;
+      metric.balance = balanceMap.get(metric.userId) || 0;
     }
 
-  /**
-   * Aggregate robot metrics from AuditLog battle_complete events
-   * Single source of truth: AuditLog
-   */
-  private async aggregateRobotMetrics(cycleNumber: number): Promise<RobotMetric[]> {
-    // Get battle_complete events - each event is for one robot
-    const battleCompleteEvents = await prisma.auditLog.findMany({
-      where: {
+    logger.info(
+      `[CycleSnapshotService] cycle=${cycleNumber} supportingEvents=${supportingEventCount} `
+      + formatProcessMemoryUsage(),
+    );
+    return {
+      stableMetrics: Array.from(stableMetricsMap.values()),
+      robotMetrics: Array.from(robotMetricsMap.values()),
+    };
+  }
+
+  private async aggregateOpponentMetrics(
+    cycleNumber: number,
+    robotMetricsMap: Map<number, RobotMetric>,
+  ): Promise<void> {
+    let afterBattleId: number | undefined;
+    let afterSequenceNumber: number | undefined;
+    let currentBattleId: number | undefined;
+    let currentBattleEvents: BattleMetricEvent[] = [];
+
+    const applyBattleMetrics = (): void => {
+      if (currentBattleEvents.length !== 2 && currentBattleEvents.length !== 4) return;
+      for (const event of currentBattleEvents) {
+        const robotMetric = robotMetricsMap.get(event.robotId);
+        if (!robotMetric) continue;
+        for (const opponent of currentBattleEvents) {
+          if (opponent.robotId === event.robotId) continue;
+          robotMetric.damageReceived += opponent.damageDealt;
+          if (opponent.destroyed) robotMetric.kills++;
+        }
+      }
+    };
+
+    while (true) {
+      const where: Prisma.AuditLogWhereInput = {
         cycleNumber,
         eventType: 'battle_complete',
-      },
-    });
-
-    // Build metrics per robot
-    const metricsMap = new Map<number, RobotMetric>();
-
-    const initMetric = (robotId: number): RobotMetric => ({
-      robotId,
-      battlesParticipated: 0,
-      wins: 0,
-      losses: 0,
-      draws: 0,
-      damageDealt: 0,
-      damageReceived: 0,
-      creditsEarned: 0,
-      repairCosts: 0,
-      kills: 0,
-      destructions: 0,
-      eloChange: 0,
-      fameChange: 0,
-    });
-
-    // Process each battle_complete event
-    battleCompleteEvents.forEach((event: AuditLog) => {
-      if (!event.robotId) return; // Skip invalid events
-      
-      let robotMetric = metricsMap.get(event.robotId);
-      if (!robotMetric) {
-        robotMetric = initMetric(event.robotId);
-        metricsMap.set(event.robotId, robotMetric);
-      }
-
-      const payload = event.payload as unknown as CycleEventPayload;
-      
-      // Aggregate battle participation
-      robotMetric.battlesParticipated++;
-      
-      // Aggregate results
-      if (payload.result === 'win') robotMetric.wins++;
-      else if (payload.result === 'loss') robotMetric.losses++;
-      else if (payload.result === 'draw') robotMetric.draws++;
-      
-      // Aggregate combat stats
-      robotMetric.damageDealt += payload.damageDealt || 0;
-      robotMetric.creditsEarned += payload.credits || 0;
-      robotMetric.eloChange += payload.eloChange || 0;
-      robotMetric.fameChange += payload.fame || 0;
-      
-      // Track kills and destructions
-      if (payload.destroyed) robotMetric.destructions++;
-      // Note: kills are tracked when opponent is destroyed, which we can't determine from single event
-      // We'll need to query opponent events or accept this limitation
-    });
-
-    // NOTE: `damageReceived` and `kills` are derived further down, from the opponent's
-    // event in the same battle (grouped on `audit_logs.battleId`). Do not add a second
-    // pass here — an earlier attempt in this spec did, and it double-counted every figure.
-
-    // Add repair costs from audit log
-    const repairEvents = await prisma.auditLog.findMany({
-      where: {
-        cycleNumber,
-        eventType: 'robot_repair',
-      },
-    });
-
-    repairEvents.forEach((event: AuditLog) => {
-      if (!event.robotId) return;
-
-      const robotMetric = metricsMap.get(event.robotId);
-      if (robotMetric) {
-        // Same Repair_Spend_Source rows, per robot rather than per stable.
-        robotMetric.repairCosts += readRepairChargedCredits(
-          event.payload as unknown as Record<string, unknown>,
-        ) ?? 0;
-      }
-    });
-    
-    // Calculate damage received by looking at opponent's damageDealt
-    // For each battle, we need to find the opponent's event
-    const battleEventsByBattle = new Map<number, AuditLog[]>();
-    battleCompleteEvents.forEach((event: AuditLog) => {
-      const battleId = event.battleId;
-      if (!battleId) return;
-      
-      if (!battleEventsByBattle.has(battleId)) {
-        battleEventsByBattle.set(battleId, []);
-      }
-      battleEventsByBattle.get(battleId)!.push(event);
-    });
-    
-    // Now process damage received and kills
-    battleEventsByBattle.forEach((events) => {
-      if (events.length !== 2 && events.length !== 4) return; // Should be 2 for 1v1/tournament, 4 for tag team
-      
-      events.forEach((event: AuditLog) => {
-        const robotMetric = metricsMap.get(event.robotId!);
-        if (!robotMetric) return;
-        
-        // Find opponent(s) in the same battle
-        const opponents = events.filter(e => e.robotId !== event.robotId);
-        opponents.forEach((oppEvent: AuditLog) => {
-          const oppPayload = oppEvent.payload as unknown as CycleEventPayload;
-          
-          // Add opponent's damage as damage received
-          robotMetric.damageReceived += oppPayload.damageDealt || 0;
-          
-          // If opponent was destroyed, count as a kill
-          if (oppPayload.destroyed) {
-            robotMetric.kills++;
-          }
-        });
-      });
-    });
-
-    return Array.from(metricsMap.values());
-  }
-
-  /**
-   * Get step durations from audit log
-   */
-  private async getStepDurations(cycleNumber: number): Promise<StepDuration[]> {
-    const stepEvents = await prisma.auditLog.findMany({
-      where: {
-        cycleNumber,
-        eventType: 'cycle_step_complete',
-      },
-      orderBy: {
-        sequenceNumber: 'asc',
-      },
-    });
-
-    return stepEvents.map((event: AuditLog) => {
-      const payload = event.payload as unknown as CycleEventPayload;
-      return {
-        stepName: payload.stepName as string,
-        duration: payload.duration as number,
+        battleId: { not: null },
       };
-    });
+      if (afterBattleId !== undefined && afterSequenceNumber !== undefined) {
+        where.OR = [
+          { battleId: { gt: afterBattleId } },
+          { battleId: afterBattleId, sequenceNumber: { gt: afterSequenceNumber } },
+        ];
+      }
+
+      const events = await prisma.auditLog.findMany({
+        where,
+        select: SNAPSHOT_EVENT_SELECT,
+        orderBy: [{ battleId: 'asc' }, { sequenceNumber: 'asc' }],
+        take: AUDIT_LOG_PAGE_SIZE,
+      });
+      if (events.length === 0) break;
+
+      for (const event of events) {
+        if (event.battleId === null || event.robotId === null) continue;
+        if (currentBattleId !== undefined && event.battleId !== currentBattleId) {
+          applyBattleMetrics();
+          currentBattleEvents = [];
+        }
+        currentBattleId = event.battleId;
+        const payload = event.payload as unknown as CycleEventPayload;
+        currentBattleEvents.push({
+          robotId: event.robotId,
+          damageDealt: payload.damageDealt || 0,
+          destroyed: payload.destroyed === true,
+        });
+      }
+
+      const lastEvent = events[events.length - 1];
+      if (lastEvent.battleId === null) break;
+      afterBattleId = lastEvent.battleId;
+      afterSequenceNumber = lastEvent.sequenceNumber;
+      if (events.length < AUDIT_LOG_PAGE_SIZE) break;
+    }
+
+    applyBattleMetrics();
   }
 
-  /**
-   * Get cycle start time from audit log
-   */
+  private async getStepDurations(cycleNumber: number): Promise<StepDuration[]> {
+    const stepDurations: StepDuration[] = [];
+    await this.forEachAuditLogPage(cycleNumber, ['cycle_step_complete'], (events) => {
+      for (const event of events) {
+        const payload = event.payload as unknown as CycleEventPayload;
+        stepDurations.push({
+          stepName: payload.stepName as string,
+          duration: payload.duration as number,
+        });
+      }
+    });
+    return stepDurations;
+  }
+
   private async getCycleStartTime(cycleNumber: number): Promise<Date> {
     const event = await prisma.auditLog.findFirst({
-      where: {
-        cycleNumber,
-        eventType: 'cycle_start',
-      },
+      where: { cycleNumber, eventType: 'cycle_start' },
     });
+    if (event) return event.eventTimestamp;
 
-    if (!event) {
-      // Fallback: use cycle snapshot start time
-      const snapshot = await prisma.cycleSnapshot.findUnique({
-        where: { cycleNumber },
-      });
-      
-      if (snapshot) {
-        return snapshot.startTime;
-      }
-
-      // Final fallback: return epoch (very old date) to allow queries to work
-      return new Date(0);
-    }
-
-    return event.eventTimestamp;
+    const snapshot = await prisma.cycleSnapshot.findUnique({ where: { cycleNumber } });
+    return snapshot?.startTime ?? new Date(0);
   }
 
-  /**
-   * Get cycle end time from audit log
-   */
   private async getCycleEndTime(cycleNumber: number): Promise<Date> {
     const event = await prisma.auditLog.findFirst({
-      where: {
-        cycleNumber,
-        eventType: 'cycle_complete',
-      },
+      where: { cycleNumber, eventType: 'cycle_complete' },
     });
+    if (event) return event.eventTimestamp;
 
-    if (!event) {
-      // Fallback: use cycle snapshot end time
-      const snapshot = await prisma.cycleSnapshot.findUnique({
-        where: { cycleNumber },
-      });
-      
-      if (snapshot) {
-        return snapshot.endTime;
-      }
-
-      // Final fallback: use current time for incomplete cycles
-      return new Date();
-    }
-
-    return event.eventTimestamp;
+    const snapshot = await prisma.cycleSnapshot.findUnique({ where: { cycleNumber } });
+    return snapshot?.endTime ?? new Date();
   }
 
-  /**
-   * Get a snapshot for a specific cycle
-   */
   async getSnapshot(cycleNumber: number): Promise<CycleSnapshot | null> {
-    const snapshot = await prisma.cycleSnapshot.findUnique({
-      where: { cycleNumber },
-    });
-
-    if (!snapshot) {
-      return null;
-    }
+    const snapshot = await prisma.cycleSnapshot.findUnique({ where: { cycleNumber } });
+    if (!snapshot) return null;
 
     return {
       cycleNumber: snapshot.cycleNumber,
@@ -620,13 +511,6 @@ export class CycleSnapshotService {
     };
   }
 
-  /**
-   * Get snapshots for a range of cycles.
-   *
-   * Pass an optional `fields` array to fetch only specific JSON columns,
-   * avoiding overfetch of large payloads callers don't need.
-   * When omitted, all columns are returned (backward-compatible).
-   */
   async getSnapshotRange(startCycle: number, endCycle: number): Promise<CycleSnapshot[]>;
   async getSnapshotRange(
     startCycle: number,
@@ -642,8 +526,6 @@ export class CycleSnapshotService {
     const orderBy = { cycleNumber: 'asc' as const };
 
     if (fields) {
-      // Build a Prisma select that always includes scalar timing columns
-      // and only the requested JSON columns.
       const select: Record<string, boolean> = {
         cycleNumber: true,
         triggerType: true,
@@ -651,18 +533,9 @@ export class CycleSnapshotService {
         endTime: true,
         durationMs: true,
       };
-      for (const field of fields) {
-        if (field === 'stableMetrics') select.stableMetrics = true;
-        if (field === 'robotMetrics') select.robotMetrics = true;
-        if (field === 'stepDurations') select.stepDurations = true;
-      }
+      for (const field of fields) select[field] = true;
 
-      const snapshots = await prisma.cycleSnapshot.findMany({
-        where,
-        orderBy,
-        select,
-      });
-
+      const snapshots = await prisma.cycleSnapshot.findMany({ where, orderBy, select });
       return snapshots.map((snapshot: Record<string, unknown>) => {
         const result: PartialSnapshot = {
           cycleNumber: snapshot.cycleNumber as number,
@@ -684,9 +557,7 @@ export class CycleSnapshotService {
       });
     }
 
-    // No fields specified — fetch everything (backward-compatible)
     const snapshots = await prisma.cycleSnapshot.findMany({ where, orderBy });
-
     return snapshots.map((snapshot) => ({
       cycleNumber: snapshot.cycleNumber,
       triggerType: snapshot.triggerType as 'manual' | 'scheduled',
@@ -700,5 +571,4 @@ export class CycleSnapshotService {
   }
 }
 
-// Export singleton instance
 export const cycleSnapshotService = new CycleSnapshotService();

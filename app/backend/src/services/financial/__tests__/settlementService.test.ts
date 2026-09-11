@@ -262,4 +262,46 @@ describe('Settlement_Service', () => {
       'settlement:7:15:operating_costs',
     ]);
   });
+
+  it('should omit per-stable detail while preserving totals in totals mode', async () => {
+    const result = await settleCycle({ cycleNumber: 17, resultMode: 'totals' });
+
+    expect(result).toMatchObject({
+      usersProcessed: 1,
+      totalPassiveIncome: 15000,
+      totalOperatingCosts: 900,
+      bankruptUsers: 0,
+      summaries: [],
+      components: [],
+    });
+    expect(mockTransaction).toHaveBeenCalledTimes(1);
+  });
+
+  it('should process settlement eligibility in bounded keyset pages', async () => {
+    const firstPage = Array.from({ length: 100 }, (_, index) => ({ id: index + 1 }));
+    mockUserFindMany
+      .mockResolvedValueOnce(firstPage)
+      .mockResolvedValueOnce([{ id: 101 }]);
+
+    const result = await settleCycle({
+      cycleNumber: 18,
+      maximumUserId: 101,
+      resultMode: 'totals',
+    });
+
+    expect(result.usersProcessed).toBe(101);
+    expect(mockUserFindMany).toHaveBeenCalledTimes(2);
+    expect(mockUserFindMany.mock.calls[0][0]).toMatchObject({
+      where: { id: { lte: 101 } },
+      select: { id: true },
+      orderBy: { id: 'asc' },
+      take: 100,
+    });
+    expect(mockUserFindMany.mock.calls[1][0]).toMatchObject({
+      where: { id: { gt: 100, lte: 101 } },
+      take: 100,
+    });
+    expect(result.summaries).toEqual([]);
+    expect(result.components).toEqual([]);
+  });
 });

@@ -213,6 +213,8 @@ export class EventLogger {
       payload: BaseEventPayload;
       userId?: number;
       robotId?: number;
+      battleId?: number;
+      sourceEventId?: string;
       metadata?: EventMetadata;
       timestamp?: Date;
     }>
@@ -235,6 +237,8 @@ export class EventLogger {
         sequenceNumber: startSequence + index,
         userId: event.userId || null,
         robotId: event.robotId || null,
+        battleId: event.battleId || null,
+        sourceEventId: event.sourceEventId || null,
         payload: event.payload,
         metadata: event.metadata || null,
       }));
@@ -247,6 +251,8 @@ export class EventLogger {
           sequenceNumber: entry.sequenceNumber,
           userId: entry.userId,
           robotId: entry.robotId,
+          battleId: entry.battleId,
+          sourceEventId: entry.sourceEventId,
           payload: entry.payload as Prisma.JsonObject,
           metadata: entry.metadata ? (entry.metadata as Prisma.JsonObject) : undefined,
         })),
