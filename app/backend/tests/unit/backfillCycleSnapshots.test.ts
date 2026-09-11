@@ -2,9 +2,10 @@
  * `backfillCycleSnapshots` stays create-only — Spec #48 Requirement 9 criteria 8
  * and 11, and Requirement 18 criterion 13.
  *
- * These are PROHIBITIONS, so the design element that satisfies them is the absence
- * of a change. This test exists to make that absence fail loudly if someone later
- * adds the reprocess path an earlier draft of the spec proposed.
+ * These are PROHIBITIONS, so the admin operation must keep its skip-if-present
+ * guard and expose no historical reprocessing path. `createSnapshot` itself uses
+ * a same-cycle upsert so an interrupted live cycle close can be retried safely;
+ * that crash-recovery primitive does not make the guarded backfill revisit history.
  *
  * The decision behind it (requirements § Design Decisions, "Option B"): players have
  * no visibility of the understated historical repair totals, this is an ACC
@@ -49,9 +50,11 @@ describe('Requirement 9 criteria 8 and 11: backfillCycleSnapshots is create-only
     expect(adminCycleService).not.toMatch(/cycleSnapshot\.update/);
   });
 
-  it('createSnapshot remains create-only, with no upsert path', () => {
-    expect(snapshotService).toMatch(/cycleSnapshot\.create\(/);
-    expect(snapshotService).not.toMatch(/cycleSnapshot\.upsert/);
+  it('uses a retry-safe same-cycle upsert behind the backfill skip guard', () => {
+    expect(snapshotService).toMatch(/cycleSnapshot\.upsert\(/);
+    expect(snapshotService).toMatch(/where:\s*\{\s*cycleNumber\s*\}/);
+    expect(snapshotService).toMatch(/create:\s*snapshotData/);
+    expect(snapshotService).toMatch(/update:\s*snapshotData/);
   });
 
   it('BackfillSnapshotsResult gains no skipped-cycle reporting field', () => {
