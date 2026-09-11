@@ -705,12 +705,10 @@ jobs:
           username: ${{ secrets.ACC_VPS_USER }}
           key: ${{ secrets.ACC_SSH_KEY }}
           script: |
-            cd /opt/armouredsouls
-            pm2 flush
-            # Select ACC explicitly. The ecosystem default is deliberately
-            # production-safe, so omitting --env acceptance would activate
-            # production-only fail-fast checks and crash-loop before listen.
-            NODE_ENV=acceptance pm2 startOrReload ecosystem.config.js --env acceptance --update-env
+            # Reconcile PM2's saved process entry with the live OS process.
+            # This starts cleanly when PM2 retained a stale/dead process id and
+            # persists the result for daemon/host restarts.
+            bash /opt/armouredsouls/scripts/reconcile-pm2-backend.sh acceptance
 
       - name: Health check (30s deadline)
         uses: appleboy/ssh-action@v1
@@ -723,9 +721,8 @@ jobs:
 
       # A failed health gate can mean the backend never listened or that it
       # listened with an unhealthy database, disk/modules failure, or the wrong
-      # environment. Those causes are only visible on the box. `pm2 flush` runs
-      # before the restart, so these diagnostics describe the failing boot and
-      # not an older process.
+      # environment. Keep PM2 and application logs intact across deployments so
+      # these diagnostics preserve the crash/restart evidence.
       - name: Capture backend diagnostics (on failure)
         if: failure()
         uses: appleboy/ssh-action@v1
@@ -757,18 +754,11 @@ jobs:
                        services/analytics/matchmakingService; do
                 if [ -f "dist/$m.js" ]; then echo "OK      $m"; else echo "MISSING $m"; fi
               done
-              # The process is SIGINT'd with code 0 and writes no application log
-              # at all — no winston output, empty error log — so the failure is
-              # invisible through PM2. Run it in the foreground to see what it
-              # actually prints. PM2 stops it before it can bind, so the port is
-              # free; if it is not, EADDRINUSE is itself the answer.
-              echo "===== foreground boot (25s, stdout+stderr) ====="
-              pm2 stop armouredsouls-backend >/dev/null 2>&1 || true
-              set +e
-              timeout 25 node dist/index.js 2>&1 | tail -60
-              echo "--- foreground exit code: $? ---"
-              set -e
-              pm2 start armouredsouls-backend >/dev/null 2>&1 || true
+              # Diagnostics must be observational. Stopping the backend here can
+              # turn a failed health probe into a prolonged outage if SSH is
+              # interrupted before a matching start.
+              echo "===== pm2 process JSON ====="
+              pm2 jlist || true
             else
               echo "cd $APP_DIR failed"
             fi
@@ -1073,9 +1063,7 @@ jobs:
           username: ${{ secrets.PRD_VPS_USER }}
           key: ${{ secrets.PRD_SSH_KEY }}
           script: |
-            cd /opt/armouredsouls
-            pm2 flush
-            NODE_ENV=production pm2 startOrReload ecosystem.config.js --env production --update-env
+            bash /opt/armouredsouls/scripts/reconcile-pm2-backend.sh production
 
       - name: Health check (30s deadline)
         uses: appleboy/ssh-action@v1
