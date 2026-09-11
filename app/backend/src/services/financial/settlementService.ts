@@ -24,6 +24,8 @@ import {
   validateFinancialBreakdown,
 } from '../../types';
 import { lockUserForSpending } from '../../lib/creditGuard';
+import logger from '../../config/logger';
+import { formatProcessMemoryUsage } from '../../utils/process-memory';
 import { getActiveFinancialCycleNumber } from '../cycle/canonicalCycleIdentity';
 
 const SETTLEMENT_USER_SELECT = {
@@ -52,6 +54,8 @@ const SETTLEMENT_ROBOT_SELECT = {
 
 type SettlementRobot = Prisma.RobotGetPayload<{ select: typeof SETTLEMENT_ROBOT_SELECT }>;
 
+export type SettlementResultMode = 'details' | 'totals';
+
 export interface SettlementOptions {
   /** The cycle identity used by both financial components and compatibility rows. */
   cycleNumber: number;
@@ -59,6 +63,10 @@ export interface SettlementOptions {
   includeAdmins?: boolean;
   /** Restrict processing to these stable IDs, primarily for compatibility callers. */
   userIds?: readonly number[];
+  /** Highest stable ID in the fixed cutover cohort. */
+  maximumUserId?: number;
+  /** Full-cycle callers can avoid retaining per-stable summaries and components. */
+  resultMode?: SettlementResultMode;
 }
 
 export interface SettlementOperatingCostComponent {
@@ -222,23 +230,35 @@ function buildDailySummary(
   };
 }
 
-async function loadSettlementUsers(
+const SETTLEMENT_USER_PAGE_SIZE = 100;
+
+async function loadSettlementUserPage(
   options: SettlementOptions,
-): Promise<SettlementUser[]> {
+  afterUserId?: number,
+): Promise<Array<{ id: number }>> {
   const userWhere: Prisma.UserWhereInput = {};
   if (options.includeAdmins === false) {
     userWhere.role = { not: 'admin' };
   }
-  if (options.userIds !== undefined) {
-    userWhere.id = { in: [...options.userIds] };
+  if (
+    options.userIds !== undefined
+    || afterUserId !== undefined
+    || options.maximumUserId !== undefined
+  ) {
+    userWhere.id = {
+      ...(options.userIds !== undefined ? { in: [...options.userIds] } : {}),
+      ...(afterUserId !== undefined ? { gt: afterUserId } : {}),
+      ...(options.maximumUserId !== undefined ? { lte: options.maximumUserId } : {}),
+    };
   }
 
-  // This is an ordered eligibility list only. Each stable's mutable inputs are
-  // deliberately read after its balance row is locked in the short transaction.
+  // Only IDs survive outside the page. Mutable settlement facts are re-read
+  // after the stable's balance row is locked in its short transaction.
   return prisma.user.findMany({
     where: userWhere,
-    select: SETTLEMENT_USER_SELECT,
+    select: { id: true },
     orderBy: { id: 'asc' },
+    take: SETTLEMENT_USER_PAGE_SIZE,
   });
 }
 
@@ -502,47 +522,63 @@ export async function settleCycle(options: SettlementOptions): Promise<Settlemen
     throw new Error('Settlement cycleNumber must be a non-negative integer');
   }
 
-  const users = await loadSettlementUsers(options);
+  const retainDetails = options.resultMode !== 'totals';
   const summaries: DailyFinancialSummary[] = [];
   const components: SettlementComponentResult[] = [];
   let totalPassiveIncome = 0;
   let totalOperatingCosts = 0;
+  let usersProcessed = 0;
+  let bankruptUsers = 0;
+  let afterUserId: number | undefined;
+  let pageNumber = 0;
 
-  if (users.length === 0) {
-    return {
-      cycleNumber: options.cycleNumber,
-      usersProcessed: 0,
-      totalPassiveIncome: 0,
-      totalOperatingCosts: 0,
-      bankruptUsers: 0,
-      summaries,
-      components,
-    };
-  }
+  logger.info(
+    `[SettlementService] cycle=${options.cycleNumber} started mode=${options.resultMode ?? 'details'} `
+    + formatProcessMemoryUsage(),
+  );
 
-  // A stable's two settlement components must commit together, but an
-  // event-wide transaction holds the cycle audit-sequence lock and every prior
-  // user row while the remaining stables are processed. Bound the transaction
-  // to one stable so other cycle work can obtain the lock between settlements.
-  // Each stable re-reads mutable inputs after its balance lock, and returns
-  // completed component identities without recomputing their stored evidence.
-  for (const user of users) {
-    const settled = await prisma.$transaction(
-      (tx) => settleStableInTransaction(tx, user.id, options.cycleNumber),
-      { timeout: 30_000 },
+  while (true) {
+    const users = await loadSettlementUserPage(options, afterUserId);
+    if (users.length === 0) break;
+
+    // A stable's two settlement components must commit together, but an
+    // event-wide transaction would retain every prior row and the sequence lock.
+    // Keep one short transaction per stable and one bounded eligibility page.
+    for (const user of users) {
+      const settled = await prisma.$transaction(
+        (tx) => settleStableInTransaction(tx, user.id, options.cycleNumber),
+        { timeout: 30_000 },
+      );
+      totalPassiveIncome += settled.component.passiveIncome.amount;
+      totalOperatingCosts += Math.abs(settled.component.operatingCosts.amount);
+      usersProcessed++;
+      if (settled.summary.isBankrupt) bankruptUsers++;
+      if (retainDetails) {
+        summaries.push(settled.summary);
+        components.push(settled.component);
+      }
+    }
+
+    pageNumber++;
+    afterUserId = users[users.length - 1].id;
+    logger.info(
+      `[SettlementService] cycle=${options.cycleNumber} page=${pageNumber} `
+      + `usersProcessed=${usersProcessed} ${formatProcessMemoryUsage()}`,
     );
-    summaries.push(settled.summary);
-    components.push(settled.component);
-    totalPassiveIncome += settled.component.passiveIncome.amount;
-    totalOperatingCosts += Math.abs(settled.component.operatingCosts.amount);
+    if (users.length < SETTLEMENT_USER_PAGE_SIZE) break;
   }
+
+  logger.info(
+    `[SettlementService] cycle=${options.cycleNumber} complete usersProcessed=${usersProcessed} `
+    + formatProcessMemoryUsage(),
+  );
 
   return {
     cycleNumber: options.cycleNumber,
-    usersProcessed: users.length,
+    usersProcessed,
     totalPassiveIncome,
     totalOperatingCosts,
-    bankruptUsers: summaries.filter((summary) => summary.isBankrupt).length,
+    bankruptUsers,
     summaries,
     components,
   };

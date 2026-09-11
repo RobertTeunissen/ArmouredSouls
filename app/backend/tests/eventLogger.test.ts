@@ -130,7 +130,12 @@ describe('EventLogger Service', () => {
     it('should log multiple events in a batch', async () => {
       // Use testCycleNumber from beforeEach
       const events = [
-        { eventType: EventType.CYCLE_START, payload: { step: 1 } },
+        {
+          eventType: EventType.CYCLE_START,
+          payload: { step: 1 },
+          battleId: 42,
+          sourceEventId: `batch:${testCycleNumber}:1`,
+        },
         { eventType: EventType.CYCLE_STEP_COMPLETE, payload: { step: 2 } },
         { eventType: EventType.CYCLE_COMPLETE, payload: { step: 3 } },
       ];
@@ -144,6 +149,8 @@ describe('EventLogger Service', () => {
 
       expect(storedEvents).toHaveLength(3);
       expect(storedEvents[0].sequenceNumber).toBe(1);
+      expect(storedEvents[0].battleId).toBe(42);
+      expect(storedEvents[0].sourceEventId).toBe(`batch:${testCycleNumber}:1`);
       expect(storedEvents[1].sequenceNumber).toBe(2);
       expect(storedEvents[2].sequenceNumber).toBe(3);
     });

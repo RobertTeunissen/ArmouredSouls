@@ -8,7 +8,8 @@ module.exports = {
       exec_mode: 'fork',
       autorestart: true,
       max_restarts: 10,
-      max_memory_restart: '1500M',
+      max_memory_restart: '1100M',
+      node_args: '--max-old-space-size=768',
       min_uptime: '5s',
       restart_delay: 5000,
       // PM2 must not report a launch as successful until Express has bound its
