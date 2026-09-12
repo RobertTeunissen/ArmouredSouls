@@ -267,7 +267,7 @@ router.delete(
 
 // ── Standings ────────────────────────────────────────────────────────
 
-const VALID_TIERS = HEAD_TO_HEAD_LEAGUE_RULES.tiers;
+const VALID_TIERS: readonly string[] = HEAD_TO_HEAD_LEAGUE_RULES.tiers;
 
 const standingsParamsSchema = z.object({
   tier: z.string().refine((v) => VALID_TIERS.includes(v), { message: 'Invalid league tier' }),
