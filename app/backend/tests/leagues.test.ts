@@ -5,7 +5,8 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import leaguesRoutes from '../src/routes/leagues';
-import { createTestUser, deleteTestUser } from './testHelpers';
+import { createTestRobot, createTestUser, deleteTestUser } from './testHelpers';
+import { enterRobotStanding } from './helpers/standings';
 import { errorHandler } from '../src/middleware/errorHandler';
 
 dotenv.config();
@@ -24,6 +25,7 @@ app.use(errorHandler);
 
 describe('Leagues Routes', () => {
   const testUserIds: number[] = [];
+  const testRobotIds: number[] = [];
   let testUser: any;
   let authToken: string;
 
@@ -42,6 +44,11 @@ describe('Leagues Routes', () => {
   });
 
   afterAll(async () => {
+    if (testRobotIds.length > 0) {
+      await prisma.standing.deleteMany({
+        where: { entityType: 'robot', entityId: { in: testRobotIds } },
+      });
+    }
     // Cleanup
     if (testUserIds.length > 0) {
       for (const userId of testUserIds) {
@@ -70,6 +77,38 @@ describe('Leagues Routes', () => {
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('data');
+    });
+
+    it('should order tied LP rows by entity ID consistently with promotion zones', async () => {
+      const instanceId = `silver_tied_${Date.now()}`;
+      const tiedRobots = await Promise.all(
+        Array.from({ length: 10 }, (_, index) => createTestRobot(testUser.id, `Tied_${index}_${Date.now()}`)),
+      );
+      const destinationRobot = await createTestRobot(testUser.id, `Gold_${Date.now()}`);
+      testRobotIds.push(...tiedRobots.map((robot) => robot.id), destinationRobot.id);
+
+      for (const robot of [...tiedRobots].reverse()) {
+        await enterRobotStanding(robot.id, 'league_1v1', {
+          tier: 'silver',
+          leagueInstanceId: instanceId,
+          leaguePoints: 60,
+          cyclesInTier: 5,
+        });
+      }
+      await enterRobotStanding(destinationRobot.id, 'league_1v1', {
+        tier: 'gold',
+        leagueInstanceId: `gold_tied_${Date.now()}`,
+      });
+
+      const response = await request(app)
+        .get('/api/leagues/silver/standings')
+        .query({ instance: instanceId, perPage: 10 });
+
+      const expectedIds = tiedRobots.map((robot) => robot.id).sort((left, right) => left - right);
+      expect(response.status).toBe(200);
+      expect(response.body.data.map((robot: { id: number }) => robot.id)).toEqual(expectedIds);
+      expect(response.body.data[0]).toMatchObject({ id: expectedIds[0], zone: 'promotion' });
+      expect(response.body.zoneMeta).toMatchObject({ totalInstances: 1, activeInstances: 1 });
     });
 
     it('should return 400 for invalid tier', async () => {

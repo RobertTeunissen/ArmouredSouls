@@ -29,10 +29,15 @@ import {
   getRefinementAdoption,
 } from '../services/admin/adminStatsService';
 import {
+  LEAGUE_HISTORY_MODES,
   getHistoryByCycleRange,
   getAggregates,
   getEntityHistory,
   detectYoYoCandidates,
+} from '../services/league/leagueHistoryService';
+import type {
+  EntityType,
+  LeagueHistoryMode,
 } from '../services/league/leagueHistoryService';
 
 const router = express.Router();
@@ -69,10 +74,14 @@ const refinementAdoptionQuerySchema = z.object({
   filter: z.enum(['all', 'real', 'auto']).optional().default('real'),
 });
 
+const leagueHistoryEntityTypeSchema = z.enum(['robot', 'tag_team', 'team_battle']);
+const leagueHistoryModeSchema = z.enum(LEAGUE_HISTORY_MODES);
+
 const leagueHistoryQuerySchema = z.object({
   startCycle: z.coerce.number().int().positive(),
   endCycle: z.coerce.number().int().positive(),
-  entityType: z.enum(['robot', 'tag_team']).optional(),
+  entityType: leagueHistoryEntityTypeSchema.optional(),
+  mode: leagueHistoryModeSchema.optional(),
   page: z.coerce.number().int().positive().optional().default(1),
   perPage: z.coerce.number().int().positive().max(100).optional().default(50),
 });
@@ -80,17 +89,23 @@ const leagueHistoryQuerySchema = z.object({
 const leagueHistoryAggregatesSchema = z.object({
   startCycle: z.coerce.number().int().positive(),
   endCycle: z.coerce.number().int().positive(),
-  entityType: z.enum(['robot', 'tag_team']).optional(),
+  entityType: leagueHistoryEntityTypeSchema.optional(),
+  mode: leagueHistoryModeSchema.optional(),
 });
 
 const leagueHistoryEntitySchema = z.object({
-  entityType: z.enum(['robot', 'tag_team']),
+  entityType: leagueHistoryEntityTypeSchema,
   entityId: positiveIntParam,
+});
+
+const leagueHistoryEntityQuerySchema = z.object({
+  mode: leagueHistoryModeSchema,
 });
 
 const leagueHistoryYoYoSchema = z.object({
   cycleWindow: z.coerce.number().int().positive().optional().default(20),
   minChanges: z.coerce.number().int().min(2).optional().default(3),
+  mode: leagueHistoryModeSchema.optional(),
 });
 
 // --- Routes ---
@@ -242,44 +257,58 @@ router.get('/refinement/adoption', authenticateToken, requireAdmin, validateRequ
 router.get('/league-history', authenticateToken, requireAdmin, validateRequest({ query: leagueHistoryQuerySchema }), async (req: Request, res: Response) => {
   const startCycle = Number(req.query.startCycle);
   const endCycle = Number(req.query.endCycle);
-  const entityType = req.query.entityType as string | undefined;
+  const entityType = req.query.entityType as EntityType | undefined;
+  const mode = req.query.mode as LeagueHistoryMode | undefined;
   const page = req.query.page ? Number(req.query.page) : 1;
   const perPage = req.query.perPage ? Number(req.query.perPage) : 50;
-  const result = await getHistoryByCycleRange({ startCycle, endCycle, entityType: entityType as 'robot' | 'tag_team' | undefined, page, perPage });
+  const result = await getHistoryByCycleRange({
+    startCycle,
+    endCycle,
+    entityType,
+    mode,
+    page,
+    perPage,
+  });
   res.json(result);
 });
 
 /**
  * GET /api/admin/league-history/aggregates
- * Promotion/demotion counts by tier for a cycle range.
+ * Promotion/demotion counts by mode and tier for a cycle range.
  */
 router.get('/league-history/aggregates', authenticateToken, requireAdmin, validateRequest({ query: leagueHistoryAggregatesSchema }), async (req: Request, res: Response) => {
   const startCycle = Number(req.query.startCycle);
   const endCycle = Number(req.query.endCycle);
-  const entityType = req.query.entityType as string | undefined;
-  const result = await getAggregates(startCycle, endCycle, entityType as 'robot' | 'tag_team' | undefined);
+  const entityType = req.query.entityType as EntityType | undefined;
+  const mode = req.query.mode as LeagueHistoryMode | undefined;
+  const result = await getAggregates(startCycle, endCycle, entityType, mode);
   res.json(result);
 });
 
 /**
  * GET /api/admin/league-history/entity/:entityType/:entityId
- * Full history for one entity.
+ * Mode-scoped history for one entity.
  */
-router.get('/league-history/entity/:entityType/:entityId', authenticateToken, requireAdmin, validateRequest({ params: leagueHistoryEntitySchema }), async (req: Request, res: Response) => {
-  const entityType = req.params.entityType as 'robot' | 'tag_team';
+router.get('/league-history/entity/:entityType/:entityId', authenticateToken, requireAdmin, validateRequest({
+  params: leagueHistoryEntitySchema,
+  query: leagueHistoryEntityQuerySchema,
+}), async (req: Request, res: Response) => {
+  const entityType = req.params.entityType as EntityType;
   const entityId = Number(req.params.entityId);
-  const data = await getEntityHistory(entityType, entityId);
+  const mode = req.query.mode as LeagueHistoryMode;
+  const data = await getEntityHistory(entityType, entityId, mode);
   res.json({ data });
 });
 
 /**
  * GET /api/admin/league-history/yo-yo
- * Yo-yo detection candidates.
+ * Mode-separated yo-yo detection candidates.
  */
 router.get('/league-history/yo-yo', authenticateToken, requireAdmin, validateRequest({ query: leagueHistoryYoYoSchema }), async (req: Request, res: Response) => {
   const cycleWindow = req.query.cycleWindow ? Number(req.query.cycleWindow) : 20;
   const minChanges = req.query.minChanges ? Number(req.query.minChanges) : 3;
-  const result = await detectYoYoCandidates(cycleWindow, minChanges);
+  const mode = req.query.mode as LeagueHistoryMode | undefined;
+  const result = await detectYoYoCandidates(cycleWindow, minChanges, mode);
   res.json(result);
 });
 

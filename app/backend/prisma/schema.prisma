@@ -723,9 +723,9 @@ model AdminAuditLog {
 
 model LeagueHistory {
   id                  Int      @id @default(autoincrement())
-  entityType          String   @map("entity_type") @db.VarChar(20) // "robot" or "tag_team"
+  entityType          String   @map("entity_type") @db.VarChar(20) // "robot", "tag_team", or "team_battle"
   entityId            Int      @map("entity_id") // Robot ID or TeamBattle ID
-  userId              Int      @map("user_id") // Owner (user.id for robots, stableId for tag teams)
+  userId              Int      @map("user_id") // Owning user/stable ID
   changeType          String   @map("change_type") @db.VarChar(20) // "promotion" or "demotion"
   mode                String?  @db.VarChar(30) // Standings mode: league_1v1, koth, grand_melee, etc.
   sourceTier          String   @map("source_tier") @db.VarChar(20) // e.g. "bronze"

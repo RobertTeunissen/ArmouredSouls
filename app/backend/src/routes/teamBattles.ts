@@ -30,7 +30,8 @@ import {
 } from '../services/team-battle/teamBattleService';
 import { MAX_TEAMS_PER_INSTANCE } from '../services/team-battle/teamBattleAdapter';
 import { getEntityHistory } from '../services/league/leagueHistoryService';
-import { getMinLPForPromotion } from '../services/league/leaguePromotionThresholds';
+import { getLeagueTierPreview } from '../services/league/league-rebalancing-preview';
+import { HEAD_TO_HEAD_LEAGUE_RULES } from '../services/league/league-rules';
 
 const router = express.Router();
 
@@ -266,14 +267,7 @@ router.delete(
 
 // ── Standings ────────────────────────────────────────────────────────
 
-const VALID_TIERS = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'];
-
-// Zone computation constants (matching 1v1 league logic)
-const PROMOTION_PERCENTAGE = 0.10;
-const DEMOTION_PERCENTAGE = 0.10;
-const MIN_CYCLES_IN_LEAGUE = 5;
-const MIN_TEAMS_FOR_REBALANCING_2V2_3V3 = 4;
-const MIN_TEAMS_FOR_REBALANCING_TAG_TEAM = 4;
+const VALID_TIERS = HEAD_TO_HEAD_LEAGUE_RULES.tiers;
 
 const standingsParamsSchema = z.object({
   tier: z.string().refine((v) => VALID_TIERS.includes(v), { message: 'Invalid league tier' }),
@@ -309,7 +303,7 @@ router.get(
 
     const standingRows = await prisma.standing.findMany({
       where: standingsWhere,
-      orderBy: [{ leaguePoints: 'desc' }],
+      orderBy: [{ leaguePoints: 'desc' }, { entityId: 'asc' }],
       skip: (page - 1) * perPage,
       take: perPage,
     });
@@ -328,54 +322,35 @@ router.get(
     });
     const teamMap = new Map(teams.map(t => [t.id, t]));
 
-    // Zone computation
-    const minLP = getMinLPForPromotion(tier);
-    const isChampion = tier === 'champion';
-    const isBronze = tier === 'bronze';
-    const minEntities = MIN_TEAMS_FOR_REBALANCING_2V2_3V3;
-
-    let eligibleCount: number;
-    let hasEnoughRobots: boolean;
-    let promotionCount = 0;
-    let demotionCount = 0;
-    const promotionTeamIds = new Set<number>();
-    const demotionTeamIds = new Set<number>();
-
-    if (instance) {
-      eligibleCount = await prisma.standing.count({
-        where: { mode: mode as StandingsMode, leagueInstanceId: instance, cyclesInTier: { gte: MIN_CYCLES_IN_LEAGUE } },
-      });
-
-      hasEnoughRobots = eligibleCount >= minEntities;
-      promotionCount = hasEnoughRobots ? Math.floor(eligibleCount * PROMOTION_PERCENTAGE) : 0;
-      demotionCount = hasEnoughRobots ? Math.floor(eligibleCount * DEMOTION_PERCENTAGE) : 0;
-
-      if (hasEnoughRobots && demotionCount > 0 && !isBronze) {
-        const demotionStandings = await prisma.standing.findMany({
-          where: { mode: mode as StandingsMode, leagueInstanceId: instance, cyclesInTier: { gte: MIN_CYCLES_IN_LEAGUE } },
-          orderBy: [{ leaguePoints: 'asc' }],
-          select: { entityId: true },
-          take: demotionCount,
-        });
-        for (const s of demotionStandings) demotionTeamIds.add(s.entityId);
-      }
-
-      if (hasEnoughRobots && promotionCount > 0 && !isChampion) {
-        const promotionStandings = await prisma.standing.findMany({
-          where: { mode: mode as StandingsMode, leagueInstanceId: instance, cyclesInTier: { gte: MIN_CYCLES_IN_LEAGUE }, leaguePoints: { gte: minLP } },
-          orderBy: [{ leaguePoints: 'desc' }],
-          select: { entityId: true },
-          take: promotionCount,
-        });
-        for (const s of promotionStandings) promotionTeamIds.add(s.entityId);
-      }
-    } else {
-      // Tier-wide count (no per-instance zone highlighting without specific instance)
-      eligibleCount = await prisma.standing.count({
-        where: { mode: mode as StandingsMode, tier, cyclesInTier: { gte: MIN_CYCLES_IN_LEAGUE } },
-      });
-      hasEnoughRobots = eligibleCount >= minEntities;
-    }
+    const preview = await getLeagueTierPreview(
+      mode as StandingsMode,
+      tier,
+      HEAD_TO_HEAD_LEAGUE_RULES,
+      instance,
+    );
+    const selectedInstancePlan = instance
+      ? preview.instancePlansById.get(instance)
+      : undefined;
+    const instancePlans = selectedInstancePlan
+      ? [selectedInstancePlan]
+      : instance
+        ? []
+        : preview.plan.instancePlans;
+    const minLP = instancePlans[0]?.minPromotionLP ?? 0;
+    const isChampion = tier === HEAD_TO_HEAD_LEAGUE_RULES.tiers[HEAD_TO_HEAD_LEAGUE_RULES.tiers.length - 1];
+    const isBronze = tier === HEAD_TO_HEAD_LEAGUE_RULES.tiers[0];
+    const eligibleCount = instancePlans.reduce((sum, plan) => sum + plan.eligibleEntities, 0);
+    const totalInstances = instancePlans.length;
+    const instancesBelowMinimum = instancePlans.filter((plan) => !plan.hasEnoughEntities).length;
+    const activeInstances = totalInstances - instancesBelowMinimum;
+    const hasEnoughRobots = totalInstances > 0 && instancesBelowMinimum === 0;
+    const smallestInstancePopulation = instancePlans.length > 0
+      ? Math.min(...instancePlans.map((plan) => plan.totalEntities))
+      : 0;
+    const promotionCount = instancePlans.reduce((sum, plan) => sum + plan.promotionSlots, 0);
+    const demotionCount = instancePlans.reduce((sum, plan) => sum + plan.demotionSlots, 0);
+    const promotionTeamIds = preview.effectivePromotionEntityIds;
+    const demotionTeamIds = preview.demotionEntityIds;
 
     // Batch-check subscription status
     const eventType = teamSize === 2 ? 'league_2v2' : 'league_3v3';
@@ -391,7 +366,7 @@ router.get(
       const teamELO = team ? team.members.reduce((sum, m) => sum + m.robot.elo, 0) : 0;
       const rank = (page - 1) * perPage + index + 1;
       const isSubscribed = team ? team.members.every(m => subscribedMemberIds.has(m.robot.id)) : false;
-      const eligible = s.cyclesInTier >= MIN_CYCLES_IN_LEAGUE;
+      const eligible = s.cyclesInTier >= HEAD_TO_HEAD_LEAGUE_RULES.minCyclesForRebalancing;
       const zone = promotionTeamIds.has(s.entityId)
         ? 'promotion' as const
         : demotionTeamIds.has(s.entityId)
@@ -432,14 +407,27 @@ router.get(
       teamSize,
       zoneMeta: {
         minLP,
-        minCycles: MIN_CYCLES_IN_LEAGUE,
+        minCycles: HEAD_TO_HEAD_LEAGUE_RULES.minCyclesForRebalancing,
         hasEnoughRobots,
-        minRobotsRequired: minEntities,
+        minRobotsRequired: HEAD_TO_HEAD_LEAGUE_RULES.minEntitiesForRebalancing,
         eligibleCount,
         isChampion,
         isBronze,
         promotionSlots: promotionCount,
         demotionSlots: demotionCount,
+        promotionCandidates: instancePlans.reduce(
+          (sum, plan) => sum + plan.promotionCandidates.length,
+          0,
+        ),
+        effectivePromotionCandidates: preview.plan.promotionBlockReason
+          ? 0
+          : instancePlans.reduce((sum, plan) => sum + plan.promotionCandidates.length, 0),
+        promotionBlockReason: preview.plan.promotionBlockReason,
+        totalEntities: instancePlans.reduce((sum, plan) => sum + plan.totalEntities, 0),
+        totalInstances,
+        activeInstances,
+        instancesBelowMinimum,
+        smallestInstancePopulation,
       },
     });
   },
@@ -546,7 +534,7 @@ router.get(
 
     const standingRows = await prisma.standing.findMany({
       where: standingsWhere,
-      orderBy: [{ leaguePoints: 'desc' }],
+      orderBy: [{ leaguePoints: 'desc' }, { entityId: 'asc' }],
       skip: (page - 1) * perPage,
       take: perPage,
     });
@@ -565,54 +553,35 @@ router.get(
     });
     const teamMap = new Map(teams.map(t => [t.id, t]));
 
-    // Zone computation
-    const minLP = getMinLPForPromotion(tier);
-    const isChampion = tier === 'champion';
-    const isBronze = tier === 'bronze';
-    const minEntities = MIN_TEAMS_FOR_REBALANCING_TAG_TEAM;
-
-    let eligibleCount: number;
-    let hasEnoughRobots: boolean;
-    let promotionCount = 0;
-    let demotionCount = 0;
-    const promotionTeamIds = new Set<number>();
-    const demotionTeamIds = new Set<number>();
-
-    if (instance) {
-      eligibleCount = await prisma.standing.count({
-        where: { mode: 'tag_team' as StandingsMode, leagueInstanceId: instance, cyclesInTier: { gte: MIN_CYCLES_IN_LEAGUE } },
-      });
-
-      hasEnoughRobots = eligibleCount >= minEntities;
-      promotionCount = hasEnoughRobots ? Math.floor(eligibleCount * PROMOTION_PERCENTAGE) : 0;
-      demotionCount = hasEnoughRobots ? Math.floor(eligibleCount * DEMOTION_PERCENTAGE) : 0;
-
-      if (hasEnoughRobots && demotionCount > 0 && !isBronze) {
-        const demotionStandings = await prisma.standing.findMany({
-          where: { mode: 'tag_team' as StandingsMode, leagueInstanceId: instance, cyclesInTier: { gte: MIN_CYCLES_IN_LEAGUE } },
-          orderBy: [{ leaguePoints: 'asc' }],
-          select: { entityId: true },
-          take: demotionCount,
-        });
-        for (const s of demotionStandings) demotionTeamIds.add(s.entityId);
-      }
-
-      if (hasEnoughRobots && promotionCount > 0 && !isChampion) {
-        const promotionStandings = await prisma.standing.findMany({
-          where: { mode: 'tag_team' as StandingsMode, leagueInstanceId: instance, cyclesInTier: { gte: MIN_CYCLES_IN_LEAGUE }, leaguePoints: { gte: minLP } },
-          orderBy: [{ leaguePoints: 'desc' }],
-          select: { entityId: true },
-          take: promotionCount,
-        });
-        for (const s of promotionStandings) promotionTeamIds.add(s.entityId);
-      }
-    } else {
-      // Tier-wide count (no per-instance zone highlighting without specific instance)
-      eligibleCount = await prisma.standing.count({
-        where: { mode: 'tag_team' as StandingsMode, tier, cyclesInTier: { gte: MIN_CYCLES_IN_LEAGUE } },
-      });
-      hasEnoughRobots = eligibleCount >= minEntities;
-    }
+    const preview = await getLeagueTierPreview(
+      'tag_team' as StandingsMode,
+      tier,
+      HEAD_TO_HEAD_LEAGUE_RULES,
+      instance,
+    );
+    const selectedInstancePlan = instance
+      ? preview.instancePlansById.get(instance)
+      : undefined;
+    const instancePlans = selectedInstancePlan
+      ? [selectedInstancePlan]
+      : instance
+        ? []
+        : preview.plan.instancePlans;
+    const minLP = instancePlans[0]?.minPromotionLP ?? 0;
+    const isChampion = tier === HEAD_TO_HEAD_LEAGUE_RULES.tiers[HEAD_TO_HEAD_LEAGUE_RULES.tiers.length - 1];
+    const isBronze = tier === HEAD_TO_HEAD_LEAGUE_RULES.tiers[0];
+    const eligibleCount = instancePlans.reduce((sum, plan) => sum + plan.eligibleEntities, 0);
+    const totalInstances = instancePlans.length;
+    const instancesBelowMinimum = instancePlans.filter((plan) => !plan.hasEnoughEntities).length;
+    const activeInstances = totalInstances - instancesBelowMinimum;
+    const hasEnoughRobots = totalInstances > 0 && instancesBelowMinimum === 0;
+    const smallestInstancePopulation = instancePlans.length > 0
+      ? Math.min(...instancePlans.map((plan) => plan.totalEntities))
+      : 0;
+    const promotionCount = instancePlans.reduce((sum, plan) => sum + plan.promotionSlots, 0);
+    const demotionCount = instancePlans.reduce((sum, plan) => sum + plan.demotionSlots, 0);
+    const promotionTeamIds = preview.effectivePromotionEntityIds;
+    const demotionTeamIds = preview.demotionEntityIds;
 
     // Batch-check tag_team subscription status
     const allMemberRobotIds = teams.flatMap(t => t.members.map(m => m.robot.id));
@@ -627,7 +596,7 @@ router.get(
       const combinedELO = team ? team.members.reduce((sum, m) => sum + m.robot.elo, 0) : 0;
       const rank = (page - 1) * perPage + index + 1;
       const isSubscribed = team ? team.members.every(m => subscribedMemberIds.has(m.robot.id)) : false;
-      const eligible = s.cyclesInTier >= MIN_CYCLES_IN_LEAGUE;
+      const eligible = s.cyclesInTier >= HEAD_TO_HEAD_LEAGUE_RULES.minCyclesForRebalancing;
       const zone = promotionTeamIds.has(s.entityId)
         ? 'promotion' as const
         : demotionTeamIds.has(s.entityId)
@@ -665,14 +634,27 @@ router.get(
       tier,
       zoneMeta: {
         minLP,
-        minCycles: MIN_CYCLES_IN_LEAGUE,
+        minCycles: HEAD_TO_HEAD_LEAGUE_RULES.minCyclesForRebalancing,
         hasEnoughRobots,
-        minRobotsRequired: minEntities,
+        minRobotsRequired: HEAD_TO_HEAD_LEAGUE_RULES.minEntitiesForRebalancing,
         eligibleCount,
         isChampion,
         isBronze,
         promotionSlots: promotionCount,
         demotionSlots: demotionCount,
+        promotionCandidates: instancePlans.reduce(
+          (sum, plan) => sum + plan.promotionCandidates.length,
+          0,
+        ),
+        effectivePromotionCandidates: preview.plan.promotionBlockReason
+          ? 0
+          : instancePlans.reduce((sum, plan) => sum + plan.promotionCandidates.length, 0),
+        promotionBlockReason: preview.plan.promotionBlockReason,
+        totalEntities: instancePlans.reduce((sum, plan) => sum + plan.totalEntities, 0),
+        totalInstances,
+        activeInstances,
+        instancesBelowMinimum,
+        smallestInstancePopulation,
       },
     });
   },

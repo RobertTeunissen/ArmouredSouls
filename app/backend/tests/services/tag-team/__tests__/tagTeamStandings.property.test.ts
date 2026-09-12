@@ -12,6 +12,7 @@
  */
 
 import * as fc from 'fast-check';
+import { MAX_TEAMS_PER_INSTANCE } from '../../../../src/services/league/leagueInstanceService';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -128,7 +129,6 @@ function getTagTeamInstances(
   teams: TeamBattleRow[],
   tier: string
 ): { leagueId: string; leagueTier: string; currentTeams: number; maxTeams: number }[] {
-  const MAX_TEAMS_PER_INSTANCE = 50;
   const filtered = teams.filter((t) => t.teamSize === 2 && t.tagTeamLeague === tier);
 
   const instanceMap = new Map<string, number>();
@@ -496,7 +496,7 @@ describe('Feature: tag-team-system-unification, Property 10: Tag Team Standings 
       );
     });
 
-    it('instances maxTeams is always 50', () => {
+    it('instances maxTeams uses the canonical capacity', () => {
       fc.assert(
         fc.property(
           teamArrayArb,
@@ -505,7 +505,7 @@ describe('Feature: tag-team-system-unification, Property 10: Tag Team Standings 
             const instances = getTagTeamInstances(teams, tier);
 
             for (const inst of instances) {
-              expect(inst.maxTeams).toBe(50);
+              expect(inst.maxTeams).toBe(MAX_TEAMS_PER_INSTANCE);
             }
           }
         ),

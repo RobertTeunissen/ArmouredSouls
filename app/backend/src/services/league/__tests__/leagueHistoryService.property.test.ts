@@ -65,10 +65,12 @@ import {
   getAggregates,
   detectYoYoCandidates,
   checkCtrlZ,
+  LEAGUE_HISTORY_MODES,
 } from '../leagueHistoryService';
 import type {
   EntityType,
   ChangeType,
+  LeagueHistoryMode,
   RecordTierChangeParams,
 } from '../leagueHistoryService';
 
@@ -352,8 +354,9 @@ describe('leagueHistoryService Property Tests', () => {
         fc.asyncProperty(
           fc.integer({ min: 1, max: 5000 }), // startCycle
           fc.integer({ min: 0, max: 5000 }), // offset to ensure endCycle >= startCycle
-          fc.option(fc.constantFrom<EntityType>('robot', 'tag_team'), { nil: undefined }),
-          async (startCycle, offset, entityType) => {
+          fc.option(fc.constantFrom<EntityType>('robot', 'tag_team', 'team_battle'), { nil: undefined }),
+          fc.option(fc.constantFrom<LeagueHistoryMode>(...LEAGUE_HISTORY_MODES), { nil: undefined }),
+          async (startCycle, offset, entityType, mode) => {
             mockPrisma.leagueHistory.findMany.mockResolvedValue([]);
             mockPrisma.leagueHistory.count.mockResolvedValue(0);
 
@@ -363,6 +366,7 @@ describe('leagueHistoryService Property Tests', () => {
               startCycle,
               endCycle,
               entityType,
+              mode,
             });
 
             const expectedWhere: Record<string, unknown> = {
@@ -370,6 +374,9 @@ describe('leagueHistoryService Property Tests', () => {
             };
             if (entityType) {
               expectedWhere.entityType = entityType;
+            }
+            if (mode) {
+              expectedWhere.mode = mode;
             }
 
             expect(mockPrisma.leagueHistory.findMany).toHaveBeenCalledWith(
@@ -397,15 +404,16 @@ describe('leagueHistoryService Property Tests', () => {
     it('should call Prisma with orderBy cycleNumber asc', async () => {
       await fc.assert(
         fc.asyncProperty(
-          fc.constantFrom<EntityType>('robot', 'tag_team'),
+          fc.constantFrom<EntityType>('robot', 'tag_team', 'team_battle'),
           fc.integer({ min: 1, max: 10000 }), // entityId
-          async (entityType, entityId) => {
+          fc.constantFrom<LeagueHistoryMode>(...LEAGUE_HISTORY_MODES),
+          async (entityType, entityId, mode) => {
             mockPrisma.leagueHistory.findMany.mockResolvedValue([]);
 
-            await getEntityHistory(entityType, entityId);
+            await getEntityHistory(entityType, entityId, mode);
 
             expect(mockPrisma.leagueHistory.findMany).toHaveBeenCalledWith({
-              where: { entityType, entityId },
+              where: { entityType, entityId, mode },
               orderBy: { cycleNumber: 'asc' },
             });
           }
@@ -475,6 +483,7 @@ describe('leagueHistoryService Property Tests', () => {
         fc.asyncProperty(
           fc.array(
             fc.record({
+              mode: fc.option(fc.constantFrom<LeagueHistoryMode>(...LEAGUE_HISTORY_MODES), { nil: null }),
               destinationTier: fc.constantFrom(...LEAGUE_TIERS),
               changeType: fc.constantFrom<ChangeType>('promotion', 'demotion'),
             }),
@@ -488,13 +497,14 @@ describe('leagueHistoryService Property Tests', () => {
             // Compute expected groupBy result from the records
             const tierChangeMap = new Map<string, number>();
             for (const record of records) {
-              const key = `${record.destinationTier}:${record.changeType}`;
+              const key = `${record.mode ?? 'legacy'}:${record.destinationTier}:${record.changeType}`;
               tierChangeMap.set(key, (tierChangeMap.get(key) || 0) + 1);
             }
 
             const groupByResult = Array.from(tierChangeMap.entries()).map(([key, count]) => {
-              const [destinationTier, changeType] = key.split(':');
-              return { destinationTier, changeType, _count: { id: count } };
+              const [modeKey, destinationTier, changeType] = key.split(':');
+              const mode = modeKey === 'legacy' ? null : modeKey;
+              return { mode, destinationTier, changeType, _count: { id: count } };
             });
 
             mockPrisma.leagueHistory.groupBy.mockResolvedValue(groupByResult);
@@ -504,10 +514,11 @@ describe('leagueHistoryService Property Tests', () => {
             // Compute expected aggregates manually
             const expectedMap = new Map<string, { promotions: number; demotions: number }>();
             for (const record of records) {
-              if (!expectedMap.has(record.destinationTier)) {
-                expectedMap.set(record.destinationTier, { promotions: 0, demotions: 0 });
+              const key = `${record.mode ?? 'legacy'}:${record.destinationTier}`;
+              if (!expectedMap.has(key)) {
+                expectedMap.set(key, { promotions: 0, demotions: 0 });
               }
-              const entry = expectedMap.get(record.destinationTier)!;
+              const entry = expectedMap.get(key)!;
               if (record.changeType === 'promotion') {
                 entry.promotions++;
               } else {
@@ -515,10 +526,10 @@ describe('leagueHistoryService Property Tests', () => {
               }
             }
 
-            // Verify result matches expected
             expect(result.length).toBe(expectedMap.size);
             for (const aggregate of result) {
-              const expected = expectedMap.get(aggregate.tier);
+              const key = `${aggregate.mode ?? 'legacy'}:${aggregate.tier}`;
+              const expected = expectedMap.get(key);
               expect(expected).toBeDefined();
               expect(aggregate.promotions).toBe(expected!.promotions);
               expect(aggregate.demotions).toBe(expected!.demotions);
@@ -542,8 +553,9 @@ describe('leagueHistoryService Property Tests', () => {
         fc.asyncProperty(
           fc.array(
             fc.record({
-              entityType: fc.constantFrom<EntityType>('robot', 'tag_team'),
+              entityType: fc.constantFrom<EntityType>('robot', 'tag_team', 'team_battle'),
               entityId: fc.integer({ min: 1, max: 100 }),
+              mode: fc.option(fc.constantFrom<LeagueHistoryMode>(...LEAGUE_HISTORY_MODES), { nil: null }),
               sourceTier: fc.constantFrom(...LEAGUE_TIERS),
               destinationTier: fc.constantFrom(...LEAGUE_TIERS),
             }),
@@ -556,20 +568,20 @@ describe('leagueHistoryService Property Tests', () => {
 
             // Mock batch name resolution for robots and tag teams
             const robotIds = [...new Set(records.filter(r => r.entityType === 'robot').map(r => r.entityId))];
-            const tagTeamIds = [...new Set(records.filter(r => r.entityType === 'tag_team').map(r => r.entityId))];
+            const teamIds = [...new Set(records.filter(r => r.entityType !== 'robot').map(r => r.entityId))];
             mockPrisma.robot.findMany.mockResolvedValue(
               robotIds.map(id => ({ id, name: `Robot${id}` }))
             );
             mockPrisma.teamBattle.findMany.mockResolvedValue(
-              tagTeamIds.map(id => ({ id, teamName: `Bot${id}A & Bot${id}B` }))
+              teamIds.map(id => ({ id, teamName: `Team${id}` }))
             );
 
             const result = await detectYoYoCandidates(20, minChanges);
 
-            // Compute expected: group by entityType:entityId, count occurrences
+            // Compute expected: group by entity type, entity ID, and mode.
             const entityCounts = new Map<string, number>();
             for (const record of records) {
-              const key = `${record.entityType}:${record.entityId}`;
+              const key = `${record.entityType}:${record.entityId}:${record.mode ?? 'legacy'}`;
               entityCounts.set(key, (entityCounts.get(key) || 0) + 1);
             }
 
@@ -583,7 +595,7 @@ describe('leagueHistoryService Property Tests', () => {
 
             // Verify all returned candidates meet the threshold
             for (const candidate of result) {
-              const key = `${candidate.entityType}:${candidate.entityId}`;
+              const key = `${candidate.entityType}:${candidate.entityId}:${candidate.mode ?? 'legacy'}`;
               expect(expectedKeys.has(key)).toBe(true);
               expect(candidate.changeCount).toBeGreaterThanOrEqual(minChanges);
             }
@@ -671,5 +683,26 @@ describe('leagueHistoryService Property Tests', () => {
         { numRuns: 100 }
       );
     });
+  });
+});
+
+
+describe('league history mode isolation regressions', () => {
+  it('should keep one robot separate when it yo-yos in two modes', async () => {
+    mockPrisma.leagueHistory.findMany.mockResolvedValue([
+      { entityType: 'robot', entityId: 42, mode: 'league_1v1', sourceTier: 'bronze', destinationTier: 'silver' },
+      { entityType: 'robot', entityId: 42, mode: 'league_1v1', sourceTier: 'silver', destinationTier: 'bronze' },
+      { entityType: 'robot', entityId: 42, mode: 'koth', sourceTier: 'bronze', destinationTier: 'silver' },
+      { entityType: 'robot', entityId: 42, mode: 'koth', sourceTier: 'silver', destinationTier: 'bronze' },
+    ]);
+    mockPrisma.robot.findMany.mockResolvedValue([{ id: 42, name: 'Mode Hopper' }]);
+
+    const result = await detectYoYoCandidates(20, 2);
+
+    expect(result).toEqual(expect.arrayContaining([
+      expect.objectContaining({ entityId: 42, mode: 'league_1v1', changeCount: 2 }),
+      expect.objectContaining({ entityId: 42, mode: 'koth', changeCount: 2 }),
+    ]));
+    expect(result).toHaveLength(2);
   });
 });

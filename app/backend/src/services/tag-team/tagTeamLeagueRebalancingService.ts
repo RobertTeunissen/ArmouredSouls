@@ -1,12 +1,12 @@
 import { TeamBattle } from '../../../generated/prisma';
 
 import {
+  TEAM_BATTLE_LEAGUE_CONFIG,
   TEAM_BATTLE_LEAGUE_TIERS,
   TeamBattleLeagueTier,
   tagTeamLeagueAdapter,
 } from '../team-battle/teamBattleAdapter';
 import {
-  LeagueEngineConfig,
   rebalanceAllTiers,
   determinePromotionsForInstance,
   determineDemotionsForInstance,
@@ -21,24 +21,8 @@ export { getMinLPForPromotion } from '../league/leaguePromotionThresholds';
 export const TAG_TEAM_LEAGUE_TIERS = TEAM_BATTLE_LEAGUE_TIERS;
 export type TagTeamLeagueTier = TeamBattleLeagueTier;
 
-// ─── Configuration ───────────────────────────────────────────────────────────
-
-const PROMOTION_PERCENTAGE = 0.10;
-const DEMOTION_PERCENTAGE = 0.10;
-const MIN_CYCLES_IN_LEAGUE_FOR_REBALANCING = 5;
-const MIN_TEAMS_FOR_REBALANCING = 4;
-const MIN_COHORT_FOR_NEW_TIER = 3;
-
-const TAG_TEAM_LEAGUE_CONFIG: LeagueEngineConfig = {
-  promotionPercentage: PROMOTION_PERCENTAGE,
-  demotionPercentage: DEMOTION_PERCENTAGE,
-  minCyclesForRebalancing: MIN_CYCLES_IN_LEAGUE_FOR_REBALANCING,
-  minEntitiesForRebalancing: MIN_TEAMS_FOR_REBALANCING,
-  minCohortForNewTier: MIN_COHORT_FOR_NEW_TIER,
-  logPrefix: 'TagTeamRebalancing',
-  tiers: TAG_TEAM_LEAGUE_TIERS,
-  entityLabel: 'team',
-};
+// Tag team uses the exact same immutable gameplay configuration as 2v2/3v3.
+export const TAG_TEAM_LEAGUE_CONFIG = TEAM_BATTLE_LEAGUE_CONFIG;
 
 // ─── Public API (unchanged signatures) ──────────────────────────────────────
 
@@ -59,8 +43,9 @@ export interface FullTagTeamRebalancingSummary {
 }
 
 /**
- * Determine which teams should be promoted from a SPECIFIC INSTANCE
- * Requirement 6.3: Promote top 10% of eligible teams (≥5 cycles in tier AND per-tier LP threshold)
+ * Determine which teams occupy effective promotion positions in an instance.
+ * The canonical planner fixes the top 10% from total population, then applies
+ * five-cycle residency and the source-tier LP threshold without backfill.
  */
 export async function determinePromotions(
   instanceId: string,
@@ -70,8 +55,9 @@ export async function determinePromotions(
 }
 
 /**
- * Determine which teams should be demoted from a SPECIFIC INSTANCE
- * Requirement 6.4: Demote bottom 10% of eligible teams (≥5 cycles in tier)
+ * Determine which teams occupy effective demotion positions in an instance.
+ * The canonical planner applies residency inside the fixed bottom 10% zone
+ * without backfilling from positions outside that zone.
  */
 export async function determineDemotions(
   instanceId: string,

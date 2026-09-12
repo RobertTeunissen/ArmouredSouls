@@ -1,12 +1,17 @@
 import prisma from '../../lib/prisma';
 import type { Prisma } from '../../../generated/prisma';
 import { StandingsMode } from '../../../generated/prisma';
+import {
+  LEAGUE_TIERS,
+  MAX_TEAMS_PER_INSTANCE,
+  REBALANCE_THRESHOLD,
+} from '../league/leagueInstanceService';
 
 /**
  * Get league health metrics.
  */
 export async function getLeagueHealth(_userFilter: Prisma.UserWhereInput = {}) {
-  const leagues = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'];
+  const leagues = LEAGUE_TIERS;
 
   // Use standings table for league health (source of truth)
   const robotsByLeague = await prisma.standing.groupBy({
@@ -61,9 +66,7 @@ export async function getLeagueHealth(_userFilter: Prisma.UserWhereInput = {}) {
  * Returns per-tier team counts, instance counts, avg ELO, and needs-rebalancing indicators.
  */
 export async function getTeamBattleLeagueHealth() {
-  const leagues = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'];
-  const MAX_TEAMS_PER_INSTANCE = 50;
-  const REBALANCE_THRESHOLD = 10;
+  const leagues = LEAGUE_TIERS;
 
   async function getLeagueDataForSize(teamSize: 2 | 3) {
     const mode: StandingsMode = teamSize === 2 ? StandingsMode.league_2v2 : StandingsMode.league_3v3;
@@ -171,9 +174,7 @@ export async function getTeamBattleLeagueHealth() {
  * and needs-rebalancing indicators for the tag team league (teamSize=2, tagTeamLeague fields).
  */
 export async function getTagTeamLeagueHealth() {
-  const leagues = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'];
-  const MAX_TEAMS_PER_INSTANCE = 50;
-  const MIN_TEAMS_FOR_TIER = 10;
+  const leagues = LEAGUE_TIERS;
 
   // Get team counts per tag team tier from standings (source of truth)
   const teamsByLeague = await prisma.standing.groupBy({
@@ -202,10 +203,13 @@ export async function getTagTeamLeagueHealth() {
       ? Math.round(instanceCounts.reduce((sum, c) => sum + c, 0) / instanceCounts.length)
       : 0;
 
-    // Determine needs-rebalancing: any instance exceeds 50 teams or team count below minimum threshold (10)
-    const hasOverflow = instanceCounts.some((c) => c > MAX_TEAMS_PER_INSTANCE);
-    const belowMinimum = teamCount > 0 && teamCount < MIN_TEAMS_FOR_TIER;
-    const needsRebalancing = hasOverflow || belowMinimum;
+    // Use the canonical instance capacity and imbalance threshold.
+    const hasOverflow = instanceCounts.some((count) => count > MAX_TEAMS_PER_INSTANCE);
+    const targetPerInstance = instances.length > 0 ? Math.ceil(teamCount / instances.length) : 0;
+    const hasImbalance = instances.length >= 2 && instanceCounts.some((count) =>
+      Math.abs(count - targetPerInstance) > REBALANCE_THRESHOLD
+    );
+    const needsRebalancing = hasOverflow || hasImbalance;
 
     return {
       league,

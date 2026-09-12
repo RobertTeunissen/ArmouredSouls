@@ -871,8 +871,8 @@ describe('teamBattleAdapter', () => {
       expect(TEAM_BATTLE_LEAGUE_CONFIG.minCyclesForRebalancing).toBe(5);
     });
 
-    it('should require 4 minimum entities for rebalancing', () => {
-      expect(TEAM_BATTLE_LEAGUE_CONFIG.minEntitiesForRebalancing).toBe(4);
+    it('should require the canonical 10-entity minimum for rebalancing', () => {
+      expect(TEAM_BATTLE_LEAGUE_CONFIG.minEntitiesForRebalancing).toBe(10);
     });
 
     it('should require 3 minimum cohort for new tier', () => {
@@ -931,69 +931,30 @@ describe('teamBattleAdapter', () => {
   });
 
   describe('adapter Prisma queries', () => {
-    it('should query entities with min points ordered by LP desc', async () => {
+    it('should query the complete instance population without LP or residency filters', async () => {
       const standings = [
-        { id: 1, entityId: 10, leaguePoints: 80 },
-        { id: 2, entityId: 20, leaguePoints: 60 },
+        { id: 1, entityId: 10, leaguePoints: 80, cyclesInTier: 2 },
+        { id: 2, entityId: 20, leaguePoints: 10, cyclesInTier: 8 },
       ];
       mockPrisma.standing.findMany.mockResolvedValue(standings);
 
-      const result = await teamBattleAdapter.getEntitiesWithMinPoints(
-        'bronze_1', 50, 5, new Set([99]),
+      const result = await teamBattleAdapter.getEntitiesInInstance(
+        'bronze_1',
+        new Set([99]),
       );
 
       expect(mockPrisma.standing.findMany).toHaveBeenCalledWith({
         where: {
           mode: 'league_2v2',
           leagueInstanceId: 'bronze_1',
-          cyclesInTier: { gte: 5 },
-          leaguePoints: { gte: 50 },
           NOT: { entityId: { in: [99] } },
         },
-        orderBy: [{ leaguePoints: 'desc' }],
       });
       expect(result).toEqual(standings);
     });
 
-    it('should count eligible entities in instance', async () => {
-      mockPrisma.standing.count.mockResolvedValue(12);
-
-      const result = await teamBattleAdapter.countEligibleInInstance(
-        'silver_1', 5, new Set([1, 2]),
-      );
-
-      expect(mockPrisma.standing.count).toHaveBeenCalledWith({
-        where: {
-          mode: 'league_2v2',
-          leagueInstanceId: 'silver_1',
-          cyclesInTier: { gte: 5 },
-          NOT: { entityId: { in: [1, 2] } },
-        },
-      });
-      expect(result).toBe(12);
-    });
-
-    it('should query entities for demotion ordered by LP asc', async () => {
-      const standings = [
-        { id: 3, entityId: 30, leaguePoints: 10 },
-        { id: 4, entityId: 40, leaguePoints: 20 },
-      ];
-      mockPrisma.standing.findMany.mockResolvedValue(standings);
-
-      const result = await teamBattleAdapter.getEntitiesForDemotion(
-        'gold_1', 5, new Set(),
-      );
-
-      expect(mockPrisma.standing.findMany).toHaveBeenCalledWith({
-        where: {
-          mode: 'league_2v2',
-          leagueInstanceId: 'gold_1',
-          cyclesInTier: { gte: 5 },
-          NOT: { entityId: { in: [] } },
-        },
-        orderBy: [{ leaguePoints: 'asc' }],
-      });
-      expect(result).toEqual(standings);
+    it('should expose cycles in tier for planner-side residency filtering', () => {
+      expect(teamBattleAdapter.getEntityCyclesInTier({ cyclesInTier: 7 } as any)).toBe(7);
     });
 
     it('should get instances for a tier', async () => {

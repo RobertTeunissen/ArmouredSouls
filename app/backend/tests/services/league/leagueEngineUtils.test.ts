@@ -10,6 +10,11 @@
 // Import the pure functions directly from the module
 // getNextTierUp and getNextTierDown are not exported, so we test via the thresholds
 import { getMinLPForPromotion, PROMOTION_LP_THRESHOLDS } from '../../../src/services/league/leaguePromotionThresholds';
+import {
+  planLeagueInstanceRebalancing,
+  planLeagueTierRebalancing,
+} from '../../../src/services/league/league-rebalancing-planner';
+import { HEAD_TO_HEAD_LEAGUE_RULES } from '../../../src/services/league/league-rules';
 
 describe('PROMOTION_LP_THRESHOLDS', () => {
   it('should define thresholds for all 6 tiers', () => {
@@ -49,5 +54,132 @@ describe('getMinLPForPromotion', () => {
   it('should return 25 as safe default for unknown tiers', () => {
     expect(getMinLPForPromotion('unknown')).toBe(25);
     expect(getMinLPForPromotion('')).toBe(25);
+  });
+});
+
+
+describe('canonical head-to-head league rebalancing planner', () => {
+  interface TestStanding {
+    entityId: number;
+    leaguePoints: number;
+    cyclesInTier: number;
+  }
+
+  const selectors = {
+    getEntityId: (standing: TestStanding): number => standing.entityId,
+    getLeaguePoints: (standing: TestStanding): number => standing.leaguePoints,
+    getCyclesInTier: (standing: TestStanding): number => standing.cyclesInTier,
+  };
+
+  const modes = ['league_1v1', 'league_2v2', 'league_3v3', 'tag_team'] as const;
+
+  it.each(modes)(
+    'should select the same five Silver candidates from 78 total entities in %s',
+    () => {
+      const standings: TestStanding[] = Array.from({ length: 78 }, (_, index) => ({
+        entityId: index + 1,
+        leaguePoints: 200 - index,
+        // Five of the seven fixed-zone positions qualify. Another 21 residents
+        // sit below the zone, giving 26 residents without affecting its size.
+        cyclesInTier: index < 5 || (index >= 7 && index < 28) ? 5 : 4,
+      }));
+
+      const plan = planLeagueInstanceRebalancing(
+        'silver_1',
+        'silver',
+        standings,
+        HEAD_TO_HEAD_LEAGUE_RULES,
+        selectors,
+      );
+
+      expect(plan.totalEntities).toBe(78);
+      expect(plan.eligibleEntities).toBe(26);
+      expect(plan.promotionSlots).toBe(7);
+      expect(plan.promotionCandidates.map(standing => standing.entityId)).toEqual([1, 2, 3, 4, 5]);
+    },
+  );
+
+  it('should not backfill promotion positions when a top-zone entity is ineligible', () => {
+    const standings: TestStanding[] = Array.from({ length: 20 }, (_, index) => ({
+      entityId: index + 1,
+      leaguePoints: 100 - index,
+      cyclesInTier: index === 0 ? 4 : 5,
+    }));
+
+    const plan = planLeagueInstanceRebalancing(
+      'silver_1',
+      'silver',
+      standings,
+      HEAD_TO_HEAD_LEAGUE_RULES,
+      selectors,
+    );
+
+    expect(plan.promotionZone.map(standing => standing.entityId)).toEqual([1, 2]);
+    expect(plan.promotionCandidates.map(standing => standing.entityId)).toEqual([2]);
+    expect(plan.promotionCandidates).not.toContainEqual(expect.objectContaining({ entityId: 3 }));
+  });
+
+  it('should not backfill demotion positions when a bottom-zone entity is ineligible', () => {
+    const standings: TestStanding[] = Array.from({ length: 20 }, (_, index) => ({
+      entityId: index + 1,
+      leaguePoints: index,
+      cyclesInTier: index === 0 ? 4 : 5,
+    }));
+
+    const plan = planLeagueInstanceRebalancing(
+      'silver_1',
+      'silver',
+      standings,
+      HEAD_TO_HEAD_LEAGUE_RULES,
+      selectors,
+    );
+
+    expect(plan.demotionZone.map(standing => standing.entityId)).toEqual([1, 2]);
+    expect(plan.demotionCandidates.map(standing => standing.entityId)).toEqual([2]);
+    expect(plan.demotionCandidates).not.toContainEqual(expect.objectContaining({ entityId: 3 }));
+  });
+
+  it('should block two candidates but open an empty destination with three', () => {
+    const twoCandidatePlan = planLeagueInstanceRebalancing(
+      'bronze_1',
+      'bronze',
+      Array.from({ length: 20 }, (_, index) => ({
+        entityId: index + 1,
+        leaguePoints: 100 - index,
+        cyclesInTier: 5,
+      })),
+      HEAD_TO_HEAD_LEAGUE_RULES,
+      selectors,
+    );
+    const threeCandidatePlan = planLeagueInstanceRebalancing(
+      'bronze_1',
+      'bronze',
+      Array.from({ length: 30 }, (_, index) => ({
+        entityId: index + 1,
+        leaguePoints: 100 - index,
+        cyclesInTier: 5,
+      })),
+      HEAD_TO_HEAD_LEAGUE_RULES,
+      selectors,
+    );
+
+    const blocked = planLeagueTierRebalancing(
+      'bronze',
+      [twoCandidatePlan],
+      0,
+      HEAD_TO_HEAD_LEAGUE_RULES,
+    );
+    const opened = planLeagueTierRebalancing(
+      'bronze',
+      [threeCandidatePlan],
+      0,
+      HEAD_TO_HEAD_LEAGUE_RULES,
+    );
+
+    expect(blocked.promotionCandidates).toHaveLength(2);
+    expect(blocked.effectivePromotionCandidates).toEqual([]);
+    expect(blocked.promotionBlockReason).toBe('destination_cohort_too_small');
+    expect(opened.effectivePromotionCandidates).toHaveLength(3);
+    expect(opened.promotionBlockReason).toBeNull();
   });
 });
