@@ -355,6 +355,46 @@ describe('simulateBattle — spatial refactor', () => {
         expect(['melee', 'short', 'mid', 'long']).toContain(rt.rangeBand);
       }
     });
+
+    it('should converge two melee robots into attack range instead of patience-rate attacks', () => {
+      const robotDefaults = {
+        currentHP: 100000,
+        maxHP: 100000,
+        currentShield: 1000,
+        maxShield: 1000,
+        yieldThreshold: 0,
+        servoMotors: new Prisma.Decimal(30),
+        combatAlgorithms: new Prisma.Decimal(50),
+        threatAnalysis: new Prisma.Decimal(50),
+        attackSpeed: new Prisma.Decimal(50),
+      };
+      const dommeAap = createMockRobot({
+        ...robotDefaults,
+        id: 1,
+        name: 'DommeAap',
+        mainWeapon: createMeleeWeaponInventory(1),
+        mainWeaponId: 1,
+      });
+      const ultron = createMockRobot({
+        ...robotDefaults,
+        id: 2,
+        name: 'Ultron',
+        mainWeapon: createMeleeWeaponInventory(2),
+        mainWeaponId: 2,
+      });
+
+      const result = simulateBattle(dommeAap, ultron);
+      const attackEvents = result.events.filter(event =>
+        ['attack', 'critical', 'miss', 'malfunction'].includes(event.type)
+        && event.attacker !== undefined,
+      );
+      const ultronAttackEvents = attackEvents.filter(event => event.attacker === 'Ultron');
+      const dommeAapAttackEvents = attackEvents.filter(event => event.attacker === 'DommeAap');
+
+      expect(ultronAttackEvents.length).toBeGreaterThan(20);
+      expect(dommeAapAttackEvents.length).toBeGreaterThan(20);
+      expect(attackEvents.every(event => event.distance !== undefined && event.distance <= 2)).toBe(true);
+    });
   });
 
   // Validates: Requirement 14.3 (out_of_range events)

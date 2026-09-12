@@ -1,6 +1,7 @@
 import * as fc from 'fast-check';
 import {
   applyMovement,
+  calculateMovementIntent,
   getPatienceLimit,
   getPreferredRange,
 } from '../../src/services/arena/movementAI';
@@ -269,6 +270,41 @@ describe('movementAI property tests', () => {
 
       const range = getPreferredRange(state);
       expect(validRangeBands).toContain(range);
+    });
+
+    it('should target the current opponent inside melee range during the final approach', () => {
+      const meleeState = makeState({
+        robot: {
+          loadoutType: 'single',
+          stance: 'balanced',
+          mainWeapon: { weapon: makeWeapon({ weaponType: 'melee', rangeBand: 'melee' }) } as any,
+          offhandWeapon: null,
+          threatAnalysis: 50,
+          combatAlgorithms: 50,
+        } as any,
+        position: { x: 0, y: 0 },
+        combatAlgorithmScore: 1,
+      });
+      const movingMeleeOpponent = makeState({
+        robot: {
+          loadoutType: 'single',
+          stance: 'balanced',
+          mainWeapon: { weapon: makeWeapon({ weaponType: 'melee', rangeBand: 'melee' }) } as any,
+          offhandWeapon: null,
+        } as any,
+        position: { x: 0, y: 3.1 },
+        velocity: { x: 12, y: 0 },
+      });
+
+      const intent = calculateMovementIntent(
+        meleeState,
+        [movingMeleeOpponent],
+        makeArena(16),
+      );
+
+      expect(intent.preferredRange).toBe('melee');
+      expect(euclideanDistance(intent.targetPosition, movingMeleeOpponent.position))
+        .toBeLessThanOrEqual(2);
     });
   });
 });

@@ -33,8 +33,7 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 | 21 | Blueprint Library | 48 | 0 🗳️ | 1 | 1 | 1 | 3 | **1.0** |
 | 22 | Cosmetic Customization System | 46 | 0 🗳️ | 2 | 1 | 1 | 5 | **0.8** |
 | 23 | Matchup-Dependent Weapon Effectiveness | 58 | 0 🗳️ | 3 | 1 | 2 | 5 | **1.2** |
-| 24 | Financial Ledger Coverage | 59 | 0 🗳️ | 2 | 1 | 3 | 2 | **3.0** |
-| 25 | Dashboard Mobile Optimisation | 60 | 0 🗳️ | 3 | 2 | 2 | 3 | **2.3** |
+| 24 | Dashboard Mobile Optimisation | 60 | 0 🗳️ | 3 | 2 | 2 | 3 | **2.3** |
 
 ---
 
@@ -145,20 +144,29 @@ Player-to-player weapon trading marketplace. Players list weapons for sale at th
 **Source**: Removed from navbar — unimplemented pages (`/friends`, `/notifications`, `/guilds`, `/guild`, `/guild/manage`, `/chat`)  
 **Priority**: Not scoped — large feature set, low player demand so far
 
-Full social layer: friend lists, in-game notifications, guild creation/management, guild chat. Would enable guild-vs-guild competitions, shared facilities, and social retention loops. Large scope — broken into four incremental phases below.
+Full social layer: friend lists, in-game notifications, guild creation/management, and guild chat. It could enable guild-vs-guild competitions, shared facilities, and social retention loops. The scope is intentionally split into four incremental phases below.
 
-**Current state (Aug 2026)**: Zero social infrastructure exists. No WebSocket/SSE layer, no notification inbox, no friend/guild models. What *does* exist: public stable profiles (`/stables/:userId`), leaderboards (player discovery), Team Battles (persistent robot groups), Discord webhooks (operational only), and two unused notification preference booleans on the User model (`notificationsBattle`, `notificationsLeague`). Scale: < 1000 concurrent users, single VPS.
+**Current state (verified Sep 2026)**: No persisted per-user social notification, friendship, guild, or chat infrastructure exists: there is no `Notification`, `Friendship`, `Guild`, `GuildMember`, `Message`, or `Channel` model; no inbox API; and no WebSocket/SSE layer. Phase 1 is therefore not partially complete.
 
-**Risk**: At current player count, friends lists and guild chat risk being a ghost town. In-game notifications have standalone value regardless of population. The signal to start Phase 2+ is players actively visiting each other's stable profiles and recognizing names on leaderboards.
+**Adjacent work that is live, but does not satisfy Phase 1**:
+- Public stable profiles (`/stables/:userId`) and leaderboards provide player discovery; Team Battles provide persistent robot groups.
+- The Dashboard displays transient tier-change banners and recent tournament champion notices; achievement toasts and the season-summary modal are separate, purpose-built flows. None has durable per-user inbox history, read/dismiss state, or common delivery semantics.
+- `notificationsBattle` and `notificationsLeague` are persisted on `User` and accepted by the profile API, but no notification producer reads them and ProfilePage does not expose controls for them.
+- `services/notifications/` dispatches operational/public Discord webhook messages after scheduler jobs. It is not a player notification service and must remain separate from one.
+
+**Risk**: At current player count, friends lists and guild chat risk being a ghost town. In-game notifications have standalone value regardless of population. The signal to start Phase 2+ is players actively visiting each other's stable profiles and recognizing names on leaderboards. Scale: < 1000 concurrent users, single VPS.
 
 #### Recommended Build Order
 
 **Phase 1: In-Game Notification System** (small-medium, ~2-3 days)
-- Highest standalone value, no social critical-mass problem, activates the dead preference booleans, and every later phase depends on it.
-- Schema: `Notification` table (userId, type, title, body, metadata JSON, read boolean, createdAt). Types: `battle_result`, `league_promotion`, `league_demotion`, `tournament_result`, `achievement_unlocked`, `season_rollover`.
-- Backend: `NotificationService` that existing orchestrators call after battles/promotions. REST endpoints for fetch/mark-read/bulk-dismiss.
-- Frontend: Bell icon in nav header, dropdown or `/notifications` page, respect existing user preferences.
-- Delivery: Start with polling (matches current infra). WebSocket/SSE upgrade is a separate future concern.
+- Highest standalone value, no social critical-mass problem, and the foundation for every later phase. This phase remains unimplemented.
+- Schema: `Notification` table with recipient `userId`, closed `type`, title, body, typed metadata JSON, read/dismiss state, timestamps, and recipient/timestamp indexes. Types: `battle_result`, `league_promotion`, `league_demotion`, `tournament_result`, `achievement_unlocked`, `season_rollover`. Define reset/season-rollover retention deliberately.
+- Backend: a dedicated in-game notification service (do not reuse the Discord dispatcher) called from battle results, promotion/demotion, tournament completion, achievement awards, and season rollover. Use source-event idempotency so retries cannot duplicate notifications; make creation observable/retriable without corrupting completed gameplay.
+- Preferences: apply the existing battle and league flags to their respective notifications. Decide explicitly whether tournament, achievement, and season notifications are always in-app or need additional preferences.
+- REST: authenticated, paginated/latest inbox fetch with unread count; mark-one-read; and bulk read/dismiss. All reads and mutations must be scoped to the authenticated user and validated with Zod.
+- Frontend: a navigation bell with unread badge and either a dropdown or protected `/notifications` page; loading, empty, and error states; read/dismiss interactions; and ProfilePage controls for the existing preferences.
+- Delivery: start with bounded polling plus visibility/refocus refresh, matching current infrastructure. WebSocket/SSE is a separate future concern.
+- Tests: producer/type coverage, preference suppression, source-event idempotency, ownership isolation, API lifecycle and validation, and UI polling/badge/preference behavior.
 
 **Phase 2: Friends System** (medium, ~3-4 days) — depends on Phase 1
 - Friend requests (send/accept/reject/cancel), friends list, last-active status, friend activity feed.
@@ -177,7 +185,7 @@ Full social layer: friend lists, in-game notifications, guild creation/managemen
 - Schema: `Message` table (channelId, senderId, content, createdAt), `Channel` table (type: direct/guild, participants).
 - Defer until player count justifies the infrastructure cost — a ghost-town chat is worse than no chat.
 
-**Dependencies**: Phase 1 is independent. Phase 2 needs Phase 1. Phase 3 needs Phases 1+2. Phase 4 needs all three plus real-time infra.
+**Dependencies**: Phase 1 is independent. Phase 2 needs Phase 1. Phase 3 needs Phases 1+2. Phase 4 needs all three plus real-time infrastructure. To avoid ambiguity with the shipped Season System, refer to this work as **Backlog #45 Social Features**, never just “Spec #45”.
 
 ### #46 — Cosmetic Customization System
 **Source**: Removed from navbar — unimplemented pages (`/customize`, `/customize/skins`, `/customize/stable`, `/customize/poses`, `/customize/emotes`)  
@@ -214,18 +222,6 @@ Let players test any weapon from the shop in practice battles, not just owned we
 **Priority**: Not scoped — large combat system change
 
 Energy weapons bypass armor but shields resist them; ballistic shreds shields but armor blocks. Creates rock-paper-scissors dynamics that require owning multiple weapon types. Large scope — needs its own spec, careful balance work, and UI changes to communicate effectiveness. Synergizes with Arena Modifiers (#12) for meta variation.
-
-### #59 — Financial Ledger Coverage — Completed by Spec #53
-**Source**: Spec #48 investigation (Aug 2026), implemented by Spec #53
-**Status**: Complete — required paired capture is active from normal backend deployment
-
-Every new current-economy credit mutation now uses `Credit_Mutation_Service`. One atomic transaction updates `User.currency`, writes one `financial_ledger` accounting record, and writes one paired `financial_transaction` audit record with the same non-null `financialEventId`. There is no financial capture feature flag, rollout command, cycle gate, or aftercare step.
-
-The closed production taxonomy is `battle_income`, `streaming_revenue`, `repair_cost`, `facility_upgrade`, `weapon_purchase`, `weapon_sale`, `weapon_refinement`, `robot_creation`, `attribute_upgrade`, `achievement_reward`, `passive_income`, and `operating_costs`. Free subscription changes do not create financial events, and prestige is kept in its own `prestige_change` audit record rather than a credit ledger row.
-
-Rows without `financialEventId` remain immutable legacy history. Reconciliation validates only identified paired evidence; it does not fabricate pairs, reconstruct historical amounts, or treat legacy rows as a completeness failure.
-
-**Related**: Spec #48 (repair figures), Spec #53 (financial ledger coverage).
 
 ### #60 — Dashboard Mobile Optimisation
 **Source**: Spec #48 review (Aug 2026) — the Overview_Row redesign satisfies its mobile requirements, but the review surfaced a whole-page problem that spec deliberately did not take on
