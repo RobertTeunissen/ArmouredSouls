@@ -272,7 +272,7 @@ describe('movementAI property tests', () => {
       expect(validRangeBands).toContain(range);
     });
 
-    it('should target the current opponent inside melee range during the final approach', () => {
+    it('should target the current opponent during the melee final approach', () => {
       const meleeState = makeState({
         robot: {
           loadoutType: 'single',
@@ -304,6 +304,42 @@ describe('movementAI property tests', () => {
 
       expect(intent.preferredRange).toBe('melee');
       expect(euclideanDistance(intent.targetPosition, movingMeleeOpponent.position))
+        .toBeLessThanOrEqual(2);
+    });
+
+    it('should keep an in-range melee robot inside attack range despite prediction and bias', () => {
+      const meleeState = makeState({
+        robot: {
+          loadoutType: 'single',
+          stance: 'balanced',
+          mainWeapon: { weapon: makeWeapon({ weaponType: 'melee', rangeBand: 'melee' }) } as any,
+          offhandWeapon: null,
+          threatAnalysis: 50,
+          combatAlgorithms: 50,
+        } as any,
+        position: { x: 0, y: 0 },
+        effectiveMovementSpeed: 20,
+        combatAlgorithmScore: 1,
+      });
+      const inRangeMeleeOpponent = makeState({
+        robot: {
+          loadoutType: 'single',
+          stance: 'balanced',
+          mainWeapon: { weapon: makeWeapon({ weaponType: 'melee', rangeBand: 'melee' }) } as any,
+          offhandWeapon: null,
+        } as any,
+        position: { x: 0, y: 1.5 },
+        velocity: { x: 12, y: 0 },
+        effectiveMovementSpeed: 10,
+      });
+
+      const intent = calculateMovementIntent(
+        meleeState,
+        [inRangeMeleeOpponent],
+        makeArena(16),
+      );
+
+      expect(euclideanDistance(intent.targetPosition, inRangeMeleeOpponent.position))
         .toBeLessThanOrEqual(2);
     });
   });

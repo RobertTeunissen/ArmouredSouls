@@ -299,8 +299,9 @@ export function calculateMovementIntent(
 
   const preferredRange = getPreferredRangeWithDynamic(state, target);
   const currentDistToTarget = euclideanDistance(state.position, target.position);
-  const isMeleeOutOfRange = preferredRange === 'melee' && currentDistToTarget > 2;
-  const meleeFinalApproachFactor = preferredRange === 'melee' && currentDistToTarget <= 4
+  const isMelee = preferredRange === 'melee';
+  const isMeleeOutOfRange = isMelee && currentDistToTarget > 2;
+  const meleeFinalApproachFactor = isMelee && currentDistToTarget <= 4
     ? Math.max(0, (currentDistToTarget - 2) / 2)
     : 1;
   let targetPos = calculateOptimalRangePosition(
@@ -319,7 +320,7 @@ export function calculateMovementIntent(
   // when two melee robots circle each other just outside melee range.
   const ca = state.robot.combatAlgorithms ? Number(state.robot.combatAlgorithms) : 1;
   const baseDeviation = DEVIATION_MAX - ((ca - 1) / 49) * (DEVIATION_MAX - DEVIATION_MIN);
-  const deviationScale = preferredRange === 'melee'
+  const deviationScale = isMelee
     ? 0.3 * meleeFinalApproachFactor
     : preferredRange === 'short' ? 0.6 : 1.0;
   const deviation = deterministicDeviation(
@@ -353,7 +354,9 @@ export function calculateMovementIntent(
   // tangential velocity and can pull a melee robot around the opponent instead
   // of into the ≤2-unit attack radius, recreating the orbital deadlock this
   // module's final-approach taper is intended to prevent.
-  const predictionWeight = isMeleeOutOfRange && currentDistToTarget <= 4
+  // This also applies while already in melee range: prediction must not move a
+  // robot back out of the radius it can currently attack from.
+  const predictionWeight = isMelee && currentDistToTarget <= 4
     ? 0
     : (ca - 1) / 49;
   if (predictionWeight > 0) {
@@ -369,12 +372,13 @@ export function calculateMovementIntent(
     targetPos = lerp(targetPos, optimalFromPredicted, predictionWeight);
   }
 
-  // Threat-aware avoidance — linear weight: ta/50 (always active, weak at low TA)
-  // Reduced for melee robots outside weapon range — avoidance prevents closing.
-  // Further tapered during final approach (dist ≤ 4) to prevent orbital lock.
+  // Threat-aware avoidance — linear weight: ta/50 (always active, weak at low TA).
+  // Melee robots use the final-approach taper at every distance. Outside melee
+  // range the base is reduced so closing takes priority; inside melee range the
+  // taper reaches zero and cannot push the robot back out of attack range.
   let avoidanceWeight: number;
-  if (isMeleeOutOfRange) {
-    const baseAvoidance = (ta / 50) * 0.2;
+  if (isMelee) {
+    const baseAvoidance = isMeleeOutOfRange ? (ta / 50) * 0.2 : ta / 50;
     avoidanceWeight = baseAvoidance * meleeFinalApproachFactor;
   } else {
     avoidanceWeight = ta / 50;
@@ -388,12 +392,12 @@ export function calculateMovementIntent(
     );
   }
 
-  // Flank approach — linear weight: ta/50, requires speed advantage
-  // Reduced for melee robots outside range — closing is priority over flanking.
-  // Further tapered during final approach (dist ≤ 4) to prevent orbital lock.
+  // Flank approach — linear weight: ta/50, requires speed advantage.
+  // As with avoidance, melee robots taper flank bias at every distance so a
+  // faster melee robot cannot be steered back outside its attack radius.
   let flankWeight: number;
-  if (isMeleeOutOfRange) {
-    const baseFlank = (ta / 50) * 0.2;
+  if (isMelee) {
+    const baseFlank = isMeleeOutOfRange ? (ta / 50) * 0.2 : ta / 50;
     flankWeight = baseFlank * meleeFinalApproachFactor;
   } else {
     flankWeight = ta / 50;
