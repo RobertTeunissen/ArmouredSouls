@@ -59,12 +59,12 @@
     "globals": "^17.4.0",
     "jsdom": "^29.0.1",
     "mermaid": "^11.16.1",
-    "postcss": "^8.5.24",
+    "postcss": "^8.5.25",
     "tailwindcss": "^4.0.0",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.57.1",
     "vite": "^8.0.16",
     "vite-plugin-svgr": "^5.2.0",
-    "vitest": "^4.1.0"
+    "vitest": "^5.0.0"
   }
 }
