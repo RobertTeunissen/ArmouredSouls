@@ -2,20 +2,38 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: v1.0 
-**Date**: February 5, 2026  
+**Version**: v1.1
+**Date**: September 12, 2026  
 **Status**: ✅ Implemented & Verified
 
 ---
 
 ## Version History
+- v1.1 - Unified all head-to-head modes behind the canonical fixed-zone planner; added tier-wide effective promotion/demotion display and cohort-hold messaging (September 12, 2026)
 - v1.0 - Initial draft by GitHub Copilot (February 5, 2026)
 
 ---
 
 ## Overview
 
-The League Standings page (`/league-standings`) displays competitive rankings for robots across different league tiers and instances. This document covers the complete implementation including all UI updates, technical details, and visual changes.
+The League Standings page (`/league-standings`) displays competitive rankings for robots and teams across tiers and instances. It supports 1v1 League, 2v2 League, 3v3 League, and Tag Team with identical promotion/demotion semantics.
+
+### Canonical Zone Display
+
+The API and executor call the same pure planner. For each instance:
+
+1. Create one canonical ranking of the complete instance population by LP descending, then entity ID ascending.
+2. Fix `floor(totalEntities × 10%)` positions from opposite ends: promotion from the start, demotion from the reversed tail.
+3. Apply five-cycle residency and the source-tier LP threshold inside those positions.
+4. Do not backfill an ineligible position from outside its zone.
+
+A selected instance marks the qualifying rows in its fixed zones. A tier-wide view computes each instance independently and combines those effective plans; it does not treat the entire tier as one instance and no longer requires an instance selection to show status.
+
+When promotion would open an empty destination tier, candidates from all source instances are combined. Fewer than three candidates are displayed as held, not as executable promotion candidates. API metadata exposes the raw candidates, effective candidates, total population, total/active instance counts, under-minimum counts, and block reason so the UI cannot disagree with execution. Selected-instance warnings show that instance's population; tier-wide warnings distinguish mixed active/paused instances from a tier where every instance is paused.
+
+Displayed standings use the same LP-descending, entity-ID-ascending canonical ranking from which the planner takes both ends, so tied rows keep the same rank and fixed-zone boundaries in the API and executor.
+
+The labels explicitly state “top/bottom 10% of total instance.” White rows with sufficient residency are not necessarily candidates: position and LP still apply, and no-backfill is intentional.
 
 ---
 
@@ -182,9 +200,10 @@ const buildInstanceDisplayLabel = (leagueIdentifier: string) => {
 ## Technical Details
 
 ### Files Modified
-- **Code**: `app/frontend/src/pages/LeagueStandingsPage.tsx`
-  - Lines changed: 102 modified, 44 removed
-  - Net change: +58 lines
+- **Frontend**: `app/frontend/src/pages/LeagueStandingsPage.tsx`, `app/frontend/src/utils/matchmakingApi.ts`, and `app/frontend/src/utils/teamBattleApi.ts`
+- **Backend APIs**: `app/backend/src/routes/leagues.ts` and `app/backend/src/routes/teamBattles.ts`
+- **Shared policy/execution**: `app/backend/src/services/league/league-rules.ts`, `league-rebalancing-planner.ts`, `league-rebalancing-preview.ts`, and `leagueEngine.ts`
+- **Mode adapters**: 1v1, 2v2, 3v3, and Tag Team rebalancing services
 
 ### Code Changes Summary
 
@@ -216,7 +235,7 @@ const buildInstanceDisplayLabel = (leagueIdentifier: string) => {
 - ✅ Follows project's React/Hooks patterns
 - ✅ Uses existing utility functions (`getLeagueTierName`, `getLeagueTierColor`)
 - ✅ Maintains existing functionality (filtering, pagination, highlights)
-- ✅ No breaking changes to data structure or API
+- ✅ Additive API metadata; existing standings fields remain compatible
 
 ### Accessibility
 - ✅ Keyboard navigable (header and button focusable)
@@ -341,17 +360,17 @@ All existing features remain functional:
 
 ### Prerequisites
 - No database migrations required
-- No API changes required
+- Deploy backend and frontend together because the UI consumes additive zone metadata
 - No environment variable changes needed
 
 ### Deployment Steps
-1. Merge PR to main branch
-2. Frontend rebuild/deploy
-3. No backend changes needed
+1. Merge the coordinated backend, frontend, test, and documentation changes
+2. Deploy the backend standings APIs and league executor
+3. Rebuild and deploy the frontend
 
 ### Rollback Plan
-- Simple git revert of commits 8a486e9 and 6e1f2bc
-- No data migration rollback needed
+- Revert the coordinated league policy, API, and frontend changes together
+- No data migration rollback is needed
 
 ---
 

@@ -266,6 +266,14 @@ export interface ZoneMeta {
   hasEnoughRobots: boolean;
   promotionSlots: number;
   demotionSlots: number;
+  promotionCandidates: number;
+  effectivePromotionCandidates: number;
+  promotionBlockReason: 'destination_cohort_too_small' | null;
+  totalEntities: number;
+  totalInstances: number;
+  activeInstances: number;
+  instancesBelowMinimum: number;
+  smallestInstancePopulation: number;
   isChampion: boolean;
   isBronze: boolean;
 }

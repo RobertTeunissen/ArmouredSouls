@@ -2,8 +2,9 @@
  * League History Service
  *
  * Provides persistent tracking of all league tier changes (promotions and demotions)
- * for both robots and tag teams. Recording is non-blocking — failures are logged
- * but never prevent the promotion/demotion from completing.
+ * for robots, tag teams, and simultaneous team-battle teams. Recording is
+ * non-blocking — failures are logged but never prevent the promotion/demotion
+ * from completing.
  *
  * @module services/league/leagueHistoryService
  */
@@ -14,6 +15,16 @@ import { AppError } from '../../errors';
 
 // --- Types ---
 
+export const LEAGUE_HISTORY_MODES = [
+  'league_1v1',
+  'league_2v2',
+  'league_3v3',
+  'tag_team',
+  'koth',
+  'grand_melee',
+] as const;
+
+export type LeagueHistoryMode = typeof LEAGUE_HISTORY_MODES[number];
 export type EntityType = 'robot' | 'tag_team' | 'team_battle';
 export type ChangeType = 'promotion' | 'demotion';
 
@@ -55,11 +66,13 @@ export interface LeagueHistoryQueryParams {
   startCycle: number;
   endCycle: number;
   entityType?: EntityType;
+  mode?: LeagueHistoryMode;
   page?: number;
   perPage?: number;
 }
 
 export interface AggregateResult {
+  mode: string | null;
   tier: string;
   promotions: number;
   demotions: number;
@@ -69,6 +82,7 @@ export interface YoYoCandidate {
   entityType: EntityType;
   entityId: number;
   entityName: string;
+  mode: string | null;
   changeCount: number;
   tiersInvolved: string[];
 }
@@ -104,10 +118,10 @@ export async function getCurrentCycleNumber(): Promise<number> {
 // --- Service Functions ---
 
 /**
- * Batch-enrich raw league history records with entity names (robot name or
- * "<active> & <reserve>" for tag teams) and the owner's stable name.
- * Avoids N+1 queries by collecting all IDs first and issuing one findMany
- * per entity type.
+ * Batch-enrich raw league history records with entity names and the owner's
+ * stable name. Team-battle and tag-team records both reference TeamBattle IDs.
+ * Avoids N+1 queries by collecting all IDs first and issuing one findMany per
+ * entity model.
  */
 async function enrichWithNames(
   records: LeagueHistoryRecord[],
@@ -115,29 +129,26 @@ async function enrichWithNames(
   if (records.length === 0) return records;
 
   const robotIds = new Set<number>();
-  const tagTeamIds = new Set<number>();
+  const teamIds = new Set<number>();
   const userIds = new Set<number>();
 
-  for (const r of records) {
-    userIds.add(r.userId);
-    if (r.entityType === 'robot') robotIds.add(r.entityId);
-    else if (r.entityType === 'tag_team') tagTeamIds.add(r.entityId);
+  for (const record of records) {
+    userIds.add(record.userId);
+    if (record.entityType === 'robot') robotIds.add(record.entityId);
+    else teamIds.add(record.entityId);
   }
 
-  const [robots, tagTeams, users] = await Promise.all([
+  const [robots, teams, users] = await Promise.all([
     robotIds.size > 0
       ? prisma.robot.findMany({
           where: { id: { in: Array.from(robotIds) } },
           select: { id: true, name: true },
         })
       : Promise.resolve([]),
-    tagTeamIds.size > 0
+    teamIds.size > 0
       ? prisma.teamBattle.findMany({
-          where: { id: { in: Array.from(tagTeamIds) } },
-          select: {
-            id: true,
-            teamName: true,
-          },
+          where: { id: { in: Array.from(teamIds) } },
+          select: { id: true, teamName: true },
         })
       : Promise.resolve([]),
     userIds.size > 0
@@ -148,21 +159,18 @@ async function enrichWithNames(
       : Promise.resolve([]),
   ]);
 
-  const robotNameMap = new Map(robots.map(r => [r.id, r.name]));
-  const tagTeamNameMap = new Map(
-    tagTeams.map(t => [t.id, t.teamName]),
-  );
+  const robotNameMap = new Map(robots.map(robot => [robot.id, robot.name]));
+  const teamNameMap = new Map(teams.map(team => [team.id, team.teamName]));
   const stableNameMap = new Map(
-    users.map(u => [u.id, u.stableName || u.username]),
+    users.map(user => [user.id, user.stableName || user.username]),
   );
 
-  return records.map(r => ({
-    ...r,
-    entityName:
-      r.entityType === 'robot'
-        ? robotNameMap.get(r.entityId)
-        : tagTeamNameMap.get(r.entityId),
-    stableName: stableNameMap.get(r.userId),
+  return records.map(record => ({
+    ...record,
+    entityName: record.entityType === 'robot'
+      ? robotNameMap.get(record.entityId)
+      : teamNameMap.get(record.entityId),
+    stableName: stableNameMap.get(record.userId),
   }));
 }
 
@@ -199,7 +207,7 @@ export async function getHistoryByCycleRange(params: LeagueHistoryQueryParams): 
   data: LeagueHistoryRecord[];
   pagination: { page: number; pageSize: number; total: number; totalPages: number };
 }> {
-  const { startCycle, endCycle, entityType, page = 1, perPage = 50 } = params;
+  const { startCycle, endCycle, entityType, mode, page = 1, perPage = 50 } = params;
 
   if (startCycle > endCycle) {
     throw new AppError(
@@ -214,6 +222,9 @@ export async function getHistoryByCycleRange(params: LeagueHistoryQueryParams): 
   };
   if (entityType) {
     where.entityType = entityType;
+  }
+  if (mode) {
+    where.mode = mode;
   }
 
   const [data, total] = await Promise.all([
@@ -242,9 +253,13 @@ export async function getHistoryByCycleRange(params: LeagueHistoryQueryParams): 
 /**
  * Get complete history for a specific entity, ordered by cycle ascending.
  */
-export async function getEntityHistory(entityType: EntityType, entityId: number): Promise<LeagueHistoryRecord[]> {
+export async function getEntityHistory(
+  entityType: EntityType,
+  entityId: number,
+  mode?: LeagueHistoryMode,
+): Promise<LeagueHistoryRecord[]> {
   const records = await prisma.leagueHistory.findMany({
-    where: { entityType, entityId },
+    where: { entityType, entityId, ...(mode ? { mode } : {}) },
     orderBy: { cycleNumber: 'asc' },
   });
 
@@ -256,7 +271,12 @@ export async function getEntityHistory(entityType: EntityType, entityId: number)
  * Validates that startCycle <= endCycle.
  * Uses Prisma groupBy to push aggregation to the database.
  */
-export async function getAggregates(startCycle: number, endCycle: number, entityType?: EntityType): Promise<AggregateResult[]> {
+export async function getAggregates(
+  startCycle: number,
+  endCycle: number,
+  entityType?: EntityType,
+  mode?: LeagueHistoryMode,
+): Promise<AggregateResult[]> {
   if (startCycle > endCycle) {
     throw new AppError(
       'INVALID_CYCLE_RANGE',
@@ -268,139 +288,139 @@ export async function getAggregates(startCycle: number, endCycle: number, entity
   const where: Record<string, unknown> = {
     cycleNumber: { gte: startCycle, lte: endCycle },
   };
-  if (entityType) {
-    where.entityType = entityType;
-  }
+  if (entityType) where.entityType = entityType;
+  if (mode) where.mode = mode;
 
-  // Use Prisma groupBy to push aggregation to the database
   const grouped = await prisma.leagueHistory.groupBy({
-    by: ['destinationTier', 'changeType'],
+    by: ['mode', 'destinationTier', 'changeType'],
     where,
     _count: { id: true },
   });
 
-  // Merge into per-tier results
-  const tierMap = new Map<string, { promotions: number; demotions: number }>();
+  const resultMap = new Map<string, AggregateResult>();
   for (const row of grouped) {
-    if (!tierMap.has(row.destinationTier)) {
-      tierMap.set(row.destinationTier, { promotions: 0, demotions: 0 });
-    }
-    const entry = tierMap.get(row.destinationTier)!;
-    if (row.changeType === 'promotion') {
-      entry.promotions = row._count.id;
-    } else {
-      entry.demotions = row._count.id;
-    }
+    const key = `${row.mode ?? 'legacy'}:${row.destinationTier}`;
+    const result = resultMap.get(key) ?? {
+      mode: row.mode,
+      tier: row.destinationTier,
+      promotions: 0,
+      demotions: 0,
+    };
+    if (row.changeType === 'promotion') result.promotions = row._count.id;
+    else result.demotions = row._count.id;
+    resultMap.set(key, result);
   }
 
-  const results: AggregateResult[] = [];
-  for (const [tier, counts] of tierMap) {
-    results.push({ tier, ...counts });
-  }
-
-  return results;
+  return Array.from(resultMap.values());
 }
 
 /**
  * Identify yo-yo candidates: entities with minChanges or more tier changes
  * within the last cycleWindow cycles from the current cycle.
  */
-export async function detectYoYoCandidates(cycleWindow = 20, minChanges = 3): Promise<YoYoCandidate[]> {
+export async function detectYoYoCandidates(
+  cycleWindow = 20,
+  minChanges = 3,
+  mode?: LeagueHistoryMode,
+): Promise<YoYoCandidate[]> {
   const currentCycle = await getCurrentCycleNumber();
   const startCycle = Math.max(0, currentCycle - cycleWindow);
 
-  // Get all records within the window, grouped by entity
   const records = await prisma.leagueHistory.findMany({
     where: {
       cycleNumber: { gte: startCycle, lte: currentCycle },
+      ...(mode ? { mode } : {}),
     },
     select: {
       entityType: true,
       entityId: true,
+      mode: true,
       destinationTier: true,
       sourceTier: true,
     },
   });
 
-  // Group by entityType + entityId
-  const entityGroups = new Map<string, {
+  interface EntityModeGroup {
     entityType: EntityType;
     entityId: number;
+    mode: string | null;
     tiers: Set<string>;
     count: number;
-  }>();
+  }
 
+  const entityGroups = new Map<string, EntityModeGroup>();
   for (const record of records) {
-    const key = `${record.entityType}:${record.entityId}`;
-    if (!entityGroups.has(key)) {
-      entityGroups.set(key, {
-        entityType: record.entityType as EntityType,
-        entityId: record.entityId,
-        tiers: new Set<string>(),
-        count: 0,
-      });
-    }
-    const group = entityGroups.get(key)!;
+    const key = `${record.entityType}:${record.entityId}:${record.mode ?? 'legacy'}`;
+    const group = entityGroups.get(key) ?? {
+      entityType: record.entityType as EntityType,
+      entityId: record.entityId,
+      mode: record.mode,
+      tiers: new Set<string>(),
+      count: 0,
+    };
     group.count++;
     group.tiers.add(record.sourceTier);
     group.tiers.add(record.destinationTier);
+    entityGroups.set(key, group);
   }
 
-  // Filter groups with count >= minChanges
-  const candidates: { entityType: EntityType; entityId: number; tiers: string[]; count: number }[] = [];
-  for (const group of entityGroups.values()) {
-    if (group.count >= minChanges) {
-      candidates.push({
-        entityType: group.entityType,
-        entityId: group.entityId,
-        tiers: Array.from(group.tiers),
-        count: group.count,
-      });
-    }
-  }
+  const candidates = Array.from(entityGroups.values()).filter(
+    group => group.count >= minChanges,
+  );
+  const robotIds = candidates
+    .filter(candidate => candidate.entityType === 'robot')
+    .map(candidate => candidate.entityId);
+  const teamIds = candidates
+    .filter(candidate => candidate.entityType !== 'robot')
+    .map(candidate => candidate.entityId);
 
-  // Batch-resolve entity names to avoid N+1 queries
-  const robotIds = candidates.filter(c => c.entityType === 'robot').map(c => c.entityId);
-  const tagTeamIds = candidates.filter(c => c.entityType === 'tag_team').map(c => c.entityId);
-
-  const [robots, tagTeams] = await Promise.all([
+  const [robots, teams] = await Promise.all([
     robotIds.length > 0
-      ? prisma.robot.findMany({ where: { id: { in: robotIds } }, select: { id: true, name: true } })
+      ? prisma.robot.findMany({
+          where: { id: { in: robotIds } },
+          select: { id: true, name: true },
+        })
       : Promise.resolve([]),
-    tagTeamIds.length > 0
+    teamIds.length > 0
       ? prisma.teamBattle.findMany({
-          where: { id: { in: tagTeamIds } },
+          where: { id: { in: teamIds } },
           select: { id: true, teamName: true },
         })
       : Promise.resolve([]),
   ]);
 
-  const robotNameMap = new Map(robots.map(r => [r.id, r.name]));
-  const tagTeamNameMap = new Map(tagTeams.map(t => [t.id, t.teamName]));
+  const robotNameMap = new Map(robots.map(robot => [robot.id, robot.name]));
+  const teamNameMap = new Map(teams.map(team => [team.id, team.teamName]));
 
-  const results: YoYoCandidate[] = candidates.map(candidate => ({
+  return candidates.map(candidate => ({
     entityType: candidate.entityType,
     entityId: candidate.entityId,
     entityName: candidate.entityType === 'robot'
       ? robotNameMap.get(candidate.entityId) || `Unknown robot #${candidate.entityId}`
-      : tagTeamNameMap.get(candidate.entityId) || `Unknown tag team #${candidate.entityId}`,
+      : teamNameMap.get(candidate.entityId)
+        || `${candidate.entityType === 'tag_team' ? 'Unknown tag team' : 'Unknown team'} #${candidate.entityId}`,
+    mode: candidate.mode,
     changeCount: candidate.count,
-    tiersInvolved: candidate.tiers,
+    tiersInvolved: Array.from(candidate.tiers),
   }));
-
-  return results;
 }
 
 /**
  * Check if a robot experienced a Ctrl+Z pattern: demoted from a tier
  * then re-promoted to the same tier within maxCycleWindow cycles.
  */
-export async function checkCtrlZ(robotId: number, tierName: string, maxCycleWindow: number): Promise<CtrlZResult> {
+export async function checkCtrlZ(
+  robotId: number,
+  tierName: string,
+  maxCycleWindow: number,
+  mode: LeagueHistoryMode = 'league_1v1',
+): Promise<CtrlZResult> {
   // Find the most recent demotion FROM the specified tier for this robot
   const demotion = await prisma.leagueHistory.findFirst({
     where: {
       entityType: 'robot',
       entityId: robotId,
+      mode,
       changeType: 'demotion',
       sourceTier: tierName,
     },
@@ -417,6 +437,7 @@ export async function checkCtrlZ(robotId: number, tierName: string, maxCycleWind
     where: {
       entityType: 'robot',
       entityId: robotId,
+      mode,
       changeType: 'promotion',
       destinationTier: tierName,
       cycleNumber: {

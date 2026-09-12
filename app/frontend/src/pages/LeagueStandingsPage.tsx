@@ -24,6 +24,7 @@ import {
   TeamBattleLeagueInstance,
 } from '../utils/teamBattleApi';
 import OwnerNameLink from '../components/OwnerNameLink';
+import { getLeaguePopulationWarning } from '../utils/league-standings-status';
 
 type LeagueMode = '1v1' | '2v2' | '3v3' | 'tag_team' | 'koth' | 'grand_melee';
 
@@ -238,7 +239,7 @@ function LeagueStandingsPage() {
         draws: entry.totalTagTeamDraws,
         totalMatches: entry.totalTagTeamWins + entry.totalTagTeamLosses + entry.totalTagTeamDraws,
         cyclesInLeague: entry.cyclesInTagTeamLeague ?? 0,
-        isSubscribed: undefined,
+        isSubscribed: entry.isSubscribed,
         zone: entry.zone,
         eligible: entry.eligible,
         members: entry.members.map(m => ({
@@ -331,6 +332,13 @@ function LeagueStandingsPage() {
     const instanceNum = segments[1];
     return `${tierLabel} ${instanceNum}`;
   };
+
+  const robotPopulationWarning = zoneMeta
+    ? getLeaguePopulationWarning(zoneMeta, 'robots', selectedInstance !== null)
+    : null;
+  const teamPopulationWarning = teamZoneMeta
+    ? getLeaguePopulationWarning(teamZoneMeta, 'teams', selectedInstance !== null)
+    : null;
 
   if (!user) {
     return null;
@@ -536,11 +544,11 @@ function LeagueStandingsPage() {
               <div className="bg-surface p-4 rounded-lg mb-4 flex flex-wrap items-center gap-4 text-sm">
                 <div className="flex items-center gap-2">
                   <span className="w-3 h-3 rounded-sm bg-green-500 inline-block"></span>
-                  <span className="text-secondary">Promotion zone (top 10%, ≥{zoneMeta.minLP} LP, ≥{zoneMeta.minCycles} cycles)</span>
+                  <span className="text-secondary">Promotion zone (top 10% of total instance, ≥{zoneMeta.minLP} LP, ≥{zoneMeta.minCycles} cycles)</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="w-3 h-3 rounded-sm bg-red-500 inline-block"></span>
-                  <span className="text-secondary">Demotion zone (bottom 10%, ≥{zoneMeta.minCycles} cycles)</span>
+                  <span className="text-secondary">Demotion zone (bottom 10% of total instance, ≥{zoneMeta.minCycles} cycles)</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="w-3 h-3 rounded-sm bg-white inline-block"></span>
@@ -550,10 +558,16 @@ function LeagueStandingsPage() {
                   <span className="text-[10px] bg-white/10 text-tertiary px-1.5 py-0.5 rounded font-medium">INACTIVE</span>
                   <span className="text-secondary">Not subscribed to this league</span>
                 </div>
-                {!zoneMeta.hasEnoughRobots && (
+                {robotPopulationWarning && (
                   <div className="flex items-center gap-2 text-warning">
                     <span>⚠️</span>
-                    <span>Promotion/demotion paused — need {zoneMeta.minRobotsRequired} eligible robots, currently {zoneMeta.eligibleCount}</span>
+                    <span>{robotPopulationWarning}</span>
+                  </div>
+                )}
+                {zoneMeta.promotionBlockReason === 'destination_cohort_too_small' && (
+                  <div className="flex items-center gap-2 text-warning">
+                    <span>⚠️</span>
+                    <span>Promotion held — the empty destination tier needs a tier-wide cohort of 3 qualifying entrants</span>
                   </div>
                 )}
                 {zoneMeta.isChampion && (
@@ -709,11 +723,11 @@ function LeagueStandingsPage() {
               <div className="bg-surface p-4 rounded-lg mb-4 flex flex-wrap items-center gap-4 text-sm">
                 <div className="flex items-center gap-2">
                   <span className="w-3 h-3 rounded-sm bg-green-500 inline-block"></span>
-                  <span className="text-secondary">Promotion zone (top 10%, ≥{teamZoneMeta.minLP} LP, ≥{teamZoneMeta.minCycles} cycles)</span>
+                  <span className="text-secondary">Promotion zone (top 10% of total instance, ≥{teamZoneMeta.minLP} LP, ≥{teamZoneMeta.minCycles} cycles)</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="w-3 h-3 rounded-sm bg-red-500 inline-block"></span>
-                  <span className="text-secondary">Demotion zone (bottom 10%, ≥{teamZoneMeta.minCycles} cycles)</span>
+                  <span className="text-secondary">Demotion zone (bottom 10% of total instance, ≥{teamZoneMeta.minCycles} cycles)</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="w-3 h-3 rounded-sm bg-white inline-block"></span>
@@ -723,10 +737,16 @@ function LeagueStandingsPage() {
                   <span className="text-[10px] bg-white/10 text-tertiary px-1.5 py-0.5 rounded font-medium">INACTIVE</span>
                   <span className="text-secondary">Not subscribed to this league</span>
                 </div>
-                {!teamZoneMeta.hasEnoughRobots && (
+                {teamPopulationWarning && (
                   <div className="flex items-center gap-2 text-warning">
                     <span>⚠️</span>
-                    <span>Promotion/demotion paused — need {teamZoneMeta.minRobotsRequired} eligible teams, currently {teamZoneMeta.eligibleCount}</span>
+                    <span>{teamPopulationWarning}</span>
+                  </div>
+                )}
+                {teamZoneMeta.promotionBlockReason === 'destination_cohort_too_small' && (
+                  <div className="flex items-center gap-2 text-warning">
+                    <span>⚠️</span>
+                    <span>Promotion held — the empty destination tier needs a tier-wide cohort of 3 qualifying entrants</span>
                   </div>
                 )}
                 {teamZoneMeta.isChampion && (

@@ -5,8 +5,9 @@
  * Validates that getTagTeamLeagueHealth computes correct per-tier metrics:
  * - totalTeams matches the count of teams in that tier
  * - instances matches the count of distinct tagTeamLeagueId values for that tier
- * - needsRebalancing is true when any instance exceeds MAX_TEAMS_PER_INSTANCE (50)
- *   OR when the total team count is below MIN_TEAMS_FOR_TIER (10) but > 0
+ * - needsRebalancing is true when any instance exceeds the canonical capacity (100)
+ *   or a multi-instance distribution differs from its target by more than 20
+ * - sparse single-instance tiers are healthy
  * - teamsPerInstance min/max/avg computed correctly
  *
  * Pure logic test — no database needed.
@@ -15,11 +16,13 @@
  */
 
 import * as fc from 'fast-check';
+import {
+  MAX_TEAMS_PER_INSTANCE,
+  REBALANCE_THRESHOLD,
+} from '../../../../src/services/league/leagueInstanceService';
 
-// ─── Constants (match production values) ────────────────────────────────────
+// ─── Constants ───────────────────────────────────────────────────────────────
 
-const MAX_TEAMS_PER_INSTANCE = 50;
-const MIN_TEAMS_FOR_TIER = 10;
 const LEAGUES = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'] as const;
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -80,10 +83,15 @@ function computeTagTeamLeagueHealth(teams: TeamBattleRow[]): LeagueHealthResult 
         ? Math.round(instanceCounts.reduce((sum, c) => sum + c, 0) / instanceCounts.length)
         : 0;
 
-    // Determine needs-rebalancing
-    const hasOverflow = instanceCounts.some((c) => c > MAX_TEAMS_PER_INSTANCE);
-    const belowMinimum = teamCount > 0 && teamCount < MIN_TEAMS_FOR_TIER;
-    const needsRebalancing = hasOverflow || belowMinimum;
+    // Determine needs-rebalancing using the canonical capacity and imbalance rule.
+    const hasOverflow = instanceCounts.some((count) => count > MAX_TEAMS_PER_INSTANCE);
+    const targetPerInstance = instanceCounts.length > 0
+      ? Math.ceil(teamCount / instanceCounts.length)
+      : 0;
+    const hasImbalance = instanceCounts.length >= 2 && instanceCounts.some(
+      count => Math.abs(count - targetPerInstance) > REBALANCE_THRESHOLD,
+    );
+    const needsRebalancing = hasOverflow || hasImbalance;
 
     return {
       league,
@@ -160,11 +168,9 @@ const arbOverflowScenario: fc.Arbitrary<TeamBattleRow[]> = fc
     }));
   });
 
-/**
- * Generates an array of teams where a tier has between 1 and 9 teams (below minimum).
- */
-const arbBelowMinimumScenario: fc.Arbitrary<TeamBattleRow[]> = fc
-  .tuple(arbLeague, fc.integer({ min: 1, max: MIN_TEAMS_FOR_TIER - 1 }))
+/** Generates a sparse single-instance tier, which does not need redistribution. */
+const arbSparseScenario: fc.Arbitrary<TeamBattleRow[]> = fc
+  .tuple(arbLeague, fc.integer({ min: 1, max: 9 }))
   .map(([league, count]) =>
     Array.from({ length: count }, (_, i) => ({
       id: i + 1,
@@ -276,11 +282,10 @@ describe('Feature: tag-team-system-unification, Property 12: Tag Team League Hea
     /**
      * **Validates: Requirements 14.5**
      *
-     * needsRebalancing is true when any instance exceeds MAX_TEAMS_PER_INSTANCE (50)
-     * OR when the team count is below MIN_TEAMS_FOR_TIER (10) but > 0.
+     * needsRebalancing is true for capacity overflow or excessive imbalance.
      */
 
-    it('should set needsRebalancing=true when any instance exceeds 50 teams', () => {
+    it('should set needsRebalancing=true when any instance exceeds capacity', () => {
       fc.assert(
         fc.property(arbOverflowScenario, (teams) => {
           const result = computeTagTeamLeagueHealth(teams);
@@ -295,17 +300,17 @@ describe('Feature: tag-team-system-unification, Property 12: Tag Team League Hea
       );
     });
 
-    it('should set needsRebalancing=true when tier has teams but below minimum (1-9)', () => {
+    it('should keep sparse single-instance tiers healthy', () => {
       fc.assert(
-        fc.property(arbBelowMinimumScenario, (teams) => {
+        fc.property(arbSparseScenario, (teams) => {
           const result = computeTagTeamLeagueHealth(teams);
 
           const league = teams[0].tagTeamLeague;
-          const tierData = result.leagues.find((l) => l.league === league);
+          const tierData = result.leagues.find((entry) => entry.league === league);
           expect(tierData).toBeDefined();
           expect(tierData!.teamCount).toBeGreaterThan(0);
-          expect(tierData!.teamCount).toBeLessThan(MIN_TEAMS_FOR_TIER);
-          expect(tierData!.needsRebalancing).toBe(true);
+          expect(tierData!.teamCount).toBeLessThan(10);
+          expect(tierData!.needsRebalancing).toBe(false);
         }),
         { numRuns: 100 }
       );
@@ -338,10 +343,14 @@ describe('Feature: tag-team-system-unification, Property 12: Tag Team League Hea
               }
               const instanceCounts = Array.from(instanceMap.values());
 
-              const hasOverflow = instanceCounts.some((c) => c > MAX_TEAMS_PER_INSTANCE);
-              const belowMinimum =
-                teamsInTier.length > 0 && teamsInTier.length < MIN_TEAMS_FOR_TIER;
-              const expectedNeedsRebalancing = hasOverflow || belowMinimum;
+              const hasOverflow = instanceCounts.some((count) => count > MAX_TEAMS_PER_INSTANCE);
+              const targetPerInstance = instanceCounts.length > 0
+                ? Math.ceil(teamsInTier.length / instanceCounts.length)
+                : 0;
+              const hasImbalance = instanceCounts.length >= 2 && instanceCounts.some(
+                count => Math.abs(count - targetPerInstance) > REBALANCE_THRESHOLD,
+              );
+              const expectedNeedsRebalancing = hasOverflow || hasImbalance;
 
               expect(tierData.needsRebalancing).toBe(expectedNeedsRebalancing);
             }
@@ -351,13 +360,12 @@ describe('Feature: tag-team-system-unification, Property 12: Tag Team League Hea
       );
     });
 
-    it('should set needsRebalancing=false when tier has >= 10 teams and no instance > 50', () => {
-      // Generate a tier with exactly 10-50 teams in a single instance
+    it('should set needsRebalancing=false for one instance at or below capacity', () => {
       fc.assert(
         fc.property(
           fc.tuple(
             arbLeague,
-            fc.integer({ min: MIN_TEAMS_FOR_TIER, max: MAX_TEAMS_PER_INSTANCE })
+            fc.integer({ min: 1, max: MAX_TEAMS_PER_INSTANCE })
           ),
           ([league, count]) => {
             const teams: TeamBattleRow[] = Array.from({ length: count }, (_, i) => ({

@@ -20,6 +20,14 @@ const mockGetEntityHistory = jest.fn();
 const mockDetectYoYoCandidates = jest.fn();
 
 jest.mock('../../services/league/leagueHistoryService', () => ({
+  LEAGUE_HISTORY_MODES: [
+    'league_1v1',
+    'league_2v2',
+    'league_3v3',
+    'tag_team',
+    'koth',
+    'grand_melee',
+  ],
   getHistoryByCycleRange: (...args: unknown[]) => mockGetHistoryByCycleRange(...args),
   getAggregates: (...args: unknown[]) => mockGetAggregates(...args),
   getEntityHistory: (...args: unknown[]) => mockGetEntityHistory(...args),
@@ -235,13 +243,13 @@ describe('Admin League History Endpoints', () => {
       expect(mockGetHistoryByCycleRange).toHaveBeenCalled();
     });
 
-    it('should pass entity type filter when provided', async () => {
-      mockGetHistoryByCycleRange.mockResolvedValue({ data: [], pagination: { page: 1, perPage: 50, total: 0, totalPages: 0 } });
+    it('should pass entity type and mode filters when provided', async () => {
+      mockGetHistoryByCycleRange.mockResolvedValue({ data: [], pagination: { page: 1, pageSize: 50, total: 0, totalPages: 0 } });
 
-      await request(app).get('/api/admin/league-history?startCycle=1&endCycle=50&entityType=robot');
+      await request(app).get('/api/admin/league-history?startCycle=1&endCycle=50&entityType=team_battle&mode=league_2v2');
 
       expect(mockGetHistoryByCycleRange).toHaveBeenCalledWith(
-        expect.objectContaining({ entityType: 'robot' }),
+        expect.objectContaining({ entityType: 'team_battle', mode: 'league_2v2' }),
       );
     });
 
@@ -271,8 +279,8 @@ describe('Admin League History Endpoints', () => {
   describe('GET /api/admin/league-history/aggregates', () => {
     it('should return aggregate counts for valid cycle range', async () => {
       const mockResult = [
-        { tier: 'silver', promotions: 5, demotions: 2 },
-        { tier: 'gold', promotions: 3, demotions: 1 },
+        { mode: 'league_1v1', tier: 'silver', promotions: 5, demotions: 2 },
+        { mode: 'league_2v2', tier: 'silver', promotions: 3, demotions: 1 },
       ];
       mockGetAggregates.mockResolvedValue(mockResult);
 
@@ -286,12 +294,12 @@ describe('Admin League History Endpoints', () => {
       expect(res.body[0]).toHaveProperty('demotions');
     });
 
-    it('should pass entity type filter when provided', async () => {
+    it('should pass entity type and mode filters when provided', async () => {
       mockGetAggregates.mockResolvedValue([]);
 
-      await request(app).get('/api/admin/league-history/aggregates?startCycle=1&endCycle=50&entityType=tag_team');
+      await request(app).get('/api/admin/league-history/aggregates?startCycle=1&endCycle=50&entityType=team_battle&mode=league_2v2');
 
-      expect(mockGetAggregates).toHaveBeenCalledWith(1, 50, 'tag_team');
+      expect(mockGetAggregates).toHaveBeenCalledWith(1, 50, 'team_battle', 'league_2v2');
     });
 
     it('should propagate service errors', async () => {
@@ -315,27 +323,36 @@ describe('Admin League History Endpoints', () => {
       ];
       mockGetEntityHistory.mockResolvedValue(mockData);
 
-      const res = await request(app).get('/api/admin/league-history/entity/robot/5');
+      const res = await request(app).get('/api/admin/league-history/entity/robot/5?mode=league_1v1');
 
       expect(res.status).toBe(200);
       expect(res.body).toHaveProperty('data');
       expect(Array.isArray(res.body.data)).toBe(true);
-      expect(mockGetEntityHistory).toHaveBeenCalledWith('robot', 5);
+      expect(mockGetEntityHistory).toHaveBeenCalledWith('robot', 5, 'league_1v1');
     });
 
-    it('should return full history for a tag_team entity', async () => {
+    it('should allow legacy entity history requests without a mode', async () => {
       mockGetEntityHistory.mockResolvedValue([]);
 
-      const res = await request(app).get('/api/admin/league-history/entity/tag_team/3');
+      const res = await request(app).get('/api/admin/league-history/entity/robot/5');
 
       expect(res.status).toBe(200);
-      expect(mockGetEntityHistory).toHaveBeenCalledWith('tag_team', 3);
+      expect(mockGetEntityHistory).toHaveBeenCalledWith('robot', 5, undefined);
+    });
+
+    it('should return mode-scoped history for a team_battle entity', async () => {
+      mockGetEntityHistory.mockResolvedValue([]);
+
+      const res = await request(app).get('/api/admin/league-history/entity/team_battle/3?mode=league_2v2');
+
+      expect(res.status).toBe(200);
+      expect(mockGetEntityHistory).toHaveBeenCalledWith('team_battle', 3, 'league_2v2');
     });
 
     it('should return empty array for entity with no history', async () => {
       mockGetEntityHistory.mockResolvedValue([]);
 
-      const res = await request(app).get('/api/admin/league-history/entity/robot/999');
+      const res = await request(app).get('/api/admin/league-history/entity/robot/999?mode=league_1v1');
 
       expect(res.status).toBe(200);
       expect(res.body.data).toEqual([]);
@@ -353,6 +370,7 @@ describe('Admin League History Endpoints', () => {
           entityType: 'robot',
           entityId: 5,
           entityName: 'TestBot',
+          mode: 'league_1v1',
           changeCount: 4,
           tiersInvolved: ['bronze', 'silver'],
         },
@@ -365,15 +383,15 @@ describe('Admin League History Endpoints', () => {
       expect(Array.isArray(res.body)).toBe(true);
       expect(res.body[0]).toHaveProperty('entityName');
       expect(res.body[0]).toHaveProperty('changeCount');
-      expect(mockDetectYoYoCandidates).toHaveBeenCalledWith(20, 3);
+      expect(mockDetectYoYoCandidates).toHaveBeenCalledWith(20, 3, undefined);
     });
 
-    it('should pass custom cycleWindow and minChanges', async () => {
+    it('should pass custom cycleWindow, minChanges, and mode', async () => {
       mockDetectYoYoCandidates.mockResolvedValue([]);
 
-      await request(app).get('/api/admin/league-history/yo-yo?cycleWindow=50&minChanges=5');
+      await request(app).get('/api/admin/league-history/yo-yo?cycleWindow=50&minChanges=5&mode=koth');
 
-      expect(mockDetectYoYoCandidates).toHaveBeenCalledWith(50, 5);
+      expect(mockDetectYoYoCandidates).toHaveBeenCalledWith(50, 5, 'koth');
     });
 
     it('should propagate service errors', async () => {
@@ -394,10 +412,20 @@ describe('Admin League History Zod Schema Validation', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { z } = require('zod');
 
+  const entityTypeSchema = z.enum(['robot', 'tag_team', 'team_battle']);
+  const modeSchema = z.enum([
+    'league_1v1',
+    'league_2v2',
+    'league_3v3',
+    'tag_team',
+    'koth',
+    'grand_melee',
+  ]);
   const leagueHistoryQuerySchema = z.object({
     startCycle: z.coerce.number().int().positive(),
     endCycle: z.coerce.number().int().positive(),
-    entityType: z.enum(['robot', 'tag_team']).optional(),
+    entityType: entityTypeSchema.optional(),
+    mode: modeSchema.optional(),
     page: z.coerce.number().int().positive().optional().default(1),
     perPage: z.coerce.number().int().positive().max(100).optional().default(50),
   });
@@ -405,12 +433,14 @@ describe('Admin League History Zod Schema Validation', () => {
   const leagueHistoryAggregatesSchema = z.object({
     startCycle: z.coerce.number().int().positive(),
     endCycle: z.coerce.number().int().positive(),
-    entityType: z.enum(['robot', 'tag_team']).optional(),
+    entityType: entityTypeSchema.optional(),
+    mode: modeSchema.optional(),
   });
 
   const leagueHistoryYoYoSchema = z.object({
     cycleWindow: z.coerce.number().int().positive().optional().default(20),
     minChanges: z.coerce.number().int().min(2).optional().default(3),
+    mode: modeSchema.optional(),
   });
 
   describe('leagueHistoryQuerySchema', () => {
@@ -418,7 +448,8 @@ describe('Admin League History Zod Schema Validation', () => {
       const result = leagueHistoryQuerySchema.safeParse({
         startCycle: '1',
         endCycle: '100',
-        entityType: 'robot',
+        entityType: 'team_battle',
+        mode: 'league_2v2',
         page: '2',
         perPage: '25',
       });
@@ -426,7 +457,8 @@ describe('Admin League History Zod Schema Validation', () => {
       expect(result.data).toEqual({
         startCycle: 1,
         endCycle: 100,
-        entityType: 'robot',
+        entityType: 'team_battle',
+        mode: 'league_2v2',
         page: 2,
         perPage: 25,
       });

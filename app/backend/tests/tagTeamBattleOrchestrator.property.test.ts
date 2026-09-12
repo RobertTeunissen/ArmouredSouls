@@ -1040,41 +1040,39 @@ describe('Tag Team Battle Orchestrator - Property Tests', () => {
   describe('Property 19: League Rebalancing Percentages', () => {
     /**
      * **Validates: Requirements 6.3, 6.4**
-     * For any tag team league tier with at least 10 teams, rebalancing should promote
-     * the top 10% of eligible teams (≥5 cycles in tier) and demote the bottom 10% of
-     * eligible teams (≥5 cycles in tier).
+     * For any tag team league instance with at least 10 teams, fixed promotion and
+     * demotion zones each contain floor(10% of the complete instance population).
+     * Residency and LP gates can only reduce the candidates inside those zones.
      */
 
-    test('promotion count is exactly 10% (floor) of eligible teams', () => {
+    test('promotion zone is exactly 10% (floor) of the instance population', () => {
       fc.assert(
         fc.property(
-          fc.integer({ min: 10, max: 100 }), // number of eligible teams
-          (eligibleTeamCount) => {
+          fc.integer({ min: 10, max: 100 }), // complete instance population
+          (instancePopulation) => {
             const PROMOTION_PERCENTAGE = 0.10;
-            const expectedPromotions = Math.floor(eligibleTeamCount * PROMOTION_PERCENTAGE);
+            const expectedPromotions = Math.floor(instancePopulation * PROMOTION_PERCENTAGE);
 
-            // Verify the calculation matches the service logic
-            expect(expectedPromotions).toBe(Math.floor(eligibleTeamCount * 0.10));
-            expect(expectedPromotions).toBeGreaterThanOrEqual(1); // At least 1 team promoted
-            expect(expectedPromotions).toBeLessThanOrEqual(eligibleTeamCount);
+            expect(expectedPromotions).toBe(Math.floor(instancePopulation * 0.10));
+            expect(expectedPromotions).toBeGreaterThanOrEqual(1);
+            expect(expectedPromotions).toBeLessThanOrEqual(instancePopulation);
           }
         ),
         { numRuns: NUM_RUNS }
       );
     });
 
-    test('demotion count is exactly 10% (floor) of eligible teams', () => {
+    test('demotion zone is exactly 10% (floor) of the instance population', () => {
       fc.assert(
         fc.property(
-          fc.integer({ min: 10, max: 100 }), // number of eligible teams
-          (eligibleTeamCount) => {
+          fc.integer({ min: 10, max: 100 }), // complete instance population
+          (instancePopulation) => {
             const DEMOTION_PERCENTAGE = 0.10;
-            const expectedDemotions = Math.floor(eligibleTeamCount * DEMOTION_PERCENTAGE);
+            const expectedDemotions = Math.floor(instancePopulation * DEMOTION_PERCENTAGE);
 
-            // Verify the calculation matches the service logic
-            expect(expectedDemotions).toBe(Math.floor(eligibleTeamCount * 0.10));
-            expect(expectedDemotions).toBeGreaterThanOrEqual(1); // At least 1 team demoted
-            expect(expectedDemotions).toBeLessThanOrEqual(eligibleTeamCount);
+            expect(expectedDemotions).toBe(Math.floor(instancePopulation * 0.10));
+            expect(expectedDemotions).toBeGreaterThanOrEqual(1);
+            expect(expectedDemotions).toBeLessThanOrEqual(instancePopulation);
           }
         ),
         { numRuns: NUM_RUNS }

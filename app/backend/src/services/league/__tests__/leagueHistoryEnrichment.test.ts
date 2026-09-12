@@ -134,10 +134,11 @@ describe('leagueHistoryService — name enrichment', () => {
       mockPrisma.leagueHistory.findMany.mockResolvedValue([
         { id: 1, entityType: 'robot', entityId: 5, userId: 10, ...baseRecord },
         { id: 2, entityType: 'robot', entityId: 6, userId: 10, ...baseRecord },
-        { id: 3, entityType: 'tag_team', entityId: 7, userId: 11, ...baseRecord },
-        { id: 4, entityType: 'tag_team', entityId: 8, userId: 11, ...baseRecord },
+        { id: 3, entityType: 'tag_team', entityId: 7, userId: 11, mode: 'tag_team', ...baseRecord },
+        { id: 4, entityType: 'tag_team', entityId: 8, userId: 11, mode: 'tag_team', ...baseRecord },
+        { id: 5, entityType: 'team_battle', entityId: 9, userId: 11, mode: 'league_2v2', ...baseRecord },
       ]);
-      mockPrisma.leagueHistory.count.mockResolvedValue(4);
+      mockPrisma.leagueHistory.count.mockResolvedValue(5);
       mockPrisma.robot.findMany.mockResolvedValue([
         { id: 5, name: 'Crusher' },
         { id: 6, name: 'Wrecker' },
@@ -145,6 +146,7 @@ describe('leagueHistoryService — name enrichment', () => {
       mockPrisma.teamBattle.findMany.mockResolvedValue([
         { id: 7, teamName: 'Hammer & Anvil' },
         { id: 8, teamName: 'Spike & Coil' },
+        { id: 9, teamName: 'Heavy Brigade' },
       ]);
       mockPrisma.user.findMany.mockResolvedValue([
         { id: 10, username: 'rob', stableName: 'Iron Stable' },
@@ -166,7 +168,7 @@ describe('leagueHistoryService — name enrichment', () => {
       );
       expect(mockPrisma.teamBattle.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { id: { in: expect.arrayContaining([7, 8]) } },
+          where: { id: { in: expect.arrayContaining([7, 8, 9]) } },
         }),
       );
       expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
@@ -180,6 +182,7 @@ describe('leagueHistoryService — name enrichment', () => {
         'Wrecker',
         'Hammer & Anvil',
         'Spike & Coil',
+        'Heavy Brigade',
       ]);
     });
 
