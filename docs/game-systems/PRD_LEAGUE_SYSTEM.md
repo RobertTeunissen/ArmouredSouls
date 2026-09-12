@@ -58,7 +58,7 @@ ELO (K=32, starting 1200) is used for matchmaking quality and seeding, not for p
 2. League Points are at or above the source-tier threshold
 3. The entity has completed ≥5 cycles in its current tier
 
-Zone size is `floor(total instance population × 0.10)`. The complete instance is sorted by LP descending, then entity ID ascending as a deterministic tie-break. The planner fixes those positions first and then applies LP and residency; it does not backfill from below the zone.
+Zone size is `floor(total instance population × 0.10)`. The planner creates one canonical ranking sorted by LP descending, then entity ID ascending as a deterministic tie-break. Promotion takes the first positions from that ranking, then applies LP and residency without backfill.
 
 #### Per-Tier LP Thresholds
 
@@ -75,7 +75,7 @@ Zone size is `floor(total instance population × 0.10)`. The complete instance i
 1. The entity occupies one of the fixed bottom 10% positions in its specific instance
 2. The entity has completed ≥5 cycles in its current tier
 
-The complete instance is sorted by LP ascending, then entity ID ascending. Residency is applied inside the fixed bottom zone without backfill.
+The planner takes the demotion zone from the tail of that same canonical LP-descending, entity-ID-ascending ranking and reverses it, so the lowest-ranked entity appears first. Residency is applied inside the fixed bottom zone without backfill. Because promotion and demotion come from opposite ends of one list, tied entities cannot occupy both zones.
 
 ### Key Rules
 

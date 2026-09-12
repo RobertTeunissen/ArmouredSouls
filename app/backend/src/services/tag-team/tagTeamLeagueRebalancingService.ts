@@ -7,6 +7,7 @@ import {
   tagTeamLeagueAdapter,
 } from '../team-battle/teamBattleAdapter';
 import {
+  LeagueEngineConfig,
   rebalanceAllTiers,
   determinePromotionsForInstance,
   determineDemotionsForInstance,
@@ -21,8 +22,11 @@ export { getMinLPForPromotion } from '../league/leaguePromotionThresholds';
 export const TAG_TEAM_LEAGUE_TIERS = TEAM_BATTLE_LEAGUE_TIERS;
 export type TagTeamLeagueTier = TeamBattleLeagueTier;
 
-// Tag team uses the exact same immutable gameplay configuration as 2v2/3v3.
-export const TAG_TEAM_LEAGUE_CONFIG = TEAM_BATTLE_LEAGUE_CONFIG;
+// Tag Team shares the exact gameplay policy with 2v2/3v3 but keeps distinct operational logging.
+export const TAG_TEAM_LEAGUE_CONFIG: LeagueEngineConfig = {
+  ...TEAM_BATTLE_LEAGUE_CONFIG,
+  logPrefix: 'TagTeamRebalancing',
+};
 
 // ─── Public API (unchanged signatures) ──────────────────────────────────────
 

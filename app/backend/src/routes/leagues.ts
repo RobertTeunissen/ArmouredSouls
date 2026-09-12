@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { getInstancesForTier, LeagueTier, LEAGUE_TIERS } from '../services/league/leagueInstanceService';
 import { getLeagueTierPreview } from '../services/league/league-rebalancing-preview';
 import { HEAD_TO_HEAD_LEAGUE_RULES, LeagueRuleSet } from '../services/league/league-rules';
+import { getMinLPForPromotion } from '../services/league/leaguePromotionThresholds';
 import prisma from '../lib/prisma';
 import type { Prisma, StandingsMode } from '../../generated/prisma';
 import { LeagueError, LeagueErrorCode } from '../errors';
@@ -88,7 +89,7 @@ router.get('/:tier/standings', validateRequest({ params: leagueTierParamsSchema 
       : preview.plan.instancePlans;
   const minLP = leagueRules.promotionMinLPOverride
     ?? instancePlans[0]?.minPromotionLP
-    ?? 0;
+    ?? getMinLPForPromotion(tier);
   const eligibleCount = instancePlans.reduce((sum, plan) => sum + plan.eligibleEntities, 0);
   const totalInstances = instancePlans.length;
   const instancesBelowMinimum = instancePlans.filter((plan) => !plan.hasEnoughEntities).length;

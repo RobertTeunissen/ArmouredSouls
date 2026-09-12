@@ -192,7 +192,8 @@ function getPlanSelectors<T extends LeagueEntityBase>(adapter: LeagueAdapter<T>)
 /**
  * Determine promotion candidates from the fixed top percentage of a complete
  * instance. The tier-level empty-destination cohort rule is applied by
- * `rebalanceTier`, after candidates from every instance have been combined.
+ * `planLeagueTierRebalancing` when `buildTierPlanSnapshot` combines candidates
+ * from every instance.
  */
 export async function determinePromotionsForInstance<T extends LeagueEntityBase>(
   instanceId: string,

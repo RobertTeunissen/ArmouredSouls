@@ -5,6 +5,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import leaguesRoutes from '../src/routes/leagues';
+import teamBattlesRoutes from '../src/routes/teamBattles';
 import { createTestRobot, createTestUser, deleteTestUser } from './testHelpers';
 import { enterRobotStanding } from './helpers/standings';
 import { errorHandler } from '../src/middleware/errorHandler';
@@ -17,6 +18,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use('/api/leagues', leaguesRoutes);
+app.use('/api/team-battles', teamBattlesRoutes);
 
 // Spec #51: without the errorHandler mounted, a thrown AppError falls through
 // to Express's default handler, which sends the right status with an EMPTY
@@ -79,6 +81,15 @@ describe('Leagues Routes', () => {
       expect(response.body).toHaveProperty('data');
     });
 
+    it('should report the canonical promotion threshold for an empty Silver instance', async () => {
+      const response = await request(app)
+        .get('/api/leagues/silver/standings')
+        .query({ instance: `silver_empty_${Date.now()}` });
+
+      expect(response.status).toBe(200);
+      expect(response.body.zoneMeta).toMatchObject({ minLP: 50, totalEntities: 0 });
+    });
+
     it('should order tied LP rows by entity ID consistently with promotion zones', async () => {
       const instanceId = `silver_tied_${Date.now()}`;
       const tiedRobots = await Promise.all(
@@ -129,6 +140,28 @@ describe('Leagues Routes', () => {
       expect(response.body.pagination.page).toBe(1);
       expect(response.body.pagination).toHaveProperty('pageSize');
       expect(response.body.pagination.pageSize).toBe(10);
+    });
+  });
+
+  describe('GET /api/team-battles league standings', () => {
+    it('should report the canonical promotion threshold for an empty Silver team instance', async () => {
+      const response = await request(app)
+        .get('/api/team-battles/leagues/2/silver/standings')
+        .set('Authorization', `Bearer ${authToken}`)
+        .query({ instance: `silver_empty_team_${Date.now()}` });
+
+      expect(response.status).toBe(200);
+      expect(response.body.zoneMeta).toMatchObject({ minLP: 50, totalEntities: 0 });
+    });
+
+    it('should report the canonical promotion threshold for an empty Silver Tag Team instance', async () => {
+      const response = await request(app)
+        .get('/api/team-battles/leagues/2/silver/tag-team-standings')
+        .set('Authorization', `Bearer ${authToken}`)
+        .query({ instance: `silver_empty_tag_${Date.now()}` });
+
+      expect(response.status).toBe(200);
+      expect(response.body.zoneMeta).toMatchObject({ minLP: 50, totalEntities: 0 });
     });
   });
 

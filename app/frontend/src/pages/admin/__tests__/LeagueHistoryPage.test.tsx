@@ -178,6 +178,43 @@ describe('LeagueHistoryPage', () => {
     expect(screen.getByText('TestBot — 1v1 League Timeline')).toBeInTheDocument();
   });
 
+  it('loads legacy mode-less history when its row is selected', async () => {
+    const legacyResponse = {
+      data: [{
+        ...mockEventsResponse.data[0],
+        id: 3,
+        entityName: 'LegacyBot',
+        mode: null,
+      }],
+      pagination: { page: 1, pageSize: 50, total: 1, totalPages: 1 },
+    };
+    mockedApiClient.get.mockImplementation((url: string) => {
+      if (url.includes('/api/admin/league-history/entity/')) {
+        return Promise.resolve({ data: { data: [] } });
+      }
+      if (url.includes('/api/admin/league-history/yo-yo')) {
+        return Promise.resolve({ data: [] });
+      }
+      if (url.includes('/api/admin/league-history/aggregates')) {
+        return Promise.resolve({ data: [] });
+      }
+      if (url.includes('/api/admin/league-history')) {
+        return Promise.resolve({ data: legacyResponse });
+      }
+      return Promise.resolve({ data: [] });
+    });
+
+    render(<LeagueHistoryPage />);
+    fireEvent.click(await screen.findByText('LegacyBot'));
+
+    await waitFor(() => {
+      expect(mockedApiClient.get).toHaveBeenCalledWith(
+        '/api/admin/league-history/entity/robot/5',
+        { params: {} },
+      );
+    });
+  });
+
   it('fetches data from correct API endpoints', async () => {
     render(<LeagueHistoryPage />);
 

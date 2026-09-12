@@ -32,6 +32,7 @@ import { MAX_TEAMS_PER_INSTANCE } from '../services/team-battle/teamBattleAdapte
 import { getEntityHistory } from '../services/league/leagueHistoryService';
 import { getLeagueTierPreview } from '../services/league/league-rebalancing-preview';
 import { HEAD_TO_HEAD_LEAGUE_RULES } from '../services/league/league-rules';
+import { getMinLPForPromotion } from '../services/league/leaguePromotionThresholds';
 
 const router = express.Router();
 
@@ -336,7 +337,7 @@ router.get(
       : instance
         ? []
         : preview.plan.instancePlans;
-    const minLP = instancePlans[0]?.minPromotionLP ?? 0;
+    const minLP = instancePlans[0]?.minPromotionLP ?? getMinLPForPromotion(tier);
     const isChampion = tier === HEAD_TO_HEAD_LEAGUE_RULES.tiers[HEAD_TO_HEAD_LEAGUE_RULES.tiers.length - 1];
     const isBronze = tier === HEAD_TO_HEAD_LEAGUE_RULES.tiers[0];
     const eligibleCount = instancePlans.reduce((sum, plan) => sum + plan.eligibleEntities, 0);
@@ -567,7 +568,7 @@ router.get(
       : instance
         ? []
         : preview.plan.instancePlans;
-    const minLP = instancePlans[0]?.minPromotionLP ?? 0;
+    const minLP = instancePlans[0]?.minPromotionLP ?? getMinLPForPromotion(tier);
     const isChampion = tier === HEAD_TO_HEAD_LEAGUE_RULES.tiers[HEAD_TO_HEAD_LEAGUE_RULES.tiers.length - 1];
     const isBronze = tier === HEAD_TO_HEAD_LEAGUE_RULES.tiers[0];
     const eligibleCount = instancePlans.reduce((sum, plan) => sum + plan.eligibleEntities, 0);

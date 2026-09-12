@@ -99,7 +99,7 @@ const leagueHistoryEntitySchema = z.object({
 });
 
 const leagueHistoryEntityQuerySchema = z.object({
-  mode: leagueHistoryModeSchema,
+  mode: leagueHistoryModeSchema.optional(),
 });
 
 const leagueHistoryYoYoSchema = z.object({
@@ -295,7 +295,7 @@ router.get('/league-history/entity/:entityType/:entityId', authenticateToken, re
 }), async (req: Request, res: Response) => {
   const entityType = req.params.entityType as EntityType;
   const entityId = Number(req.params.entityId);
-  const mode = req.query.mode as LeagueHistoryMode;
+  const mode = req.query.mode as LeagueHistoryMode | undefined;
   const data = await getEntityHistory(entityType, entityId, mode);
   res.json({ data });
 });

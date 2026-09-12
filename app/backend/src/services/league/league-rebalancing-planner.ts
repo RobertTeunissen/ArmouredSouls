@@ -34,15 +34,13 @@ export interface LeagueTierRebalancingPlan<T> {
   destinationPopulation: number;
 }
 
-function sortByLeaguePoints<T>(
+function rankByLeaguePoints<T>(
   entities: readonly T[],
   selectors: LeaguePlanSelectors<T>,
-  direction: 'asc' | 'desc',
 ): T[] {
-  const multiplier = direction === 'asc' ? 1 : -1;
   return [...entities].sort((left, right) => {
-    const lpDifference = selectors.getLeaguePoints(left) - selectors.getLeaguePoints(right);
-    if (lpDifference !== 0) return lpDifference * multiplier;
+    const lpDifference = selectors.getLeaguePoints(right) - selectors.getLeaguePoints(left);
+    if (lpDifference !== 0) return lpDifference;
     return selectors.getEntityId(left) - selectors.getEntityId(right);
   });
 }
@@ -76,8 +74,11 @@ export function planLeagueInstanceRebalancing<T>(
     ? Math.floor(totalEntities * rules.demotionPercentage)
     : 0;
 
-  const promotionZone = sortByLeaguePoints(entities, selectors, 'desc').slice(0, promotionSlots);
-  const demotionZone = sortByLeaguePoints(entities, selectors, 'asc').slice(0, demotionSlots);
+  const rankedEntities = rankByLeaguePoints(entities, selectors);
+  const promotionZone = rankedEntities.slice(0, promotionSlots);
+  const demotionZone = demotionSlots === 0
+    ? []
+    : rankedEntities.slice(-demotionSlots).reverse();
   const promotionCandidates = promotionZone.filter(
     (entity) => selectors.getCyclesInTier(entity) >= rules.minCyclesForRebalancing
       && selectors.getLeaguePoints(entity) >= minPromotionLP,

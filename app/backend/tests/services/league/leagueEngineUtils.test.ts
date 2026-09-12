@@ -99,6 +99,25 @@ describe('canonical head-to-head league rebalancing planner', () => {
     },
   );
 
+  it('should select opposite ends of one canonical ranking when all LP values are tied', () => {
+    const standings: TestStanding[] = Array.from({ length: 20 }, (_, index) => ({
+      entityId: index + 1,
+      leaguePoints: 100,
+      cyclesInTier: 5,
+    }));
+
+    const plan = planLeagueInstanceRebalancing(
+      'silver_1',
+      'silver',
+      standings,
+      HEAD_TO_HEAD_LEAGUE_RULES,
+      selectors,
+    );
+
+    expect(plan.promotionZone.map(standing => standing.entityId)).toEqual([1, 2]);
+    expect(plan.demotionZone.map(standing => standing.entityId)).toEqual([20, 19]);
+  });
+
   it('should not backfill promotion positions when a top-zone entity is ineligible', () => {
     const standings: TestStanding[] = Array.from({ length: 20 }, (_, index) => ({
       entityId: index + 1,

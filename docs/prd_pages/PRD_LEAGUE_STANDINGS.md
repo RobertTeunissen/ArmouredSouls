@@ -22,8 +22,8 @@ The League Standings page (`/league-standings`) displays competitive rankings fo
 
 The API and executor call the same pure planner. For each instance:
 
-1. Sort the complete instance population by LP (entity ID breaks ties deterministically).
-2. Fix `floor(totalEntities × 10%)` positions at the top and bottom.
+1. Create one canonical ranking of the complete instance population by LP descending, then entity ID ascending.
+2. Fix `floor(totalEntities × 10%)` positions from opposite ends: promotion from the start, demotion from the reversed tail.
 3. Apply five-cycle residency and the source-tier LP threshold inside those positions.
 4. Do not backfill an ineligible position from outside its zone.
 
@@ -31,7 +31,7 @@ A selected instance marks the qualifying rows in its fixed zones. A tier-wide vi
 
 When promotion would open an empty destination tier, candidates from all source instances are combined. Fewer than three candidates are displayed as held, not as executable promotion candidates. API metadata exposes the raw candidates, effective candidates, total population, total/active instance counts, under-minimum counts, and block reason so the UI cannot disagree with execution. Selected-instance warnings show that instance's population; tier-wide warnings distinguish mixed active/paused instances from a tier where every instance is paused.
 
-Displayed standings use the same LP-descending, entity-ID-ascending ordering as the planner, so tied rows keep the same rank and fixed-zone boundary in the API and executor.
+Displayed standings use the same LP-descending, entity-ID-ascending canonical ranking from which the planner takes both ends, so tied rows keep the same rank and fixed-zone boundaries in the API and executor.
 
 The labels explicitly state “top/bottom 10% of total instance.” White rows with sufficient residency are not necessarily candidates: position and LP still apply, and no-backfill is intentional.
 

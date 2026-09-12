@@ -44,7 +44,8 @@
     "overrides": {
       "test-exclude": "^7.0.1",
       "tar": ">=6.2.2",
-      "js-yaml": ">=4.2.0"
+      "js-yaml": ">=4.2.0",
+      "onnxruntime-node": "1.24.3"
     },
     "onlyBuiltDependencies": [
       "@tensorflow/tfjs-node",

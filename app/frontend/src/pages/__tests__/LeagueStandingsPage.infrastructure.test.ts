@@ -92,6 +92,16 @@ describe('Test Infrastructure', () => {
       expect(response.pagination.pageSize).toBe(50);
       expect(response.pagination.total).toBe(3);
       expect(response.pagination.totalPages).toBe(1);
+      expect(response.zoneMeta).toEqual(expect.objectContaining({
+        promotionCandidates: 0,
+        effectivePromotionCandidates: 0,
+        promotionBlockReason: null,
+        totalEntities: 3,
+        totalInstances: 1,
+        activeInstances: 0,
+        instancesBelowMinimum: 1,
+        smallestInstancePopulation: 3,
+      }));
     });
 
     it('should calculate total pages correctly in paginated response', () => {

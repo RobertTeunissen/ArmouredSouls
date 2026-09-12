@@ -331,6 +331,15 @@ describe('Admin League History Endpoints', () => {
       expect(mockGetEntityHistory).toHaveBeenCalledWith('robot', 5, 'league_1v1');
     });
 
+    it('should allow legacy entity history requests without a mode', async () => {
+      mockGetEntityHistory.mockResolvedValue([]);
+
+      const res = await request(app).get('/api/admin/league-history/entity/robot/5');
+
+      expect(res.status).toBe(200);
+      expect(mockGetEntityHistory).toHaveBeenCalledWith('robot', 5, undefined);
+    });
+
     it('should return mode-scoped history for a team_battle entity', async () => {
       mockGetEntityHistory.mockResolvedValue([]);
 

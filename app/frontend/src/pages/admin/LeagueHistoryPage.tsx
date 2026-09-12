@@ -188,12 +188,10 @@ function LeagueHistoryPage(): React.ReactElement {
     setEntityHistory([]); // Clear stale data immediately
     setSlideOverOpen(true);
 
-    if (!row.mode) return;
-
     try {
       const data = await api.get<{ data: LeagueHistoryEvent[] }>(
         `/api/admin/league-history/entity/${row.entityType}/${row.entityId}`,
-        { params: { mode: row.mode } },
+        { params: row.mode ? { mode: row.mode } : {} },
       );
       setEntityHistory(
         data.data.map((record) => ({

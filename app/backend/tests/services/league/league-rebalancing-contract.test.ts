@@ -195,7 +195,9 @@ describe('canonical league rebalancing contract', () => {
       { mode: 'tag_team', adapter: tagTeamLeagueAdapter, config: TAG_TEAM_LEAGUE_CONFIG },
     ];
 
-    expect(TAG_TEAM_LEAGUE_CONFIG).toBe(TEAM_BATTLE_LEAGUE_CONFIG);
+    expect(TEAM_BATTLE_LEAGUE_CONFIG.logPrefix).toBe('TeamBattleRebalancing');
+    expect(TAG_TEAM_LEAGUE_CONFIG.logPrefix).toBe('TagTeamRebalancing');
+    expect(TAG_TEAM_LEAGUE_CONFIG).not.toBe(TEAM_BATTLE_LEAGUE_CONFIG);
     for (const wiring of modeWiring) {
       expect(wiring.adapter.mode).toBe(wiring.mode);
       expect({

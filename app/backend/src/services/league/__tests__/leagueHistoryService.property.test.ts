@@ -401,6 +401,17 @@ describe('leagueHistoryService Property Tests', () => {
    * **Validates: Requirements 5.2, 5.3, 8.5, 9.5**
    */
   describe('Property 6: Query result ordering', () => {
+    it('should omit the mode predicate when querying legacy entity history', async () => {
+      mockPrisma.leagueHistory.findMany.mockResolvedValue([]);
+
+      await getEntityHistory('robot', 42);
+
+      expect(mockPrisma.leagueHistory.findMany).toHaveBeenCalledWith({
+        where: { entityType: 'robot', entityId: 42 },
+        orderBy: { cycleNumber: 'asc' },
+      });
+    });
+
     it('should call Prisma with orderBy cycleNumber asc', async () => {
       await fc.assert(
         fc.asyncProperty(
