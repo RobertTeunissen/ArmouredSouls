@@ -19,7 +19,11 @@ beforeEach(() => {
     clear: vi.fn(),
   };
    
-  global.localStorage = localStorageMock as unknown as Storage;
+  Object.defineProperty(window, 'localStorage', {
+    configurable: true,
+    writable: true,
+    value: localStorageMock,
+  });
 });
 
 // Cleanup after each test
