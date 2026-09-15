@@ -302,7 +302,7 @@ Replacement coverage is mandatory across:
 
 - unit/property: canonical cycle identity, both reconciliation equations, per-cycle sequence restarts, sale polarity, facility itemisation, repair single contribution, allocation conservation, direct-net identity, pagination invariance, forecasts, and source-reference properties;
 - PostgreSQL integration: preparation Cycle 1, scheduled/admin cutover races and blocked-writer reassignment, consistent read cutoff, zero settlement rows, boundaries/snapshots, API auth/validation/ownership, cache isolation, repair and battle joins, stable ordering, and payload safety;
-- frontend component: version/provenance, period controls, provisional labels, independent errors, itemised statements, public references, local time/DST, five robot metrics, pagination notices, keyboard and responsive states;
+- frontend component: version/provenance, period controls, provisional labels, independent errors, category-summary statements without public references, local time/DST, five robot metrics, pagination notices, keyboard and responsive states;
 - Playwright: redirects, one player navigation entry, lazy panels, current-inclusive history, 44px controls, keyboard tabs/pagination, readable itemisation, and no horizontal overflow at 320, 375, 768, 1023, 1024, and 1920px;
 - performance fixture: p95, query-growth, and payload ceilings with no per-robot query growth.
 
