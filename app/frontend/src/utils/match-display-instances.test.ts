@@ -150,7 +150,8 @@ describe('expandBattleDisplayInstances', () => {
     const battle = makeBattle('grand_melee', [
       makeParticipant(10, 7, 1),
       makeParticipant(11, 7, 1),
-      makeParticipant(12, 8, 1),
+      makeParticipant(12, 7, 1),
+      makeParticipant(13, 8, 1),
     ]);
 
     const instances = expandBattleDisplayInstances(battle, { userId: 7 });
@@ -158,6 +159,7 @@ describe('expandBattleDisplayInstances', () => {
     expect(instances.map(instance => instance.displayInstanceKey)).toEqual([
       'battle:42:robot:10',
       'battle:42:robot:11',
+      'battle:42:robot:12',
     ]);
     expect(instances.every(instance => instance.perspectiveRobotIds.length === 1)).toBe(true);
   });

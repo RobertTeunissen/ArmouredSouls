@@ -1,5 +1,6 @@
 import React, { useId } from 'react';
 import { formatCurrency } from '../../utils/formatters';
+import { summarizeStatementLines } from '../../utils/financeStatementSummary';
 import type {
   FinanceStatement as FinanceStatementData,
   ItemisedStatementLine,
@@ -15,30 +16,9 @@ interface FinanceStatementProps {
   heading?: string;
 }
 
-function isRepairLine(line: ItemisedStatementLine | RepairStatementLine): line is RepairStatementLine {
-  return line.taxonomy === 'repair_cost' && 'repairType' in line;
-}
-
 function formatSignedCurrency(amount: number): string {
   if (amount === 0) return formatCurrency(0);
   return `${amount > 0 ? '+' : '−'}${formatCurrency(Math.abs(amount))}`;
-}
-
-function provenanceLabel(line: ItemisedStatementLine | RepairStatementLine): string {
-  const evidence = line.provenance.evidenceKind === 'actual'
-    ? 'Actual'
-    : line.provenance.evidenceKind === 'quoted'
-      ? 'Quoted'
-      : 'Modelled';
-  const basis = line.provenance.basis === 'report_period'
-    ? 'report period'
-    : line.provenance.basis === 'current_context'
-      ? 'current context'
-      : 'completed sample';
-  const finality = line.provenance.finality === 'current_provisional'
-    ? 'current cycle provisional'
-    : 'completed historical';
-  return `${evidence} · ${basis} · ${finality}`;
 }
 
 function StatementLines({
@@ -48,27 +28,24 @@ function StatementLines({
   lines: Array<ItemisedStatementLine | RepairStatementLine>;
   emptyMessage: string;
 }): React.ReactElement {
-  if (lines.length === 0) return <p className="text-sm text-secondary">{emptyMessage}</p>;
+  const summaries = summarizeStatementLines(lines);
+  if (summaries.length === 0) return <p className="text-sm text-secondary">{emptyMessage}</p>;
 
   return (
     <ul className="space-y-2">
-      {lines.map((line) => (
+      {summaries.map((summary) => (
         <li
-          key={`${line.sourceReference}-${line.label}`}
+          key={summary.key}
           className="rounded-md border border-white/10 bg-background/40 p-3"
         >
           <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
-              <p className="font-medium text-white">{line.label}</p>
-              {isRepairLine(line) ? (
-                <p className="text-xs text-secondary">
-                  {line.repairType === 'manual' ? 'Manual' : 'Automatic'} repairs · {line.eventCount} event{line.eventCount === 1 ? '' : 's'}
-                </p>
-              ) : null}
-              <p className="break-all text-xs text-tertiary">Reference {line.sourceReference}</p>
-              <p className="text-xs text-tertiary">{provenanceLabel(line)}</p>
+              <p className="font-medium text-white">{summary.label}</p>
+              <p className="text-xs text-secondary">
+                {summary.count} event{summary.count === 1 ? '' : 's'}
+              </p>
             </div>
-            <p className="shrink-0 text-right font-semibold tabular-nums">{formatCurrency(Math.abs(line.amount))}</p>
+            <p className="shrink-0 text-right font-semibold tabular-nums">{formatCurrency(summary.amount)}</p>
           </div>
         </li>
       ))}

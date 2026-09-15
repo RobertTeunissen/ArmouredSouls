@@ -201,6 +201,7 @@ function makeResolvedParticipant(
   team: number,
   credits: number,
   streamingRevenue: number,
+  placement: number | null = null,
 ): BattleParticipantData {
   return {
     robotId,
@@ -214,7 +215,7 @@ function makeResolvedParticipant(
     prestigeAwarded: robotId,
     fameAwarded: credits / 10,
     damageDealt: 10,
-    placement: null,
+    placement,
     yielded: false,
     destroyed: false,
     robot: {
@@ -271,6 +272,33 @@ describe('RecentBattles resolved display instances', () => {
     expect(cards).toHaveLength(1);
     expect(cards[0].textContent).toContain('660');
     expect(cards[0].textContent).not.toContain('990');
+  });
+
+  it('should show each owned Grand Melee robot with its individual placement', () => {
+    const battle = makeResolvedBattle([
+      makeResolvedParticipant(10, 7, 1, 100, 10, 6),
+      makeResolvedParticipant(11, 7, 1, 200, 20, 8),
+      makeResolvedParticipant(12, 7, 1, 300, 30, 10),
+      makeResolvedParticipant(20, 8, 1, 900, 90, 1),
+    ], {
+      battleType: 'grand_melee',
+      kothPlacement: 6,
+      kothParticipantCount: 11,
+    });
+
+    render(
+      <MemoryRouter>
+        <RecentBattles battles={[battle]} userId={7} />
+      </MemoryRouter>,
+    );
+
+    const cards = screen.getAllByRole('button', { name: /battle result/i });
+    expect(cards).toHaveLength(3);
+    expect(cards.map(card => card.textContent)).toEqual(expect.arrayContaining([
+      expect.stringContaining('6th of 11'),
+      expect.stringContaining('8th of 11'),
+      expect.stringContaining('10th of 11'),
+    ]));
   });
 
   it('should render two independent cards for opposite owned sides', () => {

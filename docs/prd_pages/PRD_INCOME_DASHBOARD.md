@@ -96,6 +96,8 @@ The Finance Statement exposes:
 
 Prestige is not Credits and never enters statement arithmetic, ROI, balance, net movement, or Revenue Growth.
 
+The report payload retains validated itemised lines for reconciliation and detail consumers. The player-facing Finance Statement groups those lines by category, shows the combined amount and event count, and does not display source references or per-line provenance. Individual event references remain available only in the separate Robot Deployment detail view.
+
 ### 5.3 Limitations
 
 Rows without financial identity remain legacy evidence. A missing pair/boundary, snapshot disagreement, administrative anomaly, cycle identity disagreement, repair-link mismatch, or battle-allocation mismatch produces a typed non-monetary limitation. A limitation does not create a line, total, trend, or robot amount. The UI shows what is affected and never fills the gap using timestamps, snapshots, cached quotes, current facilities, current prestige, or current formulas.
@@ -126,7 +128,7 @@ It uses only shared functions in `app/shared/utils/repairCost.ts`, applies disco
 Overview is the only initial request. It uses project tile/card conventions and contains:
 
 1. selected-period balance, net cash movement, operating result, and investment purchases;
-2. expandable Finance Statement with separate proceeds and purchases headings;
+2. expandable Finance Statement with separate proceeds and purchases headings and category totals/counts;
 3. Revenue Growth;
 4. Prestige Milestone Forecast;
 5. Full Damage Repair Reference; and
