@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import SeasonHistoryBlock from '../components/season/SeasonHistoryBlock';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import Navigation from '../components/Navigation';
 import RobotDashboardCard from '../components/RobotDashboardCard';
 import AchievementBadge from '../components/AchievementBadge';
 import AchievementPinnerModal from '../components/AchievementPinnerModal';
@@ -113,7 +112,6 @@ function StableViewPage() {
   if (state === 'loading') {
     return (
       <div className="min-h-screen bg-background text-white">
-        <Navigation />
         <div className="container mx-auto px-4 py-12 text-center">
           <div className="text-xl text-secondary">Loading stable...</div>
         </div>
@@ -125,7 +123,6 @@ function StableViewPage() {
   if (state === 'not-found') {
     return (
       <div className="min-h-screen bg-background text-white">
-        <Navigation />
         <div className="container mx-auto px-4 py-12 text-center">
           <h2 className="text-2xl font-bold mb-4">Stable not found</h2>
           <button
@@ -143,7 +140,6 @@ function StableViewPage() {
   if (state === 'error') {
     return (
       <div className="min-h-screen bg-background text-white">
-        <Navigation />
         <div className="container mx-auto px-4 py-12 text-center">
           <h2 className="text-2xl font-bold mb-4">Failed to load stable. Please try again.</h2>
           <button
@@ -210,8 +206,6 @@ function StableViewPage() {
 
   return (
     <div className="min-h-screen bg-background text-white">
-      <Navigation />
-
       <div className="container mx-auto px-4 py-8 pb-24 lg:pb-8">
         {/* Back button */}
         <button

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import Navigation from '../components/Navigation';
 import { api } from '../utils/api';
 import { createRobot } from '../utils/robotApi';
 import { ApiError } from '../utils/ApiError';
@@ -92,7 +91,6 @@ function CreateRobotPage() {
 
   return (
     <div className="min-h-screen bg-background text-white">
-      <Navigation />
 
       <div className="container mx-auto px-4 py-8 pb-24 lg:pb-8">
         <div className="max-w-2xl mx-auto">

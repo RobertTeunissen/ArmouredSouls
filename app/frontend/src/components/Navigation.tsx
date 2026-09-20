@@ -17,7 +17,11 @@ import { NavLink, DropdownMenu, MobileTab, MobileDrawer } from './nav';
 import { allPages } from './nav';
 import type { UserRobot } from './nav';
 
-function Navigation() {
+export interface NavigationProps {
+  onOpenSearch?: () => void;
+}
+
+function Navigation({ onOpenSearch }: NavigationProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
@@ -102,6 +106,19 @@ function Navigation() {
           </div>
 
           <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={onOpenSearch}
+              className="flex min-h-11 items-center gap-2 rounded-md border border-white/10 bg-surface px-3 py-2 text-primary transition-colors hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              aria-label="Open search"
+            >
+              <svg aria-hidden="true" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="7" />
+                <path d="m20 20-4-4" />
+              </svg>
+              <span>Search</span>
+              <kbd className="rounded border border-white/20 px-1.5 py-0.5 text-xs text-secondary">⌘ K</kbd>
+            </button>
             <SeasonProgressIndicator />
             <div className="flex items-center gap-2 bg-surface border border-white/10 px-3 py-2 rounded-md">
               <span className="text-primary">₡</span>
@@ -127,6 +144,18 @@ function Navigation() {
             </button>
             <div className="flex items-center gap-2">
             <SeasonProgressIndicator compact />
+            <button
+              type="button"
+              onClick={onOpenSearch}
+              className="flex min-h-11 min-w-11 items-center justify-center rounded-md border border-white/10 bg-surface text-primary transition-colors hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              aria-label="Open search"
+              title="Search"
+            >
+              <svg aria-hidden="true" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="7" />
+                <path d="m20 20-4-4" />
+              </svg>
+            </button>
             <div className="flex items-center gap-2 bg-surface border border-white/10 px-2 py-1 rounded-md">
               <span className="text-primary text-sm">₡</span>
               <span className="text-primary text-sm font-medium">{user.currency.toLocaleString()}</span>

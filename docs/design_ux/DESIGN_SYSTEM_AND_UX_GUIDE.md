@@ -1401,6 +1401,43 @@ Based on dark theme aesthetic with industrial metallic tones:
 - Animation: Fade + scale-in (250ms)
 - Close: X button top-right, Escape key
 
+### Search Palette Component Pattern
+
+**Purpose**: Provide one search-only discovery surface for robots, stables, and guide articles without turning search into a command menu.
+
+**Desktop treatment (at and above the 1024px breakpoint)**:
+- Render the Search_Palette as a bounded, centered overlay above the current page rather than a full-page replacement.
+- Keep the current page visible beneath a darkened backdrop consistent with the Modal Component Pattern.
+- Bound both width and height so the palette remains scannable; result content scrolls inside the palette rather than expanding the page.
+- Keep the visible scope statement, query field, grouped results, recent-history controls, retry state, and close control within the same surface.
+
+**Mobile treatment (320px through 1023px)**:
+- Render the Search_Palette as a full-width, vertically ordered sheet. At exactly 1024px, use the desktop overlay treatment.
+- Stack the sheet header, query field, scope text, recent history, result groups, and status or retry controls in one readable column.
+- Allow vertical scrolling inside the sheet while keeping the close and query controls discoverable; do not introduce a second horizontal scrolling surface.
+- Use `box-sizing: border-box`, wrapped labels, and constrained result content so the palette and its backdrop never create horizontal overflow at any supported mobile width.
+
+**Specifications**:
+- Dialog semantics: expose an accessible name and visible `Search robots, stables, or guide articles` scope text; the palette contains results and history only, with no command actions.
+- Category labels: present readable text headings in a consistent order — **Robots**, **Stables**, and **Guide Articles**. Do not rely on color or icons alone to identify a group; retain labels when a group is empty or loading.
+- Keyboard behavior: focus the query field on open, keep Tab and Shift+Tab within the active dialog, support Escape to dismiss, and support Arrow-key navigation plus Enter activation for result items. The desktop and mobile Search controls remain visible discovery mechanisms; Cmd+K/Ctrl+K is an accelerator, never the only entry point.
+- Focus visibility: every trigger, close, clear-history, retry, result, and query control needs a visible `:focus-visible` treatment using the primary accent and sufficient contrast against the surface. Never remove the browser focus indication without replacing it.
+- Focus restoration: return focus to the Search_Control that opened the palette when it remains available; when a result is selected, close the palette before navigation and restore or transfer focus without leaving focus on a removed sheet.
+- Touch targets: provide a minimum 44px × 44px activation region for the Search_Control, close and history controls, retry, and every result. Keep icon buttons paired with an accessible label.
+- Motion: follow Management Motion — a short ease-out fade with a restrained desktop scale-in or mobile vertical sheet reveal, no bounce, elastic easing, rotation, looping, or horizontal movement. Keep the transition at or below 250ms and honor `prefers-reduced-motion` by removing transforms and using a simple fade.
+- State changes: loading, too-short, recent-history, empty, results, and error states should replace content in place without shifting the surrounding page or losing the active query.
+
+### Admin Search Analytics Responsive Pattern
+
+**Purpose**: Keep the administrator-only Search Analytics report distinct from the player Search_Palette while preserving the same responsive and accessibility standards.
+
+**Specifications**:
+- The Admin Search Analytics page is an Admin_Portal surface, not part of the Player_Shell, Global_Header, or player Search_Palette. Do not reuse the palette overlay or present analytics in player search results.
+- At and above 1024px, use the existing admin layout conventions for filters, summary metrics, trends, phrase/category panels, and bounded player/stable analysis.
+- Below 1024px, stack filters and their actions first, followed by summary metrics, trends, phrase/category sections, analysis records, and pagination. Use one column and preserve clear section headings rather than compressing unrelated panels side by side.
+- Reflow analysis tables into stacked records with readable field/value pairs at 320px–1023px. Do not require page-wide horizontal scrolling or allow long phrases, stable names, or controls to widen the viewport.
+- Keep filter fields, retry, pagination, and admin navigation controls at least 44px × 44px with visible focus states and keyboard operation at every viewport.
+
 ### Status Bar Component Pattern
 
 **Purpose**: Visual representation of current/max values (HP, Shield, storage)

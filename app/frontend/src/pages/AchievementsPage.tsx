@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import Navigation from '../components/Navigation';
 import AchievementBadge from '../components/AchievementBadge';
 import { api } from '../utils/api';
 import {
@@ -101,7 +100,6 @@ function AchievementsPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background text-white">
-        <Navigation />
         <div className="container mx-auto px-4 py-12 text-center">
           <div className="text-xl text-secondary">Loading achievements...</div>
         </div>
@@ -112,7 +110,6 @@ function AchievementsPage() {
   if (error || !data) {
     return (
       <div className="min-h-screen bg-background text-white">
-        <Navigation />
         <div className="container mx-auto px-4 py-12 text-center">
           <h2 className="text-2xl font-bold mb-4">{error || 'Failed to load achievements.'}</h2>
         </div>
@@ -122,7 +119,6 @@ function AchievementsPage() {
 
   return (
     <div className="min-h-screen bg-background text-white">
-      <Navigation />
       <div className="container mx-auto px-4 py-8 pb-24 lg:pb-8">
         <h1 className="text-3xl font-bold mb-6">Achievements</h1>
 

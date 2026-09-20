@@ -685,6 +685,68 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
 />
 ```
 
+## Shared Player Shell and Search Palette Composition
+
+Use a shared route layout for authenticated player surfaces that need global navigation or an overlay entry point. The layout owns the shell-level composition; individual pages own only their route content.
+
+### Post-Onboarding Player Route Layout
+
+- Place every authenticated post-onboarding player route beneath one `PlayerShell` route layout.
+- Keep `/onboarding`, login/register and front-page routes, `/`, `/admin`, and all admin descendants outside the player shell. The admin portal is a separate application surface and must not inherit player navigation or player overlays.
+- Render route loading, error, and not-found states inside the shell so the global header and shell-owned overlays remain available while route content changes.
+- Keep destination authorization and page behavior in the destination route; the shell must not add route-specific access or data-fetching rules.
+
+### Single Shell-Level Mount
+
+- `PlayerShell` renders exactly one `Navigation`, exactly one `SearchPalette`, and the route `Outlet`.
+- Shell-managed pages must not import or render `Navigation` or `SearchPalette` themselves. `Navigation` may receive callbacks such as `onOpenSearch`, but it must not render the palette.
+- Keep palette state and lifecycle in one shell-level hook or controller. Do not create a second palette instance for a page, mobile variant, loading fallback, error boundary, or not-found view.
+- Keep the search surface search-only: it may show the query input, recent searches, grouped results, loading/error/empty states, and retry, but it must not become a command menu or duplicate page navigation.
+
+### Header Search Control and Discoverability
+
+- `Navigation` remains the global header: use the existing fixed desktop top navbar and fixed mobile top header rather than introducing a second global header.
+- At widths of `1024px` and above, provide a visibly labelled `Search` control in the fixed desktop navbar and show a visible `⌘ K` or `Ctrl K` hint appropriate to the platform.
+- From `320px` through `1023px`, provide a visible search icon/button in the fixed mobile top header. Do not hide the control in bottom navigation or a `More` drawer.
+- Cmd/Ctrl+K is an accelerator only. The visible Search control must remain sufficient for discovery and must work with pointer, touch, and keyboard activation.
+- When the palette is open, state its scope in visible text and expose an accessible name that describes the search surface.
+
+### Responsive Overlay Rules
+
+Use the existing `1024px` desktop/mobile breakpoint consistently:
+
+- Desktop (`>=1024px`): render a bounded overlay while keeping the current page visible behind it.
+- Mobile (`320px–1023px`): render a vertically ordered, internally scrollable sheet. Keep the input, close action, states, history, and results in a predictable vertical flow.
+- Keep mobile surfaces within the viewport (`max-width: 100%`/`100vw` as appropriate), allow long labels to wrap, and set `min-width: 0` on flex/grid children that contain user or server text. Prevent horizontal page overflow; scrolling on mobile overlays should be vertical and owned by the sheet or result region.
+- Use mobile-first styles and extend the existing responsive tab/layout pattern where a surface has multiple sections. Test the boundary at `1023px` and `1024px`, as well as the supported minimum width of `320px`; do not rely on a desktop layout merely shrinking until it happens to fit.
+
+### Focus and Keyboard Interaction
+
+Interactive overlays must implement a complete focus lifecycle:
+
+- Use a semantic dialog (`role="dialog"`, `aria-modal="true"`) with a programmatic accessible name and a visible close control.
+- On open, move focus into the dialog, normally to the search input or the first meaningful control. While open, trap `Tab` and `Shift+Tab` within the dialog and keep the focus indicator visible.
+- Support `Escape` to dismiss, Arrow-key movement through result items where the result-list pattern supports it, and `Enter` to activate the focused result. Close the palette before navigating to a selected route.
+- Restore focus to the Search control that opened the palette when it still exists; if it was removed or disabled, use the nearest stable shell-level fallback without throwing or leaving focus lost.
+- Do not use clickable non-interactive elements for controls or results. Use native buttons/links where possible, provide an accessible name for icon-only controls, and ensure state changes are announced through appropriate labels or live-region semantics without exposing implementation errors.
+
+### Accessible Result Lists and Touch Targets
+
+- Render grouped results with semantic list structure and readable category headings. Each result must have a unique, descriptive accessible name and expose only the fields needed for its destination.
+- Results must be operable by pointer, keyboard, and assistive technology. Use native links for direct navigation or buttons when selection performs an action; support predictable Tab order and, where Arrow-key navigation is provided, keep the active item and visible focus synchronized.
+- Every Search control, close/retry/history control, clear control, pagination control, and result activation region must be at least `44px` by `44px`, including icon-only controls. Keep visible focus styles with sufficient contrast and do not remove the browser outline without an equivalent replacement.
+- Keep result labels and category text readable at narrow widths. Wrap text rather than clipping it or forcing the page to scroll horizontally.
+
+## Admin Page Responsive Conventions
+
+Admin pages remain inside the existing admin route/layout boundary and must not be rendered through `PlayerShell`.
+
+- At `>=1024px`, preserve the established admin layout: fixed/desktop sidebar, page title and controls, and multi-column report sections or tables where they improve scanning.
+- Below `1024px` and down to `320px`, stack page sections, filters, cards, tables, and pagination vertically in a logical reading order. Keep the admin sidebar/header navigation usable without competing with page content.
+- Keep the outer admin page free of horizontal overflow. For data that cannot be meaningfully reflowed, use a clearly bounded, keyboard-accessible internal table scroller or a responsive card representation; never let a wide child expand the viewport.
+- Give filters, retry actions, pagination, sidebar controls, and other interactive admin controls a minimum `44px` by `44px` activation region and visible focus. Preserve labels and status/error text when controls wrap.
+- Reuse `AdminLayout` title/sidebar, lazy-page outlet, loading fallback, and content error-boundary conventions. Do not create a second admin shell or duplicate navigation for a responsive variant.
+
 ## Styling Best Practices
 
 ### Tailwind CSS Usage

@@ -8,7 +8,6 @@
  * Requirements: R9.10, R9.11
  */
 
-import Navigation from '../components/Navigation';
 import SubscriptionMatrix from '../components/subscriptions/SubscriptionMatrix';
 import BookingOfficeUpgradePanel from '../components/subscriptions/BookingOfficeUpgradePanel';
 import { useStableOverview } from '../hooks/useSubscriptions';
@@ -33,7 +32,6 @@ function BookingOfficePage() {
 
   return (
     <div className="min-h-screen bg-background text-white">
-      <Navigation />
 
       <div className="container mx-auto px-4 py-8 pb-24 lg:pb-8">
         {/* Page Header */}

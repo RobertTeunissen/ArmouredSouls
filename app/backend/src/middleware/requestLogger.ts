@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import logger from '../config/logger';
+import { safeRequestPath } from '../utils/safeRequestPath';
 
 const SENSITIVE_PATTERNS = [
   /password/i,
@@ -43,7 +44,7 @@ export function requestLogger(req: Request, res: Response, next: NextFunction): 
 
     logger[level]('request completed', {
       method: req.method,
-      path: req.originalUrl,
+      path: safeRequestPath(req.originalUrl),
       statusCode: status,
       responseTime,
     });

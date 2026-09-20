@@ -25,6 +25,7 @@ const NAV_GROUPS: NavGroup[] = [
     section: 'Overview',
     items: [
       { label: 'Dashboard', path: '/admin/dashboard', icon: '📊' },
+      { label: 'Search Analytics', path: '/admin/search-analytics', icon: '🔎' },
     ],
   },
   {
@@ -83,6 +84,7 @@ const NAV_GROUPS: NavGroup[] = [
 /** Map route paths to human-readable page titles for the header bar. */
 const PAGE_TITLES: Record<string, string> = {
   '/admin/dashboard': 'Dashboard',
+  '/admin/search-analytics': 'Search Analytics',
   '/admin/cycles': 'Cycle Controls',
   '/admin/seasons': 'Season Control',
   '/admin/practice-arena': 'Practice Arena',

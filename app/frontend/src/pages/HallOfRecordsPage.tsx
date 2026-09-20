@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { api } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
-import Navigation from '../components/Navigation';
 import { useNavigate } from 'react-router-dom';
 import { createLogger } from '../utils/logger';
 import {
@@ -85,7 +84,6 @@ function HallOfRecordsPage() {
 
   return (
     <div className="min-h-screen bg-background text-white pb-24 md:pb-8">
-      <Navigation />
       <div className="container mx-auto px-4 py-8 max-w-[1800px]">
         {/* Header */}
         <div className="mb-8">

@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import Navigation from '../components/Navigation';
 import { useRobotStore } from '../stores';
 import { api } from '../utils/api';
 import {
@@ -346,7 +345,6 @@ function LeagueStandingsPage() {
 
   return (
     <div className="min-h-screen bg-background text-white">
-      <Navigation />
 
       <div className="container mx-auto px-4 py-8 pb-24 lg:pb-8">
         <h1 className="text-4xl font-bold mb-6">League Standings</h1>

@@ -39,6 +39,15 @@ import type {
   EntityType,
   LeagueHistoryMode,
 } from '../services/league/leagueHistoryService';
+import {
+  getSearchAnalyticsReport,
+  SEARCH_ANALYTICS_REPORT_DEFAULT_LIMIT,
+  SEARCH_ANALYTICS_REPORT_DEFAULT_PAGE,
+  SEARCH_ANALYTICS_REPORT_MAX_CYCLE,
+  SEARCH_ANALYTICS_REPORT_MAX_LIMIT,
+  SEARCH_ANALYTICS_REPORT_MAX_PAGE,
+} from '../services/search/searchAnalyticsReportService';
+import type { SearchAnalyticsReportQuery } from '../services/search/searchAnalyticsTypes';
 
 const router = express.Router();
 
@@ -106,6 +115,21 @@ const leagueHistoryYoYoSchema = z.object({
   cycleWindow: z.coerce.number().int().positive().optional().default(20),
   minChanges: z.coerce.number().int().min(2).optional().default(3),
   mode: leagueHistoryModeSchema.optional(),
+});
+
+const searchAnalyticsReportQuerySchema = z.object({
+  cycleFrom: z.coerce.number().int().min(0).max(SEARCH_ANALYTICS_REPORT_MAX_CYCLE).optional(),
+  cycleTo: z.coerce.number().int().min(0).max(SEARCH_ANALYTICS_REPORT_MAX_CYCLE).optional(),
+  page: z.coerce.number().int().positive().max(SEARCH_ANALYTICS_REPORT_MAX_PAGE).default(SEARCH_ANALYTICS_REPORT_DEFAULT_PAGE),
+  limit: z.coerce.number().int().positive().max(SEARCH_ANALYTICS_REPORT_MAX_LIMIT).default(SEARCH_ANALYTICS_REPORT_DEFAULT_LIMIT),
+}).strict().superRefine((value, context) => {
+  if (value.cycleFrom !== undefined && value.cycleTo !== undefined && value.cycleFrom > value.cycleTo) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['cycleFrom'],
+      message: 'cycleFrom cannot be greater than cycleTo',
+    });
+  }
 });
 
 // --- Routes ---
@@ -310,6 +334,12 @@ router.get('/league-history/yo-yo', authenticateToken, requireAdmin, validateReq
   const mode = req.query.mode as LeagueHistoryMode | undefined;
   const result = await detectYoYoCandidates(cycleWindow, minChanges, mode);
   res.json(result);
+});
+
+router.get('/search-analytics/report', authenticateToken, requireAdmin, validateRequest({ query: searchAnalyticsReportQuerySchema }), async (req: Request, res: Response) => {
+  const query = req.query as unknown as SearchAnalyticsReportQuery;
+  const report = await getSearchAnalyticsReport(query);
+  res.json(report);
 });
 
 export default router;
