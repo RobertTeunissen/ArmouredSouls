@@ -121,6 +121,7 @@ describe('SearchService API contract', () => {
         name: true,
         user: { select: { stableName: true } },
       },
+      take: 10,
     });
     expect(database.user.findMany).toHaveBeenCalledWith({
       where: {
@@ -131,6 +132,7 @@ describe('SearchService API contract', () => {
         ],
       },
       select: { id: true, stableName: true },
+      take: 10,
     });
     expect(guideIndex.getSearchIndex).toHaveBeenCalledTimes(1);
     expect(result).toEqual({
