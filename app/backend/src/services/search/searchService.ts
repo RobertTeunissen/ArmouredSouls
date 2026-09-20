@@ -62,6 +62,7 @@ export interface SearchDatabase {
         name: true;
         user: { select: { stableName: true } };
       };
+      take?: number;
     }): Promise<RobotSearchRecord[]>;
   };
   user: {
@@ -71,6 +72,7 @@ export interface SearchDatabase {
         id: true;
         stableName: true;
       };
+      take?: number;
     }): Promise<StableSearchRecord[]>;
   };
 }
@@ -218,6 +220,7 @@ export class SearchService {
           },
         },
         select: ROBOT_SELECT,
+        take: MAX_RESULTS_PER_CATEGORY,
       }),
       this.database.user.findMany({
         where: {
@@ -233,6 +236,7 @@ export class SearchService {
           ],
         },
         select: STABLE_SELECT,
+        take: MAX_RESULTS_PER_CATEGORY,
       }),
     ]);
 

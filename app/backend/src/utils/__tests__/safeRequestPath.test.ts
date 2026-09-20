@@ -6,8 +6,16 @@ describe('safeRequestPath', () => {
     '/api/search?q=secret',
     '/api/search/?q=secret',
     '/api/search///?q=secret',
-  ])('redacts query strings from search paths including trailing slashes: %s', (path) => {
+    '/api/search/?q=secret#fragment',
+    '/api/%73earch%2F?q=secret',
+    '%2Fapi%2Fsearch%2F?q=secret',
+    '//api//search///?q=secret',
+  ])('redacts query strings from canonical search paths: %s', (path) => {
     expect(safeRequestPath(path)).toBe('/api/search');
+  });
+
+  it('does not expose encoded search query text from an equivalent path variant', () => {
+    expect(safeRequestPath('/api/search%3Fq%3Dsecret%20phrase')).toBe('/api/search');
   });
 
   it('does not change unrelated paths', () => {

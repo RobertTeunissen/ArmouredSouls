@@ -336,3 +336,25 @@ describe('SearchPalette', () => {
     expect(telemetryAttempt).toHaveBeenCalledOnce();
   });
 });
+
+
+describe('SearchPalette cancellation', () => {
+  it('does not present an AbortError as a search failure', async () => {
+    mockedSearch.mockRejectedValueOnce(new DOMException('The operation was aborted.', 'AbortError'));
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter initialEntries={['/dashboard']}>
+        <SearchControllerHarness />
+      </MemoryRouter>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Open search' }));
+    await user.type(screen.getByRole('searchbox'), 'Atlas');
+
+    await waitFor(() => expect(mockedSearch).toHaveBeenCalledTimes(1));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.queryByText('Search is unavailable. Please try again.')).not.toBeInTheDocument();
+  });
+});

@@ -7,6 +7,7 @@ import SearchPalette from '../search/SearchPalette';
 import SearchResultList from '../search/SearchResultList';
 import useSearchPalette from '../search/useSearchPalette';
 import { buildSearchResultRoute } from '../../utils/searchRoutes';
+import { isApplePlatform } from '../../utils/searchShortcut';
 import type { SearchResult } from '../../utils/searchTypes';
 
 function PageLoader(): ReactElement {
@@ -50,7 +51,9 @@ function PlayerShell(): ReactElement {
 
   useEffect(() => {
     const handleSearchShortcut = (event: KeyboardEvent): void => {
-      if (searchPalette.isOpen || event.key.toLowerCase() !== 'k' || (!event.ctrlKey && !event.metaKey)) {
+      const appleShortcut = isApplePlatform();
+      const modifierPressed = appleShortcut ? event.metaKey : event.ctrlKey;
+      if (searchPalette.isOpen || event.key.toLowerCase() !== 'k' || !modifierPressed) {
         return;
       }
 

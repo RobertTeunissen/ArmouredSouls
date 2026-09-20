@@ -147,6 +147,21 @@ describe('GET /api/search', () => {
     expect(response.body).toEqual(SEARCH_RESPONSE);
   });
 
+  it('returns the successful search response when the analytics service rejects', async () => {
+    mockRecordExecutedSearch.mockRejectedValueOnce(new Error('telemetry persistence failed'));
+
+    const response = await request(app)
+      .get('/api/search?q=bot')
+      .set('Authorization', `Bearer ${authToken()}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual(SEARCH_RESPONSE);
+    expect(mockRecordTelemetryFailure).toHaveBeenCalledWith({
+      response: SEARCH_RESPONSE,
+      userId: 7,
+    });
+  });
+
   it('does not attempt analytics for a valid short query', async () => {
     const response = await request(app)
       .get('/api/search?q=a')

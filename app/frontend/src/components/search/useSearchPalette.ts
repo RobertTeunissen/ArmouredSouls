@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type RefObject } from 'react';
 import type { SearchPaletteState } from './SearchPalette';
 import { search } from '../../utils/searchApi';
+import { isAbortError } from '../../utils/abort';
 import {
   addRecentSearch,
   clearRecentSearches,
@@ -290,8 +291,8 @@ export function useSearchPalette(
           setActiveResultIndex(null);
           setState(hasSearchResults(nextResponse) ? 'results' : 'empty');
         })
-        .catch(() => {
-          if (controller.signal.aborted || requestGenerationRef.current !== generation) return;
+        .catch((error: unknown) => {
+          if (isAbortError(error, controller.signal) || requestGenerationRef.current !== generation) return;
 
           responseRef.current = null;
           responseQueryRef.current = null;

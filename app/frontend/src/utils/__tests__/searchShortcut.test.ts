@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { getSearchShortcutLabel } from '../searchShortcut';
+import { getSearchShortcutLabel, isApplePlatform } from '../searchShortcut';
 
 const originalPlatform = navigator.platform;
 const originalUserAgent = navigator.userAgent;
@@ -31,3 +31,21 @@ describe('getSearchShortcutLabel', () => {
     expect(getSearchShortcutLabel()).toBe('Ctrl K');
   });
 });
+
+  it('prefers explicit user-agent platform data over a misleading user agent string', () => {
+    expect(isApplePlatform({
+      userAgentData: { platform: 'Windows' },
+      platform: 'Win32',
+      userAgent: 'Mozilla/5.0 Macintosh',
+    })).toBe(false);
+    expect(isApplePlatform({
+      userAgentData: { platform: 'macOS' },
+      platform: 'Linux x86_64',
+      userAgent: 'Mozilla/5.0 Windows NT 10.0',
+    })).toBe(true);
+  });
+
+  it('recognizes iPad desktop mode from MacIntel touch support', () => {
+    expect(isApplePlatform({ platform: 'MacIntel', maxTouchPoints: 5 })).toBe(true);
+    expect(isApplePlatform({ platform: 'MacIntel', maxTouchPoints: 0 })).toBe(true);
+  });

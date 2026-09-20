@@ -97,6 +97,7 @@ describe('SearchService', () => {
         name: true,
         user: { select: { stableName: true } },
       },
+      take: 10,
     });
     expect(database.user.findMany).toHaveBeenCalledWith({
       where: {
@@ -107,6 +108,7 @@ describe('SearchService', () => {
         ],
       },
       select: { id: true, stableName: true },
+      take: 10,
     });
     expect(guideIndex.getSearchIndex).toHaveBeenCalledTimes(1);
     expect(result).toEqual({
@@ -145,6 +147,7 @@ describe('SearchService', () => {
         name: true,
         user: { select: { stableName: true } },
       },
+      take: 10,
     });
     expect(database.user.findMany).toHaveBeenCalledWith({
       where: {
@@ -155,6 +158,7 @@ describe('SearchService', () => {
         ],
       },
       select: { id: true, stableName: true },
+      take: 10,
     });
     expect((database.robot.findMany as jest.Mock).mock.calls[0][0].where).not.toHaveProperty('$queryRaw');
     expect((database.user.findMany as jest.Mock).mock.calls[0][0].where).not.toHaveProperty('$queryRaw');
@@ -258,10 +262,31 @@ describe('SearchService', () => {
     const result = await new SearchService({ database, guideIndex }).search('%_');
 
     expect(queryRaw).toHaveBeenCalledTimes(2);
+    expect(queryRaw.mock.calls.every(([query]) => (
+      query as unknown as { values?: unknown[] }
+    ).values?.includes(10))).toBe(true);
     expect(database.robot.findMany).not.toHaveBeenCalled();
     expect(database.user.findMany).not.toHaveBeenCalled();
     expect(result.robots).toEqual([{ category: 'robots', id: 1, label: 'Wildcard %_ Robot', subtitle: 'Stable' }]);
     expect(result.stables).toEqual([{ category: 'stables', userId: 2, label: 'Wildcard %_ Stable' }]);
+  });
+
+  it('should bound raw-query candidate materialization for normal, wildcard, and adversarial inputs', async () => {
+    const { database, guideIndex } = createDependencies();
+    const queryRaw = jest.fn().mockResolvedValue([]);
+    database.$queryRaw = queryRaw;
+    (guideIndex.getSearchIndex as jest.Mock).mockReturnValue([]);
+
+    for (const query of ['alpha', '%_', "' OR 1=1 --"]) {
+      await new SearchService({ database, guideIndex }).search(query);
+    }
+
+    expect(queryRaw).toHaveBeenCalledTimes(6);
+    expect(queryRaw.mock.calls.every(([query]) => (
+      query as unknown as { values?: unknown[] }
+    ).values?.includes(10))).toBe(true);
+    expect(database.robot.findMany).not.toHaveBeenCalled();
+    expect(database.user.findMany).not.toHaveBeenCalled();
   });
 
   it('should convert source failures into a generic safe search error', async () => {

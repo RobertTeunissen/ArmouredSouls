@@ -36,33 +36,29 @@ router.get(
       return;
     }
 
-    let activeSeasonContext: ActiveSeasonContext;
     try {
-      activeSeasonContext = await getActiveSearchSeasonContext();
+      const activeSeasonContext: ActiveSeasonContext = await getActiveSearchSeasonContext();
+      await searchAnalyticsService.recordExecutedSearch({
+        response,
+        normalizedPhrase: q,
+        activeSeasonContext,
+        userId,
+      });
     } catch {
+      // Every failure after the player response has been computed belongs to
+      // the telemetry boundary. This includes season-context lookup,
+      // persistence, failure-marker writes, and diagnostic logging. None may
+      // turn a successful search into an HTTP 500 or expose sensitive details.
       try {
-        searchAnalyticsService.recordTelemetryFailure({
-          response,
-          userId,
-        });
+        searchAnalyticsService.recordTelemetryFailure({ response, userId });
       } catch {
-        // Telemetry diagnostics are best-effort and must not change the
-        // successful player response.
+        // Telemetry diagnostics are best-effort and must remain response-isolated.
       }
-      res.json(response);
-      return;
     }
 
-    const analyticsResult = await searchAnalyticsService.recordExecutedSearch({
-      response,
-      normalizedPhrase: q,
-      activeSeasonContext,
-      userId,
-    });
-
     // Analytics is response-isolated: no telemetry status, phrase, or context
-    // is added to the player response, including on persistence failure.
-    res.json(analyticsResult.response);
+    // is added to the player response, including on any telemetry failure.
+    res.json(response);
   },
 );
 

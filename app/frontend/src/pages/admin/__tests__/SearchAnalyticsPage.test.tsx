@@ -129,6 +129,17 @@ describe('SearchAnalyticsPage', () => {
     expect(screen.queryByText('Unable to load search analytics. Try again.')).not.toBeInTheDocument();
   });
 
+  it('does not report native DOMException AbortError as an admin request failure', async () => {
+    mockGetReport.mockReset();
+    mockGetReport.mockRejectedValueOnce(new DOMException('The operation was aborted.', 'AbortError'));
+
+    render(<SearchAnalyticsPage />);
+
+    await waitFor(() => expect(mockGetReport).toHaveBeenCalledTimes(1));
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.queryByText('Unable to load search analytics. Try again.')).not.toBeInTheDocument();
+  });
+
   it('renders active-season totals, trends, phrases, category usage, and typed limitations', async () => {
     render(<SearchAnalyticsPage />);
     await screen.findByText('Search Analytics');

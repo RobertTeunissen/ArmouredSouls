@@ -130,3 +130,17 @@ describe('searchAnalyticsStore', () => {
     expect(mockPrisma.auditLog.create).not.toHaveBeenCalled();
   });
 });
+
+  it('should preserve the original event failure when the failure marker write also fails', async () => {
+    mockPrisma.searchAnalyticsEvent.create.mockClear();
+    mockPrisma.searchAnalyticsFailure.upsert.mockClear();
+    mockPrisma.auditLog.create.mockClear();
+    const eventFailure = new Error('event persistence unavailable');
+    mockPrisma.searchAnalyticsEvent.create.mockRejectedValueOnce(eventFailure);
+    mockPrisma.searchAnalyticsFailure.upsert.mockRejectedValueOnce(new Error('marker unavailable'));
+
+    await expect(createSearchAnalyticsEvent(eventInput)).rejects.toBe(eventFailure);
+    expect(mockPrisma.searchAnalyticsEvent.create).toHaveBeenCalledTimes(1);
+    expect(mockPrisma.searchAnalyticsFailure.upsert).toHaveBeenCalledTimes(1);
+    expect(mockPrisma.auditLog.create).not.toHaveBeenCalled();
+  });

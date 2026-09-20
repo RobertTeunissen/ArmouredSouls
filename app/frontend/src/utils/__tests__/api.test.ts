@@ -464,3 +464,22 @@ describe('api helper', () => {
     });
   });
 });
+
+describe('request cancellation', () => {
+  it('preserves AbortError instead of converting expected cancellation to ApiError', async () => {
+    const abortError = new DOMException('The operation was aborted.', 'AbortError');
+    mockedGet.mockRejectedValueOnce(abortError);
+
+    await expect(api.get('/api/search')).rejects.toBe(abortError);
+  });
+
+  it('preserves Axios-style canceled requests for request owners', async () => {
+    const canceledError = Object.assign(new Error('canceled'), {
+      code: 'ERR_CANCELED',
+      name: 'CanceledError',
+    });
+    mockedGet.mockRejectedValueOnce(canceledError);
+
+    await expect(api.get('/api/admin/search-analytics/report')).rejects.toBe(canceledError);
+  });
+});

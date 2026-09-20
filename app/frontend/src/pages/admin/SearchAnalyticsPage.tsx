@@ -5,6 +5,7 @@ import {
   AdminStatCard,
 } from '../../components/admin/shared';
 import { ApiError } from '../../utils/ApiError';
+import { isAbortError } from '../../utils/abort';
 import {
   getAdminSearchAnalyticsReport,
   type AdminSearchAnalyticsPlayerAnalysisEntry,
@@ -52,16 +53,6 @@ function parseCycle(value: string): number | undefined {
   return Number.isSafeInteger(parsed) && parsed >= 0 ? parsed : undefined;
 }
 
-function isExpectedAbort(error: unknown, signal: AbortSignal): boolean {
-  if (signal.aborted) return true;
-  if (error instanceof DOMException && error.name === 'AbortError') return true;
-  if (error instanceof Error && (error.name === 'AbortError' || error.name === 'CanceledError')) return true;
-  if (typeof error !== 'object' || error === null) return false;
-
-  const candidate = error as { code?: unknown; name?: unknown };
-  return candidate.code === 'ERR_CANCELED' || candidate.name === 'AbortError';
-}
-
 function SearchAnalyticsPage(): React.ReactElement {
   const [report, setReport] = useState<AdminSearchAnalyticsReport | null>(null);
   const [query, setQuery] = useState<AdminSearchAnalyticsReportQuery>({ limit: DEFAULT_PAGE_SIZE, page: 1 });
@@ -84,7 +75,7 @@ function SearchAnalyticsPage(): React.ReactElement {
     } catch (requestError: unknown) {
       if (
         requestGenerationRef.current !== generation
-        || isExpectedAbort(requestError, signal)
+        || isAbortError(requestError, signal)
       ) return;
       setError(safeErrorMessage(requestError));
     } finally {

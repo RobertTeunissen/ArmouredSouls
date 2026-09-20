@@ -133,10 +133,18 @@ export class SearchAnalyticsService {
       };
     }
 
-    const counts = countResults(input.response);
-    const eventTimestamp = this.now();
+    let counts: ReturnType<typeof countResults> = {
+      robots: 0,
+      stables: 0,
+      guide: 0,
+      total: 0,
+    };
+    let eventTimestamp: Date | undefined;
 
     try {
+      counts = countResults(input.response);
+      eventTimestamp = this.now();
+
       await this.store.createEvent({
         userId: input.userId,
         seasonNumber: input.activeSeasonContext.seasonNumber,
@@ -162,7 +170,7 @@ export class SearchAnalyticsService {
       try {
         this.logPersistenceFailure({
           userId: input.userId,
-          eventTimestamp,
+          ...(eventTimestamp === undefined ? {} : { eventTimestamp }),
           seasonNumber: input.activeSeasonContext.seasonNumber,
           cycleNumber: input.activeSeasonContext.cycleNumber,
           resultCounts: counts,

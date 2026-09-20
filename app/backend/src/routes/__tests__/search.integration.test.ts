@@ -20,6 +20,7 @@ import guideService from '../../services/common/guide-service';
 import searchAnalyticsStore from '../../services/search/searchAnalyticsStore';
 import type { SearchResponse } from '../../services/search/searchTypes';
 import { createTestRobot } from '../../../tests/testHelpers';
+import * as seasonService from '../../services/season/seasonService';
 
 /**
  * Integration coverage for the authenticated universal-search boundary.
@@ -647,6 +648,30 @@ describe('GET /api/search — PostgreSQL integration', () => {
         where: { userId: searchUser.id },
       });
       expect(afterEvents).toBe(beforeEvents);
+    });
+
+    it('should preserve a successful response when active-season telemetry context lookup fails', async () => {
+      const phrase = `SeasonContextFailure_${suffix}`;
+      const warningSpy = jest.spyOn(logger, 'warn');
+      seasonService.invalidateSeasonCache();
+      const getCurrentSeasonSpy = jest
+        .spyOn(seasonService, 'getCurrentSeason')
+        .mockRejectedValueOnce(new Error(`season lookup failed for ${phrase}`));
+
+      try {
+        const response = await request(server)
+          .get('/api/search')
+          .set('Authorization', `Bearer ${signToken(searchUser)}`)
+          .query({ q: phrase });
+
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual({ robots: [], stables: [], guide: [] });
+        expect(JSON.stringify(warningSpy.mock.calls)).not.toContain(phrase);
+      } finally {
+        getCurrentSeasonSpy.mockRestore();
+        seasonService.invalidateSeasonCache();
+        warningSpy.mockRestore();
+      }
     });
   });
 });

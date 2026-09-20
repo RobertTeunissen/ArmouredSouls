@@ -160,3 +160,52 @@ describe('SearchAnalyticsService', () => {
     expect(response.attempted).toBe(false);
   });
 });
+
+  it('should fail open when telemetry timestamp creation fails before persistence', async () => {
+    const store = createStore();
+    const failureLogger = jest.fn();
+    const response = await new SearchAnalyticsService({
+      store,
+      now: () => {
+        throw new Error('telemetry clock unavailable');
+      },
+      logPersistenceFailure: failureLogger,
+    }).recordExecutedSearch({
+      response: completedResponse,
+      normalizedPhrase: 'atlas',
+      activeSeasonContext,
+      userId: 42,
+    });
+
+    expect(response).toEqual(expect.objectContaining({
+      response: completedResponse,
+      attempted: true,
+      persisted: false,
+    }));
+    expect(store.createEvent).not.toHaveBeenCalled();
+    expect(failureLogger).toHaveBeenCalledWith(expect.objectContaining({
+      userId: 42,
+      seasonNumber: 4,
+      cycleNumber: 12,
+    }));
+  });
+
+  it('should fail open when telemetry diagnostics themselves throw', async () => {
+    const store = createStore();
+    store.createEvent.mockRejectedValueOnce(new Error('telemetry persistence unavailable'));
+    const response = await new SearchAnalyticsService({
+      store,
+      logPersistenceFailure: () => {
+        throw new Error('diagnostic sink unavailable');
+      },
+    }).recordExecutedSearch({
+      response: completedResponse,
+      normalizedPhrase: 'atlas',
+      activeSeasonContext,
+      userId: 42,
+    });
+
+    expect(response.response).toBe(completedResponse);
+    expect(response.persisted).toBe(false);
+    expect(response.limitation?.code).toBe('analyticsDataIncomplete');
+  });
