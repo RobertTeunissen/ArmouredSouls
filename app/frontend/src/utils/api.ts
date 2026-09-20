@@ -1,6 +1,7 @@
 import apiClient from './apiClient';
 import { ApiError } from './ApiError';
 import { isAxiosError } from 'axios';
+import { isAbortError } from './abort';
 import type { AxiosRequestConfig } from 'axios';
 
 /**
@@ -61,6 +62,11 @@ export interface ApiRequestConfig {
  * surfaces would otherwise display those raw strings.
  */
 function handleError(err: unknown): never {
+  // Cancellation is an expected lifecycle outcome. Preserve the original
+  // cancellation error so request owners can suppress it instead of turning
+  // an aborted request into a generic ApiError/reporting failure.
+  if (isAbortError(err)) throw err;
+
   // Real AxiosError, or anything shape-compatible with one.
   const candidate = err as {
     response?: { data?: { error?: string; message?: string; code?: string; details?: unknown }; status?: number };

@@ -74,6 +74,53 @@ Finance Center test retirement is replacement-gated. Adapt `finances.test.ts`, `
 
 Only tests for genuinely removed behavior may be retired. Formula/property, repair-log, admin contract, player-guide content, battle-result, domain snapshot, Finance Center reconciliation/security, and route-migration tests remain blocking. The final gate uses `pnpm run lint`, `pnpm run build`, `pnpm run typecheck:tests`, `pnpm run test:tiers:verify`, `pnpm run test:unit`, `pnpm run test:integration`, `pnpm run test:heavy`, the frontend lint/build/unit commands, and Playwright. Documentation-only changes do not create an exception to these durable gates, though the targeted documentation verification may be used when no executable code changed.
 
+## Universal Search coverage (Spec #56)
+
+The `Universal_Search_System` coverage is a blocking contract for the authenticated `Search_Endpoint`, the shared `Player_Shell`, browser-local `Recent_Search_History`, and the admin-only `Admin_Search_Analytics_Resource`. The files below are the exact intended coverage locations; they do not imply that any unrun check has passed.
+
+### Backend unit, property, integration, and tier coverage
+
+Pure backend behavior belongs to the Unit_Tier unless it requires PostgreSQL or supertest. The required unit and property files are:
+
+- `app/backend/src/services/search/__tests__/searchRanking.test.ts` — normalization, Exact_Match/Prefix_Match/Substring_Match boundaries, guide maximum rank, no-fuzzy behavior, deterministic tie-breaks, independent category ordering, and limits.
+- `app/backend/src/services/search/__tests__/searchRanking.property.test.ts` — Properties 1–5 for normalization/case invariance, scope/no-fuzzy matching, rank monotonicity, deterministic ordering, and independent bounds.
+- `app/backend/src/services/search/__tests__/searchReferenceBuilder.test.ts` — player-safe allow-list shaping, optional robot subtitle, generated/test stable eligibility, approved route identity, invalid identity rejection, and forbidden private/body/username fields.
+- `app/backend/src/services/search/__tests__/searchReferenceBuilder.property.test.ts` — Properties 6–7 for safe reference shaping and stable-name eligibility independent of `profileVisibility` and `isGenerated`.
+- `app/backend/src/services/search/__tests__/searchService.test.ts` — one grouped orchestration, fixed category order, short-query source conservation, source selectors, dependency-safe errors, response isolation, and bounds.
+- `app/backend/src/services/search/__tests__/searchService.property.test.ts` — Property 11 for short queries: no entity or Guide_Search_Index access, no client request, and three empty result groups.
+- `app/backend/src/services/search/__tests__/searchAnalytics.property.test.ts` — Properties 13–16 for exactly-one analytics attempt, successful one-row persistence, fail-open no-row/no-retry behavior, unchanged `Search_Response`, typed incomplete-telemetry limitation, exclusions, event completeness, active-season report aggregation, authorization, and retention boundaries using mocked persistence.
+- `app/backend/src/services/search/__tests__/searchAnalyticsStore.test.ts` — event field construction, exactly-one attempt orchestration, one row only on persistence success, no `audit_logs` fallback, no row/no retry on failure, safe diagnostics, and response-preserving `Telemetry_Fail_Open` behavior.
+
+Every fast-check property listed for Universal Search SHALL run at least 100 cases. Property tests SHALL use pure functions or mocked persistence and SHALL not call external services or mutable production data. Each property file SHALL include its required `Feature: universal-search, Property N:` annotation and trace the named property only.
+
+The database and HTTP contract files belong exclusively to the `DB_DEPENDENT`/Integration_Tier classification in `app/backend/jest.tiers.js`:
+
+- `app/backend/src/routes/__tests__/search.integration.test.ts` — authentication, one-request three-group responses, source scope, generated/test and null/cleared stable names, Guide_Search_Index results, safe references, owner/non-owner destination behavior, strict malformed/unknown/repeated/non-string/short/over-length input, parameterized SQL-like queries, rate limiting, and query-free diagnostics.
+- `app/backend/src/routes/__tests__/adminSearchAnalytics.integration.test.ts` — exactly one `Search_Analytics_Store` write attempt for each eligible completed search including zero results; exactly one `Search_Analytics_Event` row on success; no row, retry, or duplicate attempt on persistence failure; unchanged player response and typed incomplete-telemetry limitation under `Telemetry_Fail_Open`; all no-event exclusions; server-owned event fields; phrase non-propagation; admin authorization; bounded report aggregates/pagination; active-season filtering; and `Season_Rollover` purge with no archive row.
+
+`app/backend/jest.tiers.js` is the single classification source. `pnpm run test:tiers:verify` SHALL collect every Universal Search backend `*.test.ts` file exactly once: pure files in Unit_Tier and the two PostgreSQL/supertest files in Integration_Tier. No Universal Search test may be silently excluded or collected by zero or multiple tiers.
+
+### Frontend component, property, route-layout, and browser coverage
+
+The required frontend files are:
+
+- `app/frontend/src/components/search/__tests__/SearchPalette.test.tsx` — Search_Control and scope text, Cmd+K/Ctrl+K prevention, focus open/trap/restoration, Escape/Tab/Arrow/Enter behavior, grouped clickable results, close-before-navigation, loading/recent-history/too-short/empty/error states, retry, and absence of command actions or analytics fields.
+- `app/frontend/src/components/search/__tests__/SearchPalette.property.test.tsx` — Properties 11–12 for short-query request suppression and latest-query presentation under out-of-order responses, with fake timers and at least 100 cases per property.
+- `app/frontend/src/utils/__tests__/searchHistory.test.ts` — valid, malformed, unavailable, duplicate, over-length, whitespace-only, newest-first, five-item, clear, and no-network local-storage behavior.
+- `app/frontend/src/utils/__tests__/searchHistory.property.test.ts` — Properties 9–10 for bounded case-insensitive history insertion/idempotence and malformed-history sanitization, with at least 100 cases per property.
+- `app/frontend/src/utils/__tests__/searchRoutes.property.test.ts` — Property 8 for the three approved routes and rejection of invalid IDs, unsafe slugs, raw query text, labels, usernames, and arbitrary routes, with at least 100 cases.
+- `app/frontend/src/components/__tests__/Navigation.search.test.tsx` — labelled desktop Search control, visible shortcut hint, mobile fixed-header control, independent visible discovery, absence from bottom navigation/More drawer, and minimum activation target.
+- `app/frontend/src/components/layout/__tests__/PlayerShell.test.tsx` — exactly one `Navigation` and one `SearchPalette` through normal, loading, error, and not-found post-onboarding route content, with no shell-owned search surface for onboarding, auth/front-page, or admin routes.
+- `app/frontend/src/pages/admin/__tests__/SearchAnalyticsPage.test.tsx` — admin authorization-safe loading/error/retry states, active-season filters, totals, trends, phrases, category usage, typed limitations, bounded pagination, and safe display fields.
+- `app/frontend/src/pages/admin/__tests__/SearchAnalyticsPage.mobile.test.tsx` — stacked report sections and controls below 1024px, no horizontal overflow from 320px through 1023px, and filter/retry/pagination/navigation targets of at least 44px by 44px.
+- `app/frontend/tests/e2e/universal-search.spec.ts` — authenticated desktop/mobile route, shell, palette, accessibility, navigation, history, analytics isolation, and admin-report flows.
+
+The Playwright coverage SHALL exercise 320px, 375px, 768px, 1023px, 1024px, and 1920px viewports. At widths below 1024px, Search_Palette and Admin_Search_Analytics_Page assertions SHALL require vertical/stacked layouts, internal scrolling where applicable, no horizontal overflow, visible focus, and 44px touch targets. Desktop assertions SHALL require the bounded overlay and current-page visibility. Route-layout assertions SHALL require one shared `Player_Shell` mount with one `Navigation` and one Search_Palette for every post-onboarding loading/error/not-found state, and no Player_Shell-owned search UI on excluded routes.
+
+### Blocking and analytics-specific rules
+
+All Universal Search checks are blocking. A test or workflow step SHALL NOT use `continue-on-error`, `|| true`, an unguarded output pipe, or an undocumented test exclusion. Any required classification change belongs in `app/backend/jest.tiers.js`; do not add a `testPathIgnorePatterns` workaround. The analytics tests SHALL fail when any of the following is wrong: one write attempt per eligible completed `Search_Endpoint` execution (including zero results), one persisted `Search_Analytics_Event` row only after successful persistence, no row and no retry/duplicate attempt after persistence failure, unchanged `Search_Response` under `Telemetry_Fail_Open`, typed incomplete-telemetry reporting, no event for malformed/short/over-length/unauthenticated/rate-limited/failed requests or client-only activity, server-captured event fields, admin-only bounded reporting, active-season retention, and `Season_Rollover` purge without cross-season archival. These requirements describe the blocking contract; this document does not record execution results.
+
 ## Testing Policy
 
 ### Required Testing Standards

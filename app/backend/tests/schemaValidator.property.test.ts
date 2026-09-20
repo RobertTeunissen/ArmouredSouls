@@ -16,6 +16,7 @@ function mockReq(overrides: Partial<Request> = {}): Request {
     body: {},
     params: {} as Record<string, string>,
     query: {},
+    originalUrl: '/test',
     ...overrides,
   } as unknown as Request;
 }

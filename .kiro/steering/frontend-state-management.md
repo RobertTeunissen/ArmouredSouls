@@ -34,6 +34,13 @@ If none of these apply, use local state (`useState` / `useReducer`).
 - Theme preferences — global, rarely changes
 - Any truly global, rarely-changing state where provider scoping is useful
 
+## Universal Search State Boundary
+
+- `PlayerShell` and `SearchPalette` UI state belongs in local hooks/component state (for example, the palette hook), not in a Zustand store. This includes the open/closed state, query, request status, results, errors, focus lifecycle, and retry state; the shell owns the one palette instance while it is mounted.
+- `Recent_Search_History` is browser-local state. Keep its bounded, normalized values in component/hook state and persist them only through `localStorage`; do not add browser history to a Zustand store. Recent history is never sent to the backend, included in search requests, or recorded in analytics.
+- The admin search analytics report is server state. Fetch it through its typed admin API and keep its loading, filter, pagination, report, and error lifecycle with the admin report page/API boundary, not in a player-facing Zustand store.
+- These boundaries do not change the 3-criteria rule: data shared across pages, cross-page mutations, or expensive cacheable fetches may still belong in Zustand. When a Zustand store is appropriate, preserve the selector-only access and shallow-comparison rules below.
+
 ## Store Selector Pattern
 
 Always use selectors when reading from a Zustand store. Never subscribe to the entire store object.

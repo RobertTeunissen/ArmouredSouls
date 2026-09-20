@@ -29,6 +29,7 @@ import teamBattlesRoutes from './routes/teamBattles';
 import seasonsRoutes from './routes/seasons';
 import imagesRoutes from './routes/images';
 import adminSeasonsRoutes from './routes/adminSeasons';
+import searchRoutes from './routes/search';
 import { loadEnvConfig } from './config/env';
 import {
   initScheduler,
@@ -121,6 +122,7 @@ const economicPrefixes = [
   '/api/facilities',
   '/api/robots',
   '/api/subscriptions',
+  '/api/search',
   // `/api/dashboard` moves no credits, but it is the most frequently hit authenticated
   // read in the application — every Dashboard mount issues it, and a player navigating
   // the SPA can mount the Dashboard many times in a session. That is exactly the traffic
@@ -206,6 +208,7 @@ app.use('/api/subscriptions', subscriptionsRoutes);
 app.use('/api/team-battles', teamBattlesRoutes);
 app.use('/api/seasons', seasonsRoutes);
 app.use('/api/images', imagesRoutes);
+app.use('/api/search', searchRoutes);
 
 // Serve uploaded images as static files (in production, Caddy handles this)
 import path from 'path';

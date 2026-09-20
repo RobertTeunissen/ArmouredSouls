@@ -6,18 +6,10 @@ import SeasonArchivePage from '../SeasonArchivePage';
 import * as seasonApi from '../../utils/seasonApi';
 
 /**
- * These assert the page as it is actually mounted in the app, not in isolation.
- *
- * The bugs this file exists to catch, none of which an isolated component render
- * would surface:
- *  - the page not rendering the app navigation (a bare white page)
- *  - the "open your stable" link pointing at the wrong route
+ * These assert page content that is rendered inside PlayerShell in the app.
+ * PlayerShell owns the shared Navigation; the page retains its own background,
+ * destination links, and season data states.
  */
-
-// Mock Navigation with a marker so we can assert the page composes the app shell.
-vi.mock('../../components/Navigation', () => ({
-  default: () => <div data-testid="navigation">Nav</div>,
-}));
 
 vi.mock('../../contexts/AuthContext', () => ({
   useAuth: () => ({ user: { id: 42, username: 'tester', role: 'user' } }),
@@ -39,15 +31,6 @@ function renderPage(): ReturnType<typeof render> {
 describe('SeasonArchivePage — mounting and layout', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-
-  it('should render the app navigation, not a bare page', async () => {
-    vi.mocked(seasonApi.listSeasons).mockResolvedValue([]);
-    renderPage();
-
-    // Regression: the page originally rendered no <Navigation />, so it showed
-    // as a white page outside the app layout.
-    expect(screen.getByTestId('navigation')).toBeInTheDocument();
   });
 
   it('should render inside the standard page background container', async () => {

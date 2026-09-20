@@ -16,7 +16,6 @@ import { MemoryRouter, Routes, Route } from 'react-router-dom';
  * Requirements: R9.4, R9.20
  */
 
-// Mock navigation
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
@@ -28,10 +27,6 @@ vi.mock('react-router-dom', async () => {
 
 vi.mock('../../contexts/AuthContext', () => ({
   useAuth: () => ({ user: { userId: 1, username: 'test_user', role: 'user' } }),
-}));
-
-vi.mock('../../components/Navigation', () => ({
-  default: () => <div data-testid="navigation">Navigation</div>,
 }));
 
 // Mock the entire BattleDetailPage to test page-level behavior
@@ -111,12 +106,6 @@ describe('BattleDetailPage - Team Battle page-level behavior', () => {
     vi.mocked(getBattleLog).mockReturnValue(new Promise(() => {}));
     renderPage('42');
     expect(getBattleLog).toHaveBeenCalledWith(42);
-  });
-
-  it('should render navigation component', () => {
-    vi.mocked(getBattleLog).mockReturnValue(new Promise(() => {}));
-    renderPage();
-    expect(screen.getByTestId('navigation')).toBeInTheDocument();
   });
 
   it('should render page with min-h-screen class for proper viewport handling', () => {

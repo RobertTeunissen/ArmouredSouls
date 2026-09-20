@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import Navigation from '../components/Navigation';
 import { listTournaments, Tournament, ParticipantType } from '../utils/tournamentApi';
 import { getRoundLabel } from '../utils/bracketUtils';
 
@@ -96,7 +95,6 @@ function TournamentsPage() {
 
   return (
     <div className="min-h-screen bg-background text-white">
-      <Navigation />
 
       <div className="container mx-auto px-4 py-8 pb-24 lg:pb-8">
         {/* Header */}

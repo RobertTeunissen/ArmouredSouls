@@ -19,6 +19,17 @@ import CreateRobotPage from '../CreateRobotPage';
 import { AuthProvider } from '../../contexts/AuthContext';
 import apiClient from '../../utils/apiClient';
 
+const mockFetchRobots = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
+
+vi.mock('../../stores', () => {
+  const state = { fetchRobots: mockFetchRobots };
+  const useRobotStore = Object.assign(
+    (selector: (store: typeof state) => unknown): unknown => selector(state),
+    { getState: () => state },
+  );
+  return { useRobotStore };
+});
+
 // Mock apiClient
 vi.mock('../../utils/apiClient');
 
@@ -167,6 +178,7 @@ describe('CreateRobotPage - Onboarding Integration', () => {
       await waitFor(() => {
         expect(mockNavigate).toHaveBeenCalledWith('/robots/42/setup', { replace: true });
       });
+      expect(mockFetchRobots).toHaveBeenCalledOnce();
     });
 
     it('should update onboarding choices after robot creation in onboarding mode', async () => {

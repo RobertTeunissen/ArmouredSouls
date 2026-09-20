@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { fetchMyRobots } from '../utils/robotApi';
 import LogoB from '../assets/logos/logo-b.svg?react';
 import HomeIcon from '../assets/icons/home.svg?react';
 import RobotIcon from '../assets/icons/robot.svg?react';
@@ -16,13 +15,21 @@ import { useSeasonStore } from '../stores/seasonStore';
 import { NavLink, DropdownMenu, MobileTab, MobileDrawer } from './nav';
 import { allPages } from './nav';
 import type { UserRobot } from './nav';
+import { useRobotStore } from '../stores';
+import SearchTrigger from './search/SearchTrigger';
 
-function Navigation() {
+export interface NavigationProps {
+  onOpenSearch?: () => void;
+}
+
+function Navigation({ onOpenSearch }: NavigationProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [userRobots, setUserRobots] = useState<UserRobot[]>([]);
+  const storeRobots = useRobotStore((state) => state.robots);
+  const fetchRobots = useRobotStore((state) => state.fetchRobots);
+  const userRobots: UserRobot[] = storeRobots.map((robot) => ({ id: robot.id, name: robot.name }));
   const fetchSeason = useSeasonStore((s) => s.fetchSeason);
 
   // Season state drives the progress indicator, countdown banner, and summary
@@ -32,16 +39,8 @@ function Navigation() {
   }, [fetchSeason]);
 
   useEffect(() => {
-    const fetchRobots = async () => {
-      try {
-        const robots = await fetchMyRobots();
-        setUserRobots(robots.map((robot: { id: number; name: string }) => ({ id: robot.id, name: robot.name })));
-      } catch {
-        // Silently handle fetch failure
-      }
-    };
-    if (user) fetchRobots();
-  }, [user]);
+    if (user) void fetchRobots();
+  }, [fetchRobots, user]);
 
   const handleLogout = () => {
     logout();
@@ -102,6 +101,7 @@ function Navigation() {
           </div>
 
           <div className="flex items-center gap-4">
+            <SearchTrigger onOpenSearch={onOpenSearch} />
             <SeasonProgressIndicator />
             <div className="flex items-center gap-2 bg-surface border border-white/10 px-3 py-2 rounded-md">
               <span className="text-primary">₡</span>
@@ -120,16 +120,17 @@ function Navigation() {
       {/* Mobile Navigation - <768px */}
       <div className="lg:hidden">
         <header className="fixed top-0 left-0 right-0 bg-surface-elevated border-b border-white/10 z-[999]">
-          <div className="h-14 px-4 flex items-center justify-between">
-            <button onClick={() => navigate('/dashboard')} className="flex items-center gap-3" aria-label="Armoured Souls Home">
-              <LogoB className="w-8 h-8 text-primary" />
-              <h1 className="text-lg font-bold text-primary tracking-tight">ARMOURED SOULS</h1>
+          <div className="h-14 px-1 sm:px-4 flex min-w-0 items-center justify-between">
+            <button onClick={() => navigate('/dashboard')} className="flex min-w-0 shrink items-center gap-1 sm:gap-3" aria-label="Armoured Souls Home">
+              <LogoB className="h-8 w-8 shrink-0 text-primary" />
+              <h1 className="hidden truncate text-lg font-bold tracking-tight text-primary sm:block">ARMOURED SOULS</h1>
             </button>
-            <div className="flex items-center gap-2">
-            <SeasonProgressIndicator compact />
-            <div className="flex items-center gap-2 bg-surface border border-white/10 px-2 py-1 rounded-md">
+          <div className="flex min-w-0 shrink-0 items-center gap-1 sm:gap-2">
+            <SeasonProgressIndicator compact className="hidden max-w-[6rem] overflow-hidden text-ellipsis sm:inline-flex sm:max-w-none" />
+            <SearchTrigger variant="mobile" onOpenSearch={onOpenSearch} />
+            <div className="flex min-w-0 max-w-[4.5rem] items-center gap-1 overflow-hidden rounded-md border border-white/10 bg-surface px-1.5 py-1 sm:max-w-none sm:gap-2 sm:px-2">
               <span className="text-primary text-sm">₡</span>
-              <span className="text-primary text-sm font-medium">{user.currency.toLocaleString()}</span>
+              <span className="truncate text-primary text-sm font-medium">{user.currency.toLocaleString()}</span>
             </div>
             </div>
           </div>

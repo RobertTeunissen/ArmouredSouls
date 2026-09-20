@@ -95,9 +95,11 @@ Tournament wins/trophy display, loading skeletons, notification toasts. If fame 
 
 ### #27 — Universal Search / Command Palette (Cmd+K)
 **Source**: Deleted navigation analysis doc, backlog triage  
-**Priority**: Low → Medium candidate — improves discoverability across the entire app
+**Priority**: Delivered MVP — improves discoverability across the entire app
 
-No global search exists. A universal search bar (header or Cmd+K overlay) querying robots, players, weapons, pages, guide articles, and battle history. Existing infrastructure: `SearchBar` component, guide search index API, admin user search pattern.
+**Delivered MVP**: An authenticated, search-only palette searches robots by `Robot.name`, stables by trimmed non-empty `User.stableName`, and guide articles through the existing `Guide_Search_Index`. The shared post-onboarding `PlayerShell` provides one palette across player routes, with a visible Search control in the desktop navbar and a visible search control in the mobile fixed top header. Recent searches remain browser-local. Admin-only active-season Search Analytics provides bounded reports and is purged during `Season_Rollover` without cross-season retention.
+
+**Deferred**: players/`username`, teams, weapons, navigation pages/actions, battle history/reports, commands, fuzzy matching, click/selection tracking, and cross-season analytics.
 
 ### #28 — Progressive Feature Disclosure
 **Source**: Deleted navigation analysis doc  

@@ -2,7 +2,6 @@ import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
-import Navigation from '../components/Navigation';
 import BattleHistorySummary from '../components/BattleHistorySummary';
 import CompactBattleCard from '../components/CompactBattleCard';
 import {
@@ -204,7 +203,6 @@ function BattleHistoryPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0e14] text-[#e6edf3]">
-      <Navigation />
 
       <div className="container mx-auto px-4 py-8 pb-24 lg:pb-8">
         <h1 className="text-4xl font-bold mb-6">Battle History</h1>

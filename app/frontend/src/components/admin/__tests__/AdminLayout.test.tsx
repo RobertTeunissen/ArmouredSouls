@@ -31,6 +31,7 @@ const NAVIGATION_SECTIONS = [
 
 const NAVIGATION_ITEMS = [
   { label: 'Dashboard', path: '/admin/dashboard' },
+  { label: 'Search Analytics', path: '/admin/search-analytics' },
   { label: 'Cycle Controls', path: '/admin/cycles' },
   { label: 'Season Control', path: '/admin/seasons' },
   { label: 'Practice Arena', path: '/admin/practice-arena' },
