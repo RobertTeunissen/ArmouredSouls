@@ -102,6 +102,17 @@ model SearchAnalyticsEvent {
   @@map("search_analytics_events")
 }
 
+model SearchAnalyticsFailure {
+  id            BigInt   @id @default(autoincrement())
+  seasonNumber  Int      @map("season_number")
+  cycleNumber   Int      @map("cycle_number")
+  firstFailedAt DateTime @default(now()) @map("first_failed_at")
+
+  @@unique([seasonNumber, cycleNumber])
+  @@index([seasonNumber, cycleNumber])
+  @@map("search_analytics_failures")
+}
+
 model Facility {
   id           Int    @id @default(autoincrement())
   userId       Int    @map("user_id")

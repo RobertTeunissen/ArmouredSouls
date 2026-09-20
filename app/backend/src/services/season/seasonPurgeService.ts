@@ -207,6 +207,7 @@ export async function purgeHistory(): Promise<Record<string, number>> {
     'leaderboard_cache',
     'practice_arena_daily_stats',
     'search_analytics_events',
+    'search_analytics_failures',
   ] as const;
 
   // Capture the counts first so the rollover report stays truthful; TRUNCATE

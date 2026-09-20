@@ -45,15 +45,15 @@ const INCOMPLETE_TELEMETRY_LIMITATION: SearchAnalyticsLimitation = Object.freeze
 });
 
 function isActiveSeasonContext(value: unknown): value is ActiveSeasonContext {
-  if (typeof value !== 'object' || value === null) return false;
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return false;
 
   const candidate = value as Record<string, unknown>;
   return (
-    Number.isSafeInteger(candidate.seasonNumber)
-    && typeof candidate.seasonNumber === 'number'
+    typeof candidate.seasonNumber === 'number'
+    && Number.isSafeInteger(candidate.seasonNumber)
     && candidate.seasonNumber >= 0
-    && Number.isSafeInteger(candidate.cycleNumber)
     && typeof candidate.cycleNumber === 'number'
+    && Number.isSafeInteger(candidate.cycleNumber)
     && candidate.cycleNumber >= 0
   );
 }
@@ -187,17 +187,18 @@ export class SearchAnalyticsService {
    * the response isolated and records only safe aggregate diagnostics.
    */
   recordTelemetryFailure(input: { response: SearchResponse; userId: number }): void {
-    const counts = countResults(input.response);
-    const eventTimestamp = this.now();
-
     try {
+      const counts = countResults(input.response);
+      const eventTimestamp = this.now();
+
       this.logPersistenceFailure({
         userId: input.userId,
         eventTimestamp,
         resultCounts: counts,
       });
     } catch {
-      // Diagnostics are deliberately best-effort and phrase-free.
+      // Context resolution and diagnostics are both telemetry-only. Neither
+      // may turn an otherwise successful player search into an error.
     }
   }
 

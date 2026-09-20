@@ -1,5 +1,4 @@
-import { useEffect, useId, useRef } from 'react';
-import type { KeyboardEvent, ReactNode, RefObject } from 'react';
+import { useEffect, useId, useRef, type KeyboardEvent, type ReactNode, type RefObject } from 'react';
 import SearchHistoryList from './SearchHistoryList';
 
 /**

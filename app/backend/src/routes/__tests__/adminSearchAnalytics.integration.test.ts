@@ -201,11 +201,11 @@ describe('Admin Search Analytics route integration', () => {
     await prisma.searchAnalyticsEvent.deleteMany({
       where: { userId: { in: [owner.userId, otherPlayer.userId, admin.userId] } },
     });
-    clearSearchAnalyticsPersistenceFailures();
+    await clearSearchAnalyticsPersistenceFailures();
   });
 
   afterAll(async () => {
-    clearSearchAnalyticsPersistenceFailures();
+    await clearSearchAnalyticsPersistenceFailures();
     await deleteFixture(owner);
     await deleteFixture(otherPlayer);
     await deleteFixture(admin);
@@ -401,7 +401,7 @@ describe('Admin Search Analytics route integration', () => {
         storeSpy.mockRestore();
         loggerWarnSpy.mockRestore();
         loggerDebugSpy.mockRestore();
-        clearSearchAnalyticsPersistenceFailures();
+        await clearSearchAnalyticsPersistenceFailures();
       }
     });
 

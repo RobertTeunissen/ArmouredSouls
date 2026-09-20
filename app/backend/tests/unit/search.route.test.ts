@@ -133,6 +133,20 @@ describe('GET /api/search', () => {
       userId: 7,
     });
   });
+  it('returns the successful response even when telemetry failure recording itself throws', async () => {
+    mockGetActiveSearchSeasonContext.mockRejectedValueOnce(new Error('season service unavailable'));
+    mockRecordTelemetryFailure.mockImplementationOnce(() => {
+      throw new Error('diagnostics unavailable');
+    });
+
+    const response = await request(app)
+      .get('/api/search?q=bot')
+      .set('Authorization', `Bearer ${authToken()}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual(SEARCH_RESPONSE);
+  });
+
   it('does not attempt analytics for a valid short query', async () => {
     const response = await request(app)
       .get('/api/search?q=a')

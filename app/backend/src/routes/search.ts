@@ -40,10 +40,15 @@ router.get(
     try {
       activeSeasonContext = await getActiveSearchSeasonContext();
     } catch {
-      searchAnalyticsService.recordTelemetryFailure({
-        response,
-        userId,
-      });
+      try {
+        searchAnalyticsService.recordTelemetryFailure({
+          response,
+          userId,
+        });
+      } catch {
+        // Telemetry diagnostics are best-effort and must not change the
+        // successful player response.
+      }
       res.json(response);
       return;
     }

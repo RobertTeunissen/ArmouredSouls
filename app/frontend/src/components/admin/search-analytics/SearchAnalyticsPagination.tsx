@@ -26,7 +26,7 @@ export function SearchAnalyticsPagination({
       <div className="flex gap-2">
         <button
           type="button"
-          className="min-h-11 min-w-11 rounded bg-surface-elevated px-3 text-sm text-secondary transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary focus-visible:ring-2 focus-visible:ring-primary/50 disabled:cursor-not-allowed disabled:opacity-40"
+          className="min-h-11 min-w-11 rounded bg-surface-elevated px-3 text-sm text-secondary transition-colors hover:text-white focus-visible:bg-primary/10 focus-visible:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary focus-visible:ring-2 focus-visible:ring-primary/50 disabled:cursor-not-allowed disabled:opacity-40"
           disabled={loading || page <= 1}
           onClick={() => onPageChange(page - 1)}
           aria-label="Previous player analysis page"
@@ -35,7 +35,7 @@ export function SearchAnalyticsPagination({
         </button>
         <button
           type="button"
-          className="min-h-11 min-w-11 rounded bg-surface-elevated px-3 text-sm text-secondary transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary focus-visible:ring-2 focus-visible:ring-primary/50 disabled:cursor-not-allowed disabled:opacity-40"
+          className="min-h-11 min-w-11 rounded bg-surface-elevated px-3 text-sm text-secondary transition-colors hover:text-white focus-visible:bg-primary/10 focus-visible:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary focus-visible:ring-2 focus-visible:ring-primary/50 disabled:cursor-not-allowed disabled:opacity-40"
           disabled={loading || page >= totalPages}
           onClick={() => onPageChange(page + 1)}
           aria-label="Next player analysis page"

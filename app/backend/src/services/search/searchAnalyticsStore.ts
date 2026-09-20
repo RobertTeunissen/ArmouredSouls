@@ -11,61 +11,60 @@ import prisma from '../../lib/prisma';
 import type { SearchAnalyticsEventInput, SearchAnalyticsStore } from './searchAnalyticsTypes';
 
 /**
- * Fail-open persistence failures are retained only as a bounded operational
- * status by season/cycle. No phrase, request, event id, or database error is
- * retained, and the report uses this status only to expose its typed
- * incomplete-telemetry limitation.
+ * Fail-open persistence failures are retained in a dedicated active-season
+ * status table by season/cycle. No phrase, request, event id, user, or database
+ * error is retained, and Season_Rollover purges the status with the event rows.
  */
-export const MAX_TRACKED_PERSISTENCE_FAILURE_SCOPES = 256;
-
-/**
- * Bounded process-local operational status. It contains only season/cycle
- * scope, never phrases, users, responses, or database errors. Event rows
- * remain the durable analytics record; this marker only tells the report that
- * some rows may be missing after a fail-open write.
- */
-interface SearchAnalyticsFailureMarker {
-  seasonNumber: number;
-  cycleNumber: number;
-}
-
-const persistenceFailureScopes = new Map<string, SearchAnalyticsFailureMarker>();
-
 export interface SearchAnalyticsFailureScope {
   seasonNumber: number;
   cycleFrom: number | null;
   cycleTo: number | null;
 }
 
-function persistenceFailureScopeKey(seasonNumber: number, cycleNumber: number): string {
-  return `${seasonNumber}:${cycleNumber}`;
-}
+/**
+ * Read the durable, active-season failure marker without retaining phrases,
+ * users, responses, errors, or an unbounded process-local history. The unique
+ * season/cycle constraint and Season_Rollover purge bound this table to the
+ * current season's cycle range.
+ */
+export async function hasSearchAnalyticsPersistenceFailure(
+  scope: SearchAnalyticsFailureScope,
+): Promise<boolean> {
+  const marker = await prisma.searchAnalyticsFailure.findFirst({
+    where: {
+      seasonNumber: scope.seasonNumber,
+      ...(scope.cycleFrom !== null || scope.cycleTo !== null
+        ? {
+            cycleNumber: {
+              ...(scope.cycleFrom !== null ? { gte: scope.cycleFrom } : {}),
+              ...(scope.cycleTo !== null ? { lte: scope.cycleTo } : {}),
+            },
+          }
+        : {}),
+    },
+    select: { id: true },
+  });
 
-export function hasSearchAnalyticsPersistenceFailure(scope: SearchAnalyticsFailureScope): boolean {
-  for (const failedScope of persistenceFailureScopes.values()) {
-    if (failedScope.seasonNumber !== scope.seasonNumber) continue;
-    if (scope.cycleFrom !== null && failedScope.cycleNumber < scope.cycleFrom) continue;
-    if (scope.cycleTo !== null && failedScope.cycleNumber > scope.cycleTo) continue;
-    return true;
-  }
-  return false;
+  return marker !== null;
 }
 
 /** Test-only reset helper; it retains no event or phrase data. */
-export function clearSearchAnalyticsPersistenceFailures(): void {
-  persistenceFailureScopes.clear();
+export async function clearSearchAnalyticsPersistenceFailures(): Promise<void> {
+  await prisma.searchAnalyticsFailure.deleteMany({});
 }
 
-function recordSearchAnalyticsPersistenceFailure(seasonNumber: number, cycleNumber: number): void {
-  const key = persistenceFailureScopeKey(seasonNumber, cycleNumber);
-  if (persistenceFailureScopes.has(key)) return;
-
-  if (persistenceFailureScopes.size >= MAX_TRACKED_PERSISTENCE_FAILURE_SCOPES) {
-    const oldestKey = persistenceFailureScopes.keys().next().value;
-    if (oldestKey !== undefined) persistenceFailureScopes.delete(oldestKey);
-  }
-
-  persistenceFailureScopes.set(key, { seasonNumber, cycleNumber });
+async function recordSearchAnalyticsPersistenceFailure(
+  seasonNumber: number,
+  cycleNumber: number,
+): Promise<void> {
+  await prisma.searchAnalyticsFailure.upsert({
+    where: {
+      seasonNumber_cycleNumber: { seasonNumber, cycleNumber },
+    },
+    create: { seasonNumber, cycleNumber },
+    update: {},
+    select: { id: true },
+  });
 }
 
 /**
@@ -111,7 +110,12 @@ export async function createSearchAnalyticsEvent(
       select: SEARCH_ANALYTICS_EVENT_WRITE_SELECT,
     });
   } catch (error) {
-    recordSearchAnalyticsPersistenceFailure(input.seasonNumber, input.cycleNumber);
+    try {
+      await recordSearchAnalyticsPersistenceFailure(input.seasonNumber, input.cycleNumber);
+    } catch {
+      // The marker is best-effort and contains no phrase or player data. The
+      // original event failure remains the single failed event attempt.
+    }
     throw error;
   }
 }

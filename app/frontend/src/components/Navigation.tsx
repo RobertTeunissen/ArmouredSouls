@@ -27,10 +27,10 @@ function Navigation({ onOpenSearch }: NavigationProps) {
   const location = useLocation();
   const { user, logout } = useAuth();
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [userRobots, setUserRobots] = useState<UserRobot[]>([]);
-  const fetchSeason = useSeasonStore((s) => s.fetchSeason);
   const storeRobots = useRobotStore((state) => state.robots);
   const fetchRobots = useRobotStore((state) => state.fetchRobots);
+  const userRobots: UserRobot[] = storeRobots.map((robot) => ({ id: robot.id, name: robot.name }));
+  const fetchSeason = useSeasonStore((s) => s.fetchSeason);
 
   // Season state drives the progress indicator, countdown banner, and summary
   // modal. Fetched once here rather than per component.
@@ -41,10 +41,6 @@ function Navigation({ onOpenSearch }: NavigationProps) {
   useEffect(() => {
     if (user) void fetchRobots();
   }, [fetchRobots, user]);
-
-  useEffect(() => {
-    setUserRobots(storeRobots.map((robot) => ({ id: robot.id, name: robot.name })));
-  }, [storeRobots]);
 
   const handleLogout = () => {
     logout();
@@ -130,9 +126,9 @@ function Navigation({ onOpenSearch }: NavigationProps) {
               <h1 className="hidden truncate text-lg font-bold tracking-tight text-primary sm:block">ARMOURED SOULS</h1>
             </button>
           <div className="flex min-w-0 shrink-0 items-center gap-1 sm:gap-2">
-            <SeasonProgressIndicator compact />
+            <SeasonProgressIndicator compact className="hidden max-w-[6rem] overflow-hidden text-ellipsis sm:inline-flex sm:max-w-none" />
             <SearchTrigger variant="mobile" onOpenSearch={onOpenSearch} />
-            <div className="flex min-w-0 max-w-[5.5rem] items-center gap-1 overflow-hidden rounded-md border border-white/10 bg-surface px-1.5 py-1 sm:max-w-none sm:gap-2 sm:px-2">
+            <div className="flex min-w-0 max-w-[4.5rem] items-center gap-1 overflow-hidden rounded-md border border-white/10 bg-surface px-1.5 py-1 sm:max-w-none sm:gap-2 sm:px-2">
               <span className="text-primary text-sm">₡</span>
               <span className="truncate text-primary text-sm font-medium">{user.currency.toLocaleString()}</span>
             </div>

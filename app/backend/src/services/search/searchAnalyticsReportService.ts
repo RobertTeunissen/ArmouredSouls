@@ -240,12 +240,18 @@ export async function getSearchAnalyticsReport(
     stables: asCount(overview?.stables),
     guide: asCount(overview?.guide),
   };
-  const telemetryFailureObserved = typeof hasSearchAnalyticsPersistenceFailure === 'function'
-    && hasSearchAnalyticsPersistenceFailure({
+  let telemetryFailureObserved: boolean;
+  try {
+    telemetryFailureObserved = await hasSearchAnalyticsPersistenceFailure({
       seasonNumber: scope.seasonNumber,
       cycleFrom: scope.cycleFrom,
       cycleTo: scope.cycleTo,
     });
+  } catch {
+    // A status read failure means the report cannot prove complete telemetry;
+    // preserve the aggregate report and expose the typed limitation instead.
+    telemetryFailureObserved = true;
+  }
   const limitations = telemetryFailureObserved
     ? [INCOMPLETE_TELEMETRY_LIMITATION]
     : [];

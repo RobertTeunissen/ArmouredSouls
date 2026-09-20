@@ -1,5 +1,4 @@
-import { useRef, useState } from 'react';
-import type { KeyboardEvent, ReactNode } from 'react';
+import { useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import type { SearchResponse, SearchResult } from '../../utils/searchTypes';
 
 export interface SearchResultListProps {
