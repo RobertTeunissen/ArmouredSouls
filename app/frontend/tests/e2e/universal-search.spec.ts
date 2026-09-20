@@ -179,7 +179,9 @@ test.describe('Universal search — authenticated responsive discovery', () => {
 
       if (viewport.width >= 1024) {
         await expect(trigger).toContainText('Search');
-        await expect(trigger.locator('kbd')).toHaveText('⌘ K');
+        // The visible accelerator follows the browser platform: macOS uses
+        // Command while Linux/Windows uses Control.
+        await expect(trigger.locator('kbd')).toHaveText(/^(⌘ K|Ctrl K)$/);
         expect(await trigger.evaluate((element) => element.closest('nav')?.className ?? '')).not.toContain('bottom-0');
       } else {
         await expect(trigger).toHaveAttribute('title', 'Search');

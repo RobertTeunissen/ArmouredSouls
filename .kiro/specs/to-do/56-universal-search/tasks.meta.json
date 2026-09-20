@@ -1,0 +1,1540 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1.1 Define shared backend search types, constants, and strict request validation.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657806975
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657826435
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789658071138
+      }
+    ],
+    "1.2 Implement pure normalization, match classification, guide max-rank selection, deterministic sorting, and per-category limiting in `app/backend/src/services/search/searchRanking.ts`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657807005
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789658113777
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789658541635
+      }
+    ],
+    "1.3 Implement allow-listed result shaping and approved route identity fields in `app/backend/src/services/search/searchReferenceBuilder.ts`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657807035
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789658123105
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789658551435
+      }
+    ],
+    "1.4 Implement `app/backend/src/services/search/searchService.ts`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657807059
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789660636413
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789661200704
+      }
+    ],
+    "1.5 Add `app/backend/src/routes/search.ts` and wire the route in `app/backend/src/index.ts`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657807083
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789661241051
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789661880622
+      }
+    ],
+    "1.6 Redact search query data from ordinary diagnostics and error paths.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657807110
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789658131192
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789658560654
+      }
+    ],
+    "1.7 Add backend API contract tests for source scope, response shape, parameterized query behavior, safe errors, and category/total bounds once the pure test fixtures are available.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657807134
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789661250825
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789661893202
+      }
+    ],
+    "1.8 Checkpoint A — Ensure the backend search foundation has been type-checked and its focused unit tests are ready before beginning frontend composition; ask the user if questions arise.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657807156
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789661934574
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789662430724
+      }
+    ],
+    "2.1 Create `app/frontend/src/components/layout/PlayerShell.tsx` and restructure `app/frontend/src/App.tsx` so all `Post_Onboarding_Player_Route` content is inside one protected shell.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657807181
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789660645680
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789661210831
+      }
+    ],
+    "2.2 Update `app/frontend/src/components/Navigation.tsx` to receive an `onOpenSearch` callback and render the Search_Control in both existing header variants.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657807203
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657834857
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789658079679
+      }
+    ],
+    "2.3 Create `app/frontend/src/components/search/SearchTrigger.tsx`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657807230
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789658140937
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789658569363
+      }
+    ],
+    "2.4 Create `app/frontend/src/components/search/SearchPalette.tsx`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657807260
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789658150172
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789658578499
+      }
+    ],
+    "2.5 Create `app/frontend/src/components/search/SearchResultList.tsx`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657807284
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789658586969
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789658805446
+      }
+    ],
+    "2.6 Implement `app/frontend/src/components/search/useSearchPalette.ts` for debounce, request generation, cancellation, focus lifecycle, and retry state.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657807306
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789661261101
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789661903519
+      }
+    ],
+    "2.7 Apply responsive and accessibility styling in the search components and the existing frontend styling conventions.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657807331
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789661946554
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789662442017
+      }
+    ],
+    "3.1 Create `app/frontend/src/utils/searchTypes.ts` and `app/frontend/src/utils/searchApi.ts`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657807354
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657860118
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789658087554
+      }
+    ],
+    "3.2 Create pure history functions and the guarded local-storage adapter in `app/frontend/src/utils/searchHistory.ts`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657807378
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657877428
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789658096788
+      }
+    ],
+    "3.3 Create `app/frontend/src/utils/searchRoutes.ts`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657807404
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789658595371
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789658814431
+      }
+    ],
+    "3.4 Integrate `SearchHistoryList.tsx`, history selection, submission/result-selection insertion, and clear-history behavior with `SearchPalette.tsx` and `useSearchPalette.ts`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657807426
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789661956674
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789662930995
+      }
+    ],
+    "4.1 Add `SearchAnalyticsEvent` and the `User.searchAnalyticsEvents` relation to `app/backend/prisma/schema.prisma`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657807447
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657885862
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789658104849
+      }
+    ],
+    "4.2 Generate and review the Prisma migration at `app/backend/prisma/migrations/<generated-search-analytics-migration>/migration.sql`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657807469
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789658604158
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789658824025
+      }
+    ],
+    "4.3 Create `app/backend/src/services/search/searchAnalyticsTypes.ts` and `app/backend/src/services/search/searchAnalyticsStore.ts`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657807492
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789660656350
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789661221390
+      }
+    ],
+    "4.4 Implement `app/backend/src/services/search/searchAnalyticsService.ts` and integrate it after successful grouped search completion.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657807513
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789661271155
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789661914761
+      }
+    ],
+    "4.5 Add `search_analytics_events` to the fixed active-season purge set in `app/backend/src/services/season/seasonPurgeService.ts`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657807538
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789658612305
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789658834508
+      }
+    ],
+    "4.6 Add safe internal telemetry diagnostics for Search_Persistence_Failure in the existing observability path.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657807561
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789660666203
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789661231352
+      }
+    ],
+    "5.1 Implement `app/backend/src/services/search/searchAnalyticsReportService.ts` and extend `app/backend/src/routes/adminAnalytics.ts` with `GET /search-analytics/report`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657807584
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789661281673
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789661925265
+      }
+    ],
+    "5.2 Create `app/frontend/src/utils/adminSearchAnalyticsApi.ts` with typed access to `GET /api/admin/search-analytics/report`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657807608
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789661967748
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789662453595
+      }
+    ],
+    "5.3 Create `app/frontend/src/pages/admin/SearchAnalyticsPage.tsx`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657807634
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789662941407
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789663176146
+      }
+    ],
+    "5.4 Update `app/frontend/src/components/admin/AdminLayout.tsx` and the admin route configuration in `app/frontend/src/App.tsx`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657807656
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789665171342
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789665476931
+      }
+    ],
+    "5.5 Add mobile layout behavior to `SearchAnalyticsPage.tsx`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657807678
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789665184503
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789665488561
+      }
+    ],
+    "5.6 Checkpoint B — Ensure the player shell, local history, analytics persistence, and admin report code are integrated enough for component and integration tests; ask the user if questions arise.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657807701
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789666673841
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789667893146
+      }
+    ],
+    "6.1 Create `app/backend/src/services/search/__tests__/searchRanking.test.ts` with example-based normalization, rank, guide max-rank, no-fuzzy, tie-break, independent ordering, and limit tests.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657807722
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789662952081
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789663186994
+      }
+    ],
+    "6.2 Add Property 1 to `app/backend/src/services/search/__tests__/searchRanking.property.test.ts`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657807746
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789665195430
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789665500029
+      }
+    ],
+    "6.3 Add Property 2 to `app/backend/src/services/search/__tests__/searchRanking.property.test.ts`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657807771
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789666685747
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789667905643
+      }
+    ],
+    "6.4 Add Property 3 to `app/backend/src/services/search/__tests__/searchRanking.property.test.ts`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657807793
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789667941805
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789668099805
+      }
+    ],
+    "6.5 Add Property 4 to `app/backend/src/services/search/__tests__/searchRanking.property.test.ts`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657807814
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789668123506
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789668718136
+      }
+    ],
+    "6.6 Add Property 5 to `app/backend/src/services/search/__tests__/searchRanking.property.test.ts`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657807837
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789668991844
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789669296356
+      }
+    ],
+    "6.7 Create `app/backend/src/services/search/__tests__/searchReferenceBuilder.test.ts`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657807860
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789662962005
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789663197353
+      }
+    ],
+    "6.8 Add Property 6 to `app/backend/src/services/search/__tests__/searchReferenceBuilder.property.test.ts`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657807885
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789665206155
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789665511242
+      }
+    ],
+    "6.9 Add Property 7 to `app/backend/src/services/search/__tests__/searchReferenceBuilder.property.test.ts`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657807909
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789666697825
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789667917020
+      }
+    ],
+    "6.10 Create `app/backend/src/services/search/__tests__/searchService.test.ts`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657807931
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789662971123
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789663207613
+      }
+    ],
+    "6.11 Add Property 11 to `app/backend/src/services/search/__tests__/searchService.property.test.ts`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657807957
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789667954094
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789668112191
+      }
+    ],
+    "6.12 Add Property 13 to `app/backend/src/services/search/__tests__/searchAnalytics.property.test.ts`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657807985
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789668134915
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789668732253
+      }
+    ],
+    "6.13 Add Property 14 to `app/backend/src/services/search/__tests__/searchAnalytics.property.test.ts`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657808006
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789669005041
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789669309119
+      }
+    ],
+    "6.14 Add Property 15 to `app/backend/src/services/search/__tests__/searchAnalytics.property.test.ts`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657808028
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789669772563
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789670005771
+      }
+    ],
+    "6.15 Add Property 16 to `app/backend/src/services/search/__tests__/searchAnalytics.property.test.ts`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657808051
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789670046517
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789670337552
+      }
+    ],
+    "6.16 Create `app/backend/src/services/search/__tests__/searchAnalyticsStore.test.ts`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657808074
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789662981566
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789663217407
+      }
+    ],
+    "6.17 Update `app/backend/jest.tiers.js` so every pure search unit/property test is assigned to exactly one backend test tier and no new test is uncollected or multiply collected.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657808097
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789669785329
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789670019223
+      }
+    ],
+    "7.1 Create `app/frontend/src/components/search/__tests__/SearchPalette.test.tsx`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657808124
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789663229869
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789664633947
+      }
+    ],
+    "7.2 Create `app/frontend/src/utils/__tests__/searchHistory.test.ts`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657808147
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789663241586
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789664984238
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789665039731
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789665148591
+      }
+    ],
+    "7.3 Add Property 9 to `app/frontend/src/utils/__tests__/searchHistory.property.test.ts`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657808178
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789665218032
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789665522608
+      }
+    ],
+    "7.4 Add Property 10 to `app/frontend/src/utils/__tests__/searchHistory.property.test.ts`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657808202
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789666709298
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789667930189
+      }
+    ],
+    "7.5 Add Property 8 to `app/frontend/src/utils/__tests__/searchRoutes.property.test.ts`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657808224
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789663252174
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789664994683
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789665050287
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789665160573
+      }
+    ],
+    "7.6 Add Property 12 to `app/frontend/src/components/search/__tests__/SearchPalette.property.test.tsx`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657808247
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789665534754
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789665893965
+      }
+    ],
+    "7.7 Create `app/frontend/src/components/__tests__/Navigation.search.test.tsx`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657808270
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789663262350
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789664645097
+      }
+    ],
+    "7.8 Create `app/frontend/src/components/layout/__tests__/PlayerShell.test.tsx`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657808294
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789663273515
+      },
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789664656038
+      }
+    ],
+    "7.9 Create `app/frontend/src/pages/admin/__tests__/SearchAnalyticsPage.test.tsx`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657808320
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789665545402
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789666650527
+      }
+    ],
+    "7.10 Create `app/frontend/src/pages/admin/__tests__/SearchAnalyticsPage.mobile.test.tsx`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657808344
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789665557878
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789666662696
+      }
+    ],
+    "8.1 Create `app/backend/src/routes/__tests__/search.integration.test.ts` in the database-dependent tier.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657808368
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789668146077
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789668745345
+      }
+    ],
+    "8.2 Create `app/backend/src/routes/__tests__/adminSearchAnalytics.integration.test.ts` in the database-dependent tier.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657808393
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789668158661
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789668757136
+      }
+    ],
+    "8.3 Update `app/backend/jest.tiers.js` to assign `search.integration.test.ts` and `adminSearchAnalytics.integration.test.ts` exclusively to the Integration_Tier.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657808418
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789669018664
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789669323493
+      }
+    ],
+    "8.4 Create `app/frontend/tests/e2e/universal-search.spec.ts`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657808444
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789668172726
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789668769053
+      }
+    ],
+    "8.5 Add frontend network assertions to `universal-search.spec.ts` and the relevant component tests for response isolation.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657808469
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789669030019
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789669337320
+      }
+    ],
+    "8.6 Run `app/backend` `test:tiers:verify` after all test files are added and correct any zero-tier, duplicate-tier, or undocumented-exclusion result without weakening the check.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657808493
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789670351859
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789670445196
+      }
+    ],
+    "8.7 Add integration assertions that a failed required `search_analytics_events` purge blocks a claimed-complete rollover under the existing error path and never creates a cross-season fallback/archive.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657808518
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789668782535
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789668979016
+      }
+    ],
+    "8.8 Checkpoint C — Ensure all implementation, unit/property, integration, route-layout, and browser test code is wired before documentation and final verification; ask the user if questions arise.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657808546
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789670473978
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789670669511
+      }
+    ],
+    "9.1 Create `docs/implementation_notes/UNIVERSAL_SEARCH_CONTRACT.md`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657808569
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789669042499
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789669349977
+      }
+    ],
+    "9.2 Create `docs/prd_pages/PRD_UNIVERSAL_SEARCH.md`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657808593
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789669363931
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789669582885
+      }
+    ],
+    "9.3 Create `docs/guides/UNIVERSAL_SEARCH_GUIDE.md` and update `docs/guides/README.md`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657808618
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789669377447
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789669596517
+      }
+    ],
+    "9.4 Update `docs/design_ux/DESIGN_SYSTEM_AND_UX_GUIDE.md`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657808641
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789669389893
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789669609601
+      }
+    ],
+    "9.5 Update `.kiro/steering/frontend-standards.md`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657808665
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789669403669
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789669622118
+      }
+    ],
+    "9.6 Update `.kiro/steering/frontend-state-management.md`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657808689
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789669416788
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789669636325
+      }
+    ],
+    "9.7 Update `.kiro/steering/testing-strategy.md`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657808713
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789669651485
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789669745261
+      }
+    ],
+    "9.8 Update `.kiro/steering/project-overview.md`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657808750
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789669664698
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789669757941
+      }
+    ],
+    "9.9 Cross-check all new documentation against `requirements.md` and `design.md` for exact code artefact casing, established Pascal_Snake concepts, deferred scope, route boundaries, fail-open telemetry, and mobile requirements; do not update `docs/BACKLOG.md` in this group.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657808774
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789669801485
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789670032952
+      }
+    ],
+    "10.1 Run Verification Criteria 1 and 2 from `requirements.md`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657808797
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789670364968
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789670460748
+      }
+    ],
+    "10.2 Run Verification Criteria 3 and 4 from `requirements.md`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657808824
+      },
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789670488187
+      },
+      {
+        "executionId": "f4c9b306-95ee-4956-9435-83ed1f77b93b",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789754768437
+      }
+    ],
+    "10.3 Run Verification Criterion 5 from `requirements.md`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657808849
+      },
+      {
+        "executionId": "f4c9b306-95ee-4956-9435-83ed1f77b93b",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789676194653
+      },
+      {
+        "executionId": "f4c9b306-95ee-4956-9435-83ed1f77b93b",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789676333632
+      }
+    ],
+    "10.4 Run Verification Criterion 6 from `requirements.md`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657808874
+      },
+      {
+        "executionId": "f4c9b306-95ee-4956-9435-83ed1f77b93b",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789676347387
+      },
+      {
+        "executionId": "f4c9b306-95ee-4956-9435-83ed1f77b93b",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789676567762
+      }
+    ],
+    "10.5 Run Verification Criterion 7 from `requirements.md`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657808900
+      },
+      {
+        "executionId": "f4c9b306-95ee-4956-9435-83ed1f77b93b",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789676597505
+      },
+      {
+        "executionId": "f4c9b306-95ee-4956-9435-83ed1f77b93b",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789676703704
+      }
+    ],
+    "10.6 Run Verification Criteria 8 and 9 from `requirements.md`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657808923
+      },
+      {
+        "executionId": "f4c9b306-95ee-4956-9435-83ed1f77b93b",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789676718963
+      },
+      {
+        "executionId": "f4c9b306-95ee-4956-9435-83ed1f77b93b",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789676818253
+      }
+    ],
+    "10.7 Run Verification Criterion 10 from `requirements.md`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657808946
+      },
+      {
+        "executionId": "f4c9b306-95ee-4956-9435-83ed1f77b93b",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789676832211
+      },
+      {
+        "executionId": "f4c9b306-95ee-4956-9435-83ed1f77b93b",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789753334036
+      }
+    ],
+    "10.8 Run Verification Criterion 11 from `requirements.md`.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657808971
+      },
+      {
+        "executionId": "f4c9b306-95ee-4956-9435-83ed1f77b93b",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789753349794
+      },
+      {
+        "executionId": "f4c9b306-95ee-4956-9435-83ed1f77b93b",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789753473227
+      }
+    ],
+    "10.9 Run all relevant blocking project gates after the targeted criteria.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657808994
+      },
+      {
+        "executionId": "f4c9b306-95ee-4956-9435-83ed1f77b93b",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789753487625
+      },
+      {
+        "executionId": "f4c9b306-95ee-4956-9435-83ed1f77b93b",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789754783355
+      }
+    ],
+    "10.10 Only after Verification Criteria 1–11 and the relevant blocking project gates have been executed successfully, update item #27 in `docs/BACKLOG.md` to describe the delivered robots/stables/guide search-only palette and admin analytics scope; explicitly retain the broader players/weapons/pages/battle-history/commands scope as deferred and do not record an unrun check as passed.": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789657809019
+      },
+      {
+        "executionId": "f4c9b306-95ee-4956-9435-83ed1f77b93b",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789754798401
+      },
+      {
+        "executionId": "f4c9b306-95ee-4956-9435-83ed1f77b93b",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789754869476
+      }
+    ],
+    "4. Add the dedicated Search_Analytics_Store and active-season lifecycle": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789661914820
+      }
+    ],
+    "1. Implement the authenticated backend MVP search contract _Requirements: 1.1–1.11; 2.1–2.12; 3.1–3.15; 4.1–4.15_": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789662430873
+      }
+    ],
+    "2. Compose the shared post-onboarding Player_Shell and Search_Palette": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789662442084
+      }
+    ],
+    "3. Implement typed client routes and browser-local Recent_Search_History": [
+      {
+        "executionId": "c0db1340-5627-4b37-9e95-349474971e86",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789662931038
+      }
+    ],
+    "5. Implement the admin-only Search_Analytics_Report resource and page _Requirements: 12.14–12.18; 12.21_": [
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789667893188
+      }
+    ],
+    "7. Add frontend unit, component, property, and route-layout tests": [
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789667930232
+      }
+    ],
+    "9. Create the required implementation and steering documentation": [
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789670032987
+      }
+    ],
+    "6. Add backend unit and property-based tests with exclusive tier assignment": [
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789670337592
+      }
+    ],
+    "8. Add PostgreSQL integration, admin integration, route-layout browser, and blocking-tier coverage _Requirements: 9.2, 9.4–9.9; 12.1–12.21_": [
+      {
+        "executionId": "aa0f4c64-846c-47c5-8978-950ded2ed316",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789670669543
+      }
+    ],
+    "10. Final verification gate and post-verification backlog update": [
+      {
+        "executionId": "f4c9b306-95ee-4956-9435-83ed1f77b93b",
+        "chatSessionId": "sess_a637ccba-cc72-438f-8787-c018336df5f7",
+        "timestamp": 1789754869634
+      }
+    ]
+  }
+}
