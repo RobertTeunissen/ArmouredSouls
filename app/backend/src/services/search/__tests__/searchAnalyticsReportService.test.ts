@@ -68,13 +68,34 @@ describe('searchAnalyticsReportService', () => {
         entries: [{ userId: 9, stableName: 'Iron House', searchCount: 2, noResultCount: 1 }],
         page: 2,
         limit: 10,
-        total: 1,
+        total: 2,
       },
       limitations: [{
         code: 'analyticsDataIncomplete',
         message: 'Search analytics data may be incomplete because persistence failed.',
       }],
     });
+  });
+
+  it('reports the authoritative player total when the requested page is empty', async () => {
+    mockPrisma.$queryRaw.mockReset();
+    mockPrisma.$queryRaw
+      .mockResolvedValueOnce([{
+        total_searches: BigInt(3),
+        unique_searchers: BigInt(3),
+        no_result_searches: BigInt(0),
+        robots: BigInt(0),
+        stables: BigInt(0),
+        guide: BigInt(0),
+      }])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([]);
+
+    const report = await getSearchAnalyticsReport({ page: 2, limit: 2 });
+
+    expect(report.playerAnalysis).toEqual({ entries: [], page: 2, limit: 2, total: 3 });
   });
 
   it('should reject cycle filters beyond the server-resolved active cycle without querying events', async () => {

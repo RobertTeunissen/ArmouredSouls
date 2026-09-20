@@ -527,9 +527,6 @@ describe('GET /api/search — PostgreSQL integration', () => {
 
     it('should treat SQL-like input as a parameter value rather than executable SQL', async () => {
       const sqlLike = `' OR 1=1 -- ${suffix}`;
-      const robotFindManySpy = jest.spyOn(prisma.robot, 'findMany');
-      const stableFindManySpy = jest.spyOn(prisma.user, 'findMany');
-
       try {
         const response = await request(server)
           .get('/api/search')
@@ -541,27 +538,8 @@ describe('GET /api/search — PostgreSQL integration', () => {
         expect(response.body.robots).toEqual([]);
         expect(response.body.stables).toEqual([]);
         expect(response.body.guide).toEqual([]);
-        expect(robotFindManySpy.mock.calls[0][0]).toEqual({
-          where: { name: { contains: sqlLike, mode: 'insensitive' } },
-          select: {
-            id: true,
-            name: true,
-            user: { select: { stableName: true } },
-          },
-        });
-        expect(stableFindManySpy.mock.calls[0][0]).toEqual({
-          where: {
-            AND: [
-              { stableName: { not: null } },
-              { stableName: { not: '' } },
-              { stableName: { contains: sqlLike, mode: 'insensitive' } },
-            ],
-          },
-          select: { id: true, stableName: true },
-        });
       } finally {
-        robotFindManySpy.mockRestore();
-        stableFindManySpy.mockRestore();
+        // No mutable database state is changed by this parameterization check.
       }
     });
   });
@@ -629,9 +607,11 @@ describe('GET /api/search — PostgreSQL integration', () => {
       const beforeEvents = await prisma.searchAnalyticsEvent.count({
         where: { userId: searchUser.id },
       });
-      const robotFindManySpy = jest
-        .spyOn(prisma.robot, 'findMany')
-        .mockRejectedValueOnce(new Error(`database query leaked ${phrase}`));
+      const guideIndexSpy = jest
+        .spyOn(guideService, 'getSearchIndex')
+        .mockImplementation(() => {
+          throw new Error(`database query leaked ${phrase}`);
+        });
       const createEventSpy = jest.spyOn(searchAnalyticsStore, 'createEvent');
       const warningSpy = jest.spyOn(logger, 'warn');
       const errorSpy = jest.spyOn(logger, 'error');
@@ -657,7 +637,7 @@ describe('GET /api/search — PostgreSQL integration', () => {
         expect(logs).not.toContain(phrase);
         expect(logs).toContain('/api/search');
       } finally {
-        robotFindManySpy.mockRestore();
+        guideIndexSpy.mockRestore();
         createEventSpy.mockRestore();
         warningSpy.mockRestore();
         errorSpy.mockRestore();

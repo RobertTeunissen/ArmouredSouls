@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AdminDataTable,
   AdminPageHeader,
@@ -52,6 +52,16 @@ function parseCycle(value: string): number | undefined {
   return Number.isSafeInteger(parsed) && parsed >= 0 ? parsed : undefined;
 }
 
+function isExpectedAbort(error: unknown, signal: AbortSignal): boolean {
+  if (signal.aborted) return true;
+  if (error instanceof DOMException && error.name === 'AbortError') return true;
+  if (error instanceof Error && (error.name === 'AbortError' || error.name === 'CanceledError')) return true;
+  if (typeof error !== 'object' || error === null) return false;
+
+  const candidate = error as { code?: unknown; name?: unknown };
+  return candidate.code === 'ERR_CANCELED' || candidate.name === 'AbortError';
+}
+
 function SearchAnalyticsPage(): React.ReactElement {
   const [report, setReport] = useState<AdminSearchAnalyticsReport | null>(null);
   const [query, setQuery] = useState<AdminSearchAnalyticsReportQuery>({ limit: DEFAULT_PAGE_SIZE, page: 1 });
@@ -59,24 +69,34 @@ function SearchAnalyticsPage(): React.ReactElement {
   const [filterError, setFilterError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const requestGenerationRef = useRef(0);
 
-  const loadReport = useCallback(async (requestQuery: AdminSearchAnalyticsReportQuery, signal: AbortSignal): Promise<void> => {
+  const loadReport = useCallback(async (
+    requestQuery: AdminSearchAnalyticsReportQuery,
+    signal: AbortSignal,
+    generation: number,
+  ): Promise<void> => {
     try {
       const result = await getAdminSearchAnalyticsReport(requestQuery, signal);
+      if (signal.aborted || requestGenerationRef.current !== generation) return;
       setReport(result);
       setError(null);
     } catch (requestError: unknown) {
-      if (requestError instanceof DOMException && requestError.name === 'AbortError') return;
+      if (
+        requestGenerationRef.current !== generation
+        || isExpectedAbort(requestError, signal)
+      ) return;
       setError(safeErrorMessage(requestError));
     } finally {
-      if (!signal.aborted) setLoading(false);
+      if (!signal.aborted && requestGenerationRef.current === generation) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     const controller = new AbortController();
+    const generation = ++requestGenerationRef.current;
     setLoading(true);
-    void loadReport(query, controller.signal);
+    void loadReport(query, controller.signal, generation);
     return () => controller.abort();
   }, [loadReport, query]);
 

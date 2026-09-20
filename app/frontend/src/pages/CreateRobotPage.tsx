@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { api } from '../utils/api';
 import { createRobot } from '../utils/robotApi';
 import { ApiError } from '../utils/ApiError';
+import { useRobotStore } from '../stores';
 
 function CreateRobotPage() {
   const [name, setName] = useState('');
@@ -47,6 +48,13 @@ function CreateRobotPage() {
 
     try {
       const data = await createRobot(name);
+
+      if (!isOnboarding) {
+        // PlayerShell keeps Navigation mounted while the setup route loads;
+        // refresh its shared robot source before navigating so the dropdown
+        // includes the robot created in this flow.
+        await useRobotStore.getState().fetchRobots();
+      }
 
       // Refresh user data to update currency
       await refreshUser();

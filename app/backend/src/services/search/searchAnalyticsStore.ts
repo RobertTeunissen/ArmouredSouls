@@ -16,7 +16,20 @@ import type { SearchAnalyticsEventInput, SearchAnalyticsStore } from './searchAn
  * retained, and the report uses this status only to expose its typed
  * incomplete-telemetry limitation.
  */
-const persistenceFailureCycles = new Map<number, Set<number>>();
+export const MAX_TRACKED_PERSISTENCE_FAILURE_SCOPES = 256;
+
+/**
+ * Bounded process-local operational status. It contains only season/cycle
+ * scope, never phrases, users, responses, or database errors. Event rows
+ * remain the durable analytics record; this marker only tells the report that
+ * some rows may be missing after a fail-open write.
+ */
+interface SearchAnalyticsFailureMarker {
+  seasonNumber: number;
+  cycleNumber: number;
+}
+
+const persistenceFailureScopes = new Map<string, SearchAnalyticsFailureMarker>();
 
 export interface SearchAnalyticsFailureScope {
   seasonNumber: number;
@@ -24,19 +37,35 @@ export interface SearchAnalyticsFailureScope {
   cycleTo: number | null;
 }
 
-export function hasSearchAnalyticsPersistenceFailure(scope: SearchAnalyticsFailureScope): boolean {
-  const failedCycles = persistenceFailureCycles.get(scope.seasonNumber);
-  if (!failedCycles) return false;
+function persistenceFailureScopeKey(seasonNumber: number, cycleNumber: number): string {
+  return `${seasonNumber}:${cycleNumber}`;
+}
 
-  return [...failedCycles].some((cycleNumber) => (
-    (scope.cycleFrom === null || cycleNumber >= scope.cycleFrom)
-    && (scope.cycleTo === null || cycleNumber <= scope.cycleTo)
-  ));
+export function hasSearchAnalyticsPersistenceFailure(scope: SearchAnalyticsFailureScope): boolean {
+  for (const failedScope of persistenceFailureScopes.values()) {
+    if (failedScope.seasonNumber !== scope.seasonNumber) continue;
+    if (scope.cycleFrom !== null && failedScope.cycleNumber < scope.cycleFrom) continue;
+    if (scope.cycleTo !== null && failedScope.cycleNumber > scope.cycleTo) continue;
+    return true;
+  }
+  return false;
 }
 
 /** Test-only reset helper; it retains no event or phrase data. */
 export function clearSearchAnalyticsPersistenceFailures(): void {
-  persistenceFailureCycles.clear();
+  persistenceFailureScopes.clear();
+}
+
+function recordSearchAnalyticsPersistenceFailure(seasonNumber: number, cycleNumber: number): void {
+  const key = persistenceFailureScopeKey(seasonNumber, cycleNumber);
+  if (persistenceFailureScopes.has(key)) return;
+
+  if (persistenceFailureScopes.size >= MAX_TRACKED_PERSISTENCE_FAILURE_SCOPES) {
+    const oldestKey = persistenceFailureScopes.keys().next().value;
+    if (oldestKey !== undefined) persistenceFailureScopes.delete(oldestKey);
+  }
+
+  persistenceFailureScopes.set(key, { seasonNumber, cycleNumber });
 }
 
 /**
@@ -82,9 +111,7 @@ export async function createSearchAnalyticsEvent(
       select: SEARCH_ANALYTICS_EVENT_WRITE_SELECT,
     });
   } catch (error) {
-    const failedCycles = persistenceFailureCycles.get(input.seasonNumber) ?? new Set<number>();
-    failedCycles.add(input.cycleNumber);
-    persistenceFailureCycles.set(input.seasonNumber, failedCycles);
+    recordSearchAnalyticsPersistenceFailure(input.seasonNumber, input.cycleNumber);
     throw error;
   }
 }

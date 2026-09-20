@@ -1,4 +1,4 @@
-import type { Prisma } from '../../../generated/prisma';
+import { Prisma } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import guideService from '../common/guide-service';
 import { AppError } from '../../errors';
@@ -16,6 +16,7 @@ import {
 } from './searchRanking';
 import {
   GuideSearchSource,
+  MAX_RESULTS_PER_CATEGORY,
   MAX_TOTAL_RESULTS,
   MINIMUM_QUERY_LENGTH,
   RobotSearchSource,
@@ -38,8 +39,21 @@ export interface StableSearchRecord {
   stableName: string | null;
 }
 
+interface RawRobotSearchRecord {
+  id: number;
+  name: string;
+  stableName: string | null;
+}
+
+interface RawStableSearchRecord {
+  id: number;
+  stableName: string | null;
+}
+
 /** The narrow database surface required by the search service. */
 export interface SearchDatabase {
+  /** Production uses this parameterized path to rank and bound candidates in PostgreSQL. */
+  $queryRaw?<T>(query: Prisma.Sql): Promise<T[]>;
   robot: {
     findMany(args: {
       where: Prisma.RobotWhereInput;
@@ -110,6 +124,49 @@ function limitTotalResults(response: SearchResponse): SearchResponse {
   };
 }
 
+function escapeLikePattern(value: string): string {
+  return value.replace(/[\\%_]/g, '\\$&');
+}
+
+function buildRobotSearchQuery(query: string): Prisma.Sql {
+  const escapedQuery = escapeLikePattern(query);
+  const containsPattern = `%${escapedQuery}%`;
+  const prefixPattern = `${escapedQuery}%`;
+
+  return Prisma.sql`
+    SELECT r."id", r."name", u."stable_name" AS "stableName"
+    FROM "robots" r
+    INNER JOIN "users" u ON u."id" = r."user_id"
+    WHERE LOWER(r."name") LIKE LOWER(${containsPattern}) ESCAPE '\\'
+    ORDER BY CASE
+      WHEN LOWER(r."name") = LOWER(${query}) THEN 0
+      WHEN LOWER(r."name") LIKE LOWER(${prefixPattern}) ESCAPE '\\' THEN 1
+      ELSE 2
+    END ASC, LOWER(r."name") ASC, r."id" ASC
+    LIMIT ${MAX_RESULTS_PER_CATEGORY}
+  `;
+}
+
+function buildStableSearchQuery(query: string): Prisma.Sql {
+  const escapedQuery = escapeLikePattern(query);
+  const containsPattern = `%${escapedQuery}%`;
+  const prefixPattern = `${escapedQuery}%`;
+
+  return Prisma.sql`
+    SELECT u."id", BTRIM(u."stable_name") AS "stableName"
+    FROM "users" u
+    WHERE BTRIM(u."stable_name") IS NOT NULL
+      AND BTRIM(u."stable_name") <> ''
+      AND LOWER(BTRIM(u."stable_name")) LIKE LOWER(${containsPattern}) ESCAPE '\\'
+    ORDER BY CASE
+      WHEN LOWER(BTRIM(u."stable_name")) = LOWER(${query}) THEN 0
+      WHEN LOWER(BTRIM(u."stable_name")) LIKE LOWER(${prefixPattern}) ESCAPE '\\' THEN 1
+      ELSE 2
+    END ASC, LOWER(BTRIM(u."stable_name")) ASC, u."id" ASC
+    LIMIT ${MAX_RESULTS_PER_CATEGORY}
+  `;
+}
+
 /**
  * Authenticated MVP search orchestration.
  *
@@ -127,6 +184,61 @@ export class SearchService {
     this.guideIndex = dependencies.guideIndex ?? guideService;
   }
 
+  private async loadEntitySources(query: string): Promise<{
+    robotRecords: RobotSearchRecord[];
+    stableRecords: StableSearchRecord[];
+  }> {
+    if (this.database.$queryRaw) {
+      const [rawRobots, rawStables] = await Promise.all([
+        this.database.$queryRaw<RawRobotSearchRecord>(buildRobotSearchQuery(query)),
+        this.database.$queryRaw<RawStableSearchRecord>(buildStableSearchQuery(query)),
+      ]);
+
+      return {
+        robotRecords: rawRobots.map((record) => ({
+          id: record.id,
+          name: record.name,
+          user: { stableName: record.stableName },
+        })),
+        stableRecords: rawStables.map((record) => ({
+          id: record.id,
+          stableName: record.stableName,
+        })),
+      };
+    }
+
+    // Test doubles may expose only Prisma model methods. Production always
+    // uses the ranked SQL path above, which keeps database candidate materialization bounded.
+    const [robotRecords, stableRecords] = await Promise.all([
+      this.database.robot.findMany({
+        where: {
+          name: {
+            contains: query,
+            mode: 'insensitive',
+          },
+        },
+        select: ROBOT_SELECT,
+      }),
+      this.database.user.findMany({
+        where: {
+          AND: [
+            { stableName: { not: null } },
+            { stableName: { not: '' } },
+            {
+              stableName: {
+                contains: query,
+                mode: 'insensitive',
+              },
+            },
+          ],
+        },
+        select: STABLE_SELECT,
+      }),
+    ]);
+
+    return { robotRecords, stableRecords };
+  }
+
   /**
    * Returns fixed, independently ranked robots/stables/guide groups.
    *
@@ -141,31 +253,8 @@ export class SearchService {
     }
 
     try {
-      const [robotRecords, stableRecords, guideSources] = await Promise.all([
-        this.database.robot.findMany({
-          where: {
-            name: {
-              contains: normalizedQuery,
-              mode: 'insensitive',
-            },
-          },
-          select: ROBOT_SELECT,
-        }),
-        this.database.user.findMany({
-          where: {
-            AND: [
-              { stableName: { not: null } },
-              { stableName: { not: '' } },
-              {
-                stableName: {
-                  contains: normalizedQuery,
-                  mode: 'insensitive',
-                },
-              },
-            ],
-          },
-          select: STABLE_SELECT,
-        }),
+      const [{ robotRecords, stableRecords }, guideSources] = await Promise.all([
+        this.loadEntitySources(normalizedQuery),
         Promise.resolve(this.guideIndex.getSearchIndex()),
       ]);
 

@@ -44,19 +44,35 @@ const INCOMPLETE_TELEMETRY_LIMITATION: SearchAnalyticsLimitation = Object.freeze
   message: 'Search analytics data may be incomplete because persistence failed.',
 });
 
-function hasValidCompletedSearchContext(input: RecordExecutedSearchInput): boolean {
-  const { normalizedPhrase, activeSeasonContext, userId } = input;
+function isActiveSeasonContext(value: unknown): value is ActiveSeasonContext {
+  if (typeof value !== 'object' || value === null) return false;
 
+  const candidate = value as Record<string, unknown>;
   return (
-    Number.isSafeInteger(userId) &&
-    userId > 0 &&
-    Number.isSafeInteger(activeSeasonContext.seasonNumber) &&
-    activeSeasonContext.seasonNumber >= 0 &&
-    Number.isSafeInteger(activeSeasonContext.cycleNumber) &&
-    activeSeasonContext.cycleNumber >= 0 &&
-    normalizedPhrase === normalizedPhrase.trim() &&
-    normalizedPhrase.length >= MINIMUM_QUERY_LENGTH &&
-    normalizedPhrase.length <= MAXIMUM_QUERY_LENGTH
+    Number.isSafeInteger(candidate.seasonNumber)
+    && typeof candidate.seasonNumber === 'number'
+    && candidate.seasonNumber >= 0
+    && Number.isSafeInteger(candidate.cycleNumber)
+    && typeof candidate.cycleNumber === 'number'
+    && candidate.cycleNumber >= 0
+  );
+}
+
+function isNormalizedPhrase(value: unknown): value is string {
+  return (
+    typeof value === 'string'
+    && value === value.trim()
+    && value.length >= MINIMUM_QUERY_LENGTH
+    && value.length <= MAXIMUM_QUERY_LENGTH
+  );
+}
+
+function hasValidCompletedSearchContext(input: RecordExecutedSearchInput): boolean {
+  return (
+    isNormalizedPhrase(input.normalizedPhrase)
+    && isActiveSeasonContext(input.activeSeasonContext)
+    && Number.isSafeInteger(input.userId)
+    && input.userId > 0
   );
 }
 
@@ -166,8 +182,29 @@ export class SearchAnalyticsService {
   }
 
   /**
-   * Expose only the typed report limitation state to the later admin report
-   * service; no failed phrase, error, request, or response is retained.
+   * Mark a completed search as having incomplete telemetry when server context
+   * resolution fails before the event write can be attempted. This path keeps
+   * the response isolated and records only safe aggregate diagnostics.
+   */
+  recordTelemetryFailure(input: { response: SearchResponse; userId: number }): void {
+    const counts = countResults(input.response);
+    const eventTimestamp = this.now();
+
+    try {
+      this.logPersistenceFailure({
+        userId: input.userId,
+        eventTimestamp,
+        resultCounts: counts,
+      });
+    } catch {
+      // Diagnostics are deliberately best-effort and phrase-free.
+    }
+  }
+
+  /**
+   * Expose the typed limitation only for this service instance's known write
+   * failures. The admin report uses the scoped store status, not this
+   * process-local convenience value.
    */
   getIncompleteTelemetryLimitations(): SearchAnalyticsLimitation[] {
     return this.incompleteTelemetryObserved ? [toLimitation()] : [];
@@ -177,10 +214,16 @@ export class SearchAnalyticsService {
 /** Resolve the active server-owned season context for the Search_Endpoint. */
 export async function getActiveSearchSeasonContext(): Promise<ActiveSeasonContext> {
   const season = await getCurrentSeason();
-  return {
-    seasonNumber: season.seasonNumber,
-    cycleNumber: season.seasonCycle,
+  const context: unknown = {
+    seasonNumber: season?.seasonNumber,
+    cycleNumber: season?.seasonCycle,
   };
+
+  if (!isActiveSeasonContext(context)) {
+    throw new Error('Active season context is unavailable');
+  }
+
+  return context;
 }
 
 export const searchAnalyticsService = new SearchAnalyticsService();

@@ -243,6 +243,27 @@ describe('SearchService', () => {
     expectSafeResponseDtos(result);
   });
 
+  it('should use the bounded Prisma raw-query path in production and keep test doubles on model methods', async () => {
+    const { database, guideIndex } = createDependencies();
+    const queryRaw = jest.fn()
+      .mockResolvedValueOnce([
+        { id: 1, name: 'Wildcard %_ Robot', stableName: 'Stable' },
+      ])
+      .mockResolvedValueOnce([
+        { id: 2, stableName: 'Wildcard %_ Stable' },
+      ]);
+    database.$queryRaw = queryRaw;
+    (guideIndex.getSearchIndex as jest.Mock).mockReturnValue([]);
+
+    const result = await new SearchService({ database, guideIndex }).search('%_');
+
+    expect(queryRaw).toHaveBeenCalledTimes(2);
+    expect(database.robot.findMany).not.toHaveBeenCalled();
+    expect(database.user.findMany).not.toHaveBeenCalled();
+    expect(result.robots).toEqual([{ category: 'robots', id: 1, label: 'Wildcard %_ Robot', subtitle: 'Stable' }]);
+    expect(result.stables).toEqual([{ category: 'stables', userId: 2, label: 'Wildcard %_ Stable' }]);
+  });
+
   it('should convert source failures into a generic safe search error', async () => {
     const { database, guideIndex } = createDependencies();
     (database.robot.findMany as jest.Mock).mockRejectedValue(

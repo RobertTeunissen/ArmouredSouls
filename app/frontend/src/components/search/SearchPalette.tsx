@@ -45,6 +45,22 @@ export interface SearchPaletteProps {
 }
 
 const SCOPE_TEXT = 'Search robots, stables, or guide articles';
+const SEARCH_GROUP_LABELS = ['Robots', 'Stables', 'Guide articles'] as const;
+
+function EmptySearchGroups(): ReactNode {
+  return (
+    <div aria-label="Search result groups" className="space-y-5">
+      {SEARCH_GROUP_LABELS.map((label) => (
+        <section key={label} aria-labelledby={`search-state-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}>
+          <h3 id={`search-state-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`} className="mb-2 break-words text-sm font-semibold tracking-wide text-primary">
+            {label}
+          </h3>
+          <p className="text-sm text-secondary">No {label.toLowerCase()} results yet.</p>
+        </section>
+      ))}
+    </div>
+  );
+}
 
 function SearchStateContent({
   state,
@@ -70,9 +86,12 @@ function SearchStateContent({
 >): ReactNode {
   if (state === 'loading') {
     return (
-      <p className="break-words py-8 text-center text-secondary" role="status">
-        Searching robots, stables, and guide articles…
-      </p>
+      <>
+        <p className="break-words py-8 text-center text-secondary" role="status">
+          Searching robots, stables, and guide articles…
+        </p>
+        <EmptySearchGroups />
+      </>
     );
   }
 
@@ -108,9 +127,12 @@ function SearchStateContent({
 
   if (state === 'empty') {
     return (
-      <p className="break-words py-8 text-center text-secondary" role="status">
-        No matches found in robots, stables, or guide articles.
-      </p>
+      <>
+        <p className="break-words py-8 text-center text-secondary" role="status">
+          No matches found in robots, stables, or guide articles.
+        </p>
+        <EmptySearchGroups />
+      </>
     );
   }
 

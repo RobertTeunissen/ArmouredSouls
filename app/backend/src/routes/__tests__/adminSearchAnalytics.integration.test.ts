@@ -21,6 +21,7 @@ import { createUserEconomicLimiter } from '../../middleware/userRateLimiter';
 import adminAnalyticsRoutes from '../adminAnalytics';
 import searchRoutes from '../search';
 import logger from '../../config/logger';
+import guideService from '../../services/common/guide-service';
 import { securityMonitor } from '../../services/security/securityMonitor';
 import {
   getCurrentSeason,
@@ -273,9 +274,11 @@ describe('Admin Search Analytics route integration', () => {
       const storeSpy = jest.spyOn(searchAnalyticsStore, 'createEvent');
       const initialCount = await countFixtureEvents(owner.userId);
       const sourceQuery = `source_failure_${Date.now()}_${fixtureSequence}`;
-      const robotFindManySpy = jest
-        .spyOn(prisma.robot, 'findMany')
-        .mockRejectedValue(new Error(`database failure containing ${sourceQuery}`));
+      const guideIndexSpy = jest
+        .spyOn(guideService, 'getSearchIndex')
+        .mockImplementation(() => {
+          throw new Error(`database failure containing ${sourceQuery}`);
+        });
       const rateLimitViolationSpy = jest.spyOn(securityMonitor, 'trackRateLimitViolation');
 
       try {
@@ -314,7 +317,7 @@ describe('Admin Search Analytics route integration', () => {
         expect(rateLimitDiagnostics).toContain('/api/search');
         expect(rateLimitDiagnostics).not.toContain('rate_limited_');
       } finally {
-        robotFindManySpy.mockRestore();
+        guideIndexSpy.mockRestore();
         rateLimitViolationSpy.mockRestore();
         storeSpy.mockRestore();
       }

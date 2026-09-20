@@ -1,4 +1,5 @@
 import type { MouseEvent } from 'react';
+import { getSearchShortcutLabel } from '../../utils/searchShortcut';
 
 export type SearchTriggerVariant = 'desktop' | 'mobile';
 
@@ -61,7 +62,7 @@ function SearchTrigger({
       {!isMobile ? (
         <>
           <span>Search</span>
-          <kbd className="rounded border border-white/20 px-1.5 py-0.5 text-xs text-secondary">⌘ K</kbd>
+          <kbd className="rounded border border-white/20 px-1.5 py-0.5 text-xs text-secondary">{getSearchShortcutLabel()}</kbd>
         </>
       ) : null}
     </button>

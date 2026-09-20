@@ -57,6 +57,20 @@ const REPORT_WITH_UNSAFE_EXTRA_DATA = {
   },
 } as unknown as AdminSearchAnalyticsReport;
 
+function deferred<T>(): {
+  promise: Promise<T>;
+  resolve: (value: T) => void;
+  reject: (reason?: unknown) => void;
+} {
+  let resolvePromise: (value: T) => void = () => undefined;
+  let rejectPromise: (reason?: unknown) => void = () => undefined;
+  const promise = new Promise<T>((resolve, reject) => {
+    resolvePromise = resolve;
+    rejectPromise = reject;
+  });
+  return { promise, resolve: resolvePromise, reject: rejectPromise };
+}
+
 describe('SearchAnalyticsPage', () => {
   beforeEach(() => {
     mockGetReport.mockReset();
@@ -80,9 +94,43 @@ describe('SearchAnalyticsPage', () => {
     await waitFor(() => expect(screen.getByText('atlas')).toBeInTheDocument());
   });
 
-  it('renders active-season totals, trends, phrases, category usage, and typed limitations', async () => {
+  it('does not show a stale cancellation error after a newer report request starts', async () => {
+    const firstRequest = deferred<AdminSearchAnalyticsReport>();
+    const secondRequest = deferred<AdminSearchAnalyticsReport>();
+    mockGetReport.mockReset();
+    mockGetReport.mockReturnValueOnce(firstRequest.promise).mockReturnValueOnce(secondRequest.promise);
+
+    render(<SearchAnalyticsPage />);
+    await waitFor(() => expect(mockGetReport).toHaveBeenCalledTimes(1));
+
+    fireEvent.change(screen.getByLabelText('Filter from cycle'), { target: { value: '5' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Apply filters' }));
+    await waitFor(() => expect(mockGetReport).toHaveBeenCalledTimes(2));
+
+    firstRequest.reject(new ApiError('stale backend detail', 'STALE_REQUEST', 500));
+    await Promise.resolve();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+
+    secondRequest.resolve(REPORT);
+    await waitFor(() => expect(screen.getByText('atlas')).toBeInTheDocument());
+    expect(screen.queryByText('stale backend detail')).not.toBeInTheDocument();
+  });
+
+  it('does not report expected cancellation errors when an admin request is canceled', async () => {
+    const canceledRequest = new ApiError('', 'ERR_CANCELED', 0);
+    canceledRequest.name = 'CanceledError';
+    mockGetReport.mockReset();
+    mockGetReport.mockRejectedValueOnce(canceledRequest);
+
     render(<SearchAnalyticsPage />);
 
+    await waitFor(() => expect(mockGetReport).toHaveBeenCalledTimes(1));
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.queryByText('Unable to load search analytics. Try again.')).not.toBeInTheDocument();
+  });
+
+  it('renders active-season totals, trends, phrases, category usage, and typed limitations', async () => {
+    render(<SearchAnalyticsPage />);
     await screen.findByText('Search Analytics');
     const stats = screen.getByTestId('search-analytics-stats');
     expect(within(stats).getByText('120')).toBeInTheDocument();
@@ -152,6 +200,10 @@ describe('SearchAnalyticsPage', () => {
 
     await screen.findByText('North Star');
     expect(screen.getByText('Page 1 of 3 (101 players)')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Top phrases' })).toHaveAttribute('id', 'search-analytics-phrases-top-phrases');
+    expect(screen.getByRole('heading', { name: 'No-result phrases' })).toHaveAttribute('id', 'search-analytics-phrases-no-result-phrases');
+    expect(screen.getByRole('button', { name: 'Previous player analysis page' })).toHaveClass('focus-visible:outline-primary', 'focus-visible:ring-primary/50');
+    expect(screen.getByRole('button', { name: 'Next player analysis page' })).toHaveClass('focus-visible:outline-primary', 'focus-visible:ring-primary/50');
     expect(screen.getByText('User #7')).toBeInTheDocument();
     expect(screen.getByText('Unnamed stable')).toBeInTheDocument();
 

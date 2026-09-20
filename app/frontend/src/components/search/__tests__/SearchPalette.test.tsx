@@ -8,6 +8,7 @@ import SearchResultList from '../SearchResultList';
 import SearchTrigger from '../SearchTrigger';
 import useSearchPalette from '../useSearchPalette';
 import { search } from '../../../utils/searchApi';
+import { getSearchShortcutLabel } from '../../../utils/searchShortcut';
 import { buildSearchResultRoute } from '../../../utils/searchRoutes';
 import type { SearchResponse, SearchResult } from '../../../utils/searchTypes';
 
@@ -117,7 +118,7 @@ describe('SearchPalette', () => {
 
     const trigger = screen.getByRole('button', { name: 'Open search' });
     expect(screen.getByText('Search', { selector: 'span' })).toBeInTheDocument();
-    expect(screen.getByText('⌘ K')).toBeInTheDocument();
+    expect(screen.getByText(getSearchShortcutLabel())).toBeInTheDocument();
     expect(trigger).toHaveAttribute('aria-keyshortcuts', 'Meta+K Control+K');
     expect(trigger.className).toContain('min-h-11');
     expect(trigger.className).toContain('min-w-11');
@@ -154,6 +155,9 @@ describe('SearchPalette', () => {
     expect(screen.getByRole('status')).toHaveTextContent(
       'Searching robots, stables, and guide articles',
     );
+    expect(screen.getByRole('heading', { name: 'Robots' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Stables' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Guide articles' })).toBeInTheDocument();
     expect(screen.getByRole('dialog')).toHaveAttribute('aria-busy', 'true');
 
     rerender(<SearchPalette {...baseProps} state="too-short" />);
@@ -163,6 +167,9 @@ describe('SearchPalette', () => {
     expect(screen.getByRole('status')).toHaveTextContent(
       'No matches found in robots, stables, or guide articles',
     );
+    expect(screen.getByRole('heading', { name: 'Robots' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Stables' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Guide articles' })).toBeInTheDocument();
 
     rerender(
       <SearchPalette

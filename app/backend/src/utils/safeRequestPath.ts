@@ -10,6 +10,7 @@ const SEARCH_ENDPOINT_PATH = '/api/search';
 export function safeRequestPath(originalUrl: string): string {
   const queryStart = originalUrl.indexOf('?');
   const path = queryStart === -1 ? originalUrl : originalUrl.slice(0, queryStart);
+  const normalizedPath = path.replace(/\/+$/, '') || '/';
 
-  return path === SEARCH_ENDPOINT_PATH ? SEARCH_ENDPOINT_PATH : originalUrl;
+  return normalizedPath === SEARCH_ENDPOINT_PATH ? SEARCH_ENDPOINT_PATH : originalUrl;
 }

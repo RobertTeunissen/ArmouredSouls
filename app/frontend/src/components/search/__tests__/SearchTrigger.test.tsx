@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import SearchTrigger from '../SearchTrigger';
+import { getSearchShortcutLabel } from '../../../utils/searchShortcut';
 
 describe('SearchTrigger', () => {
   it('renders a labelled desktop discovery control with a shortcut hint and 44px target', () => {
@@ -10,7 +11,7 @@ describe('SearchTrigger', () => {
     const trigger = screen.getByRole('button', { name: 'Open search' });
 
     expect(screen.getByText('Search')).toBeInTheDocument();
-    expect(screen.getByText('⌘ K')).toBeInTheDocument();
+    expect(screen.getByText(getSearchShortcutLabel())).toBeInTheDocument();
     expect(trigger).toHaveAttribute('type', 'button');
     expect(trigger.className).toContain('min-h-11');
     expect(trigger.className).toContain('min-w-11');

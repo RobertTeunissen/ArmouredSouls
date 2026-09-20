@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { fetchMyRobots } from '../utils/robotApi';
 import LogoB from '../assets/logos/logo-b.svg?react';
 import HomeIcon from '../assets/icons/home.svg?react';
 import RobotIcon from '../assets/icons/robot.svg?react';
@@ -16,6 +15,8 @@ import { useSeasonStore } from '../stores/seasonStore';
 import { NavLink, DropdownMenu, MobileTab, MobileDrawer } from './nav';
 import { allPages } from './nav';
 import type { UserRobot } from './nav';
+import { useRobotStore } from '../stores';
+import SearchTrigger from './search/SearchTrigger';
 
 export interface NavigationProps {
   onOpenSearch?: () => void;
@@ -28,6 +29,8 @@ function Navigation({ onOpenSearch }: NavigationProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [userRobots, setUserRobots] = useState<UserRobot[]>([]);
   const fetchSeason = useSeasonStore((s) => s.fetchSeason);
+  const storeRobots = useRobotStore((state) => state.robots);
+  const fetchRobots = useRobotStore((state) => state.fetchRobots);
 
   // Season state drives the progress indicator, countdown banner, and summary
   // modal. Fetched once here rather than per component.
@@ -36,16 +39,12 @@ function Navigation({ onOpenSearch }: NavigationProps) {
   }, [fetchSeason]);
 
   useEffect(() => {
-    const fetchRobots = async () => {
-      try {
-        const robots = await fetchMyRobots();
-        setUserRobots(robots.map((robot: { id: number; name: string }) => ({ id: robot.id, name: robot.name })));
-      } catch {
-        // Silently handle fetch failure
-      }
-    };
-    if (user) fetchRobots();
-  }, [user]);
+    if (user) void fetchRobots();
+  }, [fetchRobots, user]);
+
+  useEffect(() => {
+    setUserRobots(storeRobots.map((robot) => ({ id: robot.id, name: robot.name })));
+  }, [storeRobots]);
 
   const handleLogout = () => {
     logout();
@@ -106,19 +105,7 @@ function Navigation({ onOpenSearch }: NavigationProps) {
           </div>
 
           <div className="flex items-center gap-4">
-            <button
-              type="button"
-              onClick={onOpenSearch}
-              className="flex min-h-11 items-center gap-2 rounded-md border border-white/10 bg-surface px-3 py-2 text-primary transition-colors hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-              aria-label="Open search"
-            >
-              <svg aria-hidden="true" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="7" />
-                <path d="m20 20-4-4" />
-              </svg>
-              <span>Search</span>
-              <kbd className="rounded border border-white/20 px-1.5 py-0.5 text-xs text-secondary">⌘ K</kbd>
-            </button>
+            <SearchTrigger onOpenSearch={onOpenSearch} />
             <SeasonProgressIndicator />
             <div className="flex items-center gap-2 bg-surface border border-white/10 px-3 py-2 rounded-md">
               <span className="text-primary">₡</span>
@@ -137,28 +124,17 @@ function Navigation({ onOpenSearch }: NavigationProps) {
       {/* Mobile Navigation - <768px */}
       <div className="lg:hidden">
         <header className="fixed top-0 left-0 right-0 bg-surface-elevated border-b border-white/10 z-[999]">
-          <div className="h-14 px-4 flex items-center justify-between">
-            <button onClick={() => navigate('/dashboard')} className="flex items-center gap-3" aria-label="Armoured Souls Home">
-              <LogoB className="w-8 h-8 text-primary" />
-              <h1 className="text-lg font-bold text-primary tracking-tight">ARMOURED SOULS</h1>
+          <div className="h-14 px-1 sm:px-4 flex min-w-0 items-center justify-between">
+            <button onClick={() => navigate('/dashboard')} className="flex min-w-0 shrink items-center gap-1 sm:gap-3" aria-label="Armoured Souls Home">
+              <LogoB className="h-8 w-8 shrink-0 text-primary" />
+              <h1 className="hidden truncate text-lg font-bold tracking-tight text-primary sm:block">ARMOURED SOULS</h1>
             </button>
-            <div className="flex items-center gap-2">
+          <div className="flex min-w-0 shrink-0 items-center gap-1 sm:gap-2">
             <SeasonProgressIndicator compact />
-            <button
-              type="button"
-              onClick={onOpenSearch}
-              className="flex min-h-11 min-w-11 items-center justify-center rounded-md border border-white/10 bg-surface text-primary transition-colors hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-              aria-label="Open search"
-              title="Search"
-            >
-              <svg aria-hidden="true" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="7" />
-                <path d="m20 20-4-4" />
-              </svg>
-            </button>
-            <div className="flex items-center gap-2 bg-surface border border-white/10 px-2 py-1 rounded-md">
+            <SearchTrigger variant="mobile" onOpenSearch={onOpenSearch} />
+            <div className="flex min-w-0 max-w-[5.5rem] items-center gap-1 overflow-hidden rounded-md border border-white/10 bg-surface px-1.5 py-1 sm:max-w-none sm:gap-2 sm:px-2">
               <span className="text-primary text-sm">₡</span>
-              <span className="text-primary text-sm font-medium">{user.currency.toLocaleString()}</span>
+              <span className="truncate text-primary text-sm font-medium">{user.currency.toLocaleString()}</span>
             </div>
             </div>
           </div>

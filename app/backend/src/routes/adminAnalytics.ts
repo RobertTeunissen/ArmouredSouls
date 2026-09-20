@@ -47,7 +47,6 @@ import {
   SEARCH_ANALYTICS_REPORT_MAX_LIMIT,
   SEARCH_ANALYTICS_REPORT_MAX_PAGE,
 } from '../services/search/searchAnalyticsReportService';
-import type { SearchAnalyticsReportQuery } from '../services/search/searchAnalyticsTypes';
 
 const router = express.Router();
 
@@ -337,7 +336,7 @@ router.get('/league-history/yo-yo', authenticateToken, requireAdmin, validateReq
 });
 
 router.get('/search-analytics/report', authenticateToken, requireAdmin, validateRequest({ query: searchAnalyticsReportQuerySchema }), async (req: Request, res: Response) => {
-  const query = req.query as unknown as SearchAnalyticsReportQuery;
+  const query = searchAnalyticsReportQuerySchema.parse(req.query);
   const report = await getSearchAnalyticsReport(query);
   res.json(report);
 });

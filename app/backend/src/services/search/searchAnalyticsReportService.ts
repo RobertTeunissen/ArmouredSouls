@@ -151,8 +151,12 @@ function mapTrendRows(rows: TrendRow[]): SearchAnalyticsTrend[] {
   }));
 }
 
-function mapPlayerRows(rows: PlayerAnalysisRow[], page: number, limit: number): SearchAnalyticsPlayerAnalysis {
-  const total = asCount(rows[0]?.total_count);
+function mapPlayerRows(
+  rows: PlayerAnalysisRow[],
+  page: number,
+  limit: number,
+  total: number,
+): SearchAnalyticsPlayerAnalysis {
   const entries: SearchAnalyticsPlayerAnalysisEntry[] = rows.map((row) => ({
     userId: asInteger(row.user_id),
     stableName: row.stable_name,
@@ -262,7 +266,15 @@ export async function getSearchAnalyticsReport(
     topPhrases: mapPhraseRows(topPhraseRows),
     noResultPhrases: mapPhraseRows(noResultPhraseRows),
     categoryUsage,
-    playerAnalysis: mapPlayerRows(playerRows, query.page, query.limit),
+    // The windowed player query has no row from which to read its total on an
+    // empty page. The overview's distinct-searcher count is the authoritative
+    // total for the same active-season/cycle scope in both cases.
+    playerAnalysis: mapPlayerRows(
+      playerRows,
+      query.page,
+      query.limit,
+      asCount(overview?.unique_searchers),
+    ),
     limitations,
   };
 }

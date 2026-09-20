@@ -1,11 +1,15 @@
 const mockSearch = jest.fn();
 const mockRecordExecutedSearch = jest.fn();
+const mockRecordTelemetryFailure = jest.fn();
 const mockGetActiveSearchSeasonContext = jest.fn();
 
 jest.mock('../../src/services/search/searchAnalyticsService', () => ({
   __esModule: true,
   getActiveSearchSeasonContext: mockGetActiveSearchSeasonContext,
-  searchAnalyticsService: { recordExecutedSearch: mockRecordExecutedSearch },
+  searchAnalyticsService: {
+    recordExecutedSearch: mockRecordExecutedSearch,
+    recordTelemetryFailure: mockRecordTelemetryFailure,
+  },
 }));
 
 jest.mock('../../src/services/search/searchService', () => ({
@@ -85,6 +89,7 @@ describe('GET /api/search', () => {
       persisted: true,
       limitation: null,
     }));
+    mockRecordTelemetryFailure.mockImplementation(() => undefined);
     app = createApp();
   });
 
@@ -113,6 +118,21 @@ describe('GET /api/search', () => {
     });
   });
 
+  it('returns the successful search response when season context lookup fails', async () => {
+    mockGetActiveSearchSeasonContext.mockRejectedValueOnce(new Error('season service unavailable'));
+
+    const response = await request(app)
+      .get('/api/search?q=bot')
+      .set('Authorization', `Bearer ${authToken()}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual(SEARCH_RESPONSE);
+    expect(mockRecordExecutedSearch).not.toHaveBeenCalled();
+    expect(mockRecordTelemetryFailure).toHaveBeenCalledWith({
+      response: SEARCH_RESPONSE,
+      userId: 7,
+    });
+  });
   it('does not attempt analytics for a valid short query', async () => {
     const response = await request(app)
       .get('/api/search?q=a')

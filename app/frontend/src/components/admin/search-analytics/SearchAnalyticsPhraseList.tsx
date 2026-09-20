@@ -10,14 +10,23 @@ function formatCount(value: number): string {
   return value.toLocaleString();
 }
 
+function headingId(title: string): string {
+  const slug = title
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return `search-analytics-phrases-${slug || 'section'}`;
+}
+
 export function SearchAnalyticsPhraseList({
   title,
   phrases,
   emptyMessage,
 }: SearchAnalyticsPhraseListProps): React.ReactElement {
   return (
-    <section className="rounded-lg bg-surface p-4 sm:p-6" aria-labelledby={`${title}-heading`}>
-      <h3 id={`${title}-heading`} className="text-lg font-semibold text-white">{title}</h3>
+    <section className="rounded-lg bg-surface p-4 sm:p-6" aria-labelledby={headingId(title)}>
+      <h3 id={headingId(title)} className="text-lg font-semibold text-white">{title}</h3>
       {phrases.length === 0 ? (
         <p className="mt-3 text-sm text-secondary">{emptyMessage}</p>
       ) : (

@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import Navigation from '../Navigation';
+import { getSearchShortcutLabel } from '../../utils/searchShortcut';
 
 vi.mock('../../contexts/AuthContext', () => ({
   useAuth: () => ({
@@ -66,7 +67,7 @@ describe('Navigation universal search controls', () => {
     expect(desktopSearch).toHaveAttribute('type', 'button');
     expect(desktopSearch).toHaveAttribute('aria-label', 'Open search');
     expect(desktopSearch).toHaveTextContent('Search');
-    expect(within(desktopSearch as HTMLElement).getByText('⌘ K')).toBeVisible();
+    expect(within(desktopSearch as HTMLElement).getByText(getSearchShortcutLabel())).toBeVisible();
     expect(desktopSearch).toHaveClass('min-h-11', 'focus-visible:outline-2', 'focus-visible:outline-primary');
     expect(desktopSearch?.closest('nav')).toHaveClass('fixed', 'top-0', 'lg:block');
   });

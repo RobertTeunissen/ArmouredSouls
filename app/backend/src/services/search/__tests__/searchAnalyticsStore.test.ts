@@ -15,7 +15,10 @@ jest.mock('../../../lib/prisma', () => ({
 }));
 
 import {
+  clearSearchAnalyticsPersistenceFailures,
   createSearchAnalyticsEvent,
+  hasSearchAnalyticsPersistenceFailure,
+  MAX_TRACKED_PERSISTENCE_FAILURE_SCOPES,
   searchAnalyticsStore,
 } from '../searchAnalyticsStore';
 
@@ -35,6 +38,7 @@ const eventInput: SearchAnalyticsEventInput = {
 describe('searchAnalyticsStore', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    clearSearchAnalyticsPersistenceFailures();
     mockPrisma.searchAnalyticsEvent.create.mockResolvedValue({ id: BigInt(1) });
     mockPrisma.auditLog.create.mockResolvedValue({ id: BigInt(2) });
   });
@@ -67,6 +71,21 @@ describe('searchAnalyticsStore', () => {
     await expect(createSearchAnalyticsEvent(eventInput)).rejects.toBe(failure);
     expect(mockPrisma.searchAnalyticsEvent.create).toHaveBeenCalledTimes(1);
     expect(mockPrisma.auditLog.create).not.toHaveBeenCalled();
+  });
+
+  it('keeps persistence-failure status bounded and scoped to season/cycle', async () => {
+    for (let cycle = 0; cycle <= MAX_TRACKED_PERSISTENCE_FAILURE_SCOPES; cycle += 1) {
+      mockPrisma.searchAnalyticsEvent.create.mockRejectedValueOnce(new Error('unavailable'));
+      await expect(createSearchAnalyticsEvent({ ...eventInput, cycleNumber: cycle })).rejects.toThrow('unavailable');
+    }
+
+    expect(hasSearchAnalyticsPersistenceFailure({ seasonNumber: eventInput.seasonNumber, cycleFrom: 0, cycleTo: 0 })).toBe(false);
+    expect(hasSearchAnalyticsPersistenceFailure({
+      seasonNumber: eventInput.seasonNumber,
+      cycleFrom: MAX_TRACKED_PERSISTENCE_FAILURE_SCOPES,
+      cycleTo: MAX_TRACKED_PERSISTENCE_FAILURE_SCOPES,
+    })).toBe(true);
+    expect(hasSearchAnalyticsPersistenceFailure({ seasonNumber: eventInput.seasonNumber + 1, cycleFrom: null, cycleTo: null })).toBe(false);
   });
 
   it('should keep player responses and raw phrases outside the persisted event shape', async () => {
