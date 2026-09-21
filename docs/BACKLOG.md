@@ -1,6 +1,10 @@
 # Backlog — Ideas to Be Specced
 
-Items identified during audits, reviews, and development. Prioritized by impact on player experience and system reliability.
+**Last reviewed**: September 21, 2026
+
+Items identified during audits, reviews, and development. The active ranking contains open work only; completed items are recorded below their historical priority context or in the changelog.
+
+Prioritized by impact on player experience and system reliability.
 
 ---
 
@@ -32,8 +36,7 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 | 20 | Blueprint Library | 48 | 0 🗳️ | 1 | 1 | 1 | 3 | **1.0** |
 | 21 | Cosmetic Customization System | 46 | 0 🗳️ | 2 | 1 | 1 | 5 | **0.8** |
 | 22 | Matchup-Dependent Weapon Effectiveness | 58 | 0 🗳️ | 3 | 1 | 2 | 5 | **1.2** |
-| 23 | Financial Ledger Coverage | 59 | 0 🗳️ | 2 | 1 | 3 | 2 | **3.0** |
-| 24 | Dashboard Mobile Optimisation | 60 | 0 🗳️ | 3 | 2 | 2 | 3 | **2.3** |
+| 23 | Dashboard Mobile Optimisation | 60 | 0 🗳️ | 3 | 2 | 2 | 3 | **2.3** |
 
 ---
 
@@ -46,7 +49,7 @@ The current front page is just a login and registration module. New visitors hav
 ### #6 — Game Loop Audit — Remaining Gaps
 **Source**: Design review  
 **Priority**: Medium — most loops are now addressed; remaining gaps are late-game and social  
-**Progress (Aug 2026)**: Loop 1 (Core), Loop 3 (Competitive), Loop 4 (Reputation), Loop 6 (Facility Investment), and the experimentation/seasonal missing loops are all addressed by shipped specs (#25, #27, #31, #33, #34, #35, #37, #38, #44, #45). What remains:
+**Progress (September 2026):** Loop 1 (Core), Loop 3 (Competitive), Loop 4 (Reputation), Loop 6 (Facility Investment), and the experimentation/seasonal missing loops are addressed by shipped specs (#25, #27, #31, #33, #34, #35, #37, #38, #44, #45). What remains:
 
 **Loop 2: Economic Loop — late-season credit drain.** The Season System (Spec #45) solves infinite accumulation by hard-resetting every 100 cycles, and the Income Dashboard makes ROI visible. But *within* a season, once facilities and attributes are maxed (~cycle 60-70), credits pile up with no meaningful sink. Weapon Refinement helps but caps out.
 - Fix candidates: Weapon Special Properties (#11), Weapon Crafting (#29), Prestige Store (#47), or any recurring consumable/cosmetic credit drain.
@@ -140,7 +143,7 @@ Player-to-player weapon trading marketplace. Players list weapons for sale at th
 
 Full social layer: friend lists, in-game notifications, guild creation/management, guild chat. Would enable guild-vs-guild competitions, shared facilities, and social retention loops. Large scope — broken into four incremental phases below.
 
-**Current state (Aug 2026)**: Zero social infrastructure exists. No WebSocket/SSE layer, no notification inbox, no friend/guild models. What *does* exist: public stable profiles (`/stables/:userId`), leaderboards (player discovery), Team Battles (persistent robot groups), Discord webhooks (operational only), and two unused notification preference booleans on the User model (`notificationsBattle`, `notificationsLeague`). Scale: < 1000 concurrent users, single VPS.
+**Current state (September 2026):** No in-game social infrastructure exists. There is no notification inbox, friends/guild model, or realtime player-chat layer. What does exist: public stable profiles (`/stables/:userId`), leaderboards, Team Battles, dashboard readiness notifications, and operational Discord webhooks. The current branch has no social routes for friends, guilds, chat, marketplace, customization, blueprints, prestige store, or robot comparison.
 
 **Risk**: At current player count, friends lists and guild chat risk being a ghost town. In-game notifications have standalone value regardless of population. The signal to start Phase 2+ is players actively visiting each other's stable profiles and recognizing names on leaderboards.
 
@@ -207,18 +210,6 @@ Let players test any weapon from the shop in practice battles, not just owned we
 **Priority**: Not scoped — large combat system change
 
 Energy weapons bypass armor but shields resist them; ballistic shreds shields but armor blocks. Creates rock-paper-scissors dynamics that require owning multiple weapon types. Large scope — needs its own spec, careful balance work, and UI changes to communicate effectiveness. Synergizes with Arena Modifiers (#12) for meta variation.
-
-### #59 — Financial Ledger Coverage — Completed by Spec #53
-**Source**: Spec #48 investigation (Aug 2026), implemented by Spec #53
-**Status**: Complete — required paired capture is active from normal backend deployment
-
-Every new current-economy credit mutation now uses `Credit_Mutation_Service`. One atomic transaction updates `User.currency`, writes one `financial_ledger` accounting record, and writes one paired `financial_transaction` audit record with the same non-null `financialEventId`. There is no financial capture feature flag, rollout command, cycle gate, or aftercare step.
-
-The closed production taxonomy is `battle_income`, `streaming_revenue`, `repair_cost`, `facility_upgrade`, `weapon_purchase`, `weapon_sale`, `weapon_refinement`, `robot_creation`, `attribute_upgrade`, `achievement_reward`, `passive_income`, and `operating_costs`. Free subscription changes do not create financial events, and prestige is kept in its own `prestige_change` audit record rather than a credit ledger row.
-
-Rows without `financialEventId` remain immutable legacy history. Reconciliation validates only identified paired evidence; it does not fabricate pairs, reconstruct historical amounts, or treat legacy rows as a completeness failure.
-
-**Related**: Spec #48 (repair figures), Spec #53 (financial ledger coverage).
 
 ### #60 — Dashboard Mobile Optimisation
 **Source**: Spec #48 review (Aug 2026) — the Overview_Row redesign satisfies its mobile requirements, but the review surfaced a whole-page problem that spec deliberately did not take on

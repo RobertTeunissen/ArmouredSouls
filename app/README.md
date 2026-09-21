@@ -1,6 +1,6 @@
-# Armoured Souls - Phase 1 Prototype
+# Armoured Souls Application Workspace
 
-This is the Phase 1 local prototype for Armoured Souls. The prototype runs entirely on your local machine for testing and development.
+This is the Armoured Souls application workspace. It contains the production game and the local development environment used to run and test it.
 
 ## 🚀 Setup Instructions
 
@@ -22,7 +22,7 @@ cd backend && pnpm run dev   # Terminal 1 - http://localhost:3001
 cd frontend && pnpm run dev  # Terminal 2 - http://localhost:3000
 ```
 
-> **📘 Having issues?** See [frontend/TROUBLESHOOTING.md](frontend/TROUBLESHOOTING.md) for common problems and solutions.
+> **📘 Having issues?** See [Troubleshooting Guide](../docs/guides/operations/TROUBLESHOOTING.md) for common problems and solutions.
 
 ## 📖 Full Documentation
 
@@ -53,13 +53,13 @@ app/
 
 **Backend**: Express, Prisma, PostgreSQL, TypeScript, JWT auth  
 **Frontend**: React, Vite, Tailwind CSS, React Router  
-**Database**: PostgreSQL 16 in Docker
+**Database**: PostgreSQL 17 in Docker for local development
 
 ---
 
 ## 🌐 Production Deployment
 
-Armoured Souls deploys to Scaleway DEV1-S VPS instances running Ubuntu 22.04, with Caddy as reverse proxy, PM2 for process management, and PostgreSQL in Docker.
+Armoured Souls deploys to Scaleway DEV1-S VPS instances running Ubuntu, with Caddy as reverse proxy, PM2 for process management, and PostgreSQL 17 installed on the production host.
 
 - [VPS Setup Guide](../docs/guides/operations/VPS_SETUP.md) — Provision a new VPS from scratch
 - [Deployment Guide](../docs/guides/operations/DEPLOYMENT.md) — CI/CD pipeline, first deploy, and manual PRD promotion

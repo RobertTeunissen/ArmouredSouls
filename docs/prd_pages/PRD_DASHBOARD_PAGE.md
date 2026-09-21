@@ -563,7 +563,7 @@ This section addresses all review comments from v1.1:
 
 **Status**: ❌ **NOT IMPLEMENTED**
 
-**Reference**: See [PRD_PRESTIGE_AND_FAME.md](../prd_core/PRD_PRESTIGE_AND_FAME.md) for complete prestige system specification.
+**Reference**: See [PRD_PRESTIGE_AND_FAME.md](../game-systems/PRD_PRESTIGE_AND_FAME.md) for complete prestige system specification.
 
 **Current Implementation**:
 - Prestige displayed as numeric value in Financial Summary component
@@ -997,7 +997,7 @@ still returns every field unchanged for those consumers.
 
 **Status**: ✅ **IMPLEMENTED**
 
-**Reference**: See [PRD_ONBOARDING_SYSTEM.md](PRD_ONBOARDING_SYSTEM.md) for complete onboarding system specification.
+**Reference**: See [../game-systems/PRD_ONBOARDING_SYSTEM.md](../game-systems/PRD_ONBOARDING_SYSTEM.md) for complete onboarding system specification.
 
 The dashboard serves as the primary entry point for the new player onboarding tutorial system. The existing "Welcome to Your Stable" empty state has been replaced with an interactive onboarding trigger for new users.
 

@@ -1,17 +1,18 @@
 # Product Requirements Document: Backend Service Directory
 
-**Project**: Armoured Souls  
-**Document Type**: Product Requirements Document (PRD)  
-**Version**: v1.1  
-**Last Updated**: June 2026  
-**Status**: ✅ Implemented  
+**Project**: Armoured Souls
+**Document Type**: Product Requirements Document (PRD)
+**Version**: v1.3
+**Last Updated**: September 21, 2026
+**Status**: ✅ Implemented
 **Owner**: Robert Teunissen
 
 **Revision History**:
 
-v1.2 (Jun 2026): Team tournament slots (15:00, 18:00) now Live with real handlers (Spec 38 — Team Battle Tournaments). Added `teamTournamentBattleOrchestrator`, `teamTournamentService`, `tournamentParticipantResolver` to tournament domain.
-v1.1 (Jun 2026): Added `matchmaking/` and `team-battle/` domains (Spec 37 — Team Battles 2v2 and 3v3). Updated cron schedule: 2v2 League (09:00) and 3v3 League (14:00) now Live.
-v1.0 (Apr 9, 2026): Initial version — extracted from MODULE_STRUCTURE.md, verified against current codebase (18 domains, 80+ service files)
+- v1.3 (Sep 21, 2026): Reconciled the service inventory with the current 36 directories and documented newer financial, season, standings, monitoring, retention, and progression domains.
+- v1.2 (Jun 2026): Team tournament slots (15:00, 18:00) went live with real handlers (Spec 38 — Team Battle Tournaments). Added team-tournament orchestration and participant resolution.
+- v1.1 (Jun 2026): Added `matchmaking/` and `team-battle/` domains (Spec 37 — Team Battles 2v2 and 3v3). Updated the cron schedule.
+- v1.0 (Apr 9, 2026): Initial version — extracted from the service structure and verified against the then-current codebase.
 
 ---
 
@@ -23,7 +24,48 @@ v1.0 (Apr 9, 2026): Initial version — extracted from MODULE_STRUCTURE.md, veri
 
 ## Overview
 
-The backend is organized into 20 domain directories under `app/backend/src/services/`. Each domain has a barrel `index.ts` that defines its public API. This structure was established in Spec 3 (Backend Service Consolidation, April 2026), replacing the original flat directory of 41 service files. Spec 37 (Team Battles 2v2 and 3v3) added the `matchmaking/` and `team-battle/` domains.
+The backend currently contains **36 domain directories** under `app/backend/src/services/`. Each domain may expose a barrel `index.ts` where appropriate. This document gives detailed descriptions for the established game domains and a complete current inventory below. The inventory is authoritative for directory presence; individual service descriptions should be updated when a domain changes materially.
+
+### Current domain inventory
+
+| Domain | Primary responsibility |
+|---|---|
+| `achievement` | Achievement progression and rewards |
+| `admin` | Administrative operations and dashboards |
+| `analytics` | Cross-domain analytics and reporting |
+| `arena` | Spatial combat subsystems |
+| `auth` | Authentication and user management |
+| `battle` | Combat orchestration, rewards, and byes |
+| `changelog` | In-game changelog management |
+| `common` | Shared infrastructure and guide content |
+| `cycle` | Scheduler, settlement, and snapshots |
+| `dashboard` | Player dashboard data |
+| `economy` | Repairs, streaming revenue, and ROI |
+| `financial` | Financial reporting and reconciliation |
+| `grand-melee` | Grand Melee orchestration |
+| `koth` | King of the Hill orchestration |
+| `leaderboard` | Leaderboard cache and reads |
+| `league` | League battles, instances, and rebalancing |
+| `match` | Battle and scheduled-match history |
+| `matchmaking` | Shared matchmaking utilities |
+| `migration` | Data migration and compatibility operations |
+| `moderation` | Image moderation and storage |
+| `monitoring` | Health reporting and operations |
+| `notifications` | Operational notification dispatch |
+| `onboarding` | New-player onboarding |
+| `practice-arena` | Offline practice battles |
+| `records` | Hall of Records data |
+| `retention` | Battle-log retention and cleanup |
+| `robot` | Robot lifecycle and upgrades |
+| `scheduling` | Event scopes, timing, and placement byes |
+| `season` | Season lifecycle and archives |
+| `security` | Security monitoring and audit support |
+| `standings` | Authoritative competitive standings |
+| `subscription` | Booking Office subscriptions |
+| `tag-team` | Tag Team mode on unified team data |
+| `team-battle` | 2v2/3v3 team battles and tournaments |
+| `tournament` | Tournament brackets and execution |
+| `tuning-pool` | Robot tactical tuning |
 
 ---
 

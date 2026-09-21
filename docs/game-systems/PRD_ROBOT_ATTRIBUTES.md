@@ -13,7 +13,7 @@
 - v1.1 - Consolidated Version (February 5, 2026)
   - Armor Plating now uses percentage-based reduction (1.5% per point, no cap)
   - Energy Shield Capacity renamed (was "Shield Capacity") for clarity
-  - Combat formulas updated - see [COMBAT_FORMULAS.md](COMBAT_FORMULAS.md) for details
+  - Combat formulas updated - see [../architecture/COMBAT_FORMULAS.md](../architecture/COMBAT_FORMULAS.md) for details
 - v1.2 - Balance Updates (February 6, 2026)
   - Two-Handed loadout: Combat Power bonus reduced from +25% to +10%
   - Two-Handed loadout: Damage multiplier reduced from 1.25x to 1.10x
@@ -118,7 +118,7 @@ All robots start with each attribute at level 1. Players spend Credits to upgrad
 - **Design**: Now provides consistent value every fight, not just against crits
 - **Synergy**: Works with shields (reduces depletion) and armor (more effective HP)
 
-**Note**: See [COMBAT_FORMULAS.md](COMBAT_FORMULAS.md) for detailed mechanics including new Damage Dampeners formula (updated Feb 2026) and Armor Plating percentage-based formula.
+**Note**: See [../architecture/COMBAT_FORMULAS.md](../architecture/COMBAT_FORMULAS.md) for detailed mechanics including new Damage Dampeners formula (updated Feb 2026) and Armor Plating percentage-based formula.
 
 ### 🟢 Chassis & Mobility (5)
 
@@ -129,7 +129,7 @@ All robots start with each attribute at level 1. Players spend Credits to upgrad
     - **2D Arena Role**: Determines base movement speed in the arena: `7.0 + servoMotors × 0.2` (range 7.2–17.0 units/s)
     - Higher servo motors = faster arena traversal
     - Subject to servo strain at sustained high speeds (>80% for >3s)
-    - See [COMBAT_FORMULAS.md](COMBAT_FORMULAS.md) for Movement_Speed and Servo_Strain formulas
+    - See [../architecture/COMBAT_FORMULAS.md](../architecture/COMBAT_FORMULAS.md) for Movement_Speed and Servo_Strain formulas
 14. **Gyro Stabilizers** - Balance, dodging ability, and reaction time
     - **2D Arena Role**: Determines turn speed: `180 + gyroStabilizers × 6` degrees/s (range 186–480°/s)
     - Reduces backstab bonus (0.25% reduction per point)
@@ -246,7 +246,7 @@ These are player-controlled robot settings, **NOT upgradeable attributes**. They
 ### Loadout
 - Options: "weapon_shield", "two_handed", "dual_wield", "single"
 - Determines how weapons/shields are equipped
-- See [WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md)
+- See [PRD_WEAPONS_LOADOUT.md](PRD_WEAPONS_LOADOUT.md)
 
 ### Stance
 - Options: "offensive", "defensive", "balanced"
@@ -268,7 +268,7 @@ Robots are bipedal humanoids with two arms. The loadout system determines how we
 - Complete weapon catalog with specifications
 - Weapon crafting system
 
-**See: [WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md)**
+**See: [PRD_WEAPONS_LOADOUT.md](PRD_WEAPONS_LOADOUT.md)**
 
 ### Loadout Bonuses Quick Reference
 
@@ -506,7 +506,7 @@ With Repair Bay: ₡34,500 (25% savings)
 
 The system uses **time-based combat** exclusively for dynamic, engaging gameplay.
 
-**For comprehensive combat formulas, see [COMBAT_FORMULAS.md](COMBAT_FORMULAS.md)** - the authoritative reference for all combat calculations including:
+**For comprehensive combat formulas, see [../architecture/COMBAT_FORMULAS.md](../architecture/COMBAT_FORMULAS.md)** - the authoritative reference for all combat calculations including:
 - Hit chance and critical hit mechanics
 - Damage calculation with weapon bonuses
 - Shield and armor interactions
@@ -528,7 +528,7 @@ Example:
 - Cooldown = 4 / (1 + 13/50) = 4 / 1.26 = 3.17 seconds
 ```
 
-For complete cooldown formulas including offhand penalties, see [COMBAT_FORMULAS.md](COMBAT_FORMULAS.md#attack-speed-and-cooldown-calculation).
+For complete cooldown formulas including offhand penalties, see [../architecture/COMBAT_FORMULAS.md](../architecture/COMBAT_FORMULAS.md#attack-speed-and-cooldown-calculation).
 
 ### Opportunity System
 
@@ -587,7 +587,7 @@ else:
 
 ## Combat Formulas
 
-**All combat formulas have been moved to [COMBAT_FORMULAS.md](COMBAT_FORMULAS.md) for comprehensive reference.**
+**All combat formulas have been moved to [../architecture/COMBAT_FORMULAS.md](../architecture/COMBAT_FORMULAS.md) for comprehensive reference.**
 
 This includes:
 - Hit chance calculation
@@ -600,7 +600,7 @@ This includes:
 - Offhand attack rules
 - Weapon bonus applications
 
-Please refer to COMBAT_FORMULAS.md for the authoritative, up-to-date formulas that match the current implementation.
+Please refer to ../architecture/COMBAT_FORMULAS.md for the authoritative, up-to-date formulas that match the current implementation.
 
 ---
 
@@ -704,7 +704,7 @@ The complete weapon system includes weapon types, properties, attribute bonuses,
 - Weapon purchase discounts via Weapons Workshop
 - Weapon inventory management and storage
 
-**See: [WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md)**
+**See: [PRD_WEAPONS_LOADOUT.md](PRD_WEAPONS_LOADOUT.md)**
 
 ---
 
@@ -838,13 +838,12 @@ Armor's percentage-based damage reduction (1.5% per point) compounds in value wh
 
 ## See Also
 
-- **[WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md)** - Complete weapon system, loadout configurations, and weapon catalog
-- **[DATABASE_SCHEMA.md](DATABASE_SCHEMA.md)** - Authoritative source for all database models, fields, and relationships
+- **[PRD_WEAPONS_LOADOUT.md](PRD_WEAPONS_LOADOUT.md)** - Complete weapon system, loadout configurations, and weapon catalog
+- **[DATABASE_SCHEMA.md](../architecture/DATABASE_SCHEMA.md)** - Authoritative source for all database models, fields, and relationships
 - **[PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md)** - ⭐ **AUTHORITATIVE** - Prestige (stable) and Fame (robot) reputation systems
 - **[STABLE_SYSTEM.md](STABLE_SYSTEM.md)** - Facility upgrades, prestige formulas, and stable management
-- **[PRD_BATTLE_STANCES_AND_YIELD.md](PRD_BATTLE_STANCES_AND_YIELD.md)** - Product requirements for battle stance and yield threshold implementation
-- **[PRD_WEAPON_LOADOUT.md](PRD_WEAPON_LOADOUT.md)** - Product requirements for weapon loadout system implementation
-- **[ROADMAP.md](ROADMAP.md)** - Implementation phases, priorities, and future enhancements
+- **[PRD_BATTLE_STANCES_AND_YIELD.md](../prd_pages/PRD_BATTLE_STANCES_AND_YIELD.md)** - Product requirements for battle stance and yield threshold implementation
+- **[BACKLOG.md](../BACKLOG.md)** - Implementation phases, priorities, and future enhancements
 
 ---
 

@@ -625,14 +625,14 @@ This PRD defines the complete economy system for Armoured Souls, covering all co
 ### Current State
 
 **✅ IMPLEMENTED (Backend - February 3-4, 2026):**
-- ✅ Currency system (Credits - ₡) defined in ROBOT_ATTRIBUTES.md
+- ✅ Currency system (Credits - ₡) defined in PRD_ROBOT_ATTRIBUTES.md
 - ✅ Complete facility system with costs in STABLE_SYSTEM.md
-- ✅ Weapon catalog with prices in WEAPONS_AND_LOADOUT.md
-- ✅ Robot attribute upgrade costs in ROBOT_ATTRIBUTES.md
+- ✅ Weapon catalog with prices in PRD_WEAPONS_LOADOUT.md
+- ✅ Robot attribute upgrade costs in PRD_ROBOT_ATTRIBUTES.md
 - ✅ Repair cost formulas with Repair Bay multi-robot discount
-- ✅ Database schema for all economic tracking (DATABASE_SCHEMA.md)
+- ✅ Database schema for all economic tracking (../architecture/DATABASE_SCHEMA.md)
 - ✅ **Economic calculation utilities** (`app/backend/src/utils/economyCalculations.ts`)
-  - Facility operating costs (all 14 facilities)
+  - Facility operating costs (all 13 facilities)
   - Revenue calculations (battle rewards, merchandising, streaming)
   - Repair costs with facility discounts
   - Financial health indicators
@@ -673,11 +673,11 @@ This PRD defines the complete economy system for Armoured Souls, covering all co
 
 - **[PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md)**: Complete prestige and fame system specification (earning, benefits)
 - **[STABLE_SYSTEM.md](STABLE_SYSTEM.md)**: Facility costs, economic formulas, daily income/expense examples
-- **[ROBOT_ATTRIBUTES.md](ROBOT_ATTRIBUTES.md)**: Upgrade costs, repair formulas, currency definition, and fame tracking
-- **[WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md)**: Weapon prices and crafting costs
+- **[PRD_ROBOT_ATTRIBUTES.md](PRD_ROBOT_ATTRIBUTES.md)**: Upgrade costs, repair formulas, currency definition, and fame tracking
+- **[PRD_WEAPONS_LOADOUT.md](PRD_WEAPONS_LOADOUT.md)**: Weapon prices and crafting costs
 - **[GAME_DESIGN.md](GAME_DESIGN.md)**: Overall economic philosophy and progression
-- **[DATABASE_SCHEMA.md](DATABASE_SCHEMA.md)**: Data model for tracking resources
-- **[PRD_WEAPON_ECONOMY_OVERHAUL.md](PRD_WEAPON_ECONOMY_OVERHAUL.md)**: Weapon economy, 23 starting weapons.
+- **[DATABASE_SCHEMA.md](../architecture/DATABASE_SCHEMA.md)**: Data model for tracking resources
+- **[PRD_WEAPON_ECONOMY.md](PRD_WEAPON_ECONOMY.md)**: Weapon economy, 23 starting weapons.
 
 ---
 
@@ -687,7 +687,7 @@ This PRD defines the complete economy system for Armoured Souls, covering all co
 
 **Primary Currency: Credits (₡)**
 - Symbol: ₡ (Costa Rican colón symbol, chosen for robotic/technical aesthetic)
-- Starting balance: **₡3,000,000** per player (increased Feb 8, 2026 - see [OPTION_C_IMPLEMENTATION.md](../OPTION_C_IMPLEMENTATION.md))
+- Starting balance: **₡3,000,000** per player (increased Feb 8, 2026 - see [STARTING_ECONOMY_REBALANCE.md](../balance_changes/STARTING_ECONOMY_REBALANCE.md))
 - Precision: Whole numbers only (no decimals)
 - Range: 0 to 999,999,999,999 (database supports up to ~2 billion)
 
@@ -770,7 +770,7 @@ robot_purchase_cost = 500,000 Credits
 #### Attribute Upgrades
 - **Formula**: `(current_level + 1) × 1,500` Credits per level (increased Feb 8, 2026)
 - **Range**: Level 1 → 50
-- **23 Attributes Total** (see ROBOT_ATTRIBUTES.md for complete list)
+- **23 Attributes Total** (see PRD_ROBOT_ATTRIBUTES.md for complete list)
 
 **Examples**:
 - Level 1→2: ₡2,000
@@ -926,7 +926,7 @@ The Streaming Studio dramatically increases streaming revenue earned per battle 
 
 **Phase 1 Implemented Weapons** (26 total):
 
-> **For complete weapon catalog, pricing, and methodology**: See **[PRD_WEAPON_ECONOMY_OVERHAUL.md](PRD_WEAPON_ECONOMY_OVERHAUL.md)** - the authoritative document for weapon economy system (implemented in `app/backend/prisma/seed.ts`).
+> **For complete weapon catalog, pricing, and methodology**: See **[PRD_WEAPON_ECONOMY.md](PRD_WEAPON_ECONOMY.md)** - the authoritative document for weapon economy system (implemented in `app/backend/prisma/seed.ts`).
 
 **Weapon Pricing Methodology**:
 
@@ -2005,7 +2005,7 @@ Recommendations:
 
 ### Early Game Economics (Days 1-30)
 
-**Starting Budget**: ₡3,000,000 (increased Feb 8, 2026 - see [OPTION_C_IMPLEMENTATION.md](../OPTION_C_IMPLEMENTATION.md))
+**Starting Budget**: ₡3,000,000 (increased Feb 8, 2026 - see [STARTING_ECONOMY_REBALANCE.md](../balance_changes/STARTING_ECONOMY_REBALANCE.md))
 
 **Recommended Spending**:
 - 1 Robot: ₡500,000
@@ -2361,10 +2361,10 @@ total_revenue = battle_winnings + merchandising_daily + streaming_daily + achiev
 ## See Also
 
 - **[STABLE_SYSTEM.md](STABLE_SYSTEM.md)** - Complete facility system, prestige, daily income examples
-- **[ROBOT_ATTRIBUTES.md](ROBOT_ATTRIBUTES.md)** - Attribute upgrade costs, repair formulas
-- **[WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md)** - Weapon catalog with prices
+- **[PRD_ROBOT_ATTRIBUTES.md](PRD_ROBOT_ATTRIBUTES.md)** - Attribute upgrade costs, repair formulas
+- **[PRD_WEAPONS_LOADOUT.md](PRD_WEAPONS_LOADOUT.md)** - Weapon catalog with prices
 - **[GAME_DESIGN.md](GAME_DESIGN.md)** - Overall game design philosophy
-- **[DATABASE_SCHEMA.md](DATABASE_SCHEMA.md)** - Data model for economic tracking
+- **[DATABASE_SCHEMA.md](../architecture/DATABASE_SCHEMA.md)** - Data model for economic tracking
 - **[PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md)**: Complete prestige and fame system specification (earning, benefits)
 
 ---

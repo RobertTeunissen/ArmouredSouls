@@ -37,7 +37,8 @@ Page PRDs define:
 ## Related Documentation
 
 For core system specifications, see:
-- `docs/prd_core/` - Core system PRDs (battle engine, economy, leagues, etc.)
+- `docs/architecture/` - Architecture, database, battle-data, security, and service references
+- `docs/game-systems/` - Game rules, economy, leagues, weapons, seasons, and progression
 - `docs/design_ux/` - Design system and UX guidelines
 - `docs/analysis/` - Navigation and page structure analysis
 

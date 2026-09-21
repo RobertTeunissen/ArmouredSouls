@@ -1,13 +1,13 @@
 # Weapons & Loadout System - Comprehensive Guide
 
-**Project**: Armoured Souls  
-**Document Type**: Comprehensive Reference  
-**Version**: v3.1  
-**Date**: February 10, 2026  
-**Status**: ✅ Implemented  
+**Project**: Armoured Souls
+**Document Type**: Comprehensive Reference
+**Version**: v3.1
+**Date**: February 10, 2026
+**Status**: ✅ Implemented
 
-**⭐ PRIMARY WEAPON REFERENCE**: [SEED_DATA_SPECIFICATION.md](../prd_core/SEED_DATA_SPECIFICATION.md)  
-**⭐ PRICING FORMULA**: [PRD_WEAPON_ECONOMY_OVERHAUL.md](../PRD_WEAPON_ECONOMY_OVERHAUL.md)
+**⭐ PRIMARY WEAPON REFERENCE**: [SEED_DATA_SPECIFICATION.md](../architecture/SEED_DATA_SPECIFICATION.md)
+**⭐ PRICING FORMULA**: [PRD_WEAPON_ECONOMY.md](PRD_WEAPON_ECONOMY.md)
 
 **This Document**: Complete consolidated guide integrating all weapon and loadout system documentation. Includes full user stories, functional requirements, technical design, UI/UX specifications, testing requirements, and implementation details.
 
@@ -98,13 +98,13 @@ The Weapon & Loadout System enables players to purchase weapons, manage inventor
 
 ### Design References
 
-- **⭐ [SEED_DATA_SPECIFICATION.md](../prd_core/SEED_DATA_SPECIFICATION.md)** - Complete weapon catalog (47 weapons)
-- **⭐ [PRD_WEAPON_ECONOMY_OVERHAUL.md](../PRD_WEAPON_ECONOMY_OVERHAUL.md)** - Pricing formula and economy design
-- **[PRD_ROBOT_ATTRIBUTES.md](../prd_core/PRD_ROBOT_ATTRIBUTES.md)** - Robot attributes and loadout bonuses
-- **[DATABASE_SCHEMA.md](../prd_core/DATABASE_SCHEMA.md)** - Database structure
-- **[COMBAT_FORMULAS.md](../prd_core/COMBAT_FORMULAS.md)** - Combat calculations
-- **[STABLE_SYSTEM.md](../STABLE_SYSTEM.md)** - Stable management and facilities
-- **[OPTION_C_IMPLEMENTATION.md](../OPTION_C_IMPLEMENTATION.md)** - Economy rebalancing (Feb 8, 2026)
+- **⭐ [SEED_DATA_SPECIFICATION.md](../architecture/SEED_DATA_SPECIFICATION.md)** - Complete weapon catalog (47 weapons)
+- **⭐ [PRD_WEAPON_ECONOMY.md](PRD_WEAPON_ECONOMY.md)** - Pricing formula and economy design
+- **[PRD_ROBOT_ATTRIBUTES.md](PRD_ROBOT_ATTRIBUTES.md)** - Robot attributes and loadout bonuses
+- **[DATABASE_SCHEMA.md](../architecture/DATABASE_SCHEMA.md)** - Database structure
+- **[COMBAT_FORMULAS.md](../architecture/COMBAT_FORMULAS.md)** - Combat calculations
+- **[STABLE_SYSTEM.md](STABLE_SYSTEM.md)** - Stable management and facilities
+- **[STARTING_ECONOMY_REBALANCE.md](../balance_changes/STARTING_ECONOMY_REBALANCE.md)** - Economy rebalancing (Feb 8, 2026)
 
 ---
 
@@ -401,13 +401,13 @@ Originally planned as separate page, but integrated into Weapon Shop for better 
 
 ### Related Documentation
 
-- **⭐ [SEED_DATA_SPECIFICATION.md](../prd_core/SEED_DATA_SPECIFICATION.md)** - Complete weapon catalog (47 weapons)
-- **⭐ [PRD_WEAPON_ECONOMY_OVERHAUL.md](../PRD_WEAPON_ECONOMY_OVERHAUL.md)** - Pricing formula and economy design
-- **[PRD_ROBOT_ATTRIBUTES.md](../prd_core/PRD_ROBOT_ATTRIBUTES.md)** - Robot attributes and combat mechanics
-- **[STABLE_SYSTEM.md](../STABLE_SYSTEM.md)** - Stable management and facilities
-- **[DATABASE_SCHEMA.md](../prd_core/DATABASE_SCHEMA.md)** - Database structure
-- **[COMBAT_FORMULAS.md](../prd_core/COMBAT_FORMULAS.md)** - Combat calculations
-- **[OPTION_C_IMPLEMENTATION.md](../OPTION_C_IMPLEMENTATION.md)** - Economy rebalancing (Feb 8, 2026)
+- **⭐ [SEED_DATA_SPECIFICATION.md](../architecture/SEED_DATA_SPECIFICATION.md)** - Complete weapon catalog (47 weapons)
+- **⭐ [PRD_WEAPON_ECONOMY.md](PRD_WEAPON_ECONOMY.md)** - Pricing formula and economy design
+- **[PRD_ROBOT_ATTRIBUTES.md](PRD_ROBOT_ATTRIBUTES.md)** - Robot attributes and combat mechanics
+- **[STABLE_SYSTEM.md](STABLE_SYSTEM.md)** - Stable management and facilities
+- **[DATABASE_SCHEMA.md](../architecture/DATABASE_SCHEMA.md)** - Database structure
+- **[COMBAT_FORMULAS.md](../architecture/COMBAT_FORMULAS.md)** - Combat calculations
+- **[STARTING_ECONOMY_REBALANCE.md](../balance_changes/STARTING_ECONOMY_REBALANCE.md)** - Economy rebalancing (Feb 8, 2026)
 
 ---
 
@@ -509,7 +509,7 @@ Loadouts use **percentage-based bonuses** rather than flat bonuses for critical 
 
 ## Weapon Catalog Overview
 
-**⭐ AUTHORITATIVE SOURCE**: [SEED_DATA_SPECIFICATION.md](../prd_core/SEED_DATA_SPECIFICATION.md)
+**⭐ AUTHORITATIVE SOURCE**: [SEED_DATA_SPECIFICATION.md](../architecture/SEED_DATA_SPECIFICATION.md)
 
 The game features **47 weapons** across 4 categories. For complete specifications, damage values, cooldowns, attribute bonuses, and exact pricing, refer to SEED_DATA_SPECIFICATION.md.
 
@@ -604,14 +604,14 @@ The game features **47 weapons** across 4 categories. For complete specification
 4. **Railgun**: 4.17 DPS (₡527K) - 2H
 5. **Sniper Rifle**: 3.67 DPS (₡387K) - 2H
 
-See [SEED_DATA_SPECIFICATION.md](../prd_core/SEED_DATA_SPECIFICATION.md) for complete weapon specifications.
+See [SEED_DATA_SPECIFICATION.md](../architecture/SEED_DATA_SPECIFICATION.md) for complete weapon specifications.
 
 
 ---
 
 ## Weapon Economy & Pricing
 
-**⭐ AUTHORITATIVE SOURCE**: [PRD_WEAPON_ECONOMY_OVERHAUL.md](../PRD_WEAPON_ECONOMY_OVERHAUL.md)
+**⭐ AUTHORITATIVE SOURCE**: [PRD_WEAPON_ECONOMY_OVERHAUL.md](PRD_WEAPON_ECONOMY.md)
 
 ### Current Economy (Option C - Feb 8, 2026)
 
@@ -621,7 +621,7 @@ See [SEED_DATA_SPECIFICATION.md](../prd_core/SEED_DATA_SPECIFICATION.md) for com
 - Attribute Upgrade Costs: +50% (now level × 1,500)
 - Facility Costs: -50% reduction
 - Weapon Costs: +25% increase
-- See [OPTION_C_IMPLEMENTATION.md](../OPTION_C_IMPLEMENTATION.md) for details
+- See [STARTING_ECONOMY_REBALANCE.md](../balance_changes/STARTING_ECONOMY_REBALANCE.md) for details
 
 ### Pricing Formula
 
@@ -645,7 +645,7 @@ Where:
 
 **Key Insight**: Specialized weapons (high single attribute) cost MORE than balanced weapons due to exponential scaling.
 
-See [PRD_WEAPON_ECONOMY_OVERHAUL.md](../PRD_WEAPON_ECONOMY_OVERHAUL.md) for complete formula details and examples.
+See [PRD_WEAPON_ECONOMY_OVERHAUL.md](PRD_WEAPON_ECONOMY.md) for complete formula details and examples.
 
 ### Weapons Workshop Discounts
 
@@ -721,7 +721,7 @@ The **Weapons Workshop** facility provides purchase discounts:
 - Special properties: ₡200,000 per property
 
 **Requirements:**
-- Unlock **Weapons Workshop Level 3** (see [STABLE_SYSTEM.md](../STABLE_SYSTEM.md#3-weapons-workshop))
+- Unlock **Weapons Workshop Level 3** (see [STABLE_SYSTEM.md](STABLE_SYSTEM.md#3-weapons-workshop))
 - Have 10+ battles with similar weapon types
 - Minimum 5,000 prestige
 
@@ -732,7 +732,7 @@ The **Weapons Workshop** facility provides purchase discounts:
 - Select one special property from list
 
 **Workshop Benefits:**
-The **Weapons Workshop** facility (see [STABLE_SYSTEM.md](../STABLE_SYSTEM.md#3-weapons-workshop)) provides:
+The **Weapons Workshop** facility (see [STABLE_SYSTEM.md](STABLE_SYSTEM.md#3-weapons-workshop)) provides:
 - **Weapon Purchase Discounts**: 5% to 50% (Levels 1-10)
 - **Operating Cost**: ₡1,000/day at Level 1, +₡500/day per level
 - **Level 3**: Unlock weapon modifications
@@ -818,7 +818,7 @@ Combat Power
   ─────────────
   Effective: 18
 
-Shield Capacity  
+Shield Capacity
   Base:     15
   Weapons:  +4  (Laser Rifle)
   Loadout:  +20% (Weapon+Shield)
@@ -1407,12 +1407,12 @@ maxShield = effective_shield_capacity × 4
 
 ### Weapon Pricing by Tier
 
-**Budget Tier (<₡100K):** 14 weapons  
-**Mid Tier (₡100-250K):** 11 weapons  
-**Premium Tier (₡250-400K):** 11 weapons  
+**Budget Tier (<₡100K):** 14 weapons
+**Mid Tier (₡100-250K):** 11 weapons
+**Premium Tier (₡250-400K):** 11 weapons
 **Luxury Tier (₡400K+):** 11 weapons
 
-See [SEED_DATA_SPECIFICATION.md](../prd_core/SEED_DATA_SPECIFICATION.md) for complete pricing.
+See [SEED_DATA_SPECIFICATION.md](../architecture/SEED_DATA_SPECIFICATION.md) for complete pricing.
 
 ### Storage Capacity by Facility Level
 
@@ -1438,7 +1438,7 @@ The Weapons & Loadout System provides a comprehensive, balanced, and strategic e
 - ✅ Comprehensive testing coverage
 
 **Primary References:**
-- **⭐ [SEED_DATA_SPECIFICATION.md](../prd_core/SEED_DATA_SPECIFICATION.md)** - Complete weapon catalog (47 weapons)
+- **⭐ [SEED_DATA_SPECIFICATION.md](../architecture/SEED_DATA_SPECIFICATION.md)** - Complete weapon catalog (47 weapons)
 
 **Future Roadmap:**
 - Weapon crafting and modifications
@@ -1562,6 +1562,6 @@ Effective Penetration: 10 * 0.80 = 8
 
 ---
 
-**Document Version**: v3.0  
-**Last Reviewed**: February 10, 2026  
+**Document Version**: v3.0
+**Last Reviewed**: February 10, 2026
 **Status**: Complete - All content from PRD_WEAPON_LOADOUT.md and WEAPONS_AND_LOADOUT.md has been integrated
