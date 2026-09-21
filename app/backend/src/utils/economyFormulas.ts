@@ -168,7 +168,10 @@ export function getLeagueWinReward(league: string): number {
     champion: 225000,
   };
 
-  return rewards[league.toLowerCase()] || rewards.bronze;
+  const normalizedLeague = league.toLowerCase();
+  return Object.hasOwn(rewards, normalizedLeague)
+    ? rewards[normalizedLeague]
+    : rewards.bronze;
 }
 
 /**

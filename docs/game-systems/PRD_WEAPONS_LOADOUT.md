@@ -611,7 +611,7 @@ See [SEED_DATA_SPECIFICATION.md](../architecture/SEED_DATA_SPECIFICATION.md) for
 
 ## Weapon Economy & Pricing
 
-**⭐ AUTHORITATIVE SOURCE**: [PRD_WEAPON_ECONOMY_OVERHAUL.md](PRD_WEAPON_ECONOMY.md)
+**⭐ AUTHORITATIVE SOURCE**: [PRD_WEAPON_ECONOMY.md](PRD_WEAPON_ECONOMY.md)
 
 ### Current Economy (Option C - Feb 8, 2026)
 
@@ -645,7 +645,7 @@ Where:
 
 **Key Insight**: Specialized weapons (high single attribute) cost MORE than balanced weapons due to exponential scaling.
 
-See [PRD_WEAPON_ECONOMY_OVERHAUL.md](PRD_WEAPON_ECONOMY.md) for complete formula details and examples.
+See [PRD_WEAPON_ECONOMY.md](PRD_WEAPON_ECONOMY.md) for complete formula details and examples.
 
 ### Weapons Workshop Discounts
 

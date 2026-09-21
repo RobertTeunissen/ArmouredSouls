@@ -8,9 +8,9 @@ inclusion: always
 Armoured Souls is a browser-based, turn-based robot-combat strategy game with leagues, tournaments, teams, progression, cycles, and a credit economy.
 
 ## Stack
-- Backend: Node.js 24, strict TypeScript 5.8, Express 5, Prisma 7, PostgreSQL 17, JWT/bcrypt, PM2.
-- Frontend: React 19, TypeScript, Vite 6, Tailwind CSS 4, Zustand, Fetch/Axios.
-- Testing: Jest 30/fast-check (backend), Vitest 4/fast-check and Playwright (frontend).
+- Backend: Node.js 24, strict TypeScript 6.0.3, Express 5, Prisma 7, PostgreSQL 17, JWT/bcrypt, PM2.
+- Frontend: React 19, TypeScript, Vite 8, Tailwind CSS 4, Zustand, React Router 7, Fetch/Axios.
+- Testing: Jest 30/fast-check (backend), Vitest 5/fast-check and Playwright (frontend).
 - Operations: Docker Compose, Caddy, GitHub Actions, UFW, automated PostgreSQL backups.
 
 ## Repository map
