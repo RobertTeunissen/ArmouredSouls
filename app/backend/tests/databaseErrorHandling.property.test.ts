@@ -23,7 +23,7 @@ app.use('/api/auth', authRoutes);
 app.use(errorHandler);
 
 // Lower NUM_RUNS since we're testing error paths with mocks
-const NUM_RUNS = 10;
+const VALID_STABLE_NAME = 'Iron Stable';
 
 /**
  * Database error factories — each produces a Prisma-like error that the
@@ -125,7 +125,7 @@ describe('Database Error Handling - Property Tests', () => {
 
             const res = await request(app)
               .post('/api/auth/register')
-              .send({ username, email, password, stableName: `stb_${username}` });
+              .send({ username, email, password, stableName: VALID_STABLE_NAME });
 
             // Should return 500
             expect(res.status).toBe(500);
@@ -162,7 +162,7 @@ describe('Database Error Handling - Property Tests', () => {
 
             const res = await request(app)
               .post('/api/auth/register')
-              .send({ username, email, password, stableName: `stb_${username}` });
+              .send({ username, email, password, stableName: VALID_STABLE_NAME });
 
             expect(res.status).toBe(500);
             expect(res.body).toHaveProperty('error');
@@ -197,7 +197,7 @@ describe('Database Error Handling - Property Tests', () => {
 
             const res = await request(app)
               .post('/api/auth/register')
-              .send({ username, email, password, stableName: `stb_${username}` });
+              .send({ username, email, password, stableName: VALID_STABLE_NAME });
 
             expect(res.status).toBe(500);
             expect(res.body).toHaveProperty('error');
