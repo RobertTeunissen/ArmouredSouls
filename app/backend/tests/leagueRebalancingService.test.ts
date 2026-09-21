@@ -113,8 +113,8 @@ describe('League Rebalancing Service', () => {
 
       const toPromote = await determinePromotions('bronze_1');
 
-      // Top 10% of 20 eligible = 2, only those with ≥25 LP (bronze threshold)
-      // Robots 5-19 have ≥25 LP (15 robots), top 2 are entityIds for robots 19 and 18
+      // Top 10% of the complete 20-robot instance = 2 fixed positions.
+      // LP and residency gates are then applied inside those positions.
       expect(toPromote.length).toBe(2);
       expect(toPromote[0].leaguePoints).toBeGreaterThanOrEqual(25);
       expect(toPromote[1].leaguePoints).toBeGreaterThanOrEqual(25);
@@ -135,10 +135,9 @@ describe('League Rebalancing Service', () => {
 
       const toPromote = await determinePromotions('bronze_1');
 
-      // Only robots 10-19 have ≥5 cycles (10 entities eligible)
-      // Of those, only robots 5-19 have ≥25 LP. Intersection: robots 10-19 (10 entities)
-      // Top 10% of 10 = 1 entity
-      expect(toPromote.length).toBe(1);
+      // The fixed promotion zone is the top 10% of all 20 standings: two positions.
+      // Residency is applied inside those positions, and both top-ranked robots qualify.
+      expect(toPromote.length).toBe(2);
       expect(toPromote[0].cyclesInTier).toBeGreaterThanOrEqual(5);
       expect(toPromote[0].leaguePoints).toBeGreaterThanOrEqual(25);
     });

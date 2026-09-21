@@ -7,12 +7,12 @@
  *
  * All modes share the same code path with the only differences being:
  *  - mode string ('league_2v2' | 'league_3v3' | 'tag_team')
- *  - maxPerInstance: 50 (teams, vs 100 for robots in 1v1/koth)
+ *  - maxPerInstance: 100 for every head-to-head mode
  *  - entityType: 'team'
  *  - useLocking: true (teams are created concurrently via API)
  *
- * Config mirrors 1v1 league: 10% promote, 10% demote, 5 min cycles.
- * Min entities for rebalancing is 4 (smaller cohorts than 1v1).
+ * Config is the canonical head-to-head rule object: 10% fixed zones, five-cycle
+ * residency, minimum population 10, and an empty-destination cohort of three.
  *
  * @module services/team-battle/teamBattleAdapter
  */
@@ -31,17 +31,19 @@ import {
 import { createStandingsAdapter } from '../league/leagueRebalancingService';
 import {
   assignLeagueInstanceWithLock,
+  LEAGUE_TIERS,
   MAX_TEAMS_PER_INSTANCE,
   LeagueTier,
 } from '../league/leagueInstanceService';
+import { HEAD_TO_HEAD_LEAGUE_RULES } from '../league/league-rules';
 
 // Re-export for consumers that need the helper
 export { getMinLPForPromotion } from '../league/leaguePromotionThresholds';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-/** Six-tier structure matching all league modes */
-export const TEAM_BATTLE_LEAGUE_TIERS = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'] as const;
+/** Six-tier structure shared by every head-to-head league mode. */
+export const TEAM_BATTLE_LEAGUE_TIERS = LEAGUE_TIERS;
 export type TeamBattleLeagueTier = typeof TEAM_BATTLE_LEAGUE_TIERS[number];
 
 export { MAX_TEAMS_PER_INSTANCE };
@@ -54,20 +56,9 @@ export const STARTING_LP = 0;
 
 // ─── Configuration ───────────────────────────────────────────────────────────
 
-const PROMOTION_PERCENTAGE = 0.10;
-const DEMOTION_PERCENTAGE = 0.10;
-const MIN_CYCLES_IN_LEAGUE_FOR_REBALANCING = 5;
-const MIN_TEAMS_FOR_REBALANCING = 4;
-const MIN_COHORT_FOR_NEW_TIER = 3;
-
 export const TEAM_BATTLE_LEAGUE_CONFIG: LeagueEngineConfig = {
-  promotionPercentage: PROMOTION_PERCENTAGE,
-  demotionPercentage: DEMOTION_PERCENTAGE,
-  minCyclesForRebalancing: MIN_CYCLES_IN_LEAGUE_FOR_REBALANCING,
-  minEntitiesForRebalancing: MIN_TEAMS_FOR_REBALANCING,
-  minCohortForNewTier: MIN_COHORT_FOR_NEW_TIER,
+  ...HEAD_TO_HEAD_LEAGUE_RULES,
   logPrefix: 'TeamBattleRebalancing',
-  tiers: TEAM_BATTLE_LEAGUE_TIERS,
   entityLabel: 'team',
 };
 
@@ -194,8 +185,9 @@ export interface FullTeamBattleRebalancingSummary {
 }
 
 /**
- * Determine which teams should be promoted from a specific instance.
- * Requirement R8.2: Promote top 10% of eligible teams (≥5 cycles in tier AND per-tier LP threshold)
+ * Determine which teams occupy effective promotion positions in an instance.
+ * The shared planner sizes the fixed zone from total population before applying
+ * five-cycle residency and the source-tier LP threshold.
  */
 export async function determineTeamBattlePromotions(
   instanceId: string,
@@ -205,8 +197,9 @@ export async function determineTeamBattlePromotions(
 }
 
 /**
- * Determine which teams should be demoted from a specific instance.
- * Requirement R8.3: Demote bottom 10% of eligible teams (≥5 cycles in tier)
+ * Determine which teams occupy effective demotion positions in an instance.
+ * The shared planner applies residency inside the fixed bottom 10% zone without
+ * backfilling from lower-ranked positions.
  */
 export async function determineTeamBattleDemotions(
   instanceId: string,

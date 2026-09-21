@@ -16,7 +16,6 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import Navigation from '../components/Navigation';
 import { useAuth } from '../contexts/AuthContext';
 import {
   listSeasons,
@@ -84,7 +83,6 @@ function SeasonArchivePage() {
 
   return (
     <div className="min-h-screen bg-background text-white pb-24 md:pb-8">
-      <Navigation />
       <div className="container mx-auto max-w-6xl px-3 py-8 sm:px-4">
         <h1 className="text-3xl font-bold">Season Archive</h1>
         <p className="mt-1 text-sm text-secondary">

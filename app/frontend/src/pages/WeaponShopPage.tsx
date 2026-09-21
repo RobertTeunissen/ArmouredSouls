@@ -9,7 +9,6 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import Navigation from '../components/Navigation';
 import ViewModeToggle from '../components/ViewModeToggle';
 import WeaponTable from '../components/WeaponTable';
 import FilterPanel from '../components/FilterPanel';
@@ -95,7 +94,6 @@ function WeaponShopPage() {
 
   return (
     <div className="min-h-screen bg-background text-white">
-      <Navigation />
 
       <div className="container mx-auto px-4 py-8 pb-24 lg:pb-8">
         <div className="mb-6">

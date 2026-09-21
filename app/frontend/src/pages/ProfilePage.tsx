@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import Navigation from '../components/Navigation';
 import TutorialSettings from '../components/TutorialSettings';
 import { getProfile, ProfileData, updateProfile, ProfileUpdateRequest } from '../utils/userApi';
 
@@ -228,8 +227,7 @@ function ProfilePage() {
   if (!user || !profile) {
     return (
       <div className="min-h-screen bg-background text-white">
-        <Navigation />
-        <div className="container mx-auto px-4 py-8 flex justify-center items-center">
+          <div className="container mx-auto px-4 py-8 flex justify-center items-center">
           {loading ? (
             <div className="text-center">Loading profile...</div>
           ) : (
@@ -242,7 +240,6 @@ function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-background text-white">
-      <Navigation />
 
       <div className="container mx-auto px-4 py-8 pb-24 lg:pb-8">
         {/* Page Header */}

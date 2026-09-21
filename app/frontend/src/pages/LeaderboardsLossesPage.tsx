@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { api } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
-import Navigation from '../components/Navigation';
 import { createLogger } from '../utils/logger';
 
 const log = createLogger('LeaderboardsLossesPage');
@@ -94,7 +93,6 @@ function LeaderboardsLossesPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navigation />
       <div className="max-w-7xl mx-auto px-4 py-8 pb-24 lg:pb-8">
       {/* Header */}
       <div className="mb-8">

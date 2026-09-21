@@ -2,7 +2,6 @@ import { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
-import Navigation from '../components/Navigation';
 import AchievementBadge from '../components/AchievementBadge';
 import {
   getBattleLog,
@@ -72,8 +71,7 @@ function BattleDetailPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background text-white">
-        <Navigation />
-        <div className="container mx-auto px-4 py-4">
+          <div className="container mx-auto px-4 py-4">
           <div className="bg-surface p-3 rounded-lg">
             <p className="text-secondary text-sm">Loading battle details...</p>
           </div>
@@ -85,8 +83,7 @@ function BattleDetailPage() {
   if (error || !battleLog) {
     return (
       <div className="min-h-screen bg-background text-white">
-        <Navigation />
-        <div className="container mx-auto px-4 py-4">
+          <div className="container mx-auto px-4 py-4">
           <div className="bg-error/10 border border-error p-3 rounded-lg">
             <p className="text-error">{error || 'Battle not found'}</p>
             <button
@@ -359,7 +356,6 @@ function BattleDetailContent({ battleLog: rawBattleLog, userId }: { battleLog: B
 
   return (
     <div className="min-h-screen bg-background text-white">
-      <Navigation />
       <div className="container mx-auto px-4 py-4 pb-24 lg:pb-8">
         {/* Header */}
         <div className="mb-3">

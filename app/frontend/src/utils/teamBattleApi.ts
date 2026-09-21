@@ -175,6 +175,14 @@ export interface TeamBattleStandingsResponse {
     isBronze: boolean;
     promotionSlots: number;
     demotionSlots: number;
+    promotionCandidates: number;
+    effectivePromotionCandidates: number;
+    promotionBlockReason: 'destination_cohort_too_small' | null;
+    totalEntities: number;
+    totalInstances: number;
+    activeInstances: number;
+    instancesBelowMinimum: number;
+    smallestInstancePopulation: number;
   };
 }
 
@@ -244,6 +252,7 @@ export interface TagTeamStandingEntry {
   totalTagTeamDraws: number;
   combinedELO: number;
   cyclesInTagTeamLeague?: number;
+  isSubscribed?: boolean;
   zone?: 'promotion' | 'demotion' | null;
   eligible?: boolean;
   members: TagTeamStandingMember[];
@@ -268,6 +277,14 @@ export interface TagTeamStandingsResponse {
     isBronze: boolean;
     promotionSlots: number;
     demotionSlots: number;
+    promotionCandidates: number;
+    effectivePromotionCandidates: number;
+    promotionBlockReason: 'destination_cohort_too_small' | null;
+    totalEntities: number;
+    totalInstances: number;
+    activeInstances: number;
+    instancesBelowMinimum: number;
+    smallestInstancePopulation: number;
   };
 }
 

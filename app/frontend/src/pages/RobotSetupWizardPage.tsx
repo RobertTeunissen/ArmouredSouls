@@ -5,7 +5,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import Navigation from '../components/Navigation';
 import RobotSetupWizard from '../components/robot-setup/RobotSetupWizard';
 import { api } from '../utils/api';
 
@@ -59,7 +58,6 @@ function RobotSetupWizardPage() {
   if (loading || !robot) {
     return (
       <div className="min-h-screen bg-background text-white">
-        <Navigation />
         <div className="flex items-center justify-center min-h-[50vh]">
           <div className="text-secondary">Loading...</div>
         </div>
@@ -69,7 +67,6 @@ function RobotSetupWizardPage() {
 
   return (
     <div className="min-h-screen bg-background text-white">
-      <Navigation />
       <div className="container mx-auto py-8 pb-24 lg:pb-8">
         <RobotSetupWizard
           robotId={robot.id}

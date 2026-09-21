@@ -73,10 +73,44 @@ model User {
   facilities      Facility[]
   weaponInventory WeaponInventory[]
   teamBattles     TeamBattle[]
-  achievements    UserAchievement[]
-  leagueHistory   LeagueHistory[]
+  achievements         UserAchievement[]
+  leagueHistory        LeagueHistory[]
+  searchAnalyticsEvents SearchAnalyticsEvent[]
 
   @@map("users")
+}
+
+model SearchAnalyticsEvent {
+  id                  BigInt   @id @default(autoincrement())
+  seasonNumber        Int      @map("season_number")
+  cycleNumber         Int      @map("cycle_number")
+  userId              Int      @map("user_id")
+  eventTimestamp      DateTime @map("event_timestamp")
+  normalizedPhrase    String   @map("normalized_phrase") @db.VarChar(100)
+  robotResultCount    Int      @map("robot_result_count")
+  stableResultCount   Int      @map("stable_result_count")
+  guideResultCount    Int      @map("guide_result_count")
+  totalResultCount    Int      @map("total_result_count")
+  noResult            Boolean  @map("no_result")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([seasonNumber, cycleNumber])
+  @@index([seasonNumber, eventTimestamp])
+  @@index([seasonNumber, userId])
+  @@index([seasonNumber, normalizedPhrase])
+  @@map("search_analytics_events")
+}
+
+model SearchAnalyticsFailure {
+  id            BigInt   @id @default(autoincrement())
+  seasonNumber  Int      @map("season_number")
+  cycleNumber   Int      @map("cycle_number")
+  firstFailedAt DateTime @default(now()) @map("first_failed_at")
+
+  @@unique([seasonNumber, cycleNumber])
+  @@index([seasonNumber, cycleNumber])
+  @@map("search_analytics_failures")
 }
 
 model Facility {
@@ -723,9 +757,9 @@ model AdminAuditLog {
 
 model LeagueHistory {
   id                  Int      @id @default(autoincrement())
-  entityType          String   @map("entity_type") @db.VarChar(20) // "robot" or "tag_team"
+  entityType          String   @map("entity_type") @db.VarChar(20) // "robot", "tag_team", or "team_battle"
   entityId            Int      @map("entity_id") // Robot ID or TeamBattle ID
-  userId              Int      @map("user_id") // Owner (user.id for robots, stableId for tag teams)
+  userId              Int      @map("user_id") // Owning user/stable ID
   changeType          String   @map("change_type") @db.VarChar(20) // "promotion" or "demotion"
   mode                String?  @db.VarChar(30) // Standings mode: league_1v1, koth, grand_melee, etc.
   sourceTier          String   @map("source_tier") @db.VarChar(20) // e.g. "bronze"

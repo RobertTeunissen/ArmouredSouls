@@ -13,6 +13,7 @@ import rateLimit, { type RateLimitRequestHandler } from 'express-rate-limit';
 import { getConfig, type EnvConfig } from '../config/env';
 import { AuthRequest } from './auth';
 import { securityMonitor } from '../services/security/securityMonitor';
+import { safeRequestPath } from '../utils/safeRequestPath';
 
 /**
  * Create a per-user rate limiter for economic transaction endpoints.
@@ -43,7 +44,7 @@ export function createUserEconomicLimiter(
     handler: (req, res) => {
       const authReq = req as AuthRequest;
       if (authReq.user?.userId) {
-        securityMonitor.trackRateLimitViolation(authReq.user.userId, req.originalUrl);
+        securityMonitor.trackRateLimitViolation(authReq.user.userId, safeRequestPath(req.originalUrl));
       }
       res.status(429).json({
         error: 'Too many requests',

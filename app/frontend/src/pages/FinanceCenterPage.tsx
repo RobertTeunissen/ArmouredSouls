@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
-import Navigation from '../components/Navigation';
 import { FinanceHistoryView } from '../components/finance/FinanceHistoryView';
 import { FinanceStatement } from '../components/finance/FinanceStatement';
 import { FullDamageRepairReference } from '../components/finance/FullDamageRepairReference';
@@ -234,7 +233,6 @@ export function FinanceCenterPage(): React.ReactElement {
 
   return (
     <div className="min-h-screen overflow-x-clip bg-background text-white">
-      <Navigation />
       <main className="container mx-auto max-w-7xl px-3 py-6 pb-24 sm:px-4 lg:pb-8">
         <header className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>

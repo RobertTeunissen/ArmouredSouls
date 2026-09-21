@@ -29,7 +29,7 @@ const CompactBattleCard: FC<CompactBattleCardProps> = ({
   opponent,
   outcome,
   eloChange,
-  myRobotId: _myRobotId,
+  myRobotId,
   reward,
   prestige,
   fame,
@@ -47,6 +47,9 @@ const CompactBattleCard: FC<CompactBattleCardProps> = ({
   const isKoth = battle.battleType === 'koth';
   const isGrandMelee = battle.battleType === 'grand_melee';
   const isFFA = isKoth || isGrandMelee;
+  const ffaPlacement = battle.participants?.find(
+    participant => participant.robotId === myRobotId,
+  )?.placement ?? battle.kothPlacement;
   const isTeamBattle = battle.battleType === 'league_2v2' || battle.battleType === 'league_3v3';
   
   // Use shared mode config for consistent icon/badge/color across all views
@@ -121,7 +124,7 @@ const CompactBattleCard: FC<CompactBattleCardProps> = ({
   };
 
   const getKothPlacementBadgeClass = (): string => {
-    const placement = battle.kothPlacement;
+    const placement = ffaPlacement;
     if (placement === 1) return 'bg-warning/20 text-warning';
     if (placement === 2) return 'bg-gray-400/20 text-gray-300';
     if (placement === 3) return 'bg-orange-600/20 text-orange-500';
@@ -186,9 +189,9 @@ const CompactBattleCard: FC<CompactBattleCardProps> = ({
             <div className="text-xs font-bold px-1.5 py-0.5 rounded text-center bg-yellow-500/20 text-warning">
               BYE
             </div>
-          ) : isFFA && battle.kothPlacement != null && battle.kothParticipantCount != null ? (
+          ) : isFFA && ffaPlacement != null && battle.kothParticipantCount != null ? (
             <div className={`text-xs font-bold px-1.5 py-0.5 rounded text-center whitespace-nowrap ${getKothPlacementBadgeClass()}`}>
-              {battle.kothPlacement}{getKothPlacementSuffix(battle.kothPlacement)} of {battle.kothParticipantCount}
+              {ffaPlacement}{getKothPlacementSuffix(ffaPlacement)} of {battle.kothParticipantCount}
             </div>
           ) : (
             <div className={`text-xs font-bold px-1.5 py-0.5 rounded text-center ${getOutcomeBadgeClass()}`}>
@@ -340,9 +343,9 @@ const CompactBattleCard: FC<CompactBattleCardProps> = ({
               <div className="text-xs font-bold px-1.5 py-0.5 rounded bg-yellow-500/20 text-warning">
                 BYE
               </div>
-            ) : isFFA && battle.kothPlacement != null && battle.kothParticipantCount != null ? (
+            ) : isFFA && ffaPlacement != null && battle.kothParticipantCount != null ? (
               <div className={`text-xs font-bold px-1.5 py-0.5 rounded ${getKothPlacementBadgeClass()}`}>
-                {battle.kothPlacement}{getKothPlacementSuffix(battle.kothPlacement)} of {battle.kothParticipantCount}
+                {ffaPlacement}{getKothPlacementSuffix(ffaPlacement)} of {battle.kothParticipantCount}
               </div>
             ) : (
               <div className={`text-xs font-bold px-1.5 py-0.5 rounded ${getOutcomeBadgeClass()}`}>

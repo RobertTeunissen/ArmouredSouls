@@ -22,32 +22,23 @@ import {
   demoteEntity,
 } from './leagueEngine';
 
+import { HEAD_TO_HEAD_LEAGUE_RULES } from './league-rules';
+
 // Re-export for consumers that need the helper
 export { getMinLPForPromotion } from './leaguePromotionThresholds';
 
 // ─── Configuration ───────────────────────────────────────────────────────────
 
-const PROMOTION_PERCENTAGE = 0.10;
-const DEMOTION_PERCENTAGE = 0.10;
-const MIN_CYCLES_IN_LEAGUE_FOR_REBALANCING = 5;
-const MIN_ROBOTS_FOR_REBALANCING = 10;
-const MIN_COHORT_FOR_NEW_TIER = 3;
-
-const ROBOT_LEAGUE_CONFIG: LeagueEngineConfig = {
-  promotionPercentage: PROMOTION_PERCENTAGE,
-  demotionPercentage: DEMOTION_PERCENTAGE,
-  minCyclesForRebalancing: MIN_CYCLES_IN_LEAGUE_FOR_REBALANCING,
-  minEntitiesForRebalancing: MIN_ROBOTS_FOR_REBALANCING,
-  minCohortForNewTier: MIN_COHORT_FOR_NEW_TIER,
+export const ROBOT_LEAGUE_CONFIG: LeagueEngineConfig = {
+  ...HEAD_TO_HEAD_LEAGUE_RULES,
   logPrefix: 'Rebalancing',
-  tiers: LEAGUE_TIERS,
   entityLabel: 'robot',
 };
 
 // ─── Robot Adapter (uses unified factory) ────────────────────────────────────
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- createStandingsAdapter is shared by five modes and returns LeagueAdapter<any>; the public functions below narrow to Standing, which is what it actually yields
-const robotAdapter: LeagueAdapter<any> = createStandingsAdapter('league_1v1', {
+export const robotAdapter: LeagueAdapter<any> = createStandingsAdapter('league_1v1', {
   maxPerInstance: MAX_ROBOTS_PER_INSTANCE,
   entityType: 'robot',
 });
@@ -140,7 +131,7 @@ export async function rebalanceLeagues(): Promise<FullRebalancingSummary> {
  *
  * Options:
  *  - overrideMinLP: KotH uses 0 (no LP threshold for promotion, uses position-based ranking)
- *  - maxPerInstance: 100 for robots (1v1, koth), 50 for teams (2v2, 3v3, tag_team)
+ *  - maxPerInstance: 100 for every current head-to-head and placement-mode instance
  *  - entityType: 'robot' | 'tag_team' | 'team_battle' (for league history recording)
  *  - useLocking: true for team creation (advisory lock on instance assignment)
  */
@@ -168,40 +159,13 @@ export function createStandingsAdapter(mode: string, options: StandingsAdapterOp
     entityType,
     mode,
 
-    async getEntitiesWithMinPoints(instanceId, minLP, minCycles, excludeIds) {
-      const effectiveMinLP = opts.overrideMinLP ?? minLP;
+    async getEntitiesInInstance(instanceId, excludeIds) {
       return prisma.standing.findMany({
         where: {
           mode: mode as StandingsMode,
           leagueInstanceId: instanceId,
-          cyclesInTier: { gte: minCycles },
-          leaguePoints: { gte: effectiveMinLP },
           NOT: { entityId: { in: Array.from(excludeIds) } },
         },
-        orderBy: [{ leaguePoints: 'desc' }],
-      });
-    },
-
-    async countEligibleInInstance(instanceId, minCycles, excludeIds) {
-      return prisma.standing.count({
-        where: {
-          mode: mode as StandingsMode,
-          leagueInstanceId: instanceId,
-          cyclesInTier: { gte: minCycles },
-          NOT: { entityId: { in: Array.from(excludeIds) } },
-        },
-      });
-    },
-
-    async getEntitiesForDemotion(instanceId, minCycles, excludeIds) {
-      return prisma.standing.findMany({
-        where: {
-          mode: mode as StandingsMode,
-          leagueInstanceId: instanceId,
-          cyclesInTier: { gte: minCycles },
-          NOT: { entityId: { in: Array.from(excludeIds) } },
-        },
-        orderBy: [{ leaguePoints: 'asc' }],
       });
     },
 
@@ -239,6 +203,7 @@ export function createStandingsAdapter(mode: string, options: StandingsAdapterOp
     getEntityCurrentTier(entity) { return entity.tier; },
     getEntityLeagueId(entity) { return entity.leagueInstanceId; },
     getEntityLeaguePoints(entity) { return entity.leaguePoints; },
+    getEntityCyclesInTier(entity) { return entity.cyclesInTier; },
     getEntityOwnerId(entity) { return entity.entityId; },
     getEntityDisplayName(entity) { return `${standingsEntityType}#${entity.entityId}`; },
 
@@ -274,6 +239,7 @@ export async function rebalanceKothLeagues(): Promise<FullRebalancingSummary> {
   const kothConfig: LeagueEngineConfig = {
     ...ROBOT_LEAGUE_CONFIG,
     minCyclesForRebalancing: 10,
+    promotionMinLPOverride: 0,
     logPrefix: 'KotH Rebalancing',
   };
   const kothAdapter = createStandingsAdapter('koth', {
@@ -310,6 +276,7 @@ export async function rebalanceGrandMeleeLeagues(): Promise<FullRebalancingSumma
   const grandMeleeConfig: LeagueEngineConfig = {
     ...ROBOT_LEAGUE_CONFIG,
     minCyclesForRebalancing: 10,
+    promotionMinLPOverride: 0,
     logPrefix: 'Grand Melee Rebalancing',
   };
   const grandMeleeAdapter = createStandingsAdapter('grand_melee', {

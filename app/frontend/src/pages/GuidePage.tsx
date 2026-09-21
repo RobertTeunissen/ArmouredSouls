@@ -6,7 +6,6 @@ import {
   fetchGuideSections,
   fetchGuideArticle,
 } from '../utils/guideApi';
-import Navigation from '../components/Navigation';
 import GuideNavigation from '../components/guide/GuideNavigation';
 import GuideSearch from '../components/guide/GuideSearch';
 import GuideLandingPage from '../components/guide/GuideLandingPage';
@@ -218,7 +217,6 @@ function GuidePage(): React.ReactElement {
 
   return (
     <div className="min-h-screen bg-background text-white">
-      <Navigation />
 
       <div className="flex min-h-[calc(100vh-4rem)]">
         {/* Sidebar navigation */}

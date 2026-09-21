@@ -13,26 +13,20 @@
 import logger from '../../config/logger';
 import prisma from '../../lib/prisma';
 import { LeagueError, LeagueErrorCode } from '../../errors/leagueErrors';
-import { getMinLPForPromotion } from './leaguePromotionThresholds';
 import { recordTierChange, getCurrentCycleNumber } from './leagueHistoryService';
+import {
+  LeaguePlanSelectors,
+  LeagueTierRebalancingPlan,
+  planLeagueInstanceRebalancing,
+  planLeagueTierRebalancing,
+} from './league-rebalancing-planner';
+import { LeagueRuleSet } from './league-rules';
 
 // ─── Configuration ───────────────────────────────────────────────────────────
 
-export interface LeagueEngineConfig {
-  /** Top X% of eligible entities get promoted */
-  promotionPercentage: number;
-  /** Bottom X% of eligible entities get demoted */
-  demotionPercentage: number;
-  /** Minimum cycles an entity must spend in current league before being eligible */
-  minCyclesForRebalancing: number;
-  /** Minimum entities in an instance for promotion/demotion to trigger */
-  minEntitiesForRebalancing: number;
-  /** Minimum cohort size required to open a new (empty) tier */
-  minCohortForNewTier: number;
+export interface LeagueEngineConfig extends LeagueRuleSet {
   /** Log prefix for identifying which league system is logging */
   logPrefix: string;
-  /** Ordered list of tier names from lowest to highest */
-  tiers: readonly string[];
   /** Label used in error messages (e.g., "robot", "team") */
   entityLabel: string;
 }
@@ -59,23 +53,11 @@ export interface InstanceInfo {
  */
 export interface LeagueAdapter<T extends LeagueEntityBase> {
   /**
-   * Get entities in a specific instance that meet the minimum cycles requirement
-   * AND have league points >= minLP. Ordered by LP descending (with tiebreaker).
-   * Must exclude entities in the excludeIds set.
+   * Get every entity in an instance. `excludeIds` is used by the standalone
+   * per-instance helpers; full-cycle planning passes an empty set and snapshots
+   * every tier before any movement occurs.
    */
-  getEntitiesWithMinPoints(instanceId: string, minLP: number, minCycles: number, excludeIds: Set<number>): Promise<T[]>;
-
-  /**
-   * Count eligible entities in a specific instance (those meeting min cycles).
-   * Must exclude entities in the excludeIds set.
-   */
-  countEligibleInInstance(instanceId: string, minCycles: number, excludeIds: Set<number>): Promise<number>;
-
-  /**
-   * Get entities in a specific instance ordered by LP ascending (for demotion).
-   * Only those meeting min cycles. Must exclude entities in the excludeIds set.
-   */
-  getEntitiesForDemotion(instanceId: string, minCycles: number, excludeIds: Set<number>): Promise<T[]>;
+  getEntitiesInInstance(instanceId: string, excludeIds: Set<number>): Promise<T[]>;
 
   /**
    * Get all instance IDs for a given tier.
@@ -119,8 +101,11 @@ export interface LeagueAdapter<T extends LeagueEntityBase> {
    */
   getEntityLeaguePoints(entity: T): number;
 
+  /** Get completed residency cycles in the entity's current tier. */
+  getEntityCyclesInTier(entity: T): number;
+
   /**
-   * Get the user/owner ID for history recording.
+   * Get the user/owner ID for history recording and deterministic ordering.
    */
   getEntityOwnerId(entity: T): number;
 
@@ -196,9 +181,19 @@ function getNextTierDown(currentTier: string, tiers: readonly string[]): string 
 
 // ─── Core Engine Functions ───────────────────────────────────────────────────
 
+function getPlanSelectors<T extends LeagueEntityBase>(adapter: LeagueAdapter<T>): LeaguePlanSelectors<T> {
+  return {
+    getEntityId: (entity) => adapter.getEntityOwnerId(entity),
+    getLeaguePoints: (entity) => adapter.getEntityLeaguePoints(entity),
+    getCyclesInTier: (entity) => adapter.getEntityCyclesInTier(entity),
+  };
+}
+
 /**
- * Determine which entities should be promoted from a specific instance.
- * Entities must meet per-tier LP threshold AND be in top X% AND have ≥N cycles in current league.
+ * Determine promotion candidates from the fixed top percentage of a complete
+ * instance. The tier-level empty-destination cohort rule is applied by
+ * `planLeagueTierRebalancing` when `buildTierPlanSnapshot` combines candidates
+ * from every instance.
  */
 export async function determinePromotionsForInstance<T extends LeagueEntityBase>(
   instanceId: string,
@@ -207,59 +202,25 @@ export async function determinePromotionsForInstance<T extends LeagueEntityBase>
   excludeIds: Set<number>,
 ): Promise<T[]> {
   const tier = instanceId.split('_')[0];
-
-  // Top tier has no promotions
-  if (tier === config.tiers[config.tiers.length - 1]) {
-    return [];
-  }
-
-  const minLP = getMinLPForPromotion(tier);
-
-  // Get entities meeting both min cycles AND min LP
-  const entitiesWithMinPoints = await adapter.getEntitiesWithMinPoints(
-    instanceId, minLP, config.minCyclesForRebalancing, excludeIds
+  const entities = await adapter.getEntitiesInInstance(instanceId, excludeIds);
+  const plan = planLeagueInstanceRebalancing(
+    instanceId,
+    tier,
+    entities,
+    config,
+    getPlanSelectors(adapter),
   );
-
-  if (entitiesWithMinPoints.length === 0) {
-    logger.info(
-      `[${config.logPrefix}] ${instanceId}: No entities with ≥${minLP} league points (${tier} tier threshold), skipping promotions`
-    );
-    return [];
-  }
-
-  // Get total eligible count for percentage calculation
-  const totalEligible = await adapter.countEligibleInInstance(
-    instanceId, config.minCyclesForRebalancing, excludeIds
-  );
-
-  if (totalEligible < config.minEntitiesForRebalancing) {
-    logger.info(
-      `[${config.logPrefix}] ${instanceId}: Too few eligible entities (${totalEligible} < ${config.minEntitiesForRebalancing}), skipping promotions`
-    );
-    return [];
-  }
-
-  const promotionCount = Math.floor(totalEligible * config.promotionPercentage);
-
-  if (promotionCount === 0) {
-    logger.info(
-      `[${config.logPrefix}] ${instanceId}: Promotion count is 0 (${totalEligible} eligible entities), skipping`
-    );
-    return [];
-  }
-
-  const toPromote = entitiesWithMinPoints.slice(0, Math.min(promotionCount, entitiesWithMinPoints.length));
 
   logger.info(
-    `[${config.logPrefix}] ${instanceId}: ${toPromote.length} entities eligible for promotion (top ${config.promotionPercentage * 100}% of ${totalEligible} AND ≥${minLP} league points [${tier} tier], ${entitiesWithMinPoints.length} met points threshold)`
+    `[${config.logPrefix}] ${instanceId}: ${plan.promotionCandidates.length} promotion candidates `
+    + `from ${plan.promotionSlots} fixed slots (${plan.totalEntities} total, `
+    + `${plan.eligibleEntities} with ≥${config.minCyclesForRebalancing} cycles, `
+    + `threshold ≥${plan.minPromotionLP} LP)`,
   );
-
-  return toPromote;
+  return plan.promotionCandidates;
 }
 
-/**
- * Determine which entities should be demoted from a specific instance.
- */
+/** Determine demotion candidates from the fixed bottom percentage. */
 export async function determineDemotionsForInstance<T extends LeagueEntityBase>(
   instanceId: string,
   config: LeagueEngineConfig,
@@ -267,38 +228,20 @@ export async function determineDemotionsForInstance<T extends LeagueEntityBase>(
   excludeIds: Set<number>,
 ): Promise<T[]> {
   const tier = instanceId.split('_')[0];
-
-  // Bottom tier has no demotions
-  if (tier === config.tiers[0]) {
-    return [];
-  }
-
-  const entities = await adapter.getEntitiesForDemotion(
-    instanceId, config.minCyclesForRebalancing, excludeIds
+  const entities = await adapter.getEntitiesInInstance(instanceId, excludeIds);
+  const plan = planLeagueInstanceRebalancing(
+    instanceId,
+    tier,
+    entities,
+    config,
+    getPlanSelectors(adapter),
   );
 
-  if (entities.length < config.minEntitiesForRebalancing) {
-    logger.info(
-      `[${config.logPrefix}] ${instanceId}: Too few entities (${entities.length} < ${config.minEntitiesForRebalancing}), skipping demotions`
-    );
-    return [];
-  }
-
-  const demotionCount = Math.floor(entities.length * config.demotionPercentage);
-
-  if (demotionCount === 0) {
-    logger.info(
-      `[${config.logPrefix}] ${instanceId}: Demotion count is 0 (${entities.length} entities), skipping`
-    );
-    return [];
-  }
-
-  const toDemote = entities.slice(0, demotionCount);
   logger.info(
-    `[${config.logPrefix}] ${instanceId}: ${toDemote.length} entities eligible for demotion (bottom ${config.demotionPercentage * 100}% of ${entities.length})`
+    `[${config.logPrefix}] ${instanceId}: ${plan.demotionCandidates.length} demotion candidates `
+    + `from ${plan.demotionSlots} fixed slots (${plan.totalEntities} total)`,
   );
-
-  return toDemote;
+  return plan.demotionCandidates;
 }
 
 /**
@@ -428,102 +371,108 @@ export async function demoteEntity<T extends LeagueEntityBase>(
   }
 }
 
-/**
- * Rebalance a single tier — process each instance, collect candidates, execute moves.
- */
-async function rebalanceTier<T extends LeagueEntityBase>(
+interface TierPlanSnapshot<T extends LeagueEntityBase> {
+  tier: string;
+  totalInTier: number;
+  instanceCount: number;
+  nextTier: string | null;
+  plan: LeagueTierRebalancingPlan<T>;
+}
+
+/** Snapshot one tier's complete population before any tier changes are written. */
+async function buildTierPlanSnapshot<T extends LeagueEntityBase>(
   tier: string,
   config: LeagueEngineConfig,
   adapter: LeagueAdapter<T>,
-  excludeIds: Set<number>,
-): Promise<TierRebalancingSummary> {
-  logger.info(`\n[${config.logPrefix}] Processing ${tier.toUpperCase()} league...`);
-
+): Promise<TierPlanSnapshot<T>> {
   const totalInTier = await adapter.countEntitiesInTier(tier);
+  const instances = await adapter.getInstancesForTier(tier);
+  const selectors = getPlanSelectors(adapter);
+  const instancePlans = [];
+
+  for (const instance of instances) {
+    const entities = await adapter.getEntitiesInInstance(instance.leagueId, new Set<number>());
+    instancePlans.push(planLeagueInstanceRebalancing(
+      instance.leagueId,
+      tier,
+      entities,
+      config,
+      selectors,
+    ));
+  }
+
+  const nextTier = getNextTierUp(tier, config.tiers);
+  const destinationPopulation = nextTier
+    ? await adapter.countEntitiesInDestinationTier(nextTier)
+    : 0;
+
+  return {
+    tier,
+    totalInTier,
+    instanceCount: instances.length,
+    nextTier,
+    plan: planLeagueTierRebalancing(tier, instancePlans, destinationPopulation, config),
+  };
+}
+
+/** Execute a previously snapshotted tier plan without replanning after moves. */
+async function executeTierPlan<T extends LeagueEntityBase>(
+  snapshot: TierPlanSnapshot<T>,
+  config: LeagueEngineConfig,
+  adapter: LeagueAdapter<T>,
+  processedIds: Set<number>,
+): Promise<TierRebalancingSummary> {
+  const { tier, totalInTier, instanceCount, nextTier, plan } = snapshot;
+  logger.info(`\n[${config.logPrefix}] Processing ${tier.toUpperCase()} league...`);
+  for (const instancePlan of plan.instancePlans) {
+    logger.info(
+      `[${config.logPrefix}] ${instancePlan.instanceId}: ${instancePlan.totalEntities} total, `
+      + `${instancePlan.promotionSlots} promotion slots, ${instancePlan.demotionSlots} demotion slots`,
+    );
+  }
 
   const summary: TierRebalancingSummary = {
     tier,
     entitiesInTier: totalInTier,
     promoted: 0,
     demoted: 0,
-    eligibleEntities: 0,
+    eligibleEntities: plan.eligibleEntities,
   };
 
-  const instances = await adapter.getInstancesForTier(tier);
-
-  logger.info(`[${config.logPrefix}] ${tier}: ${totalInTier} total entities across ${instances.length} instances`);
-
-  // Collect all promotion and demotion candidates across instances
-  const allPromotionCandidates: T[] = [];
-  const allDemotionCandidates: T[] = [];
-
-  for (const instance of instances) {
-    logger.info(`[${config.logPrefix}] Processing ${instance.leagueId}...`);
-
-    const eligibleInInstance = await adapter.countEligibleInInstance(
-      instance.leagueId, config.minCyclesForRebalancing, excludeIds
+  if (plan.promotionBlockReason === 'destination_cohort_too_small') {
+    logger.info(
+      `[${config.logPrefix}] ${tier}: Holding promotions — destination ${nextTier} is empty, `
+      + `need ${config.minCohortForNewTier} candidates but only have ${plan.promotionCandidates.length}`,
     );
-
-    summary.eligibleEntities += eligibleInInstance;
-
-    if (eligibleInInstance < config.minEntitiesForRebalancing) {
-      logger.info(
-        `[${config.logPrefix}] ${instance.leagueId}: Skipping (${eligibleInInstance} eligible, need ${config.minEntitiesForRebalancing})`
-      );
-      continue;
-    }
-
-    const toPromote = await determinePromotionsForInstance(instance.leagueId, config, adapter, excludeIds);
-    allPromotionCandidates.push(...toPromote);
-
-    const toDemote = await determineDemotionsForInstance(instance.leagueId, config, adapter, excludeIds);
-    allDemotionCandidates.push(...toDemote);
   }
 
-  // Check if destination tier needs a minimum cohort before promoting
-  const nextTier = getNextTierUp(tier, config.tiers);
-  let promotionsBlocked = false;
-
-  if (nextTier && allPromotionCandidates.length > 0) {
-    const entitiesInDestination = await adapter.countEntitiesInDestinationTier(nextTier);
-
-    if (entitiesInDestination === 0 && allPromotionCandidates.length < config.minCohortForNewTier) {
-      logger.info(
-        `[${config.logPrefix}] ${tier}: Holding promotions — destination ${nextTier} is empty, need ${config.minCohortForNewTier} candidates but only have ${allPromotionCandidates.length}`
-      );
-      promotionsBlocked = true;
+  for (const entity of plan.effectivePromotionCandidates) {
+    const entityId = adapter.getEntityOwnerId(entity);
+    if (processedIds.has(entityId)) continue;
+    try {
+      await promoteEntity(entity, config, adapter);
+      processedIds.add(entityId);
+      summary.promoted++;
+    } catch (error) {
+      logger.error(`[${config.logPrefix}] Error promoting entity ${entityId}:`, error);
     }
   }
 
-  // Execute promotions (unless blocked by cohort requirement)
-  if (!promotionsBlocked) {
-    for (const entity of allPromotionCandidates) {
-      try {
-        await promoteEntity(entity, config, adapter);
-        excludeIds.add(adapter.getEntityOwnerId(entity));
-        summary.promoted++;
-      } catch (error) {
-        logger.error(`[${config.logPrefix}] Error promoting entity ${adapter.getEntityOwnerId(entity)}:`, error);
-      }
-    }
-  }
-
-  // Execute demotions (always — not affected by cohort logic)
-  for (const entity of allDemotionCandidates) {
-    if (excludeIds.has(adapter.getEntityOwnerId(entity))) continue;
+  for (const entity of plan.demotionCandidates) {
+    const entityId = adapter.getEntityOwnerId(entity);
+    if (processedIds.has(entityId)) continue;
     try {
       await demoteEntity(entity, config, adapter);
-      excludeIds.add(adapter.getEntityOwnerId(entity));
+      processedIds.add(entityId);
       summary.demoted++;
     } catch (error) {
-      logger.error(`[${config.logPrefix}] Error demoting entity ${adapter.getEntityOwnerId(entity)}:`, error);
+      logger.error(`[${config.logPrefix}] Error demoting entity ${entityId}:`, error);
     }
   }
 
   logger.info(
-    `[${config.logPrefix}] ${tier}: Promoted ${summary.promoted}, Demoted ${summary.demoted} across ${instances.length} instances`
+    `[${config.logPrefix}] ${tier}: Promoted ${summary.promoted}, Demoted ${summary.demoted} across ${instanceCount} instances`,
   );
-
   return summary;
 }
 
@@ -550,12 +499,25 @@ export async function rebalanceAllTiers<T extends LeagueEntityBase>(
   result.totalEntities = await adapter.countAllEntities();
   logger.info(`[${config.logPrefix}] Total entities in system: ${result.totalEntities}`);
 
-  const processedIds = new Set<number>();
-
-  // Process each tier (bottom to top to avoid conflicts)
+  // Freeze every tier at the same settlement boundary. Moves executed for an
+  // earlier tier must not change the population or fixed positions of a later one.
+  const snapshots = new Map<string, TierPlanSnapshot<T>>();
   for (const tier of config.tiers) {
     try {
-      const summary = await rebalanceTier(tier, config, adapter, processedIds);
+      snapshots.set(tier, await buildTierPlanSnapshot(tier, config, adapter));
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      result.errors.push(`${tier}: ${errorMsg}`);
+      logger.error(`[${config.logPrefix}] Error planning tier ${tier}:`, error);
+    }
+  }
+
+  const processedIds = new Set<number>();
+  for (const tier of config.tiers) {
+    const snapshot = snapshots.get(tier);
+    if (!snapshot) continue;
+    try {
+      const summary = await executeTierPlan(snapshot, config, adapter, processedIds);
       result.tierSummaries.push(summary);
       result.totalPromoted += summary.promoted;
       result.totalDemoted += summary.demoted;

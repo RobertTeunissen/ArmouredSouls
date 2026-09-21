@@ -1,7 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import Navigation from '../components/Navigation';
 import { getTournamentDetails, TournamentDetails, SeedEntry, ParticipantType } from '../utils/tournamentApi';
 import { useRobotStore } from '../stores';
 import BracketView from '../components/tournament/BracketView';
@@ -95,7 +94,6 @@ function TournamentDetailPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background text-white">
-        <Navigation />
         <div className="w-full px-4 py-8">
           <div className="animate-pulse space-y-4">
             <div className="h-4 w-32 bg-surface-elevated rounded" />
@@ -117,7 +115,6 @@ function TournamentDetailPage() {
   if (notFound) {
     return (
       <div className="min-h-screen bg-background text-white">
-        <Navigation />
         <div className="container mx-auto px-4 py-8">
           <div className="bg-surface border border-white/10 p-8 rounded-lg text-center">
             <p className="text-xl text-secondary mb-4">Tournament not found</p>
@@ -137,7 +134,6 @@ function TournamentDetailPage() {
   if (error || !tournament) {
     return (
       <div className="min-h-screen bg-background text-white">
-        <Navigation />
         <div className="container mx-auto px-4 py-8">
           <div className="bg-red-900/30 border border-red-600 p-6 rounded-lg">
             <p className="text-error mb-4">{error || 'Something went wrong'}</p>
@@ -166,7 +162,6 @@ function TournamentDetailPage() {
 
   return (
     <div className="min-h-screen bg-background text-white">
-      <Navigation />
       <div className="w-full px-4 py-6 pb-24 lg:pb-8">
         {/* Back link */}
         <Link

@@ -10,7 +10,6 @@
  */
 
 import { useAuth } from '../contexts/AuthContext';
-import Navigation from '../components/Navigation';
 import { BattlePlaybackViewer } from '../components/BattlePlaybackViewer/BattlePlaybackViewer';
 
 import {
@@ -43,7 +42,6 @@ function PracticeArenaPage() {
 
   return (
     <div className="min-h-screen bg-background text-white">
-      <Navigation />
 
       <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
         {/* Header */}

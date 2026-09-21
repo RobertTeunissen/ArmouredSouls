@@ -21,7 +21,7 @@ export const RECONCILIATION: ReconciliationProof = {
   orderedBy: 'cycle_number_then_audit_sequence_number',
   firstOrderKey: { cycleNumber: 1, sequenceNumber: 1 },
   lastOrderKey: { cycleNumber: 1, sequenceNumber: 4 },
-  financialRecordCount: 4,
+  financialRecordCount: 13,
   openingBalance: 100000,
   signedMovement: 34000,
   earnedCredits: 50000,
@@ -43,10 +43,27 @@ export const STATEMENT: FinanceStatement = {
   investmentPurchases: 10000,
   netCashMovement: 34000,
   closingBalance: 134000,
-  earnedLines: [{ taxonomy: 'battle_income', label: 'Battle/bye income', amount: 45000, sourceReference: 'FS-A1', provenance: PROVENANCE }],
-  investmentProceedLines: [{ taxonomy: 'weapon_sale', label: 'Weapon sale: Arc Welder', amount: 5000, sourceReference: 'FS-SALE', provenance: PROVENANCE }],
-  runningCostLines: [{ taxonomy: 'repair_cost', label: 'Manual repairs', amount: 1000, sourceReference: 'FS-REPAIR', provenance: PROVENANCE, repairType: 'manual', eventCount: 1 }],
-  investmentPurchaseLines: [{ taxonomy: 'weapon_refinement', label: 'Weapon Refinement', amount: 10000, sourceReference: 'FS-BUY', provenance: PROVENANCE }],
+  earnedLines: [
+    { taxonomy: 'battle_income', label: 'Battle/bye income', amount: 30000, sourceReference: 'FS-A1', provenance: PROVENANCE },
+    { taxonomy: 'battle_income', label: 'Battle/bye income', amount: 15000, sourceReference: 'FS-A2', provenance: PROVENANCE },
+    { taxonomy: 'streaming_revenue', label: 'Streaming revenue', amount: 3000, sourceReference: 'FS-A3', provenance: PROVENANCE },
+    { taxonomy: 'streaming_revenue', label: 'Streaming revenue', amount: 2000, sourceReference: 'FS-A4', provenance: PROVENANCE },
+  ],
+  investmentProceedLines: [
+    { taxonomy: 'weapon_sale', label: 'Weapon sale: Arc Welder', amount: 3000, sourceReference: 'FS-SALE-1', provenance: PROVENANCE },
+    { taxonomy: 'weapon_sale', label: 'Weapon sale: Arc Welder', amount: 2000, sourceReference: 'FS-SALE-2', provenance: PROVENANCE },
+  ],
+  runningCostLines: [
+    { taxonomy: 'repair_cost', label: 'Manual repairs', amount: 500, sourceReference: 'FS-REPAIR-1', provenance: PROVENANCE, repairType: 'manual', eventCount: 1 },
+    { taxonomy: 'repair_cost', label: 'Manual repairs', amount: 500, sourceReference: 'FS-REPAIR-2', provenance: PROVENANCE, repairType: 'manual', eventCount: 1 },
+    { taxonomy: 'repair_cost', label: 'Automatic repairs', amount: 2500, sourceReference: 'FS-REPAIR-3', provenance: PROVENANCE, repairType: 'automatic', eventCount: 1 },
+    { taxonomy: 'operating_costs', label: 'Merchandising Hub', amount: -4000, sourceReference: 'FS-OPERATING-1', provenance: PROVENANCE },
+    { taxonomy: 'operating_costs', label: 'Streaming Studio', amount: -3000, sourceReference: 'FS-OPERATING-2', provenance: PROVENANCE },
+  ],
+  investmentPurchaseLines: [
+    { taxonomy: 'weapon_refinement', label: 'Weapon Refinement', amount: 6000, sourceReference: 'FS-BUY-1', provenance: PROVENANCE },
+    { taxonomy: 'weapon_refinement', label: 'Weapon Refinement', amount: 4000, sourceReference: 'FS-BUY-2', provenance: PROVENANCE },
+  ],
 };
 
 export const OVERVIEW_RESPONSE: FinanceOverviewResponse = {

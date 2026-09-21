@@ -1,18 +1,14 @@
 import express, { Request, Response } from 'express';
 import { z } from 'zod';
 import { getInstancesForTier, LeagueTier, LEAGUE_TIERS } from '../services/league/leagueInstanceService';
+import { getLeagueTierPreview } from '../services/league/league-rebalancing-preview';
+import { HEAD_TO_HEAD_LEAGUE_RULES, LeagueRuleSet } from '../services/league/league-rules';
 import { getMinLPForPromotion } from '../services/league/leaguePromotionThresholds';
 import prisma from '../lib/prisma';
 import type { Prisma, StandingsMode } from '../../generated/prisma';
 import { LeagueError, LeagueErrorCode } from '../errors';
 import { validateRequest } from '../middleware/schemaValidator';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
-
-// Constants matching leagueRebalancingService.ts
-const PROMOTION_PERCENTAGE = 0.10;
-const DEMOTION_PERCENTAGE = 0.10;
-const MIN_CYCLES_IN_LEAGUE = 5;
-const MIN_ROBOTS_FOR_REBALANCING = 10;
 
 const router = express.Router();
 
@@ -35,10 +31,9 @@ router.get('/:tier/standings', validateRequest({ params: leagueTierParamsSchema 
   const mode = (req.query.mode as string) || 'league_1v1';
   const isPlacementMode = mode === 'koth' || mode === 'grand_melee';
   const subscriptionEvent = mode === 'koth' ? 'koth' : mode === 'grand_melee' ? 'grand_melee' : 'league_1v1';
-  // Placement modes (KotH, Grand Melee) have no LP threshold for promotion (position-based)
-  const useMinLP = !isPlacementMode;
-  // Placement modes require 10 min cycles (vs 5 for other leagues) to balance promotion speed
-  const minCyclesForMode = isPlacementMode ? 10 : MIN_CYCLES_IN_LEAGUE;
+  const leagueRules: LeagueRuleSet = isPlacementMode
+    ? { ...HEAD_TO_HEAD_LEAGUE_RULES, minCyclesForRebalancing: 10, promotionMinLPOverride: 0 }
+    : HEAD_TO_HEAD_LEAGUE_RULES;
 
   if (!LEAGUE_TIERS.includes(tier)) {
     throw new LeagueError(LeagueErrorCode.INVALID_LEAGUE_TIER, 'Invalid tier', 400, { validTiers: LEAGUE_TIERS });
@@ -57,6 +52,7 @@ router.get('/:tier/standings', validateRequest({ params: leagueTierParamsSchema 
     where: standingsWhere,
     orderBy: [
       { leaguePoints: 'desc' },
+      { entityId: 'asc' },
     ],
     skip: (page - 1) * perPage,
     take: perPage,
@@ -77,52 +73,37 @@ router.get('/:tier/standings', validateRequest({ params: leagueTierParamsSchema 
   });
   const subscribedRobotIds = new Set(activeSubscriptions.map(s => s.robotId));
 
-  // Calculate promotion/demotion zones
-  const minLP = useMinLP ? getMinLPForPromotion(tier) : 0;
-  const isChampion = tier === 'champion';
-  const isBronze = tier === 'bronze';
-
-  let eligibleCount: number;
-  let hasEnoughRobots: boolean;
-  let promotionCount = 0;
-  let demotionCount = 0;
-  const promotionRobotIds = new Set<number>();
-  const demotionRobotIds = new Set<number>();
-
-  if (instance) {
-    eligibleCount = await prisma.standing.count({
-      where: { mode: mode as StandingsMode, leagueInstanceId: instance, cyclesInTier: { gte: minCyclesForMode } },
-    });
-
-    hasEnoughRobots = eligibleCount >= MIN_ROBOTS_FOR_REBALANCING;
-    promotionCount = hasEnoughRobots ? Math.floor(eligibleCount * PROMOTION_PERCENTAGE) : 0;
-    demotionCount = hasEnoughRobots ? Math.floor(eligibleCount * DEMOTION_PERCENTAGE) : 0;
-
-    if (hasEnoughRobots && demotionCount > 0 && !isBronze) {
-      const demotionStandings = await prisma.standing.findMany({
-        where: { mode: mode as StandingsMode, leagueInstanceId: instance, cyclesInTier: { gte: minCyclesForMode } },
-        orderBy: [{ leaguePoints: 'asc' }],
-        select: { entityId: true },
-        take: demotionCount,
-      });
-      for (const s of demotionStandings) demotionRobotIds.add(s.entityId);
-    }
-
-    if (hasEnoughRobots && promotionCount > 0 && !isChampion) {
-      const promotionStandings = await prisma.standing.findMany({
-        where: { mode: mode as StandingsMode, leagueInstanceId: instance, cyclesInTier: { gte: minCyclesForMode }, ...(useMinLP ? { leaguePoints: { gte: minLP } } : {}) },
-        orderBy: [{ leaguePoints: 'desc' }],
-        select: { entityId: true },
-        take: promotionCount,
-      });
-      for (const s of promotionStandings) promotionRobotIds.add(s.entityId);
-    }
-  } else {
-    eligibleCount = await prisma.standing.count({
-      where: { mode: mode as StandingsMode, tier, cyclesInTier: { gte: minCyclesForMode } },
-    });
-    hasEnoughRobots = eligibleCount >= MIN_ROBOTS_FOR_REBALANCING;
-  }
+  const preview = await getLeagueTierPreview(
+    mode as StandingsMode,
+    tier,
+    leagueRules,
+    instance,
+  );
+  const selectedInstancePlan = instance
+    ? preview.instancePlansById.get(instance)
+    : undefined;
+  const instancePlans = selectedInstancePlan
+    ? [selectedInstancePlan]
+    : instance
+      ? []
+      : preview.plan.instancePlans;
+  const minLP = leagueRules.promotionMinLPOverride
+    ?? instancePlans[0]?.minPromotionLP
+    ?? getMinLPForPromotion(tier);
+  const eligibleCount = instancePlans.reduce((sum, plan) => sum + plan.eligibleEntities, 0);
+  const totalInstances = instancePlans.length;
+  const instancesBelowMinimum = instancePlans.filter((plan) => !plan.hasEnoughEntities).length;
+  const activeInstances = totalInstances - instancesBelowMinimum;
+  const hasEnoughRobots = totalInstances > 0 && instancesBelowMinimum === 0;
+  const smallestInstancePopulation = instancePlans.length > 0
+    ? Math.min(...instancePlans.map((plan) => plan.totalEntities))
+    : 0;
+  const promotionCount = instancePlans.reduce((sum, plan) => sum + plan.promotionSlots, 0);
+  const demotionCount = instancePlans.reduce((sum, plan) => sum + plan.demotionSlots, 0);
+  const isChampion = tier === leagueRules.tiers[leagueRules.tiers.length - 1];
+  const isBronze = tier === leagueRules.tiers[0];
+  const promotionRobotIds = preview.effectivePromotionEntityIds;
+  const demotionRobotIds = preview.demotionEntityIds;
 
   const standings = standingRows.map((s) => {
     const robot = robotMap.get(s.entityId);
@@ -140,7 +121,7 @@ router.get('/:tier/standings', validateRequest({ params: leagueTierParamsSchema 
       fame: robot?.fame ?? 0,
       userId: robot?.user?.id ?? 0,
       cyclesInCurrentLeague: s.cyclesInTier,
-      eligible: s.cyclesInTier >= minCyclesForMode,
+      eligible: s.cyclesInTier >= leagueRules.minCyclesForRebalancing,
       isSubscribed: subscribedRobotIds.has(s.entityId),
       user: {
         username: robot?.user?.username ?? 'Unknown',
@@ -166,12 +147,25 @@ router.get('/:tier/standings', validateRequest({ params: leagueTierParamsSchema 
     zoneMeta: {
       tier,
       minLP,
-      minCycles: minCyclesForMode,
-      minRobotsRequired: MIN_ROBOTS_FOR_REBALANCING,
+      minCycles: leagueRules.minCyclesForRebalancing,
+      minRobotsRequired: leagueRules.minEntitiesForRebalancing,
       eligibleCount,
       hasEnoughRobots,
       promotionSlots: promotionCount,
       demotionSlots: demotionCount,
+      promotionCandidates: instancePlans.reduce(
+        (sum, plan) => sum + plan.promotionCandidates.length,
+        0,
+      ),
+      effectivePromotionCandidates: preview.plan.promotionBlockReason
+        ? 0
+        : instancePlans.reduce((sum, plan) => sum + plan.promotionCandidates.length, 0),
+      promotionBlockReason: preview.plan.promotionBlockReason,
+      totalEntities: instancePlans.reduce((sum, plan) => sum + plan.totalEntities, 0),
+      totalInstances,
+      activeInstances,
+      instancesBelowMinimum,
+      smallestInstancePopulation,
       isChampion,
       isBronze,
     },

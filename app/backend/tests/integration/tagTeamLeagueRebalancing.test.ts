@@ -4,8 +4,8 @@
  * Tests league rebalancing with varying league points using the TeamBattle model.
  *
  * This test verifies:
- * - Top 10% of eligible teams are promoted (minimum 5 cycles in tier, per-tier LP threshold)
- * - Bottom 10% of eligible teams are demoted (minimum 5 cycles in tier)
+ * - Fixed top/bottom 10% zones use the complete instance population
+ * - Residency and LP filters apply inside those positions without backfill
  * - Teams with < 5 cycles are not eligible for promotion or demotion
  * - A tier below `MIN_TEAMS_FOR_REBALANCING` moves nobody
  *
@@ -27,9 +27,9 @@
  * Two fixture facts also had to be established rather than assumed, because both gate
  * the engine and neither was ever written to the database:
  *
- *  - `cyclesInTier` — `leagueEngine` counts only entities with at least
- *    `MIN_CYCLES_IN_LEAGUE_FOR_REBALANCING` (5) as eligible, and takes 10% of the
- *    ELIGIBLE count, not of the tier total.
+ *  - `cyclesInTier` — fixed zones use the complete instance population, then
+ *    `leagueEngine` filters those positions by the five-cycle residency rule.
+ *    An ineligible position is never backfilled from below the zone.
  *  - The destination-cohort rule — `leagueEngine` holds promotions entirely when the
  *    destination tier is empty and there are fewer than `MIN_COHORT_FOR_NEW_TIER` (3)
  *    candidates. That is why the promotion test uses 30 teams and not 20: 10% of 20 is 2
@@ -188,7 +188,8 @@ describe('Tag Team League Rebalancing Integration Test', () => {
     // Step 2: Run rebalancing
     const rebalanceResult = await rebalanceTagTeamLeagues();
 
-    // Step 3: Top 10% of 30 eligible teams = 3, all of which clear the 25 LP threshold.
+    // Step 3: The fixed top 10% of the 30-team instance is 3 positions.
+    // All three clear the residency and 25 LP gates.
     const expectedPromotions = 3;
     expect(rebalanceResult.totalPromoted).toBe(expectedPromotions);
     expect(await countTeamsInTier(teamIds, 'silver')).toBe(expectedPromotions);
@@ -350,7 +351,7 @@ describe('Tag Team League Rebalancing Integration Test', () => {
     const teamIds = teams.map((t) => t.id);
     const rebalanceResult = await rebalanceTagTeamLeagues();
 
-    // Bottom 10% of 10 eligible teams = 1.
+    // Bottom fixed 10% zone of the complete 10-team instance = 1.
     const expectedDemotions = 1;
     expect(rebalanceResult.totalDemoted).toBe(expectedDemotions);
     expect(rebalanceResult.totalPromoted).toBe(0); // none reach 50 LP
@@ -367,14 +368,8 @@ describe('Tag Team League Rebalancing Integration Test', () => {
     await prisma.user.deleteMany({ where: { id: { in: users.map((u) => u.id) } } });
   });
 
-  /**
-   * Renamed from "minimum team count for rebalancing (< 10 teams)". There is no minimum
-   * of 10: `MIN_TEAMS_FOR_REBALANCING` is 4, so a 5-team tier is above the floor and is
-   * processed. What actually holds the teams in place is the percentage flooring —
-   * `Math.floor(5 * 0.10)` is 0 — which is a different rule with a different boundary,
-   * and the old name pointed a reader at the wrong one.
-   */
-  it('should move nobody when 10% of the tier floors to zero', async () => {
+  /** Five teams are below the canonical minimum instance population of ten. */
+  it('should move nobody when the instance is below the minimum population', async () => {
     const users: CreatedUser[] = [];
     const robots: CreatedRobot[] = [];
     const teams: CreatedTeam[] = [];
@@ -426,8 +421,8 @@ describe('Tag Team League Rebalancing Integration Test', () => {
       });
       teams.push(team);
 
-      // Eligible on cycles, and above the gold threshold of 75, so nothing but the
-      // percentage floor prevents a promotion.
+      // Eligible on cycles and above the gold threshold of 75; the instance
+      // population gate is the only rule preventing a move.
       await enterTeamStanding(team.id, 'tag_team', {
         tier: 'gold',
         leagueInstanceId: 'gold_1',

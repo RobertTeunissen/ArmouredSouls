@@ -1,5 +1,4 @@
 import { useNavigate } from 'react-router-dom';
-import Navigation from '../components/Navigation';
 import RobotImage from '../components/RobotImage';
 import ConfirmationModal from '../components/ConfirmationModal';
 import ViewModeToggle from '../components/ViewModeToggle';
@@ -50,7 +49,6 @@ function RobotsPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0e14] text-white">
-      <Navigation />
 
       <div className="container mx-auto px-4 py-8 pb-24 lg:pb-8">
         {/* Onboarding banner */}

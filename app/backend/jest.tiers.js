@@ -103,6 +103,8 @@ const HEAVY_TESTS = [
 const DB_DEPENDENT = [
   'tests/auditSequenceConcurrency.test.ts',
   'src/__tests__/guide/guide-routes.test.ts',
+  'src/routes/__tests__/search.integration.test.ts',
+  'src/routes/__tests__/adminSearchAnalytics.integration.test.ts',
   'src/__tests__/incomeMultipliers.test.ts',
   'src/services/economy/__tests__/unifiedFacilityROI.bugcondition.property.test.ts',
   'src/services/economy/__tests__/unifiedFacilityROI.integration.test.ts',

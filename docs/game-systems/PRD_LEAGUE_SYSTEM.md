@@ -1,14 +1,15 @@
 # Product Requirements Document: League System
 
-**Last Updated**: September 1, 2026
+**Last Updated**: September 12, 2026
 **Status**: ✅ Implemented  
 **Owner**: Robert Teunissen  
 **Epic**: League Progression System  
-**Version**: 2.1
+**Version**: 2.3
 
 ---
 
 ## Version History
+- v2.3 (September 12, 2026) — Unified `league_1v1`, `league_2v2`, `league_3v3`, and `tag_team` behind one policy and planner. Zones now use complete instance population and fixed positions before LP/residency filters; standings previews and history reporting use the same mode-aware results.
 - v2.2 (September 1, 2026) — Spec #50 shared Bye_Card display, durable bye markers, expected/awarded reward display, and all-mode Match/Battle treatment.
 - v2.1 (April 18, 2026) — Per-tier LP promotion thresholds: Bronze 25, Silver 50, Gold 75, Platinum 100, Diamond 125. Replaces flat 25 LP threshold for all tiers.
 - v2.0 (April 2, 2026) — Consolidated from three separate documents (`LEAGUE_SYSTEM_IMPLEMENTATION_GUIDE.md`, `PRD_LEAGUE_PROMOTION.md`, `PRD_LEAGUE_REBALANCING.md`) and the LP matchmaking addendum (`PRD_MATCHMAKING_LP_UPDATE.md`). Removed proposed-but-not-implemented features (PromotionHistory model, Team2v2 model, instance change tracking, UI mockups for non-existent pages). Updated file paths to reflect backend service consolidation.
@@ -19,9 +20,9 @@
 
 ## Executive Summary
 
-The league system provides competitive progression through 6 tiers with instance-based management. Robots compete within league instances (max 100 per instance), earn League Points from matches, and are promoted or demoted based on performance within their specific instance.
+The league system provides competitive progression through six tiers with instance-based management. The four head-to-head modes—1v1 League, 2v2 League, 3v3 League, and Tag Team—share one policy, planner, and execution pipeline. Every mode uses the same 100-entity instance capacity, LP thresholds, 10% zones, five-cycle residency rule, and empty-destination cohort rule.
 
-The system is intentionally simple: instance-based evaluation, LP retention across tier changes, and automatic demotion protection via a 5-cycle eligibility requirement.
+Promotion and demotion zones are positional. Their size is calculated from the complete population of each instance; LP and residency requirements are then applied only inside those fixed positions. An ineligible entity never causes a lower-ranked entity outside the zone to backfill it.
 
 ---
 
@@ -53,9 +54,11 @@ ELO (K=32, starting 1200) is used for matchmaking quality and seeding, not for p
 
 ### Promotion Requirements (all three must be met)
 
-1. Top 10% of robots within the specific instance (not the entire tier)
-2. League Points at or above the per-tier threshold (see table below)
-3. ≥5 cycles in current tier
+1. The entity occupies one of the fixed top 10% positions in its specific instance
+2. League Points are at or above the source-tier threshold
+3. The entity has completed ≥5 cycles in its current tier
+
+Zone size is `floor(total instance population × 0.10)`. The planner creates one canonical ranking sorted by LP descending, then entity ID ascending as a deterministic tie-break. Promotion takes the first positions from that ranking, then applies LP and residency without backfill.
 
 #### Per-Tier LP Thresholds
 
@@ -69,21 +72,26 @@ ELO (K=32, starting 1200) is used for matchmaking quality and seeding, not for p
 
 ### Demotion Requirements (both must be met)
 
-1. Bottom 10% of robots within the specific instance
-2. ≥5 cycles in current tier
+1. The entity occupies one of the fixed bottom 10% positions in its specific instance
+2. The entity has completed ≥5 cycles in its current tier
+
+The planner takes the demotion zone from the tail of that same canonical LP-descending, entity-ID-ascending ranking and reverses it, so the lowest-ranked entity appears first. Residency is applied inside the fixed bottom zone without backfill. Because promotion and demotion come from opposite ends of one list, tied entities cannot occupy both zones.
 
 ### Key Rules
 
+- The policy applies identically to `league_1v1`, `league_2v2`, `league_3v3`, and `tag_team`
 - LP is retained across tier changes (no reset to 0)
-- `cyclesInCurrentLeague` resets to 0 on promotion or demotion
-- This provides automatic demotion protection: newly promoted robots get 5 cycles to adapt
-- Cannot demote from Bronze (lowest tier) or promote from Champion (highest tier)
-- Minimum 10 eligible robots in an instance for promotion/demotion to trigger
-- Promotions and demotions are processed per-instance, not per-tier
+- `cyclesInTier` resets to 0 on promotion or demotion
+- Newly moved entities therefore receive five cycles of movement protection
+- Bronze cannot demote and Champion cannot promote
+- An instance needs at least 10 total entities before either zone is created
+- Promotions and demotions are planned per instance
+- If the destination tier is empty, all source-instance candidates are combined; at least 3 are required to open it
+- A blocked empty-tier cohort is shown as blocked in the standings preview and is not executed
 
-### Tag Team Leagues
+### Shared Head-to-Head Implementation
 
-Tag team leagues follow identical rules using the `TagTeam` model with `tagTeamLeague`, `tagTeamLeagueId`, and `tagTeamLeaguePoints` fields. The tag team rebalancing service mirrors the 1v1 service.
+The four modes call `planLeagueInstanceRebalancing` and `planLeagueTierRebalancing` with `HEAD_TO_HEAD_LEAGUE_RULES`. Mode adapters handle persistence, locks, history, and mode-specific achievements only; they do not redefine promotion arithmetic.
 
 ---
 
@@ -126,9 +134,9 @@ The shared card shows BYE, the mode, the real subject, scheduled/resolution time
 
 ## Instance Rebalancing
 
-### Trigger
+### Execution
 
-Rebalancing only occurs when any instance in a tier exceeds 100 robots. It does not trigger for population imbalances below that threshold — natural placement (promoted/demoted robots go to the instance with the most free spots) keeps instances balanced without forced redistribution.
+After each promotion/demotion run, every tier is redistributed from its complete post-movement population. The target instance count is `ceil(totalEntities / 100)` for all four head-to-head modes, and LP-descending rows are assigned round-robin. This both enforces the 100-entity capacity and corrects material population imbalances; redistribution is not overflow-only.
 
 ### Algorithm
 
@@ -141,7 +149,7 @@ Round-robin ensures each instance gets a mix of high, medium, and low LP robots,
 
 ### When It Runs
 
-Rebalancing is checked after each promotion/demotion cycle. The cycle scheduler calls `rebalanceLeagues()` which iterates through all tiers and checks if any instance exceeds the threshold.
+The cycle scheduler calls the shared league executor after each promotion/demotion cycle. It snapshots every tier before movement, executes those fixed plans, then redistributes every tier's post-movement population.
 
 ### What's Preserved
 
@@ -154,28 +162,27 @@ Rebalancing is checked after each promotion/demotion cycle. The cycle scheduler 
 
 ## Configuration Constants
 
-### Promotion/Demotion (`services/league/leagueRebalancingService.ts`)
+### Promotion/Demotion (`services/league/league-rules.ts`)
 
 ```typescript
-const PROMOTION_LP_THRESHOLDS: Record<string, number> = {
-  bronze: 25,     // Bronze → Silver
-  silver: 50,     // Silver → Gold
-  gold: 75,       // Gold → Platinum
-  platinum: 100,  // Platinum → Diamond
-  diamond: 125,   // Diamond → Champion
-  champion: Infinity,
+export const HEAD_TO_HEAD_LEAGUE_RULES = {
+  tiers: LEAGUE_TIERS,
+  promotionPercentage: 0.10,
+  demotionPercentage: 0.10,
+  minCyclesForRebalancing: 5,
+  minEntitiesForRebalancing: 10,
+  minCohortForNewTier: 3,
 };
-const PROMOTION_PERCENTAGE = 0.10;           // Top 10%
-const DEMOTION_PERCENTAGE = 0.10;            // Bottom 10%
-const MIN_CYCLES_IN_LEAGUE_FOR_REBALANCING = 5;
-const MIN_ROBOTS_FOR_REBALANCING = 10;
 ```
+
+Per-tier LP thresholds remain declared once in `services/league/leaguePromotionThresholds.ts`.
 
 ### Instance Management (`services/league/leagueInstanceService.ts`)
 
 ```typescript
 export const MAX_ROBOTS_PER_INSTANCE = 100;
-export const REBALANCE_THRESHOLD = 20;  // Historical, not actively used
+export const MAX_TEAMS_PER_INSTANCE = 100;
+export const REBALANCE_THRESHOLD = 20;
 export const LEAGUE_TIERS = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'] as const;
 ```
 
@@ -197,10 +204,14 @@ All paths relative to `app/backend/src/`.
 
 | File | Responsibility |
 |---|---|
-| `services/league/leagueRebalancingService.ts` | 1v1 promotion/demotion logic, tier rebalancing orchestration |
-| `services/league/leagueInstanceService.ts` | Instance CRUD, population stats, round-robin rebalancing |
-| `services/tag-team/tagTeamLeagueRebalancingService.ts` | Tag team promotion/demotion (mirrors 1v1 logic) |
-| `services/tag-team/tagTeamLeagueInstanceService.ts` | Tag team instance management |
+| `services/league/league-rules.ts` | Canonical rules shared by all four head-to-head modes |
+| `services/league/league-rebalancing-planner.ts` | Pure fixed-zone, no-backfill, and cohort planner |
+| `services/league/league-rebalancing-preview.ts` | Standings preview built from the execution planner |
+| `services/league/leagueEngine.ts` | Shared execution pipeline for all mode adapters |
+| `services/league/leagueRebalancingService.ts` | 1v1 adapter and orchestration |
+| `services/team-battle/teamBattleAdapter.ts` | 2v2/3v3 persistence adapter |
+| `services/tag-team/tagTeamLeagueRebalancingService.ts` | Tag Team adapter and orchestration |
+| `services/league/leagueInstanceService.ts` | Canonical 100-entity capacity and instance management |
 | `services/analytics/matchmakingService.ts` | LP-primary matchmaking, robot pairing, scheduled match creation |
 | `services/tag-team/tagTeamMatchmakingService.ts` | Tag team matchmaking |
 
@@ -219,8 +230,8 @@ All paths relative to `app/backend/src/`.
 ### Rebalancing
 
 - All instances overcrowded (e.g., 3 instances at 105 each = 315 total): Rebalances into `ceil(315/100) = 4` instances
-- Single robot over threshold (101): Still triggers rebalancing
-- Uneven populations below threshold (e.g., 95 and 45): No rebalancing — natural placement handles it
+- Single entity over capacity (101): Rebalances into two instances
+- Uneven populations below capacity (e.g., 95 and 45): Rebalances the complete 140-entity tier into two 70-entity instances
 
 ### Matchmaking
 
@@ -234,9 +245,7 @@ All paths relative to `app/backend/src/`.
 
 These are design ideas documented for future consideration:
 
-- Promotion/demotion history tracking (PromotionHistory model)
-- Instance consolidation for underpopulated instances (<20 robots)
-- UI promotion zone indicators with LP progress bars
+- Instance consolidation for underpopulated instances (<20 entities)
 - Promotion/demotion notifications
 
 ---

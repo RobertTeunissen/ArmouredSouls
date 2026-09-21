@@ -16,9 +16,9 @@ import { enterRobotStandings } from '../helpers/standings';
  * `getLeagueInstanceStats` sees an empty tier and `rebalanceLeagues` has nothing to
  * promote, which is why the assertions here read "Expected 331, Received 0".
  *
- * `cyclesInTier` matters as much as LP: `leagueEngine` only counts entities with at
- * least 5 cycles in tier as eligible, and the promotion count is 10% of the ELIGIBLE
- * total, not of the tier total.
+ * `cyclesInTier` matters as much as LP: the engine fixes the promotion zone at 10%
+ * of the complete instance population, then applies the five-cycle residency and LP
+ * gates inside those positions without backfill.
  */
 async function enterBronze(
   userId: number,
@@ -196,9 +196,10 @@ describe('Bronze League Rebalancing - Integration Test', () => {
     }
     await prisma.robot.createMany({ data: newRobots });
 
-    // The 100 established robots are eligible (5 cycles in tier); the 250 newcomers are
-    // not (0 cycles). That is what makes the promotion count 10 — 10% of 100 eligible —
-    // rather than 35, and it is the distinction the "new players" narrative describes.
+    // The 100 established robots have five-cycle residency; the 250 newcomers do not.
+    // Newcomers also occupy every position in the fixed top-35 zone because this helper
+    // gives that larger cohort the highest LP range. Residency filtering removes those
+    // positions and must not backfill established robots from below the zone.
     await enterBronze(user.id, 'Initial Robot ', 5);
     await enterBronze(user.id, 'New Robot ', 0);
 
@@ -216,8 +217,8 @@ describe('Bronze League Rebalancing - Integration Test', () => {
     // Verify distribution after rebalancing
     const afterStats = await getLeagueInstanceStats('bronze');
     
-    // 10 robots promoted (10% of 100 eligible), so 340 remain in bronze
-    expect(afterStats.totalRobots).toBe(340);
+    // No promotions: all 35 fixed-zone positions are non-residents and no backfill occurs.
+    expect(afterStats.totalRobots).toBe(350);
     
     // Should be distributed across multiple instances
     expect(afterStats.instances.length).toBeGreaterThan(1);

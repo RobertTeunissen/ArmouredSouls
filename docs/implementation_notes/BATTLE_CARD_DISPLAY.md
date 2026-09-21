@@ -38,7 +38,7 @@ The credit line is `credits + streamingRevenue`, exactly once. Bye records norma
 
 Each instance carries `displayInstanceKey`, `perspectiveRobotId`, `perspectiveRobotIds`, and, for side-grouped records, `perspectiveTeamId`. Keys include the source Battle id and the explicit team or robot perspective, for example `battle:<id>:team:<team>` or `battle:<id>:robot:<robotId>`. A source Battle id alone is therefore never used to collapse distinct stable-owned perspectives.
 
-`RecentBattles` and `BattleHistoryPage` pass the explicit instance perspective through `getBattlePerspective` and `getBattleEconomicDisplay` into `CompactBattleCard`. Dashboard, Battle History, and Robot Detail consequently use the same aggregation boundary.
+`RecentBattles` and `BattleHistoryPage` pass the explicit instance perspective through `getBattlePerspective` and `getBattleEconomicDisplay` into `CompactBattleCard`. Dashboard, Battle History, and Robot Detail consequently use the same aggregation boundary. For Placement_Mode cards, `CompactBattleCard` resolves the displayed placement from the selected robot's `participants[]` record, falling back to the legacy battle-level field only when participant data is unavailable.
 
 ## Upcoming Match expansion and bye subjects
 

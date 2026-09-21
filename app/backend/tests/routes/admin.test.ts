@@ -187,6 +187,14 @@ jest.mock('../../src/services/moderation/adminUploadsHandler', () => ({
 
 jest.mock('../../src/services/league/leagueHistoryService', () => ({
   __esModule: true,
+  LEAGUE_HISTORY_MODES: [
+    'league_1v1',
+    'league_2v2',
+    'league_3v3',
+    'tag_team',
+    'koth',
+    'grand_melee',
+  ],
   getHistoryByCycleRange: jest.fn(),
   getAggregates: jest.fn(),
   getEntityHistory: jest.fn(),

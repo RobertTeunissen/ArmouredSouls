@@ -3,8 +3,8 @@
  *
  * Sections:
  * 1. Summary cards (total promotions/demotions for most recent cycle)
- * 2. Filter bar (cycle range inputs + entity type dropdown)
- * 3. Per-tier breakdown grid
+ * 2. Filter bar (cycle range, entity type, and mode)
+ * 3. Per-mode/per-tier breakdown grid
  * 4. Paginated events table
  * 5. Timeline slide-over panel (opens on row click)
  * 6. Yo-yo candidates section
@@ -25,6 +25,28 @@ import { ApiError } from '../../utils/ApiError';
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
 
+type LeagueHistoryMode =
+  | 'league_1v1'
+  | 'league_2v2'
+  | 'league_3v3'
+  | 'tag_team'
+  | 'koth'
+  | 'grand_melee';
+
+const MODE_LABELS: Record<LeagueHistoryMode, string> = {
+  league_1v1: '1v1 League',
+  league_2v2: '2v2 League',
+  league_3v3: '3v3 League',
+  tag_team: 'Tag Team',
+  koth: 'King of the Hill',
+  grand_melee: 'Grand Melee',
+};
+
+function formatMode(mode: string | null): string {
+  if (!mode) return 'Legacy / Unknown';
+  return MODE_LABELS[mode as LeagueHistoryMode] ?? mode.replaceAll('_', ' ');
+}
+
 interface LeagueHistoryEvent {
   id: number;
   entityType: string;
@@ -32,6 +54,7 @@ interface LeagueHistoryEvent {
   entityName?: string;
   stableName?: string;
   changeType: string;
+  mode: string | null;
   sourceTier: string;
   destinationTier: string;
   leaguePoints: number;
@@ -40,6 +63,7 @@ interface LeagueHistoryEvent {
 }
 
 interface AggregateResult {
+  mode: string | null;
   tier: string;
   promotions: number;
   demotions: number;
@@ -49,6 +73,7 @@ interface YoYoCandidate {
   entityType: string;
   entityId: number;
   entityName: string;
+  mode: string | null;
   changeCount: number;
   tiersInvolved: string[];
 }
@@ -57,7 +82,7 @@ interface PaginatedResponse {
   data: LeagueHistoryEvent[];
   pagination: {
     page: number;
-    perPage: number;
+    pageSize: number;
     total: number;
     totalPages: number;
   };
@@ -72,6 +97,7 @@ function LeagueHistoryPage(): React.ReactElement {
   const [startCycle, setStartCycle] = useState('1');
   const [endCycle, setEndCycle] = useState('100');
   const [entityType, setEntityType] = useState('');
+  const [mode, setMode] = useState<LeagueHistoryMode | ''>('');
   const [page, setPage] = useState(1);
 
   // Data state
@@ -82,7 +108,12 @@ function LeagueHistoryPage(): React.ReactElement {
   const [error, setError] = useState<string | null>(null);
 
   // Slide-over state
-  const [selectedEntity, setSelectedEntity] = useState<{ type: string; id: number; name: string } | null>(null);
+  const [selectedEntity, setSelectedEntity] = useState<{
+    type: string;
+    id: number;
+    name: string;
+    mode: string | null;
+  } | null>(null);
   const [entityHistory, setEntityHistory] = useState<LeagueHistoryEntry[]>([]);
   const [slideOverOpen, setSlideOverOpen] = useState(false);
 
@@ -101,6 +132,7 @@ function LeagueHistoryPage(): React.ReactElement {
         perPage: 50,
       };
       if (entityType) params.entityType = entityType;
+      if (mode) params.mode = mode;
 
       const data = await api.get<PaginatedResponse>('/api/admin/league-history', { params });
       setEvents(data);
@@ -110,28 +142,31 @@ function LeagueHistoryPage(): React.ReactElement {
     } finally {
       setLoading(false);
     }
-  }, [startCycle, endCycle, entityType, page]);
+  }, [startCycle, endCycle, entityType, mode, page]);
 
   const fetchAggregates = useCallback(async () => {
     try {
       const params: Record<string, string | number> = { startCycle, endCycle };
       if (entityType) params.entityType = entityType;
+      if (mode) params.mode = mode;
 
       const data = await api.get<AggregateResult[]>('/api/admin/league-history/aggregates', { params });
       setAggregates(data);
     } catch {
       // Non-critical — don't block the page
     }
-  }, [startCycle, endCycle, entityType]);
+  }, [startCycle, endCycle, entityType, mode]);
 
   const fetchYoYo = useCallback(async () => {
     try {
-      const data = await api.get<YoYoCandidate[]>('/api/admin/league-history/yo-yo');
+      const params: Record<string, string> = {};
+      if (mode) params.mode = mode;
+      const data = await api.get<YoYoCandidate[]>('/api/admin/league-history/yo-yo', { params });
       setYoyoCandidates(data);
     } catch {
       // Non-critical
     }
-  }, []);
+  }, [mode]);
 
   useEffect(() => {
     fetchEvents();
@@ -148,22 +183,23 @@ function LeagueHistoryPage(): React.ReactElement {
       type: row.entityType,
       id: row.entityId,
       name: row.entityName || `${row.entityType} #${row.entityId}`,
+      mode: row.mode,
     });
     setEntityHistory([]); // Clear stale data immediately
     setSlideOverOpen(true);
 
     try {
-      const data = await api.get<{ data: LeagueHistoryEvent[] } | LeagueHistoryEvent[]>(
+      const data = await api.get<{ data: LeagueHistoryEvent[] }>(
         `/api/admin/league-history/entity/${row.entityType}/${row.entityId}`,
+        { params: row.mode ? { mode: row.mode } : {} },
       );
-      // Endpoint may return either a paginated wrapper or the raw array.
-      const records = Array.isArray(data) ? data : (data.data ?? []);
       setEntityHistory(
-        records.map((r) => ({
-          cycleNumber: r.cycleNumber,
-          destinationTier: r.destinationTier,
-          changeType: r.changeType as 'promotion' | 'demotion',
-          leaguePoints: r.leaguePoints,
+        data.data.map((record) => ({
+          cycleNumber: record.cycleNumber,
+          destinationTier: record.destinationTier,
+          changeType: record.changeType as 'promotion' | 'demotion',
+          leaguePoints: record.leaguePoints,
+          mode: record.mode,
         }))
       );
     } catch {
@@ -246,6 +282,20 @@ function LeagueHistoryPage(): React.ReactElement {
             <option value="team_battle">Team Battles</option>
           </select>
         </div>
+        <div>
+          <label className="block text-xs text-secondary mb-1">Mode</label>
+          <select
+            value={mode}
+            onChange={(event) => setMode(event.target.value as LeagueHistoryMode | '')}
+            className="bg-surface text-white text-sm rounded px-3 py-1.5 border border-white/10"
+            data-testid="mode-select"
+          >
+            <option value="">All modes</option>
+            {Object.entries(MODE_LABELS).map(([value, label]) => (
+              <option key={value} value={value}>{label}</option>
+            ))}
+          </select>
+        </div>
         <button
           type="button"
           onClick={handleFilterApply}
@@ -256,17 +306,21 @@ function LeagueHistoryPage(): React.ReactElement {
         </button>
       </div>
 
-      {/* Per-Tier Breakdown */}
+      {/* Per-Mode / Per-Tier Breakdown */}
       {aggregates.length > 0 && (
         <div data-testid="tier-breakdown">
-          <h3 className="text-sm font-semibold text-secondary mb-3">Per-Tier Breakdown</h3>
+          <h3 className="text-sm font-semibold text-secondary mb-3">Per-Mode / Per-Tier Breakdown</h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-            {aggregates.map((agg) => (
-              <div key={agg.tier} className="bg-surface-elevated rounded-lg p-3 text-center">
-                <div className="text-sm font-semibold text-white capitalize mb-2">{agg.tier}</div>
+            {aggregates.map((aggregate) => (
+              <div
+                key={`${aggregate.mode ?? 'legacy'}:${aggregate.tier}`}
+                className="bg-surface-elevated rounded-lg p-3 text-center"
+              >
+                <div className="text-xs text-secondary mb-1">{formatMode(aggregate.mode)}</div>
+                <div className="text-sm font-semibold text-white capitalize mb-2">{aggregate.tier}</div>
                 <div className="flex justify-center gap-3 text-xs">
-                  <span className="text-green-400">↑{agg.promotions}</span>
-                  <span className="text-red-400">↓{agg.demotions}</span>
+                  <span className="text-green-400">↑{aggregate.promotions}</span>
+                  <span className="text-red-400">↓{aggregate.demotions}</span>
                 </div>
               </div>
             ))}
@@ -294,6 +348,11 @@ function LeagueHistoryPage(): React.ReactElement {
               render: (row) => (
                 <span className="capitalize">{row.entityType.replace('_', ' ')}</span>
               ),
+            },
+            {
+              key: 'mode',
+              label: 'Mode',
+              render: (row) => formatMode(row.mode),
             },
             {
               key: 'changeType',
@@ -352,12 +411,12 @@ function LeagueHistoryPage(): React.ReactElement {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {yoyoCandidates.map((candidate) => (
               <div
-                key={`${candidate.entityType}-${candidate.entityId}`}
+                key={`${candidate.entityType}-${candidate.entityId}-${candidate.mode ?? 'legacy'}`}
                 className="bg-surface-elevated rounded-lg p-4 border border-warning/20"
               >
                 <div className="font-semibold text-white mb-1">{candidate.entityName}</div>
                 <div className="text-xs text-secondary capitalize mb-1">
-                  {candidate.entityType.replace('_', ' ')}
+                  {candidate.entityType.replace('_', ' ')} · {formatMode(candidate.mode)}
                 </div>
                 <div className="text-sm text-warning">
                   {candidate.changeCount} changes
@@ -379,7 +438,9 @@ function LeagueHistoryPage(): React.ReactElement {
           setSelectedEntity(null);
           setEntityHistory([]);
         }}
-        title={selectedEntity ? `${selectedEntity.name} — League Timeline` : 'League Timeline'}
+        title={selectedEntity
+          ? `${selectedEntity.name} — ${formatMode(selectedEntity.mode)} Timeline`
+          : 'League Timeline'}
         width="xl"
       >
         <LeagueTimeline
