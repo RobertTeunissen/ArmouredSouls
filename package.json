@@ -6,7 +6,8 @@
   "packageManager": "pnpm@10.12.1",
   "scripts": {
     "preinstall": "npx only-allow pnpm",
-    "prepare": "husky"
+    "prepare": "husky",
+    "verify:steering": "node .github/scripts/verify-steering.mjs"
   },
   "devDependencies": {
     "husky": "^9.1.7",
