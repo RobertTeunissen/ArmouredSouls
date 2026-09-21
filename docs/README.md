@@ -1,6 +1,6 @@
 # Armoured Souls Documentation
 
-**Last updated**: August 2, 2026
+**Last updated**: September 21, 2026
 
 ## Quick Start
 
@@ -19,7 +19,7 @@ docs/
 ├── architecture/           # How the system works (technical reference)
 │   ├── ARCHITECTURE.md              System overview, tech stack, deployment
 │   ├── DATABASE_SCHEMA.md           Complete Prisma schema reference
-│   ├── PRD_SERVICE_DIRECTORY.md     18 backend service domains + cron schedule
+│   ├── PRD_SERVICE_DIRECTORY.md     36 backend service domains + cron schedule
 │   ├── PRD_SECURITY.md              Security controls and exploit playbook
 │   ├── PRD_BATTLE_DATA_ARCHITECTURE.md  Battle summaries, retention, data model
 │   ├── BATTLE_SIMULATION_ARCHITECTURE.md  Combat engine deep dive
@@ -115,6 +115,11 @@ docs/
 │   ├── TRAINING_FACILITY_REBALANCE.md
 │   ├── WEAPON_CONTROL_IMPLEMENTATION.md
 │   └── README.md                   Section index
+│
+├── implementation_notes/    # Implementation contracts and release evidence
+│   ├── BATTLE_CARD_DISPLAY.md
+│   ├── finance-center-reporting-contract.md
+│   └── financial-ledger-coverage.md
 │
 ├── features/               # Feature specifications
 │   ├── AT_RISK_USERS_FEATURE.md

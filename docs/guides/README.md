@@ -1,6 +1,6 @@
 # Guides
 
-**Last updated**: August 2, 2026
+**Last updated**: September 21, 2026
 
 Practical guides for developers working on Armoured Souls.
 

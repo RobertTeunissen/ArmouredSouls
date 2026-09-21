@@ -1,6 +1,10 @@
 # Backlog — Ideas to Be Specced
 
-Items identified during audits, reviews, and development. Prioritized by impact on player experience and system reliability.
+**Last reviewed**: September 21, 2026
+
+Items identified during audits, reviews, and development. The active ranking contains open work only; completed items are recorded below their historical priority context or in the changelog.
+
+Prioritized by impact on player experience and system reliability.
 
 ---
 
@@ -22,18 +26,17 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 | 10 | Arena / Terrain Modifiers | 12 | 1 🗳️ | 3 | 1 | 2 | 4 | **1.5** |
 | 11 | Modular Package Extraction | 35 | 0 🗳️ | 1 | 1 | 2 | 3 | **1.3** |
 | 12 | Robot Detail Page Split | 37 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
-| 13 | Universal Search / Command Palette | 27 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
-| 14 | Progressive Feature Disclosure | 28 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
-| 15 | Weapon Crafting System | 29 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
-| 16 | Conditional Battle Triggers / AI Scripting | 32 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
-| 17 | Future Revenue Streams | 33 | 0 🗳️ | 2 | 1 | 1 | 4 | **1.0** |
-| 18 | Player Marketplace | 44 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
-| 19 | Social Features (Friends, Guilds, Chat) | 45 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
-| 20 | Prestige Store | 47 | 0 🗳️ | 2 | 1 | 1 | 4 | **1.0** |
-| 21 | Blueprint Library | 48 | 0 🗳️ | 1 | 1 | 1 | 3 | **1.0** |
-| 22 | Cosmetic Customization System | 46 | 0 🗳️ | 2 | 1 | 1 | 5 | **0.8** |
-| 23 | Matchup-Dependent Weapon Effectiveness | 58 | 0 🗳️ | 3 | 1 | 2 | 5 | **1.2** |
-| 24 | Dashboard Mobile Optimisation | 60 | 0 🗳️ | 3 | 2 | 2 | 3 | **2.3** |
+| 13 | Progressive Feature Disclosure | 28 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
+| 14 | Weapon Crafting System | 29 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
+| 15 | Conditional Battle Triggers / AI Scripting | 32 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
+| 16 | Future Revenue Streams | 33 | 0 🗳️ | 2 | 1 | 1 | 4 | **1.0** |
+| 17 | Player Marketplace | 44 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
+| 18 | Social Features (Friends, Guilds, Chat) | 45 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
+| 19 | Prestige Store | 47 | 0 🗳️ | 2 | 1 | 1 | 4 | **1.0** |
+| 20 | Blueprint Library | 48 | 0 🗳️ | 1 | 1 | 1 | 3 | **1.0** |
+| 21 | Cosmetic Customization System | 46 | 0 🗳️ | 2 | 1 | 1 | 5 | **0.8** |
+| 22 | Matchup-Dependent Weapon Effectiveness | 58 | 0 🗳️ | 3 | 1 | 2 | 5 | **1.2** |
+| 23 | Dashboard Mobile Optimisation | 60 | 0 🗳️ | 3 | 2 | 2 | 3 | **2.3** |
 
 ---
 
@@ -46,7 +49,7 @@ The current front page is just a login and registration module. New visitors hav
 ### #6 — Game Loop Audit — Remaining Gaps
 **Source**: Design review  
 **Priority**: Medium — most loops are now addressed; remaining gaps are late-game and social  
-**Progress (Aug 2026)**: Loop 1 (Core), Loop 3 (Competitive), Loop 4 (Reputation), Loop 6 (Facility Investment), and the experimentation/seasonal missing loops are all addressed by shipped specs (#25, #27, #31, #33, #34, #35, #37, #38, #44, #45). What remains:
+**Progress (September 2026):** Loop 1 (Core), Loop 3 (Competitive), Loop 4 (Reputation), Loop 6 (Facility Investment), and the experimentation/seasonal missing loops are addressed by shipped specs (#25, #27, #31, #33, #34, #35, #37, #38, #44, #45). What remains:
 
 **Loop 2: Economic Loop — late-season credit drain.** The Season System (Spec #45) solves infinite accumulation by hard-resetting every 100 cycles, and the Income Dashboard makes ROI visible. But *within* a season, once facilities and attributes are maxed (~cycle 60-70), credits pile up with no meaningful sink. Weapon Refinement helps but caps out.
 - Fix candidates: Weapon Special Properties (#11), Weapon Crafting (#29), Prestige Store (#47), or any recurring consumable/cosmetic credit drain.
@@ -93,14 +96,6 @@ Two archetypes: "just let me fight" vs "show me everything." Per the [Prestige &
 
 Tournament wins/trophy display, loading skeletons, notification toasts. If fame cosmetics (titles, visual indicators) are implemented via #8, the dashboard should display them.
 
-### #27 — Universal Search / Command Palette (Cmd+K)
-**Source**: Deleted navigation analysis doc, backlog triage  
-**Priority**: Delivered MVP — improves discoverability across the entire app
-
-**Delivered MVP**: An authenticated, search-only palette searches robots by `Robot.name`, stables by trimmed non-empty `User.stableName`, and guide articles through the existing `Guide_Search_Index`. The shared post-onboarding `PlayerShell` provides one palette across player routes, with a visible Search control in the desktop navbar and a visible search control in the mobile fixed top header. Recent searches remain browser-local. Admin-only active-season Search Analytics provides bounded reports and is purged during `Season_Rollover` without cross-season retention.
-
-**Deferred**: players/`username`, teams, weapons, navigation pages/actions, battle history/reports, commands, fuzzy matching, click/selection tracking, and cross-season analytics.
-
 ### #28 — Progressive Feature Disclosure
 **Source**: Deleted navigation analysis doc  
 **Priority**: Low — reduces new player overwhelm
@@ -146,29 +141,20 @@ Player-to-player weapon trading marketplace. Players list weapons for sale at th
 **Source**: Removed from navbar — unimplemented pages (`/friends`, `/notifications`, `/guilds`, `/guild`, `/guild/manage`, `/chat`)  
 **Priority**: Not scoped — large feature set, low player demand so far
 
-Full social layer: friend lists, in-game notifications, guild creation/management, and guild chat. It could enable guild-vs-guild competitions, shared facilities, and social retention loops. The scope is intentionally split into four incremental phases below.
+Full social layer: friend lists, in-game notifications, guild creation/management, guild chat. Would enable guild-vs-guild competitions, shared facilities, and social retention loops. Large scope — broken into four incremental phases below.
 
-**Current state (verified Sep 2026)**: No persisted per-user social notification, friendship, guild, or chat infrastructure exists: there is no `Notification`, `Friendship`, `Guild`, `GuildMember`, `Message`, or `Channel` model; no inbox API; and no WebSocket/SSE layer. Phase 1 is therefore not partially complete.
+**Current state (September 2026):** No in-game social infrastructure exists. There is no notification inbox, friends/guild model, or realtime player-chat layer. What does exist: public stable profiles (`/stables/:userId`), leaderboards, Team Battles, dashboard readiness notifications, and operational Discord webhooks. The current branch has no social routes for friends, guilds, chat, marketplace, customization, blueprints, prestige store, or robot comparison.
 
-**Adjacent work that is live, but does not satisfy Phase 1**:
-- Public stable profiles (`/stables/:userId`) and leaderboards provide player discovery; Team Battles provide persistent robot groups.
-- The Dashboard displays transient tier-change banners and recent tournament champion notices; achievement toasts and the season-summary modal are separate, purpose-built flows. None has durable per-user inbox history, read/dismiss state, or common delivery semantics.
-- `notificationsBattle` and `notificationsLeague` are persisted on `User` and accepted by the profile API, but no notification producer reads them and ProfilePage does not expose controls for them.
-- `services/notifications/` dispatches operational/public Discord webhook messages after scheduler jobs. It is not a player notification service and must remain separate from one.
-
-**Risk**: At current player count, friends lists and guild chat risk being a ghost town. In-game notifications have standalone value regardless of population. The signal to start Phase 2+ is players actively visiting each other's stable profiles and recognizing names on leaderboards. Scale: < 1000 concurrent users, single VPS.
+**Risk**: At current player count, friends lists and guild chat risk being a ghost town. In-game notifications have standalone value regardless of population. The signal to start Phase 2+ is players actively visiting each other's stable profiles and recognizing names on leaderboards.
 
 #### Recommended Build Order
 
 **Phase 1: In-Game Notification System** (small-medium, ~2-3 days)
-- Highest standalone value, no social critical-mass problem, and the foundation for every later phase. This phase remains unimplemented.
-- Schema: `Notification` table with recipient `userId`, closed `type`, title, body, typed metadata JSON, read/dismiss state, timestamps, and recipient/timestamp indexes. Types: `battle_result`, `league_promotion`, `league_demotion`, `tournament_result`, `achievement_unlocked`, `season_rollover`. Define reset/season-rollover retention deliberately.
-- Backend: a dedicated in-game notification service (do not reuse the Discord dispatcher) called from battle results, promotion/demotion, tournament completion, achievement awards, and season rollover. Use source-event idempotency so retries cannot duplicate notifications; make creation observable/retriable without corrupting completed gameplay.
-- Preferences: apply the existing battle and league flags to their respective notifications. Decide explicitly whether tournament, achievement, and season notifications are always in-app or need additional preferences.
-- REST: authenticated, paginated/latest inbox fetch with unread count; mark-one-read; and bulk read/dismiss. All reads and mutations must be scoped to the authenticated user and validated with Zod.
-- Frontend: a navigation bell with unread badge and either a dropdown or protected `/notifications` page; loading, empty, and error states; read/dismiss interactions; and ProfilePage controls for the existing preferences.
-- Delivery: start with bounded polling plus visibility/refocus refresh, matching current infrastructure. WebSocket/SSE is a separate future concern.
-- Tests: producer/type coverage, preference suppression, source-event idempotency, ownership isolation, API lifecycle and validation, and UI polling/badge/preference behavior.
+- Highest standalone value, no social critical-mass problem, activates the dead preference booleans, and every later phase depends on it.
+- Schema: `Notification` table (userId, type, title, body, metadata JSON, read boolean, createdAt). Types: `battle_result`, `league_promotion`, `league_demotion`, `tournament_result`, `achievement_unlocked`, `season_rollover`.
+- Backend: `NotificationService` that existing orchestrators call after battles/promotions. REST endpoints for fetch/mark-read/bulk-dismiss.
+- Frontend: Bell icon in nav header, dropdown or `/notifications` page, respect existing user preferences.
+- Delivery: Start with polling (matches current infra). WebSocket/SSE upgrade is a separate future concern.
 
 **Phase 2: Friends System** (medium, ~3-4 days) — depends on Phase 1
 - Friend requests (send/accept/reject/cancel), friends list, last-active status, friend activity feed.
@@ -187,7 +173,7 @@ Full social layer: friend lists, in-game notifications, guild creation/managemen
 - Schema: `Message` table (channelId, senderId, content, createdAt), `Channel` table (type: direct/guild, participants).
 - Defer until player count justifies the infrastructure cost — a ghost-town chat is worse than no chat.
 
-**Dependencies**: Phase 1 is independent. Phase 2 needs Phase 1. Phase 3 needs Phases 1+2. Phase 4 needs all three plus real-time infrastructure. To avoid ambiguity with the shipped Season System, refer to this work as **Backlog #45 Social Features**, never just “Spec #45”.
+**Dependencies**: Phase 1 is independent. Phase 2 needs Phase 1. Phase 3 needs Phases 1+2. Phase 4 needs all three plus real-time infra.
 
 ### #46 — Cosmetic Customization System
 **Source**: Removed from navbar — unimplemented pages (`/customize`, `/customize/skins`, `/customize/stable`, `/customize/poses`, `/customize/emotes`)  

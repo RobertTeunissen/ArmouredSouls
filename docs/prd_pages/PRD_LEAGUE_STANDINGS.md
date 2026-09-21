@@ -3,7 +3,7 @@
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
 **Version**: v1.1
-**Date**: September 12, 2026  
+**Date**: September 12, 2026
 **Status**: ✅ Implemented & Verified
 
 ---

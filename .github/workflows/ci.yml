@@ -14,6 +14,22 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
+  steering-guard:
+    name: Steering Metadata and Size Guard
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          package-manager-cache: false
+
+      - name: Verify steering metadata and budgets
+        run: node .github/scripts/verify-steering.mjs
+
   backend-unit-tests:
     name: Backend Unit Tests
     runs-on: ubuntu-latest

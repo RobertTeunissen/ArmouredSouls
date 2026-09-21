@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "maxAlwaysLines": 110,
+  "maxLines": {
+    "always": 60,
+    "fileMatch": 220,
+    "manual": 550
+  },
+  "maxBytes": {
+    "always": 8000,
+    "fileMatch": 14000,
+    "manual": 20000
+  },
+  "modeBudgets": {
+    "manual": {
+      "maxAggregateLines": 400,
+      "maxAggregateBytes": 30000
+    }
+  },
+  "manualBudgets": {
+    ".kiro/steering/environments-and-deployment.md": { "maxLines": 120, "maxBytes": 10000 },
+    ".kiro/steering/git-workflow.md": { "maxLines": 100, "maxBytes": 6000 },
+    ".kiro/steering/monitoring-observability.md": { "maxLines": 80, "maxBytes": 5000 },
+    ".kiro/steering/performance-guidelines.md": { "maxLines": 80, "maxBytes": 5000 },
+    ".kiro/steering/common-tasks.md": { "maxLines": 80, "maxBytes": 4000 },
+    ".kiro/steering/pre-deployment-checklist.md": { "maxLines": 70, "maxBytes": 4000 }
+  },
+  "overlapBudgets": {
+    "maxMatchedFiles": 6,
+    "maxAggregateLines": 200,
+    "maxAggregateBytes": 18000
+  },
+  "representativePaths": [
+    { "name": "backend-route", "path": "app/backend/src/routes/auth.ts" },
+    { "name": "backend-economy-service", "path": "app/backend/src/services/economy/repairService.ts" },
+    { "name": "frontend-page", "path": "app/frontend/src/pages/FinanceCenterPage.tsx" },
+    { "name": "frontend-store", "path": "app/frontend/src/stores/robotStore.ts" },
+    { "name": "test", "path": "app/backend/tests/auth.test.ts" },
+    { "name": "prisma-schema", "path": "app/backend/prisma/schema.prisma" },
+    { "name": "ci-workflow", "path": ".github/workflows/ci.yml" },
+    { "name": "spec", "path": ".kiro/specs/to-do/8-battle-replay-admin/requirements.md" }
+  ]
+}

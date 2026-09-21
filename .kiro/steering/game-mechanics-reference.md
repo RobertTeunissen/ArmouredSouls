@@ -1,169 +1,28 @@
 ---
 inclusion: fileMatch
-fileMatchPattern: "**/game-engine/**,**/services/battle*,**/services/combat*,**/services/matchmaking*,**/services/league*,**/services/cycle*,**/services/economy*,**/services/fame*,**/services/facility*,**/services/tournament*,**/services/team-battle*"
+fileMatchPattern: "**/backend/src/game-engine/**,**/backend/src/services/battle/**,**/backend/src/services/combat/**,**/backend/src/services/matchmaking/**,**/backend/src/services/league/**,**/backend/src/services/cycle/**,**/backend/src/services/economy/**,**/backend/src/services/fame/**,**/backend/src/services/facility/**,**/backend/src/services/tournament/**,**/backend/src/services/team-battle/**"
 ---
 
-# Game Mechanics Quick Reference
+# Game Mechanics Reference
 
-## Core Game Loop
+This file contains only cross-domain mechanics that must be visible while changing game services. Feature rules belong in the relevant PRD; battle, repair, bye, season, and financial invariants belong in `battle-data-architecture.md` and `backend-finance.md`.
 
-1. **Player Actions** - Manage robots, buy weapons, upgrade facilities
-2. **Cycle Processing** - Automated daily/weekly cycles run battles
-3. **Battle Resolution** - Combat system calculates outcomes
-4. **Rewards & Progression** - Credits, fame, league standings update
+## Booking Office and subscriptions
+- The Booking Office gates robot participation in all nine registered events: `league_1v1`, `league_2v2`, `league_3v3`, `tag_team`, `koth`, `grand_melee`, `tournament_1v1`, `tournament_2v2`, and `tournament_3v3`.
+- `SUBSCRIBABLE_EVENT_TYPES` is the source for the event union and Zod schemas. New modes register through `registerSubscribableEvent`.
+- The per-robot cap is `3 + bookingOfficeLevel`; subscriptions are per robot, not per stable.
+- Subscribing is free under the cap. Unsubscribing is free, immediate, and always allowed. A scheduled match keeps its slot until resolved, so accounting is `subscriptions ∪ outstanding obligations`.
+- The shared “does this robot owe a match?” question lives in `services/scheduling/eventScheduleScope`, including pre-battle repair scope. Do not reintroduce per-event locking predicates or `EVENT_SUBSCRIPTION_LOCKED`.
+- All writes use `applySubscriptionChange`; single and bulk subscription endpoints must behave identically. Scheduling changes apply at the next event moment exposed by `nextSchedulingMoments`.
+- Subscription state is active-only; old pending/activation behavior is not a valid state model.
 
-## Key Game Concepts
+## Cycle and team modes
+- All registered battle events run daily; subscriptions gate participation. See `docs/game-systems/PRD_CYCLE_SYSTEM.md` and `PRD_SERVICE_DIRECTORY.md` for cadence.
+- 2v2/3v3 League is simultaneous N-versus-N combat; Tag Team is phased with one active robot per side. Team LP/ELO tracks are separate from robot and tag-team tracks; team ELO is computed from members when matchmaking runs.
+- Team matchmaking and league adapters are shared infrastructure, not per-route implementations. Team-specific effects, rewards, cadence, and API eligibility details belong in `docs/game-systems/PRD_MATCHMAKING.md`.
 
-### Robots
-- Players own multiple robots
-- Each robot has attributes (armor, speed, etc.)
-- Robots can be equipped with weapons
-- Robots participate in battles and earn/lose stats
-- See: `docs/game-systems/PRD_ROBOT_ATTRIBUTES.md`
-
-### Weapons & Loadouts
-- Weapons have different types and stats
-- Robots can equip multiple weapons (loadout)
-- Weapon shop for purchasing
-- See: `docs/game-systems/PRD_WEAPONS_LOADOUT.md`
-
-### Combat System
-- Turn-based battle resolution
-- Damage calculations based on weapons and armor
-- Battle stances affect outcomes
-- See: `docs/architecture/COMBAT_FORMULAS.md`
-
-### League System
-- Multiple leagues (divisions)
-- Promotion and relegation based on performance
-- League Points (LP) determine standings
-- See: `docs/game-systems/PRD_LEAGUE_SYSTEM.md`
-
-### Economy
-- Credits as primary currency
-- Facilities generate income
-- Investments provide returns
-- Repair costs for damaged robots
-- See: `docs/game-systems/PRD_ECONOMY_SYSTEM.md`
-
-### Facilities
-- Players can build/upgrade facilities
-- Facilities provide passive income
-- Different facility types with different benefits
-- See: `docs/prd_pages/PRD_FACILITIES_PAGE.md`
-
-### Event Subscription System (Booking Office)
-- The Booking Office facility gates robot participation in all battle event modes
-- Every matchmaker calls `isRobotSubscribedTo(robotId, eventType)` before pairing or pool inclusion
-- Subscribable events (all nine): `league_1v1`, `league_2v2`, `league_3v3`, `tag_team`, `koth`, `grand_melee`, `tournament_1v1`, `tournament_2v2`, `tournament_3v3` — listed in `SUBSCRIBABLE_EVENT_TYPES`, the tuple the type union and all Zod schemas derive from
-- Per-robot Max_Events_Per_Robot: L0=3, L1=4, L2=5, L3=6, L4=7, L5=8, L6=9, L7=10, L8=11, L9=12, L10=13
-- Formula: `maxSubscriptions = 3 + bookingOfficeLevel`
-- Subscriptions are per-robot, not per-Stable — enables robot specialisation
-- **One rule for every event, no exceptions:** subscribing is free and allowed under the cap; **unsubscribing is free, immediate and always allowed**; a match already on the schedule still runs and keeps its slot occupied until fought
-- Slot accounting is therefore `subscriptions ∪ outstanding obligations`. This is what stops a robot leaving a tournament mid-bracket, spending the freed slot elsewhere, and still fighting out the bracket. A robot eliminated from a bracket owes nothing, so its slot frees immediately
-- The per-event `lockingPredicate` hooks and `EVENT_SUBSCRIPTION_LOCKED` are **gone** — they contradicted each other across events. The one remaining question ("does this robot owe a match?") lives in `services/scheduling/eventScheduleScope`, shared with pre-battle repair scoping
-- Changes take effect at the event's next scheduling moment, exposed as `nextSchedulingMoments` (from `services/scheduling/eventCronSchedule`) and shown in the UI
-- All writes funnel through `applySubscriptionChange`, so a single toggle and the bulk `PUT /api/subscriptions/robot/:robotId` behave identically
-- Subscriptions have a single state. `status` is always `'active'`; the old `pending` state was never written and its activation code was unreachable
-- New event modes register via `registerSubscribableEvent` and become subscribable automatically
-- See: `docs/prd_pages/PRD_FACILITIES_PAGE.md` (Booking Office section)
-
-### Fame & Prestige
-- Fame earned through victories
-- Prestige as long-term progression
-- Affects matchmaking and rewards
-- See: `docs/game-systems/PRD_PRESTIGE_AND_FAME.md`
-
-### Cycle System
-- Automated game progression
-- All battle events run daily (every cycle) — no alternation or weekday restrictions
-- Subscription (Spec 35 Booking Office) gates which events each robot participates in
-- Processes battles, updates standings, distributes rewards
-- See: `docs/game-systems/PRD_CYCLE_SYSTEM.md`
-
-### Matchmaking
-- Pairs robots for battles
-- Considers league, fame, and other factors
-- Aims for balanced matches
-- See: `docs/game-systems/PRD_MATCHMAKING.md`
-
-### Tournaments
-- Special competitive events
-- Bracket-style competition
-- Enhanced rewards
-- See: `docs/game-systems/PRD_TOURNAMENT_SYSTEM.md`
-
-### Team Battles (2v2 and 3v3 League)
-- Simultaneous N-vs-N combat: all robots on both sides active in the arena at the same time
-- Two sizes: 2v2 League (4 robots in arena) and 3v3 League (6 robots in arena)
-- Distinct from Tag Team (phased mode with one active robot per side at a time)
-- Persistent Teams per size, owned by a single stable
-- Team registration uses `hasSubscription()`, now an alias of `isRobotSubscribedTo()`. The two used to differ because subscriptions had an active/pending split, but nothing ever wrote `pending`, so both ask the same question and players can form teams immediately after subscribing
-- Team Coordination Attributes (`syncProtocols`, `supportSystems`, `formationTactics`) drive ally-targeted effects:
-  - `syncProtocols` → Focus Fire damage bonus (max 25%) when 2+ allies target same enemy
-  - `supportSystems` → Ally shield regeneration (max 0.80 shield/sec)
-  - `formationTactics` → Formation damage reduction (max 20%) for allies within 8 grid units
-- Team_LP and Team_ELO per team (independent of robot LP and tag-team LP)
-- Team ELO = sum of member robot ELOs (computed at matchmaking time, not persisted)
-- Credit distribution: even split across all team members (no survivor/destroyed weighting) — all credits go to the stable anyway
-- Rewards: N× multiplier of 1v1 win+participation reward (2× for 2v2, 3× for 3v3)
-- Daily cadence: 2v2 at 09:00 UTC, 3v3 at 14:00 UTC
-- Participation gated by Event Subscription System (Booking Office)
-- Uses shared matchmaking formula from `teamMatchmakingUtils.ts` (LP-primary, ELO-secondary)
-- League promotion/demotion via `leagueEngine.ts` with `teamBattleAdapter`
-- `winnerId` in team battles stores the **team ID** (not robot ID); API uses `battleLog.winningSide` to determine winner
-- Robot model includes `totalLeague1v1Wins`, `totalLeague1v1Losses`, `totalLeague1v1Draws` for 1v1-specific league standings
-- API returns `ineligibilityReason` and `ineligibilityDetail` for INELIGIBLE teams (shown on Dashboard and Team Management page)
-- See: `docs/game-systems/PRD_MATCHMAKING.md` (Team Battle Matchmaking section)
-
-## Important Game Balance Considerations
-
-When modifying game mechanics:
-- **Economy balance** - Ensure income/expenses are sustainable
-- **Combat balance** - No single strategy should dominate
-- **Progression pacing** - Players should feel steady advancement
-- **League distribution** - Players should spread across leagues naturally
-
-See `docs/balance_changes/` for historical balance modifications and rationale.
-
-## Player Archetypes
-
-Different players engage with the game differently:
-- **Competitors** - Focus on winning battles and climbing leagues
-- **Collectors** - Enjoy acquiring robots and weapons
-- **Optimizers** - Min-max strategies and economics
-- **Casual players** - Check in periodically, enjoy progression
-
-See: `docs/PLAYER_ARCHETYPES_GUIDE.md`
-
-## Data Flow
-
-1. **User actions** → API endpoints → Database updates
-2. **Cycle triggers** → Game engine processes → Battle resolution → Database updates
-3. **Frontend requests** → API → Database queries → Response to user
-
-## Critical Systems Interactions
-
-- **Battles affect**: Robot stats, league standings, fame, credits (rewards)
-- **Economy affects**: Ability to buy weapons, upgrade facilities, repair robots
-- **Leagues affect**: Matchmaking, rewards, prestige
-- **Facilities affect**: Income generation, economic sustainability
-- **Fame affects**: Matchmaking, prestige progression
-
-## When Implementing Features
-
-Always consider:
-1. **Impact on game balance** - Will this make the game too easy/hard?
-2. **Economic impact** - Does this affect credit flow?
-3. **Player experience** - Is this fun and engaging?
-4. **System interactions** - What other systems does this affect?
-5. **Edge cases** - What happens in unusual scenarios?
-
-## Testing Game Mechanics
-
-When testing or verifying game mechanics:
-1. Check relevant PRD for expected behavior
-2. Test with various input values
-3. Verify database state changes correctly
-4. Check impact on related systems
-5. Consider edge cases (zero values, maximum values, etc.)
+## Canonical references
+- Combat and loadouts: `docs/architecture/COMBAT_FORMULAS.md`, `docs/game-systems/PRD_WEAPONS_LOADOUT.md`, `docs/game-systems/PRD_ROBOT_ATTRIBUTES.md`.
+- Leagues and matchmaking: `docs/game-systems/PRD_LEAGUE_SYSTEM.md`, `docs/game-systems/PRD_MATCHMAKING.md`.
+- Economy, facilities, fame, prestige, and tournaments: the corresponding PRDs under `docs/game-systems/` and `docs/prd_pages/`.
+- Player-facing mechanics changes must also follow `guide-content-maintenance.md` and update the affected article.

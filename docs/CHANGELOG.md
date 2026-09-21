@@ -1,8 +1,8 @@
 # Armoured Souls — Changelog
 
-**Last Updated**: August 1, 2026
+**Last Updated**: September 21, 2026
 
-Development history organized by phase and month. For the forward-looking roadmap, see [ROADMAP.md](ROADMAP.md).
+Development history organized by phase and month. For planned work, see the [BACKLOG.md](BACKLOG.md).
 
 ---
 
@@ -22,7 +22,7 @@ Development history organized by phase and month. For the forward-looking roadma
 **Started**: January 24, 2026  
 **Status**: Feature-complete, deployed to production VPS
 
-Phase 1 delivered a fully functional game with 4 battle modes, 15 facilities, 47 weapons, a 5-step onboarding tutorial, automated daily cycles, and a production deployment on Scaleway. Development was tracked through 52 Kiro specs (22 in March, 26 in April, 4 in May) plus 23 earlier milestones.
+At the August 1, 2026 snapshot, Phase 1 delivered a fully functional game with four documented battle modes, 15 facilities in the historical delivery summary, 47 weapons, a 5-step onboarding tutorial, automated daily cycles, and a production deployment on Scaleway. Current mode and facility inventories are maintained in the architecture and game-system references; this historical summary is not the current catalog.
 
 ### Core Systems (Jan–Feb 2026)
 
@@ -111,11 +111,11 @@ Phase 1 delivered a fully functional game with 4 battle modes, 15 facilities, 47
 
 | Item | Spec | Summary |
 |---|---|---|
-| Weapon Resale | [Spec #33](/.kiro/specs/done-may26/33-weapon-resale/) | Workshop-level-dependent rate, ₡0–100% recovery |
-| Weapon Refinement | [Spec #34](/.kiro/specs/done-may26/34-weapon-refinement/) | Per-instance permanent upgrades, 4 tiers, 5-slot cap |
-| Booking Office / Event Subscription | [Spec #35](/.kiro/specs/done-may26/35-booking-office-facility/) | Per-robot subscription model gating participation in all battle events |
-| Cron Schedule Restructure | [Spec #36](/.kiro/specs/done-may26/36-cron-schedule-restructure/) | Daily-everything slot map |
-| Team Battles 2v2 and 3v3 (League) | [Spec #37](/.kiro/specs/done-may26/37-team-battles-2v2-3v3/) | Persistent teams, simultaneous combat, shared LP-primary matchmaking |
+| Weapon Resale | [Spec #33](../.kiro/specs/done-may26/33-weapon-resale/) | Workshop-level-dependent rate, ₡0–100% recovery |
+| Weapon Refinement | [Spec #34](../.kiro/specs/done-may26/34-weapon-refinement/) | Per-instance permanent upgrades, 4 tiers, 5-slot cap |
+| Booking Office / Event Subscription | [Spec #35](../.kiro/specs/done-may26/35-booking-office-facility/) | Per-robot subscription model gating participation in all battle events |
+| Cron Schedule Restructure | [Spec #36](../.kiro/specs/done-may26/36-cron-schedule-restructure/) | Daily-everything slot map |
+| Team Battles 2v2 and 3v3 (League) | [Spec #37](../.kiro/specs/done-may26/37-team-battles-2v2-3v3/) | Persistent teams, simultaneous combat, shared LP-primary matchmaking |
 | Untrack Generated Prisma Client | — | 68K lines out of git |
 | HTTP Client Consolidation | — | Typed `api` wrapper everywhere |
 | Console → Structured Logger Migration | — | FE + BE |
@@ -133,13 +133,13 @@ Phase 1 delivered a fully functional game with 4 battle modes, 15 facilities, 47
 
 | Item | Spec | Summary |
 |---|---|---|
-| Team Battle Tournaments (2v2 / 3v3) | [Spec #38](/.kiro/specs/done-june26/38-team-battle-tournaments/) | Single-elimination bracketed tournaments, daily round cadence, coordination effects |
-| Battle Log Retention / TOAST Trim | [Spec #39](/.kiro/specs/to-do/39-battle-log-retention/) | Pre-computed summaries, 7-day retention, nightly cron |
-| Database Unification | [Spec #40](/.kiro/specs/done-june26/40-database-unification/) | Unified standings, financial ledger, leaderboard cache |
-| Unified Match Scheduling | [Spec #41](/.kiro/specs/done-june26/41-unified-match-scheduling/) | Single scheduling table, shared matchmaking pipeline |
-| Tag Team System Unification | [Spec #42](/.kiro/specs/done-june26/42-tag-team-system-unification/) | Tag team as combat mode on 2v2 TeamBattle |
-| Legacy Column Drop (Phase 2) | [Spec #43](/.kiro/specs/to-do/43-legacy-column-drop/) | Spec #40 follow-up |
-| Grand Melee Mode | [Spec #44](/.kiro/specs/to-do/44-grand-melee/) | 20-robot FFA, F1-style placement scoring, full league system |
+| Team Battle Tournaments (2v2 / 3v3) | [Spec #38](../.kiro/specs/done-june26/38-team-battle-tournaments/) | Single-elimination bracketed tournaments, daily round cadence, coordination effects |
+| Battle Log Retention / TOAST Trim | [Spec #39](../.kiro/specs/done-june26/39-battle-log-retention/) | Pre-computed summaries, 7-day retention, nightly cron |
+| Database Unification | [Spec #40](../.kiro/specs/done-june26/40-database-unification/) | Unified standings, financial ledger, leaderboard cache |
+| Unified Match Scheduling | [Spec #41](../.kiro/specs/done-june26/41-unified-match-scheduling/) | Single scheduling table, shared matchmaking pipeline |
+| Tag Team System Unification | [Spec #42](../.kiro/specs/done-june26/42-tag-team-system-unification/) | Tag team as combat mode on 2v2 TeamBattle |
+| Legacy Column Drop (Phase 2) | [Spec #43](../.kiro/specs/done-june26/43-legacy-column-drop/) | Spec #40 follow-up |
+| Grand Melee Mode | [Spec #44](../.kiro/specs/done-june26/44-grand-melee/) | 20-robot FFA, F1-style placement scoring, full league system |
 | Tag Team Battle Time Limit Enforcement | — | Closed as working-as-designed, documented in BATTLE_SIMULATION_ARCHITECTURE.md |
 | Battle Table Denormalization Cleanup | — | 19 deprecated columns dropped (completes Spec #43 Task 6.4) |
 | Mega-Orchestrator Refactor | — | Combat-critical files |
@@ -153,8 +153,24 @@ Phase 1 delivered a fully functional game with 4 battle modes, 15 facilities, 47
 
 | Item | Spec | Summary |
 |---|---|---|
-| Season System | [Spec #45](/.kiro/specs/to-do/45-season-system/) | 100-cycle competitive seasons, 2-cycle prep windows, full archive + reset |
+| Season System | [Spec #45](../.kiro/specs/done-july26/45-season-system/) | 100-cycle competitive seasons, 2-cycle prep windows, full archive + reset |
 | Repair the Integration Test Suite | — | 149→0 compile errors, `typecheck:tests` passes, deleted 3k-line dead test file |
 
 ---
 
+
+## August–September 2026 — Current Implementation Updates
+
+These entries record repository implementation. Acceptance and production release status must be confirmed from deployment records and the live environment; implementation notes deliberately separate those facts.
+
+| Date | Item | Summary |
+|---|---|---|
+| Aug 2 | Dashboard notifications | Added player-facing dashboard readiness and promotion/demotion notifications, with follow-up dashboard and robot-card fixes. |
+| Aug 28 | Spec #49 — Bye System Unification | Unified bye detection, rewards, scheduling, and resolution across the nine scheduled battle modes. |
+| Aug 31–Sep 2 | Spec #51 — Test-Tier Restoration | Restored backend heavy and integration coverage to blocking CI/deployment gates and published the tier-partition evidence. |
+| Sep 2 | Spec #50 — Battle Card Reward Display | Unified Upcoming Matches and Recent Battles display contracts, including durable bye markers and expected/awarded bye rewards. See the [Battle Card Display Contract](implementation_notes/BATTLE_CARD_DISPLAY.md). |
+| Sep 5–6 | Spec #53 — Financial Ledger Coverage | Required paired capture for current-economy credit mutations and preserved immutable legacy history. See the [Financial Ledger Coverage record](implementation_notes/financial-ledger-coverage.md). |
+| Sep 10 | Spec #54 — Finance Center | Implemented the `/income` Finance Center route, reporting contract, historical reads, and compatibility redirects. See the [Finance Center Reporting Contract](implementation_notes/finance-center-reporting-contract.md). |
+| Sep 10–11 | Deployment reliability | Corrected Acceptance readiness checks, PM2 start/reload behavior, stale process recovery, and bounded backend cycle memory. |
+
+The historical Phase 1 summary above reflects the earlier August snapshot. Current stack versions and implementation inventories are maintained in [ARCHITECTURE.md](architecture/ARCHITECTURE.md), the [service directory](architecture/PRD_SERVICE_DIRECTORY.md), and the [documentation index](README.md).

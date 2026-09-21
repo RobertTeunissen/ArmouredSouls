@@ -54,8 +54,8 @@ Armoured Souls is deployed to a production VPS with a full game loop: create rob
 - Monitoring & alerting via Discord webhooks
 
 ### Tech Stack
-- Backend: Node.js 24, TypeScript 5.8, Express 5, Prisma 7, PostgreSQL 17
-- Frontend: React 19, Vite 6, Tailwind CSS 4, Zustand 5, React Router 6
+- Backend: Node.js 24, TypeScript 6, Express 5, Prisma 7, PostgreSQL 17
+- Frontend: React 19, Vite 8, Tailwind CSS 4, Zustand 5, React Router 7
 - Testing: Jest 30 (backend), Vitest 4 (frontend), Playwright (E2E), fast-check (property-based)
 - Infrastructure: Scaleway VPS, Caddy (auto HTTPS), PM2, GitHub Actions CI/CD
 
@@ -70,9 +70,10 @@ ArmouredSouls/
 │   ├── guides/              # Setup, deployment, maintenance
 │   ├── design_ux/           # Design system and brand guidelines
 │   ├── balance_changes/     # Game balance modifications
+│   ├── implementation_notes/ # Implementation contracts and release evidence
 │   └── analysis/            # Feature analysis and planning
 ├── app/
-│   ├── backend/             # Express 5 API (20 domain service directories)
+│   ├── backend/             # Express 5 API (36 service directories)
 │   ├── frontend/            # React 19 SPA
 │   ├── shared/              # Shared utilities (game formulas)
 │   ├── docker-compose.yml   # PostgreSQL for local dev
