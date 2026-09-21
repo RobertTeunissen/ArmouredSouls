@@ -23,6 +23,7 @@ app.use('/api/auth', authRoutes);
 app.use(errorHandler);
 
 // Lower NUM_RUNS since we're testing error paths with mocks
+const NUM_RUNS = 10;
 const VALID_STABLE_NAME = 'Iron Stable';
 
 /**
