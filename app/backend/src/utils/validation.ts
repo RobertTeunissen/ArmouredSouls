@@ -247,6 +247,19 @@ export interface RegistrationRequest {
   stableName: string;
 }
 
+/** Registration fields that can fail validation; `required` means a field was missing. */
+export type RegistrationField = 'required' | 'username' | 'email' | 'password' | 'stableName';
+
+/**
+ * Result of {@link validateRegistrationRequest}.
+ *
+ * @property invalidFields - Constant names of the fields that failed. Safe to log:
+ *   unlike `errors`, nothing in it is derived from the submitted values.
+ */
+export interface RegistrationValidationResult extends ValidationResult {
+  invalidFields: RegistrationField[];
+}
+
 /**
  * Validate a complete registration request.
  *
@@ -276,8 +289,9 @@ export interface RegistrationRequest {
  *
  * Requirements: 3.3, 9.2
  */
-export function validateRegistrationRequest(request: RegistrationRequest): ValidationResult {
+export function validateRegistrationRequest(request: RegistrationRequest): RegistrationValidationResult {
   const errors: string[] = [];
+  const invalidFields: RegistrationField[] = [];
 
   // Early return on missing fields: if any required field is absent, skip
   // individual validation to avoid confusing "too short" errors on empty strings.
@@ -286,6 +300,7 @@ export function validateRegistrationRequest(request: RegistrationRequest): Valid
     return {
       isValid: false,
       errors,
+      invalidFields: ['required'],
     };
   }
 
@@ -294,26 +309,31 @@ export function validateRegistrationRequest(request: RegistrationRequest): Valid
   const usernameResult = validateUsername(request.username);
   if (!usernameResult.isValid) {
     errors.push(...usernameResult.errors);
+    invalidFields.push('username');
   }
 
   const emailResult = validateEmail(request.email);
   if (!emailResult.isValid) {
     errors.push(...emailResult.errors);
+    invalidFields.push('email');
   }
 
   const passwordResult = validateRegistrationPassword(request.password);
   if (!passwordResult.isValid) {
     errors.push(...passwordResult.errors);
+    invalidFields.push('password');
   }
 
   const stableNameResult = validateStableName(request.stableName);
   if (!stableNameResult.valid) {
     errors.push(stableNameResult.error!);
+    invalidFields.push('stableName');
   }
 
   return {
     isValid: errors.length === 0,
     errors,
+    invalidFields,
   };
 }
 

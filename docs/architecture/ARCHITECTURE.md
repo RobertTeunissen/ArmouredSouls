@@ -298,7 +298,7 @@ Legacy `/finances`, `/cycle-summary`, and `/tag-teams` paths redirect to their c
 
 ### Protections
 - Rate limiting: auth, general API, and user-economic limiters
-- CORS: Configurable origin whitelist
+- CORS: explicit origin allowlist from `CORS_ORIGIN`, with credentials enabled. Startup rejects wildcard entries outside development, where a fixed localhost list is used instead.
 - Security headers through Caddy
 - Role-based access control: `user` and `admin` roles
 - Parameterized queries through Prisma

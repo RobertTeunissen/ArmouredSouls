@@ -84,16 +84,15 @@ app.use(helmet({
   referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
 }));
 
-// CORS — production restricts to explicit allowlist from CORS_ORIGIN env var (Req 10.1);
-// development permits all origins for local convenience (Req 10.2).
+// CORS — non-development environments use the explicit allowlist from CORS_ORIGIN (Req 10.1);
+// development uses a fixed localhost list (Req 10.2). Wildcards are rejected at startup
+// by config/env.ts because credentials are enabled, so the allowlist is passed as-is.
 // NOTE (Req 10.4): Currently using JWT in Authorization header, so CSRF is not a concern.
 // If the application transitions to cookie-based token storage in the future, implement
 // CSRF protection using the double-submit cookie pattern or synchronizer token pattern
 // before deploying. See: https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html
 app.use(cors({
-  origin: config.corsOrigins.includes('*')
-    ? true
-    : config.corsOrigins,
+  origin: config.corsOrigins,
   credentials: true,
 }));
 app.use(express.json({ limit: '1mb' }));

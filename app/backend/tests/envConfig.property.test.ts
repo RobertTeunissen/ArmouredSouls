@@ -164,7 +164,8 @@ describe('Environment Config Loading - Property Tests', () => {
             port: fc.integer({ min: 1, max: 65535 }),
             databaseUrl: fc.webUrl(),
             jwtSecret: fc.string({ minLength: 1, maxLength: 64 }),
-            corsOrigin: fc.string({ minLength: 0, maxLength: 100 }),
+            // Wildcards are rejected outside development (see cors.property.test.ts)
+            corsOrigin: fc.string({ minLength: 0, maxLength: 100 }).filter((s) => !s.includes('*')),
             schedulerEnabled: fc.constantFrom('true', 'false', '', 'yes', '1'),
           }),
           (env) => {

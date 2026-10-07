@@ -102,8 +102,10 @@ router.post('/register', validateRequest({ body: registerBodySchema }), async (r
   // Validate registration request — throws AppError for validation failures
   const validation = validateRegistrationRequest({ username, email, password, stableName });
   if (!validation.isValid) {
+    // Log field names only. The messages are returned to the client below but
+    // stay out of logs, so nothing derived from the submitted password is logged.
     logger.warn('Registration validation failed', {
-      errors: validation.errors,
+      invalidFields: validation.invalidFields,
       username: username || '<missing>',
     });
     throw new AppError('VALIDATION_ERROR', validation.errors.join(', '), 400, { errors: validation.errors });
