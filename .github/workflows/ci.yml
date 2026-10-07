@@ -13,10 +13,14 @@ permissions:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
+# Runner image is pinned to ubuntu-24.04 (what ubuntu-latest resolved to until
+# GitHub's Ubuntu 26 migration on 2026-10-19), so the image only changes when we
+# decide. Keep ci.yml, deploy.yml and codeql.yml on the same image; upgrade all
+# three together in one PR and let CI prove it.
 jobs:
   steering-guard:
     name: Steering Metadata and Size Guard
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -32,7 +36,7 @@ jobs:
 
   backend-unit-tests:
     name: Backend Unit Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     
     permissions:
       contents: read
@@ -90,7 +94,7 @@ jobs:
 
   backend-heavy-tests:
     name: Backend Heavy Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     # ------------------------------------------------------------------
     # Spec #51: BLOCKING. The Exclusion_Register entry for this tier is closed.
@@ -175,7 +179,7 @@ jobs:
 
   backend-integration-tests:
     name: Backend Integration Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     
     permissions:
       contents: read
@@ -262,7 +266,7 @@ jobs:
 
   frontend-tests:
     name: Frontend Tests & Lint
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     
     permissions:
       contents: read
@@ -301,7 +305,7 @@ jobs:
 
   e2e-tests:
     name: E2E Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     needs: [backend-unit-tests, frontend-tests]
     if: ${{ needs['backend-unit-tests'].result == 'success' && needs['frontend-tests'].result == 'success' }}
@@ -459,7 +463,7 @@ jobs:
 
   security-audit:
     name: Security Audit
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     
     permissions:
       contents: read
@@ -528,7 +532,7 @@ jobs:
   # ---------------------------------------------------------------------------
   notify-failure:
     name: Discord Failure Alert
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # backend-heavy-tests is included now that it is blocking. While it carried
     # job-level `continue-on-error` it always reported success, so it could never
     # have satisfied `failure()` and its presence here would have been decorative.

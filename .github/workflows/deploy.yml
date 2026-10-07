@@ -19,10 +19,11 @@ permissions:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
+# Runner image pinned to ubuntu-24.04; see the note in ci.yml before changing it.
 jobs:
   steering-guard:
     name: Steering Metadata and Size Guard
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -41,7 +42,7 @@ jobs:
   # ---------------------------------------------------------------------------
   backend-unit-tests:
     name: Backend Unit Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout code
@@ -93,7 +94,7 @@ jobs:
 
   backend-heavy-tests:
     name: Backend Heavy Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     # ------------------------------------------------------------------
     # Spec #51: BLOCKING. The Exclusion_Register entry for this tier is closed.
@@ -172,7 +173,7 @@ jobs:
 
   backend-integration-tests:
     name: Backend Integration Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     services:
       postgres:
@@ -233,7 +234,7 @@ jobs:
 
   frontend-build:
     name: Frontend Build & Lint
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout code
@@ -281,7 +282,7 @@ jobs:
   # ---------------------------------------------------------------------------
   e2e-tests:
     name: E2E Tests (Playwright)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     needs: [backend-unit-tests, frontend-build]
     if: ${{ needs['backend-unit-tests'].result == 'success' && needs['frontend-build'].result == 'success' }}
@@ -430,7 +431,7 @@ jobs:
   # ---------------------------------------------------------------------------
   deploy-acc:
     name: Deploy to Acceptance
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # Spec #51: e2e-tests and backend-heavy-tests were both absent from this list,
     # so neither gated a deploy. Both block now.
     #
@@ -810,7 +811,7 @@ jobs:
   # ---------------------------------------------------------------------------
   deploy-prd:
     name: Deploy to Production
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # Spec #51: e2e-tests and backend-heavy-tests were both absent from this list,
     # so neither gated a deploy. Both block now.
     #
@@ -1121,7 +1122,7 @@ jobs:
   # ---------------------------------------------------------------------------
   smoke-test-acc:
     name: Smoke Tests (Acceptance)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: deploy-acc
     if: github.event_name == 'push'
     environment: acceptance
@@ -1162,7 +1163,7 @@ jobs:
   # ---------------------------------------------------------------------------
   smoke-test-prd:
     name: Smoke Tests (Production)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: deploy-prd
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production'
     environment: production
