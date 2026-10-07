@@ -6,7 +6,6 @@ import {
   assignLeagueInstance,
   assignLeagueInstanceWithLock,
   rebalanceInstances, 
-  LEAGUE_TIERS,
   LeagueTier,
   MAX_ROBOTS_PER_INSTANCE,
   InstanceOptions,
