@@ -236,10 +236,19 @@ Accessible at `/admin` → Security tab. Shows:
 
 ### CI/CD Integration
 
-The `security-audit` job in `.github/workflows/ci.yml`:
-- `pnpm audit --audit-level=high` — fails build on high/critical vulnerabilities
-- JSON report uploaded as build artifact
-- Runs on every push and PR
+The `security-audit` job in `.github/workflows/ci.yml` runs on every push and PR. Both apps use one shared gate, `.github/scripts/audit-gate.mjs`, which is unit tested by `audit-gate.test.mjs` in the same job:
+
+- It runs `pnpm audit --json --prod` in the app directory and fails on any **high or critical** production advisory whose GHSA ID is not in the allowlist. Moderate and low advisories are listed but do not block. Dev dependencies are reported (`audit-report-*-full.json`) but not gated, because they are not deployed.
+- It parses the npm v6 envelope that pnpm emits (`advisories`, keyed by `github_advisory_id`). It also accepts the npm v7+ `vulnerabilities` envelope, so a change in tooling cannot quietly bypass the gate.
+- It **fails closed** in three cases:
+  - The audit output is empty, unparseable, an error envelope or an unrecognised shape.
+  - The parser finds fewer high/critical entries than the report's own `metadata.vulnerabilities` tally.
+  - The allowlist is malformed.
+- Allowlist entries whose `nextReviewDate` has passed raise a workflow warning. They do not fail the build.
+- The production and full JSON reports are uploaded as the `security-audit-reports` artifact.
+- A failing gate triggers the Discord failure alert.
+
+Run it locally from the repository root with `node .github/scripts/audit-gate.mjs --cwd app/backend --label backend`.
 
 ### Vulnerability Allowlist
 
@@ -257,51 +266,13 @@ When a vulnerability can't be immediately fixed, document it in `.security-audit
 }
 ```
 
-CI skips matching advisories. Review all entries on their `nextReviewDate`.
+The gate ignores advisories whose GHSA ID is listed. Every entry needs all five fields, a valid GHSA ID and ISO dates; a malformed entry fails the gate. Review each entry by its `nextReviewDate`.
 
-### ⚠️ OPEN DEFECT: the audit gate parses the wrong envelope
+### Resolved: the audit gate parsed the wrong envelope
 
-**Status:** open as of 2026-07-27. Discovered while clearing the frontend audit failure on Spec #46 (PR #410). Not fixed there — the fix has a large blast radius and needs its own change.
+Until October 2026 both inline audit steps read `audit.vulnerabilities`, which is the npm v7+ shape. `pnpm audit --json` emits the npm v6 `advisories` envelope, so the gate could never fail. As a result, exact-version `pnpm.overrides` pins (`fast-uri`, `ip-address`, `sharp`, `brace-expansion`) became vulnerable again without CI noticing. The shared `audit-gate.mjs` replaced both steps. It implements the four requirements recorded for this defect: it reads `advisories` keyed on `github_advisory_id`, cross-checks against the metadata tally, fails closed on bad output, and keeps the logic in one tested file. Its tests include a real pre-fix backend report, which the gate rejects with six high/critical advisories.
 
-**The gate cannot currently fail.** Both audit steps in `.github/workflows/ci.yml` parse the audit JSON like this:
-
-```js
-const vulns = audit.vulnerabilities || {};
-for (const [name, info] of Object.entries(vulns)) { /* ... */ }
-```
-
-`vulnerabilities` is the **npm v7+** report shape. `pnpm audit --json` emits the **npm v6** envelope:
-
-```
-{ actions, advisories: { "<numericId>": { github_advisory_id, severity, module_name, ... } }, muted, metadata }
-```
-
-So `audit.vulnerabilities` is always `undefined`, the loop body never executes, `found` stays `false`, and the step prints *"Security audit passed — all high/critical vulnerabilities are allowlisted"* regardless of what is installed. Verified locally: the backend gate reports a pass while `pnpm audit --prod` reports 9 high/critical advisories.
-
-The frontend step failed only because it did not have this logic at all — it ran a bare `pnpm audit --prod`, which exits non-zero on *any* severity. It was strict for the wrong reason, and it printed the allowlist without honouring it.
-
-**What the fix must do:**
-
-1. Read `audit.advisories` and key the allowlist match on `github_advisory_id`, not the numeric npm id (numeric ids are not stable across registries). Handle both envelopes so the gate survives a tooling change.
-2. Cross-check the parsed count against `audit.metadata.vulnerabilities.high + .critical` and fail if the parser surfaced fewer than the tally reports. Without this, the next envelope change fails silently in exactly the same way.
-3. Fail on absent or unparseable audit output rather than treating it as a pass.
-4. Extract the logic to a file (for example `.github/scripts/audit-gate.mjs`) so both steps share one implementation instead of duplicating an inline Node one-liner.
-
-**Pre-existing high/critical advisories the fix will surface** (backend, `--prod`, as of 2026-07-27). None are allowlisted; none have been reviewed. Each needs an upgrade, an override, or an allowlist entry with justification:
-
-| Package | Severity | Advisory | Summary |
-|---|---|---|---|
-| `tar` | critical | GHSA-23hp-3jrh-7fpw | Decompression/parse DoS via unlimited input |
-| `tar` | high | GHSA-8x88-c5mf-7j5w | Negative entry size causes infinite loop in archive replace |
-| `adm-zip` | high | GHSA-xcpc-8h2w-3j85 | Crafted ZIP triggers 4GB memory allocation |
-| `brace-expansion` | high | GHSA-3jxr-9vmj-r5cp | DoS via exponential-time expansion |
-| `brace-expansion` | high | GHSA-mh99-v99m-4gvg | DoS via unbounded expansion length (OOM crash) |
-| `js-yaml` | high | GHSA-52cp-r559-cp3m | YAML merge-key chains force quadratic CPU consumption |
-| `fast-uri` | high | GHSA-v2hh-gcrm-f6hx | Host confusion via literal backslash authority delimiter |
-| `fast-uri` | high | GHSA-4c8g-83qw-93j6 | Host confusion via failed IDN canonicalization |
-| `sharp` | high | GHSA-f88m-g3jw-g9cj | Inherited libvips CVEs (2026-33327/33328/35590/35591) |
-
-`sharp` is a direct production dependency (image handling in the content moderation path); the rest are transitive. Treat this table as a starting inventory, not a reviewed assessment — re-run the audit when doing the work, since the set will have moved.
+**Overrides:** a `pnpm.overrides` entry pinned to an exact version stops both Dependabot and normal updates from moving past it. When you add a security override, record why. Re-check the override whenever the gate reports that package.
 
 ---
 
