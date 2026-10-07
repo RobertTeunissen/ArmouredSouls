@@ -473,6 +473,52 @@ describe('teamBattleOrchestrator', () => {
       expect(createdBattleData.battleType).toBe('league_2v2');
     });
 
+    // #453: winningSide used to be written by a post-create update whose errors
+    // were swallowed. It must be part of the create inside the transaction.
+    it.each([
+      [1, 1],
+      [2, 2],
+      [null, null],
+    ] as const)(
+      'should write winningSide=%p atomically with the battle row (simulated side %p)',
+      async (simulatedSide, expectedSide) => {
+        mockSimulateTeamBattle.mockReturnValue(makeBattleResult(2, simulatedSide));
+        const match = makeScheduledMatch(1, 2);
+        mockUnifiedScheduledMatches([match]);
+
+        let createdBattleData: { winningSide?: number | null } | null = null;
+        mockTransaction.mockImplementation(async (cb: (...args: unknown[]) => unknown) => {
+          const tx = {
+            $executeRaw: jest.fn().mockResolvedValue(0),
+            cycleMetadata: {
+              findUnique: jest.fn().mockResolvedValue({ totalCycles: 41, featureFlags: {} }),
+            },
+            season: { findFirst: jest.fn().mockResolvedValue(null) },
+            battle: {
+              create: jest.fn().mockImplementation(({ data }) => {
+                createdBattleData = data;
+                return { id: 99 };
+              }),
+              update: jest.fn(),
+            },
+            battleParticipant: { createMany: jest.fn(), updateMany: jest.fn() },
+            robot: { update: jest.fn() },
+            scheduledMatch: { update: jest.fn() },
+          };
+          return cb(tx);
+        });
+
+        await executeScheduledTeamBattles(2);
+
+        expect(createdBattleData).not.toBeNull();
+        expect(createdBattleData!.winningSide).toBe(expectedSide);
+        const postCreateWinningSideWrites = mockPrisma.battle.update.mock.calls.filter(
+          ([args]: [{ data?: Record<string, unknown> }]) => args?.data && 'winningSide' in args.data,
+        );
+        expect(postCreateWinningSideWrites).toHaveLength(0);
+      },
+    );
+
     it('should set battleType to league_3v3 for 3v3 matches', async () => {
       setupDefaultMocks(3);
       const match = makeScheduledMatch(1, 3);

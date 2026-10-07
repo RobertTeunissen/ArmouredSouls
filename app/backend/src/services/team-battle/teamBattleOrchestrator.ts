@@ -333,6 +333,7 @@ async function executeSingleTeamBattle(
   const team2Won = battleResult.winningSide === 2;
   const isDraw = battleResult.isDraw;
   const winnerTeamId = team1Won ? match.team1Id : team2Won ? match.team2Id : null;
+  const winningSide = team1Won ? 1 : team2Won ? 2 : null;
 
   // Compute team ELOs for reward calculation
   const team1SumELO = team1Robots.reduce((sum, r) => sum + r.elo, 0);
@@ -352,6 +353,7 @@ async function executeSingleTeamBattle(
     const battleRecord = await tx.battle.create({
       data: {
         winnerId: winnerTeamId,
+        winningSide,
         battleType,
         leagueType: match.teamBattleLeague,
         leagueInstanceId: match.teamBattleLeagueId,
@@ -549,10 +551,6 @@ async function executeSingleTeamBattle(
   }, { timeout: 30_000 }); // End transaction (R7.11: rollback on failure)
 
   // Write pre-computed battle summary (Spec #39 — outside transaction, non-blocking)
-  const winningSide = team1Won ? 1 : team2Won ? 2 : null;
-  if (winningSide !== null) {
-    await prisma.battle.update({ where: { id: battle.id }, data: { winningSide } }).catch(() => {});
-  }
   const allRobots = [...team1Robots, ...team2Robots];
   const robotMaxHP: Record<string, number> = {};
   const robotNameToId: Record<string, number> = {};
