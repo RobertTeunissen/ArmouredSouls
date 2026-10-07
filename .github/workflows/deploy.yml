@@ -389,11 +389,27 @@ jobs:
           VITE_API_URL: http://localhost:3001
         run: pnpm run build
 
+      - name: Resolve Playwright version
+        id: playwright-version
+        working-directory: ./app/frontend
+        shell: bash
+        run: echo "version=$(pnpm exec playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-ubuntu-24.04-${{ steps.playwright-version.outputs.version }}
+
+      # Shared with ci.yml. Only touches apt if Chromium cannot launch with
+      # the runner's preinstalled libraries; see the script header for why.
       - name: Install Playwright browsers
         working-directory: ./app/frontend
-        run: pnpm exec playwright install --with-deps chromium
+        timeout-minutes: 8
+        run: ../../.github/scripts/install-playwright-chromium.sh
 
       - name: Run Playwright tests
+        id: e2e
         working-directory: ./app/frontend
         env:
           PLAYWRIGHT_BASE_URL: http://localhost:4173
@@ -409,8 +425,10 @@ jobs:
           done
           pnpm exec playwright test
 
+      # Skipped when the tests never started (e.g. setup failed or timed out),
+      # since there is no report to upload then.
       - name: Upload Playwright HTML report
-        if: always()
+        if: always() && steps.e2e.outcome != 'skipped'
         uses: actions/upload-artifact@v6
         with:
           name: playwright-html-report
