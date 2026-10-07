@@ -1,6 +1,14 @@
 {
-  "_description": "No current pnpm production advisories are allowlisted. Add an entry only after a current audit identifies a vulnerability that is reviewed, unreachable or otherwise accepted, with a bounded re-review date.",
-  "allowlist": [],
+  "_description": "Accepted pnpm production advisories. Add an entry only after a current audit identifies a vulnerability that is reviewed, unreachable or otherwise accepted, with a bounded re-review date.",
+  "allowlist": [
+    {
+      "id": "GHSA-hp3w-g68c-fv3c",
+      "package": "sprintf-js",
+      "justification": "No patched release exists (latest 1.1.3 is affected). Backend path is @tensorflow/tfjs-node > @tensorflow/tfjs > argparse@1 > sprintf-js@1.0.3; argparse is only used by the tfjs-custom-module CLI bin, which the backend never executes, so untrusted format strings cannot reach sprintf-js. Remove once a fixed sprintf-js ships or tfjs drops argparse.",
+      "reviewDate": "2026-10-07",
+      "nextReviewDate": "2027-01-07"
+    }
+  ],
   "_entrySchema": {
     "id": "GHSA advisory ID (e.g., GHSA-xxxx-xxxx-xxxx)",
     "package": "Affected npm package name",
