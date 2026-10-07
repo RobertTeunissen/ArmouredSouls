@@ -343,4 +343,81 @@ describe('movementAI property tests', () => {
         .toBeLessThanOrEqual(2);
     });
   });
+
+  /**
+   * #467: in a melee mirror match, leading the opponent's tangential velocity
+   * made both robots circle at ~8 units for the whole battle (time-limit draw)
+   * without ever entering the ≤4-unit final approach.
+   */
+  describe('melee mirror prediction (#467)', () => {
+    const meleeWeapon = () => ({ weapon: makeWeapon({ weaponType: 'melee', rangeBand: 'melee' }) }) as any;
+
+    /** Angle in degrees between robot→intent and robot→opponent. */
+    function headingErrorDeg(robot: Position, intentTarget: Position, opponent: Position): number {
+      const a = Math.atan2(intentTarget.y - robot.y, intentTarget.x - robot.x);
+      const b = Math.atan2(opponent.y - robot.y, opponent.x - robot.x);
+      const diff = Math.abs(a - b) % (2 * Math.PI);
+      return (Math.min(diff, 2 * Math.PI - diff) * 180) / Math.PI;
+    }
+
+    function chaser() {
+      // CA 50 = full prediction weight; TA 1 keeps avoidance/flank below their
+      // 0.01 activation threshold, so only deviation (≤1.5° for melee) remains.
+      return makeState({
+        robot: {
+          loadoutType: 'single',
+          stance: 'balanced',
+          mainWeapon: meleeWeapon(),
+          offhandWeapon: null,
+          threatAnalysis: 1,
+          combatAlgorithms: 50,
+        } as any,
+        position: { x: 0, y: 0 },
+        combatAlgorithmScore: 1,
+      });
+    }
+
+    it('should head straight at a circling melee opponent outside the final approach', () => {
+      fc.assert(
+        fc.property(
+          fc.double({ min: 4.5, max: 14, noNaN: true }),
+          fc.double({ min: 4, max: 15, noNaN: true }),
+          fc.constantFrom(1, -1),
+          (distance, speed, direction) => {
+            const robot = chaser();
+            const opponent = makeState({
+              robot: { loadoutType: 'single', stance: 'balanced', mainWeapon: meleeWeapon(), offhandWeapon: null } as any,
+              position: { x: 0, y: distance },
+              velocity: { x: speed * direction, y: 0 }, // purely tangential
+            });
+
+            const intent = calculateMovementIntent(robot, [opponent], makeArena(16));
+
+            expect(intent.preferredRange).toBe('melee');
+            expect(headingErrorDeg(robot.position, intent.targetPosition, opponent.position)).toBeLessThan(5);
+          },
+        ),
+        { numRuns: 200 },
+      );
+    });
+
+    it('should still lead a moving ranged opponent', () => {
+      const robot = chaser();
+      const rangedOpponent = makeState({
+        robot: {
+          loadoutType: 'single',
+          stance: 'balanced',
+          mainWeapon: { weapon: makeWeapon({ weaponType: 'ballistic', rangeBand: 'mid' }) } as any,
+          offhandWeapon: null,
+        } as any,
+        position: { x: 0, y: 8 },
+        velocity: { x: 12, y: 0 },
+      });
+
+      const intent = calculateMovementIntent(robot, [rangedOpponent], makeArena(16));
+
+      expect(intent.preferredRange).toBe('melee');
+      expect(headingErrorDeg(robot.position, intent.targetPosition, rangedOpponent.position)).toBeGreaterThan(20);
+    });
+  });
 });
