@@ -306,8 +306,8 @@ Run the following checks after the implementation is complete. This section is a
 ### 12.1 Spec and contract presence
 
 ```bash
-test -f .kiro/specs/to-do/56-universal-search/requirements.md && test -f .kiro/specs/to-do/56-universal-search/.config.kiro
-grep -R "GET /api/search\|Universal_Search_System\|Minimum_Query_Length\|Per_Category_Result_Limit\|Recent_Search_History\|Global_Header\|Player_Shell" app/backend/src app/frontend/src docs .kiro/specs/to-do/56-universal-search
+test -f .kiro/specs/done-september26/56-universal-search/requirements.md && test -f .kiro/specs/done-september26/56-universal-search/.config.kiro
+grep -R "GET /api/search\|Universal_Search_System\|Minimum_Query_Length\|Per_Category_Result_Limit\|Recent_Search_History\|Global_Header\|Player_Shell" app/backend/src app/frontend/src docs .kiro/specs/done-september26/56-universal-search
 ```
 
 ### 12.2 Backend search and analytics checks
@@ -316,7 +316,7 @@ grep -R "GET /api/search\|Universal_Search_System\|Minimum_Query_Length\|Per_Cat
 cd app/backend && pnpm run test:unit -- search && pnpm run build && pnpm run typecheck:tests
 cd app/backend && pnpm run test:integration -- search
 cd app/backend && pnpm run test:unit -- search && pnpm run test:integration -- search
-grep -R "Search_Analytics_Event\|Search_Analytics_Store\|Telemetry_Fail_Open\|Admin_Search_Analytics_Resource\|Active_Season_Context\|Normalized_Search_Phrase" app/backend/src app/frontend/src docs .kiro/specs/to-do/56-universal-search
+grep -R "Search_Analytics_Event\|Search_Analytics_Store\|Telemetry_Fail_Open\|Admin_Search_Analytics_Resource\|Active_Season_Context\|Normalized_Search_Phrase" app/backend/src app/frontend/src docs .kiro/specs/done-september26/56-universal-search
 ```
 
 The backend checks must cover authentication, strict `q` validation, source scope, safe DTOs, ranking and bounds, parameterized access, destination references, exactly one analytics write attempt for each eligible completed search including zero results, one row only on persistence success, no row/no retry on persistence failure, unchanged Search_Response under Telemetry_Fail_Open, typed incomplete-telemetry limitation, admin authorization, bounded reporting, active-season filtering, and `Season_Rollover` purge behavior.

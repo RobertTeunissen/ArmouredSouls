@@ -11,9 +11,9 @@
  * **Validates: Requirement 8.3**
  */
 
-// `createTagTeamBattleRecord` writes four tables, not two: it creates the battle,
-// the participants, then updates `battles.winning_side` and writes the Spec #39
-// `battle_summaries` row. Mocking only the first two left `battle.update` and
+// `createTagTeamBattleRecord` creates the battle (including `winning_side`, #453),
+// the participants and the Spec #39 `battle_summaries` row, and may update the
+// battle afterwards. Mocking only the first two left `battle.update` and
 // `battleSummary.create` undefined, which threw before any assertion ran.
 jest.mock('../../../lib/prisma', () => ({
   __esModule: true,
@@ -413,5 +413,57 @@ describe('Property 9: Tag-Team Participant Creation', () => {
       }),
       { numRuns: 100 },
     );
+  });
+});
+
+// #453: winningSide must be part of battle.create, not a post-create update
+// whose errors were swallowed. Tag-team winnerId is the team entity ID.
+describe('createTagTeamBattleRecord winningSide', () => {
+  const makeTeam = (id: number, activeId: number, reserveId: number, name: string) =>
+    ({
+      id,
+      stableId: id + 100,
+      teamName: name,
+      teamSize: 2,
+      activeRobotId: activeId,
+      reserveRobotId: reserveId,
+      activeRobot: { id: activeId, elo: 1500, name: `${name} Active`, maxHP: 100 },
+      reserveRobot: { id: reserveId, elo: 1500, name: `${name} Reserve`, maxHP: 100 },
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }) as unknown as TagTeamWithRobots;
+
+  const team1 = makeTeam(11, 101, 102, 'Alpha');
+  const team2 = makeTeam(12, 201, 202, 'Bravo');
+  const match: MockTagTeamMatch = {
+    id: 1,
+    team1Id: team1.id,
+    team2Id: team2.id,
+    teamBattleLeague: 'bronze',
+    teamBattleLeagueId: 'bronze_1',
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (mockPrisma.battle.create as jest.Mock).mockResolvedValue({ id: 900 });
+    (mockPrisma.battleParticipant.createMany as jest.Mock).mockResolvedValue({ count: 4 });
+  });
+
+  it.each([
+    ['team 1 wins', team1.id, 1],
+    ['team 2 wins', team2.id, 2],
+    ['draw', null, null],
+  ] as const)('%s: writes winningSide with the battle row', async (_label, winnerId, expectedSide) => {
+    const [result] = fc.sample(arbBattleResult(team1, team2), 1);
+    const battleResult = { ...result, winnerId, isDraw: winnerId === null } as TagTeamBattleResult;
+
+    await createTagTeamBattleRecord(match, team1, team2, battleResult);
+
+    const createArgs = (mockPrisma.battle.create as jest.Mock).mock.calls[0][0] as { data: Record<string, unknown> };
+    expect(createArgs.data.winningSide).toBe(expectedSide);
+    const winningSideUpdates = (mockPrisma.battle.update as jest.Mock).mock.calls.filter(
+      ([args]: [{ data?: Record<string, unknown> }]) => args?.data && 'winningSide' in args.data,
+    );
+    expect(winningSideUpdates).toHaveLength(0);
   });
 });

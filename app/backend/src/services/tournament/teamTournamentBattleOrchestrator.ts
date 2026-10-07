@@ -246,6 +246,8 @@ export async function processTeamTournamentBattle(
   const battle = await prisma.battle.create({
     data: {
       winnerId: winningTeamId,
+      // Written with the row (#453): the resume path rejects battles without a winning side
+      winningSide,
       battleType,
       leagueType: 'tournament',
       tournamentId: tournament.id,
@@ -288,7 +290,6 @@ export async function processTeamTournamentBattle(
   await prisma.battleParticipant.createMany({ data: participantRecords });
 
   // Write pre-computed battle summary (Spec #39)
-  await prisma.battle.update({ where: { id: battle.id }, data: { winningSide } }).catch(() => {});
   const allRobots = [...team1Robots, ...team2Robots];
   const robotMaxHP: Record<string, number> = {};
   const robotNameToId: Record<string, number> = {};

@@ -151,6 +151,19 @@ const EnvSchema = z
 
   })
   .superRefine((env, ctx) => {
+    // CORS runs with `credentials: true`, so a wildcard would let any site make
+    // credentialed requests. The `cors` package matches entries exactly, so a
+    // pattern such as `https://*.example.com` would never match either.
+    // Development ignores CORS_ORIGIN (fixed localhost list), so this applies to
+    // every other environment, including acceptance and test.
+    if (env.NODE_ENV !== 'development' && env.CORS_ORIGIN.some((origin) => origin.includes('*'))) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['CORS_ORIGIN'],
+        message: 'CORS_ORIGIN must list explicit origins; wildcards are not allowed because credentials are enabled',
+      });
+    }
+
     // Production-only invariants. Acceptance / staging deploys SHOULD also
     // set real values, but enforcing here would break tests that rely on
     // the lenient pre-Zod behavior. Keep the strict check production-only.

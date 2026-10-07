@@ -22,8 +22,9 @@ afterAll(() => {
  *
  * For any comma-separated string of origin URLs in CORS_ORIGIN, the CORS configuration
  * should parse them into an array and accept requests only from those origins when
- * NODE_ENV is not development. In development mode, all origins should be accepted
- * regardless of CORS_ORIGIN value.
+ * NODE_ENV is not development. In development mode, a fixed localhost list is used
+ * regardless of CORS_ORIGIN value. Outside development, wildcard entries are rejected
+ * at startup because the middleware runs with credentials enabled.
  */
 describe('CORS Origin Parsing - Property Tests', () => {
   describe('Property 3: CORS origin parsing and enforcement', () => {
@@ -135,57 +136,59 @@ describe('CORS Origin Parsing - Property Tests', () => {
       );
     });
 
-    test('CORS middleware receives origins array in development mode', () => {
-      fc.assert(
-        fc.property(
-          fc.string({ minLength: 0, maxLength: 50 }),
-          (corsValue) => {
-            process.env.NODE_ENV = 'development';
-            process.env.CORS_ORIGIN = corsValue;
+    test('development ignores a wildcard CORS_ORIGIN and keeps the localhost list', () => {
+      process.env.NODE_ENV = 'development';
+      process.env.CORS_ORIGIN = '*';
 
-            const config = loadEnvConfig();
+      const config = loadEnvConfig();
 
-            // In development, corsOrigins is the localhost array (no wildcard)
-            const corsOption = config.corsOrigins.includes('*')
-              ? true
-              : config.corsOrigins;
-
-            expect(Array.isArray(corsOption)).toBe(true);
-            expect(corsOption).toEqual(['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173', 'http://127.0.0.1:3000']);
-          }
-        ),
-        { numRuns: NUM_RUNS }
-      );
+      expect(config.corsOrigins).toEqual(['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173', 'http://127.0.0.1:3000']);
     });
 
-    test('CORS middleware receives origin array when not in development mode', () => {
-      const originsGen = fc.array(originGen, { minLength: 1, maxLength: 5 });
+    describe('wildcard origins outside development', () => {
+      let mockExit: jest.SpiedFunction<typeof process.exit>;
+      let mockStderr: jest.SpiedFunction<typeof process.stderr.write>;
 
-      fc.assert(
-        fc.property(
-          originsGen,
-          (origins) => {
-            const corsString = origins.join(',');
-            process.env.NODE_ENV = 'acceptance';
-            process.env.CORS_ORIGIN = corsString;
-            process.env.JWT_SECRET = 'non-default-secret-for-testing';
+      beforeEach(() => {
+        mockExit = jest.spyOn(process, 'exit').mockImplementation(((code?: number) => {
+          throw new Error(`process.exit(${code})`);
+        }) as typeof process.exit);
+        mockStderr = jest.spyOn(process.stderr, 'write').mockImplementation(() => true);
+      });
 
-            const config = loadEnvConfig();
+      afterEach(() => {
+        mockExit.mockRestore();
+        mockStderr.mockRestore();
+      });
 
-            // Non-development origins should not include '*'
-            expect(config.corsOrigins.includes('*')).toBe(false);
+      // Credentials are enabled, so a wildcard would allow credentialed requests
+      // from any site. Startup must refuse it in every non-development environment.
+      test('startup fails when any CORS_ORIGIN entry contains a wildcard', () => {
+        fc.assert(
+          fc.property(
+            fc.array(originGen, { minLength: 0, maxLength: 3 }),
+            fc.constantFrom('*', 'https://*.armouredsouls.com', ' * '),
+            fc.nat(),
+            fc.constantFrom('acceptance', 'production', 'test'),
+            (origins, wildcard, position, nodeEnv) => {
+              mockExit.mockClear();
+              mockStderr.mockClear();
+              const entries = [...origins];
+              entries.splice(position % (entries.length + 1), 0, wildcard);
+              process.env.NODE_ENV = nodeEnv;
+              process.env.CORS_ORIGIN = entries.join(',');
+              process.env.JWT_SECRET = 'non-default-secret-for-testing';
+              process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/testdb';
 
-            // The middleware should receive the array directly
-            const corsOption = config.corsOrigins.includes('*')
-              ? true
-              : config.corsOrigins;
-
-            expect(Array.isArray(corsOption)).toBe(true);
-            expect(corsOption).toEqual(origins);
-          }
-        ),
-        { numRuns: NUM_RUNS }
-      );
+              expect(() => loadEnvConfig()).toThrow('process.exit(1)');
+              expect(mockExit).toHaveBeenCalledWith(1);
+              const output = mockStderr.mock.calls.map(([chunk]) => String(chunk)).join('');
+              expect(output).toContain('CORS_ORIGIN');
+            }
+          ),
+          { numRuns: NUM_RUNS }
+        );
+      });
     });
 
     test('empty CORS_ORIGIN in non-development mode results in empty array', () => {

@@ -150,7 +150,7 @@ All robots start with each attribute at level 1. Players spend Credits to upgrad
 17. **Combat Algorithms** - Battle strategy and decision quality
     - **2D Arena Role**: Controls movement AI strategy quality
     - Score < 0.3 = random_bias, 0.3–0.6 = direct_path, > 0.6 = calculated_path
-    - Movement prediction at score ≥ 0.4
+    - Movement prediction: leads a moving target with weight `(combatAlgorithms - 1) / 49` (0 at 1, full at 50). Melee robots skip it within 4 units of their target and, against another melee robot, at every distance, so two melee fighters close in directly instead of circling each other (#467). Against ranged targets prediction stays on, to cut off a retreating opponent.
     - Patience timer: `15 - (score × 5)` seconds (10–15s range)
     - Higher combat algorithms = smarter positioning and engagement timing
 18. **Threat Analysis** - Target priority and positioning

@@ -13,10 +13,14 @@ permissions:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
+# Runner image is pinned to ubuntu-24.04 (what ubuntu-latest resolved to until
+# GitHub's Ubuntu 26 migration on 2026-10-19), so the image only changes when we
+# decide. Keep ci.yml, deploy.yml and codeql.yml on the same image; upgrade all
+# three together in one PR and let CI prove it.
 jobs:
   steering-guard:
     name: Steering Metadata and Size Guard
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -32,7 +36,7 @@ jobs:
 
   backend-unit-tests:
     name: Backend Unit Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     
     permissions:
       contents: read
@@ -90,7 +94,7 @@ jobs:
 
   backend-heavy-tests:
     name: Backend Heavy Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     # ------------------------------------------------------------------
     # Spec #51: BLOCKING. The Exclusion_Register entry for this tier is closed.
@@ -175,7 +179,7 @@ jobs:
 
   backend-integration-tests:
     name: Backend Integration Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     
     permissions:
       contents: read
@@ -262,7 +266,7 @@ jobs:
 
   frontend-tests:
     name: Frontend Tests & Lint
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     
     permissions:
       contents: read
@@ -301,7 +305,7 @@ jobs:
 
   e2e-tests:
     name: E2E Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     needs: [backend-unit-tests, frontend-tests]
     if: ${{ needs['backend-unit-tests'].result == 'success' && needs['frontend-tests'].result == 'success' }}
@@ -459,7 +463,7 @@ jobs:
 
   security-audit:
     name: Security Audit
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     
     permissions:
       contents: read
@@ -492,13 +496,27 @@ jobs:
         working-directory: ./app/frontend
         run: pnpm install --frozen-lockfile --ignore-scripts
 
-      - name: Generate audit report (backend)
-        working-directory: ./app/backend
-        run: pnpm audit --json > audit-report-backend.json || true
+      # Gate logic lives in .github/scripts/audit-gate.mjs (shared by both apps).
+      # It fails on unallowlisted high/critical production advisories, and fails
+      # closed on missing/unparseable output or a parser/tally mismatch.
+      # Dev dependencies are not deployed; they are reported but not gated.
+      # Accepted advisories are documented in .security-audit-allowlist.json.
+      - name: Test audit gate
+        run: node --test .github/scripts/audit-gate.test.mjs
 
-      - name: Generate audit report (frontend)
-        working-directory: ./app/frontend
-        run: pnpm audit --json > audit-report-frontend.json || true
+      - name: Audit backend production dependencies
+        run: >-
+          node .github/scripts/audit-gate.mjs --cwd app/backend --label backend
+          --report app/backend/audit-report-backend.json
+          --full-report app/backend/audit-report-backend-full.json
+
+      - name: Audit frontend production dependencies
+        # Run even if the backend gate failed so both results are visible.
+        if: success() || failure()
+        run: >-
+          node .github/scripts/audit-gate.mjs --cwd app/frontend --label frontend
+          --report app/frontend/audit-report-frontend.json
+          --full-report app/frontend/audit-report-frontend-full.json
 
       - name: Upload audit reports
         if: always()
@@ -506,176 +524,20 @@ jobs:
         with:
           name: security-audit-reports
           path: |
-            app/backend/audit-report-backend.json
-            app/frontend/audit-report-frontend.json
-
-      - name: Check allowlist and audit backend
-        working-directory: ./app/backend
-        run: |
-          # Run pnpm audit at high level — fail on high/critical vulnerabilities in production deps only
-          # Dev dependencies are not deployed and don't affect the production attack surface
-          # Known accepted vulnerabilities are documented in .security-audit-allowlist.json
-          ALLOWLIST_FILE="../../.security-audit-allowlist.json"
-          if [ -f "$ALLOWLIST_FILE" ]; then
-            echo "Security audit allowlist found — reviewing accepted vulnerabilities"
-            cat "$ALLOWLIST_FILE"
-          fi
-          
-          # Run audit and filter out allowlisted advisories
-          AUDIT_OUTPUT=$(pnpm audit --json --prod 2>/dev/null || true)
-          
-          if [ -f "$ALLOWLIST_FILE" ]; then
-            # Extract allowlisted GHSA IDs
-            ALLOWED_IDS=$(cat "$ALLOWLIST_FILE" | node -e "
-              const data = JSON.parse(require('fs').readFileSync('/dev/stdin','utf8'));
-              console.log(data.allowlist.map(e => e.id).join('\n'));
-            ")
-            
-            # Check for non-allowlisted high/critical vulnerabilities
-            UNALLOWED=$(echo "$AUDIT_OUTPUT" | node -e "
-              const fs = require('fs');
-              const input = fs.readFileSync('/dev/stdin', 'utf8');
-              const audit = JSON.parse(input);
-              const allowed = new Set(process.argv.slice(1));
-              const vulns = audit.vulnerabilities || {};
-              
-              // Collect all direct advisory IDs for each package (recursive via resolution)
-              function getAdvisoryIds(pkgName, visited = new Set()) {
-                if (visited.has(pkgName)) return [];
-                visited.add(pkgName);
-                const info = vulns[pkgName];
-                if (!info) return [];
-                const ids = [];
-                for (const v of (info.via || [])) {
-                  if (typeof v === 'object' && v.url) {
-                    ids.push(v.url.split('/').pop());
-                  } else if (typeof v === 'string') {
-                    ids.push(...getAdvisoryIds(v, visited));
-                  }
-                }
-                return ids;
-              }
-              
-              let found = false;
-              for (const [name, info] of Object.entries(vulns)) {
-                const severity = info.severity;
-                if (severity !== 'high' && severity !== 'critical') continue;
-                const advisoryIds = getAdvisoryIds(name);
-                const allAllowed = advisoryIds.length > 0 && advisoryIds.every(id => allowed.has(id));
-                if (!allAllowed) {
-                  console.error('UNALLOWED: ' + name + ' (' + severity + ') — ' + advisoryIds.join(', '));
-                  found = true;
-                }
-              }
-              process.exit(found ? 1 : 0);
-            " $ALLOWED_IDS)
-            
-            AUDIT_EXIT=$?
-            if [ $AUDIT_EXIT -ne 0 ]; then
-              echo "Security audit failed — unallowed high/critical vulnerabilities found"
-              pnpm audit --prod
-              exit 1
-            else
-              echo "Security audit passed — all high/critical vulnerabilities are allowlisted"
-            fi
-          else
-            pnpm audit --prod
-          fi
-
-      - name: Check allowlist and audit frontend
-        working-directory: ./app/frontend
-        run: |
-          # Production deps only — dev tooling (vitest, mermaid, eslint) excluded
-          #
-          # This step previously ran a bare `pnpm audit --prod`, which printed the
-          # allowlist and then ignored it, and failed on ANY severity including
-          # moderate. That made it stricter than the backend step in one direction
-          # (moderates broke the build) and useless in the other (allowlisted
-          # advisories still broke it). It now mirrors the backend logic exactly:
-          # fail only on high/critical that are not allowlisted.
-          #
-          # KNOWN DEFECT, shared with the backend step above: the parser reads
-          # `audit.vulnerabilities`, which is the npm v7+ shape. `pnpm audit --json`
-          # emits the npm v6 envelope instead — `{ actions, advisories, muted,
-          # metadata }` — so the loop iterates an empty object and this gate
-          # currently cannot fail. See docs/architecture/PRD_SECURITY.md
-          # "Audit gate parses the wrong envelope". Fixing it surfaces 9 pre-existing
-          # high/critical backend advisories and is tracked separately rather than
-          # bundled into Spec #46.
-          ALLOWLIST_FILE="../../.security-audit-allowlist.json"
-          if [ -f "$ALLOWLIST_FILE" ]; then
-            echo "Security audit allowlist found — reviewing accepted vulnerabilities"
-            cat "$ALLOWLIST_FILE"
-          fi
-
-          AUDIT_OUTPUT=$(pnpm audit --json --prod 2>/dev/null || true)
-
-          if [ -f "$ALLOWLIST_FILE" ]; then
-            ALLOWED_IDS=$(cat "$ALLOWLIST_FILE" | node -e "
-              const data = JSON.parse(require('fs').readFileSync('/dev/stdin','utf8'));
-              console.log(data.allowlist.map(e => e.id).join('\n'));
-            ")
-
-            UNALLOWED=$(echo "$AUDIT_OUTPUT" | node -e "
-              const fs = require('fs');
-              const input = fs.readFileSync('/dev/stdin', 'utf8');
-              const audit = JSON.parse(input);
-              const allowed = new Set(process.argv.slice(1));
-              const vulns = audit.vulnerabilities || {};
-
-              // Collect all direct advisory IDs for each package (recursive via resolution)
-              function getAdvisoryIds(pkgName, visited = new Set()) {
-                if (visited.has(pkgName)) return [];
-                visited.add(pkgName);
-                const info = vulns[pkgName];
-                if (!info) return [];
-                const ids = [];
-                for (const v of (info.via || [])) {
-                  if (typeof v === 'object' && v.url) {
-                    ids.push(v.url.split('/').pop());
-                  } else if (typeof v === 'string') {
-                    ids.push(...getAdvisoryIds(v, visited));
-                  }
-                }
-                return ids;
-              }
-
-              let found = false;
-              for (const [name, info] of Object.entries(vulns)) {
-                const severity = info.severity;
-                if (severity !== 'high' && severity !== 'critical') continue;
-                const advisoryIds = getAdvisoryIds(name);
-                const allAllowed = advisoryIds.length > 0 && advisoryIds.every(id => allowed.has(id));
-                if (!allAllowed) {
-                  console.error('UNALLOWED: ' + name + ' (' + severity + ') — ' + advisoryIds.join(', '));
-                  found = true;
-                }
-              }
-              process.exit(found ? 1 : 0);
-            " $ALLOWED_IDS)
-
-            AUDIT_EXIT=$?
-            if [ $AUDIT_EXIT -ne 0 ]; then
-              echo "Security audit failed — unallowed high/critical vulnerabilities found"
-              pnpm audit --prod
-              exit 1
-            else
-              echo "Security audit passed — all high/critical vulnerabilities are allowlisted"
-            fi
-          else
-            pnpm audit --prod
-          fi
+            app/backend/audit-report-backend*.json
+            app/frontend/audit-report-frontend*.json
 
   # ---------------------------------------------------------------------------
   # Notify on failure — Discord alert when any blocking job fails
   # ---------------------------------------------------------------------------
   notify-failure:
     name: Discord Failure Alert
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # backend-heavy-tests is included now that it is blocking. While it carried
     # job-level `continue-on-error` it always reported success, so it could never
     # have satisfied `failure()` and its presence here would have been decorative.
-    needs: [backend-unit-tests, backend-integration-tests, backend-heavy-tests, frontend-tests, e2e-tests]
+    # security-audit is included now that its gate can actually fail.
+    needs: [backend-unit-tests, backend-integration-tests, backend-heavy-tests, frontend-tests, e2e-tests, security-audit]
     if: ${{ failure() }}
 
     steps:

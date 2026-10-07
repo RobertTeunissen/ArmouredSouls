@@ -12,10 +12,11 @@ permissions:
   contents: read
   security-events: write
 
+# Runner image pinned to ubuntu-24.04; see the note in ci.yml before changing it.
 jobs:
   analyze:
     name: Analyze (JavaScript/TypeScript)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     strategy:
       fail-fast: false

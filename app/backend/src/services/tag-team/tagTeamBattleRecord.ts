@@ -23,10 +23,14 @@ export async function createTagTeamBattleRecord(
   team2: TagTeamWithRobots,
   result: TagTeamBattleResult
 ): Promise<Battle> {
+  // Winning side is derived from the team entity ID and written atomically with the row (#453)
+  const winningSide = result.winnerId === team1.id ? 1 : result.winnerId === team2.id ? 2 : null;
+
   // Create battle record with tag team fields
   const battle = await prisma.battle.create({
     data: {
       winnerId: result.winnerId,
+      winningSide,
       battleType: 'tag_team',
       leagueType: match.teamBattleLeague,
       leagueInstanceId: match.teamBattleLeagueId, // Snapshot instance at time of battle
@@ -140,12 +144,6 @@ export async function createTagTeamBattleRecord(
   await prisma.battleParticipant.createMany({ data: participantRows });
 
   // Write pre-computed battle summary (Spec #39)
-  // Determine winning side for tag team (team entity ID based)
-  const winningSide = result.winnerId === team1.id ? 1 : result.winnerId === team2.id ? 2 : null;
-  if (winningSide !== null) {
-    await prisma.battle.update({ where: { id: battle.id }, data: { winningSide } }).catch(() => {});
-  }
-
   const summaryData = computeBattleSummary({
     events: (result.battleLog || []) as unknown as import('../../shared/utils/battleStatistics').BattleLogEvent[],
     duration: result.durationSeconds,

@@ -356,7 +356,13 @@ export function calculateMovementIntent(
   // module's final-approach taper is intended to prevent.
   // This also applies while already in melee range: prediction must not move a
   // robot back out of the radius it can currently attack from.
-  const predictionWeight = isMelee && currentDistToTarget <= 4
+  // In a melee mirror match prediction is off at every distance (#467): each
+  // robot leads the other's tangential velocity, so two melee robots can circle
+  // at ~8 units for the whole battle and draw on the time limit without ever
+  // entering the final approach. Against a ranged target prediction stays on,
+  // because there it helps cut off a retreating opponent.
+  const targetPrefersMelee = getPreferredRange(target) === 'melee';
+  const predictionWeight = isMelee && (currentDistToTarget <= 4 || targetPrefersMelee)
     ? 0
     : (ca - 1) / 49;
   if (predictionWeight > 0) {

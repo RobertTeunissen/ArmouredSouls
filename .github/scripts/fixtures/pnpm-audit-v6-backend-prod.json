@@ -1,0 +1,253 @@
+{
+  "actions": [],
+  "advisories": {
+    "1239943": {
+      "id": 1239943,
+      "github_advisory_id": "GHSA-qw65-cvwx-89v3",
+      "module_name": "fast-uri",
+      "severity": "high",
+      "title": "fast-uri vulnerable to authority injection via an unvalidated port in serialize",
+      "vulnerable_versions": ">=3.0.0 <3.1.7",
+      "patched_versions": ">=3.1.7",
+      "url": "https://github.com/advisories/GHSA-qw65-cvwx-89v3",
+      "findings": [
+        {
+          "version": "3.1.6",
+          "paths": [
+            ".>prisma>@prisma/dev>@prisma/streams-local>ajv>fast-uri"
+          ]
+        }
+      ]
+    },
+    "1239946": {
+      "id": 1239946,
+      "github_advisory_id": "GHSA-58mr-gqgx-xq4g",
+      "module_name": "fast-uri",
+      "severity": "high",
+      "title": "fast-uri vulnerable to host confusion via an unclosed bracket in the URI authority",
+      "vulnerable_versions": "=3.1.6",
+      "patched_versions": ">=3.1.7",
+      "url": "https://github.com/advisories/GHSA-58mr-gqgx-xq4g",
+      "findings": [
+        {
+          "version": "3.1.6",
+          "paths": [
+            ".>prisma>@prisma/dev>@prisma/streams-local>ajv>fast-uri"
+          ]
+        }
+      ]
+    },
+    "1239948": {
+      "id": 1239948,
+      "github_advisory_id": "GHSA-rpw4-54j3-4h4q",
+      "module_name": "ip-address",
+      "severity": "moderate",
+      "title": "ip-address: Address6.isLinkLocal() recognizes fe80::/64 rather than fe80::/10, allowing SSRF and trust-boundary bypass to on-link hosts",
+      "vulnerable_versions": "<=10.5.0",
+      "patched_versions": ">=10.5.1",
+      "url": "https://github.com/advisories/GHSA-rpw4-54j3-4h4q",
+      "findings": [
+        {
+          "version": "10.3.1",
+          "paths": [
+            ".>express-rate-limit>ip-address"
+          ]
+        }
+      ]
+    },
+    "1239949": {
+      "id": 1239949,
+      "github_advisory_id": "GHSA-2vr4-cq9g-pvrc",
+      "module_name": "ip-address",
+      "severity": "moderate",
+      "title": "ip-address: no classifier recognizes the NAT64 local-use range 64:ff9b:1::/48, allowing SSRF and trust-boundary bypass",
+      "vulnerable_versions": ">=10.2.0 <=10.5.0",
+      "patched_versions": ">=10.5.1",
+      "url": "https://github.com/advisories/GHSA-2vr4-cq9g-pvrc",
+      "findings": [
+        {
+          "version": "10.3.1",
+          "paths": [
+            ".>express-rate-limit>ip-address"
+          ]
+        }
+      ]
+    },
+    "1240091": {
+      "id": 1240091,
+      "github_advisory_id": "GHSA-hrr3-gc8f-f4qj",
+      "module_name": "fast-uri",
+      "severity": "moderate",
+      "title": "fast-uri vulnerable to inconsistent host case normalization via percent-encoded octets",
+      "vulnerable_versions": ">=3.0.0 <3.1.8",
+      "patched_versions": ">=3.1.8",
+      "url": "https://github.com/advisories/GHSA-hrr3-gc8f-f4qj",
+      "findings": [
+        {
+          "version": "3.1.6",
+          "paths": [
+            ".>prisma>@prisma/dev>@prisma/streams-local>ajv>fast-uri"
+          ]
+        }
+      ]
+    },
+    "1240097": {
+      "id": 1240097,
+      "github_advisory_id": "GHSA-j6r3-76f7-8jcv",
+      "module_name": "ip-address",
+      "severity": "moderate",
+      "title": "ip-address: isInSubnet() and isHostInSubnet() compare addresses of different families as if they shared an address space, allowing an allowlist check to admit an address outside its range",
+      "vulnerable_versions": "<=10.7.0",
+      "patched_versions": ">=10.7.1",
+      "url": "https://github.com/advisories/GHSA-j6r3-76f7-8jcv",
+      "findings": [
+        {
+          "version": "10.3.1",
+          "paths": [
+            ".>express-rate-limit>ip-address"
+          ]
+        }
+      ]
+    },
+    "1240098": {
+      "id": 1240098,
+      "github_advisory_id": "GHSA-h3mg-xc3c-68pw",
+      "module_name": "ip-address",
+      "severity": "moderate",
+      "title": "ip-address: Address6 builds a parse diagnostic proportional to the input with no length bound, allowing a single long string to stall or crash the process",
+      "vulnerable_versions": "<=10.7.0",
+      "patched_versions": ">=10.7.1",
+      "url": "https://github.com/advisories/GHSA-h3mg-xc3c-68pw",
+      "findings": [
+        {
+          "version": "10.3.1",
+          "paths": [
+            ".>express-rate-limit>ip-address"
+          ]
+        }
+      ]
+    },
+    "1240100": {
+      "id": 1240100,
+      "github_advisory_id": "GHSA-q2hr-2g5m-vwhr",
+      "module_name": "brace-expansion",
+      "severity": "moderate",
+      "title": "brace-expansion: Quadratic-time expansion of the `{a},b}` rewrite causes CPU denial of service",
+      "vulnerable_versions": "<1.1.21",
+      "patched_versions": ">=1.1.21",
+      "url": "https://github.com/advisories/GHSA-q2hr-2g5m-vwhr",
+      "findings": [
+        {
+          "version": "1.1.18",
+          "paths": [
+            ".>@tensorflow/tfjs-node>@mapbox/node-pre-gyp>rimraf>glob>minimatch>brace-expansion"
+          ]
+        }
+      ]
+    },
+    "1240104": {
+      "id": 1240104,
+      "github_advisory_id": "GHSA-qhr7-859c-m2p7",
+      "module_name": "brace-expansion",
+      "severity": "high",
+      "title": "brace-expansion: DoS via uncontrolled recursion on nested brace groups causing stack exhaustion",
+      "vulnerable_versions": "<1.1.20",
+      "patched_versions": ">=1.1.20",
+      "url": "https://github.com/advisories/GHSA-qhr7-859c-m2p7",
+      "findings": [
+        {
+          "version": "1.1.18",
+          "paths": [
+            ".>@tensorflow/tfjs-node>@mapbox/node-pre-gyp>rimraf>glob>minimatch>brace-expansion"
+          ]
+        }
+      ]
+    },
+    "1240108": {
+      "id": 1240108,
+      "github_advisory_id": "GHSA-6j4f-fj2g-mc7p",
+      "module_name": "brace-expansion",
+      "severity": "high",
+      "title": "brace-expansion: DoS via uncontrolled recursion in parseCommaParts causing stack exhaustion",
+      "vulnerable_versions": "<1.1.19",
+      "patched_versions": ">=1.1.19",
+      "url": "https://github.com/advisories/GHSA-6j4f-fj2g-mc7p",
+      "findings": [
+        {
+          "version": "1.1.18",
+          "paths": [
+            ".>@tensorflow/tfjs-node>@mapbox/node-pre-gyp>rimraf>glob>minimatch>brace-expansion"
+          ]
+        }
+      ]
+    },
+    "1241202": {
+      "id": 1241202,
+      "github_advisory_id": "GHSA-hp3w-g68c-fv3c",
+      "module_name": "sprintf-js",
+      "severity": "moderate",
+      "title": "sprintf-js vulnerable to denial of service through unbounded precision specifiers",
+      "vulnerable_versions": "<=1.1.3",
+      "patched_versions": "<0.0.0",
+      "url": "https://github.com/advisories/GHSA-hp3w-g68c-fv3c",
+      "findings": [
+        {
+          "version": "1.0.3",
+          "paths": [
+            ".>@tensorflow/tfjs-node>@tensorflow/tfjs>argparse>sprintf-js"
+          ]
+        }
+      ]
+    },
+    "1241210": {
+      "id": 1241210,
+      "github_advisory_id": "GHSA-jqcg-44mw-7w3h",
+      "module_name": "proxy-addr",
+      "severity": "critical",
+      "title": "proxy-addr vulnerable to IP spoofing via IPv4-mapped IPv6 trust subnet",
+      "vulnerable_versions": ">=1.1.0 <2.0.8",
+      "patched_versions": ">=2.0.8",
+      "url": "https://github.com/advisories/GHSA-jqcg-44mw-7w3h",
+      "findings": [
+        {
+          "version": "2.0.7",
+          "paths": [
+            ".>express>proxy-addr"
+          ]
+        }
+      ]
+    },
+    "1241331": {
+      "id": 1241331,
+      "github_advisory_id": "GHSA-wq5f-xc86-pv6w",
+      "module_name": "sharp",
+      "severity": "high",
+      "title": "sharp : Vulnerability in librsvg dependency CVE-2026-96889",
+      "vulnerable_versions": "<0.35.5",
+      "patched_versions": ">=0.35.5",
+      "url": "https://github.com/advisories/GHSA-wq5f-xc86-pv6w",
+      "findings": [
+        {
+          "version": "0.35.4",
+          "paths": [
+            ".>sharp"
+          ]
+        }
+      ]
+    }
+  },
+  "muted": [],
+  "metadata": {
+    "vulnerabilities": {
+      "info": 0,
+      "low": 0,
+      "moderate": 7,
+      "high": 5,
+      "critical": 1
+    },
+    "dependencies": 438,
+    "devDependencies": 0,
+    "optionalDependencies": 0,
+    "totalDependencies": 438
+  }
+}

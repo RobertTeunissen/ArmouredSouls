@@ -52,6 +52,7 @@ htmlcov/
 
 # Generated review artifacts
 semantic-review/
+audit-report-*.json
 
 # Build outputs
 dist/
