@@ -5,8 +5,8 @@
 
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import RosterStrategyCard, { STRATEGY_DATA } from '../RosterStrategyCard';
-import type { RosterStrategy } from '../RosterStrategyCard';
+import RosterStrategyCard from '../RosterStrategyCard';
+import { STRATEGY_DATA, type RosterStrategy } from '../rosterStrategyData';
 
 describe('RosterStrategyCard', () => {
   const mockOnSelect = vi.fn();
