@@ -109,7 +109,15 @@ docker exec armouredsouls-db-prod psql -U as_prd -d armouredsouls_prd -c \
   "SHOW max_connections;"
 ```
 
-The production config sets `max_connections=20`. The Prisma connection string uses `connection_limit=10`, leaving headroom for maintenance connections.
+ACC and PRD run Postgres with `max_connections=20` (`docker-compose.production.yml`). The connection budget is:
+
+| Client | Max connections | Set by |
+|---|---|---|
+| Backend pool | 15 | `DB_POOL_MAX` (default 15, `src/lib/prisma.ts`) |
+| Deploy seed | 2 | `prisma/seed.ts` |
+| Migrations, `pg_dump`, `psql` | 1–2 each | — |
+
+`connection_limit` in `DATABASE_URL` has no effect: it is a Prisma query-engine parameter, and the pg driver adapter ignores it. Keep `DB_POOL_MAX` at least 5 below `max_connections`. Deploy migrations and the seed run through `scripts/with-db-retry.sh`, which retries when Postgres reports "too many clients".
 
 ### Vacuum
 

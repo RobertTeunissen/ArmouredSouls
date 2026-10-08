@@ -677,10 +677,12 @@ jobs:
           host: ${{ secrets.ACC_VPS_IP }}
           username: ${{ secrets.ACC_VPS_USER }}
           key: ${{ secrets.ACC_SSH_KEY }}
+          # with-db-retry.sh retries only on Postgres connection exhaustion
+          # ("too many clients"): the live backend shares max_connections=20.
           script: |
             export PATH="$HOME/.npm-global/bin:$PATH"
             cd /opt/armouredsouls/backend
-            pnpm exec prisma migrate deploy
+            bash /opt/armouredsouls/scripts/with-db-retry.sh pnpm exec prisma migrate deploy
 
       - name: Seed database (weapons, facilities, essential data)
         uses: appleboy/ssh-action@v1
@@ -688,10 +690,11 @@ jobs:
           host: ${{ secrets.ACC_VPS_IP }}
           username: ${{ secrets.ACC_VPS_USER }}
           key: ${{ secrets.ACC_SSH_KEY }}
+          command_timeout: 10m
           script: |
             export PATH="$HOME/.npm-global/bin:$PATH"
             cd /opt/armouredsouls/backend
-            NODE_ENV=acceptance pnpm exec prisma db seed
+            NODE_ENV=acceptance bash /opt/armouredsouls/scripts/with-db-retry.sh pnpm exec prisma db seed
 
       - name: Ensure logrotate config
         continue-on-error: true
@@ -1046,10 +1049,11 @@ jobs:
           host: ${{ secrets.PRD_VPS_IP }}
           username: ${{ secrets.PRD_VPS_USER }}
           key: ${{ secrets.PRD_SSH_KEY }}
+          # Retries only on Postgres connection exhaustion; see with-db-retry.sh.
           script: |
             export PATH="$HOME/.npm-global/bin:$PATH"
             cd /opt/armouredsouls/backend
-            pnpm exec prisma migrate deploy
+            bash /opt/armouredsouls/scripts/with-db-retry.sh pnpm exec prisma migrate deploy
 
       - name: Ensure logrotate config
         continue-on-error: true

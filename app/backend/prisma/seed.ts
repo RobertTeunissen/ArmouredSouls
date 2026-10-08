@@ -8,7 +8,10 @@ import { LOADOUT_TITLES, WEAPON_CODENAMES } from '../src/utils/tierConfig';
 // Load environment variables
 dotenv.config();
 
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
+// The seed runs during deploys next to the live backend on a Postgres with
+// max_connections=20, and its queries are sequential. Cap its pool so it never
+// competes for more than a couple of slots (pg's default would be 10).
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL!, max: 2 });
 const prisma = new PrismaClient({
   adapter,
   log: ['error', 'warn'],

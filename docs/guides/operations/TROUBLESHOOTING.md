@@ -126,7 +126,14 @@ docker exec armouredsouls-db-prod psql -U as_prd -d armouredsouls_prd -c \
   "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE state = 'idle' AND pid <> pg_backend_pid();"
 ```
 
-If this happens frequently, check for connection leaks in the application or increase `max_connections` in `docker-compose.production.yml`.
+See which clients hold the slots:
+
+```bash
+docker exec armouredsouls-db-prod psql -U as_prd -d armouredsouls_prd -c \
+  "SELECT usename, application_name, client_addr, state, count(*) FROM pg_stat_activity GROUP BY 1,2,3,4 ORDER BY 5 DESC;"
+```
+
+The backend pool is capped by `DB_POOL_MAX` (default 15), not by `connection_limit` in `DATABASE_URL`, which the pg driver adapter ignores. If a deploy fails at migrations or seeding with `P2037` / "too many clients already", re-run it: those steps already retry through `scripts/with-db-retry.sh`, so a repeat failure means the backend is holding connections for longer than the retry window. If this happens frequently, check for connection leaks or a `DB_POOL_MAX` override in the server's `.env`, or raise `max_connections` in `docker-compose.production.yml`.
 
 ---
 
