@@ -49,10 +49,16 @@ function createPrismaClient(): PrismaClient {
     throw new Error('DATABASE_URL environment variable is not set');
   }
 
-  // Increase pool size from default 10 to 20 to handle heavy batch workloads
-  // (e.g. tournament rounds with 2000+ matches doing ~15 DB ops each).
-  // Configurable via DB_POOL_MAX env var for per-environment tuning.
-  const poolMax = parseInt(process.env.DB_POOL_MAX || '20', 10);
+  // Pool size. ACC and PRD run Postgres with `max_connections=20`
+  // (docker-compose.production.yml), so the backend must not take every slot:
+  // deploy migrations/seed, pg_dump backups and psql sessions run alongside it.
+  // At the old default of 20 a busy backend locked them out, which failed the
+  // 2026-10-07 ACC deploy at the seed step ("too many clients already").
+  // 15 keeps 5 slots free while still covering heavy batch work (tournament
+  // rounds). Note: `connection_limit` in DATABASE_URL is a Prisma-engine
+  // parameter and is ignored by the pg driver adapter; this is the real cap.
+  // Configurable via DB_POOL_MAX; keep it below the server's max_connections.
+  const poolMax = parseInt(process.env.DB_POOL_MAX || '15', 10);
 
   // Statement timeout (ms): kills queries that exceed this duration to prevent
   // pool starvation from runaway queries. Default 30s; configurable via DB_STATEMENT_TIMEOUT_MS.
