@@ -198,9 +198,9 @@ Needs-attention reasons (a stable can have several; shown in this order):
 | Drafts list | Drafts on this environment | Drafts are never used by a stable. Each draft shows {n} errors or ready to export. (Changed after approval, consistency fix.) |
 
 - [x] Approved — 8 Oct 2026
-- [ ] Approved (§6.4b help text and rule error, decision 29)  - [ ] Changes requested — notes:
-- [ ] Approved (§6.2, §6.3, §6.4a and §6.4b consistency fixes)  - [ ] Changes requested — notes:
-- [ ] Approved (§6.4b Refine target and rule error, decisions 35–36)  - [ ] Changes requested — notes:
+- [x] Approved — 8 Oct 2026 (§6.4b help text and rule error, decision 29; recorded by the document header approval, which covers decisions 20–37 and the consistency fixes)
+- [x] Approved — 8 Oct 2026 (§6.2, §6.3, §6.4a and §6.4b consistency fixes; recorded by the document header approval, which covers decisions 20–37 and the consistency fixes)
+- [x] Approved — 8 Oct 2026 (§6.4b Refine target and rule error, decisions 35–36; recorded by the document header approval, which covers decisions 20–37 and the consistency fixes)
 
 ### 6.5 Editor tab
 
@@ -287,8 +287,8 @@ There is no aggregated "Saving" or "Blocked" count anywhere on the page: those o
 | Export buttons | Export this stable · Export all |
 
 - [x] Approved — 8 Oct 2026 (§6.7 sync status, decision 28)
-- [ ] Approved (§6.5 and §6.6 consistency fixes)  - [ ] Changes requested — notes:
-- [ ] Approved (§6.5 build order target, refinement plan row and refinement plan errors, decisions 35–36)  - [ ] Changes requested — notes:
+- [x] Approved — 8 Oct 2026 (§6.5 and §6.6 consistency fixes; recorded by the document header approval, which covers decisions 20–37 and the consistency fixes)
+- [x] Approved — 8 Oct 2026 (§6.5 build order target, refinement plan row and refinement plan errors, decisions 35–36; recorded by the document header approval, which covers decisions 20–37 and the consistency fixes)
 
 ### 6.8 Analytics filter
 

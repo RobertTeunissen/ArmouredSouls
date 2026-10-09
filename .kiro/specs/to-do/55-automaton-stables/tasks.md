@@ -12,9 +12,9 @@ All tasks are mandatory. Each task group lists its requirement trace; leaf tasks
 
 _Requirements: R13.1–R13.5_
 
-- [ ] 0.1 Confirm the Review_Pack exists with status headers and per-section checklists: `review/README.md`, `review/STRATEGIES.md`, `review/CATALOGUE.md`, `review/PLAYER_FACING_TEXT.md`, plus `mockups/player-pages.html` and `mockups/admin-automatons.html` (R13.1).
-- [ ] 0.2 Fold the product owner's remarks into the Review_Pack; where a remark changes behaviour, update `requirements.md` and `design.md` in the same change and record it in the Decisions list in `review/README.md` (R13.4).
-- [ ] 0.3 Record Content_Approval: every Review_Pack document `Status: Approved — <date>` and `review/README.md` `Status: Approved — <date>` (R13.2). Until then, Task Groups 4 and 11 and tasks 8.5, 8.6 and 10.5 must not start (R13.3).
+- [x] 0.1 Confirm the Review_Pack exists with status headers and per-section checklists: `review/README.md`, `review/STRATEGIES.md`, `review/CATALOGUE.md`, `review/PLAYER_FACING_TEXT.md`, plus `mockups/player-pages.html` and `mockups/admin-automatons.html` (R13.1).
+- [x] 0.2 Fold the product owner's remarks into the Review_Pack; where a remark changes behaviour, update `requirements.md` and `design.md` in the same change and record it in the Decisions list in `review/README.md` (R13.4). _Nothing left to fold at build start: decisions 1–39 are recorded and `review/README.md` lists no open questions. Five per-section boxes in `PLAYER_FACING_TEXT.md` (decisions 29, 35–36 and the consistency fixes) were still unticked although the document header records their approval; they were ticked to match the header._
+- [x] 0.3 Record Content_Approval: every Review_Pack document `Status: Approved — <date>` and `review/README.md` `Status: Approved — <date>` (R13.2). Until then, Task Groups 4 and 11 and tasks 8.5, 8.6 and 10.5 must not start (R13.3).
 
 ## Task Group 1: Stable_Type, schema and access
 
