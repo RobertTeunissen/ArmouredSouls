@@ -149,7 +149,81 @@ describe('containsProfanity', () => {
       },
     );
 
-    test.each(['bigass', 'BadShittyName'])('%s is not flagged', (name) => {
+    test.each(['bigshitbot', 'fuckingbot', 'bigassbot'])('%s is not flagged', (name) => {
+      expect(containsProfanity(name)).toBe(false);
+    });
+  });
+
+  describe('inflected and derived forms are listed explicitly', () => {
+    // Forms the whole-token matcher would miss if only the base word were listed.
+    const INFLECTED_FORMS = [
+      'fucking',
+      'fucker',
+      'motherfucker',
+      'motherfuckers',
+      'shitty',
+      'bullshit',
+      'horseshit',
+      'dipshit',
+      'shithead',
+      'bigass',
+      'dumbass',
+      'jackass',
+      'asshole',
+      'assholes',
+      'damnit',
+      'dammit',
+      'goddamn',
+      'faggot',
+      'nazis',
+      'retarded',
+      'niggers',
+      'niggas',
+    ];
+
+    test.each(INFLECTED_FORMS)('%s is a list entry', (form) => {
+      expect(PROFANITY_LIST).toContain(form);
+    });
+
+    test.each(INFLECTED_FORMS)('%s is flagged standalone, with separators and in camelCase', (form) => {
+      expect(containsProfanity(form)).toBe(true);
+      expect(containsProfanity(form.toUpperCase())).toBe(true);
+      expect(containsProfanity(cap(form))).toBe(true);
+      expect(containsProfanity(`Big ${cap(form)}`)).toBe(true);
+      expect(containsProfanity(`Big_${form}`)).toBe(true);
+      expect(containsProfanity(`${form}-bot`)).toBe(true);
+      expect(containsProfanity(`${cap(form)}Bot`)).toBe(true);
+      expect(containsProfanity(`My${cap(form)}`)).toBe(true);
+    });
+
+    test.each(['Fucking Robots', 'Big_Bullshit', 'ShittyBot', 'BadShittyName', 'TheMotherfuckers', 'Nazis-United'])(
+      '%s is flagged',
+      (name) => {
+        expect(containsProfanity(name)).toBe(true);
+      },
+    );
+
+    // Innocent words that resemble a listed form, plus forms skipped on purpose
+    // because they have a common innocent meaning.
+    test.each([
+      'Shitake',
+      'Shiitake Farm',
+      'Bassist',
+      'Classes',
+      'Masses',
+      'Assessor',
+      'Passes',
+      'Grasshopper',
+      'Cocktail',
+      'Cockerel',
+      'Cocky Bot',
+      'Half Cocked',
+      'Craps Table',
+      'Damning Evidence',
+      'Rapeseed Oil',
+      'Hellish',
+      'Dickens Works',
+    ])('%s is not flagged', (name) => {
       expect(containsProfanity(name)).toBe(false);
     });
   });
