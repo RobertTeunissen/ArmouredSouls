@@ -129,7 +129,7 @@ const refineRateLimiter = rateLimit({
 const refineBodySchema = z.object({
   tier: z.enum(['hone', 'augment', 'sharpen', 'forge']),
   magnitude: z.number().int().min(1).max(5),
-  targetAttribute: z.enum([...ROBOT_ATTRIBUTES] as [string, ...string[]]).optional(),
+  targetAttribute: z.enum(ROBOT_ATTRIBUTES).optional(),
 }).refine(
   (b) => {
     if (b.tier === 'sharpen' || b.tier === 'forge') {

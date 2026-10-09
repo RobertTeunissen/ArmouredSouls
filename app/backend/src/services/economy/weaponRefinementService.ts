@@ -18,6 +18,12 @@
  * first, then `SELECT ... FOR UPDATE` on `weapon_inventory`.
  *
  * Validation chain (each step throws an `EconomyError` on failure):
+ *  - Request shape (R8.7, before any read or write; the route's Zod schema
+ *    rejects these first, so only non-HTTP callers can reach them):
+ *    unknown tier → WEAPON_REFINEMENT_INVALID_TIER; magnitude not an integer in
+ *    `getRefinementMagnitudeRange(tier)` → WEAPON_REFINEMENT_MAGNITUDE_OUT_OF_RANGE;
+ *    hone/augment without a `ROBOT_ATTRIBUTES` target, or sharpen/forge with a
+ *    target → WEAPON_REFINEMENT_INVALID_TARGET_ATTRIBUTE
  *  - Tier locked vs Workshop level → WEAPON_REFINEMENT_TIER_LOCKED
  *  - Slot cap (≥ 5) / per-tier cap (Sharpen, Forge ≥ 2) → SLOT_/TIER_CAP_EXCEEDED
  *  - Shield + Sharpen/Forge → SHIELD_CANNOT_TAKE_DPS_TIER
@@ -33,12 +39,14 @@ import { verifyWeaponOwnership } from '../../middleware/ownership';
 import type { Prisma, Weapon, WeaponRefinement } from '../../../generated/prisma';
 import {
   calculateRefinementCost,
+  getRefinementMagnitudeRange,
   validateRefinementSlotAvailable,
   validateAttributeStackCap,
   validateAttributeOnWeapon,
   validateShieldCompatibility,
   type RefinementTier,
 } from '../../shared/utils/weaponRefinement';
+import { isRobotAttribute, type RobotAttribute } from '../../shared/utils/robotAttributes';
 import { eventLogger } from '../common/eventLogger';
 import { securityMonitor } from '../security/securityMonitor';
 import { applyCreditMutationInTransaction } from '../financial/creditMutationService';
@@ -60,7 +68,7 @@ const REQUIRED_WORKSHOP_LEVELS: Record<RefinementTier, number> = {
 export interface RefinementRequest {
   tier: RefinementTier;
   /** Required for hone/augment; absent for sharpen/forge. */
-  targetAttribute?: string;
+  targetAttribute?: RobotAttribute;
   /** 1–5 for hone/augment; sharpen/forge always store 1. */
   magnitude: number;
 }
@@ -103,6 +111,64 @@ function getCatalogBonus(weapon: Weapon, attribute: string): number {
   return typeof v === 'number' ? v : 0;
 }
 
+function isRefinementTier(value: unknown): value is RefinementTier {
+  return typeof value === 'string' && Object.prototype.hasOwnProperty.call(REQUIRED_WORKSHOP_LEVELS, value);
+}
+
+/**
+ * Enforce the refinement request-shape rules (R8.7) that the route's
+ * `refineBodySchema` also enforces, so a non-HTTP caller (the Automaton
+ * executor) cannot bypass them. Runs before any read or write, so a rejection
+ * leaves no refinement row, ledger row or balance change.
+ *
+ * Inputs are checked at runtime even though they are typed: callers may build
+ * requests from JSON plans. Error details carry only the allowed range, never
+ * the submitted values.
+ *
+ * @returns the validated target attribute (non-null exactly for hone/augment).
+ */
+function assertValidRefinementRequest(request: RefinementRequest): RobotAttribute | null {
+  const { tier, magnitude, targetAttribute } = request;
+
+  if (!isRefinementTier(tier)) {
+    throw new EconomyError(
+      EconomyErrorCode.WEAPON_REFINEMENT_INVALID_TIER,
+      'Refinement tier must be hone, augment, sharpen or forge.',
+      400,
+    );
+  }
+
+  const [minMagnitude, maxMagnitude] = getRefinementMagnitudeRange(tier);
+  if (!Number.isInteger(magnitude) || magnitude < minMagnitude || magnitude > maxMagnitude) {
+    throw new EconomyError(
+      EconomyErrorCode.WEAPON_REFINEMENT_MAGNITUDE_OUT_OF_RANGE,
+      `Magnitude for ${tier} must be a whole number from ${minMagnitude} to ${maxMagnitude}.`,
+      400,
+      { minMagnitude, maxMagnitude },
+    );
+  }
+
+  if (tier === 'hone' || tier === 'augment') {
+    if (typeof targetAttribute !== 'string' || !isRobotAttribute(targetAttribute)) {
+      throw new EconomyError(
+        EconomyErrorCode.WEAPON_REFINEMENT_INVALID_TARGET_ATTRIBUTE,
+        `${tier} requires a valid robot attribute as its target.`,
+        400,
+      );
+    }
+    return targetAttribute;
+  }
+
+  if (targetAttribute !== undefined) {
+    throw new EconomyError(
+      EconomyErrorCode.WEAPON_REFINEMENT_INVALID_TARGET_ATTRIBUTE,
+      `${tier} does not take a target attribute.`,
+      400,
+    );
+  }
+  return null;
+}
+
 /** The magnitude stored for a request: Sharpen/Forge always store 1. */
 export function refinementMagnitudeForStorage(tier: RefinementTier, magnitude: number): number {
   return (tier === 'sharpen' || tier === 'forge') ? 1 : magnitude;
@@ -122,10 +188,13 @@ export async function refineWeapon(
   options: PurchaseServiceOptions = {},
 ): Promise<WeaponRefinementResult> {
   const { tier, magnitude, targetAttribute } = request;
+  // R8.7: request-shape rules are enforced here, before the replay probe and
+  // the transaction, so a rejected request writes nothing.
+  const validatedTarget = assertValidRefinementRequest(request);
 
-  // Sharpen/Forge always store magnitude 1 (the route's Zod schema enforces this
-  // on input; the storage path mirrors it so an audit log of the row never
-  // disagrees with the formula module's expectations).
+  // Sharpen/Forge always store magnitude 1 (the request guard above and the
+  // route's Zod schema enforce this on input; the storage path mirrors it so an
+  // audit log of the row never disagrees with the formula module's expectations).
   const magnitudeForStorage = refinementMagnitudeForStorage(tier, magnitude);
   const requestFacts = { inventoryId, tier, magnitude: magnitudeForStorage, targetAttribute: targetAttribute ?? null };
   const identity = createEconomicRequestIdentity(userId, 'weapon_refinement', requestKey, requestFacts);
@@ -229,9 +298,10 @@ export async function refineWeapon(
       );
     }
 
-    if (tier === 'hone' || tier === 'augment') {
-      // The route's Zod schema enforces targetAttribute for hone/augment.
-      const attribute = targetAttribute as string;
+    // assertValidRefinementRequest returns a target exactly when the tier is
+    // hone/augment, so the second condition only narrows the type.
+    if ((tier === 'hone' || tier === 'augment') && validatedTarget !== null) {
+      const attribute = validatedTarget;
       const catalogBonus = getCatalogBonus(weapon, attribute);
 
       const attrCheck = validateAttributeOnWeapon(catalogBonus, refinementRows, attribute, tier);

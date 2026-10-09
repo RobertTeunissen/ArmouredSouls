@@ -103,6 +103,8 @@ Example with details:
 | `WEAPON_REFINEMENT_ATTRIBUTE_NOT_ON_WEAPON` | 400 | Hone target attribute is not present on the weapon (catalog or prior Augment) |
 | `WEAPON_REFINEMENT_ATTRIBUTE_ALREADY_ON_WEAPON` | 400 | Augment target attribute is already granted (catalog or prior Augment) |
 | `WEAPON_REFINEMENT_SHIELD_CANNOT_TAKE_DPS_TIER` | 400 | Sharpen or Forge attempted on a shield weapon |
+| `WEAPON_REFINEMENT_INVALID_TIER` | 400 | Refinement tier is not one of hone, augment, sharpen or forge (service-level guard for non-HTTP callers; the route's Zod schema rejects this first) |
+| `WEAPON_REFINEMENT_INVALID_TARGET_ATTRIBUTE` | 400 | Hone/Augment without a valid robot attribute target, or Sharpen/Forge with a target (service-level guard for non-HTTP callers; the route's Zod schema rejects this first) |
 
 ### League Errors
 

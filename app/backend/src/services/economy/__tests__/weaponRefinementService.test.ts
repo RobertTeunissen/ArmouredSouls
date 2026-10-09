@@ -4,7 +4,8 @@
  * Route regressions live in tests/weaponInventory.test.ts and the shared
  * validator suites. These cases call the service directly: Workshop tier gate,
  * shield rule, cost from `calculateRefinementCost`, stored magnitude for
- * Sharpen, the 402 affordability error, replay and the audit-context extension.
+ * Sharpen, the 402 affordability error, replay, the audit-context extension and
+ * the R8.7 request-shape guard (zero writes on rejection).
  */
 import prisma from '../../../lib/prisma';
 import { calculateRefinementCost } from '../../../shared/utils/weaponRefinement';
@@ -140,6 +141,42 @@ describe('refineWeapon', () => {
 
     expect(second.replayed).toBe(true);
     expect(await prisma.weaponRefinement.count({ where: { weaponInventoryId: inventoryId } })).toBe(1);
+  });
+
+  // R8.7: request-shape rules the route's Zod schema also enforces. A direct
+  // (non-HTTP) caller is refused before any write. Casts stand in for requests
+  // built from untyped JSON plans.
+  const invalidRequests: Array<[string, unknown, string]> = [
+    ['augment without a target', { tier: 'augment', magnitude: 3 }, 'WEAPON_REFINEMENT_INVALID_TARGET_ATTRIBUTE'],
+    ['hone without a target', { tier: 'hone', magnitude: 1 }, 'WEAPON_REFINEMENT_INVALID_TARGET_ATTRIBUTE'],
+    ['augment with an unknown attribute', { tier: 'augment', targetAttribute: 'notAnAttribute', magnitude: 2 }, 'WEAPON_REFINEMENT_INVALID_TARGET_ATTRIBUTE'],
+    ['hone with an unknown attribute', { tier: 'hone', targetAttribute: 'combatPowerBonus', magnitude: 1 }, 'WEAPON_REFINEMENT_INVALID_TARGET_ATTRIBUTE'],
+    ['sharpen with a target', { tier: 'sharpen', targetAttribute: 'combatPower', magnitude: 1 }, 'WEAPON_REFINEMENT_INVALID_TARGET_ATTRIBUTE'],
+    ['forge with a target', { tier: 'forge', targetAttribute: 'combatPower', magnitude: 1 }, 'WEAPON_REFINEMENT_INVALID_TARGET_ATTRIBUTE'],
+    ['hone magnitude above 5', { tier: 'hone', targetAttribute: 'combatPower', magnitude: 7 }, 'WEAPON_REFINEMENT_MAGNITUDE_OUT_OF_RANGE'],
+    ['hone magnitude 0', { tier: 'hone', targetAttribute: 'combatPower', magnitude: 0 }, 'WEAPON_REFINEMENT_MAGNITUDE_OUT_OF_RANGE'],
+    ['hone non-integer magnitude', { tier: 'hone', targetAttribute: 'combatPower', magnitude: 1.5 }, 'WEAPON_REFINEMENT_MAGNITUDE_OUT_OF_RANGE'],
+    ['augment negative magnitude', { tier: 'augment', targetAttribute: 'armorPlating', magnitude: -1 }, 'WEAPON_REFINEMENT_MAGNITUDE_OUT_OF_RANGE'],
+    ['sharpen magnitude other than 1', { tier: 'sharpen', magnitude: 3 }, 'WEAPON_REFINEMENT_MAGNITUDE_OUT_OF_RANGE'],
+    ['forge magnitude 0', { tier: 'forge', magnitude: 0 }, 'WEAPON_REFINEMENT_MAGNITUDE_OUT_OF_RANGE'],
+    ['unknown tier', { tier: 'polish', magnitude: 1 }, 'WEAPON_REFINEMENT_INVALID_TIER'],
+  ];
+
+  it.each(invalidRequests)('refuses %s with a 400 and writes nothing', async (_label, request, code) => {
+    const userId = await createUser(5_000_000, 8);
+    const inventoryId = await giveWeapon(userId, 'Laser Pistol');
+    const before = await prisma.weaponInventory.findUniqueOrThrow({ where: { id: inventoryId } });
+
+    await expect(
+      refineWeapon(userId, inventoryId, request as RefinementRequest, nextKey()),
+    ).rejects.toMatchObject({ code, statusCode: 400 });
+
+    expect(await prisma.weaponRefinement.count({ where: { weaponInventoryId: inventoryId } })).toBe(0);
+    expect(await prisma.financialLedger.count({ where: { userId } })).toBe(0);
+    const user = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { currency: true } });
+    expect(user.currency).toBe(5_000_000);
+    const after = await prisma.weaponInventory.findUniqueOrThrow({ where: { id: inventoryId } });
+    expect(after.pricePaid).toBe(before.pricePaid);
   });
 
   it('merges an audit-context extension into the stored metadata', async () => {
