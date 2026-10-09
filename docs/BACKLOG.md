@@ -37,6 +37,7 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 | 21 | Cosmetic Customization System | 46 | 0 🗳️ | 2 | 1 | 1 | 5 | **0.8** |
 | 22 | Matchup-Dependent Weapon Effectiveness | 58 | 0 🗳️ | 3 | 1 | 2 | 5 | **1.2** |
 | 23 | Dashboard Mobile Optimisation | 60 | 0 🗳️ | 3 | 2 | 2 | 3 | **2.3** |
+| 24 | Stable Franchises & Backstories | 61 | 0 🗳️ | 1 | 1 | 1 | 2 | **1.5** |
 
 ---
 
@@ -223,3 +224,17 @@ Spec #48 gives the Overview_Row a correct mobile layout: single column below 102
 **Suggested scope**: measure the mobile scroll depth first, then decide per section whether it collapses, lazy-loads, or moves. Also revisit whether the robot card grid belongs on the Dashboard at all given `/robots` exists. Pair with the per-tile height fix above, since both are `components/dashboard/` edits.
 
 **Not in scope for #48**, deliberately: that spec's mobile requirements are about the Overview_Row not breaking, not about the page being pleasant on a phone.
+
+### #61 — Stable Franchises & Backstories
+**Source**: Spec #55 (Automaton Stables) review, Oct 2026 — `.kiro/specs/to-do/55-automaton-stables/` (`review/README.md` decision 11)
+**Priority**: Low — flavour, no gameplay effect
+
+Spec #55 gives every Automaton stable a franchise label (e.g. "Transformers — Autobots") and a short backstory (admin-only in-world flavour text about the stable as a whole: who they are and how they fight), but shows neither to players: human stables have no equivalent, and adding one only for Automatons was rejected. The fields are stored on `AutomatonProfile` and edited in the admin Automatons page, so the content already exists when this item is picked up.
+
+**Suggested scope**:
+- A franchise/theme line and a backstory on the public stable profile (`StableViewPage`) for **all** stables, shown below the stable name.
+- Human players set their own on the profile page (`PUT /api/user/profile`), with the same validation as stable names (length, character set, profanity check).
+- Backstories are free text that every player can see, so they need moderation: a report action and an admin removal path, in line with the existing image moderation.
+- Automaton stables show their admin-written franchise and backstory from spec #55 without further work.
+
+**Dependencies**: Spec #55.

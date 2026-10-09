@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Spec 55 — Automaton Stables — Player Page Mockups</title>
+  <style>
+    /* Theme tokens copied from app/frontend/src/index.css */
+    :root { --bg:#0a0e14; --surface:#1a1f29; --elevated:#252b38; --primary:#58a6ff; --secondary:#8b949e; --tertiary:#57606a; --success:#3fb950; --warning:#d29922; --error:#f85149; --info:#a371f7; --line:rgba(255,255,255,.1); }
+    * { box-sizing:border-box; }
+    body { margin:0; background:#05070a; color:#fff; font:14px/1.45 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    a { color:var(--primary); text-decoration:none; }
+    .doc { max-width:1560px; margin:0 auto; padding:32px 24px 80px; }
+    .doc > header h1 { font-size:26px; margin:0 0 6px; }
+    .doc > header p { color:var(--secondary); margin:0 0 4px; max-width:900px; }
+    .section { margin-top:44px; }
+    .section > h2 { font-size:18px; margin:0 0 4px; }
+    .section > p.note { color:var(--secondary); margin:0 0 14px; max-width:960px; }
+    .frames { display:flex; flex-wrap:wrap; gap:24px; align-items:flex-start; }
+    .frame { container-type:inline-size; background:var(--bg); border:1px solid #30363d; border-radius:12px; overflow:hidden; }
+    .frame.m { width:360px; } .frame.d { width:1100px; max-width:100%; }
+    .frame .cap { background:#11151c; color:var(--secondary); font-size:12px; padding:6px 12px; border-bottom:1px solid #30363d; }
+    .frame .body { padding:16px; }
+
+    /* ── The badge (AutomatonBadge) ─────────────────────────────── */
+    .ab { display:inline-flex; align-items:center; gap:4px; vertical-align:middle; color:var(--info); background:rgba(163,113,247,.15); border:1px solid rgba(163,113,247,.4); border-radius:4px; font-weight:600; white-space:nowrap; }
+    .ab svg { width:12px; height:12px; flex:none; }
+    .ab.md { font-size:12px; line-height:16px; padding:2px 8px; }
+    .ab.sm { font-size:10px; line-height:14px; padding:0 4px; text-transform:uppercase; letter-spacing:.02em; }
+    .ab.sm svg { width:10px; height:10px; }
+    /* Compact mode: in rows, tables and banners narrower than 640 px the badge shows the gear only.
+       The label stays in the DOM, visually hidden, so screen readers still announce "Automaton". */
+    @container (max-width:639px) {
+      .ab.auto { padding:2px 4px; gap:0; }
+      .ab.auto .lbl { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+      .ab.auto svg { width:14px; height:14px; }
+    }
+    .lb-item > .grow { flex:1; min-width:0; }
+    .you { font-size:12px; padding:2px 8px; background:var(--primary); color:#fff; border-radius:4px; font-weight:600; }
+    .bot { font-size:10px; padding:0 4px; background:var(--surface); color:var(--tertiary); border-radius:4px; text-transform:uppercase; }
+
+    .spec-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px; }
+    .spec-card { background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:16px; }
+    .spec-card h3 { font-size:13px; color:var(--secondary); margin:0 0 10px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; }
+    .row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:6px 0; }
+    .big { transform:scale(3); transform-origin:left center; margin:18px 0 30px; display:inline-block; }
+
+    /* ── Common page bits ───────────────────────────────────────── */
+    .card { background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:16px; }
+    .muted { color:var(--secondary); } .faint { color:var(--tertiary); }
+    .back { color:var(--primary); margin-bottom:14px; display:inline-block; min-height:44px; line-height:44px; }
+    table { width:100%; border-collapse:collapse; }
+    th { text-align:left; color:var(--secondary); font-weight:600; font-size:12px; padding:8px 10px; border-bottom:1px solid var(--line); }
+    td { padding:10px; border-bottom:1px solid rgba(255,255,255,.05); vertical-align:middle; }
+    /* Badge rule: always on the same line, directly after the stable name (like YOU). Long names truncate; the badge never wraps. */
+    .name { display:flex; align-items:center; gap:8px; flex-wrap:nowrap; min-width:0; }
+    .name > a, .name > .nm { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .name > .ab, .name > .you { flex:none; }
+    .glue { white-space:nowrap; }
+
+    /* Stable header */
+    .stable-h h2 { font-size:24px; margin:0; }
+    .stable-h h2 { margin-bottom:10px; }
+    .stable-h .stats { display:flex; flex-wrap:wrap; gap:6px 24px; }
+    @container (min-width:640px) { .stable-h h2 { font-size:30px; } }
+
+    /* Robot header */
+    .robot-h { display:flex; flex-direction:column; align-items:center; gap:16px; }
+    .portrait { width:128px; height:128px; border-radius:10px; background:linear-gradient(135deg,#2b3446,#151a23); display:grid; place-items:center; color:var(--tertiary); font-size:12px; border:1px solid var(--line); flex:none; }
+    .robot-h .top { display:flex; flex-direction:column; align-items:center; gap:4px; width:100%; }
+    .robot-h h1 { font-size:24px; margin:0; }
+    .owner { text-align:center; font-size:13px; }
+    .owner .who { display:inline-flex; align-items:center; gap:6px; font-weight:600; white-space:nowrap; }
+    .robot-stats { display:flex; flex-wrap:wrap; justify-content:center; gap:6px 24px; font-size:13px; margin-top:8px; }
+    .robot-stats b { font-weight:600; }
+    @container (min-width:640px) {
+      .robot-h { flex-direction:row; align-items:flex-start; }
+      .portrait { width:168px; height:168px; }
+      .robot-h .info { flex:1; }
+      .robot-h .top { flex-direction:row; justify-content:space-between; align-items:flex-start; }
+      .robot-h h1 { font-size:30px; }
+      .owner { text-align:right; }
+      .robot-stats { justify-content:flex-start; }
+    }
+
+    /* Leaderboard */
+    .lb-table { display:none; } .lb-list { display:block; }
+    .lb-item { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,.05); }
+    .lb-item .rank { color:var(--secondary); width:28px; flex:none; }
+    @container (min-width:768px) { .lb-table { display:table; } .lb-list { display:none; } }
+
+    /* Battle banner */
+    .banner { border:2px solid rgba(63,185,80,.5); background:rgba(63,185,80,.08); border-radius:8px; padding:12px; text-align:center; }
+    .banner .head { font-size:28px; font-weight:700; color:var(--success); }
+    .banner .sub { font-size:13px; color:var(--success); opacity:.8; margin-bottom:8px; }
+    .vs-row { display:flex; justify-content:center; align-items:center; gap:16px; flex-wrap:wrap; margin-top:8px; }
+    .pt { display:flex; flex-direction:column; align-items:center; gap:3px; min-width:0; max-width:45%; }
+    .pt .mini { width:64px; height:64px; border-radius:8px; background:linear-gradient(135deg,#2b3446,#151a23); border:1px solid var(--line); }
+    .pt .rn { font-size:13px; color:var(--primary); }
+    .pt .sn { font-size:12px; color:var(--secondary); display:flex; gap:6px; align-items:center; flex-wrap:nowrap; justify-content:center; max-width:100%; }
+    .pt .sn .nm { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .pt.lose { opacity:.5; }
+    .vs { color:var(--secondary); font-weight:700; font-size:18px; }
+
+    /* Archive */
+    .arch td { padding:6px 10px; font-size:13px; }
+  </style>
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <mask id="gear-hole"><rect width="16" height="16" fill="#fff"/><circle cx="8" cy="8" r="2.2" fill="#000"/></mask>
+      <symbol id="gear" viewBox="0 0 16 16">
+        <g fill="currentColor" mask="url(#gear-hole)">
+          <circle cx="8" cy="8" r="4.6"/>
+          <rect x="6.8" y="0.8" width="2.4" height="3.2" rx="0.6"/>
+          <rect x="6.8" y="0.8" width="2.4" height="3.2" rx="0.6" transform="rotate(45 8 8)"/>
+          <rect x="6.8" y="0.8" width="2.4" height="3.2" rx="0.6" transform="rotate(90 8 8)"/>
+          <rect x="6.8" y="0.8" width="2.4" height="3.2" rx="0.6" transform="rotate(135 8 8)"/>
+          <rect x="6.8" y="0.8" width="2.4" height="3.2" rx="0.6" transform="rotate(180 8 8)"/>
+          <rect x="6.8" y="0.8" width="2.4" height="3.2" rx="0.6" transform="rotate(225 8 8)"/>
+          <rect x="6.8" y="0.8" width="2.4" height="3.2" rx="0.6" transform="rotate(270 8 8)"/>
+          <rect x="6.8" y="0.8" width="2.4" height="3.2" rx="0.6" transform="rotate(315 8 8)"/>
+        </g>
+      </symbol>
+    </defs>
+  </svg>
+
+  <div class="doc">
+    <header>
+      <h1>Spec 55 — Automaton Stables: player page mockups</h1>
+      <p>Static mockups for review. Colours and spacing use the theme tokens from <code>app/frontend/src/index.css</code>. The only new element is the Automaton badge; everything else is the page as it is today.</p>
+      <p>Each page is shown at mobile width (360 px) and desktop width. Sample data comes from the starter catalogue (<code>review/CATALOGUE.md</code>).</p>
+    </header>
+
+    <!-- 0. Badge -->
+    <section class="section">
+      <h2>The badge</h2>
+      <p class="note">Label "Automaton", gear icon, theme <code>info</code> purple. No tooltip. It always sits on the same line, directly after the stable name, like "YOU". In rows, tables and battle banners narrower than 640 px it shows only the gear, so stable names stay readable at 360 px; page headers (stable profile, robot owner) keep the full label. Screen readers always hear "Automaton". Two sizes: <code>md</code> next to names, <code>sm</code> in the dense archive tables. Shown next to the existing badges it must not be confused with.</p>
+      <div class="spec-grid">
+        <div class="spec-card">
+          <h3>Enlarged (3×)</h3>
+          <span class="big"><span class="ab md"><svg aria-hidden="true"><use href="#gear"/></svg><span class="lbl">Automaton</span></span></span>
+        </div>
+        <div class="spec-card">
+          <h3>Sizes</h3>
+          <div class="row"><span class="ab md"><svg aria-hidden="true"><use href="#gear"/></svg><span class="lbl">Automaton</span></span><span class="muted">md — 12 px, headers, tables, banners</span></div>
+          <div class="row"><span class="ab sm"><svg aria-hidden="true"><use href="#gear"/></svg><span class="lbl">Automaton</span></span><span class="muted">sm — 10 px, season archive</span></div>
+          <div class="row"><span class="ab md" style="padding:2px 4px"><svg aria-hidden="true" style="width:14px;height:14px"><use href="#gear"/></svg></span><span class="muted">compact — gear only, rows/tables/banners below 640 px</span></div>
+        </div>
+        <div class="spec-card">
+          <h3>Next to existing badges</h3>
+          <div class="row"><a href="#">Kamino Clone Legion</a><span class="ab md"><svg aria-hidden="true"><use href="#gear"/></svg><span class="lbl">Automaton</span></span></div>
+          <div class="row"><a href="#">Iron Warriors</a><span class="you">YOU</span><span class="muted">existing</span></div>
+          <div class="row"><span>Rusty Bolts</span><span class="bot">bot</span><span class="muted">existing (archive, auto-generated)</span></div>
+        </div>
+        <div class="spec-card" style="background:var(--bg)">
+          <h3>On page background</h3>
+          <div class="row"><span class="ab md"><svg aria-hidden="true"><use href="#gear"/></svg><span class="lbl">Automaton</span></span><span class="ab sm"><svg aria-hidden="true"><use href="#gear"/></svg><span class="lbl">Automaton</span></span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- A. Leaderboard -->
+    <section class="section">
+      <h2>A · Leaderboards (Prestige shown; Fame and Losses identical)</h2>
+      <p class="note">Badge after the stable name inside the owner cell. If a human player looks at their own row, "YOU" stays where it is.</p>
+      <div class="frames">
+        <div class="frame m"><div class="cap">Mobile · 360 px</div><div class="body">
+          <div class="card">
+            <table class="lb-table"><tbody></tbody></table>
+            <div class="lb-list">
+              <div class="lb-item"><span class="rank">1</span><span class="name grow"><a href="#">Old Detroit Precinct</a><span class="ab md auto"><svg aria-hidden="true"><use href="#gear"/></svg><span class="lbl">Automaton</span></span></span><span style="color:var(--primary);font-weight:600">4,820</span></div>
+              <div class="lb-item"><span class="rank">2</span><span class="name grow"><a href="#">Iron Warriors</a><span class="you">YOU</span></span><span style="color:var(--primary);font-weight:600">4,410</span></div>
+              <div class="lb-item"><span class="rank">3</span><span class="name grow"><a href="#">Kamino Clone Legion</a><span class="ab md auto"><svg aria-hidden="true"><use href="#gear"/></svg><span class="lbl">Automaton</span></span></span><span style="color:var(--primary);font-weight:600">3,960</span></div>
+              <div class="lb-item"><span class="rank">4</span><span class="name grow"><a href="#">Minion Mayhem</a></span><span style="color:var(--primary);font-weight:600">3,105</span></div>
+            </div>
+          </div>
+        </div></div>
+        <div class="frame d"><div class="cap">Desktop · 1100 px</div><div class="body">
+          <div class="card">
+            <table class="lb-table">
+              <thead><tr><th>Rank</th><th>Stable</th><th>Prestige</th><th>Robots</th><th>Titles</th></tr></thead>
+              <tbody>
+                <tr><td>1</td><td><span class="name"><a href="#">Old Detroit Precinct</a><span class="ab md auto"><svg aria-hidden="true"><use href="#gear"/></svg><span class="lbl">Automaton</span></span></span></td><td style="color:var(--primary);font-weight:600">4,820</td><td>1</td><td>2</td></tr>
+                <tr><td>2</td><td><span class="name"><a href="#">Iron Warriors</a><span class="you">YOU</span></span></td><td style="color:var(--primary);font-weight:600">4,410</td><td>3</td><td>1</td></tr>
+                <tr><td>3</td><td><span class="name"><a href="#">Kamino Clone Legion</a><span class="ab md auto"><svg aria-hidden="true"><use href="#gear"/></svg><span class="lbl">Automaton</span></span></span></td><td style="color:var(--primary);font-weight:600">3,960</td><td>5</td><td>0</td></tr>
+                <tr><td>4</td><td><span class="name"><a href="#">Minion Mayhem</a></span></td><td style="color:var(--primary);font-weight:600">3,105</td><td>2</td><td>0</td></tr>
+              </tbody>
+            </table>
+            <div class="lb-list"></div>
+          </div>
+        </div></div>
+      </div>
+    </section>
+
+    <!-- B. League standings -->
+    <section class="section">
+      <h2>B · League standings and Hall of Records</h2>
+      <p class="note">Robot rows keep the robot name as the main link; the owner cell gets the badge. Hall of Records rows ("Robot by Stable") work the same way.</p>
+      <div class="frames">
+        <div class="frame m"><div class="cap">Mobile · 360 px</div><div class="body">
+          <div class="card" style="padding:12px">
+            <div class="lb-item"><span class="rank">1</span><span class="grow"><a href="#">CT-7567 Rex</a><br><span class="name" style="font-size:12px"><a href="#" class="muted">Kamino Clone Legion</a><span class="ab md auto"><svg aria-hidden="true"><use href="#gear"/></svg><span class="lbl">Automaton</span></span></span></span><span>42 LP</span></div>
+            <div class="lb-item"><span class="rank">2</span><span class="grow"><a href="#">Ironclad</a><br><span class="name" style="font-size:12px"><a href="#" class="muted">Iron Warriors</a></span></span><span>39 LP</span></div>
+            <div class="lb-item"><span class="rank">3</span><span class="grow"><a href="#">Gipsy Danger</a><br><span class="name" style="font-size:12px"><a href="#" class="muted">Pan Pacific Defense Corps</a><span class="ab md auto"><svg aria-hidden="true"><use href="#gear"/></svg><span class="lbl">Automaton</span></span></span></span><span>35 LP</span></div>
+          </div>
+          <div class="card" style="padding:12px;margin-top:12px">
+            <div class="muted" style="font-size:12px;margin-bottom:6px">Hall of Records · Highest damage in one battle</div>
+            <div>1,500 · <a href="#">Megatron</a> by <span class="glue"><a href="#">Decepticon Armada</a> <span class="ab md auto"><svg aria-hidden="true"><use href="#gear"/></svg><span class="lbl">Automaton</span></span></span></div>
+          </div>
+        </div></div>
+        <div class="frame d"><div class="cap">Desktop · 1100 px</div><div class="body">
+          <div class="card">
+            <table>
+              <thead><tr><th>#</th><th>Robot</th><th>Owner</th><th>LP</th><th>W-L-D</th><th>ELO</th></tr></thead>
+              <tbody>
+                <tr><td>1</td><td><a href="#">CT-7567 Rex</a></td><td><span class="name"><a href="#">Kamino Clone Legion</a><span class="ab md auto"><svg aria-hidden="true"><use href="#gear"/></svg><span class="lbl">Automaton</span></span></span></td><td>42</td><td>14-3-1</td><td>1,342</td></tr>
+                <tr><td>2</td><td><a href="#">Ironclad</a></td><td><span class="name"><a href="#">Iron Warriors</a></span></td><td>39</td><td>13-4-1</td><td>1,318</td></tr>
+                <tr><td>3</td><td><a href="#">Gipsy Danger</a></td><td><span class="name"><a href="#">Pan Pacific Defense Corps</a><span class="ab md auto"><svg aria-hidden="true"><use href="#gear"/></svg><span class="lbl">Automaton</span></span></span></td><td>35</td><td>11-6-1</td><td>1,290</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="card" style="margin-top:12px">
+            <div class="muted" style="font-size:12px;margin-bottom:6px">Hall of Records · Highest damage in one battle</div>
+            <div>1,500 · <a href="#">Megatron</a> by <span class="glue"><a href="#">Decepticon Armada</a> <span class="ab md auto"><svg aria-hidden="true"><use href="#gear"/></svg><span class="lbl">Automaton</span></span></span></div>
+          </div>
+        </div></div>
+      </div>
+    </section>
+
+    <!-- C. Stable profile -->
+    <section class="section">
+      <h2>C · Stable profile page (<code>/stables/:id</code>)</h2>
+      <p class="note">Only the badge is new. No franchise line or backstory (backlog #61). Prestige, rank, titles, robots, facilities and records are unchanged; robots and below are not shown here.</p>
+      <div class="frames">
+        <div class="frame m"><div class="cap">Mobile · 360 px</div><div class="body">
+          <span class="back">← Back</span>
+          <div class="card stable-h">
+            <h2>Autobots of the <span class="glue">Ark <span class="ab md"><svg aria-hidden="true"><use href="#gear"/></svg><span class="lbl">Automaton</span></span></span></h2>
+            <div class="stats"><span><span class="muted">Prestige:</span> <b style="color:var(--primary)">2,140</b></span><span><span class="muted">Rank:</span> <b>Established</b></span></div>
+          </div>
+        </div></div>
+        <div class="frame d"><div class="cap">Desktop · 1100 px</div><div class="body">
+          <span class="back">← Back</span>
+          <div class="card stable-h">
+            <h2>Autobots of the <span class="glue">Ark <span class="ab md"><svg aria-hidden="true"><use href="#gear"/></svg><span class="lbl">Automaton</span></span></span></h2>
+            <div class="stats"><span><span class="muted">Prestige:</span> <b style="color:var(--primary)">2,140</b></span><span><span class="muted">Rank:</span> <b>Established</b></span><span><span class="muted">Championship Titles:</span> <b style="color:#fbbf24">1</b></span></div>
+          </div>
+        </div></div>
+      </div>
+    </section>
+
+    <!-- D. Robot detail -->
+    <section class="section">
+      <h2>D · Robot detail page (<code>/robots/:id</code>)</h2>
+      <p class="note">New: badge next to the owner name in the robot header. The owner name stays plain text as today. Tabs below the header are unchanged; as for any robot you do not own, the owner-only tabs stay hidden.</p>
+      <div class="frames">
+        <div class="frame m"><div class="cap">Mobile · 360 px</div><div class="body">
+          <span class="back">← Back to Robots</span>
+          <div class="card robot-h">
+            <div class="portrait">RoboCop<br>512×512</div>
+            <div class="info" style="width:100%">
+              <div class="top"><h1>RoboCop</h1><div class="owner"><div class="muted">Owner</div><span class="who">Old Detroit Precinct<span class="ab md"><svg aria-hidden="true"><use href="#gear"/></svg><span class="lbl">Automaton</span></span></span></div></div>
+              <div class="robot-stats"><span class="muted">ELO: <b style="color:#fff">1,412</b></span><span class="muted">League: <b style="color:#fff">Gold 1</b></span><span class="muted">Win Rate: <b style="color:#fff">71.4%</b></span><span class="muted">Battles: <b style="color:#fff">21</b></span></div>
+            </div>
+          </div>
+        </div></div>
+        <div class="frame d"><div class="cap">Desktop · 1100 px</div><div class="body">
+          <span class="back">← Back to Robots</span>
+          <div class="card robot-h">
+            <div class="portrait">RoboCop<br>512×512</div>
+            <div class="info">
+              <div class="top"><h1>RoboCop</h1><div class="owner"><div class="muted">Owner</div><span class="who">Old Detroit Precinct<span class="ab md"><svg aria-hidden="true"><use href="#gear"/></svg><span class="lbl">Automaton</span></span></span></div></div>
+              <div class="robot-stats"><span class="muted">ELO: <b style="color:#fff">1,412</b></span><span class="muted">Current League: <b style="color:#fff">Gold 1</b></span><span class="muted">Win Rate: <b style="color:#fff">71.4%</b></span><span class="muted">Battles: <b style="color:#fff">21</b></span><span class="muted">Record: <b style="color:#fff">15-5-1</b></span></div>
+            </div>
+          </div>
+        </div></div>
+      </div>
+    </section>
+
+    <!-- E. Battle report -->
+    <section class="section">
+      <h2>E · Battle report (<code>BattleResultBanner</code>, <code>TeamBattleMetrics</code>)</h2>
+      <p class="note">Under each robot, the stable name line gets the badge. A human-vs-Automaton 1v1 and a 2v2 team summary row are shown.</p>
+      <div class="frames">
+        <div class="frame m"><div class="cap">Mobile · 360 px</div><div class="body">
+          <div class="banner">
+            <div class="head">VICTORY</div><div class="sub">Opponent destroyed</div>
+            <div class="vs-row">
+              <div class="pt"><div class="mini"></div><a class="rn" href="#">Ironclad</a><span class="sn">Iron Warriors</span></div>
+              <span class="vs">vs</span>
+              <div class="pt lose"><div class="mini"></div><a class="rn" href="#">CT-5555 Fives</a><span class="sn"><span class="nm">Kamino Clone Legion</span><span class="ab md auto"><svg aria-hidden="true"><use href="#gear"/></svg><span class="lbl">Automaton</span></span></span></div>
+            </div>
+            <div class="muted" style="font-size:13px;margin-top:8px"><a href="#">🥈 Silver League</a> • Duration: 1m 12s</div>
+          </div>
+          <div class="card" style="margin-top:12px;padding:12px">
+            <div class="muted" style="font-size:12px;margin-bottom:6px">Team summary</div>
+            <div><b>Drift Compatible</b></div><div class="name small-name"><span class="nm muted">Pan Pacific Defense Corps</span><span class="ab md auto"><svg aria-hidden="true"><use href="#gear"/></svg><span class="lbl">Automaton</span></span></div>
+            <div class="muted" style="font-size:12px;margin-top:4px">Damage dealt 2,310 · Survived 1/2</div>
+          </div>
+        </div></div>
+        <div class="frame d"><div class="cap">Desktop · 1100 px</div><div class="body">
+          <div class="banner">
+            <div class="head">VICTORY</div><div class="sub">Opponent destroyed</div>
+            <div class="vs-row">
+              <div class="pt"><div class="mini"></div><a class="rn" href="#">Ironclad</a><span class="sn">Iron Warriors</span></div>
+              <span class="vs">vs</span>
+              <div class="pt lose"><div class="mini"></div><a class="rn" href="#">CT-5555 Fives</a><span class="sn"><span class="nm">Kamino Clone Legion</span><span class="ab md auto"><svg aria-hidden="true"><use href="#gear"/></svg><span class="lbl">Automaton</span></span></span></div>
+            </div>
+            <div class="muted" style="font-size:13px;margin-top:8px"><a href="#">🥈 Silver League</a> • Duration: 1m 12s</div>
+          </div>
+          <div class="card" style="margin-top:12px">
+            <table>
+              <thead><tr><th>Team</th><th>Stable</th><th>Damage dealt</th><th>Damage taken</th><th>Survived</th></tr></thead>
+              <tbody>
+                <tr><td><b>Drift Compatible</b></td><td><span class="name"><span class="nm">Pan Pacific Defense Corps</span><span class="ab md auto"><svg aria-hidden="true"><use href="#gear"/></svg><span class="lbl">Automaton</span></span></span></td><td>2,310</td><td>2,880</td><td>1 / 2</td></tr>
+                <tr><td><b>Steel Twins</b></td><td><span class="name"><span class="nm">Iron Warriors</span></span></td><td>2,880</td><td>2,310</td><td>2 / 2</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div></div>
+      </div>
+    </section>
+
+    <!-- F. Season archive -->
+    <section class="section">
+      <h2>F · Season archive (<code>/seasons/:n</code>)</h2>
+      <p class="note">Archived standings and accolades use the small badge, directly after the stable name. An archived Automaton never shows "bot".</p>
+      <div class="frames">
+        <div class="frame m"><div class="cap">Mobile · 360 px</div><div class="body">
+          <div class="card" style="padding:8px">
+            <table class="arch">
+              <thead><tr><th>#</th><th>Robot / Stable</th></tr></thead>
+              <tbody>
+                <tr><td>1</td><td>RoboCop<br><span class="glue muted">Old Detroit Precinct <span class="ab sm auto"><svg aria-hidden="true"><use href="#gear"/></svg><span class="lbl">Automaton</span></span></span></td></tr>
+                <tr><td>2</td><td>Ironclad<span class="you" style="margin-left:8px;font-size:10px;padding:0 4px">YOU</span><br><span class="muted">Iron Warriors</span></td></tr>
+                <tr><td>3</td><td>WimpBot Lone Spark 4<span class="bot" style="margin-left:8px">bot</span><br><span class="muted">Rusty Bolts</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div></div>
+        <div class="frame d"><div class="cap">Desktop · 1100 px</div><div class="body">
+          <div class="card">
+            <table class="arch">
+              <thead><tr><th>#</th><th>Robot</th><th>Stable</th><th>Tier</th><th>LP</th></tr></thead>
+              <tbody>
+                <tr><td>1</td><td>RoboCop</td><td class="muted"><span class="glue">Old Detroit Precinct <span class="ab sm auto"><svg aria-hidden="true"><use href="#gear"/></svg><span class="lbl">Automaton</span></span></span></td><td class="faint">Gold</td><td>88</td></tr>
+                <tr><td>2</td><td>Ironclad<span class="you" style="margin-left:8px;font-size:10px;padding:0 4px">YOU</span></td><td class="muted">Iron Warriors</td><td class="faint">Gold</td><td>81</td></tr>
+                <tr><td>3</td><td>WimpBot Lone Spark 4<span class="bot" style="margin-left:8px">bot</span></td><td class="muted">Rusty Bolts</td><td class="faint">Gold</td><td>64</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div></div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>
