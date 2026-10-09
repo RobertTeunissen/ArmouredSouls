@@ -276,7 +276,7 @@ The stable name you chose is already in use by another player. Choose a differen
 
 ### "Stable name contains inappropriate content"
 
-The stable name contains words that are not allowed. Choose a different name that doesn't include profanity or inappropriate language.
+The stable name contains words that are not allowed. Choose a different name that doesn't include profanity or inappropriate language. Words are matched as whole words, so names such as "Glass Cannon" or "Shell Corp" are allowed. A blocked word is still rejected when it stands alone, is separated by spaces, digits, hyphens or underscores, or is joined in camelCase (for example "BigAss").
 
 ### Multiple validation errors in one response
 

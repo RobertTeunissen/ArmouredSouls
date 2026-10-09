@@ -1,5 +1,5 @@
 import * as fc from 'fast-check';
-import { validateStableName, validatePassword } from '../src/utils/validation';
+import { validateStableName, validatePassword, containsProfanity } from '../src/utils/validation';
 
 // Test configuration
 const NUM_RUNS = 10;
@@ -198,13 +198,7 @@ function validStableNameGenerator(): fc.Arbitrary<string> {
       if (!/^[a-zA-Z0-9 _-]+$/.test(s)) return false;
       
       // Exclude profanity
-      const profanityList = [
-        'damn', 'hell', 'crap', 'shit', 'fuck', 'bitch', 'ass', 'bastard',
-        'dick', 'cock', 'pussy', 'whore', 'slut', 'fag', 'nigger', 'nigga',
-        'retard', 'rape', 'nazi', 'hitler'
-      ];
-      const lowerText = s.toLowerCase();
-      return !profanityList.some((word) => lowerText.includes(word));
+      return !containsProfanity(s);
     });
 }
 

@@ -49,9 +49,14 @@ describe('Validation Service - Unit Tests', () => {
       expect(containsProfanity('shit')).toBe(true);
     });
 
-    test('should detect profanity within words', () => {
-      expect(containsProfanity('BadShittyName')).toBe(true);
-      expect(containsProfanity('AssassinClan')).toBe(true);
+    test('should not flag list words inside ordinary words', () => {
+      expect(containsProfanity('AssassinClan')).toBe(false);
+      expect(containsProfanity('Glass Cannon')).toBe(false);
+    });
+
+    test('should detect long unambiguous entries inside compounds', () => {
+      expect(containsProfanity('BigBitchyBot')).toBe(true);
+      expect(containsProfanity('bigbastard')).toBe(true);
     });
   });
 
@@ -122,6 +127,21 @@ describe('Validation Service - Unit Tests', () => {
         expect(result.error).toBe(
           'Stable name can only contain letters, numbers, spaces, hyphens, and underscores'
         );
+      });
+    });
+  });
+
+  describe('Stable Name Validation - Profanity Matching', () => {
+    test('should accept names containing list words inside ordinary words', () => {
+      ['Glass Cannon', 'Shell Corp', 'Assembly Line'].forEach((name) => {
+        expect(validateStableName(name)).toEqual({ valid: true });
+      });
+    });
+
+    test('should reject a separated list word with the unchanged message', () => {
+      expect(validateStableName('Big_Ass')).toEqual({
+        valid: false,
+        error: 'Stable name contains inappropriate content',
       });
     });
   });
