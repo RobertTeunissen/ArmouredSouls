@@ -51,6 +51,12 @@ const LETTER_RUN = /\p{L}+/gu;
 /** camelCase/PascalCase parts of a letter run: "BigAss" → Big, Ass; "ASSHole" → ASS, Hole. */
 const CAMEL_CASE_PART = /\p{Lu}+(?!\p{Ll})|\p{Lu}?\p{Ll}+/gu;
 
+/** Maximal upper-case runs: "SHITbot" → SHIT (CAMEL_CASE_PART alone gives "SHI" + "Tbot"). */
+const UPPER_CASE_RUN = /\p{Lu}+/gu;
+
+/** Split points between a lower-case and an upper-case letter: "OrbitChaos" → Orbit | Chaos. */
+const LOWER_TO_UPPER_BOUNDARY = /(?<=\p{Ll})(?=\p{Lu})/u;
+
 /**
  * Check whether text contains a prohibited word from {@link PROFANITY_LIST}.
  *
@@ -62,13 +68,20 @@ const CAMEL_CASE_PART = /\p{Lu}+(?!\p{Ll})|\p{Lu}?\p{Ll}+/gu;
  * such as a space, digit, hyphen, underscore or punctuation separates runs):
  * 1. The whole run, lower-cased, equals a list entry ("ass", "SHIT", "ShIt",
  *    "Big_Ass", "big-ass", "Ass123").
- * 2. A camelCase/PascalCase part of the run equals a list entry
- *    ("BigAss" → "Big" + "Ass", "ASSHole" → "ASS" + "Hole").
- * 3. Compound rule: the lower-cased run contains an entry from
- *    {@link COMPOUND_MATCH_ENTRIES} anywhere ("bigbitchbot"). Only entries of
- *    at least 5 letters that are never a substring of a common English word
- *    qualify, so shorter or ambiguous entries are matched by rules 1-2 only
- *    ("bigass" and "shitty" are not caught).
+ * 2. A camelCase/PascalCase part of the run, or a maximal upper-case run
+ *    inside it, equals a list entry ("BigAss" → "Big" + "Ass",
+ *    "ASSHole" → "ASS" + "Hole", "SHITbot" → "SHIT").
+ * 3. Compound rule: a segment of the run, split only where a lower-case
+ *    letter is followed by an upper-case letter, contains an entry from
+ *    {@link COMPOUND_MATCH_ENTRIES} anywhere ("bigbitchbot", "BigBitchyBot",
+ *    "MyBASTARDbot"). Only entries of at least 5 letters that are never a
+ *    substring of a common English word qualify, so shorter or ambiguous
+ *    entries are matched by rules 1-2 only ("bigass" and "shitty" are not
+ *    caught). Splitting at word boundaries keeps PascalCase junctions such as
+ *    "OrbitChaos" (bit|ch) and "WhoReigns" (who|re) allowed. The trade-off is
+ *    that random-case gluing ("xBiTcHx") is not caught; the standalone word
+ *    in any case ("BiTcH") still is, by rule 1. An all-lower junction
+ *    ("orbitchaos") is still rejected, because nothing marks the boundary.
  *
  * Leetspeak and other character substitutions are not decoded.
  *
@@ -86,14 +99,16 @@ export function containsProfanity(text: string): boolean {
       return true;
     }
 
-    // Rule 2: a camelCase/PascalCase part of the run is a list entry.
-    const parts = run.match(CAMEL_CASE_PART) ?? [];
+    // Rule 2: a camelCase/PascalCase part or an upper-case run is a list entry.
+    const parts = [...(run.match(CAMEL_CASE_PART) ?? []), ...(run.match(UPPER_CASE_RUN) ?? [])];
     if (parts.some((part) => PROFANITY_SET.has(part.toLowerCase()))) {
       return true;
     }
 
-    // Rule 3: long, unambiguous entries are also caught inside compounds.
-    if (COMPOUND_MATCH_ENTRIES.some((entry) => lower.includes(entry))) {
+    // Rule 3: long, unambiguous entries are also caught inside compounds,
+    // but never across a lower→upper (PascalCase) word boundary.
+    const segments = run.split(LOWER_TO_UPPER_BOUNDARY).map((segment) => segment.toLowerCase());
+    if (segments.some((segment) => COMPOUND_MATCH_ENTRIES.some((entry) => segment.includes(entry)))) {
       return true;
     }
   }

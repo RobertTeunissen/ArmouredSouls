@@ -32,6 +32,12 @@ describe('containsProfanity', () => {
       'Scrap Heap',
       'Dickens Works',
       'Hellhound',
+      // PascalCase junctions that spell a compound entry across the word boundary.
+      'OrbitChaos',
+      'BitChassis',
+      'RabbitChase',
+      'WhoReigns',
+      'TheOnesWhoRemain',
     ])('%s is not flagged', (name) => {
       expect(containsProfanity(name)).toBe(false);
     });
@@ -94,6 +100,17 @@ describe('containsProfanity', () => {
     test.each(['BigAss', 'AssHole123', 'ASSHole', 'BadShitName'])('%s is flagged', (name) => {
       expect(containsProfanity(name)).toBe(true);
     });
+
+    // An upper-case entry glued to a lower-case tail: the camelCase split alone
+    // would give "SHI" + "Tbot", so the upper-case run is checked as well.
+    test.each(PROFANITY_LIST)('%s in upper case glued to a lower-case tail', (entry) => {
+      expect(containsProfanity(`${entry.toUpperCase()}bot`)).toBe(true);
+      expect(containsProfanity(`My${entry.toUpperCase()}bot`)).toBe(true);
+    });
+
+    test.each(['SHITbot', 'ASSface', 'FUCKyou'])('%s is flagged', (name) => {
+      expect(containsProfanity(name)).toBe(true);
+    });
   });
 
   describe('rule 3: compound substring match for long, unambiguous entries', () => {
@@ -103,8 +120,24 @@ describe('containsProfanity', () => {
       expect(containsProfanity(`${entry}s`)).toBe(true);
     });
 
-    test.each(['bitches', 'BigBitchyBot', 'bigbastard'])('%s is flagged', (name) => {
-      expect(containsProfanity(name)).toBe(true);
+    test.each(['bitches', 'BigBitchyBot', 'bigbastard', 'BIGBITCHBOT', 'MyBASTARDbot', 'orbitchaos'])(
+      '%s is flagged',
+      (name) => {
+        expect(containsProfanity(name)).toBe(true);
+      },
+    );
+
+    // Rule 3 runs per segment split at lower→upper boundaries, so a compound
+    // entry spelled across a PascalCase word junction is not matched.
+    test.each(['OrbitChaos', 'BitChassis', 'WhoReigns'])('%s is not flagged', (name) => {
+      expect(containsProfanity(name)).toBe(false);
+    });
+
+    // Documented trade-off: random-case gluing is not caught inside a compound,
+    // but the standalone word in any case still is (rule 1).
+    test('random-case gluing is the accepted trade-off', () => {
+      expect(containsProfanity('xBiTcHx')).toBe(false);
+      expect(containsProfanity('BiTcH')).toBe(true);
     });
 
     // Documented gap (rule 3 of the JSDoc): other entries are not matched inside
