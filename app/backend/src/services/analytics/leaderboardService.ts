@@ -8,6 +8,7 @@
 import prisma from '../../lib/prisma';
 import { Prisma } from '../../../generated/prisma';
 import { getPrestigeRank, getFameTier } from '../../utils/prestigeUtils';
+import type { StableTypeValue } from '../../utils/stableType';
 
 
 // ── Types ────────────────────────────────────────────────────────────
@@ -28,6 +29,8 @@ export interface FameLeaderboardEntry {
   fameTier: string;
   stableId: number;
   stableName: string;
+  /** Spec #55 R1.7: drives the Automaton_Badge. */
+  stableType: StableTypeValue;
   elo: number;
   totalBattles: number;
   wins: number;
@@ -47,6 +50,8 @@ export interface LossesLeaderboardEntry {
   killsByMode: Record<string, number>;
   stableId: number;
   stableName: string;
+  /** Spec #55 R1.7: drives the Automaton_Badge. */
+  stableType: StableTypeValue;
   elo: number;
   totalBattles: number;
   wins: number;
@@ -62,6 +67,8 @@ export interface PrestigeLeaderboardEntry {
   userId: number;
   username: string;
   stableName: string;
+  /** Spec #55 R1.7: drives the Automaton_Badge. */
+  stableType: StableTypeValue;
   prestige: number;
   prestigeRank: string;
   totalRobots: number;
@@ -114,6 +121,7 @@ export async function getFameLeaderboard(params: FameLeaderboardParams): Promise
     user_id: number;
     username: string;
     stable_name: string | null;
+    stable_type: StableTypeValue;
     total_count: bigint;
   }
 
@@ -135,6 +143,7 @@ export async function getFameLeaderboard(params: FameLeaderboardParams): Promise
       r."user_id",
       u.username,
       u."stable_name",
+      u."stable_type"::text AS stable_type,
       COUNT(*) OVER() AS total_count
     FROM "robots" r
     JOIN "users" u ON u.id = r."user_id"
@@ -152,6 +161,7 @@ export async function getFameLeaderboard(params: FameLeaderboardParams): Promise
     fameTier: getFameTier(row.fame),
     stableId: row.user_id,
     stableName: row.stable_name || row.username,
+    stableType: row.stable_type,
     elo: row.elo,
     totalBattles: row.total_battles,
     wins: row.wins,
@@ -234,6 +244,7 @@ export async function getLossesLeaderboard(params: LossesLeaderboardParams): Pro
     user_id: number;
     username: string;
     stable_name: string | null;
+    stable_type: StableTypeValue;
     total_count: bigint;
     [modeColumn: string]: unknown;
   }
@@ -265,13 +276,14 @@ export async function getLossesLeaderboard(params: LossesLeaderboardParams): Pro
       r."user_id",
       u.username,
       u."stable_name",
+      u."stable_type"::text AS stable_type,
       ${modeColumns},
       COUNT(*) OVER() AS total_count
     FROM "robots" r
     JOIN "users" u ON u.id = r."user_id"
     LEFT JOIN "robot_mode_kills" k ON k."robot_id" = r.id
     GROUP BY r.id, r.name, r.kills, r.elo, r."total_battles", r.wins, r.losses,
-             r.draws, r."damage_dealt_lifetime", r."user_id", u.username, u."stable_name"
+             r.draws, r."damage_dealt_lifetime", r."user_id", u.username, u."stable_name", u."stable_type"
     ORDER BY ${orderBy}, r.kills DESC, r.id ASC
     LIMIT ${limit} OFFSET ${skip}
   `;
@@ -288,6 +300,7 @@ export async function getLossesLeaderboard(params: LossesLeaderboardParams): Pro
     ) as Record<KillMode, number>,
     stableId: row.user_id,
     stableName: row.stable_name || row.username,
+    stableType: row.stable_type,
     elo: row.elo,
     totalBattles: row.total_battles,
     wins: row.wins,
@@ -344,6 +357,7 @@ export async function getPrestigeLeaderboard(params: PrestigeLeaderboardParams):
     id: number;
     username: string;
     stable_name: string | null;
+    stable_type: StableTypeValue;
     prestige: number;
     championship_titles: number;
     robot_count: bigint;
@@ -363,6 +377,7 @@ export async function getPrestigeLeaderboard(params: PrestigeLeaderboardParams):
         u.id,
         u.username,
         u."stable_name",
+        u."stable_type"::text AS stable_type,
         u.prestige,
         u."championship_titles",
         COUNT(r.id)::bigint AS robot_count,
@@ -394,6 +409,7 @@ export async function getPrestigeLeaderboard(params: PrestigeLeaderboardParams):
       userId: user.id,
       username: user.username,
       stableName: user.stable_name || user.username,
+      stableType: user.stable_type,
       prestige,
       prestigeRank: getPrestigeRank(prestige),
       totalRobots: Number(user.robot_count),

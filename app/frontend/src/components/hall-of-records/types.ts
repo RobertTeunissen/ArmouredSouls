@@ -3,6 +3,7 @@
  *
  * Extracted from HallOfRecordsPage.tsx during component splitting (Spec 18).
  */
+import type { StableType } from '../../types/stable';
 
 /**
  * Battle modes Most Damage is ranked within (Spec #46 R4.5).
@@ -235,6 +236,8 @@ export interface HighestFame {
 export interface RichestStables {
   userId: number;
   username: string;
+  /** Spec #55: Stable_Type of the owning stable (drives the Automaton_Badge). */
+  stableType?: StableType;
   currency: number;
   totalBattles: number;
   prestige: number;
@@ -244,6 +247,8 @@ export interface RichestStables {
 export interface HighestPrestige {
   userId: number;
   username: string;
+  /** Spec #55: Stable_Type of the owning stable (drives the Automaton_Badge). */
+  stableType?: StableType;
   prestige: number;
   totalBattles: number;
   totalWins: number;
@@ -254,6 +259,8 @@ export interface HighestPrestige {
 export interface MostTitles {
   userId: number;
   username: string;
+  /** Spec #55: Stable_Type of the owning stable (drives the Automaton_Badge). */
+  stableType?: StableType;
   championshipTitles: number;
   prestige: number;
   totalBattles: number;

@@ -46,8 +46,11 @@ export interface PurgeCounts {
  * which this never touches.
  */
 export async function deleteGeneratedStables(): Promise<number> {
+  // Spec #55 (task 1.2): only Generated_Stables are deleted. The explicit
+  // Stable_Type guard makes the skip of Automaton_Stables independent of
+  // invariant I1 (Automatons are always isGenerated = false).
   const generated = await prisma.user.findMany({
-    where: { isGenerated: true },
+    where: { isGenerated: true, stableType: { not: 'automaton' } },
     select: { id: true },
     orderBy: { id: 'asc' },
   });

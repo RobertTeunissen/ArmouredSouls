@@ -18,6 +18,7 @@ import { securityMonitor } from '../services/security/securityMonitor';
 import { SecuritySeverity } from '../services/security/securityLogger';
 import { resetPassword } from '../services/auth/passwordResetService';
 import { validatePassword } from '../utils/validation';
+import { USER_FILTER_TYPES } from '../utils/buildUserFilter';
 import {
   getAtRiskUsers,
   getRecentUserActivity,
@@ -51,7 +52,7 @@ const battlesQuerySchema = paginationQuery.extend({
 
 const recentUsersQuerySchema = z.object({
   cycles: z.coerce.number().int().positive().max(200).optional().default(10),
-  filter: z.enum(['all', 'real', 'auto']).optional().default('real'),
+  filter: z.enum(USER_FILTER_TYPES).optional().default('real'),
 });
 
 const repairAuditQuerySchema = z.object({
@@ -164,7 +165,7 @@ router.get('/users/at-risk', authenticateToken, requireAdmin, validateRequest({}
  * Get users registered in the last X cycles, with their robots and activity status.
  * Query params:
  *   - cycles: number of recent cycles to look back (default: 10)
- *   - filter: 'real' | 'auto' | 'all' (default: 'real')
+ *   - filter: 'real' | 'auto' | 'automaton' | 'all' (default: 'real')
  */
 router.get('/users/recent', authenticateToken, requireAdmin, validateRequest({ query: recentUsersQuerySchema }), async (req: Request, res: Response) => {
   const cyclesBack = Math.min(Math.max(1, parseInt(req.query.cycles as string) || 10), 200);

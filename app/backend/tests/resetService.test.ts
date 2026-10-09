@@ -431,6 +431,25 @@ describe('ResetService', () => {
       await expect(performAccountReset(nonExistentUserId)).rejects.toThrow('User not found');
     });
 
+    // Spec #55 task 1.2: an Automaton_Stable's robots, weapons and facilities
+    // belong to its Upgrade_Strategy, so an account reset is rejected and
+    // deletes nothing.
+    it('should reject an automaton account and change nothing', async () => {
+      await prisma.user.update({ where: { id: testUserId }, data: { stableType: 'automaton' } });
+
+      await expect(performAccountReset(testUserId)).rejects.toMatchObject({
+        code: 'AUTOMATON_ACCOUNT_LOCKED',
+        statusCode: 409,
+      });
+
+      expect(await prisma.robot.count({ where: { userId: testUserId } })).toBe(1);
+      expect(await prisma.weaponInventory.count({ where: { userId: testUserId } })).toBe(1);
+      expect(await prisma.facility.count({ where: { userId: testUserId } })).toBe(1);
+      expect(await prisma.resetLog.count({ where: { userId: testUserId } })).toBe(0);
+      const user = await prisma.user.findUniqueOrThrow({ where: { id: testUserId } });
+      expect(user.currency).toBe(1500000);
+    });
+
     it('should handle multiple robots, weapons, and facilities', async () => {
       // Create additional robots
       await prisma.robot.create({

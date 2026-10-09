@@ -5,6 +5,7 @@ import { createLogger } from '../utils/logger';
 
 const log = createLogger('LeaderboardsFamePage');
 import OwnerNameLink from '../components/OwnerNameLink';
+import type { StableType } from '../types/stable';
 
 interface FameLeaderboardEntry {
   rank: number;
@@ -14,6 +15,8 @@ interface FameLeaderboardEntry {
   fameTier: string;
   stableId: number;
   stableName: string;
+  /** Spec #55: Stable_Type of the owning stable (drives the Automaton_Badge). */
+  stableType?: StableType;
   elo: number;
   totalBattles: number;
   wins: number;

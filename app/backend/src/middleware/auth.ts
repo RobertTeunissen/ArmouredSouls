@@ -42,10 +42,12 @@ export const authenticateToken = async (
   try {
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { tokenVersion: true, stableName: true, role: true },
+      select: { tokenVersion: true, stableName: true, role: true, stableType: true },
     });
 
-    if (!user || user.tokenVersion !== tokenVersion) {
+    // Spec #55 R2.10: a token for an Automaton_Stable is rejected on the same
+    // 401 path as a stale or unknown token.
+    if (!user || user.tokenVersion !== tokenVersion || user.stableType === 'automaton') {
       return res.status(401).json({ error: 'Invalid or expired token' });
     }
 

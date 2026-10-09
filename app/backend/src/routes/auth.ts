@@ -239,6 +239,12 @@ router.post('/login', validateRequest({ body: loginBodySchema }), async (req: Re
     throw new AuthError(AuthErrorCode.INVALID_CREDENTIALS, 'Invalid credentials', 401);
   }
 
+  // Spec #55 R2.9: Automaton_Stables cannot log in. Same generic response as an
+  // unknown user, decided before the password is compared.
+  if (user.stableType === 'automaton') {
+    throw new AuthError(AuthErrorCode.INVALID_CREDENTIALS, 'Invalid credentials', 401);
+  }
+
   const validPassword = await bcrypt.compare(password, user.passwordHash);
   if (!validPassword) {
     throw new AuthError(AuthErrorCode.INVALID_CREDENTIALS, 'Invalid credentials', 401);

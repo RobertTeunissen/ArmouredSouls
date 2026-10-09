@@ -167,7 +167,8 @@ export async function findRobotById(robotId: number) {
     where: { id: robotId },
     include: {
       ...WEAPON_INCLUDE,
-      user: { select: { username: true, stableName: true } },
+      // Spec #55 R1.7: stableType drives the owner block's Automaton_Badge.
+      user: { select: { username: true, stableName: true, stableType: true } },
     },
   });
 

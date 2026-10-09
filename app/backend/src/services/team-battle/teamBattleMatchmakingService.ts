@@ -401,6 +401,9 @@ function createByeTeam(league: string, leagueId: string, teamSize: 2 | 3): TeamB
         frameId: 1,
         paintJob: null,
         imageUrl: null,
+        // Spec #55: the bye robot is never built from a Robot_Blueprint.
+        automatonBlueprintId: null,
+        automatonSlotIndex: null,
         // Combat Systems
         combatPower: new Prisma.Decimal(10),
         targetingSystems: new Prisma.Decimal(10),

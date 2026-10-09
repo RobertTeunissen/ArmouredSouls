@@ -19,6 +19,8 @@ export const SENSITIVE_ROBOT_FIELDS = [
   'currentHP', 'currentShield', 'damageTaken',
   // Equipment details
   'mainWeaponId', 'offhandWeaponId', 'mainWeapon', 'offhandWeapon',
+  // Automaton internals (Spec #55 R1.7): the Robot_Blueprint link is admin-only.
+  'automatonBlueprintId', 'automatonSlotIndex', 'automatonBlueprint',
 ] as const;
 
 /** Strip sensitive fields from a robot record for public display. */

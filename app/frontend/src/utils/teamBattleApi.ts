@@ -12,6 +12,7 @@
  */
 
 import { api } from './api';
+import type { StableType } from '../types/stable';
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -139,6 +140,8 @@ export interface TeamBattleStanding {
   teamName: string;
   stableId: number;
   stableName: string;
+  /** Spec #55: Stable_Type of the owning stable (drives the Automaton_Badge). */
+  stableType?: StableType;
   teamSize: number;
   teamLp: number;
   teamELO: number;
@@ -244,6 +247,8 @@ export interface TagTeamStandingEntry {
   teamName: string;
   stableId: number;
   stableName: string;
+  /** Spec #55: Stable_Type of the owning stable (drives the Automaton_Badge). */
+  stableType?: StableType;
   tagTeamLp: number;
   tagTeamLeague: string;
   tagTeamLeagueId: string;

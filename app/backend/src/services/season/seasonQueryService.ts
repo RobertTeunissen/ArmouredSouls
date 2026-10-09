@@ -14,6 +14,7 @@ import type {
   ArchivedTeamMembership,
   ArchivedFacility,
 } from '../../types';
+import type { StableTypeValue } from '../../utils/stableType';
 
 /** One collapsed row of a stable's season history. */
 export interface StableSeasonSummary {
@@ -272,6 +273,7 @@ export async function getSeasonDetail(seasonNumber: number) {
     losses: number;
     draws: number;
     is_generated_subject: boolean;
+    subject_stable_type: StableTypeValue;
     mode_rank: bigint;
   }>>`
     SELECT *
@@ -289,6 +291,7 @@ export async function getSeasonDetail(seasonNumber: number) {
         losses,
         draws,
         is_generated_subject,
+        subject_stable_type::text AS subject_stable_type,
         -- Tie-breakers after LP make the ranking stable across requests: LP alone
         -- leaves rows with equal points in an arbitrary order, so modeRank (and
         -- therefore the top-100 cut) could shift between page loads. The final
@@ -317,6 +320,7 @@ export async function getSeasonDetail(seasonNumber: number) {
     losses: number;
     draws: number;
     isGeneratedSubject: boolean;
+    subjectStableType: StableTypeValue;
     modeRank: number;
   }>>();
 
@@ -333,6 +337,7 @@ export async function getSeasonDetail(seasonNumber: number) {
       losses: row.losses,
       draws: row.draws,
       isGeneratedSubject: row.is_generated_subject,
+      subjectStableType: row.subject_stable_type,
       modeRank: Number(row.mode_rank),
     };
     const bucket = byMode.get(row.mode);
@@ -363,6 +368,8 @@ export async function getSeasonDetail(seasonNumber: number) {
           losses: r.losses,
           draws: r.draws,
           isGeneratedSubject: r.isGeneratedSubject,
+          // Spec #55 R1.7: drives the Automaton_Badge in the season archive.
+          subjectStableType: r.subjectStableType,
           modeRank: r.modeRank,
         })),
       ]),
@@ -376,6 +383,7 @@ export async function getSeasonDetail(seasonNumber: number) {
       valueLabel: a.valueLabel,
       mode: a.mode,
       isGeneratedSubject: a.isGeneratedSubject,
+      subjectStableType: a.subjectStableType,
     })),
   };
 }

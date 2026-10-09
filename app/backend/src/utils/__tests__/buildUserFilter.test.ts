@@ -78,6 +78,37 @@ describe('buildUserFilter', () => {
     it('should not have an OR property', () => {
       expect(result).not.toHaveProperty('OR');
     });
+
+    // Spec #55 R1.6: `real` also excludes Automaton_Stables, combined with the
+    // username exclusions through the implicit AND of top-level where keys.
+    it('should exclude stableType automaton alongside the username exclusions', () => {
+      expect(result.stableType).toEqual({ not: 'automaton' });
+    });
+  });
+
+  // ── 'automaton' filter (Spec #55 R1.6) ────────────────────────────
+
+  describe("filter type 'automaton'", () => {
+    it('should select exactly stableType automaton', () => {
+      expect(buildUserFilter('automaton')).toEqual({ stableType: 'automaton' });
+    });
+
+    it('should not use username prefixes', () => {
+      const result = buildUserFilter('automaton');
+      expect(result).not.toHaveProperty('NOT');
+      expect(result).not.toHaveProperty('OR');
+      expect(result).not.toHaveProperty('username');
+    });
+  });
+
+  describe('auto and all filters are unchanged by Spec #55', () => {
+    it("'auto' carries no stableType condition", () => {
+      expect(buildUserFilter('auto')).not.toHaveProperty('stableType');
+    });
+
+    it("'all' stays empty", () => {
+      expect(buildUserFilter('all')).toEqual({});
+    });
   });
 
   // ── 'auto' filter ─────────────────────────────────────────────────

@@ -69,6 +69,8 @@ function createMockRobot(overrides?: Partial<RobotWithWeapons>): RobotWithWeapon
     mainWeaponId: null,
     offhandWeaponId: null,
     imageUrl: null,
+    automatonBlueprintId: null,
+    automatonSlotIndex: null,
     // Legacy tag-team/KotH fields (moving to standings table in Spec #40)
     // Legacy league win counters (moving to standings table in Spec #40)
     // Streak fields (moving to standings table in Spec #40)

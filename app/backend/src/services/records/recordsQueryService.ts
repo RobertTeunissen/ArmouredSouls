@@ -397,7 +397,7 @@ export async function fetchEconomicRecords() {
   const richestStables = await prisma.user.findMany({
     orderBy: { currency: 'desc' }, take: 10,
     select: {
-      id: true, username: true, stableName: true, currency: true, prestige: true,
+      id: true, username: true, stableName: true, stableType: true, currency: true, prestige: true,
       robots: { where: byeRobotFilter, select: { id: true, name: true } },
     },
   });
@@ -409,7 +409,7 @@ export async function fetchEconomicRecords() {
       fame: robot.fame, elo: robot.elo,
     })),
     richestStables: richestStables.map(stable => ({
-      userId: stable.id, username: getUserDisplayName(stable),
+      userId: stable.id, username: getUserDisplayName(stable), stableType: stable.stableType,
       currency: stable.currency, prestige: stable.prestige, robotCount: stable.robots.length,
     })),
   };
@@ -419,7 +419,7 @@ export async function fetchEconomicRecords() {
 
 export async function fetchPrestigeRecords() {
   const stableSelect = {
-    id: true, username: true, stableName: true, prestige: true, championshipTitles: true,
+    id: true, username: true, stableName: true, stableType: true, prestige: true, championshipTitles: true,
     robots: { where: byeRobotFilter, select: { id: true, name: true } },
   };
 
@@ -434,11 +434,11 @@ export async function fetchPrestigeRecords() {
 
   return {
     highestPrestige: highestPrestigeStables.map(stable => ({
-      userId: stable.id, username: getUserDisplayName(stable),
+      userId: stable.id, username: getUserDisplayName(stable), stableType: stable.stableType,
       prestige: stable.prestige, championshipTitles: stable.championshipTitles, robotCount: stable.robots.length,
     })),
     mostTitles: mostTitlesStables.map(stable => ({
-      userId: stable.id, username: getUserDisplayName(stable),
+      userId: stable.id, username: getUserDisplayName(stable), stableType: stable.stableType,
       championshipTitles: stable.championshipTitles, prestige: stable.prestige, robotCount: stable.robots.length,
     })),
   };

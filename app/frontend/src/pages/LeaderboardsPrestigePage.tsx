@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { api } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 import OwnerNameLink from '../components/OwnerNameLink';
+import type { StableType } from '../types/stable';
 import { createLogger } from '../utils/logger';
 
 const log = createLogger('LeaderboardsPrestigePage');
@@ -11,6 +12,8 @@ interface PrestigeLeaderboardEntry {
   userId: number;
   username: string;
   stableName: string;
+  /** Spec #55: Stable_Type of the owning stable (drives the Automaton_Badge). */
+  stableType?: StableType;
   prestige: number;
   prestigeRank: string;
   totalRobots: number;

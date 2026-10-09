@@ -1,5 +1,5 @@
 import prisma from '../../lib/prisma';
-import { Prisma, BattleParticipant, StandingsMode } from '../../../generated/prisma';
+import { Prisma, BattleParticipant, StandingsMode, type StableType } from '../../../generated/prisma';
 import { getConfig } from '../../config/env';
 import { getNextCronOccurrence } from '../../utils/scheduleUtils';
 import {
@@ -75,7 +75,7 @@ type _BattleWithRobotsAndUsers = Prisma.BattleGetPayload<{
 }>;
 
 type TagTeamRobot = Prisma.RobotGetPayload<{
-  include: { user: { select: { id: true; username: true; stableName: true } } };
+  include: { user: { select: { id: true; username: true; stableName: true; stableType: true } } };
 }> | null;
 
 // ─── Upcoming Matches ────────────────────────────────────────────────
@@ -1003,7 +1003,7 @@ export async function getBattleLog(battleId: number) {
         include: {
           robot: {
             include: {
-              user: { select: { id: true, username: true, stableName: true } },
+              user: { select: { id: true, username: true, stableName: true, stableType: true } },
               mainWeapon: { include: { weapon: { select: { name: true, rangeBand: true } } } },
               offhandWeapon: { include: { weapon: { select: { name: true, rangeBand: true } } } },
             },
@@ -1083,6 +1083,8 @@ export async function getBattleLog(battleId: number) {
     robotName: p.robot.name,
     owner: p.robot.user.stableName || p.robot.user.username,
     ownerId: p.robot.user.id,
+    // Spec #55 R1.7: drives the Automaton_Badge.
+    ownerStableType: p.robot.user.stableType,
     imageUrl: p.robot.imageUrl ?? null,
     teamIndex: p.team - 1, // DB uses 1-based, frontend uses 0-based
     team: p.team,
@@ -1164,7 +1166,7 @@ async function buildTagTeamLogResponse(baseResponse: Record<string, unknown>, ba
   const team2ActivePart = battleParticipants.find(p => p.team === 2 && p.role === 'active');
   const team2ReservePart = battleParticipants.find(p => p.team === 2 && p.role === 'reserve');
 
-  const tagTeamUserSelect = { select: { id: true, username: true, stableName: true } };
+  const tagTeamUserSelect = { select: { id: true, username: true, stableName: true, stableType: true } };
   const [team1Active, team1Reserve, team2Active, team2Reserve] = await Promise.all([
     team1ActivePart
       ? prisma.robot.findUnique({ where: { id: team1ActivePart.robotId }, include: { user: tagTeamUserSelect } })
@@ -1185,14 +1187,14 @@ async function buildTagTeamLogResponse(baseResponse: Record<string, unknown>, ba
     team1ActivePart
       ? prisma.teamBattle.findFirst({
           where: { members: { some: { robotId: team1ActivePart.robotId } }, teamSize: 2 },
-          include: { stable: { select: { stableName: true } } },
+          include: { stable: { select: { stableName: true, stableType: true } } },
           orderBy: { updatedAt: 'desc' },
         })
       : null,
     team2ActivePart
       ? prisma.teamBattle.findFirst({
           where: { members: { some: { robotId: team2ActivePart.robotId } }, teamSize: 2 },
-          include: { stable: { select: { stableName: true } } },
+          include: { stable: { select: { stableName: true, stableType: true } } },
           orderBy: { updatedAt: 'desc' },
         })
       : null,
@@ -1204,6 +1206,7 @@ async function buildTagTeamLogResponse(baseResponse: Record<string, unknown>, ba
           id: robot.id,
           name: robot.name,
           owner: robot.user.stableName || robot.user.username,
+          ownerStableType: robot.user.stableType,
           maxHP: robot.maxHP,
           maxShield: robot.maxShield,
           damageDealt: participant?.damageDealt ?? 0,
@@ -1229,6 +1232,7 @@ async function buildTagTeamLogResponse(baseResponse: Record<string, unknown>, ba
     team1: {
       teamId: team1Details?.id || null,
       stableName: team1Details?.stable?.stableName || null,
+      stableType: team1Details?.stable?.stableType ?? null,
       activeRobot: formatTagRobot(team1Active, team1ActivePart),
       reserveRobot: formatTagRobot(team1Reserve, team1ReservePart),
       tagOutTime: getTagOutTime(team1ActivePart, 1),
@@ -1236,6 +1240,7 @@ async function buildTagTeamLogResponse(baseResponse: Record<string, unknown>, ba
     team2: {
       teamId: team2Details?.id || null,
       stableName: team2Details?.stable?.stableName || null,
+      stableType: team2Details?.stable?.stableType ?? null,
       activeRobot: formatTagRobot(team2Active, team2ActivePart),
       reserveRobot: formatTagRobot(team2Reserve, team2ReservePart),
       tagOutTime: getTagOutTime(team2ActivePart, 2),
@@ -1270,7 +1275,7 @@ async function buildKothLogResponse(baseResponse: Record<string, unknown>, battl
     where: { battleId },
     include: {
       robot: {
-        include: { user: { select: { id: true, username: true, stableName: true } } },
+        include: { user: { select: { id: true, username: true, stableName: true, stableType: true } } },
       },
     },
     orderBy: { placement: 'asc' },
@@ -1286,6 +1291,7 @@ async function buildKothLogResponse(baseResponse: Record<string, unknown>, battl
       robotName: p.robot.name,
       owner: p.robot.user.stableName || p.robot.user.username,
       ownerId: p.robot.user.id,
+      ownerStableType: p.robot.user.stableType,
       placement: p.placement ?? p.team,
       zoneScore: logEntry?.zoneScore ?? 0,
       zoneTime: logEntry?.zoneTime ?? 0,
@@ -1312,7 +1318,7 @@ async function buildKothLogResponse(baseResponse: Record<string, unknown>, battl
 interface RobotForLog {
   id: number;
   name: string;
-  user: { id: number; username: string; stableName: string | null };
+  user: { id: number; username: string; stableName: string | null; stableType: StableType };
   maxHP: number;
   maxShield: number;
   imageUrl: string | null;
@@ -1349,6 +1355,7 @@ function mapRobotForLog(
     name: robot.name,
     owner: robot.user.stableName || robot.user.username,
     ownerId: robot.user.id,
+    ownerStableType: robot.user.stableType,
     maxHP: robot.maxHP,
     maxShield: robot.maxShield,
     eloBefore: participant?.eloBefore || 0,

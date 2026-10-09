@@ -62,6 +62,8 @@ function makeRobot(id: number, elo: number, userId: number = 100): Robot {
     frameId: 1,
     paintJob: null,
     imageUrl: null,
+    automatonBlueprintId: null,
+    automatonSlotIndex: null,
     combatPower: new Prisma.Decimal(10),
     targetingSystems: new Prisma.Decimal(10),
     criticalSystems: new Prisma.Decimal(10),

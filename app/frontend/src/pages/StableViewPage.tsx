@@ -9,11 +9,14 @@ import { ApiError } from '../utils/ApiError';
 import { useAuth } from '../contexts/AuthContext';
 import { FACILITY_CATEGORIES } from '../utils/facilityCategories';
 import type { AchievementWithProgress, AchievementsResponse } from '../utils/achievementUtils';
+import type { StableType } from '../types/stable';
 
 interface StableUser {
   id: number;
   username: string;
   stableName: string | null;
+  /** Spec #55: Stable_Type of the owning stable (drives the Automaton_Badge). */
+  stableType?: StableType;
   prestige: number;
   prestigeRank: string;
   championshipTitles: number;

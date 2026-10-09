@@ -20,6 +20,8 @@ export const AuthErrorCode = {
   EMAIL_ALREADY_EXISTS: 'EMAIL_ALREADY_EXISTS',
   UNAUTHORIZED: 'UNAUTHORIZED',
   FORBIDDEN: 'FORBIDDEN',
+  /** Spec #55 R2.11: Automaton_Stable accounts have no usable credentials. */
+  AUTOMATON_ACCOUNT_LOCKED: 'AUTOMATON_ACCOUNT_LOCKED',
 } as const;
 
 export type AuthErrorCodeType = typeof AuthErrorCode[keyof typeof AuthErrorCode];

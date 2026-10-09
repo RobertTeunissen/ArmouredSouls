@@ -290,4 +290,77 @@ describe('buildUserFilter Property Tests', () => {
       );
     });
   });
+
+  /**
+   * Spec #55 R1.6: filters over users that carry a Stable_Type.
+   * - `automaton` returns exactly the users with stableType = automaton
+   * - `real` excludes automaton users in addition to its username exclusions
+   * - `auto` and `all` keep their current results
+   */
+  describe('Spec #55: Stable_Type-aware filter classification', () => {
+    type StableTypeValue = 'human' | 'generated' | 'automaton';
+    interface FilterSubject { username: string; stableType: StableTypeValue }
+
+    /** Evaluates the stableType condition of a where clause (absent = match). */
+    function matchesStableType(stableType: StableTypeValue, where: Prisma.UserWhereInput): boolean {
+      const condition = where.stableType;
+      if (condition === undefined) return true;
+      if (typeof condition === 'string') return stableType === condition;
+      if (condition && typeof condition === 'object' && 'not' in condition) {
+        return stableType !== condition.not;
+      }
+      return false;
+    }
+
+    /** Username part and Stable_Type part are combined with AND, as Prisma does for top-level keys. */
+    function matchesUser(user: FilterSubject, where: Prisma.UserWhereInput): boolean {
+      const { stableType: _stableType, ...usernamePart } = where;
+      return matchesFilter(user.username, usernamePart) && matchesStableType(user.stableType, where);
+    }
+
+    const stableTypeArb = fc.constantFrom<StableTypeValue>('human', 'generated', 'automaton');
+    const subjectArb: fc.Arbitrary<FilterSubject> = fc.record({ username: anyUsername, stableType: stableTypeArb });
+
+    it("'automaton' matches exactly the automaton users", () => {
+      const filter = buildUserFilter('automaton');
+      fc.assert(
+        fc.property(subjectArb, (user) => {
+          expect(matchesUser(user, filter)).toBe(user.stableType === 'automaton');
+        }),
+        { numRuns: 200 },
+      );
+    });
+
+    it("'real' never matches an automaton user, whatever the username", () => {
+      const filter = buildUserFilter('real');
+      fc.assert(
+        fc.property(anyUsername, (username) => {
+          expect(matchesUser({ username, stableType: 'automaton' }, filter)).toBe(false);
+        }),
+        { numRuns: 200 },
+      );
+    });
+
+    it("'real' keeps its result for non-automaton users", () => {
+      const filter = buildUserFilter('real');
+      fc.assert(
+        fc.property(anyUsername, fc.constantFrom<StableTypeValue>('human', 'generated'), (username, stableType) => {
+          expect(matchesUser({ username, stableType }, filter)).toBe(classifyUsername(username) === 'real');
+        }),
+        { numRuns: 200 },
+      );
+    });
+
+    it("'auto' and 'all' ignore Stable_Type", () => {
+      const auto = buildUserFilter('auto');
+      const all = buildUserFilter('all');
+      fc.assert(
+        fc.property(subjectArb, (user) => {
+          expect(matchesUser(user, auto)).toBe(classifyUsername(user.username) === 'auto');
+          expect(matchesUser(user, all)).toBe(true);
+        }),
+        { numRuns: 200 },
+      );
+    });
+  });
 });

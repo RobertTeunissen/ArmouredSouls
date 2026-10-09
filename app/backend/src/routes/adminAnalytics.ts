@@ -12,7 +12,7 @@ import { authenticateToken, requireAdmin } from '../middleware/auth';
 import { validateRequest } from '../middleware/schemaValidator';
 import { positiveIntParam } from '../utils/securityValidation';
 import logger from '../config/logger';
-import { buildUserFilter } from '../utils/buildUserFilter';
+import { buildUserFilter, USER_FILTER_TYPES } from '../utils/buildUserFilter';
 import type { UserFilterType } from '../utils/buildUserFilter';
 import {
   getSystemStats,
@@ -53,33 +53,33 @@ const router = express.Router();
 // --- Zod schemas ---
 
 const statsQuerySchema = z.object({
-  filter: z.enum(['all', 'real', 'auto']).optional().default('real'),
+  filter: z.enum(USER_FILTER_TYPES).optional().default('real'),
 });
 
 const dashboardKpisQuerySchema = z.object({
-  filter: z.enum(['all', 'real', 'auto']).optional().default('real'),
+  filter: z.enum(USER_FILTER_TYPES).optional().default('real'),
 });
 
 const engagementPlayersQuerySchema = z.object({
-  filter: z.enum(['all', 'real', 'auto']).optional().default('real'),
+  filter: z.enum(USER_FILTER_TYPES).optional().default('real'),
   page: z.coerce.number().int().positive().optional().default(1),
   limit: z.coerce.number().int().positive().max(100).optional().default(50),
 });
 
 const weaponAnalyticsQuerySchema = z.object({
-  filter: z.enum(['all', 'real', 'auto']).optional().default('real'),
+  filter: z.enum(USER_FILTER_TYPES).optional().default('real'),
 });
 
 const achievementAnalyticsQuerySchema = z.object({
-  filter: z.enum(['all', 'real', 'auto']).optional().default('real'),
+  filter: z.enum(USER_FILTER_TYPES).optional().default('real'),
 });
 
 const tuningAdoptionQuerySchema = z.object({
-  filter: z.enum(['all', 'real', 'auto']).optional().default('real'),
+  filter: z.enum(USER_FILTER_TYPES).optional().default('real'),
 });
 
 const refinementAdoptionQuerySchema = z.object({
-  filter: z.enum(['all', 'real', 'auto']).optional().default('real'),
+  filter: z.enum(USER_FILTER_TYPES).optional().default('real'),
 });
 
 const leagueHistoryEntityTypeSchema = z.enum(['robot', 'tag_team', 'team_battle']);

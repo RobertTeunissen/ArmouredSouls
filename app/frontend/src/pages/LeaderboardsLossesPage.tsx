@@ -5,6 +5,7 @@ import { createLogger } from '../utils/logger';
 
 const log = createLogger('LeaderboardsLossesPage');
 import OwnerNameLink from '../components/OwnerNameLink';
+import type { StableType } from '../types/stable';
 
 /**
  * Battle types broken out as columns, in display order with short headers.
@@ -32,6 +33,8 @@ interface LossesLeaderboardEntry {
   killsByMode: Record<string, number>;
   stableId: number;
   stableName: string;
+  /** Spec #55: Stable_Type of the owning stable (drives the Automaton_Badge). */
+  stableType?: StableType;
   elo: number;
   totalBattles: number;
   wins: number;

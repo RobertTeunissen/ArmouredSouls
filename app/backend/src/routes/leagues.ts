@@ -62,7 +62,7 @@ router.get('/:tier/standings', validateRequest({ params: leagueTierParamsSchema 
   const robotIds = standingRows.map(s => s.entityId);
   const robots = await prisma.robot.findMany({
     where: { id: { in: robotIds } },
-    include: { user: { select: { id: true, username: true, stableName: true } } },
+    include: { user: { select: { id: true, username: true, stableName: true, stableType: true } } },
   });
   const robotMap = new Map(robots.map(r => [r.id, r]));
 
@@ -126,6 +126,8 @@ router.get('/:tier/standings', validateRequest({ params: leagueTierParamsSchema 
       user: {
         username: robot?.user?.username ?? 'Unknown',
         stableName: robot?.user?.stableName ?? null,
+        // Spec #55 R1.7: drives the Automaton_Badge.
+        stableType: robot?.user?.stableType ?? 'human',
       },
       zone: promotionRobotIds.has(s.entityId)
         ? 'promotion' as const

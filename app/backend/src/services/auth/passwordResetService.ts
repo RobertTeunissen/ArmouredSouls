@@ -88,7 +88,7 @@ export async function resetPassword(
     // 1. Look up the target user
     const user = await tx.user.findUnique({
       where: { id: targetUserId },
-      select: { id: true, username: true, tokenVersion: true },
+      select: { id: true, username: true, tokenVersion: true, stableType: true },
     });
 
     if (!user) {
@@ -96,6 +96,16 @@ export async function resetPassword(
         AuthErrorCode.USER_NOT_FOUND,
         'User not found',
         404,
+      );
+    }
+
+    // Spec #55 R2.11: Automaton_Stable accounts never get a usable password.
+    // Reject before hashing so neither passwordHash nor tokenVersion changes.
+    if (user.stableType === 'automaton') {
+      throw new AuthError(
+        AuthErrorCode.AUTOMATON_ACCOUNT_LOCKED,
+        'Password reset is not available for this account',
+        409,
       );
     }
 

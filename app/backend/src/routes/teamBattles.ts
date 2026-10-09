@@ -314,7 +314,7 @@ router.get(
     const teams = await prisma.teamBattle.findMany({
       where: { id: { in: teamIds } },
       include: {
-        stable: { select: { stableName: true, username: true } },
+        stable: { select: { stableName: true, username: true, stableType: true } },
         members: {
           include: { robot: { select: { id: true, name: true, elo: true } } },
           orderBy: { slotIndex: 'asc' },
@@ -379,6 +379,8 @@ router.get(
         teamName: team?.teamName ?? `Team #${s.entityId}`,
         stableId: team?.stableId ?? 0,
         stableName: team?.stable?.stableName || team?.stable?.username || 'Unknown',
+        // Spec #55 R1.7: drives the Automaton_Badge.
+        stableType: team?.stable?.stableType ?? 'human',
         teamSize,
         teamLp: s.leaguePoints,
         teamELO,
@@ -545,7 +547,7 @@ router.get(
     const teams = await prisma.teamBattle.findMany({
       where: { id: { in: teamIds } },
       include: {
-        stable: { select: { stableName: true, username: true } },
+        stable: { select: { stableName: true, username: true, stableType: true } },
         members: {
           include: { robot: { select: { id: true, name: true, elo: true } } },
           orderBy: { slotIndex: 'asc' },
@@ -609,6 +611,8 @@ router.get(
         teamName: team?.teamName ?? `Team #${s.entityId}`,
         stableId: team?.stableId ?? 0,
         stableName: team?.stable?.stableName || team?.stable?.username || 'Unknown',
+        // Spec #55 R1.7: drives the Automaton_Badge.
+        stableType: team?.stable?.stableType ?? 'human',
         tagTeamLp: s.leaguePoints,
         tagTeamLeague: s.tier,
         tagTeamLeagueId: s.leagueInstanceId,

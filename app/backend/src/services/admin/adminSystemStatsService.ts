@@ -2,7 +2,7 @@ import prisma from '../../lib/prisma';
 import { getRobotLeagueTiers, tierOf } from '../standings/robotLeagueTiers';
 import type { Prisma } from '../../../generated/prisma';
 import { MatchType } from '../../../generated/prisma';
-import { buildUserFilter } from '../../utils/buildUserFilter';
+import { buildUserFilter, type UserFilterType } from '../../utils/buildUserFilter';
 import {
   readRepairChargedCredits,
   readRepairPreDiscountCredits,
@@ -819,7 +819,7 @@ export async function getRecentUserActivity(cyclesBack: number, filter: string =
   }
 
   // Apply user filter (real/auto/all)
-  const userFilter = buildUserFilter(filter as 'all' | 'real' | 'auto');
+  const userFilter = buildUserFilter(filter as UserFilterType);
   const recentUsers = await prisma.user.findMany({
     where: {
       ...userFilter,

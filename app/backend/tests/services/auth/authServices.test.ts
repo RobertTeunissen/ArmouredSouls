@@ -128,6 +128,8 @@ describe('userService', () => {
           email: 'test@example.com',
           passwordHash: '$2b$10$existing',
           stableName: 'Iron Forge',
+          // Spec #55 R1.3: registration writes Stable_Type explicitly.
+          stableType: 'human',
         },
       });
     });

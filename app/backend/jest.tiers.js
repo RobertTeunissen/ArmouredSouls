@@ -101,6 +101,12 @@ const HEAVY_TESTS = [
  * checked by `pnpm run test:tiers:verify`.
  */
 const DB_DEPENDENT = [
+  // Spec #55 — Automaton Stables
+  'tests/integration/automatonAccess.test.ts',
+  'tests/integration/automatonPublicExposure.test.ts',
+  'tests/integration/automatonRarity.test.ts',
+  'tests/integration/automatonStableTypeMigration.test.ts',
+  'tests/integration/automatonUserFilter.test.ts',
   'tests/auditSequenceConcurrency.test.ts',
   'src/__tests__/guide/guide-routes.test.ts',
   'src/routes/__tests__/search.integration.test.ts',

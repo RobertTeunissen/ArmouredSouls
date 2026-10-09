@@ -4,6 +4,7 @@ import bcrypt from 'bcrypt';
 import dotenv from 'dotenv';
 import { generateStableName } from '../src/utils/stableNameGenerator';
 import { LOADOUT_TITLES, WEAPON_CODENAMES } from '../src/utils/tierConfig';
+import { stableTypeForCreation } from '../src/utils/stableType';
 
 // Load environment variables
 dotenv.config();
@@ -854,7 +855,10 @@ export async function upsertUser(data: { username: string; passwordHash: string;
     return existing;
   }
 
-  return prisma.user.create({ data });
+  // Spec #55 I1: Stable_Type follows isGenerated on every seeded user.
+  return prisma.user.create({
+    data: { ...data, stableType: stableTypeForCreation(data.isGenerated ?? false) },
+  });
 }
 
 /**
@@ -1329,6 +1333,11 @@ async function main() {
     console.log('   - Test users: test_user_001-200 / testpass123');
   }
   console.log('');
+}
+
+/** Close the seed's own client; for tests that import seed helpers such as `upsertUser`. */
+export async function disconnectSeedClient(): Promise<void> {
+  await prisma.$disconnect();
 }
 
 // Only run main() when executed directly (not when imported for testing)

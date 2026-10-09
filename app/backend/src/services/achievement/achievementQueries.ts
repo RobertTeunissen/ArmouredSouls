@@ -161,6 +161,9 @@ export async function refreshRarityCache(cache: AchievementRarityCache): Promise
         user: {
           username: { not: { startsWith: 'auto_' } },
           AND: { username: { not: { startsWith: 'test_user_' } } },
+          // Spec #55 R1.8: rarity counts Human_Stables only; Automatons still
+          // earn achievements but are left out of the percentage.
+          stableType: { not: 'automaton' },
         },
       },
     });
@@ -177,7 +180,8 @@ export async function refreshRarityCache(cache: AchievementRarityCache): Promise
        WHERE r.total_battles > 0
          
          AND u.username NOT LIKE 'auto\\_%'
-         AND u.username NOT LIKE 'test\\_user\\_%'`
+         AND u.username NOT LIKE 'test\\_user\\_%'
+         AND u.stable_type <> 'automaton'`
     );
     const totalActivePlayers = Number(activePlayerResult[0]?.count ?? 0);
 
