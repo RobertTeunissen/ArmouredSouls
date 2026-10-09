@@ -109,6 +109,34 @@ export function buildEconomicRequestAuditContext<T>(
 }
 
 /**
+ * Optional caller-supplied facts stored with the request's audit metadata, for
+ * example `{ automaton: { catalogueKey, strategyKey, ... } }` (Spec #55 R8.2).
+ */
+export type EconomicAuditContextExtension = Readonly<JsonRecord>;
+
+/** Options accepted by the economic purchase services (Spec #55 design §9.4). */
+export interface EconomicServiceOptions {
+  /** Merged into the stored audit metadata; omitted callers store exactly what they stored before. */
+  auditContext?: EconomicAuditContextExtension;
+}
+
+/**
+ * Build the audit metadata for an economic request: the idempotency context
+ * from `buildEconomicRequestAuditContext`, plus an optional extension. Without
+ * an extension the result is exactly the idempotency context. The extension can
+ * never replace the `idempotency` key, which replay depends on.
+ */
+export function buildEconomicAuditMetadata<T>(
+  identity: EconomicRequestIdentity,
+  response: T,
+  extension?: EconomicAuditContextExtension,
+): JsonRecord {
+  const base = buildEconomicRequestAuditContext(identity, response);
+  if (extension === undefined) return base;
+  return { ...extension, ...base };
+}
+
+/**
  * Performs the early replay probe before optimistic validations that can become
  * false after the first successful request (for example a deleted inventory or
  * a newly-taken robot name). The mutation transaction repeats this check under

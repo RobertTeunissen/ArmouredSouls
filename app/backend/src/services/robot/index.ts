@@ -45,6 +45,14 @@ export {
   createRobotTransaction,
 } from './robotCreationService';
 export {
+  updateStance,
+  updateYieldThreshold,
+  ROBOT_STANCES,
+  type RobotStance,
+  type StanceUpdateResult,
+  type YieldThresholdUpdateResult,
+} from './robotSettingsService';
+export {
   computeSchedulingEligibility,
   type SchedulingEligibilityGateId,
   type SchedulingEligibilityGate,

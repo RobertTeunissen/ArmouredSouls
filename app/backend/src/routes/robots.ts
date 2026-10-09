@@ -54,6 +54,7 @@ import {
 import { achievementService, type UnlockedAchievement } from '../services/achievement';
 import { getEntityHistory } from '../services/league/leagueHistoryService';
 import { computeSchedulingEligibility } from '../services/robot/robotSchedulingEligibilityService';
+import { updateStance, updateYieldThreshold } from '../services/robot/robotSettingsService';
 
 // Re-export for backward compatibility (stables.ts imports from here)
 export { sanitizeRobotForPublic, SENSITIVE_ROBOT_FIELDS };
@@ -348,31 +349,8 @@ router.patch('/:id/stance', authenticateToken, validateRequest({ params: robotId
   const robotId = parseInt(String(req.params.id));
   const { stance } = req.body;
 
-  if (!stance || typeof stance !== 'string') {
-    throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Stance is required and must be a string', 400);
-  }
-
-  const normalizedStance = stance.toLowerCase();
-  if (!['offensive', 'defensive', 'balanced'].includes(normalizedStance)) {
-    throw new RobotError(
-      RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 
-      'Invalid stance. Must be one of: offensive, defensive, balanced',
-      400
-    );
-  }
-
-  await verifyRobotOwnership(prisma, robotId, req.user!.userId);
-
-  const stanceRobot = await prisma.robot.update({
-    where: { id: robotId },
-    data: { stance: normalizedStance },
-    include: {
-      // Spec #34: refinements drive rank prefix + slot bar in the
-      // robot detail page response.
-      mainWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
-      offhandWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
-    },
-  });
+  // Spec #55 task 2.5: normalisation, ownership and the update live in robotSettingsService.
+  const { robot: stanceRobot, stance: normalizedStance } = await updateStance(req.user!.userId, robotId, stance);
 
   let achievementUnlocks: UnlockedAchievement[] = [];
   try {
@@ -390,29 +368,8 @@ router.patch('/:id/yield-threshold', authenticateToken, validateRequest({ params
   const robotId = parseInt(String(req.params.id));
   const { yieldThreshold } = req.body;
 
-  if (yieldThreshold === undefined || yieldThreshold === null) {
-    throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Yield threshold is required', 400);
-  }
-
-  const threshold = Number(yieldThreshold);
-  if (isNaN(threshold)) {
-    throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Yield threshold must be a number', 400);
-  }
-
-  if (threshold < 0 || threshold > 50) {
-    throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Yield threshold must be between 0 and 50', 400);
-  }
-
-  await verifyRobotOwnership(prisma, robotId, req.user!.userId);
-
-  const thresholdRobot = await prisma.robot.update({
-    where: { id: robotId },
-    data: { yieldThreshold: threshold },
-    include: {
-      mainWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
-      offhandWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
-    },
-  });
+  // Spec #55 task 2.5: range checks, ownership and the update live in robotSettingsService.
+  const { robot: thresholdRobot, yieldThreshold: threshold } = await updateYieldThreshold(req.user!.userId, robotId, yieldThreshold);
 
   res.json({ ...thresholdRobot, message: `Yield threshold updated to ${threshold}%` });
 });

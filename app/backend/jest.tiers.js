@@ -107,6 +107,13 @@ const DB_DEPENDENT = [
   'tests/integration/automatonRarity.test.ts',
   'tests/integration/automatonStableTypeMigration.test.ts',
   'tests/integration/automatonUserFilter.test.ts',
+  // Spec #55 — Domain_Service_Extraction (task group 2)
+  'src/services/economy/__tests__/facilityUpgradeService.test.ts',
+  'src/services/economy/__tests__/weaponPurchaseService.test.ts',
+  'src/services/economy/__tests__/weaponSaleService.test.ts',
+  'src/services/economy/__tests__/weaponRefinementService.test.ts',
+  'src/services/robot/__tests__/robotSettingsService.test.ts',
+  'src/services/robot/__tests__/economicAuditContext.test.ts',
   'tests/auditSequenceConcurrency.test.ts',
   'src/__tests__/guide/guide-routes.test.ts',
   'src/routes/__tests__/search.integration.test.ts',

@@ -7,7 +7,7 @@
  * See docs/game-systems/STABLE_SYSTEM.md for authoritative specification.
  */
 
-import { calculateTrainingFacilityDiscount } from './discounts';
+import { calculateTrainingFacilityDiscount, applyDiscount } from './discounts';
 
 /** Base cost for upgrading from currentLevel to currentLevel+1 (before discounts). */
 export function calculateBaseCost(currentLevel: number): number {
@@ -29,6 +29,28 @@ export function calculateDiscountedUpgradeCost(
   const baseCost = calculateBaseCost(currentLevel);
   const discountPercent = calculateTrainingFacilityDiscount(trainingLevel, rosterCapacity);
   return Math.floor(baseCost * (100 - discountPercent) / 100);
+}
+
+/**
+ * Credits charged for raising one attribute from `fromLevel` to `toLevel` with a
+ * Training Facility discount of `discountPercent` (from
+ * `calculateTrainingFacilityDiscount`): each level's base cost is discounted with
+ * `applyDiscount` (floored per level), then the levels are summed.
+ *
+ * This is the formula `robotUpgradeService` charges; the Automaton pricing module
+ * (Spec #55) uses the same function so a planned upgrade costs exactly what the
+ * purchase will charge. `fromLevel` is an integer level (callers floor it).
+ */
+export function calculateTrainingDiscountedUpgradeCost(
+  fromLevel: number,
+  toLevel: number,
+  discountPercent: number,
+): number {
+  let total = 0;
+  for (let level = fromLevel; level < toLevel; level++) {
+    total += applyDiscount(calculateBaseCost(level), discountPercent);
+  }
+  return total;
 }
 
 /** Total base cost for upgrading from fromLevel to toLevel (before discounts). */
