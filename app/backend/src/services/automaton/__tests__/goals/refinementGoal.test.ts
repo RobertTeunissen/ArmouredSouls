@@ -190,6 +190,15 @@ describe('refine Goal (R3.11, R5.2, R5.4, design §8.6 item 7)', () => {
       expect(action.step).toEqual(F);
     });
 
+    it('pins the design §8.6 item 7 behaviour after a mid-plan rejection: the step after it is planned again (review C03-1)', () => {
+      // Counting by number: after the Forge is applied, rows S S F mark plan steps 1–3 done,
+      // so step 4 (F) is "not done" and a second Forge is planned. Open product question,
+      // carried to the final report; this test changes when design §8.6 item 7 changes.
+      const facts = onFinal(refinements('sharpen', 'sharpen', 'forge'));
+      const { action } = planned(goal.evaluate(facts, context(facts, { target: 10, blueprints: withPlan([S, S, S, F]) })));
+      expect(action.step).toEqual(F);
+    });
+
     it('treats a Hone past the +10 stack cap as done', () => {
       // Volt Sabre has +8 Combat Power; +3 would make 11.
       const facts = onFinal([]);

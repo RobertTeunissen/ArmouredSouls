@@ -242,11 +242,25 @@ const host = (config.nodeEnv === 'production' || config.nodeEnv === 'acceptance'
 
 // Run startup self-test before accepting connections
 import { runStartupSelfTest } from './utils/startupSelfTest';
+import { runStrategyStartupCheck } from './services/automaton/strategies/registry';
 
 (async () => {
   const selfTest = await runStartupSelfTest();
   if (!selfTest.passed) {
     // Self-test handles logging and alerting internally
+    process.exit(1);
+  }
+
+  // Spec #55 (R6.2, R6.6): refuse to start on an invalid Strategy_Definition_File
+  // or when an Automaton_Profile references a Strategy_Version without a file.
+  const strategyCheck = await runStrategyStartupCheck({
+    listStoredVersions: () => prisma.automatonProfile.findMany({
+      distinct: ['strategyKey', 'strategyVersion'],
+      select: { strategyKey: true, strategyVersion: true },
+    }),
+  });
+  if (!strategyCheck.passed) {
+    // The check handles logging and alerting internally
     process.exit(1);
   }
 

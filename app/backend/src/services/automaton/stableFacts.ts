@@ -172,3 +172,29 @@ export function inventoryItem(facts: StableFacts, inventoryId: number | null): I
 export function blueprintForSlot(blueprints: readonly BlueprintFacts[], slotIndex: number): BlueprintFacts | undefined {
   return blueprints.find((b) => b.slotIndex === slotIndex);
 }
+
+/**
+ * Matched Weapon_Stage (design §8.1): the highest stage whose weapons the
+ * robot holds in every hand of that stage while its loadout equals the
+ * blueprint loadout; −1 otherwise. Used by the facts loader and by
+ * `factProjector`, so a projected robot's stage is derived exactly as a
+ * loaded one.
+ */
+export function matchedStageIndex(
+  robot: Pick<RobotFacts, 'loadoutType' | 'mainInventoryId' | 'offhandInventoryId'>,
+  blueprint: Pick<BlueprintFacts, 'loadoutType' | 'weaponPath'>,
+  inventory: readonly InventoryFacts[],
+): number {
+  if (robot.loadoutType !== blueprint.loadoutType) return -1;
+  const nameOf = (inventoryId: number | null): string | undefined =>
+    inventoryId === null ? undefined : inventory.find((item) => item.inventoryId === inventoryId)?.weaponName;
+  const main = nameOf(robot.mainInventoryId);
+  const offhand = nameOf(robot.offhandInventoryId);
+  for (let stageIndex = blueprint.weaponPath.length - 1; stageIndex >= 0; stageIndex--) {
+    const stage = blueprint.weaponPath[stageIndex];
+    if (stage.main !== main) continue;
+    if (stage.offhand !== undefined && stage.offhand !== offhand) continue;
+    return stageIndex;
+  }
+  return -1;
+}
