@@ -91,7 +91,8 @@ test.describe('Automaton badge on player pages', () => {
           const ready = page.getByText(surface.ready()).filter({ visible: true }).first();
           if (surface.name === 'league standings') {
             // New robots start at 0 LP, so the stable may be on a later standings page.
-            await expect(page.getByRole('button', { name: 'Next' }).filter({ visible: true }).first().or(ready)).toBeVisible({ timeout: 20_000 });
+            // Either may show first; with several standings pages both are visible at once.
+            await expect(page.getByRole('button', { name: 'Next' }).filter({ visible: true }).first().or(ready).first()).toBeVisible({ timeout: 20_000 });
             for (let next = 0; next < 5 && !(await ready.isVisible()); next++) {
               await page.getByRole('button', { name: 'Next' }).filter({ visible: true }).first().click();
               await page.waitForLoadState('networkidle');

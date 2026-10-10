@@ -448,6 +448,9 @@ jobs:
         working-directory: ./app/frontend
         env:
           PLAYWRIGHT_BASE_URL: http://localhost:4173
+          # Spec #55 decision 43: the admin-teardown project deletes the e2e
+          # Automaton stables through a backend script on the backend's database.
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_e2e?connection_limit=20
         run: |
           pnpm exec vite preview --port 4173 &
           echo "Waiting for frontend preview server to start..."

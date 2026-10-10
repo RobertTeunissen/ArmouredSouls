@@ -42,6 +42,7 @@ Required Finance Center replacement coverage:
 - **Integration (`DB_DEPENDENT`):** `tests/integration/automaton*.test.ts` (turn wiring, Financial_Pairs, retries, access blocking, admin routes, sync, zero-write previews); a rollover suite that truncates history is `HEAVY_TESTS`.
 - **Heavy:** `automatonMultiSeason.test.ts` runs 100 Automatons (the 11 starters by fixed Catalogue_Keys plus generated entries) over two seasons; it takes ~14 min locally, so run it in the background.
 - Automaton code must not write `User.currency` or reference Manual_Repair (`noDirectWriters.test.ts`).
+- **E2E:** the `admin` project runs after `chromium` (its bulk cycles change seeded stables); `admin-teardown` deletes the `e2e-automaton*` stables via `scripts/deleteE2eAutomatons.ts`, so it needs the backend's `DATABASE_URL`.
 
 ## Blocking validation gates
 Required backend gates: `pnpm run lint`, `pnpm run build`, `pnpm run typecheck:tests`, `pnpm run test:tiers:verify`, `pnpm run test:unit`, `pnpm run test:integration`, and `pnpm run test:heavy`. Required frontend/E2E gates: frontend lint/build/unit and `pnpm exec playwright test`. A job must be able to fail; do not use `continue-on-error`, `|| true`, or unguarded pipes. Workflow dependencies must be verified in `.github/workflows/`, not inferred from old documentation.
