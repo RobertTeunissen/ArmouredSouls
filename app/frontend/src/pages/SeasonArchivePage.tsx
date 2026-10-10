@@ -384,8 +384,11 @@ function StandingRow({ row, mine }: { row: SnapshotEntry; mine: boolean }) {
       </td>
       <td className="px-3 py-2 text-secondary">
         {row.subjectStableType === 'automaton' ? (
-          <span className="whitespace-nowrap">
-            {row.stableName} <AutomatonBadge stableType={row.subjectStableType} size="sm" />
+          // A long name shortens with "…" instead of widening the table; the
+          // badge stays right after it on the same line (R12.2, design §18).
+          <span className="inline-flex max-w-[10rem] flex-nowrap items-center gap-1 align-middle sm:max-w-[16rem]">
+            <span className="min-w-0 truncate">{row.stableName}</span>
+            <AutomatonBadge stableType={row.subjectStableType} size="sm" className="shrink-0" />
           </span>
         ) : (
           row.stableName
@@ -439,18 +442,27 @@ function RecordCard({
               <span className="w-6 shrink-0 text-center font-bold text-tertiary">
                 {rankBadge(a.rank)}
               </span>
-              <span className="min-w-0 flex-1 truncate">
-                <span className="font-medium text-white">{a.subjectName}</span>
-                <span className="ml-1.5 text-secondary">{a.stableName}</span>
-                {a.subjectStableType === 'automaton' && (
-                  <AutomatonBadge stableType={a.subjectStableType} size="sm" className="ml-1.5" />
-                )}
-                {a.isGeneratedSubject && (
-                  <span className="ml-1.5 rounded bg-surface px-1 text-[10px] uppercase text-tertiary">
-                    system
+              {a.subjectStableType === 'automaton' ? (
+                // The names truncate on their own so the badge stays visible
+                // right after them (R12.2); it never sits inside the ellipsis.
+                <span className="flex min-w-0 flex-1 flex-nowrap items-center gap-1.5">
+                  <span className="min-w-0 truncate">
+                    <span className="font-medium text-white">{a.subjectName}</span>
+                    <span className="ml-1.5 text-secondary">{a.stableName}</span>
                   </span>
-                )}
-              </span>
+                  <AutomatonBadge stableType={a.subjectStableType} size="sm" className="shrink-0" />
+                </span>
+              ) : (
+                <span className="min-w-0 flex-1 truncate">
+                  <span className="font-medium text-white">{a.subjectName}</span>
+                  <span className="ml-1.5 text-secondary">{a.stableName}</span>
+                  {a.isGeneratedSubject && (
+                    <span className="ml-1.5 rounded bg-surface px-1 text-[10px] uppercase text-tertiary">
+                      system
+                    </span>
+                  )}
+                </span>
+              )}
               <span className="shrink-0 text-right text-slate-300">
                 {a.value !== 0 ? `${a.value} ` : ''}
                 {a.valueLabel}

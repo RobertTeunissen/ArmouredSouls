@@ -121,8 +121,16 @@ export type SaveStep =
  * higher robots target needs the new blueprints first (R3.7). When the form's
  * strategy allows fewer robots than the pinned one, an addition sized with the
  * pinned Build_Order would need Team_Names the Teams card never shows; the
- * strategy step then runs just before that addition. The count at that point
- * already reaches the form strategy's robots bound, so R3.7 holds.
+ * strategy step then runs just before that addition. R3.7 holds there when
+ * the buildable count before the addition already reaches the form's robots
+ * target, which is the usual case (an addition after the last slot raises the
+ * count by one). An addition that fills a gap can raise it by more than one
+ * (slots 1, 2, 4 plus 3: from 2 to 4), and then no order works in one save:
+ * the strategy step first is rejected with AUTOMATON_BLUEPRINTS_TOO_FEW, the
+ * addition first would need a hidden Team_Name. The plan keeps the strategy
+ * step first, so the save fails closed with the R3.7 message and the form is
+ * kept; saving the addition under the pinned strategy first, then the
+ * strategy switch, works.
  */
 export function savePlan(detail: ProfileDetail, form: EditorForm, rows: readonly BuildOrderRow[]): SaveStep[] {
   const steps: SaveStep[] = [];

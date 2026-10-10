@@ -148,7 +148,13 @@ describe('SeasonArchivePage — Automaton_Badge (R12.2, R12.4)', () => {
     const automatonRow = screen.getAllByText('RoboCop').map((el) => el.closest('tr')).find((tr) => tr !== null) as HTMLElement;
     const stableCell = within(automatonRow).getByText(/Old Detroit Precinct/).closest('td') as HTMLElement;
     expect(stableCell).toContainElement(badges[0]);
-    expect(badges[0].parentElement).toHaveClass('whitespace-nowrap');
+    // The name truncates on its own; the badge follows it in a non-wrapping row.
+    const standingName = within(stableCell).getByText('Old Detroit Precinct');
+    expect(standingName).toHaveClass('min-w-0', 'truncate');
+    expect(standingName).not.toContainElement(badges[0]);
+    expect(badges[0].parentElement).toHaveClass('flex-nowrap');
+    expect(badges[0].parentElement).not.toHaveClass('truncate');
+    expect(badges[0]).toHaveClass('shrink-0');
     expect(within(automatonRow).queryByText('bot')).toBeNull();
 
     // Generated subjects keep their chips and get no badge.
@@ -159,7 +165,16 @@ describe('SeasonArchivePage — Automaton_Badge (R12.2, R12.4)', () => {
 
     // Records: the Automaton entry carries the badge, the system entry does not.
     const eloCard = screen.getByText('Highest ELO').closest('.rounded-lg') as HTMLElement;
-    expect(within(eloCard).getByTestId('automaton-badge')).toBeInTheDocument();
+    const recordBadge = within(eloCard).getByTestId('automaton-badge');
+    // The badge is not inside the truncating names element, so an ellipsis
+    // never clips it (R12.2).
+    const truncatingNames = within(eloCard).getByText('Old Detroit Precinct').closest('.truncate') as HTMLElement;
+    expect(truncatingNames).not.toBeNull();
+    expect(truncatingNames).toHaveClass('min-w-0');
+    expect(truncatingNames).not.toContainElement(recordBadge);
+    expect(recordBadge.parentElement).toHaveClass('flex-nowrap');
+    expect(recordBadge.parentElement).toContainElement(truncatingNames);
+    expect(recordBadge).toHaveClass('shrink-0');
     const killsCard = screen.getByText('Most Kills').closest('.rounded-lg') as HTMLElement;
     expect(within(killsCard).queryByTestId('automaton-badge')).toBeNull();
   });

@@ -100,6 +100,31 @@ describe('editor state helpers', () => {
     expect(savePlan(twoSlots, twoForm, newRows).map((s) => s.kind)).toEqual(['add_blueprint', 'update_strategy']);
   });
 
+  it('keeps the strategy step first for a gap-filling addition, so the save fails closed (R3.7)', () => {
+    // Slots 1, 2, 4 (buildable 2) under a pinned robots bound of 4; the form switches to a bound and target of 3.
+    const base = detail();
+    const pinnedRows = base.strategy.buildOrder.map((r) => (r.type === 'robots' ? { ...r, bounds: { min: 1, max: 4 } } : r));
+    const gapped = detail({ blueprints: [blueprint(1), blueprint(2), blueprint(4)], strategy: { ...base.strategy, buildOrder: pinnedRows } });
+    const form = formFromDetail(gapped);
+    const newRows = base.strategy.buildOrder.map((r) => (r.type === 'robots' ? { ...r, goalId: 'duo.v1.01.robots', bounds: { min: 1, max: 3 }, defaultTarget: 3, target: 3 } : r));
+    form.strategyKey = 'duo';
+    form.targets = { 'duo.v1.01.robots': 3 };
+    form.teamNames = { twoVsTwo: ['Torrent Company'], threeVsThree: ['Bad Batch'] };
+    form.pending = [{ slot: 3, fields: { ...form.blueprints[1], robotName: 'Echo' } }];
+    // Filling slot 3 raises the buildable count from 2 to 4: pinned-sized names would need a hidden second 2v2 name,
+    // and the strategy step goes out while buildable is still 2, below its target of 3 (the backend rejects it).
+    expect(teamMaxRobots(pinnedRows, [1, 2, 3, 4])).toBe(4);
+    expect(teamMaxRobots(newRows, [1, 2, 4])).toBe(2);
+    const plan = savePlan(gapped, form, newRows);
+    expect(plan.map((s) => s.kind)).toEqual(['update_strategy', 'add_blueprint']);
+    // No step carries a '' Team_Name the Teams card never shows.
+    for (const step of plan) {
+      if (step.kind === 'update_strategy' || step.kind === 'add_blueprint') {
+        expect([...step.teamNames.twoVsTwo, ...step.teamNames.threeVsThree]).not.toContain('');
+      }
+    }
+  });
+
   it('finds the next free slot, 11 at most', () => {
     expect(nextFreeSlot([1, 2, 4])).toBe(3);
     expect(nextFreeSlot(Array.from({ length: 11 }, (_, i) => i + 1))).toBeNull();
