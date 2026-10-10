@@ -133,6 +133,17 @@ describe('containsProfanity', () => {
       expect(containsProfanity(name)).toBe(false);
     });
 
+    // A single-case run has no boundary marker, so ALL-CAPS behaves exactly
+    // like all-lower: the junction is not visible and the compound is caught.
+    test.each([
+      ['orbitchaos', 'ORBITCHAOS'],
+      ['whoreigns', 'WHOREIGNS'],
+      ['bitchassis', 'BITCHASSIS'],
+    ])('%s and %s are treated the same', (lower, upper) => {
+      expect(containsProfanity(lower)).toBe(true);
+      expect(containsProfanity(upper)).toBe(containsProfanity(lower));
+    });
+
     // Documented trade-off: random-case gluing is not caught inside a compound,
     // but the standalone word in any case still is (rule 1).
     test('random-case gluing is the accepted trade-off', () => {

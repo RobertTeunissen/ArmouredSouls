@@ -276,7 +276,7 @@ The stable name you chose is already in use by another player. Choose a differen
 
 ### "Stable name contains inappropriate content"
 
-The stable name contains words that are not allowed. Choose a different name that doesn't include profanity or inappropriate language. Words are matched as whole words, so names such as "Glass Cannon" or "Shell Corp" are allowed. A blocked word is still rejected when it stands alone, is separated by spaces, digits, hyphens or underscores, or is joined in camelCase (for example "BigAss").
+The stable name contains words that are not allowed. Choose a different name that doesn't include profanity or inappropriate language. Words are matched as whole words, so names such as "Glass Cannon" or "Shell Corp" are allowed. A blocked word is still rejected when it stands alone, is separated by spaces, digits, hyphens or underscores, or is joined in camelCase (for example "BigAss"). One exception to whole-word matching: four longer words ("bitch", "bastard", "whore", "hitler") are also rejected inside a longer word ("BigBastardBot"). Only a lower-to-upper case change such as "OrbitChaos" counts as a word boundary for these, so the same name typed in a single case ("orbitchaos", "ORBITCHAOS") is rejected.
 
 ### Multiple validation errors in one response
 

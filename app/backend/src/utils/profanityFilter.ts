@@ -202,8 +202,11 @@ const LOWER_TO_UPPER_BOUNDARY = /(?<=\p{Ll})(?=\p{Lu})/u;
  *    are not caught). Splitting at word boundaries keeps PascalCase junctions such as
  *    "OrbitChaos" (bit|ch) and "WhoReigns" (who|re) allowed. The trade-off is
  *    that random-case gluing ("xBiTcHx") is not caught; the standalone word
- *    in any case ("BiTcH") still is, by rule 1. An all-lower junction
- *    ("orbitchaos") is still rejected, because nothing marks the boundary.
+ *    in any case ("BiTcH") still is, by rule 1. A single-case junction,
+ *    all-lower or ALL-CAPS ("orbitchaos", "ORBITCHAOS", "WHOREIGNS"), is
+ *    still rejected, because nothing marks the boundary. Single-case runs
+ *    are treated identically whatever their case; only a mixed-case
+ *    lower→upper junction counts as a word boundary.
  *
  * Leetspeak and other character substitutions are not decoded.
  *
