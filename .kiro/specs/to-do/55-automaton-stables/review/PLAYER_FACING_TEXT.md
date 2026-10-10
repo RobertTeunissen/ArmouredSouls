@@ -1,6 +1,6 @@
 # Review: Player-Facing and Admin Text
 
-**Status**: Approved — 8 Oct 2026, together with both mockups, including every change made after approval (decisions 20–37 and the consistency fixes, §6.2–§6.7).
+**Status**: Approved — 8 Oct 2026, together with both mockups, including every change made after approval (decisions 20–37 and the consistency fixes, §6.2–§6.7). Changed after approval: §1 and §3 Hall of Records scope (decision 42, approved 10 Oct 2026). Awaiting approval: §6.9 admin text written during implementation (decision 41).
 **Scope**: every label and description that spec 55 adds or changes, and how the new elements look. Robot names and stable names (and the admin-only franchise and backstory) are in `CATALOGUE.md`; strategy display names and descriptions are in `STRATEGIES.md`.
 **Mockups**: `../mockups/player-pages.html` (badge and every player page that changes) and `../mockups/admin-automatons.html` (the admin page). Open them in a browser; each page is shown at mobile (360 px) and desktop width.
 **House style**: plain, direct English, no exclamation marks, "₡" for credits.
@@ -299,3 +299,34 @@ There is no aggregated "Saving" or "Blocked" count anywhere on the page: those o
 | "Real Players" help text | — | Human players only. Excludes auto-generated bots and Automatons. |
 
 - [x] Approved — 8 Oct 2026
+
+### 6.9 Admin text written during implementation — added after approval (implementation), awaiting approval (decision 41)
+
+Admin-only strings the implementation needed that §6.1–§6.8 do not contain. They are in the code as written below. They are not approved; R13.4 needs your approval (or a replacement text) before merge. "New strategy (blank)", used as the title of the new-strategy dialog, is not listed: it is the approved §6.4b Start label.
+
+| Where | Text | Shown when |
+|---|---|---|
+| Strategy Builder rule error (next to the goal) | Robots allow 1–11. | A robots goal's allowed range goes outside 1–11. |
+| Strategy Builder rule error | Attributes allow 1–50 or Max. | An attributes goal's allowed range goes outside 1–50. |
+| Strategy Builder rule error | Weapons allow stage 0–3. | A weapons goal's allowed range goes outside stage 0–3. |
+| Strategy Builder rule error | {facility} cannot go above L10. | A facility goal other than Booking Office aims above L10. |
+| Strategy Builder rule error | Academies are bought by attributes goals, not as a facility goal. | A facility goal names one of the four academies. |
+| Strategy Builder rule error | Only an attributes goal can target Max, with Max as its whole allowed range. | "Max" is used on another goal type, or mixed with a number. |
+| Strategy Builder rule error | The allowed range is empty: the minimum is above the maximum. | Minimum above maximum. |
+| Strategy Builder rule error (above the build order) | Add at least one goal. | The build order is empty. |
+| Strategy Builder rule error | Goals are numbered 1, 2, 3 … in order; expected {n}. | Goal positions are not consecutive (file import). |
+| Strategy Builder rule error (version) | A new strategy starts at v1. | A new key with a version other than 1. |
+| Strategy Builder rule error (version) | The next version of "{key}" is v{n}. | A new version of an existing key skips or repeats a number. |
+| Strategy Builder export help | Save the draft before exporting. | The draft has unsaved edits (the approved "Export is disabled while the draft has errors ({n})." still shows when it has errors). |
+| Editor save notice | Saved. Changes apply from the next settlement. | After Save changes. |
+| Editor empty state | Pick a stable to edit, or create a new one. | Editor tab with no stable selected. |
+| Blueprint editor buttons | Add stage · Remove last stage | Weapon path rows. |
+| Blueprint editor button | Add refinement step | Refinement plan rows. |
+| Stables tab empty state | No stables match this filter. | The filter matches no stable. |
+| Stables tab filter chip | Strategy: {key} ✕ | Arrived from a strategy's "stables" link; ✕ clears the filter. |
+| Stables tab bulk result | Activated {n} stables. · Activated {n} stables. Not activated: {catalogue key}: {error text} · … | After the bulk activate action. |
+| Strategy upgrade dialog | All stables are on v{n}. | No stable of the strategy is on an older version. |
+| Turn preview (single waiting goal) | Goal {n} waits. | Singular form of the approved "Goals {a}–{b} wait." when exactly one goal follows the saving goal. |
+| Placeholders | Loading… · — | While data loads; an empty value. |
+
+- [ ] Approved
