@@ -32,7 +32,7 @@ Where the badge appears (mockup section in brackets):
 |---|---|---|
 | Leaderboards (Fame, Prestige, Losses) | `OwnerNameLink` | after the stable name, before a "YOU" badge if both apply (A) |
 | League standings | `OwnerNameLink` | after the owner name (B) |
-| Hall of Records (economic and prestige records) | `OwnerNameLink` | after the stable name (B) |
+| Hall of Records (every record that names a stable: stable records, robot records "Robot by Stable", battle details, team line-ups, tournament champions) | `OwnerNameLink` (stable records), `RecordStableName` (all other records) | after the stable name (B) — changed after approval (decision 42, approved 10 Oct 2026) |
 | Stable profile page | `StableViewPage.tsx` | after the stable name in the header (C) |
 | Robot detail page | `RobotDetailPage.tsx` | after the owner name in the robot header (D) |
 | Battle report | `BattleResultBanner.tsx`, `TeamBattleMetrics.tsx` | after the owning stable's name under each robot (E) |
@@ -61,6 +61,7 @@ Franchise and backstory still exist as admin-only fields on each Automaton profi
 - No new text in battle reports or combat messages. Automaton robots appear under their blueprint names (e.g. "CT-7567 Rex lunges with Laser Pistol…") exactly like human robots.
 - The badge (§1) is the only marker.
 - Automatons appear in every leaderboard, standing, tournament bracket and Hall of Records list on the same terms as human stables.
+- In the Hall of Records every record that names an Automaton stable shows the badge after the stable name, combat and other robot records included, as in mockup section B ("Megatron by Decepticon Armada"). (Changed after approval, decision 42, approved 10 Oct 2026: the badge was first limited to the economic and prestige records.)
 
 - [x] Approved — 8 Oct 2026
 

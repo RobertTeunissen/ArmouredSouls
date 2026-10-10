@@ -141,7 +141,7 @@ Franchise and backstory are admin-only; showing them to players is backlog #61.
 
 ## Player-facing presentation
 
-The only player-visible marker is the Automaton_Badge (gear icon and "Automaton", theme `info` purple) after the stable name on leaderboards, league standings, Hall of Records (economic and prestige records), the stable profile, robot detail, battle report and season archive. The strategy name, franchise and backstory are never shown. There is no in-game guide article. Page details are in the page PRDs and `DESIGN_SYSTEM_AND_UX_GUIDE.md`.
+The only player-visible marker is the Automaton_Badge (gear icon and "Automaton", theme `info` purple) after the stable name on leaderboards, league standings, every Hall of Records record that names a stable (decision 42), the stable profile, robot detail, battle report and season archive. The strategy name, franchise and backstory are never shown. There is no in-game guide article. Page details are in the page PRDs and `DESIGN_SYSTEM_AND_UX_GUIDE.md`.
 
 ## Admin control
 

@@ -607,9 +607,11 @@ HallOfRecordsPage.tsx
 
 **Automatons hold records like humans** (decision 33). Every record category counts Automaton robots and stables on the same terms as human ones; nothing is filtered out. On a local or otherwise empty environment Automatons will hold most records; that is expected. Season accolades captured at rollover record the holder's Stable_Type in `season_accolades.subject_stable_type`.
 
-**Automaton_Badge.** The economic and prestige stable records (richest stables, highest prestige, most titles) render the holder through `OwnerNameLink` with its `stableType`, so an Automaton holder shows the badge directly after the stable name: compact gear below 640 px, full label from 640 px, never wrapped onto its own line. `recordsQueryService` adds `stableType` only to these stable records.
+**Automaton_Badge on every record** (Spec #55 decision 42). Every record that names a stable shows the badge directly after an Automaton stable's name: compact gear below 640 px, full label from 640 px, never wrapped onto its own line.
 
-Robot records ("Robot by Stable" rows: combat, career, KotH, Grand Melee, team battles, streaks, upsets) show the stable name as plain text without a badge in this implementation. This follows the approved text (`PLAYER_FACING_TEXT.md` §1: "economic and prestige records"); the approved mockup also showed the badge on one combat record, and that difference is recorded for the product owner in the Spec #55 implementation record.
+- Stable records (richest stables, highest prestige, most titles) render the holder through `OwnerNameLink` with its `stableType`.
+- Robot records ("Robot by Stable" rows: career, economic highest fame, KotH, Grand Melee, win streaks, team battle survival and damage), battle details ("Robot:", "Winner:", "Underdog:", "Underdog stable:"), team line-ups ("Robot (Stable)") and tournament champions ("Stable:") render the stable name as plain text through `components/hall-of-records/RecordStableName.tsx`, which adds the badge in the same `flex-nowrap` wrapper.
+- `recordsQueryService` ships `stableType` on every owner display object through `getRecordOwner()` (also for opponents, losers and favourites, so every name carries its type), and `ownerStableType` on tournament champions.
 
 ---
 

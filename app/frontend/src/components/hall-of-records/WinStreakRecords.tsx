@@ -1,5 +1,6 @@
 import { RecordSection } from './RecordSection';
 import { RecordCard } from './RecordCard';
+import { RecordStableName } from './RecordStableName';
 import {
   WIN_STREAK_MODES,
   WIN_STREAK_MODE_LABELS,
@@ -46,7 +47,7 @@ export function WinStreakRecords({ records }: WinStreakRecordsProps) {
               key={record.entityId}
               rank={index + 1}
               value={`${record.bestWinStreak} wins in a row`}
-              description={`${record.entityName} by ${record.username}`}
+              description={<>{record.entityName} by <RecordStableName name={record.username} stableType={record.stableType} /></>}
               details={[
                 record.isActive
                   ? `🔴 Active — currently on ${record.currentWinStreak}`

@@ -1,5 +1,6 @@
 import { RecordSection } from './RecordSection';
 import { RecordCard } from './RecordCard';
+import { RecordStableName } from './RecordStableName';
 import type { RecordsData } from './types';
 
 export interface KothRecordsProps {
@@ -17,7 +18,7 @@ export function KothRecords({ records, formatDuration }: KothRecordsProps) {
               key={record.robotId}
               rank={index + 1}
               value={`${record.kothWins} wins`}
-              description={`${record.robotName} by ${record.username}`}
+              description={<>{record.robotName} by <RecordStableName name={record.username} stableType={record.stableType} /></>}
               details={[
                 `Matches: ${record.kothMatches}`,
                 `Win Rate: ${record.winRate}%`,
@@ -34,7 +35,7 @@ export function KothRecords({ records, formatDuration }: KothRecordsProps) {
               key={record.robotId}
               rank={index + 1}
               value={`${record.avgZoneScore.toFixed(1)} avg`}
-              description={`${record.robotName} by ${record.username}`}
+              description={<>{record.robotName} by <RecordStableName name={record.username} stableType={record.stableType} /></>}
               details={[`Matches: ${record.kothMatches}`]}
             />
           ))}
@@ -48,7 +49,7 @@ export function KothRecords({ records, formatDuration }: KothRecordsProps) {
               key={record.robotId}
               rank={index + 1}
               value={`${record.kothKills} kills`}
-              description={`${record.robotName} by ${record.username}`}
+              description={<>{record.robotName} by <RecordStableName name={record.username} stableType={record.stableType} /></>}
               details={[`Matches: ${record.kothMatches}`]}
             />
           ))}
@@ -62,7 +63,7 @@ export function KothRecords({ records, formatDuration }: KothRecordsProps) {
               key={record.robotId}
               rank={index + 1}
               value={`${record.bestWinStreak} streak`}
-              description={`${record.robotName} by ${record.username}`}
+              description={<>{record.robotName} by <RecordStableName name={record.username} stableType={record.stableType} /></>}
               details={[`Total Wins: ${record.kothWins}`]}
             />
           ))}
@@ -76,7 +77,7 @@ export function KothRecords({ records, formatDuration }: KothRecordsProps) {
               key={record.robotId}
               rank={index + 1}
               value={formatDuration(record.totalZoneTime)}
-              description={`${record.robotName} by ${record.username}`}
+              description={<>{record.robotName} by <RecordStableName name={record.username} stableType={record.stableType} /></>}
               details={[`Matches: ${record.kothMatches}`]}
             />
           ))}
@@ -95,7 +96,7 @@ export function KothRecords({ records, formatDuration }: KothRecordsProps) {
               key={record.robotId}
               rank={index + 1}
               value={`${record.totalZoneScore} total`}
-              description={`${record.robotName} by ${record.username}`}
+              description={<>{record.robotName} by <RecordStableName name={record.username} stableType={record.stableType} /></>}
               details={[`Matches: ${record.kothMatches}`]}
             />
           ))}

@@ -24,6 +24,17 @@ import matchesRoutes from '../../src/routes/matches';
 import seasonsRoutes from '../../src/routes/seasons';
 import { createTestBattle, createTestRobot, deleteTestBattle } from '../testHelpers';
 import { enterRobotStanding, enterTeamStanding } from '../helpers/standings';
+import {
+  fetchCareerRecords,
+  fetchCombatRecords,
+  fetchEconomicRecords,
+  fetchGrandMeleeRecords,
+  fetchKothRecords,
+  fetchTeamBattleRecords,
+  fetchTournamentChampions,
+  fetchUpsetRecords,
+  fetchWinStreakRecords,
+} from '../../src/services/records/recordsQueryService';
 
 const suffix = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 const MARKERS = {
@@ -92,6 +103,9 @@ describe('Automaton public exposure (Spec #55 R1.7, R2.1)', () => {
   let battleId: number;
   let seasonNumber: number;
   const profileIds: number[] = [];
+  /** Decision 42 record fixtures: battles and tournaments the Automaton tops. */
+  const recordBattleIds: Record<string, number> = {};
+  const tournamentIds: number[] = [];
 
   beforeAll(async () => {
     server = await new Promise<http.Server>((resolve) => {
@@ -187,6 +201,56 @@ describe('Automaton public exposure (Spec #55 R1.7, R2.1)', () => {
 
     battleId = (await createTestBattle({ robot1Id: robotId, robot2Id: viewerRobotId, winnerId: robotId, battleType: 'league_1v1' })).id;
 
+    // Decision 42: the Automaton holds the top entry of every Hall of Records
+    // list, so each record mapping can be checked for the holder's stableType.
+    await prisma.robot.update({
+      where: { id: robotId },
+      data: { elo: TOP, totalBattles: TOP, wins: TOP, damageDealtLifetime: TOP, grandMeleeWins: TOP },
+    });
+    recordBattleIds.damage = (await createTestBattle({
+      robot1Id: robotId, robot2Id: viewerRobotId, winnerId: robotId, battleType: 'league_1v1',
+      robot1DamageDealt: TOP, robot1FinalHP: 1,
+    })).id;
+    recordBattleIds.upset = (await createTestBattle({
+      robot1Id: robotId, robot2Id: viewerRobotId, winnerId: robotId, battleType: 'tournament_1v1',
+      robot1ELOBefore: 0, robot2ELOBefore: TOP,
+    })).id;
+    recordBattleIds.team = (await createTestBattle({
+      robot1Id: robotId, robot2Id: viewerRobotId, winnerId: robotId, battleType: 'league_2v2',
+      robot1DamageDealt: TOP, robot1FinalHP: TOP, robot2FinalHP: 0, durationSeconds: 1,
+    })).id;
+    await prisma.battleSummary.create({
+      data: {
+        battleId: recordBattleIds.team, perRobot: [], damageFlows: [], battleDuration: 1, totalEvents: 0,
+        participants: [{ robotId, team: 1, survivalSeconds: TOP }],
+      },
+    });
+    recordBattleIds.teamUpset = (await createTestBattle({
+      robot1Id: robotId, robot2Id: viewerRobotId, winnerId: robotId, battleType: 'tournament_2v2',
+      robot1ELOBefore: 0, robot2ELOBefore: TOP,
+    })).id;
+    await prisma.battle.update({ where: { id: recordBattleIds.teamUpset }, data: { winningSide: 1 } });
+    await enterRobotStanding(robotId, 'koth', { wins: TOP, totalMatches: TOP });
+    await prisma.standing.updateMany({
+      where: { entityType: 'robot', entityId: robotId, mode: { in: ['koth', 'league_1v1'] } },
+      data: { bestWinStreak: TOP, currentWinStreak: TOP, totalZoneScore: TOP, totalZoneTime: TOP },
+    });
+    await prisma.standing.updateMany({
+      where: { entityType: 'team', entityId: teamId, mode: 'league_2v2' },
+      data: { bestWinStreak: TOP, currentWinStreak: TOP },
+    });
+    const farFuture = new Date('2999-01-01T00:00:00Z');
+    for (const [participantType, winnerId] of [['robot', robotId], ['team_2v2', teamId]] as const) {
+      const tournament = await prisma.tournament.create({
+        data: {
+          name: `Exp ${participantType} ${suffix}`.slice(0, 100), tournamentType: 'single_elimination',
+          participantType, status: 'completed', maxRounds: 1, totalParticipants: 2, winnerId,
+          completedAt: farFuture,
+        },
+      });
+      tournamentIds.push(tournament.id);
+    }
+
     seasonNumber = 900_000 + Math.floor(Math.random() * 90_000);
     await prisma.season.create({
       data: {
@@ -215,6 +279,8 @@ describe('Automaton public exposure (Spec #55 R1.7, R2.1)', () => {
 
   afterAll(async () => {
     await deleteTestBattle(battleId);
+    for (const id of Object.values(recordBattleIds)) await deleteTestBattle(id);
+    await prisma.tournament.deleteMany({ where: { id: { in: tournamentIds } } });
     await prisma.season.deleteMany({ where: { seasonNumber } });
     await prisma.standing.deleteMany({ where: { entityType: 'robot', entityId: { in: [robotId, robot2Id, viewerRobotId] } } });
     await prisma.standing.deleteMany({ where: { entityType: 'team', entityId: teamId } });
@@ -263,6 +329,60 @@ describe('Automaton public exposure (Spec #55 R1.7, R2.1)', () => {
     expect(find(res.body.prestige.highestPrestige)?.stableType).toBe('automaton');
     expect(find(res.body.prestige.mostTitles)?.stableType).toBe('automaton');
     expectNoInternals(res.body);
+  });
+
+  it('every Hall of Records record carries the holder stableType (decision 42)', async () => {
+    type Owned = { username: string; stableType: string | null };
+    const byRobot = (list: ReadonlyArray<{ robotId: number } & Owned> | undefined) => list?.find((e) => e.robotId === robotId);
+    const byBattle = <T extends { battleId: number }>(list: T[] | undefined, id: number) => list?.find((e) => e.battleId === id);
+
+    const career = await fetchCareerRecords();
+    for (const list of [career.mostBattles, career.highestWinRate, career.mostLifetimeDamage, career.highestElo, career.mostKills]) {
+      expect(byRobot(list)?.stableType).toBe('automaton');
+    }
+
+    const economic = await fetchEconomicRecords();
+    expect(byRobot(economic.highestFame)?.stableType).toBe('automaton');
+
+    const combat = await fetchCombatRecords();
+    const damage = byBattle(combat.mostDamageInBattle.league_1v1, recordBattleIds.damage);
+    expect(damage?.robot.stableType).toBe('automaton');
+    expect(damage?.opponent?.stableType).toBe('human');
+    const narrowest = byBattle(combat.narrowestVictory, recordBattleIds.damage);
+    expect(narrowest?.winner.stableType).toBe('automaton');
+    expect(narrowest?.loser.stableType).toBe('human');
+
+    const upsets = await fetchUpsetRecords();
+    const upset = byBattle(upsets.biggestUpset, recordBattleIds.upset);
+    expect(upset?.underdog.stableType).toBe('automaton');
+    expect(upset?.favorite.stableType).toBe('human');
+    const teamUpset = byBattle(upsets.biggestTeamUpset, recordBattleIds.teamUpset);
+    expect(teamUpset?.underdog.robots[0]?.stableType).toBe('automaton');
+    expect(teamUpset?.favorite.robots[0]?.stableType).toBe('human');
+
+    const team = (await fetchTeamBattleRecords())['2v2'];
+    expect(byBattle(team.mostDamageDealt, recordBattleIds.team)?.robot.stableType).toBe('automaton');
+    expect(byBattle(team.longestSurvival, recordBattleIds.team)?.robot.stableType).toBe('automaton');
+    const decisive = byBattle(team.mostDecisiveVictory, recordBattleIds.team);
+    expect(decisive?.team1[0]?.stableType).toBe('automaton');
+    expect(decisive?.team2[0]?.stableType).toBe('human');
+
+    const koth = (await fetchKothRecords()) as Record<string, Array<{ robotId: number } & Owned>>;
+    for (const key of ['mostWins', 'highestAvgZoneScore', 'longestWinStreak', 'mostZoneTime', 'zoneDominator']) {
+      expect(byRobot(koth[key])?.stableType).toBe('automaton');
+    }
+
+    const grandMelee = (await fetchGrandMeleeRecords()) as Record<string, Array<{ robotId: number } & Owned>>;
+    expect(byRobot(grandMelee.mostWins)?.stableType).toBe('automaton');
+
+    const streaks = await fetchWinStreakRecords();
+    expect(streaks.league_1v1.find((e) => e.entityId === robotId)?.stableType).toBe('automaton');
+    expect(streaks.league_2v2.find((e) => e.entityId === teamId)?.stableType).toBe('automaton');
+
+    const champions = await fetchTournamentChampions();
+    const ours = [...champions.champions1v1, ...champions.champions2v2].filter((c) => tournamentIds.includes(c.tournamentId));
+    expect(ours).toHaveLength(2);
+    for (const champion of ours) expect(champion.ownerStableType).toBe('automaton');
   });
 
   it('league standings carry the owner stableType', async () => {

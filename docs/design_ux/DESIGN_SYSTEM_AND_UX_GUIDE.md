@@ -1513,7 +1513,7 @@ Based on dark theme aesthetic with industrial metallic tones:
 **Placement**:
 - Inline directly after the stable name, before a "YOU" badge if both apply. Never on a line of its own: rows use a `flex-nowrap` container with the name `min-w-0 truncate`; headings keep the badge attached to the last word (`whitespace-nowrap` around last word + badge).
 - `compact={false}` (full label at every width) only in the stable profile heading and the robot detail owner block, which have room.
-- Surfaces: `OwnerNameLink` (leaderboards, league standings, Hall of Records economic and prestige records), `StableViewPage` header, `RobotDetailPage` owner block, `BattleResultBanner`, `TeamBattleMetrics`, `SeasonArchivePage` (`sm`).
+- Surfaces: `OwnerNameLink` (leaderboards, league standings, Hall of Records stable records), `RecordStableName` (every other Hall of Records record that names a stable: robot records, battle details, team line-ups, tournament champions), `StableViewPage` header, `RobotDetailPage` owner block, `BattleResultBanner`, `TeamBattleMetrics`, `SeasonArchivePage` (`sm`).
 
 **Accessibility**: accessible name "Automaton" from the visible (or visually hidden) label; not interactive, adds no touch target and no tab stop. Generated_Stables keep their existing "bot" chip and never get this badge.
 
