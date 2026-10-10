@@ -184,6 +184,8 @@ model AutomatonTurn {
   creditsReceived Int                  @default(0) @map("credits_received") // weapon_sale proceeds
   actions         Json                 @default("[]")
   goalOutcomes    Json                 @default("[]") @map("goal_outcomes")
+  /// Free_Upkeep issues of the turn (part, code, message), retried next turn and alerted.
+  upkeepIssues    Json                 @default("[]") @map("upkeep_issues")
   durationMs      Int?                 @map("duration_ms")
   startedAt       DateTime             @default(now()) @map("started_at")
   finishedAt      DateTime?            @map("finished_at")

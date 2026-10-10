@@ -14,8 +14,9 @@
  * 6. Free_Upkeep's team and subscription parts for the stable;
  * 7. the robot's tuning allocation.
  * So the robot is armed, configured, subscribed and teamed before the turn
- * ends. Steps 1 and 2 happen together, before anything else can fail, so an
- * Automaton robot always has its blueprint link (invariant I4).
+ * ends. Steps 1 and 2 are one transaction: `createRobotTransaction` writes
+ * the blueprint link with the robot (`automatonLink`), so an Automaton robot
+ * never exists without it (invariant I4).
  */
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
@@ -62,27 +63,23 @@ async function purchaseRobot(
   // As `POST /api/robots`: a committed request answers before the name check,
   // which would otherwise reject the robot's own name.
   const replay = await findCompletedEconomicRequest<{ robot: unknown }>(userId, 'robot_creation', step.requestKey, { name: robotName });
-  let robotId: number;
-  if (replay) {
-    robotId = idOfStored(replay.response.robot, 'robot');
-    recordChargedStep(cursor, step, { kind: 'robot_creation', goalId, spent: 0, received: 0, replayed: true, detail: { robotName, robotId } });
-  } else {
-    const name = await validateRobotName(robotName);
-    const balanceBefore = (await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { currency: true } })).currency;
-    const result = await createRobotTransaction(userId, name, step.requestKey, step.options);
-    robotId = idOfStored(result.robot, 'robot');
-    recordChargedStep(cursor, step, {
-      kind: 'robot_creation', goalId, spent: result.replayed ? 0 : ROBOT_CREATION_COST, received: 0, replayed: result.replayed,
-      detail: { robotName: name, robotId },
-    });
-    if (!result.replayed) await afterRobotCreated(userId, robotId, name, balanceBefore, result.user.currency);
-  }
-
   // Step 2: blueprint link, Blueprint_Slot and image (R3.10; null = no image).
-  await prisma.robot.update({
-    where: { id: robotId },
-    data: { automatonBlueprintId: blueprint.blueprintId, automatonSlotIndex: blueprint.slotIndex, imageUrl: blueprint.imageUrl },
+  const link = { blueprintId: blueprint.blueprintId, slotIndex: blueprint.slotIndex, imageUrl: blueprint.imageUrl };
+  if (replay) {
+    const robotId = idOfStored(replay.response.robot, 'robot');
+    recordChargedStep(cursor, step, { kind: 'robot_creation', goalId, spent: 0, received: 0, replayed: true, detail: { robotName, robotId } });
+    return robotId;
+  }
+  const name = await validateRobotName(robotName);
+  const balanceBefore = (await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { currency: true } })).currency;
+  // The link is written by the creating transaction itself (invariant I4).
+  const result = await createRobotTransaction(userId, name, step.requestKey, { ...step.options, automatonLink: link });
+  const robotId = idOfStored(result.robot, 'robot');
+  recordChargedStep(cursor, step, {
+    kind: 'robot_creation', goalId, spent: result.replayed ? 0 : ROBOT_CREATION_COST, received: 0, replayed: result.replayed,
+    detail: { robotName: name, robotId },
   });
+  if (!result.replayed) await afterRobotCreated(userId, robotId, name, balanceBefore, result.user.currency);
   return robotId;
 }
 

@@ -195,6 +195,11 @@ jest.mock('../../../src/services/season/seasonService', () => ({
   advancePreparationCycle: jest.fn().mockResolvedValue({ preparationCyclesCompleted: 1 }),
 }));
 
+// Spec #55: the Automaton Turn_Step after each bulk cycle.
+jest.mock('../../../src/services/automaton', () => ({
+  runTurnStepNonFatal: jest.fn().mockResolvedValue({ ok: true, summary: { processed: 0 } }),
+}));
+
 describe('Admin Cycle Service — executeBulkCycles', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -294,6 +299,45 @@ describe('Admin Cycle Service — executeBulkCycles', () => {
       expect(cycleResult.settlement!.snapshot).toBeDefined();
       expect(cycleResult.settlement!.orphanCleanup).toBeDefined();
       expect(cycleResult.settlement!.endOfCycleBalances).toBeDefined();
+    });
+  });
+
+  describe('Automaton Turn_Steps (Spec #55 R7.3, R7.4)', () => {
+    const { runTurnStepNonFatal } = jest.requireMock('../../../src/services/automaton') as { runTurnStepNonFatal: jest.Mock };
+    const { completeSerializedCycleCutover } = jest.requireMock('../../../src/services/cycle/canonicalCycleIdentity') as {
+      completeSerializedCycleCutover: jest.Mock;
+    };
+    const seasonService = jest.requireMock('../../../src/services/season/seasonService') as {
+      getCurrentSeason: jest.Mock;
+      advancePreparationCycle: jest.Mock;
+    };
+
+    it('runs a settlement turn for each closed cycle, after the cutover, and records it in the bulk result', async () => {
+      seasonService.getCurrentSeason.mockResolvedValueOnce({ phase: 'competitive', seasonNumber: 4 });
+
+      const result = await executeBulkCycles({ cycles: 1 });
+
+      expect(runTurnStepNonFatal).toHaveBeenCalledWith({ trigger: 'settlement', seasonNumber: 4, slot: 6, source: 'admin_bulk' });
+      expect(completeSerializedCycleCutover.mock.invocationCallOrder[0]).toBeLessThan(runTurnStepNonFatal.mock.invocationCallOrder[0]);
+      expect(result.results[0].settlement!.automatonTurns).toEqual({ ok: true, summary: { processed: 0 } });
+    });
+
+    it('runs a preparation turn after each preparation advance', async () => {
+      seasonService.getCurrentSeason.mockResolvedValueOnce({ phase: 'preparation', seasonNumber: 5 });
+      seasonService.advancePreparationCycle
+        .mockResolvedValueOnce({ seasonNumber: 5, preparationCyclesCompleted: 1 })
+        .mockResolvedValueOnce({ seasonNumber: 5, preparationCyclesCompleted: 2 });
+
+      const result = await executeBulkCycles({ cycles: 2 });
+
+      expect(runTurnStepNonFatal.mock.calls.map((call) => call[0])).toEqual([
+        { trigger: 'preparation', seasonNumber: 5, slot: 1, source: 'admin_bulk' },
+        { trigger: 'preparation', seasonNumber: 5, slot: 2, source: 'admin_bulk' },
+      ]);
+      expect(result.results.map((r) => r.settlement!.automatonTurns)).toEqual([
+        { ok: true, summary: { processed: 0 } },
+        { ok: true, summary: { processed: 0 } },
+      ]);
     });
   });
 

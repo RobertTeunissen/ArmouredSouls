@@ -84,6 +84,21 @@ export async function checkRosterCapacity(userId: number) {
 }
 
 /**
+ * Robot_Blueprint link of an Automaton robot (Spec #55, invariant I4). Written
+ * in the creating transaction, so an Automaton robot never exists unlinked.
+ */
+export interface AutomatonRobotLink {
+  blueprintId: number;
+  slotIndex: number;
+  /** Blueprint image copied at purchase (R3.10); null = no image. */
+  imageUrl: string | null;
+}
+
+export interface RobotCreationOptions extends EconomicServiceOptions {
+  automatonLink?: AutomatonRobotLink;
+}
+
+/**
  * Create a robot inside a locked transaction.
  * Returns the created robot and updated user.
  */
@@ -91,8 +106,9 @@ export async function createRobotTransaction(
   userId: number,
   trimmedName: string,
   requestKey: string,
-  options: EconomicServiceOptions = {},
+  options: RobotCreationOptions = {},
 ) {
+  const link = options.automatonLink;
   const identity = createEconomicRequestIdentity(userId, 'robot_creation', requestKey, { name: trimmedName });
   return runFinancialWriteTransaction(async (tx, financialCycleNumber) => {
     await lockUserForSpending(tx, userId);
@@ -137,6 +153,9 @@ export async function createRobotTransaction(
         maxHP,
         currentShield: maxShield,
         maxShield,
+        ...(link
+          ? { automatonBlueprintId: link.blueprintId, automatonSlotIndex: link.slotIndex, imageUrl: link.imageUrl }
+          : {}),
       },
       include: {
         mainWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },

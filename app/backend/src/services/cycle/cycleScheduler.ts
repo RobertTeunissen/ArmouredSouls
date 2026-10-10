@@ -42,6 +42,7 @@ import {
   resolveCanonicalCycleIdentity,
 } from './canonicalCycleIdentity';
 import { logCycleEndBalances } from './cycle-closing-evidence';
+import type { TurnStepInput } from '../automaton/automatonTurnService';
 
 const eventLogger = new EventLogger();
 
@@ -310,6 +311,13 @@ export async function executeSettlement(): Promise<JobContext> {
         ? ` — Season ${advanced.seasonNumber} now competitive`
         : ''),
     );
+    // Spec #55 R7.3: Automaton turns for this preparation day. Non-fatal.
+    await runAutomatonTurnStep({
+      trigger: 'preparation',
+      seasonNumber: advanced.seasonNumber,
+      slot: advanced.preparationCyclesCompleted,
+      source: 'scheduler',
+    });
     // Global_Cycle_Counter deliberately untouched (R2.6).
     return { jobName: 'settlement' };
   }
@@ -446,9 +454,33 @@ export async function executeSettlement(): Promise<JobContext> {
       );
       throw rolloverError;
     }
+  } else {
+    // Spec #55 R7.1/R7.2: Automaton turns run as the last step of settlement,
+    // after the close, and never on the boundary cycle (the rollover's
+    // Stage 5 gives them their `season_open` turn instead). Non-fatal.
+    await runAutomatonTurnStep({
+      trigger: 'settlement',
+      seasonNumber: advanced.seasonNumber,
+      slot: closingCycle,
+      source: 'scheduler',
+    });
   }
 
   return { jobName: 'settlement' };
+}
+
+/**
+ * Run an Automaton Turn_Step without ever failing settlement (Spec #55 R7.8):
+ * `runTurnStepNonFatal` logs and alerts its own failures; this guard also
+ * covers the module load.
+ */
+async function runAutomatonTurnStep(input: TurnStepInput): Promise<void> {
+  try {
+    const { runTurnStepNonFatal } = await import('../automaton');
+    await runTurnStepNonFatal(input);
+  } catch (error) {
+    logger.error(`Daily Settlement: Automaton Turn_Step failed (non-fatal) — ${error instanceof Error ? error.message : String(error)}`);
+  }
 }
 
 // --- KotH cycle handler ---
