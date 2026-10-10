@@ -120,6 +120,7 @@ docs/
 │
 ├── implementation_notes/    # Implementation contracts and release evidence
 │   ├── BATTLE_CARD_DISPLAY.md
+│   ├── automaton-stables-verification.md
 │   ├── finance-center-reporting-contract.md
 │   └── financial-ledger-coverage.md
 │

@@ -171,13 +171,13 @@ _Requirements: R13.6, R14.6_
 
 _Requirements: R14.7 and every acceptance criterion R1.1–R14.6 through the Verification Criteria_
 
-- [ ] 14.1 Run Verification Criterion 1 (the two greps over `app/backend/src/services/automaton`, excluding `__tests__`, for `currency` writes and Manual_Repair references) and record the result.
-- [ ] 14.2 Run Verification Criterion 2 (`pnpm run test:unit -- automaton`) and record the result.
-- [ ] 14.3 Run Verification Criterion 3 (`pnpm run test:integration -- automaton` plus the extraction regression commands with the patterns `facility weaponInventory weaponRefinement weaponPurchase weaponSale stanceAndYield robotSettings`) and record the result.
-- [ ] 14.4 Run Verification Criterion 4 (`pnpm run test:heavy -- automaton`) and record the result with measured Turn_Step durations.
-- [ ] 14.5 Run Verification Criterion 5 (`lint`, `build`, `typecheck:tests`, `test:tiers:verify`) and record the result.
-- [ ] 14.6 Run Verification Criterion 6 (frontend lint, build, Vitest, Playwright `tests/e2e/admin-automatons.spec.ts` at 320, 768 and 1024 px and `tests/e2e/automaton-badge.spec.ts` at 320, 360, 768 and 1024 px, documentation grep over the listed files) and record the result.
-- [ ] 14.7 Write the implementation record in `docs/implementation_notes/` listing each Verification Criterion as passed, failed or blocked with output excerpts or reasons; a check is recorded as passed only if it completed successfully (R14.7).
+- [x] 14.1 Run Verification Criterion 1 (the two greps over `app/backend/src/services/automaton`, excluding `__tests__`, for `currency` writes and Manual_Repair references) and record the result.
+- [x] 14.2 Run Verification Criterion 2 (`pnpm run test:unit -- automaton`) and record the result.
+- [x] 14.3 Run Verification Criterion 3 (`pnpm run test:integration -- automaton` plus the extraction regression commands with the patterns `facility weaponInventory weaponRefinement weaponPurchase weaponSale stanceAndYield robotSettings`) and record the result.
+- [x] 14.4 Run Verification Criterion 4 (`pnpm run test:heavy -- automaton`) and record the result with measured Turn_Step durations.
+- [x] 14.5 Run Verification Criterion 5 (`lint`, `build`, `typecheck:tests`, `test:tiers:verify`) and record the result.
+- [x] 14.6 Run Verification Criterion 6 (frontend lint, build, Vitest, Playwright `tests/e2e/admin-automatons.spec.ts` at 320, 768 and 1024 px and `tests/e2e/automaton-badge.spec.ts` at 320, 360, 768 and 1024 px, documentation grep over the listed files) and record the result.
+- [x] 14.7 Write the implementation record in `docs/implementation_notes/` listing each Verification Criterion as passed, failed or blocked with output excerpts or reasons; a check is recorded as passed only if it completed successfully (R14.7).
 
 ## Notes
 
