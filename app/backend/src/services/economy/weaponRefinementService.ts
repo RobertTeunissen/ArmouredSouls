@@ -60,8 +60,11 @@ import {
 import { buildPurchaseBreakdown } from '../financial/financialBreakdowns';
 import type { PurchaseServiceOptions } from './purchaseOptions';
 
-/** Workshop level required per refinement tier. */
-const REQUIRED_WORKSHOP_LEVELS: Record<RefinementTier, number> = {
+/**
+ * Workshop level required per refinement tier. Exported so the Automaton
+ * planner (Spec #55, R5.4) prices the same gate the service enforces.
+ */
+export const REQUIRED_WORKSHOP_LEVELS: Readonly<Record<RefinementTier, number>> = {
   hone: 1, augment: 3, sharpen: 5, forge: 8,
 };
 
