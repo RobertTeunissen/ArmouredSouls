@@ -43,6 +43,7 @@ const NAVIGATION_ITEMS = [
   { label: 'Weapons', path: '/admin/weapons' },
   { label: 'Players', path: '/admin/players' },
   { label: 'Economy', path: '/admin/economy' },
+  { label: 'Automatons', path: '/admin/automatons' },
   { label: 'Security', path: '/admin/security' },
   { label: 'Image Uploads', path: '/admin/image-uploads' },
   { label: 'Changelog', path: '/admin/changelog' },
@@ -108,7 +109,7 @@ describe('AdminLayout', () => {
       const sidebar = screen.getByRole('complementary', { name: /admin sidebar navigation/i });
       const links = within(sidebar).getAllByRole('link');
 
-      // Nav items in the sidebar (Overview 1 + Game Ops 3 + Battle Data 6 + Player Mgmt 2
+      // Nav items in the sidebar (Overview 1 + Game Ops 3 + Battle Data 6 + Player Mgmt 3
       // + Security 2 + Content 5 + Maintenance 2)
       expect(links.length).toBe(NAVIGATION_ITEMS.length);
     });
@@ -150,6 +151,7 @@ describe('AdminLayout', () => {
         { path: '/admin/security', title: 'Security' },
         { path: '/admin/players', title: 'Players' },
         { path: '/admin/economy', title: 'Economy' },
+        { path: '/admin/automatons', title: 'Automaton Stables' },
         { path: '/admin/audit-log', title: 'Audit Log' },
       ];
 

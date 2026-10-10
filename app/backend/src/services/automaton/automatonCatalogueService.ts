@@ -37,6 +37,7 @@ import { SUBSCRIBABLE_EVENT_TYPES } from '../subscription/eventRegistry';
 import type { BuildFocusKey, StrategyParametersV1, TeamNames } from '../../types/automaton';
 import type { Hand, LoadoutType, Stance, WeaponFacts } from './stableFacts';
 import { requiredTeamNameCounts } from './teamRule';
+import { buildableBlueprintCount, MAX_AUTOMATON_BLUEPRINTS } from '../../shared/utils/automatonTeamRule';
 import { facilityLabel } from './strategies/strategyDefinitionSchema';
 import { defaultParameters } from './strategies/strategyParameters';
 import type { StrategyRegistry } from './strategies/registry';
@@ -54,7 +55,7 @@ export const REPOSITORY_IMAGE_URL_PREFIX = '/assets/automatons';
 export const CATALOGUE_SCHEMA_VERSION = 1;
 /** Lowercase letters, digits and hyphens, 3–40 characters (`review/CATALOGUE.md` §2). */
 export const CATALOGUE_KEY_PATTERN = /^[a-z0-9-]{3,40}$/;
-export const MAX_BLUEPRINTS = 11;
+export const MAX_BLUEPRINTS = MAX_AUTOMATON_BLUEPRINTS;
 export const MAX_WEAPON_STAGES = 4;
 export const MAX_REFINEMENT_STEPS_PER_WEAPON = 5;
 export const MAX_YIELD_THRESHOLD = 50;
@@ -323,13 +324,9 @@ export function highestRobotsBound(strategy: Pick<UpgradeStrategy, 'buildOrder'>
  * and the robots Goal stops with `no_blueprint` at the first missing slot, so
  * a blueprint above a gap is never built. R3.7 and the Team_Names count
  * (R3.6) use this count, which keeps `no_blueprint` defensive (design §8).
+ * Shared with the admin Editor (`app/shared/utils/automatonTeamRule.ts`).
  */
-export function buildableBlueprintCount(slots: Iterable<number>): number {
-  const present = new Set(slots);
-  let count = 0;
-  while (count < MAX_BLUEPRINTS && present.has(count + 1)) count++;
-  return count;
-}
+export { buildableBlueprintCount };
 
 /** Team_Names counts for a strategy and blueprint count (R3.6): the Team_Rule at min(highest robots bound, blueprints). */
 export function requiredTeamNameCountsFor(strategy: Pick<UpgradeStrategy, 'buildOrder'>, blueprintCount: number): { twoVsTwo: number; threeVsThree: number } {

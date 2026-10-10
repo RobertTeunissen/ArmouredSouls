@@ -9,7 +9,7 @@
  */
 import { useState, useEffect, useCallback } from 'react';
 import { useShallow } from 'zustand/react/shallow';
-import { AdminPageHeader, AdminStatCard, AdminFilterBar } from '../../components/admin/shared';
+import { AdminPageHeader, AdminStatCard, AdminFilterBar, REAL_PLAYERS_HELP, type UserFilterType } from '../../components/admin/shared';
 import { useAdminStore } from '../../stores/adminStore';
 import { api } from '../../utils/api';
 import { ApiError } from '../../utils/ApiError';
@@ -20,7 +20,7 @@ import type { TrendDirection } from '../../utils/trendIndicator';
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
 
-type UserFilterType = 'all' | 'real' | 'auto';
+
 
 interface KpiData {
   inactivePlayers: number;
@@ -157,8 +157,9 @@ function AdminDashboardPage() {
       {/* Global filter toggle: Real / Auto / All */}
       <AdminFilterBar
         filters={[
-          { key: 'real', label: 'Real Players', active: filter === 'real' },
+          { key: 'real', label: 'Real Players', active: filter === 'real', description: REAL_PLAYERS_HELP },
           { key: 'auto', label: 'Auto-Generated', active: filter === 'auto' },
+          { key: 'automaton', label: 'Automatons', active: filter === 'automaton' },
           { key: 'all', label: 'All', active: filter === 'all' },
         ]}
         onFilterToggle={handleFilterToggle}

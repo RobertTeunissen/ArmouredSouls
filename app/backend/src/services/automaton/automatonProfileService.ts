@@ -29,7 +29,7 @@ import { AutomatonError, AutomatonErrorCode } from '../../errors/automatonErrors
 import { hashPassword } from '../auth/passwordService';
 import { validateStableName } from '../../utils/validation';
 import { SUBSCRIBABLE_EVENT_TYPES } from '../subscription/eventRegistry';
-import type { RefinementStep, StrategyParametersV1, TeamNames, WeaponStage } from '../../types/automaton';
+import type { BuildFocusKey, RefinementStep, StrategyParametersV1, TeamNames, WeaponStage } from '../../types/automaton';
 import {
   buildableBlueprintCount,
   eventOrderIssues,
@@ -63,6 +63,9 @@ import type { UpgradeStrategy } from './strategies/strategyTypes';
 import { bestTiersForUsers, type LeagueTier } from './standingsTier';
 import { loadActiveNeedAttention, loadNeedAttention, type NeedAttentionReason } from './needAttention';
 import { teamsForSlots } from './teamRule';
+import { BUILD_FOCUS_WEIGHTS, GROUP_ACADEMY } from './buildFocus';
+import { attributePlanView, buildFocusOptions, type AttributePlanSubject, type AttributePlanView } from './attributePlanView';
+import type { FacilityType } from './stableFacts';
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -468,6 +471,25 @@ export interface ProfileDetail {
   blueprints: BlueprintView[];
   registeredTeams: { id: number; teamSize: number; teamName: string; robotIds: number[] }[];
   lastTurn: TurnSummary | null;
+  /**
+   * The Editor's attributes plans, one per attributes Goal (R11.10): the live
+   * robots, or the blueprints up to the highest robots target of a stable
+   * without robots.
+   */
+  attributePlans: AttributePlanView[];
+  /** Build_Focus presets for the blueprint editor (admin-only text). */
+  buildFocusOptions: { key: BuildFocusKey; displayName: string; description: string }[];
+}
+
+/** Robots an attributes plan covers: the live robots, else the blueprints up to the robots target. */
+function attributePlanSubjects(
+  blueprints: readonly { id: number; slotIndex: number; robotName: string; buildFocus: string }[],
+  liveBlueprintIds: ReadonlySet<number>,
+  robotsTarget: number | null,
+): AttributePlanSubject[] {
+  const live = blueprints.filter((b) => liveBlueprintIds.has(b.id));
+  const chosen = live.length > 0 ? live : blueprints.filter((b) => b.slotIndex <= (robotsTarget ?? 0));
+  return chosen.map((b) => ({ slot: b.slotIndex, robotName: b.robotName, buildFocus: b.buildFocus as BuildFocusKey }));
 }
 
 /** One profile with blueprints, live robots, teams and the last turn (R11.2). */
@@ -491,6 +513,25 @@ export async function getProfileDetail(catalogueKey: string, deps: ProfileServic
       orderBy: { id: 'asc' },
     });
   const lastTurn = await prisma.automatonTurn.findFirst({ where: { profileId: profile.id }, orderBy: { startedAt: 'desc' } });
+  const academyRows = profile.userId === null
+    ? []
+    : await prisma.facility.findMany({
+      where: { userId: profile.userId, facilityType: { in: Object.values(GROUP_ACADEMY) } },
+      select: { facilityType: true, level: true },
+    });
+  const academyLevels = Object.fromEntries(academyRows.map((row) => [row.facilityType, row.level])) as Partial<Record<FacilityType, number>>;
+  const liveBlueprintIds = new Set(robots.flatMap((r) => (r.automatonBlueprintId === null ? [] : [r.automatonBlueprintId])));
+  const planSubjects = attributePlanSubjects(profile.blueprints, liveBlueprintIds, strategy && params ? highestRobotsTarget(strategy.buildOrder, params) : null);
+  const attributePlans = strategy
+    ? strategy.buildOrder
+      .filter((spec) => spec.type === 'attributes')
+      .map((spec) => attributePlanView(
+        { goalId: spec.id, target: params?.targets[spec.id] ?? spec.defaultTarget, isMax: spec.isMax },
+        planSubjects,
+        academyLevels,
+        BUILD_FOCUS_WEIGHTS,
+      ))
+    : [];
 
   const robotBySlot = new Map<number, { id: number; name: string }>();
   for (const robot of robots) {
@@ -548,6 +589,8 @@ export async function getProfileDetail(catalogueKey: string, deps: ProfileServic
     }),
     registeredTeams: teams.map((t) => ({ id: t.id, teamSize: t.teamSize, teamName: t.teamName, robotIds: t.members.map((m) => m.robotId) })),
     lastTurn: lastTurn ? turnSummary(lastTurn, strategy, params) : null,
+    attributePlans,
+    buildFocusOptions: buildFocusOptions(),
   };
 }
 

@@ -5,7 +5,7 @@
 
 export { AdminStatCard } from './AdminStatCard';
 export { AdminDataTable } from './AdminDataTable';
-export { AdminFilterBar } from './AdminFilterBar';
+export { AdminFilterBar, REAL_PLAYERS_HELP, type UserFilterType } from './AdminFilterBar';
 export { AdminPageHeader } from './AdminPageHeader';
 export { AdminSlideOver } from './AdminSlideOver';
 export { AdminEmptyState } from './AdminEmptyState';

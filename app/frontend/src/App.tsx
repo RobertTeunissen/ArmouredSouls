@@ -63,6 +63,7 @@ const AdminLeagueHistoryPage = React.lazy(() => import('./pages/admin/LeagueHist
 const AdminSubscriptionAnalyticsPage = React.lazy(() => import('./pages/admin/SubscriptionAnalyticsPage'));
 const AdminTournamentsPage = React.lazy(() => import('./pages/admin/TournamentsPage'));
 const AdminSeasonControlPage = React.lazy(() => import('./pages/admin/SeasonControlPage'));
+const AdminAutomatonsPage = React.lazy(() => import('./pages/admin/AutomatonsPage'));
 
 function AchievementToastLayer() {
   const location = useLocation();
@@ -105,6 +106,7 @@ function AppRoutes() {
         <Route path="weapons" element={<AdminWeaponAnalyticsPage />} />
         <Route path="players" element={<AdminPlayersPage />} />
         <Route path="economy" element={<AdminEconomyOverviewPage />} />
+        <Route path="automatons" element={<AdminAutomatonsPage />} />
         <Route path="security" element={<AdminSecurityPage />} />
         <Route path="image-uploads" element={<AdminImageUploadsPage />} />
         <Route path="changelog" element={<AdminChangelogPage />} />

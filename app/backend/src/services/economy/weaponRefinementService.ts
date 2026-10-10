@@ -44,6 +44,7 @@ import {
   validateAttributeStackCap,
   validateAttributeOnWeapon,
   validateShieldCompatibility,
+  REQUIRED_WORKSHOP_LEVELS,
   type RefinementTier,
 } from '../../shared/utils/weaponRefinement';
 import { isRobotAttribute, type RobotAttribute } from '../../shared/utils/robotAttributes';
@@ -61,12 +62,11 @@ import { buildPurchaseBreakdown } from '../financial/financialBreakdowns';
 import type { PurchaseServiceOptions } from './purchaseOptions';
 
 /**
- * Workshop level required per refinement tier. Exported so the Automaton
- * planner (Spec #55, R5.4) prices the same gate the service enforces.
+ * Workshop level required per refinement tier (shared with the frontend).
+ * Re-exported so the Automaton planner (Spec #55, R5.4) prices the same gate
+ * the service enforces.
  */
-export const REQUIRED_WORKSHOP_LEVELS: Readonly<Record<RefinementTier, number>> = {
-  hone: 1, augment: 3, sharpen: 5, forge: 8,
-};
+export { REQUIRED_WORKSHOP_LEVELS };
 
 export interface RefinementRequest {
   tier: RefinementTier;
