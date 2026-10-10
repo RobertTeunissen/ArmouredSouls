@@ -55,6 +55,21 @@ describe('editor state helpers', () => {
     expect(plan[3]).toEqual({ kind: 'update_profile', patch: { backstory: 'New backstory.' } });
   });
 
+  it('sizes additions with the pinned strategy and the strategy step with the new one', () => {
+    const d = detail();
+    const form = formFromDetail(d);
+    // New strategy: robots up to 11, so 4 blueprints need 2 + 1 names; the pinned one caps robots at 3 (1 + 1).
+    const newRows = d.strategy.buildOrder.map((r) => (r.type === 'robots' ? { ...r, goalId: 'paragon.v1.01.robots', bounds: { min: 1, max: 11 }, defaultTarget: 1, target: 1 } : r));
+    form.strategyKey = 'paragon';
+    form.targets = { 'paragon.v1.01.robots': 1 };
+    form.teamNames = { twoVsTwo: ['Torrent Company', 'Ghost Company'], threeVsThree: ['Bad Batch'] };
+    form.pending = [{ slot: 4, fields: { ...form.blueprints[1], robotName: 'Echo' } }];
+    const plan = savePlan(d, form, newRows);
+    expect(plan.map((s) => s.kind)).toEqual(['add_blueprint', 'update_strategy']);
+    expect(plan[0]).toMatchObject({ teamNames: { twoVsTwo: ['Torrent Company'], threeVsThree: ['Bad Batch'] } });
+    expect(plan[1]).toMatchObject({ strategyKey: 'paragon', teamNames: { twoVsTwo: ['Torrent Company', 'Ghost Company'], threeVsThree: ['Bad Batch'] } });
+  });
+
   it('finds the next free slot, 11 at most', () => {
     expect(nextFreeSlot([1, 2, 4])).toBe(3);
     expect(nextFreeSlot(Array.from({ length: 11 }, (_, i) => i + 1))).toBeNull();
@@ -74,6 +89,7 @@ describe('editor state helpers', () => {
 
 describe('EditorTab (task 10.3)', () => {
   beforeEach(() => {
+    vi.clearAllMocks();
     api.getProfile.mockResolvedValue(detail());
     api.listTurns.mockResolvedValue({ items: [], total: 0, page: 1, limit: 20 });
     api.listWeapons.mockResolvedValue(WEAPONS);
@@ -172,6 +188,72 @@ describe('EditorTab (task 10.3)', () => {
     expect(dialog).toHaveTextContent('Delete blueprint 3 · CT-5555 Fives? This cannot be undone.');
     fireEvent.click(within(dialog).getByRole('button', { name: 'Delete blueprint' }));
     await waitFor(() => expect(api.deleteBlueprint).toHaveBeenCalledWith('clone-legion', 3, expect.any(Object)));
+  });
+
+  it('keeps a saved addition and the unsaved edits after a later Save step fails, and the retry sizes Team_Names with it', async () => {
+    // Robots up to 4: blueprint 4 opens a second 2v2 team (robots 3+4).
+    const base = detail();
+    const strategy = { ...base.strategy, buildOrder: base.strategy.buildOrder.map((r) => (r.type === 'robots' ? { ...r, bounds: { min: 1, max: 4 } } : r)) };
+    const before = detail({ strategy });
+    const added = blueprint(4, { robotName: '', weaponPath: [{ main: '' }], refinementPlan: [] });
+    const after = detail({ strategy, blueprints: [...before.blueprints, added], teamNames: { twoVsTwo: ['Torrent Company', 'Ghost Company'], threeVsThree: ['Bad Batch'] } });
+    api.getProfile.mockReset();
+    api.getProfile.mockResolvedValueOnce(before).mockResolvedValue(after);
+    api.addBlueprint.mockResolvedValue(added);
+    api.updateProfile
+      .mockRejectedValueOnce(Object.assign(new Error('That stable name is taken.'), { code: 'STABLE_NAME_TAKEN' }))
+      .mockResolvedValue(after);
+    renderEditor();
+    fireEvent.click(await screen.findByRole('button', { name: 'Add blueprint' }));
+    fireEvent.change(screen.getAllByLabelText('Team name: 2v2 robots 3+4')[0], { target: { value: 'Ghost Company' } });
+    fireEvent.change(screen.getByLabelText('Franchise'), { target: { value: 'Star Wars' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+
+    expect(await screen.findByText('That stable name is taken.')).toBeInTheDocument();
+    expect(api.addBlueprint).toHaveBeenCalledWith('clone-legion', expect.objectContaining({ slot: 4, teamNames: { twoVsTwo: ['Torrent Company', 'Ghost Company'], threeVsThree: ['Bad Batch'] } }));
+    await waitFor(() => expect(api.getProfile).toHaveBeenCalledTimes(2));
+    // The saved blueprint is still shown and the edit that failed is kept.
+    expect(screen.getByRole('button', { name: /^4 ·/ })).toBeInTheDocument();
+    expect(screen.getByLabelText('Franchise')).toHaveValue('Star Wars');
+
+    fireEvent.change(screen.getAllByLabelText('Team name: 2v2 robots 3+4')[0], { target: { value: 'Ghost Co' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+    expect(await screen.findByText('Saved. Changes apply from the next settlement.')).toBeInTheDocument();
+    expect(api.addBlueprint).toHaveBeenCalledTimes(1);
+    expect(api.updateBlueprint).not.toHaveBeenCalled();
+    expect(api.updateProfile).toHaveBeenLastCalledWith('clone-legion', {
+      franchise: 'Star Wars',
+      teamNames: { twoVsTwo: ['Torrent Company', 'Ghost Co'], threeVsThree: ['Bad Batch'] },
+    });
+  });
+
+  it('keeps unsaved edits when a saved blueprint is deleted or an image is uploaded', async () => {
+    const base = detail();
+    api.getProfile.mockReset();
+    api.getProfile.mockResolvedValueOnce(base).mockResolvedValue(detail({ blueprints: base.blueprints.slice(0, 2) }));
+    api.deleteBlueprint.mockResolvedValue(undefined);
+    api.uploadBlueprintImage.mockResolvedValue(undefined);
+    renderEditor();
+    fireEvent.change(await screen.findByLabelText('Franchise'), { target: { value: 'Star Wars' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Add blueprint' }));
+    expect(screen.getByRole('button', { name: /^4 ·/ })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /3 · CT-5555 Fives/ }));
+    const buttons = screen.getAllByRole('button', { name: 'Delete blueprint' });
+    fireEvent.click(buttons[buttons.length - 2]);
+    fireEvent.click(within(screen.getByRole('dialog', { name: 'Delete blueprint' })).getByRole('button', { name: 'Delete blueprint' }));
+    await waitFor(() => expect(api.getProfile).toHaveBeenCalledTimes(2));
+    expect(api.deleteBlueprint).toHaveBeenCalledWith('clone-legion', 3, { twoVsTwo: ['Torrent Company'], threeVsThree: [] });
+    await waitFor(() => expect(screen.queryByRole('button', { name: /3 · CT-5555 Fives/ })).not.toBeInTheDocument());
+    expect(screen.getByLabelText('Franchise')).toHaveValue('Star Wars');
+    expect(screen.getByRole('button', { name: /^4 ·/ })).toBeInTheDocument();
+
+    const file = new File(['img'], 'rex.webp', { type: 'image/webp' });
+    fireEvent.change(screen.getByLabelText('Upload image: 1 CT-7567 Rex'), { target: { files: [file] } });
+    await waitFor(() => expect(api.getProfile).toHaveBeenCalledTimes(3));
+    expect(api.uploadBlueprintImage).toHaveBeenCalledWith('clone-legion', 1, file);
+    expect(screen.getByLabelText('Franchise')).toHaveValue('Star Wars');
+    expect(screen.getByRole('button', { name: /^4 ·/ })).toBeInTheDocument();
   });
 
   it('adds a blueprint in the next free slot and limits weapons to the loadout', async () => {

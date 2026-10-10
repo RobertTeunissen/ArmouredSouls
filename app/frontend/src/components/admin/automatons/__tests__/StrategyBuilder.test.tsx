@@ -73,6 +73,19 @@ describe('StrategyBuilder (task 10.4)', () => {
     const exportButton = await screen.findByRole('button', { name: 'Export strategy file' });
     expect(exportButton).toBeDisabled();
     expect(screen.getByText('Export is disabled while the draft has errors (2).')).toBeInTheDocument();
+    expect(exportButton).toHaveAttribute('aria-describedby', 'export-help-5');
+  });
+
+  it('describes Export only when it is disabled: no reason for a saved ready draft, "save first" for unsaved edits', async () => {
+    api.getStrategyDraft.mockResolvedValue(draftView({ issues: [], errorCount: 0, ready: true }));
+    renderBuilder();
+    const exportButton = await screen.findByRole('button', { name: 'Export strategy file' });
+    expect(exportButton).toBeEnabled();
+    expect(exportButton).not.toHaveAttribute('aria-describedby');
+    fireEvent.change(screen.getByLabelText('Display name'), { target: { value: 'Swarm II' } });
+    expect(exportButton).toBeDisabled();
+    expect(exportButton).toHaveAttribute('aria-describedby', 'export-help-5');
+    expect(document.getElementById('export-help-5')).toHaveTextContent('Save the draft before exporting.');
   });
 
   it('adds, moves and removes Goals; Save draft sends the Build_Order; Export saves only the definition', async () => {

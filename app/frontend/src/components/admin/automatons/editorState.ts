@@ -11,7 +11,7 @@ import type {
   TeamNames,
   UpdateProfileInput,
 } from '../../../utils/automatonAdminApi';
-import { buildableBlueprintCount, MAX_AUTOMATON_BLUEPRINTS } from '@shared/utils/automatonTeamRule';
+import { buildableBlueprintCount, MAX_AUTOMATON_BLUEPRINTS, teamNameMaxRobots } from '@shared/utils/automatonTeamRule';
 import type { BuildOrderRow } from './BuildOrderPanel';
 import type { BlueprintEditorItem } from './blueprintState';
 import type { StableCardValues } from './StableCard';
@@ -65,10 +65,9 @@ export function defaultTargets(rows: readonly BuildOrderRow[]): Record<string, n
   return Object.fromEntries(rows.map((r) => [r.goalId, r.defaultTarget]));
 }
 
-/** `maxRobots` of the Team_Rule: min(highest robots bound, buildable blueprints) — the backend's count. */
+/** `maxRobots` of the Team_Rule for these slots: the shared `teamNameMaxRobots` rule the backend uses. */
 export function teamMaxRobots(rows: readonly BuildOrderRow[], slots: Iterable<number>): number {
-  const bound = Math.max(0, ...rows.filter((r) => r.type === 'robots').map((r) => r.bounds.max));
-  return Math.min(bound, buildableBlueprintCount(slots));
+  return teamNameMaxRobots(rows, buildableBlueprintCount(slots));
 }
 
 /** Lowest free Blueprint_Slot, or null when all 11 are used ("Next free slot, 11 at most"). */
@@ -114,6 +113,9 @@ export type SaveStep =
  * additions (each with Team_Names sized for the count after it), the strategy
  * (key and targets), then the profile fields. Team_Names travel with the first
  * call that can change their count, so the profile never holds a wrong count.
+ * Additions run before the strategy step, so the backend checks their
+ * Team_Names against the pinned strategy: they are sized with the pinned
+ * Build_Order, and only the strategy step uses `rows` (the form's strategy).
  */
 export function savePlan(detail: ProfileDetail, form: EditorForm, rows: readonly BuildOrderRow[]): SaveStep[] {
   const steps: SaveStep[] = [];
@@ -121,11 +123,12 @@ export function savePlan(detail: ProfileDetail, form: EditorForm, rows: readonly
     const edited = form.blueprints[b.slot];
     if (edited && !same(edited, blueprintFields(b))) steps.push({ kind: 'update_blueprint', slot: b.slot, fields: edited });
   }
+  const pinnedRows = detail.strategy.buildOrder;
   const slots = detail.blueprints.map((b) => b.slot);
   let namesSent = false;
   for (const p of [...form.pending].sort((a, b) => a.slot - b.slot)) {
     slots.push(p.slot);
-    steps.push({ kind: 'add_blueprint', slot: p.slot, fields: p.fields, teamNames: sizeTeamNames(form.teamNames, teamMaxRobots(rows, slots)) });
+    steps.push({ kind: 'add_blueprint', slot: p.slot, fields: p.fields, teamNames: sizeTeamNames(form.teamNames, teamMaxRobots(pinnedRows, slots)) });
     namesSent = true;
   }
   const finalNames = sizeTeamNames(form.teamNames, teamMaxRobots(rows, slots));

@@ -60,3 +60,22 @@ export function buildableBlueprintCount(slots: Iterable<number>): number {
   while (count < MAX_AUTOMATON_BLUEPRINTS && present.has(count + 1)) count++;
   return count;
 }
+
+/** The part of a Build_Order Goal the Team_Names count reads. */
+export interface RobotsBoundGoal {
+  type: string;
+  bounds: { max: number };
+}
+
+/** Highest robots bound of a Build_Order (0 when it has no robots Goal). */
+export function highestRobotsBound(buildOrder: readonly RobotsBoundGoal[]): number {
+  return Math.max(0, ...buildOrder.filter((g) => g.type === 'robots').map((g) => g.bounds.max));
+}
+
+/**
+ * The robot count Team_Names are sized for (R3.6): min(highest robots bound,
+ * buildable blueprint count). Feed the result to `requiredTeamNameCounts`.
+ */
+export function teamNameMaxRobots(buildOrder: readonly RobotsBoundGoal[], buildableCount: number): number {
+  return Math.min(highestRobotsBound(buildOrder), buildableCount);
+}

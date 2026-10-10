@@ -186,6 +186,11 @@ export function StrategyBuilder({ draftId, profiles, onBack, onChanged }: Strate
   const listIssues = buildOrderIssues(issues);
   const otherIssues = metadataIssues(issues);
   const exportDisabled = !draft.ready || dirty || busy;
+  // Why Export is disabled; `busy` is momentary and needs no reason.
+  const exportHelp = !draft.ready
+    ? `Export is disabled while the draft has errors (${draft.errorCount}).`
+    : dirty ? 'Save the draft before exporting.' : null;
+  const exportHelpId = `export-help-${draft.id}`;
   const choices = goalLibraryChoices(BUILDER_FACILITY_TYPES);
   const subtitle = draft.basedOn ? `new version of ${draft.definition.displayName || draft.definition.key}` : 'new strategy';
   const warning = exported?.warning ?? draft.upgradeWarning;
@@ -298,14 +303,12 @@ export function StrategyBuilder({ draftId, profiles, onBack, onChanged }: Strate
               <ActionButton variant="danger" disabled={busy} onClick={() => setConfirmDelete(true)}>Delete draft</ActionButton>
               <div className="flex flex-col gap-2 sm:flex-row">
                 <ActionButton disabled={busy} onClick={() => void save()}>Save draft</ActionButton>
-                <ActionButton variant="primary" disabled={exportDisabled} aria-describedby={`export-help-${draft.id}`} onClick={() => void exportFile()}>
+                <ActionButton variant="primary" disabled={exportDisabled} aria-describedby={exportHelp ? exportHelpId : undefined} onClick={() => void exportFile()}>
                   Export strategy file
                 </ActionButton>
               </div>
             </div>
-            {!draft.ready && (
-              <p id={`export-help-${draft.id}`} className="text-xs text-secondary">Export is disabled while the draft has errors ({draft.errorCount}).</p>
-            )}
+            {exportHelp && <p id={exportHelpId} className="text-xs text-secondary">{exportHelp}</p>}
           </div>
         </Card>
         <DraftPreviewPanel draftId={draft.id} profiles={profiles} disabled={dirty} />

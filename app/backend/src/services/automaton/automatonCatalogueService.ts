@@ -37,7 +37,12 @@ import { SUBSCRIBABLE_EVENT_TYPES } from '../subscription/eventRegistry';
 import type { BuildFocusKey, StrategyParametersV1, TeamNames } from '../../types/automaton';
 import type { Hand, LoadoutType, Stance, WeaponFacts } from './stableFacts';
 import { requiredTeamNameCounts } from './teamRule';
-import { buildableBlueprintCount, MAX_AUTOMATON_BLUEPRINTS } from '../../shared/utils/automatonTeamRule';
+import {
+  buildableBlueprintCount,
+  highestRobotsBound as buildOrderRobotsBound,
+  MAX_AUTOMATON_BLUEPRINTS,
+  teamNameMaxRobots,
+} from '../../shared/utils/automatonTeamRule';
 import { facilityLabel } from './strategies/strategyDefinitionSchema';
 import { defaultParameters } from './strategies/strategyParameters';
 import type { StrategyRegistry } from './strategies/registry';
@@ -315,7 +320,7 @@ export function eventOrderIssues(eventOrder: readonly string[], at: (string | nu
 
 /** Highest robots bound of a Build_Order (the robot count Team_Names are sized for). */
 export function highestRobotsBound(strategy: Pick<UpgradeStrategy, 'buildOrder'>): number {
-  return Math.max(0, ...strategy.buildOrder.filter((d) => d.type === 'robots').map((d) => d.bounds.max));
+  return buildOrderRobotsBound(strategy.buildOrder);
 }
 
 /**
@@ -328,9 +333,9 @@ export function highestRobotsBound(strategy: Pick<UpgradeStrategy, 'buildOrder'>
  */
 export { buildableBlueprintCount };
 
-/** Team_Names counts for a strategy and blueprint count (R3.6): the Team_Rule at min(highest robots bound, blueprints). */
+/** Team_Names counts for a strategy and blueprint count (R3.6): the Team_Rule at min(highest robots bound, blueprints) (shared `teamNameMaxRobots`). */
 export function requiredTeamNameCountsFor(strategy: Pick<UpgradeStrategy, 'buildOrder'>, blueprintCount: number): { twoVsTwo: number; threeVsThree: number } {
-  return requiredTeamNameCounts(Math.min(highestRobotsBound(strategy), blueprintCount));
+  return requiredTeamNameCounts(teamNameMaxRobots(strategy.buildOrder, blueprintCount));
 }
 
 /** Approved text: review/PLAYER_FACING_TEXT.md §6.5 "Error: team names count". */

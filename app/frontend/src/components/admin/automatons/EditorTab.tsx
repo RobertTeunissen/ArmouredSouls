@@ -168,12 +168,24 @@ export function EditorTab({ profiles, strategies, selectedKey, onSelect, onChang
     return () => { cancelled = true; };
   }, []);
 
-  const load = useCallback(async (key: string): Promise<void> => {
+  /**
+   * Loads the stable. `keepForm` refreshes only the server state and keeps
+   * the form, so unsaved edits survive a reload after a committed call
+   * (partial Save, blueprint delete, image upload): the form is diffed
+   * against the new detail, so committed edits drop out of the next save plan.
+   */
+  const load = useCallback(async (key: string, options: { keepForm?: boolean } = {}): Promise<void> => {
     setLoadError(null);
     try {
       const next = await getProfile(key);
       setDetail(next);
-      setForm(formFromDetail(next));
+      if (options.keepForm) {
+        // Saved blueprints that no longer exist lose their edits.
+        const live = new Set(next.blueprints.map((b) => b.slot));
+        setForm((f) => (f ? { ...f, blueprints: Object.fromEntries(Object.entries(f.blueprints).filter(([slot]) => live.has(Number(slot)))) } : formFromDetail(next)));
+      } else {
+        setForm(formFromDetail(next));
+      }
       setTurns(null);
       listTurns(key).then((page) => setTurns(page.items)).catch(() => setTurns([]));
     } catch (err) {
@@ -227,6 +239,7 @@ export function EditorTab({ profiles, strategies, selectedKey, onSelect, onChang
     setSaveError(null);
     setNotice(null);
     const key = detail.catalogueKey;
+    let committed = false;
     try {
       for (const step of savePlan(detail, form, rows)) {
         if (step.kind === 'update_blueprint') await updateBlueprint(key, step.slot, step.fields);
@@ -237,12 +250,19 @@ export function EditorTab({ profiles, strategies, selectedKey, onSelect, onChang
         }
         if (step.kind === 'update_strategy') await updateStrategy(key, { strategyKey: step.strategyKey, targets: step.targets, teamNames: step.teamNames });
         if (step.kind === 'update_profile') await updateProfile(key, step.patch);
+        committed = true;
       }
       await load(key);
       setNotice('Saved. Changes apply from the next settlement.');
       onChanged();
     } catch (err) {
       fail(err, 'The changes could not be saved.');
+      // Earlier calls are saved: refresh the server state so the cards and
+      // the next save plan include them, and keep the edits not saved yet.
+      if (committed) {
+        await load(key, { keepForm: true });
+        onChanged();
+      }
     } finally {
       setBusy(false);
     }
@@ -267,8 +287,9 @@ export function EditorTab({ profiles, strategies, selectedKey, onSelect, onChang
           update({ pending: form.pending.filter((p) => p.slot !== dialog.slot) });
         } else {
           const remaining = items.filter((i) => i.slot !== dialog.slot && !i.pending).map((i) => i.slot);
-          await deleteBlueprint(detail.catalogueKey, dialog.slot, sizeTeamNames(form.teamNames, teamMaxRobots(rows, remaining)));
-          await load(detail.catalogueKey);
+          // The backend checks these names against the pinned strategy.
+          await deleteBlueprint(detail.catalogueKey, dialog.slot, sizeTeamNames(form.teamNames, teamMaxRobots(detail.strategy.buildOrder, remaining)));
+          await load(detail.catalogueKey, { keepForm: true });
         }
       }
       setDialog(null);
@@ -301,7 +322,7 @@ export function EditorTab({ profiles, strategies, selectedKey, onSelect, onChang
     setSaveError(null);
     try {
       await uploadBlueprintImage(detail.catalogueKey, slot, file);
-      await load(detail.catalogueKey);
+      await load(detail.catalogueKey, { keepForm: true });
     } catch (err) {
       fail(err, 'The image could not be uploaded.');
     } finally {
