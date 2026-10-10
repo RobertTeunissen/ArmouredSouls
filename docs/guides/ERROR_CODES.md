@@ -177,6 +177,30 @@ every event, so nothing raises it. A booked match no longer blocks the change �
 keeps its slot until it has been fought, which surfaces as
 `SUBSCRIPTION_CAP_EXCEEDED` with the event listed in `details.heldSlots`.
 
+### Automaton Errors (Spec #55)
+
+Raised by the Admin_Automaton_Control endpoints (`/api/admin/automatons`, admin only), Catalogue_Sync and the Automaton_Turn. Validation failures carry every failed rule in `details.issues` (`{ rule, message, path }`); when several rules fail at once the code is `AUTOMATON_BLUEPRINTS_TOO_FEW`, then `AUTOMATON_TEAM_NAMES_MISMATCH`, else `AUTOMATON_CATALOGUE_INVALID`.
+
+| Code | HTTP Status | Description |
+|------|-------------|-------------|
+| `AUTOMATON_ACCOUNT_LOCKED` | 409 | Password reset for an Automaton_Stable account, which has no usable password (`authErrors.ts`) |
+| `AUTOMATON_BLUEPRINTS_TOO_FEW` | 400 | A robots Goal_Target would exceed the stable's buildable Robot_Blueprints (Blueprint_Slots 1…k without a gap): strategy or parameter update, blueprint deletion or slot move, Activation, Catalogue_Entry |
+| `AUTOMATON_TEAM_NAMES_MISMATCH` | 400 | Team_Names do not have the count the Team_Rule needs for the strategy and blueprints; send `teamNames` in the same request |
+| `AUTOMATON_CATALOGUE_INVALID` | 400 | A Catalogue_Entry or admin profile/blueprint input fails the catalogue rules (weapons, loadout, Refinement_Plan, Event_Order, stable name, strategy, Goal_Targets), or an export cannot be built |
+| `AUTOMATON_NOT_FOUND` | 404 | No Automaton_Profile has this Catalogue_Key |
+| `AUTOMATON_BLUEPRINT_NOT_FOUND` | 404 | The profile has no Robot_Blueprint in this Blueprint_Slot |
+| `AUTOMATON_KEY_EXISTS` | 409 | The Catalogue_Key is already used by another Automaton_Profile |
+| `AUTOMATON_STABLE_NAME_TAKEN` | 409 | The stable name is taken by a stable or another Automaton_Profile |
+| `AUTOMATON_USERNAME_TAKEN` | 409 | Activation: the username `automaton_{catalogueKey}` already exists |
+| `AUTOMATON_NOT_DRAFT` | 409 | The operation needs a Draft_Automaton (delete, Activation); the profile is active |
+| `AUTOMATON_BLUEPRINT_IN_PLAY` | 409 | A live robot is linked to the Robot_Blueprint, so it cannot be deleted or moved to another slot |
+| `AUTOMATON_SLOT_TAKEN` | 409 | The Blueprint_Slot is taken, or all 11 slots are used |
+| `AUTOMATON_IMAGE_INVALID` | 400 | An uploaded blueprint image failed validation or processing |
+| `AUTOMATON_WEAPON_UNKNOWN` | — | Turn only: a Robot_Blueprint names a weapon that is not in the weapon catalogue; the turn fails and raises an alert |
+| `AUTOMATON_PROFILE_INVALID` | — | Turn only: the stored Team_Names or Event_Order fail their shape; the turn fails |
+| `AUTOMATON_NO_PROGRESS` | — | Turn only: an executed action changed nothing (defect guard); the turn fails instead of looping |
+| `AUTOMATON_CUTOVER_IN_PROGRESS` | — | Turn only, defensive: a Turn_Step was requested during a Serialized_Cycle_Cutover |
+
 ### Database Errors (Prisma)
 
 | Code | HTTP Status | Description |

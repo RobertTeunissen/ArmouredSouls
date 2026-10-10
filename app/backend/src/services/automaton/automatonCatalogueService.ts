@@ -317,6 +317,20 @@ export function highestRobotsBound(strategy: Pick<UpgradeStrategy, 'buildOrder'>
   return Math.max(0, ...strategy.buildOrder.filter((d) => d.type === 'robots').map((d) => d.bounds.max));
 }
 
+/**
+ * The number of Robot_Blueprints a stable can build: the run of slots 1…k
+ * with no gap. The N-th robot is built from slot N (glossary, Blueprint_Slot)
+ * and the robots Goal stops with `no_blueprint` at the first missing slot, so
+ * a blueprint above a gap is never built. R3.7 and the Team_Names count
+ * (R3.6) use this count, which keeps `no_blueprint` defensive (design §8).
+ */
+export function buildableBlueprintCount(slots: Iterable<number>): number {
+  const present = new Set(slots);
+  let count = 0;
+  while (count < MAX_BLUEPRINTS && present.has(count + 1)) count++;
+  return count;
+}
+
 /** Team_Names counts for a strategy and blueprint count (R3.6): the Team_Rule at min(highest robots bound, blueprints). */
 export function requiredTeamNameCountsFor(strategy: Pick<UpgradeStrategy, 'buildOrder'>, blueprintCount: number): { twoVsTwo: number; threeVsThree: number } {
   return requiredTeamNameCounts(Math.min(highestRobotsBound(strategy), blueprintCount));
@@ -354,7 +368,7 @@ export function teamNamesIssues(
   return issues;
 }
 
-/** Robots Goal_Targets at or below the blueprint count (R3.7). */
+/** Robots Goal_Targets at or below the blueprint count (R3.7); pass `buildableBlueprintCount`. */
 export function robotsTargetIssues(
   strategy: Pick<UpgradeStrategy, 'buildOrder'>,
   params: StrategyParametersV1,
@@ -439,8 +453,9 @@ export function catalogueEntryIssues(entry: CatalogueEntry, context: CatalogueCo
   const resolved = strategyIssues(entry, context.strategies);
   issues.push(...resolved.issues);
   if (resolved.strategy) {
-    issues.push(...teamNamesIssues(entry.teamNames, requiredTeamNameCountsFor(resolved.strategy, entry.blueprints.length)));
-    if (resolved.parameters) issues.push(...robotsTargetIssues(resolved.strategy, resolved.parameters, entry.blueprints.length));
+    const buildable = buildableBlueprintCount(slots);
+    issues.push(...teamNamesIssues(entry.teamNames, requiredTeamNameCountsFor(resolved.strategy, buildable)));
+    if (resolved.parameters) issues.push(...robotsTargetIssues(resolved.strategy, resolved.parameters, buildable));
   }
   return { issues, parameters: resolved.parameters };
 }

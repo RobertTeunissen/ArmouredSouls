@@ -25,7 +25,7 @@ export const AutomatonErrorCode = {
   AUTOMATON_PROFILE_INVALID: 'AUTOMATON_PROFILE_INVALID',
   /** An executed action changed nothing (planner/executor defect); the turn fails instead of looping. */
   AUTOMATON_NO_PROGRESS: 'AUTOMATON_NO_PROGRESS',
-  /** A robots Goal_Target would exceed the profile's number of Robot_Blueprints (R3.7). */
+  /** A robots Goal_Target would exceed the profile's buildable Robot_Blueprints, slots 1…k without a gap (R3.7). */
   AUTOMATON_BLUEPRINTS_TOO_FEW: 'AUTOMATON_BLUEPRINTS_TOO_FEW',
   /** Team_Names do not have the count the Team_Rule needs (R3.6). */
   AUTOMATON_TEAM_NAMES_MISMATCH: 'AUTOMATON_TEAM_NAMES_MISMATCH',

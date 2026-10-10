@@ -37,6 +37,7 @@ export { exportCatalogue } from './catalogueExport';
 export {
   blueprintFieldsSchema,
   blueprintRuleIssues,
+  buildableBlueprintCount,
   catalogueIssueCode,
   eventOrderIssues,
   requiredTeamNameCountsFor,

@@ -13,6 +13,7 @@ import type { StrategyParametersV1, TeamNames } from '../../types/automaton';
 import {
   blueprintFieldsSchema,
   blueprintRuleIssues,
+  buildableBlueprintCount,
   eventOrderIssues,
   MAX_BLUEPRINTS,
   requiredTeamNameCountsFor,
@@ -81,9 +82,14 @@ export function blueprintIssues(
   return issues;
 }
 
-/** Team_Names for a strategy and blueprint count (R3.6). */
+/** Team_Names for a strategy and buildable blueprint count (R3.6). */
 export function teamNamesIssuesFor(strategy: UpgradeStrategy, blueprintCount: number, teamNames: TeamNames): CatalogueIssue[] {
   return teamNamesIssues(teamNames, requiredTeamNameCountsFor(strategy, blueprintCount));
+}
+
+/** `buildableBlueprintCount` of a set of blueprints: slots 1…k without a gap (R3.7). */
+export function buildableCount(blueprints: readonly { slot: number }[]): number {
+  return buildableBlueprintCount(blueprints.map((b) => b.slot));
 }
 
 /** Label of a Goal for messages: "Goal 4 (Booking Office)". */
@@ -155,7 +161,7 @@ export interface ProfileRuleInput {
 /**
  * Every profile rule Activation needs (R2.3): blueprints (at least one, each
  * valid), Event_Order, Team_Names count and names, robots Goal_Targets at or
- * below the blueprint count.
+ * below the buildable blueprint count (slots 1…k without a gap).
  */
 export function profileIssues(input: ProfileRuleInput): CatalogueIssue[] {
   const issues: CatalogueIssue[] = [];
@@ -164,8 +170,9 @@ export function profileIssues(input: ProfileRuleInput): CatalogueIssue[] {
   }
   for (const blueprint of input.blueprints) issues.push(...blueprintIssues(blueprint, input.blueprints, input.weapons));
   issues.push(...eventOrderIssues(input.eventOrder));
-  issues.push(...teamNamesIssuesFor(input.strategy, input.blueprints.length, input.teamNames));
-  issues.push(...robotsTargetIssues(input.strategy, input.params, input.blueprints.length));
+  const buildable = buildableCount(input.blueprints);
+  issues.push(...teamNamesIssuesFor(input.strategy, buildable, input.teamNames));
+  issues.push(...robotsTargetIssues(input.strategy, input.params, buildable));
   return issues;
 }
 

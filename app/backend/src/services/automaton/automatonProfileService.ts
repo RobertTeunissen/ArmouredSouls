@@ -31,6 +31,7 @@ import { validateStableName } from '../../utils/validation';
 import { SUBSCRIBABLE_EVENT_TYPES } from '../subscription/eventRegistry';
 import type { RefinementStep, StrategyParametersV1, TeamNames, WeaponStage } from '../../types/automaton';
 import {
+  buildableBlueprintCount,
   eventOrderIssues,
   requiredTeamNameCountsFor,
   robotsTargetIssues,
@@ -112,7 +113,7 @@ export interface AddBlueprintInput extends BlueprintInput {
   teamNames?: TeamNames;
 }
 
-export type UpdateBlueprintInput = Partial<BlueprintInput> & { slot?: number };
+export type UpdateBlueprintInput = Partial<BlueprintInput> & { slot?: number; teamNames?: TeamNames };
 
 export interface DeleteBlueprintInput {
   teamNames?: TeamNames;
@@ -161,6 +162,11 @@ async function lockProfile(tx: Tx, catalogueKey: string): Promise<ProfileRow> {
     SELECT "id" FROM "automaton_profiles" WHERE "catalogue_key" = ${catalogueKey} FOR UPDATE`;
   if (locked.length === 0) throw notFound(catalogueKey);
   return tx.automatonProfile.findUniqueOrThrow({ where: { id: locked[0].id }, include: PROFILE_INCLUDE });
+}
+
+/** Buildable blueprints of a profile: slots 1…k without a gap (R3.7, R3.6). */
+function buildableOf(rows: readonly { slotIndex: number }[]): number {
+  return buildableBlueprintCount(rows.map((r) => r.slotIndex));
 }
 
 async function readProfile(catalogueKey: string): Promise<ProfileRow> {
@@ -476,10 +482,11 @@ export async function getProfileDetail(catalogueKey: string, deps: ProfileServic
     if (robot.automatonSlotIndex !== null) robotBySlot.set(robot.automatonSlotIndex, { id: robot.id, name: robot.name });
   }
   const teamNames = profileTeamNames(profile);
-  // The Teams card rows: the Team_Rule over slots 1…min(highest robots bound, blueprints) (design §17.2).
+  // The Teams card rows: the Team_Rule over slots 1…min(highest robots bound, buildable blueprints) (design §17.2).
+  const buildable = buildableOf(profile.blueprints);
   const maxRobots = strategy
-    ? Math.min(Math.max(0, ...strategy.buildOrder.filter((d) => d.type === 'robots').map((d) => d.bounds.max)), profile.blueprints.length)
-    : profile.blueprints.length;
+    ? Math.min(Math.max(0, ...strategy.buildOrder.filter((d) => d.type === 'robots').map((d) => d.bounds.max)), buildable)
+    : buildable;
   const allSlots = Array.from({ length: maxRobots }, (_, i) => i + 1);
   const teamRows = teamsForSlots(allSlots).map((team): TeamRowView => {
     const members = team.slots.map((slot) => robotBySlot.get(slot)?.name ?? null);
@@ -517,7 +524,7 @@ export async function getProfileDetail(catalogueKey: string, deps: ProfileServic
       parametersValid: params !== null,
     },
     teamNames,
-    requiredTeamNames: strategy ? requiredTeamNameCountsFor(strategy, profile.blueprints.length) : null,
+    requiredTeamNames: strategy ? requiredTeamNameCountsFor(strategy, buildable) : null,
     teams: teamRows,
     eventOrder: profileEventOrder(profile),
     blueprints: profile.blueprints.map((row): BlueprintView => {
@@ -633,7 +640,7 @@ export async function updateProfile(catalogueKey: string, input: UpdateProfileIn
       const data: Prisma.AutomatonProfileUpdateInput = {};
       const issues: CatalogueIssue[] = [];
       if (input.teamNames !== undefined) {
-        issues.push(...teamNamesIssuesFor(pinnedStrategy(profile, registry), profile.blueprints.length, input.teamNames));
+        issues.push(...teamNamesIssuesFor(pinnedStrategy(profile, registry), buildableOf(profile.blueprints), input.teamNames));
         data.teamNames = json(input.teamNames);
         changedFields.push('teamNames');
       }
@@ -705,9 +712,10 @@ export async function updateStrategy(catalogueKey: string, input: UpdateStrategy
     const resolved = resolveParameters(strategy, base, input.targets);
     if (!resolved.ok) throw issuesError(resolved.issues);
     const teamNames = input.teamNames ?? profileTeamNames(profile);
+    const buildable = buildableOf(profile.blueprints);
     assertNoIssues([
-      ...robotsTargetIssues(strategy, resolved.params, profile.blueprints.length),
-      ...teamNamesIssuesFor(strategy, profile.blueprints.length, teamNames),
+      ...robotsTargetIssues(strategy, resolved.params, buildable),
+      ...teamNamesIssuesFor(strategy, buildable, teamNames),
     ]);
     if (!sameKey) changedFields.push('strategyKey', 'strategyVersion');
     if (input.targets !== undefined || !sameKey) changedFields.push('strategyParameters');
@@ -773,7 +781,7 @@ export async function addBlueprint(catalogueKey: string, input: AddBlueprintInpu
     const teamNames = requestedNames ?? profileTeamNames(profile);
     assertNoIssues([
       ...blueprintIssues(record, records, weapons),
-      ...teamNamesIssuesFor(strategy, records.length + 1, teamNames),
+      ...teamNamesIssuesFor(strategy, buildableBlueprintCount([...records.map((r) => r.slot), slot]), teamNames),
     ]);
     await tx.automatonRobotBlueprint.create({ data: { profileId: profile.id, slotIndex: slot, imageUrl: null, ...blueprintData(fields) } });
     if (requestedNames !== undefined) {
@@ -788,7 +796,11 @@ export async function addBlueprint(catalogueKey: string, input: AddBlueprintInpu
  * Edit a Robot_Blueprint (R3.2–R3.4, R3.9–R3.12). The merged blueprint is
  * validated, so a loadout or Weapon_Path change is checked against the
  * Refinement_Plan. A robot name change never renames the live robot (R3.9);
- * a slot change is rejected while a live robot is linked (R3.12).
+ * a slot change is rejected while a live robot is linked (R3.12). A slot
+ * change can open or close a gap and so change the buildable blueprint
+ * count: it is rejected when a robots Goal_Target would exceed the new count
+ * (R3.7) or when the Team_Names (stored or the optional `teamNames`) do not
+ * fit it (R3.6).
  */
 export async function updateBlueprint(
   catalogueKey: string,
@@ -796,8 +808,9 @@ export async function updateBlueprint(
   input: UpdateBlueprintInput,
   deps: ProfileServiceDeps = {},
 ): Promise<MutationResult<ProfileDetail>> {
+  const registry = registryOf(deps);
   const weapons = await weaponsOf(deps);
-  const { slot: newSlot, ...patch } = input;
+  const { slot: newSlot, teamNames: requestedNames, ...patch } = input;
   const changedFields = Object.keys(input);
   await prisma.$transaction(async (tx) => {
     const profile = await lockProfile(tx, catalogueKey);
@@ -805,15 +818,26 @@ export async function updateBlueprint(
     if (!row) throw blueprintNotFound(catalogueKey, slot);
     const records = profile.blueprints.map(blueprintRecord);
     const targetSlot = newSlot ?? slot;
+    const issues: CatalogueIssue[] = [];
+    const teamNames = requestedNames ?? profileTeamNames(profile);
     if (targetSlot !== slot) {
       if (await liveRobotCount(tx, row.id) > 0) throw inPlayError(catalogueKey, slot, 'moved to another slot');
       if (records.some((r) => r.slot === targetSlot)) {
         throw new AutomatonError(AutomatonErrorCode.AUTOMATON_SLOT_TAKEN, `Blueprint slot ${targetSlot} of ${catalogueKey} is taken.`, 409);
       }
+      const strategy = pinnedStrategy(profile, registry);
+      const params = storedParameters(strategy, profile.strategyParameters) ?? resolveParametersOrDefaults(strategy);
+      const buildable = buildableBlueprintCount([...records.filter((r) => r.slot !== slot).map((r) => r.slot), targetSlot]);
+      issues.push(...robotsTargetIssues(strategy, params, buildable), ...teamNamesIssuesFor(strategy, buildable, teamNames));
+    } else if (requestedNames !== undefined) {
+      issues.push(...teamNamesIssuesFor(pinnedStrategy(profile, registry), buildableOf(profile.blueprints), teamNames));
     }
     const merged: BlueprintRecord = { ...blueprintRecord(row), ...patch, slot: targetSlot };
-    assertNoIssues(blueprintIssues(merged, records.filter((r) => r.slot !== slot), weapons));
+    assertNoIssues([...issues, ...blueprintIssues(merged, records.filter((r) => r.slot !== slot), weapons)]);
     await tx.automatonRobotBlueprint.update({ where: { id: row.id }, data: { slotIndex: targetSlot, ...blueprintData(merged) } });
+    if (requestedNames !== undefined) {
+      await tx.automatonProfile.update({ where: { id: profile.id }, data: { teamNames: json(teamNames) } });
+    }
   });
   return { result: await getProfileDetail(catalogueKey, deps), changedFields };
 }
@@ -839,7 +863,7 @@ export async function deleteBlueprint(
     if (await liveRobotCount(tx, row.id) > 0) throw inPlayError(catalogueKey, slot, 'deleted');
     const strategy = pinnedStrategy(profile, registry);
     const params = storedParameters(strategy, profile.strategyParameters) ?? resolveParametersOrDefaults(strategy);
-    const remaining = profile.blueprints.length - 1;
+    const remaining = buildableOf(profile.blueprints.filter((b) => b.slotIndex !== slot));
     const teamNames = input.teamNames ?? profileTeamNames(profile);
     assertNoIssues([
       ...robotsTargetIssues(strategy, params, remaining),

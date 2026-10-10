@@ -168,7 +168,8 @@ const addBlueprintBody = blueprintFieldsSchema.extend({
   teamNames: teamNamesSchema.optional(),
 }).strict();
 
-const updateBlueprintBody = blueprintFieldsSchema.partial().extend({ slot: blueprintSlot.optional() }).strict()
+// `teamNames` because a slot move can change the buildable blueprint count and so the Team_Names count (R3.6).
+const updateBlueprintBody = blueprintFieldsSchema.partial().extend({ slot: blueprintSlot.optional(), teamNames: teamNamesSchema.optional() }).strict()
   .refine((body) => Object.keys(body).length > 0, 'Send at least one field to change');
 
 const deleteBlueprintBody = z.object({ teamNames: teamNamesSchema.optional() }).strict().optional();

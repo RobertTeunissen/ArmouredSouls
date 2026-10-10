@@ -270,10 +270,44 @@ describe('Admin automaton profile endpoints (Spec #55 tasks 9.1–9.4)', () => {
 
     it('edits a blueprint (merged) and moves it to a free slot', async () => {
       const catalogueKey = await readyDraft('bpedit');
-      const res = await api('patch', `/${catalogueKey}/blueprints/1`).send({ robotName: 'Pz Renamed', yieldThreshold: 30, slot: 3 });
+      // Paragon allows 2 robots, so a second blueprint needs one 2v2 team name.
+      expect((await api('post', `/${catalogueKey}/blueprints`).send({ ...SHIELD, teamNames: { twoVsTwo: ['Pz Pair'], threeVsThree: [] } })).status).toBe(201);
+      // Slot 2 → 3 leaves slots {1, 3}: one buildable blueprint, so the 2v2 name must go in the same call (R3.6).
+      const mismatch = await api('patch', `/${catalogueKey}/blueprints/2`).send({ slot: 3 });
+      expect(mismatch.body.code).toBe('AUTOMATON_TEAM_NAMES_MISMATCH');
+      const res = await api('patch', `/${catalogueKey}/blueprints/2`).send({ robotName: 'Pz Renamed', yieldThreshold: 30, slot: 3, teamNames: { twoVsTwo: [], threeVsThree: [] } });
       expect(res.status).toBe(200);
-      expect(res.body.blueprints).toMatchObject([{ slot: 3, robotName: 'Pz Renamed', yieldThreshold: 30, loadoutType: 'two_handed' }]);
-      expect((await api('patch', `/${catalogueKey}/blueprints/1`).send({ yieldThreshold: 5 })).body.code).toBe('AUTOMATON_BLUEPRINT_NOT_FOUND');
+      expect(res.body.blueprints).toMatchObject([{ slot: 1 }, { slot: 3, robotName: 'Pz Renamed', yieldThreshold: 30, loadoutType: 'weapon_shield' }]);
+      expect(res.body.teamNames).toEqual({ twoVsTwo: [], threeVsThree: [] });
+      expect((await api('patch', `/${catalogueKey}/blueprints/2`).send({ yieldThreshold: 5 })).body.code).toBe('AUTOMATON_BLUEPRINT_NOT_FOUND');
+    });
+
+    it('rejects a slot move that leaves the next robot without a blueprint (R3.7, review C09-1)', async () => {
+      const catalogueKey = await readyDraft('bpgap');
+      // The only blueprint 1 → 3: robot 1 is built from slot 1, so nothing could ever be built.
+      const gap = await api('patch', `/${catalogueKey}/blueprints/1`).send({ slot: 3 });
+      expect(gap.status).toBe(400);
+      expect(gap.body.code).toBe('AUTOMATON_BLUEPRINTS_TOO_FEW');
+      expect(gap.body.error).toMatch(/but this stable has 0 blueprints\. Add blueprints or lower the target\.$/);
+      const unchanged = await prisma.automatonRobotBlueprint.findMany({ where: { profile: { catalogueKey } }, select: { slotIndex: true } });
+      expect(unchanged).toEqual([{ slotIndex: 1 }]);
+    });
+
+    it('rejects deleting a middle slot that leaves a robots target above the buildable blueprints (R3.7, review C09-1)', async () => {
+      const catalogueKey = await createDraft('bpmid', 'duo');
+      const pair = { twoVsTwo: ['Pz Pair'], threeVsThree: [] };
+      const trio = { twoVsTwo: ['Pz Pair'], threeVsThree: ['Pz Trio'] };
+      expect((await api('post', `/${catalogueKey}/blueprints`).send(HAMMER)).status).toBe(201);
+      expect((await api('post', `/${catalogueKey}/blueprints`).send({ ...SHIELD, teamNames: pair })).status).toBe(201);
+      expect((await api('post', `/${catalogueKey}/blueprints`).send({ ...SHIELD, robotName: 'Pz Third', teamNames: trio })).status).toBe(201);
+      // Deleting slot 2 of 3 leaves slots {1, 3}: Duo's robots target of 2 needs slot 2.
+      const gap = await request(server).delete(`${BASE}/${catalogueKey}/blueprints/2`).set('Authorization', `Bearer ${adminToken}`).send({ teamNames: { twoVsTwo: [], threeVsThree: [] } });
+      expect(gap.status).toBe(400);
+      expect(gap.body.code).toBe('AUTOMATON_BLUEPRINTS_TOO_FEW');
+      expect(await prisma.automatonRobotBlueprint.count({ where: { profile: { catalogueKey } } })).toBe(3);
+      // Deleting the top slot keeps slots 1…2 contiguous and is accepted.
+      const top = await request(server).delete(`${BASE}/${catalogueKey}/blueprints/3`).set('Authorization', `Bearer ${adminToken}`).send({ teamNames: pair });
+      expect(top.status).toBe(200);
     });
 
     it('requires Team_Names when a blueprint changes the count, with optional teamNames on add/delete (R3.6)', async () => {

@@ -7,6 +7,7 @@
 import { SUBSCRIBABLE_EVENT_TYPES } from '../../subscription/eventRegistry';
 import {
   blueprintIssues,
+  buildableCount,
   issuesError,
   nextFreeSlot,
   profileIssues,
@@ -173,6 +174,28 @@ describe('profileIssues (Activation, R2.3)', () => {
     const issues = profileIssues({ ...base(), params: resolved.params });
     expect(rules(issues)).toEqual(['blueprints_too_few']);
     expect(issues[0].message).toBe(`Goal ${goal.position} targets 2 robots, but this stable has 1 blueprints. Add blueprints or lower the target.`);
+  });
+
+  it('counts only the gap-free slots from 1, so a blueprint above a gap does not satisfy a robots target (R3.7, review C09-1)', () => {
+    // A single blueprint in slot 3: robot 1 is built from slot 1, which is empty.
+    expect(rules(profileIssues({ ...base(), blueprints: [{ ...HAMMER, slot: 3 }] }))).toEqual(['blueprints_too_few', 'blueprints_too_few']);
+    const goal = paragon.buildOrder.find((d) => d.type === 'robots' && d.bounds.max === 2)!;
+    const resolved = resolveParameters(paragon, null, { [goal.id]: 2 });
+    if (!resolved.ok) throw new Error('setup');
+    // Slots {1, 3} build one robot only; slots {1, 2} build two.
+    const gapped = [HAMMER, { ...HAMMER, slot: 3, robotName: 'Test Third' }];
+    const pair = { twoVsTwo: ['Pair One'], threeVsThree: [] };
+    expect(rules(profileIssues({ ...base(), params: resolved.params, blueprints: gapped }))).toEqual(['blueprints_too_few']);
+    expect(profileIssues({ ...base(), params: resolved.params, blueprints: [HAMMER, { ...gapped[1], slot: 2 }], teamNames: pair })).toEqual([]);
+  });
+});
+
+describe('buildableCount', () => {
+  it('is the length of the run of slots 1…k without a gap', () => {
+    expect(buildableCount([])).toBe(0);
+    expect(buildableCount([{ slot: 3 }])).toBe(0);
+    expect(buildableCount([{ slot: 2 }, { slot: 1 }, { slot: 4 }])).toBe(2);
+    expect(buildableCount(Array.from({ length: 11 }, (_, i) => ({ slot: i + 1 })))).toBe(11);
   });
 });
 

@@ -8,6 +8,7 @@ import {
   BUILD_FOCUS_KEYS,
   blueprintFieldsSchema,
   blueprintRuleIssues,
+  buildableBlueprintCount,
   catalogueIssueCode,
   eventOrderIssues,
   requiredTeamNameCountsFor,
@@ -134,6 +135,19 @@ describe('catalogue entry: context rules', () => {
       expect(issue?.message).toBe('Goal 13 targets 3 robots, but this stable has 2 blueprints. Add blueprints or lower the target.');
       expect(catalogueIssueCode('blueprints_too_few')).toBe('AUTOMATON_BLUEPRINTS_TOO_FEW');
     }
+  });
+
+  it('counts blueprints from slot 1 without a gap: slots {1, 3} build one robot (R3.7, review C09-1)', () => {
+    const gapped = withBlueprint(1, { slot: 3 });
+    const result = validateCatalogueEntry(gapped, context);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.issues.find((i) => i.rule === 'blueprints_too_few')?.message)
+        .toBe('Goal 2 targets 2 robots, but this stable has 1 blueprints. Add blueprints or lower the target.');
+    }
+    expect(buildableBlueprintCount([1, 3])).toBe(1);
+    expect(buildableBlueprintCount([2, 1])).toBe(2);
+    expect(buildableBlueprintCount([])).toBe(0);
   });
 
   it('robotsTargetIssues passes at the blueprint count', () => {
