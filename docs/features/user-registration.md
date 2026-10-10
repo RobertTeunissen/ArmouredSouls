@@ -518,7 +518,7 @@ Validation functions live in `app/backend/src/utils/validation.ts`. Each functio
 | Field | Rule | Function |
 |-------|------|----------|
 | Username | 3–20 chars, alphanumeric + `_` + `-` | `validateUsername()` |
-| Stable Name | 3–30 chars, alphanumeric + space + `_` + `-`, no profanity | `validateStableName()` |
+| Stable Name | 3–30 chars, alphanumeric + space + `_` + `-`, no profanity (whole-word match, except that `COMPOUND_MATCH_ENTRIES` are also matched as substrings inside longer words, splitting only at lower→upper case changes; see `utils/profanityFilter.ts`) | `validateStableName()` |
 | Email | 3–50 chars, alphanumeric + `_` + `-` | `validateEmail()` |
 | Password | 8–128 chars, no character restrictions | `validateRegistrationPassword()` |
 

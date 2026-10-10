@@ -11,6 +11,10 @@
 // Profile validation utilities for user input
 
 import prisma from '../lib/prisma';
+import { containsProfanity } from './profanityFilter';
+
+// Re-exported so existing importers of `utils/validation` keep working.
+export { containsProfanity };
 
 /**
  * Result of a validation check.
@@ -22,33 +26,6 @@ export interface ValidationResult {
   isValid: boolean;
   errors: string[];
 }
-
-/**
- * Basic profanity word list for stable name filtering
- * Production systems should use more sophisticated filtering libraries
- */
-const PROFANITY_LIST = [
-  'damn',
-  'hell',
-  'crap',
-  'shit',
-  'fuck',
-  'bitch',
-  'ass',
-  'bastard',
-  'dick',
-  'cock',
-  'pussy',
-  'whore',
-  'slut',
-  'fag',
-  'nigger',
-  'nigga',
-  'retard',
-  'rape',
-  'nazi',
-  'hitler',
-];
 
 /**
  * Validate a username against the registration rules.
@@ -363,14 +340,4 @@ export function validatePassword(password: string): { valid: boolean; error?: st
   }
 
   return { valid: true };
-}
-
-/**
- * Basic profanity filter using word list
- * Checks if text contains any prohibited words (case-insensitive)
- * Requirements: 1.7
- */
-export function containsProfanity(text: string): boolean {
-  const lowerText = text.toLowerCase();
-  return PROFANITY_LIST.some((word) => lowerText.includes(word));
 }

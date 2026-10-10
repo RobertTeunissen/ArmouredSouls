@@ -120,7 +120,8 @@ export const paginationQuery = z.object({
  * field nor the rule.
  *
  * Profanity is checked by `validateStableName` in the handler, not here — that is a
- * content rule rather than a shape rule, and it needs the profanity list.
+ * content rule rather than a shape rule, and it needs the profanity list in
+ * `utils/profanityFilter.ts`.
  */
 export const stableName = z
   .string()
