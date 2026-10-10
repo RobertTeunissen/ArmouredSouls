@@ -1118,6 +1118,14 @@ R3.7 at draft creation and at strategy assignment:
 
 There are deliberately no endpoints for running a turn, deleting an active profile, editing live robots/teams/subscriptions/weapons or changing balances (R2.4, R11.5).
 
+**Strategy_Library, Strategy_Draft and upgrade details** (tasks 9.8–9.10, as implemented):
+- `GET /strategies` counts every Automaton_Profile pinned to a version (drafts and active), the number the Upgrade dialog's "All {n} stables on v{old}" uses.
+- `POST /strategy-drafts` takes `{ key, displayName?, description? }` (blank: a new strategy at v1) or `{ basedOn: "key.vN" }` (a new version: a copy of that version numbered `latestVersion(key) + 1`). The version is never edited; a new-version draft keeps its key (`AUTOMATON_STRATEGY_DRAFT_INVALID`, "A new version keeps the key."). `PUT /strategy-drafts/:id` takes any of `key`, `displayName`, `description`, `buildOrder` (structurally valid entries; up to 100 so the builder can show "40 goals at most."). A draft with rule errors is saved; every read and update returns `{ issues, errorCount, ready, upgradeWarning }`.
+- Export and preview are refused with `AUTOMATON_STRATEGY_DRAFT_INVALID` while a rule fails (preview ignores the key/version rule). Export answers `{ fileName, definition, upgradeWarning }` with `Content-Disposition: attachment`; `definition` is the Strategy_Definition_File. `upgradeWarning` is null for a new strategy, else the list of profiles the §14.0a upgrade would reject (empty when none).
+- `POST /strategies/:key/upgrade` without `catalogueKeys` selects every profile of the strategy on a lower version than `toVersion`; listed keys must each be on a lower version of that strategy, else the whole request is refused with `AUTOMATON_UPGRADE_NOT_APPLICABLE` (409). `teamNames` is accepted only with exactly one `catalogueKeys` entry. A dry-run (no `confirm: true`) writes nothing, audit included.
+- Audit: a Strategy_Draft mutation concerns no stable and is recorded with Catalogue_Key `none` plus `draftId` and `strategyKey`; a confirmed upgrade records one entry per profile, or one entry when it selected none.
+- `GET /` takes `attention=true|false` (Need_Attention is computed per request, so the filter classifies the matching active stables first, then pages).
+
 **Turn_Preview** (R11.4) loads facts with a read-only Prisma query set, then loops `planNextStep` + `factProjector` up to the Turn_Budget, and returns `{ actions, goalOutcomes, projectedEndBalance }`. The integration test wraps the request in a query-counting Prisma extension and asserts zero `create`/`update`/`delete`/`upsert`/raw-write calls and no file writes.
 
 ### 17.1a Need_Attention (R11.12)

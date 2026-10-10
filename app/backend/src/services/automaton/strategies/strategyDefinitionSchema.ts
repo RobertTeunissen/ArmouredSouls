@@ -100,7 +100,8 @@ const goalReferenceSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('refine') }).strict(),
 ]);
 
-const buildOrderEntrySchema = z.object({
+/** One Build_Order entry (structure only; the builder rules run over the whole list). */
+export const buildOrderEntrySchema = z.object({
   position: z.number().int().min(1),
   goal: goalReferenceSchema,
   defaultTarget: targetValueSchema,

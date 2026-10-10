@@ -110,3 +110,46 @@ export async function deleteAutomatonStables(userIds: readonly number[]): Promis
   await prisma.automatonProfile.deleteMany({ where: { userId: { in: [...userIds] } } });
   await prisma.user.deleteMany({ where: { id: { in: [...userIds] } } });
 }
+
+export interface DraftProfileFixtureOptions {
+  catalogueKey: string;
+  plannedStableName: string;
+  strategyKey: string;
+  strategyVersion?: number;
+  strategyParameters?: { targets: Record<string, number> };
+  /** Blueprint_Slots to fill with a valid two-handed blueprint. */
+  slots: number[];
+  teamNames?: TeamNames;
+}
+
+/** A Draft_Automaton with blueprints in the given slots, written directly (no User). */
+export async function createDraftProfile(options: DraftProfileFixtureOptions): Promise<{ profileId: number; catalogueKey: string }> {
+  const profile = await prisma.automatonProfile.create({
+    data: {
+      catalogueKey: options.catalogueKey,
+      plannedStableName: options.plannedStableName,
+      franchise: 'Test franchise',
+      backstory: 'Test backstory',
+      strategyKey: options.strategyKey,
+      strategyVersion: options.strategyVersion ?? 1,
+      strategyParameters: (options.strategyParameters ?? { targets: {} }) as unknown as object,
+      teamNames: (options.teamNames ?? { twoVsTwo: [], threeVsThree: [] }) as unknown as object,
+      eventOrder: [...SUBSCRIBABLE_EVENT_TYPES] as unknown as object,
+      status: 'draft',
+      origin: 'admin',
+      blueprints: {
+        create: options.slots.map((slotIndex) => ({
+          slotIndex,
+          robotName: `Fx Hammer ${slotIndex}`,
+          loadoutType: 'two_handed',
+          stance: 'balanced',
+          yieldThreshold: 10,
+          buildFocus: 'bruiser',
+          weaponPath: [{ main: 'Shock Maul' }, { main: 'Heavy Hammer' }] as unknown as object,
+          refinementPlan: [{ tier: 'sharpen', hand: 'main', magnitude: 1 }] as unknown as object,
+        })),
+      },
+    },
+  });
+  return { profileId: profile.id, catalogueKey: profile.catalogueKey };
+}

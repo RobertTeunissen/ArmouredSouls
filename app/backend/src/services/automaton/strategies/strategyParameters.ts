@@ -44,6 +44,12 @@ export function resolveGoalTarget(spec: Pick<GoalSpec, 'id' | 'defaultTarget'>, 
   return params.targets[spec.id] ?? spec.defaultTarget;
 }
 
+/** The highest robots Goal_Target of a Build_Order (a stable's robot target), or null without a robots Goal. */
+export function highestRobotsTarget(buildOrder: readonly GoalSpec[], params: StrategyParametersV1): number | null {
+  const targets = buildOrder.filter((spec) => spec.type === 'robots').map((spec) => resolveGoalTarget(spec, params));
+  return targets.length > 0 ? Math.max(...targets) : null;
+}
+
 /** What a Goal buys (the Build_Order "What it buys" column). */
 function buysText(type: GoalType, facilityType: FacilityType | undefined, isMax: boolean): string {
   switch (type) {

@@ -118,6 +118,12 @@ const DB_DEPENDENT = [
   'tests/integration/automatonProfile.test.ts',
   'tests/integration/automatonTurnWiring.test.ts',
   'tests/integration/automatonSettlementWiring.test.ts',
+  'tests/integration/automatonNeedAttention.test.ts',
+  'tests/integration/automatonStrategyComparison.test.ts',
+  'tests/integration/automatonStrategyDrafts.test.ts',
+  'tests/integration/automatonStrategyUpgrade.test.ts',
+  'tests/integration/automatonDraftPreview.test.ts',
+  'tests/integration/automatonAdminRoutes.test.ts',
   // Spec #55 — Domain_Service_Extraction (task group 2)
   'src/services/economy/__tests__/facilityUpgradeService.test.ts',
   'src/services/economy/__tests__/weaponPurchaseService.test.ts',

@@ -13,9 +13,12 @@
  *
  * Static paths are registered before `/:key`. There are deliberately no
  * routes that run a turn, delete an active stable, edit live robots, teams,
- * subscriptions or weapons, or change a balance (R2.4, R11.5). The
- * Strategy_Library, Strategy_Comparison, Strategy_Draft, upgrade and status
- * endpoints are added to this router by tasks 9.6–9.10.
+ * subscriptions or weapons, or change a balance (R2.4, R11.5). Tasks
+ * 9.6–9.10 add the Status_Bar, Strategy_Comparison, Strategy_Library,
+ * Strategy_Draft and upgrade endpoints (R6.6, R6.9–R6.14, R11.11–R11.14).
+ * A Strategy_Draft mutation is audited with Catalogue_Key `none` (it concerns
+ * no stable); a confirmed upgrade records one entry per profile, a dry-run
+ * none.
  */
 import express, { NextFunction, Request, Response } from 'express';
 import multer from 'multer';
@@ -25,7 +28,7 @@ import { validateRequest } from '../middleware/schemaValidator';
 import { handleMulterError } from '../middleware/handleMulterError';
 import { AppError } from '../errors/AppError';
 import { AutomatonError, AutomatonErrorCode } from '../errors/automatonErrors';
-import { paginationQuery, positiveIntParam, stableName } from '../utils/securityValidation';
+import { paginationQuery, positiveIntParam, safeEnum, stableName } from '../utils/securityValidation';
 import { recordAction } from '../services/admin/adminAuditLogService';
 import {
   backstorySchema,
@@ -57,6 +60,23 @@ import { previewProfileTurn } from '../services/automaton/turnPreview';
 import { getProgramSwitch, setProgramSwitch } from '../services/automaton/programSwitch';
 import { getLastCatalogueSyncSummary } from '../services/automaton/catalogueSync';
 import { exportCatalogue } from '../services/automaton/catalogueExport';
+import { getAutomatonStatus } from '../services/automaton/automatonStatus';
+import { getStrategyComparison } from '../services/automaton/strategyComparisonService';
+import { getStrategyLibrary } from '../services/automaton/strategies/strategyLibrary';
+import {
+  BASED_ON_PATTERN,
+  createDraft as createStrategyDraft,
+  deleteDraft as deleteStrategyDraft,
+  draftBuildOrderSchema,
+  draftDescriptionSchema,
+  draftDisplayNameSchema,
+  exportDraft,
+  getDraft,
+  listDrafts,
+  previewDraft,
+  updateDraft,
+} from '../services/automaton/strategies/strategyDraftService';
+import { confirmUpgrade, dryRunUpgrade } from '../services/automaton/strategies/strategyUpgradeService';
 
 const router = express.Router();
 router.use(authenticateToken);
@@ -77,11 +97,14 @@ function auditKey(value: unknown): string {
   return typeof value === 'string' && CATALOGUE_KEY_PATTERN.test(value) ? value : 'invalid';
 }
 
-/** Mark a mutation route: names the audit operation and where its Catalogue_Key comes from. */
-function audited(operation: string, key: 'param' | 'body' | 'all') {
+/**
+ * Mark a mutation route: names the audit operation and where its Catalogue_Key
+ * comes from. Strategy_Draft mutations concern no stable (`none`).
+ */
+function audited(operation: string, key: 'param' | 'body' | 'all' | 'none') {
   return (req: Request, res: Response, next: NextFunction): void => {
     const body = req.body as Record<string, unknown> | undefined;
-    const catalogueKey = key === 'all' ? 'all' : auditKey(key === 'param' ? req.params.key : body?.catalogueKey);
+    const catalogueKey = key === 'all' || key === 'none' ? key : auditKey(key === 'param' ? req.params.key : body?.catalogueKey);
     const state: AuditState = { operation: `${AUDIT_PREFIX}.${operation}`, catalogueKey, recorded: false };
     res.locals.automatonAudit = state;
     next();
@@ -103,6 +126,45 @@ function recordSuccess(req: AuthRequest, res: Response, summary: Record<string, 
   if (!state || state.recorded || !req.user) return;
   state.recorded = true;
   recordAction(req.user.userId, state.operation, 'success', { catalogueKey: state.catalogueKey, outcome: 'completed', ...summary });
+}
+
+/**
+ * A Strategy_Version upgrade is audited only when it is confirmed: a dry-run
+ * writes nothing (R6.6). The handler records one entry per profile (task
+ * 9.9); a request rejected as a whole records one entry here.
+ */
+function auditedUpgrade(req: Request, res: Response, next: NextFunction): void {
+  const body = req.body as { confirm?: unknown; catalogueKeys?: unknown } | undefined;
+  if (body?.confirm === true) {
+    const keys = Array.isArray(body.catalogueKeys) ? body.catalogueKeys : null;
+    const catalogueKey = keys && keys.length === 1 ? auditKey(keys[0]) : 'all';
+    const state: AuditState = { operation: `${AUDIT_PREFIX}.upgrade_strategy`, catalogueKey, recorded: false };
+    res.locals.automatonAudit = state;
+  }
+  next();
+}
+
+/** One audit entry per profile of a confirmed upgrade (R11.3, task 9.9). */
+function recordProfileOutcomes(
+  req: AuthRequest,
+  res: Response,
+  outcomes: { catalogueKey: string; result: 'success' | 'failure'; summary: Record<string, unknown> }[],
+): void {
+  const state = auditState(res);
+  if (!state || state.recorded || !req.user) return;
+  state.recorded = true;
+  if (outcomes.length === 0) {
+    // A confirmed upgrade that selected no profile is still one mutation request.
+    recordAction(req.user.userId, state.operation, 'success', { catalogueKey: state.catalogueKey, outcome: 'completed', upgraded: 0, rejected: 0 });
+    return;
+  }
+  for (const outcome of outcomes) {
+    recordAction(req.user.userId, state.operation, outcome.result, {
+      catalogueKey: outcome.catalogueKey,
+      outcome: outcome.result === 'success' ? 'completed' : 'rejected',
+      ...outcome.summary,
+    });
+  }
 }
 
 function recordRejection(req: AuthRequest, res: Response, error: unknown): void {
@@ -128,7 +190,41 @@ const blueprintSlot = z.number().int().min(1).max(MAX_BLUEPRINTS);
 const listQuery = paginationQuery.extend({
   status: z.enum(['draft', 'active']).optional(),
   strategy: strategyKeySchema.optional(),
+  attention: safeEnum(['true', 'false']).transform((value) => value === 'true').optional(),
 });
+
+// ── Strategy_Library, Strategy_Draft and upgrade schemas (tasks 9.8–9.10) ──
+
+const strategyKeyParams = z.object({ key: strategyKeySchema }).strict();
+const draftParams = z.object({ id: positiveIntParam }).strict();
+
+const createDraftBody = z.union([
+  z.object({ basedOn: z.string().max(60).regex(BASED_ON_PATTERN, 'basedOn must be key.vN of a strategy version') }).strict(),
+  z.object({
+    key: strategyKeySchema,
+    displayName: draftDisplayNameSchema.optional(),
+    description: draftDescriptionSchema.optional(),
+  }).strict(),
+]);
+
+const updateDraftBody = z.object({
+  key: strategyKeySchema.optional(),
+  displayName: draftDisplayNameSchema.optional(),
+  description: draftDescriptionSchema.optional(),
+  buildOrder: draftBuildOrderSchema.optional(),
+}).strict().refine((body) => Object.keys(body).length > 0, 'Send at least one field to change');
+
+const previewDraftBody = z.object({ catalogueKey: catalogueKeySchema }).strict();
+
+const upgradeBody = z.object({
+  toVersion: z.number().int().min(1),
+  catalogueKeys: z.array(catalogueKeySchema).min(1).max(500).optional(),
+  confirm: z.boolean().optional(),
+  teamNames: teamNamesSchema.optional(),
+}).strict().refine(
+  (body) => body.teamNames === undefined || body.catalogueKeys?.length === 1,
+  { message: 'teamNames is accepted for a single-stable upgrade only', path: ['teamNames'] },
+);
 
 const exportQuery = z.object({
   keys: z.string().max(2_000).optional()
@@ -185,6 +281,91 @@ function auditMulterError(err: unknown, req: Request, res: Response, next: NextF
 
 // ── Static paths ─────────────────────────────────────────────────────
 
+router.get('/status', validateRequest({}), async (_req: AuthRequest, res: Response) => {
+  res.json(await getAutomatonStatus());
+});
+
+router.get('/strategies/comparison', validateRequest({}), async (_req: AuthRequest, res: Response) => {
+  res.json(await getStrategyComparison());
+});
+
+router.get('/strategies', validateRequest({}), async (_req: AuthRequest, res: Response) => {
+  res.json(await getStrategyLibrary());
+});
+
+router.post(
+  '/strategies/:key/upgrade',
+  auditedUpgrade,
+  validateRequest({ params: strategyKeyParams, body: upgradeBody }),
+  async (req: AuthRequest, res: Response) => {
+    const strategyKey = String(req.params.key);
+    const body = req.body as z.infer<typeof upgradeBody>;
+    if (body.confirm !== true) {
+      res.json(await dryRunUpgrade(strategyKey, body));
+      return;
+    }
+    const result = await confirmUpgrade(strategyKey, body);
+    recordProfileOutcomes(req, res, [
+      ...result.upgraded.map((p) => ({
+        catalogueKey: p.catalogueKey,
+        result: 'success' as const,
+        summary: { strategyKey, fromVersion: p.fromVersion, toVersion: p.toVersion, changedFields: p.changedFields },
+      })),
+      ...result.rejected.map((p) => ({
+        catalogueKey: p.catalogueKey,
+        result: 'failure' as const,
+        summary: { strategyKey, fromVersion: p.fromVersion, toVersion: result.toVersion, code: p.code },
+      })),
+    ]);
+    res.json(result);
+  },
+);
+
+router.get('/strategy-drafts', validateRequest({}), async (_req: AuthRequest, res: Response) => {
+  res.json({ drafts: await listDrafts() });
+});
+
+router.post('/strategy-drafts', audited('strategy_draft_create', 'none'), validateRequest({ body: createDraftBody }), async (req: AuthRequest, res: Response) => {
+  const draft = await createStrategyDraft(req.body as z.infer<typeof createDraftBody>, req.user!.userId);
+  recordSuccess(req, res, { draftId: draft.id, strategyKey: draft.definition.key, version: draft.definition.version, changedFields: Object.keys(req.body as object) });
+  res.status(201).json(draft);
+});
+
+router.get('/strategy-drafts/:id', validateRequest({ params: draftParams }), async (req: AuthRequest, res: Response) => {
+  res.json(await getDraft(Number(req.params.id)));
+});
+
+router.put(
+  '/strategy-drafts/:id',
+  audited('strategy_draft_update', 'none'),
+  validateRequest({ params: draftParams, body: updateDraftBody }),
+  async (req: AuthRequest, res: Response) => {
+    const draft = await updateDraft(Number(req.params.id), req.body as z.infer<typeof updateDraftBody>);
+    recordSuccess(req, res, { draftId: draft.id, strategyKey: draft.definition.key, version: draft.definition.version, changedFields: fieldNames(req) });
+    res.json(draft);
+  },
+);
+
+router.delete('/strategy-drafts/:id', audited('strategy_draft_delete', 'none'), validateRequest({ params: draftParams }), async (req: AuthRequest, res: Response) => {
+  const deleted = await deleteStrategyDraft(Number(req.params.id));
+  recordSuccess(req, res, { draftId: deleted.id, strategyKey: deleted.key, version: deleted.version, changedFields: ['deleted'] });
+  res.status(204).send();
+});
+
+router.post(
+  '/strategy-drafts/:id/preview',
+  validateRequest({ params: draftParams, body: previewDraftBody }),
+  async (req: AuthRequest, res: Response) => {
+    res.json(await previewDraft(Number(req.params.id), (req.body as z.infer<typeof previewDraftBody>).catalogueKey));
+  },
+);
+
+router.get('/strategy-drafts/:id/export', validateRequest({ params: draftParams }), async (req: AuthRequest, res: Response) => {
+  const exported = await exportDraft(Number(req.params.id));
+  res.setHeader('Content-Disposition', `attachment; filename="${exported.fileName}"`);
+  res.json(exported);
+});
+
 router.get('/program', validateRequest({}), async (_req: AuthRequest, res: Response) => {
   res.json(await getProgramSwitch());
 });
@@ -222,7 +403,7 @@ router.post('/activate-drafts', audited('activate_all', 'all'), validateRequest(
 
 router.get('/', validateRequest({ query: listQuery }), async (req: AuthRequest, res: Response) => {
   const query = req.query as unknown as z.infer<typeof listQuery>;
-  res.json(await listProfiles({ status: query.status, strategy: query.strategy, page: query.page, limit: query.limit }));
+  res.json(await listProfiles({ status: query.status, strategy: query.strategy, attention: query.attention, page: query.page, limit: query.limit }));
 });
 
 router.post('/', audited('create_draft', 'body'), validateRequest({ body: createBody }), async (req: AuthRequest, res: Response) => {

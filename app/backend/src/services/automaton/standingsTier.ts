@@ -6,6 +6,7 @@
  * are never read for it.
  */
 import prisma from '../../lib/prisma';
+import type { Prisma } from '../../../generated/prisma';
 
 /** Tier order, lowest first (design §17.3). */
 export const LEAGUE_TIER_ORDER = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'] as const;
@@ -23,18 +24,20 @@ export function higherTier(a: LeagueTier | null, b: string): LeagueTier | null {
   return a;
 }
 
+type TierDb = Pick<Prisma.TransactionClient, 'robot' | 'teamBattle' | 'standing'>;
+
 /** Best tier per user id; users without standings map to null. Three bounded queries. */
-export async function bestTiersForUsers(userIds: readonly number[]): Promise<Map<number, LeagueTier | null>> {
+export async function bestTiersForUsers(userIds: readonly number[], db: TierDb = prisma): Promise<Map<number, LeagueTier | null>> {
   const result = new Map<number, LeagueTier | null>(userIds.map((id) => [id, null]));
   if (userIds.length === 0) return result;
   const [robots, teams] = await Promise.all([
-    prisma.robot.findMany({ where: { userId: { in: [...userIds] } }, select: { id: true, userId: true } }),
-    prisma.teamBattle.findMany({ where: { stableId: { in: [...userIds] } }, select: { id: true, stableId: true } }),
+    db.robot.findMany({ where: { userId: { in: [...userIds] } }, select: { id: true, userId: true } }),
+    db.teamBattle.findMany({ where: { stableId: { in: [...userIds] } }, select: { id: true, stableId: true } }),
   ]);
   const ownerOfRobot = new Map(robots.map((r) => [r.id, r.userId]));
   const ownerOfTeam = new Map(teams.map((t) => [t.id, t.stableId]));
   if (ownerOfRobot.size === 0 && ownerOfTeam.size === 0) return result;
-  const rows = await prisma.standing.findMany({
+  const rows = await db.standing.findMany({
     where: {
       OR: [
         { entityType: 'robot', entityId: { in: [...ownerOfRobot.keys()] } },

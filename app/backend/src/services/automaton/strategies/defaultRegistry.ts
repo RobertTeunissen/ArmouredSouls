@@ -15,3 +15,14 @@ export function getStrategyRegistry(): StrategyRegistry {
   if (!defaultRegistry) defaultRegistry = loadStrategyRegistry({ weightTable: BUILD_FOCUS_WEIGHTS });
   return defaultRegistry;
 }
+
+/**
+ * Test seam: replace the registry the admin endpoints and turns read (e.g. one
+ * with an extra `v2` file), returning the previous one; `null` reloads the
+ * repository files on the next read.
+ */
+export function setStrategyRegistry(registry: StrategyRegistry | null): StrategyRegistry | null {
+  const previous = defaultRegistry;
+  defaultRegistry = registry;
+  return previous;
+}

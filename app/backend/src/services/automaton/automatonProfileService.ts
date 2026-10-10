@@ -57,10 +57,11 @@ import {
 import { deleteProfileImages } from './automatonImageService';
 import { loadWeaponCatalogue } from './stableFacts';
 import { getStrategyRegistry } from './strategies/defaultRegistry';
-import { describeBuildOrder, resolveGoalTarget, type BuildOrderDescriptor } from './strategies/strategyParameters';
+import { describeBuildOrder, highestRobotsTarget, resolveGoalTarget, type BuildOrderDescriptor } from './strategies/strategyParameters';
 import type { StrategyRegistry } from './strategies/registry';
 import type { UpgradeStrategy } from './strategies/strategyTypes';
 import { bestTiersForUsers, type LeagueTier } from './standingsTier';
+import { loadActiveNeedAttention, loadNeedAttention, type NeedAttentionReason } from './needAttention';
 import { teamsForSlots } from './teamRule';
 
 // ── Types ────────────────────────────────────────────────────────────
@@ -322,10 +323,7 @@ function turnSummary(turn: TurnRow, strategy: UpgradeStrategy | undefined, param
 /** Highest robots Goal_Target of the stable's Build_Order (the "target" of Robots current / target). */
 function robotTarget(strategy: UpgradeStrategy | undefined, params: StrategyParametersV1 | null): number | null {
   if (!strategy) return null;
-  const targets = strategy.buildOrder
-    .filter((d) => d.type === 'robots')
-    .map((d) => resolveGoalTarget(d, params ?? { targets: {} }));
-  return targets.length > 0 ? Math.max(...targets) : null;
+  return highestRobotsTarget(strategy.buildOrder, params ?? { targets: {} });
 }
 
 export interface ProfileListItem {
@@ -344,11 +342,15 @@ export interface ProfileListItem {
   bestTier: LeagueTier | null;
   lastTurn: TurnSummary | null;
   activatedAt: string | null;
+  /** Need_Attention reasons in the approved order; empty for a draft (R11.12). */
+  needAttention: NeedAttentionReason[];
 }
 
 export interface ProfileListQuery {
   status?: 'draft' | 'active';
   strategy?: string;
+  /** true: only stables that Need_Attention; false: only those that do not (R11.11). */
+  attention?: boolean;
   page: number;
   limit: number;
 }
@@ -363,10 +365,19 @@ export interface ProfileListPage {
 /** Profiles with progress, ordered by Catalogue_Key (R11.2). */
 export async function listProfiles(query: ProfileListQuery, deps: ProfileServiceDeps = {}): Promise<ProfileListPage> {
   const registry = registryOf(deps);
-  const where: Prisma.AutomatonProfileWhereInput = {
+  const filters: Prisma.AutomatonProfileWhereInput = {
     ...(query.status ? { status: query.status } : {}),
     ...(query.strategy ? { strategyKey: query.strategy } : {}),
   };
+  let where = filters;
+  if (query.attention !== undefined) {
+    // Need_Attention is computed, never stored: classify the matching active stables, then filter by id.
+    const attention = await loadActiveNeedAttention(filters);
+    const flagged = [...attention].flatMap(([id, reasons]) => (reasons.length > 0 ? [id] : []));
+    where = query.attention
+      ? { AND: [filters, { id: { in: flagged } }] }
+      : { AND: [filters, { id: { notIn: flagged } }] };
+  }
   const [total, rows] = await Promise.all([
     prisma.automatonProfile.count({ where }),
     prisma.automatonProfile.findMany({
@@ -382,7 +393,10 @@ export async function listProfiles(query: ProfileListQuery, deps: ProfileService
     }),
   ]);
   const userIds = rows.flatMap((row) => (row.userId === null ? [] : [row.userId]));
-  const tiers = await bestTiersForUsers(userIds);
+  const [tiers, attentionByProfile] = await Promise.all([
+    bestTiersForUsers(userIds),
+    loadNeedAttention(rows.flatMap((row) => (row.status === 'active' ? [{ profileId: row.id, balance: row.user?.currency ?? null }] : []))),
+  ]);
   const items = rows.map((row): ProfileListItem => {
     const strategy = registry.getStrategy(row.strategyKey, row.strategyVersion);
     const params = strategy ? storedParameters(strategy, row.strategyParameters) : null;
@@ -402,6 +416,7 @@ export async function listProfiles(query: ProfileListQuery, deps: ProfileService
       bestTier: row.userId === null ? null : tiers.get(row.userId) ?? null,
       lastTurn: row.turns[0] ? turnSummary(row.turns[0], strategy, params) : null,
       activatedAt: row.activatedAt?.toISOString() ?? null,
+      needAttention: attentionByProfile.get(row.id) ?? [],
     };
   });
   return { items, total, page: query.page, limit: query.limit };

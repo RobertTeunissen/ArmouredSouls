@@ -49,6 +49,16 @@ export const AutomatonErrorCode = {
   AUTOMATON_SLOT_TAKEN: 'AUTOMATON_SLOT_TAKEN',
   /** An uploaded Robot_Blueprint image failed validation or processing (400, R11.6). */
   AUTOMATON_IMAGE_INVALID: 'AUTOMATON_IMAGE_INVALID',
+  /** No Strategy_Definition_File has this strategy key or `key.vN` (404, R6.6, R6.9). */
+  AUTOMATON_STRATEGY_NOT_FOUND: 'AUTOMATON_STRATEGY_NOT_FOUND',
+  /** No Strategy_Draft has this id (404, R6.13). */
+  AUTOMATON_STRATEGY_DRAFT_NOT_FOUND: 'AUTOMATON_STRATEGY_DRAFT_NOT_FOUND',
+  /** Another Strategy_Draft already has this key and version (409, R6.11). */
+  AUTOMATON_STRATEGY_DRAFT_EXISTS: 'AUTOMATON_STRATEGY_DRAFT_EXISTS',
+  /** The Strategy_Draft fails the definition schema or a builder rule; export or preview refused (400, R6.11, R6.14). */
+  AUTOMATON_STRATEGY_DRAFT_INVALID: 'AUTOMATON_STRATEGY_DRAFT_INVALID',
+  /** A Strategy_Version upgrade names a profile that is not on an older version of the strategy (409, R6.6). */
+  AUTOMATON_UPGRADE_NOT_APPLICABLE: 'AUTOMATON_UPGRADE_NOT_APPLICABLE',
 } as const;
 
 export type AutomatonErrorCodeType = typeof AutomatonErrorCode[keyof typeof AutomatonErrorCode];
