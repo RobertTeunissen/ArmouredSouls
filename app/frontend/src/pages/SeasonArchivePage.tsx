@@ -23,14 +23,14 @@ import {
   type SeasonListEntry,
   type SeasonDetail,
   type SnapshotEntry,
-  type ArchivedAccolade,
 } from '../utils/seasonApi';
+import AutomatonBadge from '../components/AutomatonBadge';
 import { createLogger } from '../utils/logger';
 import { categoryLabel, modeLabel, rankBadge, formatDate } from '../utils/seasonFormat';
 
 const log = createLogger('SeasonArchivePage');
 
-type AccoladeEntry = ArchivedAccolade & { stableName: string; isGeneratedSubject: boolean };
+type AccoladeEntry = SeasonDetail['accolades'][number];
 
 function SeasonArchivePage() {
   const { user } = useAuth();
@@ -382,7 +382,15 @@ function StandingRow({ row, mine }: { row: SnapshotEntry; mine: boolean }) {
           </span>
         )}
       </td>
-      <td className="px-3 py-2 text-secondary">{row.stableName}</td>
+      <td className="px-3 py-2 text-secondary">
+        {row.subjectStableType === 'automaton' ? (
+          <span className="whitespace-nowrap">
+            {row.stableName} <AutomatonBadge stableType={row.subjectStableType} size="sm" />
+          </span>
+        ) : (
+          row.stableName
+        )}
+      </td>
       <td className="px-3 py-2 capitalize text-tertiary">{row.tier}</td>
       <td className="px-3 py-2 text-right font-semibold text-primary">{row.leaguePoints}</td>
       <td className="px-3 py-2 text-right text-tertiary">
@@ -434,6 +442,9 @@ function RecordCard({
               <span className="min-w-0 flex-1 truncate">
                 <span className="font-medium text-white">{a.subjectName}</span>
                 <span className="ml-1.5 text-secondary">{a.stableName}</span>
+                {a.subjectStableType === 'automaton' && (
+                  <AutomatonBadge stableType={a.subjectStableType} size="sm" className="ml-1.5" />
+                )}
                 {a.isGeneratedSubject && (
                   <span className="ml-1.5 rounded bg-surface px-1 text-[10px] uppercase text-tertiary">
                     system

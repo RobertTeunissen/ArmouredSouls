@@ -35,7 +35,7 @@ export function EconomicRecords({ records }: EconomicRecordsProps) {
               key={record.userId}
               rank={index + 1}
               value={formatCurrency(record.currency)}
-              description={<><OwnerNameLink userId={record.userId} displayName={record.username} />'s stable</>}
+              description={<><OwnerNameLink userId={record.userId} displayName={record.username} stableType={record.stableType} />'s stable</>}
               details={[
                 `Robots: ${record.robotCount}`,
                 `Prestige: ${record.prestige.toLocaleString()}`,
