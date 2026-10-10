@@ -2,7 +2,7 @@
 
 **Status**: Approved — 9 Oct 2026 (Content_Approval recorded; the gated task groups are unlocked)
 **Owner of approval**: product owner (Robert)
-**Spec**: `.kiro/specs/to-do/55-automaton-stables/`
+**Spec**: `.kiro/specs/done-october26/55-automaton-stables/`
 
 | Document | Review status |
 |---|---|

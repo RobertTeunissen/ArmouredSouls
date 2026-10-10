@@ -1,6 +1,6 @@
 # Automaton Stables Implementation Record
 
-**Spec:** 55 — Automaton Stables (`.kiro/specs/to-do/55-automaton-stables/`)  
+**Spec:** 55 — Automaton Stables (`.kiro/specs/done-october26/55-automaton-stables/`)  
 **Branch:** `feature/spec-55-automaton-stables`  
 **Recorded:** 10 Oct 2026, local machine (Apple Silicon), PostgreSQL 17 in Docker on `localhost:5432`. No check ran against ACC or PRD.
 
@@ -56,8 +56,47 @@ Run A: `test:heavy -- automaton` before the decision 42 change. Run B: the full 
 - Decision 43: the `admin-teardown` Playwright project runs `scripts/deleteE2eAutomatons.ts` (local hosts only) after the admin specs. The admin projects now run after `chromium`, because their bulk cycles change the seeded stables that the `chromium` specs expect at seed state. Both workflows' Playwright steps pass the e2e `DATABASE_URL` to the teardown.
 - `automaton-badge.spec.ts`: the league-standings wait used `.or()` without `.first()` and failed in strict mode once standings had a second page.
 
-## Deviations and open items
+## Deviations from the spec
 
-- **Admin text awaiting approval (decision 41).** The builder rule messages and admin helper strings in `review/PLAYER_FACING_TEXT.md` §6.9 are in the code but not approved (R13.4).
-- **No Playwright check of the Hall of Records badge.** Decision 42 is covered by `AutomatonRecordBadge.test.tsx` (Vitest) and `automatonPublicExposure.test.ts` (integration). The Playwright badge surfaces stay the six of task 11.3; a local e2e Automaton does not reliably top any record list.
-- **Workflow change.** The Playwright steps in `ci.yml` and `deploy.yml` gained `DATABASE_URL` for the teardown; no gate, timeout or job dependency changed.
+Each item names what differs from `requirements.md` / `design.md` and why. None changes a player-visible rule except where marked.
+
+Open items for the product owner:
+
+- **Admin text awaiting approval (R13.4, decision 41).** The builder rule messages and admin helper strings in `review/PLAYER_FACING_TEXT.md` §6.9 are in the code but not approved. Reason: they had no approved text when the admin page was built; they follow the style of §6.4b. Approve or replace before merge.
+- **Opening Turn_Step above the 180 s design target in some runs (R7.10, design §19).** The gate measured 64–98 s, but an implementation run measured 244 s and 260 s (hard limit 300 s). Reason: about 130 SQL statements per charged action on the shared human purchase path. Accepted by the product owner (FR-1); the CI heavy job has not run on this branch yet.
+
+Data model and interfaces:
+
+- **`automaton_turns.upkeep_issues` column** (migration `20261010000000_automaton_turn_upkeep_issues`), not in design §6.1. Reason: upkeep issues needed a place on the Turn_Record (R7.8).
+- **Request key separator `.` instead of `:` (design §9.3).** Reason: `buildEconomicOperationEventId` rejects `:` in a request key. Same components and determinism.
+- **`updateStance` / `updateYieldThreshold` return `{ robot, stance }` / `{ robot, yieldThreshold }`** instead of the robot only. Reason: the route needs the normalised value for its message and the `stance_changed` achievement.
+- **Admin strategy export returns JSON `{ fileName, definition, upgradeWarning }`** instead of the bare file. Reason: R6.14 requires the upgrade warning in the export response.
+- **Error codes added beyond the design**: `AUTOMATON_PROFILE_INVALID` (stored Team_Names / Event_Order fail their shape; R11.8 reserves `invalid_parameters` for strategy targets) and `AUTOMATON_NO_PROGRESS` (an action that commits nothing fails the turn instead of looping to the 10 s budget). Both are in `docs/guides/ERROR_CODES.md`.
+
+Behaviour details chosen where the spec was silent:
+
+- **Saving-streak alert fires once**, on the 15th consecutive turn Saving on the same Goal, not on every later turn.
+- **Draft creation does not run the R3.7 blueprint check.** Reason: a new draft has no blueprints yet and R3.7 does not list creation; activation (R2.3) and strategy assignment enforce it.
+- **Draft preview is refused while the draft breaks a builder rule.** Reason: an invalid Build_Order cannot be interpreted safely.
+- **Strategy startup check with the database down** checks the files and starts with a warning. Reason: refusing to boot without a DB would change today's boot behaviour; a missing version is still caught at turn time (R6.6).
+- **Automaton purchases are not fed to the per-request spending-anomaly monitor** (`securityMonitor.trackSpending` needs a client request). Event-log rows are written as for human purchases.
+- **Opening-build tolerance (design §14.1 left it open):** robots, facility levels and the final Saving Goal must match the approved tables exactly; credits within ₡15,000 (0.5% of ₡3,000,000), because the tables' attribute figures are estimates.
+
+Placement and tooling:
+
+- **ACC deploy step "Sync Automaton catalogue" runs after the seed** instead of directly after `prisma migrate deploy` (design §15.3). Reason: Catalogue_Sync validates weapon names against the seeded `weapons` table. Still after migrate (R10.6).
+- **Season_Rollover persistence test (7.4) runs in the heavy tier**, not integration as VC3's prose says; VC4 runs it.
+- **I1 property test lives in `src/utils/__tests__/`** beside its helper, not in `services/automaton/__tests__/`.
+- **`tsconfig.json` excludes `src/**/__tests__/**` from the build.** Reason: a test helper imports `prisma/seed`, which broke `tsc`; `typecheck:tests` still checks it.
+- **Workflow change.** The Playwright steps in `ci.yml` and `deploy.yml` gained `DATABASE_URL` for the e2e teardown (decision 43); no gate, timeout or job dependency changed.
+
+Frontend:
+
+- **Badge background (design §18 `bg-info/15`)** is an opaque 15% `info` tint over the page background. Reason: the translucent tint gives 4.01:1 / 3.45:1 and fails R12.1's 4.5:1; the opaque one gives 4.85:1. Design §18 is updated.
+- **Hall of Records badge on every record that names a stable (decision 42)**, wider than the original §1 table. Player-visible; approved 10 Oct 2026. Covered by Vitest and integration tests, not Playwright, because a local e2e Automaton does not reliably top a record list.
+- **Battle report at 320 px scrolls by 8 px** because of the pre-existing `ArenaCanvas` 300 px minimum (outside spec 55). The badge surfaces themselves do not overflow at any width.
+
+Not changed on this branch:
+
+- **"Glass" and other names with a profane substring.** The catalogue stable-name rule reuses `validateStableName`; its substring match is fixed on `bugfix/profanity-whole-word-matching`. None of the 11 starter names is affected.
+- **`calculateDiscountedUpgradeCost`** (frontend onboarding preview) differs by ₡1 from the charged cost on 926 of 5,460 pairs. Pre-existing; Automaton pricing uses the charged formula.

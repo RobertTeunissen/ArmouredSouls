@@ -226,7 +226,7 @@ Spec #48 gives the Overview_Row a correct mobile layout: single column below 102
 **Not in scope for #48**, deliberately: that spec's mobile requirements are about the Overview_Row not breaking, not about the page being pleasant on a phone.
 
 ### #61 — Stable Franchises & Backstories
-**Source**: Spec #55 (Automaton Stables) review, Oct 2026 — `.kiro/specs/to-do/55-automaton-stables/` (`review/README.md` decision 11)
+**Source**: Spec #55 (Automaton Stables) review, Oct 2026 — `.kiro/specs/done-october26/55-automaton-stables/` (`review/README.md` decision 11)
 **Priority**: Low — flavour, no gameplay effect
 
 Spec #55 gives every Automaton stable a franchise label (e.g. "Transformers — Autobots") and a short backstory (admin-only in-world flavour text about the stable as a whole: who they are and how they fight), but shows neither to players: human stables have no equivalent, and adding one only for Automatons was rejected. The fields are stored on `AutomatonProfile` and edited in the admin Automatons page, so the content already exists when this item is picked up.
