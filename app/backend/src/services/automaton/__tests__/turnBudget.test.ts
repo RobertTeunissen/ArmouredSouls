@@ -31,6 +31,16 @@ describe('turnBudget (R5.11, design §8.8)', () => {
     });
   });
 
+  it('starts a multi-step action only when all its charged steps fit under the limit (R5.4 + R5.11)', () => {
+    expect(checkTurnBudget({ chargedActions: 56, startedAtMs: 0 }, 0, 4)).toEqual({ exhausted: false });
+    expect(checkTurnBudget({ chargedActions: 57, startedAtMs: 0 }, 0, 4)).toEqual({
+      exhausted: true, reason: 'turn_budget_exhausted', limit: 'actions',
+    });
+    // A free action (0 charged steps) still stops once 60 actions ran.
+    expect(checkTurnBudget({ chargedActions: 59, startedAtMs: 0 }, 0, 0)).toEqual({ exhausted: false });
+    expect(checkTurnBudget({ chargedActions: 60, startedAtMs: 0 }, 0, 0)).toMatchObject({ exhausted: true, limit: 'actions' });
+  });
+
   it('reports the action limit first when both limits are reached', () => {
     expect(checkTurnBudget({ chargedActions: 60, startedAtMs: 0 }, 20_000)).toMatchObject({ limit: 'actions' });
   });

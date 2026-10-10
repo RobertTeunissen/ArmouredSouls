@@ -70,7 +70,7 @@ export function facilityChain(
 }
 
 /** Catalogue weapon by name; a name missing from the catalogue fails the turn (R7.8). */
-export function weaponByName(ctx: GoalContext, weaponName: string): WeaponFacts {
+export function weaponByName(ctx: Pick<GoalContext, 'weapons'>, weaponName: string): WeaponFacts {
   const weapon = ctx.weapons.get(weaponName);
   if (!weapon) {
     throw new AutomatonError(

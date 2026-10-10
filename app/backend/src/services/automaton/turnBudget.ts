@@ -32,12 +32,15 @@ export type TurnBudgetCheck =
   | { exhausted: true; reason: typeof TURN_BUDGET_EXHAUSTED; limit: 'actions' | 'time' };
 
 /**
- * Whether the turn may start another charged action. The action limit is
- * checked first, so a turn at 60 actions reports `actions` even when it is
- * also out of time.
+ * Whether the turn may start the next action, which has `nextChargedSteps`
+ * charged steps (`chargedStepCount`; default 1). An action runs all its steps
+ * in the same turn (R5.4), so it starts only when all of them fit under the
+ * 60-action limit (R5.11); otherwise the turn stops before it and the next
+ * turn plans it again. The action limit is checked first, so a turn at 60
+ * actions reports `actions` even when it is also out of time.
  */
-export function checkTurnBudget(state: TurnBudgetState, nowMs: number): TurnBudgetCheck {
-  if (state.chargedActions >= TURN_ACTION_LIMIT) {
+export function checkTurnBudget(state: TurnBudgetState, nowMs: number, nextChargedSteps = 1): TurnBudgetCheck {
+  if (state.chargedActions >= TURN_ACTION_LIMIT || state.chargedActions + nextChargedSteps > TURN_ACTION_LIMIT) {
     return { exhausted: true, reason: TURN_BUDGET_EXHAUSTED, limit: 'actions' };
   }
   if (nowMs - state.startedAtMs >= TURN_TIME_BUDGET_MS) {

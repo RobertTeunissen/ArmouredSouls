@@ -107,6 +107,8 @@ const DB_DEPENDENT = [
   'tests/integration/automatonRarity.test.ts',
   'tests/integration/automatonStableTypeMigration.test.ts',
   'tests/integration/automatonUserFilter.test.ts',
+  'tests/integration/automatonStableFacts.test.ts',
+  'tests/integration/automatonExecution.test.ts',
   // Spec #55 — Domain_Service_Extraction (task group 2)
   'src/services/economy/__tests__/facilityUpgradeService.test.ts',
   'src/services/economy/__tests__/weaponPurchaseService.test.ts',

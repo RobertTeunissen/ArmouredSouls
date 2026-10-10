@@ -120,16 +120,16 @@ export function simulateTurn(
     const next = plan.next;
     if (next === null) return finish({ kind: 'build_order_done' }, plan);
     if (next.kind === 'saving') return finish({ kind: 'saving', outcome: next }, plan);
-    if (checkTurnBudget({ chargedActions, startedAtMs: 0 }, 0).exhausted) {
+    const { action, cost, goalId } = next;
+    const charged = chargedStepCount(action);
+    if (checkTurnBudget({ chargedActions, startedAtMs: 0 }, 0, charged).exhausted) {
       return finish({ kind: TURN_BUDGET_EXHAUSTED }, plan);
     }
 
-    const { action, cost, goalId } = next;
     const projected = projectAction(current, action, ctx);
     if (JSON.stringify(projected) === JSON.stringify(current)) {
       throw new ProjectionError(`Goal ${goalId} planned ${action.kind} without changing the facts`);
     }
-    const charged = chargedStepCount(action);
     steps.push({ goalId, action, cost, balanceBefore: current.balance, chargedSteps: charged });
     chargedActions += charged;
     current = projected;

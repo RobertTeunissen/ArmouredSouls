@@ -38,6 +38,27 @@ export function tuningDiffers(
   return ROBOT_ATTRIBUTES.some((a) => Math.round((current[a] ?? 0) * 100) !== Math.round((desired[a] ?? 0) * 100));
 }
 
+/**
+ * Guard for `setTuningAllocation`, which sums the values as floats in
+ * insertion order and rejects a total above the pool. An allocation that is
+ * exact in hundredths can still sum to pool + 1e-12 in floating point; this
+ * lowers the last non-zero attribute by 0.01 until the float sum fits.
+ * Deterministic, and a no-op for every allocation that already fits.
+ */
+export function fitAllocationToPool(
+  allocation: Record<RobotAttribute, number>,
+  poolSize: number,
+): Record<RobotAttribute, number> {
+  const fitted = { ...allocation };
+  const floatSum = (): number => Object.values(fitted).reduce((sum, value) => sum + value, 0);
+  while (floatSum() > poolSize) {
+    const attribute = [...ROBOT_ATTRIBUTES].reverse().find((a) => fitted[a] >= 0.01);
+    if (attribute === undefined) break;
+    fitted[attribute] = Math.round((fitted[attribute] - 0.01) * 100) / 100;
+  }
+  return fitted;
+}
+
 export interface TuningChange {
   robotId: number;
   allocation: Record<RobotAttribute, number>;
@@ -53,7 +74,10 @@ export function tuningChanges(
   for (const robot of [...facts.robots].sort((a, b) => a.slotIndex - b.slotIndex)) {
     const blueprint = blueprints.find((b) => b.blueprintId === robot.blueprintId);
     if (!blueprint) continue;
-    const allocation = desiredTuningAllocation(facts, robot, weightTable[blueprint.buildFocus]);
+    const allocation = fitAllocationToPool(
+      desiredTuningAllocation(facts, robot, weightTable[blueprint.buildFocus]),
+      getPoolSize(facts.facilities.tuning_bay),
+    );
     if (tuningDiffers(robot.tuning, allocation)) changes.push({ robotId: robot.robotId, allocation });
   }
   return changes;
