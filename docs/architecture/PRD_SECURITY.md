@@ -3,7 +3,7 @@
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
 **Version**: v2.0  
-**Last Updated**: April 10, 2026  
+**Last Updated**: October 10, 2026 (Automaton accounts and admin endpoints, Spec #55)  
 **Status**: ✅ Implemented  
 **Owner**: Robert Teunissen
 
@@ -66,6 +66,15 @@ Security is enforced at multiple layers: input validation at the API boundary (Z
 ### Middleware
 - `authenticateToken` — Validates JWT on every protected route, attaches `user` to request
 - Token version check — Rejects tokens issued before the user's last password change
+- Automaton check (Spec #55) — Rejects any token whose user has `stableType = automaton` through the same 401 path
+
+### Automaton accounts (Spec #55)
+Automaton_Stables are `users` rows nobody can sign in to:
+- **Login:** `POST /login` returns the generic `401 Invalid credentials` for an `automaton` user before `bcrypt.compare`, so the response and timing do not reveal that the account exists.
+- **Tokens:** `authenticateToken` rejects an `automaton` user (401), so even a forged or leaked token for one is useless.
+- **Password and account reset:** `resetPassword` and `performAccountReset` throw `AUTOMATON_ACCOUNT_LOCKED` (409) before hashing or deleting anything.
+- **Password hash:** Activation stores `hashPassword(randomBytes(32).toString('hex'))`; the plain value is never stored or logged.
+- **Public exposure:** player endpoints select only `stableType` for the Automaton_Badge. Franchise, backstory, strategy, Goal_Targets, Team_Names, Event_Order and blueprint data are admin-only; `SENSITIVE_ROBOT_FIELDS` strips the robot's blueprint link. Draft_Automatons have no `users` row and cannot appear in any public listing.
 
 ---
 
@@ -338,3 +347,12 @@ Every new endpoint must be reviewed against this list.
 - **Confirmation token security**: Tokens are UUIDs validated via Zod. Expired/invalid tokens return 410 `PREVIEW_EXPIRED`.
 - **Upload rate limiting**: Per-user limit of 5 uploads per 10-minute window via `express-rate-limit`, keyed by `userId` (runs after `authenticateToken`). Violations tracked by `SecurityMonitor`.
 - **Client-side crop preview**: Frontend renders a 512×512 center-crop preview before upload, reducing unnecessary server round-trips.
+
+### Automaton Admin Endpoints and Image Uploads (Spec #55)
+**Exploit**: Abuse of the Automaton admin API (spending on behalf of stables, path traversal through image uploads, leaking admin-only stable data).  
+**Prevention**:
+- **Admin only**: every `/api/admin/automatons` route runs `authenticateToken` + `requireAdmin` (with the shared admin rate limit of 120 requests per minute) and validates params, query and body with `validateRequest` + Zod.
+- **Audited**: every mutation is recorded with `recordAction` (`automaton.*` operations, Catalogue_Key, field names only, never submitted values), including rejected requests.
+- **No direct game control**: there is no endpoint to run a turn, delete an active stable, change a balance, or edit live robots, teams, subscriptions or weapons. Automaton spending happens only in the Turn_Step through the domain services and `Credit_Mutation_Service`.
+- **Upload path guards**: blueprint images go to `uploads/automatons/{catalogueKey}/{uuid}.webp`. The path is built from validated components only (`catalogueKey` matches `^[a-z0-9-]{3,40}$`, the file name is a generated UUID), and the resolved path must sit under the store directory with a trailing separator. Multer memory storage with a 2 MB limit; `fileValidationService` checks magic bytes and `imageProcessingService` re-encodes to 512×512 WebP. Content moderation is not applied, matching the admin changelog image precedent; the request is admin-only and audited.
+- **Catalogue tooling**: Catalogue_Sync and Catalogue_Unpack validate every file with the strict catalogue schema (unknown keys such as `image` are rejected) and refuse to overwrite files without `--force`; sync never deletes anything.

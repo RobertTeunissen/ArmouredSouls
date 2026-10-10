@@ -1,6 +1,6 @@
 # Season System
 
-**Spec:** #45 · **Status:** Implemented · **Last updated:** July 2026
+**Spec:** #45 (Automaton additions: #55) · **Status:** Implemented · **Last updated:** October 2026
 
 Authoritative description of the season structure. This supersedes backlog item #41, which had prestige and achievements persisting across seasons.
 
@@ -37,7 +37,7 @@ At a Season_Rollover everything below is archived, then deleted.
 
 **Deleted:** `robots`, `battle_participants`, `tuning_allocations`, `subscriptions`, `weapon_inventory`, `weapon_refinement`, `facilities`, `team_battles`, `team_battle_members`, `standings`, `scheduled_matches_v2`, `scheduled_match_participants`, `tournaments`, `tournament_matches`, `user_achievements`.
 
-**Purged history:** `battles`, `battle_summaries`, `audit_logs`, `cycle_snapshots`, `financial_ledger`, `league_history`, `leaderboard_cache`, `practice_arena_daily_stats`. The global cycle counter resets to 0.
+**Purged history:** `battles`, `battle_summaries`, `audit_logs`, `cycle_snapshots`, `financial_ledger`, `league_history`, `leaderboard_cache`, `practice_arena_daily_stats`, `automaton_turns` (Spec #55 Turn_Records). The global cycle counter resets to 0.
 
 **Reset on every Human_Stable:** `currency` to ₡3,000,000 regardless of prior balance, `prestige` to 0, all four championship counters to 0, `pinnedAchievements` emptied, `totalPracticeBattles` to 0.
 
@@ -59,6 +59,16 @@ Their competitive results **do** survive, as denormalized text in `season_standi
 
 The classification column defaults to `false` deliberately: a misclassified bot survives a rollover as a dead account, which is recoverable, whereas a misclassified human would be deleted.
 
+Since Spec #55 the classification is explicit in `users.stable_type` (`human`, `generated`, `automaton`) with the invariant `is_generated = true` ⇔ `stable_type = generated`. `deleteGeneratedStables` additionally excludes `stable_type = automaton`.
+
+### Automaton stables (Spec #55)
+
+Active_Automatons are `is_generated = false`, so every stage treats them as Human_Stables: they are archived, counted by verify, and reset by the Human_Reset_Contract (₡3,000,000, prestige 0, robots and facilities deleted). Their persistent definition lives outside the reset scope: `automaton_profiles`, `automaton_robot_blueprints`, `automaton_strategy_drafts`, `automaton_program_settings` and uploaded images in `uploads/automatons/` are never touched by a rollover. `automaton_turns` is purged with the history tables. Preserved-state achievements are re-awarded to Automatons like humans, because Activation sets `hasCompletedOnboarding = true`.
+
+The archive records the Stable_Type: `stable_season_archives.stable_type`, and `subject_stable_type` on `season_standing_snapshots` and `season_accolades` alongside `is_generated_subject`. The season archive page uses it for the Automaton_Badge.
+
+No `settlement` Automaton_Turn runs on the boundary settlement, so Automatons spend nothing that the reset erases. Stage 5 gives each Automaton its `season_open` turn instead. See `PRD_AUTOMATON_STABLES.md`.
+
 ### Bot population after a rollover
 
 Because the global cycle counter resets to 0 and `generateBattleReadyUsers(cycleNumber)` creates N stables on cycle N, the bot population restarts at one stable on cycle 1 and grows with the season — roughly 55 stables by cycle 10 and 210 by cycle 20. Early-season matchmaking pools are therefore thin; the existing pipeline handles this by fabricating an in-memory bye robot. This is a known property, not a defect.
@@ -76,7 +86,12 @@ Stage 3 PURGE    — delete generated stables (200 per transaction), reset
                    open the next season in preparation.
 Stage 4 POST     — orphan sweep, VACUUM, preserved-state achievement
                    re-award. All non-fatal.
+Stage 5 AUTOMATON — `season_open` Turn_Step (Spec #55): every
+                   Active_Automaton takes its opening-build turn in the
+                   new season. Non-fatal; runs for every rollover trigger.
 ```
+
+The orphan sweep is scoped to `uploads/user-robots/`, so Automaton images in `uploads/automatons/` are never swept.
 
 Stage 3 is batched by user so an interruption leaves whole users done and whole users untouched, never a half-reset stable. Stage 4 is non-transactional because `VACUUM` cannot run inside a transaction block.
 
@@ -126,6 +141,7 @@ Deleting an image nulls `image_url` on affected archive rows so history renders 
 
 - `docs/game-systems/PRD_CYCLE_SYSTEM.md` — settlement steps and phase gating
 - `docs/game-systems/PRD_AUTO_USER_GENERATION.md` — generated stable lifecycle
+- `docs/game-systems/PRD_AUTOMATON_STABLES.md` — Automaton stables across rollovers
 - `docs/architecture/PRD_SERVICE_DIRECTORY.md` — cron schedule and suspension
 - `docs/architecture/DATABASE_SCHEMA.md` — table definitions
 - `docs/guides/ADMIN_PANEL_GUIDE.md` — admin season controls

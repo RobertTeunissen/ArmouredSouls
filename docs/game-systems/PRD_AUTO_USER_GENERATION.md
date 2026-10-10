@@ -934,3 +934,19 @@ Generated stables receive no per-stable or per-robot archive, but their league p
 Because the global cycle counter resets to 0 at rollover, generation restarts at one stable on cycle 1 and grows with the season — roughly 55 stables by cycle 10 and 210 by cycle 20. Early-season matchmaking pools are consequently thin and rely on the existing in-memory bye robot. This is a known property of the reset, not a defect.
 
 Generated robots reference shared static assets at `/assets/robots/{tier}_512x512.webp`. Nothing in the rollover touches that directory, so newly generated robots in a new season have images with no per-season provisioning.
+
+## Generated_Stables vs Automaton_Stables (Spec #55)
+
+Spec #55 added a second kind of computer-run stable. The two are distinct and do not share code:
+
+| | Generated_Stable | Automaton_Stable |
+|---|---|---|
+| Created by | `generateBattleReadyUsers` per settlement; seed `test_user_*` | Activation of a Draft_Automaton in `/admin/automatons` |
+| `users.stable_type` | `generated` | `automaton` |
+| `users.is_generated` | `true` | `false` |
+| Username | `auto_*`, `test_user_*` | `automaton_{catalogueKey}` |
+| Grows during a season | No; built once at creation | Yes; buys upgrades every cycle by its Upgrade_Strategy |
+| At Season_Rollover | Deleted; results kept as snapshot text | Archived and reset like a human, then rebuilds from its persistent profile |
+| Player-visible marker | "bot" chip in the season archive | Automaton_Badge |
+
+`users.stable_type` is set at creation through `stableTypeForCreation` (`src/utils/stableType.ts`): `generateBattleReadyUsers` and the seed write `generated` whenever they write `is_generated = true`, so the invariant `is_generated = true` ⇔ `stable_type = generated` holds. The migration backfilled `generated` for every existing `is_generated` row. The generator, its tiers and `deleteGeneratedStables` are otherwise unchanged; the latter also excludes `stable_type = automaton` as a defensive guard. See `PRD_AUTOMATON_STABLES.md`.

@@ -1,6 +1,6 @@
 # Armoured Souls — Design System & User Experience Guide
 
-**Last Updated**: February 1, 2026  
+**Last Updated**: October 10, 2026 (Automaton badge pattern, Spec #55)  
 **Status**: Master Reference Document  
 **Purpose**: Comprehensive guide for implementing visual design and user experience across all pages
 
@@ -1491,6 +1491,33 @@ Based on dark theme aesthetic with industrial metallic tones:
 - Line weight: 2px for line icons
 - Hover: Slight scale-up (1.1×) if interactive
 - Accessibility: Always paired with label or aria-label
+
+### Automaton Badge Pattern (Spec #55)
+
+**Purpose**: Marks an Automaton_Stable (computer-run stable) next to its stable name. It is a label, not an explanation: "Automaton" and nothing more, no tooltip.
+
+**Component**: `app/frontend/src/components/AutomatonBadge.tsx`
+
+| Prop | Values | Default | Effect |
+|---|---|---|---|
+| `stableType` | `human` \| `generated` \| `automaton` | — | Renders nothing unless `automaton` |
+| `size` | `md` \| `sm` | `md` | `md`: `text-xs px-2 py-0.5 rounded`, the same pill as the "YOU" badge (headers, banners, table rows). `sm`: 10 px uppercase, matching the season-archive "bot" chip |
+| `compact` | boolean | `true` | Below 640 px the label becomes `sr-only` (`sr-only sm:not-sr-only`) and the pill shows only the gear |
+
+**Look**:
+- Colour: the existing `info` purple (`--color-info: #a371f7`); no new token. Text and icon `text-info`, border `border-info/40`.
+- Background: an **opaque** 15% `info` tint mixed over the page background, `bg-[color-mix(in_srgb,var(--color-info)_15%,var(--color-background))]`. A translucent `bg-info/15` was rejected: it gives `text-info` only 4.01:1 on `surface` and 3.45:1 on `surface-elevated` cards; the opaque tint gives 4.85:1 on every card colour (≥ 4.5:1, checked in `AutomatonBadge.test.tsx` from the `index.css` tokens).
+- Icon: gear as an inline SVG, `aria-hidden="true"`, `focusable="false"`. No image asset or icon library.
+- Purple because blue is taken by links and "YOU", grey by the "bot" chip, and green/amber/red by results and warnings.
+
+**Placement**:
+- Inline directly after the stable name, before a "YOU" badge if both apply. Never on a line of its own: rows use a `flex-nowrap` container with the name `min-w-0 truncate`; headings keep the badge attached to the last word (`whitespace-nowrap` around last word + badge).
+- `compact={false}` (full label at every width) only in the stable profile heading and the robot detail owner block, which have room.
+- Surfaces: `OwnerNameLink` (leaderboards, league standings, Hall of Records economic and prestige records), `StableViewPage` header, `RobotDetailPage` owner block, `BattleResultBanner`, `TeamBattleMetrics`, `SeasonArchivePage` (`sm`).
+
+**Accessibility**: accessible name "Automaton" from the visible (or visually hidden) label; not interactive, adds no touch target and no tab stop. Generated_Stables keep their existing "bot" chip and never get this badge.
+
+**Responsive**: from 320 px no badge surface overflows horizontally; compact below 640 px, full label from 640 px (including ≥ 1024 px). Verified by Playwright `tests/e2e/automaton-badge.spec.ts` at 320, 360, 768 and 1024 px.
 
 ---
 

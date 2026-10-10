@@ -1,6 +1,6 @@
 # Product Requirements Document: Achievement & Milestone System
 
-**Last Updated**: April 20, 2026
+**Last Updated**: October 10, 2026 (Automaton stables, Spec #55)
 **Status**: ✅ Implemented (Spec #27)
 **Owner**: Robert Teunissen
 **Epic**: Achievement System (Backlog #8) + Game Loop 4 Audit (Backlog #6)
@@ -866,3 +866,11 @@ For ACC specifically: with top prestige at ~860 and top fame at ~1,234, most pla
 Each season's unlocked count, the count available at the time, and the full list of unlocked achievement identifiers are recorded in `stable_season_archives`, so the collection becomes a per-season scorecard rather than a lifetime list.
 
 Achievement rewards (credits and prestige) are also season-scoped, since both reset at the boundary.
+
+## Automaton Stables (Spec #55)
+
+**Automatons earn achievements.** After each purchase or settings action the Automaton executor calls the same `achievementService.checkAndAward` events the player routes call, with the same "failures don't block" pattern (`awardQuietly` in `services/automaton/upkeep/freeUpkeep.ts`). Battle, standing, tournament and season achievements are earned exactly as by a human (decisions 3 and 33). Achievements that only a manual action triggers, such as Manual_Repair or practice battles, are never earned, because Automatons never take those actions.
+
+**Preserved-state re-award.** Activation sets `hasCompletedOnboarding = true`, so `reawardPreservedStateAchievements` re-grants the onboarding achievement to every Active_Automaton after each Season_Rollover, as it does for humans (decision 3: parity kept).
+
+**Rarity counts humans only** (R1.8, decision 38). The "Earned by x of n players" figures ignore Automatons. `refreshRarityCache` (`services/achievement/achievementQueries.ts`) excludes `stableType = automaton` in both the earned-count query and the active-player count, next to the existing `auto_*` and `test_user_*` exclusions. Automatons still hold their achievements; only the percentage shown to players leaves them out.

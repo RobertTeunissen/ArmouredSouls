@@ -1,6 +1,6 @@
 # Armoured Souls — Deployment Guide
 
-**Last Updated**: April 9, 2026  
+**Last Updated**: October 10, 2026 (Automaton Catalogue_Sync step, Spec #55)  
 **Status**: ✅ Current
 
 How to deploy Armoured Souls to ACC (acceptance) and PRD (production) environments.
@@ -74,7 +74,7 @@ Every push to `main` triggers the full pipeline:
 
 1. **Stage 1**: Backend unit, integration, and heavy tests plus `test:tiers:verify`, alongside frontend build/lint/unit tests (parallel). These checks are blocking gates.
 2. **Stage 2**: E2E tests — provisions a PostgreSQL 17 service container, runs database migrations, seeds test data (`pnpm exec prisma db seed`), starts the backend server, builds the frontend, installs Playwright Chromium, and runs the full Playwright E2E suite. Uploads HTML report and failure artifacts (screenshots, traces) to GitHub Actions. 15-minute timeout. Blocks deployment on failure.
-3. **Deploy**: rsync artifacts → `pnpm install --frozen-lockfile --production` → pre-migration backup → `prisma migrate deploy` → PM2 restart
+3. **Deploy**: rsync artifacts → `pnpm install --frozen-lockfile --production` → pre-migration backup → `prisma migrate deploy` → `prisma db seed` → Automaton Catalogue_Sync (ACC only, see below) → PM2 restart
 4. **Enhanced health check**: Validates HTTP 200 + `disk.status` != "critical" + `modules.status` == "ok". Catches partial builds and disk issues.
 5. **Deploy notifications**: On success → Discord "✅ Deploy complete". On failure → Discord "🚨 Deploy FAILED" with link to the Actions run.
 6. **Smoke tests**: Health endpoint, frontend load, login API
@@ -91,7 +91,7 @@ Production deploys require explicit approval:
 4. Click **Run workflow**
 5. A reviewer must approve the deployment in the GitHub environment protection rules
 
-The PRD pipeline runs the same steps as ACC but uses `PRD_*` secrets and targets the production VPS.
+The PRD pipeline runs the same steps as ACC but uses `PRD_*` secrets and targets the production VPS. Exception: the Automaton Catalogue_Sync step runs on ACC only (Spec #55 scope); adding it to PRD is a future spec.
 
 ---
 
@@ -323,3 +323,25 @@ Note: The database migration (new tables, renamed event types) is forward-only. 
 Financial capture is part of the normal backend deployment. Once the existing database migration and this backend version are deployed, every new current-economy mutation uses `Credit_Mutation_Service` and commits its balance update, `FinancialLedger` row, and paired `financial_transaction` audit row atomically.
 
 There is no feature flag, cycle gate, rollout command, startup write, or post-deploy action. Existing rows without a `financialEventId` remain readable legacy history and are never reconstructed or changed.
+
+## Spec 55 — Automaton Catalogue_Sync
+
+The ACC job of `.github/workflows/deploy.yml` has a step **Sync Automaton catalogue** directly after **Seed database** and before the PM2 restart:
+
+```bash
+set -euo pipefail
+cd /opt/armouredsouls/backend
+bash /opt/armouredsouls/scripts/with-db-retry.sh pnpm run automaton:sync
+```
+
+It reads `prisma/automaton-catalogue/*.json` (in the rsynced backend source) and `/opt/armouredsouls/frontend/public/assets/automatons/` (in the rsynced frontend source). It runs after the seed because Catalogue_Entries are validated against the `weapons` table, which the seed maintains. What it does:
+
+- New Catalogue_Keys become Draft_Automatons. Nothing is activated and no existing profile is changed, apart from filling a missing blueprint image from its Repository_Image.
+- A stable-name conflict skips that entry, raises an `automaton_catalogue_sync_conflicts` alert and does **not** fail the deploy.
+- The summary is stored and shown in `/admin/automatons` → Catalogue.
+
+**Failure meaning.** A non-zero exit fails the deploy before the PM2 restart, so the previous backend keeps running against the already-migrated database. It means at least one catalogue file is invalid (schema, unknown weapon, Refinement_Plan, Team_Names count, robots target above the blueprints) or the database was unreachable after the retries. Sync validates every file before writing, so a validation failure writes nothing. Fix the file in a pull request (CI's `catalogueSchema.test.ts` catches the same rules) and redeploy. There is no `continue-on-error`; do not add one.
+
+**Server start.** The backend also checks every Strategy_Definition_File in `dist/config/automaton-strategies/` at start and refuses to start when a file is invalid or a profile's pinned version has no file. The health check then fails and the deploy is reported failed. Restore the file; never delete a strategy file that a profile still uses.
+
+Operator procedures: [AUTOMATON_OPERATIONS_GUIDE.md](../AUTOMATON_OPERATIONS_GUIDE.md).

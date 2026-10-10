@@ -20,7 +20,7 @@ Armoured Souls is a browser-based, turn-based robot-combat strategy game with le
 - `docs` — architecture, PRDs, guides, balance changes, design, and implementation notes.
 
 ## System map
-Combat, leagues, tournaments, teams/tag team, KotH, Grand Melee, Booking Office subscriptions, cycles/settlement, fame/prestige, facilities, weapons, tuning, achievements, changelog, admin portal, dashboard, monitoring, seasons, guided setup, and Finance Center are implemented domains. Use the relevant service directory and PRD before changing behavior; the canonical service map is `docs/architecture/PRD_SERVICE_DIRECTORY.md`.
+Combat, leagues, tournaments, teams/tag team, KotH, Grand Melee, Booking Office subscriptions, cycles/settlement, fame/prestige, facilities, weapons, tuning, achievements, changelog, admin portal, dashboard, monitoring, seasons, guided setup, Finance Center, and Automaton stables are implemented domains. Use the relevant service directory and PRD before changing behavior; the canonical service map is `docs/architecture/PRD_SERVICE_DIRECTORY.md`.
 
 Important product boundaries:
 - **Credits:** `User.currency` is authoritative. Current-economy mutations go through `Credit_Mutation_Service`; ledger and financial-audit pairing rules live in `docs/guides/FINANCIAL_LEDGER_AUDIT_GUIDE.md`.
@@ -29,6 +29,7 @@ Important product boundaries:
 - **Battle retention:** permanent battle data belongs in summaries/proper columns, not ephemeral `battle_log`.
 - **Seasons:** live data is current-season scoped; cross-season history comes from archive tables only.
 - **Competitive ranking:** standings are the source of truth for league/KotH/tag-team ranking data.
+- **Stable types:** `User.stableType` is `human`, `generated` (`isGenerated` bots, deleted at rollover) or `automaton` (persistent computer-run Automaton stables; no login, no grants, no Manual_Repair; turns run after settlement). See `docs/game-systems/PRD_AUTOMATON_STABLES.md`.
 - **Shared formulas:** never duplicate a frontend/backend formula; put it in `app/shared/utils/`.
 
 ## Documentation map

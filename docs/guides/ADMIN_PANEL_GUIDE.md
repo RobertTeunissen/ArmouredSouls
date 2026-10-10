@@ -28,6 +28,7 @@ All pages manage their own data fetching. The sidebar collapses to icons on narr
 | | League Health | `/admin/league-health` | Per-league robot counts, ELO averages, instance counts |
 | | Weapons | `/admin/weapons` | Weapon popularity, type breakdown, ownership stats |
 | **Player Management** | Players | `/admin/players` | Player list with tabs (New Players, Auto-Generated, At-Risk), churn risk, engagement, search, detail slide-over |
+| | Automatons | `/admin/automatons` | Automaton stables: status bar, stables, strategies, editor, catalogue (Spec #55) |
 | | Economy | `/admin/economy` | Credit circulation, balance distribution, facility adoption |
 | **Security & Moderation** | Security | `/admin/security` | Security events, severity summary, flagged users |
 | | Image Uploads | `/admin/image-uploads` | Upload history, moderation events, orphan cleanup |
@@ -65,7 +66,7 @@ All pages use the `AdminFilterBar` component for filter controls — pill-shaped
 KPI cards showing total users, new users (7d), total robots, battles (24h), total battles, active users (7d), current cycle, and last cycle timestamp. Below the KPIs: system stats grid with robot tier breakdown, match scheduling, battle statistics (overall and per-type: league/tournament/tag team/KotH), economy overview, facility stats, weapon stats, stance/loadout/yield distributions.
 
 **API:** `GET /api/admin/dashboard/kpis`, `GET /api/admin/stats`
-**Filter:** Real / Auto / All user filter
+**Filter:** Real / Auto / Automatons / All user filter
 
 ### Cycle Controls (`/admin/cycles`)
 
@@ -98,7 +99,26 @@ Unified player management page combining player listing, engagement monitoring, 
 - Facility list
 - Password reset form
 
-**API:** `GET /api/admin/users/recent?cycles=N&filter=real|auto|all`, `GET /api/admin/users/at-risk`, `GET /api/admin/users/search?q=...`, `GET /api/admin/users/:id`, `POST /api/admin/users/:id/reset-password`
+**API:** `GET /api/admin/users/recent?cycles=N&filter=real|auto|automaton|all`, `GET /api/admin/users/at-risk`, `GET /api/admin/users/search?q=...`, `GET /api/admin/users/:id`, `POST /api/admin/users/:id/reset-password`
+
+A password reset on an Automaton account is refused with `AUTOMATON_ACCOUNT_LOCKED` (409): Automaton accounts cannot log in.
+
+### Automatons (`/admin/automatons`, Spec #55)
+
+Manages Automaton_Stables on any environment. Title "Automaton Stables"; NAV entry "Automatons" under Player Management. Operator procedures (activation in batches, incidents, export and strategy workflow) are in [AUTOMATON_OPERATIONS_GUIDE.md](AUTOMATON_OPERATIONS_GUIDE.md); product rules in [PRD_AUTOMATON_STABLES.md](../game-systems/PRD_AUTOMATON_STABLES.md).
+
+**Status_Bar** (above every section): Program_Switch with confirmation, last Turn_Step (`Cycle {n}` / `Prep {n}` / `Season start`, time, stables processed, duration), failed-last-cycle count and Needs attention count; both counts link to the Stables section filtered on Needs attention.
+
+**Sections** (`TabLayout`: tabs at ≥ 1024 px, stacked sections below; the active tab is kept in `?tab=`):
+
+- **Stables** — list with status, strategy, robots, balance, last cycle and Needs attention reason. Filter chips All · Active · Draft · Needs attention. **Activate all drafts** with confirmation (prefer activating in batches; see the operations guide).
+- **Strategies** — the **Strategy_Comparison** for the current season (stables, robots average/target, prestige, best tier reached, credits, win rate vs humans; a human reference row when humans own robots), the **Strategy_Library** (strategies, versions, stables per version, **Upgrade** with dry run and confirmation, **New version**, **New strategy**) and the **Strategy_Builder** (numbered Goal list with move up/down, defaults and bounds, inline rule errors, draft preview on a stable and on a fresh stable, **Save draft**, **Export strategy file**).
+- **Editor** — stable picker, **New stable**, **Delete draft stable** (drafts only), **Export**, **Save changes**. Cards: Stable (name, franchise, backstory, strategy, Event_Order with move buttons), Teams (Team_Rule teams with names and Formed / Waits for robot {n}), Build order (numbered Goals with editable targets and Turn_Preview statuses, **Preview next cycle**, per-robot attribute plan), blueprints (`BlueprintEditor`: loadout, stance, yield, Build_Focus, Weapon_Path per hand, Refinement_Plan, **Upload image**, **Add blueprint**, **Delete blueprint**), Cycle history (Turn_Records), **Activate** with confirmation.
+- **Catalogue** — last Catalogue_Sync summary (added, present, images filled, conflicts), **Export this stable** / **Export all**.
+
+There are no controls to run a turn, delete an active stable, change a balance or edit live robots, teams, subscriptions or weapons. Every mutation is written to the admin audit log as `automaton.*`.
+
+**API:** `/api/admin/automatons` — `GET /status`, `GET /strategies`, `GET /strategies/comparison`, `POST /strategies/:key/upgrade`, `GET|POST /strategy-drafts`, `GET|PUT|DELETE /strategy-drafts/:id`, `POST /strategy-drafts/:id/preview`, `GET /strategy-drafts/:id/export`, `GET|PUT /program`, `GET /export`, `GET /catalogue/sync-status`, `POST /activate-drafts`, `GET|POST /`, `GET|PATCH|DELETE /:key`, `PUT /:key/strategy`, `POST /:key/blueprints`, `PATCH|DELETE /:key/blueprints/:slot`, `POST /:key/blueprints/:slot/image`, `POST /:key/activate`, `GET /:key/preview`, `GET /:key/turns`. Error codes: [ERROR_CODES.md](ERROR_CODES.md) "Automaton Errors".
 
 ### Economy (`/admin/economy`)
 
@@ -123,7 +143,7 @@ Per-league tier breakdown: robot count, average ELO, number of league instances,
 Weapon popularity ranking, type breakdown, total weapons owned.
 
 **API:** `GET /api/admin/weapons/analytics`
-**Filter:** Real / Auto / All user filter
+**Filter:** Real / Auto / Automatons / All user filter
 
 ### Security (`/admin/security`)
 
@@ -136,21 +156,21 @@ Security event summary (by severity), flagged users, filterable event list with 
 Per-achievement unlock count and rate, participation stats, never-unlocked and high-unlock flags.
 
 **API:** `GET /api/admin/achievements/analytics`
-**Filter:** Real / Auto / All user filter
+**Filter:** Real / Auto / Automatons / All user filter
 
 ### Tuning (`/admin/tuning`)
 
 Tuning allocation adoption rate, total robots with tuning, and attribute ranking showing which attributes players invest tuning points into most.
 
 **API:** `GET /api/admin/tuning/adoption`
-**Filter:** Real / Auto / All user filter
+**Filter:** Real / Auto / Automatons / All user filter
 
 ### Refinement (`/admin/refinement`)
 
 Weapon Refinement (Spec #34) feature usage. Tracks adoption rate (users who refined ≥1 weapon), per-tier slot counts (Hone / Augment / Sharpen / Forge), most-targeted attributes, total credits spent on refinement, and the top 10 spenders.
 
 **API:** `GET /api/admin/refinement/adoption`
-**Filter:** Real / Auto / All user filter
+**Filter:** Real / Auto / Automatons / All user filter
 
 ### Practice Arena (`/admin/practice-arena`)
 
@@ -228,11 +248,12 @@ Many admin pages support filtering data by user type to separate real player act
 
 | Filter | What it shows |
 |--------|---------------|
-| **Real** (default) | Excludes `auto_wimpbot_*`, `auto_averagebot_*`, `auto_expertbot_*`, `test_user_*`, `bye_robot_user` |
+| **Real** (default) | Human players only: excludes `auto_wimpbot_*`, `auto_averagebot_*`, `auto_expertbot_*`, `test_user_*`, `bye_robot_user` and Automaton stables (`stableType = automaton`) |
 | **Auto** | Only auto-generated bot accounts (`auto_*` prefixes) |
+| **Automatons** | Only Automaton stables (`stableType = automaton`, Spec #55) |
 | **All** | Everything including test and system accounts |
 
-The filter is implemented by `buildUserFilter()` in `src/utils/buildUserFilter.ts` which returns a Prisma `UserWhereInput` clause.
+The filter is implemented by `buildUserFilter()` in `src/utils/buildUserFilter.ts` which returns a Prisma `UserWhereInput` clause. The accepted values are `USER_FILTER_TYPES` (`all`, `real`, `auto`, `automaton`), used by every admin `filter` query parameter; the Real Players chip explains "Human players only. Excludes auto-generated bots and Automatons."
 
 ## Daily Cycle System
 
@@ -259,6 +280,7 @@ Individual operations can also be triggered manually via the production job butt
 - [Robot Statistics](../../app/backend/docs/ROBOT_STATISTICS.md)
 - [Achievement System](../game-systems/PRD_ACHIEVEMENT_SYSTEM.md)
 - [Tuning Bay System](../game-systems/TUNING_BAY_SYSTEM.md)
+- [Automaton Stables](../game-systems/PRD_AUTOMATON_STABLES.md) and [Automaton Operations Guide](AUTOMATON_OPERATIONS_GUIDE.md)
 
 ## Season Management (Spec #45)
 

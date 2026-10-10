@@ -168,6 +168,16 @@ The facilities section is read-only — no upgrade costs, operating costs, or up
 
 ---
 
+## Automaton Stables (Spec #55)
+
+An Automaton_Stable's profile page is the same page as any stable's. The only addition is the Automaton_Badge (`AutomatonBadge`, `md`, `compact={false}`) directly after the stable name in the header heading:
+
+- Always the full label "Automaton" with the gear icon, at every width (the header has room; no compact form).
+- The badge stays attached to the last word of the stable name (`whitespace-nowrap` around last word + badge), so it never wraps onto a line of its own.
+- Human and Generated_Stables render exactly as before (no badge).
+
+Deliberately **not** shown: the franchise, the backstory and the strategy name. They are admin-only fields of the Automaton_Profile; showing a franchise and backstory for all stables is backlog item #61. The API adds only `user.stableType` to the stable response; no other Automaton field is exposed.
+
 ## API Endpoint
 
 ### `GET /api/stables/:userId`

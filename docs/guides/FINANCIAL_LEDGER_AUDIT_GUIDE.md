@@ -343,6 +343,40 @@ Live Finance Center ranges are active-season only. Season Rollover purges live l
 
 Cache keys include authenticated stable, active season, exact normalized period, resource, and page/page-size/order where applicable. Only sanitized envelopes may be cached. Current-inclusive entries retain their original `asOf` and use a short TTL; completed history may be immutable. Exact TTL/invalidation and the database read mechanism are implementation evidence recorded in the reporting contract rather than invented here.
 
+## 12a. Automaton stables (Spec #55)
+
+Automaton_Stables write the same records as a human stable. Every charged action of an Automaton_Turn goes through an extracted domain service or `createRobotTransaction` / `executeUpgradeTransaction`, and from there through `Credit_Mutation_Service`: one `FinancialLedger` row plus one paired `financial_transaction` `AuditLog` row per action, in the closed taxonomy (`robot_creation`, `attribute_upgrade`, `facility_upgrade`, `weapon_purchase`, `weapon_sale`, `weapon_refinement`). Settlement components, battle rewards, streaming and repairs of an Automaton are ordinary rows. Nothing in `services/automaton/` writes `User.currency`, and Automatons never produce `repairType: manual` rows. Turn_Steps run after the Serialized_Cycle_Cutover, so their rows book to the new current cycle.
+
+**Request-key scheme.** Each charged step passes a deterministic request key:
+
+```
+automaton.{profileId}.s{seasonNumber}.{trigger}.{slot}.a{attempt}.{ordinal}
+```
+
+`trigger` is `settlement`, `preparation` or `season_open`; `slot` is the Turn_Slot; `attempt` is the Turn_Record attempt; `ordinal` counts charged steps within the attempt (1-based). Components are joined with `.` because `:` is the event-id separator. `createEconomicRequestIdentity` turns it into `financialEventId = operation:{operation}:{requestKey}:{userId}`. A replay with the same key and facts returns the original result; a different action under the same key fails closed with `EVENT_CONFLICT`, which the turn records as `failed`. A retried attempt uses a new `a{attempt}`, so it re-plans without reusing a committed key.
+
+**Audit context.** The Automaton passes `auditContext.automaton` to the service, which merges it with the request's idempotency context into the paired `AuditLog.metadata`:
+
+```json
+{
+  "automaton": {
+    "catalogueKey": "clone-legion", "strategyKey": "swarm", "strategyVersion": 1,
+    "trigger": "settlement", "slot": 41, "attempt": 1, "goalId": "swarm.v1.10.robots"
+  },
+  "idempotency": { "...": "unchanged request replay context" }
+}
+```
+
+The extension can never replace `idempotency`. Free actions (equip, loadout, stance, yield, teams, subscriptions, tuning) are not financial and have no pair.
+
+**Tracing a turn.**
+
+1. In `/admin/automatons` → Editor → Cycle history, or in `automaton_turns`, find the Turn_Record (`profile_id`, `season_number`, `trigger`, `slot`, `attempt`). Its `actions` list each charged step with Goal and cost; `credits_spent` and `credits_received` are the totals.
+2. Find the pairs: `financialEventId LIKE 'operation:%:automaton.{profileId}.s{season}.{trigger}.{slot}.%'`, or filter `AuditLog.metadata->'automaton'` on `catalogueKey`, `trigger` and `slot`.
+3. The pairs' amounts sum to `credits_received − credits_spent`. `end_balance − start_balance` normally shows the same figure, because no other job books to the stable while its turn runs.
+
+`automaton_turns` is purged at Season_Rollover with the ledger and audit rows, so a trace is always within the current season.
+
 ## 13. Release verification
 
 The normal blocking release checks remain required: lint, build, test typecheck/tier verification, backend unit/integration/heavy tests, frontend lint/build/unit tests, and E2E. Finance Center adds blocking coverage for canonical preparation Cycle 1, serialized scheduled/admin cutover races, one-cutoff sequence reconciliation, sale polarity, stored facility itemisation, repair linkage, battle-allocation conservation, source-reference security, cache isolation, pagination invariance, performance budgets, local time, and responsive/keyboard behavior.

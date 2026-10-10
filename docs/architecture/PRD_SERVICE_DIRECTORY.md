@@ -2,13 +2,14 @@
 
 **Project**: Armoured Souls
 **Document Type**: Product Requirements Document (PRD)
-**Version**: v1.3
-**Last Updated**: September 21, 2026
+**Version**: v1.4
+**Last Updated**: October 10, 2026
 **Status**: ✅ Implemented
 **Owner**: Robert Teunissen
 
 **Revision History**:
 
+- v1.4 (Oct 10, 2026): Added the `automaton` domain, the Domain_Service_Extraction services in `economy/` and `robot/`, the admin Automatons router and the catalogue scripts (Spec #55). Inventory now lists 38 directories (also `search`).
 - v1.3 (Sep 21, 2026): Reconciled the service inventory with the current 36 directories and documented newer financial, season, standings, monitoring, retention, and progression domains.
 - v1.2 (Jun 2026): Team tournament slots (15:00, 18:00) went live with real handlers (Spec 38 — Team Battle Tournaments). Added team-tournament orchestration and participant resolution.
 - v1.1 (Jun 2026): Added `matchmaking/` and `team-battle/` domains (Spec 37 — Team Battles 2v2 and 3v3). Updated the cron schedule.
@@ -24,7 +25,7 @@
 
 ## Overview
 
-The backend currently contains **36 domain directories** under `app/backend/src/services/`. Each domain may expose a barrel `index.ts` where appropriate. This document gives detailed descriptions for the established game domains and a complete current inventory below. The inventory is authoritative for directory presence; individual service descriptions should be updated when a domain changes materially.
+The backend currently contains **38 domain directories** under `app/backend/src/services/`. Each domain may expose a barrel `index.ts` where appropriate. This document gives detailed descriptions for the established game domains and a complete current inventory below. The inventory is authoritative for directory presence; individual service descriptions should be updated when a domain changes materially.
 
 ### Current domain inventory
 
@@ -35,6 +36,7 @@ The backend currently contains **36 domain directories** under `app/backend/src/
 | `analytics` | Cross-domain analytics and reporting |
 | `arena` | Spatial combat subsystems |
 | `auth` | Authentication and user management |
+| `automaton` | Automaton stables: turn engine, strategies, catalogue, admin control (Spec #55) |
 | `battle` | Combat orchestration, rewards, and byes |
 | `changelog` | In-game changelog management |
 | `common` | Shared infrastructure and guide content |
@@ -58,6 +60,7 @@ The backend currently contains **36 domain directories** under `app/backend/src/
 | `retention` | Battle-log retention and cleanup |
 | `robot` | Robot lifecycle and upgrades |
 | `scheduling` | Event scopes, timing, and placement byes |
+| `search` | Universal search and search analytics |
 | `season` | Season lifecycle and archives |
 | `security` | Security monitoring and audit support |
 | `standings` | Authoritative competitive standings |
@@ -80,6 +83,29 @@ Admin panel operations — stats dashboards, cycle execution, battle viewer, HP 
 | `adminCycleService` | Bulk cycle execution (`POST /api/admin/cycles/bulk`), snapshot backfill |
 | `adminBattleService` | Battle list queries, battle detail for admin viewer |
 | `adminMaintenanceService` | HP recalculation, robot repair (admin-triggered) |
+
+### automaton/ (Spec #55)
+Automaton_Stables: computer-run stables that play by human rules. Public API in `index.ts`; product rules in `docs/game-systems/PRD_AUTOMATON_STABLES.md`. The module never writes `User.currency` and never references Manual_Repair; every charge goes through the domain services below and `Credit_Mutation_Service`.
+
+| Service | Purpose |
+|---------|---------|
+| `automatonTurnService` | `runTurnStep` / `runTurnStepNonFatal` / `runAutomatonTurn`: cohort, Turn_Records, retries, Turn_Step lease, budgets |
+| `turnPlanner` | Pure planner: walks the Build_Order and returns the next Goal_Outcome |
+| `goals/` | Goal_Library: `robotCountGoal`, `facilityGoal`, `attributeGoal`, `weaponStageGoal`, `refinementGoal` (+ `goalTypes`, `goalSupport`) |
+| `actionExecutor`, `executionSteps`, `robotFitout` | Execute planned actions through the domain services; Robot_Chain and Robot_Fitout |
+| `upkeep/` | Free_Upkeep: `teamUpkeep`, `subscriptionUpkeep` (Event_Allocation), `blueprintSync`, `tuningUpkeep`, `freeUpkeep` |
+| `stableFacts`, `factProjector`, `pricing`, `buildFocus`, `teamRule`, `standingsTier` | Fact loading, pure projection, shared-formula pricing, Build_Focus maths, Team_Rule, tier ordering |
+| `robotNaming`, `requestKeys`, `turnBudget` | Blueprint names with "Mk II" suffixing, deterministic request keys, `TURN_*` budget constants |
+| `strategies/` | `registry` (loads Strategy_Definition_Files, startup check), `strategyDefinitionSchema`, `strategyParameters`, `migrateTargets`, `strategyLibrary`, `strategyDraftService`, `strategyUpgradeService`, `scenarioProjector`, `defaultRegistry` |
+| `automatonProfileService`, `automatonProfileRules` | Profile and blueprint CRUD, validation, Activation |
+| `turnPreview`, `attributePlanView` | Read-only Turn_Preview and per-robot attribute plan |
+| `needAttention`, `automatonStatus`, `turnRecords`, `strategyComparisonService` | Admin read models: Need_Attention, Status_Bar, Turn_Records, Strategy_Comparison (60 s cache) |
+| `programSwitch` | Program_Switch in `automaton_program_settings` |
+| `automatonCatalogueService`, `catalogueSync`, `catalogueExport`, `catalogueUnpack` | Catalogue_Entry schema, insert-only Catalogue_Sync with image fill, export and unpack |
+| `automatonImageService` | Admin blueprint image uploads in `uploads/automatons/{catalogueKey}/` |
+| `automatonObservability` | `[automaton-turns]` summary line and `[automaton-alert]` alerts |
+
+Strategy_Definition_Files live in `src/config/automaton-strategies/{key}.v{n}.json` (copied into `dist/` by `pnpm run build`). Router: `src/routes/adminAutomatons.ts` at `/api/admin/automatons` (`authenticateToken` + `requireAdmin`). Scripts: `scripts/automatonCatalogueSync.ts` (`pnpm run automaton:sync`) and `scripts/automatonCatalogueUnpack.ts` (`pnpm run automaton:unpack`). Call sites: `cycleScheduler.ts`, `adminCycleService.ts`, `seasonRolloverService.ts` Stage 5 (see `PRD_CYCLE_SYSTEM.md`).
 
 ### analytics/
 Data aggregation, leaderboards, and reporting. Read-only services that query across domains.
@@ -172,6 +198,13 @@ Financial systems — repair costs, streaming revenue, facility ROI.
 | `roiCalculatorService` | Facility ROI projections (break-even cycles, net daily benefit) |
 | `facilityRecommendationService` | AI-driven facility upgrade recommendations based on spending patterns |
 | `spendingTracker` | Tracks spending by category for onboarding budget display |
+| `facilityUpgradeService` | `upgradeFacility`, `getFacilityUpgradeRequirement` (extracted from `routes/facility.ts`, Spec #55) |
+| `weaponPurchaseService` | `purchaseWeapon` (extracted from `routes/weaponInventory.ts`, Spec #55) |
+| `weaponSaleService` | `sellWeapon` (extracted from `routes/weaponInventory.ts`, Spec #55) |
+| `weaponRefinementService` | `refineWeapon` (extracted from `routes/weaponInventory.ts` `/:id/refine`, Spec #55) |
+| `purchaseOptions` | Shared `options` type (`auditContext`) for the extracted services |
+
+The extracted services carry the route bodies verbatim (validation order, errors, locks, Financial_Pairs, replay); routes keep Zod validation, rate limits and achievement checks. Player routes and Automatons call the same functions.
 
 ### koth/
 King of the Hill mode — orchestration and matchmaking.
@@ -232,6 +265,7 @@ Robot management — the full lifecycle from creation to combat.
 | `robotRepairService` | Repair cost calculation with facility discounts |
 | `robotUpgradeService` | Attribute upgrade validation, cost calculation, academy cap enforcement |
 | `robotWeaponService` | Weapon equip/unequip transactions (main, offhand, loadout type) |
+| `robotSettingsService` | `updateStance`, `updateYieldThreshold` (extracted from `routes/robots.ts`, Spec #55) |
 | `robotSanitizer` | Strips sensitive data for public robot viewing |
 
 ### security/
@@ -326,6 +360,8 @@ Every battle event job is gated on the current Season_Phase. The check sits in `
 - Admin manual triggers of a battle event are declined, because `triggerJob` routes through the same gate.
 
 **At the season boundary:** the Settlement_Job runs all its normal steps, then advances the season counter, then invokes the Season_Rollover — so the final cycle of a season settles completely before anything is archived or purged. Season 0 is exempt and never rolls over automatically.
+
+**Automaton Turn_Step (Spec #55):** the Settlement_Job ends with an Automaton Turn_Step (`preparation` in a Preparation_Phase, `settlement` otherwise, none on the boundary settlement, where rollover Stage 5 runs `season_open`). It is non-fatal and bounded at 300 s.
 
 **On competitive cycle 1:** battle jobs find nothing due to execute, because each executes previously scheduled matches before scheduling new ones and preparation created none. Cycle 1 schedules; cycle 2 is the first battle day.
 

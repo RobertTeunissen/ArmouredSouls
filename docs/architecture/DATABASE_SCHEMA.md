@@ -2,7 +2,7 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Last Updated**: April 2, 2026  
+**Last Updated**: October 10, 2026 (Automaton tables, Spec #55)  
 **Status**: Current Implementation  
 **Version**: v2.0
 
@@ -1023,3 +1023,74 @@ Top `ACCOLADE_DEPTH` entities per (`mode`, `tier`, `league_instance_id`), includ
 |---|---|---|
 | `is_generated` | boolean, default `false` | True for auto-generated bots and seeded `test_user_*` stables; false for players and the `admin` account. Defaults false so an unclassified account fails safe and is never deleted by a rollover. |
 | `last_seen_season_number` | int, default 0 | Highest season whose summary modal the user dismissed. Survives an account reset. |
+
+## Automaton Stable Tables (Spec #55)
+
+Migration `20261009000000_automaton_stables`. Product rules: `docs/game-systems/PRD_AUTOMATON_STABLES.md`. Stored JSON shapes are typed in `app/backend/src/types/automaton.ts` (types barrel) and validated with Zod before the `as unknown as` cast.
+
+### Enums
+
+| Enum | Values |
+|---|---|
+| `StableType` | `human` (default), `generated`, `automaton` |
+| `AutomatonStatus` | `draft`, `active` |
+| `AutomatonTurnTrigger` | `settlement`, `preparation`, `season_open` |
+| `AutomatonTurnStatus` | `in_progress`, `completed`, `failed`, `skipped` |
+
+### Columns on existing tables
+
+| Table | Column | Notes |
+|---|---|---|
+| `users` | `stable_type` `StableType`, default `human`, indexed | Backfilled `generated` where `is_generated`. `automaton` rows are created only by Activation |
+| `robots` | `automaton_blueprint_id` int?, FK → `automaton_robot_blueprints` `ON DELETE SET NULL`, indexed | The blueprint the robot was built from |
+| `robots` | `automaton_slot_index` int? | The Blueprint_Slot the robot occupies |
+| `stable_season_archives` | `stable_type` `StableType`, default `human` | Stable_Type at archive time |
+| `season_standing_snapshots`, `season_accolades` | `subject_stable_type` `StableType`, default `human` | Written alongside `is_generated_subject`; backfilled `generated` where it is true |
+
+`SENSITIVE_ROBOT_FIELDS` strips `automatonBlueprintId`, `automatonSlotIndex` and `automatonBlueprint` from public robot responses.
+
+### `automaton_profiles`
+
+One row per Automaton_Profile, Draft or Active. Never touched by a Season_Rollover.
+
+| Column | Type | Notes |
+|---|---|---|
+| `catalogue_key` | varchar(40), unique | Permanent slug `^[a-z0-9-]{3,40}$`; the username is `automaton_{catalogue_key}` |
+| `user_id` | int?, unique, FK → `users` `ON DELETE RESTRICT` | Set at Activation |
+| `planned_stable_name` | varchar(30)?, unique | Stable name while Draft; cleared at Activation (afterwards `users.stable_name` is authoritative) |
+| `franchise` / `backstory` | varchar(60) / varchar(400) | Admin-only (backlog #61) |
+| `strategy_key` / `strategy_version` | varchar(40) / int | Pinned Strategy_Version |
+| `strategy_parameters` | Json | `{ targets: Record<goalId, number> }` |
+| `team_names` | Json | `{ twoVsTwo: string[], threeVsThree: string[] }` in Team_Rule order |
+| `event_order` | Json | All 9 subscribable event types, each once |
+| `status` | `AutomatonStatus`, default `draft`, indexed | |
+| `origin` | varchar(20) | `catalogue` or `admin` |
+| `activated_at`, `created_at`, `updated_at` | timestamp | |
+
+### `automaton_robot_blueprints`
+
+One row per Robot_Blueprint, unique on (`profile_id`, `slot_index`), cascading from the profile. Columns: `robot_name` varchar(50), `image_url` varchar(255)? (null = no image), `loadout_type`, `stance`, `yield_threshold`, `build_focus`, `weapon_path` Json (`WeaponStage[]`), `refinement_plan` Json (`RefinementStep[]`, default `[]`), timestamps.
+
+### `automaton_turns`
+
+One Turn_Record per Automaton_Turn, unique on (`profile_id`, `season_number`, `trigger`, `slot`); indexed on (`season_number`, `trigger`, `slot`) and (`profile_id`, `started_at`). Columns: `attempt` (default 1), `status`, `reason` varchar(40)? (`program_off`, `step_budget_exhausted`, `turn_budget_exhausted`, `invalid_parameters` or an error code), `strategy_key`, `strategy_version`, `start_balance`, `end_balance`?, `credits_spent`, `credits_received` (weapon-sale proceeds), `actions` Json, `goal_outcomes` Json, `upkeep_issues` Json, `duration_ms`?, `started_at`, `finished_at`?. In the `purgeHistory` truncate list.
+
+### `automaton_strategy_drafts`
+
+Strategy_Builder drafts, unique on (`key`, `version`). Columns: `based_on` varchar(50)? (`key.vN`), `definition` Json (Strategy_Definition_File shape), `created_by`, timestamps. Never read by the planner.
+
+### `automaton_program_settings`
+
+Single row `id = 1`, seeded by the migration. Columns: `turns_enabled` (Program_Switch, default true), `turn_step_lease_until`? (Turn_Step lease), `last_sync_summary` Json? (last Catalogue_Sync), `updated_by_user_id`?, `updated_at`. A dedicated table because `cycle_metadata.feature_flags` is rewritten as a whole by the cutover functions.
+
+### Invariants (tested)
+
+| ID | Invariant |
+|---|---|
+| I1 | `users.is_generated = true` ⇔ `users.stable_type = generated` |
+| I2 | `automaton_profiles.status = active` ⇔ `user_id IS NOT NULL` ⇔ the linked user has `stable_type = automaton` |
+| I3 | `status = draft` ⇒ `planned_stable_name IS NOT NULL`; `status = active` ⇒ `planned_stable_name IS NULL` |
+| I4 | Every robot of an Automaton_Stable has a non-null `automaton_slot_index`, unique within the stable, and an `automaton_blueprint_id` pointing at that slot's blueprint of the same profile |
+| I5 | At most one `automaton_turns` row per (`profile_id`, `season_number`, `trigger`, `slot`) |
+| I6 | `automaton_program_settings` has exactly one row (`id = 1`) |
+| I7 | Every robots Goal_Target of a profile is at most its buildable blueprints: slots 1…k with no gap |

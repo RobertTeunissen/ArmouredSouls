@@ -3,7 +3,7 @@
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
 **Version**: v2.0  
-**Last Updated**: April 9, 2026  
+**Last Updated**: October 10, 2026 (Automaton Turn_Step, Spec #55)  
 **Status**: ✅ Implemented  
 **Owner**: Robert Teunissen  
 **Epic**: Game Systems — Time Management
@@ -151,6 +151,7 @@ Heavy modes (1v1 League, KotH) are spaced 5 hours apart. Reserved slots are no-o
 | 5 | Create analytics snapshot (CycleSnapshot) |
 | 6 | Flush practice arena daily stats |
 | 7 | Auto-generate users (if configured) |
+| 8 | Automaton Turn_Step after the season counter advances, skipped on the boundary settlement (Spec #55; see "Automaton Turn_Step" below) |
 
 ---
 
@@ -477,3 +478,29 @@ Gating is an early return rather than per-step conditionals, so the skip list ca
 **At the season boundary** settlement runs all its normal steps, then advances the season cycle counter, then invokes the Season_Rollover. The final cycle of a season therefore settles completely — income paid, battles resolved, snapshot written — before anything is archived or purged. Season 0 is exempt and never triggers an automatic rollover regardless of its cycle count.
 
 See `PRD_SEASON_SYSTEM.md` for the rollover stages and reset scope.
+
+## Automaton Turn_Step (Spec #55)
+
+Active_Automatons act once per cycle in a Turn_Step (`runTurnStep` in `services/automaton/automatonTurnService.ts`). It always runs **after** the Serialized_Cycle_Cutover has completed, so Automaton purchases use the normal current-cycle write path and book to the new cycle, exactly like a human buying after settlement. It is never part of the cutover, `logCycleEndBalances` or the settlement Financial_Pairs.
+
+| Call site | Placement | Turn_Trigger / Turn_Slot |
+|---|---|---|
+| `cycleScheduler.ts` `executeSettlement`, Preparation_Phase | after `advancePreparationCycle()`, before the early return | `preparation` / `preparationCyclesCompleted` |
+| `cycleScheduler.ts` `executeSettlement`, competitive | last step, after `advanceCompetitiveCycle()`, only when no season boundary was reached | `settlement` / the closed global cycle number |
+| `seasonRolloverService.ts` Stage 5 | after `reclaimSpace()` in the new season | `season_open` / 0 |
+| `adminCycleService.ts` bulk preparation loop | after each `advancePreparationCycle()` | `preparation` / `preparationCyclesCompleted` |
+| `adminCycleService.ts` bulk competitive loop | after `completeSerializedCycleCutover` and the counters step | `settlement` / the closed cycle number; result in the bulk response's `automatonTurns` |
+
+On the boundary settlement no `settlement` turn runs; the rollover's Stage 5 gives every Automaton its `season_open` turn instead. If the rollover fails, no Automaton turn runs for that settlement and the retried rollover runs Stage 5.
+
+Every call is non-fatal: a failing Turn_Step is logged and alerted and never fails settlement, the bulk cycle or the rollover. A lease in `automaton_program_settings.turn_step_lease_until` serialises scheduler and admin bulk Turn_Steps across processes; `assertNoCutoverInProgress` is a defensive guard.
+
+**Turn_Budget** (`services/automaton/turnBudget.ts`):
+
+| Limit | Value | On reach |
+|---|---|---|
+| Charged actions per Automaton_Turn | 60 (`TURN_ACTION_LIMIT`) | turn ends `completed`, reason `turn_budget_exhausted` |
+| Wall clock per Automaton_Turn | 10 s (`TURN_TIME_BUDGET_MS`) | same |
+| Wall clock per Turn_Step | 300 s (`TURN_STEP_BUDGET_MS`) | remaining stables `skipped` with `step_budget_exhausted`, alert |
+
+Free_Upkeep counts against the time budget but not the action limit. Measured with 100 Active_Automatons (heavy simulation, local): opening-build steps 244–260 s, steady-state settlement steps 5–12 s. The design target for opening builds is 180 s, so a large activation batch on a slow host can reach the 300 s limit; see `docs/guides/AUTOMATON_OPERATIONS_GUIDE.md` (activate in batches) and `docs/game-systems/PRD_AUTOMATON_STABLES.md`.

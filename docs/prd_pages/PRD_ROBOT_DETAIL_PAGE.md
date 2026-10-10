@@ -1382,6 +1382,17 @@ The existing `RobotImageSelector` modal has been extended with a new "Upload Cus
 | 1.0 | 2026-01-30 | Robert Teunissen | Initial draft |
 | 1.1 | 2026-02-10 | Robert Teunissen | Implementation complete |
 | 1.2 | 2026-03-05 | GitHub Copilot | Added onboarding GuidedUIOverlay integration (Battle-Ready Setup) |
+| 1.3 | 2026-10-10 | Kiro | Automaton_Badge after the owner name in the robot header (Spec #55) |
+
+---
+
+## Automaton Stables (Spec #55)
+
+A robot owned by an Automaton_Stable uses the same robot detail page. In the robot header the owner name stays plain text (`truncate`) and the Automaton_Badge (`md`, `compact={false}`) sits directly after it:
+
+- Always the full label "Automaton" with the gear icon, at every width; the owner block keeps name and badge on one line, and a long name is shortened with "…".
+- Data: the robot detail response adds `user.stableType` (`useRobotDetail`'s `RobotDetail.user.stableType`). The blueprint link columns (`automatonBlueprintId`, `automatonSlotIndex`) are stripped by `SENSITIVE_ROBOT_FIELDS`; no blueprint, strategy, franchise or backstory data reaches the page.
+- Human and Generated_Stable robots render exactly as before. Verified by `RobotDetailAutomatonBadge.test.tsx` and Playwright `automaton-badge.spec.ts` at 320, 360, 768 and 1024 px.
 
 ---
 

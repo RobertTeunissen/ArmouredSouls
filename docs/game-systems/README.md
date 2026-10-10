@@ -18,3 +18,4 @@ Game design and mechanics — what the game does, rules, rewards, progression.
 | `STABLE_SYSTEM.md` | 13 facility types |
 | `PRD_ONBOARDING_SYSTEM.md` | 5-step new player tutorial |
 | `PRD_AUTO_USER_GENERATION.md` | AI user generation during settlement |
+| `PRD_AUTOMATON_STABLES.md` | Automaton stables: persistent computer-run stables (Spec #55) |
