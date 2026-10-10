@@ -70,6 +70,36 @@ describe('editor state helpers', () => {
     expect(plan[1]).toMatchObject({ strategyKey: 'paragon', teamNames: { twoVsTwo: ['Torrent Company', 'Ghost Company'], threeVsThree: ['Bad Batch'] } });
   });
 
+  it('switches to a strategy with a lower robots bound before an addition that would need hidden Team_Names', () => {
+    const d = detail();
+    const form = formFromDetail(d);
+    // Pinned strategy: robots up to 3, so 4 blueprints would need 1 + 1 names; the new one caps robots at 2 (1 + 0).
+    const newRows = d.strategy.buildOrder.map((r) => (r.type === 'robots' ? { ...r, goalId: 'duo.v1.01.robots', bounds: { min: 1, max: 2 }, defaultTarget: 2, target: 2 } : r));
+    form.strategyKey = 'duo';
+    form.targets = { 'duo.v1.01.robots': 2 };
+    form.teamNames = { twoVsTwo: ['Torrent Company'], threeVsThree: [] };
+    form.pending = [{ slot: 4, fields: { ...form.blueprints[1], robotName: 'Echo' } }];
+    const plan = savePlan(d, form, newRows);
+    expect(plan.map((s) => s.kind)).toEqual(['update_strategy', 'add_blueprint']);
+    // Both calls carry only the names the Teams card shows: no '' padding for a 3v3 row it never rendered.
+    expect(plan[0]).toMatchObject({ strategyKey: 'duo', teamNames: { twoVsTwo: ['Torrent Company'], threeVsThree: [] } });
+    expect(plan[1]).toMatchObject({ slot: 4, teamNames: { twoVsTwo: ['Torrent Company'], threeVsThree: [] } });
+  });
+
+  it('keeps additions first when the lower robots bound does not change the Team_Names count', () => {
+    const d = detail();
+    // Pinned bound 3 vs new bound 2 with one blueprint added to two: both give min(bound, 2) = 2.
+    const twoSlots = { ...d, blueprints: d.blueprints.filter((b) => b.slot <= 1) };
+    const twoForm = formFromDetail(twoSlots);
+    const newRows = d.strategy.buildOrder.map((r) => (r.type === 'robots' ? { ...r, goalId: 'duo.v1.01.robots', bounds: { min: 1, max: 2 }, defaultTarget: 2, target: 2 } : r));
+    twoForm.strategyKey = 'duo';
+    twoForm.targets = { 'duo.v1.01.robots': 2 };
+    twoForm.teamNames = { twoVsTwo: ['Torrent Company'], threeVsThree: [] };
+    twoForm.pending = [{ slot: 2, fields: { ...twoForm.blueprints[1], robotName: 'Echo' } }];
+    // The new target (2) needs the second blueprint first (R3.7), so the strategy step stays last.
+    expect(savePlan(twoSlots, twoForm, newRows).map((s) => s.kind)).toEqual(['add_blueprint', 'update_strategy']);
+  });
+
   it('finds the next free slot, 11 at most', () => {
     expect(nextFreeSlot([1, 2, 4])).toBe(3);
     expect(nextFreeSlot(Array.from({ length: 11 }, (_, i) => i + 1))).toBeNull();

@@ -113,9 +113,16 @@ export type SaveStep =
  * additions (each with Team_Names sized for the count after it), the strategy
  * (key and targets), then the profile fields. Team_Names travel with the first
  * call that can change their count, so the profile never holds a wrong count.
- * Additions run before the strategy step, so the backend checks their
- * Team_Names against the pinned strategy: they are sized with the pinned
- * Build_Order, and only the strategy step uses `rows` (the form's strategy).
+ *
+ * The backend checks each call's Team_Names against the strategy pinned at
+ * that moment: additions before the strategy step are sized with the pinned
+ * Build_Order, the strategy step and later additions with `rows` (the form's
+ * strategy). The strategy step normally runs after the additions, because a
+ * higher robots target needs the new blueprints first (R3.7). When the form's
+ * strategy allows fewer robots than the pinned one, an addition sized with the
+ * pinned Build_Order would need Team_Names the Teams card never shows; the
+ * strategy step then runs just before that addition. The count at that point
+ * already reaches the form strategy's robots bound, so R3.7 holds.
  */
 export function savePlan(detail: ProfileDetail, form: EditorForm, rows: readonly BuildOrderRow[]): SaveStep[] {
   const steps: SaveStep[] = [];
@@ -125,19 +132,25 @@ export function savePlan(detail: ProfileDetail, form: EditorForm, rows: readonly
   }
   const pinnedRows = detail.strategy.buildOrder;
   const slots = detail.blueprints.map((b) => b.slot);
-  let namesSent = false;
-  for (const p of [...form.pending].sort((a, b) => a.slot - b.slot)) {
-    slots.push(p.slot);
-    steps.push({ kind: 'add_blueprint', slot: p.slot, fields: p.fields, teamNames: sizeTeamNames(form.teamNames, teamMaxRobots(pinnedRows, slots)) });
-    namesSent = true;
-  }
-  const finalNames = sizeTeamNames(form.teamNames, teamMaxRobots(rows, slots));
   const strategyChanged = form.strategyKey !== detail.strategy.key;
   const targetsChanged = rows.some((r) => !r.isMax && (form.targets[r.goalId] ?? r.target) !== r.target);
-  if (strategyChanged || targetsChanged) {
-    steps.push({ kind: 'update_strategy', strategyKey: form.strategyKey, targets: form.targets, teamNames: finalNames });
+  let strategyPending = strategyChanged || targetsChanged;
+  let namesSent = false;
+  const pushStrategy = (): void => {
+    steps.push({ kind: 'update_strategy', strategyKey: form.strategyKey, targets: form.targets, teamNames: sizeTeamNames(form.teamNames, teamMaxRobots(rows, slots)) });
+    strategyPending = false;
+    namesSent = true;
+  };
+  for (const p of [...form.pending].sort((a, b) => a.slot - b.slot)) {
+    const after = [...slots, p.slot];
+    if (strategyPending && teamMaxRobots(pinnedRows, after) > teamMaxRobots(rows, after)) pushStrategy();
+    slots.push(p.slot);
+    const sizing = strategyPending ? pinnedRows : rows;
+    steps.push({ kind: 'add_blueprint', slot: p.slot, fields: p.fields, teamNames: sizeTeamNames(form.teamNames, teamMaxRobots(sizing, slots)) });
     namesSent = true;
   }
+  if (strategyPending) pushStrategy();
+  const finalNames = sizeTeamNames(form.teamNames, teamMaxRobots(rows, slots));
   const patch: UpdateProfileInput = {};
   if (form.stableName !== detail.stableName) patch.stableName = form.stableName;
   if (form.franchise !== detail.franchise) patch.franchise = form.franchise;

@@ -62,7 +62,7 @@ import type { StrategyRegistry } from './strategies/registry';
 import type { UpgradeStrategy } from './strategies/strategyTypes';
 import { bestTiersForUsers, type LeagueTier } from './standingsTier';
 import { loadActiveNeedAttention, loadNeedAttention, type NeedAttentionReason } from './needAttention';
-import { teamsForSlots } from './teamRule';
+import { teamNameMaxRobots, teamsForSlots } from './teamRule';
 import { BUILD_FOCUS_WEIGHTS, GROUP_ACADEMY } from './buildFocus';
 import { attributePlanView, buildFocusOptions, type AttributePlanSubject, type AttributePlanView } from './attributePlanView';
 import type { FacilityType } from './stableFacts';
@@ -540,9 +540,7 @@ export async function getProfileDetail(catalogueKey: string, deps: ProfileServic
   const teamNames = profileTeamNames(profile);
   // The Teams card rows: the Team_Rule over slots 1…min(highest robots bound, buildable blueprints) (design §17.2).
   const buildable = buildableOf(profile.blueprints);
-  const maxRobots = strategy
-    ? Math.min(Math.max(0, ...strategy.buildOrder.filter((d) => d.type === 'robots').map((d) => d.bounds.max)), buildable)
-    : buildable;
+  const maxRobots = strategy ? teamNameMaxRobots(strategy.buildOrder, buildable) : buildable;
   const allSlots = Array.from({ length: maxRobots }, (_, i) => i + 1);
   const teamRows = teamsForSlots(allSlots).map((team): TeamRowView => {
     const members = team.slots.map((slot) => robotBySlot.get(slot)?.name ?? null);

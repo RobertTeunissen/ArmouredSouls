@@ -8,5 +8,6 @@ export {
   TEAM_RULE_3V3,
   teamsForSlots,
   requiredTeamNameCounts,
+  teamNameMaxRobots,
   type TeamRuleTeam,
 } from '../../shared/utils/automatonTeamRule';
