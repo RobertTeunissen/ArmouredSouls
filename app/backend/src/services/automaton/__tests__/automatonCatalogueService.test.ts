@@ -131,7 +131,7 @@ describe('catalogue entry: context rules', () => {
     expect(result.ok).toBe(false);
     if (!result.ok) {
       const issue = result.issues.find((i) => i.rule === 'blueprints_too_few');
-      expect(issue?.message).toMatch(/Goal 13 \(Robots → 3\).*the 2 this stable has/);
+      expect(issue?.message).toBe('Goal 13 targets 3 robots, but this stable has 2 blueprints. Add blueprints or lower the target.');
       expect(catalogueIssueCode('blueprints_too_few')).toBe('AUTOMATON_BLUEPRINTS_TOO_FEW');
     }
   });

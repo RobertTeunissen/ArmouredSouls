@@ -107,10 +107,13 @@ const buildOrderEntrySchema = z.object({
   bounds: z.object({ min: targetValueSchema, max: targetValueSchema }).strict(),
 }).strict();
 
+/** A strategy key: lowercase letters, digits and hyphens, at most 40 characters. */
+export const strategyKeySchema = z.string().max(STRATEGY_KEY_MAX_LENGTH).regex(STRATEGY_KEY_PATTERN, 'Use lowercase letters, digits and hyphens.');
+
 /** The file structure without the builder rules. */
 export const strategyDefinitionShape = z.object({
   schemaVersion: z.literal(1),
-  key: z.string().max(STRATEGY_KEY_MAX_LENGTH).regex(STRATEGY_KEY_PATTERN, 'Use lowercase letters, digits and hyphens.'),
+  key: strategyKeySchema,
   version: z.number().int().min(1),
   displayName: z.string().trim().min(1).max(STRATEGY_DISPLAY_NAME_MAX_LENGTH),
   description: z.string().trim().min(1).max(STRATEGY_DESCRIPTION_MAX_LENGTH),

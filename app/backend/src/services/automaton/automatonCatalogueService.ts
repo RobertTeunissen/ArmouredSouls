@@ -88,6 +88,11 @@ export const catalogueKeySchema = z.string().regex(CATALOGUE_KEY_PATTERN, 'Use 3
 
 const robotNameSchema = safeName.refine((value) => value.trim() === value, 'Robot name must not start or end with spaces.');
 
+/** Franchise: admin-only grouping text, 1–60 characters. */
+export const franchiseSchema = trimmedText(FRANCHISE_MAX_LENGTH);
+/** Backstory: admin-only flavour text, 1–400 characters. */
+export const backstorySchema = trimmedText(BACKSTORY_MAX_LENGTH);
+
 export const refinementStepSchema = z.object({
   tier: z.enum(['hone', 'augment', 'sharpen', 'forge']),
   hand: z.enum(['main', 'offhand']),
@@ -139,8 +144,8 @@ export const catalogueEntryShape = z.object({
   schemaVersion: z.literal(CATALOGUE_SCHEMA_VERSION),
   catalogueKey: catalogueKeySchema,
   stableName: z.string(),
-  franchise: trimmedText(FRANCHISE_MAX_LENGTH),
-  backstory: trimmedText(BACKSTORY_MAX_LENGTH),
+  franchise: franchiseSchema,
+  backstory: backstorySchema,
   strategy: z.object({
     key: z.string().min(1).max(40),
     version: z.number().int().min(1),
@@ -255,7 +260,7 @@ function refinementPlanIssues(blueprint: BlueprintFields, weapons: WeaponCatalog
     }
     counts[step.hand]++;
     if (counts[step.hand] > MAX_REFINEMENT_STEPS_PER_WEAPON) {
-      issues.push({ rule: 'refinement_step_count', message: `Step ${index + 1}: more than ${MAX_REFINEMENT_STEPS_PER_WEAPON} steps on ${name} (${HAND_LABEL[step.hand]}).`, path: stepPath });
+      issues.push({ rule: 'refinement_step_count', message: `${name} (${HAND_LABEL[step.hand]}) has more than ${MAX_REFINEMENT_STEPS_PER_WEAPON} refinement steps.`, path: stepPath });
       return;
     }
     const weapon = weapons.get(name);
@@ -284,7 +289,7 @@ function refinementPlanIssues(blueprint: BlueprintFields, weapons: WeaponCatalog
     const weapon = weapons.get(name);
     if (!weapon || weapon.handsRequired === 'shield') continue;
     if (counts[hand] === 0) {
-      issues.push({ rule: 'refinement_missing', message: `Refinement plan needs at least one step on ${name} (${HAND_LABEL[hand]}).`, path: [...at, 'refinementPlan'] });
+      issues.push({ rule: 'refinement_missing', message: `Every weapon of the last stage except a shield needs at least one refinement step: ${name} (${HAND_LABEL[hand]}).`, path: [...at, 'refinementPlan'] });
     }
   }
   return issues;
@@ -317,6 +322,11 @@ export function requiredTeamNameCountsFor(strategy: Pick<UpgradeStrategy, 'build
   return requiredTeamNameCounts(Math.min(highestRobotsBound(strategy), blueprintCount));
 }
 
+/** Approved text: review/PLAYER_FACING_TEXT.md §6.5 "Error: team names count". */
+export function teamNamesCountMessage(required: { twoVsTwo: number; threeVsThree: number }): string {
+  return `This stable needs ${required.twoVsTwo} team names for 2v2 and ${required.threeVsThree} for 3v3.`;
+}
+
 /** Team_Names rules (R3.6): counts, 3–32 characters accepted by `safeName`, distinct within the profile. */
 export function teamNamesIssues(
   teamNames: TeamNames,
@@ -328,7 +338,7 @@ export function teamNamesIssues(
   for (const [field, label] of [['twoVsTwo', '2v2'], ['threeVsThree', '3v3']] as const) {
     const names = teamNames[field];
     if (names.length !== required[field]) {
-      issues.push({ rule: 'team_names_count', message: `${label} team names: needs exactly ${required[field]}, has ${names.length}.`, path: [...at, field] });
+      issues.push({ rule: 'team_names_count', message: teamNamesCountMessage(required), path: [...at, field] });
     }
     names.forEach((name, index) => {
       const lengthOk = name.length >= TEAM_NAME_MIN_LENGTH && name.length <= TEAM_NAME_MAX_LENGTH;
@@ -356,7 +366,8 @@ export function robotsTargetIssues(
     .filter((d) => (params.targets[d.id] ?? d.defaultTarget) > blueprintCount)
     .map((d) => ({
       rule: 'blueprints_too_few' as const,
-      message: `Goal ${d.position} (Robots → ${params.targets[d.id] ?? d.defaultTarget}) needs more robot blueprints than the ${blueprintCount} this stable has.`,
+      // Approved text: review/PLAYER_FACING_TEXT.md §6.5 "Error: too few blueprints".
+      message: `Goal ${d.position} targets ${params.targets[d.id] ?? d.defaultTarget} robots, but this stable has ${blueprintCount} blueprints. Add blueprints or lower the target.`,
       path: at,
     }));
 }

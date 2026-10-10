@@ -31,6 +31,24 @@ export const AutomatonErrorCode = {
   AUTOMATON_TEAM_NAMES_MISMATCH: 'AUTOMATON_TEAM_NAMES_MISMATCH',
   /** A Catalogue_Entry or admin blueprint/profile input fails the catalogue rules, or an export cannot be built (R10.1, R10.7). */
   AUTOMATON_CATALOGUE_INVALID: 'AUTOMATON_CATALOGUE_INVALID',
+  /** No Automaton_Profile has this Catalogue_Key (404). */
+  AUTOMATON_NOT_FOUND: 'AUTOMATON_NOT_FOUND',
+  /** The profile has no Robot_Blueprint in this Blueprint_Slot (404). */
+  AUTOMATON_BLUEPRINT_NOT_FOUND: 'AUTOMATON_BLUEPRINT_NOT_FOUND',
+  /** A Catalogue_Key is already used by another Automaton_Profile (409). */
+  AUTOMATON_KEY_EXISTS: 'AUTOMATON_KEY_EXISTS',
+  /** The stable name is taken by a stable or another Automaton_Profile (409, R2.3, R3.8). */
+  AUTOMATON_STABLE_NAME_TAKEN: 'AUTOMATON_STABLE_NAME_TAKEN',
+  /** Activation: the username `automaton_{catalogueKey}` already exists (409, R2.3). */
+  AUTOMATON_USERNAME_TAKEN: 'AUTOMATON_USERNAME_TAKEN',
+  /** The operation needs a Draft_Automaton; the profile is active (409, R2.4, R2.6). */
+  AUTOMATON_NOT_DRAFT: 'AUTOMATON_NOT_DRAFT',
+  /** A live robot is linked to the Robot_Blueprint (409, R3.12). */
+  AUTOMATON_BLUEPRINT_IN_PLAY: 'AUTOMATON_BLUEPRINT_IN_PLAY',
+  /** The Blueprint_Slot is taken, or no slot from 1 to 11 is free (409, R3.1). */
+  AUTOMATON_SLOT_TAKEN: 'AUTOMATON_SLOT_TAKEN',
+  /** An uploaded Robot_Blueprint image failed validation or processing (400, R11.6). */
+  AUTOMATON_IMAGE_INVALID: 'AUTOMATON_IMAGE_INVALID',
 } as const;
 
 export type AutomatonErrorCodeType = typeof AutomatonErrorCode[keyof typeof AutomatonErrorCode];

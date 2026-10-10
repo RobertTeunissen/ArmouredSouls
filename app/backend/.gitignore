@@ -26,3 +26,5 @@ id_ed25519
 # User-uploaded robot images (keep .gitkeep for directory structure)
 uploads/user-robots/*
 !uploads/user-robots/.gitkeep
+# Spec #55: admin uploads of Robot_Blueprint images (Automaton_Image_Store)
+uploads/automatons/

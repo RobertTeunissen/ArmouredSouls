@@ -29,6 +29,7 @@ import teamBattlesRoutes from './routes/teamBattles';
 import seasonsRoutes from './routes/seasons';
 import imagesRoutes from './routes/images';
 import adminSeasonsRoutes from './routes/adminSeasons';
+import adminAutomatonsRoutes from './routes/adminAutomatons';
 import searchRoutes from './routes/search';
 import { loadEnvConfig } from './config/env';
 import {
@@ -184,6 +185,7 @@ app.use('/api/weapon-inventory', weaponInventoryRoutes);
 // Mount the more specific admin router first so it cannot be shadowed by
 // fall-through ordering in the generic /api/admin router.
 app.use('/api/admin/seasons', adminSeasonsRoutes);
+app.use('/api/admin/automatons', adminAutomatonsRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/matches', matchesRoutes);
 app.use('/api/leagues', leaguesRoutes);

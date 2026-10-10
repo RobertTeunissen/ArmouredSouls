@@ -72,6 +72,8 @@ const HEAVY_TESTS = [
   'tests/financeCenterPerformance.integration.test.ts',
   'tests/integration.test.ts',
   'tests/integration/adminCycleGeneration.test.ts',
+  // Spec #55 task 7.4: a full Season_Rollover truncates history tables.
+  'tests/integration/automatonSeasonRollover.test.ts',
   'tests/integration/bronzeLeagueRebalancing.test.ts',
   'tests/integration/byeInvariant.test.ts',
   'tests/integration/byeScopeAndShape.test.ts',
@@ -113,6 +115,9 @@ const DB_DEPENDENT = [
   'tests/integration/automatonPreservedStateAchievement.test.ts',
   'tests/integration/automatonCatalogueSync.test.ts',
   'tests/integration/automatonCatalogueExport.test.ts',
+  'tests/integration/automatonProfile.test.ts',
+  'tests/integration/automatonTurnWiring.test.ts',
+  'tests/integration/automatonSettlementWiring.test.ts',
   // Spec #55 — Domain_Service_Extraction (task group 2)
   'src/services/economy/__tests__/facilityUpgradeService.test.ts',
   'src/services/economy/__tests__/weaponPurchaseService.test.ts',
