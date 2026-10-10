@@ -72,6 +72,8 @@ const HEAVY_TESTS = [
   'tests/financeCenterPerformance.integration.test.ts',
   'tests/integration.test.ts',
   'tests/integration/adminCycleGeneration.test.ts',
+  // Spec #55 task 12.2: two seasons, 100 Automatons, one rollover, bulk battles.
+  'tests/integration/automatonMultiSeason.test.ts',
   // Spec #55 task 7.4: a full Season_Rollover truncates history tables.
   'tests/integration/automatonSeasonRollover.test.ts',
   'tests/integration/bronzeLeagueRebalancing.test.ts',
