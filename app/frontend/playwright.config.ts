@@ -39,9 +39,25 @@ export default defineConfig({
         storageState: { cookies: [], origins: [] },
       },
     },
+    // Spec #55: admin setup logs in as the seeded `admin` and saves its state
+    {
+      name: 'admin-setup',
+      testMatch: /admin\.setup\.ts/,
+      use: { ...devices['Desktop Chrome'] },
+    },
+    // Spec #55: the admin Automatons page and the Automaton badge run as admin
+    {
+      name: 'admin',
+      testMatch: /(admin-automatons|automaton-badge)\.spec\.ts/,
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: '.auth/admin.json',
+      },
+      dependencies: ['admin-setup'],
+    },
     {
       name: 'chromium',
-      testIgnore: /login\.spec\.ts/,
+      testIgnore: [/login\.spec\.ts/, /admin-automatons\.spec\.ts/, /automaton-badge\.spec\.ts/],
       use: {
         ...devices['Desktop Chrome'],
         screenshot: 'on',
