@@ -1,9 +1,9 @@
 /**
  * Build_Focus mathematics (Spec #55, R4.2–R4.5, design §8.4, task 3.2).
  *
- * Pure functions over an injected group-weight table. The approved preset
- * table from `review/STRATEGIES.md` §3 is added by task 4.1; nothing here
- * depends on its values.
+ * Pure functions over an injected group-weight table. The approved presets
+ * (`review/STRATEGIES.md` §3, task 4.1) are `BUILD_FOCUS_PRESETS` and
+ * `BUILD_FOCUS_WEIGHTS`; the mathematics never depends on their values.
  *
  * - Attribute target: `max(1, ceil(w × L))` for a milestone L, 50 for `Max`.
  * - Priority order: groups by weight descending, ties Combat → Defense →
@@ -36,6 +36,61 @@ export const GROUP_ACADEMY: Readonly<Record<AttributeGroup, FacilityType>> = {
   mobility: 'mobility_training_academy',
   ai: 'ai_training_academy',
 };
+
+// ── Approved presets (review/STRATEGIES.md §3, R4.1) ─────────────────
+
+export interface BuildFocusPreset {
+  key: BuildFocusKey;
+  displayName: string;
+  weights: GroupWeights;
+  /** Admin-only description (`PLAYER_FACING_TEXT.md` §2: not shown to players). */
+  description: string;
+}
+
+/** The six Build_Focus presets, in the order of the approved table. */
+export const BUILD_FOCUS_PRESETS: readonly BuildFocusPreset[] = [
+  {
+    key: 'bruiser',
+    displayName: 'Bruiser',
+    weights: { combat: 1.0, defense: 0.8, mobility: 0.7, ai: 0.4 },
+    description: 'A heavy hitter that wades in and trades blows. Built to deal damage first and survive the return fire second.',
+  },
+  {
+    key: 'deadeye',
+    displayName: 'Deadeye',
+    weights: { combat: 1.0, defense: 0.4, mobility: 0.5, ai: 0.8 },
+    description: 'Precision over everything: targeting, crits and penetration, backed by sharp combat AI. Fragile if caught.',
+  },
+  {
+    key: 'warden',
+    displayName: 'Warden',
+    weights: { combat: 0.6, defense: 1.0, mobility: 0.6, ai: 0.5 },
+    description: 'A shield wall. Soaks punishment, counters attackers and wins the long fight.',
+  },
+  {
+    key: 'sprinter',
+    displayName: 'Sprinter',
+    weights: { combat: 0.7, defense: 0.5, mobility: 1.0, ai: 0.5 },
+    description: 'Fast, evasive and relentless. Hard to pin down, strikes often.',
+  },
+  {
+    key: 'tactician',
+    displayName: 'Tactician',
+    weights: { combat: 0.6, defense: 0.6, mobility: 0.5, ai: 1.0 },
+    description: 'Reads the battlefield and coordinates the team. Strongest next to allies.',
+  },
+  {
+    key: 'versatile',
+    displayName: 'Versatile',
+    weights: { combat: 1.0, defense: 1.0, mobility: 1.0, ai: 1.0 },
+    description: 'No weak spots and no spikes. Every system upgraded evenly.',
+  },
+];
+
+/** Group weights per preset: the weight table the registry and Goals use. */
+export const BUILD_FOCUS_WEIGHTS: BuildFocusWeightTable = Object.fromEntries(
+  BUILD_FOCUS_PRESETS.map((preset) => [preset.key, preset.weights]),
+) as Record<BuildFocusKey, GroupWeights>;
 
 /** Attribute level ceiling and the `Max` target. */
 export const ATTRIBUTE_MAX_LEVEL = 50;

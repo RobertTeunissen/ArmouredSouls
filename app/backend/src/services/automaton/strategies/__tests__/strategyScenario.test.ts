@@ -21,7 +21,7 @@ import {
 } from '../scenarioProjector';
 import type { StableFacts } from '../../stableFacts';
 import { planNextStep } from '../../turnPlanner';
-import { TEST_WEIGHTS } from '../../__tests__/helpers/automatonFixtures';
+import { BUILD_FOCUS_WEIGHTS } from '../../buildFocus';
 import {
   FIXTURE_STRATEGY_DIRECTORY,
   SEED_WEAPON_MAP,
@@ -30,13 +30,16 @@ import {
 } from './helpers/strategyTestSupport';
 
 /**
- * Simple income model: per live robot after every competitive turn (several
- * battles a cycle across the subscribed events, streaming and merchandising).
- * It is a test model, not a balance claim; it is generous enough that a
- * strategy reaches its last Goal within two seasons, so a strategy that gets
- * stuck shows up as a failure.
+ * Simple income model: a stable-wide amount plus an amount per live robot
+ * after every competitive turn (battles across the subscribed events,
+ * streaming and merchandising). It is a test model, not a balance claim: it
+ * is generous enough that every one of the six version-1 strategies (one to
+ * eleven robots) reaches its last Goal within two seasons, so a Build_Order
+ * that can never get past a Goal shows up as a failure. Prestige grows per
+ * robot only, so the Prestige_Gates still block the late levels.
  */
-const CREDITS_PER_ROBOT_PER_TURN = 100_000;
+const CREDITS_PER_STABLE_PER_TURN = 1_000_000;
+const CREDITS_PER_ROBOT_PER_TURN = 250_000;
 const PRESTIGE_PER_ROBOT_PER_TURN = 60;
 const PREPARATION_TURNS_PER_SEASON = 2;
 const COMPETITIVE_TURNS_PER_SEASON = 60;
@@ -48,7 +51,7 @@ const PHASES: StableFacts['phase'][] = Array.from({ length: SEASONS }, () => [
 ]).flat();
 
 const STRATEGIES = STRATEGY_TEST_DIRECTORIES.flatMap((directory) =>
-  loadStrategyRegistry({ directory, weightTable: TEST_WEIGHTS }).all());
+  loadStrategyRegistry({ directory, weightTable: BUILD_FOCUS_WEIGHTS }).all());
 
 describe.each(STRATEGIES.map((s) => [`${s.key}.v${s.version}`, s] as const))('generic scenario: %s (R6.7, R14.2)', (_name, strategy) => {
   const blueprints = generatedBlueprintSet(11);
@@ -66,7 +69,7 @@ describe.each(STRATEGIES.map((s) => [`${s.key}.v${s.version}`, s] as const))('ge
       betweenTurns: (facts, turnIndex) => (PHASES[turnIndex] === 'competitive'
         ? {
           ...facts,
-          balance: facts.balance + facts.robots.length * CREDITS_PER_ROBOT_PER_TURN,
+          balance: facts.balance + CREDITS_PER_STABLE_PER_TURN + facts.robots.length * CREDITS_PER_ROBOT_PER_TURN,
           prestige: facts.prestige + facts.robots.length * PRESTIGE_PER_ROBOT_PER_TURN,
         }
         : facts),
@@ -109,7 +112,7 @@ describe.each(STRATEGIES.map((s) => [`${s.key}.v${s.version}`, s] as const))('ge
 });
 
 describe('projectOpeningBuild (R6.12, design §14.0b)', () => {
-  const [strategy] = loadStrategyRegistry({ directory: FIXTURE_STRATEGY_DIRECTORY, weightTable: TEST_WEIGHTS }).all();
+  const [strategy] = loadStrategyRegistry({ directory: FIXTURE_STRATEGY_DIRECTORY, weightTable: BUILD_FOCUS_WEIGHTS }).all();
   const blueprints = generatedBlueprintSet(11);
   const params = defaultParameters(strategy.buildOrder);
   const opening = projectOpeningBuild({ strategy, params, blueprints, weapons: SEED_WEAPON_MAP, teamNames: null });

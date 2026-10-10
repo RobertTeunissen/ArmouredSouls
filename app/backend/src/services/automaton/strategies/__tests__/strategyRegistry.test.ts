@@ -10,6 +10,7 @@ import {
 } from '../registry';
 import type { StrategyDefinitionFile } from '../strategyTypes';
 import { TEST_WEIGHTS } from '../../__tests__/helpers/automatonFixtures';
+import { BUILD_FOCUS_WEIGHTS } from '../../buildFocus';
 import { FIXTURE_STRATEGY_DIRECTORY } from './helpers/strategyTestSupport';
 
 jest.mock('../../../../config/logger', () => ({ __esModule: true, default: { info: jest.fn(), warn: jest.fn(), error: jest.fn() } }));
@@ -37,6 +38,14 @@ describe('Strategy_Registry (R6.2, R6.6, R6.8, design §14.0)', () => {
   it('resolves the repository strategy directory to src/config/automaton-strategies', () => {
     expect(STRATEGY_DIRECTORY.endsWith(path.join('src', 'config', 'automaton-strategies'))).toBe(true);
     expect(fs.existsSync(STRATEGY_DIRECTORY)).toBe(true);
+  });
+
+  it('holds the six version-1 strategies and they pass the startup check (task 4.2, R6.1–R6.3)', () => {
+    const registry = loadStrategyRegistry({ weightTable: BUILD_FOCUS_WEIGHTS });
+    expect(registry.all().map((s) => `${s.key}.v${s.version}`))
+      .toEqual(['duo.v1', 'generalist.v1', 'paragon.v1', 'swarm.v1', 'trio.v1', 'tycoon.v1']);
+    const stored = registry.all().map((s) => ({ strategyKey: s.key, strategyVersion: s.version }));
+    expect(checkStrategyDirectory(stored)).toEqual({ passed: true, strategyFiles: 6, problems: [] });
   });
 
   it('loads a directory, derives Goal ids and builds every Goal through the factories', () => {

@@ -1,8 +1,8 @@
 /**
  * Test fixtures for the pure Automaton engine (Spec #55). Not a test file.
  *
- * The weight table here is a test-only table; the approved Build_Focus
- * presets arrive with task 4.1.
+ * The weight table here is a test-only table, so the Build_Focus maths
+ * tests do not move when the approved presets (`BUILD_FOCUS_WEIGHTS`) change.
  */
 import { ROBOT_ATTRIBUTES, type RobotAttribute } from '../../../../shared/utils/robotAttributes';
 import type { BuildFocusWeightTable } from '../../buildFocus';

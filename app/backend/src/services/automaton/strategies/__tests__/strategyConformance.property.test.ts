@@ -54,7 +54,7 @@ import { planNextStep, type SimulationContext } from '../../turnPlanner';
 import { TURN_ACTION_LIMIT } from '../../turnBudget';
 import { loadStrategyRegistry } from '../registry';
 import type { UpgradeStrategy } from '../strategyTypes';
-import { TEST_WEIGHTS } from '../../__tests__/helpers/automatonFixtures';
+import { BUILD_FOCUS_WEIGHTS } from '../../buildFocus';
 import {
   SEED_WEAPON_MAP,
   STRATEGY_TEST_DIRECTORIES,
@@ -62,7 +62,7 @@ import {
 } from './helpers/strategyTestSupport';
 
 const STRATEGIES: UpgradeStrategy[] = STRATEGY_TEST_DIRECTORIES.flatMap((directory) =>
-  loadStrategyRegistry({ directory, weightTable: TEST_WEIGHTS }).all());
+  loadStrategyRegistry({ directory, weightTable: BUILD_FOCUS_WEIGHTS }).all());
 
 const NUM_RUNS = 100;
 const KNOWN_ACTION_KINDS = new Set<PlannedAction['kind']>(['robot_chain', 'facility_upgrade', 'attribute_upgrade', 'weapon_stage', 'weapon_refinement']);
@@ -200,7 +200,35 @@ const scenarioArbitrary = fc.record({
   spareWeapons: fc.array(fc.constantFrom(...seedWeaponNames), { maxLength: 4 }),
   teamFlags: fc.array(fc.boolean(), { minLength: 1, maxLength: 8 }),
   targetSeeds: fc.array(fc.nat(), { minLength: 40, maxLength: 40 }),
+  // One case in three is a late-game stable (see `matureDraw`).
+  mature: fc.integer({ min: 0, max: 2 }).map((n) => n === 0),
 });
+
+type ScenarioDraw = typeof scenarioArbitrary extends fc.Arbitrary<infer T> ? T : never;
+
+const ACADEMIES = new Set<FacilityType>(Object.values(GROUP_ACADEMY));
+
+/**
+ * A late-game stable for the drawn Goal_Targets: every facility at least at
+ * its highest facility-Goal target (academies at L10), the highest robots
+ * target alive and every attribute at 50, so the walk reaches the Goals at
+ * the bottom of the Build_Order (weapons, refine) that a uniform draw almost
+ * never gets to. Weapon stages, prestige, balance and inventories stay drawn.
+ */
+function matureDraw(draw: ScenarioDraw, strategy: UpgradeStrategy, targets: Readonly<Record<string, number>>): ScenarioDraw {
+  const levels = AUTOMATON_FACILITY_TYPES.map((type, i) => {
+    if (ACADEMIES.has(type)) return 10;
+    const goalTargets = strategy.buildOrder.filter((d) => d.facilityType === type).map((d) => targets[d.id]);
+    return Math.max(draw.levels[i], ...goalTargets);
+  });
+  const robotCount = Math.max(draw.robotCount, ...strategy.buildOrder.filter((d) => d.type === 'robots').map((d) => targets[d.id]));
+  return {
+    ...draw,
+    levels,
+    robotCount,
+    robotDraws: draw.robotDraws.map((robot) => ({ ...robot, attributeSeeds: robot.attributeSeeds.map(() => 49) })),
+  };
+}
 
 // ── Assertions ───────────────────────────────────────────────────────
 
@@ -312,12 +340,12 @@ describe.each(STRATEGIES.map((s) => [`${s.key}.v${s.version}`, s] as const))('st
   it('plans only affordable, valid, deterministic steps within the Turn_Budget', () => {
     const seenActionKinds = new Set<PlannedAction['kind']>();
     fc.assert(fc.property(scenarioArbitrary, (draw) => {
-      const facts = buildFacts(draw);
       const targets: Record<string, number> = {};
       strategy.buildOrder.forEach((definition, i) => {
         const span = definition.bounds.max - definition.bounds.min + 1;
         targets[definition.id] = definition.bounds.min + (draw.targetSeeds[i % draw.targetSeeds.length] % span);
       });
+      const facts = buildFacts(draw.mature ? matureDraw(draw, strategy, targets) : draw);
       // R3.7: robots targets never exceed the blueprints (11 here).
       const ctx: SimulationContext = { params: { targets }, blueprints: draw.blueprints, weapons: SEED_WEAPON_MAP, teamNames: null };
 

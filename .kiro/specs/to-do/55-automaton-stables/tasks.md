@@ -65,11 +65,11 @@ _Requirements: R3.6, R3.7, R3.9, R4.2–R4.5, R5.1–R5.12, R6.2, R6.3, R6.6, R6
 
 _Requirements: R4.1, R6.1–R6.3, R6.7, R6.8, R13.4, R14.1, R14.2_
 
-- [ ] 4.1 Add the approved Build_Focus weight table and descriptions to `buildFocus.ts` with a fixture test comparing them to `review/STRATEGIES.md` §3 (R4.1, R13.4).
-- [ ] 4.2 Write the six Strategy_Definition_Files `app/backend/src/config/automaton-strategies/{swarm,paragon,duo,trio,tycoon,generalist}.v1.json`: display name, description and the numbered Build_Order with default Goal_Targets and bounds exactly as approved in `review/STRATEGIES.md` §5–§10, each ending with "Attributes → Max" and containing every required Goal type (R6.11); the server starts and `GET /strategies` lists all six (R6.1–R6.3, R6.8).
-- [ ] 4.3 Add `{key}.v1.fixture.test.ts` for each of the six files, comparing display text, Build_Order Goal list, defaults and bounds with fixtures copied from the approved review document (R13.4).
-- [ ] 4.4 Run the conformance suite and the generic scenario test against the real strategy directory and confirm both pass for all six files; both exercise every Goal type in every file (R6.7, R14.2).
-- [ ] 4.5 Extend each `{key}.v1.fixture.test.ts` with the opening-build assertion: `scenarioProjector` from ₡3,000,000 matches the approved opening table (robots bought, facility levels reached) within the documented tolerance (R6.1, R6.7, R14.1).
+- [x] 4.1 Add the approved Build_Focus weight table and descriptions to `buildFocus.ts` with a fixture test comparing them to `review/STRATEGIES.md` §3 (R4.1, R13.4).
+- [x] 4.2 Write the six Strategy_Definition_Files `app/backend/src/config/automaton-strategies/{swarm,paragon,duo,trio,tycoon,generalist}.v1.json`: display name, description and the numbered Build_Order with default Goal_Targets and bounds exactly as approved in `review/STRATEGIES.md` §5–§10, each ending with "Attributes → Max" and containing every required Goal type (R6.11); the server starts and `GET /strategies` lists all six (R6.1–R6.3, R6.8).
+- [x] 4.3 Add `{key}.v1.fixture.test.ts` for each of the six files, comparing display text, Build_Order Goal list, defaults and bounds with fixtures copied from the approved review document (R13.4).
+- [x] 4.4 Run the conformance suite and the generic scenario test against the real strategy directory and confirm both pass for all six files; both exercise every Goal type in every file (R6.7, R14.2).
+- [x] 4.5 Extend each `{key}.v1.fixture.test.ts` with the opening-build assertion: `scenarioProjector` from ₡3,000,000 matches the approved opening table (robots bought, facility levels reached) within the documented tolerance (R6.1, R6.7, R14.1).
 
 ## Task Group 5: Execution, Robot_Fitout and Free_Upkeep side effects
 
