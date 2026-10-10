@@ -37,11 +37,23 @@ describe('purgeHistory', () => {
 
     expect(rowsDeleted.search_analytics_events).toBe(7);
     expect(rowsDeleted.search_analytics_failures).toBe(0);
-    expect(prisma.$queryRawUnsafe).toHaveBeenCalledTimes(10);
+    expect(prisma.$queryRawUnsafe).toHaveBeenCalledTimes(11);
     expect(prisma.$executeRawUnsafe).toHaveBeenCalledWith(
       expect.stringContaining('"search_analytics_events"'),
     );
     expect(prisma.cycleMetadata.update).toHaveBeenCalledTimes(1);
+  });
+
+  it('counts and truncates the Automaton Turn_Records (Spec #55 R9.5)', async () => {
+    (prisma.$queryRawUnsafe as jest.Mock).mockImplementation(async (query: string) => {
+      const table = query.match(/FROM "([^"]+)"/)?.[1];
+      return [{ count: BigInt(table === 'automaton_turns' ? 4 : 0) }];
+    });
+
+    const rowsDeleted = await purgeHistory();
+
+    expect(rowsDeleted.automaton_turns).toBe(4);
+    expect(prisma.$executeRawUnsafe).toHaveBeenCalledWith(expect.stringContaining('"automaton_turns"'));
   });
 
   it('does not truncate or advance the cycle counter when a required table count fails', async () => {

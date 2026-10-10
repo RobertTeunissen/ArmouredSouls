@@ -86,21 +86,21 @@ _Requirements: R3.11, R5.4, R5.5, R5.7–R5.9, R7.7, R8.1–R8.5, R8.7, R8.8, R1
 
 _Requirements: R2.7, R2.8, R5.11, R6.6, R7.1–R7.10, R11.7, R11.8, R14.3_
 
-- [ ] 6.1 Implement `programSwitch.ts` (read and write `automaton_program_settings`) (R2.7, R2.8).
-- [ ] 6.2 Implement `automatonTurnService.ts`: `runTurnStep` (cutover assertion, Turn_Step lease (`withTurnStepLease` on `turnStepLeaseUntil`, design §11.1), fixed cohort, step budget, `claimTurnRecord`, Program_Switch handling, failure isolation) and `runAutomatonTurn` (load the profile's pinned Strategy_Version and validate its stored Goal_Targets; a missing version or invalid targets records `failed`/`invalid_parameters` and raises an alert; no automatic migration, start/end Free_Upkeep, planner loop with Turn_Budget, Turn_Record completion; a stored weapon name missing from the weapons table fails the turn with `AUTOMATON_WEAPON_UNKNOWN` and an alert) (R5.11, R6.6, R7.5, R7.6, R7.8, R7.9, R7.10).
-- [ ] 6.3 Wire `cycleScheduler.ts`: preparation turn after `advancePreparationCycle()`; competitive `settlement` turn after `advanceCompetitiveCycle()` only when no boundary was reached; both non-fatal (R7.1, R7.2, R7.3).
-- [ ] 6.4 Add Stage 5 to `executeSeasonRollover`: `season_open` turn for the new season, non-fatal, for every rollover trigger (R7.2).
-- [ ] 6.5 Wire `adminCycleService.ts`: preparation turn after each `advancePreparationCycle()`; `settlement` turn after each `completeSerializedCycleCutover`; record results in the bulk response (R7.3, R7.4).
-- [ ] 6.6 Implement `automatonObservability.ts`: Turn_Step summary log and alerts through `sendMonitoringAlert` (`utils/monitoringWebhook.ts`) plus `logger.error` for turn failure, step budget, Saving > 14 turns, negative start balance, `invalid_parameters` and a rejected Strategy_Version upgrade (one alert per profile, used by 9.9) (R11.7, R11.8).
+- [x] 6.1 Implement `programSwitch.ts` (read and write `automaton_program_settings`) (R2.7, R2.8).
+- [x] 6.2 Implement `automatonTurnService.ts`: `runTurnStep` (cutover assertion, Turn_Step lease (`withTurnStepLease` on `turnStepLeaseUntil`, design §11.1), fixed cohort, step budget, `claimTurnRecord`, Program_Switch handling, failure isolation) and `runAutomatonTurn` (load the profile's pinned Strategy_Version and validate its stored Goal_Targets; a missing version or invalid targets records `failed`/`invalid_parameters` and raises an alert; no automatic migration, start/end Free_Upkeep, planner loop with Turn_Budget, Turn_Record completion; a stored weapon name missing from the weapons table fails the turn with `AUTOMATON_WEAPON_UNKNOWN` and an alert) (R5.11, R6.6, R7.5, R7.6, R7.8, R7.9, R7.10).
+- [x] 6.3 Wire `cycleScheduler.ts`: preparation turn after `advancePreparationCycle()`; competitive `settlement` turn after `advanceCompetitiveCycle()` only when no boundary was reached; both non-fatal (R7.1, R7.2, R7.3).
+- [x] 6.4 Add Stage 5 to `executeSeasonRollover`: `season_open` turn for the new season, non-fatal, for every rollover trigger (R7.2).
+- [x] 6.5 Wire `adminCycleService.ts`: preparation turn after each `advancePreparationCycle()`; `settlement` turn after each `completeSerializedCycleCutover`; record results in the bulk response (R7.3, R7.4).
+- [x] 6.6 Implement `automatonObservability.ts`: Turn_Step summary log and alerts through `sendMonitoringAlert` (`utils/monitoringWebhook.ts`) plus `logger.error` for turn failure, step budget, Saving > 14 turns, negative start balance, `invalid_parameters` and a rejected Strategy_Version upgrade (one alert per profile, used by 9.9) (R11.7, R11.8).
 - [ ] 6.7 Integration tests: each Turn_Trigger produces exactly one Turn_Record per Active_Automaton with the right season and slot; no `settlement` turn on the boundary cycle; retried Turn_Steps skip completed records and re-plan failed ones with attempt + 1 and no duplicate charges; a throwing Automaton is recorded `failed` while others complete and settlement succeeds; Program_Switch off records `skipped`/`program_off` and changes nothing; a profile activated mid-step waits for the next step; turns never start while a cutover is in progress; a scheduler Turn_Step and an admin bulk cycle started together run one after the other; an expired lease is taken over; a turn that starts with a negative balance runs Free_Upkeep, buys nothing and raises the turn-start alert; a profile activated after the last non-boundary settlement first acts in the next `season_open` step (R2.7, R7.1–R7.10, R14.3).
 
 ## Task Group 7: Season_Rollover integration
 
 _Requirements: R1.5, R9.1–R9.8, R14.3_
 
-- [ ] 7.1 Write `stableType` to `StableSeasonArchive` and `subjectStableType` to `SeasonStandingSnapshot` and `SeasonAccolade` in `seasonArchiveService.ts` (R9.4).
-- [ ] 7.2 Add `automaton_turns` to `purgeHistory` `TRUNCATE_TABLES` (R9.5).
-- [ ] 7.3 Add an integration test that `reawardPreservedStateAchievements` re-awards the onboarding achievement to Active_Automatons exactly like Human_Stables (decided: parity; no code change expected) (R9.7).
+- [x] 7.1 Write `stableType` to `StableSeasonArchive` and `subjectStableType` to `SeasonStandingSnapshot` and `SeasonAccolade` in `seasonArchiveService.ts` (R9.4).
+- [x] 7.2 Add `automaton_turns` to `purgeHistory` `TRUNCATE_TABLES` (R9.5).
+- [x] 7.3 Add an integration test that `reawardPreservedStateAchievements` re-awards the onboarding achievement to Active_Automatons exactly like Human_Stables (decided: parity; no code change expected) (R9.7).
 - [ ] 7.4 Integration tests over a full rollover with Active_Automatons, a Draft_Automaton, Generated_Stables and Human_Stables: Automaton users survive and are reset per the Human_Reset_Contract; Generated_Stables are still deleted; profiles (incl. Team_Names and Event_Order), blueprints, parameters, Program_Switch and `uploads/automatons/` files are unchanged; archive rows carry the subject Stable_Type; Turn_Records are purged; the `season_open` and `preparation` turns rebuild each Automaton from ₡3,000,000 (R1.5, R9.1–R9.8).
 
 ## Task Group 8: Automaton_Catalogue tooling and starter catalogue

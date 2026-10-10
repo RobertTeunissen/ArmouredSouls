@@ -211,6 +211,8 @@ export async function purgeHistory(): Promise<Record<string, number>> {
     'practice_arena_daily_stats',
     'search_analytics_events',
     'search_analytics_failures',
+    // Spec #55 R9.5: Turn_Records are per-season history.
+    'automaton_turns',
   ] as const;
 
   // Capture the counts first so the rollover report stays truthful; TRUNCATE
