@@ -41,7 +41,7 @@ export function StrategyComparisonTable({ comparison, error, onOpenStrategy }: S
   const name = (row: ComparisonRow): ReactNode => (row.reference || row.strategyKey === null ? (
     <span><b className="text-white">Human stables</b> <span className="text-secondary">(reference)</span></span>
   ) : (
-    <button type="button" onClick={() => onOpenStrategy(row.strategyKey as string)} className={`min-h-11 text-left font-medium text-primary hover:underline ${FOCUS_RING}`}>
+    <button type="button" onClick={() => onOpenStrategy(row.strategyKey as string)} className={`min-h-11 min-w-11 text-left font-medium text-primary hover:underline ${FOCUS_RING}`}>
       {row.displayName}
     </button>
   ));

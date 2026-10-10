@@ -21,7 +21,7 @@ import {
   type ProfileListItem,
   type UpgradeWarningEntry,
 } from '../../../utils/automatonAdminApi';
-import { ActionButton, Card, ConfirmDialog, FOCUS_RING, Field, FieldError, IconButton, INPUT_CLASS, Notice } from './ui';
+import { ActionButton, Card, ConfirmDialog, FOCUS_RING, Field, FieldError, IconButton, INPUT_CLASS, NARROW_INPUT_CLASS, Notice } from './ui';
 import { errorText, issueMessages } from './requestErrors';
 import { BUILDER_FACILITY_TYPES, upgradeWarningText } from './automatonText';
 import { DraftPreviewPanel } from './DraftPreviewPanel';
@@ -64,7 +64,7 @@ function TargetField({ label, value, allowMax, onChange }: { label: string; valu
       aria-label={label}
       aria-invalid={invalid ? true : undefined}
       inputMode={allowMax ? 'text' : 'numeric'}
-      className={`${INPUT_CLASS} w-20 ${invalid ? 'border-red-400' : ''}`}
+      className={`${NARROW_INPUT_CLASS} ${invalid ? 'border-red-400' : ''}`}
       value={raw}
       onChange={(e) => {
         setRaw(e.target.value);
@@ -246,22 +246,23 @@ export function StrategyBuilder({ draftId, profiles, onBack, onChanged }: Strate
                   const errors = issuesAt(issues, entry.position);
                   return (
                     <li key={row.id} className="rounded-md border border-white/10 bg-background p-2">
-                      <div className="grid grid-cols-1 md:grid-cols-[2rem_minmax(7rem,1fr)_auto_auto_auto] gap-2 md:items-center text-sm">
-                        <span className="text-secondary">{entry.position}</span>
-                        <span className="font-medium text-white">{label}</span>
-                        <span className="flex items-center gap-1">
+                      {/* Wraps instead of a fixed grid, so the row fits from 320 px up and sits on one line where there is room. */}
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
+                        <span className="w-6 shrink-0 text-secondary">{entry.position}</span>
+                        <span className="min-w-[7rem] flex-1 font-medium text-white">{label}</span>
+                        <span className="flex min-w-0 flex-wrap items-center gap-1">
                           <span className="text-secondary">Default</span>
                           {prefix && <span aria-hidden="true">{prefix}</span>}
                           <TargetField label={`Default: ${name}`} value={entry.defaultTarget} allowMax={allowMax} onChange={(v) => patchEntry(index, { defaultTarget: v })} />
                           {entry.goal.type === 'refine' && <span className="text-xs text-secondary">steps</span>}
                         </span>
-                        <span className="flex items-center gap-1">
+                        <span className="flex min-w-0 flex-wrap items-center gap-1">
                           <span className="text-secondary">Allowed</span>
                           <TargetField label={`Allowed from: ${name}`} value={entry.bounds.min} allowMax={allowMax} onChange={(v) => patchEntry(index, { bounds: { ...entry.bounds, min: v } })} />
                           <span aria-hidden="true">–</span>
                           <TargetField label={`Allowed to: ${name}`} value={entry.bounds.max} allowMax={allowMax} onChange={(v) => patchEntry(index, { bounds: { ...entry.bounds, max: v } })} />
                         </span>
-                        <span className="flex gap-1">
+                        <span className="flex shrink-0 gap-1">
                           <IconButton label={`Move up: ${name}`} disabled={index === 0} onClick={() => setList(moveGoal(rows, index, -1))}>▲</IconButton>
                           <IconButton label={`Move down: ${name}`} disabled={index === rows.length - 1} onClick={() => setList(moveGoal(rows, index, 1))}>▼</IconButton>
                           <IconButton label={`Remove: ${name}`} onClick={() => setList(removeGoal(rows, index))}>✕</IconButton>

@@ -9,7 +9,7 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import type { AttributePlanView, BuildOrderDescriptor, PreviewAction, PreviewGoal } from '../../../utils/automatonAdminApi';
-import { ActionButton, Card, FOCUS_RING, INPUT_CLASS, Pill } from './ui';
+import { ActionButton, Card, FOCUS_RING, NARROW_INPUT_CLASS, Pill } from './ui';
 import {
   BUILD_FOCUS_NAMES,
   GROUP_LABELS,
@@ -88,7 +88,7 @@ function TargetInput({ row, value, onChange }: { row: BuildOrderRow; value: numb
         step={1}
         value={Number.isFinite(value) ? value : ''}
         onChange={(e) => onChange(e.target.value === '' ? Number.NaN : Number(e.target.value))}
-        className={`${INPUT_CLASS} w-20 ${error ? 'border-red-400' : ''}`}
+        className={`${NARROW_INPUT_CLASS} ${error ? 'border-red-400' : ''}`}
       />
       {suffix && <span className="text-xs text-secondary">{suffix}</span>}
     </span>
@@ -117,7 +117,7 @@ export function BuildOrderPanel({ heading, rows, targets, preview, attributePlan
         What this stable buys, in order of priority: goal 1 first. Change a target to tune it; the order comes from the strategy. Changes apply from the next settlement.
       </p>
       <div role="table" aria-label="Build order" className="text-sm">
-        <div role="rowgroup" className="hidden md:block">
+        <div role="rowgroup" className="hidden lg:block">
           <div role="row" className="grid grid-cols-[2.5rem_minmax(8rem,1fr)_9rem_6rem_minmax(10rem,2fr)] gap-2 border-b border-white/10 py-2 text-left text-secondary">
             <span role="columnheader">#</span>
             <span role="columnheader">Goal</span>
@@ -137,18 +137,18 @@ export function BuildOrderPanel({ heading, rows, targets, preview, attributePlan
               <div
                 key={row.goalId}
                 role="row"
-                className={`grid grid-cols-[2.5rem_1fr] md:grid-cols-[2.5rem_minmax(8rem,1fr)_9rem_6rem_minmax(10rem,2fr)] gap-2 border-b border-white/5 py-2 items-center ${goal?.status === 'saving' ? 'bg-amber-900/20' : ''}`}
+                className={`grid grid-cols-[2.5rem_1fr] lg:grid-cols-[2.5rem_minmax(8rem,1fr)_9rem_6rem_minmax(10rem,2fr)] gap-2 border-b border-white/5 py-2 items-center ${goal?.status === 'saving' ? 'bg-amber-900/20' : ''}`}
               >
                 <span role="cell" className="text-secondary">{row.position}</span>
                 <span role="cell" className="font-medium text-white">{row.label}</span>
-                <span role="cell" className="col-start-2 md:col-start-auto">
+                <span role="cell" className="col-start-2 lg:col-start-auto">
                   <TargetInput row={row} value={value} onChange={(n) => onTargetChange(row.goalId, n)} />
                   {error && <span role="alert" className="block text-xs text-red-300">{error}</span>}
                 </span>
-                <span role="cell" className="col-start-2 md:col-start-auto text-secondary">
-                  <span className="md:hidden">Allowed </span>{boundsText(row, row.bounds)}
+                <span role="cell" className="col-start-2 lg:col-start-auto text-secondary">
+                  <span className="lg:hidden">Allowed </span>{boundsText(row, row.bounds)}
                 </span>
-                <span role="cell" className="col-start-2 md:col-start-auto min-w-0">
+                <span role="cell" className="col-start-2 lg:col-start-auto min-w-0">
                   <StatusCell goal={goal} actions={preview?.actions ?? []} />
                   {plan && (
                     <button
@@ -162,7 +162,7 @@ export function BuildOrderPanel({ heading, rows, targets, preview, attributePlan
                   )}
                 </span>
                 {plan && open && (
-                  <div className="col-span-2 md:col-span-5 md:col-start-2">
+                  <div className="col-span-2 lg:col-span-5 lg:col-start-2">
                     <AttributePlan plan={plan} target={targetText(row, row.target)} />
                   </div>
                 )}

@@ -26,7 +26,7 @@ import { ROBOT_ATTRIBUTES } from '@shared/utils/robotAttributes';
 import { canEquipToSlot } from '@shared/utils/weaponSlots';
 import { formatAttributeName } from '../../weapon-refinement/attributeFormat';
 import { blueprintHeader, refinementStepCosts, type BlueprintEditorItem } from './blueprintState';
-import { ActionButton, Field, FieldError, FOCUS_RING, IconButton, INPUT_CLASS } from './ui';
+import { ActionButton, Field, FieldError, FLEX_INPUT_CLASS, FOCUS_RING, IconButton, INPUT_CLASS, NARROW_INPUT_CLASS } from './ui';
 import {
   HAND_LABELS,
   LOADOUT_LABELS,
@@ -233,11 +233,12 @@ export function BlueprintEditor({ item, weapons, buildFocusOptions, expanded, er
             </p>
             <ol className="space-y-2">
               {f.weaponPath.map((stage, index) => (
-                <li key={index} className="grid grid-cols-1 md:grid-cols-[4rem_1fr_1fr_minmax(8rem,1fr)_7rem] gap-2 items-center rounded-md border border-white/10 p-2 text-sm">
-                  <span className="text-secondary">Stage {index}{index === f.weaponPath.length - 1 ? ' · final' : ''}</span>
+                // A wrapping row: one line where there is room, the selects on their own lines on narrow screens.
+                <li key={index} className="flex flex-wrap items-center gap-2 rounded-md border border-white/10 p-2 text-sm">
+                  <span className="w-full shrink-0 text-secondary sm:w-24">Stage {index}{index === f.weaponPath.length - 1 ? ' · final' : ''}</span>
                   <select
                     aria-label={`Main hand, stage ${index}`}
-                    className={INPUT_CLASS}
+                    className={FLEX_INPUT_CLASS}
                     value={stage.main}
                     onChange={(e) => setStage(index, { main: e.target.value })}
                   >
@@ -247,18 +248,16 @@ export function BlueprintEditor({ item, weapons, buildFocusOptions, expanded, er
                   {hasOffhand ? (
                     <select
                       aria-label={`${offhandLabel}, stage ${index}`}
-                      className={INPUT_CLASS}
+                      className={FLEX_INPUT_CLASS}
                       value={stage.offhand ?? ''}
                       onChange={(e) => setStage(index, { offhand: e.target.value || undefined })}
                     >
                       <option value="">—</option>
                       {weaponOptions(weapons, 'offhand', f.loadoutType).map((w) => <option key={w.name} value={w.name}>{w.name}</option>)}
                     </select>
-                  ) : (
-                    <span className="hidden md:block" />
-                  )}
-                  <span><span className="md:hidden text-secondary">Range </span>{stageRangeText(stage, f.loadoutType, weapons)}</span>
-                  <span><span className="md:hidden text-secondary">Cost </span>{formatCredits(stageCost(f.weaponPath, index, weapons))}</span>
+                  ) : null}
+                  <span className="max-w-full"><span className="text-secondary">Range </span>{stageRangeText(stage, f.loadoutType, weapons)}</span>
+                  <span className="max-w-full"><span className="text-secondary">Cost </span>{formatCredits(stageCost(f.weaponPath, index, weapons))}</span>
                 </li>
               ))}
             </ol>
@@ -288,11 +287,11 @@ export function BlueprintEditor({ item, weapons, buildFocusOptions, expanded, er
                 {f.refinementPlan.map((step, index) => {
                   const label = `${index + 1} ${weaponOfHand(step.hand)} (${HAND_LABELS[step.hand]})`;
                   return (
-                    <li key={index} className="grid grid-cols-1 md:grid-cols-[2rem_1fr_8rem_1fr_6rem_7rem_auto] gap-2 items-center rounded-md border border-white/10 p-2 text-sm">
-                      <span className="text-secondary">{index + 1}</span>
+                    <li key={index} className="flex flex-wrap items-center gap-2 rounded-md border border-white/10 p-2 text-sm">
+                      <span className="w-6 shrink-0 text-secondary">{index + 1}</span>
                       <select
                         aria-label={`Weapon, step ${index + 1}`}
-                        className={INPUT_CLASS}
+                        className={FLEX_INPUT_CLASS}
                         value={step.hand}
                         onChange={(e) => setStep(index, { hand: e.target.value as Hand })}
                       >
@@ -301,17 +300,17 @@ export function BlueprintEditor({ item, weapons, buildFocusOptions, expanded, er
                       </select>
                       <select
                         aria-label={`Tier, step ${index + 1}`}
-                        className={INPUT_CLASS}
+                        className={FLEX_INPUT_CLASS}
                         value={step.tier}
                         onChange={(e) => setStep(index, { tier: e.target.value as RefinementTierKey })}
                       >
                         {TIERS.map((t) => <option key={t} value={t}>{TIER_LABELS[t]}</option>)}
                       </select>
                       {step.tier === 'hone' || step.tier === 'augment' ? (
-                        <span className="flex gap-2">
+                        <span className="flex min-w-0 flex-1 basis-60 flex-wrap gap-2">
                           <select
                             aria-label={`Attribute, step ${index + 1}`}
-                            className={INPUT_CLASS}
+                            className={FLEX_INPUT_CLASS}
                             value={step.targetAttribute ?? ''}
                             onChange={(e) => setStep(index, { targetAttribute: e.target.value })}
                           >
@@ -319,7 +318,7 @@ export function BlueprintEditor({ item, weapons, buildFocusOptions, expanded, er
                           </select>
                           <select
                             aria-label={`Magnitude, step ${index + 1}`}
-                            className={`${INPUT_CLASS} w-20`}
+                            className={NARROW_INPUT_CLASS}
                             value={step.magnitude}
                             onChange={(e) => setStep(index, { magnitude: Number(e.target.value) })}
                           >
@@ -331,7 +330,7 @@ export function BlueprintEditor({ item, weapons, buildFocusOptions, expanded, er
                       )}
                       <span>{formatCredits(stepCosts[index])}</span>
                       <span className="text-secondary">needs Workshop L{REQUIRED_WORKSHOP_LEVELS[step.tier]}</span>
-                      <span className="flex gap-1">
+                      <span className="ml-auto flex shrink-0 gap-1">
                         <IconButton label={`Move up: ${label}`} disabled={index === 0} onClick={() => moveStep(index, -1)}>▲</IconButton>
                         <IconButton label={`Move down: ${label}`} disabled={index === f.refinementPlan.length - 1} onClick={() => moveStep(index, 1)}>▼</IconButton>
                         <IconButton label={`Remove: ${label}`} onClick={() => set({ refinementPlan: f.refinementPlan.filter((_, i) => i !== index) })}>✕</IconButton>

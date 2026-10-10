@@ -165,7 +165,7 @@ export function StrategyLibrary({ strategies, drafts, error, onNewStrategy, onNe
                 {drafts.map((draft) => (
                   <li key={draft.id} className="flex flex-wrap items-center justify-between gap-2 text-sm">
                     <span>
-                      <button type="button" onClick={() => onOpenDraft(draft.id)} className={`min-h-11 text-primary hover:underline ${FOCUS_RING}`}>
+                      <button type="button" onClick={() => onOpenDraft(draft.id)} className={`min-h-11 min-w-11 text-primary hover:underline ${FOCUS_RING}`}>
                         {draft.displayName || draft.key} v{draft.version}
                       </button>
                       <span className="text-secondary"> · {draft.basedOn ? `from ${draft.basedOn.split('.').pop()}` : 'new strategy'}</span>

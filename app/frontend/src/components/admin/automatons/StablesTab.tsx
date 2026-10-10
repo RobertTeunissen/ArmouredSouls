@@ -86,7 +86,7 @@ export function StablesTab({ profiles, filter, strategyFilter, onFilterChange, o
   };
 
   const stableLink = (item: ProfileListItem): ReactNode => (
-    <button type="button" onClick={() => onOpenStable(item.catalogueKey)} className={`min-h-11 text-left font-medium text-primary underline-offset-2 hover:underline ${FOCUS_RING}`}>
+    <button type="button" onClick={() => onOpenStable(item.catalogueKey)} className={`min-h-11 min-w-11 text-left font-medium text-primary underline-offset-2 hover:underline ${FOCUS_RING}`}>
       {item.stableName}
     </button>
   );

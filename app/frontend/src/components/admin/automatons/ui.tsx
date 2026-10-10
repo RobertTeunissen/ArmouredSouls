@@ -85,7 +85,15 @@ export function FieldError({ id, children }: { id?: string; children: ReactNode 
   return <p id={id} role="alert" className="mt-1 text-xs text-red-300">{children}</p>;
 }
 
-export const INPUT_CLASS = `w-full min-h-11 rounded-md bg-background border border-white/20 px-3 py-2 text-sm text-white ${FOCUS_RING}`;
+const INPUT_BASE = `min-h-11 rounded-md bg-background border border-white/20 px-3 py-2 text-sm text-white ${FOCUS_RING}`;
+
+export const INPUT_CLASS = `w-full ${INPUT_BASE}`;
+
+/** A short number field (targets, bounds, magnitudes): fixed 80 px, never squeezed below the 44 px touch target. */
+export const NARROW_INPUT_CLASS = `w-20 min-w-11 shrink-0 ${INPUT_BASE}`;
+
+/** A select in a wrapping row: grows to share the row, wraps to its own line before it gets narrower than 160 px. */
+export const FLEX_INPUT_CLASS = `min-w-40 flex-1 basis-40 ${INPUT_BASE}`;
 
 /** Label + control + help text + error, wired with `aria-describedby`. */
 export function Field({ label, help, error, children }: {
