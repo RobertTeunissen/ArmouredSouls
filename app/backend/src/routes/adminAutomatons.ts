@@ -361,9 +361,9 @@ router.post(
 );
 
 router.get('/strategy-drafts/:id/export', validateRequest({ params: draftParams }), async (req: AuthRequest, res: Response) => {
-  const exported = await exportDraft(Number(req.params.id));
-  res.setHeader('Content-Disposition', `attachment; filename="${exported.fileName}"`);
-  res.json(exported);
+  // A JSON wrapper `{ fileName, definition, upgradeWarning }`, not the file itself, so no attachment
+  // header: the admin page saves `definition` as `fileName` (review C10F-1).
+  res.json(await exportDraft(Number(req.params.id)));
 });
 
 router.get('/program', validateRequest({}), async (_req: AuthRequest, res: Response) => {

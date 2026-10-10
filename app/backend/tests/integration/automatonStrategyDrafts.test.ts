@@ -101,7 +101,8 @@ describe('Strategy_Library and Strategy_Drafts (Spec #55 task 9.8)', () => {
     await harness.api('put', `/strategy-drafts/${draftId}`).send({ buildOrder: duoV1Definition().buildOrder });
     const exported = await harness.api('get', `/strategy-drafts/${draftId}/export`);
     expect(exported.status).toBe(200);
-    expect(exported.headers['content-disposition']).toBe(`attachment; filename="${DRAFT_KEY}.v1.json"`);
+    // The body is a wrapper, not the file: no attachment header, the admin page saves `definition` (review C10F-1).
+    expect(exported.headers['content-disposition']).toBeUndefined();
     expect(exported.body).toMatchObject({ fileName: `${DRAFT_KEY}.v1.json`, upgradeWarning: null });
     const check = validateStrategyDefinition(exported.body.definition, { latestVersions: getStrategyRegistry().latestVersions() });
     expect(check).toMatchObject({ ok: true });

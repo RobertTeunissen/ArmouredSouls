@@ -197,9 +197,11 @@ interface HumanTierRow {
   tier_rank: number;
 }
 
-const TIER_RANK_SQL = Prisma.sql`CASE s."tier"
-  WHEN 'bronze' THEN 0 WHEN 'silver' THEN 1 WHEN 'gold' THEN 2
-  WHEN 'platinum' THEN 3 WHEN 'diamond' THEN 4 WHEN 'champion' THEN 5 ELSE -1 END`;
+/** Tier rank in SQL, generated from `LEAGUE_TIER_ORDER` so the reference row ranks tiers as the strategy rows do. */
+const TIER_RANK_SQL = Prisma.sql`CASE s."tier" ${Prisma.join(
+  LEAGUE_TIER_ORDER.map((tier, rank) => Prisma.sql`WHEN ${tier} THEN ${rank}`),
+  ' ',
+)} ELSE -1 END`;
 
 /** The reference row: Human_Stables with at least one robot; null when there are none. */
 async function readHumanReference(db: ComparisonDb): Promise<ComparisonRow | null> {
