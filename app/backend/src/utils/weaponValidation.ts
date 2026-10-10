@@ -20,7 +20,7 @@ export function isWeaponCompatibleWithLoadout(weapon: Weapon, loadoutType: strin
  * based on its type and the robot's loadout configuration
  */
 export function canEquipToSlot(
-  weapon: Weapon,
+  weapon: Pick<Weapon, 'handsRequired' | 'weaponType'>,
   slot: 'main' | 'offhand',
   loadoutType: string
 ): { canEquip: boolean; reason?: string } {

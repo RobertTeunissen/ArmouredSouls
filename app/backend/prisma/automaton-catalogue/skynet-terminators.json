@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "catalogueKey": "skynet-terminators",
+  "stableName": "Cyberdyne Skynet",
+  "franchise": "The Terminator",
+  "backstory": "It will not stop. It will not yield. Skynet sends a single unit back into every season and spends everything it has on making that unit harder to kill.",
+  "strategy": { "key": "paragon", "version": 1, "targetOverrides": {} },
+  "teamNames": {
+    "twoVsTwo": ["Judgment Day"],
+    "threeVsThree": []
+  },
+  "eventOrder": ["league_1v1", "tournament_1v1", "grand_melee", "koth", "league_2v2", "tournament_2v2", "tag_team", "league_3v3", "tournament_3v3"],
+  "blueprints": [
+    {
+      "slot": 1,
+      "robotName": "T-800 Model 101",
+      "loadoutType": "two_handed",
+      "stance": "offensive",
+      "yieldThreshold": 0,
+      "buildFocus": "bruiser",
+      "weaponPath": [{ "main": "Shotgun" }, { "main": "Plasma Cannon" }],
+      "refinementPlan": [
+        { "tier": "sharpen", "hand": "main", "magnitude": 1 },
+        { "tier": "sharpen", "hand": "main", "magnitude": 1 },
+        { "tier": "forge", "hand": "main", "magnitude": 1 },
+        { "tier": "forge", "hand": "main", "magnitude": 1 }
+      ]
+    },
+    {
+      "slot": 2,
+      "robotName": "T-1000",
+      "loadoutType": "dual_wield",
+      "stance": "offensive",
+      "yieldThreshold": 0,
+      "buildFocus": "sprinter",
+      "weaponPath": [{ "main": "Energy Blade", "offhand": "Energy Blade" }, { "main": "Vibro Mace", "offhand": "Vibro Mace" }],
+      "refinementPlan": [
+        { "tier": "sharpen", "hand": "main", "magnitude": 1 },
+        { "tier": "sharpen", "hand": "offhand", "magnitude": 1 },
+        { "tier": "sharpen", "hand": "main", "magnitude": 1 },
+        { "tier": "sharpen", "hand": "offhand", "magnitude": 1 },
+        { "tier": "forge", "hand": "main", "magnitude": 1 },
+        { "tier": "forge", "hand": "offhand", "magnitude": 1 },
+        { "tier": "forge", "hand": "main", "magnitude": 1 },
+        { "tier": "forge", "hand": "offhand", "magnitude": 1 }
+      ]
+    }
+  ]
+}

@@ -32,6 +32,19 @@ export {
   type ProgramSwitchChange,
   type ProgramSwitchState,
 } from './programSwitch';
+export { getLastCatalogueSyncSummary, syncCatalogue, type CatalogueSyncResult } from './catalogueSync';
+export { exportCatalogue } from './catalogueExport';
+export {
+  blueprintFieldsSchema,
+  blueprintRuleIssues,
+  catalogueIssueCode,
+  eventOrderIssues,
+  requiredTeamNameCountsFor,
+  robotsTargetIssues,
+  teamNamesIssues,
+  type CatalogueExportDocument,
+  type CatalogueIssue,
+} from './automatonCatalogueService';
 export {
   alertUpgradeRejected,
   alertCatalogueSyncConflicts,

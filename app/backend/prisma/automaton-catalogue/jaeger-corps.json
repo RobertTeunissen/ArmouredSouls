@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "catalogueKey": "jaeger-corps",
+  "stableName": "Pan Pacific Defense Corps",
+  "franchise": "Pacific Rim — Jaegers",
+  "backstory": "Two pilots, one mind, a lot of steel. The Corps fights in pairs because that is the only way it knows how — linked, shoulder to shoulder, holding the line one tag-team bout at a time.",
+  "strategy": { "key": "duo", "version": 1, "targetOverrides": {} },
+  "teamNames": {
+    "twoVsTwo": ["Drift Compatible"],
+    "threeVsThree": ["Shatterdome Strike"]
+  },
+  "eventOrder": ["league_2v2", "tag_team", "tournament_2v2", "league_1v1", "koth", "grand_melee", "tournament_1v1", "league_3v3", "tournament_3v3"],
+  "blueprints": [
+    {
+      "slot": 1,
+      "robotName": "Gipsy Danger",
+      "loadoutType": "two_handed",
+      "stance": "balanced",
+      "yieldThreshold": 10,
+      "buildFocus": "bruiser",
+      "weaponPath": [{ "main": "Shock Maul" }, { "main": "Heavy Hammer" }],
+      "refinementPlan": [
+        { "tier": "sharpen", "hand": "main", "magnitude": 1 },
+        { "tier": "sharpen", "hand": "main", "magnitude": 1 },
+        { "tier": "forge", "hand": "main", "magnitude": 1 },
+        { "tier": "forge", "hand": "main", "magnitude": 1 },
+        { "tier": "hone", "hand": "main", "targetAttribute": "combatPower", "magnitude": 1 }
+      ]
+    },
+    {
+      "slot": 2,
+      "robotName": "Striker Eureka",
+      "loadoutType": "single",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "sprinter",
+      "weaponPath": [{ "main": "Burst Rifle" }, { "main": "Volt Sabre" }],
+      "refinementPlan": [
+        { "tier": "sharpen", "hand": "main", "magnitude": 1 },
+        { "tier": "sharpen", "hand": "main", "magnitude": 1 },
+        { "tier": "forge", "hand": "main", "magnitude": 1 },
+        { "tier": "forge", "hand": "main", "magnitude": 1 },
+        { "tier": "hone", "hand": "main", "targetAttribute": "powerCore", "magnitude": 1 }
+      ]
+    },
+    {
+      "slot": 3,
+      "robotName": "Crimson Typhoon",
+      "loadoutType": "dual_wield",
+      "stance": "offensive",
+      "yieldThreshold": 5,
+      "buildFocus": "sprinter",
+      "weaponPath": [{ "main": "Combat Knife", "offhand": "Combat Knife" }, { "main": "Vibro Mace", "offhand": "Vibro Mace" }],
+      "refinementPlan": [
+        { "tier": "sharpen", "hand": "main", "magnitude": 1 },
+        { "tier": "sharpen", "hand": "offhand", "magnitude": 1 },
+        { "tier": "sharpen", "hand": "main", "magnitude": 1 },
+        { "tier": "sharpen", "hand": "offhand", "magnitude": 1 },
+        { "tier": "forge", "hand": "main", "magnitude": 1 },
+        { "tier": "forge", "hand": "offhand", "magnitude": 1 },
+        { "tier": "forge", "hand": "main", "magnitude": 1 },
+        { "tier": "forge", "hand": "offhand", "magnitude": 1 },
+        { "tier": "hone", "hand": "main", "targetAttribute": "gyroStabilizers", "magnitude": 1 },
+        { "tier": "hone", "hand": "offhand", "targetAttribute": "gyroStabilizers", "magnitude": 1 }
+      ]
+    }
+  ]
+}

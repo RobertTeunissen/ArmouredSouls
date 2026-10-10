@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "catalogueKey": "world-robot-boxing",
+  "stableName": "World Robot Boxing",
+  "franchise": "Real Steel",
+  "backstory": "Somewhere between a sport and a spectacle. The league sells tickets, streams every bout and puts the takings back into the ring. Its fighters range from scrapped-together sparring bots to polished champions, and the crowd loves an underdog.",
+  "strategy": { "key": "tycoon", "version": 1, "targetOverrides": { "20": 3 } },
+  "teamNames": {
+    "twoVsTwo": ["Underworld Circuit"],
+    "threeVsThree": ["Crash Palace"]
+  },
+  "eventOrder": ["koth", "league_1v1", "grand_melee", "tag_team", "league_2v2", "tournament_1v1", "tournament_2v2", "league_3v3", "tournament_3v3"],
+  "blueprints": [
+    {
+      "slot": 1,
+      "robotName": "Atom",
+      "loadoutType": "dual_wield",
+      "stance": "balanced",
+      "yieldThreshold": 0,
+      "buildFocus": "sprinter",
+      "weaponPath": [{ "main": "Practice Sword", "offhand": "Practice Sword" }, { "main": "Vibro Mace", "offhand": "Vibro Mace" }],
+      "refinementPlan": [
+        { "tier": "sharpen", "hand": "main", "magnitude": 1 },
+        { "tier": "sharpen", "hand": "offhand", "magnitude": 1 },
+        { "tier": "sharpen", "hand": "main", "magnitude": 1 },
+        { "tier": "sharpen", "hand": "offhand", "magnitude": 1 },
+        { "tier": "forge", "hand": "main", "magnitude": 1 },
+        { "tier": "forge", "hand": "offhand", "magnitude": 1 },
+        { "tier": "forge", "hand": "main", "magnitude": 1 },
+        { "tier": "forge", "hand": "offhand", "magnitude": 1 },
+        { "tier": "hone", "hand": "main", "targetAttribute": "gyroStabilizers", "magnitude": 2 },
+        { "tier": "hone", "hand": "offhand", "targetAttribute": "gyroStabilizers", "magnitude": 2 }
+      ]
+    },
+    {
+      "slot": 2,
+      "robotName": "Noisy Boy",
+      "loadoutType": "dual_wield",
+      "stance": "offensive",
+      "yieldThreshold": 5,
+      "buildFocus": "bruiser",
+      "weaponPath": [{ "main": "Machine Pistol", "offhand": "Machine Pistol" }, { "main": "Volt Sabre", "offhand": "Volt Sabre" }],
+      "refinementPlan": [
+        { "tier": "sharpen", "hand": "main", "magnitude": 1 },
+        { "tier": "sharpen", "hand": "offhand", "magnitude": 1 },
+        { "tier": "sharpen", "hand": "main", "magnitude": 1 },
+        { "tier": "sharpen", "hand": "offhand", "magnitude": 1 },
+        { "tier": "forge", "hand": "main", "magnitude": 1 },
+        { "tier": "forge", "hand": "offhand", "magnitude": 1 },
+        { "tier": "forge", "hand": "main", "magnitude": 1 },
+        { "tier": "forge", "hand": "offhand", "magnitude": 1 },
+        { "tier": "hone", "hand": "main", "targetAttribute": "combatPower", "magnitude": 2 },
+        { "tier": "hone", "hand": "offhand", "targetAttribute": "combatPower", "magnitude": 2 }
+      ]
+    },
+    {
+      "slot": 3,
+      "robotName": "Zeus",
+      "loadoutType": "two_handed",
+      "stance": "defensive",
+      "yieldThreshold": 10,
+      "buildFocus": "warden",
+      "weaponPath": [{ "main": "War Club" }, { "main": "Heavy Hammer" }],
+      "refinementPlan": [
+        { "tier": "sharpen", "hand": "main", "magnitude": 1 },
+        { "tier": "sharpen", "hand": "main", "magnitude": 1 },
+        { "tier": "forge", "hand": "main", "magnitude": 1 },
+        { "tier": "forge", "hand": "main", "magnitude": 1 },
+        { "tier": "augment", "hand": "main", "targetAttribute": "armorPlating", "magnitude": 1 }
+      ]
+    }
+  ]
+}

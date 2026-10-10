@@ -1,9 +1,8 @@
 /**
  * Automaton-specific error codes and error class (Spec #55).
  *
- * The admin endpoint codes (`AUTOMATON_BLUEPRINTS_TOO_FEW`,
- * `AUTOMATON_TEAM_NAMES_MISMATCH`, …) are added by the tasks that introduce
- * those endpoints. `AUTOMATON_ACCOUNT_LOCKED` lives in `authErrors.ts` because
+ * Further admin endpoint codes are added by the tasks that introduce those
+ * endpoints. `AUTOMATON_ACCOUNT_LOCKED` lives in `authErrors.ts` because
  * the auth paths raise it.
  *
  * @module errors/automatonErrors
@@ -26,6 +25,12 @@ export const AutomatonErrorCode = {
   AUTOMATON_PROFILE_INVALID: 'AUTOMATON_PROFILE_INVALID',
   /** An executed action changed nothing (planner/executor defect); the turn fails instead of looping. */
   AUTOMATON_NO_PROGRESS: 'AUTOMATON_NO_PROGRESS',
+  /** A robots Goal_Target would exceed the profile's number of Robot_Blueprints (R3.7). */
+  AUTOMATON_BLUEPRINTS_TOO_FEW: 'AUTOMATON_BLUEPRINTS_TOO_FEW',
+  /** Team_Names do not have the count the Team_Rule needs (R3.6). */
+  AUTOMATON_TEAM_NAMES_MISMATCH: 'AUTOMATON_TEAM_NAMES_MISMATCH',
+  /** A Catalogue_Entry or admin blueprint/profile input fails the catalogue rules, or an export cannot be built (R10.1, R10.7). */
+  AUTOMATON_CATALOGUE_INVALID: 'AUTOMATON_CATALOGUE_INVALID',
 } as const;
 
 export type AutomatonErrorCodeType = typeof AutomatonErrorCode[keyof typeof AutomatonErrorCode];

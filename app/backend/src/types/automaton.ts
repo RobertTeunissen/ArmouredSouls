@@ -78,6 +78,34 @@ export interface TurnUpkeepIssue {
   teamIndex?: number;
 }
 
+/** A Catalogue_Entry skipped by Catalogue_Sync because its stable name is taken (R10.4). */
+export interface CatalogueSyncConflict {
+  catalogueKey: string;
+  stableName: string;
+  reason: 'stable_name_taken';
+}
+
+/** A Repository_Image filled onto a Robot_Blueprint that had no image (R10.3). */
+export interface CatalogueImageFill {
+  catalogueKey: string;
+  slot: number;
+  imageUrl: string;
+}
+
+/**
+ * Stored in `AutomatonProgramSetting.lastSyncSummary` (R10.5): the last
+ * Catalogue_Sync run. Counts are the list lengths.
+ */
+export interface CatalogueSyncSummary {
+  ranAt: string;
+  /** Catalogue_Keys of the Draft_Automatons created. */
+  added: string[];
+  /** Catalogue_Keys that already had an Automaton_Profile. */
+  present: string[];
+  filled: CatalogueImageFill[];
+  conflicts: CatalogueSyncConflict[];
+}
+
 /** Stored in `AutomatonProfile.strategyParameters`. Keys are Goal ids of the profile's Build_Order. */
 export interface StrategyParametersV1 {
   /** Goal id → Goal_Target (robot count, facility level, attribute level, stage index, refine step count 0–10). */

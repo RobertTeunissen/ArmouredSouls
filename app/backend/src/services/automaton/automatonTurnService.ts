@@ -36,7 +36,6 @@ import { resolveCanonicalCycleIdentity } from '../cycle/canonicalCycleIdentity';
 import { SUBSCRIBABLE_EVENT_TYPES } from '../subscription/eventRegistry';
 import type { AutomatonTurnTrigger, Prisma } from '../../../generated/prisma';
 import type { EventOrder, StrategyParametersV1, TeamNames } from '../../types/automaton';
-import { BUILD_FOCUS_WEIGHTS } from './buildFocus';
 import { createExecutionCursor, executeAction, type ExecutionContext } from './actionExecutor';
 import { chargedStepCount } from './factProjector';
 import { planNextStep, type PlanResult } from './turnPlanner';
@@ -44,7 +43,8 @@ import { checkTurnBudget, isStepBudgetExhausted, STEP_BUDGET_EXHAUSTED, TURN_BUD
 import { loadBlueprintFacts, loadStableFacts, loadWeaponCatalogue, type StableFacts, type WeaponFacts } from './stableFacts';
 import { runFreeUpkeep, type FreeUpkeepIssue } from './upkeep/freeUpkeep';
 import { ensureProgramSettings, isProgramEnabled, PROGRAM_SETTINGS_ID } from './programSwitch';
-import { loadStrategyRegistry, type StrategyRegistry } from './strategies/registry';
+import type { StrategyRegistry } from './strategies/registry';
+import { getStrategyRegistry } from './strategies/defaultRegistry';
 import {
   alertInvalidParameters,
   alertNegativeBalance,
@@ -108,13 +108,7 @@ export interface TurnStepDependencies {
 
 // ─── Strategy_Registry ───────────────────────────────────────────────
 
-let defaultRegistry: StrategyRegistry | null = null;
-
-/** The repository Strategy_Registry, loaded once (the startup check has validated the files). */
-export function getStrategyRegistry(): StrategyRegistry {
-  if (!defaultRegistry) defaultRegistry = loadStrategyRegistry({ weightTable: BUILD_FOCUS_WEIGHTS });
-  return defaultRegistry;
-}
+export { getStrategyRegistry };
 
 // ─── Errors ──────────────────────────────────────────────────────────
 

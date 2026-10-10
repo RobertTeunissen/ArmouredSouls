@@ -83,15 +83,35 @@ function weaponPathFor(loadout: LoadoutType, stages: number, variant: number): W
   });
 }
 
-/** Every Sharpen and Forge per non-shield weapon of the final stage (decision 35). */
-function refinementPlanFor(loadout: LoadoutType): RefinementStep[] {
-  const hand = (h: 'main' | 'offhand'): RefinementStep[] => [
+/**
+ * A fifth step valid for `weaponName` (decision 36): a Hone +1 on its first
+ * bonus that stays within +10, else an Augment +1 on an attribute it lacks.
+ */
+function fifthStepFor(weaponName: string, hand: 'main' | 'offhand', variant: number): RefinementStep {
+  const bonuses = SEED_WEAPON_MAP.get(weaponName)?.bonuses ?? {};
+  const honeable = (Object.entries(bonuses) as [RobotAttribute, number][]).filter(([, value]) => value + 1 <= 10);
+  if (honeable.length > 0 && variant % 2 === 0) {
+    return { tier: 'hone', hand, targetAttribute: honeable[0][0], magnitude: 1 };
+  }
+  const absent = ROBOT_ATTRIBUTES.find((attribute) => bonuses[attribute] === undefined) as RobotAttribute;
+  return { tier: 'augment', hand, targetAttribute: absent, magnitude: 1 };
+}
+
+/**
+ * Every Sharpen and Forge per non-shield weapon of the final stage (decision
+ * 35), then a Hone or Augment fifth step per weapon (Hone +1 on the shield).
+ */
+function refinementPlanFor(loadout: LoadoutType, finalStage: WeaponStage, variant: number): RefinementStep[] {
+  const dps = (h: 'main' | 'offhand'): RefinementStep[] => [
     { tier: 'sharpen', hand: h, magnitude: 1 },
     { tier: 'sharpen', hand: h, magnitude: 1 },
     { tier: 'forge', hand: h, magnitude: 1 },
     { tier: 'forge', hand: h, magnitude: 1 },
   ];
-  return loadout === 'dual_wield' ? [...hand('main'), ...hand('offhand')] : hand('main');
+  const main = [...dps('main'), fifthStepFor(finalStage.main, 'main', variant)];
+  if (loadout === 'dual_wield' && finalStage.offhand) return [...main, ...dps('offhand'), fifthStepFor(finalStage.offhand, 'offhand', variant + 1)];
+  if (loadout === 'weapon_shield' && finalStage.offhand) return [...main, fifthStepFor(finalStage.offhand, 'offhand', 0)];
+  return main;
 }
 
 /** A deterministic valid blueprint for `slotIndex`. */
@@ -101,6 +121,7 @@ export function generatedBlueprint(
   stages = 2,
   buildFocus: BuildFocusKey = BUILD_FOCUS_KEYS[(slotIndex - 1) % BUILD_FOCUS_KEYS.length],
 ): BlueprintFacts {
+  const weaponPath = weaponPathFor(loadout, stages, slotIndex);
   return {
     blueprintId: 500 + slotIndex,
     slotIndex,
@@ -110,9 +131,45 @@ export function generatedBlueprint(
     stance: STANCES[(slotIndex - 1) % STANCES.length],
     yieldThreshold: 10,
     buildFocus,
-    weaponPath: weaponPathFor(loadout, stages, slotIndex),
-    refinementPlan: refinementPlanFor(loadout),
+    weaponPath,
+    refinementPlan: refinementPlanFor(loadout, weaponPath[weaponPath.length - 1], slotIndex),
   };
+}
+
+/**
+ * The starter catalogue's blueprints as planner facts, one 11-slot set per
+ * Catalogue_Entry: the entry's blueprints in their slots, generated
+ * blueprints in the slots it does not have (design §14.1, C04-3).
+ */
+export function starterBlueprintSets(entries: readonly { blueprints: readonly CatalogueBlueprintLike[] }[]): BlueprintFacts[][] {
+  return entries.map((entry) => Array.from({ length: 11 }, (_unused, i): BlueprintFacts => {
+    const blueprint = entry.blueprints.find((b) => b.slot === i + 1);
+    if (!blueprint) return generatedBlueprint(i + 1);
+    return {
+      blueprintId: 500 + blueprint.slot,
+      slotIndex: blueprint.slot,
+      robotName: blueprint.robotName,
+      imageUrl: null,
+      loadoutType: blueprint.loadoutType,
+      stance: blueprint.stance,
+      yieldThreshold: blueprint.yieldThreshold,
+      buildFocus: blueprint.buildFocus,
+      weaponPath: blueprint.weaponPath.map((stage) => ({ ...stage })),
+      refinementPlan: blueprint.refinementPlan.map((step) => ({ ...step })),
+    };
+  }));
+}
+
+/** The Catalogue_Entry blueprint fields `starterBlueprintSets` reads. */
+export interface CatalogueBlueprintLike {
+  slot: number;
+  robotName: string;
+  loadoutType: LoadoutType;
+  stance: Stance;
+  yieldThreshold: number;
+  buildFocus: BuildFocusKey;
+  weaponPath: readonly WeaponStage[];
+  refinementPlan: readonly RefinementStep[];
 }
 
 /** Eleven generated blueprints covering every loadout and Build_Focus. */

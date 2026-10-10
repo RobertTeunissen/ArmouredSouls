@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "catalogueKey": "planet-express",
+  "stableName": "Planet Express Crew",
+  "franchise": "Futurama",
+  "backstory": "Planet Express treats the arena as a side business. The merchandise sells, the streams pay, and the robots are mostly there to keep the cameras rolling. Profit first; glory if it is cheap.",
+  "strategy": { "key": "tycoon", "version": 1, "targetOverrides": {} },
+  "teamNames": {
+    "twoVsTwo": ["Delivery Crew"],
+    "threeVsThree": ["Robot Arms Apts"]
+  },
+  "eventOrder": ["koth", "grand_melee", "league_1v1", "tag_team", "league_2v2", "tournament_1v1", "tournament_2v2", "league_3v3", "tournament_3v3"],
+  "blueprints": [
+    {
+      "slot": 1,
+      "robotName": "Bender",
+      "loadoutType": "two_handed",
+      "stance": "offensive",
+      "yieldThreshold": 30,
+      "buildFocus": "bruiser",
+      "weaponPath": [{ "main": "War Club" }, { "main": "Heavy Hammer" }],
+      "refinementPlan": [
+        { "tier": "sharpen", "hand": "main", "magnitude": 1 },
+        { "tier": "sharpen", "hand": "main", "magnitude": 1 },
+        { "tier": "forge", "hand": "main", "magnitude": 1 },
+        { "tier": "forge", "hand": "main", "magnitude": 1 },
+        { "tier": "hone", "hand": "main", "targetAttribute": "combatPower", "magnitude": 2 }
+      ]
+    },
+    {
+      "slot": 2,
+      "robotName": "Calculon",
+      "loadoutType": "single",
+      "stance": "balanced",
+      "yieldThreshold": 20,
+      "buildFocus": "deadeye",
+      "weaponPath": [{ "main": "Beam Pistol" }, { "main": "Particle Lance" }],
+      "refinementPlan": [
+        { "tier": "sharpen", "hand": "main", "magnitude": 1 },
+        { "tier": "sharpen", "hand": "main", "magnitude": 1 },
+        { "tier": "forge", "hand": "main", "magnitude": 1 },
+        { "tier": "forge", "hand": "main", "magnitude": 1 },
+        { "tier": "hone", "hand": "main", "targetAttribute": "combatPower", "magnitude": 2 }
+      ]
+    },
+    {
+      "slot": 3,
+      "robotName": "Roberto",
+      "loadoutType": "dual_wield",
+      "stance": "offensive",
+      "yieldThreshold": 0,
+      "buildFocus": "sprinter",
+      "weaponPath": [{ "main": "Combat Knife", "offhand": "Combat Knife" }, { "main": "Vibro Mace", "offhand": "Vibro Mace" }],
+      "refinementPlan": [
+        { "tier": "sharpen", "hand": "main", "magnitude": 1 },
+        { "tier": "sharpen", "hand": "offhand", "magnitude": 1 },
+        { "tier": "sharpen", "hand": "main", "magnitude": 1 },
+        { "tier": "sharpen", "hand": "offhand", "magnitude": 1 },
+        { "tier": "forge", "hand": "main", "magnitude": 1 },
+        { "tier": "forge", "hand": "offhand", "magnitude": 1 },
+        { "tier": "forge", "hand": "main", "magnitude": 1 },
+        { "tier": "forge", "hand": "offhand", "magnitude": 1 },
+        { "tier": "hone", "hand": "main", "targetAttribute": "gyroStabilizers", "magnitude": 2 },
+        { "tier": "hone", "hand": "offhand", "targetAttribute": "gyroStabilizers", "magnitude": 2 }
+      ]
+    }
+  ]
+}

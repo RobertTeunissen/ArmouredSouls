@@ -111,6 +111,8 @@ const DB_DEPENDENT = [
   'tests/integration/automatonExecution.test.ts',
   'tests/integration/automatonSeasonArchive.test.ts',
   'tests/integration/automatonPreservedStateAchievement.test.ts',
+  'tests/integration/automatonCatalogueSync.test.ts',
+  'tests/integration/automatonCatalogueExport.test.ts',
   // Spec #55 — Domain_Service_Extraction (task group 2)
   'src/services/economy/__tests__/facilityUpgradeService.test.ts',
   'src/services/economy/__tests__/weaponPurchaseService.test.ts',

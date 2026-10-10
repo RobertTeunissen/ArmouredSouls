@@ -25,7 +25,9 @@
     "test:tiers:verify": "tsx scripts/verifyTiers.ts",
     "test:all": "pnpm run test && pnpm run test:heavy",
     "test:matchmaking": "tsx scripts/testMatchmaking.ts",
-    "test:robot-stats": "tsx scripts/testRobotStats.ts"
+    "test:robot-stats": "tsx scripts/testRobotStats.ts",
+    "automaton:sync": "tsx scripts/automatonCatalogueSync.ts",
+    "automaton:unpack": "tsx scripts/automatonCatalogueUnpack.ts"
   },
   "keywords": [
     "game",

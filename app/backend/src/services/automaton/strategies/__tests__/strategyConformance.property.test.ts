@@ -26,6 +26,8 @@ import { canEquipToSlot } from '../../../../utils/weaponValidation';
 import { getCapForLevel } from '../../../../shared/utils/academyCaps';
 import { ROBOT_ATTRIBUTES, type RobotAttribute } from '../../../../shared/utils/robotAttributes';
 import {
+  validateAttributeOnWeapon,
+  validateAttributeStackCap,
   validateRefinementSlotAvailable,
   validateShieldCompatibility,
   type RefinementRow,
@@ -59,10 +61,26 @@ import {
   SEED_WEAPON_MAP,
   STRATEGY_TEST_DIRECTORIES,
   blueprintSetArbitrary,
+  starterBlueprintSets,
 } from './helpers/strategyTestSupport';
+import { loadCatalogueDirectory } from '../../automatonCatalogueService';
 
 const STRATEGIES: UpgradeStrategy[] = STRATEGY_TEST_DIRECTORIES.flatMap((directory) =>
   loadStrategyRegistry({ directory, weightTable: BUILD_FOCUS_WEIGHTS }).all());
+
+/** The starter catalogue blueprints (C04-3), padded to 11 slots. */
+const STARTER_SETS = starterBlueprintSets(loadCatalogueDirectory({
+  weapons: SEED_WEAPON_MAP,
+  strategies: loadStrategyRegistry({ weightTable: BUILD_FOCUS_WEIGHTS }),
+}).entries.map(({ entry }) => entry));
+
+/** Hone and Augment steps planned across all strategies and runs. */
+const seenRefinementTiers = new Set<string>();
+
+afterAll(() => {
+  // Generated and starter plans carry Hone and Augment fifth steps (C04-3).
+  expect([...seenRefinementTiers].sort()).toEqual(['augment', 'hone']);
+});
 
 const NUM_RUNS = 100;
 const KNOWN_ACTION_KINDS = new Set<PlannedAction['kind']>(['robot_chain', 'facility_upgrade', 'attribute_upgrade', 'weapon_stage', 'weapon_refinement']);
@@ -191,7 +209,8 @@ const scenarioArbitrary = fc.record({
   prestige: fc.integer({ min: 0, max: 60_000 }),
   levels: fc.array(fc.integer({ min: 0, max: 10 }), { minLength: AUTOMATON_FACILITY_TYPES.length, maxLength: AUTOMATON_FACILITY_TYPES.length }),
   robotCount: fc.integer({ min: 0, max: 11 }),
-  blueprints: blueprintSetArbitrary(11),
+  // Generated sets, or one of the 11 starter catalogue sets (design §14.1).
+  blueprints: fc.oneof(blueprintSetArbitrary(11), fc.constantFrom(...STARTER_SETS)),
   robotDraws: fc.array(fc.record({
     stage: fc.integer({ min: -1, max: 3 }),
     attributeSeeds: fc.array(fc.nat(), { minLength: ROBOT_ATTRIBUTES.length, maxLength: ROBOT_ATTRIBUTES.length }),
@@ -312,6 +331,13 @@ function expectActionValid(before: StableFacts, after: StableFacts, action: Plan
       expect(workshop).toBeGreaterThanOrEqual(workshopLevelForTier(action.step.tier));
       expect(validateRefinementSlotAvailable(item.refinements, action.step.tier).ok).toBe(true);
       expect(validateShieldCompatibility(SEED_WEAPON_MAP.get(item.weaponName)?.weaponType ?? '', action.step.tier).ok).toBe(true);
+      if (action.step.tier === 'hone' || action.step.tier === 'augment') {
+        const attribute = action.step.targetAttribute as RobotAttribute;
+        const bonus = SEED_WEAPON_MAP.get(item.weaponName)?.bonuses[attribute] ?? 0;
+        expect(validateAttributeOnWeapon(bonus, item.refinements, attribute, action.step.tier).ok).toBe(true);
+        expect(validateAttributeStackCap(bonus, item.refinements, attribute, action.step.magnitude).ok).toBe(true);
+        seenRefinementTiers.add(action.step.tier);
+      }
       const existing = item.refinements.filter((r) => r.tier === action.step.tier).length;
       expect(action.refinementCost).toBe(refinementStepCost(action.step.tier, action.step.magnitude, existing));
       break;
