@@ -104,6 +104,12 @@ export interface TurnStepDependencies {
   now?: () => number;
   /** Lease poll interval; TURN_STEP_LEASE_POLL_MS by default. */
   leasePollMs?: number;
+  /**
+   * Tests on a shared database: which Active_Automatons of the cohort take
+   * part (default: all), so a test never runs turns for stables it did not
+   * create. Applied to the cohort read at the start (R7.9).
+   */
+  cohortFilter?: (profile: CohortProfile) => boolean;
 }
 
 // ─── Strategy_Registry ───────────────────────────────────────────────
@@ -478,7 +484,7 @@ export async function runTurnStep(input: TurnStepInput, deps: TurnStepDependenci
     const started = now();
     const summary = emptyTurnStepSummary(turn, input.source);
     const enabled = await isProgramEnabled();
-    const cohort = await listActiveProfilesOrderedByUserId();
+    const cohort = (await listActiveProfilesOrderedByUserId()).filter(deps.cohortFilter ?? ((): boolean => true));
     summary.processed = cohort.length;
     const env: TurnEnvironment | null = enabled && cohort.length > 0
       ? { registry: deps.registry ?? getStrategyRegistry(), weapons: await loadWeaponCatalogue(), phase, now }

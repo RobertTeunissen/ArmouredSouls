@@ -156,4 +156,18 @@ describe('Coverage_Matrix (R10.9, review/CATALOGUE.md §14)', () => {
   it('has a blueprint slot beyond the default robots target', () => {
     expect(loaded.some((item) => item.entry.blueprints.length > Math.max(...robotTargets(item)))).toBe(true);
   });
+
+  it('has the yield extremes 0 and 30', () => {
+    const yields = new Set(blueprints.map((b) => b.yieldThreshold));
+    expect(yields.has(0)).toBe(true);
+    expect(yields.has(30)).toBe(true);
+  });
+
+  it('buys Tuning Bay levels in every stable: every catalogue strategy has a Tuning Bay Goal (decision 29)', () => {
+    for (const item of loaded) {
+      const tuningGoals = strategyOf(item).buildOrder.filter((d) => d.type === 'facility' && d.facilityType === 'tuning_bay');
+      expect(tuningGoals.length).toBeGreaterThan(0);
+      expect(Math.max(...tuningGoals.map((d) => item.parameters.targets[d.id]))).toBeGreaterThan(0);
+    }
+  });
 });

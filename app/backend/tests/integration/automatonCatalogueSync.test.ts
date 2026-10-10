@@ -198,6 +198,25 @@ describe('Catalogue_Sync (R10.3–R10.5)', () => {
     expect(result.io.lines.join('\n')).toContain('conflict');
   });
 
+  it('skips a stable name another Automaton_Profile plans (a draft), and alerts', async () => {
+    const d = dirs('planned');
+    const planner = keyFor('planner');
+    await prisma.automatonProfile.create({
+      data: {
+        catalogueKey: planner, plannedStableName: `T55 Planned ${suffix}`, franchise: 'F', backstory: 'B', strategyKey: 'duo',
+        strategyVersion: 1, strategyParameters: { targets: {} }, eventOrder: [], status: 'draft', origin: 'admin',
+      },
+    });
+    const key = keyFor('conf2');
+    writeEntry(d, entryFor(key, `T55 Planned ${suffix}`));
+    alerts.length = 0;
+
+    expect((await run(d)).code).toBe(0);
+    expect(await profileOf(key)).toBeNull();
+    expect((await storedSummary())?.conflicts).toEqual([{ catalogueKey: key, stableName: `T55 Planned ${suffix}`, reason: 'stable_name_taken' }]);
+    expect(alerts).toEqual([[`${key}: stable name "T55 Planned ${suffix}" is taken`]]);
+  });
+
   it('aborts with exit 1 and writes nothing when any file is invalid (R10.4)', async () => {
     const d = dirs('invalid');
     const good = keyFor('good');
