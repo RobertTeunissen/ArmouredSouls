@@ -96,6 +96,10 @@ Frontend:
 - **Hall of Records badge on every record that names a stable (decision 42)**, wider than the original §1 table. Player-visible; approved 10 Oct 2026. Covered by Vitest and integration tests, not Playwright, because a local e2e Automaton does not reliably top a record list.
 - **Battle report at 320 px scrolls by 8 px** because of the pre-existing `ArenaCanvas` 300 px minimum (outside spec 55). The badge surfaces themselves do not overflow at any width.
 
+Pre-existing fix included on this branch:
+
+- **Duplicate achievement-unlock attempts (outside spec 55, product owner's request).** Concurrent achievement checks for one stable in team tournament, KotH and Grand Melee battles raced on `user_achievements_user_id_achievement_id_key` (caught, but logged as `prisma:error`). `achievementService.checkAndAward` now runs one check at a time per stable; rewards and pairing unchanged. Commit e78a68ae.
+
 Not changed on this branch:
 
 - **"Glass" and other names with a profane substring.** The catalogue stable-name rule reuses `validateStableName`; its substring match is fixed on `bugfix/profanity-whole-word-matching`. None of the 11 starter names is affected.
