@@ -1,0 +1,178 @@
+{
+  "number": 157,
+  "catalogue_key": "vision-synthetic-workshop",
+  "name": "Vision Synthetic Workshop",
+  "franchise": "Marvel",
+  "strategy": "Paragon",
+  "opening_robots": 1,
+  "target_robots": 1,
+  "max_planned_robots": 1,
+  "strategy_review_limit": 2,
+  "backstory": "A single composed synthetic receives precise mid-range equipment and patient refinement. Its workshop invests in supported hardware rather than assigning combat effects to exceptional source abilities.",
+  "strategy_personality": "A separate synthetic-character flagship. Select the source appearance and retain the authentic humanoid presentation; source powers do not add unsupported mechanics.",
+  "teams": {
+    "2v2": [],
+    "3v3": []
+  },
+  "event_order": [
+    "league_1v1",
+    "tournament_1v1",
+    "koth",
+    "grand_melee",
+    "league_2v2",
+    "tag_team",
+    "tournament_2v2",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "robots": [
+    {
+      "slot": 1,
+      "name": "Vision",
+      "source_identity": "Vision",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 15,
+      "build_focus": "Tactician",
+      "range_from_weapons": "mid",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Bolt Carbine",
+          "offhand_weapon": null,
+          "list_price_credits": 93000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Nova Caster",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Sharpen",
+          "weapon": "Nova Caster",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 1,
+          "cost_credits": 300000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 1
+        },
+        {
+          "operation": "Sharpen",
+          "weapon": "Nova Caster",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 2,
+          "cost_credits": 900000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 2
+        },
+        {
+          "operation": "Forge",
+          "weapon": "Nova Caster",
+          "hand": "main",
+          "workshop_level": 8,
+          "occurrence": 1,
+          "cost_credits": 400000,
+          "prestige_gate": 15000,
+          "effect": "+8% damage",
+          "step": 3
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset: one square individual robot portrait for the Armoured Souls game. Create an original robot design with its own construction and proportions. Premium realistic industrial science-fiction 3D render, fine scratches and restrained paint wear, believable materials. Quiet charcoal-to-black studio backdrop, dark floor, faint low haze. Neutral soft key light and cool upper-right rim. Three-quarter view, entire robot, wheels, antennae and tools visible, centered at 80% canvas height with clear margin on all sides. Readable at 512px. One robot only. No text, logos, watermark, frame, interface, collage, firing, explosions or extra characters.\nSubject: Original advanced synthetic guardian android. Slim athletic biped with smooth pearl-white ceramic plates over a navy flexible lattice, long streamlined limbs and a seamless oval frosted-glass faceplate with a subtle soft cyan interior glow. Inset concentric arcs across the upper chest, brushed aluminium joint rings and narrow sculpted feet. No cape, no forehead gem, no human facial anatomy. Graceful grounded three-quarter stance with relaxed open hands. Clean geometric forms, precise engineering and restrained realistic surface wear.",
+      "role": "Measured mid-range fighter",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 1600000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "Vision fills the measured mid-range fighter role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Tactician tuning supports the mid equipment role; balanced stance and a 15% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Paragon strategy tuning rules with the Tactician Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "vision-synthetic-workshop:1:vision",
+      "folder": "stables/157-vision-synthetic-workshop/robots/01-vision",
+      "files": {
+        "png": "stables/157-vision-synthetic-workshop/robots/01-vision/portrait.png",
+        "webp": "stables/157-vision-synthetic-workshop/robots/01-vision/portrait.webp",
+        "blueprint": "stables/157-vision-synthetic-workshop/robots/01-vision/blueprint.json",
+        "profile": "stables/157-vision-synthetic-workshop/robots/01-vision/profile.md",
+        "prompt": "stables/157-vision-synthetic-workshop/robots/01-vision/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/vision-synthetic-workshop/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 157,
+          "stable_name": "Vision Synthetic Workshop",
+          "catalogue_key": "vision-synthetic-workshop",
+          "slot": 1,
+          "robot_name": "Vision",
+          "source_identity": "Vision",
+          "source_edition": "Original Armoured Souls visual interpretation; planned source identity retained as roster metadata",
+          "source_references": [
+            "https://www.marvel.com/characters/vision/in-comics"
+          ],
+          "prompt": "Use case: stylized-concept. Asset: one square individual robot portrait for the Armoured Souls game. Create an original robot design with its own construction and proportions. Premium realistic industrial science-fiction 3D render, fine scratches and restrained paint wear, believable materials. Quiet charcoal-to-black studio backdrop, dark floor, faint low haze. Neutral soft key light and cool upper-right rim. Three-quarter view, entire robot, wheels, antennae and tools visible, centered at 80% canvas height with clear margin on all sides. Readable at 512px. One robot only. No text, logos, watermark, frame, interface, collage, firing, explosions or extra characters.\nSubject: Original advanced synthetic guardian android. Slim athletic biped with smooth pearl-white ceramic plates over a navy flexible lattice, long streamlined limbs and a seamless oval frosted-glass faceplate with a subtle soft cyan interior glow. Inset concentric arcs across the upper chest, brushed aluminium joint rings and narrow sculpted feet. No cape, no forehead gem, no human facial anatomy. Graceful grounded three-quarter stance with relaxed open hands. Clean geometric forms, precise engineering and restrained realistic surface wear.",
+          "original_plan_prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic classic Marvel comics Vision synthezoid. Humanlike red face with yellow forehead jewel, green closely fitted synthetic body suit with yellow gloves, yellow boots, yellow trunks and yellow diamond chest panel, high-collared flowing yellow cape. Slim athletic adult humanoid proportions, material subtly synthetic with restrained panel lines, humanlike face, no helmet or bulky mech armour. Neutral dignified standing pose, cape fully contained, no energy effects.\nMetadata only, do not render text: #157 slot 1 Vision.",
+          "artwork_type": "original interpretation",
+          "art_direction": "Original sleek synthetic android",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-c5bfb654-94cf-4f80-aac4-ea0ccb31d55e.png",
+          "visual_review": "Accepted — original interpretation reviewed for complete-body framing, correct mechanical anatomy, readable silhouette, matching materials and studio lighting",
+          "asset_id": "vision-synthetic-workshop:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/vision-synthetic-workshop/1.webp",
+          "master": "outputs/automaton-portraits/masters/vision-synthetic-workshop/1.png",
+          "output": "app/frontend/public/assets/automatons/vision-synthetic-workshop/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "a6d996219894c6a914cb17365d3e4134414a4a03a65778fec65729a0db6ebfeb",
+          "bytes": 34502,
+          "original_source_edition": "Marvel Earth-616 comics — classic green/yellow Vision",
+          "source_reference_note": "References describe the roster background; the final visual design is an original interpretation."
+        },
+        "sha256": "a6d996219894c6a914cb17365d3e4134414a4a03a65778fec65729a0db6ebfeb",
+        "revision": 1,
+        "artwork_type": "original interpretation",
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "alternatives": [],
+  "blueprint_status": "detailed",
+  "source_notes": "\n**Franchise:** Marvel  \n**Strategy:** Paragon · **Target roster:** 1 robot\n\n**Proposed robots:** Vision.\n\n**Direction:** A separate synthetic-character flagship. Select the source appearance and retain the authentic humanoid presentation; source powers do not add unsupported mechanics.\n\n**Production edition:** Marvel Earth-616 comics — classic green/yellow Vision.  \n**Catalogue key:** `vision-synthetic-workshop`\n\n",
+  "source_documents": [
+    "reference/AUTOMATON_STABLE_EXPANSION.md"
+  ],
+  "blueprint_origin": "completed during collection",
+  "purchasing_plan": "Open and remain at one robot. Buy its complete stage-1 loadout before refinement. Execute the listed steps in order, progressing Workshop L1/L3/L5/L8 as required. Keep prestige-gated steps pending; fund repairs and maintenance before every purchase.",
+  "target_overrides": {},
+  "equipment_budget": {
+    "stage_0_credits": 93000,
+    "stage_1_credits": 425000,
+    "refinement_credits": 1600000,
+    "excludes": "Frames, facilities, training, repairs, upkeep, discounts and resale; stage-1 total replaces stage-0 gear and is not a simultaneous equipment inventory."
+  },
+  "folder": "stables/157-vision-synthetic-workshop",
+  "history_image_count": 0
+}

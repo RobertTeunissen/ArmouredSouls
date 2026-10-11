@@ -1,0 +1,356 @@
+{
+  "number": 173,
+  "catalogue_key": "simulant-refuge-workshop",
+  "name": "Simulant Refuge Workshop",
+  "franchise": "The Creator — 2023 film",
+  "strategy": "Generalist",
+  "opening_robots": 2,
+  "target_robots": 3,
+  "max_planned_robots": 3,
+  "strategy_review_limit": 4,
+  "backstory": "A military lead, a protected guard and a cautious civilian frame give the refuge a small adaptable roster. Their equipment roles are arena contracts rather than new source-world identities.",
+  "strategy_personality": "Differentiate the collection through the film's exposed head mechanisms, lived-in clothing, and contrast between military and civilian equipment. Harun supplies a named identity; the other two require specific screen references before production. Keep the source's human-like features and avoid interchangeable metal soldiers. The three arena roles and their association are design proposals, rather than a claim that these exact individuals form a canonical team.",
+  "teams": {
+    "2v2": [
+      {
+        "name": "Refuge Circuit Pair 01",
+        "slots": [
+          1,
+          2
+        ],
+        "forms": "Opening"
+      }
+    ],
+    "3v3": [
+      {
+        "name": "Refuge Circuit Squad 01",
+        "slots": [
+          1,
+          2,
+          3
+        ],
+        "forms": "When slot 3 joins"
+      }
+    ]
+  },
+  "event_order": [
+    "league_1v1",
+    "league_2v2",
+    "tag_team",
+    "league_3v3",
+    "koth",
+    "grand_melee",
+    "tournament_1v1",
+    "tournament_2v2",
+    "tournament_3v3"
+  ],
+  "robots": [
+    {
+      "slot": 1,
+      "name": "Harun",
+      "source_identity": "Harun, named simulant",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 15,
+      "build_focus": "Tactician",
+      "range_from_weapons": "mid",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Bolt Carbine",
+          "offhand_weapon": null,
+          "list_price_credits": 93000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Nova Caster",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Sharpen",
+          "weapon": "Nova Caster",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 1,
+          "cost_credits": 300000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 1
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Harun from The Creator 2023, recognizable adult human-like face of the film character portrayed by Ken Watanabe, exposed cylindrical mechanical openings through the side/back of head and neck, source weathered light robes and layered scarf, restrained alert stance holding a source-style rifle low. Keep lived-in clothing and authentic simulant construction, no generic robot helmet.\nMetadata only, do not render text: #173 slot 1 Harun.",
+      "role": "Measured mid-range fighter",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 300000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "Harun fills the measured mid-range fighter role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Tactician tuning supports the mid equipment role; balanced stance and a 15% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Generalist strategy tuning rules with the Tactician Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "simulant-refuge-workshop:1:harun",
+      "folder": "stables/173-simulant-refuge-workshop/robots/01-harun",
+      "files": {
+        "png": "stables/173-simulant-refuge-workshop/robots/01-harun/portrait.png",
+        "webp": "stables/173-simulant-refuge-workshop/robots/01-harun/portrait.webp",
+        "blueprint": "stables/173-simulant-refuge-workshop/robots/01-harun/blueprint.json",
+        "profile": "stables/173-simulant-refuge-workshop/robots/01-harun/profile.md",
+        "prompt": "stables/173-simulant-refuge-workshop/robots/01-harun/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/simulant-refuge-workshop/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 173,
+          "stable_name": "Simulant Refuge Workshop",
+          "catalogue_key": "simulant-refuge-workshop",
+          "slot": 1,
+          "robot_name": "Harun",
+          "source_identity": "Harun, named simulant",
+          "source_edition": "The Creator 2023 film: Harun in source robe, adult military simulant and adult Buddhist monk simulant; latter names are original arena labels",
+          "source_references": [
+            "https://lumiere-a.akamaihd.net/v1/documents/the_creator_final_production_notes_bios_7962bbd8.pdf"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Harun from The Creator 2023, recognizable adult human-like face of the film character portrayed by Ken Watanabe, exposed cylindrical mechanical openings through the side/back of head and neck, source weathered light robes and layered scarf, restrained alert stance holding a source-style rifle low. Keep lived-in clothing and authentic simulant construction, no generic robot helmet.\nMetadata only, do not render text: #173 slot 1 Harun.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-6870df3b-6130-4b52-90ca-0daa9a46f450.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "simulant-refuge-workshop:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/simulant-refuge-workshop/1.webp",
+          "master": "outputs/automaton-portraits/masters/simulant-refuge-workshop/1.png",
+          "output": "app/frontend/public/assets/automatons/simulant-refuge-workshop/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "8261a325c3c40603904912a484006c83e3d185ff93a6e7c23c3bdac85c644551",
+          "bytes": 33338
+        },
+        "sha256": "8261a325c3c40603904912a484006c83e3d185ff93a6e7c23c3bdac85c644551",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 2,
+      "name": "Refuge Guard 02",
+      "source_identity": "Adult military simulant; original arena unit label",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yield_threshold": 25,
+      "build_focus": "Warden",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": "Light Shield",
+          "list_price_credits": 108000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": "Aegis Bulwark",
+          "list_price_credits": 834000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: One adult military simulant from The Creator 2023 in a recognizable film military configuration: human-looking Asian male face, cylindrical open mechanical head/ear architecture and exposed neck mechanisms, worn olive military field clothing and practical vest, source-style compact rifle held low. Original arena name labels a source machine class; preserve film construction, no invented bulky sci-fi armour.\nMetadata only, do not render text: #173 slot 2 Refuge Guard 02.",
+      "role": "Protected short-range anchor",
+      "missing_fields": [],
+      "refinement_note": "Generalist refinement spending is reserved for the slot-1 lead; this supporting robot has an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 1,
+      "equipment_interpretation": "Refuge Guard 02 fills the protected short-range anchor role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Warden tuning supports the short equipment role; defensive stance and a 25% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Generalist strategy tuning rules with the Warden Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "simulant-refuge-workshop:2:refuge-guard-02",
+      "folder": "stables/173-simulant-refuge-workshop/robots/02-refuge-guard-02",
+      "files": {
+        "png": "stables/173-simulant-refuge-workshop/robots/02-refuge-guard-02/portrait.png",
+        "webp": "stables/173-simulant-refuge-workshop/robots/02-refuge-guard-02/portrait.webp",
+        "blueprint": "stables/173-simulant-refuge-workshop/robots/02-refuge-guard-02/blueprint.json",
+        "profile": "stables/173-simulant-refuge-workshop/robots/02-refuge-guard-02/profile.md",
+        "prompt": "stables/173-simulant-refuge-workshop/robots/02-refuge-guard-02/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/simulant-refuge-workshop/2.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 173,
+          "stable_name": "Simulant Refuge Workshop",
+          "catalogue_key": "simulant-refuge-workshop",
+          "slot": 2,
+          "robot_name": "Refuge Guard 02",
+          "source_identity": "Adult military simulant; original arena unit label",
+          "source_edition": "The Creator 2023 film: Harun in source robe, adult military simulant and adult Buddhist monk simulant; latter names are original arena labels",
+          "source_references": [
+            "https://lumiere-a.akamaihd.net/v1/documents/the_creator_final_production_notes_bios_7962bbd8.pdf"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: One adult military simulant from The Creator 2023 in a recognizable film military configuration: human-looking Asian male face, cylindrical open mechanical head/ear architecture and exposed neck mechanisms, worn olive military field clothing and practical vest, source-style compact rifle held low. Original arena name labels a source machine class; preserve film construction, no invented bulky sci-fi armour.\nMetadata only, do not render text: #173 slot 2 Refuge Guard 02.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-8c3ce200-31a3-430e-93e2-ea225f732d52.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "simulant-refuge-workshop:2",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/simulant-refuge-workshop/2.webp",
+          "master": "outputs/automaton-portraits/masters/simulant-refuge-workshop/2.png",
+          "output": "app/frontend/public/assets/automatons/simulant-refuge-workshop/2.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "c99813e263048aaa3a11bac63773b0d1b8a4668aa85c5a503bb9d7a6bb5144e0",
+          "bytes": 30634
+        },
+        "sha256": "c99813e263048aaa3a11bac63773b0d1b8a4668aa85c5a503bb9d7a6bb5144e0",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 3,
+      "name": "Refuge Monk 03",
+      "source_identity": "Adult civilian Buddhist monk simulant; original arena unit label",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "defensive",
+      "yield_threshold": 30,
+      "build_focus": "Tactician",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Practice Blaster",
+          "offhand_weapon": null,
+          "list_price_credits": 50000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: One adult civilian Buddhist monk simulant from The Creator 2023: mature human-like Asian face with shaved scalp and the film's exposed cylindrical head openings/neck components, simple saffron/orange monk robes, modest sandals, gentle composed stance with empty hands. Film civilian source configuration; no soldier helmet or invented armoured body. Entire robes and feet visible.\nMetadata only, do not render text: #173 slot 3 Refuge Monk 03.",
+      "role": "Cautious utility fighter",
+      "missing_fields": [],
+      "refinement_note": "Generalist refinement spending is reserved for the slot-1 lead; this supporting robot has an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 2,
+      "equipment_interpretation": "Refuge Monk 03 fills the cautious utility fighter role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Tactician tuning supports the short equipment role; defensive stance and a 30% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Generalist strategy tuning rules with the Tactician Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "simulant-refuge-workshop:3:refuge-monk-03",
+      "folder": "stables/173-simulant-refuge-workshop/robots/03-refuge-monk-03",
+      "files": {
+        "png": "stables/173-simulant-refuge-workshop/robots/03-refuge-monk-03/portrait.png",
+        "webp": "stables/173-simulant-refuge-workshop/robots/03-refuge-monk-03/portrait.webp",
+        "blueprint": "stables/173-simulant-refuge-workshop/robots/03-refuge-monk-03/blueprint.json",
+        "profile": "stables/173-simulant-refuge-workshop/robots/03-refuge-monk-03/profile.md",
+        "prompt": "stables/173-simulant-refuge-workshop/robots/03-refuge-monk-03/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/simulant-refuge-workshop/3.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 173,
+          "stable_name": "Simulant Refuge Workshop",
+          "catalogue_key": "simulant-refuge-workshop",
+          "slot": 3,
+          "robot_name": "Refuge Monk 03",
+          "source_identity": "Adult civilian Buddhist monk simulant; original arena unit label",
+          "source_edition": "The Creator 2023 film: Harun in source robe, adult military simulant and adult Buddhist monk simulant; latter names are original arena labels",
+          "source_references": [
+            "https://lumiere-a.akamaihd.net/v1/documents/the_creator_final_production_notes_bios_7962bbd8.pdf"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: One adult civilian Buddhist monk simulant from The Creator 2023: mature human-like Asian face with shaved scalp and the film's exposed cylindrical head openings/neck components, simple saffron/orange monk robes, modest sandals, gentle composed stance with empty hands. Film civilian source configuration; no soldier helmet or invented armoured body. Entire robes and feet visible.\nMetadata only, do not render text: #173 slot 3 Refuge Monk 03.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-8dcc635d-64e1-4544-9492-21ed615de5a2.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "simulant-refuge-workshop:3",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/simulant-refuge-workshop/3.webp",
+          "master": "outputs/automaton-portraits/masters/simulant-refuge-workshop/3.png",
+          "output": "app/frontend/public/assets/automatons/simulant-refuge-workshop/3.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "c208e3bcd90e709e280c91cd7d44f086c236b145e01021ee3686b2bc190749b0",
+          "bytes": 34008
+        },
+        "sha256": "c208e3bcd90e709e280c91cd7d44f086c236b145e01021ee3686b2bc190749b0",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "alternatives": [],
+  "blueprint_status": "detailed",
+  "source_notes": "\n**Franchise:** The Creator — 2023 film  \n**Strategy:** Generalist · **Target roster:** 3 robots\n\n**Proposed robots:** Harun; Refuge Guard 02; Refuge Monk 03.\n\n**Direction:** Differentiate the collection through the film's exposed head mechanisms, lived-in clothing, and contrast between military and civilian equipment. Harun supplies a named identity; the other two require specific screen references before production. Keep the source's human-like features and avoid interchangeable metal soldiers. The three arena roles and their association are design proposals, rather than a claim that these exact individuals form a canonical team.\n\nReferences: [official production notes and character background](https://lumiere-a.akamaihd.net/v1/documents/the_creator_final_production_notes_bios_7962bbd8.pdf).\n\n**Production edition:** The Creator 2023 film: Harun in source robe, adult military simulant and adult Buddhist monk simulant; latter names are original arena labels.  \n**Catalogue key:** `simulant-refuge-workshop`\n\n",
+  "source_documents": [
+    "reference/AUTOMATON_STABLE_EXPANSION.md"
+  ],
+  "blueprint_origin": "completed during collection",
+  "purchasing_plan": "Open with slots 1–2; recruit slot 3 with its complete stage-0 loadout. Complete stage-1 loadouts in slot order. Refine the slot-1 lead only: verified Hone/Augment operations, then a first Sharpen at Workshop L5 and 3,000 prestige. Other slots have explicit empty refinement plans.",
+  "target_overrides": {
+    "robots": 3
+  },
+  "equipment_budget": {
+    "stage_0_credits": 251000,
+    "stage_1_credits": 1684000,
+    "refinement_credits": 300000,
+    "excludes": "Frames, facilities, training, repairs, upkeep, discounts and resale; stage-1 total replaces stage-0 gear and is not a simultaneous equipment inventory."
+  },
+  "folder": "stables/173-simulant-refuge-workshop",
+  "history_image_count": 0
+}

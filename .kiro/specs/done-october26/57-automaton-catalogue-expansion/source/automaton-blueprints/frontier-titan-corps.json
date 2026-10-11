@@ -1,0 +1,236 @@
+{
+  "number": 16,
+  "catalogueKey": "frontier-titan-corps",
+  "stableName": "Frontier Titan Corps",
+  "franchiseLabel": "Titanfall",
+  "strategy": "Trio",
+  "fit": "Direct",
+  "conceptIdentity": "Three clearly different roles: ranged platform, heavy anchor, mobile melee fighter. Military panels, hydraulics, identification markings.",
+  "backstory": "Frontier Titan Corps enters the arena with a clear doctrine. Three clearly different roles: ranged platform, heavy anchor, mobile melee fighter. Every surviving machine returns to the workshop before the next booking.",
+  "openingRobots": 3,
+  "targetRobots": 3,
+  "adminMaximumRobots": 4,
+  "targetOverrides": {},
+  "teamNames": {
+    "2v2": [
+      {
+        "name": "Frontier Pair 01",
+        "slots": [
+          1,
+          2
+        ]
+      },
+      {
+        "name": "Frontier Pair 02",
+        "slots": [
+          3,
+          4
+        ]
+      }
+    ],
+    "3v3": [
+      {
+        "name": "Frontier Squad 01",
+        "slots": [
+          1,
+          2,
+          3
+        ]
+      }
+    ]
+  },
+  "eventOrder": [
+    "league_3v3",
+    "tournament_3v3",
+    "league_1v1",
+    "league_2v2",
+    "tag_team",
+    "koth",
+    "grand_melee",
+    "tournament_2v2",
+    "tournament_1v1"
+  ],
+  "robots": [
+    {
+      "blueprintId": "frontier-titan-corps:1:ion",
+      "slot": 1,
+      "name": "Ion",
+      "sourceAlias": "Ion",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 10,
+      "buildFocus": "Deadeye",
+      "weaponPath": [
+        {
+          "mainWeapon": "Bolt Carbine",
+          "offhandWeapon": null,
+          "listPriceCredits": 93000
+        },
+        {
+          "mainWeapon": "Nova Caster",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "mid",
+        "artBrief": "Military Titan with a central sensor, squared armour and energy weapon.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 0,
+        "imageConvention": "app/frontend/public/assets/automatons/frontier-titan-corps/1.webp"
+      }
+    },
+    {
+      "blueprintId": "frontier-titan-corps:2:scorch",
+      "slot": 2,
+      "name": "Scorch",
+      "sourceAlias": "Scorch",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "two_handed",
+      "stance": "defensive",
+      "yieldThreshold": 5,
+      "buildFocus": "Warden",
+      "weaponPath": [
+        {
+          "mainWeapon": "Scatter Cannon",
+          "offhandWeapon": null,
+          "listPriceCredits": 84000
+        },
+        {
+          "mainWeapon": "Arc Projector",
+          "offhandWeapon": null,
+          "listPriceCredits": 488000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Heavy yellow-brown Titan with thick plates, heat shielding and a broad launcher.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 1,
+        "imageConvention": "app/frontend/public/assets/automatons/frontier-titan-corps/2.webp"
+      }
+    },
+    {
+      "blueprintId": "frontier-titan-corps:3:ronin",
+      "slot": 3,
+      "name": "Ronin",
+      "sourceAlias": "Ronin",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "dual_wield",
+      "stance": "offensive",
+      "yieldThreshold": 5,
+      "buildFocus": "Sprinter",
+      "weaponPath": [
+        {
+          "mainWeapon": "Combat Knife",
+          "offhandWeapon": "Combat Knife",
+          "listPriceCredits": 186000
+        },
+        {
+          "mainWeapon": "Vibro Mace",
+          "offhandWeapon": "Vibro Mace",
+          "listPriceCredits": 850000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "melee",
+        "artBrief": "Lean dark Titan with mechanical joints and a long close-combat blade.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 2,
+        "imageConvention": "app/frontend/public/assets/automatons/frontier-titan-corps/3.webp"
+      }
+    },
+    {
+      "blueprintId": "frontier-titan-corps:4:bt-7274",
+      "slot": 4,
+      "name": "BT-7274",
+      "sourceAlias": "BT-7274",
+      "nameBasis": "Source character or machine designation",
+      "availability": "reserve",
+      "loadout": "weapon_shield",
+      "stance": "balanced",
+      "yieldThreshold": 10,
+      "buildFocus": "Versatile",
+      "weaponPath": [
+        {
+          "mainWeapon": "Laser Pistol",
+          "offhandWeapon": "Light Shield",
+          "listPriceCredits": 108000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": "Aegis Bulwark",
+          "listPriceCredits": 834000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Green Vanguard Titan with orange sensor, white markings and rugged military plates.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 3,
+        "imageConvention": "app/frontend/public/assets/automatons/frontier-titan-corps/4.webp"
+      }
+    }
+  ],
+  "alternativeBlueprints": [
+    {
+      "blueprintId": "frontier-titan-corps:alternative:4:northstar",
+      "slot": 4,
+      "name": "Northstar",
+      "sourceAlias": "Northstar",
+      "nameBasis": "Source character or machine designation",
+      "availability": "alternative",
+      "loadout": "two_handed",
+      "stance": "defensive",
+      "yieldThreshold": 15,
+      "buildFocus": "Deadeye",
+      "weaponPath": [
+        {
+          "mainWeapon": "Training Beam",
+          "offhandWeapon": null,
+          "listPriceCredits": 50000
+        },
+        {
+          "mainWeapon": "Ion Beam",
+          "offhandWeapon": null,
+          "listPriceCredits": 544000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "long",
+        "artBrief": "Lean Titan with long precision weapon, narrow cockpit and missile-pod detail.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 3,
+        "imageConvention": "app/frontend/public/assets/automatons/frontier-titan-corps/4.webp"
+      }
+    }
+  ],
+  "review": {
+    "openingWeaponCredits": 363000,
+    "finalWeaponCreditsAtTarget": 1763000,
+    "equippedWeaponCountAtTarget": 4,
+    "purchaseOrder": [
+      1,
+      2,
+      3
+    ],
+    "reserveSlots": [
+      4
+    ],
+    "alternativeRule": "Choose an alternative before catalogue approval; it replaces the specified slot and never adds another live robot."
+  }
+}

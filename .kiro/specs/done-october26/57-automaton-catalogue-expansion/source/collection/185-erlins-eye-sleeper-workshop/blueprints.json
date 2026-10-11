@@ -1,0 +1,198 @@
+{
+  "stable_number": 185,
+  "catalogue_key": "erlins-eye-sleeper-workshop",
+  "robots": [
+    {
+      "slot": 1,
+      "name": "Sleeper — Operator",
+      "source_identity": "Sleeper — Operator",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "defensive",
+      "yield_threshold": 30,
+      "build_focus": "Tactician",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Practice Blaster",
+          "offhand_weapon": null,
+          "list_price_credits": 50000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Hone",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 1,
+          "attribute": "Combat Power",
+          "magnitude": 2,
+          "result_value": 10,
+          "cost_credits": 40000,
+          "base_value": 8,
+          "effect": "Combat Power 8→10",
+          "step": 1
+        },
+        {
+          "operation": "Augment",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 3,
+          "attribute": "Adaptive AI",
+          "magnitude": 3,
+          "result_value": 3,
+          "cost_credits": 180000,
+          "effect": "Adaptive AI, new +3",
+          "step": 2
+        },
+        {
+          "operation": "Sharpen",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 1,
+          "cost_credits": 300000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 3
+        },
+        {
+          "operation": "Sharpen",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 2,
+          "cost_credits": 900000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 4
+        },
+        {
+          "operation": "Forge",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 8,
+          "occurrence": 1,
+          "cost_credits": 400000,
+          "prestige_gate": 15000,
+          "effect": "+8% damage",
+          "step": 5
+        }
+      ],
+      "art_brief": "EDIT the FIRST attached Armoured Souls portrait of the Citizen Sleeper Operator to fix an accidental EXTRA ARM AND HAND. The canonical Operator in the second official game screenshot has exactly TWO arms and TWO hands. The first generated portrait currently shows THREE hands: one outer hand holding the lowered arena sidearm at viewer-left, a second unwanted empty hand hanging vertically inside the open coat near the belly at viewer-left-of-centre, and the other hand across the abdomen. REMOVE ONLY the unwanted inner vertically hanging extra empty hand and its associated forearm near the body's centre-left. Restore the chest/abdomen wiring and dark open-coat interior behind that removed arm. Keep exactly two naturally connected arms: the right arm on viewer-left ends in the lowered sidearm hand; the left arm from viewer-right bends across the abdomen. Preserve every other design element: pale grey-green bald synthetic face, yellow eyes, teal quilted shoulder panels, oversized dark coat, source cables, mismatched knee panels, detailed lower legs and boots. Premium realistic industrial materials, square charcoal studio background, full body and both feet visible with breathing room. No extra limbs, no other character, no text or borders. Use second screenshot only to confirm the original two-arm anatomy and source appearance, do not copy its UI.",
+      "role": "Cautious utility fighter",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 1820000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "Sleeper — Operator fills the cautious utility fighter role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Tactician tuning supports the short equipment role; defensive stance and a 30% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Paragon strategy tuning rules with the Tactician Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "erlins-eye-sleeper-workshop:1:sleeper-operator",
+      "folder": "stables/185-erlins-eye-sleeper-workshop/robots/01-sleeper-operator",
+      "files": {
+        "png": "stables/185-erlins-eye-sleeper-workshop/robots/01-sleeper-operator/portrait.png",
+        "webp": "stables/185-erlins-eye-sleeper-workshop/robots/01-sleeper-operator/portrait.webp",
+        "blueprint": "stables/185-erlins-eye-sleeper-workshop/robots/01-sleeper-operator/blueprint.json",
+        "profile": "stables/185-erlins-eye-sleeper-workshop/robots/01-sleeper-operator/profile.md",
+        "prompt": "stables/185-erlins-eye-sleeper-workshop/robots/01-sleeper-operator/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/erlins-eye-sleeper-workshop/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 185,
+          "stable_name": "Erlin's Eye Sleeper Workshop",
+          "catalogue_key": "erlins-eye-sleeper-workshop",
+          "slot": 1,
+          "robot_name": "Sleeper — Operator",
+          "source_identity": "Sleeper — Operator",
+          "source_edition": "Citizen Sleeper (2022), first-game Operator class artwork",
+          "source_references": [
+            "https://store.steampowered.com/app/1578650/Citizen_Sleeper/"
+          ],
+          "prompt": "EDIT the FIRST attached Armoured Souls portrait of the Citizen Sleeper Operator to fix an accidental EXTRA ARM AND HAND. The canonical Operator in the second official game screenshot has exactly TWO arms and TWO hands. The first generated portrait currently shows THREE hands: one outer hand holding the lowered arena sidearm at viewer-left, a second unwanted empty hand hanging vertically inside the open coat near the belly at viewer-left-of-centre, and the other hand across the abdomen. REMOVE ONLY the unwanted inner vertically hanging extra empty hand and its associated forearm near the body's centre-left. Restore the chest/abdomen wiring and dark open-coat interior behind that removed arm. Keep exactly two naturally connected arms: the right arm on viewer-left ends in the lowered sidearm hand; the left arm from viewer-right bends across the abdomen. Preserve every other design element: pale grey-green bald synthetic face, yellow eyes, teal quilted shoulder panels, oversized dark coat, source cables, mismatched knee panels, detailed lower legs and boots. Premium realistic industrial materials, square charcoal studio background, full body and both feet visible with breathing room. No extra limbs, no other character, no text or borders. Use second screenshot only to confirm the original two-arm anatomy and source appearance, do not copy its UI.",
+          "referenced_image_paths": [
+            "/Users/robertteunissen/.codex/.chatgpt-projects/g-p-697c65205aa4819195676e871f22833f/outputs/automaton-portraits/masters/erlins-eye-sleeper-workshop/1.png",
+            "/tmp/armoured-game-refs/sleeper-1.png"
+          ],
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-4d96ae32-7cd4-40c2-941e-7f74cd5ffb5f.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "erlins-eye-sleeper-workshop:1",
+          "status": "generated",
+          "revision": 2,
+          "runtime_output": "app/frontend/public/assets/automatons/erlins-eye-sleeper-workshop/1.webp",
+          "master": "outputs/automaton-portraits/masters/erlins-eye-sleeper-workshop/1-v2.png",
+          "output": "app/frontend/public/assets/automatons/erlins-eye-sleeper-workshop/1-v2.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "c4e1686d1b2234a2879a70169d7360094d7f78b611c711a39e717385191daba4",
+          "bytes": 43566,
+          "previous_versions": [
+            {
+              "stable_number": 185,
+              "stable_name": "Erlin's Eye Sleeper Workshop",
+              "catalogue_key": "erlins-eye-sleeper-workshop",
+              "slot": 1,
+              "robot_name": "Sleeper — Operator",
+              "source_identity": "Sleeper — Operator",
+              "source_edition": "Citizen Sleeper (2022), first-game Operator class artwork",
+              "source_references": [
+                "https://store.steampowered.com/app/1578650/Citizen_Sleeper/"
+              ],
+              "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE Sleeper using the OPERATOR class appearance from the FIRST Citizen Sleeper game, exactly the large standing synthetic figure in the attached primary game screenshot: bald grey-green artificial humanlike head, visible cranial and ear panels, a long utility coat with a very high wide collar and turquoise quilted shoulder cape, exposed slender mechanical forearms and white synthetic hands, industrial repaired torso cabling beneath the open coat, black trousers and utilitarian knee protection. Extend the source faithfully to complete dark work boots. Adult synthetic embodiment, reserved vulnerable expression, full body. A single compact arena service pistol held low in the right hand is an original arena addition. Do not include the tiny floating helper from the reference screenshot or any other figure.\nMetadata only, do not render text: #185 slot 1 Sleeper — Operator.",
+              "referenced_image_paths": [
+                "/tmp/armoured-game-refs/sleeper-1.png"
+              ],
+              "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-e60e4f0d-93de-4dff-889a-42e0080befa9.png",
+              "visual_review": "Superseded by selected refined portrait; original retained",
+              "asset_id": "erlins-eye-sleeper-workshop:1",
+              "status": "generated",
+              "revision": 1,
+              "runtime_output": "app/frontend/public/assets/automatons/erlins-eye-sleeper-workshop/1.webp",
+              "master": "outputs/automaton-portraits/masters/erlins-eye-sleeper-workshop/1.png",
+              "output": "app/frontend/public/assets/automatons/erlins-eye-sleeper-workshop/1.webp",
+              "master_dimensions": [
+                1254,
+                1254
+              ],
+              "export_dimensions": [
+                512,
+                512
+              ],
+              "sha256": "2a0e22991fa0fc4af51103988d4cbed022031f4659f188f7655f8d4e6cdbc873",
+              "bytes": 44866
+            }
+          ]
+        },
+        "sha256": "c4e1686d1b2234a2879a70169d7360094d7f78b611c711a39e717385191daba4",
+        "revision": 2,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "replacement_alternatives": []
+}

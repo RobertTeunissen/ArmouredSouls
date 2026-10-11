@@ -1,0 +1,1161 @@
+{
+  "number": 118,
+  "catalogue_key": "core-war-foundry",
+  "name": "CORE War Foundry",
+  "franchise": "Total Annihilation",
+  "strategy": "Swarm",
+  "opening_robots": 3,
+  "target_robots": 11,
+  "max_planned_robots": 11,
+  "strategy_review_limit": 11,
+  "backstory": "The war foundry builds an infantry base, then adds specialised assault and support frames. Recruitment takes priority over polishing an expensive flagship.",
+  "strategy_personality": "A foundational machine-war property with a convincing mass-production identity. Use CORE machine designs consistently. The source distinguishes CORE's machine-hosted consciousness from ARM's clone-piloted vehicles. [Publisher background](https://store.steampowered.com/app/298030/Total_Annihilation/).",
+  "teams": {
+    "2v2": [
+      {
+        "name": "CORE Foundry Pair 01",
+        "slots": [
+          1,
+          2
+        ],
+        "forms": "Opening"
+      },
+      {
+        "name": "CORE Foundry Pair 02",
+        "slots": [
+          3,
+          4
+        ],
+        "forms": "When slot 4 joins"
+      },
+      {
+        "name": "CORE Foundry Pair 03",
+        "slots": [
+          5,
+          6
+        ],
+        "forms": "When slot 6 joins"
+      },
+      {
+        "name": "CORE Foundry Pair 04",
+        "slots": [
+          7,
+          8
+        ],
+        "forms": "When slot 8 joins"
+      },
+      {
+        "name": "CORE Foundry Pair 05",
+        "slots": [
+          9,
+          10
+        ],
+        "forms": "When slot 10 joins"
+      }
+    ],
+    "3v3": [
+      {
+        "name": "CORE Foundry Squad 01",
+        "slots": [
+          1,
+          2,
+          3
+        ],
+        "forms": "Opening"
+      },
+      {
+        "name": "CORE Foundry Squad 02",
+        "slots": [
+          4,
+          5,
+          6
+        ],
+        "forms": "When slot 6 joins"
+      },
+      {
+        "name": "CORE Foundry Squad 03",
+        "slots": [
+          7,
+          8,
+          9
+        ],
+        "forms": "When slot 9 joins"
+      }
+    ]
+  },
+  "event_order": [
+    "league_3v3",
+    "league_2v2",
+    "tag_team",
+    "league_1v1",
+    "koth",
+    "grand_melee",
+    "tournament_3v3",
+    "tournament_2v2",
+    "tournament_1v1"
+  ],
+  "robots": [
+    {
+      "slot": 1,
+      "name": "CORE Commander 01",
+      "source_identity": "CORE Commander — Total Annihilation — original 1997 game, Core Contingency and official Cavedog units; CORE red team markings",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 15,
+      "build_focus": "Tactician",
+      "range_from_weapons": "mid",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Bolt Carbine",
+          "offhand_weapon": null,
+          "list_price_credits": 93000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Nova Caster",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Recognizable original Total Annihilation CORE Commander, tall bulky grey/red armoured humanoid Kbot with distinctive broad command torso, small source sensor head, sturdy blocky legs, source weapon arm and construction arm. Preserve the 1997 CORE model geometry translated to realistic steel, not ARM Commander or a modern mod redesign. Red player-team markings, restrained mechanical wear.\nCatalogue label for metadata only, do not render text: #118 slot 1 CORE Commander 01.",
+      "role": "Measured mid-range fighter",
+      "missing_fields": [],
+      "refinement_note": "Swarm follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "CORE Commander 01 fills the measured mid-range fighter role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Tactician tuning supports the mid equipment role; balanced stance and a 15% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Swarm strategy tuning rules with the Tactician Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "core-war-foundry:1:core-commander-01",
+      "folder": "stables/118-core-war-foundry/robots/01-core-commander-01",
+      "files": {
+        "png": "stables/118-core-war-foundry/robots/01-core-commander-01/portrait.png",
+        "webp": "stables/118-core-war-foundry/robots/01-core-commander-01/portrait.webp",
+        "blueprint": "stables/118-core-war-foundry/robots/01-core-commander-01/blueprint.json",
+        "profile": "stables/118-core-war-foundry/robots/01-core-commander-01/profile.md",
+        "prompt": "stables/118-core-war-foundry/robots/01-core-commander-01/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/core-war-foundry/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 118,
+          "stable_name": "CORE War Foundry",
+          "catalogue_key": "core-war-foundry",
+          "slot": 1,
+          "robot_name": "CORE Commander 01",
+          "source_identity": "CORE Commander — Total Annihilation — original 1997 game, Core Contingency and official Cavedog units; CORE red team markings",
+          "source_edition": "Total Annihilation — original 1997 game, Core Contingency and official Cavedog units; CORE red team markings",
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Recognizable original Total Annihilation CORE Commander, tall bulky grey/red armoured humanoid Kbot with distinctive broad command torso, small source sensor head, sturdy blocky legs, source weapon arm and construction arm. Preserve the 1997 CORE model geometry translated to realistic steel, not ARM Commander or a modern mod redesign. Red player-team markings, restrained mechanical wear.\nCatalogue label for metadata only, do not render text: #118 slot 1 CORE Commander 01.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-6420b9aa-7202-49f9-95fd-e04f6d514fa8.png",
+          "visual_review": "Accepted: complete framing, distinct chassis, shared collection lighting and finish",
+          "asset_id": "core-war-foundry:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/core-war-foundry/1.webp",
+          "master": "outputs/automaton-portraits/masters/core-war-foundry/1.png",
+          "output": "app/frontend/public/assets/automatons/core-war-foundry/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "99098e0648004b13c5b29cad77407fea2106f0b369190ecb0f2d712bea9a7d74",
+          "bytes": 63342,
+          "source_references": [
+            "https://store.steampowered.com/app/298030/Total_Annihilation/"
+          ]
+        },
+        "sha256": "99098e0648004b13c5b29cad77407fea2106f0b369190ecb0f2d712bea9a7d74",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 2,
+      "name": "AK 02",
+      "source_identity": "AK light Kbot — Total Annihilation — original 1997 game, Core Contingency and official Cavedog units; CORE red team markings",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 15,
+      "build_focus": "Versatile",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": null,
+          "list_price_credits": 57000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Original Total Annihilation CORE AK light laser Kbot: small agile thin grey mechanical biped, compact source torso and sensor head, narrow jointed legs and source light laser armament, red player-team panels. Preserve the original AK chassis silhouette as realistic industrial metal, no generic humanoid soldier or oversized armour.\nCatalogue label for metadata only, do not render text: #118 slot 2 AK 02.",
+      "role": "Flexible line fighter",
+      "missing_fields": [],
+      "refinement_note": "Swarm follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 1,
+      "equipment_interpretation": "AK 02 fills the flexible line fighter role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Versatile tuning supports the short equipment role; balanced stance and a 15% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Swarm strategy tuning rules with the Versatile Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "core-war-foundry:2:ak-02",
+      "folder": "stables/118-core-war-foundry/robots/02-ak-02",
+      "files": {
+        "png": "stables/118-core-war-foundry/robots/02-ak-02/portrait.png",
+        "webp": "stables/118-core-war-foundry/robots/02-ak-02/portrait.webp",
+        "blueprint": "stables/118-core-war-foundry/robots/02-ak-02/blueprint.json",
+        "profile": "stables/118-core-war-foundry/robots/02-ak-02/profile.md",
+        "prompt": "stables/118-core-war-foundry/robots/02-ak-02/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/core-war-foundry/2.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 118,
+          "stable_name": "CORE War Foundry",
+          "catalogue_key": "core-war-foundry",
+          "slot": 2,
+          "robot_name": "AK 02",
+          "source_identity": "AK light Kbot — Total Annihilation — original 1997 game, Core Contingency and official Cavedog units; CORE red team markings",
+          "source_edition": "Total Annihilation — original 1997 game, Core Contingency and official Cavedog units; CORE red team markings",
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Original Total Annihilation CORE AK light laser Kbot: small agile thin grey mechanical biped, compact source torso and sensor head, narrow jointed legs and source light laser armament, red player-team panels. Preserve the original AK chassis silhouette as realistic industrial metal, no generic humanoid soldier or oversized armour.\nCatalogue label for metadata only, do not render text: #118 slot 2 AK 02.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-65d60a4a-d555-4a97-8c43-c024f1daebb8.png",
+          "visual_review": "Accepted: complete framing, distinct chassis, shared collection lighting and finish",
+          "asset_id": "core-war-foundry:2",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/core-war-foundry/2.webp",
+          "master": "outputs/automaton-portraits/masters/core-war-foundry/2.png",
+          "output": "app/frontend/public/assets/automatons/core-war-foundry/2.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "a81b9dbac04460b393ac6e3365a1d1fe4be21f6dc5b59e36ed81bb3e88fe0b28",
+          "bytes": 45364,
+          "source_references": [
+            "https://store.steampowered.com/app/298030/Total_Annihilation/"
+          ]
+        },
+        "sha256": "a81b9dbac04460b393ac6e3365a1d1fe4be21f6dc5b59e36ed81bb3e88fe0b28",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 3,
+      "name": "Storm 03",
+      "source_identity": "Storm rocket Kbot — Total Annihilation — original 1997 game, Core Contingency and official Cavedog units; CORE red team markings",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Bruiser",
+      "range_from_weapons": "mid",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Training Rifle",
+          "offhand_weapon": null,
+          "list_price_credits": 50000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Plasma Cannon",
+          "offhand_weapon": null,
+          "list_price_credits": 408000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Original Total Annihilation CORE Storm rocket Kbot, source compact bipedal missile robot with chunky upper launch assembly and slim mechanical legs, grey armour with red team markings. Preserve exact original Storm model silhouette, complete launch tubes and feet visible, no launched rockets, no ARM Rocko substitution.\nCatalogue label for metadata only, do not render text: #118 slot 3 Storm 03.",
+      "role": "Heavy mid-range pressure",
+      "missing_fields": [],
+      "refinement_note": "Swarm follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 2,
+      "equipment_interpretation": "Storm 03 fills the heavy mid-range pressure role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Bruiser tuning supports the mid equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Swarm strategy tuning rules with the Bruiser Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "core-war-foundry:3:storm-03",
+      "folder": "stables/118-core-war-foundry/robots/03-storm-03",
+      "files": {
+        "png": "stables/118-core-war-foundry/robots/03-storm-03/portrait.png",
+        "webp": "stables/118-core-war-foundry/robots/03-storm-03/portrait.webp",
+        "blueprint": "stables/118-core-war-foundry/robots/03-storm-03/blueprint.json",
+        "profile": "stables/118-core-war-foundry/robots/03-storm-03/profile.md",
+        "prompt": "stables/118-core-war-foundry/robots/03-storm-03/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/core-war-foundry/3.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 118,
+          "stable_name": "CORE War Foundry",
+          "catalogue_key": "core-war-foundry",
+          "slot": 3,
+          "robot_name": "Storm 03",
+          "source_identity": "Storm rocket Kbot — Total Annihilation — original 1997 game, Core Contingency and official Cavedog units; CORE red team markings",
+          "source_edition": "Total Annihilation — original 1997 game, Core Contingency and official Cavedog units; CORE red team markings",
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Original Total Annihilation CORE Storm rocket Kbot, source compact bipedal missile robot with chunky upper launch assembly and slim mechanical legs, grey armour with red team markings. Preserve exact original Storm model silhouette, complete launch tubes and feet visible, no launched rockets, no ARM Rocko substitution.\nCatalogue label for metadata only, do not render text: #118 slot 3 Storm 03.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-10342f32-5820-4e18-9018-5ca84e1c6a52.png",
+          "visual_review": "Accepted: complete framing, distinct chassis, shared collection lighting and finish",
+          "asset_id": "core-war-foundry:3",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/core-war-foundry/3.webp",
+          "master": "outputs/automaton-portraits/masters/core-war-foundry/3.png",
+          "output": "app/frontend/public/assets/automatons/core-war-foundry/3.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "da0147e8afcc9ac8c13e81e6ba0ed61c6a602751300b11f6a5aaa6ddf4aacd6a",
+          "bytes": 57684,
+          "source_references": [
+            "https://store.steampowered.com/app/298030/Total_Annihilation/"
+          ]
+        },
+        "sha256": "da0147e8afcc9ac8c13e81e6ba0ed61c6a602751300b11f6a5aaa6ddf4aacd6a",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 4,
+      "name": "Thud 04",
+      "source_identity": "Thud artillery Kbot — Total Annihilation — original 1997 game, Core Contingency and official Cavedog units; CORE red team markings",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Bruiser",
+      "range_from_weapons": "mid",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Training Rifle",
+          "offhand_weapon": null,
+          "list_price_credits": 50000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Plasma Cannon",
+          "offhand_weapon": null,
+          "list_price_credits": 408000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Original Total Annihilation CORE Thud artillery Kbot: squat two-legged mechanical artillery body with recognisable source paired cannon housings, broad compact torso and sturdy short legs, grey steel/red team panels. Faithful original Thud model proportions, no generic mech face or extra weapons.\nCatalogue label for metadata only, do not render text: #118 slot 4 Thud 04.",
+      "role": "Heavy mid-range pressure",
+      "missing_fields": [],
+      "refinement_note": "Swarm follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 3,
+      "equipment_interpretation": "Thud 04 fills the heavy mid-range pressure role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Bruiser tuning supports the mid equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Swarm strategy tuning rules with the Bruiser Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "core-war-foundry:4:thud-04",
+      "folder": "stables/118-core-war-foundry/robots/04-thud-04",
+      "files": {
+        "png": "stables/118-core-war-foundry/robots/04-thud-04/portrait.png",
+        "webp": "stables/118-core-war-foundry/robots/04-thud-04/portrait.webp",
+        "blueprint": "stables/118-core-war-foundry/robots/04-thud-04/blueprint.json",
+        "profile": "stables/118-core-war-foundry/robots/04-thud-04/profile.md",
+        "prompt": "stables/118-core-war-foundry/robots/04-thud-04/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/core-war-foundry/4.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 118,
+          "stable_name": "CORE War Foundry",
+          "catalogue_key": "core-war-foundry",
+          "slot": 4,
+          "robot_name": "Thud 04",
+          "source_identity": "Thud artillery Kbot — Total Annihilation — original 1997 game, Core Contingency and official Cavedog units; CORE red team markings",
+          "source_edition": "Total Annihilation — original 1997 game, Core Contingency and official Cavedog units; CORE red team markings",
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Original Total Annihilation CORE Thud artillery Kbot: squat two-legged mechanical artillery body with recognisable source paired cannon housings, broad compact torso and sturdy short legs, grey steel/red team panels. Faithful original Thud model proportions, no generic mech face or extra weapons.\nCatalogue label for metadata only, do not render text: #118 slot 4 Thud 04.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-de34052b-89a1-4206-8677-ec53a726ca17.png",
+          "visual_review": "Accepted: complete framing, distinct chassis, shared collection lighting and finish",
+          "asset_id": "core-war-foundry:4",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/core-war-foundry/4.webp",
+          "master": "outputs/automaton-portraits/masters/core-war-foundry/4.png",
+          "output": "app/frontend/public/assets/automatons/core-war-foundry/4.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "e1704b940864b0233f171f690af4c9c598c146a38195d95b38349a2af561cce6",
+          "bytes": 51676,
+          "source_references": [
+            "https://store.steampowered.com/app/298030/Total_Annihilation/"
+          ]
+        },
+        "sha256": "e1704b940864b0233f171f690af4c9c598c146a38195d95b38349a2af561cce6",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 5,
+      "name": "Pyro 05",
+      "source_identity": "Pyro flamethrower Kbot — Total Annihilation — original 1997 game, Core Contingency and official Cavedog units; CORE red team markings",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Bruiser",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Scatter Cannon",
+          "offhand_weapon": null,
+          "list_price_credits": 84000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Arc Projector",
+          "offhand_weapon": null,
+          "list_price_credits": 488000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Original Total Annihilation CORE Pyro flamethrower Kbot: recognizable compact stocky rounded armoured biped and source flamethrower nozzle assembly, grey and red team-colour plating, thick mechanical legs and exposed dark joints. Preserve original Pyro silhouette. No flames, victims or firing effects.\nCatalogue label for metadata only, do not render text: #118 slot 5 Pyro 05.",
+      "role": "Heavy short-range pressure",
+      "missing_fields": [],
+      "refinement_note": "Swarm follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 4,
+      "equipment_interpretation": "Pyro 05 fills the heavy short-range pressure role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Bruiser tuning supports the short equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Swarm strategy tuning rules with the Bruiser Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "core-war-foundry:5:pyro-05",
+      "folder": "stables/118-core-war-foundry/robots/05-pyro-05",
+      "files": {
+        "png": "stables/118-core-war-foundry/robots/05-pyro-05/portrait.png",
+        "webp": "stables/118-core-war-foundry/robots/05-pyro-05/portrait.webp",
+        "blueprint": "stables/118-core-war-foundry/robots/05-pyro-05/blueprint.json",
+        "profile": "stables/118-core-war-foundry/robots/05-pyro-05/profile.md",
+        "prompt": "stables/118-core-war-foundry/robots/05-pyro-05/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/core-war-foundry/5.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 118,
+          "stable_name": "CORE War Foundry",
+          "catalogue_key": "core-war-foundry",
+          "slot": 5,
+          "robot_name": "Pyro 05",
+          "source_identity": "Pyro flamethrower Kbot — Total Annihilation — original 1997 game, Core Contingency and official Cavedog units; CORE red team markings",
+          "source_edition": "Total Annihilation — original 1997 game, Core Contingency and official Cavedog units; CORE red team markings",
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Original Total Annihilation CORE Pyro flamethrower Kbot: recognizable compact stocky rounded armoured biped and source flamethrower nozzle assembly, grey and red team-colour plating, thick mechanical legs and exposed dark joints. Preserve original Pyro silhouette. No flames, victims or firing effects.\nCatalogue label for metadata only, do not render text: #118 slot 5 Pyro 05.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-4c0a554f-e444-484e-bc9d-1e909d1caf5b.png",
+          "visual_review": "Accepted: complete framing, distinct chassis, shared collection lighting and finish",
+          "asset_id": "core-war-foundry:5",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/core-war-foundry/5.webp",
+          "master": "outputs/automaton-portraits/masters/core-war-foundry/5.png",
+          "output": "app/frontend/public/assets/automatons/core-war-foundry/5.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "0f08319c64a6eb71475aa8385c38d4a0e70671b00a9240577a7d6f1e2bce2948",
+          "bytes": 54166,
+          "source_references": [
+            "https://store.steampowered.com/app/298030/Total_Annihilation/"
+          ]
+        },
+        "sha256": "0f08319c64a6eb71475aa8385c38d4a0e70671b00a9240577a7d6f1e2bce2948",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 6,
+      "name": "Sumo 06",
+      "source_identity": "Sumo heavy laser Kbot — Total Annihilation — original 1997 game, Core Contingency and official Cavedog units; CORE red team markings",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Bruiser",
+      "range_from_weapons": "melee",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Shock Maul",
+          "offhand_weapon": null,
+          "list_price_credits": 183000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Heavy Hammer",
+          "offhand_weapon": null,
+          "list_price_credits": 478000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Original Total Annihilation CORE Sumo heavy laser Kbot: extremely broad squat heavy mechanical biped, distinctive massive round/barrel-like armoured upper body and source heavy laser aperture, thick short walking legs. Grey weathered metal and red team panels, canonical Sumo shape without humanoid head or hands invented.\nCatalogue label for metadata only, do not render text: #118 slot 6 Sumo 06.",
+      "role": "Heavy contact attacker",
+      "missing_fields": [],
+      "refinement_note": "Swarm follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 5,
+      "equipment_interpretation": "Sumo 06 fills the heavy contact attacker role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Bruiser tuning supports the melee equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Swarm strategy tuning rules with the Bruiser Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "core-war-foundry:6:sumo-06",
+      "folder": "stables/118-core-war-foundry/robots/06-sumo-06",
+      "files": {
+        "png": "stables/118-core-war-foundry/robots/06-sumo-06/portrait.png",
+        "webp": "stables/118-core-war-foundry/robots/06-sumo-06/portrait.webp",
+        "blueprint": "stables/118-core-war-foundry/robots/06-sumo-06/blueprint.json",
+        "profile": "stables/118-core-war-foundry/robots/06-sumo-06/profile.md",
+        "prompt": "stables/118-core-war-foundry/robots/06-sumo-06/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/core-war-foundry/6.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 118,
+          "stable_name": "CORE War Foundry",
+          "catalogue_key": "core-war-foundry",
+          "slot": 6,
+          "robot_name": "Sumo 06",
+          "source_identity": "Sumo heavy laser Kbot — Total Annihilation — original 1997 game, Core Contingency and official Cavedog units; CORE red team markings",
+          "source_edition": "Total Annihilation — original 1997 game, Core Contingency and official Cavedog units; CORE red team markings",
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Original Total Annihilation CORE Sumo heavy laser Kbot: extremely broad squat heavy mechanical biped, distinctive massive round/barrel-like armoured upper body and source heavy laser aperture, thick short walking legs. Grey weathered metal and red team panels, canonical Sumo shape without humanoid head or hands invented.\nCatalogue label for metadata only, do not render text: #118 slot 6 Sumo 06.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-bbebf1d4-4098-49e6-b762-318cedf0b53e.png",
+          "visual_review": "Accepted: complete framing, distinct chassis, shared collection lighting and finish",
+          "asset_id": "core-war-foundry:6",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/core-war-foundry/6.webp",
+          "master": "outputs/automaton-portraits/masters/core-war-foundry/6.png",
+          "output": "app/frontend/public/assets/automatons/core-war-foundry/6.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "75e65a581251de803f01e70cf1cefed187ebfe4b61b4bdaf3cda4647de847850",
+          "bytes": 64054,
+          "source_references": [
+            "https://store.steampowered.com/app/298030/Total_Annihilation/"
+          ]
+        },
+        "sha256": "75e65a581251de803f01e70cf1cefed187ebfe4b61b4bdaf3cda4647de847850",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 7,
+      "name": "The Can 07",
+      "source_identity": "The Can armoured Kbot — Total Annihilation — original 1997 game, Core Contingency and official Cavedog units; CORE red team markings",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yield_threshold": 25,
+      "build_focus": "Warden",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": "Light Shield",
+          "list_price_credits": 108000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": "Aegis Bulwark",
+          "list_price_credits": 834000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Original Total Annihilation CORE The Can advanced armoured Kbot: source tall cylindrical heavily plated canister-like main body, compact cannon aperture, TWO robust articulated mechanical legs and broad feet, grey metal with red player-team markings. Preserve the exact cylindrical source silhouette, no human head, arms or unrelated robot.\nCatalogue label for metadata only, do not render text: #118 slot 7 The Can 07.",
+      "role": "Protected short-range anchor",
+      "missing_fields": [],
+      "refinement_note": "Swarm follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 6,
+      "equipment_interpretation": "The Can 07 fills the protected short-range anchor role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Warden tuning supports the short equipment role; defensive stance and a 25% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Swarm strategy tuning rules with the Warden Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "core-war-foundry:7:the-can-07",
+      "folder": "stables/118-core-war-foundry/robots/07-the-can-07",
+      "files": {
+        "png": "stables/118-core-war-foundry/robots/07-the-can-07/portrait.png",
+        "webp": "stables/118-core-war-foundry/robots/07-the-can-07/portrait.webp",
+        "blueprint": "stables/118-core-war-foundry/robots/07-the-can-07/blueprint.json",
+        "profile": "stables/118-core-war-foundry/robots/07-the-can-07/profile.md",
+        "prompt": "stables/118-core-war-foundry/robots/07-the-can-07/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/core-war-foundry/7.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 118,
+          "stable_name": "CORE War Foundry",
+          "catalogue_key": "core-war-foundry",
+          "slot": 7,
+          "robot_name": "The Can 07",
+          "source_identity": "The Can armoured Kbot — Total Annihilation — original 1997 game, Core Contingency and official Cavedog units; CORE red team markings",
+          "source_edition": "Total Annihilation — original 1997 game, Core Contingency and official Cavedog units; CORE red team markings",
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Original Total Annihilation CORE The Can advanced armoured Kbot: source tall cylindrical heavily plated canister-like main body, compact cannon aperture, TWO robust articulated mechanical legs and broad feet, grey metal with red player-team markings. Preserve the exact cylindrical source silhouette, no human head, arms or unrelated robot.\nCatalogue label for metadata only, do not render text: #118 slot 7 The Can 07.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-c1090c15-2c02-4db4-8750-510ea1e3f625.png",
+          "visual_review": "Accepted: complete framing, distinct chassis, shared collection lighting and finish",
+          "asset_id": "core-war-foundry:7",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/core-war-foundry/7.webp",
+          "master": "outputs/automaton-portraits/masters/core-war-foundry/7.png",
+          "output": "app/frontend/public/assets/automatons/core-war-foundry/7.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "4fe517602af160cb78b79a4cce1857c2a6d184f21b1cc7c7a9b227dc8e42d69f",
+          "bytes": 50612,
+          "source_references": [
+            "https://store.steampowered.com/app/298030/Total_Annihilation/"
+          ]
+        },
+        "sha256": "4fe517602af160cb78b79a4cce1857c2a6d184f21b1cc7c7a9b227dc8e42d69f",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 8,
+      "name": "Roach 08",
+      "source_identity": "Roach crawling bomb — Total Annihilation — original 1997 game, Core Contingency and official Cavedog units; CORE red team markings",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Sprinter",
+      "range_from_weapons": "melee",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Practice Sword",
+          "offhand_weapon": null,
+          "list_price_credits": 50000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Vibro Mace",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Original Total Annihilation CORE Roach crawling-bomb robot, intact safe dormant state: small low compact insect-like mechanical walking mine with its authentic source red/grey armoured shell, short splayed mechanical leg arrangement and no arms or humanoid torso. Preserve original game Roach geometry. Whole robot alone, no detonation or damage scene.\nCatalogue label for metadata only, do not render text: #118 slot 8 Roach 08.",
+      "role": "Agile contact specialist",
+      "missing_fields": [],
+      "refinement_note": "Swarm follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 7,
+      "equipment_interpretation": "Roach 08 fills the agile contact specialist role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Sprinter tuning supports the melee equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Swarm strategy tuning rules with the Sprinter Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "core-war-foundry:8:roach-08",
+      "folder": "stables/118-core-war-foundry/robots/08-roach-08",
+      "files": {
+        "png": "stables/118-core-war-foundry/robots/08-roach-08/portrait.png",
+        "webp": "stables/118-core-war-foundry/robots/08-roach-08/portrait.webp",
+        "blueprint": "stables/118-core-war-foundry/robots/08-roach-08/blueprint.json",
+        "profile": "stables/118-core-war-foundry/robots/08-roach-08/profile.md",
+        "prompt": "stables/118-core-war-foundry/robots/08-roach-08/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/core-war-foundry/8.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 118,
+          "stable_name": "CORE War Foundry",
+          "catalogue_key": "core-war-foundry",
+          "slot": 8,
+          "robot_name": "Roach 08",
+          "source_identity": "Roach crawling bomb — Total Annihilation — original 1997 game, Core Contingency and official Cavedog units; CORE red team markings",
+          "source_edition": "Total Annihilation — original 1997 game, Core Contingency and official Cavedog units; CORE red team markings",
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Original Total Annihilation CORE Roach crawling-bomb robot, intact safe dormant state: small low compact insect-like mechanical walking mine with its authentic source red/grey armoured shell, short splayed mechanical leg arrangement and no arms or humanoid torso. Preserve original game Roach geometry. Whole robot alone, no detonation or damage scene.\nCatalogue label for metadata only, do not render text: #118 slot 8 Roach 08.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-57386d1f-df3b-493e-9be9-744b3b1bb50f.png",
+          "visual_review": "Accepted: complete framing, distinct chassis, shared collection lighting and finish",
+          "asset_id": "core-war-foundry:8",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/core-war-foundry/8.webp",
+          "master": "outputs/automaton-portraits/masters/core-war-foundry/8.png",
+          "output": "app/frontend/public/assets/automatons/core-war-foundry/8.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "620e2ee5e22cafe329df0f4905f4180d0c6875a55980b9330da6c40e9b6f2140",
+          "bytes": 51502,
+          "source_references": [
+            "https://store.steampowered.com/app/298030/Total_Annihilation/"
+          ]
+        },
+        "sha256": "620e2ee5e22cafe329df0f4905f4180d0c6875a55980b9330da6c40e9b6f2140",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 9,
+      "name": "Morty 09",
+      "source_identity": "Morty mortar Kbot — Total Annihilation — original 1997 game, Core Contingency and official Cavedog units; CORE red team markings",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "balanced",
+      "yield_threshold": 15,
+      "build_focus": "Deadeye",
+      "range_from_weapons": "long",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Training Beam",
+          "offhand_weapon": null,
+          "list_price_credits": 50000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Ion Beam",
+          "offhand_weapon": null,
+          "list_price_credits": 544000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Original Total Annihilation CORE Morty mortar Kbot: recognizable source compact mobile artillery robot with high-trajectory mortar barrel assembly on its original walking Kbot chassis, grey metallic armour and red player-team panels. Preserve original Morty body and locomotion, full barrel and complete legs in frame. No mod-only redesign, no firing.\nCatalogue label for metadata only, do not render text: #118 slot 9 Morty 09.",
+      "role": "Heavy long-range support",
+      "missing_fields": [],
+      "refinement_note": "Swarm follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 8,
+      "equipment_interpretation": "Morty 09 fills the heavy long-range support role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Deadeye tuning supports the long equipment role; balanced stance and a 15% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Swarm strategy tuning rules with the Deadeye Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "core-war-foundry:9:morty-09",
+      "folder": "stables/118-core-war-foundry/robots/09-morty-09",
+      "files": {
+        "png": "stables/118-core-war-foundry/robots/09-morty-09/portrait.png",
+        "webp": "stables/118-core-war-foundry/robots/09-morty-09/portrait.webp",
+        "blueprint": "stables/118-core-war-foundry/robots/09-morty-09/blueprint.json",
+        "profile": "stables/118-core-war-foundry/robots/09-morty-09/profile.md",
+        "prompt": "stables/118-core-war-foundry/robots/09-morty-09/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/core-war-foundry/9.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 118,
+          "stable_name": "CORE War Foundry",
+          "catalogue_key": "core-war-foundry",
+          "slot": 9,
+          "robot_name": "Morty 09",
+          "source_identity": "Morty mortar Kbot — Total Annihilation — original 1997 game, Core Contingency and official Cavedog units; CORE red team markings",
+          "source_edition": "Total Annihilation — original 1997 game, Core Contingency and official Cavedog units; CORE red team markings",
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Original Total Annihilation CORE Morty mortar Kbot: recognizable source compact mobile artillery robot with high-trajectory mortar barrel assembly on its original walking Kbot chassis, grey metallic armour and red player-team panels. Preserve original Morty body and locomotion, full barrel and complete legs in frame. No mod-only redesign, no firing.\nCatalogue label for metadata only, do not render text: #118 slot 9 Morty 09.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-18d80a18-53f3-4d4d-a1b8-15b601ac8581.png",
+          "visual_review": "Accepted: complete framing, distinct chassis, shared collection lighting and finish",
+          "asset_id": "core-war-foundry:9",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/core-war-foundry/9.webp",
+          "master": "outputs/automaton-portraits/masters/core-war-foundry/9.png",
+          "output": "app/frontend/public/assets/automatons/core-war-foundry/9.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "9eb6f8e340fc86c247af638e07665834fac98178d34179434285bdd13d9c8dfd",
+          "bytes": 50510,
+          "source_references": [
+            "https://store.steampowered.com/app/298030/Total_Annihilation/"
+          ]
+        },
+        "sha256": "9eb6f8e340fc86c247af638e07665834fac98178d34179434285bdd13d9c8dfd",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 10,
+      "name": "Dominator 10",
+      "source_identity": "Dominator rocket Kbot — Total Annihilation — original 1997 game, Core Contingency and official Cavedog units; CORE red team markings",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "balanced",
+      "yield_threshold": 15,
+      "build_focus": "Deadeye",
+      "range_from_weapons": "long",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Training Beam",
+          "offhand_weapon": null,
+          "list_price_credits": 50000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Ion Beam",
+          "offhand_weapon": null,
+          "list_price_credits": 544000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Original Total Annihilation CORE Dominator advanced rocket Kbot: source broad angular missile-carrying upper chassis on articulated mechanical walking legs, recognizable original launch-tube arrangement, grey steel with red team panels. Preserve original 1997-era design and body proportions, no ARM unit or modern mod. Full weapon assembly contained.\nCatalogue label for metadata only, do not render text: #118 slot 10 Dominator 10.",
+      "role": "Heavy long-range support",
+      "missing_fields": [],
+      "refinement_note": "Swarm follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 9,
+      "equipment_interpretation": "Dominator 10 fills the heavy long-range support role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Deadeye tuning supports the long equipment role; balanced stance and a 15% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Swarm strategy tuning rules with the Deadeye Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "core-war-foundry:10:dominator-10",
+      "folder": "stables/118-core-war-foundry/robots/10-dominator-10",
+      "files": {
+        "png": "stables/118-core-war-foundry/robots/10-dominator-10/portrait.png",
+        "webp": "stables/118-core-war-foundry/robots/10-dominator-10/portrait.webp",
+        "blueprint": "stables/118-core-war-foundry/robots/10-dominator-10/blueprint.json",
+        "profile": "stables/118-core-war-foundry/robots/10-dominator-10/profile.md",
+        "prompt": "stables/118-core-war-foundry/robots/10-dominator-10/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/core-war-foundry/10.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 118,
+          "stable_name": "CORE War Foundry",
+          "catalogue_key": "core-war-foundry",
+          "slot": 10,
+          "robot_name": "Dominator 10",
+          "source_identity": "Dominator rocket Kbot — Total Annihilation — original 1997 game, Core Contingency and official Cavedog units; CORE red team markings",
+          "source_edition": "Total Annihilation — original 1997 game, Core Contingency and official Cavedog units; CORE red team markings",
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Original Total Annihilation CORE Dominator advanced rocket Kbot: source broad angular missile-carrying upper chassis on articulated mechanical walking legs, recognizable original launch-tube arrangement, grey steel with red team panels. Preserve original 1997-era design and body proportions, no ARM unit or modern mod. Full weapon assembly contained.\nCatalogue label for metadata only, do not render text: #118 slot 10 Dominator 10.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-8a930f84-60e7-489d-a4f1-6117aeeaa3b8.png",
+          "visual_review": "Accepted: complete framing, distinct chassis, shared collection lighting and finish",
+          "asset_id": "core-war-foundry:10",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/core-war-foundry/10.webp",
+          "master": "outputs/automaton-portraits/masters/core-war-foundry/10.png",
+          "output": "app/frontend/public/assets/automatons/core-war-foundry/10.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "066a08291c2dff6b6b88a052144d06bf9df3dcb3f1499f2ea1d6bc8c0672958a",
+          "bytes": 62726,
+          "source_references": [
+            "https://store.steampowered.com/app/298030/Total_Annihilation/"
+          ]
+        },
+        "sha256": "066a08291c2dff6b6b88a052144d06bf9df3dcb3f1499f2ea1d6bc8c0672958a",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 11,
+      "name": "Krogoth 11",
+      "source_identity": "Krogoth experimental Kbot — Total Annihilation — original 1997 game, Core Contingency and official Cavedog units; CORE red team markings",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Bruiser",
+      "range_from_weapons": "mid",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Training Rifle",
+          "offhand_weapon": null,
+          "list_price_credits": 50000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Plasma Cannon",
+          "offhand_weapon": null,
+          "list_price_credits": 408000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Refine this existing Armoured Souls Krogoth portrait. Preserve this exact robot design, two cannon arms, grey/red finish, pose, dark industrial studio floor, lighting and realistic render style. Pull the camera back so the complete robot INCLUDING BOTH BACK LAUNCHER PODS is fully visible, with a clean minimum 7% margin above the highest launcher and 5% margin around all other extremities. Keep the subject centered in a square canvas. No new equipment, text, border or extra characters. This is a framing refinement of the supplied image.",
+      "role": "Heavy mid-range pressure",
+      "missing_fields": [],
+      "refinement_note": "Swarm follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 10,
+      "equipment_interpretation": "Krogoth 11 fills the heavy mid-range pressure role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Bruiser tuning supports the mid equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Swarm strategy tuning rules with the Bruiser Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "core-war-foundry:11:krogoth-11",
+      "folder": "stables/118-core-war-foundry/robots/11-krogoth-11",
+      "files": {
+        "png": "stables/118-core-war-foundry/robots/11-krogoth-11/portrait.png",
+        "webp": "stables/118-core-war-foundry/robots/11-krogoth-11/portrait.webp",
+        "blueprint": "stables/118-core-war-foundry/robots/11-krogoth-11/blueprint.json",
+        "profile": "stables/118-core-war-foundry/robots/11-krogoth-11/profile.md",
+        "prompt": "stables/118-core-war-foundry/robots/11-krogoth-11/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/core-war-foundry/11.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 118,
+          "stable_name": "CORE War Foundry",
+          "catalogue_key": "core-war-foundry",
+          "slot": 11,
+          "robot_name": "Krogoth 11",
+          "source_identity": "Krogoth experimental Kbot — Total Annihilation — original 1997 game, Core Contingency and official Cavedog units; CORE red team markings",
+          "source_edition": "Total Annihilation — original 1997 game, Core Contingency and official Cavedog units; CORE red team markings",
+          "prompt": "Refine this existing Armoured Souls Krogoth portrait. Preserve this exact robot design, two cannon arms, grey/red finish, pose, dark industrial studio floor, lighting and realistic render style. Pull the camera back so the complete robot INCLUDING BOTH BACK LAUNCHER PODS is fully visible, with a clean minimum 7% margin above the highest launcher and 5% margin around all other extremities. Keep the subject centered in a square canvas. No new equipment, text, border or extra characters. This is a framing refinement of the supplied image.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-bd5709cb-ea2e-4e01-8074-f8a81f6d95aa.png",
+          "visual_review": "Accepted: complete figure, distinct readable silhouette, shared collection finish and lighting",
+          "asset_id": "core-war-foundry:11",
+          "status": "generated",
+          "revision": 2,
+          "runtime_output": "app/frontend/public/assets/automatons/core-war-foundry/11.webp",
+          "master": "outputs/automaton-portraits/masters/core-war-foundry/11-v2.png",
+          "output": "app/frontend/public/assets/automatons/core-war-foundry/11-v2.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "927aa8c10929ba8637471eda2461d780a49ae8bcce63e7fb6e30e6b145077613",
+          "bytes": 54572,
+          "previous_versions": [
+            {
+              "stable_number": 118,
+              "stable_name": "CORE War Foundry",
+              "catalogue_key": "core-war-foundry",
+              "slot": 11,
+              "robot_name": "Krogoth 11",
+              "source_identity": "Krogoth experimental Kbot — Total Annihilation — original 1997 game, Core Contingency and official Cavedog units; CORE red team markings",
+              "source_edition": "Total Annihilation — original 1997 game, Core Contingency and official Cavedog units; CORE red team markings",
+              "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Original Total Annihilation: Core Contingency CORE Krogoth, towering massive grey mechanical biped with broad blocky torso, tiny source head with integrated laser, two enormous cannon arms, source paired back launch housings and thick heavily armoured legs. Red CORE player-team panels. Preserve iconic original Krogoth geometry, all arms, back housings and feet visible.\nCatalogue label for metadata only, do not render text: #118 slot 11 Krogoth 11.",
+              "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-226bfc30-ee42-49ad-954e-132b56f1875f.png",
+              "visual_review": "Superseded by selected refined portrait; original retained",
+              "asset_id": "core-war-foundry:11",
+              "status": "generated",
+              "revision": 1,
+              "runtime_output": "app/frontend/public/assets/automatons/core-war-foundry/11.webp",
+              "master": "outputs/automaton-portraits/masters/core-war-foundry/11.png",
+              "output": "app/frontend/public/assets/automatons/core-war-foundry/11.webp",
+              "master_dimensions": [
+                1254,
+                1254
+              ],
+              "export_dimensions": [
+                512,
+                512
+              ],
+              "sha256": "62b60deba224b19808ad102084a0967a0a0415efb027bdca22927f3d03ef5b1b",
+              "bytes": 63212,
+              "source_references": [
+                "https://store.steampowered.com/app/298030/Total_Annihilation/"
+              ]
+            }
+          ],
+          "source_references": [
+            "https://store.steampowered.com/app/298030/Total_Annihilation/"
+          ]
+        },
+        "sha256": "927aa8c10929ba8637471eda2461d780a49ae8bcce63e7fb6e30e6b145077613",
+        "revision": 2,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "alternatives": [],
+  "blueprint_status": "detailed",
+  "source_notes": "\n**Franchise:** Total Annihilation  \n**Strategy:** Swarm · **Target roster:** 11 robots\n**Catalogue key:** `core-war-foundry`\n\n**Proposed robots:** CORE Commander 01; AK 02; Storm 03; Thud 04; Pyro 05; Sumo 06; The Can 07; Roach 08; Morty 09; Dominator 10; Krogoth 11\n\n**Direction:** A foundational machine-war property with a convincing mass-production identity. Use CORE machine designs consistently. The source distinguishes CORE's machine-hosted consciousness from ARM's clone-piloted vehicles. [Publisher background](https://store.steampowered.com/app/298030/Total_Annihilation/).\n\n**Production edition:** Total Annihilation — original 1997 game, Core Contingency and official Cavedog units; CORE red team markings. Numbered names are original arena unit labels for source machine classes. Slot order follows the roster above.\n\n",
+  "source_documents": [
+    "reference/AUTOMATON_STABLE_EXPANSION.md"
+  ],
+  "blueprint_origin": "completed during collection",
+  "purchasing_plan": "Open with slots 1–3; recruit 4 through 11 in slot order. Fund each complete stage-0 loadout and the necessary roster/storage expansion before recruitment. Prioritise the full roster, then stage-1 equipment in slot order. No weapon refinement purchases.",
+  "target_overrides": {},
+  "equipment_budget": {
+    "stage_0_credits": 825000,
+    "stage_1_credits": 5387000,
+    "refinement_credits": 0,
+    "excludes": "Frames, facilities, training, repairs, upkeep, discounts and resale; stage-1 total replaces stage-0 gear and is not a simultaneous equipment inventory."
+  },
+  "folder": "stables/118-core-war-foundry",
+  "history_image_count": 2
+}

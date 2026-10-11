@@ -1,0 +1,476 @@
+{
+  "number": 14,
+  "catalogueKey": "rannoch-geth-consensus",
+  "stableName": "Rannoch Geth Consensus",
+  "franchiseLabel": "Mass Effect",
+  "strategy": "Swarm",
+  "fit": "Direct",
+  "conceptIdentity": "Grow a role-diverse machine roster. Repeat a coherent chassis language while differentiating scouts, shooters, and heavy units by silhouette.",
+  "backstory": "Rannoch Geth Consensus enters the arena with a clear doctrine. Grow a role-diverse machine roster. Every surviving machine returns to the workshop before the next booking.",
+  "openingRobots": 3,
+  "targetRobots": 11,
+  "adminMaximumRobots": 11,
+  "targetOverrides": {},
+  "teamNames": {
+    "2v2": [
+      {
+        "name": "Rannoch Pair 01",
+        "slots": [
+          1,
+          2
+        ]
+      },
+      {
+        "name": "Rannoch Pair 02",
+        "slots": [
+          3,
+          4
+        ]
+      },
+      {
+        "name": "Rannoch Pair 03",
+        "slots": [
+          5,
+          6
+        ]
+      },
+      {
+        "name": "Rannoch Pair 04",
+        "slots": [
+          7,
+          8
+        ]
+      },
+      {
+        "name": "Rannoch Pair 05",
+        "slots": [
+          9,
+          10
+        ]
+      }
+    ],
+    "3v3": [
+      {
+        "name": "Rannoch Squad 01",
+        "slots": [
+          1,
+          2,
+          3
+        ]
+      },
+      {
+        "name": "Rannoch Squad 02",
+        "slots": [
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "Rannoch Squad 03",
+        "slots": [
+          7,
+          8,
+          9
+        ]
+      }
+    ]
+  },
+  "eventOrder": [
+    "league_3v3",
+    "league_2v2",
+    "grand_melee",
+    "koth",
+    "league_1v1",
+    "tag_team",
+    "tournament_3v3",
+    "tournament_2v2",
+    "tournament_1v1"
+  ],
+  "robots": [
+    {
+      "blueprintId": "rannoch-geth-consensus:1:legion",
+      "slot": 1,
+      "name": "Legion",
+      "sourceAlias": "Legion",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 10,
+      "buildFocus": "Tactician",
+      "weaponPath": [
+        {
+          "mainWeapon": "Beam Pistol",
+          "offhandWeapon": null,
+          "listPriceCredits": 93000
+        },
+        {
+          "mainWeapon": "Particle Lance",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "long",
+        "artBrief": "Geth scout platform, single optic, exposed cables and repaired chest armour.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 0,
+        "imageConvention": "app/frontend/public/assets/automatons/rannoch-geth-consensus/1.webp"
+      }
+    },
+    {
+      "blueprintId": "rannoch-geth-consensus:2:geth-hunter",
+      "slot": 2,
+      "name": "Geth Hunter",
+      "sourceAlias": "Geth Hunter",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "dual_wield",
+      "stance": "offensive",
+      "yieldThreshold": 5,
+      "buildFocus": "Sprinter",
+      "weaponPath": [
+        {
+          "mainWeapon": "Laser Pistol",
+          "offhandWeapon": "Laser Pistol",
+          "listPriceCredits": 114000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": "Volt Sabre",
+          "listPriceCredits": 850000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Compact dark geth hunter with narrow optic and short-range weapon mounts.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 1,
+        "imageConvention": "app/frontend/public/assets/automatons/rannoch-geth-consensus/2.webp"
+      }
+    },
+    {
+      "blueprintId": "rannoch-geth-consensus:3:geth-prime",
+      "slot": 3,
+      "name": "Geth Prime",
+      "sourceAlias": "Geth Prime",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "two_handed",
+      "stance": "defensive",
+      "yieldThreshold": 5,
+      "buildFocus": "Warden",
+      "weaponPath": [
+        {
+          "mainWeapon": "Training Rifle",
+          "offhandWeapon": null,
+          "listPriceCredits": 50000
+        },
+        {
+          "mainWeapon": "Plasma Cannon",
+          "offhandWeapon": null,
+          "listPriceCredits": 408000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "mid",
+        "artBrief": "Tall broad geth command platform, red armour and heavy weapon assembly.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 2,
+        "imageConvention": "app/frontend/public/assets/automatons/rannoch-geth-consensus/3.webp"
+      }
+    },
+    {
+      "blueprintId": "rannoch-geth-consensus:4:geth-trooper",
+      "slot": 4,
+      "name": "Geth Trooper",
+      "sourceAlias": "Geth Trooper",
+      "nameBasis": "Source character or machine designation",
+      "availability": "growth",
+      "loadout": "single",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "Versatile",
+      "weaponPath": [
+        {
+          "mainWeapon": "Laser Pistol",
+          "offhandWeapon": null,
+          "listPriceCredits": 57000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Standard geth infantry platform with a bright optic and utilitarian rifle.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 3,
+        "imageConvention": "app/frontend/public/assets/automatons/rannoch-geth-consensus/4.webp"
+      }
+    },
+    {
+      "blueprintId": "rannoch-geth-consensus:5:geth-sniper",
+      "slot": 5,
+      "name": "Geth Sniper",
+      "sourceAlias": "Geth Sniper",
+      "nameBasis": "Source character or machine designation",
+      "availability": "growth",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 10,
+      "buildFocus": "Deadeye",
+      "weaponPath": [
+        {
+          "mainWeapon": "Beam Pistol",
+          "offhandWeapon": null,
+          "listPriceCredits": 93000
+        },
+        {
+          "mainWeapon": "Particle Lance",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "long",
+        "artBrief": "Lean geth marksman, long sensor head and a precision barrel.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 4,
+        "imageConvention": "app/frontend/public/assets/automatons/rannoch-geth-consensus/5.webp"
+      }
+    },
+    {
+      "blueprintId": "rannoch-geth-consensus:6:geth-pyro",
+      "slot": 6,
+      "name": "Geth Pyro",
+      "sourceAlias": "Geth Pyro",
+      "nameBasis": "Source character or machine designation",
+      "availability": "growth",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yieldThreshold": 0,
+      "buildFocus": "Bruiser",
+      "weaponPath": [
+        {
+          "mainWeapon": "Scatter Cannon",
+          "offhandWeapon": null,
+          "listPriceCredits": 84000
+        },
+        {
+          "mainWeapon": "Arc Projector",
+          "offhandWeapon": null,
+          "listPriceCredits": 488000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Heavy geth close-range platform, armoured emitter and heat-resistant casing.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 5,
+        "imageConvention": "app/frontend/public/assets/automatons/rannoch-geth-consensus/6.webp"
+      }
+    },
+    {
+      "blueprintId": "rannoch-geth-consensus:7:geth-trooper-07",
+      "slot": 7,
+      "name": "Geth Trooper 07",
+      "sourceAlias": "Geth Trooper 07",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 10,
+      "buildFocus": "Deadeye",
+      "weaponPath": [
+        {
+          "mainWeapon": "Bolt Carbine",
+          "offhandWeapon": null,
+          "listPriceCredits": 93000
+        },
+        {
+          "mainWeapon": "Nova Caster",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "mid",
+        "artBrief": "Standard geth infantry platform with a bright optic and utilitarian rifle. Arena unit 07 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 6,
+        "imageConvention": "app/frontend/public/assets/automatons/rannoch-geth-consensus/7.webp"
+      }
+    },
+    {
+      "blueprintId": "rannoch-geth-consensus:8:geth-trooper-08",
+      "slot": 8,
+      "name": "Geth Trooper 08",
+      "sourceAlias": "Geth Trooper 08",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "Bruiser",
+      "weaponPath": [
+        {
+          "mainWeapon": "Scatter Cannon",
+          "offhandWeapon": null,
+          "listPriceCredits": 84000
+        },
+        {
+          "mainWeapon": "Arc Projector",
+          "offhandWeapon": null,
+          "listPriceCredits": 488000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Standard geth infantry platform with a bright optic and utilitarian rifle. Arena unit 08 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 7,
+        "imageConvention": "app/frontend/public/assets/automatons/rannoch-geth-consensus/8.webp"
+      }
+    },
+    {
+      "blueprintId": "rannoch-geth-consensus:9:geth-trooper-09",
+      "slot": 9,
+      "name": "Geth Trooper 09",
+      "sourceAlias": "Geth Trooper 09",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "dual_wield",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "Sprinter",
+      "weaponPath": [
+        {
+          "mainWeapon": "Combat Knife",
+          "offhandWeapon": "Combat Knife",
+          "listPriceCredits": 186000
+        },
+        {
+          "mainWeapon": "Vibro Mace",
+          "offhandWeapon": "Vibro Mace",
+          "listPriceCredits": 850000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "melee",
+        "artBrief": "Standard geth infantry platform with a bright optic and utilitarian rifle. Arena unit 09 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 8,
+        "imageConvention": "app/frontend/public/assets/automatons/rannoch-geth-consensus/9.webp"
+      }
+    },
+    {
+      "blueprintId": "rannoch-geth-consensus:10:geth-trooper-10",
+      "slot": 10,
+      "name": "Geth Trooper 10",
+      "sourceAlias": "Geth Trooper 10",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "Bruiser",
+      "weaponPath": [
+        {
+          "mainWeapon": "Training Rifle",
+          "offhandWeapon": null,
+          "listPriceCredits": 50000
+        },
+        {
+          "mainWeapon": "Plasma Cannon",
+          "offhandWeapon": null,
+          "listPriceCredits": 408000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "mid",
+        "artBrief": "Standard geth infantry platform with a bright optic and utilitarian rifle. Arena unit 10 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 9,
+        "imageConvention": "app/frontend/public/assets/automatons/rannoch-geth-consensus/10.webp"
+      }
+    },
+    {
+      "blueprintId": "rannoch-geth-consensus:11:geth-trooper-11",
+      "slot": 11,
+      "name": "Geth Trooper 11",
+      "sourceAlias": "Geth Trooper 11",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "two_handed",
+      "stance": "defensive",
+      "yieldThreshold": 10,
+      "buildFocus": "Deadeye",
+      "weaponPath": [
+        {
+          "mainWeapon": "Training Beam",
+          "offhandWeapon": null,
+          "listPriceCredits": 50000
+        },
+        {
+          "mainWeapon": "Ion Beam",
+          "offhandWeapon": null,
+          "listPriceCredits": 544000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "long",
+        "artBrief": "Standard geth infantry platform with a bright optic and utilitarian rifle. Arena unit 11 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 10,
+        "imageConvention": "app/frontend/public/assets/automatons/rannoch-geth-consensus/11.webp"
+      }
+    }
+  ],
+  "alternativeBlueprints": [],
+  "review": {
+    "openingWeaponCredits": 257000,
+    "finalWeaponCreditsAtTarget": 5736000,
+    "equippedWeaponCountAtTarget": 13,
+    "purchaseOrder": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+    ],
+    "reserveSlots": [],
+    "alternativeRule": "Choose an alternative before catalogue approval; it replaces the specified slot and never adds another live robot."
+  }
+}

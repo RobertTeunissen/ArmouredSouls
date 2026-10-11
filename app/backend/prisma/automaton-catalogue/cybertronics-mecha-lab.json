@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "catalogueKey": "cybertronics-mecha-lab",
+  "stableName": "Cybertronics Mecha Lab",
+  "franchise": "A.I. Artificial Intelligence",
+  "backstory": "Cybertronics Mecha Lab enters the arena with a clear doctrine. A subtle tactical android interpretation. Every surviving machine returns to the workshop before the next booking.",
+  "strategy": {
+    "key": "paragon",
+    "version": 1,
+    "targetOverrides": {
+      "3": 4,
+      "8": 2
+    }
+  },
+  "teamNames": {
+    "twoVsTwo": [
+      "Blue Fairy Seekers"
+    ],
+    "threeVsThree": []
+  },
+  "eventOrder": [
+    "league_1v1",
+    "tournament_1v1",
+    "koth",
+    "grand_melee",
+    "league_2v2",
+    "tag_team",
+    "tournament_2v2",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "blueprints": [
+    {
+      "slot": 1,
+      "robotName": "David Mecha",
+      "loadoutType": "weapon_shield",
+      "stance": "defensive",
+      "yieldThreshold": 40,
+      "buildFocus": "tactician",
+      "weaponPath": [
+        {
+          "main": "Gauss Pistol",
+          "offhand": "Combat Shield"
+        },
+        {
+          "main": "Particle Lance",
+          "offhand": "Aegis Bulwark"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        }
+      ]
+    },
+    {
+      "slot": 2,
+      "robotName": "Gigolo Joe",
+      "loadoutType": "single",
+      "stance": "balanced",
+      "yieldThreshold": 30,
+      "buildFocus": "versatile",
+      "weaponPath": [
+        {
+          "main": "Gauss Pistol"
+        },
+        {
+          "main": "Particle Lance"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "magnitude": 1,
+          "targetAttribute": "combatPower"
+        }
+      ]
+    }
+  ]
+}

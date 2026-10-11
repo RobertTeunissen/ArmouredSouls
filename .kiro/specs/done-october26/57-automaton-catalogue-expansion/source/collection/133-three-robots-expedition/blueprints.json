@@ -1,0 +1,286 @@
+{
+  "stable_number": 133,
+  "catalogue_key": "three-robots-expedition",
+  "robots": [
+    {
+      "slot": 1,
+      "name": "K-VRC",
+      "source_identity": "K-VRC",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 20,
+      "build_focus": "Sprinter",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": null,
+          "list_price_credits": 57000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic K-VRC, the tiny orange sightseeing robot from Love, Death & Robots Three Robots. Compact playful toy-like orange humanoid chassis, short thin black-jointed limbs, large rounded rectangular orange head with black digital face and expressive small cyan/blue eyes, chunky orange hands and boots, dark waist. Preserve small doll-like source proportions, not a miniature generic military robot. One complete robot alone, curious standing pose with one hand raised, no companion or cat.\nCatalogue label for metadata only, do not render text: #133 slot 1 K-VRC.",
+      "role": "Mobile skirmisher",
+      "missing_fields": [],
+      "refinement_note": "Trio follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "K-VRC fills the mobile skirmisher role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Sprinter tuning supports the short equipment role; balanced stance and a 20% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Trio strategy tuning rules with the Sprinter Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "three-robots-expedition:1:k-vrc",
+      "folder": "stables/133-three-robots-expedition/robots/01-k-vrc",
+      "files": {
+        "png": "stables/133-three-robots-expedition/robots/01-k-vrc/portrait.png",
+        "webp": "stables/133-three-robots-expedition/robots/01-k-vrc/portrait.webp",
+        "blueprint": "stables/133-three-robots-expedition/robots/01-k-vrc/blueprint.json",
+        "profile": "stables/133-three-robots-expedition/robots/01-k-vrc/profile.md",
+        "prompt": "stables/133-three-robots-expedition/robots/01-k-vrc/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/three-robots-expedition/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 133,
+          "stable_name": "Three Robots Expedition",
+          "catalogue_key": "three-robots-expedition",
+          "slot": 1,
+          "robot_name": "K-VRC",
+          "source_identity": "K-VRC",
+          "source_edition": "Love, Death & Robots — Three Robots 2019 base designs",
+          "source_references": [
+            "https://about.netflix.com/en/news/love-death-robots-john-scalzi-sequel-episode",
+            "https://www.behance.net/gallery/86509033/Love-Death-Robots-Xbot-4000"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic K-VRC, the tiny orange sightseeing robot from Love, Death & Robots Three Robots. Compact playful toy-like orange humanoid chassis, short thin black-jointed limbs, large rounded rectangular orange head with black digital face and expressive small cyan/blue eyes, chunky orange hands and boots, dark waist. Preserve small doll-like source proportions, not a miniature generic military robot. One complete robot alone, curious standing pose with one hand raised, no companion or cat.\nCatalogue label for metadata only, do not render text: #133 slot 1 K-VRC.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-fb227cf7-c0fd-4383-a541-962b159bf94b.png",
+          "visual_review": "Accepted: complete readable silhouette, planned source or original construction and studio finish",
+          "asset_id": "three-robots-expedition:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/three-robots-expedition/1.webp",
+          "master": "outputs/automaton-portraits/masters/three-robots-expedition/1.png",
+          "output": "app/frontend/public/assets/automatons/three-robots-expedition/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "12ad0661c1b7113c1ee2031683c5cbfdb723e045396c8bd806e757301a6da5b7",
+          "bytes": 46554
+        },
+        "sha256": "12ad0661c1b7113c1ee2031683c5cbfdb723e045396c8bd806e757301a6da5b7",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 2,
+      "name": "XBOT 4000",
+      "source_identity": "XBOT 4000",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yield_threshold": 25,
+      "build_focus": "Warden",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": "Light Shield",
+          "list_price_credits": 108000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": "Aegis Bulwark",
+          "list_price_credits": 834000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic XBOT 4000 from Love, Death & Robots Three Robots. Tall slender white and pale grey skeletal humanoid robot with exposed dark narrow mechanical spine/waist and thin upper limbs, distinctive rounded skull-like head, two large circular dark recessed eyes and visible mechanical mouth/jaw construction, articulated white hands and long feet. Source white/grey chassis with wear, no clothes, no weapon, no cat, a curious upright standing pose.\nCatalogue label for metadata only, do not render text: #133 slot 2 XBOT 4000.",
+      "role": "Protected short-range anchor",
+      "missing_fields": [],
+      "refinement_note": "Trio follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 1,
+      "equipment_interpretation": "XBOT 4000 fills the protected short-range anchor role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Warden tuning supports the short equipment role; defensive stance and a 25% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Trio strategy tuning rules with the Warden Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "three-robots-expedition:2:xbot-4000",
+      "folder": "stables/133-three-robots-expedition/robots/02-xbot-4000",
+      "files": {
+        "png": "stables/133-three-robots-expedition/robots/02-xbot-4000/portrait.png",
+        "webp": "stables/133-three-robots-expedition/robots/02-xbot-4000/portrait.webp",
+        "blueprint": "stables/133-three-robots-expedition/robots/02-xbot-4000/blueprint.json",
+        "profile": "stables/133-three-robots-expedition/robots/02-xbot-4000/profile.md",
+        "prompt": "stables/133-three-robots-expedition/robots/02-xbot-4000/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/three-robots-expedition/2.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 133,
+          "stable_name": "Three Robots Expedition",
+          "catalogue_key": "three-robots-expedition",
+          "slot": 2,
+          "robot_name": "XBOT 4000",
+          "source_identity": "XBOT 4000",
+          "source_edition": "Love, Death & Robots — Three Robots 2019 base designs",
+          "source_references": [
+            "https://about.netflix.com/en/news/love-death-robots-john-scalzi-sequel-episode",
+            "https://www.behance.net/gallery/86509033/Love-Death-Robots-Xbot-4000"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic XBOT 4000 from Love, Death & Robots Three Robots. Tall slender white and pale grey skeletal humanoid robot with exposed dark narrow mechanical spine/waist and thin upper limbs, distinctive rounded skull-like head, two large circular dark recessed eyes and visible mechanical mouth/jaw construction, articulated white hands and long feet. Source white/grey chassis with wear, no clothes, no weapon, no cat, a curious upright standing pose.\nCatalogue label for metadata only, do not render text: #133 slot 2 XBOT 4000.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-b8f0b128-2342-4c34-a300-6d9c2ff54132.png",
+          "visual_review": "Accepted: complete readable silhouette, planned source or original construction and studio finish",
+          "asset_id": "three-robots-expedition:2",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/three-robots-expedition/2.webp",
+          "master": "outputs/automaton-portraits/masters/three-robots-expedition/2.png",
+          "output": "app/frontend/public/assets/automatons/three-robots-expedition/2.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "218a4ded333d3e1379289fbc1c75eb7cbbc95633d5a6a2bcbf53dcc6b06a9c08",
+          "bytes": 26086
+        },
+        "sha256": "218a4ded333d3e1379289fbc1c75eb7cbbc95633d5a6a2bcbf53dcc6b06a9c08",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 3,
+      "name": "11-45-G",
+      "source_identity": "11-45-G",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 20,
+      "build_focus": "Deadeye",
+      "range_from_weapons": "long",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Beam Pistol",
+          "offhand_weapon": null,
+          "list_price_credits": 93000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Particle Lance",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic 11-45-G from Love, Death & Robots Three Robots. One tall triangular pyramidal dark charcoal robot body, tapering to a sharp apex, broad low base, faceted ribbed panel faces and a single small mobile optical sensor on a vertical front track; source slim articulated utility arm at its side. No humanoid head, torso, arms or boots. Preserve the pyramid's source locomotion at its base, held close above floor with subtle floor shadow. No hat, no other robots, no decorative text.\nCatalogue label for metadata only, do not render text: #133 slot 3 11-45-G.",
+      "role": "Precision fire support",
+      "missing_fields": [],
+      "refinement_note": "Trio follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 2,
+      "equipment_interpretation": "11-45-G fills the precision fire support role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Deadeye tuning supports the long equipment role; balanced stance and a 20% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Trio strategy tuning rules with the Deadeye Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "three-robots-expedition:3:11-45-g",
+      "folder": "stables/133-three-robots-expedition/robots/03-11-45-g",
+      "files": {
+        "png": "stables/133-three-robots-expedition/robots/03-11-45-g/portrait.png",
+        "webp": "stables/133-three-robots-expedition/robots/03-11-45-g/portrait.webp",
+        "blueprint": "stables/133-three-robots-expedition/robots/03-11-45-g/blueprint.json",
+        "profile": "stables/133-three-robots-expedition/robots/03-11-45-g/profile.md",
+        "prompt": "stables/133-three-robots-expedition/robots/03-11-45-g/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/three-robots-expedition/3.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 133,
+          "stable_name": "Three Robots Expedition",
+          "catalogue_key": "three-robots-expedition",
+          "slot": 3,
+          "robot_name": "11-45-G",
+          "source_identity": "11-45-G",
+          "source_edition": "Love, Death & Robots — Three Robots 2019 base designs",
+          "source_references": [
+            "https://about.netflix.com/en/news/love-death-robots-john-scalzi-sequel-episode",
+            "https://www.behance.net/gallery/86509033/Love-Death-Robots-Xbot-4000"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic 11-45-G from Love, Death & Robots Three Robots. One tall triangular pyramidal dark charcoal robot body, tapering to a sharp apex, broad low base, faceted ribbed panel faces and a single small mobile optical sensor on a vertical front track; source slim articulated utility arm at its side. No humanoid head, torso, arms or boots. Preserve the pyramid's source locomotion at its base, held close above floor with subtle floor shadow. No hat, no other robots, no decorative text.\nCatalogue label for metadata only, do not render text: #133 slot 3 11-45-G.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-4928c80e-ce66-43ac-8918-2823db3fa9f4.png",
+          "visual_review": "Accepted: complete readable silhouette, planned source or original construction and studio finish",
+          "asset_id": "three-robots-expedition:3",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/three-robots-expedition/3.webp",
+          "master": "outputs/automaton-portraits/masters/three-robots-expedition/3.png",
+          "output": "app/frontend/public/assets/automatons/three-robots-expedition/3.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "b56e64a5dccffb88c094ceef08447da51abc843dafb8920a7c223063e4794943",
+          "bytes": 35010
+        },
+        "sha256": "b56e64a5dccffb88c094ceef08447da51abc843dafb8920a7c223063e4794943",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "replacement_alternatives": []
+}

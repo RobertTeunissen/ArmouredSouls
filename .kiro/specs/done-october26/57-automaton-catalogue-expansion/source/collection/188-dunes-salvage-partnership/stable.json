@@ -1,0 +1,314 @@
+{
+  "number": 188,
+  "catalogue_key": "dunes-salvage-partnership",
+  "name": "Dunes Salvage Partnership",
+  "franchise": "Primordia — 2012 game",
+  "strategy": "Duo",
+  "opening_robots": 2,
+  "target_robots": 2,
+  "max_planned_robots": 2,
+  "strategy_review_limit": 3,
+  "backstory": "A repaired humanoid and a small precise companion share a desert workshop. Protected endurance and careful distant fire divide a practical partner upgrade account.",
+  "strategy_personality": "A worn humanoid repairer and his small floating companion supply contrasting scale and an immediately recognizable salvage aesthetic. Preserve Horatio's repaired construction and Crispin's source body rather than enlarging both into equivalent infantry robots. Practical equipment, repair-minded investment, and complementary roles fit the pair. Crispin's hovering appearance remains a visual characteristic; it does not automatically add a flight mechanic.",
+  "teams": {
+    "2v2": [
+      {
+        "name": "Dunes Pair Pair 01",
+        "slots": [
+          1,
+          2
+        ],
+        "forms": "Opening"
+      }
+    ],
+    "3v3": []
+  },
+  "event_order": [
+    "league_2v2",
+    "tag_team",
+    "tournament_2v2",
+    "league_1v1",
+    "koth",
+    "grand_melee",
+    "tournament_1v1",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "robots": [
+    {
+      "slot": 1,
+      "name": "Horatio Nullbuilt",
+      "source_identity": "Horatio Nullbuilt",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yield_threshold": 25,
+      "build_focus": "Warden",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": "Light Shield",
+          "list_price_credits": 108000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": "Aegis Bulwark",
+          "list_price_credits": 834000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Hone",
+          "weapon": "Aegis Bulwark",
+          "hand": "offhand",
+          "workshop_level": 1,
+          "attribute": "Evasion Thrusters",
+          "magnitude": 5,
+          "result_value": 0,
+          "cost_credits": 250000,
+          "base_value": -5,
+          "effect": "Evasion Thrusters -5→0",
+          "step": 1
+        },
+        {
+          "operation": "Hone",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 1,
+          "attribute": "Combat Power",
+          "magnitude": 2,
+          "result_value": 10,
+          "cost_credits": 40000,
+          "base_value": 8,
+          "effect": "Combat Power 8→10",
+          "step": 2
+        },
+        {
+          "operation": "Augment",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 3,
+          "attribute": "Adaptive AI",
+          "magnitude": 3,
+          "result_value": 3,
+          "cost_credits": 180000,
+          "effect": "Adaptive AI, new +3",
+          "step": 3
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE Horatio Nullbuilt from Primordia, the tall lanky humanoid robot visible in the attached original game screenshot. Weathered narrow squared metal head, small subdued optics, long thin mechanical neck, slender worn metal hands and legs, heavy aged off-white cloth robe/cloak with rust-stained edges and practical boots. Preserve his original disproportionate repair-built silhouette. One compact salvaged metal pistol held low in right hand as an original arena addition; left hand empty. Full-body three-quarter isolated portrait. Do not include Crispin, the small hovering companion in the screenshot, or other figures.\nMetadata only, do not render text: #188 slot 1 Horatio Nullbuilt.",
+      "role": "Protected short-range anchor",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 470000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "Horatio Nullbuilt fills the protected short-range anchor role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Warden tuning supports the short equipment role; defensive stance and a 25% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Duo strategy tuning rules with the Warden Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "dunes-salvage-partnership:1:horatio-nullbuilt",
+      "folder": "stables/188-dunes-salvage-partnership/robots/01-horatio-nullbuilt",
+      "files": {
+        "png": "stables/188-dunes-salvage-partnership/robots/01-horatio-nullbuilt/portrait.png",
+        "webp": "stables/188-dunes-salvage-partnership/robots/01-horatio-nullbuilt/portrait.webp",
+        "blueprint": "stables/188-dunes-salvage-partnership/robots/01-horatio-nullbuilt/blueprint.json",
+        "profile": "stables/188-dunes-salvage-partnership/robots/01-horatio-nullbuilt/profile.md",
+        "prompt": "stables/188-dunes-salvage-partnership/robots/01-horatio-nullbuilt/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/dunes-salvage-partnership/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 188,
+          "stable_name": "Dunes Salvage Partnership",
+          "catalogue_key": "dunes-salvage-partnership",
+          "slot": 1,
+          "robot_name": "Horatio Nullbuilt",
+          "source_identity": "Horatio Nullbuilt",
+          "source_edition": "Primordia (2012), original Horatio model",
+          "source_references": [
+            "https://wadjeteyegames.com/games/primordia/",
+            "https://store.steampowered.com/app/227000/Primordia/"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE Horatio Nullbuilt from Primordia, the tall lanky humanoid robot visible in the attached original game screenshot. Weathered narrow squared metal head, small subdued optics, long thin mechanical neck, slender worn metal hands and legs, heavy aged off-white cloth robe/cloak with rust-stained edges and practical boots. Preserve his original disproportionate repair-built silhouette. One compact salvaged metal pistol held low in right hand as an original arena addition; left hand empty. Full-body three-quarter isolated portrait. Do not include Crispin, the small hovering companion in the screenshot, or other figures.\nMetadata only, do not render text: #188 slot 1 Horatio Nullbuilt.",
+          "referenced_image_paths": [
+            "/tmp/armoured-game-refs/primordia-1.png"
+          ],
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-1496a14a-985b-43cc-abe9-6e946de356f1.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "dunes-salvage-partnership:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/dunes-salvage-partnership/1.webp",
+          "master": "outputs/automaton-portraits/masters/dunes-salvage-partnership/1.png",
+          "output": "app/frontend/public/assets/automatons/dunes-salvage-partnership/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "93fe615d36902d30be2ef50c9fdd4632cd3588ea1611e0eb78875908259cc868",
+          "bytes": 33614
+        },
+        "sha256": "93fe615d36902d30be2ef50c9fdd4632cd3588ea1611e0eb78875908259cc868",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 2,
+      "name": "Crispin",
+      "source_identity": "Crispin",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 20,
+      "build_focus": "Deadeye",
+      "range_from_weapons": "long",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Beam Pistol",
+          "offhand_weapon": null,
+          "list_price_credits": 93000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Particle Lance",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Hone",
+          "weapon": "Particle Lance",
+          "hand": "main",
+          "workshop_level": 1,
+          "attribute": "Targeting Systems",
+          "magnitude": 2,
+          "result_value": 10,
+          "cost_credits": 40000,
+          "base_value": 8,
+          "effect": "Targeting Systems 8→10",
+          "step": 1
+        },
+        {
+          "operation": "Augment",
+          "weapon": "Particle Lance",
+          "hand": "main",
+          "workshop_level": 3,
+          "attribute": "Weapon Control",
+          "magnitude": 3,
+          "result_value": 3,
+          "cost_credits": 180000,
+          "effect": "Weapon Control, new +3",
+          "step": 2
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE Crispin from Primordia, ONLY the small round floating companion to the left of Horatio in the attached game screenshot. Preserve Crispin's original compact worn rounded cylindrical robot body, a tall small central cylindrical head with TWO small dark round eyes, surrounded at its base by a wide shallow circular flotation ring and little side components; hovering just above the floor. Translate the actual pixel silhouette into believable worn metal. Do not turn him into a human-sized biped, add invented legs, or include Horatio. One very small underslung service emitter is explicitly an original arena equipment addition, subordinate to the recognizable source body. Full complete silhouette with clear margin on all sides.\nMetadata only, do not render text: #188 slot 2 Crispin.",
+      "role": "Precision fire support",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 220000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 1,
+      "equipment_interpretation": "Crispin fills the precision fire support role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Deadeye tuning supports the long equipment role; balanced stance and a 20% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Duo strategy tuning rules with the Deadeye Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "dunes-salvage-partnership:2:crispin",
+      "folder": "stables/188-dunes-salvage-partnership/robots/02-crispin",
+      "files": {
+        "png": "stables/188-dunes-salvage-partnership/robots/02-crispin/portrait.png",
+        "webp": "stables/188-dunes-salvage-partnership/robots/02-crispin/portrait.webp",
+        "blueprint": "stables/188-dunes-salvage-partnership/robots/02-crispin/blueprint.json",
+        "profile": "stables/188-dunes-salvage-partnership/robots/02-crispin/profile.md",
+        "prompt": "stables/188-dunes-salvage-partnership/robots/02-crispin/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/dunes-salvage-partnership/2.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 188,
+          "stable_name": "Dunes Salvage Partnership",
+          "catalogue_key": "dunes-salvage-partnership",
+          "slot": 2,
+          "robot_name": "Crispin",
+          "source_identity": "Crispin",
+          "source_edition": "Primordia (2012), original floating companion body",
+          "source_references": [
+            "https://wadjeteyegames.com/games/primordia/",
+            "https://store.steampowered.com/app/227000/Primordia/"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE Crispin from Primordia, ONLY the small round floating companion to the left of Horatio in the attached game screenshot. Preserve Crispin's original compact worn rounded cylindrical robot body, a tall small central cylindrical head with TWO small dark round eyes, surrounded at its base by a wide shallow circular flotation ring and little side components; hovering just above the floor. Translate the actual pixel silhouette into believable worn metal. Do not turn him into a human-sized biped, add invented legs, or include Horatio. One very small underslung service emitter is explicitly an original arena equipment addition, subordinate to the recognizable source body. Full complete silhouette with clear margin on all sides.\nMetadata only, do not render text: #188 slot 2 Crispin.",
+          "referenced_image_paths": [
+            "/tmp/armoured-crispin-reference.png",
+            "/tmp/armoured-game-refs/primordia-1.png"
+          ],
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-1a83c3c4-916d-4de0-96a2-2c9fef0ec39e.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "dunes-salvage-partnership:2",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/dunes-salvage-partnership/2.webp",
+          "master": "outputs/automaton-portraits/masters/dunes-salvage-partnership/2.png",
+          "output": "app/frontend/public/assets/automatons/dunes-salvage-partnership/2.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "7da6ae84d7f19df1399188e661b428d3a6a73f6aa1f2f2940548837cc718e72a",
+          "bytes": 39882
+        },
+        "sha256": "7da6ae84d7f19df1399188e661b428d3a6a73f6aa1f2f2940548837cc718e72a",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "alternatives": [],
+  "blueprint_status": "detailed",
+  "source_notes": "\n**Franchise:** Primordia — 2012 game  \n**Strategy:** Duo · **Target roster:** 2 robots\n\n**Proposed robots:** Horatio Nullbuilt; Crispin.\n\n**Direction:** A worn humanoid repairer and his small floating companion supply contrasting scale and an immediately recognizable salvage aesthetic. Preserve Horatio's repaired construction and Crispin's source body rather than enlarging both into equivalent infantry robots. Practical equipment, repair-minded investment, and complementary roles fit the pair. Crispin's hovering appearance remains a visual characteristic; it does not automatically add a flight mechanic.\n\nReferences: [Wadjet Eye Games' Primordia reference](https://wadjeteyegames.com/games/primordia/).\n\n**Production edition:** Primordia (2012), original Horatio model; Primordia (2012), original floating companion body.  \n**Catalogue key:** `dunes-salvage-partnership`\n\n",
+  "source_documents": [
+    "reference/AUTOMATON_STABLE_EXPANSION.md"
+  ],
+  "blueprint_origin": "completed during collection",
+  "purchasing_plan": "Open with both robots. Alternate stage-1 equipment investment between slots 1 and 2; finish both final loadouts before refining. Visit both robots in each Hone pass, then each Augment pass, buying Workshop L1/L3 only as required. No Sharpen or Forge purchases.",
+  "target_overrides": {},
+  "equipment_budget": {
+    "stage_0_credits": 201000,
+    "stage_1_credits": 1259000,
+    "refinement_credits": 690000,
+    "excludes": "Frames, facilities, training, repairs, upkeep, discounts and resale; stage-1 total replaces stage-0 gear and is not a simultaneous equipment inventory."
+  },
+  "folder": "stables/188-dunes-salvage-partnership",
+  "history_image_count": 0
+}

@@ -1,0 +1,243 @@
+{
+  "stable_number": 126,
+  "catalogue_key": "mithril-arm-slave-hangar",
+  "robots": [
+    {
+      "slot": 1,
+      "name": "ARX-7 Arbalest",
+      "source_identity": "ARX-7 Arbalest",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 20,
+      "build_focus": "Sprinter",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": null,
+          "list_price_credits": 57000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Hone",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 1,
+          "attribute": "Attack Speed",
+          "magnitude": 3,
+          "result_value": 7,
+          "cost_credits": 90000,
+          "base_value": 4,
+          "effect": "Attack Speed 4→7",
+          "step": 1
+        },
+        {
+          "operation": "Augment",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 3,
+          "attribute": "Evasion Thrusters",
+          "magnitude": 2,
+          "result_value": 2,
+          "cost_credits": 80000,
+          "effect": "Evasion Thrusters, new +2",
+          "step": 2
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic Full Metal Panic! The Second Raid ARX-7 Arbalest, distinctive white and dark-blue slim Arm Slave armour, yellow trim, narrow original head with twin optical sensors and source antenna arrangement, angular shoulders, slender mechanical waist and long biped legs. Hold source shotgun in both hands at rest. Preserve television proportions, no Lambda Driver glow or pilot.\nCatalogue label for metadata only, do not render text: #126 slot 1 ARX-7 Arbalest.",
+      "role": "Mobile skirmisher",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 170000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "ARX-7 Arbalest fills the mobile skirmisher role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Sprinter tuning supports the short equipment role; balanced stance and a 20% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Duo strategy tuning rules with the Sprinter Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "mithril-arm-slave-hangar:1:arx-7-arbalest",
+      "folder": "stables/126-mithril-arm-slave-hangar/robots/01-arx-7-arbalest",
+      "files": {
+        "png": "stables/126-mithril-arm-slave-hangar/robots/01-arx-7-arbalest/portrait.png",
+        "webp": "stables/126-mithril-arm-slave-hangar/robots/01-arx-7-arbalest/portrait.webp",
+        "blueprint": "stables/126-mithril-arm-slave-hangar/robots/01-arx-7-arbalest/blueprint.json",
+        "profile": "stables/126-mithril-arm-slave-hangar/robots/01-arx-7-arbalest/profile.md",
+        "prompt": "stables/126-mithril-arm-slave-hangar/robots/01-arx-7-arbalest/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/mithril-arm-slave-hangar/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 126,
+          "stable_name": "Mithril Arm Slave Hangar",
+          "catalogue_key": "mithril-arm-slave-hangar",
+          "slot": 1,
+          "robot_name": "ARX-7 Arbalest",
+          "source_identity": "ARX-7 Arbalest",
+          "source_edition": "Full Metal Panic! The Second Raid — 2005 television designs; Arbalest and standard M9 Gernsback",
+          "source_references": [
+            "https://alter-web.jp/products/344/"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic Full Metal Panic! The Second Raid ARX-7 Arbalest, distinctive white and dark-blue slim Arm Slave armour, yellow trim, narrow original head with twin optical sensors and source antenna arrangement, angular shoulders, slender mechanical waist and long biped legs. Hold source shotgun in both hands at rest. Preserve television proportions, no Lambda Driver glow or pilot.\nCatalogue label for metadata only, do not render text: #126 slot 1 ARX-7 Arbalest.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-51e88f33-015d-4f8f-bcae-41102164a344.png",
+          "visual_review": "Accepted: complete figure, distinct readable silhouette, shared collection finish and lighting",
+          "asset_id": "mithril-arm-slave-hangar:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/mithril-arm-slave-hangar/1.webp",
+          "master": "outputs/automaton-portraits/masters/mithril-arm-slave-hangar/1.png",
+          "output": "app/frontend/public/assets/automatons/mithril-arm-slave-hangar/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "65c42be025341806f0cb5fdb2d03b6539bfbcc8792937bbfb166d0d53ddc47de",
+          "bytes": 44758
+        },
+        "sha256": "65c42be025341806f0cb5fdb2d03b6539bfbcc8792937bbfb166d0d53ddc47de",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 2,
+      "name": "M9 Gernsback",
+      "source_identity": "M9 Gernsback standard Mithril unit",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 20,
+      "build_focus": "Deadeye",
+      "range_from_weapons": "long",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Beam Pistol",
+          "offhand_weapon": null,
+          "list_price_credits": 93000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Particle Lance",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Hone",
+          "weapon": "Particle Lance",
+          "hand": "main",
+          "workshop_level": 1,
+          "attribute": "Targeting Systems",
+          "magnitude": 2,
+          "result_value": 10,
+          "cost_credits": 40000,
+          "base_value": 8,
+          "effect": "Targeting Systems 8→10",
+          "step": 1
+        },
+        {
+          "operation": "Augment",
+          "weapon": "Particle Lance",
+          "hand": "main",
+          "workshop_level": 3,
+          "attribute": "Weapon Control",
+          "magnitude": 3,
+          "result_value": 3,
+          "cost_credits": 180000,
+          "effect": "Weapon Control, new +3",
+          "step": 2
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic Full Metal Panic! The Second Raid standard M9 Gernsback, muted grey-green armour, characteristic compact faceted helmet and mechanical sensors, slender tactical body with original shoulder and hip plates, long articulated legs. Use ordinary standard head, no commander blade antenna. Carry GDC-B 40mm rifle in both hands at rest. No chibi toy proportions, no invisible-victory redesign or pilot.\nCatalogue label for metadata only, do not render text: #126 slot 2 M9 Gernsback.",
+      "role": "Precision fire support",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 220000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 1,
+      "equipment_interpretation": "M9 Gernsback fills the precision fire support role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Deadeye tuning supports the long equipment role; balanced stance and a 20% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Duo strategy tuning rules with the Deadeye Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "mithril-arm-slave-hangar:2:m9-gernsback",
+      "folder": "stables/126-mithril-arm-slave-hangar/robots/02-m9-gernsback",
+      "files": {
+        "png": "stables/126-mithril-arm-slave-hangar/robots/02-m9-gernsback/portrait.png",
+        "webp": "stables/126-mithril-arm-slave-hangar/robots/02-m9-gernsback/portrait.webp",
+        "blueprint": "stables/126-mithril-arm-slave-hangar/robots/02-m9-gernsback/blueprint.json",
+        "profile": "stables/126-mithril-arm-slave-hangar/robots/02-m9-gernsback/profile.md",
+        "prompt": "stables/126-mithril-arm-slave-hangar/robots/02-m9-gernsback/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/mithril-arm-slave-hangar/2.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 126,
+          "stable_name": "Mithril Arm Slave Hangar",
+          "catalogue_key": "mithril-arm-slave-hangar",
+          "slot": 2,
+          "robot_name": "M9 Gernsback",
+          "source_identity": "M9 Gernsback standard Mithril unit",
+          "source_edition": "Full Metal Panic! The Second Raid — 2005 television designs; Arbalest and standard M9 Gernsback",
+          "source_references": [
+            "https://alter-web.jp/products/344/"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic Full Metal Panic! The Second Raid standard M9 Gernsback, muted grey-green armour, characteristic compact faceted helmet and mechanical sensors, slender tactical body with original shoulder and hip plates, long articulated legs. Use ordinary standard head, no commander blade antenna. Carry GDC-B 40mm rifle in both hands at rest. No chibi toy proportions, no invisible-victory redesign or pilot.\nCatalogue label for metadata only, do not render text: #126 slot 2 M9 Gernsback.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-848be05c-d02e-4ac4-84f8-7e95e4b46835.png",
+          "visual_review": "Accepted: complete figure, distinct readable silhouette, shared collection finish and lighting",
+          "asset_id": "mithril-arm-slave-hangar:2",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/mithril-arm-slave-hangar/2.webp",
+          "master": "outputs/automaton-portraits/masters/mithril-arm-slave-hangar/2.png",
+          "output": "app/frontend/public/assets/automatons/mithril-arm-slave-hangar/2.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "a866b5d03de53549d348f2dc6ea7d7233319eb20591a20c579497dcaabf666d9",
+          "bytes": 39492
+        },
+        "sha256": "a866b5d03de53549d348f2dc6ea7d7233319eb20591a20c579497dcaabf666d9",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "replacement_alternatives": []
+}

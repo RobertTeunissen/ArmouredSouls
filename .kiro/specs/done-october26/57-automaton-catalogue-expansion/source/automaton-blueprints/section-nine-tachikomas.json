@@ -1,0 +1,476 @@
+{
+  "number": 84,
+  "catalogueKey": "section-nine-tachikomas",
+  "stableName": "Section Nine Tachikomas",
+  "franchiseLabel": "Ghost in the Shell",
+  "strategy": "Swarm",
+  "fit": "Direct",
+  "conceptIdentity": "Repeatable agile tank robots with ranged builds. Blue rounded bodies, multiple articulated legs, distinctive sensor pods. Keep human and cyborg agents outside this particular roster.",
+  "backstory": "Section Nine Tachikomas enters the arena with a clear doctrine. Repeatable agile tank robots with ranged builds. Every surviving machine returns to the workshop before the next booking.",
+  "openingRobots": 3,
+  "targetRobots": 11,
+  "adminMaximumRobots": 11,
+  "targetOverrides": {},
+  "teamNames": {
+    "2v2": [
+      {
+        "name": "Section Nine Pair 01",
+        "slots": [
+          1,
+          2
+        ]
+      },
+      {
+        "name": "Section Nine Pair 02",
+        "slots": [
+          3,
+          4
+        ]
+      },
+      {
+        "name": "Section Nine Pair 03",
+        "slots": [
+          5,
+          6
+        ]
+      },
+      {
+        "name": "Section Nine Pair 04",
+        "slots": [
+          7,
+          8
+        ]
+      },
+      {
+        "name": "Section Nine Pair 05",
+        "slots": [
+          9,
+          10
+        ]
+      }
+    ],
+    "3v3": [
+      {
+        "name": "Section Nine Squad 01",
+        "slots": [
+          1,
+          2,
+          3
+        ]
+      },
+      {
+        "name": "Section Nine Squad 02",
+        "slots": [
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "Section Nine Squad 03",
+        "slots": [
+          7,
+          8,
+          9
+        ]
+      }
+    ]
+  },
+  "eventOrder": [
+    "league_3v3",
+    "league_2v2",
+    "grand_melee",
+    "koth",
+    "league_1v1",
+    "tag_team",
+    "tournament_3v3",
+    "tournament_2v2",
+    "tournament_1v1"
+  ],
+  "robots": [
+    {
+      "blueprintId": "section-nine-tachikomas:1:tachikoma-01",
+      "slot": 1,
+      "name": "Tachikoma 01",
+      "sourceAlias": "Tachikoma 01",
+      "nameBasis": "Original arena designation",
+      "availability": "opening",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 15,
+      "buildFocus": "Sprinter",
+      "weaponPath": [
+        {
+          "mainWeapon": "Laser Pistol",
+          "offhandWeapon": null,
+          "listPriceCredits": 57000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Blue rounded spider-tank robot with articulated legs, white sensor spheres and central weapon.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 0,
+        "imageConvention": "app/frontend/public/assets/automatons/section-nine-tachikomas/1.webp"
+      }
+    },
+    {
+      "blueprintId": "section-nine-tachikomas:2:tachikoma-02",
+      "slot": 2,
+      "name": "Tachikoma 02",
+      "sourceAlias": "Tachikoma 02",
+      "nameBasis": "Original arena designation",
+      "availability": "opening",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yieldThreshold": 20,
+      "buildFocus": "Warden",
+      "weaponPath": [
+        {
+          "mainWeapon": "Bolt Carbine",
+          "offhandWeapon": "Combat Shield",
+          "listPriceCredits": 171000
+        },
+        {
+          "mainWeapon": "Nova Caster",
+          "offhandWeapon": "Aegis Bulwark",
+          "listPriceCredits": 834000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "mid",
+        "artBrief": "Blue rounded spider-tank robot with reinforced cargo body and defensive equipment.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 1,
+        "imageConvention": "app/frontend/public/assets/automatons/section-nine-tachikomas/2.webp"
+      }
+    },
+    {
+      "blueprintId": "section-nine-tachikomas:3:tachikoma-03",
+      "slot": 3,
+      "name": "Tachikoma 03",
+      "sourceAlias": "Tachikoma 03",
+      "nameBasis": "Original arena designation",
+      "availability": "opening",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 15,
+      "buildFocus": "Tactician",
+      "weaponPath": [
+        {
+          "mainWeapon": "Bolt Carbine",
+          "offhandWeapon": null,
+          "listPriceCredits": 93000
+        },
+        {
+          "mainWeapon": "Nova Caster",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "mid",
+        "artBrief": "Blue rounded spider-tank robot with articulated legs and a longer ranged emitter.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 2,
+        "imageConvention": "app/frontend/public/assets/automatons/section-nine-tachikomas/3.webp"
+      }
+    },
+    {
+      "blueprintId": "section-nine-tachikomas:4:tachikoma-04",
+      "slot": 4,
+      "name": "Tachikoma 04",
+      "sourceAlias": "Tachikoma 04",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yieldThreshold": 10,
+      "buildFocus": "Warden",
+      "weaponPath": [
+        {
+          "mainWeapon": "Laser Pistol",
+          "offhandWeapon": "Light Shield",
+          "listPriceCredits": 108000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": "Aegis Bulwark",
+          "listPriceCredits": 834000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Blue rounded spider-tank robot with articulated legs, white sensor spheres and central weapon. Arena unit 04 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 3,
+        "imageConvention": "app/frontend/public/assets/automatons/section-nine-tachikomas/4.webp"
+      }
+    },
+    {
+      "blueprintId": "section-nine-tachikomas:5:tachikoma-05",
+      "slot": 5,
+      "name": "Tachikoma 05",
+      "sourceAlias": "Tachikoma 05",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 10,
+      "buildFocus": "Deadeye",
+      "weaponPath": [
+        {
+          "mainWeapon": "Beam Pistol",
+          "offhandWeapon": null,
+          "listPriceCredits": 93000
+        },
+        {
+          "mainWeapon": "Particle Lance",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "long",
+        "artBrief": "Blue rounded spider-tank robot with articulated legs, white sensor spheres and central weapon. Arena unit 05 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 4,
+        "imageConvention": "app/frontend/public/assets/automatons/section-nine-tachikomas/5.webp"
+      }
+    },
+    {
+      "blueprintId": "section-nine-tachikomas:6:tachikoma-06",
+      "slot": 6,
+      "name": "Tachikoma 06",
+      "sourceAlias": "Tachikoma 06",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 10,
+      "buildFocus": "Versatile",
+      "weaponPath": [
+        {
+          "mainWeapon": "Laser Pistol",
+          "offhandWeapon": null,
+          "listPriceCredits": 57000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Blue rounded spider-tank robot with articulated legs, white sensor spheres and central weapon. Arena unit 06 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 5,
+        "imageConvention": "app/frontend/public/assets/automatons/section-nine-tachikomas/6.webp"
+      }
+    },
+    {
+      "blueprintId": "section-nine-tachikomas:7:tachikoma-07",
+      "slot": 7,
+      "name": "Tachikoma 07",
+      "sourceAlias": "Tachikoma 07",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 10,
+      "buildFocus": "Deadeye",
+      "weaponPath": [
+        {
+          "mainWeapon": "Bolt Carbine",
+          "offhandWeapon": null,
+          "listPriceCredits": 93000
+        },
+        {
+          "mainWeapon": "Nova Caster",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "mid",
+        "artBrief": "Blue rounded spider-tank robot with articulated legs, white sensor spheres and central weapon. Arena unit 07 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 6,
+        "imageConvention": "app/frontend/public/assets/automatons/section-nine-tachikomas/7.webp"
+      }
+    },
+    {
+      "blueprintId": "section-nine-tachikomas:8:tachikoma-08",
+      "slot": 8,
+      "name": "Tachikoma 08",
+      "sourceAlias": "Tachikoma 08",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yieldThreshold": 10,
+      "buildFocus": "Warden",
+      "weaponPath": [
+        {
+          "mainWeapon": "Laser Pistol",
+          "offhandWeapon": "Light Shield",
+          "listPriceCredits": 108000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": "Aegis Bulwark",
+          "listPriceCredits": 834000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Blue rounded spider-tank robot with articulated legs, white sensor spheres and central weapon. Arena unit 08 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 7,
+        "imageConvention": "app/frontend/public/assets/automatons/section-nine-tachikomas/8.webp"
+      }
+    },
+    {
+      "blueprintId": "section-nine-tachikomas:9:tachikoma-09",
+      "slot": 9,
+      "name": "Tachikoma 09",
+      "sourceAlias": "Tachikoma 09",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 10,
+      "buildFocus": "Deadeye",
+      "weaponPath": [
+        {
+          "mainWeapon": "Beam Pistol",
+          "offhandWeapon": null,
+          "listPriceCredits": 93000
+        },
+        {
+          "mainWeapon": "Particle Lance",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "long",
+        "artBrief": "Blue rounded spider-tank robot with articulated legs, white sensor spheres and central weapon. Arena unit 09 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 8,
+        "imageConvention": "app/frontend/public/assets/automatons/section-nine-tachikomas/9.webp"
+      }
+    },
+    {
+      "blueprintId": "section-nine-tachikomas:10:tachikoma-10",
+      "slot": 10,
+      "name": "Tachikoma 10",
+      "sourceAlias": "Tachikoma 10",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 10,
+      "buildFocus": "Versatile",
+      "weaponPath": [
+        {
+          "mainWeapon": "Laser Pistol",
+          "offhandWeapon": null,
+          "listPriceCredits": 57000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Blue rounded spider-tank robot with articulated legs, white sensor spheres and central weapon. Arena unit 10 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 9,
+        "imageConvention": "app/frontend/public/assets/automatons/section-nine-tachikomas/10.webp"
+      }
+    },
+    {
+      "blueprintId": "section-nine-tachikomas:11:tachikoma-11",
+      "slot": 11,
+      "name": "Tachikoma 11",
+      "sourceAlias": "Tachikoma 11",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 10,
+      "buildFocus": "Deadeye",
+      "weaponPath": [
+        {
+          "mainWeapon": "Bolt Carbine",
+          "offhandWeapon": null,
+          "listPriceCredits": 93000
+        },
+        {
+          "mainWeapon": "Nova Caster",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "mid",
+        "artBrief": "Blue rounded spider-tank robot with articulated legs, white sensor spheres and central weapon. Arena unit 11 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 10,
+        "imageConvention": "app/frontend/public/assets/automatons/section-nine-tachikomas/11.webp"
+      }
+    }
+  ],
+  "alternativeBlueprints": [],
+  "review": {
+    "openingWeaponCredits": 321000,
+    "finalWeaponCreditsAtTarget": 5902000,
+    "equippedWeaponCountAtTarget": 14,
+    "purchaseOrder": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+    ],
+    "reserveSlots": [],
+    "alternativeRule": "Choose an alternative before catalogue approval; it replaces the specified slot and never adds another live robot."
+  }
+}

@@ -1,0 +1,286 @@
+{
+  "stable_number": 115,
+  "catalogue_key": "polanian-dieselworks",
+  "robots": [
+    {
+      "slot": 1,
+      "name": "PZM-7 Śmiały",
+      "source_identity": "PZM-7 Śmiały — Iron Harvest — 2020 base-game Polania chassis",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 15,
+      "build_focus": "Tactician",
+      "range_from_weapons": "mid",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Bolt Carbine",
+          "offhand_weapon": null,
+          "list_price_credits": 93000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Nova Caster",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around EVERY extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic PZM-7 Śmiały light Polanian mech from Iron Harvest: tall slender dieselpunk humanoid walker with cylindrical riveted olive-green armoured hull, thin mechanical arms and long spindly jointed legs, source exhaust stacks, characteristic long anti-mech rifle with bayonet held in both mechanical hands. Preserve game design and source Polanian markings. Entire rifle/bayonet, hull and both feet visible, no people.\nCatalogue label for metadata only, do not render text: #115 slot 1 PZM-7 Śmiały.",
+      "role": "Measured mid-range fighter",
+      "missing_fields": [],
+      "refinement_note": "Tycoon follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "PZM-7 Śmiały fills the measured mid-range fighter role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Tactician tuning supports the mid equipment role; balanced stance and a 15% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Tycoon strategy tuning rules with the Tactician Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "polanian-dieselworks:1:pzm-7-smiay",
+      "folder": "stables/115-polanian-dieselworks/robots/01-pzm-7-smiay",
+      "files": {
+        "png": "stables/115-polanian-dieselworks/robots/01-pzm-7-smiay/portrait.png",
+        "webp": "stables/115-polanian-dieselworks/robots/01-pzm-7-smiay/portrait.webp",
+        "blueprint": "stables/115-polanian-dieselworks/robots/01-pzm-7-smiay/blueprint.json",
+        "profile": "stables/115-polanian-dieselworks/robots/01-pzm-7-smiay/profile.md",
+        "prompt": "stables/115-polanian-dieselworks/robots/01-pzm-7-smiay/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/polanian-dieselworks/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 115,
+          "stable_name": "Polanian Dieselworks",
+          "catalogue_key": "polanian-dieselworks",
+          "slot": 1,
+          "robot_name": "PZM-7 Śmiały",
+          "source_identity": "PZM-7 Śmiały — Iron Harvest — 2020 base-game Polania chassis",
+          "source_edition": "Iron Harvest — 2020 base-game Polania chassis",
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around EVERY extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic PZM-7 Śmiały light Polanian mech from Iron Harvest: tall slender dieselpunk humanoid walker with cylindrical riveted olive-green armoured hull, thin mechanical arms and long spindly jointed legs, source exhaust stacks, characteristic long anti-mech rifle with bayonet held in both mechanical hands. Preserve game design and source Polanian markings. Entire rifle/bayonet, hull and both feet visible, no people.\nCatalogue label for metadata only, do not render text: #115 slot 1 PZM-7 Śmiały.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-d8afc86c-7856-431c-8d59-78745f9e4ccd.png",
+          "visual_review": "Accepted — complete framing, limb count, equipment representation and shared portrait style checked.",
+          "asset_id": "polanian-dieselworks:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/polanian-dieselworks/1.webp",
+          "master": "outputs/automaton-portraits/masters/polanian-dieselworks/1.png",
+          "output": "app/frontend/public/assets/automatons/polanian-dieselworks/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "fe43559ee389f6c468af646f837286498fb6aaffd9bcbefb0b4c826c6ab31b7f",
+          "bytes": 36408,
+          "source_references": [
+            "https://store.steampowered.com/app/826630/Iron_Harvest/",
+            "https://kingart-games.com/article/104-iron-harvest-devblog-34-january-2021"
+          ]
+        },
+        "sha256": "fe43559ee389f6c468af646f837286498fb6aaffd9bcbefb0b4c826c6ab31b7f",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 2,
+      "name": "PZM-11 Łowca",
+      "source_identity": "PZM-11 Łowca — Iron Harvest — 2020 base-game Polania chassis",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Bruiser",
+      "range_from_weapons": "melee",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Shock Maul",
+          "offhand_weapon": null,
+          "list_price_credits": 183000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Heavy Hammer",
+          "offhand_weapon": null,
+          "list_price_credits": 478000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around EVERY extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic PZM-11 Łowca Polanian mech hunter from Iron Harvest, source medium-armoured dieselpunk biped with cylindrical riveted green/grey main hull, slender articulated lower legs and recognisable heavy source gun-arm assemblies. Preserve the exact 2020 game chassis, not a generic humanoid tank. Weathered olive paint, dark exposed machinery and exhausts. Full body and complete gun assemblies visible, no crew.\nCatalogue label for metadata only, do not render text: #115 slot 2 PZM-11 Łowca.",
+      "role": "Heavy contact attacker",
+      "missing_fields": [],
+      "refinement_note": "Tycoon follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 1,
+      "equipment_interpretation": "PZM-11 Łowca fills the heavy contact attacker role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Bruiser tuning supports the melee equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Tycoon strategy tuning rules with the Bruiser Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "polanian-dieselworks:2:pzm-11-owca",
+      "folder": "stables/115-polanian-dieselworks/robots/02-pzm-11-owca",
+      "files": {
+        "png": "stables/115-polanian-dieselworks/robots/02-pzm-11-owca/portrait.png",
+        "webp": "stables/115-polanian-dieselworks/robots/02-pzm-11-owca/portrait.webp",
+        "blueprint": "stables/115-polanian-dieselworks/robots/02-pzm-11-owca/blueprint.json",
+        "profile": "stables/115-polanian-dieselworks/robots/02-pzm-11-owca/profile.md",
+        "prompt": "stables/115-polanian-dieselworks/robots/02-pzm-11-owca/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/polanian-dieselworks/2.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 115,
+          "stable_name": "Polanian Dieselworks",
+          "catalogue_key": "polanian-dieselworks",
+          "slot": 2,
+          "robot_name": "PZM-11 Łowca",
+          "source_identity": "PZM-11 Łowca — Iron Harvest — 2020 base-game Polania chassis",
+          "source_edition": "Iron Harvest — 2020 base-game Polania chassis",
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around EVERY extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic PZM-11 Łowca Polanian mech hunter from Iron Harvest, source medium-armoured dieselpunk biped with cylindrical riveted green/grey main hull, slender articulated lower legs and recognisable heavy source gun-arm assemblies. Preserve the exact 2020 game chassis, not a generic humanoid tank. Weathered olive paint, dark exposed machinery and exhausts. Full body and complete gun assemblies visible, no crew.\nCatalogue label for metadata only, do not render text: #115 slot 2 PZM-11 Łowca.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-c3fb396e-17dc-4007-bc80-ed506395298e.png",
+          "visual_review": "Accepted — complete framing, limb count, equipment representation and shared portrait style checked.",
+          "asset_id": "polanian-dieselworks:2",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/polanian-dieselworks/2.webp",
+          "master": "outputs/automaton-portraits/masters/polanian-dieselworks/2.png",
+          "output": "app/frontend/public/assets/automatons/polanian-dieselworks/2.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "e80809ce492292894ec5fabe8bc14d638d905c446a30e890e11a4e72a9c4dcd9",
+          "bytes": 58148,
+          "source_references": [
+            "https://store.steampowered.com/app/826630/Iron_Harvest/",
+            "https://kingart-games.com/article/104-iron-harvest-devblog-34-january-2021"
+          ]
+        },
+        "sha256": "e80809ce492292894ec5fabe8bc14d638d905c446a30e890e11a4e72a9c4dcd9",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 3,
+      "name": "PZM-24 Tur",
+      "source_identity": "PZM-24 Tur — Iron Harvest — 2020 base-game Polania chassis",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "balanced",
+      "yield_threshold": 15,
+      "build_focus": "Deadeye",
+      "range_from_weapons": "long",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Training Beam",
+          "offhand_weapon": null,
+          "list_price_credits": 50000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Ion Beam",
+          "offhand_weapon": null,
+          "list_price_credits": 544000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around EVERY extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic PZM-24 Tur superheavy Polanian mech from Iron Harvest, massive broad riveted cylindrical/bulbous dieselpunk hull on TWO huge mechanical legs, characteristic paired heavy source arm cannons, thick olive-green steel plates, vents, exhausts, source Polanian markings. Preserve actual 2020 in-game Tur silhouette and walking body, no tank treads or extra legs. Whole mech and both complete cannon barrels visible.\nCatalogue label for metadata only, do not render text: #115 slot 3 PZM-24 Tur.",
+      "role": "Heavy long-range support",
+      "missing_fields": [],
+      "refinement_note": "Tycoon follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 2,
+      "equipment_interpretation": "PZM-24 Tur fills the heavy long-range support role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Deadeye tuning supports the long equipment role; balanced stance and a 15% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Tycoon strategy tuning rules with the Deadeye Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "polanian-dieselworks:3:pzm-24-tur",
+      "folder": "stables/115-polanian-dieselworks/robots/03-pzm-24-tur",
+      "files": {
+        "png": "stables/115-polanian-dieselworks/robots/03-pzm-24-tur/portrait.png",
+        "webp": "stables/115-polanian-dieselworks/robots/03-pzm-24-tur/portrait.webp",
+        "blueprint": "stables/115-polanian-dieselworks/robots/03-pzm-24-tur/blueprint.json",
+        "profile": "stables/115-polanian-dieselworks/robots/03-pzm-24-tur/profile.md",
+        "prompt": "stables/115-polanian-dieselworks/robots/03-pzm-24-tur/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/polanian-dieselworks/3.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 115,
+          "stable_name": "Polanian Dieselworks",
+          "catalogue_key": "polanian-dieselworks",
+          "slot": 3,
+          "robot_name": "PZM-24 Tur",
+          "source_identity": "PZM-24 Tur — Iron Harvest — 2020 base-game Polania chassis",
+          "source_edition": "Iron Harvest — 2020 base-game Polania chassis",
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around EVERY extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic PZM-24 Tur superheavy Polanian mech from Iron Harvest, massive broad riveted cylindrical/bulbous dieselpunk hull on TWO huge mechanical legs, characteristic paired heavy source arm cannons, thick olive-green steel plates, vents, exhausts, source Polanian markings. Preserve actual 2020 in-game Tur silhouette and walking body, no tank treads or extra legs. Whole mech and both complete cannon barrels visible.\nCatalogue label for metadata only, do not render text: #115 slot 3 PZM-24 Tur.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-db270d0d-c59e-49b6-a2aa-2dc052ffd8dd.png",
+          "visual_review": "Accepted — complete framing, limb count, equipment representation and shared portrait style checked.",
+          "asset_id": "polanian-dieselworks:3",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/polanian-dieselworks/3.webp",
+          "master": "outputs/automaton-portraits/masters/polanian-dieselworks/3.png",
+          "output": "app/frontend/public/assets/automatons/polanian-dieselworks/3.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "10e05e1b4d8b1ecb6e38f947137d6b510846670cd268337813b2ad88802abd42",
+          "bytes": 64120,
+          "source_references": [
+            "https://store.steampowered.com/app/826630/Iron_Harvest/",
+            "https://kingart-games.com/article/104-iron-harvest-devblog-34-january-2021"
+          ]
+        },
+        "sha256": "10e05e1b4d8b1ecb6e38f947137d6b510846670cd268337813b2ad88802abd42",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "replacement_alternatives": []
+}

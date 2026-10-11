@@ -1,0 +1,133 @@
+{
+  "stable_number": 139,
+  "catalogue_key": "mark-13-salvage-works",
+  "robots": [
+    {
+      "slot": 1,
+      "name": "MARK 13",
+      "source_identity": "MARK 13",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Bruiser",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Scatter Cannon",
+          "offhand_weapon": null,
+          "list_price_credits": 84000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Arc Projector",
+          "offhand_weapon": null,
+          "list_price_credits": 488000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Sharpen",
+          "weapon": "Arc Projector",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 1,
+          "cost_credits": 300000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 1
+        },
+        {
+          "operation": "Sharpen",
+          "weapon": "Arc Projector",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 2,
+          "cost_credits": 900000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 2
+        },
+        {
+          "operation": "Forge",
+          "weapon": "Arc Projector",
+          "hand": "main",
+          "workshop_level": 8,
+          "occurrence": 1,
+          "cost_credits": 400000,
+          "prestige_gate": 15000,
+          "effect": "+8% damage",
+          "step": 3
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: The recognizable MARK 13 robot from Hardware (1990), skull-like battered metal head with weathered American flag paint and dark red mechanical eye, blackened steel jaw, exposed wiring and scavenged rusty mechanical construction. Complete standing body reconstructed from film's salvage-machine anatomy: narrow skeletal torso, exposed cables and hydraulics, mismatched mechanical limbs and claw hands, heavy functional feet. This complete arena body is an explicitly original reconstruction around the canonical head, not a claim of an untouched factory model. No gore, victims or text.\nMetadata only, do not render text: #139 slot 1 MARK 13.",
+      "role": "Heavy short-range pressure",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 1600000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "MARK 13 fills the heavy short-range pressure role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Bruiser tuning supports the short equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Paragon strategy tuning rules with the Bruiser Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "mark-13-salvage-works:1:mark-13",
+      "folder": "stables/139-mark-13-salvage-works/robots/01-mark-13",
+      "files": {
+        "png": "stables/139-mark-13-salvage-works/robots/01-mark-13/portrait.png",
+        "webp": "stables/139-mark-13-salvage-works/robots/01-mark-13/portrait.webp",
+        "blueprint": "stables/139-mark-13-salvage-works/robots/01-mark-13/blueprint.json",
+        "profile": "stables/139-mark-13-salvage-works/robots/01-mark-13/profile.md",
+        "prompt": "stables/139-mark-13-salvage-works/robots/01-mark-13/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/mark-13-salvage-works/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 139,
+          "stable_name": "MARK-13 Salvage Works",
+          "catalogue_key": "mark-13-salvage-works",
+          "slot": 1,
+          "robot_name": "MARK 13",
+          "source_identity": "MARK 13",
+          "source_edition": "Hardware — 1990 MARK 13; complete arena reconstruction",
+          "source_references": [
+            "https://www.miramax.com/movie/Hardware/"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: The recognizable MARK 13 robot from Hardware (1990), skull-like battered metal head with weathered American flag paint and dark red mechanical eye, blackened steel jaw, exposed wiring and scavenged rusty mechanical construction. Complete standing body reconstructed from film's salvage-machine anatomy: narrow skeletal torso, exposed cables and hydraulics, mismatched mechanical limbs and claw hands, heavy functional feet. This complete arena body is an explicitly original reconstruction around the canonical head, not a claim of an untouched factory model. No gore, victims or text.\nMetadata only, do not render text: #139 slot 1 MARK 13.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-25869ed0-38f7-4d8b-b8a1-f503429d4efd.png",
+          "visual_review": "Accepted: complete readable silhouette, planned source or original construction and studio finish",
+          "asset_id": "mark-13-salvage-works:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/mark-13-salvage-works/1.webp",
+          "master": "outputs/automaton-portraits/masters/mark-13-salvage-works/1.png",
+          "output": "app/frontend/public/assets/automatons/mark-13-salvage-works/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "aee6be60435dce5cbbf48fe80c843dae7a25a3c9ab1cdcb7796abc28a956ba34",
+          "bytes": 53602
+        },
+        "sha256": "aee6be60435dce5cbbf48fe80c843dae7a25a3c9ab1cdcb7796abc28a956ba34",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "replacement_alternatives": []
+}

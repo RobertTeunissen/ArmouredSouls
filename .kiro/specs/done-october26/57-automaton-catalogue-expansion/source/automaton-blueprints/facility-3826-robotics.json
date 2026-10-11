@@ -1,0 +1,162 @@
+{
+  "number": 37,
+  "catalogueKey": "facility-3826-robotics",
+  "stableName": "Facility 3826 Robotics",
+  "franchiseLabel": "Atomic Heart",
+  "strategy": "Generalist",
+  "fit": "Direct",
+  "conceptIdentity": "Different machine classes receive different build focuses. Retro-futurist white enamel, chrome and red; avoid human operators as roster entries.",
+  "backstory": "Facility 3826 Robotics enters the arena with a clear doctrine. Different machine classes receive different build focuses. Every surviving machine returns to the workshop before the next booking.",
+  "openingRobots": 2,
+  "targetRobots": 3,
+  "adminMaximumRobots": 4,
+  "targetOverrides": {
+    "robots": 3
+  },
+  "teamNames": {
+    "2v2": [
+      {
+        "name": "3826 Pair 01",
+        "slots": [
+          1,
+          2
+        ]
+      }
+    ],
+    "3v3": [
+      {
+        "name": "3826 Squad 01",
+        "slots": [
+          1,
+          2,
+          3
+        ]
+      }
+    ]
+  },
+  "eventOrder": [
+    "league_1v1",
+    "league_2v2",
+    "league_3v3",
+    "tag_team",
+    "koth",
+    "grand_melee",
+    "tournament_1v1",
+    "tournament_2v2",
+    "tournament_3v3"
+  ],
+  "robots": [
+    {
+      "blueprintId": "facility-3826-robotics:1:vov-a-worker-01",
+      "slot": 1,
+      "name": "VOV-A Worker 01",
+      "sourceAlias": "VOV-A worker robot",
+      "nameBasis": "Original arena designation",
+      "availability": "opening",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 15,
+      "buildFocus": "Versatile",
+      "weaponPath": [
+        {
+          "mainWeapon": "Practice Sword",
+          "offhandWeapon": null,
+          "listPriceCredits": 50000
+        },
+        {
+          "mainWeapon": "Vibro Mace",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "melee",
+        "artBrief": "White enamel VOV-A worker robot, chrome joints and a recognizable humanlike face.",
+        "refinementNote": "Equipment upgrades and tuning only: no verified Hone/Augment facts for this final weapon are supplied, and no unreachable refinement tier is added.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 0,
+        "imageConvention": "app/frontend/public/assets/automatons/facility-3826-robotics/1.webp"
+      }
+    },
+    {
+      "blueprintId": "facility-3826-robotics:2:facility-3826-heavy-02",
+      "slot": 2,
+      "name": "Facility 3826 Heavy 02",
+      "sourceAlias": "heavy combat robot",
+      "nameBasis": "Original arena designation",
+      "availability": "opening",
+      "loadout": "two_handed",
+      "stance": "defensive",
+      "yieldThreshold": 5,
+      "buildFocus": "Warden",
+      "weaponPath": [
+        {
+          "mainWeapon": "Training Rifle",
+          "offhandWeapon": null,
+          "listPriceCredits": 50000
+        },
+        {
+          "mainWeapon": "Plasma Cannon",
+          "offhandWeapon": null,
+          "listPriceCredits": 408000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "mid",
+        "artBrief": "Arena-designated heavy Soviet retro-futurist combat robot, white enamel and red accents.",
+        "refinementNote": "Generalist refinement is reserved for the flagship in slot 1; this robot receives equipment upgrades and tuning.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 1,
+        "imageConvention": "app/frontend/public/assets/automatons/facility-3826-robotics/2.webp"
+      }
+    },
+    {
+      "blueprintId": "facility-3826-robotics:3:facility-3826-scout-03",
+      "slot": 3,
+      "name": "Facility 3826 Scout 03",
+      "sourceAlias": "smaller mobile robot",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 20,
+      "buildFocus": "Sprinter",
+      "weaponPath": [
+        {
+          "mainWeapon": "Laser Pistol",
+          "offhandWeapon": null,
+          "listPriceCredits": 57000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Arena-designated small mobile robot with rounded white casing and exposed chrome limbs.",
+        "refinementNote": "Generalist refinement is reserved for the flagship in slot 1; this robot receives equipment upgrades and tuning.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 2,
+        "imageConvention": "app/frontend/public/assets/automatons/facility-3826-robotics/3.webp"
+      }
+    }
+  ],
+  "alternativeBlueprints": [],
+  "review": {
+    "openingWeaponCredits": 100000,
+    "finalWeaponCreditsAtTarget": 1258000,
+    "equippedWeaponCountAtTarget": 3,
+    "purchaseOrder": [
+      1,
+      2,
+      3
+    ],
+    "reserveSlots": [],
+    "alternativeRule": "Choose an alternative before catalogue approval; it replaces the specified slot and never adds another live robot."
+  }
+}

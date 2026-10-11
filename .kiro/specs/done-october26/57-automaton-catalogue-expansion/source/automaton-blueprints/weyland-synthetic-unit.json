@@ -1,0 +1,222 @@
+{
+  "number": 73,
+  "catalogueKey": "weyland-synthetic-unit",
+  "stableName": "Weyland Synthetic Unit",
+  "franchiseLabel": "Alien",
+  "strategy": "Duo",
+  "fit": "Adapt",
+  "conceptIdentity": "A pair of precise android builds. Visible manufactured anatomy and restrained industrial uniforms; lower priority if metal-bodied robots are preferred.",
+  "backstory": "Weyland Synthetic Unit enters the arena with a clear doctrine. A pair of precise android builds. Every surviving machine returns to the workshop before the next booking.",
+  "openingRobots": 2,
+  "targetRobots": 2,
+  "adminMaximumRobots": 3,
+  "targetOverrides": {},
+  "teamNames": {
+    "2v2": [
+      {
+        "name": "Weyland Pair 01",
+        "slots": [
+          1,
+          2
+        ]
+      }
+    ],
+    "3v3": [
+      {
+        "name": "Weyland Squad 01",
+        "slots": [
+          1,
+          2,
+          3
+        ]
+      }
+    ]
+  },
+  "eventOrder": [
+    "league_2v2",
+    "tag_team",
+    "tournament_2v2",
+    "league_1v1",
+    "koth",
+    "grand_melee",
+    "tournament_1v1",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "robots": [
+    {
+      "blueprintId": "weyland-synthetic-unit:1:david-8",
+      "slot": 1,
+      "name": "David 8",
+      "sourceAlias": "David",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 15,
+      "buildFocus": "Deadeye",
+      "weaponPath": [
+        {
+          "mainWeapon": "Beam Pistol",
+          "offhandWeapon": null,
+          "listPriceCredits": 93000
+        },
+        {
+          "mainWeapon": "Particle Lance",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "Hone",
+          "weapon": "Particle Lance",
+          "weaponSlot": "main",
+          "attribute": "Targeting Systems",
+          "baseValue": 8,
+          "magnitude": 2,
+          "resultValue": 10,
+          "costCredits": 40000,
+          "workshopLevel": 1,
+          "step": 1
+        },
+        {
+          "tier": "Augment",
+          "weapon": "Particle Lance",
+          "weaponSlot": "main",
+          "attribute": "Weapon Control",
+          "magnitude": 3,
+          "resultValue": 3,
+          "costCredits": 180000,
+          "workshopLevel": 3,
+          "step": 2
+        }
+      ],
+      "review": {
+        "rangeFromWeapons": "long",
+        "artBrief": "Human-looking Weyland synthetic in restrained industrial clothing and a precise ready stance.",
+        "refinementNote": "Apply in order after stage 1. Dual-wield refinements affect the main-hand copy only; the offhand stays unrefined unless explicitly targeted.",
+        "refinementTotalCredits": 220000,
+        "minimumRosterExpansionLevel": 0,
+        "imageConvention": "app/frontend/public/assets/automatons/weyland-synthetic-unit/1.webp"
+      }
+    },
+    {
+      "blueprintId": "weyland-synthetic-unit:2:walter-one",
+      "slot": 2,
+      "name": "Walter One",
+      "sourceAlias": "Walter",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yieldThreshold": 20,
+      "buildFocus": "Warden",
+      "weaponPath": [
+        {
+          "mainWeapon": "Bolt Carbine",
+          "offhandWeapon": "Combat Shield",
+          "listPriceCredits": 171000
+        },
+        {
+          "mainWeapon": "Nova Caster",
+          "offhandWeapon": "Aegis Bulwark",
+          "listPriceCredits": 834000
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "Hone",
+          "weapon": "Aegis Bulwark",
+          "weaponSlot": "offhand",
+          "attribute": "Evasion Thrusters",
+          "baseValue": -5,
+          "magnitude": 5,
+          "resultValue": 0,
+          "costCredits": 250000,
+          "workshopLevel": 1,
+          "step": 1
+        }
+      ],
+      "review": {
+        "rangeFromWeapons": "mid",
+        "artBrief": "Human-looking Weyland synthetic in dark utility clothing and a protective stance.",
+        "refinementNote": "Apply in order after stage 1. Dual-wield refinements affect the main-hand copy only; the offhand stays unrefined unless explicitly targeted.",
+        "refinementTotalCredits": 250000,
+        "minimumRosterExpansionLevel": 1,
+        "imageConvention": "app/frontend/public/assets/automatons/weyland-synthetic-unit/2.webp"
+      }
+    },
+    {
+      "blueprintId": "weyland-synthetic-unit:3:bishop",
+      "slot": 3,
+      "name": "Bishop",
+      "sourceAlias": "Bishop",
+      "nameBasis": "Source character or machine designation",
+      "availability": "reserve",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yieldThreshold": 25,
+      "buildFocus": "Tactician",
+      "weaponPath": [
+        {
+          "mainWeapon": "Beam Pistol",
+          "offhandWeapon": "Combat Shield",
+          "listPriceCredits": 171000
+        },
+        {
+          "mainWeapon": "Particle Lance",
+          "offhandWeapon": "Aegis Bulwark",
+          "listPriceCredits": 834000
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "Hone",
+          "weapon": "Particle Lance",
+          "weaponSlot": "main",
+          "attribute": "Targeting Systems",
+          "baseValue": 8,
+          "magnitude": 2,
+          "resultValue": 10,
+          "costCredits": 40000,
+          "workshopLevel": 1,
+          "step": 1
+        },
+        {
+          "tier": "Augment",
+          "weapon": "Particle Lance",
+          "weaponSlot": "main",
+          "attribute": "Weapon Control",
+          "magnitude": 3,
+          "resultValue": 3,
+          "costCredits": 180000,
+          "workshopLevel": 3,
+          "step": 2
+        }
+      ],
+      "review": {
+        "rangeFromWeapons": "long",
+        "artBrief": "Human-looking Weyland synthetic in pale industrial utility clothing, calm and defensive.",
+        "refinementNote": "Apply in order after stage 1. Dual-wield refinements affect the main-hand copy only; the offhand stays unrefined unless explicitly targeted.",
+        "refinementTotalCredits": 220000,
+        "minimumRosterExpansionLevel": 2,
+        "imageConvention": "app/frontend/public/assets/automatons/weyland-synthetic-unit/3.webp"
+      }
+    }
+  ],
+  "alternativeBlueprints": [],
+  "review": {
+    "openingWeaponCredits": 264000,
+    "finalWeaponCreditsAtTarget": 1259000,
+    "equippedWeaponCountAtTarget": 3,
+    "purchaseOrder": [
+      1,
+      2
+    ],
+    "reserveSlots": [
+      3
+    ],
+    "alternativeRule": "Choose an alternative before catalogue approval; it replaces the specified slot and never adds another live robot."
+  }
+}

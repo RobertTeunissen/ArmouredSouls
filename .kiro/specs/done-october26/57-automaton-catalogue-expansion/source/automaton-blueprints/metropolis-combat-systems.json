@@ -1,0 +1,106 @@
+{
+  "number": 56,
+  "catalogueKey": "metropolis-combat-systems",
+  "stableName": "Metropolis Combat Systems",
+  "franchiseLabel": "Rise of the Robots",
+  "strategy": "Paragon",
+  "fit": "Direct",
+  "conceptIdentity": "One powerful close-range machine. Blue armour and exposed mechanical assemblies. Coton is a cyborg rather than a wholly artificial robot.",
+  "backstory": "Metropolis Combat Systems enters the arena with a clear doctrine. One powerful close-range machine. Every surviving machine returns to the workshop before the next booking.",
+  "openingRobots": 1,
+  "targetRobots": 1,
+  "adminMaximumRobots": 2,
+  "targetOverrides": {},
+  "teamNames": {
+    "2v2": [],
+    "3v3": []
+  },
+  "eventOrder": [
+    "league_1v1",
+    "tournament_1v1",
+    "koth",
+    "grand_melee",
+    "league_2v2",
+    "tag_team",
+    "tournament_2v2",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "robots": [
+    {
+      "blueprintId": "metropolis-combat-systems:1:eco35-2-coton",
+      "slot": 1,
+      "name": "ECO35-2 Coton",
+      "sourceAlias": "Coton",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "dual_wield",
+      "stance": "offensive",
+      "yieldThreshold": 5,
+      "buildFocus": "Bruiser",
+      "weaponPath": [
+        {
+          "mainWeapon": "Energy Blade",
+          "offhandWeapon": "Energy Blade",
+          "listPriceCredits": 350000
+        },
+        {
+          "mainWeapon": "Vibro Mace",
+          "offhandWeapon": "Vibro Mace",
+          "listPriceCredits": 850000
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "Sharpen",
+          "weapon": "Vibro Mace",
+          "weaponSlot": "main",
+          "cooldownReductionPercent": 10,
+          "costCredits": 300000,
+          "workshopLevel": 5,
+          "prestigeGate": 3000,
+          "step": 1
+        },
+        {
+          "tier": "Sharpen",
+          "weapon": "Vibro Mace",
+          "weaponSlot": "main",
+          "cooldownReductionPercent": 10,
+          "costCredits": 900000,
+          "workshopLevel": 5,
+          "prestigeGate": 3000,
+          "step": 2
+        },
+        {
+          "tier": "Forge",
+          "weapon": "Vibro Mace",
+          "weaponSlot": "main",
+          "damageIncreasePercent": 8,
+          "costCredits": 400000,
+          "workshopLevel": 8,
+          "prestigeGate": 15000,
+          "step": 3
+        }
+      ],
+      "review": {
+        "rangeFromWeapons": "melee",
+        "artBrief": "Blue-armoured cyborg combat machine with exposed mechanical assemblies and a sleek torso.",
+        "refinementNote": "Apply in order after stage 1. Dual-wield refinements affect the main-hand copy only; the offhand stays unrefined unless explicitly targeted.",
+        "refinementTotalCredits": 1600000,
+        "minimumRosterExpansionLevel": 0,
+        "imageConvention": "app/frontend/public/assets/automatons/metropolis-combat-systems/1.webp"
+      }
+    }
+  ],
+  "alternativeBlueprints": [],
+  "review": {
+    "openingWeaponCredits": 350000,
+    "finalWeaponCreditsAtTarget": 850000,
+    "equippedWeaponCountAtTarget": 2,
+    "purchaseOrder": [
+      1
+    ],
+    "reserveSlots": [],
+    "alternativeRule": "Choose an alternative before catalogue approval; it replaces the specified slot and never adds another live robot."
+  }
+}

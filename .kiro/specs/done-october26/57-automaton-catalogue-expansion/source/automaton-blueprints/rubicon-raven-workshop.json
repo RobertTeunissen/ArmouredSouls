@@ -1,0 +1,180 @@
+{
+  "number": 33,
+  "catalogueKey": "rubicon-raven-workshop",
+  "stableName": "Rubicon Raven Workshop",
+  "franchiseLabel": "Armored Core",
+  "strategy": "Paragon",
+  "fit": "Direct",
+  "conceptIdentity": "Concentrate refinement in one premium machine. Dense mechanical detail, utilitarian armour, asymmetric equipment. Use machine names rather than human pilot names.",
+  "backstory": "Rubicon Raven Workshop enters the arena with a clear doctrine. Concentrate refinement in one premium machine. Every surviving machine returns to the workshop before the next booking.",
+  "openingRobots": 1,
+  "targetRobots": 1,
+  "adminMaximumRobots": 2,
+  "targetOverrides": {},
+  "teamNames": {
+    "2v2": [
+      {
+        "name": "Raven Pair 01",
+        "slots": [
+          1,
+          2
+        ]
+      }
+    ],
+    "3v3": []
+  },
+  "eventOrder": [
+    "league_1v1",
+    "tournament_1v1",
+    "koth",
+    "grand_melee",
+    "league_2v2",
+    "tag_team",
+    "tournament_2v2",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "robots": [
+    {
+      "blueprintId": "rubicon-raven-workshop:1:nightfall",
+      "slot": 1,
+      "name": "NIGHTFALL",
+      "sourceAlias": "NIGHTFALL",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "dual_wield",
+      "stance": "balanced",
+      "yieldThreshold": 5,
+      "buildFocus": "Versatile",
+      "weaponPath": [
+        {
+          "mainWeapon": "Disruptor Cannon",
+          "offhandWeapon": "Disruptor Cannon",
+          "listPriceCredits": 586000
+        },
+        {
+          "mainWeapon": "Nova Caster",
+          "offhandWeapon": "Nova Caster",
+          "listPriceCredits": 850000
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "Sharpen",
+          "weapon": "Nova Caster",
+          "weaponSlot": "main",
+          "cooldownReductionPercent": 10,
+          "costCredits": 300000,
+          "workshopLevel": 5,
+          "prestigeGate": 3000,
+          "step": 1
+        },
+        {
+          "tier": "Sharpen",
+          "weapon": "Nova Caster",
+          "weaponSlot": "main",
+          "cooldownReductionPercent": 10,
+          "costCredits": 900000,
+          "workshopLevel": 5,
+          "prestigeGate": 3000,
+          "step": 2
+        },
+        {
+          "tier": "Forge",
+          "weapon": "Nova Caster",
+          "weaponSlot": "main",
+          "damageIncreasePercent": 8,
+          "costCredits": 400000,
+          "workshopLevel": 8,
+          "prestigeGate": 15000,
+          "step": 3
+        }
+      ],
+      "review": {
+        "rangeFromWeapons": "mid",
+        "artBrief": "Dense angular Armored Core with utilitarian armour and asymmetric military attachments.",
+        "refinementNote": "Apply in order after stage 1. Dual-wield refinements affect the main-hand copy only; the offhand stays unrefined unless explicitly targeted.",
+        "refinementTotalCredits": 1600000,
+        "minimumRosterExpansionLevel": 0,
+        "imageConvention": "app/frontend/public/assets/automatons/rubicon-raven-workshop/1.webp"
+      }
+    },
+    {
+      "blueprintId": "rubicon-raven-workshop:2:steel-haze",
+      "slot": 2,
+      "name": "STEEL HAZE",
+      "sourceAlias": "STEEL HAZE",
+      "nameBasis": "Source character or machine designation",
+      "availability": "reserve",
+      "loadout": "dual_wield",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "Sprinter",
+      "weaponPath": [
+        {
+          "mainWeapon": "Energy Blade",
+          "offhandWeapon": "Energy Blade",
+          "listPriceCredits": 350000
+        },
+        {
+          "mainWeapon": "Vibro Mace",
+          "offhandWeapon": "Vibro Mace",
+          "listPriceCredits": 850000
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "Sharpen",
+          "weapon": "Vibro Mace",
+          "weaponSlot": "main",
+          "cooldownReductionPercent": 10,
+          "costCredits": 300000,
+          "workshopLevel": 5,
+          "prestigeGate": 3000,
+          "step": 1
+        },
+        {
+          "tier": "Sharpen",
+          "weapon": "Vibro Mace",
+          "weaponSlot": "main",
+          "cooldownReductionPercent": 10,
+          "costCredits": 900000,
+          "workshopLevel": 5,
+          "prestigeGate": 3000,
+          "step": 2
+        },
+        {
+          "tier": "Forge",
+          "weapon": "Vibro Mace",
+          "weaponSlot": "main",
+          "damageIncreasePercent": 8,
+          "costCredits": 400000,
+          "workshopLevel": 8,
+          "prestigeGate": 15000,
+          "step": 3
+        }
+      ],
+      "review": {
+        "rangeFromWeapons": "melee",
+        "artBrief": "Lean high-mobility Armored Core with articulated reverse-joint-inspired leg detail.",
+        "refinementNote": "Apply in order after stage 1. Dual-wield refinements affect the main-hand copy only; the offhand stays unrefined unless explicitly targeted.",
+        "refinementTotalCredits": 1600000,
+        "minimumRosterExpansionLevel": 1,
+        "imageConvention": "app/frontend/public/assets/automatons/rubicon-raven-workshop/2.webp"
+      }
+    }
+  ],
+  "alternativeBlueprints": [],
+  "review": {
+    "openingWeaponCredits": 586000,
+    "finalWeaponCreditsAtTarget": 850000,
+    "equippedWeaponCountAtTarget": 2,
+    "purchaseOrder": [
+      1
+    ],
+    "reserveSlots": [
+      2
+    ],
+    "alternativeRule": "Choose an alternative before catalogue approval; it replaces the specified slot and never adds another live robot."
+  }
+}

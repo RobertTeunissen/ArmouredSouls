@@ -40,7 +40,7 @@ Required Finance Center replacement coverage:
 ## Automaton coverage (Spec #55)
 - **Unit:** `strategyConformance.property.test.ts` and `strategyScenario.test.ts` iterate every file in `src/config/automaton-strategies/`, so a new Strategy_Definition_File needs no new test; `{key}.v1.fixture.test.ts` pins the six approved v1 files. Catalogue tests (`catalogueSchema`, `automatonCatalogueCoverage`, `catalogueImages`) cover every repository Catalogue_Entry and Repository_Image.
 - **Integration (`DB_DEPENDENT`):** `tests/integration/automaton*.test.ts` (turn wiring, Financial_Pairs, retries, access blocking, admin routes, sync, zero-write previews); a rollover suite that truncates history is `HEAVY_TESTS`.
-- **Heavy:** `automatonMultiSeason.test.ts` runs 100 Automatons (the 11 starters by fixed Catalogue_Keys plus generated entries) over two seasons; it takes ~14 min locally, so run it in the background.
+- **Heavy:** `automatonMultiSeason.test.ts` runs every repository Catalogue_Entry (starters checked by `STARTER_CATALOGUE_KEYS`, no generated entries) over two seasons (Spec #57). Its duration grows with the catalogue, so run it in the background on a dedicated heavy database; the measured timing is in `docs/implementation_notes/AUTOMATON_CATALOGUE_EXPANSION.md`.
 - Automaton code must not write `User.currency` or reference Manual_Repair (`noDirectWriters.test.ts`).
 - **E2E:** the `admin` project runs after `chromium` (its bulk cycles change seeded stables); `admin-teardown` deletes the `e2e-automaton*` stables via `scripts/deleteE2eAutomatons.ts`, so it needs the backend's `DATABASE_URL`.
 

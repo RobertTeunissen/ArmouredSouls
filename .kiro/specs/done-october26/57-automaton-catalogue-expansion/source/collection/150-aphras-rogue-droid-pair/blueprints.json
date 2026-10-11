@@ -1,0 +1,232 @@
+{
+  "stable_number": 150,
+  "catalogue_key": "aphras-rogue-droid-pair",
+  "robots": [
+    {
+      "slot": 1,
+      "name": "0-0-0",
+      "source_identity": "0-0-0",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yield_threshold": 25,
+      "build_focus": "Tactician",
+      "range_from_weapons": "mid",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Bolt Carbine",
+          "offhand_weapon": "Light Shield",
+          "list_price_credits": 144000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Nova Caster",
+          "offhand_weapon": "Aegis Bulwark",
+          "list_price_credits": 834000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Hone",
+          "weapon": "Aegis Bulwark",
+          "hand": "offhand",
+          "workshop_level": 1,
+          "attribute": "Evasion Thrusters",
+          "magnitude": 5,
+          "result_value": 0,
+          "cost_credits": 250000,
+          "base_value": -5,
+          "effect": "Evasion Thrusters -5→0",
+          "step": 1
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic 0-0-0 (Triple-Zero) from Star Wars Doctor Aphra comics. Black dark charcoal protocol-droid humanoid with the recognizable source mechanical face, two red circular eyes, narrow exposed wired abdomen, black metal limb plates and articulated hands/feet. Polite poised standing stance, complete body, one hand held near chest. No victim or torture scene, no gold plating or human face.\nMetadata only, do not render text: #150 slot 1 0-0-0.",
+      "role": "Protected tactical support",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 250000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "0-0-0 fills the protected tactical support role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Tactician tuning supports the mid equipment role; defensive stance and a 25% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Duo strategy tuning rules with the Tactician Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "aphras-rogue-droid-pair:1:0-0-0",
+      "folder": "stables/150-aphras-rogue-droid-pair/robots/01-0-0-0",
+      "files": {
+        "png": "stables/150-aphras-rogue-droid-pair/robots/01-0-0-0/portrait.png",
+        "webp": "stables/150-aphras-rogue-droid-pair/robots/01-0-0-0/portrait.webp",
+        "blueprint": "stables/150-aphras-rogue-droid-pair/robots/01-0-0-0/blueprint.json",
+        "profile": "stables/150-aphras-rogue-droid-pair/robots/01-0-0-0/profile.md",
+        "prompt": "stables/150-aphras-rogue-droid-pair/robots/01-0-0-0/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/aphras-rogue-droid-pair/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 150,
+          "stable_name": "Aphra's Rogue Droid Pair",
+          "catalogue_key": "aphras-rogue-droid-pair",
+          "slot": 1,
+          "robot_name": "0-0-0",
+          "source_identity": "0-0-0",
+          "source_edition": "Star Wars — Doctor Aphra comics classic droid bodies",
+          "source_references": [
+            "https://www.starwars.com/news/10-of-the-deadliest-droids-in-star-wars"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic 0-0-0 (Triple-Zero) from Star Wars Doctor Aphra comics. Black dark charcoal protocol-droid humanoid with the recognizable source mechanical face, two red circular eyes, narrow exposed wired abdomen, black metal limb plates and articulated hands/feet. Polite poised standing stance, complete body, one hand held near chest. No victim or torture scene, no gold plating or human face.\nMetadata only, do not render text: #150 slot 1 0-0-0.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-b8def588-4536-4bdc-8eef-68e55d572592.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "aphras-rogue-droid-pair:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/aphras-rogue-droid-pair/1.webp",
+          "master": "outputs/automaton-portraits/masters/aphras-rogue-droid-pair/1.png",
+          "output": "app/frontend/public/assets/automatons/aphras-rogue-droid-pair/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "1af8692ad665151a716b7820945894d9d427a94c1625d9eaf673f723ff65a0a1",
+          "bytes": 29588
+        },
+        "sha256": "1af8692ad665151a716b7820945894d9d427a94c1625d9eaf673f723ff65a0a1",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 2,
+      "name": "BT-1",
+      "source_identity": "BT-1",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "dual_wield",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Sprinter",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": "Laser Pistol",
+          "list_price_credits": 114000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": "Volt Sabre",
+          "list_price_credits": 850000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Hone",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 1,
+          "attribute": "Attack Speed",
+          "magnitude": 3,
+          "result_value": 7,
+          "cost_credits": 90000,
+          "base_value": 4,
+          "effect": "Attack Speed 4→7",
+          "step": 1
+        },
+        {
+          "operation": "Augment",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 3,
+          "attribute": "Evasion Thrusters",
+          "magnitude": 2,
+          "result_value": 2,
+          "cost_credits": 80000,
+          "effect": "Evasion Thrusters, new +2",
+          "step": 2
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic BT-1 (Beetee), Star Wars Doctor Aphra. Black and dark-grey cylindrical blastomech with red panels and a rounded black dome, red optical sensor, three-legged astromech stance including central third foot, source concealed weapon hatches deployed into compact side blaster assemblies. Preserve squat astromech geometry, no humanoid arms. Entire feet and weapon tips visible.\nMetadata only, do not render text: #150 slot 2 BT-1.",
+      "role": "Mobile paired-fire attacker",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 170000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 1,
+      "equipment_interpretation": "BT-1 fills the mobile paired-fire attacker role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Sprinter tuning supports the short equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Duo strategy tuning rules with the Sprinter Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "aphras-rogue-droid-pair:2:bt-1",
+      "folder": "stables/150-aphras-rogue-droid-pair/robots/02-bt-1",
+      "files": {
+        "png": "stables/150-aphras-rogue-droid-pair/robots/02-bt-1/portrait.png",
+        "webp": "stables/150-aphras-rogue-droid-pair/robots/02-bt-1/portrait.webp",
+        "blueprint": "stables/150-aphras-rogue-droid-pair/robots/02-bt-1/blueprint.json",
+        "profile": "stables/150-aphras-rogue-droid-pair/robots/02-bt-1/profile.md",
+        "prompt": "stables/150-aphras-rogue-droid-pair/robots/02-bt-1/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/aphras-rogue-droid-pair/2.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 150,
+          "stable_name": "Aphra's Rogue Droid Pair",
+          "catalogue_key": "aphras-rogue-droid-pair",
+          "slot": 2,
+          "robot_name": "BT-1",
+          "source_identity": "BT-1",
+          "source_edition": "Star Wars — Doctor Aphra comics classic droid bodies",
+          "source_references": [
+            "https://www.starwars.com/news/10-of-the-deadliest-droids-in-star-wars"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic BT-1 (Beetee), Star Wars Doctor Aphra. Black and dark-grey cylindrical blastomech with red panels and a rounded black dome, red optical sensor, three-legged astromech stance including central third foot, source concealed weapon hatches deployed into compact side blaster assemblies. Preserve squat astromech geometry, no humanoid arms. Entire feet and weapon tips visible.\nMetadata only, do not render text: #150 slot 2 BT-1.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-aa5699d6-50c8-4567-9788-423c3747a8e8.png",
+          "visual_review": "Accepted — reviewed black-and-red BT-1 astromech geometry, dome sensor, three feet and deployed side blasters; complete body, no extra limbs or firing",
+          "asset_id": "aphras-rogue-droid-pair:2",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/aphras-rogue-droid-pair/2.webp",
+          "master": "outputs/automaton-portraits/masters/aphras-rogue-droid-pair/2.png",
+          "output": "app/frontend/public/assets/automatons/aphras-rogue-droid-pair/2.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "695e0baf9f9be566bb45a0280d90318c5016d9765610481e1b396756127f4f21",
+          "bytes": 52416,
+          "retry_requested": "2026-10-11"
+        },
+        "sha256": "695e0baf9f9be566bb45a0280d90318c5016d9765610481e1b396756127f4f21",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "replacement_alternatives": []
+}

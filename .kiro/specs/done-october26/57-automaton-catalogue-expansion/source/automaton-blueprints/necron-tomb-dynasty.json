@@ -1,0 +1,476 @@
+{
+  "number": 15,
+  "catalogueKey": "necron-tomb-dynasty",
+  "stableName": "Necron Tomb Dynasty",
+  "franchiseLabel": "Warhammer 40,000",
+  "strategy": "Swarm",
+  "fit": "Direct",
+  "conceptIdentity": "Favor resilience and deliberate ranged pressure. Skeletal metal, aged bronze details, restrained green internal light. No resurrection mechanic implied.",
+  "backstory": "Necron Tomb Dynasty enters the arena with a clear doctrine. Favor resilience and deliberate ranged pressure. Every surviving machine returns to the workshop before the next booking.",
+  "openingRobots": 3,
+  "targetRobots": 11,
+  "adminMaximumRobots": 11,
+  "targetOverrides": {},
+  "teamNames": {
+    "2v2": [
+      {
+        "name": "Tomb Guard Pair 01",
+        "slots": [
+          1,
+          2
+        ]
+      },
+      {
+        "name": "Tomb Guard Pair 02",
+        "slots": [
+          3,
+          4
+        ]
+      },
+      {
+        "name": "Tomb Guard Pair 03",
+        "slots": [
+          5,
+          6
+        ]
+      },
+      {
+        "name": "Tomb Guard Pair 04",
+        "slots": [
+          7,
+          8
+        ]
+      },
+      {
+        "name": "Tomb Guard Pair 05",
+        "slots": [
+          9,
+          10
+        ]
+      }
+    ],
+    "3v3": [
+      {
+        "name": "Tomb Guard Squad 01",
+        "slots": [
+          1,
+          2,
+          3
+        ]
+      },
+      {
+        "name": "Tomb Guard Squad 02",
+        "slots": [
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "Tomb Guard Squad 03",
+        "slots": [
+          7,
+          8,
+          9
+        ]
+      }
+    ]
+  },
+  "eventOrder": [
+    "league_1v1",
+    "league_3v3",
+    "league_2v2",
+    "grand_melee",
+    "koth",
+    "tag_team",
+    "tournament_3v3",
+    "tournament_2v2",
+    "tournament_1v1"
+  ],
+  "robots": [
+    {
+      "blueprintId": "necron-tomb-dynasty:1:necron-overlord",
+      "slot": 1,
+      "name": "Necron Overlord",
+      "sourceAlias": "Overlord",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yieldThreshold": 5,
+      "buildFocus": "Tactician",
+      "weaponPath": [
+        {
+          "mainWeapon": "Practice Sword",
+          "offhandWeapon": "Light Shield",
+          "listPriceCredits": 101000
+        },
+        {
+          "mainWeapon": "Vibro Mace",
+          "offhandWeapon": "Aegis Bulwark",
+          "listPriceCredits": 834000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "melee",
+        "artBrief": "Ancient metal skeletal commander with ornamental armour and a staff-like weapon.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 0,
+        "imageConvention": "app/frontend/public/assets/automatons/necron-tomb-dynasty/1.webp"
+      }
+    },
+    {
+      "blueprintId": "necron-tomb-dynasty:2:necron-warrior",
+      "slot": 2,
+      "name": "Necron Warrior",
+      "sourceAlias": "Warrior",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "single",
+      "stance": "offensive",
+      "yieldThreshold": 0,
+      "buildFocus": "Versatile",
+      "weaponPath": [
+        {
+          "mainWeapon": "Laser Pistol",
+          "offhandWeapon": null,
+          "listPriceCredits": 57000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Silver skeletal infantry machine with green optics and a long firearm.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 1,
+        "imageConvention": "app/frontend/public/assets/automatons/necron-tomb-dynasty/2.webp"
+      }
+    },
+    {
+      "blueprintId": "necron-tomb-dynasty:3:necron-immortal",
+      "slot": 3,
+      "name": "Necron Immortal",
+      "sourceAlias": "Immortal",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "two_handed",
+      "stance": "defensive",
+      "yieldThreshold": 0,
+      "buildFocus": "Warden",
+      "weaponPath": [
+        {
+          "mainWeapon": "Training Rifle",
+          "offhandWeapon": null,
+          "listPriceCredits": 50000
+        },
+        {
+          "mainWeapon": "Plasma Cannon",
+          "offhandWeapon": null,
+          "listPriceCredits": 408000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "mid",
+        "artBrief": "Broad armoured skeletal machine with oversized energy weapon.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 2,
+        "imageConvention": "app/frontend/public/assets/automatons/necron-tomb-dynasty/3.webp"
+      }
+    },
+    {
+      "blueprintId": "necron-tomb-dynasty:4:necron-deathmark",
+      "slot": 4,
+      "name": "Necron Deathmark",
+      "sourceAlias": "Deathmark",
+      "nameBasis": "Source character or machine designation",
+      "availability": "growth",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 0,
+      "buildFocus": "Deadeye",
+      "weaponPath": [
+        {
+          "mainWeapon": "Beam Pistol",
+          "offhandWeapon": null,
+          "listPriceCredits": 93000
+        },
+        {
+          "mainWeapon": "Particle Lance",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "long",
+        "artBrief": "Lean skeletal marksman, single focused optic and a long precision weapon.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 3,
+        "imageConvention": "app/frontend/public/assets/automatons/necron-tomb-dynasty/4.webp"
+      }
+    },
+    {
+      "blueprintId": "necron-tomb-dynasty:5:necron-lychguard",
+      "slot": 5,
+      "name": "Necron Lychguard",
+      "sourceAlias": "Lychguard",
+      "nameBasis": "Source character or machine designation",
+      "availability": "growth",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yieldThreshold": 0,
+      "buildFocus": "Warden",
+      "weaponPath": [
+        {
+          "mainWeapon": "Practice Sword",
+          "offhandWeapon": "Light Shield",
+          "listPriceCredits": 101000
+        },
+        {
+          "mainWeapon": "Vibro Mace",
+          "offhandWeapon": "Aegis Bulwark",
+          "listPriceCredits": 834000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "melee",
+        "artBrief": "Armoured skeletal guardian with a tall shield and close-combat weapon.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 4,
+        "imageConvention": "app/frontend/public/assets/automatons/necron-tomb-dynasty/5.webp"
+      }
+    },
+    {
+      "blueprintId": "necron-tomb-dynasty:6:necron-warrior-06",
+      "slot": 6,
+      "name": "Necron Warrior 06",
+      "sourceAlias": "Necron Warrior 06",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yieldThreshold": 0,
+      "buildFocus": "Warden",
+      "weaponPath": [
+        {
+          "mainWeapon": "Laser Pistol",
+          "offhandWeapon": "Light Shield",
+          "listPriceCredits": 108000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": "Aegis Bulwark",
+          "listPriceCredits": 834000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Silver skeletal infantry machine with green optics and a long firearm. Arena unit 06 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 5,
+        "imageConvention": "app/frontend/public/assets/automatons/necron-tomb-dynasty/6.webp"
+      }
+    },
+    {
+      "blueprintId": "necron-tomb-dynasty:7:necron-warrior-07",
+      "slot": 7,
+      "name": "Necron Warrior 07",
+      "sourceAlias": "Necron Warrior 07",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 0,
+      "buildFocus": "Deadeye",
+      "weaponPath": [
+        {
+          "mainWeapon": "Bolt Carbine",
+          "offhandWeapon": null,
+          "listPriceCredits": 93000
+        },
+        {
+          "mainWeapon": "Nova Caster",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "mid",
+        "artBrief": "Silver skeletal infantry machine with green optics and a long firearm. Arena unit 07 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 6,
+        "imageConvention": "app/frontend/public/assets/automatons/necron-tomb-dynasty/7.webp"
+      }
+    },
+    {
+      "blueprintId": "necron-tomb-dynasty:8:necron-warrior-08",
+      "slot": 8,
+      "name": "Necron Warrior 08",
+      "sourceAlias": "Necron Warrior 08",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yieldThreshold": 0,
+      "buildFocus": "Bruiser",
+      "weaponPath": [
+        {
+          "mainWeapon": "Scatter Cannon",
+          "offhandWeapon": null,
+          "listPriceCredits": 84000
+        },
+        {
+          "mainWeapon": "Arc Projector",
+          "offhandWeapon": null,
+          "listPriceCredits": 488000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Silver skeletal infantry machine with green optics and a long firearm. Arena unit 08 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 7,
+        "imageConvention": "app/frontend/public/assets/automatons/necron-tomb-dynasty/8.webp"
+      }
+    },
+    {
+      "blueprintId": "necron-tomb-dynasty:9:necron-warrior-09",
+      "slot": 9,
+      "name": "Necron Warrior 09",
+      "sourceAlias": "Necron Warrior 09",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "dual_wield",
+      "stance": "offensive",
+      "yieldThreshold": 0,
+      "buildFocus": "Sprinter",
+      "weaponPath": [
+        {
+          "mainWeapon": "Combat Knife",
+          "offhandWeapon": "Combat Knife",
+          "listPriceCredits": 186000
+        },
+        {
+          "mainWeapon": "Vibro Mace",
+          "offhandWeapon": "Vibro Mace",
+          "listPriceCredits": 850000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "melee",
+        "artBrief": "Silver skeletal infantry machine with green optics and a long firearm. Arena unit 09 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 8,
+        "imageConvention": "app/frontend/public/assets/automatons/necron-tomb-dynasty/9.webp"
+      }
+    },
+    {
+      "blueprintId": "necron-tomb-dynasty:10:necron-warrior-10",
+      "slot": 10,
+      "name": "Necron Warrior 10",
+      "sourceAlias": "Necron Warrior 10",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yieldThreshold": 0,
+      "buildFocus": "Bruiser",
+      "weaponPath": [
+        {
+          "mainWeapon": "Training Rifle",
+          "offhandWeapon": null,
+          "listPriceCredits": 50000
+        },
+        {
+          "mainWeapon": "Plasma Cannon",
+          "offhandWeapon": null,
+          "listPriceCredits": 408000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "mid",
+        "artBrief": "Silver skeletal infantry machine with green optics and a long firearm. Arena unit 10 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 9,
+        "imageConvention": "app/frontend/public/assets/automatons/necron-tomb-dynasty/10.webp"
+      }
+    },
+    {
+      "blueprintId": "necron-tomb-dynasty:11:necron-warrior-11",
+      "slot": 11,
+      "name": "Necron Warrior 11",
+      "sourceAlias": "Necron Warrior 11",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "two_handed",
+      "stance": "defensive",
+      "yieldThreshold": 0,
+      "buildFocus": "Deadeye",
+      "weaponPath": [
+        {
+          "mainWeapon": "Training Beam",
+          "offhandWeapon": null,
+          "listPriceCredits": 50000
+        },
+        {
+          "mainWeapon": "Ion Beam",
+          "offhandWeapon": null,
+          "listPriceCredits": 544000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "long",
+        "artBrief": "Silver skeletal infantry machine with green optics and a long firearm. Arena unit 11 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 10,
+        "imageConvention": "app/frontend/public/assets/automatons/necron-tomb-dynasty/11.webp"
+      }
+    }
+  ],
+  "alternativeBlueprints": [],
+  "review": {
+    "openingWeaponCredits": 208000,
+    "finalWeaponCreditsAtTarget": 6475000,
+    "equippedWeaponCountAtTarget": 15,
+    "purchaseOrder": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+    ],
+    "reserveSlots": [],
+    "alternativeRule": "Choose an alternative before catalogue approval; it replaces the specified slot and never adds another live robot."
+  }
+}

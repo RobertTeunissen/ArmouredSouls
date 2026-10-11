@@ -1,0 +1,236 @@
+{
+  "number": 128,
+  "catalogue_key": "buster-machine-hangar",
+  "name": "Buster Machine Hangar",
+  "franchise": "Gunbuster",
+  "strategy": "Paragon",
+  "opening_robots": 1,
+  "target_robots": 1,
+  "max_planned_robots": 1,
+  "strategy_review_limit": 2,
+  "backstory": "One immense champion takes every available upgrade slot in the hangar's budget. Its heavy arena weapon is purchased and refined through ordinary workshop milestones.",
+  "strategy_personality": "Strong classic-mecha recognition and imposing mass. Use the combined flagship as one entry rather than counting it alongside its two component machines. [Licensed machine reference](https://tamashiiweb.com/item/640/?dmode=pc&wovn=en).",
+  "teams": {
+    "2v2": [],
+    "3v3": []
+  },
+  "event_order": [
+    "league_1v1",
+    "tournament_1v1",
+    "koth",
+    "grand_melee",
+    "league_2v2",
+    "tag_team",
+    "tournament_2v2",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "robots": [
+    {
+      "slot": 1,
+      "name": "Gunbuster",
+      "source_identity": "Gunbuster",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Bruiser",
+      "range_from_weapons": "mid",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Training Rifle",
+          "offhand_weapon": null,
+          "list_price_credits": 50000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Plasma Cannon",
+          "offhand_weapon": null,
+          "list_price_credits": 408000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Hone",
+          "weapon": "Plasma Cannon",
+          "hand": "main",
+          "workshop_level": 1,
+          "attribute": "Combat Power",
+          "magnitude": 3,
+          "result_value": 10,
+          "cost_credits": 90000,
+          "base_value": 7,
+          "effect": "Combat Power 7→10",
+          "step": 1
+        },
+        {
+          "operation": "Hone",
+          "weapon": "Plasma Cannon",
+          "hand": "main",
+          "workshop_level": 1,
+          "attribute": "Critical Systems",
+          "magnitude": 4,
+          "result_value": 10,
+          "cost_credits": 160000,
+          "base_value": 6,
+          "effect": "Critical Systems 6→10",
+          "step": 2
+        },
+        {
+          "operation": "Augment",
+          "weapon": "Plasma Cannon",
+          "hand": "main",
+          "workshop_level": 3,
+          "attribute": "Hull Integrity",
+          "magnitude": 3,
+          "result_value": 3,
+          "cost_credits": 180000,
+          "effect": "Hull Integrity, new +3",
+          "step": 3
+        },
+        {
+          "operation": "Sharpen",
+          "weapon": "Plasma Cannon",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 1,
+          "cost_credits": 300000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 4
+        },
+        {
+          "operation": "Forge",
+          "weapon": "Plasma Cannon",
+          "hand": "main",
+          "workshop_level": 8,
+          "occurrence": 1,
+          "cost_credits": 400000,
+          "prestige_gate": 15000,
+          "effect": "+8% damage",
+          "step": 5
+        }
+      ],
+      "art_brief": "Use case: precise-object-edit. Reframe this Gunbuster portrait while preserving the exact robot geometry, black/orange colours, crossed arms, source details, feet, lighting and studio. Pull camera back enough to show the entire tips of BOTH tall shoulder towers and both complete feet, with 8% clear dark margin around every extremity. Whole figure at most 78% of square image height. Do not crop any tower. No other changes.",
+      "role": "Heavy mid-range pressure",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 1130000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "Gunbuster fills the heavy mid-range pressure role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Bruiser tuning supports the mid equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Paragon strategy tuning rules with the Bruiser Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "buster-machine-hangar:1:gunbuster",
+      "folder": "stables/128-buster-machine-hangar/robots/01-gunbuster",
+      "files": {
+        "png": "stables/128-buster-machine-hangar/robots/01-gunbuster/portrait.png",
+        "webp": "stables/128-buster-machine-hangar/robots/01-gunbuster/portrait.webp",
+        "blueprint": "stables/128-buster-machine-hangar/robots/01-gunbuster/blueprint.json",
+        "profile": "stables/128-buster-machine-hangar/robots/01-gunbuster/profile.md",
+        "prompt": "stables/128-buster-machine-hangar/robots/01-gunbuster/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/buster-machine-hangar/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 128,
+          "stable_name": "Buster Machine Hangar",
+          "catalogue_key": "buster-machine-hangar",
+          "slot": 1,
+          "robot_name": "Gunbuster",
+          "source_identity": "Gunbuster",
+          "source_edition": "Gunbuster — 1988 OVA combined Gunbuster",
+          "source_references": [
+            "https://tamashiiweb.com/item/640/?dmode=pc&wovn=en"
+          ],
+          "prompt": "Use case: precise-object-edit. Reframe this Gunbuster portrait while preserving the exact robot geometry, black/orange colours, crossed arms, source details, feet, lighting and studio. Pull camera back enough to show the entire tips of BOTH tall shoulder towers and both complete feet, with 8% clear dark margin around every extremity. Whole figure at most 78% of square image height. Do not crop any tower. No other changes.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-0191ac70-63c6-43da-aeb3-cbe583185f21.png",
+          "visual_review": "Accepted: complete readable silhouette, planned source or original construction and studio finish",
+          "asset_id": "buster-machine-hangar:1",
+          "status": "generated",
+          "revision": 2,
+          "runtime_output": "app/frontend/public/assets/automatons/buster-machine-hangar/1.webp",
+          "master": "outputs/automaton-portraits/masters/buster-machine-hangar/1-v2.png",
+          "output": "app/frontend/public/assets/automatons/buster-machine-hangar/1-v2.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "21993b18227daf29bd7e59b02843635af47afe283de768478c8bf555411cc61a",
+          "bytes": 39042,
+          "reference_paths": [
+            "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-0da276d3-6920-42b8-95a4-bb86f34cac33.png"
+          ],
+          "previous_versions": [
+            {
+              "stable_number": 128,
+              "stable_name": "Buster Machine Hangar",
+              "catalogue_key": "buster-machine-hangar",
+              "slot": 1,
+              "robot_name": "Gunbuster",
+              "source_identity": "Gunbuster",
+              "source_edition": "Gunbuster — 1988 OVA combined Gunbuster",
+              "source_references": [
+                "https://tamashiiweb.com/item/640/?dmode=pc&wovn=en"
+              ],
+              "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: The authentic combined Gunbuster, classic 1988 OVA. Huge broad black and charcoal humanoid super robot with orange-yellow vent panels, white upper-arm details, orange lower legs, iconic head with two long orange side horns and small green forehead sensor, massively thick forearms, triangular angular chest and heavy feet. Full combined machine, not Buster Machine 1 or 2 separately. Arms folded in its signature confident stance, both feet on floor, no pilots.\nCatalogue label for metadata only, do not render text: #128 slot 1 Gunbuster.",
+              "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-0da276d3-6920-42b8-95a4-bb86f34cac33.png",
+              "visual_review": "Superseded by selected refined portrait; original retained",
+              "asset_id": "buster-machine-hangar:1",
+              "status": "generated",
+              "revision": 1,
+              "runtime_output": "app/frontend/public/assets/automatons/buster-machine-hangar/1.webp",
+              "master": "outputs/automaton-portraits/masters/buster-machine-hangar/1.png",
+              "output": "app/frontend/public/assets/automatons/buster-machine-hangar/1.webp",
+              "master_dimensions": [
+                1254,
+                1254
+              ],
+              "export_dimensions": [
+                512,
+                512
+              ],
+              "sha256": "5fe125ce119f9990252571acf4bc0eb630e21af2fea51742a1c49064c4246751",
+              "bytes": 44412
+            }
+          ]
+        },
+        "sha256": "21993b18227daf29bd7e59b02843635af47afe283de768478c8bf555411cc61a",
+        "revision": 2,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "alternatives": [],
+  "blueprint_status": "detailed",
+  "source_notes": "\n**Franchise:** Gunbuster  \n**Strategy:** Paragon · **Target roster:** 1 robot\n\n**Proposed robots:** Gunbuster.\n\n**Direction:** Strong classic-mecha recognition and imposing mass. Use the combined flagship as one entry rather than counting it alongside its two component machines. [Licensed machine reference](https://tamashiiweb.com/item/640/?dmode=pc&wovn=en).\n\n**Production edition:** Gunbuster — 1988 OVA combined Gunbuster.  \n**Catalogue key:** `buster-machine-hangar`\n\n",
+  "source_documents": [
+    "reference/AUTOMATON_STABLE_EXPANSION.md"
+  ],
+  "blueprint_origin": "completed during collection",
+  "purchasing_plan": "Open and remain at one robot. Buy its complete stage-1 loadout before refinement. Execute the listed steps in order, progressing Workshop L1/L3/L5/L8 as required. Keep prestige-gated steps pending; fund repairs and maintenance before every purchase.",
+  "target_overrides": {},
+  "equipment_budget": {
+    "stage_0_credits": 50000,
+    "stage_1_credits": 408000,
+    "refinement_credits": 1130000,
+    "excludes": "Frames, facilities, training, repairs, upkeep, discounts and resale; stage-1 total replaces stage-0 gear and is not a simultaneous equipment inventory."
+  },
+  "folder": "stables/128-buster-machine-hangar",
+  "history_image_count": 2
+}

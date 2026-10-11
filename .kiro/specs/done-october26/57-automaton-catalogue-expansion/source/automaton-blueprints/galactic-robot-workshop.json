@@ -1,0 +1,196 @@
+{
+  "number": 40,
+  "catalogueKey": "galactic-robot-workshop",
+  "stableName": "Galactic Robot Workshop",
+  "franchiseLabel": "Ratchet & Clank",
+  "strategy": "Generalist",
+  "fit": "Direct",
+  "conceptIdentity": "Small tactician, heavier specialist, aggressive ranged fighter. Metallic robot forms only; Ratchet is the organic lead and stays outside this roster.",
+  "backstory": "Galactic Robot Workshop enters the arena with a clear doctrine. Small tactician, heavier specialist, aggressive ranged fighter. Every surviving machine returns to the workshop before the next booking.",
+  "openingRobots": 2,
+  "targetRobots": 3,
+  "adminMaximumRobots": 4,
+  "targetOverrides": {
+    "robots": 3
+  },
+  "teamNames": {
+    "2v2": [
+      {
+        "name": "Galactic Pair 01",
+        "slots": [
+          1,
+          2
+        ]
+      }
+    ],
+    "3v3": [
+      {
+        "name": "Galactic Squad 01",
+        "slots": [
+          1,
+          2,
+          3
+        ]
+      }
+    ]
+  },
+  "eventOrder": [
+    "league_1v1",
+    "league_2v2",
+    "league_3v3",
+    "tag_team",
+    "koth",
+    "grand_melee",
+    "tournament_1v1",
+    "tournament_2v2",
+    "tournament_3v3"
+  ],
+  "robots": [
+    {
+      "blueprintId": "galactic-robot-workshop:1:clank",
+      "slot": 1,
+      "name": "Clank",
+      "sourceAlias": "Clank",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yieldThreshold": 30,
+      "buildFocus": "Tactician",
+      "weaponPath": [
+        {
+          "mainWeapon": "Laser Pistol",
+          "offhandWeapon": "Light Shield",
+          "listPriceCredits": 108000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": "Aegis Bulwark",
+          "listPriceCredits": 834000
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "Hone",
+          "weapon": "Volt Sabre",
+          "weaponSlot": "main",
+          "attribute": "Combat Power",
+          "baseValue": 8,
+          "magnitude": 2,
+          "resultValue": 10,
+          "costCredits": 40000,
+          "workshopLevel": 1,
+          "step": 1
+        },
+        {
+          "tier": "Augment",
+          "weapon": "Volt Sabre",
+          "weaponSlot": "main",
+          "attribute": "Adaptive AI",
+          "magnitude": 3,
+          "resultValue": 3,
+          "costCredits": 180000,
+          "workshopLevel": 3,
+          "step": 2
+        },
+        {
+          "tier": "Sharpen",
+          "weapon": "Volt Sabre",
+          "weaponSlot": "main",
+          "cooldownReductionPercent": 10,
+          "costCredits": 300000,
+          "workshopLevel": 5,
+          "prestigeGate": 3000,
+          "step": 3
+        }
+      ],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Small silver robot with green optics, square limbs and a modest service chassis.",
+        "refinementNote": "Apply in order after stage 1. Dual-wield refinements affect the main-hand copy only; the offhand stays unrefined unless explicitly targeted.",
+        "refinementTotalCredits": 520000,
+        "minimumRosterExpansionLevel": 0,
+        "imageConvention": "app/frontend/public/assets/automatons/galactic-robot-workshop/1.webp"
+      }
+    },
+    {
+      "blueprintId": "galactic-robot-workshop:2:dr-nefarious",
+      "slot": 2,
+      "name": "Dr. Nefarious",
+      "sourceAlias": "Dr. Nefarious",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "single",
+      "stance": "offensive",
+      "yieldThreshold": 20,
+      "buildFocus": "Deadeye",
+      "weaponPath": [
+        {
+          "mainWeapon": "Beam Pistol",
+          "offhandWeapon": null,
+          "listPriceCredits": 93000
+        },
+        {
+          "mainWeapon": "Particle Lance",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "long",
+        "artBrief": "Tall angular villain robot with exposed head machinery, thin limbs and dark metal.",
+        "refinementNote": "Generalist refinement is reserved for the flagship in slot 1; this robot receives equipment upgrades and tuning.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 1,
+        "imageConvention": "app/frontend/public/assets/automatons/galactic-robot-workshop/2.webp"
+      }
+    },
+    {
+      "blueprintId": "galactic-robot-workshop:3:mr-zurkon",
+      "slot": 3,
+      "name": "Mr. Zurkon",
+      "sourceAlias": "Mr. Zurkon",
+      "nameBasis": "Source character or machine designation",
+      "availability": "growth",
+      "loadout": "dual_wield",
+      "stance": "offensive",
+      "yieldThreshold": 0,
+      "buildFocus": "Bruiser",
+      "weaponPath": [
+        {
+          "mainWeapon": "Laser Pistol",
+          "offhandWeapon": "Laser Pistol",
+          "listPriceCredits": 114000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": "Volt Sabre",
+          "listPriceCredits": 850000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Compact aggressive hovering combat robot with a mechanical face and paired emitters.",
+        "refinementNote": "Generalist refinement is reserved for the flagship in slot 1; this robot receives equipment upgrades and tuning.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 2,
+        "imageConvention": "app/frontend/public/assets/automatons/galactic-robot-workshop/3.webp"
+      }
+    }
+  ],
+  "alternativeBlueprints": [],
+  "review": {
+    "openingWeaponCredits": 201000,
+    "finalWeaponCreditsAtTarget": 2109000,
+    "equippedWeaponCountAtTarget": 5,
+    "purchaseOrder": [
+      1,
+      2,
+      3
+    ],
+    "reserveSlots": [],
+    "alternativeRule": "Choose an alternative before catalogue approval; it replaces the specified slot and never adds another live robot."
+  }
+}

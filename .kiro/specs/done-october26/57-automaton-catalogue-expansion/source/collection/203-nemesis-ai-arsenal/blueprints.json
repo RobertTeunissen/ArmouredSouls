@@ -1,0 +1,133 @@
+{
+  "stable_number": 203,
+  "catalogue_key": "nemesis-ai-arsenal",
+  "robots": [
+    {
+      "slot": 1,
+      "name": "Red One",
+      "source_identity": "Red One AI; original compact arena proxy, no canonical ground-body claim",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "balanced",
+      "yield_threshold": 15,
+      "build_focus": "Deadeye",
+      "range_from_weapons": "long",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Training Beam",
+          "offhand_weapon": null,
+          "list_price_credits": 50000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Ion Beam",
+          "offhand_weapon": null,
+          "list_price_credits": 544000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Sharpen",
+          "weapon": "Ion Beam",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 1,
+          "cost_credits": 300000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 1
+        },
+        {
+          "operation": "Sharpen",
+          "weapon": "Ion Beam",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 2,
+          "cost_credits": 900000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 2
+        },
+        {
+          "operation": "Forge",
+          "weapon": "Ion Beam",
+          "hand": "main",
+          "workshop_level": 8,
+          "occurrence": 1,
+          "cost_credits": 400000,
+          "prestige_gate": 15000,
+          "effect": "+8% damage",
+          "step": 3
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete original arena robot, explicitly adapted from the stated fictional AI premise.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE ORIGINAL compact ground robot designed as an ARENA PROXY representing Red One, the AI associated with Nemesis in Proximal Flame's original web fiction The Last Angel. This is deliberately an original adaptation, not a canonical ground body. Squat four-legged military-industrial proxy, obsidian-black broad faceted central body like a miniature armoured ship prow, a deep single RED sensor slit, four heavy articulated ground legs with stabilizing feet, compact dorsal sensor bank and one restrained side-mounted energy emitter, inactive. Dense believable industrial metal and matte graphite plating with dark red accents, precise composed pose. No ship background, humanoid woman, independent extra drones, text or logo. All four feet and complete body contained.\nMetadata only, do not render text: #203 slot 1 Red One.",
+      "role": "Heavy long-range support",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 1600000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "Red One fills the heavy long-range support role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Deadeye tuning supports the long equipment role; balanced stance and a 15% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Paragon strategy tuning rules with the Deadeye Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "nemesis-ai-arsenal:1:red-one",
+      "folder": "stables/203-nemesis-ai-arsenal/robots/01-red-one",
+      "files": {
+        "png": "stables/203-nemesis-ai-arsenal/robots/01-red-one/portrait.png",
+        "webp": "stables/203-nemesis-ai-arsenal/robots/01-red-one/portrait.webp",
+        "blueprint": "stables/203-nemesis-ai-arsenal/robots/01-red-one/blueprint.json",
+        "profile": "stables/203-nemesis-ai-arsenal/robots/01-red-one/profile.md",
+        "prompt": "stables/203-nemesis-ai-arsenal/robots/01-red-one/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/nemesis-ai-arsenal/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 203,
+          "stable_name": "Nemesis AI Arsenal",
+          "catalogue_key": "nemesis-ai-arsenal",
+          "slot": 1,
+          "robot_name": "Red One",
+          "source_identity": "Red One AI; original compact arena proxy, no canonical ground-body claim",
+          "source_edition": "The Last Angel by Proximal Flame, original arena proxy for the warship AI",
+          "source_references": [
+            "https://proximalflame.com/2026/01/30/the-last-angel-descent-chapter-1/"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete original arena robot, explicitly adapted from the stated fictional AI premise.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE ORIGINAL compact ground robot designed as an ARENA PROXY representing Red One, the AI associated with Nemesis in Proximal Flame's original web fiction The Last Angel. This is deliberately an original adaptation, not a canonical ground body. Squat four-legged military-industrial proxy, obsidian-black broad faceted central body like a miniature armoured ship prow, a deep single RED sensor slit, four heavy articulated ground legs with stabilizing feet, compact dorsal sensor bank and one restrained side-mounted energy emitter, inactive. Dense believable industrial metal and matte graphite plating with dark red accents, precise composed pose. No ship background, humanoid woman, independent extra drones, text or logo. All four feet and complete body contained.\nMetadata only, do not render text: #203 slot 1 Red One.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-0847a0ba-2783-4dd2-98df-71835344ba5c.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "nemesis-ai-arsenal:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/nemesis-ai-arsenal/1.webp",
+          "master": "outputs/automaton-portraits/masters/nemesis-ai-arsenal/1.png",
+          "output": "app/frontend/public/assets/automatons/nemesis-ai-arsenal/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "4b64ff663bae3423f871f60d4a190937147618605ede27027dd90444c3dd1b16",
+          "bytes": 63070
+        },
+        "sha256": "4b64ff663bae3423f871f60d4a190937147618605ede27027dd90444c3dd1b16",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "replacement_alternatives": []
+}

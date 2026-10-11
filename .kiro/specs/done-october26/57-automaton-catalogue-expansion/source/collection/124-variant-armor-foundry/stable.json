@@ -1,0 +1,381 @@
+{
+  "number": 124,
+  "catalogue_key": "variant-armor-foundry",
+  "name": "Variant Armor Foundry",
+  "franchise": "Cyberbots / Armored Warriors",
+  "strategy": "Generalist",
+  "opening_robots": 2,
+  "target_robots": 3,
+  "max_planned_robots": 3,
+  "strategy_review_limit": 4,
+  "backstory": "Three contrasting combat frames keep the foundry ready for changing brackets. A flexible lead, a mobile skirmisher and a heavy contact machine divide the upgrades.",
+  "strategy_personality": "Robot-fighting-game heritage makes this an excellent thematic match. Treat the related games as one candidate family here; confirm the other machine names during blueprint work. [Capcom's Blodia reference](https://news.capcomusa.com/lets/browse/capcom-snapshots-robots).",
+  "teams": {
+    "2v2": [
+      {
+        "name": "Variant Armor Pair 01",
+        "slots": [
+          1,
+          2
+        ],
+        "forms": "Opening"
+      }
+    ],
+    "3v3": [
+      {
+        "name": "Variant Armor Squad 01",
+        "slots": [
+          1,
+          2,
+          3
+        ],
+        "forms": "When slot 3 joins"
+      }
+    ]
+  },
+  "event_order": [
+    "league_1v1",
+    "league_2v2",
+    "tag_team",
+    "league_3v3",
+    "koth",
+    "grand_melee",
+    "tournament_1v1",
+    "tournament_2v2",
+    "tournament_3v3"
+  ],
+  "robots": [
+    {
+      "slot": 1,
+      "name": "Blodia",
+      "source_identity": "BX-02 Blodia",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 15,
+      "build_focus": "Versatile",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": null,
+          "list_price_credits": 57000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Hone",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 1,
+          "attribute": "Combat Power",
+          "magnitude": 2,
+          "result_value": 10,
+          "cost_credits": 40000,
+          "base_value": 8,
+          "effect": "Combat Power 8→10",
+          "step": 1
+        },
+        {
+          "operation": "Augment",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 3,
+          "attribute": "Adaptive AI",
+          "magnitude": 3,
+          "result_value": 3,
+          "cost_credits": 180000,
+          "effect": "Adaptive AI, new +3",
+          "step": 2
+        },
+        {
+          "operation": "Sharpen",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 1,
+          "cost_credits": 300000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 3
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic Cyberbots BX-02 Blodia default red Variant Armor, iconic squat massive fighting-mech body, broad red shoulder plates, small recessed head with light sensor, immense articulated punching arms and thick short mechanical legs. Preserve Capcom's rounded industrial 1995 design, heavy feet, original blue/dark-metal accents. No human pilot or additional handheld weapon.\nCatalogue label for metadata only, do not render text: #124 slot 1 Blodia.",
+      "role": "Flexible line fighter",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 520000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "Blodia fills the flexible line fighter role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Versatile tuning supports the short equipment role; balanced stance and a 15% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Generalist strategy tuning rules with the Versatile Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "variant-armor-foundry:1:blodia",
+      "folder": "stables/124-variant-armor-foundry/robots/01-blodia",
+      "files": {
+        "png": "stables/124-variant-armor-foundry/robots/01-blodia/portrait.png",
+        "webp": "stables/124-variant-armor-foundry/robots/01-blodia/portrait.webp",
+        "blueprint": "stables/124-variant-armor-foundry/robots/01-blodia/blueprint.json",
+        "profile": "stables/124-variant-armor-foundry/robots/01-blodia/profile.md",
+        "prompt": "stables/124-variant-armor-foundry/robots/01-blodia/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/variant-armor-foundry/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 124,
+          "stable_name": "Variant Armor Foundry",
+          "catalogue_key": "variant-armor-foundry",
+          "slot": 1,
+          "robot_name": "Blodia",
+          "source_identity": "BX-02 Blodia",
+          "source_edition": "Cyberbots: Fullmetal Madness — 1995 arcade default Variant Armors",
+          "source_references": [
+            "https://news.capcomusa.com/lets/browse/capcom-snapshots-robots"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic Cyberbots BX-02 Blodia default red Variant Armor, iconic squat massive fighting-mech body, broad red shoulder plates, small recessed head with light sensor, immense articulated punching arms and thick short mechanical legs. Preserve Capcom's rounded industrial 1995 design, heavy feet, original blue/dark-metal accents. No human pilot or additional handheld weapon.\nCatalogue label for metadata only, do not render text: #124 slot 1 Blodia.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-4a8dd8e7-0e54-4aee-9f2d-7e9233cbab9f.png",
+          "visual_review": "Accepted: complete figure, distinct readable silhouette, shared collection finish and lighting",
+          "asset_id": "variant-armor-foundry:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/variant-armor-foundry/1.webp",
+          "master": "outputs/automaton-portraits/masters/variant-armor-foundry/1.png",
+          "output": "app/frontend/public/assets/automatons/variant-armor-foundry/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "e2b1496ef12819e226c4d06856a016aadc2778a743d86340cd72ca7e535d23d2",
+          "bytes": 74924
+        },
+        "sha256": "e2b1496ef12819e226c4d06856a016aadc2778a743d86340cd72ca7e535d23d2",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 2,
+      "name": "Reptos",
+      "source_identity": "RF-004 Reptos",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 20,
+      "build_focus": "Sprinter",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": null,
+          "list_price_credits": 57000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic Cyberbots RF-004 Reptos default light blue Variant Armor, agile reptilian mechanical frame with source sensor cockpit/head, distinctive long-barrel arm weapon, opposite claw arm and original digitigrade jointed legs with hooked feet. Preserve actual source geometry and rear assembly, no humanoid fists replacing claw, no extra limbs or unrelated mecha parts.\nCatalogue label for metadata only, do not render text: #124 slot 2 Reptos.",
+      "role": "Mobile skirmisher",
+      "missing_fields": [],
+      "refinement_note": "Generalist refinement spending is reserved for the slot-1 lead; this supporting robot has an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 1,
+      "equipment_interpretation": "Reptos fills the mobile skirmisher role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Sprinter tuning supports the short equipment role; balanced stance and a 20% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Generalist strategy tuning rules with the Sprinter Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "variant-armor-foundry:2:reptos",
+      "folder": "stables/124-variant-armor-foundry/robots/02-reptos",
+      "files": {
+        "png": "stables/124-variant-armor-foundry/robots/02-reptos/portrait.png",
+        "webp": "stables/124-variant-armor-foundry/robots/02-reptos/portrait.webp",
+        "blueprint": "stables/124-variant-armor-foundry/robots/02-reptos/blueprint.json",
+        "profile": "stables/124-variant-armor-foundry/robots/02-reptos/profile.md",
+        "prompt": "stables/124-variant-armor-foundry/robots/02-reptos/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/variant-armor-foundry/2.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 124,
+          "stable_name": "Variant Armor Foundry",
+          "catalogue_key": "variant-armor-foundry",
+          "slot": 2,
+          "robot_name": "Reptos",
+          "source_identity": "RF-004 Reptos",
+          "source_edition": "Cyberbots: Fullmetal Madness — 1995 arcade default Variant Armors",
+          "source_references": [
+            "https://news.capcomusa.com/lets/browse/capcom-snapshots-robots"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic Cyberbots RF-004 Reptos default light blue Variant Armor, agile reptilian mechanical frame with source sensor cockpit/head, distinctive long-barrel arm weapon, opposite claw arm and original digitigrade jointed legs with hooked feet. Preserve actual source geometry and rear assembly, no humanoid fists replacing claw, no extra limbs or unrelated mecha parts.\nCatalogue label for metadata only, do not render text: #124 slot 2 Reptos.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-e2eef021-3eb4-4154-97af-a2a053d13b49.png",
+          "visual_review": "Accepted: complete figure, distinct readable silhouette, shared collection finish and lighting",
+          "asset_id": "variant-armor-foundry:2",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/variant-armor-foundry/2.webp",
+          "master": "outputs/automaton-portraits/masters/variant-armor-foundry/2.png",
+          "output": "app/frontend/public/assets/automatons/variant-armor-foundry/2.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "7975c6bb13b1ee5eeb256ad0daa3df208084bf95588a9c64aaa0378acfe3eaa6",
+          "bytes": 60860
+        },
+        "sha256": "7975c6bb13b1ee5eeb256ad0daa3df208084bf95588a9c64aaa0378acfe3eaa6",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 3,
+      "name": "Guldin",
+      "source_identity": "GP-N1 Guldin",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Bruiser",
+      "range_from_weapons": "melee",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Shock Maul",
+          "offhand_weapon": null,
+          "list_price_credits": 183000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Heavy Hammer",
+          "offhand_weapon": null,
+          "list_price_credits": 478000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic Cyberbots GP-N1 Guldin default green Variant Armor, squat immense green upper body on TWO BROAD TANK TRACKS, giant clamp-like mechanical arms, compact original head/sensor and source shoulder gun housing. Preserve rounded source armour and tread geometry, no walking legs. Full tracks and clamps contained inside canvas.\nCatalogue label for metadata only, do not render text: #124 slot 3 Guldin.",
+      "role": "Heavy contact attacker",
+      "missing_fields": [],
+      "refinement_note": "Generalist refinement spending is reserved for the slot-1 lead; this supporting robot has an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 2,
+      "equipment_interpretation": "Guldin fills the heavy contact attacker role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Bruiser tuning supports the melee equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Generalist strategy tuning rules with the Bruiser Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "variant-armor-foundry:3:guldin",
+      "folder": "stables/124-variant-armor-foundry/robots/03-guldin",
+      "files": {
+        "png": "stables/124-variant-armor-foundry/robots/03-guldin/portrait.png",
+        "webp": "stables/124-variant-armor-foundry/robots/03-guldin/portrait.webp",
+        "blueprint": "stables/124-variant-armor-foundry/robots/03-guldin/blueprint.json",
+        "profile": "stables/124-variant-armor-foundry/robots/03-guldin/profile.md",
+        "prompt": "stables/124-variant-armor-foundry/robots/03-guldin/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/variant-armor-foundry/3.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 124,
+          "stable_name": "Variant Armor Foundry",
+          "catalogue_key": "variant-armor-foundry",
+          "slot": 3,
+          "robot_name": "Guldin",
+          "source_identity": "GP-N1 Guldin",
+          "source_edition": "Cyberbots: Fullmetal Madness — 1995 arcade default Variant Armors",
+          "source_references": [
+            "https://news.capcomusa.com/lets/browse/capcom-snapshots-robots"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic Cyberbots GP-N1 Guldin default green Variant Armor, squat immense green upper body on TWO BROAD TANK TRACKS, giant clamp-like mechanical arms, compact original head/sensor and source shoulder gun housing. Preserve rounded source armour and tread geometry, no walking legs. Full tracks and clamps contained inside canvas.\nCatalogue label for metadata only, do not render text: #124 slot 3 Guldin.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-e058387f-1504-451c-94ae-3b0f57beb4de.png",
+          "visual_review": "Accepted: complete figure, distinct readable silhouette, shared collection finish and lighting",
+          "asset_id": "variant-armor-foundry:3",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/variant-armor-foundry/3.webp",
+          "master": "outputs/automaton-portraits/masters/variant-armor-foundry/3.png",
+          "output": "app/frontend/public/assets/automatons/variant-armor-foundry/3.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "06fa1abf7ba4162a83b39d45e07a78b10d42029e54743046f04c5b1d7d2032c3",
+          "bytes": 78374
+        },
+        "sha256": "06fa1abf7ba4162a83b39d45e07a78b10d42029e54743046f04c5b1d7d2032c3",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "alternatives": [],
+  "blueprint_status": "detailed",
+  "source_notes": "\n**Franchise:** Cyberbots / Armored Warriors  \n**Strategy:** Generalist · **Target roster:** 3 robots\n\n**Catalogue key:** `variant-armor-foundry`\n\n**Proposed robots:** Blodia; Reptos; Guldin.\n\n**Direction:** Robot-fighting-game heritage makes this an excellent thematic match. Treat the related games as one candidate family here; confirm the other machine names during blueprint work. [Capcom's Blodia reference](https://news.capcomusa.com/lets/browse/capcom-snapshots-robots).\n\n**Production edition:** Cyberbots: Fullmetal Madness — 1995 arcade default Variant Armors. Custom arena names and equipment are adaptations; source machine identities remain as specified.\n\n\n",
+  "source_documents": [
+    "reference/AUTOMATON_STABLE_EXPANSION.md"
+  ],
+  "blueprint_origin": "completed during collection",
+  "purchasing_plan": "Open with slots 1–2; recruit slot 3 with its complete stage-0 loadout. Complete stage-1 loadouts in slot order. Refine the slot-1 lead only: verified Hone/Augment operations, then a first Sharpen at Workshop L5 and 3,000 prestige. Other slots have explicit empty refinement plans.",
+  "target_overrides": {
+    "robots": 3
+  },
+  "equipment_budget": {
+    "stage_0_credits": 297000,
+    "stage_1_credits": 1328000,
+    "refinement_credits": 520000,
+    "excludes": "Frames, facilities, training, repairs, upkeep, discounts and resale; stage-1 total replaces stage-0 gear and is not a simultaneous equipment inventory."
+  },
+  "folder": "stables/124-variant-armor-foundry",
+  "history_image_count": 0
+}

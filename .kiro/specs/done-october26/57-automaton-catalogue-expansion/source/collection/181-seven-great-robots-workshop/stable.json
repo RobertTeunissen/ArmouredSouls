@@ -1,0 +1,966 @@
+{
+  "number": 181,
+  "catalogue_key": "seven-great-robots-workshop",
+  "name": "Seven Great Robots Workshop",
+  "franchise": "PLUTO - 2023 anime adaptation",
+  "strategy": "Squadron",
+  "opening_robots": 3,
+  "target_robots": 6,
+  "max_planned_robots": 6,
+  "strategy_review_limit": 6,
+  "backstory": "A detective, two arena veterans, and three very different guardians enter a new competition. Six individuals share a workshop, but every body, temperament, and assignment remains distinct.",
+  "strategy_personality": "Montblanc joins Hercules to complete the second pair. North No.2 and Epsilon complete the final pair and second trio. Epsilon receives protective equipment and a high yield threshold as an explicit arena adaptation.",
+  "teams": {
+    "2v2": [
+      {
+        "name": "Detective and Champion",
+        "slots": [
+          1,
+          2
+        ],
+        "forms": "Opening trio"
+      },
+      {
+        "name": "Mountain Guard",
+        "slots": [
+          3,
+          4
+        ],
+        "forms": "When slot 4 joins"
+      },
+      {
+        "name": "Sun and Steel",
+        "slots": [
+          5,
+          6
+        ],
+        "forms": "When slot 6 joins"
+      }
+    ],
+    "3v3": [
+      {
+        "name": "Europol Vanguard",
+        "slots": [
+          1,
+          2,
+          3
+        ],
+        "forms": "Opening trio"
+      },
+      {
+        "name": "Quiet Guardians",
+        "slots": [
+          4,
+          5,
+          6
+        ],
+        "forms": "When slot 6 joins"
+      }
+    ]
+  },
+  "event_order": [
+    "league_3v3",
+    "league_2v2",
+    "tag_team",
+    "tournament_3v3",
+    "tournament_2v2",
+    "league_1v1",
+    "koth",
+    "grand_melee",
+    "tournament_1v1"
+  ],
+  "robots": [
+    {
+      "slot": 1,
+      "name": "Gesicht",
+      "source_identity": "Gesicht",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 20,
+      "build_focus": "Tactician",
+      "range_from_weapons": "mid",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Bolt Carbine",
+          "offhand_weapon": null,
+          "list_price_credits": 93000,
+          "source_text": "Bolt Carbine (₡93,000)"
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Nova Caster",
+          "offhand_weapon": null,
+          "list_price_credits": 425000,
+          "source_text": "Nova Caster (₡425,000)"
+        }
+      ],
+      "refinement_plan": [
+        {
+          "step": 1,
+          "operation": "Sharpen",
+          "weapon": "Nova Caster",
+          "hand": "main",
+          "effect": "1 (−10% cooldown)",
+          "cost_credits": 300000,
+          "workshop_level": 5,
+          "requirements": "Workshop L5; 3,000 prestige",
+          "prestige_gate": 3000,
+          "source_text": "Main Nova Caster: Sharpen 1 (−10% cooldown)"
+        },
+        {
+          "step": 2,
+          "operation": "Forge",
+          "weapon": "Nova Caster",
+          "hand": "main",
+          "effect": "1 (+8% damage)",
+          "cost_credits": 400000,
+          "workshop_level": 8,
+          "requirements": "Workshop L8; 15,000 prestige",
+          "prestige_gate": 15000,
+          "source_text": "Main Nova Caster: Forge 1 (+8% damage)"
+        }
+      ],
+      "art_brief": "Anime Gesicht with his human-looking face, short hair, and detective clothing. One mid-range arena weapon; preserve the android's authentic appearance.",
+      "role": "Tactical line shooter",
+      "missing_fields": [],
+      "refinement_total_credits": 700000,
+      "blueprint_origin": "preserved existing design",
+      "minimum_roster_expansion_level": 0,
+      "blueprint_id": "seven-great-robots-workshop:1:gesicht",
+      "folder": "stables/181-seven-great-robots-workshop/robots/01-gesicht",
+      "files": {
+        "png": "stables/181-seven-great-robots-workshop/robots/01-gesicht/portrait.png",
+        "webp": "stables/181-seven-great-robots-workshop/robots/01-gesicht/portrait.webp",
+        "blueprint": "stables/181-seven-great-robots-workshop/robots/01-gesicht/blueprint.json",
+        "profile": "stables/181-seven-great-robots-workshop/robots/01-gesicht/profile.md",
+        "prompt": "stables/181-seven-great-robots-workshop/robots/01-gesicht/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/seven-great-robots-workshop/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 181,
+          "stable_name": "Seven Great Robots Workshop",
+          "catalogue_key": "seven-great-robots-workshop",
+          "slot": 1,
+          "robot_name": "Gesicht",
+          "source_identity": "Gesicht",
+          "source_edition": "PLUTO 2023 anime; Brando dark Pankration combat body, Hercules gold Pankration combat body, Montblanc pale metal with blue overalls; all held weapons/shields are original arena allocations",
+          "source_references": [
+            "https://pluto-anime.com/character",
+            "https://pluto-anime.com/story",
+            "https://x.com/pluto_anime_/status/1713842227225715047"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Gesicht from PLUTO 2023 anime, use attached face/clothing reference. Preserve authentic adult human-looking face, short light brown hair, tan detective suit, pale shirt and blue striped tie, practical dark shoes. Full body holding ONE compact mid-range arena carbine low in his hands. Weapon is an original Armoured Souls equipment allocation; preserve human-looking android construction, no exposed mechanical face or added battle armour.\nMetadata only, do not render text: #181 slot 1 Gesicht.",
+          "referenced_image_paths": [
+            "/tmp/pluto-gesicht.jpg"
+          ],
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-037c4e9f-8b57-4c6a-b5dc-7aac2de51228.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "seven-great-robots-workshop:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/seven-great-robots-workshop/1.webp",
+          "master": "outputs/automaton-portraits/masters/seven-great-robots-workshop/1.png",
+          "output": "app/frontend/public/assets/automatons/seven-great-robots-workshop/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "793de5e09de975afa20277ae87f397ce9358e8bc35d67fa949b64c060bb41893",
+          "bytes": 32068
+        },
+        "sha256": "793de5e09de975afa20277ae87f397ce9358e8bc35d67fa949b64c060bb41893",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 2,
+      "name": "Brando",
+      "source_identity": "Brando",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Bruiser",
+      "range_from_weapons": "melee",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "War Club",
+          "offhand_weapon": null,
+          "list_price_credits": 84000,
+          "source_text": "War Club (₡84,000)"
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Heavy Hammer",
+          "offhand_weapon": null,
+          "list_price_credits": 478000,
+          "source_text": "Heavy Hammer (₡478,000)"
+        }
+      ],
+      "refinement_plan": [
+        {
+          "step": 1,
+          "operation": "Hone",
+          "weapon": "Heavy Hammer",
+          "hand": "main",
+          "effect": "Hydraulic Systems 8→10",
+          "cost_credits": 40000,
+          "workshop_level": 1,
+          "requirements": "Workshop L1",
+          "magnitude": 2,
+          "attribute": "Hydraulic Systems",
+          "base_value": 8,
+          "result_value": 10,
+          "source_text": "Main Heavy Hammer: Hone Hydraulic Systems 8→10"
+        },
+        {
+          "step": 2,
+          "operation": "Augment",
+          "weapon": "Heavy Hammer",
+          "hand": "main",
+          "effect": "Armor Plating +3 (new)",
+          "cost_credits": 180000,
+          "workshop_level": 3,
+          "requirements": "Workshop L3",
+          "magnitude": 3,
+          "attribute": "Armor Plating",
+          "result_value": 3,
+          "source_text": "Main Heavy Hammer: Augment Armor Plating +3 (new)"
+        },
+        {
+          "step": 3,
+          "operation": "Sharpen",
+          "weapon": "Heavy Hammer",
+          "hand": "main",
+          "effect": "1 (−10% cooldown)",
+          "cost_credits": 300000,
+          "workshop_level": 5,
+          "requirements": "Workshop L5; 3,000 prestige",
+          "prestige_gate": 3000,
+          "source_text": "Main Heavy Hammer: Sharpen 1 (−10% cooldown)"
+        },
+        {
+          "step": 4,
+          "operation": "Forge",
+          "weapon": "Heavy Hammer",
+          "hand": "main",
+          "effect": "1 (+8% damage)",
+          "cost_credits": 400000,
+          "workshop_level": 8,
+          "requirements": "Workshop L8; 15,000 prestige",
+          "prestige_gate": 15000,
+          "source_text": "Main Heavy Hammer: Forge 1 (+8% damage)"
+        }
+      ],
+      "art_brief": "Use Brando's dark Pankration combat body rather than his everyday body. Preserve its source mass and mechanical head construction; one two-handed arena melee weapon.",
+      "role": "Close-combat champion",
+      "missing_fields": [],
+      "refinement_total_credits": 920000,
+      "blueprint_origin": "preserved existing design",
+      "minimum_roster_expansion_level": 1,
+      "blueprint_id": "seven-great-robots-workshop:2:brando",
+      "folder": "stables/181-seven-great-robots-workshop/robots/02-brando",
+      "files": {
+        "png": "stables/181-seven-great-robots-workshop/robots/02-brando/portrait.png",
+        "webp": "stables/181-seven-great-robots-workshop/robots/02-brando/portrait.webp",
+        "blueprint": "stables/181-seven-great-robots-workshop/robots/02-brando/blueprint.json",
+        "profile": "stables/181-seven-great-robots-workshop/robots/02-brando/profile.md",
+        "prompt": "stables/181-seven-great-robots-workshop/robots/02-brando/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/seven-great-robots-workshop/2.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 181,
+          "stable_name": "Seven Great Robots Workshop",
+          "catalogue_key": "seven-great-robots-workshop",
+          "slot": 2,
+          "robot_name": "Brando",
+          "source_identity": "Brando, dark Pankration combat body",
+          "source_edition": "PLUTO 2023 anime; Brando dark Pankration combat body, Hercules gold Pankration combat body, Montblanc pale metal with blue overalls; all held weapons/shields are original arena allocations",
+          "source_references": [
+            "https://pluto-anime.com/character",
+            "https://pluto-anime.com/story",
+            "https://x.com/pluto_anime_/status/1713842227225715047"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Brando from PLUTO 2023 in his bulky dark Pankration combat body shown in the attached official episode still, not his red-shirt everyday humanoid form. Preserve massive rounded charcoal armour and short sturdy limbs, source reddish/pink front and head details, authentic combat head construction. Convert the reference pose into a calm full-body three-quarter portrait. Hold ONE broad two-handed arena war club with BOTH hands, club entire length contained. Club is an explicit original arena adaptation. No humans, storm, battle, extra robots or human pilot visible.\nMetadata only, do not render text: #181 slot 2 Brando.",
+          "referenced_image_paths": [
+            "/tmp/armoured-source-stills/PL02-11.png"
+          ],
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-f48d695a-e11c-404c-9bec-fce9dc5e1412.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "seven-great-robots-workshop:2",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/seven-great-robots-workshop/2.webp",
+          "master": "outputs/automaton-portraits/masters/seven-great-robots-workshop/2.png",
+          "output": "app/frontend/public/assets/automatons/seven-great-robots-workshop/2.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "9bbac249bce7f9ff1905f00ef3b1938c3a733d0f51dbe669d05c14ccf69321c6",
+          "bytes": 45950
+        },
+        "sha256": "9bbac249bce7f9ff1905f00ef3b1938c3a733d0f51dbe669d05c14ccf69321c6",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 3,
+      "name": "Hercules",
+      "source_identity": "Hercules",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yield_threshold": 15,
+      "build_focus": "Warden",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": "Light Shield",
+          "list_price_credits": 108000,
+          "source_text": "Laser Pistol + Light Shield (₡108,000)"
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": "Aegis Bulwark",
+          "list_price_credits": 834000,
+          "source_text": "Volt Sabre + Aegis Bulwark (₡834,000)"
+        }
+      ],
+      "refinement_plan": [
+        {
+          "step": 1,
+          "operation": "Hone",
+          "weapon": "Aegis Bulwark",
+          "hand": "offhand",
+          "effect": "Evasion Thrusters −5→0",
+          "cost_credits": 250000,
+          "workshop_level": 1,
+          "requirements": "Workshop L1",
+          "magnitude": 5,
+          "attribute": "Evasion Thrusters",
+          "base_value": -5,
+          "result_value": 0,
+          "source_text": "Offhand Aegis Bulwark: Hone Evasion Thrusters −5→0"
+        },
+        {
+          "step": 2,
+          "operation": "Hone",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "effect": "Combat Power 8→10",
+          "cost_credits": 40000,
+          "workshop_level": 1,
+          "requirements": "Workshop L1",
+          "magnitude": 2,
+          "attribute": "Combat Power",
+          "base_value": 8,
+          "result_value": 10,
+          "source_text": "Main Volt Sabre: Hone Combat Power 8→10"
+        },
+        {
+          "step": 3,
+          "operation": "Augment",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "effect": "Adaptive AI +3 (new)",
+          "cost_credits": 180000,
+          "workshop_level": 3,
+          "requirements": "Workshop L3",
+          "magnitude": 3,
+          "attribute": "Adaptive AI",
+          "result_value": 3,
+          "source_text": "Main Volt Sabre: Augment Adaptive AI +3 (new)"
+        },
+        {
+          "step": 4,
+          "operation": "Sharpen",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "effect": "1 (−10% cooldown)",
+          "cost_credits": 300000,
+          "workshop_level": 5,
+          "requirements": "Workshop L5; 3,000 prestige",
+          "prestige_gate": 3000,
+          "source_text": "Main Volt Sabre: Sharpen 1 (−10% cooldown)"
+        },
+        {
+          "step": 5,
+          "operation": "Forge",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "effect": "1 (+8% damage)",
+          "cost_credits": 400000,
+          "workshop_level": 8,
+          "requirements": "Workshop L8; 15,000 prestige",
+          "prestige_gate": 15000,
+          "source_text": "Main Volt Sabre: Forge 1 (+8% damage)"
+        }
+      ],
+      "art_brief": "Use Hercules's gold Pankration combat body and helmet head. One short-range arena weapon and one shield allocation; retain his distinction from Brando.",
+      "role": "Protected champion",
+      "missing_fields": [],
+      "refinement_total_credits": 1170000,
+      "blueprint_origin": "preserved existing design",
+      "minimum_roster_expansion_level": 2,
+      "blueprint_id": "seven-great-robots-workshop:3:hercules",
+      "folder": "stables/181-seven-great-robots-workshop/robots/03-hercules",
+      "files": {
+        "png": "stables/181-seven-great-robots-workshop/robots/03-hercules/portrait.png",
+        "webp": "stables/181-seven-great-robots-workshop/robots/03-hercules/portrait.webp",
+        "blueprint": "stables/181-seven-great-robots-workshop/robots/03-hercules/blueprint.json",
+        "profile": "stables/181-seven-great-robots-workshop/robots/03-hercules/profile.md",
+        "prompt": "stables/181-seven-great-robots-workshop/robots/03-hercules/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/seven-great-robots-workshop/3.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 181,
+          "stable_name": "Seven Great Robots Workshop",
+          "catalogue_key": "seven-great-robots-workshop",
+          "slot": 3,
+          "robot_name": "Hercules",
+          "source_identity": "Hercules, gold Pankration combat body",
+          "source_edition": "PLUTO 2023 anime; Brando dark Pankration combat body, Hercules gold Pankration combat body, Montblanc pale metal with blue overalls; all held weapons/shields are original arena allocations",
+          "source_references": [
+            "https://pluto-anime.com/character",
+            "https://pluto-anime.com/story",
+            "https://x.com/pluto_anime_/status/1713842227225715047"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Hercules from PLUTO 2023, use attached official gold Pankration robot as construction reference: pale gold muscular rounded breastplates and segmented abdominal plates, authentic small helmet-like head with red visor optics and swept crest, curved source shoulder tips, gold limbs. Full standing body and feet in frame. Hold ONE small arena sidearm in right hand and ONE light shield on left forearm; these are original arena equipment allocations. No human everyday head or green T-shirt. Preserve source robot anatomy, remove all poster text.\nMetadata only, do not render text: #181 slot 3 Hercules.",
+          "referenced_image_paths": [
+            "/tmp/pluto-hercules-combat.jpg"
+          ],
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-c1c1fd9c-1488-42cf-9575-6ffac0ca076d.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "seven-great-robots-workshop:3",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/seven-great-robots-workshop/3.webp",
+          "master": "outputs/automaton-portraits/masters/seven-great-robots-workshop/3.png",
+          "output": "app/frontend/public/assets/automatons/seven-great-robots-workshop/3.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "da0e2f13cc52860c053c1f48f363d01e2a108c8b43335ef32697065341dc3056",
+          "bytes": 49760
+        },
+        "sha256": "da0e2f13cc52860c053c1f48f363d01e2a108c8b43335ef32697065341dc3056",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 4,
+      "name": "Montblanc",
+      "source_identity": "Montblanc",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "balanced",
+      "yield_threshold": 20,
+      "build_focus": "Bruiser",
+      "range_from_weapons": "mid",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Training Rifle",
+          "offhand_weapon": null,
+          "list_price_credits": 50000,
+          "source_text": "Training Rifle (₡50,000)"
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Plasma Cannon",
+          "offhand_weapon": null,
+          "list_price_credits": 408000,
+          "source_text": "Plasma Cannon (₡408,000)"
+        }
+      ],
+      "refinement_plan": [
+        {
+          "step": 1,
+          "operation": "Hone",
+          "weapon": "Plasma Cannon",
+          "hand": "main",
+          "effect": "Combat Power 7→10",
+          "cost_credits": 90000,
+          "workshop_level": 1,
+          "requirements": "Workshop L1",
+          "magnitude": 3,
+          "attribute": "Combat Power",
+          "base_value": 7,
+          "result_value": 10,
+          "source_text": "Main Plasma Cannon: Hone Combat Power 7→10"
+        },
+        {
+          "step": 2,
+          "operation": "Hone",
+          "weapon": "Plasma Cannon",
+          "hand": "main",
+          "effect": "Critical Systems 6→10",
+          "cost_credits": 160000,
+          "workshop_level": 1,
+          "requirements": "Workshop L1",
+          "magnitude": 4,
+          "attribute": "Critical Systems",
+          "base_value": 6,
+          "result_value": 10,
+          "source_text": "Main Plasma Cannon: Hone Critical Systems 6→10"
+        },
+        {
+          "step": 3,
+          "operation": "Augment",
+          "weapon": "Plasma Cannon",
+          "hand": "main",
+          "effect": "Hull Integrity +3 (new)",
+          "cost_credits": 180000,
+          "workshop_level": 3,
+          "requirements": "Workshop L3",
+          "magnitude": 3,
+          "attribute": "Hull Integrity",
+          "result_value": 3,
+          "source_text": "Main Plasma Cannon: Augment Hull Integrity +3 (new)"
+        },
+        {
+          "step": 4,
+          "operation": "Sharpen",
+          "weapon": "Plasma Cannon",
+          "hand": "main",
+          "effect": "1 (−10% cooldown)",
+          "cost_credits": 300000,
+          "workshop_level": 5,
+          "requirements": "Workshop L5; 3,000 prestige",
+          "prestige_gate": 3000,
+          "source_text": "Main Plasma Cannon: Sharpen 1 (−10% cooldown)"
+        },
+        {
+          "step": 5,
+          "operation": "Forge",
+          "weapon": "Plasma Cannon",
+          "hand": "main",
+          "effect": "1 (+8% damage)",
+          "cost_credits": 400000,
+          "workshop_level": 8,
+          "requirements": "Workshop L8; 15,000 prestige",
+          "prestige_gate": 15000,
+          "source_text": "Main Plasma Cannon: Forge 1 (+8% damage)"
+        }
+      ],
+      "art_brief": "Preserve Montblanc's large pale cream-metal industrial body, blue overalls, and recognizable head. One heavy mid-range arena weapon; keep the full machine readable.",
+      "role": "Durable line shooter",
+      "missing_fields": [],
+      "refinement_total_credits": 1130000,
+      "blueprint_origin": "preserved existing design",
+      "minimum_roster_expansion_level": 3,
+      "blueprint_id": "seven-great-robots-workshop:4:montblanc",
+      "folder": "stables/181-seven-great-robots-workshop/robots/04-montblanc",
+      "files": {
+        "png": "stables/181-seven-great-robots-workshop/robots/04-montblanc/portrait.png",
+        "webp": "stables/181-seven-great-robots-workshop/robots/04-montblanc/portrait.webp",
+        "blueprint": "stables/181-seven-great-robots-workshop/robots/04-montblanc/blueprint.json",
+        "profile": "stables/181-seven-great-robots-workshop/robots/04-montblanc/profile.md",
+        "prompt": "stables/181-seven-great-robots-workshop/robots/04-montblanc/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/seven-great-robots-workshop/4.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 181,
+          "stable_name": "Seven Great Robots Workshop",
+          "catalogue_key": "seven-great-robots-workshop",
+          "slot": 4,
+          "robot_name": "Montblanc",
+          "source_identity": "Montblanc, anime industrial body",
+          "source_edition": "PLUTO 2023 anime; Brando dark Pankration combat body, Hercules gold Pankration combat body, Montblanc pale metal with blue overalls; all held weapons/shields are original arena allocations",
+          "source_references": [
+            "https://pluto-anime.com/character",
+            "https://pluto-anime.com/story",
+            "https://x.com/pluto_anime_/status/1713842227225715047"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Montblanc from PLUTO 2023, use attached official reference: large PALE CREAM/BEIGE metal industrial robot with rounded head, two circular greenish eyes, vent-like smiling mouth, broad rounded shoulders and large arms, BLUE work overalls with shoulder straps. Correct the earlier green-body planning error; do not paint this anime body green. Full robot and broad feet in frame, ONE heavy mid-range arena rifle held with BOTH hands at waist height, original arena equipment. No birds or people.\nMetadata only, do not render text: #181 slot 4 Montblanc.",
+          "referenced_image_paths": [
+            "/tmp/pluto-mont_blanc.jpg"
+          ],
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-bb8eaced-1c0e-4686-a79b-533167718970.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "seven-great-robots-workshop:4",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/seven-great-robots-workshop/4.webp",
+          "master": "outputs/automaton-portraits/masters/seven-great-robots-workshop/4.png",
+          "output": "app/frontend/public/assets/automatons/seven-great-robots-workshop/4.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "937c5c4c45600420ad362485ce26e2236026ea2b6160d650c3c90e535f7c5912",
+          "bytes": 53944
+        },
+        "sha256": "937c5c4c45600420ad362485ce26e2236026ea2b6160d650c3c90e535f7c5912",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 5,
+      "name": "North No.2",
+      "source_identity": "North #2",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "balanced",
+      "yield_threshold": 20,
+      "build_focus": "Deadeye",
+      "range_from_weapons": "long",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Training Beam",
+          "offhand_weapon": null,
+          "list_price_credits": 50000,
+          "source_text": "Training Beam (₡50,000)"
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Ion Beam",
+          "offhand_weapon": null,
+          "list_price_credits": 544000,
+          "source_text": "Ion Beam (₡544,000)"
+        }
+      ],
+      "refinement_plan": [
+        {
+          "step": 1,
+          "operation": "Sharpen",
+          "weapon": "Ion Beam",
+          "hand": "main",
+          "effect": "1 (−10% cooldown)",
+          "cost_credits": 300000,
+          "workshop_level": 5,
+          "requirements": "Workshop L5; 3,000 prestige",
+          "prestige_gate": 3000,
+          "source_text": "Main Ion Beam: Sharpen 1 (−10% cooldown)"
+        },
+        {
+          "step": 2,
+          "operation": "Forge",
+          "weapon": "Ion Beam",
+          "hand": "main",
+          "effect": "1 (+8% damage)",
+          "cost_credits": 400000,
+          "workshop_level": 8,
+          "requirements": "Workshop L8; 15,000 prestige",
+          "prestige_gate": 15000,
+          "source_text": "Main Ion Beam: Forge 1 (+8% damage)"
+        }
+      ],
+      "art_brief": "Use North #2's anime six-armed, legless hovering mechanical body and hooded cloak. One long-range two-handed weapon allocation; remaining arms are passive and create no extra equipment slots.",
+      "role": "Heavy precision support",
+      "missing_fields": [],
+      "refinement_total_credits": 700000,
+      "blueprint_origin": "preserved existing design",
+      "minimum_roster_expansion_level": 4,
+      "blueprint_id": "seven-great-robots-workshop:5:north-no-2",
+      "folder": "stables/181-seven-great-robots-workshop/robots/05-north-no-2",
+      "files": {
+        "png": "stables/181-seven-great-robots-workshop/robots/05-north-no-2/portrait.png",
+        "webp": "stables/181-seven-great-robots-workshop/robots/05-north-no-2/portrait.webp",
+        "blueprint": "stables/181-seven-great-robots-workshop/robots/05-north-no-2/blueprint.json",
+        "profile": "stables/181-seven-great-robots-workshop/robots/05-north-no-2/profile.md",
+        "prompt": "stables/181-seven-great-robots-workshop/robots/05-north-no-2/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/seven-great-robots-workshop/5.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 181,
+          "stable_name": "Seven Great Robots Workshop",
+          "catalogue_key": "seven-great-robots-workshop",
+          "slot": 5,
+          "robot_name": "North No.2",
+          "source_identity": "North #2, six-armed hovering mechanical body",
+          "source_edition": "PLUTO 2023 anime; Brando dark Pankration combat body, Hercules gold Pankration combat body, Montblanc pale metal with blue overalls; all held weapons/shields are original arena allocations",
+          "source_references": [
+            "https://pluto-anime.com/character",
+            "https://pluto-anime.com/story",
+            "https://x.com/pluto_anime_/status/1713842227225715047"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: North No.2 from PLUTO 2023, attached references define authentic grey helmet-like head with broad dark-red central head marking, covered eyes and human-like mouth, tall black/navy cloak and body. Open cloak enough to show SIX mechanical arms attached in three pairs; two hold ONE long-range two-handed arena beam rifle and the other four remain passive near the sides. Preserve legless source hovering propulsion lower body, no invented walking legs or feet. Entire connected chassis, cloak hem and all arms/gun within frame. One weapon only, original arena allocation; not the different Atom: The Beginning design.\nMetadata only, do not render text: #181 slot 5 North No.2.",
+          "referenced_image_paths": [
+            "/tmp/pluto-north_no2.jpg",
+            "/tmp/armoured-source-stills/PL01-08.png"
+          ],
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-973e4ef2-d744-4e91-a141-275d8396ac7c.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "seven-great-robots-workshop:5",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/seven-great-robots-workshop/5.webp",
+          "master": "outputs/automaton-portraits/masters/seven-great-robots-workshop/5.png",
+          "output": "app/frontend/public/assets/automatons/seven-great-robots-workshop/5.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "9c1545f2de25c4896266a1ef321bae89f70374a38156d1b158296fa90a3a1206",
+          "bytes": 36730
+        },
+        "sha256": "9c1545f2de25c4896266a1ef321bae89f70374a38156d1b158296fa90a3a1206",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 6,
+      "name": "Epsilon",
+      "source_identity": "Epsilon",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yield_threshold": 40,
+      "build_focus": "Tactician",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": "Light Shield",
+          "list_price_credits": 108000,
+          "source_text": "Laser Pistol + Light Shield (₡108,000)"
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": "Aegis Bulwark",
+          "list_price_credits": 834000,
+          "source_text": "Volt Sabre + Aegis Bulwark (₡834,000)"
+        }
+      ],
+      "refinement_plan": [
+        {
+          "step": 1,
+          "operation": "Hone",
+          "weapon": "Aegis Bulwark",
+          "hand": "offhand",
+          "effect": "Evasion Thrusters −5→0",
+          "cost_credits": 250000,
+          "workshop_level": 1,
+          "requirements": "Workshop L1",
+          "magnitude": 5,
+          "attribute": "Evasion Thrusters",
+          "base_value": -5,
+          "result_value": 0,
+          "source_text": "Offhand Aegis Bulwark: Hone Evasion Thrusters −5→0"
+        },
+        {
+          "step": 2,
+          "operation": "Hone",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "effect": "Combat Power 8→10",
+          "cost_credits": 40000,
+          "workshop_level": 1,
+          "requirements": "Workshop L1",
+          "magnitude": 2,
+          "attribute": "Combat Power",
+          "base_value": 8,
+          "result_value": 10,
+          "source_text": "Main Volt Sabre: Hone Combat Power 8→10"
+        },
+        {
+          "step": 3,
+          "operation": "Augment",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "effect": "Adaptive AI +3 (new)",
+          "cost_credits": 180000,
+          "workshop_level": 3,
+          "requirements": "Workshop L3",
+          "magnitude": 3,
+          "attribute": "Adaptive AI",
+          "result_value": 3,
+          "source_text": "Main Volt Sabre: Augment Adaptive AI +3 (new)"
+        },
+        {
+          "step": 4,
+          "operation": "Sharpen",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "effect": "1 (−10% cooldown)",
+          "cost_credits": 300000,
+          "workshop_level": 5,
+          "requirements": "Workshop L5; 3,000 prestige",
+          "prestige_gate": 3000,
+          "source_text": "Main Volt Sabre: Sharpen 1 (−10% cooldown)"
+        },
+        {
+          "step": 5,
+          "operation": "Forge",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "effect": "1 (+8% damage)",
+          "cost_credits": 400000,
+          "workshop_level": 8,
+          "requirements": "Workshop L8; 15,000 prestige",
+          "prestige_gate": 15000,
+          "source_text": "Main Volt Sabre: Forge 1 (+8% damage)"
+        }
+      ],
+      "art_brief": "Preserve Epsilon's human-looking face, long platinum-blond/silver hair, and black anime clothing. Shield and sidearm are arena adaptations of a pacifist character, with no healing or solar-power mechanic.",
+      "role": "Protective anchor",
+      "missing_fields": [],
+      "refinement_total_credits": 1170000,
+      "blueprint_origin": "preserved existing design",
+      "minimum_roster_expansion_level": 5,
+      "blueprint_id": "seven-great-robots-workshop:6:epsilon",
+      "folder": "stables/181-seven-great-robots-workshop/robots/06-epsilon",
+      "files": {
+        "png": "stables/181-seven-great-robots-workshop/robots/06-epsilon/portrait.png",
+        "webp": "stables/181-seven-great-robots-workshop/robots/06-epsilon/portrait.webp",
+        "blueprint": "stables/181-seven-great-robots-workshop/robots/06-epsilon/blueprint.json",
+        "profile": "stables/181-seven-great-robots-workshop/robots/06-epsilon/profile.md",
+        "prompt": "stables/181-seven-great-robots-workshop/robots/06-epsilon/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/seven-great-robots-workshop/6.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 181,
+          "stable_name": "Seven Great Robots Workshop",
+          "catalogue_key": "seven-great-robots-workshop",
+          "slot": 6,
+          "robot_name": "Epsilon",
+          "source_identity": "Epsilon",
+          "source_edition": "PLUTO 2023 anime; Brando dark Pankration combat body, Hercules gold Pankration combat body, Montblanc pale metal with blue overalls; all held weapons/shields are original arena allocations",
+          "source_references": [
+            "https://pluto-anime.com/character",
+            "https://pluto-anime.com/story",
+            "https://x.com/pluto_anime_/status/1713842227225715047"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Epsilon from PLUTO 2023, attached official appearance: authentic adult human-looking male face with long straight platinum-blond/silver hair, black high-collared fitted source clothing and simple dark shoes. Gentle composed full-body posture. Carry ONE small laser-style arena sidearm pointed down and ONE light defensive shield. Those two items are explicit Armoured Souls adaptation of a pacifist character. Preserve source face/hair/clothing, no metallic face or bulky soldier armour.\nMetadata only, do not render text: #181 slot 6 Epsilon.",
+          "referenced_image_paths": [
+            "/tmp/armoured-source-stills/PL03-06.png"
+          ],
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-4c476bd7-8395-438a-9782-da3b2ffdb16a.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "seven-great-robots-workshop:6",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/seven-great-robots-workshop/6.webp",
+          "master": "outputs/automaton-portraits/masters/seven-great-robots-workshop/6.png",
+          "output": "app/frontend/public/assets/automatons/seven-great-robots-workshop/6.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "7b13c43805327ddd5f676687a3f445ac071666af0deecb0a9f9e16450989c431",
+          "bytes": 27996
+        },
+        "sha256": "7b13c43805327ddd5f676687a3f445ac071666af0deecb0a9f9e16450989c431",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "alternatives": [],
+  "blueprint_status": "detailed",
+  "source_notes": "\n**Franchise:** PLUTO - 2023 anime adaptation  \n**Strategy:** Squadron · **Target roster:** 6 robots  \n**Opening:** 3 robots · **Hard cap:** 6 robots  \n**Catalogue key:** `seven-great-robots-workshop`\n\n**Proposed robots:** Gesicht; Brando; Hercules; Montblanc; North No.2; Epsilon.\n\n**Source edition:** 2023 anime appearances: Gesicht, Brando, Hercules, Montblanc, North No.2, and Epsilon. Use Brando and Hercules in their established combat bodies; the other four retain their recognizable anime bodies.\n\n**Naming:** All six are source characters. North No.2 is the valid arena spelling for source North #2. The stable name references the source group; the roster contains six, with Atom excluded to avoid repeating the earlier Astro Boy identity.\n\n**Backstory:** A detective, two arena veterans, and three very different guardians enter a new competition. Six individuals share a workshop, but every body, temperament, and assignment remains distinct.\n\n**Purchasing personality:** Montblanc joins Hercules to complete the second pair. North No.2 and Epsilon complete the final pair and second trio. Epsilon receives protective equipment and a high yield threshold as an explicit arena adaptation.\n\n**Robot blueprints**\n\n| Slot | Arena robot name | Source identity | Joins | Arena role | Loadout | Stance / yield | Build_Focus |\n|---|---|---|---|---|---|---|---|\n| 1 | **Gesicht** | Gesicht | Opening | Tactical line shooter | `single` | balanced / 20% | Tactician |\n| 2 | **Brando** | Brando | Opening | Close-combat champion | `two_handed` | offensive / 10% | Bruiser |\n| 3 | **Hercules** | Hercules | Opening | Protected champion | `weapon_shield` | defensive / 15% | Warden |\n| 4 | **Montblanc** | Montblanc | Growth #1 | Durable line shooter | `two_handed` | balanced / 20% | Bruiser |\n| 5 | **North No.2** | North #2 | Growth #2 | Heavy precision support | `two_handed` | balanced / 20% | Deadeye |\n| 6 | **Epsilon** | Epsilon | Growth #3 | Protective anchor | `weapon_shield` | defensive / 40% | Tactician |\n\n**Weapon paths** — stage 0 on recruitment, then stage 1. Prices are combined list-price equipment subtotals, not total robot or stable purchase costs.\n\n| Slot | Range from weapons | Stage 0 | Stage 1 |\n|---|---|---|---|\n| 1 | mid | Bolt Carbine (₡93,000) | Nova Caster (₡425,000) |\n| 2 | melee | War Club (₡84,000) | Heavy Hammer (₡478,000) |\n| 3 | short | Laser Pistol + Light Shield (₡108,000) | Volt Sabre + Aegis Bulwark (₡834,000) |\n| 4 | mid | Training Rifle (₡50,000) | Plasma Cannon (₡408,000) |\n| 5 | long | Training Beam (₡50,000) | Ion Beam (₡544,000) |\n| 6 | short | Laser Pistol + Light Shield (₡108,000) | Volt Sabre + Aegis Bulwark (₡834,000) |\n\n**Equipment planning totals:** opening trio ₡285,000; recruits 4–6 at stage 0 ₡208,000; all six at stage 1 ₡3,523,000; 8 equipped weapon/shield items at the six-robot target. The stage-0 equipment component of the slot-5-and-6 recruitment reserve is ₡158,000, plus both robot frames, required facilities, and maintenance reserve.\n\n**Refinement plans — after all six robots reach stage 1**\n\nExecute each row from left to right. Costs and workshop gates for every operation are in the [shared refinement rules](#squadron-refinement-rules). Main/offhand targets are explicit; all six robots have a non-empty plan.\n\n| Slot | Robot | Ordered refinement steps | Refinement subtotal |\n|---|---|---|---:|\n| 1 | **Gesicht** | Main Nova Caster: Sharpen 1 (−10% cooldown) → Main Nova Caster: Forge 1 (+8% damage) | ₡700,000 |\n| 2 | **Brando** | Main Heavy Hammer: Hone Hydraulic Systems 8→10 → Main Heavy Hammer: Augment Armor Plating +3 (new) → Main Heavy Hammer: Sharpen 1 (−10% cooldown) → Main Heavy Hammer: Forge 1 (+8% damage) | ₡920,000 |\n| 3 | **Hercules** | Offhand Aegis Bulwark: Hone Evasion Thrusters −5→0 → Main Volt Sabre: Hone Combat Power 8→10 → Main Volt Sabre: Augment Adaptive AI +3 (new) → Main Volt Sabre: Sharpen 1 (−10% cooldown) → Main Volt Sabre: Forge 1 (+8% damage) | ₡1,170,000 |\n| 4 | **Montblanc** | Main Plasma Cannon: Hone Combat Power 7→10 → Main Plasma Cannon: Hone Critical Systems 6→10 → Main Plasma Cannon: Augment Hull Integrity +3 (new) → Main Plasma Cannon: Sharpen 1 (−10% cooldown) → Main Plasma Cannon: Forge 1 (+8% damage) | ₡1,130,000 |\n| 5 | **North No.2** | Main Ion Beam: Sharpen 1 (−10% cooldown) → Main Ion Beam: Forge 1 (+8% damage) | ₡700,000 |\n| 6 | **Epsilon** | Offhand Aegis Bulwark: Hone Evasion Thrusters −5→0 → Main Volt Sabre: Hone Combat Power 8→10 → Main Volt Sabre: Augment Adaptive AI +3 (new) → Main Volt Sabre: Sharpen 1 (−10% cooldown) → Main Volt Sabre: Forge 1 (+8% damage) | ₡1,170,000 |\n\n**Refinement budget:** ₡5,790,000 across six robots. Final stage-1 equipment plus refinement totals ₡9,313,000; stage-0 purchases and facility, frame, training, and maintenance costs are additional.\n\n**Portrait blueprints** — show one complete body using the shared art direction. Signature features identify the source; every active weapon or shield must map to the equipment allocations above.\n\n| Slot | Portrait and equipment brief |\n|---|---|\n| 1 | Anime Gesicht with his human-looking face, short hair, and detective clothing. One mid-range arena weapon; preserve the android's authentic appearance. |\n| 2 | Use Brando's dark Pankration combat body rather than his everyday body. Preserve its source mass and mechanical head construction; one two-handed arena melee weapon. |\n| 3 | Use Hercules's gold Pankration combat body and helmet head. One short-range arena weapon and one shield allocation; retain his distinction from Brando. |\n| 4 | Preserve Montblanc's large pale cream-metal industrial body, blue overalls, and recognizable head. One heavy mid-range arena weapon; keep the full machine readable. |\n| 5 | Use North #2's anime six-armed, legless hovering mechanical body and hooded cloak. One long-range two-handed weapon allocation; remaining arms are passive and create no extra equipment slots. |\n| 6 | Preserve Epsilon's human-looking face, long platinum-blond/silver hair, and black anime clothing. Shield and sidearm are arena adaptations of a pacifist character, with no healing or solar-power mechanic. |\n\n**Named teams and fixed membership** — all names are original Armoured Souls team labels.\n\n| Format | Team name | Fixed members | Forms |\n|---|---|---|---|\n| 2v2 | **Detective and Champion** | 1 Gesicht + 2 Brando | Opening trio |\n| 2v2 | **Mountain Guard** | 3 Hercules + 4 Montblanc | When slot 4 joins |\n| 2v2 | **Sun and Steel** | 5 North No.2 + 6 Epsilon | When slot 6 joins |\n| 3v3 | **Europol Vanguard** | 1 Gesicht + 2 Brando + 3 Hercules | Opening trio |\n| 3v3 | **Quiet Guardians** | 4 Montblanc + 5 North No.2 + 6 Epsilon | When slot 6 joins |\n\n**Shared parameters:** apply the Squadron recruitment, fixed-team, event-order, budget, tuning, refinement, and image rules below. Slots 1–3 open together; buy 4, then 5, then 6. No reserve slots or substitution alternatives are included.\n\nReferences: [official anime identities and cast](https://media.netflix.com/en/only-on-netflix/81281344), [official anime production background](https://about.netflix.com/en/news/emotionally-charged-trailer-offers-a-thrilling-glimpse-into-the-pluto-anime).\n\n",
+  "source_documents": [
+    "reference/AUTOMATON_STABLE_EXPANSION.md"
+  ],
+  "blueprint_origin": "preserved existing design",
+  "purchasing_plan": "Open with slots 1–3. Recruit slot 4, then fund the complete slot-5/slot-6 pair before buying 5 followed by 6. Finish all six final loadouts before refinement. Invest in slot order 1,4,2,5,3,6, with Hone, Augment, first Sharpen and first Forge passes through Workshop L1, L3, L5 and L8. Keep funding and prestige-gated steps pending.",
+  "equipment_budget": {
+    "stage_0_credits": 493000,
+    "stage_1_credits": 3523000,
+    "refinement_credits": 5790000,
+    "excludes": "Frames, facilities, training, upkeep, repair costs, discounts and resale. Alternatives excluded."
+  },
+  "folder": "stables/181-seven-great-robots-workshop",
+  "history_image_count": 0
+}

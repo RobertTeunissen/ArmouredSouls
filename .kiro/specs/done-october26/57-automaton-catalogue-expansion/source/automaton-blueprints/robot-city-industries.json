@@ -1,0 +1,196 @@
+{
+  "number": 21,
+  "catalogueKey": "robot-city-industries",
+  "stableName": "Robot City Industries",
+  "franchiseLabel": "Robots",
+  "strategy": "Tycoon",
+  "fit": "Adapt",
+  "conceptIdentity": "Facility-led growth and a modest fighting roster. Rivets, repaired panels, copper and steel; translate the comedy into convincing industrial materials.",
+  "backstory": "Robot City Industries enters the arena with a clear doctrine. Facility-led growth and a modest fighting roster. Every surviving machine returns to the workshop before the next booking.",
+  "openingRobots": 2,
+  "targetRobots": 3,
+  "adminMaximumRobots": 3,
+  "targetOverrides": {
+    "robots": 3
+  },
+  "teamNames": {
+    "2v2": [
+      {
+        "name": "Robot City Pair 01",
+        "slots": [
+          1,
+          2
+        ]
+      }
+    ],
+    "3v3": [
+      {
+        "name": "Robot City Squad 01",
+        "slots": [
+          1,
+          2,
+          3
+        ]
+      }
+    ]
+  },
+  "eventOrder": [
+    "koth",
+    "grand_melee",
+    "league_1v1",
+    "league_2v2",
+    "tag_team",
+    "tournament_1v1",
+    "tournament_2v2",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "robots": [
+    {
+      "blueprintId": "robot-city-industries:1:rodney-copperbottom",
+      "slot": 1,
+      "name": "Rodney Copperbottom",
+      "sourceAlias": "Rodney Copperbottom",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 25,
+      "buildFocus": "Tactician",
+      "weaponPath": [
+        {
+          "mainWeapon": "Laser Pistol",
+          "offhandWeapon": null,
+          "listPriceCredits": 57000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Blue riveted inventor robot with repaired panels and practical mechanical hands.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 0,
+        "imageConvention": "app/frontend/public/assets/automatons/robot-city-industries/1.webp"
+      }
+    },
+    {
+      "blueprintId": "robot-city-industries:2:fender",
+      "slot": 2,
+      "name": "Fender",
+      "sourceAlias": "Fender",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "dual_wield",
+      "stance": "offensive",
+      "yieldThreshold": 30,
+      "buildFocus": "Sprinter",
+      "weaponPath": [
+        {
+          "mainWeapon": "Combat Knife",
+          "offhandWeapon": "Combat Knife",
+          "listPriceCredits": 186000
+        },
+        {
+          "mainWeapon": "Vibro Mace",
+          "offhandWeapon": "Vibro Mace",
+          "listPriceCredits": 850000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "melee",
+        "artBrief": "Red gangly robot with exposed joints, mismatched parts and a narrow face.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 1,
+        "imageConvention": "app/frontend/public/assets/automatons/robot-city-industries/2.webp"
+      }
+    },
+    {
+      "blueprintId": "robot-city-industries:3:bigweld",
+      "slot": 3,
+      "name": "Bigweld",
+      "sourceAlias": "Bigweld",
+      "nameBasis": "Source character or machine designation",
+      "availability": "growth",
+      "loadout": "two_handed",
+      "stance": "defensive",
+      "yieldThreshold": 20,
+      "buildFocus": "Warden",
+      "weaponPath": [
+        {
+          "mainWeapon": "War Club",
+          "offhandWeapon": null,
+          "listPriceCredits": 84000
+        },
+        {
+          "mainWeapon": "Heavy Hammer",
+          "offhandWeapon": null,
+          "listPriceCredits": 478000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "melee",
+        "artBrief": "Large spherical silver robot with a rounded head and broad mechanical body.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 2,
+        "imageConvention": "app/frontend/public/assets/automatons/robot-city-industries/3.webp"
+      }
+    }
+  ],
+  "alternativeBlueprints": [
+    {
+      "blueprintId": "robot-city-industries:alternative:3:phineas-ratchet",
+      "slot": 3,
+      "name": "Phineas Ratchet",
+      "sourceAlias": "Ratchet",
+      "nameBasis": "Source character or machine designation",
+      "availability": "alternative",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 30,
+      "buildFocus": "Deadeye",
+      "weaponPath": [
+        {
+          "mainWeapon": "Beam Pistol",
+          "offhandWeapon": null,
+          "listPriceCredits": 93000
+        },
+        {
+          "mainWeapon": "Particle Lance",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "long",
+        "artBrief": "Polished corporate villain robot with a narrow metallic face and immaculate panels.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 2,
+        "imageConvention": "app/frontend/public/assets/automatons/robot-city-industries/3.webp"
+      }
+    }
+  ],
+  "review": {
+    "openingWeaponCredits": 243000,
+    "finalWeaponCreditsAtTarget": 1753000,
+    "equippedWeaponCountAtTarget": 4,
+    "purchaseOrder": [
+      1,
+      2,
+      3
+    ],
+    "reserveSlots": [],
+    "alternativeRule": "Choose an alternative before catalogue approval; it replaces the specified slot and never adds another live robot."
+  }
+}

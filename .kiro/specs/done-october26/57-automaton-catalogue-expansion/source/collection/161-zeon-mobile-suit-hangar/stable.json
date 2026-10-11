@@ -1,0 +1,342 @@
+{
+  "number": 161,
+  "catalogue_key": "zeon-mobile-suit-hangar",
+  "name": "Zeon Mobile Suit Hangar",
+  "franchise": "Gundam",
+  "strategy": "Trio",
+  "opening_robots": 3,
+  "target_robots": 3,
+  "max_planned_robots": 3,
+  "strategy_review_limit": 4,
+  "backstory": "Three military chassis divide practical fire, close pressure and heavy assault. The hangar stocks distinct equipment while upgrading the full trio through the same spending rules.",
+  "strategy_personality": "A Zeon Trio is one of the best same-franchise additions because it changes silhouette language as well as faction. More distinctive than adding several near-identical white Gundams. Exact model editions and individual builds remain to be selected.",
+  "teams": {
+    "2v2": [
+      {
+        "name": "Zeon Hangar Pair 01",
+        "slots": [
+          1,
+          2
+        ],
+        "forms": "Opening"
+      }
+    ],
+    "3v3": [
+      {
+        "name": "Zeon Hangar Squad 01",
+        "slots": [
+          1,
+          2,
+          3
+        ],
+        "forms": "Opening"
+      }
+    ]
+  },
+  "event_order": [
+    "league_3v3",
+    "tournament_3v3",
+    "league_2v2",
+    "tag_team",
+    "league_1v1",
+    "koth",
+    "grand_melee",
+    "tournament_2v2",
+    "tournament_1v1"
+  ],
+  "robots": [
+    {
+      "slot": 1,
+      "name": "MS-06F Zaku II",
+      "source_identity": "MS-06F Zaku II",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 15,
+      "build_focus": "Tactician",
+      "range_from_weapons": "mid",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Bolt Carbine",
+          "offhand_weapon": null,
+          "list_price_credits": 93000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Nova Caster",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic standard green MS-06F Zaku II from 1979 Mobile Suit Gundam. Rounded mono-eye helmet with black horizontal visor and single pink eye, green power hoses around muzzle/waist, left spiked shoulder and right rectangular shield, olive/dark-green bulky armour, thick boots. Source Zaku machine gun held low with both hands. No Char colours, no commander fin, no later variants.\nMetadata only, do not render text: #161 slot 1 MS-06F Zaku II.",
+      "role": "Measured mid-range fighter",
+      "missing_fields": [],
+      "refinement_note": "Trio follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "MS-06F Zaku II fills the measured mid-range fighter role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Tactician tuning supports the mid equipment role; balanced stance and a 15% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Trio strategy tuning rules with the Tactician Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "zeon-mobile-suit-hangar:1:ms-06f-zaku-ii",
+      "folder": "stables/161-zeon-mobile-suit-hangar/robots/01-ms-06f-zaku-ii",
+      "files": {
+        "png": "stables/161-zeon-mobile-suit-hangar/robots/01-ms-06f-zaku-ii/portrait.png",
+        "webp": "stables/161-zeon-mobile-suit-hangar/robots/01-ms-06f-zaku-ii/portrait.webp",
+        "blueprint": "stables/161-zeon-mobile-suit-hangar/robots/01-ms-06f-zaku-ii/blueprint.json",
+        "profile": "stables/161-zeon-mobile-suit-hangar/robots/01-ms-06f-zaku-ii/profile.md",
+        "prompt": "stables/161-zeon-mobile-suit-hangar/robots/01-ms-06f-zaku-ii/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/zeon-mobile-suit-hangar/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 161,
+          "stable_name": "Zeon Mobile Suit Hangar",
+          "catalogue_key": "zeon-mobile-suit-hangar",
+          "slot": 1,
+          "robot_name": "MS-06F Zaku II",
+          "source_identity": "MS-06F Zaku II",
+          "source_edition": "Mobile Suit Gundam — 1979 MS-06F Zaku II, MS-07B Gouf and MS-09 Dom",
+          "source_references": [
+            "https://satellite.bandai-hobby.net/For_Oversea_Customer/images/pdf/GNC_web_2023.pdf"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic standard green MS-06F Zaku II from 1979 Mobile Suit Gundam. Rounded mono-eye helmet with black horizontal visor and single pink eye, green power hoses around muzzle/waist, left spiked shoulder and right rectangular shield, olive/dark-green bulky armour, thick boots. Source Zaku machine gun held low with both hands. No Char colours, no commander fin, no later variants.\nMetadata only, do not render text: #161 slot 1 MS-06F Zaku II.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-64486387-ee2a-4cdc-b0e8-e0f9665097b0.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "zeon-mobile-suit-hangar:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/zeon-mobile-suit-hangar/1.webp",
+          "master": "outputs/automaton-portraits/masters/zeon-mobile-suit-hangar/1.png",
+          "output": "app/frontend/public/assets/automatons/zeon-mobile-suit-hangar/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "02c31ccee3cd3dbb40139b4a30777f01e4270bdae2f55ad6fabd08278e9eb387",
+          "bytes": 48100
+        },
+        "sha256": "02c31ccee3cd3dbb40139b4a30777f01e4270bdae2f55ad6fabd08278e9eb387",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 2,
+      "name": "MS-07B Gouf",
+      "source_identity": "MS-07B Gouf",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Sprinter",
+      "range_from_weapons": "melee",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Practice Sword",
+          "offhand_weapon": null,
+          "list_price_credits": 50000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Vibro Mace",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic blue MS-07B Gouf from original 1979 Gundam. Dark and medium blue heavy rounded armour, mono-eye helmet and curved muzzle hose, large curved shoulder spikes, left hand source finger-gun construction and forearm shield, one source heat sword lowered in right hand. Standard Gouf not Gouf Custom, complete thick feet and spikes visible, no pilot.\nMetadata only, do not render text: #161 slot 2 MS-07B Gouf.",
+      "role": "Agile contact specialist",
+      "missing_fields": [],
+      "refinement_note": "Trio follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 1,
+      "equipment_interpretation": "MS-07B Gouf fills the agile contact specialist role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Sprinter tuning supports the melee equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Trio strategy tuning rules with the Sprinter Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "zeon-mobile-suit-hangar:2:ms-07b-gouf",
+      "folder": "stables/161-zeon-mobile-suit-hangar/robots/02-ms-07b-gouf",
+      "files": {
+        "png": "stables/161-zeon-mobile-suit-hangar/robots/02-ms-07b-gouf/portrait.png",
+        "webp": "stables/161-zeon-mobile-suit-hangar/robots/02-ms-07b-gouf/portrait.webp",
+        "blueprint": "stables/161-zeon-mobile-suit-hangar/robots/02-ms-07b-gouf/blueprint.json",
+        "profile": "stables/161-zeon-mobile-suit-hangar/robots/02-ms-07b-gouf/profile.md",
+        "prompt": "stables/161-zeon-mobile-suit-hangar/robots/02-ms-07b-gouf/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/zeon-mobile-suit-hangar/2.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 161,
+          "stable_name": "Zeon Mobile Suit Hangar",
+          "catalogue_key": "zeon-mobile-suit-hangar",
+          "slot": 2,
+          "robot_name": "MS-07B Gouf",
+          "source_identity": "MS-07B Gouf",
+          "source_edition": "Mobile Suit Gundam — 1979 MS-06F Zaku II, MS-07B Gouf and MS-09 Dom",
+          "source_references": [
+            "https://satellite.bandai-hobby.net/For_Oversea_Customer/images/pdf/GNC_web_2023.pdf"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic blue MS-07B Gouf from original 1979 Gundam. Dark and medium blue heavy rounded armour, mono-eye helmet and curved muzzle hose, large curved shoulder spikes, left hand source finger-gun construction and forearm shield, one source heat sword lowered in right hand. Standard Gouf not Gouf Custom, complete thick feet and spikes visible, no pilot.\nMetadata only, do not render text: #161 slot 2 MS-07B Gouf.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-e456fc5c-89f1-4332-9421-3c09bccfc61f.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "zeon-mobile-suit-hangar:2",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/zeon-mobile-suit-hangar/2.webp",
+          "master": "outputs/automaton-portraits/masters/zeon-mobile-suit-hangar/2.png",
+          "output": "app/frontend/public/assets/automatons/zeon-mobile-suit-hangar/2.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "8cc9d937d5e98445db71bc6b22038b05171496469373a0bd573fb543ea345151",
+          "bytes": 53524
+        },
+        "sha256": "8cc9d937d5e98445db71bc6b22038b05171496469373a0bd573fb543ea345151",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 3,
+      "name": "MS-09 Dom",
+      "source_identity": "MS-09 Dom",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Bruiser",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Scatter Cannon",
+          "offhand_weapon": null,
+          "list_price_credits": 84000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Arc Projector",
+          "offhand_weapon": null,
+          "list_price_credits": 488000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic purple and black MS-09 Dom from 1979 Gundam. Very broad heavy skirt-armoured mobile suit, distinctive black face cross with single pink mono-eye, purple shoulders/torso/skirt/lower legs over black body, huge thick bell-shaped lower legs and feet. One giant source bazooka held diagonally downward, entire barrel inside canvas. Grounded complete biped, no Rick Dom space thrusters or flight effects.\nMetadata only, do not render text: #161 slot 3 MS-09 Dom.",
+      "role": "Heavy short-range pressure",
+      "missing_fields": [],
+      "refinement_note": "Trio follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 2,
+      "equipment_interpretation": "MS-09 Dom fills the heavy short-range pressure role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Bruiser tuning supports the short equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Trio strategy tuning rules with the Bruiser Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "zeon-mobile-suit-hangar:3:ms-09-dom",
+      "folder": "stables/161-zeon-mobile-suit-hangar/robots/03-ms-09-dom",
+      "files": {
+        "png": "stables/161-zeon-mobile-suit-hangar/robots/03-ms-09-dom/portrait.png",
+        "webp": "stables/161-zeon-mobile-suit-hangar/robots/03-ms-09-dom/portrait.webp",
+        "blueprint": "stables/161-zeon-mobile-suit-hangar/robots/03-ms-09-dom/blueprint.json",
+        "profile": "stables/161-zeon-mobile-suit-hangar/robots/03-ms-09-dom/profile.md",
+        "prompt": "stables/161-zeon-mobile-suit-hangar/robots/03-ms-09-dom/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/zeon-mobile-suit-hangar/3.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 161,
+          "stable_name": "Zeon Mobile Suit Hangar",
+          "catalogue_key": "zeon-mobile-suit-hangar",
+          "slot": 3,
+          "robot_name": "MS-09 Dom",
+          "source_identity": "MS-09 Dom",
+          "source_edition": "Mobile Suit Gundam — 1979 MS-06F Zaku II, MS-07B Gouf and MS-09 Dom",
+          "source_references": [
+            "https://satellite.bandai-hobby.net/For_Oversea_Customer/images/pdf/GNC_web_2023.pdf"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic purple and black MS-09 Dom from 1979 Gundam. Very broad heavy skirt-armoured mobile suit, distinctive black face cross with single pink mono-eye, purple shoulders/torso/skirt/lower legs over black body, huge thick bell-shaped lower legs and feet. One giant source bazooka held diagonally downward, entire barrel inside canvas. Grounded complete biped, no Rick Dom space thrusters or flight effects.\nMetadata only, do not render text: #161 slot 3 MS-09 Dom.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-a9e518dc-3928-4769-ad32-49c0285f7f1b.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "zeon-mobile-suit-hangar:3",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/zeon-mobile-suit-hangar/3.webp",
+          "master": "outputs/automaton-portraits/masters/zeon-mobile-suit-hangar/3.png",
+          "output": "app/frontend/public/assets/automatons/zeon-mobile-suit-hangar/3.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "0854a216ea78517b83ccd7607cefcf214fa7de25063831dc10597055e97c21e2",
+          "bytes": 55974
+        },
+        "sha256": "0854a216ea78517b83ccd7607cefcf214fa7de25063831dc10597055e97c21e2",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "alternatives": [],
+  "blueprint_status": "detailed",
+  "source_notes": "\n**Franchise:** Gundam  \n**Strategy:** Trio · **Target roster:** 3 robots\n\n**Proposed robots:** MS-06F Zaku II; MS-07B Gouf; MS-09 Dom.\n\n**Direction:** A Zeon Trio is one of the best same-franchise additions because it changes silhouette language as well as faction. More distinctive than adding several near-identical white Gundams. Exact model editions and individual builds remain to be selected.\n\n**Production edition:** Mobile Suit Gundam — 1979 MS-06F Zaku II, MS-07B Gouf and MS-09 Dom.  \n**Catalogue key:** `zeon-mobile-suit-hangar`\n\n",
+  "source_documents": [
+    "reference/AUTOMATON_STABLE_EXPANSION.md"
+  ],
+  "blueprint_origin": "completed during collection",
+  "purchasing_plan": "Open with all three robots. Maintain and tune the trio together; complete stage-1 equipment in slot order. No weapon refinement purchases.",
+  "target_overrides": {},
+  "equipment_budget": {
+    "stage_0_credits": 227000,
+    "stage_1_credits": 1338000,
+    "refinement_credits": 0,
+    "excludes": "Frames, facilities, training, repairs, upkeep, discounts and resale; stage-1 total replaces stage-0 gear and is not a simultaneous equipment inventory."
+  },
+  "folder": "stables/161-zeon-mobile-suit-hangar",
+  "history_image_count": 0
+}

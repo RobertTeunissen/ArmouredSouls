@@ -1,0 +1,219 @@
+{
+  "stable_number": 171,
+  "catalogue_key": "companion-defence-laboratory",
+  "robots": [
+    {
+      "slot": 1,
+      "name": "M3GAN",
+      "source_identity": "M3GAN, original companion android",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "dual_wield",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Sprinter",
+      "range_from_weapons": "melee",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Practice Sword",
+          "offhand_weapon": "Practice Sword",
+          "list_price_credits": 100000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Vibro Mace",
+          "offhand_weapon": "Vibro Mace",
+          "list_price_credits": 850000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: M3GAN using her original 2023 lifelike doll body and signature outfit: long honey-blond hair, recognizable pale doll face with blue eyes, beige pleated dress over a striped long-sleeve undershirt, oversized striped bow at the collar, opaque white tights, black Mary Jane shoes. Calm composed standing full body, arms relaxed, no injury or violence, preserve the character's source clothing and proportions, no military armour or exposed skin beyond source head/hands.\nMetadata only, do not render text: #171 slot 1 M3GAN.",
+      "role": "Paired contact attacker",
+      "missing_fields": [],
+      "refinement_note": "No verified Hone/Augment combination exists for this final weapon in the supplied references; Duo does not buy Sharpen/Forge. The empty plan is intentional.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "M3GAN fills the paired contact attacker role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Sprinter tuning supports the melee equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Duo strategy tuning rules with the Sprinter Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "companion-defence-laboratory:1:m3gan",
+      "folder": "stables/171-companion-defence-laboratory/robots/01-m3gan",
+      "files": {
+        "png": "stables/171-companion-defence-laboratory/robots/01-m3gan/portrait.png",
+        "webp": "stables/171-companion-defence-laboratory/robots/01-m3gan/portrait.webp",
+        "blueprint": "stables/171-companion-defence-laboratory/robots/01-m3gan/blueprint.json",
+        "profile": "stables/171-companion-defence-laboratory/robots/01-m3gan/profile.md",
+        "prompt": "stables/171-companion-defence-laboratory/robots/01-m3gan/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/companion-defence-laboratory/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 171,
+          "stable_name": "Companion Defence Laboratory",
+          "catalogue_key": "companion-defence-laboratory",
+          "slot": 1,
+          "robot_name": "M3GAN",
+          "source_identity": "M3GAN, original companion android",
+          "source_edition": "M3GAN original 2023 companion body and AMELIA M3GAN 2.0 2025 infiltration body; same film technology lineage",
+          "source_references": [
+            "https://www.universalstudios.com/videos/1FeiTZMtwLA/",
+            "https://www.blumhouse.com/film/m3gan-2-0"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: M3GAN using her original 2023 lifelike doll body and signature outfit: long honey-blond hair, recognizable pale doll face with blue eyes, beige pleated dress over a striped long-sleeve undershirt, oversized striped bow at the collar, opaque white tights, black Mary Jane shoes. Calm composed standing full body, arms relaxed, no injury or violence, preserve the character's source clothing and proportions, no military armour or exposed skin beyond source head/hands.\nMetadata only, do not render text: #171 slot 1 M3GAN.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-ca8f3af3-f3f8-45d9-8645-c4c840f938df.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "companion-defence-laboratory:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/companion-defence-laboratory/1.webp",
+          "master": "outputs/automaton-portraits/masters/companion-defence-laboratory/1.png",
+          "output": "app/frontend/public/assets/automatons/companion-defence-laboratory/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "80c880e2ad61f517d166988878db962227d6ebfd252d2681ad6525a9db1574fc",
+          "bytes": 29608
+        },
+        "sha256": "80c880e2ad61f517d166988878db962227d6ebfd252d2681ad6525a9db1574fc",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 2,
+      "name": "AMELIA",
+      "source_identity": "AMELIA, adult infiltration android",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 20,
+      "build_focus": "Deadeye",
+      "range_from_weapons": "long",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Beam Pistol",
+          "offhand_weapon": null,
+          "list_price_credits": 93000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Particle Lance",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Hone",
+          "weapon": "Particle Lance",
+          "hand": "main",
+          "workshop_level": 1,
+          "attribute": "Targeting Systems",
+          "magnitude": 2,
+          "result_value": 10,
+          "cost_credits": 40000,
+          "base_value": 8,
+          "effect": "Targeting Systems 8→10",
+          "step": 1
+        },
+        {
+          "operation": "Augment",
+          "weapon": "Particle Lance",
+          "hand": "main",
+          "workshop_level": 3,
+          "attribute": "Weapon Control",
+          "magnitude": 3,
+          "result_value": 3,
+          "cost_credits": 180000,
+          "effect": "Weapon Control, new +3",
+          "step": 2
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: AMELIA from M3GAN 2.0 2025, the adult female infiltration android portrayed by Ivanna Sakhno, authentic human-looking face and blonde hair in a sleek pulled-back infiltration hairstyle, fitted black tactical/leather outfit and boots from the film, restrained alert standing posture. Source screen appearance, no doll proportions, no invented metallic soldier face, no damage or violence.\nMetadata only, do not render text: #171 slot 2 AMELIA.",
+      "role": "Precision fire support",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 220000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 1,
+      "equipment_interpretation": "AMELIA fills the precision fire support role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Deadeye tuning supports the long equipment role; balanced stance and a 20% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Duo strategy tuning rules with the Deadeye Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "companion-defence-laboratory:2:amelia",
+      "folder": "stables/171-companion-defence-laboratory/robots/02-amelia",
+      "files": {
+        "png": "stables/171-companion-defence-laboratory/robots/02-amelia/portrait.png",
+        "webp": "stables/171-companion-defence-laboratory/robots/02-amelia/portrait.webp",
+        "blueprint": "stables/171-companion-defence-laboratory/robots/02-amelia/blueprint.json",
+        "profile": "stables/171-companion-defence-laboratory/robots/02-amelia/profile.md",
+        "prompt": "stables/171-companion-defence-laboratory/robots/02-amelia/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/companion-defence-laboratory/2.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 171,
+          "stable_name": "Companion Defence Laboratory",
+          "catalogue_key": "companion-defence-laboratory",
+          "slot": 2,
+          "robot_name": "AMELIA",
+          "source_identity": "AMELIA, adult infiltration android",
+          "source_edition": "M3GAN original 2023 companion body and AMELIA M3GAN 2.0 2025 infiltration body; same film technology lineage",
+          "source_references": [
+            "https://www.universalstudios.com/videos/1FeiTZMtwLA/",
+            "https://www.blumhouse.com/film/m3gan-2-0"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: AMELIA from M3GAN 2.0 2025, the adult female infiltration android portrayed by Ivanna Sakhno, authentic human-looking face and blonde hair in a sleek pulled-back infiltration hairstyle, fitted black tactical/leather outfit and boots from the film, restrained alert standing posture. Source screen appearance, no doll proportions, no invented metallic soldier face, no damage or violence.\nMetadata only, do not render text: #171 slot 2 AMELIA.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-dfca4fcf-546d-414b-85d5-a034d379cba6.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "companion-defence-laboratory:2",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/companion-defence-laboratory/2.webp",
+          "master": "outputs/automaton-portraits/masters/companion-defence-laboratory/2.png",
+          "output": "app/frontend/public/assets/automatons/companion-defence-laboratory/2.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "8a54b268786e866e7123365a252ef9b52b60c74f6e806919fdde38fc4866b053",
+          "bytes": 26708
+        },
+        "sha256": "8a54b268786e866e7123365a252ef9b52b60c74f6e806919fdde38fc4866b053",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "replacement_alternatives": []
+}

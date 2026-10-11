@@ -1,0 +1,134 @@
+{
+  "stable_number": 194,
+  "catalogue_key": "safeguard-enforcement-workshop",
+  "robots": [
+    {
+      "slot": 1,
+      "name": "Sanakan",
+      "source_identity": "Sanakan",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "balanced",
+      "yield_threshold": 15,
+      "build_focus": "Deadeye",
+      "range_from_weapons": "long",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Training Beam",
+          "offhand_weapon": null,
+          "list_price_credits": 50000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Ion Beam",
+          "offhand_weapon": null,
+          "list_price_credits": 544000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Sharpen",
+          "weapon": "Ion Beam",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 1,
+          "cost_credits": 300000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 1
+        },
+        {
+          "operation": "Sharpen",
+          "weapon": "Ion Beam",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 2,
+          "cost_credits": 900000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 2
+        },
+        {
+          "operation": "Forge",
+          "weapon": "Ion Beam",
+          "hand": "main",
+          "workshop_level": 8,
+          "occurrence": 1,
+          "cost_credits": 400000,
+          "prestige_gate": 15000,
+          "effect": "+8% damage",
+          "step": 3
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE Sanakan from Tsutomu Nihei's original BLAME! MANGA, her recognizable early humanoid Safeguard enforcement body. Adult female-form artificial entity, pale humanlike expressionless face, short black bob haircut, very dark black biomechanical full-body construction with ribbed layered structural texture, slim angular limbs and mechanical joints. Her source integrated large Gravitational Beam Emitter arm is lowered, inactive; preserve the manga's continuous biomechanical attachment rather than giving her a separate generic human rifle. No film redesign, no composite transformations. Fully covered biomechanical torso, no nudity, blood or victims. Full body with both feet visible, unsettling quiet posture, faithful manga silhouette translated to detailed black industrial materials.\nMetadata only, do not render text: #194 slot 1 Sanakan.",
+      "role": "Heavy long-range support",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 1600000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "Sanakan fills the heavy long-range support role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Deadeye tuning supports the long equipment role; balanced stance and a 15% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Paragon strategy tuning rules with the Deadeye Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "safeguard-enforcement-workshop:1:sanakan",
+      "folder": "stables/194-safeguard-enforcement-workshop/robots/01-sanakan",
+      "files": {
+        "png": "stables/194-safeguard-enforcement-workshop/robots/01-sanakan/portrait.png",
+        "webp": "stables/194-safeguard-enforcement-workshop/robots/01-sanakan/portrait.webp",
+        "blueprint": "stables/194-safeguard-enforcement-workshop/robots/01-sanakan/blueprint.json",
+        "profile": "stables/194-safeguard-enforcement-workshop/robots/01-sanakan/profile.md",
+        "prompt": "stables/194-safeguard-enforcement-workshop/robots/01-sanakan/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/safeguard-enforcement-workshop/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 194,
+          "stable_name": "Safeguard Enforcement Workshop",
+          "catalogue_key": "safeguard-enforcement-workshop",
+          "slot": 1,
+          "robot_name": "Sanakan",
+          "source_identity": "Sanakan",
+          "source_edition": "BLAME! manga, first humanoid Safeguard enforcement body",
+          "source_references": [
+            "https://kodansha.us/series/blame/volume-6/",
+            "https://kmanga.kodansha.com/title/10222/episode/334286"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE Sanakan from Tsutomu Nihei's original BLAME! MANGA, her recognizable early humanoid Safeguard enforcement body. Adult female-form artificial entity, pale humanlike expressionless face, short black bob haircut, very dark black biomechanical full-body construction with ribbed layered structural texture, slim angular limbs and mechanical joints. Her source integrated large Gravitational Beam Emitter arm is lowered, inactive; preserve the manga's continuous biomechanical attachment rather than giving her a separate generic human rifle. No film redesign, no composite transformations. Fully covered biomechanical torso, no nudity, blood or victims. Full body with both feet visible, unsettling quiet posture, faithful manga silhouette translated to detailed black industrial materials.\nMetadata only, do not render text: #194 slot 1 Sanakan.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-360f290b-dfff-4c37-899b-cb61cf347501.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "safeguard-enforcement-workshop:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/safeguard-enforcement-workshop/1.webp",
+          "master": "outputs/automaton-portraits/masters/safeguard-enforcement-workshop/1.png",
+          "output": "app/frontend/public/assets/automatons/safeguard-enforcement-workshop/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "e93315c8ec13656eb9ccb561402b65cc63ff5618cdf824bc9237f241150c8da6",
+          "bytes": 27738
+        },
+        "sha256": "e93315c8ec13656eb9ccb561402b65cc63ff5618cdf824bc9237f241150c8da6",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "replacement_alternatives": []
+}

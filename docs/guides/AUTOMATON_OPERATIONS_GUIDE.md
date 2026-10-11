@@ -1,6 +1,6 @@
 # Automaton Operations Guide
 
-**Spec:** #55 · **Audience:** administrators and developers · **Last updated:** October 2026
+**Spec:** #55, #57 · **Audience:** administrators and developers · **Last updated:** 11 October 2026
 
 How to run Automaton_Stables: adding and activating stables, tuning them, reading their turns and alerts, handling incidents, and moving definitions and strategies between the admin page and the repository. Product rules are in `docs/game-systems/PRD_AUTOMATON_STABLES.md`.
 
@@ -20,6 +20,16 @@ Everything below happens on `/admin/automatons` (admin login required; every mut
 **Activating.** Editor → **Activate** (one stable) or Stables → **Activate all drafts** (each draft on its own, in Catalogue_Key order, with a per-stable result; one rejection does not stop the others). Activation is rejected when the stable name or username is taken or the strategy targets, blueprints, Team_Names or Event_Order fail validation. Activation is one-way: an active stable cannot be deleted or paused on its own. It joins the cohort at the next Turn_Step and builds its opening roster from ₡3,000,000.
 
 Activate new drafts **in batches** rather than all at once (decision 39). A large catalogue addition activated in one go enters matchmaking in one cycle and makes that cycle's Turn_Step an opening build for every new stable, which is the slowest kind of step (see §3). Activate a handful per cycle and check the Status_Bar after each Turn_Step.
+
+**Expansion_Stables (spec 57).** After the deploy that delivers spec 57, every Expansion_Stable appears as a Draft_Automaton next to the active starter stables; nothing is activated automatically. There is no activation cap (spec 57 decision 19): every draft may be activated. Activate them in batches through the per-stable **Activate** in the Editor, not **Activate all drafts**. Each new Active_Automaton's first turn is an opening build, and the 300 s Turn_Step budget serves only a limited number of opening builds per day. Profiles the budget skips are always the ones with the highest `User.id`, i.e. the most recently activated stables, so activating too many at once leaves the newest stables waiting. How many fit into one Turn_Step, and why, is in `.kiro/specs/done-october26/57-automaton-catalogue-expansion/review/SCALING.md`. The engine changes that very large populations need are open items there (§6), not implemented:
+
+- Bounded parallel Turn_Steps, so one daily Turn_Step serves more Automatons.
+- Fair rotation after budget skips, so the last-activated stables are not always the ones skipped.
+- A Turn_Step budget scaled with the population, or follow-up chunks until the cohort is done.
+- Fewer SQL statements per charged action (incremental facts, batched event-log and spending writes).
+- Bulk skip marking and a lease heartbeat, so a very large Turn_Step cannot outlive its lease.
+- Batched or background admin operations (a batch size for activate-drafts, a paginated or streamed catalogue export, a cached Need_Attention count).
+- A battle-volume measurement at the target robot count before activating thousands of Automatons.
 
 **Deleting.** Only a Draft_Automaton can be deleted; its blueprints and admin-uploaded images go with it. A draft that came from a Catalogue_Entry comes back at the next sync; delete the catalogue file in a pull request to remove it for good.
 
@@ -99,6 +109,7 @@ Catalogue_Sync skips an entry when its stable name is taken by a stable or anoth
 - **Fill-only sync:** a blueprint without an image gets its Repository_Image at the next Catalogue_Sync, and the live robot built from it gets the same image if it has none. Sync never replaces or deletes an image that is already set.
 - **Admin uploads win:** Editor → blueprint → **Upload image** (2 MB limit, processed to 512 × 512 WebP) stores the file in `uploads/automatons/{catalogueKey}/` and updates the blueprint and its live robot in one transaction. Replaced upload files of an active stable are never deleted automatically (season archives may reference them), and the rollover orphan sweep does not touch this directory. Deleting a Draft_Automaton deletes its uploads.
 - No image at all is fine: the robot shows the same generic frame as a player's robot without an image.
+- **Expansion slots:** commit an expansion Repository_Image only together with or after the Catalogue_Entry of its Catalogue_Key (spec 57 R4.4); a folder without an entry fails `catalogueImages.test.ts`. A missing expansion image can be added later under the same path, and the next Catalogue_Sync fills it in.
 
 ## 8. Strategy workflow
 

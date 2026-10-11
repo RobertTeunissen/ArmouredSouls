@@ -1,0 +1,1019 @@
+{
+  "stable_number": 204,
+  "catalogue_key": "chrysalis-reconstruction-array",
+  "robots": [
+    {
+      "slot": 1,
+      "name": "Reconstruction Drone 01",
+      "source_identity": "Reconstruction Drone 01; original arena drone adaptation of BeaverFur's Chrysalis",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 15,
+      "build_focus": "Versatile",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": null,
+          "list_price_credits": 57000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete original arena robot, explicitly adapted from the stated fictional AI premise.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE ORIGINAL arena-scale reconstruction drone representing the intelligence's industrial drones in BeaverFur's original r/HFY web fiction Chrysalis. Detailed chassis and numbered unit label are original arena adaptations, not named independent characters or exact canonical robot designs. Family design shared across all eleven: compact white/off-white faceted industrial central body, one small dark horizontal sensor visor with a restrained amber optic, four short sturdy segmented walking legs and broad rectangular foot pads, grey exposed joint hardware, very light yellow hazard trim without writing. This coordination variant is distinguished by a short raised sensor mast and a slim dorsal antenna. One unified small machine, no humanoid face, hands or separate head, no warship, extra drones or humans. Source industrial reconstruction premise, believable clean white paint with gentle wear; all four feet and every attachment visible inside the square.\nMetadata only, do not render text: #204 slot 1 Reconstruction Drone 01.",
+      "role": "Flexible line fighter",
+      "missing_fields": [],
+      "refinement_note": "Swarm follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "Reconstruction Drone 01 fills the flexible line fighter role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Versatile tuning supports the short equipment role; balanced stance and a 15% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Swarm strategy tuning rules with the Versatile Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "chrysalis-reconstruction-array:1:reconstruction-drone-01",
+      "folder": "stables/204-chrysalis-reconstruction-array/robots/01-reconstruction-drone-01",
+      "files": {
+        "png": "stables/204-chrysalis-reconstruction-array/robots/01-reconstruction-drone-01/portrait.png",
+        "webp": "stables/204-chrysalis-reconstruction-array/robots/01-reconstruction-drone-01/portrait.webp",
+        "blueprint": "stables/204-chrysalis-reconstruction-array/robots/01-reconstruction-drone-01/blueprint.json",
+        "profile": "stables/204-chrysalis-reconstruction-array/robots/01-reconstruction-drone-01/profile.md",
+        "prompt": "stables/204-chrysalis-reconstruction-array/robots/01-reconstruction-drone-01/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/chrysalis-reconstruction-array/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 204,
+          "stable_name": "Chrysalis Reconstruction Array",
+          "catalogue_key": "chrysalis-reconstruction-array",
+          "slot": 1,
+          "robot_name": "Reconstruction Drone 01",
+          "source_identity": "Reconstruction Drone 01; original arena drone adaptation of BeaverFur's Chrysalis",
+          "source_edition": "Chrysalis by BeaverFur, original coherent arena drone family",
+          "source_references": [
+            "https://www.reddit.com/r/HFY/comments/55v9e1/chrysalis/"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete original arena robot, explicitly adapted from the stated fictional AI premise.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE ORIGINAL arena-scale reconstruction drone representing the intelligence's industrial drones in BeaverFur's original r/HFY web fiction Chrysalis. Detailed chassis and numbered unit label are original arena adaptations, not named independent characters or exact canonical robot designs. Family design shared across all eleven: compact white/off-white faceted industrial central body, one small dark horizontal sensor visor with a restrained amber optic, four short sturdy segmented walking legs and broad rectangular foot pads, grey exposed joint hardware, very light yellow hazard trim without writing. This coordination variant is distinguished by a short raised sensor mast and a slim dorsal antenna. One unified small machine, no humanoid face, hands or separate head, no warship, extra drones or humans. Source industrial reconstruction premise, believable clean white paint with gentle wear; all four feet and every attachment visible inside the square.\nMetadata only, do not render text: #204 slot 1 Reconstruction Drone 01.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-b19b2771-5a0d-4d44-b5b0-4daf3032aad4.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "chrysalis-reconstruction-array:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/chrysalis-reconstruction-array/1.webp",
+          "master": "outputs/automaton-portraits/masters/chrysalis-reconstruction-array/1.png",
+          "output": "app/frontend/public/assets/automatons/chrysalis-reconstruction-array/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "2cdc0492b71df537f1447a07e8d4ff41c88c425f46a207f5c8f7660ec41f3505",
+          "bytes": 56080
+        },
+        "sha256": "2cdc0492b71df537f1447a07e8d4ff41c88c425f46a207f5c8f7660ec41f3505",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 2,
+      "name": "Reconstruction Drone 02",
+      "source_identity": "Reconstruction Drone 02; original arena drone adaptation of BeaverFur's Chrysalis",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "defensive",
+      "yield_threshold": 30,
+      "build_focus": "Tactician",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Practice Blaster",
+          "offhand_weapon": null,
+          "list_price_credits": 50000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete original arena robot, explicitly adapted from the stated fictional AI premise.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE ORIGINAL arena-scale reconstruction drone representing the intelligence's industrial drones in BeaverFur's original r/HFY web fiction Chrysalis. Detailed chassis and numbered unit label are original arena adaptations, not named independent characters or exact canonical robot designs. Family design shared across all eleven: compact white/off-white faceted industrial central body, one small dark horizontal sensor visor with a restrained amber optic, four short sturdy segmented walking legs and broad rectangular foot pads, grey exposed joint hardware, very light yellow hazard trim without writing. This scout variant is distinguished by a taller narrow periscope sensor mast and lighter protective upper panels. One unified small machine, no humanoid face, hands or separate head, no warship, extra drones or humans. Source industrial reconstruction premise, believable clean white paint with gentle wear; all four feet and every attachment visible inside the square.\nMetadata only, do not render text: #204 slot 2 Reconstruction Drone 02.",
+      "role": "Cautious utility fighter",
+      "missing_fields": [],
+      "refinement_note": "Swarm follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 1,
+      "equipment_interpretation": "Reconstruction Drone 02 fills the cautious utility fighter role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Tactician tuning supports the short equipment role; defensive stance and a 30% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Swarm strategy tuning rules with the Tactician Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "chrysalis-reconstruction-array:2:reconstruction-drone-02",
+      "folder": "stables/204-chrysalis-reconstruction-array/robots/02-reconstruction-drone-02",
+      "files": {
+        "png": "stables/204-chrysalis-reconstruction-array/robots/02-reconstruction-drone-02/portrait.png",
+        "webp": "stables/204-chrysalis-reconstruction-array/robots/02-reconstruction-drone-02/portrait.webp",
+        "blueprint": "stables/204-chrysalis-reconstruction-array/robots/02-reconstruction-drone-02/blueprint.json",
+        "profile": "stables/204-chrysalis-reconstruction-array/robots/02-reconstruction-drone-02/profile.md",
+        "prompt": "stables/204-chrysalis-reconstruction-array/robots/02-reconstruction-drone-02/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/chrysalis-reconstruction-array/2.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 204,
+          "stable_name": "Chrysalis Reconstruction Array",
+          "catalogue_key": "chrysalis-reconstruction-array",
+          "slot": 2,
+          "robot_name": "Reconstruction Drone 02",
+          "source_identity": "Reconstruction Drone 02; original arena drone adaptation of BeaverFur's Chrysalis",
+          "source_edition": "Chrysalis by BeaverFur, original coherent arena drone family",
+          "source_references": [
+            "https://www.reddit.com/r/HFY/comments/55v9e1/chrysalis/"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete original arena robot, explicitly adapted from the stated fictional AI premise.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE ORIGINAL arena-scale reconstruction drone representing the intelligence's industrial drones in BeaverFur's original r/HFY web fiction Chrysalis. Detailed chassis and numbered unit label are original arena adaptations, not named independent characters or exact canonical robot designs. Family design shared across all eleven: compact white/off-white faceted industrial central body, one small dark horizontal sensor visor with a restrained amber optic, four short sturdy segmented walking legs and broad rectangular foot pads, grey exposed joint hardware, very light yellow hazard trim without writing. This scout variant is distinguished by a taller narrow periscope sensor mast and lighter protective upper panels. One unified small machine, no humanoid face, hands or separate head, no warship, extra drones or humans. Source industrial reconstruction premise, believable clean white paint with gentle wear; all four feet and every attachment visible inside the square.\nMetadata only, do not render text: #204 slot 2 Reconstruction Drone 02.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-24a924aa-4149-434a-a69a-20fc22428228.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "chrysalis-reconstruction-array:2",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/chrysalis-reconstruction-array/2.webp",
+          "master": "outputs/automaton-portraits/masters/chrysalis-reconstruction-array/2.png",
+          "output": "app/frontend/public/assets/automatons/chrysalis-reconstruction-array/2.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "0581c564a30010a4ec4090ea4b3eb5c8334f5e228caccd8fe59893e170b6ea6e",
+          "bytes": 54022
+        },
+        "sha256": "0581c564a30010a4ec4090ea4b3eb5c8334f5e228caccd8fe59893e170b6ea6e",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 3,
+      "name": "Reconstruction Drone 03",
+      "source_identity": "Reconstruction Drone 03; original arena drone adaptation of BeaverFur's Chrysalis",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 15,
+      "build_focus": "Tactician",
+      "range_from_weapons": "mid",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Bolt Carbine",
+          "offhand_weapon": null,
+          "list_price_credits": 93000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Nova Caster",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete original arena robot, explicitly adapted from the stated fictional AI premise.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE ORIGINAL arena-scale reconstruction drone representing the intelligence's industrial drones in BeaverFur's original r/HFY web fiction Chrysalis. Detailed chassis and numbered unit label are original arena adaptations, not named independent characters or exact canonical robot designs. Family design shared across all eleven: compact white/off-white faceted industrial central body, one small dark horizontal sensor visor with a restrained amber optic, four short sturdy segmented walking legs and broad rectangular foot pads, grey exposed joint hardware, very light yellow hazard trim without writing. This carrier variant is distinguished by one compact closed load basket attached across the back, no cargo obscuring the body. One unified small machine, no humanoid face, hands or separate head, no warship, extra drones or humans. Source industrial reconstruction premise, believable clean white paint with gentle wear; all four feet and every attachment visible inside the square.\nMetadata only, do not render text: #204 slot 3 Reconstruction Drone 03.",
+      "role": "Measured mid-range fighter",
+      "missing_fields": [],
+      "refinement_note": "Swarm follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 2,
+      "equipment_interpretation": "Reconstruction Drone 03 fills the measured mid-range fighter role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Tactician tuning supports the mid equipment role; balanced stance and a 15% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Swarm strategy tuning rules with the Tactician Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "chrysalis-reconstruction-array:3:reconstruction-drone-03",
+      "folder": "stables/204-chrysalis-reconstruction-array/robots/03-reconstruction-drone-03",
+      "files": {
+        "png": "stables/204-chrysalis-reconstruction-array/robots/03-reconstruction-drone-03/portrait.png",
+        "webp": "stables/204-chrysalis-reconstruction-array/robots/03-reconstruction-drone-03/portrait.webp",
+        "blueprint": "stables/204-chrysalis-reconstruction-array/robots/03-reconstruction-drone-03/blueprint.json",
+        "profile": "stables/204-chrysalis-reconstruction-array/robots/03-reconstruction-drone-03/profile.md",
+        "prompt": "stables/204-chrysalis-reconstruction-array/robots/03-reconstruction-drone-03/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/chrysalis-reconstruction-array/3.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 204,
+          "stable_name": "Chrysalis Reconstruction Array",
+          "catalogue_key": "chrysalis-reconstruction-array",
+          "slot": 3,
+          "robot_name": "Reconstruction Drone 03",
+          "source_identity": "Reconstruction Drone 03; original arena drone adaptation of BeaverFur's Chrysalis",
+          "source_edition": "Chrysalis by BeaverFur, original coherent arena drone family",
+          "source_references": [
+            "https://www.reddit.com/r/HFY/comments/55v9e1/chrysalis/"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete original arena robot, explicitly adapted from the stated fictional AI premise.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE ORIGINAL arena-scale reconstruction drone representing the intelligence's industrial drones in BeaverFur's original r/HFY web fiction Chrysalis. Detailed chassis and numbered unit label are original arena adaptations, not named independent characters or exact canonical robot designs. Family design shared across all eleven: compact white/off-white faceted industrial central body, one small dark horizontal sensor visor with a restrained amber optic, four short sturdy segmented walking legs and broad rectangular foot pads, grey exposed joint hardware, very light yellow hazard trim without writing. This carrier variant is distinguished by one compact closed load basket attached across the back, no cargo obscuring the body. One unified small machine, no humanoid face, hands or separate head, no warship, extra drones or humans. Source industrial reconstruction premise, believable clean white paint with gentle wear; all four feet and every attachment visible inside the square.\nMetadata only, do not render text: #204 slot 3 Reconstruction Drone 03.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-cba1cdd0-1617-4c02-bc60-715512a4e206.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "chrysalis-reconstruction-array:3",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/chrysalis-reconstruction-array/3.webp",
+          "master": "outputs/automaton-portraits/masters/chrysalis-reconstruction-array/3.png",
+          "output": "app/frontend/public/assets/automatons/chrysalis-reconstruction-array/3.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "bd370de95be1edb7dc76fe748a9e455f4e30a682936c1476975da5e5abd34eda",
+          "bytes": 58918
+        },
+        "sha256": "bd370de95be1edb7dc76fe748a9e455f4e30a682936c1476975da5e5abd34eda",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 4,
+      "name": "Reconstruction Drone 04",
+      "source_identity": "Reconstruction Drone 04; original arena drone adaptation of BeaverFur's Chrysalis",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 20,
+      "build_focus": "Sprinter",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": null,
+          "list_price_credits": 57000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete original arena robot, explicitly adapted from the stated fictional AI premise.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE ORIGINAL arena-scale reconstruction drone representing the intelligence's industrial drones in BeaverFur's original r/HFY web fiction Chrysalis. Detailed chassis and numbered unit label are original arena adaptations, not named independent characters or exact canonical robot designs. Family design shared across all eleven: compact white/off-white faceted industrial central body, one small dark horizontal sensor visor with a restrained amber optic, four short sturdy segmented walking legs and broad rectangular foot pads, grey exposed joint hardware, very light yellow hazard trim without writing. This welder variant is distinguished by one short insulated welding manipulator folded against the right flank, switched off. One unified small machine, no humanoid face, hands or separate head, no warship, extra drones or humans. Source industrial reconstruction premise, believable clean white paint with gentle wear; all four feet and every attachment visible inside the square.\nMetadata only, do not render text: #204 slot 4 Reconstruction Drone 04.",
+      "role": "Mobile skirmisher",
+      "missing_fields": [],
+      "refinement_note": "Swarm follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 3,
+      "equipment_interpretation": "Reconstruction Drone 04 fills the mobile skirmisher role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Sprinter tuning supports the short equipment role; balanced stance and a 20% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Swarm strategy tuning rules with the Sprinter Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "chrysalis-reconstruction-array:4:reconstruction-drone-04",
+      "folder": "stables/204-chrysalis-reconstruction-array/robots/04-reconstruction-drone-04",
+      "files": {
+        "png": "stables/204-chrysalis-reconstruction-array/robots/04-reconstruction-drone-04/portrait.png",
+        "webp": "stables/204-chrysalis-reconstruction-array/robots/04-reconstruction-drone-04/portrait.webp",
+        "blueprint": "stables/204-chrysalis-reconstruction-array/robots/04-reconstruction-drone-04/blueprint.json",
+        "profile": "stables/204-chrysalis-reconstruction-array/robots/04-reconstruction-drone-04/profile.md",
+        "prompt": "stables/204-chrysalis-reconstruction-array/robots/04-reconstruction-drone-04/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/chrysalis-reconstruction-array/4.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 204,
+          "stable_name": "Chrysalis Reconstruction Array",
+          "catalogue_key": "chrysalis-reconstruction-array",
+          "slot": 4,
+          "robot_name": "Reconstruction Drone 04",
+          "source_identity": "Reconstruction Drone 04; original arena drone adaptation of BeaverFur's Chrysalis",
+          "source_edition": "Chrysalis by BeaverFur, original coherent arena drone family",
+          "source_references": [
+            "https://www.reddit.com/r/HFY/comments/55v9e1/chrysalis/"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete original arena robot, explicitly adapted from the stated fictional AI premise.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE ORIGINAL arena-scale reconstruction drone representing the intelligence's industrial drones in BeaverFur's original r/HFY web fiction Chrysalis. Detailed chassis and numbered unit label are original arena adaptations, not named independent characters or exact canonical robot designs. Family design shared across all eleven: compact white/off-white faceted industrial central body, one small dark horizontal sensor visor with a restrained amber optic, four short sturdy segmented walking legs and broad rectangular foot pads, grey exposed joint hardware, very light yellow hazard trim without writing. This welder variant is distinguished by one short insulated welding manipulator folded against the right flank, switched off. One unified small machine, no humanoid face, hands or separate head, no warship, extra drones or humans. Source industrial reconstruction premise, believable clean white paint with gentle wear; all four feet and every attachment visible inside the square.\nMetadata only, do not render text: #204 slot 4 Reconstruction Drone 04.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-abeda5bc-1d0d-4b10-b0a4-d06c9744b3f2.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "chrysalis-reconstruction-array:4",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/chrysalis-reconstruction-array/4.webp",
+          "master": "outputs/automaton-portraits/masters/chrysalis-reconstruction-array/4.png",
+          "output": "app/frontend/public/assets/automatons/chrysalis-reconstruction-array/4.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "0f34b9eeea4e64e1558504a7edcd233b9cf3a1a0cce11503f656e4c0f95c1bec",
+          "bytes": 61684
+        },
+        "sha256": "0f34b9eeea4e64e1558504a7edcd233b9cf3a1a0cce11503f656e4c0f95c1bec",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 5,
+      "name": "Reconstruction Drone 05",
+      "source_identity": "Reconstruction Drone 05; original arena drone adaptation of BeaverFur's Chrysalis",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 20,
+      "build_focus": "Deadeye",
+      "range_from_weapons": "long",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Beam Pistol",
+          "offhand_weapon": null,
+          "list_price_credits": 93000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Particle Lance",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete original arena robot, explicitly adapted from the stated fictional AI premise.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE ORIGINAL arena-scale reconstruction drone representing the intelligence's industrial drones in BeaverFur's original r/HFY web fiction Chrysalis. Detailed chassis and numbered unit label are original arena adaptations, not named independent characters or exact canonical robot designs. Family design shared across all eleven: compact white/off-white faceted industrial central body, one small dark horizontal sensor visor with a restrained amber optic, four short sturdy segmented walking legs and broad rectangular foot pads, grey exposed joint hardware, very light yellow hazard trim without writing. This cutter variant is distinguished by one guarded circular cutting tool folded on the right flank, blade stationary. One unified small machine, no humanoid face, hands or separate head, no warship, extra drones or humans. Source industrial reconstruction premise, believable clean white paint with gentle wear; all four feet and every attachment visible inside the square.\nMetadata only, do not render text: #204 slot 5 Reconstruction Drone 05.",
+      "role": "Precision fire support",
+      "missing_fields": [],
+      "refinement_note": "Swarm follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 4,
+      "equipment_interpretation": "Reconstruction Drone 05 fills the precision fire support role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Deadeye tuning supports the long equipment role; balanced stance and a 20% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Swarm strategy tuning rules with the Deadeye Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "chrysalis-reconstruction-array:5:reconstruction-drone-05",
+      "folder": "stables/204-chrysalis-reconstruction-array/robots/05-reconstruction-drone-05",
+      "files": {
+        "png": "stables/204-chrysalis-reconstruction-array/robots/05-reconstruction-drone-05/portrait.png",
+        "webp": "stables/204-chrysalis-reconstruction-array/robots/05-reconstruction-drone-05/portrait.webp",
+        "blueprint": "stables/204-chrysalis-reconstruction-array/robots/05-reconstruction-drone-05/blueprint.json",
+        "profile": "stables/204-chrysalis-reconstruction-array/robots/05-reconstruction-drone-05/profile.md",
+        "prompt": "stables/204-chrysalis-reconstruction-array/robots/05-reconstruction-drone-05/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/chrysalis-reconstruction-array/5.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 204,
+          "stable_name": "Chrysalis Reconstruction Array",
+          "catalogue_key": "chrysalis-reconstruction-array",
+          "slot": 5,
+          "robot_name": "Reconstruction Drone 05",
+          "source_identity": "Reconstruction Drone 05; original arena drone adaptation of BeaverFur's Chrysalis",
+          "source_edition": "Chrysalis by BeaverFur, original coherent arena drone family",
+          "source_references": [
+            "https://www.reddit.com/r/HFY/comments/55v9e1/chrysalis/"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete original arena robot, explicitly adapted from the stated fictional AI premise.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE ORIGINAL arena-scale reconstruction drone representing the intelligence's industrial drones in BeaverFur's original r/HFY web fiction Chrysalis. Detailed chassis and numbered unit label are original arena adaptations, not named independent characters or exact canonical robot designs. Family design shared across all eleven: compact white/off-white faceted industrial central body, one small dark horizontal sensor visor with a restrained amber optic, four short sturdy segmented walking legs and broad rectangular foot pads, grey exposed joint hardware, very light yellow hazard trim without writing. This cutter variant is distinguished by one guarded circular cutting tool folded on the right flank, blade stationary. One unified small machine, no humanoid face, hands or separate head, no warship, extra drones or humans. Source industrial reconstruction premise, believable clean white paint with gentle wear; all four feet and every attachment visible inside the square.\nMetadata only, do not render text: #204 slot 5 Reconstruction Drone 05.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-d2a0bbff-2590-4702-bd78-25ad198ee0af.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "chrysalis-reconstruction-array:5",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/chrysalis-reconstruction-array/5.webp",
+          "master": "outputs/automaton-portraits/masters/chrysalis-reconstruction-array/5.png",
+          "output": "app/frontend/public/assets/automatons/chrysalis-reconstruction-array/5.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "56a68a77f2256cedc3c7e591d1b8f050ab7ae154a1734aa20246c2d39b4ea215",
+          "bytes": 64148
+        },
+        "sha256": "56a68a77f2256cedc3c7e591d1b8f050ab7ae154a1734aa20246c2d39b4ea215",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 6,
+      "name": "Reconstruction Drone 06",
+      "source_identity": "Reconstruction Drone 06; original arena drone adaptation of BeaverFur's Chrysalis",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yield_threshold": 25,
+      "build_focus": "Warden",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": "Light Shield",
+          "list_price_credits": 108000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": "Aegis Bulwark",
+          "list_price_credits": 834000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete original arena robot, explicitly adapted from the stated fictional AI premise.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE ORIGINAL arena-scale reconstruction drone representing the intelligence's industrial drones in BeaverFur's original r/HFY web fiction Chrysalis. Detailed chassis and numbered unit label are original arena adaptations, not named independent characters or exact canonical robot designs. Family design shared across all eleven: compact white/off-white faceted industrial central body, one small dark horizontal sensor visor with a restrained amber optic, four short sturdy segmented walking legs and broad rectangular foot pads, grey exposed joint hardware, very light yellow hazard trim without writing. This drill variant is distinguished by one compact blunt industrial drill assembly folded on the right flank, inactive. One unified small machine, no humanoid face, hands or separate head, no warship, extra drones or humans. Source industrial reconstruction premise, believable clean white paint with gentle wear; all four feet and every attachment visible inside the square.\nMetadata only, do not render text: #204 slot 6 Reconstruction Drone 06.",
+      "role": "Protected short-range anchor",
+      "missing_fields": [],
+      "refinement_note": "Swarm follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 5,
+      "equipment_interpretation": "Reconstruction Drone 06 fills the protected short-range anchor role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Warden tuning supports the short equipment role; defensive stance and a 25% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Swarm strategy tuning rules with the Warden Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "chrysalis-reconstruction-array:6:reconstruction-drone-06",
+      "folder": "stables/204-chrysalis-reconstruction-array/robots/06-reconstruction-drone-06",
+      "files": {
+        "png": "stables/204-chrysalis-reconstruction-array/robots/06-reconstruction-drone-06/portrait.png",
+        "webp": "stables/204-chrysalis-reconstruction-array/robots/06-reconstruction-drone-06/portrait.webp",
+        "blueprint": "stables/204-chrysalis-reconstruction-array/robots/06-reconstruction-drone-06/blueprint.json",
+        "profile": "stables/204-chrysalis-reconstruction-array/robots/06-reconstruction-drone-06/profile.md",
+        "prompt": "stables/204-chrysalis-reconstruction-array/robots/06-reconstruction-drone-06/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/chrysalis-reconstruction-array/6.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 204,
+          "stable_name": "Chrysalis Reconstruction Array",
+          "catalogue_key": "chrysalis-reconstruction-array",
+          "slot": 6,
+          "robot_name": "Reconstruction Drone 06",
+          "source_identity": "Reconstruction Drone 06; original arena drone adaptation of BeaverFur's Chrysalis",
+          "source_edition": "Chrysalis by BeaverFur, original coherent arena drone family",
+          "source_references": [
+            "https://www.reddit.com/r/HFY/comments/55v9e1/chrysalis/"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete original arena robot, explicitly adapted from the stated fictional AI premise.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE ORIGINAL arena-scale reconstruction drone representing the intelligence's industrial drones in BeaverFur's original r/HFY web fiction Chrysalis. Detailed chassis and numbered unit label are original arena adaptations, not named independent characters or exact canonical robot designs. Family design shared across all eleven: compact white/off-white faceted industrial central body, one small dark horizontal sensor visor with a restrained amber optic, four short sturdy segmented walking legs and broad rectangular foot pads, grey exposed joint hardware, very light yellow hazard trim without writing. This drill variant is distinguished by one compact blunt industrial drill assembly folded on the right flank, inactive. One unified small machine, no humanoid face, hands or separate head, no warship, extra drones or humans. Source industrial reconstruction premise, believable clean white paint with gentle wear; all four feet and every attachment visible inside the square.\nMetadata only, do not render text: #204 slot 6 Reconstruction Drone 06.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-15c23c77-dff8-4839-b76b-e055447fa005.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "chrysalis-reconstruction-array:6",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/chrysalis-reconstruction-array/6.webp",
+          "master": "outputs/automaton-portraits/masters/chrysalis-reconstruction-array/6.png",
+          "output": "app/frontend/public/assets/automatons/chrysalis-reconstruction-array/6.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "a7c8bcee4c5c1f120eb6a5c88f99376d5500efe18383027e9cf26f4b6788bc9c",
+          "bytes": 63664
+        },
+        "sha256": "a7c8bcee4c5c1f120eb6a5c88f99376d5500efe18383027e9cf26f4b6788bc9c",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 7,
+      "name": "Reconstruction Drone 07",
+      "source_identity": "Reconstruction Drone 07; original arena drone adaptation of BeaverFur's Chrysalis",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Sprinter",
+      "range_from_weapons": "melee",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Practice Sword",
+          "offhand_weapon": null,
+          "list_price_credits": 50000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Vibro Mace",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete original arena robot, explicitly adapted from the stated fictional AI premise.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE ORIGINAL arena-scale reconstruction drone representing the intelligence's industrial drones in BeaverFur's original r/HFY web fiction Chrysalis. Detailed chassis and numbered unit label are original arena adaptations, not named independent characters or exact canonical robot designs. Family design shared across all eleven: compact white/off-white faceted industrial central body, one small dark horizontal sensor visor with a restrained amber optic, four short sturdy segmented walking legs and broad rectangular foot pads, grey exposed joint hardware, very light yellow hazard trim without writing. This fabricator variant is distinguished by one boxlike closed fabrication module integrated across the back. One unified small machine, no humanoid face, hands or separate head, no warship, extra drones or humans. Source industrial reconstruction premise, believable clean white paint with gentle wear; all four feet and every attachment visible inside the square.\nMetadata only, do not render text: #204 slot 7 Reconstruction Drone 07.",
+      "role": "Agile contact specialist",
+      "missing_fields": [],
+      "refinement_note": "Swarm follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 6,
+      "equipment_interpretation": "Reconstruction Drone 07 fills the agile contact specialist role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Sprinter tuning supports the melee equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Swarm strategy tuning rules with the Sprinter Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "chrysalis-reconstruction-array:7:reconstruction-drone-07",
+      "folder": "stables/204-chrysalis-reconstruction-array/robots/07-reconstruction-drone-07",
+      "files": {
+        "png": "stables/204-chrysalis-reconstruction-array/robots/07-reconstruction-drone-07/portrait.png",
+        "webp": "stables/204-chrysalis-reconstruction-array/robots/07-reconstruction-drone-07/portrait.webp",
+        "blueprint": "stables/204-chrysalis-reconstruction-array/robots/07-reconstruction-drone-07/blueprint.json",
+        "profile": "stables/204-chrysalis-reconstruction-array/robots/07-reconstruction-drone-07/profile.md",
+        "prompt": "stables/204-chrysalis-reconstruction-array/robots/07-reconstruction-drone-07/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/chrysalis-reconstruction-array/7.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 204,
+          "stable_name": "Chrysalis Reconstruction Array",
+          "catalogue_key": "chrysalis-reconstruction-array",
+          "slot": 7,
+          "robot_name": "Reconstruction Drone 07",
+          "source_identity": "Reconstruction Drone 07; original arena drone adaptation of BeaverFur's Chrysalis",
+          "source_edition": "Chrysalis by BeaverFur, original coherent arena drone family",
+          "source_references": [
+            "https://www.reddit.com/r/HFY/comments/55v9e1/chrysalis/"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete original arena robot, explicitly adapted from the stated fictional AI premise.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE ORIGINAL arena-scale reconstruction drone representing the intelligence's industrial drones in BeaverFur's original r/HFY web fiction Chrysalis. Detailed chassis and numbered unit label are original arena adaptations, not named independent characters or exact canonical robot designs. Family design shared across all eleven: compact white/off-white faceted industrial central body, one small dark horizontal sensor visor with a restrained amber optic, four short sturdy segmented walking legs and broad rectangular foot pads, grey exposed joint hardware, very light yellow hazard trim without writing. This fabricator variant is distinguished by one boxlike closed fabrication module integrated across the back. One unified small machine, no humanoid face, hands or separate head, no warship, extra drones or humans. Source industrial reconstruction premise, believable clean white paint with gentle wear; all four feet and every attachment visible inside the square.\nMetadata only, do not render text: #204 slot 7 Reconstruction Drone 07.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-9c88cdf4-97c4-4682-ac9e-cfcf105d07a9.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "chrysalis-reconstruction-array:7",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/chrysalis-reconstruction-array/7.webp",
+          "master": "outputs/automaton-portraits/masters/chrysalis-reconstruction-array/7.png",
+          "output": "app/frontend/public/assets/automatons/chrysalis-reconstruction-array/7.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "2b069b006b13a647ada3a3ea66ef3e001f8e524f6f280d69ed11f07fecd13441",
+          "bytes": 59754
+        },
+        "sha256": "2b069b006b13a647ada3a3ea66ef3e001f8e524f6f280d69ed11f07fecd13441",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 8,
+      "name": "Reconstruction Drone 08",
+      "source_identity": "Reconstruction Drone 08; original arena drone adaptation of BeaverFur's Chrysalis",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Bruiser",
+      "range_from_weapons": "melee",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Shock Maul",
+          "offhand_weapon": null,
+          "list_price_credits": 183000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Heavy Hammer",
+          "offhand_weapon": null,
+          "list_price_credits": 478000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete original arena robot, explicitly adapted from the stated fictional AI premise.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE ORIGINAL arena-scale reconstruction drone representing the intelligence's industrial drones in BeaverFur's original r/HFY web fiction Chrysalis. Detailed chassis and numbered unit label are original arena adaptations, not named independent characters or exact canonical robot designs. Family design shared across all eleven: compact white/off-white faceted industrial central body, one small dark horizontal sensor visor with a restrained amber optic, four short sturdy segmented walking legs and broad rectangular foot pads, grey exposed joint hardware, very light yellow hazard trim without writing. This shield variant is distinguished by one shallow reinforced rectangular shield fitted neatly against the left flank. One unified small machine, no humanoid face, hands or separate head, no warship, extra drones or humans. Source industrial reconstruction premise, believable clean white paint with gentle wear; all four feet and every attachment visible inside the square.\nMetadata only, do not render text: #204 slot 8 Reconstruction Drone 08.",
+      "role": "Heavy contact attacker",
+      "missing_fields": [],
+      "refinement_note": "Swarm follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 7,
+      "equipment_interpretation": "Reconstruction Drone 08 fills the heavy contact attacker role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Bruiser tuning supports the melee equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Swarm strategy tuning rules with the Bruiser Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "chrysalis-reconstruction-array:8:reconstruction-drone-08",
+      "folder": "stables/204-chrysalis-reconstruction-array/robots/08-reconstruction-drone-08",
+      "files": {
+        "png": "stables/204-chrysalis-reconstruction-array/robots/08-reconstruction-drone-08/portrait.png",
+        "webp": "stables/204-chrysalis-reconstruction-array/robots/08-reconstruction-drone-08/portrait.webp",
+        "blueprint": "stables/204-chrysalis-reconstruction-array/robots/08-reconstruction-drone-08/blueprint.json",
+        "profile": "stables/204-chrysalis-reconstruction-array/robots/08-reconstruction-drone-08/profile.md",
+        "prompt": "stables/204-chrysalis-reconstruction-array/robots/08-reconstruction-drone-08/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/chrysalis-reconstruction-array/8.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 204,
+          "stable_name": "Chrysalis Reconstruction Array",
+          "catalogue_key": "chrysalis-reconstruction-array",
+          "slot": 8,
+          "robot_name": "Reconstruction Drone 08",
+          "source_identity": "Reconstruction Drone 08; original arena drone adaptation of BeaverFur's Chrysalis",
+          "source_edition": "Chrysalis by BeaverFur, original coherent arena drone family",
+          "source_references": [
+            "https://www.reddit.com/r/HFY/comments/55v9e1/chrysalis/"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete original arena robot, explicitly adapted from the stated fictional AI premise.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE ORIGINAL arena-scale reconstruction drone representing the intelligence's industrial drones in BeaverFur's original r/HFY web fiction Chrysalis. Detailed chassis and numbered unit label are original arena adaptations, not named independent characters or exact canonical robot designs. Family design shared across all eleven: compact white/off-white faceted industrial central body, one small dark horizontal sensor visor with a restrained amber optic, four short sturdy segmented walking legs and broad rectangular foot pads, grey exposed joint hardware, very light yellow hazard trim without writing. This shield variant is distinguished by one shallow reinforced rectangular shield fitted neatly against the left flank. One unified small machine, no humanoid face, hands or separate head, no warship, extra drones or humans. Source industrial reconstruction premise, believable clean white paint with gentle wear; all four feet and every attachment visible inside the square.\nMetadata only, do not render text: #204 slot 8 Reconstruction Drone 08.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-d6145331-e986-4ea7-a2db-5a69edd9d342.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "chrysalis-reconstruction-array:8",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/chrysalis-reconstruction-array/8.webp",
+          "master": "outputs/automaton-portraits/masters/chrysalis-reconstruction-array/8.png",
+          "output": "app/frontend/public/assets/automatons/chrysalis-reconstruction-array/8.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "da3975433dd91fb15172c5f6d38dacfc716516d3e8264990557e3b9e33aed5c0",
+          "bytes": 52978
+        },
+        "sha256": "da3975433dd91fb15172c5f6d38dacfc716516d3e8264990557e3b9e33aed5c0",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 9,
+      "name": "Reconstruction Drone 09",
+      "source_identity": "Reconstruction Drone 09; original arena drone adaptation of BeaverFur's Chrysalis",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Bruiser",
+      "range_from_weapons": "mid",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Training Rifle",
+          "offhand_weapon": null,
+          "list_price_credits": 50000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Plasma Cannon",
+          "offhand_weapon": null,
+          "list_price_credits": 408000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete original arena robot, explicitly adapted from the stated fictional AI premise.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE ORIGINAL arena-scale reconstruction drone representing the intelligence's industrial drones in BeaverFur's original r/HFY web fiction Chrysalis. Detailed chassis and numbered unit label are original arena adaptations, not named independent characters or exact canonical robot designs. Family design shared across all eleven: compact white/off-white faceted industrial central body, one small dark horizontal sensor visor with a restrained amber optic, four short sturdy segmented walking legs and broad rectangular foot pads, grey exposed joint hardware, very light yellow hazard trim without writing. This loader variant is distinguished by one short paired load-handling fork folded over the front chassis, not extending beyond frame. One unified small machine, no humanoid face, hands or separate head, no warship, extra drones or humans. Source industrial reconstruction premise, believable clean white paint with gentle wear; all four feet and every attachment visible inside the square.\nMetadata only, do not render text: #204 slot 9 Reconstruction Drone 09.",
+      "role": "Heavy mid-range pressure",
+      "missing_fields": [],
+      "refinement_note": "Swarm follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 8,
+      "equipment_interpretation": "Reconstruction Drone 09 fills the heavy mid-range pressure role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Bruiser tuning supports the mid equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Swarm strategy tuning rules with the Bruiser Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "chrysalis-reconstruction-array:9:reconstruction-drone-09",
+      "folder": "stables/204-chrysalis-reconstruction-array/robots/09-reconstruction-drone-09",
+      "files": {
+        "png": "stables/204-chrysalis-reconstruction-array/robots/09-reconstruction-drone-09/portrait.png",
+        "webp": "stables/204-chrysalis-reconstruction-array/robots/09-reconstruction-drone-09/portrait.webp",
+        "blueprint": "stables/204-chrysalis-reconstruction-array/robots/09-reconstruction-drone-09/blueprint.json",
+        "profile": "stables/204-chrysalis-reconstruction-array/robots/09-reconstruction-drone-09/profile.md",
+        "prompt": "stables/204-chrysalis-reconstruction-array/robots/09-reconstruction-drone-09/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/chrysalis-reconstruction-array/9.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 204,
+          "stable_name": "Chrysalis Reconstruction Array",
+          "catalogue_key": "chrysalis-reconstruction-array",
+          "slot": 9,
+          "robot_name": "Reconstruction Drone 09",
+          "source_identity": "Reconstruction Drone 09; original arena drone adaptation of BeaverFur's Chrysalis",
+          "source_edition": "Chrysalis by BeaverFur, original coherent arena drone family",
+          "source_references": [
+            "https://www.reddit.com/r/HFY/comments/55v9e1/chrysalis/"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete original arena robot, explicitly adapted from the stated fictional AI premise.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE ORIGINAL arena-scale reconstruction drone representing the intelligence's industrial drones in BeaverFur's original r/HFY web fiction Chrysalis. Detailed chassis and numbered unit label are original arena adaptations, not named independent characters or exact canonical robot designs. Family design shared across all eleven: compact white/off-white faceted industrial central body, one small dark horizontal sensor visor with a restrained amber optic, four short sturdy segmented walking legs and broad rectangular foot pads, grey exposed joint hardware, very light yellow hazard trim without writing. This loader variant is distinguished by one short paired load-handling fork folded over the front chassis, not extending beyond frame. One unified small machine, no humanoid face, hands or separate head, no warship, extra drones or humans. Source industrial reconstruction premise, believable clean white paint with gentle wear; all four feet and every attachment visible inside the square.\nMetadata only, do not render text: #204 slot 9 Reconstruction Drone 09.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-725393b4-aed4-4a1f-a47a-d311d4d1882d.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "chrysalis-reconstruction-array:9",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/chrysalis-reconstruction-array/9.webp",
+          "master": "outputs/automaton-portraits/masters/chrysalis-reconstruction-array/9.png",
+          "output": "app/frontend/public/assets/automatons/chrysalis-reconstruction-array/9.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "69229df9d20d425226ce88b98f6b7209ca6051042efff443a982708a13d8add6",
+          "bytes": 62360
+        },
+        "sha256": "69229df9d20d425226ce88b98f6b7209ca6051042efff443a982708a13d8add6",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 10,
+      "name": "Reconstruction Drone 10",
+      "source_identity": "Reconstruction Drone 10; original arena drone adaptation of BeaverFur's Chrysalis",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yield_threshold": 20,
+      "build_focus": "Warden",
+      "range_from_weapons": "long",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Beam Pistol",
+          "offhand_weapon": "Light Shield",
+          "list_price_credits": 144000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Particle Lance",
+          "offhand_weapon": "Aegis Bulwark",
+          "list_price_credits": 834000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete original arena robot, explicitly adapted from the stated fictional AI premise.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE ORIGINAL arena-scale reconstruction drone representing the intelligence's industrial drones in BeaverFur's original r/HFY web fiction Chrysalis. Detailed chassis and numbered unit label are original arena adaptations, not named independent characters or exact canonical robot designs. Family design shared across all eleven: compact white/off-white faceted industrial central body, one small dark horizontal sensor visor with a restrained amber optic, four short sturdy segmented walking legs and broad rectangular foot pads, grey exposed joint hardware, very light yellow hazard trim without writing. This repair variant is distinguished by one small folded precision repair manipulator and closed tool cassette. One unified small machine, no humanoid face, hands or separate head, no warship, extra drones or humans. Source industrial reconstruction premise, believable clean white paint with gentle wear; all four feet and every attachment visible inside the square.\nMetadata only, do not render text: #204 slot 10 Reconstruction Drone 10.",
+      "role": "Protected precision platform",
+      "missing_fields": [],
+      "refinement_note": "Swarm follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 9,
+      "equipment_interpretation": "Reconstruction Drone 10 fills the protected precision platform role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Warden tuning supports the long equipment role; defensive stance and a 20% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Swarm strategy tuning rules with the Warden Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "chrysalis-reconstruction-array:10:reconstruction-drone-10",
+      "folder": "stables/204-chrysalis-reconstruction-array/robots/10-reconstruction-drone-10",
+      "files": {
+        "png": "stables/204-chrysalis-reconstruction-array/robots/10-reconstruction-drone-10/portrait.png",
+        "webp": "stables/204-chrysalis-reconstruction-array/robots/10-reconstruction-drone-10/portrait.webp",
+        "blueprint": "stables/204-chrysalis-reconstruction-array/robots/10-reconstruction-drone-10/blueprint.json",
+        "profile": "stables/204-chrysalis-reconstruction-array/robots/10-reconstruction-drone-10/profile.md",
+        "prompt": "stables/204-chrysalis-reconstruction-array/robots/10-reconstruction-drone-10/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/chrysalis-reconstruction-array/10.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 204,
+          "stable_name": "Chrysalis Reconstruction Array",
+          "catalogue_key": "chrysalis-reconstruction-array",
+          "slot": 10,
+          "robot_name": "Reconstruction Drone 10",
+          "source_identity": "Reconstruction Drone 10; original arena drone adaptation of BeaverFur's Chrysalis",
+          "source_edition": "Chrysalis by BeaverFur, original coherent arena drone family",
+          "source_references": [
+            "https://www.reddit.com/r/HFY/comments/55v9e1/chrysalis/"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete original arena robot, explicitly adapted from the stated fictional AI premise.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE ORIGINAL arena-scale reconstruction drone representing the intelligence's industrial drones in BeaverFur's original r/HFY web fiction Chrysalis. Detailed chassis and numbered unit label are original arena adaptations, not named independent characters or exact canonical robot designs. Family design shared across all eleven: compact white/off-white faceted industrial central body, one small dark horizontal sensor visor with a restrained amber optic, four short sturdy segmented walking legs and broad rectangular foot pads, grey exposed joint hardware, very light yellow hazard trim without writing. This repair variant is distinguished by one small folded precision repair manipulator and closed tool cassette. One unified small machine, no humanoid face, hands or separate head, no warship, extra drones or humans. Source industrial reconstruction premise, believable clean white paint with gentle wear; all four feet and every attachment visible inside the square.\nMetadata only, do not render text: #204 slot 10 Reconstruction Drone 10.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-2a5f2d9d-5a35-432c-a440-0971a1cd528b.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "chrysalis-reconstruction-array:10",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/chrysalis-reconstruction-array/10.webp",
+          "master": "outputs/automaton-portraits/masters/chrysalis-reconstruction-array/10.png",
+          "output": "app/frontend/public/assets/automatons/chrysalis-reconstruction-array/10.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "06eaeb693e13e93aebed6d4891654c3ae525d3d14d42b51c525aea7d120f7c4c",
+          "bytes": 56942
+        },
+        "sha256": "06eaeb693e13e93aebed6d4891654c3ae525d3d14d42b51c525aea7d120f7c4c",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 11,
+      "name": "Reconstruction Drone 11",
+      "source_identity": "Reconstruction Drone 11; original arena drone adaptation of BeaverFur's Chrysalis",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "balanced",
+      "yield_threshold": 15,
+      "build_focus": "Deadeye",
+      "range_from_weapons": "long",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Training Beam",
+          "offhand_weapon": null,
+          "list_price_credits": 50000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Ion Beam",
+          "offhand_weapon": null,
+          "list_price_credits": 544000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete original arena robot, explicitly adapted from the stated fictional AI premise.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE ORIGINAL arena-scale reconstruction drone representing the intelligence's industrial drones in BeaverFur's original r/HFY web fiction Chrysalis. Detailed chassis and numbered unit label are original arena adaptations, not named independent characters or exact canonical robot designs. Family design shared across all eleven: compact white/off-white faceted industrial central body, one small dark horizontal sensor visor with a restrained amber optic, four short sturdy segmented walking legs and broad rectangular foot pads, grey exposed joint hardware, very light yellow hazard trim without writing. This precision variant is distinguished by one long but compact inactive forward tool/emitter rail. One unified small machine, no humanoid face, hands or separate head, no warship, extra drones or humans. Source industrial reconstruction premise, believable clean white paint with gentle wear; all four feet and every attachment visible inside the square.\nMetadata only, do not render text: #204 slot 11 Reconstruction Drone 11.",
+      "role": "Heavy long-range support",
+      "missing_fields": [],
+      "refinement_note": "Swarm follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 10,
+      "equipment_interpretation": "Reconstruction Drone 11 fills the heavy long-range support role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Deadeye tuning supports the long equipment role; balanced stance and a 15% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Swarm strategy tuning rules with the Deadeye Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "chrysalis-reconstruction-array:11:reconstruction-drone-11",
+      "folder": "stables/204-chrysalis-reconstruction-array/robots/11-reconstruction-drone-11",
+      "files": {
+        "png": "stables/204-chrysalis-reconstruction-array/robots/11-reconstruction-drone-11/portrait.png",
+        "webp": "stables/204-chrysalis-reconstruction-array/robots/11-reconstruction-drone-11/portrait.webp",
+        "blueprint": "stables/204-chrysalis-reconstruction-array/robots/11-reconstruction-drone-11/blueprint.json",
+        "profile": "stables/204-chrysalis-reconstruction-array/robots/11-reconstruction-drone-11/profile.md",
+        "prompt": "stables/204-chrysalis-reconstruction-array/robots/11-reconstruction-drone-11/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/chrysalis-reconstruction-array/11.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 204,
+          "stable_name": "Chrysalis Reconstruction Array",
+          "catalogue_key": "chrysalis-reconstruction-array",
+          "slot": 11,
+          "robot_name": "Reconstruction Drone 11",
+          "source_identity": "Reconstruction Drone 11; original arena drone adaptation of BeaverFur's Chrysalis",
+          "source_edition": "Chrysalis by BeaverFur, original coherent arena drone family",
+          "source_references": [
+            "https://www.reddit.com/r/HFY/comments/55v9e1/chrysalis/"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete original arena robot, explicitly adapted from the stated fictional AI premise.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE ORIGINAL arena-scale reconstruction drone representing the intelligence's industrial drones in BeaverFur's original r/HFY web fiction Chrysalis. Detailed chassis and numbered unit label are original arena adaptations, not named independent characters or exact canonical robot designs. Family design shared across all eleven: compact white/off-white faceted industrial central body, one small dark horizontal sensor visor with a restrained amber optic, four short sturdy segmented walking legs and broad rectangular foot pads, grey exposed joint hardware, very light yellow hazard trim without writing. This precision variant is distinguished by one long but compact inactive forward tool/emitter rail. One unified small machine, no humanoid face, hands or separate head, no warship, extra drones or humans. Source industrial reconstruction premise, believable clean white paint with gentle wear; all four feet and every attachment visible inside the square.\nMetadata only, do not render text: #204 slot 11 Reconstruction Drone 11.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-fde931c8-5394-42da-84ef-961b643d57cd.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "chrysalis-reconstruction-array:11",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/chrysalis-reconstruction-array/11.webp",
+          "master": "outputs/automaton-portraits/masters/chrysalis-reconstruction-array/11.png",
+          "output": "app/frontend/public/assets/automatons/chrysalis-reconstruction-array/11.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "2b3b737740ac6724967e84542f524ab03251cb89dfa647a1317286d604c5cb5c",
+          "bytes": 56274
+        },
+        "sha256": "2b3b737740ac6724967e84542f524ab03251cb89dfa647a1317286d604c5cb5c",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "replacement_alternatives": []
+}

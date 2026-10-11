@@ -1,0 +1,366 @@
+{
+  "number": 186,
+  "catalogue_key": "skeleton-drifter-workshop",
+  "name": "Skeleton Drifter Workshop",
+  "franchise": "Kenshi — game continuity",
+  "strategy": "Generalist",
+  "opening_robots": 2,
+  "target_robots": 3,
+  "max_planned_robots": 3,
+  "strategy_review_limit": 4,
+  "backstory": "Three weathered mechanical drifters bring agile contact, protection and heavy fire to a salvage-minded workshop. Their distinct jobs guide purchases without erasing their source chassis.",
+  "strategy_personality": "Three named Skeletons bring weathered metal bodies, exposed joints, and a strong scavenged-world identity. Their different source models matter more than a common repaint; select reference views for each before assigning supported loadouts. A balanced salvage-minded roster suits their setting. Preserve Agnu's source chassis and each recruit's identity, while treating their association and arena purchasing behaviour as a design proposal.",
+  "teams": {
+    "2v2": [
+      {
+        "name": "Skeleton Yard Pair 01",
+        "slots": [
+          1,
+          2
+        ],
+        "forms": "Opening"
+      }
+    ],
+    "3v3": [
+      {
+        "name": "Skeleton Yard Squad 01",
+        "slots": [
+          1,
+          2,
+          3
+        ],
+        "forms": "When slot 3 joins"
+      }
+    ]
+  },
+  "event_order": [
+    "league_1v1",
+    "league_2v2",
+    "tag_team",
+    "league_3v3",
+    "koth",
+    "grand_melee",
+    "tournament_1v1",
+    "tournament_2v2",
+    "tournament_3v3"
+  ],
+  "robots": [
+    {
+      "slot": 1,
+      "name": "Burn",
+      "source_identity": "Burn",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Sprinter",
+      "range_from_weapons": "melee",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Practice Sword",
+          "offhand_weapon": null,
+          "list_price_credits": 50000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Vibro Mace",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Sharpen",
+          "weapon": "Vibro Mace",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 1,
+          "cost_credits": 300000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 1
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE Burn, the named Skeleton recruit from Kenshi. Match the attached in-game screenshot's mechanical Skeleton head and body construction: worn dark steel narrow frame, angular broad-topped head with small round inset sensors and a long downward central face mechanism, exposed joints and ribbed mechanical torso, thin metal fingers and feet. Tattered brown cloth shoulder wrap and armoured rags, patched rag skirt over mechanical legs, all based on Kenshi salvage equipment. Hold ONE long heavy cleaver in BOTH hands lowered diagonally, no second back weapon. Preserve a weathered retired adventurer identity, no human skull or flesh. Complete full body including feet; no game UI or other characters.\nMetadata only, do not render text: #186 slot 1 Burn.",
+      "role": "Agile contact specialist",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 300000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "Burn fills the agile contact specialist role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Sprinter tuning supports the melee equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Generalist strategy tuning rules with the Sprinter Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "skeleton-drifter-workshop:1:burn",
+      "folder": "stables/186-skeleton-drifter-workshop/robots/01-burn",
+      "files": {
+        "png": "stables/186-skeleton-drifter-workshop/robots/01-burn/portrait.png",
+        "webp": "stables/186-skeleton-drifter-workshop/robots/01-burn/portrait.webp",
+        "blueprint": "stables/186-skeleton-drifter-workshop/robots/01-burn/blueprint.json",
+        "profile": "stables/186-skeleton-drifter-workshop/robots/01-burn/profile.md",
+        "prompt": "stables/186-skeleton-drifter-workshop/robots/01-burn/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/skeleton-drifter-workshop/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 186,
+          "stable_name": "Skeleton Drifter Workshop",
+          "catalogue_key": "skeleton-drifter-workshop",
+          "slot": 1,
+          "robot_name": "Burn",
+          "source_identity": "Burn",
+          "source_edition": "Kenshi, standard Skeleton body with arena salvage equipment",
+          "source_references": [
+            "https://store.steampowered.com/app/233860/Kenshi/",
+            "https://kenshi.zone/en/burn"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE Burn, the named Skeleton recruit from Kenshi. Match the attached in-game screenshot's mechanical Skeleton head and body construction: worn dark steel narrow frame, angular broad-topped head with small round inset sensors and a long downward central face mechanism, exposed joints and ribbed mechanical torso, thin metal fingers and feet. Tattered brown cloth shoulder wrap and armoured rags, patched rag skirt over mechanical legs, all based on Kenshi salvage equipment. Hold ONE long heavy cleaver in BOTH hands lowered diagonally, no second back weapon. Preserve a weathered retired adventurer identity, no human skull or flesh. Complete full body including feet; no game UI or other characters.\nMetadata only, do not render text: #186 slot 1 Burn.",
+          "referenced_image_paths": [
+            "/tmp/armoured-kenshi-recruits.jpg"
+          ],
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-cff4bdd3-271b-47cc-9046-4f8361a1698e.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "skeleton-drifter-workshop:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/skeleton-drifter-workshop/1.webp",
+          "master": "outputs/automaton-portraits/masters/skeleton-drifter-workshop/1.png",
+          "output": "app/frontend/public/assets/automatons/skeleton-drifter-workshop/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "2dc696da144a1f695f59dae005c8bfb00a2cdd5f945e048fe9681c61f67f77eb",
+          "bytes": 37562
+        },
+        "sha256": "2dc696da144a1f695f59dae005c8bfb00a2cdd5f945e048fe9681c61f67f77eb",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 2,
+      "name": "Sadneil",
+      "source_identity": "Sadneil",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yield_threshold": 25,
+      "build_focus": "Warden",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": "Light Shield",
+          "list_price_credits": 108000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": "Aegis Bulwark",
+          "list_price_credits": 834000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE Sadneil from Kenshi, faithful to the attached in-game screenshot's standard Skeleton head and exposed mechanical body: angular broad-topped metal head with inset round sensors and a long thin central face mechanism, lanky steel articulated limbs, ribbed narrow torso, slender hands and metal feet. Sparse faded charcoal-brown cloth trousers and light practical torso plates, retaining far more exposed joints than Burn. Slightly slumped weary posture, no human flesh or literal organic skeleton. One compact worn service pistol held downward in right hand as an original arena loadout addition; left hand empty. Source head anatomy, entire body and feet within frame. No UI, humans or other characters.\nMetadata only, do not render text: #186 slot 2 Sadneil.",
+      "role": "Protected short-range anchor",
+      "missing_fields": [],
+      "refinement_note": "Generalist refinement spending is reserved for the slot-1 lead; this supporting robot has an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 1,
+      "equipment_interpretation": "Sadneil fills the protected short-range anchor role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Warden tuning supports the short equipment role; defensive stance and a 25% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Generalist strategy tuning rules with the Warden Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "skeleton-drifter-workshop:2:sadneil",
+      "folder": "stables/186-skeleton-drifter-workshop/robots/02-sadneil",
+      "files": {
+        "png": "stables/186-skeleton-drifter-workshop/robots/02-sadneil/portrait.png",
+        "webp": "stables/186-skeleton-drifter-workshop/robots/02-sadneil/portrait.webp",
+        "blueprint": "stables/186-skeleton-drifter-workshop/robots/02-sadneil/blueprint.json",
+        "profile": "stables/186-skeleton-drifter-workshop/robots/02-sadneil/profile.md",
+        "prompt": "stables/186-skeleton-drifter-workshop/robots/02-sadneil/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/skeleton-drifter-workshop/2.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 186,
+          "stable_name": "Skeleton Drifter Workshop",
+          "catalogue_key": "skeleton-drifter-workshop",
+          "slot": 2,
+          "robot_name": "Sadneil",
+          "source_identity": "Sadneil",
+          "source_edition": "Kenshi, standard named Skeleton recruit with original arena service pistol",
+          "source_references": [
+            "https://store.steampowered.com/app/233860/Kenshi/",
+            "https://kenshi.zone/en/sadneil"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE Sadneil from Kenshi, faithful to the attached in-game screenshot's standard Skeleton head and exposed mechanical body: angular broad-topped metal head with inset round sensors and a long thin central face mechanism, lanky steel articulated limbs, ribbed narrow torso, slender hands and metal feet. Sparse faded charcoal-brown cloth trousers and light practical torso plates, retaining far more exposed joints than Burn. Slightly slumped weary posture, no human flesh or literal organic skeleton. One compact worn service pistol held downward in right hand as an original arena loadout addition; left hand empty. Source head anatomy, entire body and feet within frame. No UI, humans or other characters.\nMetadata only, do not render text: #186 slot 2 Sadneil.",
+          "referenced_image_paths": [
+            "/tmp/armoured-sadneil-reference.jpg"
+          ],
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-8b44f847-62b6-4994-9c3c-459bbdf85c93.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "skeleton-drifter-workshop:2",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/skeleton-drifter-workshop/2.webp",
+          "master": "outputs/automaton-portraits/masters/skeleton-drifter-workshop/2.png",
+          "output": "app/frontend/public/assets/automatons/skeleton-drifter-workshop/2.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "149f01f8a62102e5da59beb31be279e4740a6d5f692f0ddc1675c6b5158170dd",
+          "bytes": 38250
+        },
+        "sha256": "149f01f8a62102e5da59beb31be279e4740a6d5f692f0ddc1675c6b5158170dd",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 3,
+      "name": "Agnu",
+      "source_identity": "Agnu",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Bruiser",
+      "range_from_weapons": "mid",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Training Rifle",
+          "offhand_weapon": null,
+          "list_price_credits": 50000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Plasma Cannon",
+          "offhand_weapon": null,
+          "list_price_credits": 408000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE Agnu, the named Soldierbot recruit from Kenshi. Preserve the canonical Soldierbot body on its lanky old industrial humanoid frame and the distinctive elongated cylindrical LOG-HEAD MKII sensor head, clearly different from the triangular standard Skeleton head used by Burn and Sadneil. Weathered dark blue-grey metal and faded navy rag/loincloth equipment associated with Agnu, exposed heavy pistons and narrow jointed limbs, no human face, skull or flesh. One heavy salvaged two-handed industrial blade held down in BOTH hands is an original arena loadout addition. Full body, sensor head and both feet fully contained, modest wear, three-quarter pose, no cage, companions or game UI.\nMetadata only, do not render text: #186 slot 3 Agnu.",
+      "role": "Heavy mid-range pressure",
+      "missing_fields": [],
+      "refinement_note": "Generalist refinement spending is reserved for the slot-1 lead; this supporting robot has an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 2,
+      "equipment_interpretation": "Agnu fills the heavy mid-range pressure role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Bruiser tuning supports the mid equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Generalist strategy tuning rules with the Bruiser Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "skeleton-drifter-workshop:3:agnu",
+      "folder": "stables/186-skeleton-drifter-workshop/robots/03-agnu",
+      "files": {
+        "png": "stables/186-skeleton-drifter-workshop/robots/03-agnu/portrait.png",
+        "webp": "stables/186-skeleton-drifter-workshop/robots/03-agnu/portrait.webp",
+        "blueprint": "stables/186-skeleton-drifter-workshop/robots/03-agnu/blueprint.json",
+        "profile": "stables/186-skeleton-drifter-workshop/robots/03-agnu/profile.md",
+        "prompt": "stables/186-skeleton-drifter-workshop/robots/03-agnu/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/skeleton-drifter-workshop/3.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 186,
+          "stable_name": "Skeleton Drifter Workshop",
+          "catalogue_key": "skeleton-drifter-workshop",
+          "slot": 3,
+          "robot_name": "Agnu",
+          "source_identity": "Agnu",
+          "source_edition": "Kenshi, Soldierbot body with Log-Head MKII head and dark blue-grey colour identity",
+          "source_references": [
+            "https://store.steampowered.com/app/233860/Kenshi/",
+            "https://kenshi.zone/en/agnu",
+            "https://kenshi.zone/en/soldierbot"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE Agnu, the named Soldierbot recruit from Kenshi. Preserve the canonical Soldierbot body on its lanky old industrial humanoid frame and the distinctive elongated cylindrical LOG-HEAD MKII sensor head, clearly different from the triangular standard Skeleton head used by Burn and Sadneil. Weathered dark blue-grey metal and faded navy rag/loincloth equipment associated with Agnu, exposed heavy pistons and narrow jointed limbs, no human face, skull or flesh. One heavy salvaged two-handed industrial blade held down in BOTH hands is an original arena loadout addition. Full body, sensor head and both feet fully contained, modest wear, three-quarter pose, no cage, companions or game UI.\nMetadata only, do not render text: #186 slot 3 Agnu.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-07a1d138-e450-4450-a77b-ec937b2db915.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "skeleton-drifter-workshop:3",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/skeleton-drifter-workshop/3.webp",
+          "master": "outputs/automaton-portraits/masters/skeleton-drifter-workshop/3.png",
+          "output": "app/frontend/public/assets/automatons/skeleton-drifter-workshop/3.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "c83fbc36eb714069af108e61d188146dcff91b9181f626c2a6fe0c4399893c2f",
+          "bytes": 37138
+        },
+        "sha256": "c83fbc36eb714069af108e61d188146dcff91b9181f626c2a6fe0c4399893c2f",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "alternatives": [],
+  "blueprint_status": "detailed",
+  "source_notes": "\n**Franchise:** Kenshi — game continuity  \n**Strategy:** Generalist · **Target roster:** 3 robots\n\n**Proposed robots:** Burn; Sadneil; Agnu.\n\n**Direction:** Three named Skeletons bring weathered metal bodies, exposed joints, and a strong scavenged-world identity. Their different source models matter more than a common repaint; select reference views for each before assigning supported loadouts. A balanced salvage-minded roster suits their setting. Preserve Agnu's source chassis and each recruit's identity, while treating their association and arena purchasing behaviour as a design proposal.\n\nReferences: [official Kenshi game reference](https://store.steampowered.com/app/233860/Kenshi/), [secondary Skeleton model reference](https://kenshi.zone/en/skeleton).\n\n**Production edition:** Kenshi, standard Skeleton body with arena salvage equipment; Kenshi, standard named Skeleton recruit with original arena service pistol; Kenshi, Soldierbot body with Log-Head MKII head and dark blue-grey colour identity.  \n**Catalogue key:** `skeleton-drifter-workshop`\n\n",
+  "source_documents": [
+    "reference/AUTOMATON_STABLE_EXPANSION.md"
+  ],
+  "blueprint_origin": "completed during collection",
+  "purchasing_plan": "Open with slots 1–2; recruit slot 3 with its complete stage-0 loadout. Complete stage-1 loadouts in slot order. Refine the slot-1 lead only: verified Hone/Augment operations, then a first Sharpen at Workshop L5 and 3,000 prestige. Other slots have explicit empty refinement plans.",
+  "target_overrides": {
+    "robots": 3
+  },
+  "equipment_budget": {
+    "stage_0_credits": 208000,
+    "stage_1_credits": 1667000,
+    "refinement_credits": 300000,
+    "excludes": "Frames, facilities, training, repairs, upkeep, discounts and resale; stage-1 total replaces stage-0 gear and is not a simultaneous equipment inventory."
+  },
+  "folder": "stables/186-skeleton-drifter-workshop",
+  "history_image_count": 0
+}

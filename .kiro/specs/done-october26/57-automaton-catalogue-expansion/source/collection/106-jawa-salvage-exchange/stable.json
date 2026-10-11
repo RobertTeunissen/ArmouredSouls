@@ -1,0 +1,355 @@
+{
+  "number": 106,
+  "catalogue_key": "jawa-salvage-exchange",
+  "name": "Jawa Salvage Exchange",
+  "franchise": "Star Wars",
+  "strategy": "Tycoon",
+  "opening_robots": 2,
+  "target_robots": 3,
+  "max_planned_robots": 3,
+  "strategy_review_limit": 3,
+  "backstory": "The exchange turns discarded service machines into paying arena assets. Income facilities come first, and the repaired trio earns its equipment one careful purchase at a time.",
+  "strategy_personality": "prioritize the Tycoon strategy's income facilities, then invest in a modest, repaired roster. R5-D4 is the mobile general-purpose machine, the Treadwell is the precise tool-using specialist, and the GNK provides the sturdy defensive silhouette. These are arena interpretations of civilian machines, not claims that they are canonical combatants.",
+  "teams": {
+    "2v2": [
+      {
+        "name": "Jawa Salvage Pair 01",
+        "slots": [
+          1,
+          2
+        ],
+        "forms": "Opening"
+      }
+    ],
+    "3v3": [
+      {
+        "name": "Jawa Salvage Squad 01",
+        "slots": [
+          1,
+          2,
+          3
+        ],
+        "forms": "When slot 3 joins"
+      }
+    ]
+  },
+  "event_order": [
+    "league_2v2",
+    "tag_team",
+    "league_1v1",
+    "league_3v3",
+    "koth",
+    "grand_melee",
+    "tournament_2v2",
+    "tournament_3v3",
+    "tournament_1v1"
+  ],
+  "robots": [
+    {
+      "slot": 1,
+      "name": "R5-D4",
+      "source_identity": "R5-D4 — A New Hope",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 15,
+      "build_focus": "Versatile",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": null,
+          "list_price_credits": 57000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset: one square individual robot portrait for the Armoured Souls game. Create an original robot design with its own construction and proportions. Premium realistic industrial science-fiction 3D render, fine scratches and restrained paint wear, believable materials. Quiet charcoal-to-black studio backdrop, dark floor, faint low haze. Neutral soft key light and cool upper-right rim. Three-quarter view, entire robot, wheels, antennae and tools visible, centered at 80% canvas height with clear margin on all sides. Readable at 512px. One robot only. No text, logos, watermark, frame, interface, collage, firing, explosions or extra characters.\nSubject: Original desert salvage utility robot on four large rugged wheels, each on an independent articulated suspension strut. Low rounded rectangular cream-and-ochre cargo body, copper patch plates, pale mint access doors, a short swivelling square periscope sensor mast and a folded lifting fork along the side. Dust and restrained oxidation. Friendly compact proportions, unique rolling-toolbox silhouette, all four wheels and mast fully visible.",
+      "role": "Flexible line fighter",
+      "missing_fields": [],
+      "refinement_note": "Tycoon follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "R5-D4 fills the flexible line fighter role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Versatile tuning supports the short equipment role; balanced stance and a 15% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Tycoon strategy tuning rules with the Versatile Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "jawa-salvage-exchange:1:r5-d4",
+      "folder": "stables/106-jawa-salvage-exchange/robots/01-r5-d4",
+      "files": {
+        "png": "stables/106-jawa-salvage-exchange/robots/01-r5-d4/portrait.png",
+        "webp": "stables/106-jawa-salvage-exchange/robots/01-r5-d4/portrait.webp",
+        "blueprint": "stables/106-jawa-salvage-exchange/robots/01-r5-d4/blueprint.json",
+        "profile": "stables/106-jawa-salvage-exchange/robots/01-r5-d4/profile.md",
+        "prompt": "stables/106-jawa-salvage-exchange/robots/01-r5-d4/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/jawa-salvage-exchange/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 106,
+          "stable_name": "Jawa Salvage Exchange",
+          "catalogue_key": "jawa-salvage-exchange",
+          "slot": 1,
+          "robot_name": "R5-D4",
+          "source_identity": "R5-D4 — A New Hope",
+          "prompt": "Use case: stylized-concept. Asset: one square individual robot portrait for the Armoured Souls game. Create an original robot design with its own construction and proportions. Premium realistic industrial science-fiction 3D render, fine scratches and restrained paint wear, believable materials. Quiet charcoal-to-black studio backdrop, dark floor, faint low haze. Neutral soft key light and cool upper-right rim. Three-quarter view, entire robot, wheels, antennae and tools visible, centered at 80% canvas height with clear margin on all sides. Readable at 512px. One robot only. No text, logos, watermark, frame, interface, collage, firing, explosions or extra characters.\nSubject: Original desert salvage utility robot on four large rugged wheels, each on an independent articulated suspension strut. Low rounded rectangular cream-and-ochre cargo body, copper patch plates, pale mint access doors, a short swivelling square periscope sensor mast and a folded lifting fork along the side. Dust and restrained oxidation. Friendly compact proportions, unique rolling-toolbox silhouette, all four wheels and mast fully visible.",
+          "source_edition": "Original Armoured Souls visual interpretation; planned source identity retained as roster metadata",
+          "source_references": [
+            "https://www.starwars.com/databank/r5-d4",
+            "https://www.starwars.com/databank/wed-treadwell-droid",
+            "https://www.starwars.com/databank/gonk-droid"
+          ],
+          "original_plan_prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 85% of square canvas with breathing room. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\nSubject: Authentic R5-D4 Tatooine astromech: squat white cylindrical body with red panels, flat-topped trapezoidal white/red head and three front red photoreceptor details, two side legs and central support foot, dusty scratched metal. Preserve characteristic R5 head rather than R2's dome. Whole robot, no Jawas or people, no invented humanoid hands or large weapons.\nCatalogue label for metadata only, do not render text: #106 slot 1 R5-D4.",
+          "artwork_type": "original interpretation",
+          "art_direction": "Original retro-space robot",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-df32e843-8445-48c6-b431-37a076cb25a5.png",
+          "visual_review": "Accepted — original interpretation reviewed for complete-body framing, correct mechanical anatomy, readable silhouette, matching materials and studio lighting",
+          "asset_id": "jawa-salvage-exchange:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/jawa-salvage-exchange/1.webp",
+          "master": "outputs/automaton-portraits/masters/jawa-salvage-exchange/1.png",
+          "output": "app/frontend/public/assets/automatons/jawa-salvage-exchange/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "7fba21effa6a42d2966306840d479efe2ce6eef1131c7ad39fbe84410ec89979",
+          "bytes": 75608,
+          "original_source_edition": "classic Tatooine service hardware. R5-D4 has his recognizable red-and-white flat-topped astromech head; the Treadwell retains its tracked base, thin neck, and tool arms; the GNK retains its box-shaped walking-generator body. Use sand, oxidized metal, patched housings, and restrained grime. Avoid turning the tiny GNK into an unrelated humanoid mech or equipping the Treadwell with a different source model's anatomy.",
+          "source_reference_note": "References describe the roster background; the final visual design is an original interpretation."
+        },
+        "sha256": "7fba21effa6a42d2966306840d479efe2ce6eef1131c7ad39fbe84410ec89979",
+        "revision": 1,
+        "artwork_type": "original interpretation",
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 2,
+      "name": "WED Treadwell 02",
+      "source_identity": "WED Treadwell repair droid — A New Hope",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 20,
+      "build_focus": "Deadeye",
+      "range_from_weapons": "long",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Beam Pistol",
+          "offhand_weapon": null,
+          "list_price_credits": 93000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Particle Lance",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 85% of square canvas with breathing room. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\nSubject: One authentic WED Treadwell repair droid: compact rectangular blue tracked base, tall very thin central neck, source binocular/telescope-like paired optical head, spindly articulated repair-tool manipulators. Dusty chipped blue paint, dark exposed mechanisms and sand wear. Preserve the tracked service-droid construction, all tracks and tools visible; no humanoid body or unrelated walker chassis.\nCatalogue label for metadata only, do not render text: #106 slot 2 WED Treadwell 02.",
+      "role": "Precision fire support",
+      "missing_fields": [],
+      "refinement_note": "Tycoon follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 1,
+      "equipment_interpretation": "WED Treadwell 02 fills the precision fire support role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Deadeye tuning supports the long equipment role; balanced stance and a 20% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Tycoon strategy tuning rules with the Deadeye Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "jawa-salvage-exchange:2:wed-treadwell-02",
+      "folder": "stables/106-jawa-salvage-exchange/robots/02-wed-treadwell-02",
+      "files": {
+        "png": "stables/106-jawa-salvage-exchange/robots/02-wed-treadwell-02/portrait.png",
+        "webp": "stables/106-jawa-salvage-exchange/robots/02-wed-treadwell-02/portrait.webp",
+        "blueprint": "stables/106-jawa-salvage-exchange/robots/02-wed-treadwell-02/blueprint.json",
+        "profile": "stables/106-jawa-salvage-exchange/robots/02-wed-treadwell-02/profile.md",
+        "prompt": "stables/106-jawa-salvage-exchange/robots/02-wed-treadwell-02/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/jawa-salvage-exchange/2.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 106,
+          "stable_name": "Jawa Salvage Exchange",
+          "catalogue_key": "jawa-salvage-exchange",
+          "slot": 2,
+          "robot_name": "WED Treadwell 02",
+          "source_identity": "WED Treadwell repair droid — A New Hope",
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 85% of square canvas with breathing room. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\nSubject: One authentic WED Treadwell repair droid: compact rectangular blue tracked base, tall very thin central neck, source binocular/telescope-like paired optical head, spindly articulated repair-tool manipulators. Dusty chipped blue paint, dark exposed mechanisms and sand wear. Preserve the tracked service-droid construction, all tracks and tools visible; no humanoid body or unrelated walker chassis.\nCatalogue label for metadata only, do not render text: #106 slot 2 WED Treadwell 02.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-a146add4-d8e0-4256-85a5-4c837bba44ae.png",
+          "visual_review": "Accepted: recognizable source identity, complete body and equipment, matching industrial studio finish.",
+          "asset_id": "jawa-salvage-exchange:2",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/jawa-salvage-exchange/2.webp",
+          "master": "outputs/automaton-portraits/masters/jawa-salvage-exchange/2.png",
+          "output": "app/frontend/public/assets/automatons/jawa-salvage-exchange/2.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "86f97369b7bec07898e5f9f6f9f1e6a40fa7370ad8c92388281da59f9f30cd9e",
+          "bytes": 49000,
+          "source_edition": "classic Tatooine service hardware. R5-D4 has his recognizable red-and-white flat-topped astromech head; the Treadwell retains its tracked base, thin neck, and tool arms; the GNK retains its box-shaped walking-generator body. Use sand, oxidized metal, patched housings, and restrained grime. Avoid turning the tiny GNK into an unrelated humanoid mech or equipping the Treadwell with a different source model's anatomy.",
+          "source_references": [
+            "https://www.starwars.com/databank/r5-d4",
+            "https://www.starwars.com/databank/wed-treadwell-droid",
+            "https://www.starwars.com/databank/gonk-droid"
+          ]
+        },
+        "sha256": "86f97369b7bec07898e5f9f6f9f1e6a40fa7370ad8c92388281da59f9f30cd9e",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 3,
+      "name": "GNK Power Droid 03",
+      "source_identity": "GNK gonk power droid — original Star Wars trilogy",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yield_threshold": 25,
+      "build_focus": "Warden",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": "Light Shield",
+          "list_price_credits": 108000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": "Aegis Bulwark",
+          "list_price_credits": 834000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 85% of square canvas with breathing room. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\nSubject: One authentic GNK gonk power droid: chunky rectangular weathered grey-brown generator box, two short articulated legs with broad flat feet, recognizable inset front power panels and lower mechanical grilles. No separate head, arms, face or humanoid reconstruction. Source-correct squat walking-generator silhouette, dusty Tatooine surface wear, complete feet visible.\nCatalogue label for metadata only, do not render text: #106 slot 3 GNK Power Droid 03.",
+      "role": "Protected short-range anchor",
+      "missing_fields": [],
+      "refinement_note": "Tycoon follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 2,
+      "equipment_interpretation": "GNK Power Droid 03 fills the protected short-range anchor role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Warden tuning supports the short equipment role; defensive stance and a 25% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Tycoon strategy tuning rules with the Warden Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "jawa-salvage-exchange:3:gnk-power-droid-03",
+      "folder": "stables/106-jawa-salvage-exchange/robots/03-gnk-power-droid-03",
+      "files": {
+        "png": "stables/106-jawa-salvage-exchange/robots/03-gnk-power-droid-03/portrait.png",
+        "webp": "stables/106-jawa-salvage-exchange/robots/03-gnk-power-droid-03/portrait.webp",
+        "blueprint": "stables/106-jawa-salvage-exchange/robots/03-gnk-power-droid-03/blueprint.json",
+        "profile": "stables/106-jawa-salvage-exchange/robots/03-gnk-power-droid-03/profile.md",
+        "prompt": "stables/106-jawa-salvage-exchange/robots/03-gnk-power-droid-03/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/jawa-salvage-exchange/3.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 106,
+          "stable_name": "Jawa Salvage Exchange",
+          "catalogue_key": "jawa-salvage-exchange",
+          "slot": 3,
+          "robot_name": "GNK Power Droid 03",
+          "source_identity": "GNK gonk power droid — original Star Wars trilogy",
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 85% of square canvas with breathing room. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\nSubject: One authentic GNK gonk power droid: chunky rectangular weathered grey-brown generator box, two short articulated legs with broad flat feet, recognizable inset front power panels and lower mechanical grilles. No separate head, arms, face or humanoid reconstruction. Source-correct squat walking-generator silhouette, dusty Tatooine surface wear, complete feet visible.\nCatalogue label for metadata only, do not render text: #106 slot 3 GNK Power Droid 03.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-6658bca1-01db-4f12-b70c-2041f344a45f.png",
+          "visual_review": "Accepted: recognizable source identity, complete body and equipment, matching industrial studio finish.",
+          "asset_id": "jawa-salvage-exchange:3",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/jawa-salvage-exchange/3.webp",
+          "master": "outputs/automaton-portraits/masters/jawa-salvage-exchange/3.png",
+          "output": "app/frontend/public/assets/automatons/jawa-salvage-exchange/3.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "b1ac29b8316006536b694551442c00df6ca62f0ab42cc219c32beb6e1d73f807",
+          "bytes": 61294,
+          "source_edition": "classic Tatooine service hardware. R5-D4 has his recognizable red-and-white flat-topped astromech head; the Treadwell retains its tracked base, thin neck, and tool arms; the GNK retains its box-shaped walking-generator body. Use sand, oxidized metal, patched housings, and restrained grime. Avoid turning the tiny GNK into an unrelated humanoid mech or equipping the Treadwell with a different source model's anatomy.",
+          "source_references": [
+            "https://www.starwars.com/databank/r5-d4",
+            "https://www.starwars.com/databank/wed-treadwell-droid",
+            "https://www.starwars.com/databank/gonk-droid"
+          ]
+        },
+        "sha256": "b1ac29b8316006536b694551442c00df6ca62f0ab42cc219c32beb6e1d73f807",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "alternatives": [],
+  "blueprint_status": "detailed",
+  "source_notes": "\n**Franchise:** Star Wars  \n**Strategy:** Tycoon · **Target roster:** 3 robots  \n**Catalogue key:** `jawa-salvage-exchange`\n\n**Proposed robots:** R5-D4, WED Treadwell 02, and GNK Power Droid 03.\n\n**Identity:** a small salvage enterprise turns battered utility hardware into an arena business. Jawas provide the stable's setting and management flavour; the robot roster consists of the droids.\n\n**Strategy personality:** prioritize the Tycoon strategy's income facilities, then invest in a modest, repaired roster. R5-D4 is the mobile general-purpose machine, the Treadwell is the precise tool-using specialist, and the GNK provides the sturdy defensive silhouette. These are arena interpretations of civilian machines, not claims that they are canonical combatants.\n\n**Visual direction:** classic Tatooine service hardware. R5-D4 has his recognizable red-and-white flat-topped astromech head; the Treadwell retains its tracked base, thin neck, and tool arms; the GNK retains its box-shaped walking-generator body. Use sand, oxidized metal, patched housings, and restrained grime. Avoid turning the tiny GNK into an unrelated humanoid mech or equipping the Treadwell with a different source model's anatomy.\n\nReferences: [R5-D4](https://www.starwars.com/databank/r5-d4), [WED Treadwell droid](https://www.starwars.com/databank/wed-treadwell-droid), [gonk power droids](https://www.starwars.com/databank/gonk-droid).\n\n",
+  "source_documents": [
+    "reference/AUTOMATON_STABLE_EXPANSION.md"
+  ],
+  "blueprint_origin": "completed during collection",
+  "purchasing_plan": "Open with slots 1–2; follow income-facility goals before recruiting slot 3 with a funded complete stage-0 loadout. Upgrade final equipment in slot order after the roster and income base are secure. No weapon refinement purchases.",
+  "target_overrides": {
+    "robots": 3
+  },
+  "equipment_budget": {
+    "stage_0_credits": 258000,
+    "stage_1_credits": 1684000,
+    "refinement_credits": 0,
+    "excludes": "Frames, facilities, training, repairs, upkeep, discounts and resale; stage-1 total replaces stage-0 gear and is not a simultaneous equipment inventory."
+  },
+  "folder": "stables/106-jawa-salvage-exchange",
+  "history_image_count": 0
+}

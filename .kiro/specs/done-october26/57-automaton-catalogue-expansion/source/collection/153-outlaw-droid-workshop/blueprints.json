@@ -1,0 +1,133 @@
+{
+  "stable_number": 153,
+  "catalogue_key": "outlaw-droid-workshop",
+  "robots": [
+    {
+      "slot": 1,
+      "name": "ND-5",
+      "source_identity": "ND-5",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 15,
+      "build_focus": "Tactician",
+      "range_from_weapons": "mid",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Bolt Carbine",
+          "offhand_weapon": null,
+          "list_price_credits": 93000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Nova Caster",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Sharpen",
+          "weapon": "Nova Caster",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 1,
+          "cost_credits": 300000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 1
+        },
+        {
+          "operation": "Sharpen",
+          "weapon": "Nova Caster",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 2,
+          "cost_credits": 900000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 2
+        },
+        {
+          "operation": "Forge",
+          "weapon": "Nova Caster",
+          "hand": "main",
+          "workshop_level": 8,
+          "occurrence": 1,
+          "cost_credits": 400000,
+          "prestige_gate": 15000,
+          "effect": "+8% damage",
+          "step": 3
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic ND-5 from Star Wars Outlaws. Tall modified BX commando droid with dark battered metal, elongated angular BX head, glowing pale-red optics, distinctive long brown leather trench coat with open front, exposed mechanical legs and broad angular feet. Holstered blaster and one hand near belt, entire coat hem and feet visible. Preserve his exact robot head and coat, no human face or hats.\nMetadata only, do not render text: #153 slot 1 ND-5.",
+      "role": "Measured mid-range fighter",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 1600000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "ND-5 fills the measured mid-range fighter role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Tactician tuning supports the mid equipment role; balanced stance and a 15% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Paragon strategy tuning rules with the Tactician Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "outlaw-droid-workshop:1:nd-5",
+      "folder": "stables/153-outlaw-droid-workshop/robots/01-nd-5",
+      "files": {
+        "png": "stables/153-outlaw-droid-workshop/robots/01-nd-5/portrait.png",
+        "webp": "stables/153-outlaw-droid-workshop/robots/01-nd-5/portrait.webp",
+        "blueprint": "stables/153-outlaw-droid-workshop/robots/01-nd-5/blueprint.json",
+        "profile": "stables/153-outlaw-droid-workshop/robots/01-nd-5/profile.md",
+        "prompt": "stables/153-outlaw-droid-workshop/robots/01-nd-5/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/outlaw-droid-workshop/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 153,
+          "stable_name": "Outlaw Droid Workshop",
+          "catalogue_key": "outlaw-droid-workshop",
+          "slot": 1,
+          "robot_name": "ND-5",
+          "source_identity": "ND-5",
+          "source_edition": "Star Wars Outlaws — 2024 ND-5",
+          "source_references": [
+            "https://www.starwars.com/databank/nd-5"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic ND-5 from Star Wars Outlaws. Tall modified BX commando droid with dark battered metal, elongated angular BX head, glowing pale-red optics, distinctive long brown leather trench coat with open front, exposed mechanical legs and broad angular feet. Holstered blaster and one hand near belt, entire coat hem and feet visible. Preserve his exact robot head and coat, no human face or hats.\nMetadata only, do not render text: #153 slot 1 ND-5.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-7d35b00a-0866-4156-bb4d-80a5390afb36.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "outlaw-droid-workshop:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/outlaw-droid-workshop/1.webp",
+          "master": "outputs/automaton-portraits/masters/outlaw-droid-workshop/1.png",
+          "output": "app/frontend/public/assets/automatons/outlaw-droid-workshop/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "9d1f7f3a203253e1624f88ac2e0c02e627a3224d2d0d22cb1b0511300eb14bcb",
+          "bytes": 33480
+        },
+        "sha256": "9d1f7f3a203253e1624f88ac2e0c02e627a3224d2d0d22cb1b0511300eb14bcb",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "replacement_alternatives": []
+}

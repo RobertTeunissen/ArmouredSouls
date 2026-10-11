@@ -1,0 +1,202 @@
+{
+  "number": 79,
+  "catalogueKey": "copper-nine-drone-works",
+  "stableName": "Copper Nine Drone Works",
+  "franchiseLabel": "Murder Drones",
+  "strategy": "Trio",
+  "fit": "Direct",
+  "conceptIdentity": "Three aggressive machines with different build focuses. Dark metal, luminous face displays, industrial drone silhouettes; avoid graphic horror.",
+  "backstory": "Copper Nine Drone Works enters the arena with a clear doctrine. Three aggressive machines with different build focuses. Every surviving machine returns to the workshop before the next booking.",
+  "openingRobots": 3,
+  "targetRobots": 3,
+  "adminMaximumRobots": 4,
+  "targetOverrides": {},
+  "teamNames": {
+    "2v2": [
+      {
+        "name": "Copper Nine Pair 01",
+        "slots": [
+          1,
+          2
+        ]
+      },
+      {
+        "name": "Copper Nine Pair 02",
+        "slots": [
+          3,
+          4
+        ]
+      }
+    ],
+    "3v3": [
+      {
+        "name": "Copper Nine Squad 01",
+        "slots": [
+          1,
+          2,
+          3
+        ]
+      }
+    ]
+  },
+  "eventOrder": [
+    "league_3v3",
+    "tournament_3v3",
+    "league_1v1",
+    "league_2v2",
+    "tag_team",
+    "koth",
+    "grand_melee",
+    "tournament_2v2",
+    "tournament_1v1"
+  ],
+  "robots": [
+    {
+      "blueprintId": "copper-nine-drone-works:1:n",
+      "slot": 1,
+      "name": "N",
+      "sourceAlias": "N",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "weapon_shield",
+      "stance": "balanced",
+      "yieldThreshold": 15,
+      "buildFocus": "Versatile",
+      "weaponPath": [
+        {
+          "mainWeapon": "Laser Pistol",
+          "offhandWeapon": "Light Shield",
+          "listPriceCredits": 108000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": "Aegis Bulwark",
+          "listPriceCredits": 834000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Dark disassembly drone with yellow face display, pale hair and an industrial cap.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 0,
+        "imageConvention": "app/frontend/public/assets/automatons/copper-nine-drone-works/1.webp"
+      }
+    },
+    {
+      "blueprintId": "copper-nine-drone-works:2:v",
+      "slot": 2,
+      "name": "V",
+      "sourceAlias": "V",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "dual_wield",
+      "stance": "offensive",
+      "yieldThreshold": 0,
+      "buildFocus": "Sprinter",
+      "weaponPath": [
+        {
+          "mainWeapon": "Combat Knife",
+          "offhandWeapon": "Combat Knife",
+          "listPriceCredits": 186000
+        },
+        {
+          "mainWeapon": "Vibro Mace",
+          "offhandWeapon": "Vibro Mace",
+          "listPriceCredits": 850000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "melee",
+        "artBrief": "Dark disassembly drone with yellow face display, pale hair and sharp mechanical tools.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 1,
+        "imageConvention": "app/frontend/public/assets/automatons/copper-nine-drone-works/2.webp"
+      }
+    },
+    {
+      "blueprintId": "copper-nine-drone-works:3:j",
+      "slot": 3,
+      "name": "J",
+      "sourceAlias": "J",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "dual_wield",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "Tactician",
+      "weaponPath": [
+        {
+          "mainWeapon": "Bolt Carbine",
+          "offhandWeapon": "Bolt Carbine",
+          "listPriceCredits": 186000
+        },
+        {
+          "mainWeapon": "Nova Caster",
+          "offhandWeapon": "Nova Caster",
+          "listPriceCredits": 850000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "mid",
+        "artBrief": "Dark disassembly drone with yellow face display, pale twin-tail hair and industrial equipment.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 2,
+        "imageConvention": "app/frontend/public/assets/automatons/copper-nine-drone-works/3.webp"
+      }
+    },
+    {
+      "blueprintId": "copper-nine-drone-works:4:uzi",
+      "slot": 4,
+      "name": "Uzi",
+      "sourceAlias": "Uzi",
+      "nameBasis": "Source character or machine designation",
+      "availability": "reserve",
+      "loadout": "two_handed",
+      "stance": "defensive",
+      "yieldThreshold": 5,
+      "buildFocus": "Deadeye",
+      "weaponPath": [
+        {
+          "mainWeapon": "Training Beam",
+          "offhandWeapon": null,
+          "listPriceCredits": 50000
+        },
+        {
+          "mainWeapon": "Ion Beam",
+          "offhandWeapon": null,
+          "listPriceCredits": 544000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "long",
+        "artBrief": "Compact worker drone with purple face display, dark clothing and a large long-range weapon.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 3,
+        "imageConvention": "app/frontend/public/assets/automatons/copper-nine-drone-works/4.webp"
+      }
+    }
+  ],
+  "alternativeBlueprints": [],
+  "review": {
+    "openingWeaponCredits": 480000,
+    "finalWeaponCreditsAtTarget": 2534000,
+    "equippedWeaponCountAtTarget": 6,
+    "purchaseOrder": [
+      1,
+      2,
+      3
+    ],
+    "reserveSlots": [
+      4
+    ],
+    "alternativeRule": "Choose an alternative before catalogue approval; it replaces the specified slot and never adds another live robot."
+  }
+}

@@ -1,0 +1,381 @@
+{
+  "number": 165,
+  "catalogue_key": "machine-village-foundry",
+  "name": "Machine Village Foundry",
+  "franchise": "NieR",
+  "strategy": "Generalist",
+  "opening_robots": 2,
+  "target_robots": 3,
+  "max_planned_robots": 3,
+  "strategy_review_limit": 4,
+  "backstory": "A careful village machine, a small contact frame and a heavier biped make an adaptable repaired roster. Modest purchases and maintenance keep all three useful.",
+  "strategy_personality": "A visually different machine collection would complement the existing YoRHa androids. Source abilities remain flavour; preserve the machines' simple, recognizable construction. Final chassis names, source versions, and roster roles remain to be selected.",
+  "teams": {
+    "2v2": [
+      {
+        "name": "Village Foundry Pair 01",
+        "slots": [
+          1,
+          2
+        ],
+        "forms": "Opening"
+      }
+    ],
+    "3v3": [
+      {
+        "name": "Village Foundry Squad 01",
+        "slots": [
+          1,
+          2,
+          3
+        ],
+        "forms": "When slot 3 joins"
+      }
+    ]
+  },
+  "event_order": [
+    "league_1v1",
+    "league_2v2",
+    "tag_team",
+    "league_3v3",
+    "koth",
+    "grand_melee",
+    "tournament_1v1",
+    "tournament_2v2",
+    "tournament_3v3"
+  ],
+  "robots": [
+    {
+      "slot": 1,
+      "name": "Pascal",
+      "source_identity": "Pascal",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "defensive",
+      "yield_threshold": 30,
+      "build_focus": "Tactician",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Practice Blaster",
+          "offhand_weapon": null,
+          "list_price_credits": 50000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Hone",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 1,
+          "attribute": "Combat Power",
+          "magnitude": 2,
+          "result_value": 10,
+          "cost_credits": 40000,
+          "base_value": 8,
+          "effect": "Combat Power 8→10",
+          "step": 1
+        },
+        {
+          "operation": "Augment",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 3,
+          "attribute": "Adaptive AI",
+          "magnitude": 3,
+          "result_value": 3,
+          "cost_credits": 180000,
+          "effect": "Adaptive AI, new +3",
+          "step": 2
+        },
+        {
+          "operation": "Sharpen",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 1,
+          "cost_credits": 300000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 3
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic Pascal from NieR Automata (2017). Friendly rusty tan/brass machine lifeform with round spherical head, two circular black eyes and small circular mouth, broad barrel torso, thin articulated arms with broad grippers, short cylindrical legs and rounded mechanical feet, distinctive small blue cloth neck scarf and source repaired details. Pacifist source portrait with empty hands, no armour or weapon added.\nMetadata only, do not render text: #165 slot 1 Pascal.",
+      "role": "Cautious utility fighter",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 520000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "Pascal fills the cautious utility fighter role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Tactician tuning supports the short equipment role; defensive stance and a 30% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Generalist strategy tuning rules with the Tactician Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "machine-village-foundry:1:pascal",
+      "folder": "stables/165-machine-village-foundry/robots/01-pascal",
+      "files": {
+        "png": "stables/165-machine-village-foundry/robots/01-pascal/portrait.png",
+        "webp": "stables/165-machine-village-foundry/robots/01-pascal/portrait.webp",
+        "blueprint": "stables/165-machine-village-foundry/robots/01-pascal/blueprint.json",
+        "profile": "stables/165-machine-village-foundry/robots/01-pascal/profile.md",
+        "prompt": "stables/165-machine-village-foundry/robots/01-pascal/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/machine-village-foundry/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 165,
+          "stable_name": "Machine Village Foundry",
+          "catalogue_key": "machine-village-foundry",
+          "slot": 1,
+          "robot_name": "Pascal",
+          "source_identity": "Pascal",
+          "source_edition": "NieR Automata — 2017 Pascal, Small Stubby and Medium Biped",
+          "source_references": [
+            "https://www.platinumgames.com/works/nier-automata"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic Pascal from NieR Automata (2017). Friendly rusty tan/brass machine lifeform with round spherical head, two circular black eyes and small circular mouth, broad barrel torso, thin articulated arms with broad grippers, short cylindrical legs and rounded mechanical feet, distinctive small blue cloth neck scarf and source repaired details. Pacifist source portrait with empty hands, no armour or weapon added.\nMetadata only, do not render text: #165 slot 1 Pascal.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-f56bcb6a-6874-4d19-990a-6ea439d798c6.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "machine-village-foundry:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/machine-village-foundry/1.webp",
+          "master": "outputs/automaton-portraits/masters/machine-village-foundry/1.png",
+          "output": "app/frontend/public/assets/automatons/machine-village-foundry/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "b3d4104fd76c9a7a634aeb2fbe2c7afa30292c75b9ba6c770c4528ff78239334",
+          "bytes": 49160
+        },
+        "sha256": "b3d4104fd76c9a7a634aeb2fbe2c7afa30292c75b9ba6c770c4528ff78239334",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 2,
+      "name": "Small Stubby 02",
+      "source_identity": "Small Stubby 02",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Sprinter",
+      "range_from_weapons": "melee",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Practice Sword",
+          "offhand_weapon": null,
+          "list_price_credits": 50000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Vibro Mace",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic NieR Automata Small Stubby machine lifeform, original arena unit label 02. Tiny rusty tan barrel torso, spherical head with two dark round eyes and simple small mouth, very short thin mechanical arms and stubby two legs, simple plated feet. One small source sword held at rest, basic machine-lifeform proportions, no YoRHa human face.\nMetadata only, do not render text: #165 slot 2 Small Stubby 02.",
+      "role": "Agile contact specialist",
+      "missing_fields": [],
+      "refinement_note": "Generalist refinement spending is reserved for the slot-1 lead; this supporting robot has an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 1,
+      "equipment_interpretation": "Small Stubby 02 fills the agile contact specialist role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Sprinter tuning supports the melee equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Generalist strategy tuning rules with the Sprinter Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "machine-village-foundry:2:small-stubby-02",
+      "folder": "stables/165-machine-village-foundry/robots/02-small-stubby-02",
+      "files": {
+        "png": "stables/165-machine-village-foundry/robots/02-small-stubby-02/portrait.png",
+        "webp": "stables/165-machine-village-foundry/robots/02-small-stubby-02/portrait.webp",
+        "blueprint": "stables/165-machine-village-foundry/robots/02-small-stubby-02/blueprint.json",
+        "profile": "stables/165-machine-village-foundry/robots/02-small-stubby-02/profile.md",
+        "prompt": "stables/165-machine-village-foundry/robots/02-small-stubby-02/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/machine-village-foundry/2.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 165,
+          "stable_name": "Machine Village Foundry",
+          "catalogue_key": "machine-village-foundry",
+          "slot": 2,
+          "robot_name": "Small Stubby 02",
+          "source_identity": "Small Stubby 02",
+          "source_edition": "NieR Automata — 2017 Pascal, Small Stubby and Medium Biped",
+          "source_references": [
+            "https://www.platinumgames.com/works/nier-automata"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic NieR Automata Small Stubby machine lifeform, original arena unit label 02. Tiny rusty tan barrel torso, spherical head with two dark round eyes and simple small mouth, very short thin mechanical arms and stubby two legs, simple plated feet. One small source sword held at rest, basic machine-lifeform proportions, no YoRHa human face.\nMetadata only, do not render text: #165 slot 2 Small Stubby 02.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-61403855-0320-4d13-ab98-3a8a3b89c8b6.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "machine-village-foundry:2",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/machine-village-foundry/2.webp",
+          "master": "outputs/automaton-portraits/masters/machine-village-foundry/2.png",
+          "output": "app/frontend/public/assets/automatons/machine-village-foundry/2.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "0d5185b40e260ca995c879602127def470e39ac0e5043fba5432f75e2cffd755",
+          "bytes": 45972
+        },
+        "sha256": "0d5185b40e260ca995c879602127def470e39ac0e5043fba5432f75e2cffd755",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 3,
+      "name": "Medium Biped 03",
+      "source_identity": "Medium Biped 03",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Bruiser",
+      "range_from_weapons": "mid",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Training Rifle",
+          "offhand_weapon": null,
+          "list_price_credits": 50000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Plasma Cannon",
+          "offhand_weapon": null,
+          "list_price_credits": 408000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic NieR Automata Medium Biped machine lifeform, original arena unit label 03. Tall rusty beige barrel torso, spherical face with two circular eyes, long thin mechanical arms, much longer jointed bipedal legs and chunky simple feet, source round-joint construction. One source long sword held lowered in right hand. Clearly taller silhouette than Small Stubby, no Pascal scarf or human face.\nMetadata only, do not render text: #165 slot 3 Medium Biped 03.",
+      "role": "Heavy mid-range pressure",
+      "missing_fields": [],
+      "refinement_note": "Generalist refinement spending is reserved for the slot-1 lead; this supporting robot has an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 2,
+      "equipment_interpretation": "Medium Biped 03 fills the heavy mid-range pressure role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Bruiser tuning supports the mid equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Generalist strategy tuning rules with the Bruiser Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "machine-village-foundry:3:medium-biped-03",
+      "folder": "stables/165-machine-village-foundry/robots/03-medium-biped-03",
+      "files": {
+        "png": "stables/165-machine-village-foundry/robots/03-medium-biped-03/portrait.png",
+        "webp": "stables/165-machine-village-foundry/robots/03-medium-biped-03/portrait.webp",
+        "blueprint": "stables/165-machine-village-foundry/robots/03-medium-biped-03/blueprint.json",
+        "profile": "stables/165-machine-village-foundry/robots/03-medium-biped-03/profile.md",
+        "prompt": "stables/165-machine-village-foundry/robots/03-medium-biped-03/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/machine-village-foundry/3.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 165,
+          "stable_name": "Machine Village Foundry",
+          "catalogue_key": "machine-village-foundry",
+          "slot": 3,
+          "robot_name": "Medium Biped 03",
+          "source_identity": "Medium Biped 03",
+          "source_edition": "NieR Automata — 2017 Pascal, Small Stubby and Medium Biped",
+          "source_references": [
+            "https://www.platinumgames.com/works/nier-automata"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic NieR Automata Medium Biped machine lifeform, original arena unit label 03. Tall rusty beige barrel torso, spherical face with two circular eyes, long thin mechanical arms, much longer jointed bipedal legs and chunky simple feet, source round-joint construction. One source long sword held lowered in right hand. Clearly taller silhouette than Small Stubby, no Pascal scarf or human face.\nMetadata only, do not render text: #165 slot 3 Medium Biped 03.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-fca7c432-9264-4bf7-a860-e886d19a91ce.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "machine-village-foundry:3",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/machine-village-foundry/3.webp",
+          "master": "outputs/automaton-portraits/masters/machine-village-foundry/3.png",
+          "output": "app/frontend/public/assets/automatons/machine-village-foundry/3.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "e807c8947847b8e3e995ee5d901e415520413173d823d76aede1d88367268498",
+          "bytes": 36948
+        },
+        "sha256": "e807c8947847b8e3e995ee5d901e415520413173d823d76aede1d88367268498",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "alternatives": [],
+  "blueprint_status": "detailed",
+  "source_notes": "\n**Franchise:** NieR  \n**Strategy:** Generalist · **Target roster:** 3 robots\n\n**Proposed robots:** Pascal; Small Stubby 02; Medium Biped 03.\n\n**Direction:** A visually different machine collection would complement the existing YoRHa androids. Source abilities remain flavour; preserve the machines' simple, recognizable construction. Final chassis names, source versions, and roster roles remain to be selected.\n\n**Production edition:** NieR Automata — 2017 Pascal, Small Stubby and Medium Biped.  \n**Catalogue key:** `machine-village-foundry`\n\n",
+  "source_documents": [
+    "reference/AUTOMATON_STABLE_EXPANSION.md"
+  ],
+  "blueprint_origin": "completed during collection",
+  "purchasing_plan": "Open with slots 1–2; recruit slot 3 with its complete stage-0 loadout. Complete stage-1 loadouts in slot order. Refine the slot-1 lead only: verified Hone/Augment operations, then a first Sharpen at Workshop L5 and 3,000 prestige. Other slots have explicit empty refinement plans.",
+  "target_overrides": {
+    "robots": 3
+  },
+  "equipment_budget": {
+    "stage_0_credits": 150000,
+    "stage_1_credits": 1258000,
+    "refinement_credits": 520000,
+    "excludes": "Frames, facilities, training, repairs, upkeep, discounts and resale; stage-1 total replaces stage-0 gear and is not a simultaneous equipment inventory."
+  },
+  "folder": "stables/165-machine-village-foundry",
+  "history_image_count": 0
+}

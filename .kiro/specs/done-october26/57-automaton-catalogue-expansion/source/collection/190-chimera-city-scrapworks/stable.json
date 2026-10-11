@@ -1,0 +1,201 @@
+{
+  "number": 190,
+  "catalogue_key": "chimera-city-scrapworks",
+  "name": "Chimera City Scrapworks",
+  "franchise": "Scrapland — use the Remastered edition's references",
+  "strategy": "Paragon",
+  "opening_robots": 1,
+  "target_robots": 1,
+  "max_planned_robots": 1,
+  "strategy_review_limit": 2,
+  "backstory": "A self-assembled contender turns scrap into a heavy contact build. The workshop improves one complete body through concentrated equipment and refinement spending.",
+  "strategy_personality": "A self-assembled robotic newcomer from a city of machines, with a distinctive scrap-built body rather than a conventional armoured torso. Preserve the selected game model's proportions and component shapes. Salvage and selective upgrades provide the purchasing personality. The game's character-changing feature remains source flavour; it does not turn every adopted identity or vehicle into a separate simultaneous combatant.",
+  "teams": {
+    "2v2": [],
+    "3v3": []
+  },
+  "event_order": [
+    "league_1v1",
+    "tournament_1v1",
+    "koth",
+    "grand_melee",
+    "league_2v2",
+    "tag_team",
+    "tournament_2v2",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "robots": [
+    {
+      "slot": 1,
+      "name": "D-Tritus",
+      "source_identity": "D-Tritus",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Bruiser",
+      "range_from_weapons": "melee",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Shock Maul",
+          "offhand_weapon": null,
+          "list_price_credits": 183000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Heavy Hammer",
+          "offhand_weapon": null,
+          "list_price_credits": 478000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Hone",
+          "weapon": "Heavy Hammer",
+          "hand": "main",
+          "workshop_level": 1,
+          "attribute": "Hydraulic Systems",
+          "magnitude": 2,
+          "result_value": 10,
+          "cost_credits": 40000,
+          "base_value": 8,
+          "effect": "Hydraulic Systems 8→10",
+          "step": 1
+        },
+        {
+          "operation": "Augment",
+          "weapon": "Heavy Hammer",
+          "hand": "main",
+          "workshop_level": 3,
+          "attribute": "Armor Plating",
+          "magnitude": 3,
+          "result_value": 3,
+          "cost_credits": 180000,
+          "effect": "Armor Plating, new +3",
+          "step": 2
+        },
+        {
+          "operation": "Sharpen",
+          "weapon": "Heavy Hammer",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 1,
+          "cost_credits": 300000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 3
+        },
+        {
+          "operation": "Sharpen",
+          "weapon": "Heavy Hammer",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 2,
+          "cost_credits": 900000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 4
+        },
+        {
+          "operation": "Forge",
+          "weapon": "Heavy Hammer",
+          "hand": "main",
+          "workshop_level": 8,
+          "occurrence": 1,
+          "cost_credits": 400000,
+          "prestige_gate": 15000,
+          "effect": "+8% damage",
+          "step": 5
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE D-Tritus from Scrapland Remastered. Match the attached primary screenshot's self-assembled robot model, but present his normal INTACT configuration with his head ATTACHED to his neck. His odd segmented grey head has bright green/cyan optics, red inner mechanical parts and a small green antenna; rounded pear-shaped grey torso with a gold pointed lower chest, long slender reddish segmented arms, compact jointed legs and small broad rounded feet. Preserve the specific eccentric Scrapland shapes and source palette. Both hands attached and empty, no head held in his hand. A single small original arena emitter flush-mounted on one forearm. Full body isolated three-quarter studio portrait; no game environment, UI or other figures.\nMetadata only, do not render text: #190 slot 1 D-Tritus.",
+      "role": "Heavy contact attacker",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 1820000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "D-Tritus fills the heavy contact attacker role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Bruiser tuning supports the melee equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Paragon strategy tuning rules with the Bruiser Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "chimera-city-scrapworks:1:d-tritus",
+      "folder": "stables/190-chimera-city-scrapworks/robots/01-d-tritus",
+      "files": {
+        "png": "stables/190-chimera-city-scrapworks/robots/01-d-tritus/portrait.png",
+        "webp": "stables/190-chimera-city-scrapworks/robots/01-d-tritus/portrait.webp",
+        "blueprint": "stables/190-chimera-city-scrapworks/robots/01-d-tritus/blueprint.json",
+        "profile": "stables/190-chimera-city-scrapworks/robots/01-d-tritus/profile.md",
+        "prompt": "stables/190-chimera-city-scrapworks/robots/01-d-tritus/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/chimera-city-scrapworks/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 190,
+          "stable_name": "Chimera City Scrapworks",
+          "catalogue_key": "chimera-city-scrapworks",
+          "slot": 1,
+          "robot_name": "D-Tritus",
+          "source_identity": "D-Tritus",
+          "source_edition": "Scrapland Remastered (2021), standard intact D-Tritus body",
+          "source_references": [
+            "https://store.steampowered.com/app/897610/Scrapland_Remastered/"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE D-Tritus from Scrapland Remastered. Match the attached primary screenshot's self-assembled robot model, but present his normal INTACT configuration with his head ATTACHED to his neck. His odd segmented grey head has bright green/cyan optics, red inner mechanical parts and a small green antenna; rounded pear-shaped grey torso with a gold pointed lower chest, long slender reddish segmented arms, compact jointed legs and small broad rounded feet. Preserve the specific eccentric Scrapland shapes and source palette. Both hands attached and empty, no head held in his hand. A single small original arena emitter flush-mounted on one forearm. Full body isolated three-quarter studio portrait; no game environment, UI or other figures.\nMetadata only, do not render text: #190 slot 1 D-Tritus.",
+          "referenced_image_paths": [
+            "/tmp/armoured-game-refs/scrapland-3.png"
+          ],
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-bc0ac84a-0e6c-4055-8fb9-882243624acf.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "chimera-city-scrapworks:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/chimera-city-scrapworks/1.webp",
+          "master": "outputs/automaton-portraits/masters/chimera-city-scrapworks/1.png",
+          "output": "app/frontend/public/assets/automatons/chimera-city-scrapworks/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "146e249c504429c23cefe11b2de3dc1056ac3937914d7fa9e6005d6df94140e7",
+          "bytes": 47062
+        },
+        "sha256": "146e249c504429c23cefe11b2de3dc1056ac3937914d7fa9e6005d6df94140e7",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "alternatives": [],
+  "blueprint_status": "detailed",
+  "source_notes": "\n**Franchise:** Scrapland — use the Remastered edition's references  \n**Strategy:** Paragon · **Target roster:** 1 robot\n\n**Proposed robots:** D-Tritus.\n\n**Direction:** A self-assembled robotic newcomer from a city of machines, with a distinctive scrap-built body rather than a conventional armoured torso. Preserve the selected game model's proportions and component shapes. Salvage and selective upgrades provide the purchasing personality. The game's character-changing feature remains source flavour; it does not turn every adopted identity or vehicle into a separate simultaneous combatant.\n\nReferences: [official Scrapland Remastered description](https://store.steampowered.com/app/897610/).\n\n**Production edition:** Scrapland Remastered (2021), standard intact D-Tritus body.  \n**Catalogue key:** `chimera-city-scrapworks`\n\n",
+  "source_documents": [
+    "reference/AUTOMATON_STABLE_EXPANSION.md"
+  ],
+  "blueprint_origin": "completed during collection",
+  "purchasing_plan": "Open and remain at one robot. Buy its complete stage-1 loadout before refinement. Execute the listed steps in order, progressing Workshop L1/L3/L5/L8 as required. Keep prestige-gated steps pending; fund repairs and maintenance before every purchase.",
+  "target_overrides": {},
+  "equipment_budget": {
+    "stage_0_credits": 183000,
+    "stage_1_credits": 478000,
+    "refinement_credits": 1820000,
+    "excludes": "Frames, facilities, training, repairs, upkeep, discounts and resale; stage-1 total replaces stage-0 gear and is not a simultaneous equipment inventory."
+  },
+  "folder": "stables/190-chimera-city-scrapworks",
+  "history_image_count": 0
+}

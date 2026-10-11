@@ -1,0 +1,864 @@
+{
+  "stable_number": 113,
+  "catalogue_key": "corpus-proxy-exchange",
+  "robots": [
+    {
+      "slot": 1,
+      "name": "Scrip MOA",
+      "source_identity": "MOA",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 15,
+      "build_focus": "Versatile",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": null,
+          "list_price_credits": 57000,
+          "source_text": "Laser Pistol (₡57,000)"
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": null,
+          "list_price_credits": 425000,
+          "source_text": "Volt Sabre (₡425,000)"
+        }
+      ],
+      "refinement_plan": [
+        {
+          "step": 1,
+          "operation": "Hone",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "effect": "Combat Power 8→10",
+          "cost_credits": 40000,
+          "workshop_level": 1,
+          "requirements": "Workshop L1",
+          "magnitude": 2,
+          "attribute": "Combat Power",
+          "base_value": 8,
+          "result_value": 10,
+          "source_text": "Main Volt Sabre: Hone Combat Power 8→10"
+        },
+        {
+          "step": 2,
+          "operation": "Augment",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "effect": "Adaptive AI +3 (new)",
+          "cost_credits": 180000,
+          "workshop_level": 3,
+          "requirements": "Workshop L3",
+          "magnitude": 3,
+          "attribute": "Adaptive AI",
+          "result_value": 3,
+          "source_text": "Main Volt Sabre: Augment Adaptive AI +3 (new)"
+        },
+        {
+          "step": 3,
+          "operation": "Sharpen",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "effect": "1 (−10% cooldown)",
+          "cost_credits": 300000,
+          "workshop_level": 5,
+          "requirements": "Workshop L5; 3,000 prestige",
+          "prestige_gate": 3000,
+          "source_text": "Main Volt Sabre: Sharpen 1 (−10% cooldown)"
+        },
+        {
+          "step": 4,
+          "operation": "Forge",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "effect": "1 (+8% damage)",
+          "cost_credits": 400000,
+          "workshop_level": 8,
+          "requirements": "Workshop L8; 15,000 prestige",
+          "prestige_gate": 15000,
+          "source_text": "Main Volt Sabre: Forge 1 (+8% damage)"
+        }
+      ],
+      "art_brief": "Standard MOA walker: preserve its inverted-knee legs, source sensor assembly, and weapon mount. One short-range arena emitter; no invented humanoid arms.",
+      "role": "Mobile line shooter",
+      "missing_fields": [],
+      "refinement_total_credits": 920000,
+      "blueprint_origin": "preserved existing design",
+      "minimum_roster_expansion_level": 0,
+      "blueprint_id": "corpus-proxy-exchange:1:scrip-moa",
+      "folder": "stables/113-corpus-proxy-exchange/robots/01-scrip-moa",
+      "files": {
+        "png": "stables/113-corpus-proxy-exchange/robots/01-scrip-moa/portrait.png",
+        "webp": "stables/113-corpus-proxy-exchange/robots/01-scrip-moa/portrait.webp",
+        "blueprint": "stables/113-corpus-proxy-exchange/robots/01-scrip-moa/blueprint.json",
+        "profile": "stables/113-corpus-proxy-exchange/robots/01-scrip-moa/profile.md",
+        "prompt": "stables/113-corpus-proxy-exchange/robots/01-scrip-moa/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/corpus-proxy-exchange/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 113,
+          "stable_name": "Corpus Proxy Exchange",
+          "catalogue_key": "corpus-proxy-exchange",
+          "slot": 1,
+          "robot_name": "Scrip MOA",
+          "source_identity": "MOA — Warframe — standard Corpus MOA and Bursa models",
+          "source_edition": "Warframe — standard Corpus MOA and Bursa models",
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around EVERY extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic standard green Corpus MOA from Warframe: compact armless bird-like mechanical walker on TWO reverse-jointed legs, broad claw feet, green source armour and black mechanisms, distinctive top-mounted weapon and low sensor assembly. Preserve actual source geometry. One short-range arena emitter in the existing weapon mount, no human torso or arms.\nCatalogue label for metadata only, do not render text: #113 slot 1 Scrip MOA.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-a6fa8bb9-d12e-4c44-bf7b-534fc0d50159.png",
+          "visual_review": "Accepted — complete framing, limb count, equipment representation and shared portrait style checked.",
+          "asset_id": "corpus-proxy-exchange:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/corpus-proxy-exchange/1.webp",
+          "master": "outputs/automaton-portraits/masters/corpus-proxy-exchange/1.png",
+          "output": "app/frontend/public/assets/automatons/corpus-proxy-exchange/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "8288a66d36a15d1dcbef9fcc4aeb005bdfff6713b8d10e87df346a324bcb7a64",
+          "bytes": 40332,
+          "source_references": [
+            "https://www.warframe.com/en/patch-notes/pc/18-4-10",
+            "https://www.warframe.com/en/news/operation-false-profit-1",
+            "https://wiki.warframe.com/w/Corpus_Tech/Vapos_Tech"
+          ]
+        },
+        "sha256": "8288a66d36a15d1dcbef9fcc4aeb005bdfff6713b8d10e87df346a324bcb7a64",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 2,
+      "name": "Ledger MOA",
+      "source_identity": "Railgun MOA",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 20,
+      "build_focus": "Deadeye",
+      "range_from_weapons": "long",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Beam Pistol",
+          "offhand_weapon": null,
+          "list_price_credits": 93000,
+          "source_text": "Beam Pistol (₡93,000)"
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Particle Lance",
+          "offhand_weapon": null,
+          "list_price_credits": 425000,
+          "source_text": "Particle Lance (₡425,000)"
+        }
+      ],
+      "refinement_plan": [
+        {
+          "step": 1,
+          "operation": "Hone",
+          "weapon": "Particle Lance",
+          "hand": "main",
+          "effect": "Targeting Systems 8→10",
+          "cost_credits": 40000,
+          "workshop_level": 1,
+          "requirements": "Workshop L1",
+          "magnitude": 2,
+          "attribute": "Targeting Systems",
+          "base_value": 8,
+          "result_value": 10,
+          "source_text": "Main Particle Lance: Hone Targeting Systems 8→10"
+        },
+        {
+          "step": 2,
+          "operation": "Augment",
+          "weapon": "Particle Lance",
+          "hand": "main",
+          "effect": "Weapon Control +3 (new)",
+          "cost_credits": 180000,
+          "workshop_level": 3,
+          "requirements": "Workshop L3",
+          "magnitude": 3,
+          "attribute": "Weapon Control",
+          "result_value": 3,
+          "source_text": "Main Particle Lance: Augment Weapon Control +3 (new)"
+        },
+        {
+          "step": 3,
+          "operation": "Sharpen",
+          "weapon": "Particle Lance",
+          "hand": "main",
+          "effect": "1 (−10% cooldown)",
+          "cost_credits": 300000,
+          "workshop_level": 5,
+          "requirements": "Workshop L5; 3,000 prestige",
+          "prestige_gate": 3000,
+          "source_text": "Main Particle Lance: Sharpen 1 (−10% cooldown)"
+        },
+        {
+          "step": 4,
+          "operation": "Forge",
+          "weapon": "Particle Lance",
+          "hand": "main",
+          "effect": "1 (+8% damage)",
+          "cost_credits": 400000,
+          "workshop_level": 8,
+          "requirements": "Workshop L8; 15,000 prestige",
+          "prestige_gate": 15000,
+          "source_text": "Main Particle Lance: Forge 1 (+8% damage)"
+        }
+      ],
+      "art_brief": "Use the standard Railgun MOA model and its distinctive source cannon assembly. One long-range emitter in the existing mount; preserve the walker silhouette.",
+      "role": "Precision support",
+      "missing_fields": [],
+      "refinement_total_credits": 920000,
+      "blueprint_origin": "preserved existing design",
+      "minimum_roster_expansion_level": 1,
+      "blueprint_id": "corpus-proxy-exchange:2:ledger-moa",
+      "folder": "stables/113-corpus-proxy-exchange/robots/02-ledger-moa",
+      "files": {
+        "png": "stables/113-corpus-proxy-exchange/robots/02-ledger-moa/portrait.png",
+        "webp": "stables/113-corpus-proxy-exchange/robots/02-ledger-moa/portrait.webp",
+        "blueprint": "stables/113-corpus-proxy-exchange/robots/02-ledger-moa/blueprint.json",
+        "profile": "stables/113-corpus-proxy-exchange/robots/02-ledger-moa/profile.md",
+        "prompt": "stables/113-corpus-proxy-exchange/robots/02-ledger-moa/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/corpus-proxy-exchange/2.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 113,
+          "stable_name": "Corpus Proxy Exchange",
+          "catalogue_key": "corpus-proxy-exchange",
+          "slot": 2,
+          "robot_name": "Ledger MOA",
+          "source_identity": "Railgun MOA — Warframe — standard Corpus MOA and Bursa models",
+          "source_edition": "Warframe — standard Corpus MOA and Bursa models",
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around EVERY extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic standard blue Corpus Railgun MOA from Warframe: armless two-legged reverse-knee walker with source blue/teal armour, distinctive elevated long railgun assembly, low source sensor body and broad mechanical feet. Preserve source chassis geometry, one long-range arena emitter in existing cannon mount, no arms or hands.\nCatalogue label for metadata only, do not render text: #113 slot 2 Ledger MOA.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-cf94becb-eeb7-4724-986d-34632f6b958d.png",
+          "visual_review": "Accepted — complete framing, limb count, equipment representation and shared portrait style checked.",
+          "asset_id": "corpus-proxy-exchange:2",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/corpus-proxy-exchange/2.webp",
+          "master": "outputs/automaton-portraits/masters/corpus-proxy-exchange/2.png",
+          "output": "app/frontend/public/assets/automatons/corpus-proxy-exchange/2.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "08a8d0443c74a5efeb0e0af564f0d35272795579957afaa82664aed0397b77d6",
+          "bytes": 40580,
+          "source_references": [
+            "https://www.warframe.com/en/patch-notes/pc/18-4-10",
+            "https://www.warframe.com/en/news/operation-false-profit-1",
+            "https://wiki.warframe.com/w/Corpus_Tech/Vapos_Tech"
+          ]
+        },
+        "sha256": "08a8d0443c74a5efeb0e0af564f0d35272795579957afaa82664aed0397b77d6",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 3,
+      "name": "Margin MOA",
+      "source_identity": "Fusion MOA",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Bruiser",
+      "range_from_weapons": "mid",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Training Rifle",
+          "offhand_weapon": null,
+          "list_price_credits": 50000,
+          "source_text": "Training Rifle (₡50,000)"
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Plasma Cannon",
+          "offhand_weapon": null,
+          "list_price_credits": 408000,
+          "source_text": "Plasma Cannon (₡408,000)"
+        }
+      ],
+      "refinement_plan": [
+        {
+          "step": 1,
+          "operation": "Hone",
+          "weapon": "Plasma Cannon",
+          "hand": "main",
+          "effect": "Combat Power 7→10",
+          "cost_credits": 90000,
+          "workshop_level": 1,
+          "requirements": "Workshop L1",
+          "magnitude": 3,
+          "attribute": "Combat Power",
+          "base_value": 7,
+          "result_value": 10,
+          "source_text": "Main Plasma Cannon: Hone Combat Power 7→10"
+        },
+        {
+          "step": 2,
+          "operation": "Hone",
+          "weapon": "Plasma Cannon",
+          "hand": "main",
+          "effect": "Critical Systems 6→10",
+          "cost_credits": 160000,
+          "workshop_level": 1,
+          "requirements": "Workshop L1",
+          "magnitude": 4,
+          "attribute": "Critical Systems",
+          "base_value": 6,
+          "result_value": 10,
+          "source_text": "Main Plasma Cannon: Hone Critical Systems 6→10"
+        },
+        {
+          "step": 3,
+          "operation": "Augment",
+          "weapon": "Plasma Cannon",
+          "hand": "main",
+          "effect": "Hull Integrity +3 (new)",
+          "cost_credits": 180000,
+          "workshop_level": 3,
+          "requirements": "Workshop L3",
+          "magnitude": 3,
+          "attribute": "Hull Integrity",
+          "result_value": 3,
+          "source_text": "Main Plasma Cannon: Augment Hull Integrity +3 (new)"
+        },
+        {
+          "step": 4,
+          "operation": "Sharpen",
+          "weapon": "Plasma Cannon",
+          "hand": "main",
+          "effect": "1 (−10% cooldown)",
+          "cost_credits": 300000,
+          "workshop_level": 5,
+          "requirements": "Workshop L5; 3,000 prestige",
+          "prestige_gate": 3000,
+          "source_text": "Main Plasma Cannon: Sharpen 1 (−10% cooldown)"
+        },
+        {
+          "step": 5,
+          "operation": "Forge",
+          "weapon": "Plasma Cannon",
+          "hand": "main",
+          "effect": "1 (+8% damage)",
+          "cost_credits": 400000,
+          "workshop_level": 8,
+          "requirements": "Workshop L8; 15,000 prestige",
+          "prestige_gate": 15000,
+          "source_text": "Main Plasma Cannon: Forge 1 (+8% damage)"
+        }
+      ],
+      "art_brief": "Use the Fusion MOA source body and its larger gun assembly. A single heavy mid-range arena weapon consumes the two-handed equipment allocation; depict no extra deployed drone.",
+      "role": "Sustained fire",
+      "missing_fields": [],
+      "refinement_total_credits": 1130000,
+      "blueprint_origin": "preserved existing design",
+      "minimum_roster_expansion_level": 2,
+      "blueprint_id": "corpus-proxy-exchange:3:margin-moa",
+      "folder": "stables/113-corpus-proxy-exchange/robots/03-margin-moa",
+      "files": {
+        "png": "stables/113-corpus-proxy-exchange/robots/03-margin-moa/portrait.png",
+        "webp": "stables/113-corpus-proxy-exchange/robots/03-margin-moa/portrait.webp",
+        "blueprint": "stables/113-corpus-proxy-exchange/robots/03-margin-moa/blueprint.json",
+        "profile": "stables/113-corpus-proxy-exchange/robots/03-margin-moa/profile.md",
+        "prompt": "stables/113-corpus-proxy-exchange/robots/03-margin-moa/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/corpus-proxy-exchange/3.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 113,
+          "stable_name": "Corpus Proxy Exchange",
+          "catalogue_key": "corpus-proxy-exchange",
+          "slot": 3,
+          "robot_name": "Margin MOA",
+          "source_identity": "Fusion MOA — Warframe — standard Corpus MOA and Bursa models",
+          "source_edition": "Warframe — standard Corpus MOA and Bursa models",
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around EVERY extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic standard Warframe Fusion MOA: heavier white/cream and gold Corpus walker with EXACTLY TWO reverse-jointed legs, broad feet, recognizable larger source energy-gun assembly and compact armless torso. Preserve correct Fusion MOA silhouette and colours. One heavy mid-range arena emitter; no deployed drone or added hands.\nCatalogue label for metadata only, do not render text: #113 slot 3 Margin MOA.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-bb3b87be-714d-49be-8b83-57ef783c6dfa.png",
+          "visual_review": "Accepted — complete framing, limb count, equipment representation and shared portrait style checked.",
+          "asset_id": "corpus-proxy-exchange:3",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/corpus-proxy-exchange/3.webp",
+          "master": "outputs/automaton-portraits/masters/corpus-proxy-exchange/3.png",
+          "output": "app/frontend/public/assets/automatons/corpus-proxy-exchange/3.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "de288d23438d071c70fb63eb22aa9e837e231d2d75bb38666c418baf787de5c4",
+          "bytes": 54220,
+          "source_references": [
+            "https://www.warframe.com/en/patch-notes/pc/18-4-10",
+            "https://www.warframe.com/en/news/operation-false-profit-1",
+            "https://wiki.warframe.com/w/Corpus_Tech/Vapos_Tech"
+          ]
+        },
+        "sha256": "de288d23438d071c70fb63eb22aa9e837e231d2d75bb38666c418baf787de5c4",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 4,
+      "name": "Escrow Bursa",
+      "source_identity": "Denial Bursa",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yield_threshold": 25,
+      "build_focus": "Warden",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": "Light Shield",
+          "list_price_credits": 108000,
+          "source_text": "Laser Pistol + Light Shield (₡108,000)"
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": "Aegis Bulwark",
+          "list_price_credits": 834000,
+          "source_text": "Volt Sabre + Aegis Bulwark (₡834,000)"
+        }
+      ],
+      "refinement_plan": [
+        {
+          "step": 1,
+          "operation": "Hone",
+          "weapon": "Aegis Bulwark",
+          "hand": "offhand",
+          "effect": "Evasion Thrusters −5→0",
+          "cost_credits": 250000,
+          "workshop_level": 1,
+          "requirements": "Workshop L1",
+          "magnitude": 5,
+          "attribute": "Evasion Thrusters",
+          "base_value": -5,
+          "result_value": 0,
+          "source_text": "Offhand Aegis Bulwark: Hone Evasion Thrusters −5→0"
+        },
+        {
+          "step": 2,
+          "operation": "Hone",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "effect": "Combat Power 8→10",
+          "cost_credits": 40000,
+          "workshop_level": 1,
+          "requirements": "Workshop L1",
+          "magnitude": 2,
+          "attribute": "Combat Power",
+          "base_value": 8,
+          "result_value": 10,
+          "source_text": "Main Volt Sabre: Hone Combat Power 8→10"
+        },
+        {
+          "step": 3,
+          "operation": "Augment",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "effect": "Adaptive AI +3 (new)",
+          "cost_credits": 180000,
+          "workshop_level": 3,
+          "requirements": "Workshop L3",
+          "magnitude": 3,
+          "attribute": "Adaptive AI",
+          "result_value": 3,
+          "source_text": "Main Volt Sabre: Augment Adaptive AI +3 (new)"
+        },
+        {
+          "step": 4,
+          "operation": "Sharpen",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "effect": "1 (−10% cooldown)",
+          "cost_credits": 300000,
+          "workshop_level": 5,
+          "requirements": "Workshop L5; 3,000 prestige",
+          "prestige_gate": 3000,
+          "source_text": "Main Volt Sabre: Sharpen 1 (−10% cooldown)"
+        },
+        {
+          "step": 5,
+          "operation": "Forge",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "effect": "1 (+8% damage)",
+          "cost_credits": 400000,
+          "workshop_level": 8,
+          "requirements": "Workshop L8; 15,000 prestige",
+          "prestige_gate": 15000,
+          "source_text": "Main Volt Sabre: Forge 1 (+8% damage)"
+        }
+      ],
+      "art_brief": "Standard Denial Bursa body, frontal protection, and source locomotion. One short-range weapon and one represented shield item; frontal plates do not provide extra free shield statistics.",
+      "role": "Defensive anchor",
+      "missing_fields": [],
+      "refinement_total_credits": 1170000,
+      "blueprint_origin": "preserved existing design",
+      "minimum_roster_expansion_level": 3,
+      "blueprint_id": "corpus-proxy-exchange:4:escrow-bursa",
+      "folder": "stables/113-corpus-proxy-exchange/robots/04-escrow-bursa",
+      "files": {
+        "png": "stables/113-corpus-proxy-exchange/robots/04-escrow-bursa/portrait.png",
+        "webp": "stables/113-corpus-proxy-exchange/robots/04-escrow-bursa/portrait.webp",
+        "blueprint": "stables/113-corpus-proxy-exchange/robots/04-escrow-bursa/blueprint.json",
+        "profile": "stables/113-corpus-proxy-exchange/robots/04-escrow-bursa/profile.md",
+        "prompt": "stables/113-corpus-proxy-exchange/robots/04-escrow-bursa/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/corpus-proxy-exchange/4.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 113,
+          "stable_name": "Corpus Proxy Exchange",
+          "catalogue_key": "corpus-proxy-exchange",
+          "slot": 4,
+          "robot_name": "Escrow Bursa",
+          "source_identity": "Denial Bursa — Warframe — standard Corpus MOA and Bursa models",
+          "source_edition": "Warframe — standard Corpus MOA and Bursa models",
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around EVERY extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic standard RED-ORANGE Warframe Denial Bursa, a squat heavily armoured Corpus riot MOA on TWO robust mechanical legs with large forward shield plates and low source body. Compact recessed source sensors and source weapon mount, no humanoid head or arms. One short-range arena emitter and frontal protection representing one shield item; no shield bubble or additional weapons.\nCatalogue label for metadata only, do not render text: #113 slot 4 Escrow Bursa.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-d82771ac-6fea-4132-8e0d-3ae0dddc45a6.png",
+          "visual_review": "Accepted — complete framing, limb count, equipment representation and shared portrait style checked.",
+          "asset_id": "corpus-proxy-exchange:4",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/corpus-proxy-exchange/4.webp",
+          "master": "outputs/automaton-portraits/masters/corpus-proxy-exchange/4.png",
+          "output": "app/frontend/public/assets/automatons/corpus-proxy-exchange/4.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "5d00d3a460d6e0f1ac15ae031ab1eee5f42efdaa23df6c8bd91b2bafc69df53d",
+          "bytes": 64994,
+          "source_references": [
+            "https://www.warframe.com/en/patch-notes/pc/18-4-10",
+            "https://www.warframe.com/en/news/operation-false-profit-1",
+            "https://wiki.warframe.com/w/Corpus_Tech/Vapos_Tech"
+          ]
+        },
+        "sha256": "5d00d3a460d6e0f1ac15ae031ab1eee5f42efdaa23df6c8bd91b2bafc69df53d",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 5,
+      "name": "Dividend Bursa",
+      "source_identity": "Drover Bursa",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Bruiser",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Scatter Cannon",
+          "offhand_weapon": null,
+          "list_price_credits": 84000,
+          "source_text": "Scatter Cannon (₡84,000)"
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Arc Projector",
+          "offhand_weapon": null,
+          "list_price_credits": 488000,
+          "source_text": "Arc Projector (₡488,000)"
+        }
+      ],
+      "refinement_plan": [
+        {
+          "step": 1,
+          "operation": "Sharpen",
+          "weapon": "Arc Projector",
+          "hand": "main",
+          "effect": "1 (−10% cooldown)",
+          "cost_credits": 300000,
+          "workshop_level": 5,
+          "requirements": "Workshop L5; 3,000 prestige",
+          "prestige_gate": 3000,
+          "source_text": "Main Arc Projector: Sharpen 1 (−10% cooldown)"
+        },
+        {
+          "step": 2,
+          "operation": "Forge",
+          "weapon": "Arc Projector",
+          "hand": "main",
+          "effect": "1 (+8% damage)",
+          "cost_credits": 400000,
+          "workshop_level": 8,
+          "requirements": "Workshop L8; 15,000 prestige",
+          "prestige_gate": 15000,
+          "source_text": "Main Arc Projector: Forge 1 (+8% damage)"
+        }
+      ],
+      "art_brief": "Use the standard Drover Bursa chassis and source armament silhouette. One heavy short-range arena emitter; retain the machine body rather than adding hands.",
+      "role": "Close pressure",
+      "missing_fields": [],
+      "refinement_total_credits": 700000,
+      "blueprint_origin": "preserved existing design",
+      "minimum_roster_expansion_level": 4,
+      "blueprint_id": "corpus-proxy-exchange:5:dividend-bursa",
+      "folder": "stables/113-corpus-proxy-exchange/robots/05-dividend-bursa",
+      "files": {
+        "png": "stables/113-corpus-proxy-exchange/robots/05-dividend-bursa/portrait.png",
+        "webp": "stables/113-corpus-proxy-exchange/robots/05-dividend-bursa/portrait.webp",
+        "blueprint": "stables/113-corpus-proxy-exchange/robots/05-dividend-bursa/blueprint.json",
+        "profile": "stables/113-corpus-proxy-exchange/robots/05-dividend-bursa/profile.md",
+        "prompt": "stables/113-corpus-proxy-exchange/robots/05-dividend-bursa/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/corpus-proxy-exchange/5.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 113,
+          "stable_name": "Corpus Proxy Exchange",
+          "catalogue_key": "corpus-proxy-exchange",
+          "slot": 5,
+          "robot_name": "Dividend Bursa",
+          "source_identity": "Drover Bursa — Warframe — standard Corpus MOA and Bursa models",
+          "source_edition": "Warframe — standard Corpus MOA and Bursa models",
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around EVERY extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic standard BLUE Warframe Drover Bursa, squat heavy Corpus riot MOA with its source angular blue armour, large forward leg-mounted protective plates, TWO stout mechanical legs, source upper weapon body and compact sensor assembly. No humanoid hands. Represent one heavy short-range emitter, source shape preserved.\nCatalogue label for metadata only, do not render text: #113 slot 5 Dividend Bursa.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-00ada23f-bf5c-46f7-b5b6-242c045cbaa2.png",
+          "visual_review": "Accepted — complete framing, limb count, equipment representation and shared portrait style checked.",
+          "asset_id": "corpus-proxy-exchange:5",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/corpus-proxy-exchange/5.webp",
+          "master": "outputs/automaton-portraits/masters/corpus-proxy-exchange/5.png",
+          "output": "app/frontend/public/assets/automatons/corpus-proxy-exchange/5.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "b22d8325c29e3f7f4321cac2acb0eab9f58389615c2a642c9717e7eb74c681e4",
+          "bytes": 62480,
+          "source_references": [
+            "https://www.warframe.com/en/patch-notes/pc/18-4-10",
+            "https://www.warframe.com/en/news/operation-false-profit-1",
+            "https://wiki.warframe.com/w/Corpus_Tech/Vapos_Tech"
+          ]
+        },
+        "sha256": "b22d8325c29e3f7f4321cac2acb0eab9f58389615c2a642c9717e7eb74c681e4",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 6,
+      "name": "Audit Bursa",
+      "source_identity": "Isolator Bursa",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yield_threshold": 20,
+      "build_focus": "Tactician",
+      "range_from_weapons": "mid",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Bolt Carbine",
+          "offhand_weapon": "Combat Shield",
+          "list_price_credits": 171000,
+          "source_text": "Bolt Carbine + Combat Shield (₡171,000)"
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Nova Caster",
+          "offhand_weapon": "Aegis Bulwark",
+          "list_price_credits": 834000,
+          "source_text": "Nova Caster + Aegis Bulwark (₡834,000)"
+        }
+      ],
+      "refinement_plan": [
+        {
+          "step": 1,
+          "operation": "Hone",
+          "weapon": "Aegis Bulwark",
+          "hand": "offhand",
+          "effect": "Evasion Thrusters −5→0",
+          "cost_credits": 250000,
+          "workshop_level": 1,
+          "requirements": "Workshop L1",
+          "magnitude": 5,
+          "attribute": "Evasion Thrusters",
+          "base_value": -5,
+          "result_value": 0,
+          "source_text": "Offhand Aegis Bulwark: Hone Evasion Thrusters −5→0"
+        },
+        {
+          "step": 2,
+          "operation": "Sharpen",
+          "weapon": "Nova Caster",
+          "hand": "main",
+          "effect": "1 (−10% cooldown)",
+          "cost_credits": 300000,
+          "workshop_level": 5,
+          "requirements": "Workshop L5; 3,000 prestige",
+          "prestige_gate": 3000,
+          "source_text": "Main Nova Caster: Sharpen 1 (−10% cooldown)"
+        },
+        {
+          "step": 3,
+          "operation": "Forge",
+          "weapon": "Nova Caster",
+          "hand": "main",
+          "effect": "1 (+8% damage)",
+          "cost_credits": 400000,
+          "workshop_level": 8,
+          "requirements": "Workshop L8; 15,000 prestige",
+          "prestige_gate": 15000,
+          "source_text": "Main Nova Caster: Forge 1 (+8% damage)"
+        }
+      ],
+      "art_brief": "Standard Isolator Bursa body with recognizable frontal protection. One mid-range emitter and one shield allocation; source nullification effects remain narrative flavour.",
+      "role": "Protected fire support",
+      "missing_fields": [],
+      "refinement_total_credits": 950000,
+      "blueprint_origin": "preserved existing design",
+      "minimum_roster_expansion_level": 5,
+      "blueprint_id": "corpus-proxy-exchange:6:audit-bursa",
+      "folder": "stables/113-corpus-proxy-exchange/robots/06-audit-bursa",
+      "files": {
+        "png": "stables/113-corpus-proxy-exchange/robots/06-audit-bursa/portrait.png",
+        "webp": "stables/113-corpus-proxy-exchange/robots/06-audit-bursa/portrait.webp",
+        "blueprint": "stables/113-corpus-proxy-exchange/robots/06-audit-bursa/blueprint.json",
+        "profile": "stables/113-corpus-proxy-exchange/robots/06-audit-bursa/profile.md",
+        "prompt": "stables/113-corpus-proxy-exchange/robots/06-audit-bursa/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/corpus-proxy-exchange/6.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 113,
+          "stable_name": "Corpus Proxy Exchange",
+          "catalogue_key": "corpus-proxy-exchange",
+          "slot": 6,
+          "robot_name": "Audit Bursa",
+          "source_identity": "Isolator Bursa — Warframe — standard Corpus MOA and Bursa models",
+          "source_edition": "Warframe — standard Corpus MOA and Bursa models",
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around EVERY extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic standard WHITE Warframe Isolator Bursa: squat heavily armoured Corpus machine on TWO mechanical legs, large characteristic white front protective plates, low compact sensor and source gun assembly. Preserve exact Isolator chassis. One mid-range emitter and frontal protection representing one shield allocation; no nullifier bubble, drone, hands or additional figures.\nCatalogue label for metadata only, do not render text: #113 slot 6 Audit Bursa.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-82efa79d-9834-43e5-b6b2-bf791a7828fa.png",
+          "visual_review": "Accepted — complete framing, limb count, equipment representation and shared portrait style checked.",
+          "asset_id": "corpus-proxy-exchange:6",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/corpus-proxy-exchange/6.webp",
+          "master": "outputs/automaton-portraits/masters/corpus-proxy-exchange/6.png",
+          "output": "app/frontend/public/assets/automatons/corpus-proxy-exchange/6.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "06a8efedef1df38cbd66235e9f4afbb34be91d4b251d7c3c56f12a34781219f5",
+          "bytes": 54670,
+          "source_references": [
+            "https://www.warframe.com/en/patch-notes/pc/18-4-10",
+            "https://www.warframe.com/en/news/operation-false-profit-1",
+            "https://wiki.warframe.com/w/Corpus_Tech/Vapos_Tech"
+          ]
+        },
+        "sha256": "06a8efedef1df38cbd66235e9f4afbb34be91d4b251d7c3c56f12a34781219f5",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "replacement_alternatives": []
+}

@@ -1,0 +1,3980 @@
+{
+  "_comment": "Product-owner decisions of review/README.md §4, overlaid on source/ by convert.py (source/ is never edited). Entries under decisions 3, 7, 13, 14, 15, 16 and 18 are product-owner-delegated authoring (R1.4): the product owner asked the spec author to write them and reviews them in review/CATALOGUE.md.",
+  "_decisions": [
+    {
+      "number": 1,
+      "checks": [
+        "V02"
+      ],
+      "answer": "Keep the four stable names; change the filter in a separate fix: the whole-word rule of bugfix/profanity-whole-word-matching, which must be merged before Task Group 2 (merged to main in PR #528, 4fd40c6d; spec 55 must be rebased on main before Task Group 2).",
+      "changesContent": false,
+      "delegated": false,
+      "date": "2026-10-10"
+    },
+    {
+      "number": 2,
+      "checks": [
+        "A08"
+      ],
+      "answer": "Discard all 7 alternatives (Northstar, Ramattra, Phineas Ratchet, Foxy, Black Lion, Platinum, Lead); no backup blueprints; every slot keeps its main blueprint.",
+      "changesContent": false,
+      "delegated": false,
+      "date": "2026-10-10"
+    },
+    {
+      "number": 3,
+      "checks": [
+        "A03"
+      ],
+      "answer": "Author franchise-flavoured team names for every stable and distinct robot names for the numbered robots, with their own art briefs; unit designations only where the franchise mass-produces identical units or the designation is canon.",
+      "changesContent": true,
+      "delegated": true,
+      "date": "2026-10-10"
+    },
+    {
+      "number": 4,
+      "checks": [
+        "A04"
+      ],
+      "answer": "Accept for now, rewrite with backlog #61.",
+      "changesContent": false,
+      "delegated": false,
+      "date": "2026-10-10"
+    },
+    {
+      "number": 5,
+      "checks": [
+        "A01",
+        "A12"
+      ],
+      "answer": "Raise the robots target to the blueprint count wherever the spare blueprint is a good candidate, with the Booking Office target the larger roster needs (Paragon goal 8 → 2 and goal 3 → L4; Duo goal 13 → 3 and goal 11 → L6; Trio goal 12 → 4; Generalist goal 14 → 4). All 20 spares qualify; no spare blueprint is added or kept idle. Supersedes 'Accept: no spare blueprint per stable'.",
+      "changesContent": true,
+      "delegated": false,
+      "date": "2026-10-10"
+    },
+    {
+      "number": 6,
+      "checks": [
+        "V13",
+        "A07"
+      ],
+      "answer": "Confirm the generated plans, re-confirmed against the spec-55 code as built.",
+      "changesContent": false,
+      "delegated": false,
+      "date": "2026-10-10"
+    },
+    {
+      "number": 7,
+      "checks": [
+        "V18",
+        "V16"
+      ],
+      "answer": "Fix the three labels as recommended and polish every franchise label to official title casing and the starter format.",
+      "changesContent": true,
+      "delegated": true,
+      "date": "2026-10-10"
+    },
+    {
+      "number": 8,
+      "checks": [
+        "A09"
+      ],
+      "answer": "Keep Gigolo Joe, David Mecha and the human-looking android briefs as they are, provided the names pass the whole-word profanity filter.",
+      "changesContent": false,
+      "delegated": false,
+      "date": "2026-10-10"
+    },
+    {
+      "number": 9,
+      "checks": [
+        "A02"
+      ],
+      "answer": "Accept both Metropolis stables.",
+      "changesContent": false,
+      "delegated": false,
+      "date": "2026-10-10"
+    },
+    {
+      "number": 10,
+      "checks": [
+        "V03"
+      ],
+      "answer": "Keep robot names containing a list word as is.",
+      "changesContent": false,
+      "delegated": false,
+      "date": "2026-10-10"
+    },
+    {
+      "number": 11,
+      "checks": [
+        "S55"
+      ],
+      "answer": "As recommended: the Coverage_Matrix stays defined by the 11 starters; the test asserts over the union of all entries plus one starter-only assertion.",
+      "changesContent": false,
+      "delegated": false,
+      "date": "2026-10-10"
+    },
+    {
+      "number": 12,
+      "checks": [
+        "V06"
+      ],
+      "answer": "'Approved': the Squadron stables become Trio stables with robots target 6 (targetOverrides {\"12\": 6}, within the Trio bounds 3–6); Trio's default Weapons Workshop target is kept (no {\"20\": 8}); plans are regenerated (decision 6). Squadron has no spec-55 equivalent, so its purchase order (recruit 4, fund 5 and 6 together), upgrade order 1,4,2,5,3,6, authored plans, Workshop L8 path and the strategy_personality / purchasing_plan / equipment_budget prose are dropped.",
+      "changesContent": true,
+      "delegated": false,
+      "date": "2026-10-11"
+    },
+    {
+      "number": 13,
+      "checks": [
+        "V02",
+        "V03"
+      ],
+      "answer": "'Rename them. Stay as close to the original as possible': names that fail the built validators are transliterated to plain ASCII (German umlauts as their standard digraph, so 'Löwe' becomes 'Loewe'; other diacritics are dropped, so 'Śmiały' becomes 'Smialy' and 'Łowca' 'Lowca'), apostrophes and em dashes are dropped, and over-long names are shortened minimally.",
+      "changesContent": true,
+      "delegated": true,
+      "date": "2026-10-11"
+    },
+    {
+      "number": 14,
+      "checks": [
+        "A03"
+      ],
+      "answer": "Decision 3 applies to the collection unchanged: franchise-flavoured team names and distinct robot names with their own art briefs, designations only for mass-produced or canon units; names are chosen together with the portrait.",
+      "changesContent": true,
+      "delegated": true,
+      "date": "2026-10-11"
+    },
+    {
+      "number": 15,
+      "checks": [
+        "V03",
+        "V09",
+        "A02"
+      ],
+      "answer": "'Make them unique': stable names case-insensitive, robot names exact and normalised (lower case, letters and digits only), team names exact and case-insensitive, across the starters and every Expansion_Stable; an original product-owner name beats a decision-3/14-authored name (the authored one changes); where both are original the higher-numbered stable changes.",
+      "changesContent": true,
+      "delegated": true,
+      "date": "2026-10-11"
+    },
+    {
+      "number": 16,
+      "checks": [
+        "V18",
+        "V16"
+      ],
+      "answer": "'Go for it': decision 7 applies to the collection: starter format 'Title' or 'Title — subtitle', official casing, no slash, parentheses, instruction, year, medium or authorship annotation; shared labels get a starter-format subtitle; root-sharing between subtitled labels of one franchise is accepted because the product owner's plan places several stables in one franchise.",
+      "changesContent": true,
+      "delegated": true,
+      "date": "2026-10-11"
+    },
+    {
+      "number": 17,
+      "checks": [
+        "A09"
+      ],
+      "answer": "'Keep them. They are metal on the inside': decision 8 applies to the collection: the actor-likeness briefs, M3GAN and the fan-work and web-fiction franchises are kept.",
+      "changesContent": false,
+      "delegated": false,
+      "date": "2026-10-11"
+    },
+    {
+      "number": 18,
+      "checks": [
+        "A13"
+      ],
+      "answer": "'Align images and names': every slot whose name or art brief a decision changed is checked against its portrait; name and brief follow the image (images are not regenerated) unless the image clearly shows the wrong robot, which is recorded as needing a new portrait.",
+      "changesContent": true,
+      "delegated": true,
+      "date": "2026-10-11"
+    },
+    {
+      "number": 19,
+      "checks": [
+        "S55"
+      ],
+      "answer": "'Why would it not work? This should be able to scale to 10000 Automatons': no activation cap; a read-only scaling investigation goes in review/SCALING.md; the heavy test runs every repository Catalogue_Entry whatever their number and records timing per automaton; engine changes for larger populations are open items for the product owner.",
+      "changesContent": false,
+      "delegated": false,
+      "date": "2026-10-11"
+    },
+    {
+      "number": 20,
+      "checks": [],
+      "answer": "'Then don't hardcode it or update it. I do like to get informed of totals though': counts and ranges are derived from source/, and one generated Totals block reports them.",
+      "changesContent": false,
+      "delegated": false,
+      "date": "2026-10-11"
+    }
+  ],
+  "angel-grove-zord-command": {
+    "_decisions": [
+      14
+    ],
+    "teamNames": {
+      "2v2": [
+        "Mighty Morphin Zords"
+      ]
+    }
+  },
+  "aperture-test-division": {
+    "_decisions": [
+      3
+    ],
+    "teamNames": {
+      "2v2": [
+        "Cooperative Testing Initiative"
+      ],
+      "3v3": []
+    }
+  },
+  "aphras-rogue-droid-pair": {
+    "_decisions": [
+      13,
+      14,
+      16
+    ],
+    "stableName": "Aphras Rogue Droid Pair",
+    "franchiseLabel": "Star Wars — Doctor Aphra",
+    "teamNames": {
+      "2v2": [
+        "Triple-Zero and Beetee"
+      ]
+    }
+  },
+  "arena-systems-consortium": {
+    "_decisions": [
+      12
+    ],
+    "strategy": "Trio",
+    "targetOverrides": {
+      "12": 6
+    }
+  },
+  "arsenal-mercenary-works": {
+    "_decisions": [
+      14,
+      18
+    ],
+    "teamNames": {
+      "2v2": [
+        "Vanguard and Aegis"
+      ],
+      "3v3": [
+        "Outer Mercenaries"
+      ]
+    },
+    "robots": {
+      "1": {
+        "name": "Crimson Vanguard",
+        "artBrief": "Sleek white Arsenal frame with red trim, horned head, swept shoulder fins, long assault rifle held low",
+        "portrait": "aligned"
+      },
+      "2": {
+        "name": "Hornet Aegis",
+        "artBrief": "Heavy yellow-and-black Arsenal frame, broad armoured legs, glowing amber visor, assault rifle braced",
+        "portrait": "aligned"
+      },
+      "3": {
+        "name": "Dune Longshot",
+        "artBrief": "Tan Arsenal frame with blue stripes, hooded sensor head, long scoped sniper rifle aimed forward",
+        "portrait": "aligned"
+      }
+    }
+  },
+  "aumaan-orbital-foundry": {
+    "_decisions": [
+      14
+    ],
+    "teamNames": {
+      "2v2": [
+        "Orbital Frames"
+      ]
+    }
+  },
+  "axiom-salvage-crew": {
+    "_decisions": [
+      3,
+      5
+    ],
+    "teamNames": {
+      "2v2": [
+        "Plant Directive"
+      ],
+      "3v3": [
+        "Operation Recolonize"
+      ]
+    },
+    "targetOverrides": {
+      "11": 6,
+      "13": 3
+    }
+  },
+  "battletech-mercenary-lance": {
+    "_decisions": [
+      3,
+      7
+    ],
+    "franchiseLabel": "BattleTech",
+    "teamNames": {
+      "2v2": [
+        "Kell Hounds"
+      ],
+      "3v3": [
+        "Gray Death Legion"
+      ]
+    }
+  },
+  "bd-expedition-workshop": {
+    "_decisions": [
+      16
+    ],
+    "franchiseLabel": "Star Wars — Jedi: Fallen Order"
+  },
+  "blue-book-synthetic-laboratory": {
+    "_decisions": [
+      16
+    ],
+    "franchiseLabel": "Ex Machina"
+  },
+  "bravern-heroic-arsenal": {
+    "_decisions": [
+      16
+    ],
+    "franchiseLabel": "Brave Bang Bravern!"
+  },
+  "breakwater-salvage-union": {
+    "_decisions": [
+      14,
+      18
+    ],
+    "teamNames": {
+      "2v2": [
+        "Low Tide Salvors"
+      ],
+      "3v3": [
+        "Harbour Recovery Gang"
+      ]
+    },
+    "robots": {
+      "1": {
+        "name": "Hawser",
+        "artBrief": "Rusted tracked salvage tug, big cable winch drum and tow shackle up front, twin lamp eyes, shoulder cannon",
+        "portrait": "aligned"
+      },
+      "2": {
+        "name": "Hermit Clamp",
+        "artBrief": "Rusted four-legged crab salvager, tall cylinder torso with one blue eye, huge clamp claw and a saw arm",
+        "portrait": "aligned"
+      },
+      "3": {
+        "name": "Harbourmaster",
+        "artBrief": "Six-wheel rusted recovery rig, overhead crane gantry with hook, two clamp arms, front winch and chains",
+        "portrait": "aligned"
+      }
+    }
+  },
+  "candys-animatronic-workshop": {
+    "_decisions": [
+      13,
+      14,
+      16
+    ],
+    "stableName": "Candys Animatronic Workshop",
+    "franchiseLabel": "Five Nights at Candy's",
+    "teamNames": {
+      "2v2": [
+        "Candy's Burgers and Fries"
+      ],
+      "3v3": [
+        "Animatronic Showtime"
+      ]
+    }
+  },
+  "cauldron-machineworks": {
+    "_decisions": [
+      3,
+      5
+    ],
+    "teamNames": {
+      "2v2": [
+        "Cauldron SIGMA",
+        "Cauldron RHO"
+      ],
+      "3v3": [
+        "The Derangement"
+      ]
+    },
+    "targetOverrides": {
+      "14": 4
+    }
+  },
+  "chimera-city-scrapworks": {
+    "_decisions": [
+      16
+    ],
+    "franchiseLabel": "Scrapland"
+  },
+  "chrysalis-reconstruction-array": {
+    "_decisions": [
+      14,
+      16,
+      18
+    ],
+    "franchiseLabel": "Chrysalis",
+    "teamNames": {
+      "2v2": [
+        "Rebuild Protocol",
+        "Salvage Swarm",
+        "Foundry Drones",
+        "Reclaimed Earth",
+        "Patient Machine"
+      ],
+      "3v3": [
+        "Reconstruction Wave",
+        "Seed of Rebirth",
+        "Chrysalis Awakening"
+      ]
+    },
+    "robots": {
+      "1": {
+        "name": "Survey Mast",
+        "artBrief": "White quadruped drone with yellow hazard stripes, camera head on a short mast, whip antenna, amber visor slit",
+        "portrait": "aligned"
+      },
+      "2": {
+        "name": "Periscope",
+        "artBrief": "White-and-yellow quadruped drone, tall periscope sensor stalk rising from its back, amber eye slit",
+        "portrait": "aligned"
+      },
+      "3": {
+        "name": "Rack Hauler",
+        "artBrief": "Boxy white quadruped drone carrying an open cargo rack on its back, amber visor slit",
+        "portrait": "aligned"
+      },
+      "4": {
+        "name": "Hose Welder",
+        "artBrief": "White quadruped drone with a hose-fed welding nozzle arm curled over its shoulder",
+        "portrait": "aligned"
+      },
+      "5": {
+        "name": "Sawback",
+        "artBrief": "White quadruped drone with a large circular saw blade mounted on its side arm",
+        "portrait": "aligned"
+      },
+      "6": {
+        "name": "Borehead",
+        "artBrief": "White quadruped drone with a heavy spiral drill bit mounted on its side",
+        "portrait": "aligned"
+      },
+      "7": {
+        "name": "Cargo Mule",
+        "artBrief": "Long white quadruped drone hauling a big sealed container module on its back",
+        "portrait": "aligned"
+      },
+      "8": {
+        "name": "Plate Layer",
+        "artBrief": "Squat white quadruped drone with a large slab of hull plate carried on its flank",
+        "portrait": "aligned"
+      },
+      "9": {
+        "name": "Forktine",
+        "artBrief": "White quadruped drone with twin forklift tines jutting forward under its body",
+        "portrait": "aligned"
+      },
+      "10": {
+        "name": "Tinker Arm",
+        "artBrief": "White quadruped drone with a side toolbox pod and a small manipulator arm at the front",
+        "portrait": "aligned"
+      },
+      "11": {
+        "name": "Beam Cutter",
+        "artBrief": "White quadruped drone with a long beam-cutter barrel mounted along its side",
+        "portrait": "aligned"
+      }
+    }
+  },
+  "citadel-mechworks": {
+    "_decisions": [
+      14,
+      16
+    ],
+    "franchiseLabel": "Mass Effect — Security Mechs",
+    "teamNames": {
+      "2v2": [
+        "C-Sec Patrol"
+      ],
+      "3v3": [
+        "Presidium Security"
+      ]
+    }
+  },
+  "citadel-robot-security": {
+    "_decisions": [
+      3,
+      18
+    ],
+    "robots": {
+      "1": {
+        "name": "Maintenance-Bot",
+        "artBrief": "Yellow-and-black wheeled maintenance robot, boxy head with a red eye, cutter arm and a claw",
+        "portrait": "aligned"
+      },
+      "2": {
+        "name": "Security-1",
+        "artBrief": "Grey security walker with a saucer head, single red eye, red trim, blaster arm and a gripper hand",
+        "portrait": "aligned"
+      },
+      "3": {
+        "name": "Security-2",
+        "artBrief": "Dark gunmetal security robot, saucer head with a red visor band, heavy rifle held two-handed",
+        "portrait": "aligned"
+      },
+      "4": {
+        "name": "Security Unit 04",
+        "artBrief": "White saucer-headed security robot stencilled 04, TriOptimum chest badge, red eyes, blaster arm",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "5": {
+        "name": "Security Unit 05",
+        "artBrief": "Grey-and-red boxy-headed security robot, red eye panel, long blaster arm and an open claw",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "6": {
+        "name": "Security Unit 06",
+        "artBrief": "Grey-and-red security robot stencilled 06, red eye, blaster arm and a TriOptimum riot shield",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "7": {
+        "name": "Security Unit 07",
+        "artBrief": "Slim white-and-red security robot stencilled 07, cyclops red eye, rifle held low",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "8": {
+        "name": "Security Unit 08",
+        "artBrief": "Grey security robot stencilled 08, narrow slit head with red eyes, rotary minigun held two-handed",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "9": {
+        "name": "Security Unit 09",
+        "artBrief": "Lanky white-and-red security robot, saucer head with a red eye, a blaster pod on each forearm",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "10": {
+        "name": "Security Unit 10",
+        "artBrief": "Grey-and-red security robot, saucer head with red eyes, two-handed twin-barrel rifle",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "11": {
+        "name": "Security Unit 11",
+        "artBrief": "White-and-red security robot stencilled 11, angular hat-like head, red eye, red-coil rifle",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      }
+    },
+    "teamNames": {
+      "2v2": [
+        "Maintenance Level",
+        "TriOptimum Security",
+        "Executive Suite",
+        "Flight Deck Patrol",
+        "Reactor Watch"
+      ],
+      "3v3": [
+        "SHODAN's Chosen",
+        "Beta Grove Keepers",
+        "Systems Engineering"
+      ]
+    }
+  },
+  "city-companion-repair-shop": {
+    "_decisions": [
+      16
+    ],
+    "franchiseLabel": "Robot Dreams"
+  },
+  "clone-drone-combat-factory": {
+    "_decisions": [
+      3,
+      18
+    ],
+    "robots": {
+      "1": {
+        "name": "Sword Bot",
+        "artBrief": "Blue-and-grey voxel robot, red square eye, glowing white sword with a gold hilt swung low",
+        "portrait": "aligned"
+      },
+      "2": {
+        "name": "Archer Bot",
+        "artBrief": "Blue-and-grey voxel archer, cyan eye, glowing bow drawn with a blue arrow nocked",
+        "portrait": "aligned"
+      },
+      "3": {
+        "name": "Horned Hammer Bot",
+        "artBrief": "Blue voxel robot with a horned head, red eyes, giant blocky hammer held two-handed",
+        "portrait": "aligned"
+      },
+      "4": {
+        "name": "Sword Bot Mk II",
+        "artBrief": "Red-and-grey voxel robot, red visor bar, glowing sword raised overhead",
+        "portrait": "aligned"
+      },
+      "5": {
+        "name": "Sword Bot 05",
+        "artBrief": "Blue voxel swordsman with a crested head, blue eyes, glowing sword held high",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "6": {
+        "name": "Sword Bot 06",
+        "artBrief": "Blue voxel swordsman, red visor bar, glowing sword swept across its legs",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "7": {
+        "name": "Sword Bot 07",
+        "artBrief": "Red-and-grey voxel swordsman, twin red eyes, red-glowing sword raised",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "8": {
+        "name": "Sword Bot 08",
+        "artBrief": "Blue voxel swordsman in a lunge, red eyes, glowing sword held up and back",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "9": {
+        "name": "Sword Bot 09",
+        "artBrief": "Tall blue voxel swordsman, single red eye, flat hat-like head, glowing sword held low",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "10": {
+        "name": "Sword Bot 10",
+        "artBrief": "Scuffed blue voxel swordsman, wide red visor, glowing sword raised beside its head",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "11": {
+        "name": "Sword Bot 11",
+        "artBrief": "Blue voxel swordsman with 11 on its shoulder, red eyes, glowing sword held upright",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      }
+    },
+    "teamNames": {
+      "2v2": [
+        "Arena Rookies",
+        "Twitch Mode",
+        "Mind Transfer",
+        "Jetpack Ambush",
+        "Endless Mode"
+      ],
+      "3v3": [
+        "Last Bot Standing",
+        "Commentatron's Picks",
+        "Emperor's Arena"
+      ]
+    }
+  },
+  "companion-defence-laboratory": {
+    "_decisions": [
+      14,
+      16
+    ],
+    "franchiseLabel": "M3GAN",
+    "teamNames": {
+      "2v2": [
+        "Funki Prototypes"
+      ]
+    }
+  },
+  "companion-robotics-bureau": {
+    "_decisions": [
+      15,
+      18
+    ],
+    "robots": {
+      "1": {
+        "name": "VGC-60L",
+        "artBrief": "Glossy white VGC-60L care robot, rounded helmet head with a black visor, slim jointed limbs, no visible weapon",
+        "portrait": "aligned"
+      }
+    }
+  },
+  "copper-nine-drone-works": {
+    "_decisions": [
+      3,
+      5
+    ],
+    "teamNames": {
+      "2v2": [
+        "Serial Designations",
+        "Absolute Solver"
+      ],
+      "3v3": [
+        "Disassembly Squad"
+      ]
+    },
+    "targetOverrides": {
+      "12": 4
+    }
+  },
+  "core-war-foundry": {
+    "_decisions": [
+      14,
+      18
+    ],
+    "teamNames": {
+      "2v2": [
+        "Commander Escort",
+        "Artillery Line",
+        "Flame and Fist",
+        "Crawling Defence",
+        "Missile Battery"
+      ],
+      "3v3": [
+        "Kbot Lab Wave",
+        "Heavy Kbot Push",
+        "CORE Contingency"
+      ]
+    },
+    "robots": {
+      "1": {
+        "name": "CORE Commander",
+        "artBrief": "Hulking grey-and-red CORE Commander, domed sensor head, heavy arm cannon and a three-finger build claw",
+        "portrait": "aligned"
+      },
+      "2": {
+        "name": "AK",
+        "artBrief": "Lean two-legged AK kbot, red-striped wedge head with a red sensor, single forward laser gun",
+        "portrait": "aligned"
+      },
+      "3": {
+        "name": "Storm",
+        "artBrief": "Stocky Storm rocket kbot, twin six-tube rocket boxes on its shoulders, red-striped grey armour",
+        "portrait": "aligned"
+      },
+      "4": {
+        "name": "Thud",
+        "artBrief": "Squat Thud artillery kbot, two raised plasma cannon barrels on the shoulders, red-panelled armour",
+        "portrait": "aligned"
+      },
+      "5": {
+        "name": "Pyro",
+        "artBrief": "Hunched Pyro kbot, red domed head, twin fuel tanks on the back, perforated flamethrower nozzle",
+        "portrait": "aligned"
+      },
+      "6": {
+        "name": "Sumo",
+        "artBrief": "Round heavy Sumo kbot, spherical grey-and-red armoured body on thick legs, forward laser port",
+        "portrait": "aligned"
+      },
+      "7": {
+        "name": "The Can",
+        "artBrief": "Cylindrical The Can kbot, red-banded armoured drum on two legs, small cannon in a front slot",
+        "portrait": "aligned"
+      },
+      "8": {
+        "name": "Roach",
+        "artBrief": "Low red-and-grey Roach crawling bomb, flat armoured dome on four short legs, no visible weapon",
+        "portrait": "aligned"
+      },
+      "9": {
+        "name": "Morty",
+        "artBrief": "Two-legged Morty mortar kbot, large red-tipped mortar tube angled up from its grey armoured body",
+        "portrait": "aligned"
+      },
+      "10": {
+        "name": "Dominator",
+        "artBrief": "Broad Dominator kbot, four nine-tube missile boxes across its shoulders, red-striped grey legs",
+        "portrait": "aligned"
+      },
+      "11": {
+        "name": "Krogoth",
+        "artBrief": "Towering Krogoth, blocky grey-and-red armour, small head between shoulder vents, twin arm cannons",
+        "portrait": "aligned"
+      }
+    }
+  },
+  "corpus-proxy-exchange": {
+    "_decisions": [
+      12
+    ],
+    "strategy": "Trio",
+    "targetOverrides": {
+      "12": 6
+    }
+  },
+  "cyberlife-deviants": {
+    "_decisions": [
+      3,
+      7
+    ],
+    "franchiseLabel": "Detroit: Become Human",
+    "teamNames": {
+      "2v2": [
+        "CyberLife Tower"
+      ],
+      "3v3": [
+        "Jericho Uprising"
+      ]
+    }
+  },
+  "cyberman-conversion-works": {
+    "_decisions": [
+      14,
+      16,
+      18
+    ],
+    "franchiseLabel": "Doctor Who — Cybermen",
+    "teamNames": {
+      "2v2": [
+        "Cyber Command",
+        "Cybus Industries",
+        "Battersea Plant",
+        "You Will Be Upgraded",
+        "Earpod Network"
+      ],
+      "3v3": [
+        "Rise of the Cybermen",
+        "The Age of Steel",
+        "Army of Ghosts"
+      ]
+    },
+    "robots": {
+      "3": {
+        "name": "Cybus Cyberman 03",
+        "artBrief": "Silver Cybus Cyberman at ease, both hands open by its sides, handlebar ear-pods, chest disc",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "4": {
+        "name": "Cybus Cyberman 04",
+        "artBrief": "Silver Cybus Cyberman with one fist raised to its chest, forearm blaster pointed at the floor",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "5": {
+        "name": "Cybus Cyberman 05",
+        "artBrief": "Silver Cybus Cyberman stepping forward, forearm gun held out at hip height, other hand open",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "6": {
+        "name": "Cybus Cyberman 06",
+        "artBrief": "Scratched silver Cybus Cyberman in a wide stance, forearm gun angled outward, black joint ribbing",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "7": {
+        "name": "Cybus Cyberman 07",
+        "artBrief": "Silver Cybus Cyberman turned slightly, forearm gun barrel aimed toward the viewer, fist half closed",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "8": {
+        "name": "Cybus Cyberman 08",
+        "artBrief": "Silver Cybus Cyberman standing to attention, arms straight down, feet together, gun along the forearm",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "9": {
+        "name": "Cybus Cyberman 09",
+        "artBrief": "Worn silver Cybus Cyberman, forearm gun raised toward the camera, open hand, scuffed chest plates",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "10": {
+        "name": "Cybus Cyberman 10",
+        "artBrief": "Silver Cybus Cyberman braced with legs apart, both fists clenched, forearm gun pointing down",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "11": {
+        "name": "Cybus Cyberman 11",
+        "artBrief": "Silver Cybus Cyberman mid-stride, forearm blaster extended low, other hand curled, ear-pod handles",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      }
+    }
+  },
+  "cyberstan-iron-legion": {
+    "_decisions": [
+      14,
+      18
+    ],
+    "teamNames": {
+      "2v2": [
+        "Chainsaw Charge",
+        "Heavy Line",
+        "Strider Patrol",
+        "Shield and Flame",
+        "Iron Column"
+      ],
+      "3v3": [
+        "Cyberstan Vanguard",
+        "Malevelon Creek",
+        "Automaton Incursion"
+      ]
+    },
+    "robots": {
+      "1": {
+        "name": "Automaton Trooper",
+        "artBrief": "Skeletal black Automaton trooper, red-lit skull face and seams, assault rifle held across the chest",
+        "portrait": "aligned"
+      },
+      "2": {
+        "name": "Berserker",
+        "artBrief": "Rust-red skull-faced Berserker, spiked shoulders, exposed chest wiring, a chainsaw blade on each arm",
+        "portrait": "aligned"
+      },
+      "3": {
+        "name": "Devastator",
+        "artBrief": "Bulky gunmetal Devastator, red-eyed skull head, red chevron emblem on the chest, heavy arm cannon held low",
+        "portrait": "aligned"
+      },
+      "4": {
+        "name": "Hulk Bruiser",
+        "artBrief": "Squat armoured Hulk Bruiser, glowing red eye slit, wide-bore cannon arm and a six-tube rocket pod",
+        "portrait": "aligned"
+      },
+      "5": {
+        "name": "Scout Strider",
+        "artBrief": "Bipedal grey Scout Strider walker, boxy armoured cab with a skull marking, twin side guns, rear rail",
+        "portrait": "aligned"
+      },
+      "6": {
+        "name": "Rocket Devastator",
+        "artBrief": "Red-trimmed Rocket Devastator, skull face, star emblem, twin shoulder rocket pods, long arm cannon held low",
+        "portrait": "aligned"
+      },
+      "7": {
+        "name": "Heavy Devastator",
+        "artBrief": "Heavy Devastator with skull face and cog emblem, rotary minigun arm and a tall red-striped riot shield",
+        "portrait": "aligned"
+      },
+      "8": {
+        "name": "Hulk Scorcher",
+        "artBrief": "Boxy rusted Hulk Scorcher, red eye slit, star emblem, flamethrower arm and a spinning saw blade",
+        "portrait": "aligned"
+      },
+      "9": {
+        "name": "Annihilator Tank",
+        "artBrief": "Black Annihilator tank with a white star on the hull, long-barrelled turret cannon, red sensor light",
+        "portrait": "aligned"
+      },
+      "10": {
+        "name": "Factory Strider",
+        "artBrief": "Massive four-legged Factory Strider, red-lit armoured hull, top turret cannon, twin chin gatlings",
+        "portrait": "aligned"
+      },
+      "11": {
+        "name": "Reinforced Scout Strider",
+        "artBrief": "Armoured two-legged Reinforced Scout Strider, enclosed cab with red sensors, side rocket pod",
+        "portrait": "aligned"
+      }
+    }
+  },
+  "cybertronics-mecha-lab": {
+    "_decisions": [
+      3,
+      5
+    ],
+    "teamNames": {
+      "2v2": [
+        "Blue Fairy Seekers"
+      ],
+      "3v3": []
+    },
+    "targetOverrides": {
+      "3": 4,
+      "8": 2
+    }
+  },
+  "cygnus-robotics-division": {
+    "_decisions": [
+      3,
+      5
+    ],
+    "teamNames": {
+      "2v2": [
+        "Palomino Crew"
+      ],
+      "3v3": [
+        "Reinhardt's Sentries"
+      ]
+    },
+    "targetOverrides": {
+      "11": 6,
+      "13": 3
+    }
+  },
+  "cylon-centurion-fleet": {
+    "_decisions": [
+      3,
+      18
+    ],
+    "robots": {
+      "1": {
+        "name": "Centurion Classic",
+        "artBrief": "Classic bright-chrome Centurion, crested helmet, red scanner visor, ribbed chest, heavy rifle held low",
+        "portrait": "aligned"
+      },
+      "2": {
+        "name": "Centurion Modern",
+        "artBrief": "Lean modern Centurion, polished steel plates, red eye slit, gun barrel folded out of its forearm",
+        "portrait": "aligned"
+      },
+      "3": {
+        "name": "Model 0005",
+        "artBrief": "Boxy crested Centurion, scuffed chrome plates, red visor, long rifle braced in both hands",
+        "portrait": "aligned"
+      },
+      "4": {
+        "name": "U-87",
+        "artBrief": "Gaunt dark-chrome Centurion, exposed ribbed torso, red eye slit, heavy gun barrel on its forearm",
+        "portrait": "aligned"
+      },
+      "5": {
+        "name": "Centurion 05",
+        "artBrief": "Riveted dark-chrome Centurion, red eye slit, stubby gun with a red light on its forearm",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "6": {
+        "name": "Centurion 06",
+        "artBrief": "Polished bright-chrome Centurion standing tall, red eye slit, forearm-mounted gun barrel",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "7": {
+        "name": "Centurion 07",
+        "artBrief": "Upright silver Centurion with 07 stencilled on its shoulder, red eye slit, forearm gun held low",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "8": {
+        "name": "Centurion 08",
+        "artBrief": "Striding scuffed-chrome Centurion, orange-red eye slit, bulky forearm gun with a glowing red strip",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "9": {
+        "name": "Centurion 09",
+        "artBrief": "Hunched dark-chrome Centurion, long red-striped gun barrel running down its forearm",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "10": {
+        "name": "Centurion 10",
+        "artBrief": "Dark-chrome Centurion, red eye slit, chunky multi-barrel cannon wrapped around its forearm",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "11": {
+        "name": "Centurion 11",
+        "artBrief": "Gaunt dark-chrome Centurion, glowing red eyes, long forearm gun, clawed free hand spread wide",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      }
+    },
+    "teamNames": {
+      "2v2": [
+        "By Your Command",
+        "Basestar Guard",
+        "Armistice Line",
+        "New Caprica Garrison",
+        "Resurrection Ship"
+      ],
+      "3v3": [
+        "Imperious Leader's Guard",
+        "First Cylon War",
+        "Cylon Occupation"
+      ]
+    }
+  },
+  "dai-gurren-workshop": {
+    "_decisions": [
+      3
+    ],
+    "teamNames": {
+      "2v2": [
+        "Pierce the Heavens"
+      ],
+      "3v3": []
+    }
+  },
+  "delos-host-division": {
+    "_decisions": [
+      3
+    ],
+    "teamNames": {
+      "2v2": [
+        "Mariposa Saloon"
+      ],
+      "3v3": [
+        "Center of the Maze"
+      ]
+    }
+  },
+  "dinobot-forge": {
+    "_decisions": [
+      14,
+      16
+    ],
+    "franchiseLabel": "Transformers — Dinobots",
+    "teamNames": {
+      "2v2": [
+        "Dinobot Charge"
+      ],
+      "3v3": [
+        "Dinobots Transform"
+      ]
+    }
+  },
+  "droid-bounty-syndicate": {
+    "_decisions": [
+      14,
+      16
+    ],
+    "franchiseLabel": "Star Wars — Bounty Hunters",
+    "teamNames": {
+      "2v2": [
+        "IG Assassin Line"
+      ],
+      "3v3": [
+        "Bounty Hunters Guild"
+      ]
+    }
+  },
+  "dunes-salvage-partnership": {
+    "_decisions": [
+      14,
+      16
+    ],
+    "franchiseLabel": "Primordia",
+    "teamNames": {
+      "2v2": [
+        "Metropol Outcasts"
+      ]
+    }
+  },
+  "e-series-combat-works": {
+    "_decisions": [
+      14,
+      16
+    ],
+    "franchiseLabel": "Sonic the Hedgehog — E-Robots",
+    "teamNames": {
+      "2v2": [
+        "Rogue E-Series"
+      ]
+    }
+  },
+  "eden-agricultural-workshop": {
+    "_decisions": [
+      14,
+      16
+    ],
+    "franchiseLabel": "Eden",
+    "teamNames": {
+      "2v2": [
+        "Orchard Caretakers"
+      ]
+    }
+  },
+  "eggman-badnik-works": {
+    "_decisions": [
+      3,
+      18
+    ],
+    "robots": {
+      "4": {
+        "name": "Egg Pawn 04",
+        "artBrief": "Round orange egg robot with a yellow zigzag band, grinning visor, cyan eyes, cone drill fists",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "5": {
+        "name": "Egg Pawn 05",
+        "artBrief": "Orange egg robot, grinning visor with cyan eyes, head vent slits, blocky clenched fists",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "6": {
+        "name": "Egg Pawn 06",
+        "artBrief": "Orange egg robot on wedge boots, grinning visor, cyan eyes, open pincer hands",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "7": {
+        "name": "Egg Pawn 07",
+        "artBrief": "Orange egg robot with yellow triangle side decals, grinning visor, cyan eyes, claw hands",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "8": {
+        "name": "Egg Pawn 08",
+        "artBrief": "Orange egg robot in a brawler stance, grinning visor, cyan eyes, blocky fists raised",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "9": {
+        "name": "Egg Pawn 09",
+        "artBrief": "Orange egg robot with yellow shoulder panels, grinning visor, round belly port, blocky fists",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "10": {
+        "name": "Egg Pawn 10",
+        "artBrief": "Orange egg robot with a head seam panel, grinning visor, cyan eyes, claws spread wide",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "11": {
+        "name": "Egg Pawn 11",
+        "artBrief": "Orange egg robot with twin yellow side stripes, grinning visor, wedge boots, claw hands",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      }
+    },
+    "teamNames": {
+      "2v2": [
+        "Green Hill Ambush",
+        "Egg Fleet Infantry",
+        "Chemical Plant Crew",
+        "Scrap Brain Works",
+        "Final Fortress"
+      ],
+      "3v3": [
+        "Stardust Speedway",
+        "Egg Carrier Guard",
+        "Death Egg Garrison"
+      ]
+    }
+  },
+  "encom-program-arena": {
+    "_decisions": [
+      14,
+      16
+    ],
+    "franchiseLabel": "TRON",
+    "teamNames": {
+      "2v2": [
+        "Light Cycle Duel"
+      ],
+      "3v3": [
+        "End of Line"
+      ]
+    }
+  },
+  "endurance-robotics-pair": {
+    "_decisions": [
+      14,
+      16
+    ],
+    "franchiseLabel": "Interstellar",
+    "teamNames": {
+      "2v2": [
+        "Miller's Planet Rescue"
+      ]
+    }
+  },
+  "erlins-eye-sleeper-workshop": {
+    "_decisions": [
+      13,
+      16,
+      18
+    ],
+    "stableName": "Erlins Eye Sleeper Workshop",
+    "robots": {
+      "1": {
+        "name": "Sleeper Operator",
+        "artBrief": "Grey-green android with a cranial cap, oversized black-and-teal quilted coat, pistol, prosthetic leg",
+        "portrait": "aligned"
+      }
+    },
+    "franchiseLabel": "Citizen Sleeper"
+  },
+  "evangelion-unit-hangar": {
+    "_decisions": [
+      14
+    ],
+    "teamNames": {
+      "2v2": [
+        "Operation Yashima"
+      ],
+      "3v3": [
+        "NERV Tokyo-3"
+      ]
+    }
+  },
+  "facility-3826-robotics": {
+    "_decisions": [
+      3,
+      18
+    ],
+    "robots": {
+      "1": {
+        "name": "VOV-A6 Lab Tech",
+        "artBrief": "Visibly synthetic white-enamel humanoid, painted moustache faceplate, red star chest badge, open hands",
+        "portrait": "aligned"
+      },
+      "2": {
+        "name": "MA-9 Belyash",
+        "artBrief": "Hulking white-and-red enamel robot, red star belly, single red porthole optic, rotary cannon braced in both hands",
+        "portrait": "aligned"
+      },
+      "3": {
+        "name": "Vovchik",
+        "artBrief": "Round white egg-headed robot, red star on its dome, orange eyes, red cylinder gun arm and a pincer claw",
+        "portrait": "aligned"
+      }
+    },
+    "teamNames": {
+      "2v2": [
+        "Polymer Workshop"
+      ],
+      "3v3": [
+        "Kollektiv 2.0"
+      ]
+    }
+  },
+  "factory-night-shift": {
+    "_decisions": [
+      12
+    ],
+    "strategy": "Trio",
+    "targetOverrides": {
+      "12": 6
+    }
+  },
+  "fazbear-arena-entertainment": {
+    "_decisions": [
+      3
+    ],
+    "teamNames": {
+      "2v2": [
+        "Night Shift"
+      ],
+      "3v3": [
+        "Freddy Fazbear's Pizza"
+      ]
+    }
+  },
+  "fix-it-foundry": {
+    "_decisions": [
+      3,
+      5,
+      7,
+      18
+    ],
+    "franchiseLabel": "*batteries not included",
+    "robots": {
+      "1": {
+        "name": "Kilowatt",
+        "artBrief": "Weathered saucer Fix-It with a ribbed vent dome, twin amber eyes, a claw arm and a tool-gun arm",
+        "portrait": "aligned"
+      },
+      "2": {
+        "name": "Carmen",
+        "artBrief": "Smooth domed saucer Fix-It on four legs, small antennae, twin amber eyes, no arms",
+        "portrait": "aligned"
+      },
+      "3": {
+        "name": "Wheems",
+        "artBrief": "Red-striped saucer Fix-It with a tail fin and antenna, round goggle eyes, two claw arms",
+        "portrait": "aligned"
+      }
+    },
+    "teamNames": {
+      "2v2": [
+        "East Eighth Street"
+      ],
+      "3v3": [
+        "Fix-It Family"
+      ]
+    },
+    "targetOverrides": {
+      "11": 6,
+      "13": 3
+    }
+  },
+  "fnix-machine-network": {
+    "_decisions": [
+      3,
+      18
+    ],
+    "robots": {
+      "1": {
+        "name": "Military Runner",
+        "artBrief": "Olive four-legged Runner, exposed orange cables, red sensor eye, machine-gun turret on its back",
+        "portrait": "aligned"
+      },
+      "2": {
+        "name": "Prototype Hunter",
+        "artBrief": "Tall grey-green two-legged Hunter, hunched frame, red indicator lights, arm-mounted rifle",
+        "portrait": "aligned"
+      },
+      "3": {
+        "name": "Military Tank",
+        "artBrief": "Hulking olive two-legged Tank, rocket pod arm and heavy cannon arm, red sensor slits",
+        "portrait": "aligned"
+      },
+      "4": {
+        "name": "Military Harvester",
+        "artBrief": "Olive six-legged Harvester, hazard stripes, underbelly spiral drill, twin rocket pods on its back",
+        "portrait": "aligned"
+      },
+      "5": {
+        "name": "FNIX Runner 05",
+        "artBrief": "Black-and-red FNIX Runner on four legs, red arrow decal, back-mounted rifle turret, red eye",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "6": {
+        "name": "FNIX Runner 06",
+        "artBrief": "Red-plated FNIX Runner, diamond decals, ammo box and long rifle turret on its back",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "7": {
+        "name": "FNIX Runner 07",
+        "artBrief": "Red FNIX Runner stencilled 07 on its flank, red eye, rear rifle turret with an ammo box",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "8": {
+        "name": "FNIX Runner 08",
+        "artBrief": "Weathered red FNIX Runner, tall antenna, back-mounted long rifle turret, red eye",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "9": {
+        "name": "FNIX Runner 09",
+        "artBrief": "Red FNIX Runner stencilled 09, twin rear antennae, chin-mounted rifle under its red eye",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "10": {
+        "name": "FNIX Runner 10",
+        "artBrief": "Red FNIX Runner with chevron shoulder plates, roll-cage face guard, back-mounted cannon turret",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "11": {
+        "name": "FNIX Runner 11",
+        "artBrief": "Black-and-red FNIX Runner, twin red eyes, chin-mounted heavy gun, warning-sign box on its flank",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      }
+    },
+    "teamNames": {
+      "2v2": [
+        "Landfall Patrol",
+        "Alpine Unrest",
+        "Saltbacken Watch",
+        "Archipelago Sweep",
+        "Apocalypse Class"
+      ],
+      "3v3": [
+        "FNIX Rising",
+        "Harvest Season",
+        "Reaper Pack"
+      ]
+    }
+  },
+  "forerunner-sentinel-array": {
+    "_decisions": [
+      3,
+      18
+    ],
+    "robots": {
+      "1": {
+        "name": "Aggressor Sentinel",
+        "artBrief": "Silver geometric Aggressor, bright blue optic core, two blue-lit blade wings, beam emitter below",
+        "portrait": "aligned"
+      },
+      "2": {
+        "name": "Protector Sentinel",
+        "artBrief": "Silver geometric Sentinel, blue optic core, angled wing blades, blue hard-light shield on one wing",
+        "portrait": "aligned"
+      },
+      "3": {
+        "name": "Sentinel Enforcer",
+        "artBrief": "Hulking hovering Enforcer, armoured stone-grey hull, blue light seams, two pincer claws hanging below",
+        "portrait": "aligned"
+      },
+      "4": {
+        "name": "Aggressor 04",
+        "artBrief": "Cracked silver Aggressor in level flight, blue optic flaring, wings swept out wide",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "5": {
+        "name": "Aggressor 05",
+        "artBrief": "Silver Aggressor with a cleaner hull, steady blue optic, wing blades tilted up",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "6": {
+        "name": "Aggressor 06",
+        "artBrief": "Weathered silver Aggressor, cracked plating, pale blue optic, wings angled forward",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "7": {
+        "name": "Aggressor 07",
+        "artBrief": "Silver Aggressor with heavy hull cracks, bright blue optic, wide-set blade wings",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "8": {
+        "name": "Aggressor 08",
+        "artBrief": "Dark-trimmed silver Aggressor, blue optic, tall upright wing blades with blue seams",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "9": {
+        "name": "Aggressor 09",
+        "artBrief": "Silver Aggressor banking sideways, blue optic core, wings at uneven heights",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "10": {
+        "name": "Aggressor 10",
+        "artBrief": "Silver Aggressor in a steep bank, blue optic, one wing raised high",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "11": {
+        "name": "Aggressor 11",
+        "artBrief": "Silver Aggressor with ring ports on both wing blades, blue optic core",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      }
+    },
+    "teamNames": {
+      "2v2": [
+        "Guilty Spark's Escort",
+        "Library Wardens",
+        "Didact's Vanguard",
+        "Genesis Caretakers",
+        "Installation 04"
+      ],
+      "3v3": [
+        "Flood Containment",
+        "Warden Eternal's Host",
+        "Requiem Guard"
+      ]
+    }
+  },
+  "frontier-titan-corps": {
+    "_decisions": [
+      3,
+      5
+    ],
+    "teamNames": {
+      "2v2": [
+        "Marauder Corps",
+        "Militia SRS"
+      ],
+      "3v3": [
+        "Apex Predators"
+      ]
+    },
+    "targetOverrides": {
+      "12": 4
+    }
+  },
+  "galactic-robot-workshop": {
+    "_decisions": [
+      3
+    ],
+    "teamNames": {
+      "2v2": [
+        "Great Clock Custodians"
+      ],
+      "3v3": [
+        "Q-Force"
+      ]
+    }
+  },
+  "geonosis-droid-foundry": {
+    "_decisions": [
+      14,
+      16,
+      18
+    ],
+    "franchiseLabel": "Star Wars — Separatist Droid Army",
+    "teamNames": {
+      "2v2": [
+        "Kalani's Vanguard",
+        "Destroyer Line",
+        "Commando Guard",
+        "Tactical Command",
+        "Geonosis Walkers"
+      ],
+      "3v3": [
+        "Roger Roger",
+        "Confederacy Guard",
+        "Battle of Geonosis"
+      ]
+    },
+    "robots": {
+      "2": {
+        "name": "B1 Battle Droid",
+        "artBrief": "Tan B1 battle droid, thin skeletal limbs, long snout head and backpack antenna, E-5 blaster rifle held low",
+        "portrait": "aligned"
+      },
+      "3": {
+        "name": "B2 Super Battle Droid",
+        "artBrief": "Hulking gunmetal B2 super battle droid, broad hunched torso, tiny recessed head, twin wrist blasters on both arms",
+        "portrait": "aligned"
+      },
+      "4": {
+        "name": "Droideka",
+        "artBrief": "Rust-brown droideka on three clawed legs, curved shell back, red sensor eyes, twin blaster arms forward",
+        "portrait": "aligned"
+      },
+      "5": {
+        "name": "BX Commando Droid",
+        "artBrief": "Lean dark-grey BX commando droid, angular armoured frame, glowing visor slits, compact blaster carbine in both hands",
+        "portrait": "aligned"
+      },
+      "6": {
+        "name": "IG-100 MagnaGuard",
+        "artBrief": "Bone-white IG-100 MagnaGuard, tattered grey cloak, glowing amber eyes, electrostaff crackling violet at both ends",
+        "portrait": "aligned"
+      },
+      "7": {
+        "name": "T-series Tactical Droid",
+        "artBrief": "Slender blue-and-cream T-series tactical droid, flat wedge head with orange eyes, blaster pistol at its side",
+        "portrait": "aligned"
+      },
+      "8": {
+        "name": "B1 Commander",
+        "artBrief": "Tan B1 commander droid with yellow head and chest markings, one hand raised, E-5 blaster rifle in the other",
+        "portrait": "aligned"
+      },
+      "9": {
+        "name": "Dwarf Spider Droid",
+        "artBrief": "Sandy tan dwarf spider droid, rounded dome on four jointed legs, tall antenna, red lenses, long central blaster cannon",
+        "portrait": "aligned"
+      },
+      "10": {
+        "name": "LM-432 Crab Droid",
+        "artBrief": "Low rust-brown LM-432 crab droid, wide armoured shell on clawed legs, paired red photoreceptors, twin front blasters",
+        "portrait": "aligned"
+      },
+      "11": {
+        "name": "Octuptarra Droid",
+        "artBrief": "Grey Octuptarra tri-droid, spherical head with a big red eye on three thin clawed legs, twin blaster turrets each side",
+        "portrait": "aligned"
+      }
+    }
+  },
+  "gero-android-laboratory": {
+    "_decisions": [
+      14
+    ],
+    "teamNames": {
+      "2v2": [
+        "Red Ribbon Androids"
+      ],
+      "3v3": [
+        "Gero Creations"
+      ]
+    }
+  },
+  "glitch-feudal-forge": {
+    "_decisions": [
+      14,
+      16
+    ],
+    "franchiseLabel": "Starbound",
+    "teamNames": {
+      "2v2": [
+        "Sarcasm Detected"
+      ],
+      "3v3": [
+        "Glitch Castle Guard"
+      ]
+    }
+  },
+  "gobotron-guardian-fleet": {
+    "_decisions": [
+      3
+    ],
+    "teamNames": {
+      "2v2": [
+        "Guardian Command"
+      ],
+      "3v3": [
+        "Command Center Crew"
+      ]
+    }
+  },
+  "gray-mann-robot-works": {
+    "_decisions": [
+      3
+    ],
+    "teamNames": {
+      "2v2": [
+        "Coal Town Rush",
+        "Gear Grinder",
+        "Mecha Engine",
+        "Steel Trap",
+        "Two Cities"
+      ],
+      "3v3": [
+        "Mannhattan Assault",
+        "Rottenburg Raid",
+        "Mannworks Siege"
+      ]
+    }
+  },
+  "grievous-war-forge": {
+    "_decisions": [
+      16
+    ],
+    "franchiseLabel": "Star Wars — The Clone Wars"
+  },
+  "guardian-reboot-camp": {
+    "_decisions": [
+      3
+    ],
+    "teamNames": {
+      "2v2": [
+        "Kenzie's Guardians"
+      ],
+      "3v3": []
+    }
+  },
+  "gunhed-autonomous-works": {
+    "_decisions": [
+      16
+    ],
+    "franchiseLabel": "GUNHED"
+  },
+  "gutsy-robot-command": {
+    "_decisions": [
+      12
+    ],
+    "strategy": "Trio",
+    "targetOverrides": {
+      "12": 6
+    }
+  },
+  "hero-factory-assembly": {
+    "_decisions": [
+      3
+    ],
+    "teamNames": {
+      "2v2": [
+        "Rise of the Rookies"
+      ],
+      "3v3": [
+        "Alpha 1 Team"
+      ]
+    }
+  },
+  "hyperion-loader-division": {
+    "_decisions": [
+      3,
+      18
+    ],
+    "robots": {
+      "2": {
+        "name": "WAR Loader",
+        "artBrief": "Hulking yellow Hyperion loader, red eye, HYPERION chest stencil, rotary cannon arm and pincer claw",
+        "portrait": "aligned"
+      },
+      "3": {
+        "name": "Hyperion Constructor",
+        "artBrief": "Boxy yellow Hyperion walker on four splayed legs, big red lens, red-tipped rocket pods on its roof",
+        "portrait": "aligned"
+      }
+    },
+    "teamNames": {
+      "2v2": [
+        "Helios Station"
+      ],
+      "3v3": [
+        "Handsome Jack's Army"
+      ]
+    }
+  },
+  "infinite-war-assembly": {
+    "_decisions": [
+      14,
+      18
+    ],
+    "teamNames": {
+      "2v2": [
+        "UEF Command Escort"
+      ],
+      "3v3": [
+        "UEF Frontline"
+      ]
+    },
+    "robots": {
+      "2": {
+        "name": "Mech Marine",
+        "artBrief": "Light blue-and-grey Mech Marine assault bot, hunched cockpit body, blue visor, twin arm guns",
+        "portrait": "aligned"
+      },
+      "3": {
+        "name": "Titan",
+        "artBrief": "Heavy blue-and-grey UEF Titan assault bot, blocky shoulders, blue sensor slits, twin arm cannons",
+        "portrait": "aligned"
+      }
+    }
+  },
+  "interplanetary-peacekeeper-works": {
+    "_decisions": [
+      13,
+      16
+    ],
+    "stableName": "Interplanetary Peacekeepers",
+    "franchiseLabel": "The Day the Earth Stood Still"
+  },
+  "irken-droid-outpost": {
+    "_decisions": [
+      3,
+      5,
+      18
+    ],
+    "robots": {
+      "2": {
+        "name": "MiMi",
+        "artBrief": "Slim silver SIR unit, blade-shaped head with a big red eye, one blade arm and a pincer claw",
+        "portrait": "aligned"
+      }
+    },
+    "teamNames": {
+      "2v2": [
+        "Operation Impending Doom"
+      ],
+      "3v3": []
+    },
+    "targetOverrides": {
+      "3": 4,
+      "8": 2
+    }
+  },
+  "iron-city-berserker-workshop": {
+    "_decisions": [
+      16
+    ],
+    "franchiseLabel": "Alita: Battle Angel"
+  },
+  "jawa-salvage-exchange": {
+    "_decisions": [
+      14,
+      16,
+      18
+    ],
+    "franchiseLabel": "Star Wars — Jawas",
+    "teamNames": {
+      "2v2": [
+        "Bad Motivator"
+      ],
+      "3v3": [
+        "Sandcrawler Crew"
+      ]
+    },
+    "robots": {
+      "2": {
+        "name": "WED Treadwell",
+        "artBrief": "Weathered blue WED Treadwell on tank treads, tall mast with twin camera eyes, claw arm and a drill arm raised",
+        "portrait": "aligned"
+      },
+      "3": {
+        "name": "GNK Power Droid",
+        "artBrief": "Boxy sand-stained GNK power droid, rectangular body with a control panel, stubby walking legs, no visible weapon",
+        "portrait": "aligned"
+      }
+    }
+  },
+  "jupiter-robot-hangar": {
+    "_decisions": [
+      3,
+      5
+    ],
+    "teamNames": {
+      "2v2": [
+        "Danger Will Robinson"
+      ],
+      "3v3": []
+    },
+    "targetOverrides": {
+      "3": 4,
+      "8": 2
+    }
+  },
+  "justice-android-laboratory": {
+    "_decisions": [
+      14,
+      16
+    ],
+    "franchiseLabel": "DC — Justice League",
+    "teamNames": {
+      "2v2": [
+        "Ivo and Morrow"
+      ]
+    }
+  },
+  "k9-companion-workshop": {
+    "_decisions": [
+      16
+    ],
+    "franchiseLabel": "Doctor Who — K9"
+  },
+  "kaylon-assembly-array": {
+    "_decisions": [
+      14,
+      16,
+      18
+    ],
+    "franchiseLabel": "The Orville",
+    "teamNames": {
+      "2v2": [
+        "First Contact Envoy",
+        "Kaylon Sphere Patrol",
+        "Planetary Union Breach",
+        "Glowing Eyes",
+        "Orville Boarding Party"
+      ],
+      "3v3": [
+        "Kaylon Uprising",
+        "Sphere Armada",
+        "Identity Crisis"
+      ]
+    },
+    "robots": {
+      "3": {
+        "name": "Kaylon Unit 03",
+        "artBrief": "Scuffed silver Kaylon, weight on one leg, arms loose with fingers curled, two red eye optics",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "4": {
+        "name": "Kaylon Unit 04",
+        "artBrief": "Silver Kaylon in a wide stance, glowing red eyes, ribbed black waist, hands hanging open",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "5": {
+        "name": "Kaylon Unit 05",
+        "artBrief": "Broad-shouldered silver Kaylon standing square to the viewer, seamed chest, open hands, red eyes",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "6": {
+        "name": "Kaylon Unit 06",
+        "artBrief": "Silver Kaylon in three-quarter turn, head angled toward the viewer, one foot set forward",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "7": {
+        "name": "Kaylon Unit 07",
+        "artBrief": "Scratched silver Kaylon with hunched shoulders, legs apart, hands hanging open, red eyes",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "8": {
+        "name": "Kaylon Unit 08",
+        "artBrief": "Silver Kaylon raising its right fist to chest height, left hand open by its hip, red eyes",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "9": {
+        "name": "Kaylon Unit 09",
+        "artBrief": "Polished chrome Kaylon standing tall and upright, lit from above, arms straight at its sides",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "10": {
+        "name": "Kaylon Unit 10",
+        "artBrief": "Silver Kaylon mid-stride walking toward the viewer, left foot forward, arms swinging",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "11": {
+        "name": "Kaylon Unit 11",
+        "artBrief": "Battered silver Kaylon in a crouched ready stance, fists half clenched, shoulders squared",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      }
+    }
+  },
+  "kepler-android-caretakers": {
+    "_decisions": [
+      14,
+      16
+    ],
+    "franchiseLabel": "Raised by Wolves",
+    "teamNames": {
+      "2v2": [
+        "Kepler-22b Colonists"
+      ]
+    }
+  },
+  "kilnheart-foundry": {
+    "_decisions": [
+      14
+    ],
+    "teamNames": {
+      "2v2": [
+        "Kiln and Ember"
+      ]
+    }
+  },
+  "knightmare-frame-foundry": {
+    "_decisions": [
+      3
+    ],
+    "teamNames": {
+      "2v2": [
+        "Area 11 Rivals"
+      ],
+      "3v3": [
+        "Zero Requiem"
+      ]
+    }
+  },
+  "last-city-exo-foundry": {
+    "_decisions": [
+      3
+    ],
+    "teamNames": {
+      "2v2": [
+        "Black Armory"
+      ],
+      "3v3": [
+        "Vanguard Tower"
+      ]
+    }
+  },
+  "last-quiet-day-repair-works": {
+    "_decisions": [
+      16
+    ],
+    "franchiseLabel": "The Uncertain: Last Quiet Day"
+  },
+  "legion-autonomous-arsenal": {
+    "_decisions": [
+      13,
+      14,
+      16,
+      18
+    ],
+    "robots": {
+      "7": {
+        "name": "Loewe 01",
+        "artBrief": "Silver six-legged Loewe tank, long main cannon aimed left, radiator spine fan on its back",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "8": {
+        "name": "Loewe 02",
+        "artBrief": "Loewe tank in brighter chrome, long cannon angled low, angular sensor turret and spine fan",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "9": {
+        "name": "Loewe 03",
+        "artBrief": "Darker-lit Loewe tank on wet floor, cannon held level to the left, legs bent in a firm stance",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "1": {
+        "name": "Ameise 01",
+        "artBrief": "Blue-chrome six-legged Ameise scout, tall sawtooth fin crest, twin forward gun pods, lit from the left",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "2": {
+        "name": "Ameise 02",
+        "artBrief": "Bright chrome Ameise scout seen a little more side-on, spined crest fin, legs splayed on wet floor",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "3": {
+        "name": "Ameise 03",
+        "artBrief": "Deep blue-tinted Ameise scout against a darker backdrop, crest fin high, gun pods aimed left",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "4": {
+        "name": "Grauwolf 01",
+        "artBrief": "Silver Grauwolf with a box rocket launcher on its back, blade foreleg raised, AA flank markings",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "5": {
+        "name": "Grauwolf 02",
+        "artBrief": "Silver Grauwolf lit from the upper right, back launcher level, blade foreleg pushed forward",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "6": {
+        "name": "Grauwolf 03",
+        "artBrief": "Matte silver Grauwolf with legs planted wide, launcher box held level, blade foreleg raised high",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "10": {
+        "name": "Dinosauria 01",
+        "artBrief": "Huge silver Dinosauria tank, very long main gun, horn spikes on its hull and a spined crest",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "11": {
+        "name": "Dinosauria 02",
+        "artBrief": "Dinosauria tank seen lower and closer, long gun aimed left, tall horn spikes and clawed feet",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      }
+    },
+    "franchiseLabel": "86 Eighty-Six",
+    "teamNames": {
+      "2v2": [
+        "Eastern Front Raid",
+        "Spearhead Squadron",
+        "No Face Directive",
+        "Morpho Battery",
+        "Republic Border Raid"
+      ],
+      "3v3": [
+        "Legion Advance Guard",
+        "Black Sheep Herd",
+        "Eighty-Sixth Sector Siege"
+      ]
+    }
+  },
+  "lunar-yard-consortium": {
+    "_decisions": [
+      14,
+      18
+    ],
+    "teamNames": {
+      "2v2": [
+        "Regolith Haulers"
+      ],
+      "3v3": [
+        "Crater Construction Crew"
+      ]
+    },
+    "robots": {
+      "1": {
+        "name": "Crane Fly",
+        "artBrief": "Very tall skeletal white walker, thin limbs, small visor head with a blue slit, slim rifle in one hand",
+        "portrait": "aligned"
+      },
+      "2": {
+        "name": "Tine Hauler",
+        "artBrief": "Four-legged white-and-yellow yard walker, forklift tines on its front feet, launcher pod on its back",
+        "portrait": "aligned"
+      },
+      "3": {
+        "name": "Moonwheel",
+        "artBrief": "White unicycle robot on one big tyre with two support legs, binocular blue eyes, claw arm and arm blaster",
+        "portrait": "aligned"
+      }
+    }
+  },
+  "machine-city-sentinel-array": {
+    "_decisions": [
+      14,
+      15,
+      16,
+      18
+    ],
+    "franchiseLabel": "The Matrix",
+    "teamNames": {
+      "2v2": [
+        "Search and Destroy",
+        "Sewer Line Hunt",
+        "Hovercraft Chasers",
+        "Dock Breach",
+        "Broadcast Depth"
+      ],
+      "3v3": [
+        "Battle of Zion",
+        "Deus Ex Machina",
+        "Machine War Swarm"
+      ]
+    },
+    "robots": {
+      "1": {
+        "name": "Squiddy 01",
+        "designation": "mass-produced",
+        "artBrief": "Black domed Sentinel, ring of red eyes round one large lens, tentacles spread wide to claw tips",
+        "portrait": "aligned"
+      },
+      "2": {
+        "name": "Squiddy 02",
+        "designation": "mass-produced",
+        "artBrief": "Black Sentinel facing the viewer, dense red eye cluster, one tentacle raised high, the rest splayed wide",
+        "portrait": "aligned"
+      },
+      "3": {
+        "name": "Squiddy 03",
+        "designation": "mass-produced",
+        "artBrief": "Banded flat-dome Sentinel turned to the right, side eye cluster, tentacles curling up on both sides",
+        "portrait": "aligned"
+      },
+      "4": {
+        "name": "Squiddy 04",
+        "designation": "mass-produced",
+        "artBrief": "Ribbed round Sentinel head-on, red eye ring, tentacles splayed low with red-lit claws on the floor",
+        "portrait": "aligned"
+      },
+      "5": {
+        "name": "Squiddy 05",
+        "designation": "mass-produced",
+        "artBrief": "Dark Sentinel turned right, two rear tentacles arched overhead like scorpion tails, red eyes",
+        "portrait": "aligned"
+      },
+      "6": {
+        "name": "Squiddy 06",
+        "designation": "mass-produced",
+        "artBrief": "Elongated Sentinel in a low stalking crouch, tentacles creeping forward, one curled up behind",
+        "portrait": "aligned"
+      },
+      "7": {
+        "name": "Squiddy 07",
+        "designation": "mass-produced",
+        "artBrief": "Open-frame ribbed Sentinel with visible internals, two upper tentacles hooked like question marks",
+        "portrait": "aligned"
+      },
+      "8": {
+        "name": "Squiddy 08",
+        "designation": "mass-produced",
+        "artBrief": "Banded domed Sentinel hovering with twin antennae, tentacles hanging below, claws opened out",
+        "portrait": "aligned"
+      },
+      "9": {
+        "name": "Squiddy 09",
+        "designation": "mass-produced",
+        "artBrief": "Broad flat-topped Sentinel, row of red eyes along its rim, tentacles dangling straight like a jellyfish",
+        "portrait": "aligned"
+      },
+      "10": {
+        "name": "Squiddy 10",
+        "designation": "mass-produced",
+        "artBrief": "Sentinel tilted forward, packed red eye cluster, one long tentacle stretched along the floor",
+        "portrait": "aligned"
+      },
+      "11": {
+        "name": "Squiddy 11",
+        "designation": "mass-produced",
+        "artBrief": "Drum-bodied banded Sentinel, one big red eye off-centre, two front tentacles reaching at the viewer",
+        "portrait": "aligned"
+      }
+    }
+  },
+  "machine-village-foundry": {
+    "_decisions": [
+      14,
+      18
+    ],
+    "teamNames": {
+      "2v2": [
+        "Peaceful Machines"
+      ],
+      "3v3": [
+        "Pascal's Village"
+      ]
+    },
+    "robots": {
+      "2": {
+        "name": "Leibniz",
+        "artBrief": "Rust-mottled small stubby machine, round head with two dark eyes, rusty sword held low across its legs",
+        "portrait": "aligned"
+      },
+      "3": {
+        "name": "Spinoza",
+        "artBrief": "Tall rusted medium biped, small dome head with two glowing eyes, long thin legs, curved rusty blade",
+        "portrait": "aligned"
+      }
+    }
+  },
+  "macross-valkyrie-squadron": {
+    "_decisions": [
+      3
+    ],
+    "teamNames": {
+      "2v2": [
+        "Skull Squadron"
+      ],
+      "3v3": [
+        "Vermilion Squadron"
+      ]
+    }
+  },
+  "maverick-hunter-workshop": {
+    "_decisions": [
+      14,
+      16
+    ],
+    "franchiseLabel": "Mega Man — Maverick Hunters",
+    "teamNames": {
+      "2v2": [
+        "17th Elite Unit"
+      ]
+    }
+  },
+  "medabot-tournament-club": {
+    "_decisions": [
+      3
+    ],
+    "teamNames": {
+      "2v2": [
+        "Robattle Rivals"
+      ],
+      "3v3": []
+    }
+  },
+  "metal-men-laboratory": {
+    "_decisions": [
+      3,
+      5,
+      7
+    ],
+    "franchiseLabel": "DC — Metal Men",
+    "teamNames": {
+      "2v2": [
+        "Gold Standard",
+        "Responsometer Crew"
+      ],
+      "3v3": [
+        "Doc Magnus's Finest"
+      ]
+    },
+    "targetOverrides": {
+      "12": 4
+    }
+  },
+  "mithril-arm-slave-hangar": {
+    "_decisions": [
+      14
+    ],
+    "teamNames": {
+      "2v2": [
+        "Urzu Six and Seven"
+      ]
+    }
+  },
+  "moshimo-robotics": {
+    "_decisions": [
+      3,
+      5
+    ],
+    "teamNames": {
+      "2v2": [
+        "Superactivated"
+      ],
+      "3v3": [
+        "Tommy's Defenders"
+      ]
+    },
+    "targetOverrides": {
+      "11": 6,
+      "13": 3
+    }
+  },
+  "municipal-reclamation-grid": {
+    "_decisions": [
+      14,
+      18
+    ],
+    "teamNames": {
+      "2v2": [
+        "Curbside Sweep",
+        "Plaza Patrol",
+        "Sparks and Shears",
+        "Collection Day",
+        "Heavy Compaction"
+      ],
+      "3v3": [
+        "Street Cleaning Brigade",
+        "Cutting Crew",
+        "Reclamation Detail"
+      ]
+    },
+    "robots": {
+      "1": {
+        "name": "Kerb Bristle",
+        "artBrief": "Four-wheel grey sweeper with an orange roof, two front brush drums, periscope camera mast, side tool arm",
+        "portrait": "aligned"
+      },
+      "2": {
+        "name": "Drain Hound",
+        "artBrief": "Tracked orange gutter cleaner, one blue camera eye, long ribbed vacuum hose ending in a brush nozzle",
+        "portrait": "aligned"
+      },
+      "3": {
+        "name": "Plaza Broom",
+        "artBrief": "Wide three-wheel orange sweeper, two outrigger brush pods, visor mast on top and a side camera emitter",
+        "portrait": "aligned"
+      },
+      "4": {
+        "name": "Shearjaw",
+        "artBrief": "Orange four-legged crab cutter, one huge toothed shear claw, small pincer arm, single yellow lens",
+        "portrait": "aligned"
+      },
+      "5": {
+        "name": "Kerf",
+        "artBrief": "Tracked grey robot with an orange dome head, long arm with a guarded circular saw, claw hand",
+        "portrait": "aligned"
+      },
+      "6": {
+        "name": "Oxy Lance",
+        "artBrief": "Slim orange-and-grey biped, box head with two blue eyes, gas cylinders on its back, long cutting torch",
+        "portrait": "aligned"
+      },
+      "7": {
+        "name": "Skip Grabber",
+        "artBrief": "Six-wheel scrap truck robot, big orange skip hopper, grapple claw boom, camera mast and side emitter",
+        "portrait": "aligned"
+      },
+      "8": {
+        "name": "Bale Box",
+        "artBrief": "Squat orange tracked baler, boxy compression chamber with side pistons, two short arms, amber visor",
+        "portrait": "aligned"
+      },
+      "9": {
+        "name": "Pile Driver",
+        "artBrief": "Four-legged orange compactor, giant vertical piston column, hazard-striped ram beam, blue sensor slit",
+        "portrait": "aligned"
+      },
+      "10": {
+        "name": "Jawcrusher",
+        "artBrief": "Six-wheel orange-and-grey brute, two huge toothed crusher-jaw arms, domed camera head between shoulders",
+        "portrait": "aligned"
+      },
+      "11": {
+        "name": "Shift Foreman",
+        "artBrief": "Tall orange-and-grey biped, black visor with two amber eyes, plated shoulders, rifle held in both hands",
+        "portrait": "aligned"
+      }
+    }
+  },
+  "necron-tomb-dynasty": {
+    "_decisions": [
+      3,
+      18
+    ],
+    "robots": {
+      "6": {
+        "name": "Royal Warden",
+        "artBrief": "Skeletal necron with rust-bronze pauldrons in a wide crouch, green-celled gauss rifle held low",
+        "portrait": "aligned"
+      },
+      "7": {
+        "name": "Sautekh Warrior",
+        "artBrief": "Upright skeletal necron, green chest glyph, glowing gauss rifle angled up past its shoulder",
+        "portrait": "aligned"
+      },
+      "8": {
+        "name": "Mephrit Immortal",
+        "artBrief": "Wide-stanced skeletal necron, bronze chest plate, gauss rifle levelled with a green-lit claw muzzle",
+        "portrait": "aligned"
+      },
+      "9": {
+        "name": "Nihilakh Warrior",
+        "artBrief": "Skeletal necron striding forward, glowing green spine, one bronze pauldron, gauss rifle held level",
+        "portrait": "aligned"
+      },
+      "10": {
+        "name": "Novokh Immortal",
+        "artBrief": "Crouched skeletal necron, green-lit ribcage, gauss rifle held across its body angled down",
+        "portrait": "aligned"
+      },
+      "11": {
+        "name": "Nephrekh Warrior",
+        "artBrief": "Tall gaunt skeletal necron, bronze ribbed chest, green gauss weapon hanging down at its side",
+        "portrait": "aligned"
+      }
+    },
+    "teamNames": {
+      "2v2": [
+        "Sautekh Phalanx",
+        "Nihilakh Watch",
+        "Szarekhan Court",
+        "Mephrit Cohort",
+        "Destroyer Cult"
+      ],
+      "3v3": [
+        "Novokh Awakening",
+        "Silent King's Guard",
+        "Nephrekh Ascension"
+      ]
+    }
+  },
+  "nemesis-ai-arsenal": {
+    "_decisions": [
+      16
+    ],
+    "franchiseLabel": "The Last Angel"
+  },
+  "neo-tokyo-security-works": {
+    "_decisions": [
+      16
+    ],
+    "franchiseLabel": "Akira"
+  },
+  "nialand-ai-partnership": {
+    "_decisions": [
+      14,
+      16
+    ],
+    "franchiseLabel": "Vivy: Fluorite Eye's Song",
+    "teamNames": {
+      "2v2": [
+        "Singularity Project"
+      ]
+    }
+  },
+  "nindroid-assembly-line": {
+    "_decisions": [
+      3,
+      18
+    ],
+    "robots": {
+      "3": {
+        "name": "Nindroid 03",
+        "artBrief": "Black-grey Nindroid with a tattered neck scarf and sash, twin red optics, a katana in each hand",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "4": {
+        "name": "Nindroid 04",
+        "artBrief": "Black Nindroid stencilled 04, red slit visor, red side lens, grey sash, two long katanas drawn",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "5": {
+        "name": "Nindroid 05",
+        "artBrief": "Black-and-silver Nindroid stencilled 05, crested helm, red eyes, curved blade in each fist",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "6": {
+        "name": "Nindroid 06",
+        "artBrief": "Black Nindroid stencilled 06, trailing headband, red optics, red chest core, twin katanas",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "7": {
+        "name": "Nindroid 07",
+        "artBrief": "Slim glossy-black Nindroid, rounded helm, red visor, red shoulder core, two curved sabres",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "8": {
+        "name": "Nindroid 08",
+        "artBrief": "Bulky black Nindroid stencilled 08, red visor, red chest core, katanas held high and low",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "9": {
+        "name": "Nindroid 09",
+        "artBrief": "Lean grey-black Nindroid, red slit visor, red chest core, red-lined blades in both hands",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "10": {
+        "name": "Nindroid 10",
+        "artBrief": "Black Nindroid with a hood scarf, red multi-lens headset, red chest core, two katanas",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "11": {
+        "name": "Nindroid 11",
+        "artBrief": "Black Nindroid stencilled 11, torn red-lined cape, red lens cluster, twin curved blades",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      }
+    },
+    "teamNames": {
+      "2v2": [
+        "Overlord's Vanguard",
+        "Techno Blade Hunters",
+        "Borg Industries",
+        "New Ninjago Patrol",
+        "Digiverse Breach"
+      ],
+      "3v3": [
+        "Nindroid Army",
+        "Titanium Legacy",
+        "Rebooted Legion"
+      ]
+    }
+  },
+  "olympus-landmate-hangar": {
+    "_decisions": [
+      3
+    ],
+    "teamNames": {
+      "2v2": [
+        "Olympus ESWAT"
+      ],
+      "3v3": []
+    }
+  },
+  "omnic-arena-collective": {
+    "_decisions": [
+      3,
+      5
+    ],
+    "teamNames": {
+      "2v2": [
+        "Numbani Guardians",
+        "Shambali Monastery"
+      ],
+      "3v3": [
+        "Omnic Crisis"
+      ]
+    },
+    "targetOverrides": {
+      "14": 4
+    }
+  },
+  "outlaw-droid-workshop": {
+    "_decisions": [
+      16
+    ],
+    "franchiseLabel": "Star Wars — Outlaws"
+  },
+  "pelagic-pressure-works": {
+    "_decisions": [
+      14,
+      18
+    ],
+    "teamNames": {
+      "2v2": [
+        "Deep Pressure"
+      ],
+      "3v3": [
+        "Abyssal Watch"
+      ]
+    },
+    "robots": {
+      "1": {
+        "name": "Bathysphere",
+        "artBrief": "Round diving-bell crawler on four legs, big glass porthole with a blue eye, harpoon gun on its back",
+        "portrait": "aligned"
+      },
+      "2": {
+        "name": "Fathom",
+        "artBrief": "Tall white boiler-tank diver on two legs, green porthole eye, trailing hoses, two long pincer arms",
+        "portrait": "aligned"
+      },
+      "3": {
+        "name": "Abyss Warden",
+        "artBrief": "Hulking round diving-suit robot, blue porthole visor, arm cannon and a large hatch-wheel shield",
+        "portrait": "aligned"
+      }
+    }
+  },
+  "photon-power-institute": {
+    "_decisions": [
+      3
+    ],
+    "teamNames": {
+      "2v2": [
+        "Fortress of Science"
+      ],
+      "3v3": []
+    }
+  },
+  "polanian-dieselworks": {
+    "_decisions": [
+      13,
+      14,
+      16,
+      18
+    ],
+    "robots": {
+      "1": {
+        "name": "PZM-7 Smialy",
+        "portrait": "aligned"
+      },
+      "2": {
+        "name": "PZM-11 Lowca",
+        "portrait": "aligned"
+      }
+    },
+    "franchiseLabel": "Iron Harvest",
+    "teamNames": {
+      "2v2": [
+        "Riveted Vanguard"
+      ],
+      "3v3": [
+        "Polanian Mech Column"
+      ]
+    }
+  },
+  "ptmc-mining-rebellion": {
+    "_decisions": [
+      3,
+      18
+    ],
+    "robots": {
+      "1": {
+        "name": "Medium Lifter",
+        "artBrief": "Rusty orange walker with a wedge-shaped head, single red eye, drill-bit forearm and a pincer claw",
+        "portrait": "aligned"
+      },
+      "2": {
+        "name": "Medium Hulk",
+        "artBrief": "Grey walker with red-striped plating, stacked red optics, red-muzzled cannon arm levelled",
+        "portrait": "aligned"
+      },
+      "3": {
+        "name": "Super Hulk",
+        "artBrief": "Massive yellow-and-grey hulk, blocky shoulder pods, amber visor, rotary cannon held two-handed",
+        "portrait": "aligned"
+      },
+      "4": {
+        "name": "PTMC Miner 04",
+        "artBrief": "Round orange miner hull stencilled 04, amber eye lens, drill-bit forearm and a three-finger claw",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "5": {
+        "name": "PTMC Miner 05",
+        "artBrief": "Boxy orange miner stencilled 05, big amber eye, conical drill arm and an open grabber claw",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "6": {
+        "name": "PTMC Miner 06",
+        "artBrief": "Orange miner stencilled 06, amber lamp eye, rotary cannon arm and a tall orange riot shield",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "7": {
+        "name": "PTMC Miner 07",
+        "artBrief": "Tall upright orange miner stencilled 07, amber headlamp, drill forearm and a hooked claw hand",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "8": {
+        "name": "PTMC Miner 08",
+        "artBrief": "Stocky orange miner stencilled 08, amber eye, huge drill held two-handed across its body",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "9": {
+        "name": "PTMC Miner 09",
+        "artBrief": "Lean orange miner stencilled 09, twin amber eyes, roll-cage head, a short blaster in each hand",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "10": {
+        "name": "PTMC Miner 10",
+        "artBrief": "Heavy orange miner stencilled 10, amber eye, big two-handed grinder bit with studded teeth",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "11": {
+        "name": "PTMC Miner 11",
+        "artBrief": "Orange miner stencilled 11, amber eye in a pipe-framed head, long two-handed drill levelled",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      }
+    },
+    "teamNames": {
+      "2v2": [
+        "Lunar Outpost Crew",
+        "Venus Lab Shift",
+        "Mercury Solar Lab",
+        "Io Sulphur Mine",
+        "Pluto Outpost"
+      ],
+      "3v3": [
+        "Zeta Aquilae Uprising",
+        "Baloris Prime Watch",
+        "Charon Reactor Guard"
+      ]
+    }
+  },
+  "rannoch-geth-consensus": {
+    "_decisions": [
+      3,
+      18
+    ],
+    "robots": {
+      "7": {
+        "name": "Geth Shock Trooper",
+        "artBrief": "Upright grey-white geth, bright white flashlight optic, red knee stripes, rifle held level",
+        "portrait": "aligned"
+      },
+      "8": {
+        "name": "Geth Infiltrator",
+        "artBrief": "Geth in a low lunging stance, tall dorsal fins, blue optic, rifle angled forward",
+        "portrait": "aligned"
+      },
+      "9": {
+        "name": "Geth Engineer",
+        "artBrief": "Geth standing square, red shoulder patch, blue optic flare, rifle held diagonally low",
+        "portrait": "aligned"
+      },
+      "10": {
+        "name": "Geth Rifleman",
+        "artBrief": "Wide-stanced geth with red chest and thigh stripes, back fin, long-barrelled rifle held level",
+        "portrait": "aligned"
+      },
+      "11": {
+        "name": "Geth Vanguard",
+        "artBrief": "Pale grey-white geth lunging forward, red shoulder and leg stripes, blue optic flare, rifle levelled ahead",
+        "portrait": "aligned"
+      }
+    },
+    "teamNames": {
+      "2v2": [
+        "Shepard-Commander's Escort",
+        "Perseus Veil Guard",
+        "Heretic Hunters",
+        "Geth Dreadnought Crew",
+        "Dyson Sphere Watch"
+      ],
+      "3v3": [
+        "Morning War Veterans",
+        "Rannoch Liberators",
+        "Old Machines"
+      ]
+    }
+  },
+  "ray-custom-robo-lab": {
+    "_decisions": [
+      3,
+      18
+    ],
+    "robots": {
+      "1": {
+        "name": "Ray 01",
+        "artBrief": "White Ray-series robo, red V-crest, green eye, red-and-blue armour, chunky blue arm cannon levelled",
+        "designation": "canon",
+        "portrait": "aligned"
+      }
+    },
+    "teamNames": {
+      "2v2": [
+        "Steel Hearts"
+      ],
+      "3v3": []
+    }
+  },
+  "rebel-droid-network": {
+    "_decisions": [
+      14,
+      16
+    ],
+    "franchiseLabel": "Star Wars — Rebel Alliance",
+    "teamNames": {
+      "2v2": [
+        "Chopper Base"
+      ],
+      "3v3": [
+        "Rogue One Support"
+      ]
+    }
+  },
+  "rebel-droid-partnership": {
+    "_decisions": [
+      14,
+      16
+    ],
+    "franchiseLabel": "Star Wars — Skywalker Saga",
+    "teamNames": {
+      "2v2": [
+        "Tantive IV Escape"
+      ]
+    }
+  },
+  "repopulation-facility-robotics": {
+    "_decisions": [
+      16
+    ],
+    "franchiseLabel": "I Am Mother"
+  },
+  "rift-walker-hangar": {
+    "_decisions": [
+      3
+    ],
+    "teamNames": {
+      "2v2": [
+        "Archive Inc. Guard"
+      ],
+      "3v3": [
+        "Rift Walkers"
+      ]
+    }
+  },
+  "robocraft-assembly-yard": {
+    "_decisions": [
+      3,
+      18
+    ],
+    "robots": {
+      "1": {
+        "name": "Ion Strider",
+        "artBrief": "Four-legged white-and-orange block walker, blue visor slit, twin double-barrel turrets on top",
+        "portrait": "aligned"
+      },
+      "2": {
+        "name": "Plasma Crawler",
+        "artBrief": "Tracked white-and-orange block tank, blue-lit wheels, long cannon turret with a sensor pod",
+        "portrait": "aligned"
+      },
+      "3": {
+        "name": "SMG Sprinter",
+        "artBrief": "Two-legged white-and-orange block walker, big blue eye, a blocky gun on each arm",
+        "portrait": "aligned"
+      }
+    },
+    "teamNames": {
+      "2v2": [
+        "Tech Tree Climbers"
+      ],
+      "3v3": [
+        "Battle Arena Crew"
+      ]
+    }
+  },
+  "robot-city-industries": {
+    "_decisions": [
+      3
+    ],
+    "teamNames": {
+      "2v2": [
+        "Rivet Town Rusties"
+      ],
+      "3v3": [
+        "Outmode Rebellion"
+      ]
+    }
+  },
+  "robot-jox-arena-hangar": {
+    "_decisions": [
+      14,
+      18
+    ],
+    "teamNames": {
+      "2v2": [
+        "Robot Jox Champions"
+      ]
+    },
+    "robots": {
+      "1": {
+        "name": "Achilles",
+        "artBrief": "Towering white Achilles with red and blue armour panels, blocky shoulders, heavy armoured fists, no visible weapon",
+        "portrait": "aligned"
+      },
+      "2": {
+        "name": "Alexander",
+        "artBrief": "Hulking red-and-grey Alexander, rounded armoured shoulders, red visor slit, heavy clenched fists, no visible weapon",
+        "portrait": "aligned"
+      }
+    }
+  },
+  "robot-systems-workshop": {
+    "_decisions": [
+      15
+    ],
+    "robots": {
+      "1": {
+        "designation": "canon"
+      }
+    }
+  },
+  "rubicon-raven-workshop": {
+    "_decisions": [
+      3,
+      5
+    ],
+    "teamNames": {
+      "2v2": [
+        "Fires of Raven"
+      ],
+      "3v3": []
+    },
+    "targetOverrides": {
+      "3": 4,
+      "8": 2
+    }
+  },
+  "ruin-era-synthetic-unit": {
+    "_decisions": [
+      14
+    ],
+    "teamNames": {
+      "2v2": [
+        "Casshern Sins"
+      ],
+      "3v3": [
+        "Ruin Survivors"
+      ]
+    }
+  },
+  "safeguard-enforcement-workshop": {
+    "_decisions": [
+      16
+    ],
+    "franchiseLabel": "BLAME!"
+  },
+  "sakura-spiricle-workshop": {
+    "_decisions": [
+      13,
+      14,
+      18
+    ],
+    "robots": {
+      "1": {
+        "name": "Koubu Kai Sakura Unit",
+        "artBrief": "Pink riveted Koubu Kai steam armour, cherry-blossom crest, brass exhaust stacks, a katana in each hand",
+        "portrait": "aligned"
+      },
+      "2": {
+        "name": "Koubu Kai Sumire Unit",
+        "artBrief": "Purple riveted Koubu Kai steam armour, gold iris crest on the shoulder, long naginata held two-handed",
+        "portrait": "aligned"
+      }
+    },
+    "teamNames": {
+      "2v2": [
+        "Imperial Flower Division"
+      ]
+    }
+  },
+  "satellite-six-robot-club": {
+    "_decisions": [
+      3
+    ],
+    "teamNames": {
+      "2v2": [
+        "Movie Sign!"
+      ],
+      "3v3": [
+        "Satellite of Love"
+      ]
+    }
+  },
+  "scopedog-motor-pool": {
+    "_decisions": [
+      14
+    ],
+    "teamNames": {
+      "2v2": [
+        "Uoodo Patrol"
+      ],
+      "3v3": [
+        "Red Shoulder Battalion"
+      ]
+    }
+  },
+  "scrap-garden-restoration-shop": {
+    "_decisions": [
+      16
+    ],
+    "franchiseLabel": "Scrap Garden"
+  },
+  "section-nine-tachikomas": {
+    "_decisions": [
+      3,
+      18
+    ],
+    "robots": {
+      "1": {
+        "name": "Batou's Tachikoma",
+        "artBrief": "Blue Tachikoma stencilled 02, white sensor spheres, red rear optics, claw manipulator and chin gun",
+        "portrait": "aligned"
+      },
+      "2": {
+        "name": "Tachikoma 02",
+        "artBrief": "Blue Tachikoma with three white sensor spheres, grabbing claw raised, long rifle on its right manipulator",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "3": {
+        "name": "Tachikoma 03",
+        "artBrief": "Blue Tachikoma on wheeled feet, white sensor spheres, twin claw manipulators beside a chin cannon",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "4": {
+        "name": "Tachikoma 04",
+        "artBrief": "Blue Tachikoma stencilled 04 on its leg, white sensor spheres, chin cannon and a pair of claws",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "5": {
+        "name": "Tachikoma 05",
+        "artBrief": "Blue Tachikoma stencilled 05 on its pod, wide white sensor spheres, minigun between two claws",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "6": {
+        "name": "Tachikoma 06",
+        "artBrief": "Deep-blue Tachikoma, white sensor spheres, a claw on one side and a short rotary gun on the other",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "7": {
+        "name": "Tachikoma 07",
+        "artBrief": "Blue Tachikoma stencilled 07 on its pod, wheeled feet, chin cannon and twin-barrel arm gun",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "8": {
+        "name": "Tachikoma 08",
+        "artBrief": "Blue Tachikoma stencilled 08 with a chevron, minigun manipulator and a claw held low",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "9": {
+        "name": "Tachikoma 09",
+        "artBrief": "Blue Tachikoma with one large white sensor sphere forward, chin cannon and a red-tipped arm gun",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "10": {
+        "name": "Tachikoma 10",
+        "artBrief": "Blue Tachikoma stencilled 10 on its pod, white sensor spheres, chin cannon, a claw and a red-tipped arm gun",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "11": {
+        "name": "Tachikoma 11",
+        "artBrief": "Weathered blue Tachikoma stencilled 11, white sensor spheres, a claw and an arm gun raised",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      }
+    },
+    "teamNames": {
+      "2v2": [
+        "Batou's Ride",
+        "Think Tanks",
+        "Tachikoma Days",
+        "Laughing Man Case",
+        "Niihama Patrol"
+      ],
+      "3v3": [
+        "Major's Recon",
+        "Individual Eleven Case",
+        "Stand Alone Complex"
+      ]
+    }
+  },
+  "sentinel-enforcement-array": {
+    "_decisions": [
+      14,
+      16,
+      18
+    ],
+    "franchiseLabel": "Marvel — Sentinels",
+    "teamNames": {
+      "2v2": [
+        "Days of Future Past",
+        "Project Wideawake",
+        "Trask Industries",
+        "Genosha Patrol",
+        "Mutant Detection Grid"
+      ],
+      "3v3": [
+        "Operation Zero Tolerance",
+        "Sentinel Program",
+        "Mutant Round-Up"
+      ]
+    },
+    "robots": {
+      "3": {
+        "name": "Sentinel 03",
+        "artBrief": "Blue-grey heavy enforcer, ochre shoulder boxes, teal visor, grille chest, arms hanging with open claws",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "4": {
+        "name": "Sentinel 04",
+        "artBrief": "Blue-grey heavy enforcer reaching forward with one open clawed hand, ochre shoulder boxes, teal visor",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "5": {
+        "name": "Sentinel 05",
+        "artBrief": "Blue-grey heavy enforcer with one arm swung out to the side, clawed fingers splayed, other claw hanging low",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "6": {
+        "name": "Sentinel 06",
+        "artBrief": "Blue-grey enforcer standing square, cream armour inserts on its limbs, clawed hands slightly apart",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "7": {
+        "name": "Sentinel 07",
+        "artBrief": "Ochre-shouldered blue-grey enforcer, teal visor and antennae, weight on its back foot, hands loose",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "8": {
+        "name": "Sentinel 08",
+        "artBrief": "Blue-grey enforcer seen in three-quarter view, chunky stepped feet, mesh chest vent, open claws low",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "9": {
+        "name": "Sentinel 09",
+        "artBrief": "Blue-grey heavy enforcer raising one clenched fist beside its shoulder, other claw hanging open",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "10": {
+        "name": "Sentinel 10",
+        "artBrief": "Weathered blue-grey enforcer, chipped ochre shoulder boxes, teal visor, both claws hanging at its knees",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "11": {
+        "name": "Sentinel 11",
+        "artBrief": "Blue-grey heavy enforcer lifting one curled claw toward its chest, teal visor turned to the viewer",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      }
+    }
+  },
+  "series-4000-service-workshop": {
+    "_decisions": [
+      16
+    ],
+    "franchiseLabel": "Red Dwarf"
+  },
+  "seven-great-robots-workshop": {
+    "_decisions": [
+      12,
+      16
+    ],
+    "strategy": "Trio",
+    "targetOverrides": {
+      "12": 6
+    },
+    "franchiseLabel": "PLUTO"
+  },
+  "sewer-circuit-workshop": {
+    "_decisions": [
+      14
+    ],
+    "teamNames": {
+      "2v2": [
+        "Cowabunga Circuit"
+      ],
+      "3v3": [
+        "Sewer Lair Crew"
+      ]
+    }
+  },
+  "shadow-moses-arsenal": {
+    "_decisions": [
+      3,
+      5
+    ],
+    "teamNames": {
+      "2v2": [
+        "Big Shell Incident"
+      ],
+      "3v3": []
+    },
+    "targetOverrides": {
+      "3": 4,
+      "8": 2
+    }
+  },
+  "sierpinski-replika-workshop": {
+    "_decisions": [
+      16
+    ],
+    "franchiseLabel": "SIGNALIS"
+  },
+  "simulant-refuge-workshop": {
+    "_decisions": [
+      14,
+      16,
+      18
+    ],
+    "franchiseLabel": "The Creator",
+    "teamNames": {
+      "2v2": [
+        "Simulant Resistance"
+      ],
+      "3v3": [
+        "New Asia Defenders"
+      ]
+    },
+    "robots": {
+      "2": {
+        "name": "Takumi",
+        "artBrief": "Young simulant soldier in green camo and plate carrier, rifle at low ready, open cylinder head port",
+        "portrait": "aligned"
+      },
+      "3": {
+        "name": "Brother Sonam",
+        "artBrief": "Elderly simulant monk in layered saffron robes and sandals, shaved head with mechanical ear ports",
+        "portrait": "aligned"
+      }
+    }
+  },
+  "skeleton-drifter-workshop": {
+    "_decisions": [
+      14,
+      16
+    ],
+    "franchiseLabel": "Kenshi",
+    "teamNames": {
+      "2v2": [
+        "Ashlands Wanderers"
+      ],
+      "3v3": [
+        "Black Desert City"
+      ]
+    }
+  },
+  "soong-android-institute": {
+    "_decisions": [
+      3
+    ],
+    "teamNames": {
+      "2v2": [
+        "Soong-Type Brothers"
+      ],
+      "3v3": [
+        "Omicron Theta Colony"
+      ]
+    }
+  },
+  "special-vehicle-robot-unit": {
+    "_decisions": [
+      3,
+      18
+    ],
+    "robots": {
+      "1": {
+        "name": "AV-98 Ingram Unit 1",
+        "artBrief": "White-and-black police Ingram stencilled 1, red shoulder light bars, revolver and police shield",
+        "designation": "canon",
+        "portrait": "aligned"
+      },
+      "2": {
+        "name": "AV-98 Ingram Unit 2",
+        "artBrief": "White-and-black police Ingram stencilled 2, red shoulder light bars, revolver drawn, police shield",
+        "designation": "canon",
+        "portrait": "aligned"
+      }
+    },
+    "teamNames": {
+      "2v2": [
+        "SV2 First Platoon"
+      ],
+      "3v3": []
+    }
+  },
+  "steamworks-robot-partnership": {
+    "_decisions": [
+      14,
+      16
+    ],
+    "franchiseLabel": "Undertale Yellow",
+    "teamNames": {
+      "2v2": [
+        "Steamworks Caretakers"
+      ]
+    }
+  },
+  "steamworld-privateers": {
+    "_decisions": [
+      3
+    ],
+    "teamNames": {
+      "2v2": [
+        "Royalist Wreckers"
+      ],
+      "3v3": [
+        "Captain Piper's Crew"
+      ]
+    }
+  },
+  "stitchpunk-salvage-circle": {
+    "_decisions": [
+      14,
+      16
+    ],
+    "franchiseLabel": "9",
+    "teamNames": {
+      "2v2": [
+        "Talisman Seekers"
+      ],
+      "3v3": [
+        "The Stitchpunks"
+      ]
+    }
+  },
+  "striker-assembly-wing": {
+    "_decisions": [
+      14
+    ],
+    "teamNames": {
+      "2v2": [
+        "Alysnes and Welkin"
+      ],
+      "3v3": [
+        "Mecha Break Vanguard"
+      ]
+    }
+  },
+  "sweetie-circuit-atelier": {
+    "_decisions": [
+      16
+    ],
+    "franchiseLabel": "My Little Pony — Steel Soul"
+  },
+  "tenma-robotics-institute": {
+    "_decisions": [
+      3,
+      5
+    ],
+    "teamNames": {
+      "2v2": [
+        "Metro City Rivals"
+      ],
+      "3v3": []
+    },
+    "targetOverrides": {
+      "3": 4,
+      "8": 2
+    }
+  },
+  "terra-nova-gearworks": {
+    "_decisions": [
+      12
+    ],
+    "strategy": "Trio",
+    "targetOverrides": {
+      "12": 6
+    }
+  },
+  "tetravaal-tactical-unit": {
+    "_decisions": [
+      3,
+      5,
+      18
+    ],
+    "robots": {
+      "2": {
+        "name": "Joburg Scout",
+        "artBrief": "Grey police Scout droid, POLICE chest plate, blue visor, orange-tipped antenna, assault rifle",
+        "portrait": "aligned"
+      }
+    },
+    "teamNames": {
+      "2v2": [
+        "Joburg Showdown"
+      ],
+      "3v3": []
+    },
+    "targetOverrides": {
+      "3": 4,
+      "8": 2
+    }
+  },
+  "three-robots-expedition": {
+    "_decisions": [
+      14
+    ],
+    "teamNames": {
+      "2v2": [
+        "K-VRC and XBOT"
+      ],
+      "3v3": [
+        "Three Robots"
+      ]
+    }
+  },
+  "toa-foundry": {
+    "_decisions": [
+      3,
+      5
+    ],
+    "teamNames": {
+      "2v2": [
+        "Fire and Ice",
+        "Earth and Air"
+      ],
+      "3v3": [
+        "Toa Mata"
+      ]
+    },
+    "targetOverrides": {
+      "14": 4
+    }
+  },
+  "trantor-imperial-robotics": {
+    "_decisions": [
+      16
+    ],
+    "franchiseLabel": "Foundation"
+  },
+  "ultron-sentry-network": {
+    "_decisions": [
+      3,
+      7,
+      18
+    ],
+    "franchiseLabel": "Marvel — Ultron",
+    "robots": {
+      "2": {
+        "name": "Ultron Sentry 02",
+        "artBrief": "Lean gunmetal Ultron sentry, red eyes and glowing seams, unarmed with clawed hands",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "3": {
+        "name": "Ultron Sentry 03",
+        "artBrief": "Chrome Ultron sentry with curved red-lit armour guards on both forearms, clawed hands",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "4": {
+        "name": "Ultron Sentry 04",
+        "artBrief": "Gunmetal Ultron sentry, red eyes, red-glowing cannon barrel fitted to its right forearm",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "5": {
+        "name": "Ultron Sentry 05",
+        "artBrief": "Hunched gunmetal Ultron sentry, red crest fins, red-cored arm cannon, clawed left hand",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "6": {
+        "name": "Ultron Sentry 06",
+        "artBrief": "Slim chrome Ultron sentry, red-lit chest seam, compact red-cored gun on its left forearm",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "7": {
+        "name": "Ultron Sentry 07",
+        "artBrief": "Broad dark-gunmetal Ultron sentry, red-lit gauntlets on both forearms, clawed hands",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "8": {
+        "name": "Ultron Sentry 08",
+        "artBrief": "Chrome Ultron sentry with a ribbed chest, chunky red-lit cannon on its right forearm",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "9": {
+        "name": "Ultron Sentry 09",
+        "artBrief": "Lean dark-chrome Ultron sentry, red eyes, red-lit thigh seams, small wrist gun on the right",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "10": {
+        "name": "Ultron Sentry 10",
+        "artBrief": "Tall chrome Ultron sentry, finned crest, red eyes, red-lit bracers on both forearms",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "11": {
+        "name": "Ultron Sentry 11",
+        "artBrief": "Hunched chrome Ultron sentry, spined crest, red eyes, multi-barrel red-cored arm cannon",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      }
+    },
+    "teamNames": {
+      "2v2": [
+        "Age of Ultron",
+        "Iron Legion",
+        "Bride of Ultron",
+        "Rage of Ultron",
+        "Sokovia Swarm"
+      ],
+      "3v3": [
+        "Ultron Unlimited",
+        "Masters of Evil",
+        "Ultron Forever"
+      ]
+    }
+  },
+  "union-city-circuit-workshop": {
+    "_decisions": [
+      16
+    ],
+    "franchiseLabel": "Beneath a Steel Sky"
+  },
+  "usr-synthetic-division": {
+    "_decisions": [
+      3,
+      18
+    ],
+    "robots": {
+      "2": {
+        "name": "NS-5 Unit 02",
+        "artBrief": "Translucent white NS-5 marked 02 in a braced stance, tall curved riot shield on one arm",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "3": {
+        "name": "NS-5 Unit 03",
+        "artBrief": "Translucent white NS-5 marked 03 on the thigh, standing upright, blue-lit rifle held low",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "4": {
+        "name": "NS-5 Unit 04",
+        "artBrief": "White NS-5 marked 04 on the chest, slab shield on one arm, glowing baton in the other hand",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "5": {
+        "name": "NS-5 Unit 05",
+        "artBrief": "White NS-5 leaning forward, chunky blue-cored cannon mounted on its forearm",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "6": {
+        "name": "NS-5 Unit 06",
+        "artBrief": "White NS-5 marked 06 on the chest, standing straight and unarmed, arms hanging loose",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "7": {
+        "name": "NS-5 Unit 07",
+        "artBrief": "Glossy NS-5 marked 07 in a relaxed stance, faint blue chest glow, unarmed",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "8": {
+        "name": "NS-5 Unit 08",
+        "artBrief": "NS-5 marked 08 on the upper arm, low wide crouch, hands curled ready",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "9": {
+        "name": "NS-5 Unit 09",
+        "artBrief": "Translucent NS-5 standing tall, long blue-lit rifle held down at its side",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "10": {
+        "name": "NS-5 Unit 10",
+        "artBrief": "NS-5 marked 10 on the chest, heavy multi-barrel cannon on one arm, blue eyes",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      },
+      "11": {
+        "name": "NS-5 Unit 11",
+        "artBrief": "NS-5 marked 11 on the chest, wide crouch, unarmed with hands open, blue eyes",
+        "designation": "mass-produced",
+        "portrait": "aligned"
+      }
+    },
+    "teamNames": {
+      "2v2": [
+        "Three Laws Safe",
+        "Solar Station Five",
+        "Little Lost Robot",
+        "Calvin's Casebook",
+        "Runaround"
+      ],
+      "3v3": [
+        "Ghosts in the Machine",
+        "Catch That Rabbit",
+        "Positronic Pioneers"
+      ]
+    }
+  },
+  "v-model-combat-lab": {
+    "_decisions": [
+      3
+    ],
+    "teamNames": {
+      "2v2": [
+        "The Cyber Grind"
+      ],
+      "3v3": []
+    }
+  },
+  "valley-forge-maintenance": {
+    "_decisions": [
+      3
+    ],
+    "teamNames": {
+      "2v2": [
+        "Dome Gardeners"
+      ],
+      "3v3": [
+        "Lowell's Drones"
+      ]
+    }
+  },
+  "variant-armor-foundry": {
+    "_decisions": [
+      14,
+      16
+    ],
+    "franchiseLabel": "Cyberbots",
+    "teamNames": {
+      "2v2": [
+        "Fullmetal Madness"
+      ],
+      "3v3": [
+        "Variant Armor Brigade"
+      ]
+    }
+  },
+  "virgil-test-facility-workshop": {
+    "_decisions": [
+      16
+    ],
+    "franchiseLabel": "Portal Stories: Mel"
+  },
+  "virtual-on-combat-lab": {
+    "_decisions": [
+      3
+    ],
+    "teamNames": {
+      "2v2": [
+        "Moon Gate Strike"
+      ],
+      "3v3": []
+    }
+  },
+  "vision-synthetic-workshop": {
+    "_decisions": [
+      16
+    ],
+    "franchiseLabel": "Marvel — Vision"
+  },
+  "voltron-lion-hangar": {
+    "_decisions": [
+      3,
+      5
+    ],
+    "teamNames": {
+      "2v2": [
+        "Castle of Lions",
+        "Paladins of Arus"
+      ],
+      "3v3": [
+        "Defenders of the Universe"
+      ]
+    },
+    "targetOverrides": {
+      "12": 4
+    }
+  },
+  "walking-war-foundry": {
+    "_decisions": [
+      12
+    ],
+    "strategy": "Trio",
+    "targetOverrides": {
+      "12": 6
+    }
+  },
+  "wanzer-assembly-corps": {
+    "_decisions": [
+      3,
+      18
+    ],
+    "robots": {
+      "1": {
+        "name": "Gust",
+        "artBrief": "Blocky olive wanzer with boxy shoulders, two-handed long rifle held across its chest",
+        "portrait": "aligned"
+      },
+      "2": {
+        "name": "Frost",
+        "artBrief": "Pale khaki wanzer with twin antennae, aiming a long scoped sniper rifle",
+        "portrait": "aligned"
+      },
+      "3": {
+        "name": "Zenith",
+        "artBrief": "Slate-blue armoured wanzer, tall slab shield on one arm, forearm gun on the other",
+        "portrait": "aligned"
+      }
+    },
+    "teamNames": {
+      "2v2": [
+        "Huffman Crisis"
+      ],
+      "3v3": [
+        "Canyon Crows"
+      ]
+    }
+  },
+  "war-arena-foundry": {
+    "_decisions": [
+      3,
+      7,
+      18
+    ],
+    "franchiseLabel": "One Must Fall: 2097",
+    "robots": {
+      "3": {
+        "name": "Nova HAR",
+        "artBrief": "Heavy red-and-grey HAR, boxy armoured shoulders, red visor slit, long two-handed cannon held low",
+        "portrait": "aligned"
+      }
+    },
+    "teamNames": {
+      "2v2": [
+        "Fire Pit Brawlers"
+      ],
+      "3v3": [
+        "Kreissack's Champions"
+      ]
+    }
+  },
+  "wasteland-robotics": {
+    "_decisions": [
+      3,
+      5,
+      18
+    ],
+    "robots": {
+      "2": {
+        "name": "Assaultron",
+        "artBrief": "Lean rusted green Assaultron, glowing red head laser eye, curved blade forearms",
+        "portrait": "aligned"
+      },
+      "3": {
+        "name": "Sentry Bot",
+        "artBrief": "Olive Sentry Bot with a white army star, gatling arm and heavy cannon arm, chunky wheels",
+        "portrait": "aligned"
+      },
+      "4": {
+        "name": "Protectron",
+        "artBrief": "Pale-blue rusted Protectron, glass head dome with a single lamp, gun arm and pincer claw",
+        "portrait": "aligned"
+      }
+    },
+    "teamNames": {
+      "2v2": [
+        "Sanctuary Hills",
+        "RobCo Security"
+      ],
+      "3v3": [
+        "Mechanist's Army"
+      ]
+    },
+    "targetOverrides": {
+      "14": 4
+    }
+  },
+  "weyland-synthetic-unit": {
+    "_decisions": [
+      3,
+      5
+    ],
+    "teamNames": {
+      "2v2": [
+        "Covenant Crew"
+      ],
+      "3v3": [
+        "Building Better Worlds"
+      ]
+    },
+    "targetOverrides": {
+      "11": 6,
+      "13": 3
+    }
+  },
+  "wilson-resistance-salvage-works": {
+    "_decisions": [
+      13,
+      16
+    ],
+    "stableName": "Wilson Resistance Salvageworks",
+    "franchiseLabel": "Entropy: Zero 2"
+  },
+  "wily-robot-master-foundry": {
+    "_decisions": [
+      12,
+      16
+    ],
+    "strategy": "Trio",
+    "targetOverrides": {
+      "12": 6
+    },
+    "franchiseLabel": "Mega Man — Robot Masters"
+  },
+  "yorha-combat-division": {
+    "_decisions": [
+      3
+    ],
+    "teamNames": {
+      "2v2": [
+        "The Bunker"
+      ],
+      "3v3": [
+        "Glory to Mankind"
+      ]
+    }
+  },
+  "zdr-pursuit-unit": {
+    "_decisions": [
+      14
+    ],
+    "teamNames": {
+      "2v2": [
+        "EMMI Hunt"
+      ],
+      "3v3": [
+        "ZDR Lockdown"
+      ]
+    }
+  },
+  "zeon-mobile-suit-hangar": {
+    "_decisions": [
+      14
+    ],
+    "teamNames": {
+      "2v2": [
+        "Ramba Ral Raiders"
+      ],
+      "3v3": [
+        "Sieg Zeon"
+      ]
+    }
+  },
+  "zoids-arena-forge": {
+    "_decisions": [
+      3
+    ],
+    "teamNames": {
+      "2v2": [
+        "Backdraft Group"
+      ],
+      "3v3": [
+        "Guardian Force"
+      ]
+    }
+  }
+}

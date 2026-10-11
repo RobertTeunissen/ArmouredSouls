@@ -1,0 +1,344 @@
+{
+  "number": 122,
+  "catalogue_key": "infinite-war-assembly",
+  "name": "Infinite War Assembly",
+  "franchise": "Supreme Commander",
+  "strategy": "Tycoon",
+  "opening_robots": 2,
+  "target_robots": 3,
+  "max_planned_robots": 3,
+  "strategy_review_limit": 3,
+  "backstory": "A protected commander keeps the production account open while two lighter combat machines earn arena revenue. The factory invests in income before premium equipment.",
+  "strategy_personality": "A particularly convincing factory-and-economy stable. Select one faction before drafting the roster. It is a separate property from Total Annihilation despite their design lineage. [Publisher description](https://store.steampowered.com/app/9350/Supreme_Commander/).",
+  "teams": {
+    "2v2": [
+      {
+        "name": "Infinite Assembly Pair 01",
+        "slots": [
+          1,
+          2
+        ],
+        "forms": "Opening"
+      }
+    ],
+    "3v3": [
+      {
+        "name": "Infinite Assembly Squad 01",
+        "slots": [
+          1,
+          2,
+          3
+        ],
+        "forms": "When slot 3 joins"
+      }
+    ]
+  },
+  "event_order": [
+    "league_2v2",
+    "tag_team",
+    "league_1v1",
+    "league_3v3",
+    "koth",
+    "grand_melee",
+    "tournament_2v2",
+    "tournament_3v3",
+    "tournament_1v1"
+  ],
+  "robots": [
+    {
+      "slot": 1,
+      "name": "UEF Commander",
+      "source_identity": "UEF Armored Command Unit",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yield_threshold": 25,
+      "build_focus": "Tactician",
+      "range_from_weapons": "mid",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Bolt Carbine",
+          "offhand_weapon": "Light Shield",
+          "list_price_credits": 144000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Nova Caster",
+          "offhand_weapon": "Aegis Bulwark",
+          "list_price_credits": 834000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic original Supreme Commander UEF Armored Command Unit, massive blocky broad-shouldered humanoid command mech, tiny central head, thick grey armour with blue team panels, stocky two legs and immense feet. Source right arm gun and left construction manipulator, recognizable original game ACU proportions. No shield effects, no human pilot or escort.\nCatalogue label for metadata only, do not render text: #122 slot 1 UEF Commander.",
+      "role": "Protected tactical support",
+      "missing_fields": [],
+      "refinement_note": "Tycoon follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "UEF Commander fills the protected tactical support role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Tactician tuning supports the mid equipment role; defensive stance and a 25% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Tycoon strategy tuning rules with the Tactician Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "infinite-war-assembly:1:uef-commander",
+      "folder": "stables/122-infinite-war-assembly/robots/01-uef-commander",
+      "files": {
+        "png": "stables/122-infinite-war-assembly/robots/01-uef-commander/portrait.png",
+        "webp": "stables/122-infinite-war-assembly/robots/01-uef-commander/portrait.webp",
+        "blueprint": "stables/122-infinite-war-assembly/robots/01-uef-commander/blueprint.json",
+        "profile": "stables/122-infinite-war-assembly/robots/01-uef-commander/profile.md",
+        "prompt": "stables/122-infinite-war-assembly/robots/01-uef-commander/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/infinite-war-assembly/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 122,
+          "stable_name": "Infinite War Assembly",
+          "catalogue_key": "infinite-war-assembly",
+          "slot": 1,
+          "robot_name": "UEF Commander",
+          "source_identity": "UEF Armored Command Unit",
+          "source_edition": "Supreme Commander — 2007 base game; UEF faction; blue team colours",
+          "source_references": [
+            "https://store.steampowered.com/app/9350/Supreme_Commander/"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic original Supreme Commander UEF Armored Command Unit, massive blocky broad-shouldered humanoid command mech, tiny central head, thick grey armour with blue team panels, stocky two legs and immense feet. Source right arm gun and left construction manipulator, recognizable original game ACU proportions. No shield effects, no human pilot or escort.\nCatalogue label for metadata only, do not render text: #122 slot 1 UEF Commander.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-72bbfd9e-d309-4e2d-bdb9-c433bd5620c0.png",
+          "visual_review": "Accepted: complete figure, distinct readable silhouette, shared collection finish and lighting",
+          "asset_id": "infinite-war-assembly:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/infinite-war-assembly/1.webp",
+          "master": "outputs/automaton-portraits/masters/infinite-war-assembly/1.png",
+          "output": "app/frontend/public/assets/automatons/infinite-war-assembly/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "491c4ba79704860fad6082fd3698ef2c382f59d22d78fa9155b402913fe45c19",
+          "bytes": 66478
+        },
+        "sha256": "491c4ba79704860fad6082fd3698ef2c382f59d22d78fa9155b402913fe45c19",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 2,
+      "name": "Mech Marine 02",
+      "source_identity": "UEF Tech 1 Mech Marine",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 15,
+      "build_focus": "Versatile",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": null,
+          "list_price_credits": 57000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic original Supreme Commander UEF Mech Marine Tech 1 light assault bot, compact angular mechanical torso, small recessed sensor, two nimble articulated legs, source integrated gun arms, grey metal and blue UEF team panels. Preserve the slender utilitarian source frame, clearly lighter than an ACU. Entire robot visible in a grounded ready stance.\nCatalogue label for metadata only, do not render text: #122 slot 2 Mech Marine 02.",
+      "role": "Flexible line fighter",
+      "missing_fields": [],
+      "refinement_note": "Tycoon follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 1,
+      "equipment_interpretation": "Mech Marine 02 fills the flexible line fighter role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Versatile tuning supports the short equipment role; balanced stance and a 15% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Tycoon strategy tuning rules with the Versatile Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "infinite-war-assembly:2:mech-marine-02",
+      "folder": "stables/122-infinite-war-assembly/robots/02-mech-marine-02",
+      "files": {
+        "png": "stables/122-infinite-war-assembly/robots/02-mech-marine-02/portrait.png",
+        "webp": "stables/122-infinite-war-assembly/robots/02-mech-marine-02/portrait.webp",
+        "blueprint": "stables/122-infinite-war-assembly/robots/02-mech-marine-02/blueprint.json",
+        "profile": "stables/122-infinite-war-assembly/robots/02-mech-marine-02/profile.md",
+        "prompt": "stables/122-infinite-war-assembly/robots/02-mech-marine-02/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/infinite-war-assembly/2.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 122,
+          "stable_name": "Infinite War Assembly",
+          "catalogue_key": "infinite-war-assembly",
+          "slot": 2,
+          "robot_name": "Mech Marine 02",
+          "source_identity": "UEF Tech 1 Mech Marine",
+          "source_edition": "Supreme Commander — 2007 base game; UEF faction; blue team colours",
+          "source_references": [
+            "https://store.steampowered.com/app/9350/Supreme_Commander/"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic original Supreme Commander UEF Mech Marine Tech 1 light assault bot, compact angular mechanical torso, small recessed sensor, two nimble articulated legs, source integrated gun arms, grey metal and blue UEF team panels. Preserve the slender utilitarian source frame, clearly lighter than an ACU. Entire robot visible in a grounded ready stance.\nCatalogue label for metadata only, do not render text: #122 slot 2 Mech Marine 02.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-f490acc9-3549-49c8-8c76-d5048b663bc9.png",
+          "visual_review": "Accepted: complete figure, distinct readable silhouette, shared collection finish and lighting",
+          "asset_id": "infinite-war-assembly:2",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/infinite-war-assembly/2.webp",
+          "master": "outputs/automaton-portraits/masters/infinite-war-assembly/2.png",
+          "output": "app/frontend/public/assets/automatons/infinite-war-assembly/2.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "ba8068c1820596ed5470fe35b5ba3474c63272131d88d00b5274fb15fe3429f2",
+          "bytes": 53114
+        },
+        "sha256": "ba8068c1820596ed5470fe35b5ba3474c63272131d88d00b5274fb15fe3429f2",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 3,
+      "name": "Titan 03",
+      "source_identity": "UEF Tech 3 Titan assault bot",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Bruiser",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Scatter Cannon",
+          "offhand_weapon": null,
+          "list_price_credits": 84000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Arc Projector",
+          "offhand_weapon": null,
+          "list_price_credits": 488000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic original Supreme Commander UEF Titan Tech 3 heavy assault bot, wide reinforced grey-and-blue upper chassis, small source head, paired integrated cannon forearms, sturdy jointed bipedal legs with broad feet. Preserve original Titan body and weapon geometry, heavier than Mech Marine but distinct from ACU. No shield bubble, no fabricated human hands.\nCatalogue label for metadata only, do not render text: #122 slot 3 Titan 03.",
+      "role": "Heavy short-range pressure",
+      "missing_fields": [],
+      "refinement_note": "Tycoon follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 2,
+      "equipment_interpretation": "Titan 03 fills the heavy short-range pressure role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Bruiser tuning supports the short equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Tycoon strategy tuning rules with the Bruiser Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "infinite-war-assembly:3:titan-03",
+      "folder": "stables/122-infinite-war-assembly/robots/03-titan-03",
+      "files": {
+        "png": "stables/122-infinite-war-assembly/robots/03-titan-03/portrait.png",
+        "webp": "stables/122-infinite-war-assembly/robots/03-titan-03/portrait.webp",
+        "blueprint": "stables/122-infinite-war-assembly/robots/03-titan-03/blueprint.json",
+        "profile": "stables/122-infinite-war-assembly/robots/03-titan-03/profile.md",
+        "prompt": "stables/122-infinite-war-assembly/robots/03-titan-03/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/infinite-war-assembly/3.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 122,
+          "stable_name": "Infinite War Assembly",
+          "catalogue_key": "infinite-war-assembly",
+          "slot": 3,
+          "robot_name": "Titan 03",
+          "source_identity": "UEF Tech 3 Titan assault bot",
+          "source_edition": "Supreme Commander — 2007 base game; UEF faction; blue team colours",
+          "source_references": [
+            "https://store.steampowered.com/app/9350/Supreme_Commander/"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic original Supreme Commander UEF Titan Tech 3 heavy assault bot, wide reinforced grey-and-blue upper chassis, small source head, paired integrated cannon forearms, sturdy jointed bipedal legs with broad feet. Preserve original Titan body and weapon geometry, heavier than Mech Marine but distinct from ACU. No shield bubble, no fabricated human hands.\nCatalogue label for metadata only, do not render text: #122 slot 3 Titan 03.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-b6fa24f8-1937-4f45-a0f4-722186d74221.png",
+          "visual_review": "Accepted: complete figure, distinct readable silhouette, shared collection finish and lighting",
+          "asset_id": "infinite-war-assembly:3",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/infinite-war-assembly/3.webp",
+          "master": "outputs/automaton-portraits/masters/infinite-war-assembly/3.png",
+          "output": "app/frontend/public/assets/automatons/infinite-war-assembly/3.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "9592ad53ea4c34055b5f142152ab438992f8305772c92ffe508d17a153ff35d8",
+          "bytes": 59752
+        },
+        "sha256": "9592ad53ea4c34055b5f142152ab438992f8305772c92ffe508d17a153ff35d8",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "alternatives": [],
+  "blueprint_status": "detailed",
+  "source_notes": "\n**Franchise:** Supreme Commander  \n**Strategy:** Tycoon · **Target roster:** 3 robots\n\n**Catalogue key:** `infinite-war-assembly`\n\n**Proposed robots:** UEF Commander; Mech Marine 02; Titan 03.\n\n**Direction:** A particularly convincing factory-and-economy stable. Select one faction before drafting the roster. It is a separate property from Total Annihilation despite their design lineage. [Publisher description](https://store.steampowered.com/app/9350/Supreme_Commander/).\n\n**Production edition:** Supreme Commander — 2007 base game; UEF faction; blue team colours. Custom arena names and equipment are adaptations; source machine identities remain as specified.\n\n\n",
+  "source_documents": [
+    "reference/AUTOMATON_STABLE_EXPANSION.md"
+  ],
+  "blueprint_origin": "completed during collection",
+  "purchasing_plan": "Open with slots 1–2; follow income-facility goals before recruiting slot 3 with a funded complete stage-0 loadout. Upgrade final equipment in slot order after the roster and income base are secure. No weapon refinement purchases.",
+  "target_overrides": {
+    "robots": 3
+  },
+  "equipment_budget": {
+    "stage_0_credits": 285000,
+    "stage_1_credits": 1747000,
+    "refinement_credits": 0,
+    "excludes": "Frames, facilities, training, repairs, upkeep, discounts and resale; stage-1 total replaces stage-0 gear and is not a simultaneous equipment inventory."
+  },
+  "folder": "stables/122-infinite-war-assembly",
+  "history_image_count": 0
+}

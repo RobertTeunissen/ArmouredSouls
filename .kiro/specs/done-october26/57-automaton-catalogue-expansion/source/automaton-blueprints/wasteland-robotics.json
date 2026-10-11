@@ -1,0 +1,238 @@
+{
+  "number": 31,
+  "catalogueKey": "wasteland-robotics",
+  "stableName": "Wasteland Robotics",
+  "franchiseLabel": "Fallout",
+  "strategy": "Generalist",
+  "fit": "Direct",
+  "conceptIdentity": "Grow from utility machinery to specialist combat models. Retro-industrial curves, oxidized metal, exposed hoses, and heavy riveted armour.",
+  "backstory": "Wasteland Robotics enters the arena with a clear doctrine. Grow from utility machinery to specialist combat models. Every surviving machine returns to the workshop before the next booking.",
+  "openingRobots": 2,
+  "targetRobots": 3,
+  "adminMaximumRobots": 4,
+  "targetOverrides": {
+    "robots": 3
+  },
+  "teamNames": {
+    "2v2": [
+      {
+        "name": "Wasteland Pair 01",
+        "slots": [
+          1,
+          2
+        ]
+      },
+      {
+        "name": "Wasteland Pair 02",
+        "slots": [
+          3,
+          4
+        ]
+      }
+    ],
+    "3v3": [
+      {
+        "name": "Wasteland Squad 01",
+        "slots": [
+          1,
+          2,
+          3
+        ]
+      }
+    ]
+  },
+  "eventOrder": [
+    "league_1v1",
+    "league_2v2",
+    "league_3v3",
+    "tag_team",
+    "koth",
+    "grand_melee",
+    "tournament_1v1",
+    "tournament_2v2",
+    "tournament_3v3"
+  ],
+  "robots": [
+    {
+      "blueprintId": "wasteland-robotics:1:codsworth",
+      "slot": 1,
+      "name": "Codsworth",
+      "sourceAlias": "Codsworth",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "single",
+      "stance": "defensive",
+      "yieldThreshold": 25,
+      "buildFocus": "Tactician",
+      "weaponPath": [
+        {
+          "mainWeapon": "Beam Pistol",
+          "offhandWeapon": null,
+          "listPriceCredits": 93000
+        },
+        {
+          "mainWeapon": "Particle Lance",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "Hone",
+          "weapon": "Particle Lance",
+          "weaponSlot": "main",
+          "attribute": "Targeting Systems",
+          "baseValue": 8,
+          "magnitude": 2,
+          "resultValue": 10,
+          "costCredits": 40000,
+          "workshopLevel": 1,
+          "step": 1
+        },
+        {
+          "tier": "Augment",
+          "weapon": "Particle Lance",
+          "weaponSlot": "main",
+          "attribute": "Weapon Control",
+          "magnitude": 3,
+          "resultValue": 3,
+          "costCredits": 180000,
+          "workshopLevel": 3,
+          "step": 2
+        },
+        {
+          "tier": "Sharpen",
+          "weapon": "Particle Lance",
+          "weaponSlot": "main",
+          "cooldownReductionPercent": 10,
+          "costCredits": 300000,
+          "workshopLevel": 5,
+          "prestigeGate": 3000,
+          "step": 3
+        }
+      ],
+      "review": {
+        "rangeFromWeapons": "long",
+        "artBrief": "Retro metallic Mr Handy robot, three articulated tool arms and separate eye stalks.",
+        "refinementNote": "Apply in order after stage 1. Dual-wield refinements affect the main-hand copy only; the offhand stays unrefined unless explicitly targeted.",
+        "refinementTotalCredits": 520000,
+        "minimumRosterExpansionLevel": 0,
+        "imageConvention": "app/frontend/public/assets/automatons/wasteland-robotics/1.webp"
+      }
+    },
+    {
+      "blueprintId": "wasteland-robotics:2:wasteland-assaultron-02",
+      "slot": 2,
+      "name": "Wasteland Assaultron 02",
+      "sourceAlias": "Assaultron",
+      "nameBasis": "Original arena designation",
+      "availability": "opening",
+      "loadout": "dual_wield",
+      "stance": "offensive",
+      "yieldThreshold": 5,
+      "buildFocus": "Sprinter",
+      "weaponPath": [
+        {
+          "mainWeapon": "Combat Knife",
+          "offhandWeapon": "Combat Knife",
+          "listPriceCredits": 186000
+        },
+        {
+          "mainWeapon": "Vibro Mace",
+          "offhandWeapon": "Vibro Mace",
+          "listPriceCredits": 850000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "melee",
+        "artBrief": "Lean rusted Assaultron with a central head emitter and articulated blade-like limbs.",
+        "refinementNote": "Generalist refinement is reserved for the flagship in slot 1; this robot receives equipment upgrades and tuning.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 1,
+        "imageConvention": "app/frontend/public/assets/automatons/wasteland-robotics/2.webp"
+      }
+    },
+    {
+      "blueprintId": "wasteland-robotics:3:wasteland-sentry-bot-03",
+      "slot": 3,
+      "name": "Wasteland Sentry Bot 03",
+      "sourceAlias": "Sentry Bot",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "two_handed",
+      "stance": "defensive",
+      "yieldThreshold": 5,
+      "buildFocus": "Warden",
+      "weaponPath": [
+        {
+          "mainWeapon": "Training Rifle",
+          "offhandWeapon": null,
+          "listPriceCredits": 50000
+        },
+        {
+          "mainWeapon": "Plasma Cannon",
+          "offhandWeapon": null,
+          "listPriceCredits": 408000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "mid",
+        "artBrief": "Heavy armoured Sentry Bot on three wheels with military plates and cannon arms.",
+        "refinementNote": "Generalist refinement is reserved for the flagship in slot 1; this robot receives equipment upgrades and tuning.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 2,
+        "imageConvention": "app/frontend/public/assets/automatons/wasteland-robotics/3.webp"
+      }
+    },
+    {
+      "blueprintId": "wasteland-robotics:4:wasteland-protectron-04",
+      "slot": 4,
+      "name": "Wasteland Protectron 04",
+      "sourceAlias": "Protectron",
+      "nameBasis": "Original arena designation",
+      "availability": "reserve",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yieldThreshold": 25,
+      "buildFocus": "Warden",
+      "weaponPath": [
+        {
+          "mainWeapon": "Laser Pistol",
+          "offhandWeapon": "Light Shield",
+          "listPriceCredits": 108000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": "Aegis Bulwark",
+          "listPriceCredits": 834000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Rounded retro-industrial Protectron with glass-like head dome and thick service limbs.",
+        "refinementNote": "Generalist refinement is reserved for the flagship in slot 1; this robot receives equipment upgrades and tuning.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 3,
+        "imageConvention": "app/frontend/public/assets/automatons/wasteland-robotics/4.webp"
+      }
+    }
+  ],
+  "alternativeBlueprints": [],
+  "review": {
+    "openingWeaponCredits": 279000,
+    "finalWeaponCreditsAtTarget": 1683000,
+    "equippedWeaponCountAtTarget": 4,
+    "purchaseOrder": [
+      1,
+      2,
+      3
+    ],
+    "reserveSlots": [
+      4
+    ],
+    "alternativeRule": "Choose an alternative before catalogue approval; it replaces the specified slot and never adds another live robot."
+  }
+}

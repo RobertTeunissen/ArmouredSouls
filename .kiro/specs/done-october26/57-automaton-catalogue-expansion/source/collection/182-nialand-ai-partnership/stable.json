@@ -1,0 +1,294 @@
+{
+  "number": 182,
+  "catalogue_key": "nialand-ai-partnership",
+  "name": "NiaLand AI Partnership",
+  "franchise": "Vivy: Fluorite Eye's Song — 2021 anime",
+  "strategy": "Duo",
+  "opening_robots": 2,
+  "target_robots": 2,
+  "max_planned_robots": 2,
+  "strategy_review_limit": 3,
+  "backstory": "A mobile performance android and a compact precise AI body share the partnership's equipment budget. Different vessels remain alternate depictions rather than extra simultaneous fighters.",
+  "strategy_personality": "A human-looking performance android beside a compact geometric AI body creates a particularly readable duo. Preserve Vivy's selected stage-era appearance and the cube's source geometry. Give the pair complementary arena equipment without importing time travel, unrestricted hacking, or additional simultaneous Matsumoto bodies. Alternate vessels and Vivy's later costumes remain production alternatives for these same two characters.",
+  "teams": {
+    "2v2": [
+      {
+        "name": "NiaLand Pair Pair 01",
+        "slots": [
+          1,
+          2
+        ],
+        "forms": "Opening"
+      }
+    ],
+    "3v3": []
+  },
+  "event_order": [
+    "league_2v2",
+    "tag_team",
+    "tournament_2v2",
+    "league_1v1",
+    "koth",
+    "grand_melee",
+    "tournament_1v1",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "robots": [
+    {
+      "slot": 1,
+      "name": "Vivy",
+      "source_identity": "Vivy, initial NiaLand performance android",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 20,
+      "build_focus": "Sprinter",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": null,
+          "list_price_credits": 57000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Hone",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 1,
+          "attribute": "Attack Speed",
+          "magnitude": 3,
+          "result_value": 7,
+          "cost_credits": 90000,
+          "base_value": 4,
+          "effect": "Attack Speed 4→7",
+          "step": 1
+        },
+        {
+          "operation": "Augment",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 3,
+          "attribute": "Evasion Thrusters",
+          "magnitude": 2,
+          "result_value": 2,
+          "cost_credits": 80000,
+          "effect": "Evasion Thrusters, new +2",
+          "step": 2
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Vivy from Vivy: Fluorite Eye's Song 2021 anime, authentic human-looking female android with long straight blue hair, blue eyes and source initial NiaLand stage outfit: white sleeveless performance dress with recognizable dark-blue details, white gloves and source dark boots. Preserve anime face and costume proportions rendered with realistic fabric and subtle synthetic surfaces. Calm full-body standing pose, empty hands, no generic combat armour or added metal face, do not use later Diva stage costume.\nMetadata only, do not render text: #182 slot 1 Vivy.",
+      "role": "Mobile skirmisher",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 170000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "Vivy fills the mobile skirmisher role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Sprinter tuning supports the short equipment role; balanced stance and a 20% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Duo strategy tuning rules with the Sprinter Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "nialand-ai-partnership:1:vivy",
+      "folder": "stables/182-nialand-ai-partnership/robots/01-vivy",
+      "files": {
+        "png": "stables/182-nialand-ai-partnership/robots/01-vivy/portrait.png",
+        "webp": "stables/182-nialand-ai-partnership/robots/01-vivy/portrait.webp",
+        "blueprint": "stables/182-nialand-ai-partnership/robots/01-vivy/blueprint.json",
+        "profile": "stables/182-nialand-ai-partnership/robots/01-vivy/profile.md",
+        "prompt": "stables/182-nialand-ai-partnership/robots/01-vivy/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/nialand-ai-partnership/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 182,
+          "stable_name": "NiaLand AI Partnership",
+          "catalogue_key": "nialand-ai-partnership",
+          "slot": 1,
+          "robot_name": "Vivy",
+          "source_identity": "Vivy, initial NiaLand performance android",
+          "source_edition": "Vivy: Fluorite Eye's Song 2021 anime, initial NiaLand Vivy stage outfit and Matsumoto blue cube body",
+          "source_references": [
+            "https://vivy-anime.com/character/detail/?id=vivy",
+            "https://vivy-portal.com/character/detail/?id=matsumoto"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Vivy from Vivy: Fluorite Eye's Song 2021 anime, authentic human-looking female android with long straight blue hair, blue eyes and source initial NiaLand stage outfit: white sleeveless performance dress with recognizable dark-blue details, white gloves and source dark boots. Preserve anime face and costume proportions rendered with realistic fabric and subtle synthetic surfaces. Calm full-body standing pose, empty hands, no generic combat armour or added metal face, do not use later Diva stage costume.\nMetadata only, do not render text: #182 slot 1 Vivy.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-e8ea910b-4751-447a-ac50-87c1c45bcc29.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "nialand-ai-partnership:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/nialand-ai-partnership/1.webp",
+          "master": "outputs/automaton-portraits/masters/nialand-ai-partnership/1.png",
+          "output": "app/frontend/public/assets/automatons/nialand-ai-partnership/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "24d3c07e4de831b4b0347011e9b774ebc571848e6d7e45a577531f0daa1034e8",
+          "bytes": 40302
+        },
+        "sha256": "24d3c07e4de831b4b0347011e9b774ebc571848e6d7e45a577531f0daa1034e8",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 2,
+      "name": "Matsumoto",
+      "source_identity": "Matsumoto, blue cube AI body",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 20,
+      "build_focus": "Deadeye",
+      "range_from_weapons": "long",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Beam Pistol",
+          "offhand_weapon": null,
+          "list_price_credits": 93000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Particle Lance",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Hone",
+          "weapon": "Particle Lance",
+          "hand": "main",
+          "workshop_level": 1,
+          "attribute": "Targeting Systems",
+          "magnitude": 2,
+          "result_value": 10,
+          "cost_credits": 40000,
+          "base_value": 8,
+          "effect": "Targeting Systems 8→10",
+          "step": 1
+        },
+        {
+          "operation": "Augment",
+          "weapon": "Particle Lance",
+          "hand": "main",
+          "workshop_level": 3,
+          "attribute": "Weapon Control",
+          "magnitude": 3,
+          "result_value": 3,
+          "cost_credits": 180000,
+          "effect": "Weapon Control, new +3",
+          "step": 2
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Matsumoto from Vivy: Fluorite Eye's Song 2021, ONE small blue cube AI body with canonical bevels and simple luminous face/display details, source panel divisions and compact geometry. Hover just above the studio floor with soft grounding shadow, full cube visible. No teddy-bear vessel, humanoid arms, legs or invented military chassis.\nMetadata only, do not render text: #182 slot 2 Matsumoto.",
+      "role": "Precision fire support",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 220000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 1,
+      "equipment_interpretation": "Matsumoto fills the precision fire support role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Deadeye tuning supports the long equipment role; balanced stance and a 20% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Duo strategy tuning rules with the Deadeye Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "nialand-ai-partnership:2:matsumoto",
+      "folder": "stables/182-nialand-ai-partnership/robots/02-matsumoto",
+      "files": {
+        "png": "stables/182-nialand-ai-partnership/robots/02-matsumoto/portrait.png",
+        "webp": "stables/182-nialand-ai-partnership/robots/02-matsumoto/portrait.webp",
+        "blueprint": "stables/182-nialand-ai-partnership/robots/02-matsumoto/blueprint.json",
+        "profile": "stables/182-nialand-ai-partnership/robots/02-matsumoto/profile.md",
+        "prompt": "stables/182-nialand-ai-partnership/robots/02-matsumoto/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/nialand-ai-partnership/2.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 182,
+          "stable_name": "NiaLand AI Partnership",
+          "catalogue_key": "nialand-ai-partnership",
+          "slot": 2,
+          "robot_name": "Matsumoto",
+          "source_identity": "Matsumoto, blue cube AI body",
+          "source_edition": "Vivy: Fluorite Eye's Song 2021 anime, initial NiaLand Vivy stage outfit and Matsumoto blue cube body",
+          "source_references": [
+            "https://vivy-anime.com/character/detail/?id=vivy",
+            "https://vivy-portal.com/character/detail/?id=matsumoto"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Matsumoto from Vivy: Fluorite Eye's Song 2021, ONE small blue cube AI body with canonical bevels and simple luminous face/display details, source panel divisions and compact geometry. Hover just above the studio floor with soft grounding shadow, full cube visible. No teddy-bear vessel, humanoid arms, legs or invented military chassis.\nMetadata only, do not render text: #182 slot 2 Matsumoto.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-5b0c1483-2581-495a-a168-062d25cebcd0.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "nialand-ai-partnership:2",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/nialand-ai-partnership/2.webp",
+          "master": "outputs/automaton-portraits/masters/nialand-ai-partnership/2.png",
+          "output": "app/frontend/public/assets/automatons/nialand-ai-partnership/2.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "d0ac818b981e3e8f7a1e8c245769ef67468cf683ed251b4b1af820f3a66f90eb",
+          "bytes": 31348
+        },
+        "sha256": "d0ac818b981e3e8f7a1e8c245769ef67468cf683ed251b4b1af820f3a66f90eb",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "alternatives": [],
+  "blueprint_status": "detailed",
+  "source_notes": "\n**Franchise:** Vivy: Fluorite Eye's Song — 2021 anime  \n**Strategy:** Duo · **Target roster:** 2 robots\n\n**Proposed robots:** Vivy; Matsumoto.\n\n**Direction:** A human-looking performance android beside a compact geometric AI body creates a particularly readable duo. Preserve Vivy's selected stage-era appearance and the cube's source geometry. Give the pair complementary arena equipment without importing time travel, unrestricted hacking, or additional simultaneous Matsumoto bodies. Alternate vessels and Vivy's later costumes remain production alternatives for these same two characters.\n\nReferences: [official Vivy character reference](https://vivy-anime.com/character/detail/?id=vivy), [official Matsumoto character reference](https://vivy-portal.com/character/detail/?id=matsumoto).\n\n**Production edition:** Vivy: Fluorite Eye's Song 2021 anime, initial NiaLand Vivy stage outfit and Matsumoto blue cube body.  \n**Catalogue key:** `nialand-ai-partnership`\n\n",
+  "source_documents": [
+    "reference/AUTOMATON_STABLE_EXPANSION.md"
+  ],
+  "blueprint_origin": "completed during collection",
+  "purchasing_plan": "Open with both robots. Alternate stage-1 equipment investment between slots 1 and 2; finish both final loadouts before refining. Visit both robots in each Hone pass, then each Augment pass, buying Workshop L1/L3 only as required. No Sharpen or Forge purchases.",
+  "target_overrides": {},
+  "equipment_budget": {
+    "stage_0_credits": 150000,
+    "stage_1_credits": 850000,
+    "refinement_credits": 390000,
+    "excludes": "Frames, facilities, training, repairs, upkeep, discounts and resale; stage-1 total replaces stage-0 gear and is not a simultaneous equipment inventory."
+  },
+  "folder": "stables/182-nialand-ai-partnership",
+  "history_image_count": 0
+}

@@ -1,0 +1,277 @@
+{
+  "stable_number": 144,
+  "catalogue_key": "breakwater-salvage-union",
+  "robots": [
+    {
+      "slot": 1,
+      "name": "Breakwater Tug 01",
+      "source_identity": "Original Armoured Souls design",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yield_threshold": 25,
+      "build_focus": "Warden",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": "Light Shield",
+          "list_price_credits": 108000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": "Aegis Bulwark",
+          "list_price_credits": 834000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete original Armoured Souls robot.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Original autonomous coastal salvage TUG robot. Low broad twin caterpillar-track chassis, squat copper-and-steel winch torso, forward cylindrical camera pod with paired amber lenses, central tow drum, one articulated compact heavy emitter mounted on the shoulder. Salt patina, patched steel, faded copper enamel. Clearly a complete independent machine, no driver cab or human. Compact ground-hugging silhouette.\nMetadata only, do not render text: #144 slot 1 Breakwater Tug 01.",
+      "role": "Protected short-range anchor",
+      "missing_fields": [],
+      "refinement_note": "Tycoon follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "Breakwater Tug 01 fills the protected short-range anchor role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Warden tuning supports the short equipment role; defensive stance and a 25% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Tycoon strategy tuning rules with the Warden Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "breakwater-salvage-union:1:breakwater-tug-01",
+      "folder": "stables/144-breakwater-salvage-union/robots/01-breakwater-tug-01",
+      "files": {
+        "png": "stables/144-breakwater-salvage-union/robots/01-breakwater-tug-01/portrait.png",
+        "webp": "stables/144-breakwater-salvage-union/robots/01-breakwater-tug-01/portrait.webp",
+        "blueprint": "stables/144-breakwater-salvage-union/robots/01-breakwater-tug-01/blueprint.json",
+        "profile": "stables/144-breakwater-salvage-union/robots/01-breakwater-tug-01/profile.md",
+        "prompt": "stables/144-breakwater-salvage-union/robots/01-breakwater-tug-01/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/breakwater-salvage-union/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 144,
+          "stable_name": "Breakwater Salvage Union",
+          "catalogue_key": "breakwater-salvage-union",
+          "slot": 1,
+          "robot_name": "Breakwater Tug 01",
+          "source_identity": "Original Armoured Souls design",
+          "source_edition": "Armoured Souls original — coastal salvage machines",
+          "source_references": [],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete original Armoured Souls robot.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Original autonomous coastal salvage TUG robot. Low broad twin caterpillar-track chassis, squat copper-and-steel winch torso, forward cylindrical camera pod with paired amber lenses, central tow drum, one articulated compact heavy emitter mounted on the shoulder. Salt patina, patched steel, faded copper enamel. Clearly a complete independent machine, no driver cab or human. Compact ground-hugging silhouette.\nMetadata only, do not render text: #144 slot 1 Breakwater Tug 01.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-c93a2cab-eed7-4ff6-9363-769db7e13476.png",
+          "visual_review": "Accepted: complete readable silhouette, planned source or original construction and studio finish",
+          "asset_id": "breakwater-salvage-union:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/breakwater-salvage-union/1.webp",
+          "master": "outputs/automaton-portraits/masters/breakwater-salvage-union/1.png",
+          "output": "app/frontend/public/assets/automatons/breakwater-salvage-union/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "fd5c89d973a3ae61d8c70bb88d7f01c91d7287308bf0e358694dcbc0eacf57d2",
+          "bytes": 78474
+        },
+        "sha256": "fd5c89d973a3ae61d8c70bb88d7f01c91d7287308bf0e358694dcbc0eacf57d2",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 2,
+      "name": "Breakwater Clamp 02",
+      "source_identity": "Original Armoured Souls design",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Bruiser",
+      "range_from_weapons": "melee",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Shock Maul",
+          "offhand_weapon": null,
+          "list_price_credits": 183000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Heavy Hammer",
+          "offhand_weapon": null,
+          "list_price_credits": 478000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete original Armoured Souls robot.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Original autonomous coastal CLAMP SALVAGER robot, distinct from tug: four crab-like hydraulic walking legs under narrow vertically stacked sensor torso; two long asymmetric articulated clamp arms, one large gripping claw and one compact cutting tool, single blue porthole eye. Salt-worn copper shell, repaired steel struts, pale mineral residue. Complete four-legged machine, no tracks, no humanoid face.\nMetadata only, do not render text: #144 slot 2 Breakwater Clamp 02.",
+      "role": "Heavy contact attacker",
+      "missing_fields": [],
+      "refinement_note": "Tycoon follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 1,
+      "equipment_interpretation": "Breakwater Clamp 02 fills the heavy contact attacker role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Bruiser tuning supports the melee equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Tycoon strategy tuning rules with the Bruiser Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "breakwater-salvage-union:2:breakwater-clamp-02",
+      "folder": "stables/144-breakwater-salvage-union/robots/02-breakwater-clamp-02",
+      "files": {
+        "png": "stables/144-breakwater-salvage-union/robots/02-breakwater-clamp-02/portrait.png",
+        "webp": "stables/144-breakwater-salvage-union/robots/02-breakwater-clamp-02/portrait.webp",
+        "blueprint": "stables/144-breakwater-salvage-union/robots/02-breakwater-clamp-02/blueprint.json",
+        "profile": "stables/144-breakwater-salvage-union/robots/02-breakwater-clamp-02/profile.md",
+        "prompt": "stables/144-breakwater-salvage-union/robots/02-breakwater-clamp-02/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/breakwater-salvage-union/2.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 144,
+          "stable_name": "Breakwater Salvage Union",
+          "catalogue_key": "breakwater-salvage-union",
+          "slot": 2,
+          "robot_name": "Breakwater Clamp 02",
+          "source_identity": "Original Armoured Souls design",
+          "source_edition": "Armoured Souls original — coastal salvage machines",
+          "source_references": [],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete original Armoured Souls robot.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Original autonomous coastal CLAMP SALVAGER robot, distinct from tug: four crab-like hydraulic walking legs under narrow vertically stacked sensor torso; two long asymmetric articulated clamp arms, one large gripping claw and one compact cutting tool, single blue porthole eye. Salt-worn copper shell, repaired steel struts, pale mineral residue. Complete four-legged machine, no tracks, no humanoid face.\nMetadata only, do not render text: #144 slot 2 Breakwater Clamp 02.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-23f58985-58bf-4783-9c8e-4d9c6a589438.png",
+          "visual_review": "Accepted: complete readable silhouette, planned source or original construction and studio finish",
+          "asset_id": "breakwater-salvage-union:2",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/breakwater-salvage-union/2.webp",
+          "master": "outputs/automaton-portraits/masters/breakwater-salvage-union/2.png",
+          "output": "app/frontend/public/assets/automatons/breakwater-salvage-union/2.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "7c7ad051e4479c62a823205361ac41c40746374334d863353f5a71aa4d9f6b86",
+          "bytes": 71542
+        },
+        "sha256": "7c7ad051e4479c62a823205361ac41c40746374334d863353f5a71aa4d9f6b86",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 3,
+      "name": "Breakwater Recovery 03",
+      "source_identity": "Original Armoured Souls design",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "balanced",
+      "yield_threshold": 15,
+      "build_focus": "Deadeye",
+      "range_from_weapons": "long",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Training Beam",
+          "offhand_weapon": null,
+          "list_price_credits": 50000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Ion Beam",
+          "offhand_weapon": null,
+          "list_price_credits": 544000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete original Armoured Souls robot.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Original coastal HEAVY RECOVERY robot. Six large rubber industrial wheels support a wide rectangular chassis, raised rear lifting boom stowed in an angular arch, central armoured sensor mast with twin amber optics and two heavy hydraulic manipulator arms. Copper and weathered steel, visible welded repair plates. Massive loader silhouette distinct from a crab walker or tracked tug, no occupant.\nMetadata only, do not render text: #144 slot 3 Breakwater Recovery 03.",
+      "role": "Heavy long-range support",
+      "missing_fields": [],
+      "refinement_note": "Tycoon follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 2,
+      "equipment_interpretation": "Breakwater Recovery 03 fills the heavy long-range support role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Deadeye tuning supports the long equipment role; balanced stance and a 15% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Tycoon strategy tuning rules with the Deadeye Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "breakwater-salvage-union:3:breakwater-recovery-03",
+      "folder": "stables/144-breakwater-salvage-union/robots/03-breakwater-recovery-03",
+      "files": {
+        "png": "stables/144-breakwater-salvage-union/robots/03-breakwater-recovery-03/portrait.png",
+        "webp": "stables/144-breakwater-salvage-union/robots/03-breakwater-recovery-03/portrait.webp",
+        "blueprint": "stables/144-breakwater-salvage-union/robots/03-breakwater-recovery-03/blueprint.json",
+        "profile": "stables/144-breakwater-salvage-union/robots/03-breakwater-recovery-03/profile.md",
+        "prompt": "stables/144-breakwater-salvage-union/robots/03-breakwater-recovery-03/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/breakwater-salvage-union/3.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 144,
+          "stable_name": "Breakwater Salvage Union",
+          "catalogue_key": "breakwater-salvage-union",
+          "slot": 3,
+          "robot_name": "Breakwater Recovery 03",
+          "source_identity": "Original Armoured Souls design",
+          "source_edition": "Armoured Souls original — coastal salvage machines",
+          "source_references": [],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete original Armoured Souls robot.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Original coastal HEAVY RECOVERY robot. Six large rubber industrial wheels support a wide rectangular chassis, raised rear lifting boom stowed in an angular arch, central armoured sensor mast with twin amber optics and two heavy hydraulic manipulator arms. Copper and weathered steel, visible welded repair plates. Massive loader silhouette distinct from a crab walker or tracked tug, no occupant.\nMetadata only, do not render text: #144 slot 3 Breakwater Recovery 03.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-a8c856b5-50c5-4ec4-9ccd-9d6acd218752.png",
+          "visual_review": "Accepted: complete readable silhouette, planned source or original construction and studio finish",
+          "asset_id": "breakwater-salvage-union:3",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/breakwater-salvage-union/3.webp",
+          "master": "outputs/automaton-portraits/masters/breakwater-salvage-union/3.png",
+          "output": "app/frontend/public/assets/automatons/breakwater-salvage-union/3.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "e2af823a868c5392dd7a5e6b321f13650ab9b9e866f466f71b51c56fdc12654c",
+          "bytes": 84562
+        },
+        "sha256": "e2af823a868c5392dd7a5e6b321f13650ab9b9e866f466f71b51c56fdc12654c",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "replacement_alternatives": []
+}

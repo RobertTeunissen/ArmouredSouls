@@ -1,0 +1,162 @@
+{
+  "number": 72,
+  "catalogueKey": "delos-host-division",
+  "stableName": "Delos Host Division",
+  "franchiseLabel": "Westworld",
+  "strategy": "Tycoon",
+  "fit": "Adapt",
+  "conceptIdentity": "Corporate infrastructure funds a compact synthetic roster. Exposed white synthetic structure beneath partial exterior coverings; original hosts largely look human.",
+  "backstory": "Delos Host Division enters the arena with a clear doctrine. Corporate infrastructure funds a compact synthetic roster. Every surviving machine returns to the workshop before the next booking.",
+  "openingRobots": 2,
+  "targetRobots": 3,
+  "adminMaximumRobots": 3,
+  "targetOverrides": {
+    "robots": 3
+  },
+  "teamNames": {
+    "2v2": [
+      {
+        "name": "Delos Pair 01",
+        "slots": [
+          1,
+          2
+        ]
+      }
+    ],
+    "3v3": [
+      {
+        "name": "Delos Squad 01",
+        "slots": [
+          1,
+          2,
+          3
+        ]
+      }
+    ]
+  },
+  "eventOrder": [
+    "koth",
+    "grand_melee",
+    "league_1v1",
+    "league_2v2",
+    "tag_team",
+    "tournament_1v1",
+    "tournament_2v2",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "robots": [
+    {
+      "blueprintId": "delos-host-division:1:dolores",
+      "slot": 1,
+      "name": "Dolores",
+      "sourceAlias": "Dolores",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 15,
+      "buildFocus": "Versatile",
+      "weaponPath": [
+        {
+          "mainWeapon": "Laser Pistol",
+          "offhandWeapon": null,
+          "listPriceCredits": 57000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Human-looking Delos host with pale blue clothing and subtly visible manufactured detail.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 0,
+        "imageConvention": "app/frontend/public/assets/automatons/delos-host-division/1.webp"
+      }
+    },
+    {
+      "blueprintId": "delos-host-division:2:maeve",
+      "slot": 2,
+      "name": "Maeve",
+      "sourceAlias": "Maeve",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "dual_wield",
+      "stance": "balanced",
+      "yieldThreshold": 20,
+      "buildFocus": "Tactician",
+      "weaponPath": [
+        {
+          "mainWeapon": "Beam Pistol",
+          "offhandWeapon": "Beam Pistol",
+          "listPriceCredits": 186000
+        },
+        {
+          "mainWeapon": "Particle Lance",
+          "offhandWeapon": "Particle Lance",
+          "listPriceCredits": 850000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "long",
+        "artBrief": "Human-looking Delos host in dark clothing with precise composure and subtle synthetic detail.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 1,
+        "imageConvention": "app/frontend/public/assets/automatons/delos-host-division/2.webp"
+      }
+    },
+    {
+      "blueprintId": "delos-host-division:3:bernard",
+      "slot": 3,
+      "name": "Bernard",
+      "sourceAlias": "Bernard",
+      "nameBasis": "Source character or machine designation",
+      "availability": "growth",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yieldThreshold": 25,
+      "buildFocus": "Tactician",
+      "weaponPath": [
+        {
+          "mainWeapon": "Beam Pistol",
+          "offhandWeapon": "Combat Shield",
+          "listPriceCredits": 171000
+        },
+        {
+          "mainWeapon": "Particle Lance",
+          "offhandWeapon": "Aegis Bulwark",
+          "listPriceCredits": 834000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "long",
+        "artBrief": "Human-looking Delos host with glasses, subdued clothing and visible synthetic joint detail.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 2,
+        "imageConvention": "app/frontend/public/assets/automatons/delos-host-division/3.webp"
+      }
+    }
+  ],
+  "alternativeBlueprints": [],
+  "review": {
+    "openingWeaponCredits": 243000,
+    "finalWeaponCreditsAtTarget": 2109000,
+    "equippedWeaponCountAtTarget": 5,
+    "purchaseOrder": [
+      1,
+      2,
+      3
+    ],
+    "reserveSlots": [],
+    "alternativeRule": "Choose an alternative before catalogue approval; it replaces the specified slot and never adds another live robot."
+  }
+}

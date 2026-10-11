@@ -1,0 +1,286 @@
+{
+  "stable_number": 131,
+  "catalogue_key": "ruin-era-synthetic-unit",
+  "robots": [
+    {
+      "slot": 1,
+      "name": "Casshern",
+      "source_identity": "Casshern",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Sprinter",
+      "range_from_weapons": "melee",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Practice Sword",
+          "offhand_weapon": null,
+          "list_price_credits": 50000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Vibro Mace",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic Casshern from the 2008 Casshern Sins anime. Slim athletic humanlike male android, pale youthful face, dark brown hair visible beneath distinctive white helmet, small green forehead panel, white high-collared body suit with red chest emblem and red trim, white forearm guards, white boots and characteristic rounded shoulder silhouette. Neutral ready stance with empty hands. Preserve the simplified elegant source construction and humanlike face in a polished 3D interpretation; no exposed endoskeleton, no gun, no original-series scarf.\nCatalogue label for metadata only, do not render text: #131 slot 1 Casshern.",
+      "role": "Agile contact specialist",
+      "missing_fields": [],
+      "refinement_note": "Trio follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "Casshern fills the agile contact specialist role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Sprinter tuning supports the melee equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Trio strategy tuning rules with the Sprinter Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "ruin-era-synthetic-unit:1:casshern",
+      "folder": "stables/131-ruin-era-synthetic-unit/robots/01-casshern",
+      "files": {
+        "png": "stables/131-ruin-era-synthetic-unit/robots/01-casshern/portrait.png",
+        "webp": "stables/131-ruin-era-synthetic-unit/robots/01-casshern/portrait.webp",
+        "blueprint": "stables/131-ruin-era-synthetic-unit/robots/01-casshern/blueprint.json",
+        "profile": "stables/131-ruin-era-synthetic-unit/robots/01-casshern/profile.md",
+        "prompt": "stables/131-ruin-era-synthetic-unit/robots/01-casshern/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/ruin-era-synthetic-unit/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 131,
+          "stable_name": "Ruin-Era Synthetic Unit",
+          "catalogue_key": "ruin-era-synthetic-unit",
+          "slot": 1,
+          "robot_name": "Casshern",
+          "source_identity": "Casshern",
+          "source_edition": "Casshern Sins — 2008 television designs",
+          "source_references": [
+            "https://tatsunoko.co.jp/en/works/casshern-sins/",
+            "https://tatsunoko.co.jp/pastworks/casshern-sins/story/episode.html"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic Casshern from the 2008 Casshern Sins anime. Slim athletic humanlike male android, pale youthful face, dark brown hair visible beneath distinctive white helmet, small green forehead panel, white high-collared body suit with red chest emblem and red trim, white forearm guards, white boots and characteristic rounded shoulder silhouette. Neutral ready stance with empty hands. Preserve the simplified elegant source construction and humanlike face in a polished 3D interpretation; no exposed endoskeleton, no gun, no original-series scarf.\nCatalogue label for metadata only, do not render text: #131 slot 1 Casshern.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-a18e907f-391f-4597-a3ca-7de67ce9f46c.png",
+          "visual_review": "Accepted: complete readable silhouette, planned source or original construction and studio finish",
+          "asset_id": "ruin-era-synthetic-unit:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/ruin-era-synthetic-unit/1.webp",
+          "master": "outputs/automaton-portraits/masters/ruin-era-synthetic-unit/1.png",
+          "output": "app/frontend/public/assets/automatons/ruin-era-synthetic-unit/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "0a746b78a0ef987a6866adde8efe3c31c75fa60b5f7afe5977276487eaf382a2",
+          "bytes": 30620
+        },
+        "sha256": "0a746b78a0ef987a6866adde8efe3c31c75fa60b5f7afe5977276487eaf382a2",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 2,
+      "name": "Dio",
+      "source_identity": "Dio",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Bruiser",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": null,
+          "list_price_credits": 57000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic Dio from the 2008 Casshern Sins anime, slender athletic adult male android with pale humanlike face and long pale blond hair. His dark violet nearly black high-collar full-body suit, yellow edging and angular yellow chest motif, sharp forearm/elbow details, dark helmet-like head framing, violet boots. One complete figure, poised fists lowered, source anatomy and clothing-like synthetic surfaces, no generic mech helmet, no added guns.\nCatalogue label for metadata only, do not render text: #131 slot 2 Dio.",
+      "role": "Direct short-range pressure",
+      "missing_fields": [],
+      "refinement_note": "Trio follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 1,
+      "equipment_interpretation": "Dio fills the direct short-range pressure role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Bruiser tuning supports the short equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Trio strategy tuning rules with the Bruiser Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "ruin-era-synthetic-unit:2:dio",
+      "folder": "stables/131-ruin-era-synthetic-unit/robots/02-dio",
+      "files": {
+        "png": "stables/131-ruin-era-synthetic-unit/robots/02-dio/portrait.png",
+        "webp": "stables/131-ruin-era-synthetic-unit/robots/02-dio/portrait.webp",
+        "blueprint": "stables/131-ruin-era-synthetic-unit/robots/02-dio/blueprint.json",
+        "profile": "stables/131-ruin-era-synthetic-unit/robots/02-dio/profile.md",
+        "prompt": "stables/131-ruin-era-synthetic-unit/robots/02-dio/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/ruin-era-synthetic-unit/2.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 131,
+          "stable_name": "Ruin-Era Synthetic Unit",
+          "catalogue_key": "ruin-era-synthetic-unit",
+          "slot": 2,
+          "robot_name": "Dio",
+          "source_identity": "Dio",
+          "source_edition": "Casshern Sins — 2008 television designs",
+          "source_references": [
+            "https://tatsunoko.co.jp/en/works/casshern-sins/",
+            "https://tatsunoko.co.jp/pastworks/casshern-sins/story/episode.html"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic Dio from the 2008 Casshern Sins anime, slender athletic adult male android with pale humanlike face and long pale blond hair. His dark violet nearly black high-collar full-body suit, yellow edging and angular yellow chest motif, sharp forearm/elbow details, dark helmet-like head framing, violet boots. One complete figure, poised fists lowered, source anatomy and clothing-like synthetic surfaces, no generic mech helmet, no added guns.\nCatalogue label for metadata only, do not render text: #131 slot 2 Dio.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-d8f08b03-a68c-4def-a663-1dcf1361cf2a.png",
+          "visual_review": "Accepted: complete readable silhouette, planned source or original construction and studio finish",
+          "asset_id": "ruin-era-synthetic-unit:2",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/ruin-era-synthetic-unit/2.webp",
+          "master": "outputs/automaton-portraits/masters/ruin-era-synthetic-unit/2.png",
+          "output": "app/frontend/public/assets/automatons/ruin-era-synthetic-unit/2.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "c03580810f4b7237c1f72f9a59cbbdf26904cf5135c606bda30cae3db4ecc268",
+          "bytes": 25492
+        },
+        "sha256": "c03580810f4b7237c1f72f9a59cbbdf26904cf5135c606bda30cae3db4ecc268",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 3,
+      "name": "Leda",
+      "source_identity": "Leda",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 20,
+      "build_focus": "Sprinter",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": null,
+          "list_price_credits": 57000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic Leda from the 2008 Casshern Sins anime, adult female android with pale humanlike face, very long purple hair, source red and black high-collar battle suit, red thigh-high boots and forearm details. Slim elegant full-body standing pose with hands relaxed. Preserve her recognizable face, hair and synthetic suit, without added military plates or a robot face. Non-sexual neutral character portrait.\nCatalogue label for metadata only, do not render text: #131 slot 3 Leda.",
+      "role": "Mobile skirmisher",
+      "missing_fields": [],
+      "refinement_note": "Trio follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 2,
+      "equipment_interpretation": "Leda fills the mobile skirmisher role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Sprinter tuning supports the short equipment role; balanced stance and a 20% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Trio strategy tuning rules with the Sprinter Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "ruin-era-synthetic-unit:3:leda",
+      "folder": "stables/131-ruin-era-synthetic-unit/robots/03-leda",
+      "files": {
+        "png": "stables/131-ruin-era-synthetic-unit/robots/03-leda/portrait.png",
+        "webp": "stables/131-ruin-era-synthetic-unit/robots/03-leda/portrait.webp",
+        "blueprint": "stables/131-ruin-era-synthetic-unit/robots/03-leda/blueprint.json",
+        "profile": "stables/131-ruin-era-synthetic-unit/robots/03-leda/profile.md",
+        "prompt": "stables/131-ruin-era-synthetic-unit/robots/03-leda/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/ruin-era-synthetic-unit/3.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 131,
+          "stable_name": "Ruin-Era Synthetic Unit",
+          "catalogue_key": "ruin-era-synthetic-unit",
+          "slot": 3,
+          "robot_name": "Leda",
+          "source_identity": "Leda",
+          "source_edition": "Casshern Sins — 2008 television designs",
+          "source_references": [
+            "https://tatsunoko.co.jp/en/works/casshern-sins/",
+            "https://tatsunoko.co.jp/pastworks/casshern-sins/story/episode.html"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic Leda from the 2008 Casshern Sins anime, adult female android with pale humanlike face, very long purple hair, source red and black high-collar battle suit, red thigh-high boots and forearm details. Slim elegant full-body standing pose with hands relaxed. Preserve her recognizable face, hair and synthetic suit, without added military plates or a robot face. Non-sexual neutral character portrait.\nCatalogue label for metadata only, do not render text: #131 slot 3 Leda.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-24e10688-a230-4482-a160-dd7721e22ffa.png",
+          "visual_review": "Accepted: complete readable silhouette, planned source or original construction and studio finish",
+          "asset_id": "ruin-era-synthetic-unit:3",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/ruin-era-synthetic-unit/3.webp",
+          "master": "outputs/automaton-portraits/masters/ruin-era-synthetic-unit/3.png",
+          "output": "app/frontend/public/assets/automatons/ruin-era-synthetic-unit/3.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "82ff14f30d6577d42b0b7d7ff0c12fb137d8e2ed50dc0da120773d263d380c4b",
+          "bytes": 27932
+        },
+        "sha256": "82ff14f30d6577d42b0b7d7ff0c12fb137d8e2ed50dc0da120773d263d380c4b",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "replacement_alternatives": []
+}
