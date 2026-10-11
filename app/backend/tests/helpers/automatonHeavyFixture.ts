@@ -1,18 +1,12 @@
 /**
- * Spec #55 task 12.1 — the heavy-test population of 100 Active_Automatons
- * (R14.4, design §21 Heavy row, decision 39) and the bulk data the heavy
- * simulation needs.
+ * Spec #55 task 12.1, changed by Spec #57 R5.4 (design D18) — the heavy-test
+ * population and the bulk data the heavy simulation needs.
  *
- * Population: the 11 starter Catalogue_Entries, selected by the fixed
- * `STARTER_CATALOGUE_KEYS` list (never "every file in the repository
- * Automaton_Catalogue", so later catalogue additions do not change the
- * population), plus 89 generated entries that cycle through all six
- * Upgrade_Strategies and all six Build_Focus presets. Every generated entry
- * has exactly enough buildable blueprints for its robots Goal_Targets (R3.7;
- * every fourth one has one spare), the Team_Names counts
- * `requiredTeamNameCountsFor` requires (R3.6) and a 9-type Event_Order.
- * Generated blueprints reuse the starter blueprints' loadouts, Weapon_Paths
- * and Refinement_Plans, which the catalogue rules already accept.
+ * Population: every Catalogue_Entry of the repository Automaton_Catalogue
+ * (`app/backend/prisma/automaton-catalogue/`), the Starter_Stables plus the
+ * Expansion_Stables, whatever their number. There is no fixed population size
+ * and there are no generated entries; the heavy test's duration grows with
+ * the catalogue. `STARTER_CATALOGUE_KEYS` stays for the starter checks.
  *
  * Only tests use this.
  */
@@ -20,20 +14,13 @@ import fs from 'fs';
 import path from 'path';
 import prisma from '../../src/lib/prisma';
 import {
-  BUILD_FOCUS_KEYS,
   CATALOGUE_DIRECTORY,
-  CATALOGUE_SCHEMA_VERSION,
-  MAX_BLUEPRINTS,
   catalogueEntryShape,
-  requiredTeamNameCountsFor,
-  type CatalogueBlueprint,
+  compareCatalogueKeys,
   type CatalogueEntry,
 } from '../../src/services/automaton/automatonCatalogueService';
-import { defaultParameters, highestRobotsTarget } from '../../src/services/automaton/strategies/strategyParameters';
-import type { StrategyRegistry } from '../../src/services/automaton/strategies/registry';
-import { SUBSCRIBABLE_EVENT_TYPES } from '../../src/services/subscription/eventRegistry';
 
-/** The 11 starter stables (review/CATALOGUE.md §3–§13), fixed by decision 39. */
+/** The starter stables (spec-55 review/CATALOGUE.md §3–§13), fixed by decision 39. */
 export const STARTER_CATALOGUE_KEYS = [
   'clone-legion',
   'dalek-empire',
@@ -48,9 +35,6 @@ export const STARTER_CATALOGUE_KEYS = [
   'autobots-ark',
 ] as const;
 
-export const HEAVY_POPULATION_SIZE = 100;
-export const GENERATED_ENTRY_COUNT = HEAVY_POPULATION_SIZE - STARTER_CATALOGUE_KEYS.length;
-export const GENERATED_KEY_PREFIX = 'heavy55-';
 export const HEAVY_STRATEGY_KEYS = ['swarm', 'paragon', 'duo', 'trio', 'tycoon', 'generalist'] as const;
 
 /**
@@ -78,8 +62,6 @@ const BATTLE_MIX: readonly { battleType: string; share: number; sideSize: number
   { battleType: 'grand_melee', share: 8, sideSize: 0, freeForAll: 8 },
 ];
 
-const pad3 = (value: number): string => String(value).padStart(3, '0');
-
 /** The starter entries, read by Catalogue_Key from the repository catalogue (structure checked; context rules run in Catalogue_Sync). */
 export function loadStarterEntries(directory: string = CATALOGUE_DIRECTORY): CatalogueEntry[] {
   return STARTER_CATALOGUE_KEYS.map((key) => {
@@ -88,55 +70,18 @@ export function loadStarterEntries(directory: string = CATALOGUE_DIRECTORY): Cat
   });
 }
 
-/** The generated entries (89), deterministic. */
-export function generatedEntries(starters: readonly CatalogueEntry[], strategies: StrategyRegistry): CatalogueEntry[] {
-  const pool: CatalogueBlueprint[] = starters.flatMap((entry) => entry.blueprints);
-  const entries: CatalogueEntry[] = [];
-  for (let index = 0; index < GENERATED_ENTRY_COUNT; index += 1) {
-    const number = pad3(index + 1);
-    const strategyKey = HEAVY_STRATEGY_KEYS[index % HEAVY_STRATEGY_KEYS.length];
-    const version = strategies.latestVersion(strategyKey);
-    const strategy = version === undefined ? undefined : strategies.getStrategy(strategyKey, version);
-    if (!strategy || version === undefined) throw new Error(`Strategy ${strategyKey} is not in the registry`);
-    const robotsTarget = highestRobotsTarget(strategy.buildOrder, defaultParameters(strategy.buildOrder)) ?? 1;
-    const spare = index % 4 === 3 ? 1 : 0;
-    const blueprintCount = Math.min(MAX_BLUEPRINTS, robotsTarget + spare);
-    const blueprints: CatalogueBlueprint[] = Array.from({ length: blueprintCount }, (_, s) => {
-      const template = pool[(index * 7 + s) % pool.length];
-      return {
-        ...template,
-        slot: s + 1,
-        robotName: `Heavy ${number} Unit ${s + 1}`,
-        buildFocus: BUILD_FOCUS_KEYS[(index + s) % BUILD_FOCUS_KEYS.length],
-      };
-    });
-    const teamCounts = requiredTeamNameCountsFor(strategy, blueprintCount);
-    const rotation = index % SUBSCRIBABLE_EVENT_TYPES.length;
-    entries.push({
-      schemaVersion: CATALOGUE_SCHEMA_VERSION,
-      catalogueKey: `${GENERATED_KEY_PREFIX}${number}`,
-      stableName: `Heavy Works ${number}`,
-      franchise: 'Heavy test population',
-      backstory: `Generated stable ${number} of the Spec #55 heavy simulation.`,
-      strategy: { key: strategyKey, version, targetOverrides: {} },
-      teamNames: {
-        twoVsTwo: Array.from({ length: teamCounts.twoVsTwo }, (_, i) => `Heavy ${number} Pair ${i + 1}`),
-        threeVsThree: Array.from({ length: teamCounts.threeVsThree }, (_, i) => `Heavy ${number} Trio ${i + 1}`),
-      },
-      eventOrder: [...SUBSCRIBABLE_EVENT_TYPES.slice(rotation), ...SUBSCRIBABLE_EVENT_TYPES.slice(0, rotation)],
-      blueprints,
-    });
-  }
-  return entries;
-}
-
-/** Write entries as `{catalogueKey}.json` into a fresh directory (for Catalogue_Sync). */
-export function writeCatalogueDirectory(directory: string, entries: readonly CatalogueEntry[]): void {
-  fs.rmSync(directory, { recursive: true, force: true });
-  fs.mkdirSync(directory, { recursive: true });
-  for (const entry of entries) {
-    fs.writeFileSync(path.join(directory, `${entry.catalogueKey}.json`), `${JSON.stringify(entry, null, 2)}\n`);
-  }
+/**
+ * Every Catalogue_Entry of the repository catalogue (Spec #57 R5.4), sorted by
+ * Catalogue_Key (structure checked; context rules run in Catalogue_Sync).
+ */
+export function loadRepositoryEntries(directory: string = CATALOGUE_DIRECTORY): CatalogueEntry[] {
+  return fs.readdirSync(directory)
+    .filter((file) => file.endsWith('.json'))
+    .map((file) => {
+      const raw: unknown = JSON.parse(fs.readFileSync(path.join(directory, file), 'utf8'));
+      return catalogueEntryShape.parse(raw);
+    })
+    .sort((a, b) => compareCatalogueKeys(a.catalogueKey, b.catalogueKey));
 }
 
 /**

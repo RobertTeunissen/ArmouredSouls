@@ -1,0 +1,141 @@
+{
+  "number": 45,
+  "catalogueKey": "v-model-combat-lab",
+  "stableName": "V Model Combat Lab",
+  "franchiseLabel": "ULTRAKILL",
+  "strategy": "Duo",
+  "fit": "Direct",
+  "conceptIdentity": "Two highly mobile combat builds with contrasting equipment. Angular blue/red armour, camera heads, narrow limbs, and aggressive poses.",
+  "backstory": "V Model Combat Lab enters the arena with a clear doctrine. Two highly mobile combat builds with contrasting equipment. Every surviving machine returns to the workshop before the next booking.",
+  "openingRobots": 2,
+  "targetRobots": 2,
+  "adminMaximumRobots": 3,
+  "targetOverrides": {},
+  "teamNames": {
+    "2v2": [
+      {
+        "name": "V Model Pair 01",
+        "slots": [
+          1,
+          2
+        ]
+      }
+    ],
+    "3v3": []
+  },
+  "eventOrder": [
+    "tag_team",
+    "league_2v2",
+    "tournament_2v2",
+    "league_1v1",
+    "koth",
+    "grand_melee",
+    "tournament_1v1",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "robots": [
+    {
+      "blueprintId": "v-model-combat-lab:1:v1",
+      "slot": 1,
+      "name": "V1",
+      "sourceAlias": "V1",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "dual_wield",
+      "stance": "offensive",
+      "yieldThreshold": 0,
+      "buildFocus": "Sprinter",
+      "weaponPath": [
+        {
+          "mainWeapon": "Laser Pistol",
+          "offhandWeapon": "Laser Pistol",
+          "listPriceCredits": 114000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": "Volt Sabre",
+          "listPriceCredits": 850000
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "Hone",
+          "weapon": "Volt Sabre",
+          "weaponSlot": "main",
+          "attribute": "Attack Speed",
+          "baseValue": 4,
+          "magnitude": 3,
+          "resultValue": 7,
+          "costCredits": 90000,
+          "workshopLevel": 1,
+          "step": 1
+        },
+        {
+          "tier": "Augment",
+          "weapon": "Volt Sabre",
+          "weaponSlot": "main",
+          "attribute": "Evasion Thrusters",
+          "magnitude": 2,
+          "resultValue": 2,
+          "costCredits": 80000,
+          "workshopLevel": 3,
+          "step": 2
+        }
+      ],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Angular blue camera-headed combat machine with narrow limbs and back-mounted plates.",
+        "refinementNote": "Apply in order after stage 1. Dual-wield refinements affect the main-hand copy only; the offhand stays unrefined unless explicitly targeted.",
+        "refinementTotalCredits": 170000,
+        "minimumRosterExpansionLevel": 0,
+        "imageConvention": "app/frontend/public/assets/automatons/v-model-combat-lab/1.webp"
+      }
+    },
+    {
+      "blueprintId": "v-model-combat-lab:2:v2",
+      "slot": 2,
+      "name": "V2",
+      "sourceAlias": "V2",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "dual_wield",
+      "stance": "offensive",
+      "yieldThreshold": 0,
+      "buildFocus": "Sprinter",
+      "weaponPath": [
+        {
+          "mainWeapon": "Combat Knife",
+          "offhandWeapon": "Combat Knife",
+          "listPriceCredits": 186000
+        },
+        {
+          "mainWeapon": "Vibro Mace",
+          "offhandWeapon": "Vibro Mace",
+          "listPriceCredits": 850000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "melee",
+        "artBrief": "Angular red camera-headed combat machine with a reinforced mechanical arm.",
+        "refinementNote": "Equipment upgrades and tuning only: no verified Hone/Augment facts for this final weapon are supplied, and no unreachable refinement tier is added.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 1,
+        "imageConvention": "app/frontend/public/assets/automatons/v-model-combat-lab/2.webp"
+      }
+    }
+  ],
+  "alternativeBlueprints": [],
+  "review": {
+    "openingWeaponCredits": 300000,
+    "finalWeaponCreditsAtTarget": 1700000,
+    "equippedWeaponCountAtTarget": 4,
+    "purchaseOrder": [
+      1,
+      2
+    ],
+    "reserveSlots": [],
+    "alternativeRule": "Choose an alternative before catalogue approval; it replaces the specified slot and never adds another live robot."
+  }
+}

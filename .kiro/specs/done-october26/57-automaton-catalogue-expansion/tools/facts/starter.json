@@ -1,0 +1,3402 @@
+{
+  "source": "app/backend/prisma/automaton-catalogue/*.json (built, authoritative); _review from .kiro/specs/done-october26/55-automaton-stables/review/CATALOGUE.md §3–§13",
+  "docVsCode": [],
+  "stables": [
+    {
+      "schemaVersion": 1,
+      "catalogueKey": "clone-legion",
+      "stableName": "Kamino Clone Legion",
+      "franchise": "Star Wars — Clone Troopers",
+      "backstory": "Grown, drilled and shipped in batches. The Legion fields more robots than anyone else in the arena, every one of them identical in discipline if not in paint. The sergeants keep the numbers up; the quartermasters keep the repair bills down. Mostly.",
+      "strategy": {
+        "key": "swarm",
+        "version": 1,
+        "targetOverrides": {}
+      },
+      "teamNames": {
+        "twoVsTwo": [
+          "Torrent Company",
+          "Domino Squad",
+          "Ghost Company",
+          "Foxtrot Company",
+          "Coruscant Guard"
+        ],
+        "threeVsThree": [
+          "Bad Batch",
+          "Delta Squad",
+          "Omega Squad"
+        ]
+      },
+      "eventOrder": [
+        "league_2v2",
+        "tag_team",
+        "league_3v3",
+        "league_1v1",
+        "koth",
+        "grand_melee",
+        "tournament_3v3",
+        "tournament_1v1",
+        "tournament_2v2"
+      ],
+      "blueprints": [
+        {
+          "slot": 1,
+          "robotName": "CT-7567 Rex",
+          "loadoutType": "dual_wield",
+          "stance": "offensive",
+          "yieldThreshold": 10,
+          "buildFocus": "versatile",
+          "weaponPath": [
+            {
+              "main": "Laser Pistol",
+              "offhand": "Laser Pistol"
+            },
+            {
+              "main": "Volt Sabre",
+              "offhand": "Volt Sabre"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "offhand",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "offhand",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "offhand",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "offhand",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "main",
+              "targetAttribute": "targetingSystems",
+              "magnitude": 4
+            },
+            {
+              "tier": "hone",
+              "hand": "offhand",
+              "targetAttribute": "targetingSystems",
+              "magnitude": 4
+            }
+          ],
+          "_review": {
+            "artBrief": "Veteran captain, blue-striped white armour, twin pistols",
+            "range": "short",
+            "planCost": 5920000
+          }
+        },
+        {
+          "slot": 2,
+          "robotName": "CC-2224 Cody",
+          "loadoutType": "single",
+          "stance": "balanced",
+          "yieldThreshold": 15,
+          "buildFocus": "deadeye",
+          "weaponPath": [
+            {
+              "main": "Bolt Carbine"
+            },
+            {
+              "main": "Nova Caster"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "main",
+              "targetAttribute": "targetingSystems",
+              "magnitude": 4
+            }
+          ],
+          "_review": {
+            "artBrief": "Commander, orange-striped armour, carbine at the shoulder",
+            "range": "mid",
+            "planCost": 2960000
+          }
+        },
+        {
+          "slot": 3,
+          "robotName": "CT-5555 Fives",
+          "loadoutType": "weapon_shield",
+          "stance": "defensive",
+          "yieldThreshold": 20,
+          "buildFocus": "warden",
+          "weaponPath": [
+            {
+              "main": "Laser Pistol",
+              "offhand": "Light Shield"
+            },
+            {
+              "main": "Volt Sabre",
+              "offhand": "Aegis Bulwark"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "augment",
+              "hand": "main",
+              "targetAttribute": "armorPlating",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "offhand",
+              "targetAttribute": "evasionThrusters",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "offhand",
+              "targetAttribute": "evasionThrusters",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "offhand",
+              "targetAttribute": "evasionThrusters",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "offhand",
+              "targetAttribute": "evasionThrusters",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "offhand",
+              "targetAttribute": "evasionThrusters",
+              "magnitude": 1
+            }
+          ],
+          "_review": {
+            "artBrief": "Trooper behind a riot shield, ARC markings",
+            "range": "short",
+            "planCost": 2870000
+          }
+        },
+        {
+          "slot": 4,
+          "robotName": "CT-21-0408 Echo",
+          "loadoutType": "single",
+          "stance": "balanced",
+          "yieldThreshold": 15,
+          "buildFocus": "deadeye",
+          "weaponPath": [
+            {
+              "main": "Beam Pistol"
+            },
+            {
+              "main": "Particle Lance"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "main",
+              "targetAttribute": "combatPower",
+              "magnitude": 4
+            }
+          ],
+          "_review": {
+            "artBrief": "Lean scout trooper, long-barrel pistol, antenna",
+            "range": "long",
+            "planCost": 2960000
+          }
+        },
+        {
+          "slot": 5,
+          "robotName": "CT-6116 Kix",
+          "loadoutType": "single",
+          "stance": "defensive",
+          "yieldThreshold": 25,
+          "buildFocus": "tactician",
+          "weaponPath": [
+            {
+              "main": "Practice Blaster"
+            },
+            {
+              "main": "Volt Sabre"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "augment",
+              "hand": "main",
+              "targetAttribute": "combatAlgorithms",
+              "magnitude": 1
+            }
+          ],
+          "_review": {
+            "artBrief": "Field medic trooper, red cross plates, sidearm",
+            "range": "short",
+            "planCost": 2820000
+          }
+        },
+        {
+          "slot": 6,
+          "robotName": "CT-782 Hevy",
+          "loadoutType": "two_handed",
+          "stance": "offensive",
+          "yieldThreshold": 5,
+          "buildFocus": "bruiser",
+          "weaponPath": [
+            {
+              "main": "Scatter Cannon"
+            },
+            {
+              "main": "Arc Projector"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "main",
+              "targetAttribute": "targetingSystems",
+              "magnitude": 4
+            }
+          ],
+          "_review": {
+            "artBrief": "Bulky heavy gunner with a rotary cannon",
+            "range": "short",
+            "planCost": 2960000
+          }
+        },
+        {
+          "slot": 7,
+          "robotName": "CT-4040 Cutup",
+          "loadoutType": "single",
+          "stance": "offensive",
+          "yieldThreshold": 10,
+          "buildFocus": "sprinter",
+          "weaponPath": [
+            {
+              "main": "Practice Sword"
+            },
+            {
+              "main": "Vibro Mace"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "main",
+              "targetAttribute": "gyroStabilizers",
+              "magnitude": 4
+            }
+          ],
+          "_review": {
+            "artBrief": "Wiry trooper with a vibro knife, battle-scarred helmet",
+            "range": "melee",
+            "planCost": 2960000
+          }
+        },
+        {
+          "slot": 8,
+          "robotName": "RC-1138 Boss",
+          "loadoutType": "two_handed",
+          "stance": "offensive",
+          "yieldThreshold": 5,
+          "buildFocus": "bruiser",
+          "weaponPath": [
+            {
+              "main": "Training Rifle"
+            },
+            {
+              "main": "Plasma Cannon"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "main",
+              "targetAttribute": "criticalSystems",
+              "magnitude": 4
+            }
+          ],
+          "_review": {
+            "artBrief": "Commando in dark armour with a launcher",
+            "range": "mid",
+            "planCost": 2960000
+          }
+        },
+        {
+          "slot": 9,
+          "robotName": "CT-5597 Jesse",
+          "loadoutType": "single",
+          "stance": "offensive",
+          "yieldThreshold": 10,
+          "buildFocus": "bruiser",
+          "weaponPath": [
+            {
+              "main": "Laser Pistol"
+            },
+            {
+              "main": "Volt Sabre"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "main",
+              "targetAttribute": "targetingSystems",
+              "magnitude": 4
+            }
+          ],
+          "_review": {
+            "artBrief": "Trooper with a Republic crest painted across his helmet, pistol drawn",
+            "range": "short",
+            "planCost": 2960000
+          }
+        },
+        {
+          "slot": 10,
+          "robotName": "CC-3636 Wolffe",
+          "loadoutType": "two_handed",
+          "stance": "balanced",
+          "yieldThreshold": 15,
+          "buildFocus": "deadeye",
+          "weaponPath": [
+            {
+              "main": "Training Beam"
+            },
+            {
+              "main": "Ion Beam"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "main",
+              "targetAttribute": "targetingSystems",
+              "magnitude": 4
+            }
+          ],
+          "_review": {
+            "artBrief": "Grey-striped commander with a cybernetic eye and a long beam rifle",
+            "range": "long",
+            "planCost": 2960000
+          }
+        },
+        {
+          "slot": 11,
+          "robotName": "CT-5385 Tup",
+          "loadoutType": "dual_wield",
+          "stance": "offensive",
+          "yieldThreshold": 10,
+          "buildFocus": "sprinter",
+          "weaponPath": [
+            {
+              "main": "Laser Pistol",
+              "offhand": "Laser Pistol"
+            },
+            {
+              "main": "Volt Sabre",
+              "offhand": "Volt Sabre"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "offhand",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "offhand",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "offhand",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "offhand",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "main",
+              "targetAttribute": "powerCore",
+              "magnitude": 4
+            },
+            {
+              "tier": "hone",
+              "hand": "offhand",
+              "targetAttribute": "powerCore",
+              "magnitude": 4
+            }
+          ],
+          "_review": {
+            "artBrief": "Young trooper with a teardrop helmet marking and twin pistols",
+            "range": "short",
+            "planCost": 5920000
+          }
+        }
+      ],
+      "_review": {
+        "statedTotal": {
+          "steps": 70,
+          "credits": 38250000
+        }
+      }
+    },
+    {
+      "schemaVersion": 1,
+      "catalogueKey": "dalek-empire",
+      "stableName": "Skaro Dalek Empire",
+      "franchise": "Doctor Who — Daleks",
+      "backstory": "They do not negotiate, they do not retreat, and they do not take the stairs. The Empire rolls out in numbers, shields up and guns forward, and treats every bracket as a planet to be conquered.",
+      "strategy": {
+        "key": "swarm",
+        "version": 1,
+        "targetOverrides": {}
+      },
+      "teamNames": {
+        "twoVsTwo": [
+          "Skaro Vanguard",
+          "Kaled Remnant",
+          "Supreme Command",
+          "Emperor's Escort",
+          "New Paradigm"
+        ],
+        "threeVsThree": [
+          "Cult of Skaro",
+          "Time War Assault",
+          "Imperial Guard"
+        ]
+      },
+      "eventOrder": [
+        "league_3v3",
+        "tournament_3v3",
+        "league_1v1",
+        "koth",
+        "grand_melee",
+        "league_2v2",
+        "tournament_2v2",
+        "tag_team",
+        "tournament_1v1"
+      ],
+      "blueprints": [
+        {
+          "slot": 1,
+          "robotName": "Dalek Sec",
+          "loadoutType": "single",
+          "stance": "balanced",
+          "yieldThreshold": 10,
+          "buildFocus": "tactician",
+          "weaponPath": [
+            {
+              "main": "Laser Pistol"
+            },
+            {
+              "main": "Volt Sabre"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "augment",
+              "hand": "main",
+              "targetAttribute": "combatAlgorithms",
+              "magnitude": 1
+            }
+          ],
+          "_review": {
+            "artBrief": "Black-casing commander, gun-stick raised",
+            "range": "short",
+            "planCost": 2820000
+          }
+        },
+        {
+          "slot": 2,
+          "robotName": "Dalek Thay",
+          "loadoutType": "weapon_shield",
+          "stance": "defensive",
+          "yieldThreshold": 15,
+          "buildFocus": "warden",
+          "weaponPath": [
+            {
+              "main": "Laser Pistol",
+              "offhand": "Light Shield"
+            },
+            {
+              "main": "Volt Sabre",
+              "offhand": "Aegis Bulwark"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "augment",
+              "hand": "main",
+              "targetAttribute": "armorPlating",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "offhand",
+              "targetAttribute": "evasionThrusters",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "offhand",
+              "targetAttribute": "evasionThrusters",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "offhand",
+              "targetAttribute": "evasionThrusters",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "offhand",
+              "targetAttribute": "evasionThrusters",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "offhand",
+              "targetAttribute": "evasionThrusters",
+              "magnitude": 1
+            }
+          ],
+          "_review": {
+            "artBrief": "Bronze casing behind a shimmering force field",
+            "range": "short",
+            "planCost": 2870000
+          }
+        },
+        {
+          "slot": 3,
+          "robotName": "Dalek Jast",
+          "loadoutType": "single",
+          "stance": "defensive",
+          "yieldThreshold": 15,
+          "buildFocus": "warden",
+          "weaponPath": [
+            {
+              "main": "Bolt Carbine"
+            },
+            {
+              "main": "Nova Caster"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "augment",
+              "hand": "main",
+              "targetAttribute": "armorPlating",
+              "magnitude": 1
+            }
+          ],
+          "_review": {
+            "artBrief": "Bronze casing, extended mid-range emitter",
+            "range": "mid",
+            "planCost": 2820000
+          }
+        },
+        {
+          "slot": 4,
+          "robotName": "Dalek Caan",
+          "loadoutType": "single",
+          "stance": "balanced",
+          "yieldThreshold": 10,
+          "buildFocus": "deadeye",
+          "weaponPath": [
+            {
+              "main": "Beam Pistol"
+            },
+            {
+              "main": "Particle Lance"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "main",
+              "targetAttribute": "combatPower",
+              "magnitude": 4
+            }
+          ],
+          "_review": {
+            "artBrief": "Battered casing, long-focus beam emitter",
+            "range": "long",
+            "planCost": 2960000
+          }
+        },
+        {
+          "slot": 5,
+          "robotName": "Supreme Dalek",
+          "loadoutType": "two_handed",
+          "stance": "offensive",
+          "yieldThreshold": 5,
+          "buildFocus": "deadeye",
+          "weaponPath": [
+            {
+              "main": "Training Beam"
+            },
+            {
+              "main": "Ion Beam"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "main",
+              "targetAttribute": "targetingSystems",
+              "magnitude": 4
+            }
+          ],
+          "_review": {
+            "artBrief": "Red-and-gold casing with a heavy cannon",
+            "range": "long",
+            "planCost": 2960000
+          }
+        },
+        {
+          "slot": 6,
+          "robotName": "Dalek X",
+          "loadoutType": "dual_wield",
+          "stance": "offensive",
+          "yieldThreshold": 5,
+          "buildFocus": "bruiser",
+          "weaponPath": [
+            {
+              "main": "Laser Pistol",
+              "offhand": "Laser Pistol"
+            },
+            {
+              "main": "Volt Sabre",
+              "offhand": "Nova Caster"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "offhand",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "offhand",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "offhand",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "offhand",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "main",
+              "targetAttribute": "targetingSystems",
+              "magnitude": 4
+            },
+            {
+              "tier": "hone",
+              "hand": "offhand",
+              "targetAttribute": "targetingSystems",
+              "magnitude": 4
+            }
+          ],
+          "_review": {
+            "artBrief": "Scarred grey casing with twin guns",
+            "range": "short",
+            "planCost": 5920000
+          }
+        },
+        {
+          "slot": 7,
+          "robotName": "Dalek Emperor",
+          "loadoutType": "weapon_shield",
+          "stance": "defensive",
+          "yieldThreshold": 20,
+          "buildFocus": "warden",
+          "weaponPath": [
+            {
+              "main": "Bolt Carbine",
+              "offhand": "Combat Shield"
+            },
+            {
+              "main": "Nova Caster",
+              "offhand": "Aegis Bulwark"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "augment",
+              "hand": "main",
+              "targetAttribute": "armorPlating",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "offhand",
+              "targetAttribute": "evasionThrusters",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "offhand",
+              "targetAttribute": "evasionThrusters",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "offhand",
+              "targetAttribute": "evasionThrusters",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "offhand",
+              "targetAttribute": "evasionThrusters",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "offhand",
+              "targetAttribute": "evasionThrusters",
+              "magnitude": 1
+            }
+          ],
+          "_review": {
+            "artBrief": "Towering white-and-gold casing, great shield",
+            "range": "mid",
+            "planCost": 2870000
+          }
+        },
+        {
+          "slot": 8,
+          "robotName": "Rusty",
+          "loadoutType": "single",
+          "stance": "balanced",
+          "yieldThreshold": 30,
+          "buildFocus": "versatile",
+          "weaponPath": [
+            {
+              "main": "Practice Blaster"
+            },
+            {
+              "main": "Volt Sabre"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "main",
+              "targetAttribute": "targetingSystems",
+              "magnitude": 4
+            }
+          ],
+          "_review": {
+            "artBrief": "Rust-streaked lone Dalek, slightly dented",
+            "range": "short",
+            "planCost": 2960000
+          }
+        },
+        {
+          "slot": 9,
+          "robotName": "Strategist Dalek",
+          "loadoutType": "single",
+          "stance": "balanced",
+          "yieldThreshold": 15,
+          "buildFocus": "tactician",
+          "weaponPath": [
+            {
+              "main": "Beam Pistol"
+            },
+            {
+              "main": "Particle Lance"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "augment",
+              "hand": "main",
+              "targetAttribute": "combatAlgorithms",
+              "magnitude": 1
+            }
+          ],
+          "_review": {
+            "artBrief": "Tall blue casing with a long-focus emitter",
+            "range": "long",
+            "planCost": 2820000
+          }
+        },
+        {
+          "slot": 10,
+          "robotName": "Scientist Dalek",
+          "loadoutType": "weapon_shield",
+          "stance": "defensive",
+          "yieldThreshold": 20,
+          "buildFocus": "warden",
+          "weaponPath": [
+            {
+              "main": "Laser Pistol",
+              "offhand": "Light Shield"
+            },
+            {
+              "main": "Volt Sabre",
+              "offhand": "Aegis Bulwark"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "augment",
+              "hand": "main",
+              "targetAttribute": "armorPlating",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "offhand",
+              "targetAttribute": "evasionThrusters",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "offhand",
+              "targetAttribute": "evasionThrusters",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "offhand",
+              "targetAttribute": "evasionThrusters",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "offhand",
+              "targetAttribute": "evasionThrusters",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "offhand",
+              "targetAttribute": "evasionThrusters",
+              "magnitude": 1
+            }
+          ],
+          "_review": {
+            "artBrief": "Tall orange casing behind a force field",
+            "range": "short",
+            "planCost": 2870000
+          }
+        },
+        {
+          "slot": 11,
+          "robotName": "Eternal Dalek",
+          "loadoutType": "two_handed",
+          "stance": "offensive",
+          "yieldThreshold": 5,
+          "buildFocus": "bruiser",
+          "weaponPath": [
+            {
+              "main": "Training Rifle"
+            },
+            {
+              "main": "Plasma Cannon"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "main",
+              "targetAttribute": "criticalSystems",
+              "magnitude": 4
+            }
+          ],
+          "_review": {
+            "artBrief": "Tall yellow casing with a heavy plasma cannon",
+            "range": "mid",
+            "planCost": 2960000
+          }
+        }
+      ],
+      "_review": {
+        "statedTotal": {
+          "steps": 75,
+          "credits": 34830000
+        }
+      }
+    },
+    {
+      "schemaVersion": 1,
+      "catalogueKey": "robocop-precinct",
+      "stableName": "Old Detroit Precinct",
+      "franchise": "RoboCop",
+      "backstory": "Part man, part machine, all paperwork. One unit, one sidearm, and an upgrade budget signed off by the board. The precinct does not field a team — it does not need one.",
+      "strategy": {
+        "key": "paragon",
+        "version": 1,
+        "targetOverrides": {}
+      },
+      "teamNames": {
+        "twoVsTwo": [
+          "Delta City Patrol"
+        ],
+        "threeVsThree": []
+      },
+      "eventOrder": [
+        "league_1v1",
+        "tournament_1v1",
+        "koth",
+        "grand_melee",
+        "league_2v2",
+        "tag_team",
+        "tournament_2v2",
+        "league_3v3",
+        "tournament_3v3"
+      ],
+      "blueprints": [
+        {
+          "slot": 1,
+          "robotName": "RoboCop",
+          "loadoutType": "single",
+          "stance": "balanced",
+          "yieldThreshold": 15,
+          "buildFocus": "deadeye",
+          "weaponPath": [
+            {
+              "main": "Gauss Pistol"
+            },
+            {
+              "main": "Particle Lance"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            }
+          ],
+          "_review": {
+            "artBrief": "Silver-blue armoured lawman, visor, heavy pistol",
+            "range": "long",
+            "planCost": 2800000
+          }
+        },
+        {
+          "slot": 2,
+          "robotName": "ED-209",
+          "loadoutType": "two_handed",
+          "stance": "offensive",
+          "yieldThreshold": 0,
+          "buildFocus": "bruiser",
+          "weaponPath": [
+            {
+              "main": "Grenade Launcher"
+            },
+            {
+              "main": "Plasma Cannon"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            }
+          ],
+          "_review": {
+            "artBrief": "Hulking bipedal enforcement droid, twin cannon arms",
+            "range": "mid",
+            "planCost": 2800000
+          }
+        }
+      ],
+      "_review": {
+        "statedTotal": {
+          "steps": 8,
+          "credits": 5600000
+        }
+      }
+    },
+    {
+      "schemaVersion": 1,
+      "catalogueKey": "skynet-terminators",
+      "stableName": "Cyberdyne Skynet",
+      "franchise": "The Terminator",
+      "backstory": "It will not stop. It will not yield. Skynet sends a single unit back into every season and spends everything it has on making that unit harder to kill.",
+      "strategy": {
+        "key": "paragon",
+        "version": 1,
+        "targetOverrides": {}
+      },
+      "teamNames": {
+        "twoVsTwo": [
+          "Judgment Day"
+        ],
+        "threeVsThree": []
+      },
+      "eventOrder": [
+        "league_1v1",
+        "tournament_1v1",
+        "grand_melee",
+        "koth",
+        "league_2v2",
+        "tournament_2v2",
+        "tag_team",
+        "league_3v3",
+        "tournament_3v3"
+      ],
+      "blueprints": [
+        {
+          "slot": 1,
+          "robotName": "T-800 Model 101",
+          "loadoutType": "two_handed",
+          "stance": "offensive",
+          "yieldThreshold": 0,
+          "buildFocus": "bruiser",
+          "weaponPath": [
+            {
+              "main": "Shotgun"
+            },
+            {
+              "main": "Plasma Cannon"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            }
+          ],
+          "_review": {
+            "artBrief": "Chrome endoskeleton, red eye, heavy plasma rifle",
+            "range": "mid",
+            "planCost": 2800000
+          }
+        },
+        {
+          "slot": 2,
+          "robotName": "T-1000",
+          "loadoutType": "dual_wield",
+          "stance": "offensive",
+          "yieldThreshold": 0,
+          "buildFocus": "sprinter",
+          "weaponPath": [
+            {
+              "main": "Energy Blade",
+              "offhand": "Energy Blade"
+            },
+            {
+              "main": "Vibro Mace",
+              "offhand": "Vibro Mace"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "offhand",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "offhand",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "offhand",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "offhand",
+              "magnitude": 1
+            }
+          ],
+          "_review": {
+            "artBrief": "Liquid-metal figure with blade arms",
+            "range": "melee",
+            "planCost": 5600000
+          }
+        }
+      ],
+      "_review": {
+        "statedTotal": {
+          "steps": 12,
+          "credits": 8400000
+        }
+      }
+    },
+    {
+      "schemaVersion": 1,
+      "catalogueKey": "jaeger-corps",
+      "stableName": "Pan Pacific Defense Corps",
+      "franchise": "Pacific Rim — Jaegers",
+      "backstory": "Two pilots, one mind, a lot of steel. The Corps fights in pairs because that is the only way it knows how — linked, shoulder to shoulder, holding the line one tag-team bout at a time.",
+      "strategy": {
+        "key": "duo",
+        "version": 1,
+        "targetOverrides": {}
+      },
+      "teamNames": {
+        "twoVsTwo": [
+          "Drift Compatible"
+        ],
+        "threeVsThree": [
+          "Shatterdome Strike"
+        ]
+      },
+      "eventOrder": [
+        "league_2v2",
+        "tag_team",
+        "tournament_2v2",
+        "league_1v1",
+        "koth",
+        "grand_melee",
+        "tournament_1v1",
+        "league_3v3",
+        "tournament_3v3"
+      ],
+      "blueprints": [
+        {
+          "slot": 1,
+          "robotName": "Gipsy Danger",
+          "loadoutType": "two_handed",
+          "stance": "balanced",
+          "yieldThreshold": 10,
+          "buildFocus": "bruiser",
+          "weaponPath": [
+            {
+              "main": "Shock Maul"
+            },
+            {
+              "main": "Heavy Hammer"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "main",
+              "targetAttribute": "combatPower",
+              "magnitude": 1
+            }
+          ],
+          "_review": {
+            "artBrief": "Blue-steel giant with a glowing chest reactor and a great hammer",
+            "range": "melee",
+            "planCost": 2810000
+          }
+        },
+        {
+          "slot": 2,
+          "robotName": "Striker Eureka",
+          "loadoutType": "single",
+          "stance": "offensive",
+          "yieldThreshold": 10,
+          "buildFocus": "sprinter",
+          "weaponPath": [
+            {
+              "main": "Burst Rifle"
+            },
+            {
+              "main": "Volt Sabre"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "main",
+              "targetAttribute": "powerCore",
+              "magnitude": 1
+            }
+          ],
+          "_review": {
+            "artBrief": "Sleek, fast grey-and-yellow mech with a chest launcher",
+            "range": "short",
+            "planCost": 2810000
+          }
+        },
+        {
+          "slot": 3,
+          "robotName": "Crimson Typhoon",
+          "loadoutType": "dual_wield",
+          "stance": "offensive",
+          "yieldThreshold": 5,
+          "buildFocus": "sprinter",
+          "weaponPath": [
+            {
+              "main": "Combat Knife",
+              "offhand": "Combat Knife"
+            },
+            {
+              "main": "Vibro Mace",
+              "offhand": "Vibro Mace"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "offhand",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "offhand",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "offhand",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "offhand",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "main",
+              "targetAttribute": "gyroStabilizers",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "offhand",
+              "targetAttribute": "gyroStabilizers",
+              "magnitude": 1
+            }
+          ],
+          "_review": {
+            "artBrief": "Red three-armed mech with spinning saw blades",
+            "range": "melee",
+            "planCost": 5620000
+          }
+        }
+      ],
+      "_review": {
+        "statedTotal": {
+          "steps": 20,
+          "credits": 11240000
+        }
+      }
+    },
+    {
+      "schemaVersion": 1,
+      "catalogueKey": "light-labs",
+      "stableName": "Light Labs",
+      "franchise": "Mega Man",
+      "backstory": "Built to help, upgraded to fight. Light Labs sends its two brothers into the tag-team circuit with a simple philosophy: learn from every opponent, charge the shot, and never leave a teammate behind.",
+      "strategy": {
+        "key": "duo",
+        "version": 1,
+        "targetOverrides": {}
+      },
+      "teamNames": {
+        "twoVsTwo": [
+          "Blue Bomber Brothers"
+        ],
+        "threeVsThree": [
+          "Light Family"
+        ]
+      },
+      "eventOrder": [
+        "tag_team",
+        "league_2v2",
+        "tournament_2v2",
+        "league_1v1",
+        "tournament_1v1",
+        "koth",
+        "grand_melee",
+        "league_3v3",
+        "tournament_3v3"
+      ],
+      "blueprints": [
+        {
+          "slot": 1,
+          "robotName": "Mega Man",
+          "loadoutType": "single",
+          "stance": "balanced",
+          "yieldThreshold": 15,
+          "buildFocus": "versatile",
+          "weaponPath": [
+            {
+              "main": "Laser Pistol"
+            },
+            {
+              "main": "Volt Sabre"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "main",
+              "targetAttribute": "combatPower",
+              "magnitude": 1
+            }
+          ],
+          "_review": {
+            "artBrief": "Compact blue robot with an arm cannon",
+            "range": "short",
+            "planCost": 2810000
+          }
+        },
+        {
+          "slot": 2,
+          "robotName": "Proto Man",
+          "loadoutType": "weapon_shield",
+          "stance": "defensive",
+          "yieldThreshold": 20,
+          "buildFocus": "warden",
+          "weaponPath": [
+            {
+              "main": "Machine Pistol",
+              "offhand": "Light Shield"
+            },
+            {
+              "main": "Volt Sabre",
+              "offhand": "Aegis Bulwark"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "main",
+              "targetAttribute": "combatPower",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "offhand",
+              "targetAttribute": "evasionThrusters",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "offhand",
+              "targetAttribute": "evasionThrusters",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "offhand",
+              "targetAttribute": "evasionThrusters",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "offhand",
+              "targetAttribute": "evasionThrusters",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "offhand",
+              "targetAttribute": "evasionThrusters",
+              "magnitude": 1
+            }
+          ],
+          "_review": {
+            "artBrief": "Red robot with a visor, scarf and round shield",
+            "range": "short",
+            "planCost": 2860000
+          }
+        },
+        {
+          "slot": 3,
+          "robotName": "Roll",
+          "loadoutType": "single",
+          "stance": "defensive",
+          "yieldThreshold": 30,
+          "buildFocus": "tactician",
+          "weaponPath": [
+            {
+              "main": "Beam Pistol"
+            },
+            {
+              "main": "Particle Lance"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "main",
+              "targetAttribute": "combatPower",
+              "magnitude": 1
+            }
+          ],
+          "_review": {
+            "artBrief": "Small red-and-white support robot with a long-range blaster",
+            "range": "long",
+            "planCost": 2810000
+          }
+        }
+      ],
+      "_review": {
+        "statedTotal": {
+          "steps": 20,
+          "credits": 8480000
+        }
+      }
+    },
+    {
+      "schemaVersion": 1,
+      "catalogueKey": "decepticon-armada",
+      "stableName": "Decepticon Armada",
+      "franchise": "Transformers — Decepticons",
+      "backstory": "Peace through tyranny, and tyranny through superior firepower. The Armada fields three of its most notorious commanders as one 3v3 unit and lets the rest of the arena argue about who is really in charge.",
+      "strategy": {
+        "key": "trio",
+        "version": 1,
+        "targetOverrides": {}
+      },
+      "teamNames": {
+        "twoVsTwo": [
+          "Air Command",
+          "Science Division"
+        ],
+        "threeVsThree": [
+          "Decepticon High Command"
+        ]
+      },
+      "eventOrder": [
+        "league_3v3",
+        "tournament_3v3",
+        "league_2v2",
+        "tag_team",
+        "league_1v1",
+        "koth",
+        "grand_melee",
+        "tournament_2v2",
+        "tournament_1v1"
+      ],
+      "blueprints": [
+        {
+          "slot": 1,
+          "robotName": "Megatron",
+          "loadoutType": "two_handed",
+          "stance": "offensive",
+          "yieldThreshold": 5,
+          "buildFocus": "deadeye",
+          "weaponPath": [
+            {
+              "main": "Siege Cannon"
+            },
+            {
+              "main": "Ion Beam"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "main",
+              "targetAttribute": "combatPower",
+              "magnitude": 1
+            }
+          ],
+          "_review": {
+            "artBrief": "Grey warlord with an arm-mounted fusion cannon",
+            "range": "long",
+            "planCost": 2810000
+          }
+        },
+        {
+          "slot": 2,
+          "robotName": "Starscream",
+          "loadoutType": "dual_wield",
+          "stance": "offensive",
+          "yieldThreshold": 25,
+          "buildFocus": "sprinter",
+          "weaponPath": [
+            {
+              "main": "Laser Pistol",
+              "offhand": "Laser Pistol"
+            },
+            {
+              "main": "Volt Sabre",
+              "offhand": "Volt Sabre"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "offhand",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "offhand",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "offhand",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "offhand",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "main",
+              "targetAttribute": "powerCore",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "offhand",
+              "targetAttribute": "powerCore",
+              "magnitude": 1
+            }
+          ],
+          "_review": {
+            "artBrief": "Angular jet-winged robot with twin wrist blasters",
+            "range": "short",
+            "planCost": 5620000
+          }
+        },
+        {
+          "slot": 3,
+          "robotName": "Soundwave",
+          "loadoutType": "single",
+          "stance": "defensive",
+          "yieldThreshold": 15,
+          "buildFocus": "tactician",
+          "weaponPath": [
+            {
+              "main": "Bolt Carbine"
+            },
+            {
+              "main": "Nova Caster"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "main",
+              "targetAttribute": "combatPower",
+              "magnitude": 1
+            }
+          ],
+          "_review": {
+            "artBrief": "Blue communications robot with a chest-mounted visor",
+            "range": "mid",
+            "planCost": 2810000
+          }
+        },
+        {
+          "slot": 4,
+          "robotName": "Shockwave",
+          "loadoutType": "two_handed",
+          "stance": "balanced",
+          "yieldThreshold": 10,
+          "buildFocus": "deadeye",
+          "weaponPath": [
+            {
+              "main": "Mortar System"
+            },
+            {
+              "main": "Plasma Cannon"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "main",
+              "targetAttribute": "combatPower",
+              "magnitude": 1
+            }
+          ],
+          "_review": {
+            "artBrief": "Purple one-eyed scientist with a cannon arm",
+            "range": "mid",
+            "planCost": 2810000
+          }
+        }
+      ],
+      "_review": {
+        "statedTotal": {
+          "steps": 25,
+          "credits": 14050000
+        }
+      }
+    },
+    {
+      "schemaVersion": 1,
+      "catalogueKey": "white-base",
+      "stableName": "White Base Mobile Suits",
+      "franchise": "Mobile Suit Gundam",
+      "backstory": "A battered carrier, a green crew and three prototypes nobody planned to send into combat. White Base learns on the job: upgrade what survives, refit what does not, and keep the formation tight.",
+      "strategy": {
+        "key": "trio",
+        "version": 1,
+        "targetOverrides": {}
+      },
+      "teamNames": {
+        "twoVsTwo": [
+          "Cannon Support",
+          "Argama Escort"
+        ],
+        "threeVsThree": [
+          "White Base Squadron"
+        ]
+      },
+      "eventOrder": [
+        "league_3v3",
+        "tournament_3v3",
+        "league_1v1",
+        "tournament_1v1",
+        "league_2v2",
+        "tag_team",
+        "koth",
+        "tournament_2v2",
+        "grand_melee"
+      ],
+      "blueprints": [
+        {
+          "slot": 1,
+          "robotName": "RX-78-2 Gundam",
+          "loadoutType": "weapon_shield",
+          "stance": "balanced",
+          "yieldThreshold": 15,
+          "buildFocus": "versatile",
+          "weaponPath": [
+            {
+              "main": "Laser Pistol",
+              "offhand": "Light Shield"
+            },
+            {
+              "main": "Volt Sabre",
+              "offhand": "Aegis Bulwark"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "main",
+              "targetAttribute": "combatPower",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "offhand",
+              "targetAttribute": "evasionThrusters",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "offhand",
+              "targetAttribute": "evasionThrusters",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "offhand",
+              "targetAttribute": "evasionThrusters",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "offhand",
+              "targetAttribute": "evasionThrusters",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "offhand",
+              "targetAttribute": "evasionThrusters",
+              "magnitude": 1
+            }
+          ],
+          "_review": {
+            "artBrief": "White, blue and red mobile suit with beam rifle and shield",
+            "range": "short",
+            "planCost": 2860000
+          }
+        },
+        {
+          "slot": 2,
+          "robotName": "Guncannon",
+          "loadoutType": "two_handed",
+          "stance": "defensive",
+          "yieldThreshold": 15,
+          "buildFocus": "deadeye",
+          "weaponPath": [
+            {
+              "main": "Training Beam"
+            },
+            {
+              "main": "Ion Beam"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "main",
+              "targetAttribute": "combatPower",
+              "magnitude": 1
+            }
+          ],
+          "_review": {
+            "artBrief": "Red artillery suit with shoulder cannons",
+            "range": "long",
+            "planCost": 2810000
+          }
+        },
+        {
+          "slot": 3,
+          "robotName": "Guntank",
+          "loadoutType": "two_handed",
+          "stance": "defensive",
+          "yieldThreshold": 20,
+          "buildFocus": "warden",
+          "weaponPath": [
+            {
+              "main": "Training Rifle"
+            },
+            {
+              "main": "Plasma Cannon"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "main",
+              "targetAttribute": "combatPower",
+              "magnitude": 1
+            }
+          ],
+          "_review": {
+            "artBrief": "Tracked tank-bodied suit with twin long guns",
+            "range": "mid",
+            "planCost": 2810000
+          }
+        },
+        {
+          "slot": 4,
+          "robotName": "Zeta Gundam",
+          "loadoutType": "dual_wield",
+          "stance": "offensive",
+          "yieldThreshold": 10,
+          "buildFocus": "sprinter",
+          "weaponPath": [
+            {
+              "main": "Energy Blade",
+              "offhand": "Energy Blade"
+            },
+            {
+              "main": "Vibro Mace",
+              "offhand": "Vibro Mace"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "offhand",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "offhand",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "offhand",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "offhand",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "main",
+              "targetAttribute": "gyroStabilizers",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "offhand",
+              "targetAttribute": "gyroStabilizers",
+              "magnitude": 1
+            }
+          ],
+          "_review": {
+            "artBrief": "Sleek transforming suit with twin beam sabres",
+            "range": "melee",
+            "planCost": 5620000
+          }
+        }
+      ],
+      "_review": {
+        "statedTotal": {
+          "steps": 30,
+          "credits": 14100000
+        }
+      }
+    },
+    {
+      "schemaVersion": 1,
+      "catalogueKey": "planet-express",
+      "stableName": "Planet Express Crew",
+      "franchise": "Futurama",
+      "backstory": "Planet Express treats the arena as a side business. The merchandise sells, the streams pay, and the robots are mostly there to keep the cameras rolling. Profit first; glory if it is cheap.",
+      "strategy": {
+        "key": "tycoon",
+        "version": 1,
+        "targetOverrides": {}
+      },
+      "teamNames": {
+        "twoVsTwo": [
+          "Delivery Crew"
+        ],
+        "threeVsThree": [
+          "Robot Arms Apts"
+        ]
+      },
+      "eventOrder": [
+        "koth",
+        "grand_melee",
+        "league_1v1",
+        "tag_team",
+        "league_2v2",
+        "tournament_1v1",
+        "tournament_2v2",
+        "league_3v3",
+        "tournament_3v3"
+      ],
+      "blueprints": [
+        {
+          "slot": 1,
+          "robotName": "Bender",
+          "loadoutType": "two_handed",
+          "stance": "offensive",
+          "yieldThreshold": 30,
+          "buildFocus": "bruiser",
+          "weaponPath": [
+            {
+              "main": "War Club"
+            },
+            {
+              "main": "Heavy Hammer"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "main",
+              "targetAttribute": "combatPower",
+              "magnitude": 2
+            }
+          ],
+          "_review": {
+            "artBrief": "Grey bending robot with antenna, swinging a girder",
+            "range": "melee",
+            "planCost": 2840000
+          }
+        },
+        {
+          "slot": 2,
+          "robotName": "Calculon",
+          "loadoutType": "single",
+          "stance": "balanced",
+          "yieldThreshold": 20,
+          "buildFocus": "deadeye",
+          "weaponPath": [
+            {
+              "main": "Beam Pistol"
+            },
+            {
+              "main": "Particle Lance"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "main",
+              "targetAttribute": "combatPower",
+              "magnitude": 2
+            }
+          ],
+          "_review": {
+            "artBrief": "Dramatic gold actor-robot with a long-range pistol",
+            "range": "long",
+            "planCost": 2840000
+          }
+        },
+        {
+          "slot": 3,
+          "robotName": "Roberto",
+          "loadoutType": "dual_wield",
+          "stance": "offensive",
+          "yieldThreshold": 0,
+          "buildFocus": "sprinter",
+          "weaponPath": [
+            {
+              "main": "Combat Knife",
+              "offhand": "Combat Knife"
+            },
+            {
+              "main": "Vibro Mace",
+              "offhand": "Vibro Mace"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "offhand",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "offhand",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "offhand",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "offhand",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "main",
+              "targetAttribute": "gyroStabilizers",
+              "magnitude": 2
+            },
+            {
+              "tier": "hone",
+              "hand": "offhand",
+              "targetAttribute": "gyroStabilizers",
+              "magnitude": 2
+            }
+          ],
+          "_review": {
+            "artBrief": "Twitchy robot with twin knives",
+            "range": "melee",
+            "planCost": 5680000
+          }
+        }
+      ],
+      "_review": {
+        "statedTotal": {
+          "steps": 20,
+          "credits": 11360000
+        }
+      }
+    },
+    {
+      "schemaVersion": 1,
+      "catalogueKey": "world-robot-boxing",
+      "stableName": "World Robot Boxing",
+      "franchise": "Real Steel",
+      "backstory": "Somewhere between a sport and a spectacle. The league sells tickets, streams every bout and puts the takings back into the ring. Its fighters range from scrapped-together sparring bots to polished champions, and the crowd loves an underdog.",
+      "strategy": {
+        "key": "tycoon",
+        "version": 1,
+        "targetOverrides": {
+          "20": 3
+        }
+      },
+      "teamNames": {
+        "twoVsTwo": [
+          "Underworld Circuit"
+        ],
+        "threeVsThree": [
+          "Crash Palace"
+        ]
+      },
+      "eventOrder": [
+        "koth",
+        "league_1v1",
+        "grand_melee",
+        "tag_team",
+        "league_2v2",
+        "tournament_1v1",
+        "tournament_2v2",
+        "league_3v3",
+        "tournament_3v3"
+      ],
+      "blueprints": [
+        {
+          "slot": 1,
+          "robotName": "Atom",
+          "loadoutType": "dual_wield",
+          "stance": "balanced",
+          "yieldThreshold": 0,
+          "buildFocus": "sprinter",
+          "weaponPath": [
+            {
+              "main": "Practice Sword",
+              "offhand": "Practice Sword"
+            },
+            {
+              "main": "Vibro Mace",
+              "offhand": "Vibro Mace"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "offhand",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "offhand",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "offhand",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "offhand",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "main",
+              "targetAttribute": "gyroStabilizers",
+              "magnitude": 2
+            },
+            {
+              "tier": "hone",
+              "hand": "offhand",
+              "targetAttribute": "gyroStabilizers",
+              "magnitude": 2
+            }
+          ],
+          "_review": {
+            "artBrief": "Scuffed grey sparring robot with fists up",
+            "range": "melee",
+            "planCost": 5680000
+          }
+        },
+        {
+          "slot": 2,
+          "robotName": "Noisy Boy",
+          "loadoutType": "dual_wield",
+          "stance": "offensive",
+          "yieldThreshold": 5,
+          "buildFocus": "bruiser",
+          "weaponPath": [
+            {
+              "main": "Machine Pistol",
+              "offhand": "Machine Pistol"
+            },
+            {
+              "main": "Volt Sabre",
+              "offhand": "Volt Sabre"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "offhand",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "offhand",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "offhand",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "offhand",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "main",
+              "targetAttribute": "combatPower",
+              "magnitude": 2
+            },
+            {
+              "tier": "hone",
+              "hand": "offhand",
+              "targetAttribute": "combatPower",
+              "magnitude": 2
+            }
+          ],
+          "_review": {
+            "artBrief": "Flashy black-and-red fighter with glowing panels",
+            "range": "short",
+            "planCost": 5680000
+          }
+        },
+        {
+          "slot": 3,
+          "robotName": "Zeus",
+          "loadoutType": "two_handed",
+          "stance": "defensive",
+          "yieldThreshold": 10,
+          "buildFocus": "warden",
+          "weaponPath": [
+            {
+              "main": "War Club"
+            },
+            {
+              "main": "Heavy Hammer"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "augment",
+              "hand": "main",
+              "targetAttribute": "armorPlating",
+              "magnitude": 1
+            }
+          ],
+          "_review": {
+            "artBrief": "Massive black champion with a heavy hammer",
+            "range": "melee",
+            "planCost": 2820000
+          }
+        }
+      ],
+      "_review": {
+        "statedTotal": {
+          "steps": 25,
+          "credits": 14180000
+        }
+      }
+    },
+    {
+      "schemaVersion": 1,
+      "catalogueKey": "autobots-ark",
+      "stableName": "Autobots of the Ark",
+      "franchise": "Transformers — Autobots",
+      "backstory": "Disciplined, adaptable and stubbornly decent. The Autobots bring a little of everything to the arena — a leader, a scout, a heavy and a medic — and grow carefully, one well-equipped robot at a time.",
+      "strategy": {
+        "key": "generalist",
+        "version": 1,
+        "targetOverrides": {
+          "14": 3
+        }
+      },
+      "teamNames": {
+        "twoVsTwo": [
+          "Autobot Vanguard",
+          "Ark Repair Crew"
+        ],
+        "threeVsThree": [
+          "Ark Defenders"
+        ]
+      },
+      "eventOrder": [
+        "league_1v1",
+        "league_2v2",
+        "league_3v3",
+        "koth",
+        "tag_team",
+        "grand_melee",
+        "tournament_1v1",
+        "tournament_2v2",
+        "tournament_3v3"
+      ],
+      "blueprints": [
+        {
+          "slot": 1,
+          "robotName": "Optimus Prime",
+          "loadoutType": "single",
+          "stance": "balanced",
+          "yieldThreshold": 10,
+          "buildFocus": "versatile",
+          "weaponPath": [
+            {
+              "main": "Laser Pistol"
+            },
+            {
+              "main": "Volt Sabre"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "main",
+              "targetAttribute": "combatPower",
+              "magnitude": 2
+            }
+          ],
+          "_review": {
+            "artBrief": "Red-and-blue leader with an ion blaster",
+            "range": "short",
+            "planCost": 2840000
+          }
+        },
+        {
+          "slot": 2,
+          "robotName": "Bumblebee",
+          "loadoutType": "dual_wield",
+          "stance": "offensive",
+          "yieldThreshold": 20,
+          "buildFocus": "sprinter",
+          "weaponPath": [
+            {
+              "main": "Laser Pistol",
+              "offhand": "Laser Pistol"
+            },
+            {
+              "main": "Volt Sabre",
+              "offhand": "Volt Sabre"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "offhand",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "offhand",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "offhand",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "offhand",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "main",
+              "targetAttribute": "powerCore",
+              "magnitude": 2
+            },
+            {
+              "tier": "hone",
+              "hand": "offhand",
+              "targetAttribute": "powerCore",
+              "magnitude": 2
+            }
+          ],
+          "_review": {
+            "artBrief": "Small yellow scout with twin stingers",
+            "range": "short",
+            "planCost": 5680000
+          }
+        },
+        {
+          "slot": 3,
+          "robotName": "Ironhide",
+          "loadoutType": "two_handed",
+          "stance": "defensive",
+          "yieldThreshold": 10,
+          "buildFocus": "warden",
+          "weaponPath": [
+            {
+              "main": "Training Rifle"
+            },
+            {
+              "main": "Plasma Cannon"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "main",
+              "targetAttribute": "combatPower",
+              "magnitude": 1
+            }
+          ],
+          "_review": {
+            "artBrief": "Stocky red veteran with a heavy cannon",
+            "range": "mid",
+            "planCost": 2810000
+          }
+        },
+        {
+          "slot": 4,
+          "robotName": "Ratchet",
+          "loadoutType": "weapon_shield",
+          "stance": "defensive",
+          "yieldThreshold": 25,
+          "buildFocus": "tactician",
+          "weaponPath": [
+            {
+              "main": "Beam Pistol",
+              "offhand": "Combat Shield"
+            },
+            {
+              "main": "Particle Lance",
+              "offhand": "Aegis Bulwark"
+            }
+          ],
+          "refinementPlan": [
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "sharpen",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "forge",
+              "hand": "main",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "main",
+              "targetAttribute": "combatPower",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "offhand",
+              "targetAttribute": "evasionThrusters",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "offhand",
+              "targetAttribute": "evasionThrusters",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "offhand",
+              "targetAttribute": "evasionThrusters",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "offhand",
+              "targetAttribute": "evasionThrusters",
+              "magnitude": 1
+            },
+            {
+              "tier": "hone",
+              "hand": "offhand",
+              "targetAttribute": "evasionThrusters",
+              "magnitude": 1
+            }
+          ],
+          "_review": {
+            "artBrief": "White-and-red medic with a long pistol and a shield",
+            "range": "long",
+            "planCost": 2860000
+          }
+        }
+      ],
+      "_review": {
+        "statedTotal": {
+          "steps": 30,
+          "credits": 14190000
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,165 @@
+{
+  "schemaVersion": 1,
+  "catalogueKey": "encom-program-arena",
+  "stableName": "ENCOM Program Arena",
+  "franchise": "TRON",
+  "backstory": "Three embodied programs divide agile contact, measured fire and cautious support. The arena gives each avatar one ordinary equipment plan without turning software identity into extra mechanics.",
+  "strategy": {
+    "key": "trio",
+    "version": 1,
+    "targetOverrides": {}
+  },
+  "teamNames": {
+    "twoVsTwo": [
+      "Light Cycle Duel"
+    ],
+    "threeVsThree": [
+      "End of Line"
+    ]
+  },
+  "eventOrder": [
+    "league_3v3",
+    "tournament_3v3",
+    "league_2v2",
+    "tag_team",
+    "league_1v1",
+    "koth",
+    "grand_melee",
+    "tournament_2v2",
+    "tournament_1v1"
+  ],
+  "blueprints": [
+    {
+      "slot": 1,
+      "robotName": "Tron",
+      "loadoutType": "single",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "sprinter",
+      "weaponPath": [
+        {
+          "main": "Practice Sword"
+        },
+        {
+          "main": "Vibro Mace"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "magnitude": 1,
+          "targetAttribute": "gyroStabilizers"
+        }
+      ]
+    },
+    {
+      "slot": 2,
+      "robotName": "Sark",
+      "loadoutType": "single",
+      "stance": "balanced",
+      "yieldThreshold": 15,
+      "buildFocus": "tactician",
+      "weaponPath": [
+        {
+          "main": "Bolt Carbine"
+        },
+        {
+          "main": "Nova Caster"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "magnitude": 1,
+          "targetAttribute": "combatPower"
+        }
+      ]
+    },
+    {
+      "slot": 3,
+      "robotName": "Yori",
+      "loadoutType": "single",
+      "stance": "defensive",
+      "yieldThreshold": 30,
+      "buildFocus": "tactician",
+      "weaponPath": [
+        {
+          "main": "Practice Blaster"
+        },
+        {
+          "main": "Volt Sabre"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "magnitude": 1,
+          "targetAttribute": "combatPower"
+        }
+      ]
+    }
+  ]
+}

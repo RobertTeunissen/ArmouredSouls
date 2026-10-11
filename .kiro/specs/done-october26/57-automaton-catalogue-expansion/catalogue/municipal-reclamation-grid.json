@@ -1,0 +1,583 @@
+{
+  "schemaVersion": 1,
+  "catalogueKey": "municipal-reclamation-grid",
+  "stableName": "Municipal Reclamation Grid",
+  "franchise": "Armoured Souls original",
+  "backstory": "Sweepers establish the municipal account, cutters add pressure and compactors complete the heavy line. Recruitment and practical equipment keep the eleven-machine grid productive.",
+  "strategy": {
+    "key": "swarm",
+    "version": 1,
+    "targetOverrides": {}
+  },
+  "teamNames": {
+    "twoVsTwo": [
+      "Curbside Sweep",
+      "Plaza Patrol",
+      "Sparks and Shears",
+      "Collection Day",
+      "Heavy Compaction"
+    ],
+    "threeVsThree": [
+      "Street Cleaning Brigade",
+      "Cutting Crew",
+      "Reclamation Detail"
+    ]
+  },
+  "eventOrder": [
+    "league_3v3",
+    "league_2v2",
+    "tag_team",
+    "league_1v1",
+    "koth",
+    "grand_melee",
+    "tournament_3v3",
+    "tournament_2v2",
+    "tournament_1v1"
+  ],
+  "blueprints": [
+    {
+      "slot": 1,
+      "robotName": "Kerb Bristle",
+      "loadoutType": "single",
+      "stance": "balanced",
+      "yieldThreshold": 15,
+      "buildFocus": "versatile",
+      "weaponPath": [
+        {
+          "main": "Laser Pistol"
+        },
+        {
+          "main": "Volt Sabre"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "magnitude": 4,
+          "targetAttribute": "targetingSystems"
+        }
+      ]
+    },
+    {
+      "slot": 2,
+      "robotName": "Drain Hound",
+      "loadoutType": "single",
+      "stance": "defensive",
+      "yieldThreshold": 30,
+      "buildFocus": "tactician",
+      "weaponPath": [
+        {
+          "main": "Practice Blaster"
+        },
+        {
+          "main": "Volt Sabre"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "augment",
+          "hand": "main",
+          "magnitude": 1,
+          "targetAttribute": "combatAlgorithms"
+        }
+      ]
+    },
+    {
+      "slot": 3,
+      "robotName": "Plaza Broom",
+      "loadoutType": "single",
+      "stance": "balanced",
+      "yieldThreshold": 15,
+      "buildFocus": "tactician",
+      "weaponPath": [
+        {
+          "main": "Bolt Carbine"
+        },
+        {
+          "main": "Nova Caster"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "augment",
+          "hand": "main",
+          "magnitude": 1,
+          "targetAttribute": "combatAlgorithms"
+        }
+      ]
+    },
+    {
+      "slot": 4,
+      "robotName": "Shearjaw",
+      "loadoutType": "single",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "sprinter",
+      "weaponPath": [
+        {
+          "main": "Practice Sword"
+        },
+        {
+          "main": "Vibro Mace"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "magnitude": 4,
+          "targetAttribute": "gyroStabilizers"
+        }
+      ]
+    },
+    {
+      "slot": 5,
+      "robotName": "Kerf",
+      "loadoutType": "dual_wield",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "sprinter",
+      "weaponPath": [
+        {
+          "main": "Practice Sword",
+          "offhand": "Practice Sword"
+        },
+        {
+          "main": "Vibro Mace",
+          "offhand": "Vibro Mace"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "offhand",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "offhand",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "offhand",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "offhand",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "magnitude": 4,
+          "targetAttribute": "gyroStabilizers"
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "magnitude": 4,
+          "targetAttribute": "gyroStabilizers"
+        }
+      ]
+    },
+    {
+      "slot": 6,
+      "robotName": "Oxy Lance",
+      "loadoutType": "two_handed",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "bruiser",
+      "weaponPath": [
+        {
+          "main": "Scatter Cannon"
+        },
+        {
+          "main": "Arc Projector"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "magnitude": 4,
+          "targetAttribute": "targetingSystems"
+        }
+      ]
+    },
+    {
+      "slot": 7,
+      "robotName": "Skip Grabber",
+      "loadoutType": "single",
+      "stance": "balanced",
+      "yieldThreshold": 20,
+      "buildFocus": "deadeye",
+      "weaponPath": [
+        {
+          "main": "Beam Pistol"
+        },
+        {
+          "main": "Particle Lance"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "magnitude": 4,
+          "targetAttribute": "combatPower"
+        }
+      ]
+    },
+    {
+      "slot": 8,
+      "robotName": "Bale Box",
+      "loadoutType": "two_handed",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "bruiser",
+      "weaponPath": [
+        {
+          "main": "Shock Maul"
+        },
+        {
+          "main": "Heavy Hammer"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "magnitude": 4,
+          "targetAttribute": "criticalSystems"
+        }
+      ]
+    },
+    {
+      "slot": 9,
+      "robotName": "Pile Driver",
+      "loadoutType": "two_handed",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "bruiser",
+      "weaponPath": [
+        {
+          "main": "Shock Maul"
+        },
+        {
+          "main": "Heavy Hammer"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "magnitude": 4,
+          "targetAttribute": "criticalSystems"
+        }
+      ]
+    },
+    {
+      "slot": 10,
+      "robotName": "Jawcrusher",
+      "loadoutType": "two_handed",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "bruiser",
+      "weaponPath": [
+        {
+          "main": "Training Rifle"
+        },
+        {
+          "main": "Plasma Cannon"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "magnitude": 4,
+          "targetAttribute": "criticalSystems"
+        }
+      ]
+    },
+    {
+      "slot": 11,
+      "robotName": "Shift Foreman",
+      "loadoutType": "weapon_shield",
+      "stance": "defensive",
+      "yieldThreshold": 25,
+      "buildFocus": "tactician",
+      "weaponPath": [
+        {
+          "main": "Bolt Carbine",
+          "offhand": "Light Shield"
+        },
+        {
+          "main": "Nova Caster",
+          "offhand": "Aegis Bulwark"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "augment",
+          "hand": "main",
+          "magnitude": 1,
+          "targetAttribute": "combatAlgorithms"
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "magnitude": 1,
+          "targetAttribute": "evasionThrusters"
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "magnitude": 1,
+          "targetAttribute": "evasionThrusters"
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "magnitude": 1,
+          "targetAttribute": "evasionThrusters"
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "magnitude": 1,
+          "targetAttribute": "evasionThrusters"
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "magnitude": 1,
+          "targetAttribute": "evasionThrusters"
+        }
+      ]
+    }
+  ]
+}

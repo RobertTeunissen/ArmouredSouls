@@ -1,0 +1,173 @@
+{
+  "number": 132,
+  "catalogue_key": "medical-mechanica-repair-yard",
+  "name": "Medical Mechanica Repair Yard",
+  "franchise": "FLCL",
+  "strategy": "Paragon",
+  "opening_robots": 1,
+  "target_robots": 1,
+  "max_planned_robots": 1,
+  "strategy_review_limit": 2,
+  "backstory": "A lanky repair machine becomes the yard's unlikely arena champion. Practical mid-range equipment and gradual refinement keep the budget tied to one complete body.",
+  "strategy_personality": "A television-headed robot provides unusually strong thumbnail identity. Its lanky proportions are the attraction. Source reference here is secondary; obtain a production-quality visual reference before illustration. [Character reference](https://flcl.fandom.com/wiki/Canti).",
+  "teams": {
+    "2v2": [],
+    "3v3": []
+  },
+  "event_order": [
+    "league_1v1",
+    "tournament_1v1",
+    "koth",
+    "grand_melee",
+    "league_2v2",
+    "tag_team",
+    "tournament_2v2",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "robots": [
+    {
+      "slot": 1,
+      "name": "Canti",
+      "source_identity": "Canti",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 15,
+      "build_focus": "Tactician",
+      "range_from_weapons": "mid",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Bolt Carbine",
+          "offhand_weapon": null,
+          "list_price_credits": 93000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Nova Caster",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Sharpen",
+          "weapon": "Nova Caster",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 1,
+          "cost_credits": 300000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 1
+        },
+        {
+          "operation": "Sharpen",
+          "weapon": "Nova Caster",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 2,
+          "cost_credits": 900000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 2
+        },
+        {
+          "operation": "Forge",
+          "weapon": "Nova Caster",
+          "hand": "main",
+          "workshop_level": 8,
+          "occurrence": 1,
+          "cost_credits": 400000,
+          "prestige_gate": 15000,
+          "effect": "+8% damage",
+          "step": 3
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic Canti from the original 2000 FLCL, blue/green normal form. Very tall lanky skinny mechanical humanoid, chunky old CRT television for a head with deep dark glass screen and angular light-grey casing, long antenna, teal turquoise torso and thin segmented limbs, blue five-finger hands, orange elbow/shoulder accents and red soles. Source waist proportions and long legs, television face unlit, one hand gently open. Do not bulk him into a heavily armoured soldier. Complete feet and TV antenna visible.\nCatalogue label for metadata only, do not render text: #132 slot 1 Canti.",
+      "role": "Measured mid-range fighter",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 1600000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "Canti fills the measured mid-range fighter role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Tactician tuning supports the mid equipment role; balanced stance and a 15% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Paragon strategy tuning rules with the Tactician Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "medical-mechanica-repair-yard:1:canti",
+      "folder": "stables/132-medical-mechanica-repair-yard/robots/01-canti",
+      "files": {
+        "png": "stables/132-medical-mechanica-repair-yard/robots/01-canti/portrait.png",
+        "webp": "stables/132-medical-mechanica-repair-yard/robots/01-canti/portrait.webp",
+        "blueprint": "stables/132-medical-mechanica-repair-yard/robots/01-canti/blueprint.json",
+        "profile": "stables/132-medical-mechanica-repair-yard/robots/01-canti/profile.md",
+        "prompt": "stables/132-medical-mechanica-repair-yard/robots/01-canti/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/medical-mechanica-repair-yard/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 132,
+          "stable_name": "Medical Mechanica Repair Yard",
+          "catalogue_key": "medical-mechanica-repair-yard",
+          "slot": 1,
+          "robot_name": "Canti",
+          "source_identity": "Canti",
+          "source_edition": "FLCL — 2000 blue/green Canti base form",
+          "source_references": [
+            "https://www.1999.co.jp/eng/10751029"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic Canti from the original 2000 FLCL, blue/green normal form. Very tall lanky skinny mechanical humanoid, chunky old CRT television for a head with deep dark glass screen and angular light-grey casing, long antenna, teal turquoise torso and thin segmented limbs, blue five-finger hands, orange elbow/shoulder accents and red soles. Source waist proportions and long legs, television face unlit, one hand gently open. Do not bulk him into a heavily armoured soldier. Complete feet and TV antenna visible.\nCatalogue label for metadata only, do not render text: #132 slot 1 Canti.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-ec56b1f1-1841-4f63-ba51-5a4e83bd58c7.png",
+          "visual_review": "Accepted: complete readable silhouette, planned source or original construction and studio finish",
+          "asset_id": "medical-mechanica-repair-yard:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/medical-mechanica-repair-yard/1.webp",
+          "master": "outputs/automaton-portraits/masters/medical-mechanica-repair-yard/1.png",
+          "output": "app/frontend/public/assets/automatons/medical-mechanica-repair-yard/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "85091cd005b21e0e30be957a7f2ed1804338a783211a80e4d52d2a24830aae81",
+          "bytes": 29560
+        },
+        "sha256": "85091cd005b21e0e30be957a7f2ed1804338a783211a80e4d52d2a24830aae81",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "alternatives": [],
+  "blueprint_status": "detailed",
+  "source_notes": "\n**Franchise:** FLCL  \n**Strategy:** Paragon · **Target roster:** 1 robot\n\n**Proposed robots:** Canti.\n\n**Direction:** A television-headed robot provides unusually strong thumbnail identity. Its lanky proportions are the attraction. Source reference here is secondary; obtain a production-quality visual reference before illustration. [Character reference](https://flcl.fandom.com/wiki/Canti).\n\n**Production edition:** FLCL — 2000 blue/green Canti base form.  \n**Catalogue key:** `medical-mechanica-repair-yard`\n\n",
+  "source_documents": [
+    "reference/AUTOMATON_STABLE_EXPANSION.md"
+  ],
+  "blueprint_origin": "completed during collection",
+  "purchasing_plan": "Open and remain at one robot. Buy its complete stage-1 loadout before refinement. Execute the listed steps in order, progressing Workshop L1/L3/L5/L8 as required. Keep prestige-gated steps pending; fund repairs and maintenance before every purchase.",
+  "target_overrides": {},
+  "equipment_budget": {
+    "stage_0_credits": 93000,
+    "stage_1_credits": 425000,
+    "refinement_credits": 1600000,
+    "excludes": "Frames, facilities, training, repairs, upkeep, discounts and resale; stage-1 total replaces stage-0 gear and is not a simultaneous equipment inventory."
+  },
+  "folder": "stables/132-medical-mechanica-repair-yard",
+  "history_image_count": 0
+}

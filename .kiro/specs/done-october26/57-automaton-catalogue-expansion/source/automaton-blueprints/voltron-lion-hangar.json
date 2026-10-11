@@ -1,0 +1,236 @@
+{
+  "number": 88,
+  "catalogueKey": "voltron-lion-hangar",
+  "stableName": "Voltron Lion Hangar",
+  "franchiseLabel": "Voltron",
+  "strategy": "Trio",
+  "fit": "Direct",
+  "conceptIdentity": "A mixed-role robot-lion squad. Distinct colours, mechanical animal heads, sturdy articulated bodies; no combining mechanic required.",
+  "backstory": "Voltron Lion Hangar enters the arena with a clear doctrine. A mixed-role robot-lion squad. Every surviving machine returns to the workshop before the next booking.",
+  "openingRobots": 3,
+  "targetRobots": 3,
+  "adminMaximumRobots": 4,
+  "targetOverrides": {},
+  "teamNames": {
+    "2v2": [
+      {
+        "name": "Voltron Pair 01",
+        "slots": [
+          1,
+          2
+        ]
+      },
+      {
+        "name": "Voltron Pair 02",
+        "slots": [
+          3,
+          4
+        ]
+      }
+    ],
+    "3v3": [
+      {
+        "name": "Voltron Squad 01",
+        "slots": [
+          1,
+          2,
+          3
+        ]
+      }
+    ]
+  },
+  "eventOrder": [
+    "league_3v3",
+    "tournament_3v3",
+    "league_1v1",
+    "league_2v2",
+    "tag_team",
+    "koth",
+    "grand_melee",
+    "tournament_2v2",
+    "tournament_1v1"
+  ],
+  "robots": [
+    {
+      "blueprintId": "voltron-lion-hangar:1:red-lion",
+      "slot": 1,
+      "name": "Red Lion",
+      "sourceAlias": "Red Lion",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "dual_wield",
+      "stance": "offensive",
+      "yieldThreshold": 5,
+      "buildFocus": "Sprinter",
+      "weaponPath": [
+        {
+          "mainWeapon": "Combat Knife",
+          "offhandWeapon": "Combat Knife",
+          "listPriceCredits": 186000
+        },
+        {
+          "mainWeapon": "Vibro Mace",
+          "offhandWeapon": "Vibro Mace",
+          "listPriceCredits": 850000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "melee",
+        "artBrief": "Red mechanical lion with articulated body, metallic jaws and compact armour plates.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 0,
+        "imageConvention": "app/frontend/public/assets/automatons/voltron-lion-hangar/1.webp"
+      }
+    },
+    {
+      "blueprintId": "voltron-lion-hangar:2:blue-lion",
+      "slot": 2,
+      "name": "Blue Lion",
+      "sourceAlias": "Blue Lion",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 15,
+      "buildFocus": "Deadeye",
+      "weaponPath": [
+        {
+          "mainWeapon": "Beam Pistol",
+          "offhandWeapon": null,
+          "listPriceCredits": 93000
+        },
+        {
+          "mainWeapon": "Particle Lance",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "long",
+        "artBrief": "Blue mechanical lion with distinctive head, articulated legs and emitter-inspired equipment.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 1,
+        "imageConvention": "app/frontend/public/assets/automatons/voltron-lion-hangar/2.webp"
+      }
+    },
+    {
+      "blueprintId": "voltron-lion-hangar:3:yellow-lion",
+      "slot": 3,
+      "name": "Yellow Lion",
+      "sourceAlias": "Yellow Lion",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yieldThreshold": 10,
+      "buildFocus": "Warden",
+      "weaponPath": [
+        {
+          "mainWeapon": "Practice Sword",
+          "offhandWeapon": "Light Shield",
+          "listPriceCredits": 101000
+        },
+        {
+          "mainWeapon": "Vibro Mace",
+          "offhandWeapon": "Aegis Bulwark",
+          "listPriceCredits": 834000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "melee",
+        "artBrief": "Broad yellow mechanical lion with heavy legs and defensive armour.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 2,
+        "imageConvention": "app/frontend/public/assets/automatons/voltron-lion-hangar/3.webp"
+      }
+    },
+    {
+      "blueprintId": "voltron-lion-hangar:4:green-lion",
+      "slot": 4,
+      "name": "Green Lion",
+      "sourceAlias": "Green Lion",
+      "nameBasis": "Source character or machine designation",
+      "availability": "reserve",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 15,
+      "buildFocus": "Tactician",
+      "weaponPath": [
+        {
+          "mainWeapon": "Laser Pistol",
+          "offhandWeapon": null,
+          "listPriceCredits": 57000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Green mechanical lion with a lean body, compact armour and alert mechanical eyes.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 3,
+        "imageConvention": "app/frontend/public/assets/automatons/voltron-lion-hangar/4.webp"
+      }
+    }
+  ],
+  "alternativeBlueprints": [
+    {
+      "blueprintId": "voltron-lion-hangar:alternative:4:black-lion",
+      "slot": 4,
+      "name": "Black Lion",
+      "sourceAlias": "Black Lion",
+      "nameBasis": "Source character or machine designation",
+      "availability": "alternative",
+      "loadout": "two_handed",
+      "stance": "defensive",
+      "yieldThreshold": 5,
+      "buildFocus": "Warden",
+      "weaponPath": [
+        {
+          "mainWeapon": "Training Rifle",
+          "offhandWeapon": null,
+          "listPriceCredits": 50000
+        },
+        {
+          "mainWeapon": "Plasma Cannon",
+          "offhandWeapon": null,
+          "listPriceCredits": 408000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "mid",
+        "artBrief": "Large black mechanical lion with broad armour, articulated body and emitter-like gear.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 3,
+        "imageConvention": "app/frontend/public/assets/automatons/voltron-lion-hangar/4.webp"
+      }
+    }
+  ],
+  "review": {
+    "openingWeaponCredits": 380000,
+    "finalWeaponCreditsAtTarget": 2109000,
+    "equippedWeaponCountAtTarget": 5,
+    "purchaseOrder": [
+      1,
+      2,
+      3
+    ],
+    "reserveSlots": [
+      4
+    ],
+    "alternativeRule": "Choose an alternative before catalogue approval; it replaces the specified slot and never adds another live robot."
+  }
+}

@@ -1,0 +1,199 @@
+{
+  "schemaVersion": 1,
+  "catalogueKey": "simulant-refuge-workshop",
+  "stableName": "Simulant Refuge Workshop",
+  "franchise": "The Creator",
+  "backstory": "A military lead, a protected guard and a cautious civilian frame give the refuge a small adaptable roster. Their equipment roles are arena contracts rather than new source-world identities.",
+  "strategy": {
+    "key": "generalist",
+    "version": 1,
+    "targetOverrides": {
+      "14": 3
+    }
+  },
+  "teamNames": {
+    "twoVsTwo": [
+      "Simulant Resistance"
+    ],
+    "threeVsThree": [
+      "New Asia Defenders"
+    ]
+  },
+  "eventOrder": [
+    "league_1v1",
+    "league_2v2",
+    "tag_team",
+    "league_3v3",
+    "koth",
+    "grand_melee",
+    "tournament_1v1",
+    "tournament_2v2",
+    "tournament_3v3"
+  ],
+  "blueprints": [
+    {
+      "slot": 1,
+      "robotName": "Harun",
+      "loadoutType": "single",
+      "stance": "balanced",
+      "yieldThreshold": 15,
+      "buildFocus": "tactician",
+      "weaponPath": [
+        {
+          "main": "Bolt Carbine"
+        },
+        {
+          "main": "Nova Caster"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "magnitude": 1,
+          "targetAttribute": "combatPower"
+        }
+      ]
+    },
+    {
+      "slot": 2,
+      "robotName": "Takumi",
+      "loadoutType": "weapon_shield",
+      "stance": "defensive",
+      "yieldThreshold": 25,
+      "buildFocus": "warden",
+      "weaponPath": [
+        {
+          "main": "Laser Pistol",
+          "offhand": "Light Shield"
+        },
+        {
+          "main": "Volt Sabre",
+          "offhand": "Aegis Bulwark"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "magnitude": 1,
+          "targetAttribute": "combatPower"
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "magnitude": 1,
+          "targetAttribute": "evasionThrusters"
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "magnitude": 1,
+          "targetAttribute": "evasionThrusters"
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "magnitude": 1,
+          "targetAttribute": "evasionThrusters"
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "magnitude": 1,
+          "targetAttribute": "evasionThrusters"
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "magnitude": 1,
+          "targetAttribute": "evasionThrusters"
+        }
+      ]
+    },
+    {
+      "slot": 3,
+      "robotName": "Brother Sonam",
+      "loadoutType": "single",
+      "stance": "defensive",
+      "yieldThreshold": 30,
+      "buildFocus": "tactician",
+      "weaponPath": [
+        {
+          "main": "Practice Blaster"
+        },
+        {
+          "main": "Volt Sabre"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "magnitude": 1,
+          "targetAttribute": "combatPower"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 1,
+  "catalogueKey": "kilnheart-foundry",
+  "stableName": "Kilnheart Foundry",
+  "franchise": "Armoured Souls original",
+  "backstory": "A ceramic-shielded furnace frame anchors the forge while its long-limbed partner works from range. Concentrated partner upgrades preserve both machines' distinct jobs.",
+  "strategy": {
+    "key": "duo",
+    "version": 1,
+    "targetOverrides": {}
+  },
+  "teamNames": {
+    "twoVsTwo": [
+      "Kiln and Ember"
+    ],
+    "threeVsThree": []
+  },
+  "eventOrder": [
+    "league_2v2",
+    "tag_team",
+    "tournament_2v2",
+    "league_1v1",
+    "koth",
+    "grand_melee",
+    "tournament_1v1",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "blueprints": [
+    {
+      "slot": 1,
+      "robotName": "Cinder Keep",
+      "loadoutType": "weapon_shield",
+      "stance": "defensive",
+      "yieldThreshold": 25,
+      "buildFocus": "warden",
+      "weaponPath": [
+        {
+          "main": "Practice Sword",
+          "offhand": "Light Shield"
+        },
+        {
+          "main": "Vibro Mace",
+          "offhand": "Aegis Bulwark"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "magnitude": 1,
+          "targetAttribute": "counterProtocols"
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "magnitude": 1,
+          "targetAttribute": "evasionThrusters"
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "magnitude": 1,
+          "targetAttribute": "evasionThrusters"
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "magnitude": 1,
+          "targetAttribute": "evasionThrusters"
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "magnitude": 1,
+          "targetAttribute": "evasionThrusters"
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "magnitude": 1,
+          "targetAttribute": "evasionThrusters"
+        }
+      ]
+    },
+    {
+      "slot": 2,
+      "robotName": "Longfire",
+      "loadoutType": "two_handed",
+      "stance": "balanced",
+      "yieldThreshold": 15,
+      "buildFocus": "deadeye",
+      "weaponPath": [
+        {
+          "main": "Training Beam"
+        },
+        {
+          "main": "Ion Beam"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "magnitude": 1,
+          "targetAttribute": "combatPower"
+        }
+      ]
+    }
+  ]
+}

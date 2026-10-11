@@ -1,0 +1,165 @@
+{
+  "schemaVersion": 1,
+  "catalogueKey": "ruin-era-synthetic-unit",
+  "stableName": "Ruin-Era Synthetic Unit",
+  "franchise": "Casshern",
+  "backstory": "Three synthetic fighters bring speed, direct pressure and mobility to a battered workshop. The roster advances as a trio rather than splitting its funds between rival flagships.",
+  "strategy": {
+    "key": "trio",
+    "version": 1,
+    "targetOverrides": {}
+  },
+  "teamNames": {
+    "twoVsTwo": [
+      "Casshern Sins"
+    ],
+    "threeVsThree": [
+      "Ruin Survivors"
+    ]
+  },
+  "eventOrder": [
+    "league_3v3",
+    "tournament_3v3",
+    "league_2v2",
+    "tag_team",
+    "league_1v1",
+    "koth",
+    "grand_melee",
+    "tournament_2v2",
+    "tournament_1v1"
+  ],
+  "blueprints": [
+    {
+      "slot": 1,
+      "robotName": "Casshern",
+      "loadoutType": "single",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "sprinter",
+      "weaponPath": [
+        {
+          "main": "Practice Sword"
+        },
+        {
+          "main": "Vibro Mace"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "magnitude": 1,
+          "targetAttribute": "gyroStabilizers"
+        }
+      ]
+    },
+    {
+      "slot": 2,
+      "robotName": "Dio",
+      "loadoutType": "single",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "bruiser",
+      "weaponPath": [
+        {
+          "main": "Laser Pistol"
+        },
+        {
+          "main": "Volt Sabre"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "magnitude": 1,
+          "targetAttribute": "combatPower"
+        }
+      ]
+    },
+    {
+      "slot": 3,
+      "robotName": "Leda",
+      "loadoutType": "single",
+      "stance": "balanced",
+      "yieldThreshold": 20,
+      "buildFocus": "sprinter",
+      "weaponPath": [
+        {
+          "main": "Laser Pistol"
+        },
+        {
+          "main": "Volt Sabre"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "magnitude": 1,
+          "targetAttribute": "powerCore"
+        }
+      ]
+    }
+  ]
+}

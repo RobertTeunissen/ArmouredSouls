@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 1,
+  "catalogueKey": "virtual-on-combat-lab",
+  "stableName": "Virtual On Combat Lab",
+  "franchise": "Virtual-On",
+  "backstory": "Virtual On Combat Lab enters the arena with a clear doctrine. A mobile all-rounder and a heavy ranged partner. Every surviving machine returns to the workshop before the next booking.",
+  "strategy": {
+    "key": "duo",
+    "version": 1,
+    "targetOverrides": {}
+  },
+  "teamNames": {
+    "twoVsTwo": [
+      "Moon Gate Strike"
+    ],
+    "threeVsThree": []
+  },
+  "eventOrder": [
+    "league_2v2",
+    "tag_team",
+    "tournament_2v2",
+    "league_1v1",
+    "koth",
+    "grand_melee",
+    "tournament_1v1",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "blueprints": [
+    {
+      "slot": 1,
+      "robotName": "Temjin",
+      "loadoutType": "single",
+      "stance": "balanced",
+      "yieldThreshold": 10,
+      "buildFocus": "versatile",
+      "weaponPath": [
+        {
+          "main": "Laser Pistol"
+        },
+        {
+          "main": "Volt Sabre"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "magnitude": 1,
+          "targetAttribute": "combatPower"
+        }
+      ]
+    },
+    {
+      "slot": 2,
+      "robotName": "Raiden",
+      "loadoutType": "two_handed",
+      "stance": "defensive",
+      "yieldThreshold": 10,
+      "buildFocus": "warden",
+      "weaponPath": [
+        {
+          "main": "Training Beam"
+        },
+        {
+          "main": "Ion Beam"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "magnitude": 1,
+          "targetAttribute": "combatPower"
+        }
+      ]
+    }
+  ]
+}

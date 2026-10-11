@@ -1,0 +1,205 @@
+{
+  "number": 35,
+  "catalogueKey": "shadow-moses-arsenal",
+  "stableName": "Shadow Moses Arsenal",
+  "franchiseLabel": "Metal Gear",
+  "strategy": "Paragon",
+  "fit": "Direct",
+  "conceptIdentity": "A concentrated investment in one siege-like war machine. Angular legs, armoured sensor head, heavy weapon silhouette.",
+  "backstory": "Shadow Moses Arsenal enters the arena with a clear doctrine. A concentrated investment in one siege-like war machine. Every surviving machine returns to the workshop before the next booking.",
+  "openingRobots": 1,
+  "targetRobots": 1,
+  "adminMaximumRobots": 2,
+  "targetOverrides": {},
+  "teamNames": {
+    "2v2": [
+      {
+        "name": "Shadow Moses Pair 01",
+        "slots": [
+          1,
+          2
+        ]
+      }
+    ],
+    "3v3": []
+  },
+  "eventOrder": [
+    "league_1v1",
+    "grand_melee",
+    "tournament_1v1",
+    "koth",
+    "league_2v2",
+    "tag_team",
+    "tournament_2v2",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "robots": [
+    {
+      "blueprintId": "shadow-moses-arsenal:1:metal-gear-rex",
+      "slot": 1,
+      "name": "Metal Gear REX",
+      "sourceAlias": "Metal Gear REX",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "two_handed",
+      "stance": "defensive",
+      "yieldThreshold": 0,
+      "buildFocus": "Deadeye",
+      "weaponPath": [
+        {
+          "mainWeapon": "Siege Cannon",
+          "offhandWeapon": null,
+          "listPriceCredits": 163000
+        },
+        {
+          "mainWeapon": "Ion Beam",
+          "offhandWeapon": null,
+          "listPriceCredits": 544000
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "Sharpen",
+          "weapon": "Ion Beam",
+          "weaponSlot": "main",
+          "cooldownReductionPercent": 10,
+          "costCredits": 300000,
+          "workshopLevel": 5,
+          "prestigeGate": 3000,
+          "step": 1
+        },
+        {
+          "tier": "Sharpen",
+          "weapon": "Ion Beam",
+          "weaponSlot": "main",
+          "cooldownReductionPercent": 10,
+          "costCredits": 900000,
+          "workshopLevel": 5,
+          "prestigeGate": 3000,
+          "step": 2
+        },
+        {
+          "tier": "Forge",
+          "weapon": "Ion Beam",
+          "weaponSlot": "main",
+          "damageIncreasePercent": 8,
+          "costCredits": 400000,
+          "workshopLevel": 8,
+          "prestigeGate": 15000,
+          "step": 3
+        }
+      ],
+      "review": {
+        "rangeFromWeapons": "long",
+        "artBrief": "Angular REX war machine with heavy legs, sensor head and prominent railgun assembly.",
+        "refinementNote": "Apply in order after stage 1. Dual-wield refinements affect the main-hand copy only; the offhand stays unrefined unless explicitly targeted.",
+        "refinementTotalCredits": 1600000,
+        "minimumRosterExpansionLevel": 0,
+        "imageConvention": "app/frontend/public/assets/automatons/shadow-moses-arsenal/1.webp"
+      }
+    },
+    {
+      "blueprintId": "shadow-moses-arsenal:2:metal-gear-ray",
+      "slot": 2,
+      "name": "Metal Gear RAY",
+      "sourceAlias": "Metal Gear RAY",
+      "nameBasis": "Source character or machine designation",
+      "availability": "reserve",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yieldThreshold": 5,
+      "buildFocus": "Sprinter",
+      "weaponPath": [
+        {
+          "mainWeapon": "Shotgun",
+          "offhandWeapon": null,
+          "listPriceCredits": 283000
+        },
+        {
+          "mainWeapon": "Plasma Cannon",
+          "offhandWeapon": null,
+          "listPriceCredits": 408000
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "Hone",
+          "weapon": "Plasma Cannon",
+          "weaponSlot": "main",
+          "attribute": "Combat Power",
+          "baseValue": 7,
+          "magnitude": 3,
+          "resultValue": 10,
+          "costCredits": 90000,
+          "workshopLevel": 1,
+          "step": 1
+        },
+        {
+          "tier": "Hone",
+          "weapon": "Plasma Cannon",
+          "weaponSlot": "main",
+          "attribute": "Critical Systems",
+          "baseValue": 6,
+          "magnitude": 4,
+          "resultValue": 10,
+          "costCredits": 160000,
+          "workshopLevel": 1,
+          "step": 2
+        },
+        {
+          "tier": "Augment",
+          "weapon": "Plasma Cannon",
+          "weaponSlot": "main",
+          "attribute": "Hull Integrity",
+          "magnitude": 3,
+          "resultValue": 3,
+          "costCredits": 180000,
+          "workshopLevel": 3,
+          "step": 3
+        },
+        {
+          "tier": "Sharpen",
+          "weapon": "Plasma Cannon",
+          "weaponSlot": "main",
+          "cooldownReductionPercent": 10,
+          "costCredits": 300000,
+          "workshopLevel": 5,
+          "prestigeGate": 3000,
+          "step": 4
+        },
+        {
+          "tier": "Forge",
+          "weapon": "Plasma Cannon",
+          "weaponSlot": "main",
+          "damageIncreasePercent": 8,
+          "costCredits": 400000,
+          "workshopLevel": 8,
+          "prestigeGate": 15000,
+          "step": 5
+        }
+      ],
+      "review": {
+        "rangeFromWeapons": "mid",
+        "artBrief": "Streamlined RAY war machine with long arm assemblies and powerful mechanical legs.",
+        "refinementNote": "Apply in order after stage 1. Dual-wield refinements affect the main-hand copy only; the offhand stays unrefined unless explicitly targeted.",
+        "refinementTotalCredits": 1130000,
+        "minimumRosterExpansionLevel": 1,
+        "imageConvention": "app/frontend/public/assets/automatons/shadow-moses-arsenal/2.webp"
+      }
+    }
+  ],
+  "alternativeBlueprints": [],
+  "review": {
+    "openingWeaponCredits": 163000,
+    "finalWeaponCreditsAtTarget": 544000,
+    "equippedWeaponCountAtTarget": 1,
+    "purchaseOrder": [
+      1
+    ],
+    "reserveSlots": [
+      2
+    ],
+    "alternativeRule": "Choose an alternative before catalogue approval; it replaces the specified slot and never adds another live robot."
+  }
+}

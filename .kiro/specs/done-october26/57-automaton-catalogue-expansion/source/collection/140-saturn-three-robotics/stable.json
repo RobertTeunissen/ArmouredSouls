@@ -1,0 +1,198 @@
+{
+  "number": 140,
+  "catalogue_key": "saturn-three-robotics",
+  "name": "Saturn Three Robotics",
+  "franchise": "Saturn 3",
+  "strategy": "Paragon",
+  "opening_robots": 1,
+  "target_robots": 1,
+  "max_planned_robots": 1,
+  "strategy_review_limit": 2,
+  "backstory": "An imposing industrial frame brings heavy contact pressure to a small robotics workshop. The owners refine one final weapon after the machinery and repair reserve are secure.",
+  "strategy_personality": "A striking retro robot with an unusual head/body silhouette. Useful for an archival science-fiction wave; final body and equipment reference needs work. [Film reference, secondary](https://www.imdb.com/title/tt0079285/plotsummary/).",
+  "teams": {
+    "2v2": [],
+    "3v3": []
+  },
+  "event_order": [
+    "league_1v1",
+    "tournament_1v1",
+    "koth",
+    "grand_melee",
+    "league_2v2",
+    "tag_team",
+    "tournament_2v2",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "robots": [
+    {
+      "slot": 1,
+      "name": "Hector",
+      "source_identity": "Hector",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Bruiser",
+      "range_from_weapons": "melee",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Shock Maul",
+          "offhand_weapon": null,
+          "list_price_credits": 183000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Heavy Hammer",
+          "offhand_weapon": null,
+          "list_price_credits": 478000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Hone",
+          "weapon": "Heavy Hammer",
+          "hand": "main",
+          "workshop_level": 1,
+          "attribute": "Hydraulic Systems",
+          "magnitude": 2,
+          "result_value": 10,
+          "cost_credits": 40000,
+          "base_value": 8,
+          "effect": "Hydraulic Systems 8→10",
+          "step": 1
+        },
+        {
+          "operation": "Augment",
+          "weapon": "Heavy Hammer",
+          "hand": "main",
+          "workshop_level": 3,
+          "attribute": "Armor Plating",
+          "magnitude": 3,
+          "result_value": 3,
+          "cost_credits": 180000,
+          "effect": "Armor Plating, new +3",
+          "step": 2
+        },
+        {
+          "operation": "Sharpen",
+          "weapon": "Heavy Hammer",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 1,
+          "cost_credits": 300000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 3
+        },
+        {
+          "operation": "Sharpen",
+          "weapon": "Heavy Hammer",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 2,
+          "cost_credits": 900000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 4
+        },
+        {
+          "operation": "Forge",
+          "weapon": "Heavy Hammer",
+          "hand": "main",
+          "workshop_level": 8,
+          "occurrence": 1,
+          "cost_credits": 400000,
+          "prestige_gate": 15000,
+          "effect": "+8% damage",
+          "step": 5
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic Hector Demigod Series robot from Saturn 3 (1980), complete intact film body before damage. Broad chrome sculpted muscular chest and shoulders, exposed red/blue hydraulic tubing and clear torso sections, chrome and dark metal bipedal limbs, large claw/pincer hands. Unusual essentially headless humanoid: a thin curved articulated stalk rises between shoulders to a tiny two-eyed binocular camera tip, absolutely no normal humanoid head. Preserve this stalk and whole feet within image. No human head, gore or other figures.\nMetadata only, do not render text: #140 slot 1 Hector.",
+      "role": "Heavy contact attacker",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 1820000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "Hector fills the heavy contact attacker role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Bruiser tuning supports the melee equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Paragon strategy tuning rules with the Bruiser Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "saturn-three-robotics:1:hector",
+      "folder": "stables/140-saturn-three-robotics/robots/01-hector",
+      "files": {
+        "png": "stables/140-saturn-three-robotics/robots/01-hector/portrait.png",
+        "webp": "stables/140-saturn-three-robotics/robots/01-hector/portrait.webp",
+        "blueprint": "stables/140-saturn-three-robotics/robots/01-hector/blueprint.json",
+        "profile": "stables/140-saturn-three-robotics/robots/01-hector/profile.md",
+        "prompt": "stables/140-saturn-three-robotics/robots/01-hector/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/saturn-three-robotics/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 140,
+          "stable_name": "Saturn Three Robotics",
+          "catalogue_key": "saturn-three-robotics",
+          "slot": 1,
+          "robot_name": "Hector",
+          "source_identity": "Hector",
+          "source_edition": "Saturn 3 — 1980 Hector intact body",
+          "source_references": [
+            "https://saturn3makingof.com/photo-gallery/"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic Hector Demigod Series robot from Saturn 3 (1980), complete intact film body before damage. Broad chrome sculpted muscular chest and shoulders, exposed red/blue hydraulic tubing and clear torso sections, chrome and dark metal bipedal limbs, large claw/pincer hands. Unusual essentially headless humanoid: a thin curved articulated stalk rises between shoulders to a tiny two-eyed binocular camera tip, absolutely no normal humanoid head. Preserve this stalk and whole feet within image. No human head, gore or other figures.\nMetadata only, do not render text: #140 slot 1 Hector.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-c23d66f1-1bf2-48c3-a882-39f878fe10af.png",
+          "visual_review": "Accepted: complete readable silhouette, planned source or original construction and studio finish",
+          "asset_id": "saturn-three-robotics:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/saturn-three-robotics/1.webp",
+          "master": "outputs/automaton-portraits/masters/saturn-three-robotics/1.png",
+          "output": "app/frontend/public/assets/automatons/saturn-three-robotics/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "a1231cf038761afaa0e2b91121bfdb21e027bcb8392f63baf51e28fedfeca031",
+          "bytes": 49584
+        },
+        "sha256": "a1231cf038761afaa0e2b91121bfdb21e027bcb8392f63baf51e28fedfeca031",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "alternatives": [],
+  "blueprint_status": "detailed",
+  "source_notes": "\n**Franchise:** Saturn 3  \n**Strategy:** Paragon · **Target roster:** 1 robot\n\n**Proposed robots:** Hector.\n\n**Direction:** A striking retro robot with an unusual head/body silhouette. Useful for an archival science-fiction wave; final body and equipment reference needs work. [Film reference, secondary](https://www.imdb.com/title/tt0079285/plotsummary/).\n\n**Production edition:** Saturn 3 — 1980 Hector intact body.  \n**Catalogue key:** `saturn-three-robotics`\n\n",
+  "source_documents": [
+    "reference/AUTOMATON_STABLE_EXPANSION.md"
+  ],
+  "blueprint_origin": "completed during collection",
+  "purchasing_plan": "Open and remain at one robot. Buy its complete stage-1 loadout before refinement. Execute the listed steps in order, progressing Workshop L1/L3/L5/L8 as required. Keep prestige-gated steps pending; fund repairs and maintenance before every purchase.",
+  "target_overrides": {},
+  "equipment_budget": {
+    "stage_0_credits": 183000,
+    "stage_1_credits": 478000,
+    "refinement_credits": 1820000,
+    "excludes": "Frames, facilities, training, repairs, upkeep, discounts and resale; stage-1 total replaces stage-0 gear and is not a simultaneous equipment inventory."
+  },
+  "folder": "stables/140-saturn-three-robotics",
+  "history_image_count": 0
+}

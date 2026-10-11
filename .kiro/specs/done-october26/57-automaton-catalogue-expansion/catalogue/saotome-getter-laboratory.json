@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "catalogueKey": "saotome-getter-laboratory",
+  "stableName": "Saotome Getter Laboratory",
+  "franchise": "Getter Robo",
+  "backstory": "Saotome Getter Laboratory enters the arena with a clear doctrine. A concentrated heavy combat build. Every surviving machine returns to the workshop before the next booking.",
+  "strategy": {
+    "key": "paragon",
+    "version": 1,
+    "targetOverrides": {}
+  },
+  "teamNames": {
+    "twoVsTwo": [],
+    "threeVsThree": []
+  },
+  "eventOrder": [
+    "league_1v1",
+    "tournament_1v1",
+    "koth",
+    "grand_melee",
+    "league_2v2",
+    "tag_team",
+    "tournament_2v2",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "blueprints": [
+    {
+      "slot": 1,
+      "robotName": "Getter Robo",
+      "loadoutType": "two_handed",
+      "stance": "balanced",
+      "yieldThreshold": 0,
+      "buildFocus": "bruiser",
+      "weaponPath": [
+        {
+          "main": "Shock Maul"
+        },
+        {
+          "main": "Heavy Hammer"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        }
+      ]
+    }
+  ]
+}

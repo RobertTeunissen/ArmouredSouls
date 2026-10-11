@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "catalogueKey": "gunhed-autonomous-works",
+  "stableName": "GUNHED Autonomous Works",
+  "franchise": "GUNHED",
+  "backstory": "An industrial combat machine carries the works' heavy-fire contracts. Concentrated upgrades and refinement improve its standing arena configuration without buying its alternate mode as another robot.",
+  "strategy": {
+    "key": "paragon",
+    "version": 1,
+    "targetOverrides": {}
+  },
+  "teamNames": {
+    "twoVsTwo": [],
+    "threeVsThree": []
+  },
+  "eventOrder": [
+    "league_1v1",
+    "tournament_1v1",
+    "koth",
+    "grand_melee",
+    "league_2v2",
+    "tag_team",
+    "tournament_2v2",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "blueprints": [
+    {
+      "slot": 1,
+      "robotName": "GUNHED 507",
+      "loadoutType": "two_handed",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "bruiser",
+      "weaponPath": [
+        {
+          "main": "Training Rifle"
+        },
+        {
+          "main": "Plasma Cannon"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        }
+      ]
+    }
+  ]
+}

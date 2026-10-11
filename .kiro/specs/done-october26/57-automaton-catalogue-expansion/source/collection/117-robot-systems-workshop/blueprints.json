@@ -1,0 +1,133 @@
+{
+  "stable_number": 117,
+  "catalogue_key": "robot-systems-workshop",
+  "robots": [
+    {
+      "slot": 1,
+      "name": "Robot",
+      "source_identity": "Robot mechanical combat body — Invincible — season 1 green mechanical Robot body",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 15,
+      "build_focus": "Tactician",
+      "range_from_weapons": "mid",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Bolt Carbine",
+          "offhand_weapon": null,
+          "list_price_credits": 93000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Nova Caster",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Sharpen",
+          "weapon": "Nova Caster",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 1,
+          "cost_credits": 300000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 1
+        },
+        {
+          "operation": "Sharpen",
+          "weapon": "Nova Caster",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 2,
+          "cost_credits": 900000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 2
+        },
+        {
+          "operation": "Forge",
+          "weapon": "Nova Caster",
+          "hand": "main",
+          "workshop_level": 8,
+          "occurrence": 1,
+          "cost_credits": 400000,
+          "prestige_gate": 15000,
+          "effect": "+8% damage",
+          "step": 3
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around EVERY extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic Robot from Invincible television season one, complete green mechanical combat body: compact angular green armoured humanoid, boxy green helmet with dark narrow source eye slit, orange/black source facial details, broad green shoulders, articulated mechanical hands and sturdy legs, recognizable source torso plating. Preserve the animated design as believable painted-metal game rendering. No Rudy human controller, no extra robot bodies, no invented gun.\nCatalogue label for metadata only, do not render text: #117 slot 1 Robot.",
+      "role": "Measured mid-range fighter",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 1600000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "Robot fills the measured mid-range fighter role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Tactician tuning supports the mid equipment role; balanced stance and a 15% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Paragon strategy tuning rules with the Tactician Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "robot-systems-workshop:1:robot",
+      "folder": "stables/117-robot-systems-workshop/robots/01-robot",
+      "files": {
+        "png": "stables/117-robot-systems-workshop/robots/01-robot/portrait.png",
+        "webp": "stables/117-robot-systems-workshop/robots/01-robot/portrait.webp",
+        "blueprint": "stables/117-robot-systems-workshop/robots/01-robot/blueprint.json",
+        "profile": "stables/117-robot-systems-workshop/robots/01-robot/profile.md",
+        "prompt": "stables/117-robot-systems-workshop/robots/01-robot/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/robot-systems-workshop/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 117,
+          "stable_name": "Robot Systems Workshop",
+          "catalogue_key": "robot-systems-workshop",
+          "slot": 1,
+          "robot_name": "Robot",
+          "source_identity": "Robot mechanical combat body — Invincible — season 1 green mechanical Robot body",
+          "source_edition": "Invincible — season 1 green mechanical Robot body",
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around EVERY extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic Robot from Invincible television season one, complete green mechanical combat body: compact angular green armoured humanoid, boxy green helmet with dark narrow source eye slit, orange/black source facial details, broad green shoulders, articulated mechanical hands and sturdy legs, recognizable source torso plating. Preserve the animated design as believable painted-metal game rendering. No Rudy human controller, no extra robot bodies, no invented gun.\nCatalogue label for metadata only, do not render text: #117 slot 1 Robot.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-3d3d54eb-bdb7-4c3b-95f6-06bbe224bc9f.png",
+          "visual_review": "Accepted — complete framing, limb count, equipment representation and shared portrait style checked.",
+          "asset_id": "robot-systems-workshop:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/robot-systems-workshop/1.webp",
+          "master": "outputs/automaton-portraits/masters/robot-systems-workshop/1.png",
+          "output": "app/frontend/public/assets/automatons/robot-systems-workshop/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "21593a469f59952debd986f3599d77d5b0583bfd254fa8eb626442f42bba5abd",
+          "bytes": 41528,
+          "source_references": [
+            "https://www.skybound.com/invincible/tv-series"
+          ]
+        },
+        "sha256": "21593a469f59952debd986f3599d77d5b0583bfd254fa8eb626442f42bba5abd",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "replacement_alternatives": []
+}

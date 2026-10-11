@@ -1,0 +1,160 @@
+{
+  "number": 49,
+  "catalogueKey": "last-city-exo-foundry",
+  "stableName": "Last City Exo Foundry",
+  "franchiseLabel": "Destiny",
+  "strategy": "Trio",
+  "fit": "Adapt",
+  "conceptIdentity": "A mobile shooter, tactical specialist, durable veteran. Clearly mechanical Exo faces and bodies; this is an arena collection, not a canonical fireteam.",
+  "backstory": "Last City Exo Foundry enters the arena with a clear doctrine. A mobile shooter, tactical specialist, durable veteran. Every surviving machine returns to the workshop before the next booking.",
+  "openingRobots": 3,
+  "targetRobots": 3,
+  "adminMaximumRobots": 4,
+  "targetOverrides": {},
+  "teamNames": {
+    "2v2": [
+      {
+        "name": "Exo Pair 01",
+        "slots": [
+          1,
+          2
+        ]
+      }
+    ],
+    "3v3": [
+      {
+        "name": "Exo Squad 01",
+        "slots": [
+          1,
+          2,
+          3
+        ]
+      }
+    ]
+  },
+  "eventOrder": [
+    "league_3v3",
+    "tournament_3v3",
+    "league_1v1",
+    "league_2v2",
+    "tag_team",
+    "koth",
+    "grand_melee",
+    "tournament_2v2",
+    "tournament_1v1"
+  ],
+  "robots": [
+    {
+      "blueprintId": "last-city-exo-foundry:1:cayde-6",
+      "slot": 1,
+      "name": "Cayde-6",
+      "sourceAlias": "Cayde-6",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "dual_wield",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "Sprinter",
+      "weaponPath": [
+        {
+          "mainWeapon": "Laser Pistol",
+          "offhandWeapon": "Laser Pistol",
+          "listPriceCredits": 114000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": "Volt Sabre",
+          "listPriceCredits": 850000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Exo gunslinger with a blue mechanical face, orange horn-like details and worn cloak.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 0,
+        "imageConvention": "app/frontend/public/assets/automatons/last-city-exo-foundry/1.webp"
+      }
+    },
+    {
+      "blueprintId": "last-city-exo-foundry:2:ada-1",
+      "slot": 2,
+      "name": "Ada-1",
+      "sourceAlias": "Ada-1",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 25,
+      "buildFocus": "Tactician",
+      "weaponPath": [
+        {
+          "mainWeapon": "Beam Pistol",
+          "offhandWeapon": null,
+          "listPriceCredits": 93000
+        },
+        {
+          "mainWeapon": "Particle Lance",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "long",
+        "artBrief": "Pale mechanical Exo craftswoman with dark articulated body and refined metal detail.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 1,
+        "imageConvention": "app/frontend/public/assets/automatons/last-city-exo-foundry/2.webp"
+      }
+    },
+    {
+      "blueprintId": "last-city-exo-foundry:3:banshee-44",
+      "slot": 3,
+      "name": "Banshee-44",
+      "sourceAlias": "Banshee-44",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yieldThreshold": 20,
+      "buildFocus": "Warden",
+      "weaponPath": [
+        {
+          "mainWeapon": "Laser Pistol",
+          "offhandWeapon": "Light Shield",
+          "listPriceCredits": 108000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": "Aegis Bulwark",
+          "listPriceCredits": 834000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Broad veteran Exo with a blue mechanical face and weathered utility clothing.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 2,
+        "imageConvention": "app/frontend/public/assets/automatons/last-city-exo-foundry/3.webp"
+      }
+    }
+  ],
+  "alternativeBlueprints": [],
+  "review": {
+    "openingWeaponCredits": 315000,
+    "finalWeaponCreditsAtTarget": 2109000,
+    "equippedWeaponCountAtTarget": 5,
+    "purchaseOrder": [
+      1,
+      2,
+      3
+    ],
+    "reserveSlots": [],
+    "alternativeRule": "Choose an alternative before catalogue approval; it replaces the specified slot and never adds another live robot."
+  }
+}

@@ -1,0 +1,160 @@
+{
+  "number": 34,
+  "catalogueKey": "wanzer-assembly-corps",
+  "stableName": "Wanzer Assembly Corps",
+  "franchiseLabel": "Front Mission",
+  "strategy": "Trio",
+  "fit": "Direct",
+  "conceptIdentity": "Give the squad melee, ranged, and defensive builds. Squared military bodies, visible leg actuators, and a unified camouflage scheme.",
+  "backstory": "Wanzer Assembly Corps enters the arena with a clear doctrine. Give the squad melee, ranged, and defensive builds. Every surviving machine returns to the workshop before the next booking.",
+  "openingRobots": 3,
+  "targetRobots": 3,
+  "adminMaximumRobots": 4,
+  "targetOverrides": {},
+  "teamNames": {
+    "2v2": [
+      {
+        "name": "Wanzer Pair 01",
+        "slots": [
+          1,
+          2
+        ]
+      }
+    ],
+    "3v3": [
+      {
+        "name": "Wanzer Squad 01",
+        "slots": [
+          1,
+          2,
+          3
+        ]
+      }
+    ]
+  },
+  "eventOrder": [
+    "league_3v3",
+    "tournament_3v3",
+    "league_1v1",
+    "league_2v2",
+    "tag_team",
+    "koth",
+    "grand_melee",
+    "tournament_2v2",
+    "tournament_1v1"
+  ],
+  "robots": [
+    {
+      "blueprintId": "wanzer-assembly-corps:1:wanzer-vanguard-01",
+      "slot": 1,
+      "name": "Wanzer Vanguard 01",
+      "sourceAlias": "Wanzer Vanguard 01",
+      "nameBasis": "Original arena designation",
+      "availability": "opening",
+      "loadout": "two_handed",
+      "stance": "balanced",
+      "yieldThreshold": 10,
+      "buildFocus": "Bruiser",
+      "weaponPath": [
+        {
+          "mainWeapon": "War Club",
+          "offhandWeapon": null,
+          "listPriceCredits": 84000
+        },
+        {
+          "mainWeapon": "Heavy Hammer",
+          "offhandWeapon": null,
+          "listPriceCredits": 478000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "melee",
+        "artBrief": "Original arena Wanzer frame, squared olive armour, heavy arms and visible actuators.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 0,
+        "imageConvention": "app/frontend/public/assets/automatons/wanzer-assembly-corps/1.webp"
+      }
+    },
+    {
+      "blueprintId": "wanzer-assembly-corps:2:wanzer-longshot-02",
+      "slot": 2,
+      "name": "Wanzer Longshot 02",
+      "sourceAlias": "Wanzer Longshot 02",
+      "nameBasis": "Original arena designation",
+      "availability": "opening",
+      "loadout": "two_handed",
+      "stance": "defensive",
+      "yieldThreshold": 15,
+      "buildFocus": "Deadeye",
+      "weaponPath": [
+        {
+          "mainWeapon": "Training Beam",
+          "offhandWeapon": null,
+          "listPriceCredits": 50000
+        },
+        {
+          "mainWeapon": "Ion Beam",
+          "offhandWeapon": null,
+          "listPriceCredits": 544000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "long",
+        "artBrief": "Original arena Wanzer frame with long firearm, stable legs and military sensor head.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 1,
+        "imageConvention": "app/frontend/public/assets/automatons/wanzer-assembly-corps/2.webp"
+      }
+    },
+    {
+      "blueprintId": "wanzer-assembly-corps:3:wanzer-bastion-03",
+      "slot": 3,
+      "name": "Wanzer Bastion 03",
+      "sourceAlias": "Wanzer Bastion 03",
+      "nameBasis": "Original arena designation",
+      "availability": "opening",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yieldThreshold": 20,
+      "buildFocus": "Warden",
+      "weaponPath": [
+        {
+          "mainWeapon": "Bolt Carbine",
+          "offhandWeapon": "Combat Shield",
+          "listPriceCredits": 171000
+        },
+        {
+          "mainWeapon": "Nova Caster",
+          "offhandWeapon": "Aegis Bulwark",
+          "listPriceCredits": 834000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "mid",
+        "artBrief": "Original arena Wanzer defender with thick blue-grey plates and a large shield.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 2,
+        "imageConvention": "app/frontend/public/assets/automatons/wanzer-assembly-corps/3.webp"
+      }
+    }
+  ],
+  "alternativeBlueprints": [],
+  "review": {
+    "openingWeaponCredits": 305000,
+    "finalWeaponCreditsAtTarget": 1856000,
+    "equippedWeaponCountAtTarget": 4,
+    "purchaseOrder": [
+      1,
+      2,
+      3
+    ],
+    "reserveSlots": [],
+    "alternativeRule": "Choose an alternative before catalogue approval; it replaces the specified slot and never adds another live robot."
+  }
+}

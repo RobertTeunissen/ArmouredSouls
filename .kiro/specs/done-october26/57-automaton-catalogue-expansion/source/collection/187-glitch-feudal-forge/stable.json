@@ -1,0 +1,353 @@
+{
+  "number": 187,
+  "catalogue_key": "glitch-feudal-forge",
+  "name": "Glitch Feudal Forge",
+  "franchise": "Starbound — game continuity",
+  "strategy": "Tycoon",
+  "opening_robots": 2,
+  "target_robots": 3,
+  "max_planned_robots": 3,
+  "strategy_review_limit": 3,
+  "backstory": "A blade fighter, a forge worker and a protected ledger keeper earn the feudal workshop's facility budget. Commerce precedes premium equipment for the repaired three-machine roster.",
+  "strategy_personality": "Medieval robot society supports a visually coherent forge-and-commerce stable: mechanical faces, period clothing, plate armour, and practical tools. These are source-inspired role selections, not three newly discovered named characters. Select actual game sprites and equipment for the final chassis briefs, preserving their compact silhouettes in realistic materials. The Tycoon identity comes from forge investment and equipment purchases within the existing strategy engine.",
+  "teams": {
+    "2v2": [
+      {
+        "name": "Glitch Forge Pair 01",
+        "slots": [
+          1,
+          2
+        ],
+        "forms": "Opening"
+      }
+    ],
+    "3v3": [
+      {
+        "name": "Glitch Forge Squad 01",
+        "slots": [
+          1,
+          2,
+          3
+        ],
+        "forms": "When slot 3 joins"
+      }
+    ]
+  },
+  "event_order": [
+    "league_2v2",
+    "tag_team",
+    "league_1v1",
+    "league_3v3",
+    "koth",
+    "grand_melee",
+    "tournament_2v2",
+    "tournament_3v3",
+    "tournament_1v1"
+  ],
+  "robots": [
+    {
+      "slot": 1,
+      "name": "Brassblade",
+      "source_identity": "Glitch knight; original arena name Brassblade",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "dual_wield",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Sprinter",
+      "range_from_weapons": "melee",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Practice Sword",
+          "offhand_weapon": "Practice Sword",
+          "list_price_credits": 100000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Vibro Mace",
+          "offhand_weapon": "Vibro Mace",
+          "list_price_credits": 850000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE Glitch robot knight from Starbound, directly matching the attached original Chucklefish Glitch character artwork: lavender/silver fully mechanical medieval helmet face with a narrow cyan optical slit and tall sweeping blue metal crest, round cyan ear-like mechanical hubs, chainmail neck and lower tunic, long pale grey/cream split tabard, brown leather gloves, belt and boots over cream trousers. Keep the original compact chunky cartoon proportions, translated to realistic metal, mail and cloth. Hold ONE source-shaped medieval poleaxe in BOTH hands, its complete blade and haft visible, no shield or extra sword. Brassblade is an original arena name, not a canonical named NPC. Full body and all equipment in frame.\nMetadata only, do not render text: #187 slot 1 Brassblade.",
+      "role": "Paired contact attacker",
+      "missing_fields": [],
+      "refinement_note": "Tycoon follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "Brassblade fills the paired contact attacker role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Sprinter tuning supports the melee equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Tycoon strategy tuning rules with the Sprinter Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "glitch-feudal-forge:1:brassblade",
+      "folder": "stables/187-glitch-feudal-forge/robots/01-brassblade",
+      "files": {
+        "png": "stables/187-glitch-feudal-forge/robots/01-brassblade/portrait.png",
+        "webp": "stables/187-glitch-feudal-forge/robots/01-brassblade/portrait.webp",
+        "blueprint": "stables/187-glitch-feudal-forge/robots/01-brassblade/blueprint.json",
+        "profile": "stables/187-glitch-feudal-forge/robots/01-brassblade/profile.md",
+        "prompt": "stables/187-glitch-feudal-forge/robots/01-brassblade/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/glitch-feudal-forge/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 187,
+          "stable_name": "Glitch Feudal Forge",
+          "catalogue_key": "glitch-feudal-forge",
+          "slot": 1,
+          "robot_name": "Brassblade",
+          "source_identity": "Glitch knight; original arena name Brassblade",
+          "source_edition": "Starbound, creator's 2013 Glitch introduction knight artwork; original arena name",
+          "source_references": [
+            "https://playstarbound.com/introducing-the-glitch/"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE Glitch robot knight from Starbound, directly matching the attached original Chucklefish Glitch character artwork: lavender/silver fully mechanical medieval helmet face with a narrow cyan optical slit and tall sweeping blue metal crest, round cyan ear-like mechanical hubs, chainmail neck and lower tunic, long pale grey/cream split tabard, brown leather gloves, belt and boots over cream trousers. Keep the original compact chunky cartoon proportions, translated to realistic metal, mail and cloth. Hold ONE source-shaped medieval poleaxe in BOTH hands, its complete blade and haft visible, no shield or extra sword. Brassblade is an original arena name, not a canonical named NPC. Full body and all equipment in frame.\nMetadata only, do not render text: #187 slot 1 Brassblade.",
+          "referenced_image_paths": [
+            "/tmp/armoured-glitch-reference.png"
+          ],
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-3c3dc56f-7494-408a-9d8f-26fa3882ecd9.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "glitch-feudal-forge:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/glitch-feudal-forge/1.webp",
+          "master": "outputs/automaton-portraits/masters/glitch-feudal-forge/1.png",
+          "output": "app/frontend/public/assets/automatons/glitch-feudal-forge/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "e971851f63c145f1b735eec65290f73c24a0cea036c0a2e90d93745faa0e8632",
+          "bytes": 46928
+        },
+        "sha256": "e971851f63c145f1b735eec65290f73c24a0cea036c0a2e90d93745faa0e8632",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 2,
+      "name": "Forgehand",
+      "source_identity": "Glitch source sprite; original blacksmith arena role and name Forgehand",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Bruiser",
+      "range_from_weapons": "melee",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Shock Maul",
+          "offhand_weapon": null,
+          "list_price_credits": 183000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Heavy Hammer",
+          "offhand_weapon": null,
+          "list_price_credits": 478000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE Glitch robot from Starbound, using the main player-character sprite in the attached creator screenshot as the source body and clothing: compact humanoid robot with a pale rounded metal helmet-like mechanical head, horizontal dark face grille with small cyan optics, orange-brown work vest over pale blue sleeves, brown belt and trousers, sturdy brown boots and compact mechanical hands. Preserve the actual source sprite proportions and metal head, no human face or skin. The blacksmith arena role and name Forgehand are original adaptations. Hold ONE short industrial forge hammer in the right hand, left hand empty. Realistic worn metal and medieval cloth, entire head and boots and hammer visible, no game UI or background figures.\nMetadata only, do not render text: #187 slot 2 Forgehand.",
+      "role": "Heavy contact attacker",
+      "missing_fields": [],
+      "refinement_note": "Tycoon follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 1,
+      "equipment_interpretation": "Forgehand fills the heavy contact attacker role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Bruiser tuning supports the melee equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Tycoon strategy tuning rules with the Bruiser Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "glitch-feudal-forge:2:forgehand",
+      "folder": "stables/187-glitch-feudal-forge/robots/02-forgehand",
+      "files": {
+        "png": "stables/187-glitch-feudal-forge/robots/02-forgehand/portrait.png",
+        "webp": "stables/187-glitch-feudal-forge/robots/02-forgehand/portrait.webp",
+        "blueprint": "stables/187-glitch-feudal-forge/robots/02-forgehand/blueprint.json",
+        "profile": "stables/187-glitch-feudal-forge/robots/02-forgehand/profile.md",
+        "prompt": "stables/187-glitch-feudal-forge/robots/02-forgehand/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/glitch-feudal-forge/2.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 187,
+          "stable_name": "Glitch Feudal Forge",
+          "catalogue_key": "glitch-feudal-forge",
+          "slot": 2,
+          "robot_name": "Forgehand",
+          "source_identity": "Glitch source sprite; original blacksmith arena role and name Forgehand",
+          "source_edition": "Starbound, creator's Glitch introduction in-game sprite; original blacksmith role/name",
+          "source_references": [
+            "https://playstarbound.com/introducing-the-glitch/"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE Glitch robot from Starbound, using the main player-character sprite in the attached creator screenshot as the source body and clothing: compact humanoid robot with a pale rounded metal helmet-like mechanical head, horizontal dark face grille with small cyan optics, orange-brown work vest over pale blue sleeves, brown belt and trousers, sturdy brown boots and compact mechanical hands. Preserve the actual source sprite proportions and metal head, no human face or skin. The blacksmith arena role and name Forgehand are original adaptations. Hold ONE short industrial forge hammer in the right hand, left hand empty. Realistic worn metal and medieval cloth, entire head and boots and hammer visible, no game UI or background figures.\nMetadata only, do not render text: #187 slot 2 Forgehand.",
+          "referenced_image_paths": [
+            "/tmp/armoured-glitch-sprites2.png"
+          ],
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-2848a80e-09e8-462e-9ece-41c6eef0b130.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "glitch-feudal-forge:2",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/glitch-feudal-forge/2.webp",
+          "master": "outputs/automaton-portraits/masters/glitch-feudal-forge/2.png",
+          "output": "app/frontend/public/assets/automatons/glitch-feudal-forge/2.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "bb4f7b43deb7ec81b908727f16a4d3beecf72173197c39bc0bb2c26800ecf452",
+          "bytes": 46870
+        },
+        "sha256": "bb4f7b43deb7ec81b908727f16a4d3beecf72173197c39bc0bb2c26800ecf452",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 3,
+      "name": "Goldledger",
+      "source_identity": "Glitch village NPC appearance; original merchant arena role and name Goldledger",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yield_threshold": 25,
+      "build_focus": "Tactician",
+      "range_from_weapons": "mid",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Bolt Carbine",
+          "offhand_weapon": "Light Shield",
+          "list_price_credits": 144000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Nova Caster",
+          "offhand_weapon": "Aegis Bulwark",
+          "list_price_credits": 834000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE Glitch robot from Starbound using the purple-hatted NPC on the lower-left roof in the attached developer screenshot: compact medieval humanoid robot with a boxlike mechanical face and small optics, pointed deep purple brimmed hat, dark purple tunic over a brown utility belt and tan/brown trousers with sturdy brown boots. Preserve this specific source sprite body and clothing in realistic materials. The merchant arena role and name Goldledger are original arena choices. Add ONE compact lowered service pistol in the right hand as original arena equipment, and a small leather coin pouch at the belt; left hand empty. Complete full-body silhouette, no human face or game UI, no other figures.\nMetadata only, do not render text: #187 slot 3 Goldledger.",
+      "role": "Protected tactical support",
+      "missing_fields": [],
+      "refinement_note": "Tycoon follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 2,
+      "equipment_interpretation": "Goldledger fills the protected tactical support role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Tactician tuning supports the mid equipment role; defensive stance and a 25% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Tycoon strategy tuning rules with the Tactician Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "glitch-feudal-forge:3:goldledger",
+      "folder": "stables/187-glitch-feudal-forge/robots/03-goldledger",
+      "files": {
+        "png": "stables/187-glitch-feudal-forge/robots/03-goldledger/portrait.png",
+        "webp": "stables/187-glitch-feudal-forge/robots/03-goldledger/portrait.webp",
+        "blueprint": "stables/187-glitch-feudal-forge/robots/03-goldledger/blueprint.json",
+        "profile": "stables/187-glitch-feudal-forge/robots/03-goldledger/profile.md",
+        "prompt": "stables/187-glitch-feudal-forge/robots/03-goldledger/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/glitch-feudal-forge/3.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 187,
+          "stable_name": "Glitch Feudal Forge",
+          "catalogue_key": "glitch-feudal-forge",
+          "slot": 3,
+          "robot_name": "Goldledger",
+          "source_identity": "Glitch village NPC appearance; original merchant arena role and name Goldledger",
+          "source_edition": "Starbound, creator's Glitch village NPC sprite; original merchant role/name",
+          "source_references": [
+            "https://playstarbound.com/introducing-the-glitch/"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE Glitch robot from Starbound using the purple-hatted NPC on the lower-left roof in the attached developer screenshot: compact medieval humanoid robot with a boxlike mechanical face and small optics, pointed deep purple brimmed hat, dark purple tunic over a brown utility belt and tan/brown trousers with sturdy brown boots. Preserve this specific source sprite body and clothing in realistic materials. The merchant arena role and name Goldledger are original arena choices. Add ONE compact lowered service pistol in the right hand as original arena equipment, and a small leather coin pouch at the belt; left hand empty. Complete full-body silhouette, no human face or game UI, no other figures.\nMetadata only, do not render text: #187 slot 3 Goldledger.",
+          "referenced_image_paths": [
+            "/tmp/armoured-glitch-sprites4.png"
+          ],
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-b8f6e8ac-128e-4992-8e0b-e509f443bb94.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "glitch-feudal-forge:3",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/glitch-feudal-forge/3.webp",
+          "master": "outputs/automaton-portraits/masters/glitch-feudal-forge/3.png",
+          "output": "app/frontend/public/assets/automatons/glitch-feudal-forge/3.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "2b08d76bb16973f646ac9d57feb1edc49369402ff3797325f19eb950f957b30d",
+          "bytes": 38264
+        },
+        "sha256": "2b08d76bb16973f646ac9d57feb1edc49369402ff3797325f19eb950f957b30d",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "alternatives": [],
+  "blueprint_status": "detailed",
+  "source_notes": "\n**Franchise:** Starbound — game continuity  \n**Strategy:** Tycoon · **Target roster:** 3 robots\n\n**Proposed robots:** Brassblade; Forgehand; Goldledger.\n\n**Direction:** Medieval robot society supports a visually coherent forge-and-commerce stable: mechanical faces, period clothing, plate armour, and practical tools. These are source-inspired role selections, not three newly discovered named characters. Select actual game sprites and equipment for the final chassis briefs, preserving their compact silhouettes in realistic materials. The Tycoon identity comes from forge investment and equipment purchases within the existing strategy engine.\n\nReferences: [Chucklefish's introduction to the Glitch](https://playstarbound.com/introducing-the-glitch/).\n\n**Production edition:** Starbound, creator's 2013 Glitch introduction knight artwork; original arena name; Starbound, creator's Glitch introduction in-game sprite; original blacksmith role/name; Starbound, creator's Glitch village NPC sprite; original merchant role/name.  \n**Catalogue key:** `glitch-feudal-forge`\n\n",
+  "source_documents": [
+    "reference/AUTOMATON_STABLE_EXPANSION.md"
+  ],
+  "blueprint_origin": "completed during collection",
+  "purchasing_plan": "Open with slots 1–2; follow income-facility goals before recruiting slot 3 with a funded complete stage-0 loadout. Upgrade final equipment in slot order after the roster and income base are secure. No weapon refinement purchases.",
+  "target_overrides": {
+    "robots": 3
+  },
+  "equipment_budget": {
+    "stage_0_credits": 427000,
+    "stage_1_credits": 2162000,
+    "refinement_credits": 0,
+    "excludes": "Frames, facilities, training, repairs, upkeep, discounts and resale; stage-1 total replaces stage-0 gear and is not a simultaneous equipment inventory."
+  },
+  "folder": "stables/187-glitch-feudal-forge",
+  "history_image_count": 0
+}

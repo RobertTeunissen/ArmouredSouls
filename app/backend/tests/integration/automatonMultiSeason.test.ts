@@ -1,15 +1,17 @@
 /**
- * Spec #55 task 12.2 — heavy multi-season simulation with 100
- * Active_Automatons (R7.10, R11.14, R14.4, design §19, §21 Heavy row).
+ * Spec #55 task 12.2, extended by Spec #57 R5.4 — heavy multi-season
+ * simulation with every repository Catalogue_Entry active (R7.10, R11.14,
+ * R14.4, design §19, §21 Heavy row).
  *
  * HEAVY tier: it runs a Season_Rollover, which archives, deletes generated
  * stables, resets every stable and truncates the history tables of the whole
  * database. Run it only on a dedicated database (CI's heavy job or a local
  * `armouredsouls_heavy`), never on a shared dev database.
  *
- * Population (task 12.1, decision 39): the 11 starter entries by a fixed list
- * of Catalogue_Keys plus 89 generated entries, created through Catalogue_Sync
- * from a scratch catalogue directory and activated one by one.
+ * Population (Spec #57 R5.4, design D18): every Catalogue_Entry of the
+ * repository Automaton_Catalogue, whatever their number (the starters are
+ * checked by `STARTER_CATALOGUE_KEYS`; no generated entries), created through
+ * Catalogue_Sync from the repository folder and activated one by one.
  *
  * Timeline, every step through the real `executeSettlement` (scheduler path)
  * with `SEASON_LENGTH_CYCLES = 6` and `PREPARATION_LENGTH_CYCLES = 2`:
@@ -28,11 +30,12 @@
  * run (no battle job is part of settlement); the bulk battles stand in for a
  * season of results at ACC volume.
  *
- * Measured step durations are logged with the `[automaton-heavy]` prefix for
- * the implementation record.
+ * Measured step durations, the Automatons processed, their quotient and the
+ * budget-skip count are logged per Turn_Step and per Turn_Trigger with the
+ * `[automaton-heavy]` prefix for the implementation record
+ * (`docs/implementation_notes/AUTOMATON_CATALOGUE_EXPANSION.md`); any
+ * `step_budget_exhausted` Turn_Record fails the test.
  */
-import fs from 'fs';
-import path from 'path';
 import { performance } from 'node:perf_hooks';
 import prisma from '../../src/lib/prisma';
 import logger from '../../src/config/logger';
@@ -41,7 +44,7 @@ import { invalidateSeasonCache } from '../../src/services/season/seasonService';
 import { setAlertSender } from '../../src/services/automaton/automatonObservability';
 import { syncCatalogue } from '../../src/services/automaton/catalogueSync';
 import { activateProfile } from '../../src/services/automaton/automatonProfileService';
-import { validateCatalogueEntry, BUILD_FOCUS_KEYS } from '../../src/services/automaton/automatonCatalogueService';
+import { CATALOGUE_DIRECTORY, validateCatalogueEntry, BUILD_FOCUS_KEYS } from '../../src/services/automaton/automatonCatalogueService';
 import { getStrategyRegistry } from '../../src/services/automaton/strategies/defaultRegistry';
 import { loadWeaponCatalogue } from '../../src/services/automaton/stableFacts';
 import { clearStrategyComparisonCache, type StrategyComparison } from '../../src/services/automaton/strategyComparisonService';
@@ -51,27 +54,28 @@ import type { TurnActionRecord } from '../../src/types/automaton';
 import {
   ACC_DAILY_BATTLES,
   FULL_SEASON_CYCLES,
-  GENERATED_ENTRY_COUNT,
-  HEAVY_POPULATION_SIZE,
   HEAVY_STRATEGY_KEYS,
   STARTER_CATALOGUE_KEYS,
   deletePopulation,
   deleteStables,
-  generatedEntries,
   insertSeasonOfBattles,
-  loadStarterEntries,
-  writeCatalogueDirectory,
+  loadRepositoryEntries,
   type BulkBattleResult,
 } from '../helpers/automatonHeavyFixture';
 import { runTag, startAdminApi, type AdminApiHarness } from '../helpers/automatonAdminApi';
 
+/** Every repository Catalogue_Entry (Spec #57 R5.4): the heavy population. */
+const POPULATION = loadRepositoryEntries();
+
 /**
- * Per phase (`beforeAll`, each `it`, `afterAll`). Measured locally: setup
- * ~30 s, season 1 ~350 s, rollover ~280 s, season 2 ~195 s (~14 min in all),
- * dominated by the two opening-build Turn_Steps (~250 s each). CI's heavy
- * job has 30 minutes for the whole tier.
+ * Per phase (`beforeAll`, each `it`, `afterAll`). Spec 55 measured ~14 min in
+ * all for 100 Automatons, dominated by the two opening-build Turn_Steps
+ * (~250 s each), with a 15-minute phase timeout. 9 s per Automaton reproduces
+ * that timeout at 100 and grows with the catalogue; there is no cap, and the
+ * Turn_Step budget (`TURN_STEP_BUDGET_MS`) is unchanged. CI's heavy job has
+ * 30 minutes for the whole tier.
  */
-const PHASE_TIMEOUT_MS = 15 * 60_000;
+const PHASE_TIMEOUT_MS = Math.max(15 * 60_000, POPULATION.length * 9_000);
 const COMPARISON_BUDGET_MS = 2_000;
 const SEASON_LENGTH = 6;
 const PREPARATION_LENGTH = 2;
@@ -80,7 +84,6 @@ const HUMAN_ROBOTS_EACH = 3;
 const PURCHASE_TYPES = ['robot_creation', 'attribute_upgrade', 'facility_upgrade', 'weapon_purchase', 'weapon_refinement'];
 
 const tag = runTag();
-const scratchDirectory = path.join(__dirname, `.automaton-heavy-catalogue-${tag}`);
 
 interface StepRecord {
   label: string;
@@ -89,7 +92,12 @@ interface StepRecord {
   slot: number;
   turns: number;
   profiles: number;
+  /** Turn_Records whose status is not `skipped`. */
+  processed: number;
+  /** Turn_Records skipped with `step_budget_exhausted`. */
+  budgetSkipped: number;
   stepMs: number;
+  msPerAutomaton: number;
   settlementMs: number;
   chargedActions: number;
   robotsBought: number;
@@ -105,7 +113,7 @@ async function resetSeasonTables(): Promise<void> {
   invalidateSeasonCache();
 }
 
-describe('Automaton multi-season simulation (Spec #55 task 12.2)', () => {
+describe('Automaton multi-season simulation (Spec #55 task 12.2, Spec #57 R5.4)', () => {
   const catalogueKeys: string[] = [];
   const automatonUserIds: number[] = [];
   const profileIds: number[] = [];
@@ -168,6 +176,35 @@ describe('Automaton multi-season simulation (Spec #55 task 12.2)', () => {
         actions: true, upkeepIssues: true, startedAt: true, finishedAt: true, durationMs: true,
       },
     });
+    // The record is built and logged before the assertions, so a failing step still reports its timing.
+    const actions = turns.map((t) => (t.actions as unknown as TurnActionRecord[]).filter((a) => !a.replayed));
+    const first = turns.length > 0 ? Math.min(...turns.map((t) => t.startedAt.getTime())) : 0;
+    const last = turns.length > 0 ? Math.max(...turns.map((t) => (t.finishedAt ?? t.startedAt).getTime())) : 0;
+    const processed = turns.filter((t) => t.status !== 'skipped').length;
+    const record: StepRecord = {
+      label,
+      seasonNumber: turns[0]?.seasonNumber ?? 0,
+      trigger: turns[0]?.trigger ?? 'none',
+      slot: turns[0]?.slot ?? -1,
+      turns: turns.length,
+      profiles: new Set(turns.map((t) => t.profileId)).size,
+      processed,
+      budgetSkipped: turns.filter((t) => t.reason === STEP_BUDGET_EXHAUSTED).length,
+      stepMs: last - first,
+      msPerAutomaton: Math.round((last - first) / Math.max(processed, 1)),
+      settlementMs,
+      chargedActions: actions.reduce((sum, list) => sum + list.length, 0),
+      robotsBought: actions.reduce((sum, list) => sum + list.filter((a) => a.kind === 'robot_creation').length, 0),
+      maxTurnMs: Math.max(0, ...turns.map((t) => t.durationMs ?? 0)),
+    };
+    steps.push(record);
+    logger.info(
+      `[automaton-heavy] ${label}: season=${record.seasonNumber} trigger=${record.trigger} slot=${record.slot} `
+      + `turns=${record.turns} stepMs=${record.stepMs} processed=${record.processed} budgetSkipped=${record.budgetSkipped} `
+      + `msPerAutomaton=${record.msPerAutomaton} maxTurnMs=${record.maxTurnMs} settlementMs=${settlementMs} `
+      + `chargedActions=${record.chargedActions} robotsBought=${record.robotsBought}`,
+    );
+
     const groups = new Set(turns.map((t) => `${t.seasonNumber}/${t.trigger}/${t.slot}`));
     expect({ label, steps: groups.size }).toEqual({ label, steps: 1 });
     const failures = turns
@@ -176,34 +213,11 @@ describe('Automaton multi-season simulation (Spec #55 task 12.2)', () => {
     expect({ label, failures }).toEqual({ label, failures: [] });
     const upkeepIssues = turns.filter((t) => Array.isArray(t.upkeepIssues) && t.upkeepIssues.length > 0).map((t) => t.profileId);
     expect({ label, upkeepIssues }).toEqual({ label, upkeepIssues: [] });
-    expect({ label, turns: turns.length, profiles: new Set(turns.map((t) => t.profileId)).size })
-      .toEqual({ label, turns: HEAVY_POPULATION_SIZE, profiles: HEAVY_POPULATION_SIZE });
-
-    const actions = turns.map((t) => (t.actions as unknown as TurnActionRecord[]).filter((a) => !a.replayed));
+    expect({ label, turns: record.turns, profiles: record.profiles })
+      .toEqual({ label, turns: POPULATION.length, profiles: POPULATION.length });
     for (const list of actions) expect(list.length).toBeLessThanOrEqual(TURN_ACTION_LIMIT);
-    const first = Math.min(...turns.map((t) => t.startedAt.getTime()));
-    const last = Math.max(...turns.map((t) => (t.finishedAt ?? t.startedAt).getTime()));
-    const record: StepRecord = {
-      label,
-      seasonNumber: turns[0].seasonNumber,
-      trigger: turns[0].trigger,
-      slot: turns[0].slot,
-      turns: turns.length,
-      profiles: new Set(turns.map((t) => t.profileId)).size,
-      stepMs: last - first,
-      settlementMs,
-      chargedActions: actions.reduce((sum, list) => sum + list.length, 0),
-      robotsBought: actions.reduce((sum, list) => sum + list.filter((a) => a.kind === 'robot_creation').length, 0),
-      maxTurnMs: Math.max(...turns.map((t) => t.durationMs ?? 0)),
-    };
     // R7.10: every Turn_Step within the 300 s budget.
     expect(record.stepMs).toBeLessThanOrEqual(TURN_STEP_BUDGET_MS);
-    steps.push(record);
-    logger.info(
-      `[automaton-heavy] ${label}: season=${record.seasonNumber} trigger=${record.trigger} slot=${record.slot} `
-      + `turns=${record.turns} stepMs=${record.stepMs} maxTurnMs=${record.maxTurnMs} settlementMs=${settlementMs} `
-      + `chargedActions=${record.chargedActions} robotsBought=${record.robotsBought}`,
-    );
     await assertEndOfSettlement(label);
     return record;
   }
@@ -224,7 +238,7 @@ describe('Automaton multi-season simulation (Spec #55 task 12.2)', () => {
     const strategyRows = body.rows.filter((row) => !row.reference);
     expect(strategyRows.map((row) => row.strategyKey).sort()).toEqual([...HEAVY_STRATEGY_KEYS].sort());
     // At least this run's stables (another heavy suite may have left its own on the shared heavy database).
-    expect(strategyRows.reduce((sum, row) => sum + row.stables, 0)).toBeGreaterThanOrEqual(HEAVY_POPULATION_SIZE);
+    expect(strategyRows.reduce((sum, row) => sum + row.stables, 0)).toBeGreaterThanOrEqual(POPULATION.length);
     expect(body.rows.some((row) => row.reference && row.stables >= HUMAN_STABLES)).toBe(true);
     for (const row of strategyRows) expect(row.winRate?.total ?? 0).toBeGreaterThan(0);
     comparisons.push({ label, ms, bulk });
@@ -243,16 +257,13 @@ describe('Automaton multi-season simulation (Spec #55 task 12.2)', () => {
     process.env.SEASON_LENGTH_CYCLES = String(SEASON_LENGTH);
     process.env.PREPARATION_LENGTH_CYCLES = String(PREPARATION_LENGTH);
 
-    // Task 12.1: the fixed population, validated by the catalogue rules.
+    // Spec #57 R5.4: every repository Catalogue_Entry, validated by the catalogue rules.
     const strategies = getStrategyRegistry();
-    const starters = loadStarterEntries();
-    const generated = generatedEntries(starters, strategies);
-    expect(generated).toHaveLength(GENERATED_ENTRY_COUNT);
-    expect(new Set(generated.map((e) => e.strategy.key))).toEqual(new Set(HEAVY_STRATEGY_KEYS));
-    expect(new Set(generated.flatMap((e) => e.blueprints.map((b) => b.buildFocus)))).toEqual(new Set(BUILD_FOCUS_KEYS));
-    const entries = [...starters, ...generated];
+    const entries = POPULATION;
     catalogueKeys.push(...entries.map((e) => e.catalogueKey));
-    expect(catalogueKeys.slice(0, STARTER_CATALOGUE_KEYS.length)).toEqual([...STARTER_CATALOGUE_KEYS]);
+    expect(STARTER_CATALOGUE_KEYS.filter((key) => !catalogueKeys.includes(key))).toEqual([]);
+    expect(new Set(entries.map((e) => e.strategy.key))).toEqual(new Set(HEAVY_STRATEGY_KEYS));
+    expect(new Set(entries.flatMap((e) => e.blueprints.map((b) => b.buildFocus)))).toEqual(new Set(BUILD_FOCUS_KEYS));
     const context = { weapons: await loadWeaponCatalogue(), strategies };
     const invalid = entries
       .map((entry) => ({ key: entry.catalogueKey, result: validateCatalogueEntry(entry, context) }))
@@ -273,14 +284,15 @@ describe('Automaton multi-season simulation (Spec #55 task 12.2)', () => {
     firstUserId = ((await prisma.user.findFirst({ orderBy: { id: 'desc' }, select: { id: true } }))?.id ?? 0) + 1;
     harness = await startAdminApi(`hv${tag}`);
 
-    writeCatalogueDirectory(scratchDirectory, entries);
-    const sync = await syncCatalogue({ catalogueDirectory: scratchDirectory, alertConflicts: async () => undefined });
+    const sync = await syncCatalogue({ catalogueDirectory: CATALOGUE_DIRECTORY, alertConflicts: async () => undefined });
     if (!sync.ok) throw new Error(`Catalogue_Sync failed: ${sync.problems.join('; ')}`);
     expect(sync.summary.conflicts).toEqual([]);
-    expect(sync.summary.added).toHaveLength(HEAVY_POPULATION_SIZE);
+    expect(sync.summary.added).toHaveLength(POPULATION.length);
     for (const key of catalogueKeys) automatonUserIds.push((await activateProfile(key)).result.userId);
     profileIds.push(...(await prisma.automatonProfile.findMany({ where: { catalogueKey: { in: catalogueKeys } }, select: { id: true } })).map((p) => p.id));
-    expect(profileIds).toHaveLength(HEAVY_POPULATION_SIZE);
+    expect(profileIds).toHaveLength(POPULATION.length);
+    // Every repository entry active.
+    expect(await prisma.automatonProfile.count({ where: { catalogueKey: { in: catalogueKeys }, status: 'active' } })).toBe(POPULATION.length);
 
     for (let i = 0; i < HUMAN_STABLES; i += 1) {
       const user = await prisma.user.create({ data: { username: `t55hv_h${i}_${tag}`, passwordHash: 'unused', stableName: `Hv Human ${i} ${tag}`.slice(0, 30) } });
@@ -295,10 +307,20 @@ describe('Automaton multi-season simulation (Spec #55 task 12.2)', () => {
     else process.env.SEASON_LENGTH_CYCLES = previousEnv.season;
     if (previousEnv.preparation === undefined) delete process.env.PREPARATION_LENGTH_CYCLES;
     else process.env.PREPARATION_LENGTH_CYCLES = previousEnv.preparation;
-    fs.rmSync(scratchDirectory, { recursive: true, force: true });
-
     // Durations for the implementation record.
+    logger.info(`[automaton-heavy] population: ${POPULATION.length} repository Catalogue_Entries`);
     logger.info(`[automaton-heavy] steps: ${JSON.stringify(steps)}`);
+    const perTrigger: Record<string, { steps: number; stepMs: number; processed: number; budgetSkipped: number; secondsPerAutomaton: number }> = {};
+    for (const step of steps) {
+      const row = perTrigger[step.trigger] ?? { steps: 0, stepMs: 0, processed: 0, budgetSkipped: 0, secondsPerAutomaton: 0 };
+      row.steps += 1;
+      row.stepMs += step.stepMs;
+      row.processed += step.processed;
+      row.budgetSkipped += step.budgetSkipped;
+      row.secondsPerAutomaton = Math.round((row.stepMs / Math.max(row.processed, 1)) * 1000) / 1_000_000;
+      perTrigger[step.trigger] = row;
+    }
+    logger.info(`[automaton-heavy] per-trigger: ${JSON.stringify(perTrigger)}`);
     logger.info(`[automaton-heavy] comparisons: ${JSON.stringify(comparisons.map((c) => ({ label: c.label, ms: c.ms, battles: c.bulk.battles, participants: c.bulk.participants })))}`);
     logger.info(`[automaton-heavy] alerts raised: ${alerts.length}`);
 
@@ -317,7 +339,7 @@ describe('Automaton multi-season simulation (Spec #55 task 12.2)', () => {
     const prep1 = await settle('s1 prep 1');
     expect(prep1).toMatchObject({ seasonNumber: 1, trigger: 'preparation', slot: 1 });
     // The first preparation turn builds every stable's opening roster from ₡3,000,000.
-    expect(prep1.robotsBought).toBeGreaterThanOrEqual(HEAVY_POPULATION_SIZE);
+    expect(prep1.robotsBought).toBeGreaterThanOrEqual(POPULATION.length);
     for (const userId of automatonUserIds) expect(await prisma.robot.count({ where: { userId } })).toBeGreaterThan(0);
     expect(await settle('s1 prep 2')).toMatchObject({ seasonNumber: 1, trigger: 'preparation', slot: 2 });
     expect((await prisma.season.findUniqueOrThrow({ where: { seasonNumber: 1 } })).phase).toBe('competitive');
@@ -337,7 +359,7 @@ describe('Automaton multi-season simulation (Spec #55 task 12.2)', () => {
     lastBulk = null;
     expect(await prisma.battle.count()).toBe(0);
     // R14.4: Automaton users survive the rollover.
-    expect(await prisma.user.count({ where: { id: { in: automatonUserIds }, stableType: 'automaton' } })).toBe(HEAVY_POPULATION_SIZE);
+    expect(await prisma.user.count({ where: { id: { in: automatonUserIds }, stableType: 'automaton' } })).toBe(POPULATION.length);
   }, PHASE_TIMEOUT_MS);
 
   it('season 2: every stable rebuilt in the Preparation_Phase, competitive settlements and the comparison at ACC volume', async () => {
@@ -356,7 +378,7 @@ describe('Automaton multi-season simulation (Spec #55 task 12.2)', () => {
         .filter((t) => (t.actions as unknown as TurnActionRecord[]).some((a) => a.kind === 'robot_creation' && !a.replayed))
         .map((t) => t.profileId),
     );
-    expect(rebuilt.size).toBe(HEAVY_POPULATION_SIZE);
+    expect(rebuilt.size).toBe(POPULATION.length);
     for (const userId of automatonUserIds) {
       expect(await prisma.robot.count({ where: { userId, createdAt: { gte: rolloverAt } } })).toBeGreaterThan(0);
     }

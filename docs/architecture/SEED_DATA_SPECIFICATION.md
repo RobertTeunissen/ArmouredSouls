@@ -2,7 +2,7 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Technical Specification  
-**Last Updated**: October 10, 2026 (Automaton catalogue and strategy files, Spec #55)  
+**Last Updated**: October 11, 2026 (Automaton catalogue expansion, Spec #57)  
 **Status**: Current Implementation  
 **Version**: v1.5
 
@@ -702,7 +702,7 @@ Automaton stables and strategies are repository data, but **not** seed data: `pr
 
 ### Automaton_Catalogue
 
-**Location**: `app/backend/prisma/automaton-catalogue/{catalogueKey}.json`, one Catalogue_Entry per file. The repository holds the 11 starter stables (decision 32).
+**Location**: `app/backend/prisma/automaton-catalogue/{catalogueKey}.json`, one Catalogue_Entry per file. The folder holds the Starter_Stables of spec 55 (decision 32) plus the Expansion_Stables of spec 57. The entry count is whatever the folder holds (`ls app/backend/prisma/automaton-catalogue/*.json | wc -l`); no document or test states it.
 
 **Format** (`schemaVersion` 1, validated by `catalogueEntrySchema` in `services/automaton/automatonCatalogueService.ts`; strict, unknown keys rejected):
 
@@ -734,6 +734,7 @@ Rules enforced by the schema (the admin create and update endpoints reuse them):
 - Weapon names must exist in `WEAPON_DEFINITIONS` (CI) and the `weapons` table (sync); weapons must fit the loadout.
 - Every blueprint has a `refinementPlan` with at least one step on each non-shield weapon of the final stage, at most 5 per weapon, checked cumulatively with the shared refinement validators.
 - There is **no image field**.
+- **Cross-stable uniqueness** (spec 57): Catalogue_Key, stable name (case-insensitive), robot name (exact) and team name (exact) are unique across all entries in the folder, enforced by `catalogueSchema.test.ts` (`crossEntryDuplicates`, which names both entries of a repeat).
 
 ### Repository_Images
 

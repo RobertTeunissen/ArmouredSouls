@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "catalogueKey": "ndr-precision-workshop",
+  "stableName": "NDR Precision Workshop",
+  "franchise": "Bicentennial Man",
+  "backstory": "NDR Precision Workshop enters the arena with a clear doctrine. A balanced flagship that improves steadily. Every surviving machine returns to the workshop before the next booking.",
+  "strategy": {
+    "key": "paragon",
+    "version": 1,
+    "targetOverrides": {}
+  },
+  "teamNames": {
+    "twoVsTwo": [],
+    "threeVsThree": []
+  },
+  "eventOrder": [
+    "league_1v1",
+    "tournament_1v1",
+    "koth",
+    "grand_melee",
+    "league_2v2",
+    "tag_team",
+    "tournament_2v2",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "blueprints": [
+    {
+      "slot": 1,
+      "robotName": "Andrew NDR-114",
+      "loadoutType": "single",
+      "stance": "balanced",
+      "yieldThreshold": 25,
+      "buildFocus": "versatile",
+      "weaponPath": [
+        {
+          "main": "Plasma Rifle"
+        },
+        {
+          "main": "Volt Sabre"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        }
+      ]
+    }
+  ]
+}

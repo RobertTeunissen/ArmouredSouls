@@ -1,0 +1,160 @@
+{
+  "number": 68,
+  "catalogueKey": "valley-forge-maintenance",
+  "stableName": "Valley Forge Maintenance",
+  "franchiseLabel": "Silent Running",
+  "strategy": "Trio",
+  "fit": "Adapt",
+  "conceptIdentity": "A utility crew adapted into durable arena robots. Boxy low bodies, squat legs, numbered casings, matching industrial paint.",
+  "backstory": "Valley Forge Maintenance enters the arena with a clear doctrine. A utility crew adapted into durable arena robots. Every surviving machine returns to the workshop before the next booking.",
+  "openingRobots": 3,
+  "targetRobots": 3,
+  "adminMaximumRobots": 4,
+  "targetOverrides": {},
+  "teamNames": {
+    "2v2": [
+      {
+        "name": "Valley Forge Pair 01",
+        "slots": [
+          1,
+          2
+        ]
+      }
+    ],
+    "3v3": [
+      {
+        "name": "Valley Forge Squad 01",
+        "slots": [
+          1,
+          2,
+          3
+        ]
+      }
+    ]
+  },
+  "eventOrder": [
+    "league_3v3",
+    "tournament_3v3",
+    "league_1v1",
+    "league_2v2",
+    "tag_team",
+    "koth",
+    "grand_melee",
+    "tournament_2v2",
+    "tournament_1v1"
+  ],
+  "robots": [
+    {
+      "blueprintId": "valley-forge-maintenance:1:huey",
+      "slot": 1,
+      "name": "Huey",
+      "sourceAlias": "Huey",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yieldThreshold": 25,
+      "buildFocus": "Warden",
+      "weaponPath": [
+        {
+          "mainWeapon": "Laser Pistol",
+          "offhandWeapon": "Light Shield",
+          "listPriceCredits": 108000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": "Aegis Bulwark",
+          "listPriceCredits": 834000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Boxy low utility drone with squat legs, numbered casing and an articulated tool arm.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 0,
+        "imageConvention": "app/frontend/public/assets/automatons/valley-forge-maintenance/1.webp"
+      }
+    },
+    {
+      "blueprintId": "valley-forge-maintenance:2:dewey",
+      "slot": 2,
+      "name": "Dewey",
+      "sourceAlias": "Dewey",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "single",
+      "stance": "defensive",
+      "yieldThreshold": 25,
+      "buildFocus": "Tactician",
+      "weaponPath": [
+        {
+          "mainWeapon": "Laser Pistol",
+          "offhandWeapon": null,
+          "listPriceCredits": 57000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Boxy low utility drone with squat legs, distinct service markings and a sensor assembly.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 1,
+        "imageConvention": "app/frontend/public/assets/automatons/valley-forge-maintenance/2.webp"
+      }
+    },
+    {
+      "blueprintId": "valley-forge-maintenance:3:louie",
+      "slot": 3,
+      "name": "Louie",
+      "sourceAlias": "Louie",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 25,
+      "buildFocus": "Versatile",
+      "weaponPath": [
+        {
+          "mainWeapon": "Bolt Carbine",
+          "offhandWeapon": null,
+          "listPriceCredits": 93000
+        },
+        {
+          "mainWeapon": "Nova Caster",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "mid",
+        "artBrief": "Boxy low utility drone with repaired panels, squat legs and a compact tool mount.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 2,
+        "imageConvention": "app/frontend/public/assets/automatons/valley-forge-maintenance/3.webp"
+      }
+    }
+  ],
+  "alternativeBlueprints": [],
+  "review": {
+    "openingWeaponCredits": 258000,
+    "finalWeaponCreditsAtTarget": 1684000,
+    "equippedWeaponCountAtTarget": 4,
+    "purchaseOrder": [
+      1,
+      2,
+      3
+    ],
+    "reserveSlots": [],
+    "alternativeRule": "Choose an alternative before catalogue approval; it replaces the specified slot and never adds another live robot."
+  }
+}

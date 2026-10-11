@@ -1,10 +1,10 @@
 # Automaton Stables
 
-**Spec:** #55 · **Status:** Implemented (ACC) · **Last updated:** October 2026
+**Spec:** #55 (engine and starter stables), #57 (catalogue expansion) · **Status:** Implemented (ACC; the Expansion_Stables of spec 57 arrive with the next ACC deploy) · **Last updated:** 11 October 2026
 
 Automaton_Stables are persistent, themed, computer-run stables that play by the same rules as human players. They buy robots, facilities, attributes, weapons and refinements through the same services and credit paths as a player, enter the same events, survive every Season_Rollover and rebuild themselves from the human starting balance.
 
-Operator procedures are in `docs/guides/AUTOMATON_OPERATIONS_GUIDE.md`. The approved creative content (strategies, Build_Focus weights, the 11 starter stables, every player- and admin-visible string) is the Review_Pack in `.kiro/specs/done-october26/55-automaton-stables/review/`.
+Operator procedures are in `docs/guides/AUTOMATON_OPERATIONS_GUIDE.md`. The approved creative content (strategies, Build_Focus weights, the starter stables, every player- and admin-visible string) is the Review_Pack in `.kiro/specs/done-october26/55-automaton-stables/review/`; the Expansion_Stables were approved in the spec-57 Expansion_Review_Pack (`.kiro/specs/done-october26/57-automaton-catalogue-expansion/review/`).
 
 ## Purpose
 
@@ -91,7 +91,7 @@ Purchases therefore book to the new cycle exactly like a human buying after sett
 - A failing Automaton never fails settlement or rollover and never blocks the other Automatons; the turn is recorded `failed` and alerts.
 - Free_Upkeep (teams, subscriptions, stance and yield sync, tuning) runs at the start and end of every turn and costs nothing.
 
-Measured on the heavy simulation (100 Active_Automatons, local Apple Silicon, PostgreSQL 17): opening-build Turn_Steps 244 s (first preparation) and 260 s (`season_open`), steady-state settlement steps 5–12 s, slowest single turn 4.5 s. The opening steps pass the 300 s hard limit but miss the 180 s design target; most time is spent in the shared purchase path (audit, locks, cycle identity, achievement checks). With the 11 starter stables the opening step scales to roughly 27 s (an extrapolation from the 100-stable figure, not a measurement). The full simulation runs about 14 minutes locally.
+Measured on the heavy simulation (100 Active_Automatons, local Apple Silicon, PostgreSQL 17): opening-build Turn_Steps 244 s (first preparation) and 260 s (`season_open`), steady-state settlement steps 5–12 s, slowest single turn 4.5 s. The opening steps pass the 300 s hard limit but miss the 180 s design target; most time is spent in the shared purchase path (audit, locks, cycle identity, achievement checks). With the 11 starter stables the opening step scales to roughly 27 s (an extrapolation from the 100-stable figure, not a measurement). The full simulation runs about 14 minutes locally. These are spec 55's figures. Since spec 57 the heavy test runs every repository Catalogue_Entry instead of a fixed population; its seconds per Automaton per Turn_Trigger, budget skips and wall time are recorded in `docs/implementation_notes/AUTOMATON_CATALOGUE_EXPANSION.md`.
 
 ## Economic boundaries
 
@@ -112,9 +112,9 @@ Measured on the heavy simulation (100 Active_Automatons, local Apple Silicon, Po
 
 Reviewed stable definitions live in the repository as Catalogue_Entries (`app/backend/prisma/automaton-catalogue/{catalogueKey}.json`). On every ACC deploy Catalogue_Sync (`pnpm run automaton:sync`) inserts new entries as Draft_Automatons. It is insert-only, with one exception: a blueprint without an image gets its Repository_Image (`app/frontend/public/assets/automatons/{catalogueKey}/{slot}.webp`). Edits made in the admin page are never overwritten. Admin edits travel back to the repository through Catalogue_Export → `pnpm run automaton:unpack` → pull request.
 
-### The 11 starter stables
+### Starter stables (spec 55)
 
-This spec delivers exactly these stables (decision 32). More follow through the admin page or a later spec.
+Spec 55 delivered these stables (decision 32); spec 57 adds the Expansion_Stables below. They alone cover the Coverage_Matrix, so no Expansion_Stable is ever needed for engine coverage.
 
 | Catalogue_Key | Stable | Franchise | Strategy | Blueprints |
 |---|---|---|---|---|
@@ -131,6 +131,16 @@ This spec delivers exactly these stables (decision 32). More follow through the 
 | `autobots-ark` | Autobots of the Ark | Transformers — Autobots | Generalist (goal 14 Robots → 3) | 4 |
 
 Franchise and backstory are admin-only; showing them to players is backlog #61.
+
+### Expansion stables (spec 57)
+
+The Automaton_Catalogue is the Starter_Stables plus the Expansion_Stables of spec 57, whatever their number: the folder `app/backend/prisma/automaton-catalogue/` is the source, and its file count is the catalogue size (`ls app/backend/prisma/automaton-catalogue/*.json | wc -l`). The current totals per origin and per strategy are in the generated Totals block of the spec-57 `review/FINDINGS.md`.
+
+- **Review and approval**: every Expansion_Stable was converted from the product owner's drafts, validated against every spec-55 catalogue rule and the built code, and approved with the spec-57 Expansion_Review_Pack (`.kiro/specs/done-october26/57-automaton-catalogue-expansion/review/`, Content_Approval 11 October 2026). The approved entries were copied byte-identical into the catalogue folder; the starter entries are unchanged.
+- **Strategies**: the engine and the six strategies are unchanged. The collection's Squadron stables were converted as Trio with robots target 6 (`targetOverrides {"12": 6}`, decision 12).
+- **Names**: Catalogue_Keys, stable names (case-insensitive), robot names and team names are unique across the whole catalogue (`catalogueSchema.test.ts`).
+- **Portraits**: each expansion Blueprint_Slot has its Repository_Image at `app/frontend/public/assets/automatons/{catalogueKey}/{slot}.webp`; renamed slots follow their portrait (decision 18).
+- **No activation cap** (decision 19): after the deploy every Expansion_Stable is a Draft_Automaton, and an admin activates them in batches (`docs/guides/AUTOMATON_OPERATIONS_GUIDE.md` §1). What the built engine needs for very large populations is investigated in `.kiro/specs/done-october26/57-automaton-catalogue-expansion/review/SCALING.md`; its open items are not implemented.
 
 ## Competitive parity and matchmaking
 

@@ -1,0 +1,345 @@
+{
+  "number": 178,
+  "catalogue_key": "stitchpunk-salvage-circle",
+  "name": "Stitchpunk Salvage Circle",
+  "franchise": "9 — 2009 feature film",
+  "strategy": "Trio",
+  "opening_robots": 3,
+  "target_robots": 3,
+  "max_planned_robots": 3,
+  "strategy_review_limit": 4,
+  "backstory": "Three stitched constructs make salvage hardware serve flexible fire, precision and agile contact. The workshop equips the complete trio without replacing their unusual bodies.",
+  "strategy_personality": "Small constructed beings with stitched coverings, optical eyes, and improvised equipment provide strong material variety. Preserve their different bodies and costumes, especially 7's distinctive headgear. These are fantasy creations animated through the film's soul-based premise, rather than ordinary software-driven androids. Salvage and complementary equipment are useful arena interpretations; do not replace their fabric bodies with standard robot armour.",
+  "teams": {
+    "2v2": [
+      {
+        "name": "Stitchpunk Pair 01",
+        "slots": [
+          1,
+          2
+        ],
+        "forms": "Opening"
+      }
+    ],
+    "3v3": [
+      {
+        "name": "Stitchpunk Squad 01",
+        "slots": [
+          1,
+          2,
+          3
+        ],
+        "forms": "Opening"
+      }
+    ]
+  },
+  "event_order": [
+    "league_3v3",
+    "tournament_3v3",
+    "league_2v2",
+    "tag_team",
+    "league_1v1",
+    "koth",
+    "grand_melee",
+    "tournament_2v2",
+    "tournament_1v1"
+  ],
+  "robots": [
+    {
+      "slot": 1,
+      "name": "Nine",
+      "source_identity": "9, stitchpunk; arena name spells source numeral",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 15,
+      "build_focus": "Versatile",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": null,
+          "list_price_credits": 57000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: 9 from the 2009 film, small authentic burlap stitchpunk with worn tan stitched fabric body, big metal-rimmed circular optical eyes, distinctive zipper down front, thin articulated limbs and tiny mechanical hands/feet. One source-inspired small improvised staff held low. Preserve rag-doll construction and expressive source geometry, not a plated humanoid robot.\nMetadata only, do not render text: #178 slot 1 Nine.",
+      "role": "Flexible line fighter",
+      "missing_fields": [],
+      "refinement_note": "Trio follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "Nine fills the flexible line fighter role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Versatile tuning supports the short equipment role; balanced stance and a 15% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Trio strategy tuning rules with the Versatile Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "stitchpunk-salvage-circle:1:nine",
+      "folder": "stables/178-stitchpunk-salvage-circle/robots/01-nine",
+      "files": {
+        "png": "stables/178-stitchpunk-salvage-circle/robots/01-nine/portrait.png",
+        "webp": "stables/178-stitchpunk-salvage-circle/robots/01-nine/portrait.webp",
+        "blueprint": "stables/178-stitchpunk-salvage-circle/robots/01-nine/blueprint.json",
+        "profile": "stables/178-stitchpunk-salvage-circle/robots/01-nine/profile.md",
+        "prompt": "stables/178-stitchpunk-salvage-circle/robots/01-nine/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/stitchpunk-salvage-circle/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 178,
+          "stable_name": "Stitchpunk Salvage Circle",
+          "catalogue_key": "stitchpunk-salvage-circle",
+          "slot": 1,
+          "robot_name": "Nine",
+          "source_identity": "9, stitchpunk; arena name spells source numeral",
+          "source_edition": "9, 2009 feature film stitchpunk bodies",
+          "source_references": [
+            "https://www.focusfeatures.com/9",
+            "https://www.focusfeatures.com/article/9_production_notes"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: 9 from the 2009 film, small authentic burlap stitchpunk with worn tan stitched fabric body, big metal-rimmed circular optical eyes, distinctive zipper down front, thin articulated limbs and tiny mechanical hands/feet. One source-inspired small improvised staff held low. Preserve rag-doll construction and expressive source geometry, not a plated humanoid robot.\nMetadata only, do not render text: #178 slot 1 Nine.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-992dcdca-73ad-4f18-8c7a-cbbb4a74f9b1.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "stitchpunk-salvage-circle:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/stitchpunk-salvage-circle/1.webp",
+          "master": "outputs/automaton-portraits/masters/stitchpunk-salvage-circle/1.png",
+          "output": "app/frontend/public/assets/automatons/stitchpunk-salvage-circle/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "4b32619199b95dfaa775baff7688708a2bce00e96169e8ba3b6c7bbfda818349",
+          "bytes": 49078
+        },
+        "sha256": "4b32619199b95dfaa775baff7688708a2bce00e96169e8ba3b6c7bbfda818349",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 2,
+      "name": "Five",
+      "source_identity": "5, stitchpunk; arena name spells source numeral",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 20,
+      "build_focus": "Deadeye",
+      "range_from_weapons": "long",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Beam Pistol",
+          "offhand_weapon": null,
+          "list_price_credits": 93000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Particle Lance",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: 5 from the 2009 film, authentic small burlap stitchpunk with worn beige stitched fabric body, one intact round optical eye and one missing/damaged eye socket as the canonical design, asymmetrical optical face, thin mechanical hands and feet. Small practical salvaged tool held at side. No gore; preserve source cloth construction, not metal body armour.\nMetadata only, do not render text: #178 slot 2 Five.",
+      "role": "Precision fire support",
+      "missing_fields": [],
+      "refinement_note": "Trio follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 1,
+      "equipment_interpretation": "Five fills the precision fire support role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Deadeye tuning supports the long equipment role; balanced stance and a 20% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Trio strategy tuning rules with the Deadeye Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "stitchpunk-salvage-circle:2:five",
+      "folder": "stables/178-stitchpunk-salvage-circle/robots/02-five",
+      "files": {
+        "png": "stables/178-stitchpunk-salvage-circle/robots/02-five/portrait.png",
+        "webp": "stables/178-stitchpunk-salvage-circle/robots/02-five/portrait.webp",
+        "blueprint": "stables/178-stitchpunk-salvage-circle/robots/02-five/blueprint.json",
+        "profile": "stables/178-stitchpunk-salvage-circle/robots/02-five/profile.md",
+        "prompt": "stables/178-stitchpunk-salvage-circle/robots/02-five/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/stitchpunk-salvage-circle/2.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 178,
+          "stable_name": "Stitchpunk Salvage Circle",
+          "catalogue_key": "stitchpunk-salvage-circle",
+          "slot": 2,
+          "robot_name": "Five",
+          "source_identity": "5, stitchpunk; arena name spells source numeral",
+          "source_edition": "9, 2009 feature film stitchpunk bodies",
+          "source_references": [
+            "https://www.focusfeatures.com/9",
+            "https://www.focusfeatures.com/article/9_production_notes"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: 5 from the 2009 film, authentic small burlap stitchpunk with worn beige stitched fabric body, one intact round optical eye and one missing/damaged eye socket as the canonical design, asymmetrical optical face, thin mechanical hands and feet. Small practical salvaged tool held at side. No gore; preserve source cloth construction, not metal body armour.\nMetadata only, do not render text: #178 slot 2 Five.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-f986464a-fcda-4395-afb5-2d134bdc6820.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "stitchpunk-salvage-circle:2",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/stitchpunk-salvage-circle/2.webp",
+          "master": "outputs/automaton-portraits/masters/stitchpunk-salvage-circle/2.png",
+          "output": "app/frontend/public/assets/automatons/stitchpunk-salvage-circle/2.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "cb420740e01d5e46013e51e3e23f2e41fa8b5d7c801b250fb37881ba63e0173a",
+          "bytes": 40810
+        },
+        "sha256": "cb420740e01d5e46013e51e3e23f2e41fa8b5d7c801b250fb37881ba63e0173a",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 3,
+      "name": "Seven",
+      "source_identity": "7, stitchpunk; arena name spells source numeral",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "dual_wield",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Sprinter",
+      "range_from_weapons": "melee",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Practice Sword",
+          "offhand_weapon": "Practice Sword",
+          "list_price_credits": 100000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Vibro Mace",
+          "offhand_weapon": "Vibro Mace",
+          "list_price_credits": 850000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: 7 from the 2009 film, slender burlap stitchpunk warrior with source bird-skull headgear framing large metal-ringed optical eyes, authentic fabric body and thin limbs, recognizable feathered mantle and one improvised source spear held low. Entire spear, bird skull and feet fit in frame. No extra animal or figure.\nMetadata only, do not render text: #178 slot 3 Seven.",
+      "role": "Paired contact attacker",
+      "missing_fields": [],
+      "refinement_note": "Trio follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 2,
+      "equipment_interpretation": "Seven fills the paired contact attacker role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Sprinter tuning supports the melee equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Trio strategy tuning rules with the Sprinter Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "stitchpunk-salvage-circle:3:seven",
+      "folder": "stables/178-stitchpunk-salvage-circle/robots/03-seven",
+      "files": {
+        "png": "stables/178-stitchpunk-salvage-circle/robots/03-seven/portrait.png",
+        "webp": "stables/178-stitchpunk-salvage-circle/robots/03-seven/portrait.webp",
+        "blueprint": "stables/178-stitchpunk-salvage-circle/robots/03-seven/blueprint.json",
+        "profile": "stables/178-stitchpunk-salvage-circle/robots/03-seven/profile.md",
+        "prompt": "stables/178-stitchpunk-salvage-circle/robots/03-seven/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/stitchpunk-salvage-circle/3.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 178,
+          "stable_name": "Stitchpunk Salvage Circle",
+          "catalogue_key": "stitchpunk-salvage-circle",
+          "slot": 3,
+          "robot_name": "Seven",
+          "source_identity": "7, stitchpunk; arena name spells source numeral",
+          "source_edition": "9, 2009 feature film stitchpunk bodies",
+          "source_references": [
+            "https://www.focusfeatures.com/9",
+            "https://www.focusfeatures.com/article/9_production_notes"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: 7 from the 2009 film, slender burlap stitchpunk warrior with source bird-skull headgear framing large metal-ringed optical eyes, authentic fabric body and thin limbs, recognizable feathered mantle and one improvised source spear held low. Entire spear, bird skull and feet fit in frame. No extra animal or figure.\nMetadata only, do not render text: #178 slot 3 Seven.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-39d924a5-bb82-43b8-a371-b99a454c9287.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "stitchpunk-salvage-circle:3",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/stitchpunk-salvage-circle/3.webp",
+          "master": "outputs/automaton-portraits/masters/stitchpunk-salvage-circle/3.png",
+          "output": "app/frontend/public/assets/automatons/stitchpunk-salvage-circle/3.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "fdb9b7456e51826ff63bcbc763ecfa0d804bebc583f7dcf53e69285f51702fa1",
+          "bytes": 38484
+        },
+        "sha256": "fdb9b7456e51826ff63bcbc763ecfa0d804bebc583f7dcf53e69285f51702fa1",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "alternatives": [],
+  "blueprint_status": "detailed",
+  "source_notes": "\n**Franchise:** 9 — 2009 feature film  \n**Strategy:** Trio · **Target roster:** 3 robots\n\n**Proposed robots:** Nine; Five; Seven.\n\n**Direction:** Small constructed beings with stitched coverings, optical eyes, and improvised equipment provide strong material variety. Preserve their different bodies and costumes, especially 7's distinctive headgear. These are fantasy creations animated through the film's soul-based premise, rather than ordinary software-driven androids. Salvage and complementary equipment are useful arena interpretations; do not replace their fabric bodies with standard robot armour.\n\nReferences: [Focus Features' film reference](https://www.focusfeatures.com/9), [official production notes](https://www.focusfeatures.com/article/9_production_notes).\n\n**Production edition:** 9, 2009 feature film stitchpunk bodies.  \n**Catalogue key:** `stitchpunk-salvage-circle`\n\n",
+  "source_documents": [
+    "reference/AUTOMATON_STABLE_EXPANSION.md"
+  ],
+  "blueprint_origin": "completed during collection",
+  "purchasing_plan": "Open with all three robots. Maintain and tune the trio together; complete stage-1 equipment in slot order. No weapon refinement purchases.",
+  "target_overrides": {},
+  "equipment_budget": {
+    "stage_0_credits": 250000,
+    "stage_1_credits": 1700000,
+    "refinement_credits": 0,
+    "excludes": "Frames, facilities, training, repairs, upkeep, discounts and resale; stage-1 total replaces stage-0 gear and is not a simultaneous equipment inventory."
+  },
+  "folder": "stables/178-stitchpunk-salvage-circle",
+  "history_image_count": 0
+}

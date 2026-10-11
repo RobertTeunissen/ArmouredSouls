@@ -1,0 +1,1259 @@
+{
+  "number": 101,
+  "catalogue_key": "geonosis-droid-foundry",
+  "name": "Geonosis Droid Foundry",
+  "franchise": "Star Wars",
+  "strategy": "Swarm",
+  "opening_robots": 3,
+  "target_robots": 11,
+  "max_planned_robots": 11,
+  "strategy_review_limit": 11,
+  "backstory": "The foundry ships practical infantry first, then fills the line with guards, walkers and heavy platforms. Kalani keeps the production queue moving and the repair bill under control.",
+  "strategy_personality": "prioritize roster growth and practical equipment. Light infantry, ranged platforms, and close-combat specialists give the army different build focuses within the existing Swarm strategy. Kalani supplies the stable's narrative leadership; he does not grant a new command buff.",
+  "teams": {
+    "2v2": [
+      {
+        "name": "Geonosis Pair 01",
+        "slots": [
+          1,
+          2
+        ],
+        "forms": "Opening"
+      },
+      {
+        "name": "Geonosis Pair 02",
+        "slots": [
+          3,
+          4
+        ],
+        "forms": "When slot 4 joins"
+      },
+      {
+        "name": "Geonosis Pair 03",
+        "slots": [
+          5,
+          6
+        ],
+        "forms": "When slot 6 joins"
+      },
+      {
+        "name": "Geonosis Pair 04",
+        "slots": [
+          7,
+          8
+        ],
+        "forms": "When slot 8 joins"
+      },
+      {
+        "name": "Geonosis Pair 05",
+        "slots": [
+          9,
+          10
+        ],
+        "forms": "When slot 10 joins"
+      }
+    ],
+    "3v3": [
+      {
+        "name": "Geonosis Squad 01",
+        "slots": [
+          1,
+          2,
+          3
+        ],
+        "forms": "Opening"
+      },
+      {
+        "name": "Geonosis Squad 02",
+        "slots": [
+          4,
+          5,
+          6
+        ],
+        "forms": "When slot 6 joins"
+      },
+      {
+        "name": "Geonosis Squad 03",
+        "slots": [
+          7,
+          8,
+          9
+        ],
+        "forms": "When slot 9 joins"
+      }
+    ]
+  },
+  "event_order": [
+    "league_3v3",
+    "league_2v2",
+    "tag_team",
+    "league_1v1",
+    "koth",
+    "grand_melee",
+    "tournament_3v3",
+    "tournament_2v2",
+    "tournament_1v1"
+  ],
+  "robots": [
+    {
+      "slot": 1,
+      "name": "Kalani",
+      "source_identity": "Kalani — Star Wars Rebels",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 15,
+      "build_focus": "Tactician",
+      "range_from_weapons": "mid",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Bolt Carbine",
+          "offhand_weapon": null,
+          "list_price_credits": 93000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Nova Caster",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept.\nAsset type: Armoured Souls individual game portrait, stable #101 Geonosis Droid Foundry, slot 1 Kalani. Generate ONE image, one complete robot, square 1:1.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and low haze, no scene clutter.\nSubject: source-faithful Kalani, the green-and-gold Super Tactical Droid as seen in Star Wars Rebels, not an original substitute. Preserve his broad geometric command-droid head, three small warm orange/red photoreceptors, dark green armour with distinctive gold decorative line patterns, angular chest and shoulders, dark exposed mechanical waist and joints, slender articulated arms and legs, and the authentic Rebels body proportions. He is clearly a fully mechanical droid. One modest Separatist blaster held low in one hand, calm calculating command stance, other hand relaxed. No cape or human pilot.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D render matching the existing Armoured Souls robot portraits; believable brushed metal, restrained paint wear and fine scratches, accurate source geometry rendered in realistic materials.\nComposition/framing: three-quarter view; complete head, body, hands, weapon and both feet inside frame; centered occupying about 85% of canvas with generous breathing room; readable distinctive silhouette at 512px thumbnail scale.\nLighting/mood: soft neutral key light, cool rim light from upper right, subtle warm sensor emission; controlled cinematic contrast.\nConstraints: source-faithful Kalani identity and green/gold markings. One character only. No extra figures, grid, collage, text, labels, watermark, logo, border, UI, explosions or firing. Square full-resolution master for a 512x512 WebP export.",
+      "role": "Measured mid-range fighter",
+      "missing_fields": [],
+      "refinement_note": "Swarm follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "Kalani fills the measured mid-range fighter role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Tactician tuning supports the mid equipment role; balanced stance and a 15% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Swarm strategy tuning rules with the Tactician Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "geonosis-droid-foundry:1:kalani",
+      "folder": "stables/101-geonosis-droid-foundry/robots/01-kalani",
+      "files": {
+        "png": "stables/101-geonosis-droid-foundry/robots/01-kalani/portrait.png",
+        "webp": "stables/101-geonosis-droid-foundry/robots/01-kalani/portrait.webp",
+        "blueprint": "stables/101-geonosis-droid-foundry/robots/01-kalani/blueprint.json",
+        "profile": "stables/101-geonosis-droid-foundry/robots/01-kalani/profile.md",
+        "prompt": "stables/101-geonosis-droid-foundry/robots/01-kalani/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/geonosis-droid-foundry/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 101,
+          "stable_name": "Geonosis Droid Foundry",
+          "catalogue_key": "geonosis-droid-foundry",
+          "slot": 1,
+          "robot_name": "Kalani",
+          "source_identity": "Kalani — Star Wars Rebels",
+          "prompt": "Use case: stylized-concept.\nAsset type: Armoured Souls individual game portrait, stable #101 Geonosis Droid Foundry, slot 1 Kalani. Generate ONE image, one complete robot, square 1:1.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and low haze, no scene clutter.\nSubject: source-faithful Kalani, the green-and-gold Super Tactical Droid as seen in Star Wars Rebels, not an original substitute. Preserve his broad geometric command-droid head, three small warm orange/red photoreceptors, dark green armour with distinctive gold decorative line patterns, angular chest and shoulders, dark exposed mechanical waist and joints, slender articulated arms and legs, and the authentic Rebels body proportions. He is clearly a fully mechanical droid. One modest Separatist blaster held low in one hand, calm calculating command stance, other hand relaxed. No cape or human pilot.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D render matching the existing Armoured Souls robot portraits; believable brushed metal, restrained paint wear and fine scratches, accurate source geometry rendered in realistic materials.\nComposition/framing: three-quarter view; complete head, body, hands, weapon and both feet inside frame; centered occupying about 85% of canvas with generous breathing room; readable distinctive silhouette at 512px thumbnail scale.\nLighting/mood: soft neutral key light, cool rim light from upper right, subtle warm sensor emission; controlled cinematic contrast.\nConstraints: source-faithful Kalani identity and green/gold markings. One character only. No extra figures, grid, collage, text, labels, watermark, logo, border, UI, explosions or firing. Square full-resolution master for a 512x512 WebP export.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-f5343173-81e9-4d57-a0e5-e11a237f9178.png",
+          "visual_review": "Accepted: one complete body, green/gold Kalani identity, correct full-body studio framing, source-specific head and three sensors.",
+          "asset_id": "geonosis-droid-foundry:1",
+          "status": "generated",
+          "master": "outputs/automaton-portraits/masters/geonosis-droid-foundry/1.png",
+          "output": "app/frontend/public/assets/automatons/geonosis-droid-foundry/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "5128e5f51130871b4709263e422007cfc889bc012c1dbbdd301dbc28b3695eca",
+          "bytes": 32396,
+          "source_edition": "Star Wars Rebels — Kalani green-and-gold Super Tactical Droid body",
+          "source_references": [
+            "https://www.starwars.com/databank/super-tactical-droid"
+          ],
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/geonosis-droid-foundry/1.webp"
+        },
+        "sha256": "5128e5f51130871b4709263e422007cfc889bc012c1dbbdd301dbc28b3695eca",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 2,
+      "name": "B1 Battle Droid 02",
+      "source_identity": "Standard B1 battle droid — Star Wars prequels",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 15,
+      "build_focus": "Versatile",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": null,
+          "list_price_credits": 57000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 85% of square canvas with breathing room. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\nSubject: Recognizable standard tan B1 battle droid: long narrow beak-like head with two dark sensor openings, very thin long neck, slender skeletal torso, backpack, articulated skinny arms and long legs, broad flat feet. Weathered sandy-beige metal. Hold one faithful black E-5 blaster rifle in a relaxed ready pose. Standard infantry, no command colours.\nCatalogue label for metadata only, do not render text: #101 slot 2 B1 Battle Droid 02.",
+      "role": "Flexible line fighter",
+      "missing_fields": [],
+      "refinement_note": "Swarm follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 1,
+      "equipment_interpretation": "B1 Battle Droid 02 fills the flexible line fighter role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Versatile tuning supports the short equipment role; balanced stance and a 15% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Swarm strategy tuning rules with the Versatile Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "geonosis-droid-foundry:2:b1-battle-droid-02",
+      "folder": "stables/101-geonosis-droid-foundry/robots/02-b1-battle-droid-02",
+      "files": {
+        "png": "stables/101-geonosis-droid-foundry/robots/02-b1-battle-droid-02/portrait.png",
+        "webp": "stables/101-geonosis-droid-foundry/robots/02-b1-battle-droid-02/portrait.webp",
+        "blueprint": "stables/101-geonosis-droid-foundry/robots/02-b1-battle-droid-02/blueprint.json",
+        "profile": "stables/101-geonosis-droid-foundry/robots/02-b1-battle-droid-02/profile.md",
+        "prompt": "stables/101-geonosis-droid-foundry/robots/02-b1-battle-droid-02/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/geonosis-droid-foundry/2.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 101,
+          "stable_name": "Geonosis Droid Foundry",
+          "catalogue_key": "geonosis-droid-foundry",
+          "slot": 2,
+          "robot_name": "B1 Battle Droid 02",
+          "source_identity": "Standard B1 battle droid — Star Wars prequels",
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 85% of square canvas with breathing room. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\nSubject: Recognizable standard tan B1 battle droid: long narrow beak-like head with two dark sensor openings, very thin long neck, slender skeletal torso, backpack, articulated skinny arms and long legs, broad flat feet. Weathered sandy-beige metal. Hold one faithful black E-5 blaster rifle in a relaxed ready pose. Standard infantry, no command colours.\nCatalogue label for metadata only, do not render text: #101 slot 2 B1 Battle Droid 02.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-adbf1d1e-b314-4778-88ab-1c410af394dd.png",
+          "visual_review": "Accepted: recognizable source chassis, full-body framing and source-correct limb count.",
+          "asset_id": "geonosis-droid-foundry:2",
+          "status": "generated",
+          "master": "outputs/automaton-portraits/masters/geonosis-droid-foundry/2.png",
+          "output": "app/frontend/public/assets/automatons/geonosis-droid-foundry/2.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "0230bca624cea8fcfb9177bb76f558ca0c278cbcfd6ddf028b3249fb6b36fafd",
+          "bytes": 33264,
+          "source_edition": "use the established prequel/Clone Wars machine designs, with Kalani based on his Star Wars Rebels appearance. This is an era-spanning Separatist arena collection, not a claim that these exact units fought together in one battle.",
+          "source_references": [
+            "https://www.starwars.com/databank/battle-droid",
+            "https://www.starwars.com/databank/super-battle-droid",
+            "https://www.starwars.com/databank/droideka",
+            "https://www.starwars.com/databank/commando-droid",
+            "https://www.starwars.com/news/10-of-the-deadliest-droids-in-star-wars",
+            "https://www.starwars.com/databank/t-series-tactical-droid",
+            "https://www.starwars.com/databank/super-tactical-droid",
+            "https://www.starwars.com/databank/dwarf-spider-droid",
+            "https://www.starwars.com/databank/lm-432-muckraker-crab-droid",
+            "https://www.starwars.com/databank/octuptarra-droid"
+          ],
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/geonosis-droid-foundry/2.webp"
+        },
+        "sha256": "0230bca624cea8fcfb9177bb76f558ca0c278cbcfd6ddf028b3249fb6b36fafd",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 3,
+      "name": "B2 Super Battle Droid 03",
+      "source_identity": "B2 super battle droid — Attack of the Clones / Revenge of the Sith",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Bruiser",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": null,
+          "list_price_credits": 57000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Edit this B2 super battle droid portrait. Change ONLY the very small recessed head/sensor block in the top of the torso to be more faithful to the Star Wars prequel B2: an extremely small, low, dark angular sensor wedge tucked deep into the chest recess under the top armour, with a featureless mechanical surface. Remove the human-like pair of eyes, helmet brow, nose and mouth/grille from that head. Keep the characteristic separate small red body sensor on the upper chest. Preserve the entire existing blue-grey broad armoured body, shoulders, two forearm blaster assemblies, pose, legs, feet, full square framing, surface finish, studio floor/background and lighting exactly. No humanoid face, no added helmet, no new text, no new objects.",
+      "role": "Direct short-range pressure",
+      "missing_fields": [],
+      "refinement_note": "Swarm follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 2,
+      "equipment_interpretation": "B2 Super Battle Droid 03 fills the direct short-range pressure role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Bruiser tuning supports the short equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Swarm strategy tuning rules with the Bruiser Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "geonosis-droid-foundry:3:b2-super-battle-droid-03",
+      "folder": "stables/101-geonosis-droid-foundry/robots/03-b2-super-battle-droid-03",
+      "files": {
+        "png": "stables/101-geonosis-droid-foundry/robots/03-b2-super-battle-droid-03/portrait.png",
+        "webp": "stables/101-geonosis-droid-foundry/robots/03-b2-super-battle-droid-03/portrait.webp",
+        "blueprint": "stables/101-geonosis-droid-foundry/robots/03-b2-super-battle-droid-03/blueprint.json",
+        "profile": "stables/101-geonosis-droid-foundry/robots/03-b2-super-battle-droid-03/profile.md",
+        "prompt": "stables/101-geonosis-droid-foundry/robots/03-b2-super-battle-droid-03/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/geonosis-droid-foundry/3.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 101,
+          "stable_name": "Geonosis Droid Foundry",
+          "catalogue_key": "geonosis-droid-foundry",
+          "slot": 3,
+          "robot_name": "B2 Super Battle Droid 03",
+          "source_identity": "B2 super battle droid — Attack of the Clones / Revenge of the Sith",
+          "prompt": "Edit this B2 super battle droid portrait. Change ONLY the very small recessed head/sensor block in the top of the torso to be more faithful to the Star Wars prequel B2: an extremely small, low, dark angular sensor wedge tucked deep into the chest recess under the top armour, with a featureless mechanical surface. Remove the human-like pair of eyes, helmet brow, nose and mouth/grille from that head. Keep the characteristic separate small red body sensor on the upper chest. Preserve the entire existing blue-grey broad armoured body, shoulders, two forearm blaster assemblies, pose, legs, feet, full square framing, surface finish, studio floor/background and lighting exactly. No humanoid face, no added helmet, no new text, no new objects.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-2eba14b5-01a9-4d35-b898-db72f1c2aa69.png",
+          "revision": 2,
+          "visual_review": "Accepted: corrected recessed faceless sensor block; complete blue-grey B2 body and integrated wrist weapons retained.",
+          "asset_id": "geonosis-droid-foundry:3",
+          "status": "generated",
+          "runtime_output": "app/frontend/public/assets/automatons/geonosis-droid-foundry/3.webp",
+          "master": "outputs/automaton-portraits/masters/geonosis-droid-foundry/3-v2.png",
+          "output": "app/frontend/public/assets/automatons/geonosis-droid-foundry/3-v2.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "060088cf0eb4e5bb038ba2e8c8d10418d7ec1c2c26c92bf1145f250e1033d1c2",
+          "bytes": 37048,
+          "previous_versions": [
+            {
+              "stable_number": 101,
+              "stable_name": "Geonosis Droid Foundry",
+              "catalogue_key": "geonosis-droid-foundry",
+              "slot": 3,
+              "robot_name": "B2 Super Battle Droid 03",
+              "source_identity": "B2 super battle droid — Attack of the Clones / Revenge of the Sith",
+              "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 85% of square canvas with breathing room. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\nSubject: Recognizable standard B2 super battle droid: massive broad blue-grey armoured upper torso, tiny recessed integrated head, narrow mechanical waist, thick shoulders and robust legs, paired wrist-blaster barrels on one forward forearm. Both complete feet visible. No handheld rifle and no invented human helmet. Preserve the exact film B2 silhouette.\nCatalogue label for metadata only, do not render text: #101 slot 3 B2 Super Battle Droid 03.",
+              "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-0bf5ab97-8f07-4f57-8152-b16eec162314.png",
+              "visual_review": "Superseded by selected refined portrait; original retained",
+              "asset_id": "geonosis-droid-foundry:3",
+              "status": "generated",
+              "master": "outputs/automaton-portraits/masters/geonosis-droid-foundry/3.png",
+              "output": "app/frontend/public/assets/automatons/geonosis-droid-foundry/3.webp",
+              "master_dimensions": [
+                1254,
+                1254
+              ],
+              "export_dimensions": [
+                512,
+                512
+              ],
+              "sha256": "5bb96e44b1a0fe1271f33286e2dbe6bdd0dc459c5a7b26592e988c4102f0367c",
+              "bytes": 42032,
+              "source_edition": "use the established prequel/Clone Wars machine designs, with Kalani based on his Star Wars Rebels appearance. This is an era-spanning Separatist arena collection, not a claim that these exact units fought together in one battle.",
+              "source_references": [
+                "https://www.starwars.com/databank/battle-droid",
+                "https://www.starwars.com/databank/super-battle-droid",
+                "https://www.starwars.com/databank/droideka",
+                "https://www.starwars.com/databank/commando-droid",
+                "https://www.starwars.com/news/10-of-the-deadliest-droids-in-star-wars",
+                "https://www.starwars.com/databank/t-series-tactical-droid",
+                "https://www.starwars.com/databank/super-tactical-droid",
+                "https://www.starwars.com/databank/dwarf-spider-droid",
+                "https://www.starwars.com/databank/lm-432-muckraker-crab-droid",
+                "https://www.starwars.com/databank/octuptarra-droid"
+              ]
+            }
+          ],
+          "source_edition": "use the established prequel/Clone Wars machine designs, with Kalani based on his Star Wars Rebels appearance. This is an era-spanning Separatist arena collection, not a claim that these exact units fought together in one battle.",
+          "source_references": [
+            "https://www.starwars.com/databank/battle-droid",
+            "https://www.starwars.com/databank/super-battle-droid",
+            "https://www.starwars.com/databank/droideka",
+            "https://www.starwars.com/databank/commando-droid",
+            "https://www.starwars.com/news/10-of-the-deadliest-droids-in-star-wars",
+            "https://www.starwars.com/databank/t-series-tactical-droid",
+            "https://www.starwars.com/databank/super-tactical-droid",
+            "https://www.starwars.com/databank/dwarf-spider-droid",
+            "https://www.starwars.com/databank/lm-432-muckraker-crab-droid",
+            "https://www.starwars.com/databank/octuptarra-droid"
+          ]
+        },
+        "sha256": "060088cf0eb4e5bb038ba2e8c8d10418d7ec1c2c26c92bf1145f250e1033d1c2",
+        "revision": 2,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 4,
+      "name": "Droideka 04",
+      "source_identity": "Deployed destroyer droid — Star Wars prequels",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yield_threshold": 25,
+      "build_focus": "Warden",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": "Light Shield",
+          "list_price_credits": 108000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": "Aegis Bulwark",
+          "list_price_credits": 834000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 85% of square canvas with breathing room. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\nSubject: Recognizable Droideka destroyer droid in deployed standing form: EXACTLY THREE articulated legs, compact bronze-brown rounded upper shell, curved skeletal neck/head and paired gun arms, exposed cables, dark silver joints. All three claw feet and both complete gun assemblies visible. No human-like torso or arms, no rolling duplicate, no shield bubble hiding the silhouette.\nCatalogue label for metadata only, do not render text: #101 slot 4 Droideka 04.",
+      "role": "Protected short-range anchor",
+      "missing_fields": [],
+      "refinement_note": "Swarm follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 3,
+      "equipment_interpretation": "Droideka 04 fills the protected short-range anchor role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Warden tuning supports the short equipment role; defensive stance and a 25% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Swarm strategy tuning rules with the Warden Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "geonosis-droid-foundry:4:droideka-04",
+      "folder": "stables/101-geonosis-droid-foundry/robots/04-droideka-04",
+      "files": {
+        "png": "stables/101-geonosis-droid-foundry/robots/04-droideka-04/portrait.png",
+        "webp": "stables/101-geonosis-droid-foundry/robots/04-droideka-04/portrait.webp",
+        "blueprint": "stables/101-geonosis-droid-foundry/robots/04-droideka-04/blueprint.json",
+        "profile": "stables/101-geonosis-droid-foundry/robots/04-droideka-04/profile.md",
+        "prompt": "stables/101-geonosis-droid-foundry/robots/04-droideka-04/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/geonosis-droid-foundry/4.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 101,
+          "stable_name": "Geonosis Droid Foundry",
+          "catalogue_key": "geonosis-droid-foundry",
+          "slot": 4,
+          "robot_name": "Droideka 04",
+          "source_identity": "Deployed destroyer droid — Star Wars prequels",
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 85% of square canvas with breathing room. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\nSubject: Recognizable Droideka destroyer droid in deployed standing form: EXACTLY THREE articulated legs, compact bronze-brown rounded upper shell, curved skeletal neck/head and paired gun arms, exposed cables, dark silver joints. All three claw feet and both complete gun assemblies visible. No human-like torso or arms, no rolling duplicate, no shield bubble hiding the silhouette.\nCatalogue label for metadata only, do not render text: #101 slot 4 Droideka 04.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-28b52675-2198-4c02-84cc-048da5aa26b2.png",
+          "visual_review": "Accepted: recognizable source chassis, full-body framing and source-correct limb count.",
+          "asset_id": "geonosis-droid-foundry:4",
+          "status": "generated",
+          "master": "outputs/automaton-portraits/masters/geonosis-droid-foundry/4.png",
+          "output": "app/frontend/public/assets/automatons/geonosis-droid-foundry/4.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "814e7de2709c88f9c2da3ff64bd8288382d72da2acb2cfea7ad68f1fc8be7405",
+          "bytes": 53480,
+          "source_edition": "use the established prequel/Clone Wars machine designs, with Kalani based on his Star Wars Rebels appearance. This is an era-spanning Separatist arena collection, not a claim that these exact units fought together in one battle.",
+          "source_references": [
+            "https://www.starwars.com/databank/battle-droid",
+            "https://www.starwars.com/databank/super-battle-droid",
+            "https://www.starwars.com/databank/droideka",
+            "https://www.starwars.com/databank/commando-droid",
+            "https://www.starwars.com/news/10-of-the-deadliest-droids-in-star-wars",
+            "https://www.starwars.com/databank/t-series-tactical-droid",
+            "https://www.starwars.com/databank/super-tactical-droid",
+            "https://www.starwars.com/databank/dwarf-spider-droid",
+            "https://www.starwars.com/databank/lm-432-muckraker-crab-droid",
+            "https://www.starwars.com/databank/octuptarra-droid"
+          ],
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/geonosis-droid-foundry/4.webp"
+        },
+        "sha256": "814e7de2709c88f9c2da3ff64bd8288382d72da2acb2cfea7ad68f1fc8be7405",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 5,
+      "name": "BX Commando Droid 05",
+      "source_identity": "BX-series commando droid — The Clone Wars",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 20,
+      "build_focus": "Sprinter",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": null,
+          "list_price_credits": 57000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 85% of square canvas with breathing room. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\nSubject: Source-faithful BX commando droid, dark charcoal gunmetal plates, distinctive narrow elongated commando-droid head with pale glowing eye sensors, lean agile humanoid mechanical body, narrow waist, articulated limbs. One compact E-5 style carbine held low, controlled stealthy ready stance. Keep the authentic BX geometry rather than a B1 head or human helmet.\nCatalogue label for metadata only, do not render text: #101 slot 5 BX Commando Droid 05.",
+      "role": "Mobile skirmisher",
+      "missing_fields": [],
+      "refinement_note": "Swarm follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 4,
+      "equipment_interpretation": "BX Commando Droid 05 fills the mobile skirmisher role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Sprinter tuning supports the short equipment role; balanced stance and a 20% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Swarm strategy tuning rules with the Sprinter Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "geonosis-droid-foundry:5:bx-commando-droid-05",
+      "folder": "stables/101-geonosis-droid-foundry/robots/05-bx-commando-droid-05",
+      "files": {
+        "png": "stables/101-geonosis-droid-foundry/robots/05-bx-commando-droid-05/portrait.png",
+        "webp": "stables/101-geonosis-droid-foundry/robots/05-bx-commando-droid-05/portrait.webp",
+        "blueprint": "stables/101-geonosis-droid-foundry/robots/05-bx-commando-droid-05/blueprint.json",
+        "profile": "stables/101-geonosis-droid-foundry/robots/05-bx-commando-droid-05/profile.md",
+        "prompt": "stables/101-geonosis-droid-foundry/robots/05-bx-commando-droid-05/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/geonosis-droid-foundry/5.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 101,
+          "stable_name": "Geonosis Droid Foundry",
+          "catalogue_key": "geonosis-droid-foundry",
+          "slot": 5,
+          "robot_name": "BX Commando Droid 05",
+          "source_identity": "BX-series commando droid — The Clone Wars",
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 85% of square canvas with breathing room. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\nSubject: Source-faithful BX commando droid, dark charcoal gunmetal plates, distinctive narrow elongated commando-droid head with pale glowing eye sensors, lean agile humanoid mechanical body, narrow waist, articulated limbs. One compact E-5 style carbine held low, controlled stealthy ready stance. Keep the authentic BX geometry rather than a B1 head or human helmet.\nCatalogue label for metadata only, do not render text: #101 slot 5 BX Commando Droid 05.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-42261336-3641-47ab-b1f3-9c5289da30ff.png",
+          "visual_review": "Accepted: visually reviewed for recognizable source body, complete limbs/equipment, distinct silhouette and matching studio presentation.",
+          "asset_id": "geonosis-droid-foundry:5",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/geonosis-droid-foundry/5.webp",
+          "master": "outputs/automaton-portraits/masters/geonosis-droid-foundry/5.png",
+          "output": "app/frontend/public/assets/automatons/geonosis-droid-foundry/5.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "7c7f19c47374ec53ccb71f810434a15a641c31c87739a6a5d6bff558be9d169a",
+          "bytes": 32488,
+          "source_edition": "use the established prequel/Clone Wars machine designs, with Kalani based on his Star Wars Rebels appearance. This is an era-spanning Separatist arena collection, not a claim that these exact units fought together in one battle.",
+          "source_references": [
+            "https://www.starwars.com/databank/battle-droid",
+            "https://www.starwars.com/databank/super-battle-droid",
+            "https://www.starwars.com/databank/droideka",
+            "https://www.starwars.com/databank/commando-droid",
+            "https://www.starwars.com/news/10-of-the-deadliest-droids-in-star-wars",
+            "https://www.starwars.com/databank/t-series-tactical-droid",
+            "https://www.starwars.com/databank/super-tactical-droid",
+            "https://www.starwars.com/databank/dwarf-spider-droid",
+            "https://www.starwars.com/databank/lm-432-muckraker-crab-droid",
+            "https://www.starwars.com/databank/octuptarra-droid"
+          ]
+        },
+        "sha256": "7c7f19c47374ec53ccb71f810434a15a641c31c87739a6a5d6bff558be9d169a",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 6,
+      "name": "IG-100 MagnaGuard 06",
+      "source_identity": "IG-100 MagnaGuard — Revenge of the Sith",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "dual_wield",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Sprinter",
+      "range_from_weapons": "melee",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Practice Sword",
+          "offhand_weapon": "Practice Sword",
+          "list_price_credits": 100000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Vibro Mace",
+          "offhand_weapon": "Vibro Mace",
+          "list_price_credits": 850000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 85% of square canvas with breathing room. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\nSubject: One IG-100 MagnaGuard bodyguard droid in authentic pale silver-grey body armour, tall thin mechanical frame, recognizable rounded head with warm yellow-orange photoreceptors, a weathered light grey cloak draped back so limbs remain readable. Hold ONE electrostaff with subtle violet energized ends diagonally in both hands, full staff and both feet inside frame. No Grievous body or extra hands.\nCatalogue label for metadata only, do not render text: #101 slot 6 IG-100 MagnaGuard 06.",
+      "role": "Paired contact attacker",
+      "missing_fields": [],
+      "refinement_note": "Swarm follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 5,
+      "equipment_interpretation": "IG-100 MagnaGuard 06 fills the paired contact attacker role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Sprinter tuning supports the melee equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Swarm strategy tuning rules with the Sprinter Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "geonosis-droid-foundry:6:ig-100-magnaguard-06",
+      "folder": "stables/101-geonosis-droid-foundry/robots/06-ig-100-magnaguard-06",
+      "files": {
+        "png": "stables/101-geonosis-droid-foundry/robots/06-ig-100-magnaguard-06/portrait.png",
+        "webp": "stables/101-geonosis-droid-foundry/robots/06-ig-100-magnaguard-06/portrait.webp",
+        "blueprint": "stables/101-geonosis-droid-foundry/robots/06-ig-100-magnaguard-06/blueprint.json",
+        "profile": "stables/101-geonosis-droid-foundry/robots/06-ig-100-magnaguard-06/profile.md",
+        "prompt": "stables/101-geonosis-droid-foundry/robots/06-ig-100-magnaguard-06/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/geonosis-droid-foundry/6.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 101,
+          "stable_name": "Geonosis Droid Foundry",
+          "catalogue_key": "geonosis-droid-foundry",
+          "slot": 6,
+          "robot_name": "IG-100 MagnaGuard 06",
+          "source_identity": "IG-100 MagnaGuard — Revenge of the Sith",
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 85% of square canvas with breathing room. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\nSubject: One IG-100 MagnaGuard bodyguard droid in authentic pale silver-grey body armour, tall thin mechanical frame, recognizable rounded head with warm yellow-orange photoreceptors, a weathered light grey cloak draped back so limbs remain readable. Hold ONE electrostaff with subtle violet energized ends diagonally in both hands, full staff and both feet inside frame. No Grievous body or extra hands.\nCatalogue label for metadata only, do not render text: #101 slot 6 IG-100 MagnaGuard 06.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-abd5d049-c309-4d96-8790-871255029bfb.png",
+          "visual_review": "Accepted: visually reviewed for recognizable source body, complete limbs/equipment, distinct silhouette and matching studio presentation.",
+          "asset_id": "geonosis-droid-foundry:6",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/geonosis-droid-foundry/6.webp",
+          "master": "outputs/automaton-portraits/masters/geonosis-droid-foundry/6.png",
+          "output": "app/frontend/public/assets/automatons/geonosis-droid-foundry/6.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "ec42ff8c11161651a99b98a61c3f07e5697d1a872b7ac5a4cc1252c3033fa719",
+          "bytes": 49824,
+          "source_edition": "use the established prequel/Clone Wars machine designs, with Kalani based on his Star Wars Rebels appearance. This is an era-spanning Separatist arena collection, not a claim that these exact units fought together in one battle.",
+          "source_references": [
+            "https://www.starwars.com/databank/battle-droid",
+            "https://www.starwars.com/databank/super-battle-droid",
+            "https://www.starwars.com/databank/droideka",
+            "https://www.starwars.com/databank/commando-droid",
+            "https://www.starwars.com/news/10-of-the-deadliest-droids-in-star-wars",
+            "https://www.starwars.com/databank/t-series-tactical-droid",
+            "https://www.starwars.com/databank/super-tactical-droid",
+            "https://www.starwars.com/databank/dwarf-spider-droid",
+            "https://www.starwars.com/databank/lm-432-muckraker-crab-droid",
+            "https://www.starwars.com/databank/octuptarra-droid"
+          ]
+        },
+        "sha256": "ec42ff8c11161651a99b98a61c3f07e5697d1a872b7ac5a4cc1252c3033fa719",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 7,
+      "name": "T-series Tactical Droid 07",
+      "source_identity": "Standard T-series tactical droid — The Clone Wars",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 20,
+      "build_focus": "Deadeye",
+      "range_from_weapons": "long",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Beam Pistol",
+          "offhand_weapon": null,
+          "list_price_credits": 93000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Particle Lance",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 85% of square canvas with breathing room. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\nSubject: A standard T-series tactical droid in grey-blue and ivory machine panels with the authentic narrow rectangular angular tactical-droid head, coloured optical sensors, mechanical chest, tall thin articulated limbs and exposed joints. Clearly different silhouette from Kalani's broad Super Tactical head. One discreet blaster low in a hand, composed planning stance. Preserve the canonical T-series body.\nCatalogue label for metadata only, do not render text: #101 slot 7 T-series Tactical Droid 07.",
+      "role": "Precision fire support",
+      "missing_fields": [],
+      "refinement_note": "Swarm follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 6,
+      "equipment_interpretation": "T-series Tactical Droid 07 fills the precision fire support role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Deadeye tuning supports the long equipment role; balanced stance and a 20% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Swarm strategy tuning rules with the Deadeye Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "geonosis-droid-foundry:7:t-series-tactical-droid-07",
+      "folder": "stables/101-geonosis-droid-foundry/robots/07-t-series-tactical-droid-07",
+      "files": {
+        "png": "stables/101-geonosis-droid-foundry/robots/07-t-series-tactical-droid-07/portrait.png",
+        "webp": "stables/101-geonosis-droid-foundry/robots/07-t-series-tactical-droid-07/portrait.webp",
+        "blueprint": "stables/101-geonosis-droid-foundry/robots/07-t-series-tactical-droid-07/blueprint.json",
+        "profile": "stables/101-geonosis-droid-foundry/robots/07-t-series-tactical-droid-07/profile.md",
+        "prompt": "stables/101-geonosis-droid-foundry/robots/07-t-series-tactical-droid-07/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/geonosis-droid-foundry/7.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 101,
+          "stable_name": "Geonosis Droid Foundry",
+          "catalogue_key": "geonosis-droid-foundry",
+          "slot": 7,
+          "robot_name": "T-series Tactical Droid 07",
+          "source_identity": "Standard T-series tactical droid — The Clone Wars",
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 85% of square canvas with breathing room. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\nSubject: A standard T-series tactical droid in grey-blue and ivory machine panels with the authentic narrow rectangular angular tactical-droid head, coloured optical sensors, mechanical chest, tall thin articulated limbs and exposed joints. Clearly different silhouette from Kalani's broad Super Tactical head. One discreet blaster low in a hand, composed planning stance. Preserve the canonical T-series body.\nCatalogue label for metadata only, do not render text: #101 slot 7 T-series Tactical Droid 07.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-d47809fc-31bb-478b-8d47-f4ae4d8ea391.png",
+          "visual_review": "Accepted: visually reviewed for recognizable source body, complete limbs/equipment, distinct silhouette and matching studio presentation.",
+          "asset_id": "geonosis-droid-foundry:7",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/geonosis-droid-foundry/7.webp",
+          "master": "outputs/automaton-portraits/masters/geonosis-droid-foundry/7.png",
+          "output": "app/frontend/public/assets/automatons/geonosis-droid-foundry/7.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "47dfca09afca412882097ddf59bb3d960ca1be5b71ec534d8c84c3cd531d8fec",
+          "bytes": 34614,
+          "source_edition": "use the established prequel/Clone Wars machine designs, with Kalani based on his Star Wars Rebels appearance. This is an era-spanning Separatist arena collection, not a claim that these exact units fought together in one battle.",
+          "source_references": [
+            "https://www.starwars.com/databank/battle-droid",
+            "https://www.starwars.com/databank/super-battle-droid",
+            "https://www.starwars.com/databank/droideka",
+            "https://www.starwars.com/databank/commando-droid",
+            "https://www.starwars.com/news/10-of-the-deadliest-droids-in-star-wars",
+            "https://www.starwars.com/databank/t-series-tactical-droid",
+            "https://www.starwars.com/databank/super-tactical-droid",
+            "https://www.starwars.com/databank/dwarf-spider-droid",
+            "https://www.starwars.com/databank/lm-432-muckraker-crab-droid",
+            "https://www.starwars.com/databank/octuptarra-droid"
+          ]
+        },
+        "sha256": "47dfca09afca412882097ddf59bb3d960ca1be5b71ec534d8c84c3cd531d8fec",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 8,
+      "name": "B1 Commander 08",
+      "source_identity": "B1 command battle droid — Star Wars prequels",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 15,
+      "build_focus": "Tactician",
+      "range_from_weapons": "mid",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Bolt Carbine",
+          "offhand_weapon": null,
+          "list_price_credits": 93000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Nova Caster",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 85% of square canvas with breathing room. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\nSubject: One source-faithful B1 commander battle droid, tan skeletal B1 body and long beak-like head, yellow command markings on head and upper chest, backpack and thin articulated limbs. One black E-5 blaster held in a calm command pose, free hand slightly raised. All limbs and feet visible; commander clearly distinct from standard B1 slot 2.\nCatalogue label for metadata only, do not render text: #101 slot 8 B1 Commander 08.",
+      "role": "Measured mid-range fighter",
+      "missing_fields": [],
+      "refinement_note": "Swarm follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 7,
+      "equipment_interpretation": "B1 Commander 08 fills the measured mid-range fighter role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Tactician tuning supports the mid equipment role; balanced stance and a 15% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Swarm strategy tuning rules with the Tactician Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "geonosis-droid-foundry:8:b1-commander-08",
+      "folder": "stables/101-geonosis-droid-foundry/robots/08-b1-commander-08",
+      "files": {
+        "png": "stables/101-geonosis-droid-foundry/robots/08-b1-commander-08/portrait.png",
+        "webp": "stables/101-geonosis-droid-foundry/robots/08-b1-commander-08/portrait.webp",
+        "blueprint": "stables/101-geonosis-droid-foundry/robots/08-b1-commander-08/blueprint.json",
+        "profile": "stables/101-geonosis-droid-foundry/robots/08-b1-commander-08/profile.md",
+        "prompt": "stables/101-geonosis-droid-foundry/robots/08-b1-commander-08/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/geonosis-droid-foundry/8.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 101,
+          "stable_name": "Geonosis Droid Foundry",
+          "catalogue_key": "geonosis-droid-foundry",
+          "slot": 8,
+          "robot_name": "B1 Commander 08",
+          "source_identity": "B1 command battle droid — Star Wars prequels",
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 85% of square canvas with breathing room. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\nSubject: One source-faithful B1 commander battle droid, tan skeletal B1 body and long beak-like head, yellow command markings on head and upper chest, backpack and thin articulated limbs. One black E-5 blaster held in a calm command pose, free hand slightly raised. All limbs and feet visible; commander clearly distinct from standard B1 slot 2.\nCatalogue label for metadata only, do not render text: #101 slot 8 B1 Commander 08.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-c5f95269-7aa4-490d-89c0-06ba75d2c219.png",
+          "visual_review": "Accepted: visually reviewed for recognizable source body, complete limbs/equipment, distinct silhouette and matching studio presentation.",
+          "asset_id": "geonosis-droid-foundry:8",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/geonosis-droid-foundry/8.webp",
+          "master": "outputs/automaton-portraits/masters/geonosis-droid-foundry/8.png",
+          "output": "app/frontend/public/assets/automatons/geonosis-droid-foundry/8.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "d86dece444a8ff4024ea96aba6eba8d64d0e439042232099491886c5084a5b41",
+          "bytes": 33048,
+          "source_edition": "use the established prequel/Clone Wars machine designs, with Kalani based on his Star Wars Rebels appearance. This is an era-spanning Separatist arena collection, not a claim that these exact units fought together in one battle.",
+          "source_references": [
+            "https://www.starwars.com/databank/battle-droid",
+            "https://www.starwars.com/databank/super-battle-droid",
+            "https://www.starwars.com/databank/droideka",
+            "https://www.starwars.com/databank/commando-droid",
+            "https://www.starwars.com/news/10-of-the-deadliest-droids-in-star-wars",
+            "https://www.starwars.com/databank/t-series-tactical-droid",
+            "https://www.starwars.com/databank/super-tactical-droid",
+            "https://www.starwars.com/databank/dwarf-spider-droid",
+            "https://www.starwars.com/databank/lm-432-muckraker-crab-droid",
+            "https://www.starwars.com/databank/octuptarra-droid"
+          ]
+        },
+        "sha256": "d86dece444a8ff4024ea96aba6eba8d64d0e439042232099491886c5084a5b41",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 9,
+      "name": "Dwarf Spider Droid 09",
+      "source_identity": "DSD1 dwarf spider droid — Star Wars prequels",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "balanced",
+      "yield_threshold": 15,
+      "build_focus": "Deadeye",
+      "range_from_weapons": "long",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Training Beam",
+          "offhand_weapon": null,
+          "list_price_credits": 50000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Ion Beam",
+          "offhand_weapon": null,
+          "list_price_credits": 544000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 85% of square canvas with breathing room. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\nSubject: Authentic DSD1 dwarf spider droid: compact rounded tan metal dome on EXACTLY FOUR jointed spider legs, tall thin central antenna, forward protruding single central blaster cannon, small red sensor lenses. Low non-humanoid mechanical body, restrained sandy paint wear, all four feet and cannon inside frame. No humanoid head, torso or hands.\nCatalogue label for metadata only, do not render text: #101 slot 9 Dwarf Spider Droid 09.",
+      "role": "Heavy long-range support",
+      "missing_fields": [],
+      "refinement_note": "Swarm follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 8,
+      "equipment_interpretation": "Dwarf Spider Droid 09 fills the heavy long-range support role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Deadeye tuning supports the long equipment role; balanced stance and a 15% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Swarm strategy tuning rules with the Deadeye Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "geonosis-droid-foundry:9:dwarf-spider-droid-09",
+      "folder": "stables/101-geonosis-droid-foundry/robots/09-dwarf-spider-droid-09",
+      "files": {
+        "png": "stables/101-geonosis-droid-foundry/robots/09-dwarf-spider-droid-09/portrait.png",
+        "webp": "stables/101-geonosis-droid-foundry/robots/09-dwarf-spider-droid-09/portrait.webp",
+        "blueprint": "stables/101-geonosis-droid-foundry/robots/09-dwarf-spider-droid-09/blueprint.json",
+        "profile": "stables/101-geonosis-droid-foundry/robots/09-dwarf-spider-droid-09/profile.md",
+        "prompt": "stables/101-geonosis-droid-foundry/robots/09-dwarf-spider-droid-09/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/geonosis-droid-foundry/9.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 101,
+          "stable_name": "Geonosis Droid Foundry",
+          "catalogue_key": "geonosis-droid-foundry",
+          "slot": 9,
+          "robot_name": "Dwarf Spider Droid 09",
+          "source_identity": "DSD1 dwarf spider droid — Star Wars prequels",
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 85% of square canvas with breathing room. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\nSubject: Authentic DSD1 dwarf spider droid: compact rounded tan metal dome on EXACTLY FOUR jointed spider legs, tall thin central antenna, forward protruding single central blaster cannon, small red sensor lenses. Low non-humanoid mechanical body, restrained sandy paint wear, all four feet and cannon inside frame. No humanoid head, torso or hands.\nCatalogue label for metadata only, do not render text: #101 slot 9 Dwarf Spider Droid 09.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-cef33c7b-cde6-4fce-a97f-a56e29f8c21d.png",
+          "visual_review": "Accepted: visually reviewed for recognizable source body, complete limbs/equipment, distinct silhouette and matching studio presentation.",
+          "asset_id": "geonosis-droid-foundry:9",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/geonosis-droid-foundry/9.webp",
+          "master": "outputs/automaton-portraits/masters/geonosis-droid-foundry/9.png",
+          "output": "app/frontend/public/assets/automatons/geonosis-droid-foundry/9.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "401e5ce994c248109f9431dd7134bacb666f79d8cc35a2692345a7e8e25445cb",
+          "bytes": 54654,
+          "source_edition": "use the established prequel/Clone Wars machine designs, with Kalani based on his Star Wars Rebels appearance. This is an era-spanning Separatist arena collection, not a claim that these exact units fought together in one battle.",
+          "source_references": [
+            "https://www.starwars.com/databank/battle-droid",
+            "https://www.starwars.com/databank/super-battle-droid",
+            "https://www.starwars.com/databank/droideka",
+            "https://www.starwars.com/databank/commando-droid",
+            "https://www.starwars.com/news/10-of-the-deadliest-droids-in-star-wars",
+            "https://www.starwars.com/databank/t-series-tactical-droid",
+            "https://www.starwars.com/databank/super-tactical-droid",
+            "https://www.starwars.com/databank/dwarf-spider-droid",
+            "https://www.starwars.com/databank/lm-432-muckraker-crab-droid",
+            "https://www.starwars.com/databank/octuptarra-droid"
+          ]
+        },
+        "sha256": "401e5ce994c248109f9431dd7134bacb666f79d8cc35a2692345a7e8e25445cb",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 10,
+      "name": "LM-432 Crab Droid 10",
+      "source_identity": "LM-432 Muckraker crab droid — Revenge of the Sith",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Bruiser",
+      "range_from_weapons": "melee",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Shock Maul",
+          "offhand_weapon": null,
+          "list_price_credits": 183000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Heavy Hammer",
+          "offhand_weapon": null,
+          "list_price_credits": 478000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 85% of square canvas with breathing room. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\nSubject: One authentic film LM-432 Muckraker crab droid as seen on Utapau: low rust-brown armoured crab-like chassis, paired red forward photoreceptors, rugged mechanical legs and claw-like feet in the source-accurate arrangement, source frontal blaster assembly. Use a compact standard model, not a giant fan variant. Keep the full low, wide silhouette and every foot contained in frame, no humanoid components.\nCatalogue label for metadata only, do not render text: #101 slot 10 LM-432 Crab Droid 10.",
+      "role": "Heavy contact attacker",
+      "missing_fields": [],
+      "refinement_note": "Swarm follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 9,
+      "equipment_interpretation": "LM-432 Crab Droid 10 fills the heavy contact attacker role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Bruiser tuning supports the melee equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Swarm strategy tuning rules with the Bruiser Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "geonosis-droid-foundry:10:lm-432-crab-droid-10",
+      "folder": "stables/101-geonosis-droid-foundry/robots/10-lm-432-crab-droid-10",
+      "files": {
+        "png": "stables/101-geonosis-droid-foundry/robots/10-lm-432-crab-droid-10/portrait.png",
+        "webp": "stables/101-geonosis-droid-foundry/robots/10-lm-432-crab-droid-10/portrait.webp",
+        "blueprint": "stables/101-geonosis-droid-foundry/robots/10-lm-432-crab-droid-10/blueprint.json",
+        "profile": "stables/101-geonosis-droid-foundry/robots/10-lm-432-crab-droid-10/profile.md",
+        "prompt": "stables/101-geonosis-droid-foundry/robots/10-lm-432-crab-droid-10/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/geonosis-droid-foundry/10.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 101,
+          "stable_name": "Geonosis Droid Foundry",
+          "catalogue_key": "geonosis-droid-foundry",
+          "slot": 10,
+          "robot_name": "LM-432 Crab Droid 10",
+          "source_identity": "LM-432 Muckraker crab droid — Revenge of the Sith",
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 85% of square canvas with breathing room. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\nSubject: One authentic film LM-432 Muckraker crab droid as seen on Utapau: low rust-brown armoured crab-like chassis, paired red forward photoreceptors, rugged mechanical legs and claw-like feet in the source-accurate arrangement, source frontal blaster assembly. Use a compact standard model, not a giant fan variant. Keep the full low, wide silhouette and every foot contained in frame, no humanoid components.\nCatalogue label for metadata only, do not render text: #101 slot 10 LM-432 Crab Droid 10.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-9e633777-c66a-4f75-af29-fa44adf9f0df.png",
+          "visual_review": "Accepted: visually reviewed for recognizable source body, complete limbs/equipment, distinct silhouette and matching studio presentation.",
+          "asset_id": "geonosis-droid-foundry:10",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/geonosis-droid-foundry/10.webp",
+          "master": "outputs/automaton-portraits/masters/geonosis-droid-foundry/10.png",
+          "output": "app/frontend/public/assets/automatons/geonosis-droid-foundry/10.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "78709b758fbecff21b8ae24c921b5a4620ee7c8090843dab1fb44bd90eab4fc0",
+          "bytes": 59468,
+          "source_choice": "Small four-legged LM-432 model; official Star Wars Databank distinguishes four-legged small and six-legged large models.",
+          "source_edition": "use the established prequel/Clone Wars machine designs, with Kalani based on his Star Wars Rebels appearance. This is an era-spanning Separatist arena collection, not a claim that these exact units fought together in one battle.",
+          "source_references": [
+            "https://www.starwars.com/databank/battle-droid",
+            "https://www.starwars.com/databank/super-battle-droid",
+            "https://www.starwars.com/databank/droideka",
+            "https://www.starwars.com/databank/commando-droid",
+            "https://www.starwars.com/news/10-of-the-deadliest-droids-in-star-wars",
+            "https://www.starwars.com/databank/t-series-tactical-droid",
+            "https://www.starwars.com/databank/super-tactical-droid",
+            "https://www.starwars.com/databank/dwarf-spider-droid",
+            "https://www.starwars.com/databank/lm-432-muckraker-crab-droid",
+            "https://www.starwars.com/databank/octuptarra-droid"
+          ]
+        },
+        "sha256": "78709b758fbecff21b8ae24c921b5a4620ee7c8090843dab1fb44bd90eab4fc0",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 11,
+      "name": "Octuptarra Droid 11",
+      "source_identity": "Small Octuptarra combat tri-droid — Revenge of the Sith",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Bruiser",
+      "range_from_weapons": "mid",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Training Rifle",
+          "offhand_weapon": null,
+          "list_price_credits": 50000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Plasma Cannon",
+          "offhand_weapon": null,
+          "list_price_credits": 408000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 85% of square canvas with breathing room. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\nSubject: One source-faithful smaller Octuptarra combat tri-droid, NOT the towering magna variant: spherical elevated grey-blue head/body with red sensor lenses and source cannon assemblies, EXACTLY THREE tall thin multi-jointed legs arranged in radial tripod formation. Whole sphere, all three legs and claw feet visible. Keep authentic non-humanoid source construction and no human pilot.\nCatalogue label for metadata only, do not render text: #101 slot 11 Octuptarra Droid 11.",
+      "role": "Heavy mid-range pressure",
+      "missing_fields": [],
+      "refinement_note": "Swarm follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 10,
+      "equipment_interpretation": "Octuptarra Droid 11 fills the heavy mid-range pressure role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Bruiser tuning supports the mid equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Swarm strategy tuning rules with the Bruiser Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "geonosis-droid-foundry:11:octuptarra-droid-11",
+      "folder": "stables/101-geonosis-droid-foundry/robots/11-octuptarra-droid-11",
+      "files": {
+        "png": "stables/101-geonosis-droid-foundry/robots/11-octuptarra-droid-11/portrait.png",
+        "webp": "stables/101-geonosis-droid-foundry/robots/11-octuptarra-droid-11/portrait.webp",
+        "blueprint": "stables/101-geonosis-droid-foundry/robots/11-octuptarra-droid-11/blueprint.json",
+        "profile": "stables/101-geonosis-droid-foundry/robots/11-octuptarra-droid-11/profile.md",
+        "prompt": "stables/101-geonosis-droid-foundry/robots/11-octuptarra-droid-11/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/geonosis-droid-foundry/11.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 101,
+          "stable_name": "Geonosis Droid Foundry",
+          "catalogue_key": "geonosis-droid-foundry",
+          "slot": 11,
+          "robot_name": "Octuptarra Droid 11",
+          "source_identity": "Small Octuptarra combat tri-droid — Revenge of the Sith",
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 85% of square canvas with breathing room. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\nSubject: One source-faithful smaller Octuptarra combat tri-droid, NOT the towering magna variant: spherical elevated grey-blue head/body with red sensor lenses and source cannon assemblies, EXACTLY THREE tall thin multi-jointed legs arranged in radial tripod formation. Whole sphere, all three legs and claw feet visible. Keep authentic non-humanoid source construction and no human pilot.\nCatalogue label for metadata only, do not render text: #101 slot 11 Octuptarra Droid 11.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-4646b75b-8720-4806-9f03-5d60dc5e63bc.png",
+          "visual_review": "Accepted: visually reviewed for recognizable source body, complete limbs/equipment, distinct silhouette and matching studio presentation.",
+          "asset_id": "geonosis-droid-foundry:11",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/geonosis-droid-foundry/11.webp",
+          "master": "outputs/automaton-portraits/masters/geonosis-droid-foundry/11.png",
+          "output": "app/frontend/public/assets/automatons/geonosis-droid-foundry/11.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "7f28ad9c8008854ba47ea8069b1b6caef1b87eaeb40d87305e1af1b7e91ac6f3",
+          "bytes": 41784,
+          "source_edition": "use the established prequel/Clone Wars machine designs, with Kalani based on his Star Wars Rebels appearance. This is an era-spanning Separatist arena collection, not a claim that these exact units fought together in one battle.",
+          "source_references": [
+            "https://www.starwars.com/databank/battle-droid",
+            "https://www.starwars.com/databank/super-battle-droid",
+            "https://www.starwars.com/databank/droideka",
+            "https://www.starwars.com/databank/commando-droid",
+            "https://www.starwars.com/news/10-of-the-deadliest-droids-in-star-wars",
+            "https://www.starwars.com/databank/t-series-tactical-droid",
+            "https://www.starwars.com/databank/super-tactical-droid",
+            "https://www.starwars.com/databank/dwarf-spider-droid",
+            "https://www.starwars.com/databank/lm-432-muckraker-crab-droid",
+            "https://www.starwars.com/databank/octuptarra-droid"
+          ]
+        },
+        "sha256": "7f28ad9c8008854ba47ea8069b1b6caef1b87eaeb40d87305e1af1b7e91ac6f3",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "alternatives": [],
+  "blueprint_status": "detailed",
+  "source_notes": "\n**Franchise:** Star Wars  \n**Strategy:** Swarm · **Target roster:** 11 robots  \n**Catalogue key:** `geonosis-droid-foundry`\n\n**Proposed robots:** Kalani; B1 battle droid; B2 super battle droid; Droideka; BX commando droid; IG-100 MagnaGuard; T-series tactical droid; B1 commander; dwarf spider droid; LM-432 crab droid; Octuptarra droid.\n\n**Identity:** a surviving Separatist production line repurposes its machines for the arena. The stable expands through recognizable classes rather than eleven recoloured infantry portraits.\n\n**Strategy personality:** prioritize roster growth and practical equipment. Light infantry, ranged platforms, and close-combat specialists give the army different build focuses within the existing Swarm strategy. Kalani supplies the stable's narrative leadership; he does not grant a new command buff.\n\n| Slot | Proposed robot name | Source identity | Arena role direction | Portrait identity |\n|---|---|---|---|---|\n| 1 | **Kalani** | Named Super Tactical Droid | Tactical ranged lead | Distinctive angular command head and source paint scheme. |\n| 2 | **B1 Battle Droid 02** | Standard B1 battle droid | Light ranged infantry | Sand-coloured narrow chassis, elongated head, backpack, recognizable blaster. |\n| 3 | **B2 Super Battle Droid 03** | B2 super battle droid | Durable ranged infantry | Broad blue-grey torso, recessed head, integrated forearm weapon. |\n| 4 | **Droideka 04** | Destroyer droid | Defensive ranged platform | Deployed three-legged silhouette and twin weapon arms; keep the full body readable. |\n| 5 | **BX Commando Droid 05** | BX-series commando droid | Mobile ranged specialist | Dark, agile humanoid chassis and distinctive commando head. |\n| 6 | **IG-100 MagnaGuard 06** | MagnaGuard bodyguard droid | Close-combat specialist | Cloaked mechanical body and a clearly readable electrostaff. |\n| 7 | **T-series Tactical Droid 07** | T-series tactical droid | Precise tactical fighter | Clearly different head and torso from Kalani; preserve the selected source unit's colours. |\n| 8 | **B1 Commander 08** | B1 command variant | Light tactical infantry | The B1 source frame with command markings and a distinct pose. |\n| 9 | **Dwarf Spider Droid 09** | Dwarf spider droid | Compact ranged platform | Four-legged domed chassis with a central cannon. |\n| 10 | **LM-432 Crab Droid 10** | LM-432 “Muckraker” crab droid | Heavy close-range pressure | Select one source size/model and preserve its correct leg count and low stance. |\n| 11 | **Octuptarra Droid 11** | Octuptarra droid | Heavy ranged platform | Select a smaller source variant; three tall legs and the characteristic elevated sensor/weapon body. |\n\nThe numbered names are original arena unit labels for source machine classes. They are not presented as named Star Wars characters. Only the two B1 entries deliberately share their basic chassis; the eleven portraits cover ten distinct chassis families.\n\n**Visual family:** source-specific finishes, scuffed industrial metal, visible mechanisms, and subtle Geonosian factory atmosphere. Preserve the B1's thin geometry, the B2's broad mass, and the walker silhouettes. Shared lighting should unify the collection without forcing every machine into the same colour palette.\n\n**Source edition:** use the established prequel/Clone Wars machine designs, with Kalani based on his Star Wars Rebels appearance. This is an era-spanning Separatist arena collection, not a claim that these exact units fought together in one battle.\n\nReferences: [B1 battle droid](https://www.starwars.com/databank/battle-droid), [B2 super battle droid](https://www.starwars.com/databank/super-battle-droid), [Droideka](https://www.starwars.com/databank/droideka), [commando droid](https://www.starwars.com/databank/commando-droid), [MagnaGuard background](https://www.starwars.com/news/10-of-the-deadliest-droids-in-star-wars), [T-series tactical droid](https://www.starwars.com/databank/t-series-tactical-droid), [Super Tactical Droids and Kalani](https://www.starwars.com/databank/super-tactical-droid), [dwarf spider droid](https://www.starwars.com/databank/dwarf-spider-droid), [LM-432 crab droid](https://www.starwars.com/databank/lm-432-muckraker-crab-droid), [Octuptarra droid](https://www.starwars.com/databank/octuptarra-droid).\n\n",
+  "source_documents": [
+    "reference/AUTOMATON_STABLE_EXPANSION.md"
+  ],
+  "blueprint_origin": "completed during collection",
+  "purchasing_plan": "Open with slots 1–3; recruit 4 through 11 in slot order. Fund each complete stage-0 loadout and the necessary roster/storage expansion before recruitment. Prioritise the full roster, then stage-1 equipment in slot order. No weapon refinement purchases.",
+  "target_overrides": {},
+  "equipment_budget": {
+    "stage_0_credits": 941000,
+    "stage_1_credits": 5664000,
+    "refinement_credits": 0,
+    "excludes": "Frames, facilities, training, repairs, upkeep, discounts and resale; stage-1 total replaces stage-0 gear and is not a simultaneous equipment inventory."
+  },
+  "folder": "stables/101-geonosis-droid-foundry",
+  "history_image_count": 2
+}

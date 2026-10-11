@@ -1,0 +1,199 @@
+{
+  "schemaVersion": 1,
+  "catalogueKey": "dinobot-forge",
+  "stableName": "Dinobot Forge",
+  "franchise": "Transformers — Dinobots",
+  "backstory": "Three mechanical creatures bring heavy contact, short-range pressure and a guarded front to the forge. Their source forms remain single complete bodies with ordinary arena loadouts.",
+  "strategy": {
+    "key": "generalist",
+    "version": 1,
+    "targetOverrides": {
+      "14": 3
+    }
+  },
+  "teamNames": {
+    "twoVsTwo": [
+      "Dinobot Charge"
+    ],
+    "threeVsThree": [
+      "Dinobots Transform"
+    ]
+  },
+  "eventOrder": [
+    "league_1v1",
+    "league_2v2",
+    "tag_team",
+    "league_3v3",
+    "koth",
+    "grand_melee",
+    "tournament_1v1",
+    "tournament_2v2",
+    "tournament_3v3"
+  ],
+  "blueprints": [
+    {
+      "slot": 1,
+      "robotName": "Grimlock",
+      "loadoutType": "two_handed",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "bruiser",
+      "weaponPath": [
+        {
+          "main": "Shock Maul"
+        },
+        {
+          "main": "Heavy Hammer"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "magnitude": 2,
+          "targetAttribute": "combatPower"
+        }
+      ]
+    },
+    {
+      "slot": 2,
+      "robotName": "Slag",
+      "loadoutType": "two_handed",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "bruiser",
+      "weaponPath": [
+        {
+          "main": "Scatter Cannon"
+        },
+        {
+          "main": "Arc Projector"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "magnitude": 2,
+          "targetAttribute": "combatPower"
+        }
+      ]
+    },
+    {
+      "slot": 3,
+      "robotName": "Sludge",
+      "loadoutType": "weapon_shield",
+      "stance": "defensive",
+      "yieldThreshold": 25,
+      "buildFocus": "warden",
+      "weaponPath": [
+        {
+          "main": "Practice Sword",
+          "offhand": "Light Shield"
+        },
+        {
+          "main": "Vibro Mace",
+          "offhand": "Aegis Bulwark"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "magnitude": 2,
+          "targetAttribute": "counterProtocols"
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "magnitude": 1,
+          "targetAttribute": "evasionThrusters"
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "magnitude": 1,
+          "targetAttribute": "evasionThrusters"
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "magnitude": 1,
+          "targetAttribute": "evasionThrusters"
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "magnitude": 1,
+          "targetAttribute": "evasionThrusters"
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "magnitude": 1,
+          "targetAttribute": "evasionThrusters"
+        }
+      ]
+    }
+  ]
+}

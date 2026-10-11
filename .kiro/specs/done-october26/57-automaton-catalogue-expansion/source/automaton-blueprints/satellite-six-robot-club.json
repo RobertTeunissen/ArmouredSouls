@@ -1,0 +1,162 @@
+{
+  "number": 66,
+  "catalogueKey": "satellite-six-robot-club",
+  "stableName": "Satellite Six Robot Club",
+  "franchiseLabel": "Mystery Science Theater 3000",
+  "strategy": "Tycoon",
+  "fit": "Adapt",
+  "conceptIdentity": "Audience income supports a small roster. Gold skeletal frame, red dome-headed body, and industrial service unit; larger combat interpretation needed.",
+  "backstory": "Satellite Six Robot Club enters the arena with a clear doctrine. Audience income supports a small roster. Every surviving machine returns to the workshop before the next booking.",
+  "openingRobots": 2,
+  "targetRobots": 3,
+  "adminMaximumRobots": 3,
+  "targetOverrides": {
+    "robots": 3
+  },
+  "teamNames": {
+    "2v2": [
+      {
+        "name": "Satellite Six Pair 01",
+        "slots": [
+          1,
+          2
+        ]
+      }
+    ],
+    "3v3": [
+      {
+        "name": "Satellite Six Squad 01",
+        "slots": [
+          1,
+          2,
+          3
+        ]
+      }
+    ]
+  },
+  "eventOrder": [
+    "koth",
+    "grand_melee",
+    "league_1v1",
+    "league_2v2",
+    "tag_team",
+    "tournament_1v1",
+    "tournament_2v2",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "robots": [
+    {
+      "blueprintId": "satellite-six-robot-club:1:crow-t-robot",
+      "slot": 1,
+      "name": "Crow T. Robot",
+      "sourceAlias": "Crow T. Robot",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "single",
+      "stance": "offensive",
+      "yieldThreshold": 30,
+      "buildFocus": "Sprinter",
+      "weaponPath": [
+        {
+          "mainWeapon": "Practice Sword",
+          "offhandWeapon": null,
+          "listPriceCredits": 50000
+        },
+        {
+          "mainWeapon": "Vibro Mace",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "melee",
+        "artBrief": "Gold skeletal robot with a long beak-like face, distinctive head crest and thin limbs.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 0,
+        "imageConvention": "app/frontend/public/assets/automatons/satellite-six-robot-club/1.webp"
+      }
+    },
+    {
+      "blueprintId": "satellite-six-robot-club:2:tom-servo",
+      "slot": 2,
+      "name": "Tom Servo",
+      "sourceAlias": "Tom Servo",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 30,
+      "buildFocus": "Tactician",
+      "weaponPath": [
+        {
+          "mainWeapon": "Beam Pistol",
+          "offhandWeapon": null,
+          "listPriceCredits": 93000
+        },
+        {
+          "mainWeapon": "Particle Lance",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "long",
+        "artBrief": "Red dome-headed robot with a transparent upper housing and compact body.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 1,
+        "imageConvention": "app/frontend/public/assets/automatons/satellite-six-robot-club/2.webp"
+      }
+    },
+    {
+      "blueprintId": "satellite-six-robot-club:3:gypsy",
+      "slot": 3,
+      "name": "Gypsy",
+      "sourceAlias": "Gypsy",
+      "nameBasis": "Source character or machine designation",
+      "availability": "growth",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yieldThreshold": 30,
+      "buildFocus": "Warden",
+      "weaponPath": [
+        {
+          "mainWeapon": "Laser Pistol",
+          "offhandWeapon": "Light Shield",
+          "listPriceCredits": 108000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": "Aegis Bulwark",
+          "listPriceCredits": 834000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Large service robot with a rounded purple head, single eye and flexible mechanical body.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 2,
+        "imageConvention": "app/frontend/public/assets/automatons/satellite-six-robot-club/3.webp"
+      }
+    }
+  ],
+  "alternativeBlueprints": [],
+  "review": {
+    "openingWeaponCredits": 143000,
+    "finalWeaponCreditsAtTarget": 1684000,
+    "equippedWeaponCountAtTarget": 4,
+    "purchaseOrder": [
+      1,
+      2,
+      3
+    ],
+    "reserveSlots": [],
+    "alternativeRule": "Choose an alternative before catalogue approval; it replaces the specified slot and never adds another live robot."
+  }
+}

@@ -1,0 +1,1139 @@
+{
+  "number": 166,
+  "catalogue_key": "machine-city-sentinel-array",
+  "name": "Machine City Sentinel Array",
+  "franchise": "The Matrix — film continuity",
+  "strategy": "Swarm",
+  "opening_robots": 3,
+  "target_robots": 11,
+  "max_planned_robots": 11,
+  "strategy_review_limit": 11,
+  "backstory": "Eleven articulated machines fill distinct arena jobs from mobile scouts to heavy support. Their shared origin supplies the atmosphere; each body buys its own supported equipment.",
+  "strategy_personality": "A strong non-humanoid military swarm: compact sensor bodies, clusters of red optics, and long articulated tentacles. Preserve the squid-like construction and distinguish individuals through pose, wear, and restrained unit markings. Arena equipment and combat balance need an adaptation; the films' overwhelming numbers do not create extra attacks or shared damage. Use trilogy references rather than silently mixing later redesigns.",
+  "teams": {
+    "2v2": [
+      {
+        "name": "Machine City Pair 01",
+        "slots": [
+          1,
+          2
+        ],
+        "forms": "Opening"
+      },
+      {
+        "name": "Machine City Pair 02",
+        "slots": [
+          3,
+          4
+        ],
+        "forms": "When slot 4 joins"
+      },
+      {
+        "name": "Machine City Pair 03",
+        "slots": [
+          5,
+          6
+        ],
+        "forms": "When slot 6 joins"
+      },
+      {
+        "name": "Machine City Pair 04",
+        "slots": [
+          7,
+          8
+        ],
+        "forms": "When slot 8 joins"
+      },
+      {
+        "name": "Machine City Pair 05",
+        "slots": [
+          9,
+          10
+        ],
+        "forms": "When slot 10 joins"
+      }
+    ],
+    "3v3": [
+      {
+        "name": "Machine City Squad 01",
+        "slots": [
+          1,
+          2,
+          3
+        ],
+        "forms": "Opening"
+      },
+      {
+        "name": "Machine City Squad 02",
+        "slots": [
+          4,
+          5,
+          6
+        ],
+        "forms": "When slot 6 joins"
+      },
+      {
+        "name": "Machine City Squad 03",
+        "slots": [
+          7,
+          8,
+          9
+        ],
+        "forms": "When slot 9 joins"
+      }
+    ]
+  },
+  "event_order": [
+    "league_3v3",
+    "league_2v2",
+    "tag_team",
+    "league_1v1",
+    "koth",
+    "grand_melee",
+    "tournament_3v3",
+    "tournament_2v2",
+    "tournament_1v1"
+  ],
+  "robots": [
+    {
+      "slot": 1,
+      "name": "Sentinel 01",
+      "source_identity": "Sentinel machine hunter; original numbered arena unit label",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 20,
+      "build_focus": "Sprinter",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": null,
+          "list_price_credits": 57000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: ONE Matrix Sentinel from the original 1999–2003 film trilogy. Squid-like non-humanoid machine: compact rounded ribbed dark metal sensor body with a cluster of many small red camera lenses, numerous long flexible jointed metal tentacles ending in small manipulator tips. Preserve the familiar original-trilogy Sentinel construction. All tentacles connect to this one body, loosely curled into the square frame, every tip visible with a 5% margin. Pose variant 1: low frontal curl, individual restrained scratches and wear, same source chassis and colours. No added human arms, head or legs. No humans or other sentinels.\nMetadata only, do not render text: #166 slot 1 Sentinel 01.",
+      "role": "Mobile skirmisher",
+      "missing_fields": [],
+      "refinement_note": "Swarm follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "Sentinel 01 fills the mobile skirmisher role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Sprinter tuning supports the short equipment role; balanced stance and a 20% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Swarm strategy tuning rules with the Sprinter Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "machine-city-sentinel-array:1:sentinel-01",
+      "folder": "stables/166-machine-city-sentinel-array/robots/01-sentinel-01",
+      "files": {
+        "png": "stables/166-machine-city-sentinel-array/robots/01-sentinel-01/portrait.png",
+        "webp": "stables/166-machine-city-sentinel-array/robots/01-sentinel-01/portrait.webp",
+        "blueprint": "stables/166-machine-city-sentinel-array/robots/01-sentinel-01/blueprint.json",
+        "profile": "stables/166-machine-city-sentinel-array/robots/01-sentinel-01/profile.md",
+        "prompt": "stables/166-machine-city-sentinel-array/robots/01-sentinel-01/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/machine-city-sentinel-array/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 166,
+          "stable_name": "Machine City Sentinel Array",
+          "catalogue_key": "machine-city-sentinel-array",
+          "slot": 1,
+          "robot_name": "Sentinel 01",
+          "source_identity": "Sentinel machine hunter; original numbered arena unit label",
+          "source_edition": "The Matrix original film trilogy, 1999–2003 Sentinel design",
+          "source_references": [
+            "https://www.warnerbros.com/movies/matrix"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: ONE Matrix Sentinel from the original 1999–2003 film trilogy. Squid-like non-humanoid machine: compact rounded ribbed dark metal sensor body with a cluster of many small red camera lenses, numerous long flexible jointed metal tentacles ending in small manipulator tips. Preserve the familiar original-trilogy Sentinel construction. All tentacles connect to this one body, loosely curled into the square frame, every tip visible with a 5% margin. Pose variant 1: low frontal curl, individual restrained scratches and wear, same source chassis and colours. No added human arms, head or legs. No humans or other sentinels.\nMetadata only, do not render text: #166 slot 1 Sentinel 01.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-e7bf69f4-61b8-479a-90d9-d1e7a7a89f13.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "machine-city-sentinel-array:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/machine-city-sentinel-array/1.webp",
+          "master": "outputs/automaton-portraits/masters/machine-city-sentinel-array/1.png",
+          "output": "app/frontend/public/assets/automatons/machine-city-sentinel-array/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "2074528ded1270dffc4588617cc9596588c5084c280f8af1fffa3d4be53199af",
+          "bytes": 70352,
+          "source_reference_note": "Original-trilogy body selected; corrected an earlier later-film reference link"
+        },
+        "sha256": "2074528ded1270dffc4588617cc9596588c5084c280f8af1fffa3d4be53199af",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 2,
+      "name": "Sentinel 02",
+      "source_identity": "Sentinel machine hunter; original numbered arena unit label",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "dual_wield",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Sprinter",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": "Laser Pistol",
+          "list_price_credits": 114000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": "Volt Sabre",
+          "list_price_credits": 850000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: ONE Matrix Sentinel from the original 1999–2003 film trilogy. Squid-like non-humanoid machine: compact rounded ribbed dark metal sensor body with a cluster of many small red camera lenses, numerous long flexible jointed metal tentacles ending in small manipulator tips. Preserve the familiar original-trilogy Sentinel construction. All tentacles connect to this one body, loosely curled into the square frame, every tip visible with a 5% margin. Pose variant 2: elevated leftward coil, individual restrained scratches and wear, same source chassis and colours. No added human arms, head or legs. No humans or other sentinels.\nMetadata only, do not render text: #166 slot 2 Sentinel 02.",
+      "role": "Mobile paired-fire attacker",
+      "missing_fields": [],
+      "refinement_note": "Swarm follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 1,
+      "equipment_interpretation": "Sentinel 02 fills the mobile paired-fire attacker role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Sprinter tuning supports the short equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Swarm strategy tuning rules with the Sprinter Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "machine-city-sentinel-array:2:sentinel-02",
+      "folder": "stables/166-machine-city-sentinel-array/robots/02-sentinel-02",
+      "files": {
+        "png": "stables/166-machine-city-sentinel-array/robots/02-sentinel-02/portrait.png",
+        "webp": "stables/166-machine-city-sentinel-array/robots/02-sentinel-02/portrait.webp",
+        "blueprint": "stables/166-machine-city-sentinel-array/robots/02-sentinel-02/blueprint.json",
+        "profile": "stables/166-machine-city-sentinel-array/robots/02-sentinel-02/profile.md",
+        "prompt": "stables/166-machine-city-sentinel-array/robots/02-sentinel-02/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/machine-city-sentinel-array/2.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 166,
+          "stable_name": "Machine City Sentinel Array",
+          "catalogue_key": "machine-city-sentinel-array",
+          "slot": 2,
+          "robot_name": "Sentinel 02",
+          "source_identity": "Sentinel machine hunter; original numbered arena unit label",
+          "source_edition": "The Matrix original film trilogy, 1999–2003 Sentinel design",
+          "source_references": [
+            "https://www.warnerbros.com/movies/matrix"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: ONE Matrix Sentinel from the original 1999–2003 film trilogy. Squid-like non-humanoid machine: compact rounded ribbed dark metal sensor body with a cluster of many small red camera lenses, numerous long flexible jointed metal tentacles ending in small manipulator tips. Preserve the familiar original-trilogy Sentinel construction. All tentacles connect to this one body, loosely curled into the square frame, every tip visible with a 5% margin. Pose variant 2: elevated leftward coil, individual restrained scratches and wear, same source chassis and colours. No added human arms, head or legs. No humans or other sentinels.\nMetadata only, do not render text: #166 slot 2 Sentinel 02.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-4f6000bc-05af-48c5-bd9d-ed0078957561.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "machine-city-sentinel-array:2",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/machine-city-sentinel-array/2.webp",
+          "master": "outputs/automaton-portraits/masters/machine-city-sentinel-array/2.png",
+          "output": "app/frontend/public/assets/automatons/machine-city-sentinel-array/2.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "2f5c468cd5dd6224331a162618729012d05eb494ad457acb7cf7e1f7f6ac475f",
+          "bytes": 64004,
+          "source_reference_note": "Original-trilogy body selected; corrected an earlier later-film reference link"
+        },
+        "sha256": "2f5c468cd5dd6224331a162618729012d05eb494ad457acb7cf7e1f7f6ac475f",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 3,
+      "name": "Sentinel 03",
+      "source_identity": "Sentinel machine hunter; original numbered arena unit label",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Sprinter",
+      "range_from_weapons": "melee",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Practice Sword",
+          "offhand_weapon": null,
+          "list_price_credits": 50000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Vibro Mace",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: ONE Matrix Sentinel from the original 1999–2003 film trilogy. Squid-like non-humanoid machine: compact rounded ribbed dark metal sensor body with a cluster of many small red camera lenses, numerous long flexible jointed metal tentacles ending in small manipulator tips. Preserve the familiar original-trilogy Sentinel construction. All tentacles connect to this one body, loosely curled into the square frame, every tip visible with a 5% margin. Pose variant 3: rightward inspection tilt, individual restrained scratches and wear, same source chassis and colours. No added human arms, head or legs. No humans or other sentinels.\nMetadata only, do not render text: #166 slot 3 Sentinel 03.",
+      "role": "Agile contact specialist",
+      "missing_fields": [],
+      "refinement_note": "Swarm follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 2,
+      "equipment_interpretation": "Sentinel 03 fills the agile contact specialist role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Sprinter tuning supports the melee equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Swarm strategy tuning rules with the Sprinter Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "machine-city-sentinel-array:3:sentinel-03",
+      "folder": "stables/166-machine-city-sentinel-array/robots/03-sentinel-03",
+      "files": {
+        "png": "stables/166-machine-city-sentinel-array/robots/03-sentinel-03/portrait.png",
+        "webp": "stables/166-machine-city-sentinel-array/robots/03-sentinel-03/portrait.webp",
+        "blueprint": "stables/166-machine-city-sentinel-array/robots/03-sentinel-03/blueprint.json",
+        "profile": "stables/166-machine-city-sentinel-array/robots/03-sentinel-03/profile.md",
+        "prompt": "stables/166-machine-city-sentinel-array/robots/03-sentinel-03/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/machine-city-sentinel-array/3.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 166,
+          "stable_name": "Machine City Sentinel Array",
+          "catalogue_key": "machine-city-sentinel-array",
+          "slot": 3,
+          "robot_name": "Sentinel 03",
+          "source_identity": "Sentinel machine hunter; original numbered arena unit label",
+          "source_edition": "The Matrix original film trilogy, 1999–2003 Sentinel design",
+          "source_references": [
+            "https://www.warnerbros.com/movies/matrix"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: ONE Matrix Sentinel from the original 1999–2003 film trilogy. Squid-like non-humanoid machine: compact rounded ribbed dark metal sensor body with a cluster of many small red camera lenses, numerous long flexible jointed metal tentacles ending in small manipulator tips. Preserve the familiar original-trilogy Sentinel construction. All tentacles connect to this one body, loosely curled into the square frame, every tip visible with a 5% margin. Pose variant 3: rightward inspection tilt, individual restrained scratches and wear, same source chassis and colours. No added human arms, head or legs. No humans or other sentinels.\nMetadata only, do not render text: #166 slot 3 Sentinel 03.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-eaa83b1e-3fb6-4daf-812a-dcc8e0705746.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "machine-city-sentinel-array:3",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/machine-city-sentinel-array/3.webp",
+          "master": "outputs/automaton-portraits/masters/machine-city-sentinel-array/3.png",
+          "output": "app/frontend/public/assets/automatons/machine-city-sentinel-array/3.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "4a5ea5ea5d64b7e12b4f9097c9d8b259515999b30508f161d98d2e103b3f36de",
+          "bytes": 69324,
+          "source_reference_note": "Original-trilogy body selected; corrected an earlier later-film reference link"
+        },
+        "sha256": "4a5ea5ea5d64b7e12b4f9097c9d8b259515999b30508f161d98d2e103b3f36de",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 4,
+      "name": "Sentinel 04",
+      "source_identity": "Sentinel machine hunter; original numbered arena unit label",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 15,
+      "build_focus": "Tactician",
+      "range_from_weapons": "mid",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Bolt Carbine",
+          "offhand_weapon": null,
+          "list_price_credits": 93000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Nova Caster",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: ONE Matrix Sentinel from the original 1999–2003 film trilogy. Squid-like non-humanoid machine: compact rounded ribbed dark metal sensor body with a cluster of many small red camera lenses, numerous long flexible jointed metal tentacles ending in small manipulator tips. Preserve the familiar original-trilogy Sentinel construction. All tentacles connect to this one body, loosely curled into the square frame, every tip visible with a 5% margin. Pose variant 4: low broad spread, individual restrained scratches and wear, same source chassis and colours. No added human arms, head or legs. No humans or other sentinels.\nMetadata only, do not render text: #166 slot 4 Sentinel 04.",
+      "role": "Measured mid-range fighter",
+      "missing_fields": [],
+      "refinement_note": "Swarm follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 3,
+      "equipment_interpretation": "Sentinel 04 fills the measured mid-range fighter role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Tactician tuning supports the mid equipment role; balanced stance and a 15% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Swarm strategy tuning rules with the Tactician Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "machine-city-sentinel-array:4:sentinel-04",
+      "folder": "stables/166-machine-city-sentinel-array/robots/04-sentinel-04",
+      "files": {
+        "png": "stables/166-machine-city-sentinel-array/robots/04-sentinel-04/portrait.png",
+        "webp": "stables/166-machine-city-sentinel-array/robots/04-sentinel-04/portrait.webp",
+        "blueprint": "stables/166-machine-city-sentinel-array/robots/04-sentinel-04/blueprint.json",
+        "profile": "stables/166-machine-city-sentinel-array/robots/04-sentinel-04/profile.md",
+        "prompt": "stables/166-machine-city-sentinel-array/robots/04-sentinel-04/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/machine-city-sentinel-array/4.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 166,
+          "stable_name": "Machine City Sentinel Array",
+          "catalogue_key": "machine-city-sentinel-array",
+          "slot": 4,
+          "robot_name": "Sentinel 04",
+          "source_identity": "Sentinel machine hunter; original numbered arena unit label",
+          "source_edition": "The Matrix original film trilogy, 1999–2003 Sentinel design",
+          "source_references": [
+            "https://www.warnerbros.com/movies/matrix"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: ONE Matrix Sentinel from the original 1999–2003 film trilogy. Squid-like non-humanoid machine: compact rounded ribbed dark metal sensor body with a cluster of many small red camera lenses, numerous long flexible jointed metal tentacles ending in small manipulator tips. Preserve the familiar original-trilogy Sentinel construction. All tentacles connect to this one body, loosely curled into the square frame, every tip visible with a 5% margin. Pose variant 4: low broad spread, individual restrained scratches and wear, same source chassis and colours. No added human arms, head or legs. No humans or other sentinels.\nMetadata only, do not render text: #166 slot 4 Sentinel 04.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-c4ce4439-312a-4ad3-822d-69fe84967aaf.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "machine-city-sentinel-array:4",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/machine-city-sentinel-array/4.webp",
+          "master": "outputs/automaton-portraits/masters/machine-city-sentinel-array/4.png",
+          "output": "app/frontend/public/assets/automatons/machine-city-sentinel-array/4.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "9497bdd9cfaed959b4797b08cf47a414606c86a3127463adea298f528ec822b8",
+          "bytes": 67102,
+          "source_reference_note": "Original-trilogy body selected; corrected an earlier later-film reference link"
+        },
+        "sha256": "9497bdd9cfaed959b4797b08cf47a414606c86a3127463adea298f528ec822b8",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 5,
+      "name": "Sentinel 05",
+      "source_identity": "Sentinel machine hunter; original numbered arena unit label",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yield_threshold": 25,
+      "build_focus": "Warden",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": "Light Shield",
+          "list_price_credits": 108000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": "Aegis Bulwark",
+          "list_price_credits": 834000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: ONE Matrix Sentinel from the original 1999–2003 film trilogy. Squid-like non-humanoid machine: compact rounded ribbed dark metal sensor body with a cluster of many small red camera lenses, numerous long flexible jointed metal tentacles ending in small manipulator tips. Preserve the familiar original-trilogy Sentinel construction. All tentacles connect to this one body, loosely curled into the square frame, every tip visible with a 5% margin. Pose variant 5: compact upright coil, individual restrained scratches and wear, same source chassis and colours. No added human arms, head or legs. No humans or other sentinels.\nMetadata only, do not render text: #166 slot 5 Sentinel 05.",
+      "role": "Protected short-range anchor",
+      "missing_fields": [],
+      "refinement_note": "Swarm follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 4,
+      "equipment_interpretation": "Sentinel 05 fills the protected short-range anchor role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Warden tuning supports the short equipment role; defensive stance and a 25% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Swarm strategy tuning rules with the Warden Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "machine-city-sentinel-array:5:sentinel-05",
+      "folder": "stables/166-machine-city-sentinel-array/robots/05-sentinel-05",
+      "files": {
+        "png": "stables/166-machine-city-sentinel-array/robots/05-sentinel-05/portrait.png",
+        "webp": "stables/166-machine-city-sentinel-array/robots/05-sentinel-05/portrait.webp",
+        "blueprint": "stables/166-machine-city-sentinel-array/robots/05-sentinel-05/blueprint.json",
+        "profile": "stables/166-machine-city-sentinel-array/robots/05-sentinel-05/profile.md",
+        "prompt": "stables/166-machine-city-sentinel-array/robots/05-sentinel-05/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/machine-city-sentinel-array/5.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 166,
+          "stable_name": "Machine City Sentinel Array",
+          "catalogue_key": "machine-city-sentinel-array",
+          "slot": 5,
+          "robot_name": "Sentinel 05",
+          "source_identity": "Sentinel machine hunter; original numbered arena unit label",
+          "source_edition": "The Matrix original film trilogy, 1999–2003 Sentinel design",
+          "source_references": [
+            "https://www.warnerbros.com/movies/matrix"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: ONE Matrix Sentinel from the original 1999–2003 film trilogy. Squid-like non-humanoid machine: compact rounded ribbed dark metal sensor body with a cluster of many small red camera lenses, numerous long flexible jointed metal tentacles ending in small manipulator tips. Preserve the familiar original-trilogy Sentinel construction. All tentacles connect to this one body, loosely curled into the square frame, every tip visible with a 5% margin. Pose variant 5: compact upright coil, individual restrained scratches and wear, same source chassis and colours. No added human arms, head or legs. No humans or other sentinels.\nMetadata only, do not render text: #166 slot 5 Sentinel 05.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-c3960926-1f2f-4796-81db-c49885156065.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "machine-city-sentinel-array:5",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/machine-city-sentinel-array/5.webp",
+          "master": "outputs/automaton-portraits/masters/machine-city-sentinel-array/5.png",
+          "output": "app/frontend/public/assets/automatons/machine-city-sentinel-array/5.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "2dcbd28379de63ff2040eca14966ed0168d10182126f6d680932b97015be9374",
+          "bytes": 68716,
+          "source_reference_note": "Original-trilogy body selected; corrected an earlier later-film reference link"
+        },
+        "sha256": "2dcbd28379de63ff2040eca14966ed0168d10182126f6d680932b97015be9374",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 6,
+      "name": "Sentinel 06",
+      "source_identity": "Sentinel machine hunter; original numbered arena unit label",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 20,
+      "build_focus": "Deadeye",
+      "range_from_weapons": "long",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Beam Pistol",
+          "offhand_weapon": null,
+          "list_price_credits": 93000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Particle Lance",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: ONE Matrix Sentinel from the original 1999–2003 film trilogy. Squid-like non-humanoid machine: compact rounded ribbed dark metal sensor body with a cluster of many small red camera lenses, numerous long flexible jointed metal tentacles ending in small manipulator tips. Preserve the familiar original-trilogy Sentinel construction. All tentacles connect to this one body, loosely curled into the square frame, every tip visible with a 5% margin. Pose variant 6: side-on hunting crouch, individual restrained scratches and wear, same source chassis and colours. No added human arms, head or legs. No humans or other sentinels.\nMetadata only, do not render text: #166 slot 6 Sentinel 06.",
+      "role": "Precision fire support",
+      "missing_fields": [],
+      "refinement_note": "Swarm follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 5,
+      "equipment_interpretation": "Sentinel 06 fills the precision fire support role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Deadeye tuning supports the long equipment role; balanced stance and a 20% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Swarm strategy tuning rules with the Deadeye Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "machine-city-sentinel-array:6:sentinel-06",
+      "folder": "stables/166-machine-city-sentinel-array/robots/06-sentinel-06",
+      "files": {
+        "png": "stables/166-machine-city-sentinel-array/robots/06-sentinel-06/portrait.png",
+        "webp": "stables/166-machine-city-sentinel-array/robots/06-sentinel-06/portrait.webp",
+        "blueprint": "stables/166-machine-city-sentinel-array/robots/06-sentinel-06/blueprint.json",
+        "profile": "stables/166-machine-city-sentinel-array/robots/06-sentinel-06/profile.md",
+        "prompt": "stables/166-machine-city-sentinel-array/robots/06-sentinel-06/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/machine-city-sentinel-array/6.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 166,
+          "stable_name": "Machine City Sentinel Array",
+          "catalogue_key": "machine-city-sentinel-array",
+          "slot": 6,
+          "robot_name": "Sentinel 06",
+          "source_identity": "Sentinel machine hunter; original numbered arena unit label",
+          "source_edition": "The Matrix original film trilogy, 1999–2003 Sentinel design",
+          "source_references": [
+            "https://www.warnerbros.com/movies/matrix"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: ONE Matrix Sentinel from the original 1999–2003 film trilogy. Squid-like non-humanoid machine: compact rounded ribbed dark metal sensor body with a cluster of many small red camera lenses, numerous long flexible jointed metal tentacles ending in small manipulator tips. Preserve the familiar original-trilogy Sentinel construction. All tentacles connect to this one body, loosely curled into the square frame, every tip visible with a 5% margin. Pose variant 6: side-on hunting crouch, individual restrained scratches and wear, same source chassis and colours. No added human arms, head or legs. No humans or other sentinels.\nMetadata only, do not render text: #166 slot 6 Sentinel 06.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-5d884d27-ba64-4939-b5b2-ca102d123ba7.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "machine-city-sentinel-array:6",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/machine-city-sentinel-array/6.webp",
+          "master": "outputs/automaton-portraits/masters/machine-city-sentinel-array/6.png",
+          "output": "app/frontend/public/assets/automatons/machine-city-sentinel-array/6.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "b7f468660eceb4b3a69bffac0943247d6be085efb7e8d64ccce36e9801ca0f5c",
+          "bytes": 73970,
+          "source_reference_note": "Original-trilogy body selected; corrected an earlier later-film reference link"
+        },
+        "sha256": "b7f468660eceb4b3a69bffac0943247d6be085efb7e8d64ccce36e9801ca0f5c",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 7,
+      "name": "Sentinel 07",
+      "source_identity": "Sentinel machine hunter; original numbered arena unit label",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "dual_wield",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Sprinter",
+      "range_from_weapons": "melee",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Practice Sword",
+          "offhand_weapon": "Practice Sword",
+          "list_price_credits": 100000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Vibro Mace",
+          "offhand_weapon": "Vibro Mace",
+          "list_price_credits": 850000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: ONE Matrix Sentinel from the original 1999–2003 film trilogy. Squid-like non-humanoid machine: compact rounded ribbed dark metal sensor body with a cluster of many small red camera lenses, numerous long flexible jointed metal tentacles ending in small manipulator tips. Preserve the familiar original-trilogy Sentinel construction. All tentacles connect to this one body, loosely curled into the square frame, every tip visible with a 5% margin. Pose variant 7: diagonal S-shaped tendril arrangement, individual restrained scratches and wear, same source chassis and colours. No added human arms, head or legs. No humans or other sentinels.\nMetadata only, do not render text: #166 slot 7 Sentinel 07.",
+      "role": "Paired contact attacker",
+      "missing_fields": [],
+      "refinement_note": "Swarm follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 6,
+      "equipment_interpretation": "Sentinel 07 fills the paired contact attacker role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Sprinter tuning supports the melee equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Swarm strategy tuning rules with the Sprinter Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "machine-city-sentinel-array:7:sentinel-07",
+      "folder": "stables/166-machine-city-sentinel-array/robots/07-sentinel-07",
+      "files": {
+        "png": "stables/166-machine-city-sentinel-array/robots/07-sentinel-07/portrait.png",
+        "webp": "stables/166-machine-city-sentinel-array/robots/07-sentinel-07/portrait.webp",
+        "blueprint": "stables/166-machine-city-sentinel-array/robots/07-sentinel-07/blueprint.json",
+        "profile": "stables/166-machine-city-sentinel-array/robots/07-sentinel-07/profile.md",
+        "prompt": "stables/166-machine-city-sentinel-array/robots/07-sentinel-07/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/machine-city-sentinel-array/7.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 166,
+          "stable_name": "Machine City Sentinel Array",
+          "catalogue_key": "machine-city-sentinel-array",
+          "slot": 7,
+          "robot_name": "Sentinel 07",
+          "source_identity": "Sentinel machine hunter; original numbered arena unit label",
+          "source_edition": "The Matrix original film trilogy, 1999–2003 Sentinel design",
+          "source_references": [
+            "https://www.warnerbros.com/movies/matrix"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: ONE Matrix Sentinel from the original 1999–2003 film trilogy. Squid-like non-humanoid machine: compact rounded ribbed dark metal sensor body with a cluster of many small red camera lenses, numerous long flexible jointed metal tentacles ending in small manipulator tips. Preserve the familiar original-trilogy Sentinel construction. All tentacles connect to this one body, loosely curled into the square frame, every tip visible with a 5% margin. Pose variant 7: diagonal S-shaped tendril arrangement, individual restrained scratches and wear, same source chassis and colours. No added human arms, head or legs. No humans or other sentinels.\nMetadata only, do not render text: #166 slot 7 Sentinel 07.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-43f84ae1-3852-4ce1-ae84-f0c9d7961a10.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "machine-city-sentinel-array:7",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/machine-city-sentinel-array/7.webp",
+          "master": "outputs/automaton-portraits/masters/machine-city-sentinel-array/7.png",
+          "output": "app/frontend/public/assets/automatons/machine-city-sentinel-array/7.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "339d24d745d53a5356660bdb57bde7cfa1329c3cb7af94dceaff73b62b5d8791",
+          "bytes": 65542,
+          "source_reference_note": "Original-trilogy body selected; corrected an earlier later-film reference link"
+        },
+        "sha256": "339d24d745d53a5356660bdb57bde7cfa1329c3cb7af94dceaff73b62b5d8791",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 8,
+      "name": "Sentinel 08",
+      "source_identity": "Sentinel machine hunter; original numbered arena unit label",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Bruiser",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Scatter Cannon",
+          "offhand_weapon": null,
+          "list_price_credits": 84000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Arc Projector",
+          "offhand_weapon": null,
+          "list_price_credits": 488000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: ONE Matrix Sentinel from the original 1999–2003 film trilogy. Squid-like non-humanoid machine: compact rounded ribbed dark metal sensor body with a cluster of many small red camera lenses, numerous long flexible jointed metal tentacles ending in small manipulator tips. Preserve the familiar original-trilogy Sentinel construction. All tentacles connect to this one body, loosely curled into the square frame, every tip visible with a 5% margin. Pose variant 8: balanced radial spread, individual restrained scratches and wear, same source chassis and colours. No added human arms, head or legs. No humans or other sentinels.\nMetadata only, do not render text: #166 slot 8 Sentinel 08.",
+      "role": "Heavy short-range pressure",
+      "missing_fields": [],
+      "refinement_note": "Swarm follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 7,
+      "equipment_interpretation": "Sentinel 08 fills the heavy short-range pressure role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Bruiser tuning supports the short equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Swarm strategy tuning rules with the Bruiser Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "machine-city-sentinel-array:8:sentinel-08",
+      "folder": "stables/166-machine-city-sentinel-array/robots/08-sentinel-08",
+      "files": {
+        "png": "stables/166-machine-city-sentinel-array/robots/08-sentinel-08/portrait.png",
+        "webp": "stables/166-machine-city-sentinel-array/robots/08-sentinel-08/portrait.webp",
+        "blueprint": "stables/166-machine-city-sentinel-array/robots/08-sentinel-08/blueprint.json",
+        "profile": "stables/166-machine-city-sentinel-array/robots/08-sentinel-08/profile.md",
+        "prompt": "stables/166-machine-city-sentinel-array/robots/08-sentinel-08/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/machine-city-sentinel-array/8.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 166,
+          "stable_name": "Machine City Sentinel Array",
+          "catalogue_key": "machine-city-sentinel-array",
+          "slot": 8,
+          "robot_name": "Sentinel 08",
+          "source_identity": "Sentinel machine hunter; original numbered arena unit label",
+          "source_edition": "The Matrix original film trilogy, 1999–2003 Sentinel design",
+          "source_references": [
+            "https://www.warnerbros.com/movies/matrix"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: ONE Matrix Sentinel from the original 1999–2003 film trilogy. Squid-like non-humanoid machine: compact rounded ribbed dark metal sensor body with a cluster of many small red camera lenses, numerous long flexible jointed metal tentacles ending in small manipulator tips. Preserve the familiar original-trilogy Sentinel construction. All tentacles connect to this one body, loosely curled into the square frame, every tip visible with a 5% margin. Pose variant 8: balanced radial spread, individual restrained scratches and wear, same source chassis and colours. No added human arms, head or legs. No humans or other sentinels.\nMetadata only, do not render text: #166 slot 8 Sentinel 08.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-554510af-1e02-40e7-9cb6-d7f69c647bb0.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "machine-city-sentinel-array:8",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/machine-city-sentinel-array/8.webp",
+          "master": "outputs/automaton-portraits/masters/machine-city-sentinel-array/8.png",
+          "output": "app/frontend/public/assets/automatons/machine-city-sentinel-array/8.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "a9e7f165083b2549b99dbe1f2ac9b95530e5ddabfbbd123f5e010261146247a9",
+          "bytes": 67424,
+          "source_reference_note": "Original-trilogy body selected; corrected an earlier later-film reference link"
+        },
+        "sha256": "a9e7f165083b2549b99dbe1f2ac9b95530e5ddabfbbd123f5e010261146247a9",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 9,
+      "name": "Sentinel 09",
+      "source_identity": "Sentinel machine hunter; original numbered arena unit label",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Bruiser",
+      "range_from_weapons": "mid",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Training Rifle",
+          "offhand_weapon": null,
+          "list_price_credits": 50000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Plasma Cannon",
+          "offhand_weapon": null,
+          "list_price_credits": 408000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: ONE Matrix Sentinel from the original 1999–2003 film trilogy. Squid-like non-humanoid machine: compact rounded ribbed dark metal sensor body with a cluster of many small red camera lenses, numerous long flexible jointed metal tentacles ending in small manipulator tips. Preserve the familiar original-trilogy Sentinel construction. All tentacles connect to this one body, loosely curled into the square frame, every tip visible with a 5% margin. Pose variant 9: raised central body with folded tendrils, individual restrained scratches and wear, same source chassis and colours. No added human arms, head or legs. No humans or other sentinels.\nMetadata only, do not render text: #166 slot 9 Sentinel 09.",
+      "role": "Heavy mid-range pressure",
+      "missing_fields": [],
+      "refinement_note": "Swarm follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 8,
+      "equipment_interpretation": "Sentinel 09 fills the heavy mid-range pressure role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Bruiser tuning supports the mid equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Swarm strategy tuning rules with the Bruiser Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "machine-city-sentinel-array:9:sentinel-09",
+      "folder": "stables/166-machine-city-sentinel-array/robots/09-sentinel-09",
+      "files": {
+        "png": "stables/166-machine-city-sentinel-array/robots/09-sentinel-09/portrait.png",
+        "webp": "stables/166-machine-city-sentinel-array/robots/09-sentinel-09/portrait.webp",
+        "blueprint": "stables/166-machine-city-sentinel-array/robots/09-sentinel-09/blueprint.json",
+        "profile": "stables/166-machine-city-sentinel-array/robots/09-sentinel-09/profile.md",
+        "prompt": "stables/166-machine-city-sentinel-array/robots/09-sentinel-09/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/machine-city-sentinel-array/9.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 166,
+          "stable_name": "Machine City Sentinel Array",
+          "catalogue_key": "machine-city-sentinel-array",
+          "slot": 9,
+          "robot_name": "Sentinel 09",
+          "source_identity": "Sentinel machine hunter; original numbered arena unit label",
+          "source_edition": "The Matrix original film trilogy, 1999–2003 Sentinel design",
+          "source_references": [
+            "https://www.warnerbros.com/movies/matrix"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: ONE Matrix Sentinel from the original 1999–2003 film trilogy. Squid-like non-humanoid machine: compact rounded ribbed dark metal sensor body with a cluster of many small red camera lenses, numerous long flexible jointed metal tentacles ending in small manipulator tips. Preserve the familiar original-trilogy Sentinel construction. All tentacles connect to this one body, loosely curled into the square frame, every tip visible with a 5% margin. Pose variant 9: raised central body with folded tendrils, individual restrained scratches and wear, same source chassis and colours. No added human arms, head or legs. No humans or other sentinels.\nMetadata only, do not render text: #166 slot 9 Sentinel 09.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-4abf30d0-d5e3-48e5-9779-3ffe1c48d410.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "machine-city-sentinel-array:9",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/machine-city-sentinel-array/9.webp",
+          "master": "outputs/automaton-portraits/masters/machine-city-sentinel-array/9.png",
+          "output": "app/frontend/public/assets/automatons/machine-city-sentinel-array/9.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "3da96c51e7028190ff4ebb9101cae040e5f726ca79cc4395f644969161b10109",
+          "bytes": 65258,
+          "source_reference_note": "Original-trilogy body selected; corrected an earlier later-film reference link"
+        },
+        "sha256": "3da96c51e7028190ff4ebb9101cae040e5f726ca79cc4395f644969161b10109",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 10,
+      "name": "Sentinel 10",
+      "source_identity": "Sentinel machine hunter; original numbered arena unit label",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yield_threshold": 20,
+      "build_focus": "Warden",
+      "range_from_weapons": "long",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Beam Pistol",
+          "offhand_weapon": "Light Shield",
+          "list_price_credits": 144000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Particle Lance",
+          "offhand_weapon": "Aegis Bulwark",
+          "list_price_credits": 834000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: ONE Matrix Sentinel from the original 1999–2003 film trilogy. Squid-like non-humanoid machine: compact rounded ribbed dark metal sensor body with a cluster of many small red camera lenses, numerous long flexible jointed metal tentacles ending in small manipulator tips. Preserve the familiar original-trilogy Sentinel construction. All tentacles connect to this one body, loosely curled into the square frame, every tip visible with a 5% margin. Pose variant 10: low rightward turn, individual restrained scratches and wear, same source chassis and colours. No added human arms, head or legs. No humans or other sentinels.\nMetadata only, do not render text: #166 slot 10 Sentinel 10.",
+      "role": "Protected precision platform",
+      "missing_fields": [],
+      "refinement_note": "Swarm follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 9,
+      "equipment_interpretation": "Sentinel 10 fills the protected precision platform role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Warden tuning supports the long equipment role; defensive stance and a 20% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Swarm strategy tuning rules with the Warden Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "machine-city-sentinel-array:10:sentinel-10",
+      "folder": "stables/166-machine-city-sentinel-array/robots/10-sentinel-10",
+      "files": {
+        "png": "stables/166-machine-city-sentinel-array/robots/10-sentinel-10/portrait.png",
+        "webp": "stables/166-machine-city-sentinel-array/robots/10-sentinel-10/portrait.webp",
+        "blueprint": "stables/166-machine-city-sentinel-array/robots/10-sentinel-10/blueprint.json",
+        "profile": "stables/166-machine-city-sentinel-array/robots/10-sentinel-10/profile.md",
+        "prompt": "stables/166-machine-city-sentinel-array/robots/10-sentinel-10/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/machine-city-sentinel-array/10.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 166,
+          "stable_name": "Machine City Sentinel Array",
+          "catalogue_key": "machine-city-sentinel-array",
+          "slot": 10,
+          "robot_name": "Sentinel 10",
+          "source_identity": "Sentinel machine hunter; original numbered arena unit label",
+          "source_edition": "The Matrix original film trilogy, 1999–2003 Sentinel design",
+          "source_references": [
+            "https://www.warnerbros.com/movies/matrix"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: ONE Matrix Sentinel from the original 1999–2003 film trilogy. Squid-like non-humanoid machine: compact rounded ribbed dark metal sensor body with a cluster of many small red camera lenses, numerous long flexible jointed metal tentacles ending in small manipulator tips. Preserve the familiar original-trilogy Sentinel construction. All tentacles connect to this one body, loosely curled into the square frame, every tip visible with a 5% margin. Pose variant 10: low rightward turn, individual restrained scratches and wear, same source chassis and colours. No added human arms, head or legs. No humans or other sentinels.\nMetadata only, do not render text: #166 slot 10 Sentinel 10.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-14aa1863-27c2-4fb4-b75c-ce75a545ff74.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "machine-city-sentinel-array:10",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/machine-city-sentinel-array/10.webp",
+          "master": "outputs/automaton-portraits/masters/machine-city-sentinel-array/10.png",
+          "output": "app/frontend/public/assets/automatons/machine-city-sentinel-array/10.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "4f99c2877329578fd87a48026f281c4374d34ee978f3714067d65932f90b8f1a",
+          "bytes": 74054,
+          "source_reference_note": "Original-trilogy body selected; corrected an earlier later-film reference link"
+        },
+        "sha256": "4f99c2877329578fd87a48026f281c4374d34ee978f3714067d65932f90b8f1a",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 11,
+      "name": "Sentinel 11",
+      "source_identity": "Sentinel machine hunter; original numbered arena unit label",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "balanced",
+      "yield_threshold": 15,
+      "build_focus": "Deadeye",
+      "range_from_weapons": "long",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Training Beam",
+          "offhand_weapon": null,
+          "list_price_credits": 50000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Ion Beam",
+          "offhand_weapon": null,
+          "list_price_credits": 544000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: ONE Matrix Sentinel from the original 1999–2003 film trilogy. Squid-like non-humanoid machine: compact rounded ribbed dark metal sensor body with a cluster of many small red camera lenses, numerous long flexible jointed metal tentacles ending in small manipulator tips. Preserve the familiar original-trilogy Sentinel construction. All tentacles connect to this one body, loosely curled into the square frame, every tip visible with a 5% margin. Pose variant 11: compact watchful coil, individual restrained scratches and wear, same source chassis and colours. No added human arms, head or legs. No humans or other sentinels.\nMetadata only, do not render text: #166 slot 11 Sentinel 11.",
+      "role": "Heavy long-range support",
+      "missing_fields": [],
+      "refinement_note": "Swarm follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 10,
+      "equipment_interpretation": "Sentinel 11 fills the heavy long-range support role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Deadeye tuning supports the long equipment role; balanced stance and a 15% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Swarm strategy tuning rules with the Deadeye Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "machine-city-sentinel-array:11:sentinel-11",
+      "folder": "stables/166-machine-city-sentinel-array/robots/11-sentinel-11",
+      "files": {
+        "png": "stables/166-machine-city-sentinel-array/robots/11-sentinel-11/portrait.png",
+        "webp": "stables/166-machine-city-sentinel-array/robots/11-sentinel-11/portrait.webp",
+        "blueprint": "stables/166-machine-city-sentinel-array/robots/11-sentinel-11/blueprint.json",
+        "profile": "stables/166-machine-city-sentinel-array/robots/11-sentinel-11/profile.md",
+        "prompt": "stables/166-machine-city-sentinel-array/robots/11-sentinel-11/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/machine-city-sentinel-array/11.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 166,
+          "stable_name": "Machine City Sentinel Array",
+          "catalogue_key": "machine-city-sentinel-array",
+          "slot": 11,
+          "robot_name": "Sentinel 11",
+          "source_identity": "Sentinel machine hunter; original numbered arena unit label",
+          "source_edition": "The Matrix original film trilogy, 1999–2003 Sentinel design",
+          "source_references": [
+            "https://www.warnerbros.com/movies/matrix"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: ONE Matrix Sentinel from the original 1999–2003 film trilogy. Squid-like non-humanoid machine: compact rounded ribbed dark metal sensor body with a cluster of many small red camera lenses, numerous long flexible jointed metal tentacles ending in small manipulator tips. Preserve the familiar original-trilogy Sentinel construction. All tentacles connect to this one body, loosely curled into the square frame, every tip visible with a 5% margin. Pose variant 11: compact watchful coil, individual restrained scratches and wear, same source chassis and colours. No added human arms, head or legs. No humans or other sentinels.\nMetadata only, do not render text: #166 slot 11 Sentinel 11.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-5251dc29-4797-4f4b-9fd2-b77b904ac45b.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "machine-city-sentinel-array:11",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/machine-city-sentinel-array/11.webp",
+          "master": "outputs/automaton-portraits/masters/machine-city-sentinel-array/11.png",
+          "output": "app/frontend/public/assets/automatons/machine-city-sentinel-array/11.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "e674158ff0fe7f150291bbfbf461f906e2abaeff4ba560910b5cee468da80374",
+          "bytes": 79974,
+          "source_reference_note": "Original-trilogy body selected; corrected an earlier later-film reference link"
+        },
+        "sha256": "e674158ff0fe7f150291bbfbf461f906e2abaeff4ba560910b5cee468da80374",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "alternatives": [],
+  "blueprint_status": "detailed",
+  "source_notes": "\n**Franchise:** The Matrix — film continuity  \n**Strategy:** Swarm · **Target roster:** 11 robots\n\n**Proposed robots:** Sentinel 01; Sentinel 02; Sentinel 03; Sentinel 04; Sentinel 05; Sentinel 06; Sentinel 07; Sentinel 08; Sentinel 09; Sentinel 10; Sentinel 11.\n\n**Direction:** A strong non-humanoid military swarm: compact sensor bodies, clusters of red optics, and long articulated tentacles. Preserve the squid-like construction and distinguish individuals through pose, wear, and restrained unit markings. Arena equipment and combat balance need an adaptation; the films' overwhelming numbers do not create extra attacks or shared damage. Use trilogy references rather than silently mixing later redesigns.\n\nReferences: [Warner Bros. original Matrix film](https://www.warnerbros.com/movies/matrix). The portraits use the original-trilogy Sentinel body; later-film production references are not the selected source edition.\n\n**Production edition:** The Matrix original film trilogy, 1999–2003 Sentinel design.  \n**Catalogue key:** `machine-city-sentinel-array`\n\n",
+  "source_documents": [
+    "reference/AUTOMATON_STABLE_EXPANSION.md"
+  ],
+  "blueprint_origin": "completed during collection",
+  "purchasing_plan": "Open with slots 1–3; recruit 4 through 11 in slot order. Fund each complete stage-0 loadout and the necessary roster/storage expansion before recruitment. Prioritise the full roster, then stage-1 equipment in slot order. No weapon refinement purchases.",
+  "target_overrides": {},
+  "equipment_budget": {
+    "stage_0_credits": 943000,
+    "stage_1_credits": 6508000,
+    "refinement_credits": 0,
+    "excludes": "Frames, facilities, training, repairs, upkeep, discounts and resale; stage-1 total replaces stage-0 gear and is not a simultaneous equipment inventory."
+  },
+  "folder": "stables/166-machine-city-sentinel-array",
+  "history_image_count": 0
+}

@@ -1,0 +1,177 @@
+{
+  "number": 167,
+  "catalogue_key": "neo-tokyo-security-works",
+  "name": "Neo-Tokyo Security Works",
+  "franchise": "Akira — Katsuhiro Otomo's manga",
+  "strategy": "Paragon",
+  "opening_robots": 1,
+  "target_robots": 1,
+  "max_planned_robots": 1,
+  "strategy_review_limit": 2,
+  "backstory": "A rounded security machine becomes the works' sole contender. One compact mid-range allocation preserves its industrial body while concentrated equipment purchases build a capable champion.",
+  "strategy_personality": "The manga provides an actual robot candidate with a rounded industrial body. Select manga panels showing the original autonomous machine before designing the portrait; later examples are converted into manually operated transport and combat vehicles. Keep the spherical chassis and source locomotion readable. This proposal uses the manga robot, rather than treating the human psychic characters or their mutations as androids. Source equipment and an arena loadout still need selection.",
+  "teams": {
+    "2v2": [],
+    "3v3": []
+  },
+  "event_order": [
+    "league_1v1",
+    "tournament_1v1",
+    "koth",
+    "grand_melee",
+    "league_2v2",
+    "tag_team",
+    "tournament_2v2",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "robots": [
+    {
+      "slot": 1,
+      "name": "Security Ball",
+      "source_identity": "Akira Security Ball / caretaker robot",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 15,
+      "build_focus": "Tactician",
+      "range_from_weapons": "mid",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Bolt Carbine",
+          "offhand_weapon": null,
+          "list_price_credits": 93000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Nova Caster",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Sharpen",
+          "weapon": "Nova Caster",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 1,
+          "cost_credits": 300000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 1
+        },
+        {
+          "operation": "Sharpen",
+          "weapon": "Nova Caster",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 2,
+          "cost_credits": 900000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 2
+        },
+        {
+          "operation": "Forge",
+          "weapon": "Nova Caster",
+          "hand": "main",
+          "workshop_level": 8,
+          "occurrence": 1,
+          "cost_credits": 400000,
+          "prestige_gate": 15000,
+          "effect": "+8% damage",
+          "step": 3
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Use the attached published manga sample as the mechanical reference: the intact autonomous spherical caretaker shown in the street, especially the lower-right panel and left overhead view, not the later human-operated open vehicle. ONE closed rounded metal Security Ball with a hemispherical dome, circumferential lower ring of round joint housings and short splayed articulated walking legs ending in broad tapered pads. Match the source leg arrangement and dome-mounted small sensor details. Grey steel and pale industrial lower mechanisms are an original neutral material interpretation of black-and-white manga; do not claim a canonical colour scheme. No rider, open cockpit, people, manga panels, text, numbers or giant added weapons. Entire dome and all walking pads visible.\nMetadata only, do not render text: #167 slot 1 Security Ball.",
+      "role": "Measured mid-range fighter",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 1600000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "Security Ball fills the measured mid-range fighter role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Tactician tuning supports the mid equipment role; balanced stance and a 15% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Paragon strategy tuning rules with the Tactician Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "neo-tokyo-security-works:1:security-ball",
+      "folder": "stables/167-neo-tokyo-security-works/robots/01-security-ball",
+      "files": {
+        "png": "stables/167-neo-tokyo-security-works/robots/01-security-ball/portrait.png",
+        "webp": "stables/167-neo-tokyo-security-works/robots/01-security-ball/portrait.webp",
+        "blueprint": "stables/167-neo-tokyo-security-works/robots/01-security-ball/blueprint.json",
+        "profile": "stables/167-neo-tokyo-security-works/robots/01-security-ball/profile.md",
+        "prompt": "stables/167-neo-tokyo-security-works/robots/01-security-ball/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/neo-tokyo-security-works/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 167,
+          "stable_name": "Neo-Tokyo Security Works",
+          "catalogue_key": "neo-tokyo-security-works",
+          "slot": 1,
+          "robot_name": "Security Ball",
+          "source_identity": "Akira Security Ball / caretaker robot",
+          "source_edition": "Akira manga volume 3 original autonomous caretaker configuration; neutral grey finish is an arena colour interpretation",
+          "source_references": [
+            "https://www.mdpi.com/2076-0752/7/3/32",
+            "https://www.popcultcha.com.au/akira-volume-03-manga-paperback-book.html"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Use the attached published manga sample as the mechanical reference: the intact autonomous spherical caretaker shown in the street, especially the lower-right panel and left overhead view, not the later human-operated open vehicle. ONE closed rounded metal Security Ball with a hemispherical dome, circumferential lower ring of round joint housings and short splayed articulated walking legs ending in broad tapered pads. Match the source leg arrangement and dome-mounted small sensor details. Grey steel and pale industrial lower mechanisms are an original neutral material interpretation of black-and-white manga; do not claim a canonical colour scheme. No rider, open cockpit, people, manga panels, text, numbers or giant added weapons. Entire dome and all walking pads visible.\nMetadata only, do not render text: #167 slot 1 Security Ball.",
+          "referenced_image_paths": [
+            "/tmp/armoured-akira-caretaker.png"
+          ],
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-e64efd40-c4cd-4048-b118-66c57a6f1e69.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "neo-tokyo-security-works:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/neo-tokyo-security-works/1.webp",
+          "master": "outputs/automaton-portraits/masters/neo-tokyo-security-works/1.png",
+          "output": "app/frontend/public/assets/automatons/neo-tokyo-security-works/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "15508a1630c61762cdfda7528497b396af93f110ed9d3593b8b9085a946b142b",
+          "bytes": 63918
+        },
+        "sha256": "15508a1630c61762cdfda7528497b396af93f110ed9d3593b8b9085a946b142b",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "alternatives": [],
+  "blueprint_status": "detailed",
+  "source_notes": "\n**Franchise:** Akira — Katsuhiro Otomo's manga  \n**Strategy:** Paragon · **Target roster:** 1 robot\n\n**Proposed robots:** Security Ball.\n\n**Direction:** The manga provides an actual robot candidate with a rounded industrial body. Select manga panels showing the original autonomous machine before designing the portrait; later examples are converted into manually operated transport and combat vehicles. Keep the spherical chassis and source locomotion readable. This proposal uses the manga robot, rather than treating the human psychic characters or their mutations as androids. Source equipment and an arena loadout still need selection.\n\nReferences: [illustrated scholarly analysis identifying Security Balls and their later conversions](https://mdpi-res.com/bookfiles/book/1497/Cyberpunk_in_a_Transnational_Context.pdf?v=1773885747) — Martin de la Iglesia, “Has Akira Always Been a Cyberpunk Comic?”, Arts 7(3), 32; references include manga volumes 5 and 6.\n\n**Production edition:** Akira manga volume 3 original autonomous caretaker configuration; neutral grey finish is an arena colour interpretation.  \n**Catalogue key:** `neo-tokyo-security-works`\n\n",
+  "source_documents": [
+    "reference/AUTOMATON_STABLE_EXPANSION.md"
+  ],
+  "blueprint_origin": "completed during collection",
+  "purchasing_plan": "Open and remain at one robot. Buy its complete stage-1 loadout before refinement. Execute the listed steps in order, progressing Workshop L1/L3/L5/L8 as required. Keep prestige-gated steps pending; fund repairs and maintenance before every purchase.",
+  "target_overrides": {},
+  "equipment_budget": {
+    "stage_0_credits": 93000,
+    "stage_1_credits": 425000,
+    "refinement_credits": 1600000,
+    "excludes": "Frames, facilities, training, repairs, upkeep, discounts and resale; stage-1 total replaces stage-0 gear and is not a simultaneous equipment inventory."
+  },
+  "folder": "stables/167-neo-tokyo-security-works",
+  "history_image_count": 0
+}

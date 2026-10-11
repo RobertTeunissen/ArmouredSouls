@@ -1,0 +1,343 @@
+{
+  "number": 120,
+  "catalogue_key": "striker-assembly-wing",
+  "name": "Striker Assembly Wing",
+  "franchise": "Mecha BREAK",
+  "strategy": "Trio",
+  "opening_robots": 3,
+  "target_robots": 3,
+  "max_planned_robots": 3,
+  "strategy_review_limit": 4,
+  "backstory": "The assembly wing fields a flexible shooter, a heavy contact fighter and a defensive anchor. The three frames advance together through measured equipment upgrades.",
+  "strategy_personality": "A modern source of precise, angular mecha silhouettes. Final named roster and source versions need confirmation; flight and specialized abilities remain visual/build flavour. [Publisher description](https://store.steampowered.com/app/2452280/Mecha_BREAK/).",
+  "teams": {
+    "2v2": [
+      {
+        "name": "Striker Wing Pair 01",
+        "slots": [
+          1,
+          2
+        ],
+        "forms": "Opening"
+      }
+    ],
+    "3v3": [
+      {
+        "name": "Striker Wing Squad 01",
+        "slots": [
+          1,
+          2,
+          3
+        ],
+        "forms": "Opening"
+      }
+    ]
+  },
+  "event_order": [
+    "league_3v3",
+    "tournament_3v3",
+    "league_2v2",
+    "tag_team",
+    "league_1v1",
+    "koth",
+    "grand_melee",
+    "tournament_2v2",
+    "tournament_1v1"
+  ],
+  "robots": [
+    {
+      "slot": 1,
+      "name": "Alysnes",
+      "source_identity": "Alysnes medium attacker",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 15,
+      "build_focus": "Versatile",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": null,
+          "list_price_credits": 57000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic Mecha BREAK Alysnes in its complete armoured base form, white and blue angular plates, dark inner frame and restrained green sensor accents; correct source helmet, shoulder construction, slim waist, pointed feet and back assembly. Hold the source energy autocannon in one hand and complex shield on other forearm, halberd stowed. Grounded bipedal stance; no armour purge, no flight, no pilot.\nCatalogue label for metadata only, do not render text: #120 slot 1 Alysnes.",
+      "role": "Flexible line fighter",
+      "missing_fields": [],
+      "refinement_note": "Trio follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "Alysnes fills the flexible line fighter role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Versatile tuning supports the short equipment role; balanced stance and a 15% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Trio strategy tuning rules with the Versatile Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "striker-assembly-wing:1:alysnes",
+      "folder": "stables/120-striker-assembly-wing/robots/01-alysnes",
+      "files": {
+        "png": "stables/120-striker-assembly-wing/robots/01-alysnes/portrait.png",
+        "webp": "stables/120-striker-assembly-wing/robots/01-alysnes/portrait.webp",
+        "blueprint": "stables/120-striker-assembly-wing/robots/01-alysnes/blueprint.json",
+        "profile": "stables/120-striker-assembly-wing/robots/01-alysnes/profile.md",
+        "prompt": "stables/120-striker-assembly-wing/robots/01-alysnes/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/striker-assembly-wing/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 120,
+          "stable_name": "Striker Assembly Wing",
+          "catalogue_key": "striker-assembly-wing",
+          "slot": 1,
+          "robot_name": "Alysnes",
+          "source_identity": "Alysnes medium attacker",
+          "source_edition": "Mecha BREAK — 2025 base Striker designs, no custom skins",
+          "source_references": [
+            "https://news.xbox.com/en-us/2025/03/04/mecha-break-open-beta-tips/"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic Mecha BREAK Alysnes in its complete armoured base form, white and blue angular plates, dark inner frame and restrained green sensor accents; correct source helmet, shoulder construction, slim waist, pointed feet and back assembly. Hold the source energy autocannon in one hand and complex shield on other forearm, halberd stowed. Grounded bipedal stance; no armour purge, no flight, no pilot.\nCatalogue label for metadata only, do not render text: #120 slot 1 Alysnes.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-419cd802-8a41-407d-bc5b-570998f53657.png",
+          "visual_review": "Accepted — reviewed full-body white-and-blue Alysnes base armour, dark frame, green sensors, autocannon and shield; complete extremities, clean silhouette and matching studio materials",
+          "asset_id": "striker-assembly-wing:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/striker-assembly-wing/1.webp",
+          "master": "outputs/automaton-portraits/masters/striker-assembly-wing/1.png",
+          "output": "app/frontend/public/assets/automatons/striker-assembly-wing/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "5dc3df0a47b7c74bf0976d5934f3d2d0d9a406196fb78cd3f841ec61eb493368",
+          "bytes": 60110,
+          "retry_requested": "2026-10-11"
+        },
+        "sha256": "5dc3df0a47b7c74bf0976d5934f3d2d0d9a406196fb78cd3f841ec61eb493368",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 2,
+      "name": "Welkin",
+      "source_identity": "Welkin heavy brawler",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Bruiser",
+      "range_from_weapons": "melee",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Shock Maul",
+          "offhand_weapon": null,
+          "list_price_credits": 183000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Heavy Hammer",
+          "offhand_weapon": null,
+          "list_price_credits": 478000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic Mecha BREAK Welkin heavy brawler in standard red and dark armour, bulky circular shoulder modules, characteristic compact source head, green central core, heavy original legs and feet. One enormous source battleaxe held in two hands in a resting grounded stance. Preserve the Welkin shape, no generic Gundam substitute, no effects or forcefield.\nCatalogue label for metadata only, do not render text: #120 slot 2 Welkin.",
+      "role": "Heavy contact attacker",
+      "missing_fields": [],
+      "refinement_note": "Trio follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 1,
+      "equipment_interpretation": "Welkin fills the heavy contact attacker role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Bruiser tuning supports the melee equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Trio strategy tuning rules with the Bruiser Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "striker-assembly-wing:2:welkin",
+      "folder": "stables/120-striker-assembly-wing/robots/02-welkin",
+      "files": {
+        "png": "stables/120-striker-assembly-wing/robots/02-welkin/portrait.png",
+        "webp": "stables/120-striker-assembly-wing/robots/02-welkin/portrait.webp",
+        "blueprint": "stables/120-striker-assembly-wing/robots/02-welkin/blueprint.json",
+        "profile": "stables/120-striker-assembly-wing/robots/02-welkin/profile.md",
+        "prompt": "stables/120-striker-assembly-wing/robots/02-welkin/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/striker-assembly-wing/2.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 120,
+          "stable_name": "Striker Assembly Wing",
+          "catalogue_key": "striker-assembly-wing",
+          "slot": 2,
+          "robot_name": "Welkin",
+          "source_identity": "Welkin heavy brawler",
+          "source_edition": "Mecha BREAK — 2025 base Striker designs, no custom skins",
+          "source_references": [
+            "https://news.xbox.com/en-us/2025/03/04/mecha-break-open-beta-tips/"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic Mecha BREAK Welkin heavy brawler in standard red and dark armour, bulky circular shoulder modules, characteristic compact source head, green central core, heavy original legs and feet. One enormous source battleaxe held in two hands in a resting grounded stance. Preserve the Welkin shape, no generic Gundam substitute, no effects or forcefield.\nCatalogue label for metadata only, do not render text: #120 slot 2 Welkin.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-72032199-f0b5-4dee-b196-9d7d8b00822d.png",
+          "visual_review": "Accepted: complete figure, distinct readable silhouette, shared collection finish and lighting",
+          "asset_id": "striker-assembly-wing:2",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/striker-assembly-wing/2.webp",
+          "master": "outputs/automaton-portraits/masters/striker-assembly-wing/2.png",
+          "output": "app/frontend/public/assets/automatons/striker-assembly-wing/2.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "af7cf4524aba0ce94106e045160f8cd119eb8b17606c5c8b77e8249e781c3e59",
+          "bytes": 74182
+        },
+        "sha256": "af7cf4524aba0ce94106e045160f8cd119eb8b17606c5c8b77e8249e781c3e59",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 3,
+      "name": "Tricera",
+      "source_identity": "Tricera ultra-heavy defender",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yield_threshold": 25,
+      "build_focus": "Warden",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": "Light Shield",
+          "list_price_credits": 108000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": "Aegis Bulwark",
+          "list_price_credits": 834000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic Mecha BREAK Tricera in standard walking biped configuration, broad squat grey military body, heavy shoulder cannon housings, source dark face/cockpit and thick short legs. Preserve distinctive four gatling barrels and source silhouette, all inactive. No deployed turret transformation, drones, pilot or added human arms.\nCatalogue label for metadata only, do not render text: #120 slot 3 Tricera.",
+      "role": "Protected short-range anchor",
+      "missing_fields": [],
+      "refinement_note": "Trio follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 2,
+      "equipment_interpretation": "Tricera fills the protected short-range anchor role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Warden tuning supports the short equipment role; defensive stance and a 25% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Trio strategy tuning rules with the Warden Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "striker-assembly-wing:3:tricera",
+      "folder": "stables/120-striker-assembly-wing/robots/03-tricera",
+      "files": {
+        "png": "stables/120-striker-assembly-wing/robots/03-tricera/portrait.png",
+        "webp": "stables/120-striker-assembly-wing/robots/03-tricera/portrait.webp",
+        "blueprint": "stables/120-striker-assembly-wing/robots/03-tricera/blueprint.json",
+        "profile": "stables/120-striker-assembly-wing/robots/03-tricera/profile.md",
+        "prompt": "stables/120-striker-assembly-wing/robots/03-tricera/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/striker-assembly-wing/3.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 120,
+          "stable_name": "Striker Assembly Wing",
+          "catalogue_key": "striker-assembly-wing",
+          "slot": 3,
+          "robot_name": "Tricera",
+          "source_identity": "Tricera ultra-heavy defender",
+          "source_edition": "Mecha BREAK — 2025 base Striker designs, no custom skins",
+          "source_references": [
+            "https://news.xbox.com/en-us/2025/03/04/mecha-break-open-beta-tips/"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic Mecha BREAK Tricera in standard walking biped configuration, broad squat grey military body, heavy shoulder cannon housings, source dark face/cockpit and thick short legs. Preserve distinctive four gatling barrels and source silhouette, all inactive. No deployed turret transformation, drones, pilot or added human arms.\nCatalogue label for metadata only, do not render text: #120 slot 3 Tricera.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-9ae4185e-80d2-4fe8-99d1-1b5f765d8900.png",
+          "visual_review": "Accepted: complete figure, distinct readable silhouette, shared collection finish and lighting",
+          "asset_id": "striker-assembly-wing:3",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/striker-assembly-wing/3.webp",
+          "master": "outputs/automaton-portraits/masters/striker-assembly-wing/3.png",
+          "output": "app/frontend/public/assets/automatons/striker-assembly-wing/3.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "61bad9da7157ee4c6762479d3e93db5e7d57ffcce975222fe1d3f532922a1994",
+          "bytes": 59798
+        },
+        "sha256": "61bad9da7157ee4c6762479d3e93db5e7d57ffcce975222fe1d3f532922a1994",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "alternatives": [],
+  "blueprint_status": "detailed",
+  "source_notes": "\n**Franchise:** Mecha BREAK  \n**Strategy:** Trio · **Target roster:** 3 robots\n\n**Catalogue key:** `striker-assembly-wing`\n\n**Proposed robots:** Alysnes; Welkin; Tricera.\n\n**Direction:** A modern source of precise, angular mecha silhouettes. Final named roster and source versions need confirmation; flight and specialized abilities remain visual/build flavour. [Publisher description](https://store.steampowered.com/app/2452280/Mecha_BREAK/).\n\n**Production edition:** Mecha BREAK — 2025 base Striker designs, no custom skins. Custom arena names and equipment are adaptations; source machine identities remain as specified.\n\n\n",
+  "source_documents": [
+    "reference/AUTOMATON_STABLE_EXPANSION.md"
+  ],
+  "blueprint_origin": "completed during collection",
+  "purchasing_plan": "Open with all three robots. Maintain and tune the trio together; complete stage-1 equipment in slot order. No weapon refinement purchases.",
+  "target_overrides": {},
+  "equipment_budget": {
+    "stage_0_credits": 348000,
+    "stage_1_credits": 1737000,
+    "refinement_credits": 0,
+    "excludes": "Frames, facilities, training, repairs, upkeep, discounts and resale; stage-1 total replaces stage-0 gear and is not a simultaneous equipment inventory."
+  },
+  "folder": "stables/120-striker-assembly-wing",
+  "history_image_count": 0
+}

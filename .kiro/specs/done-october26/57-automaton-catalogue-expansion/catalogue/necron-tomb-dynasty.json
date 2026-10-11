@@ -1,0 +1,647 @@
+{
+  "schemaVersion": 1,
+  "catalogueKey": "necron-tomb-dynasty",
+  "stableName": "Necron Tomb Dynasty",
+  "franchise": "Warhammer 40,000",
+  "backstory": "Necron Tomb Dynasty enters the arena with a clear doctrine. Favor resilience and deliberate ranged pressure. Every surviving machine returns to the workshop before the next booking.",
+  "strategy": {
+    "key": "swarm",
+    "version": 1,
+    "targetOverrides": {}
+  },
+  "teamNames": {
+    "twoVsTwo": [
+      "Sautekh Phalanx",
+      "Nihilakh Watch",
+      "Szarekhan Court",
+      "Mephrit Cohort",
+      "Destroyer Cult"
+    ],
+    "threeVsThree": [
+      "Novokh Awakening",
+      "Silent King's Guard",
+      "Nephrekh Ascension"
+    ]
+  },
+  "eventOrder": [
+    "league_1v1",
+    "league_3v3",
+    "league_2v2",
+    "grand_melee",
+    "koth",
+    "tag_team",
+    "tournament_3v3",
+    "tournament_2v2",
+    "tournament_1v1"
+  ],
+  "blueprints": [
+    {
+      "slot": 1,
+      "robotName": "Necron Overlord",
+      "loadoutType": "weapon_shield",
+      "stance": "defensive",
+      "yieldThreshold": 5,
+      "buildFocus": "tactician",
+      "weaponPath": [
+        {
+          "main": "Practice Sword",
+          "offhand": "Light Shield"
+        },
+        {
+          "main": "Vibro Mace",
+          "offhand": "Aegis Bulwark"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "augment",
+          "hand": "main",
+          "magnitude": 1,
+          "targetAttribute": "combatAlgorithms"
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "magnitude": 1,
+          "targetAttribute": "evasionThrusters"
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "magnitude": 1,
+          "targetAttribute": "evasionThrusters"
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "magnitude": 1,
+          "targetAttribute": "evasionThrusters"
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "magnitude": 1,
+          "targetAttribute": "evasionThrusters"
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "magnitude": 1,
+          "targetAttribute": "evasionThrusters"
+        }
+      ]
+    },
+    {
+      "slot": 2,
+      "robotName": "Necron Warrior",
+      "loadoutType": "single",
+      "stance": "offensive",
+      "yieldThreshold": 0,
+      "buildFocus": "versatile",
+      "weaponPath": [
+        {
+          "main": "Laser Pistol"
+        },
+        {
+          "main": "Volt Sabre"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "magnitude": 4,
+          "targetAttribute": "targetingSystems"
+        }
+      ]
+    },
+    {
+      "slot": 3,
+      "robotName": "Necron Immortal",
+      "loadoutType": "two_handed",
+      "stance": "defensive",
+      "yieldThreshold": 0,
+      "buildFocus": "warden",
+      "weaponPath": [
+        {
+          "main": "Training Rifle"
+        },
+        {
+          "main": "Plasma Cannon"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "augment",
+          "hand": "main",
+          "magnitude": 1,
+          "targetAttribute": "armorPlating"
+        }
+      ]
+    },
+    {
+      "slot": 4,
+      "robotName": "Necron Deathmark",
+      "loadoutType": "single",
+      "stance": "balanced",
+      "yieldThreshold": 0,
+      "buildFocus": "deadeye",
+      "weaponPath": [
+        {
+          "main": "Beam Pistol"
+        },
+        {
+          "main": "Particle Lance"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "magnitude": 4,
+          "targetAttribute": "combatPower"
+        }
+      ]
+    },
+    {
+      "slot": 5,
+      "robotName": "Necron Lychguard",
+      "loadoutType": "weapon_shield",
+      "stance": "defensive",
+      "yieldThreshold": 0,
+      "buildFocus": "warden",
+      "weaponPath": [
+        {
+          "main": "Practice Sword",
+          "offhand": "Light Shield"
+        },
+        {
+          "main": "Vibro Mace",
+          "offhand": "Aegis Bulwark"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "magnitude": 4,
+          "targetAttribute": "counterProtocols"
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "magnitude": 1,
+          "targetAttribute": "evasionThrusters"
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "magnitude": 1,
+          "targetAttribute": "evasionThrusters"
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "magnitude": 1,
+          "targetAttribute": "evasionThrusters"
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "magnitude": 1,
+          "targetAttribute": "evasionThrusters"
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "magnitude": 1,
+          "targetAttribute": "evasionThrusters"
+        }
+      ]
+    },
+    {
+      "slot": 6,
+      "robotName": "Royal Warden",
+      "loadoutType": "weapon_shield",
+      "stance": "defensive",
+      "yieldThreshold": 0,
+      "buildFocus": "warden",
+      "weaponPath": [
+        {
+          "main": "Laser Pistol",
+          "offhand": "Light Shield"
+        },
+        {
+          "main": "Volt Sabre",
+          "offhand": "Aegis Bulwark"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "augment",
+          "hand": "main",
+          "magnitude": 1,
+          "targetAttribute": "armorPlating"
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "magnitude": 1,
+          "targetAttribute": "evasionThrusters"
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "magnitude": 1,
+          "targetAttribute": "evasionThrusters"
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "magnitude": 1,
+          "targetAttribute": "evasionThrusters"
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "magnitude": 1,
+          "targetAttribute": "evasionThrusters"
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "magnitude": 1,
+          "targetAttribute": "evasionThrusters"
+        }
+      ]
+    },
+    {
+      "slot": 7,
+      "robotName": "Sautekh Warrior",
+      "loadoutType": "single",
+      "stance": "balanced",
+      "yieldThreshold": 0,
+      "buildFocus": "deadeye",
+      "weaponPath": [
+        {
+          "main": "Bolt Carbine"
+        },
+        {
+          "main": "Nova Caster"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "magnitude": 4,
+          "targetAttribute": "targetingSystems"
+        }
+      ]
+    },
+    {
+      "slot": 8,
+      "robotName": "Mephrit Immortal",
+      "loadoutType": "two_handed",
+      "stance": "offensive",
+      "yieldThreshold": 0,
+      "buildFocus": "bruiser",
+      "weaponPath": [
+        {
+          "main": "Scatter Cannon"
+        },
+        {
+          "main": "Arc Projector"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "magnitude": 4,
+          "targetAttribute": "targetingSystems"
+        }
+      ]
+    },
+    {
+      "slot": 9,
+      "robotName": "Nihilakh Warrior",
+      "loadoutType": "dual_wield",
+      "stance": "offensive",
+      "yieldThreshold": 0,
+      "buildFocus": "sprinter",
+      "weaponPath": [
+        {
+          "main": "Combat Knife",
+          "offhand": "Combat Knife"
+        },
+        {
+          "main": "Vibro Mace",
+          "offhand": "Vibro Mace"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "offhand",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "offhand",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "offhand",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "offhand",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "magnitude": 4,
+          "targetAttribute": "gyroStabilizers"
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "magnitude": 4,
+          "targetAttribute": "gyroStabilizers"
+        }
+      ]
+    },
+    {
+      "slot": 10,
+      "robotName": "Novokh Immortal",
+      "loadoutType": "two_handed",
+      "stance": "offensive",
+      "yieldThreshold": 0,
+      "buildFocus": "bruiser",
+      "weaponPath": [
+        {
+          "main": "Training Rifle"
+        },
+        {
+          "main": "Plasma Cannon"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "magnitude": 4,
+          "targetAttribute": "criticalSystems"
+        }
+      ]
+    },
+    {
+      "slot": 11,
+      "robotName": "Nephrekh Warrior",
+      "loadoutType": "two_handed",
+      "stance": "defensive",
+      "yieldThreshold": 0,
+      "buildFocus": "deadeye",
+      "weaponPath": [
+        {
+          "main": "Training Beam"
+        },
+        {
+          "main": "Ion Beam"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "magnitude": 4,
+          "targetAttribute": "targetingSystems"
+        }
+      ]
+    }
+  ]
+}

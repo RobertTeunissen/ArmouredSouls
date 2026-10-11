@@ -1,0 +1,209 @@
+{
+  "number": 67,
+  "catalogueKey": "cygnus-robotics-division",
+  "stableName": "Cygnus Robotics Division",
+  "franchiseLabel": "The Black Hole",
+  "strategy": "Duo",
+  "fit": "Direct",
+  "conceptIdentity": "Compact precision-oriented partners with distinct defensive priorities. Floating-canister silhouettes, mechanical eyes, worn versus polished finishes.",
+  "backstory": "Cygnus Robotics Division enters the arena with a clear doctrine. Compact precision-oriented partners with distinct defensive priorities. Every surviving machine returns to the workshop before the next booking.",
+  "openingRobots": 2,
+  "targetRobots": 2,
+  "adminMaximumRobots": 3,
+  "targetOverrides": {},
+  "teamNames": {
+    "2v2": [
+      {
+        "name": "Cygnus Pair 01",
+        "slots": [
+          1,
+          2
+        ]
+      }
+    ],
+    "3v3": [
+      {
+        "name": "Cygnus Squad 01",
+        "slots": [
+          1,
+          2,
+          3
+        ]
+      }
+    ]
+  },
+  "eventOrder": [
+    "league_2v2",
+    "tag_team",
+    "tournament_2v2",
+    "league_1v1",
+    "koth",
+    "grand_melee",
+    "tournament_1v1",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "robots": [
+    {
+      "blueprintId": "cygnus-robotics-division:1:v-i-n-cent",
+      "slot": 1,
+      "name": "V.I.N.CENT.",
+      "sourceAlias": "V.I.N.CENT.",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "dual_wield",
+      "stance": "balanced",
+      "yieldThreshold": 15,
+      "buildFocus": "Versatile",
+      "weaponPath": [
+        {
+          "mainWeapon": "Laser Pistol",
+          "offhandWeapon": "Laser Pistol",
+          "listPriceCredits": 114000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": "Volt Sabre",
+          "listPriceCredits": 850000
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "Hone",
+          "weapon": "Volt Sabre",
+          "weaponSlot": "main",
+          "attribute": "Combat Power",
+          "baseValue": 8,
+          "magnitude": 2,
+          "resultValue": 10,
+          "costCredits": 40000,
+          "workshopLevel": 1,
+          "step": 1
+        },
+        {
+          "tier": "Augment",
+          "weapon": "Volt Sabre",
+          "weaponSlot": "main",
+          "attribute": "Adaptive AI",
+          "magnitude": 3,
+          "resultValue": 3,
+          "costCredits": 180000,
+          "workshopLevel": 3,
+          "step": 2
+        }
+      ],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Polished floating-canister robot with large cartoon-like optics and retractable weapon ports.",
+        "refinementNote": "Apply in order after stage 1. Dual-wield refinements affect the main-hand copy only; the offhand stays unrefined unless explicitly targeted.",
+        "refinementTotalCredits": 220000,
+        "minimumRosterExpansionLevel": 0,
+        "imageConvention": "app/frontend/public/assets/automatons/cygnus-robotics-division/1.webp"
+      }
+    },
+    {
+      "blueprintId": "cygnus-robotics-division:2:b-o-b",
+      "slot": 2,
+      "name": "B.O.B.",
+      "sourceAlias": "B.O.B.",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yieldThreshold": 25,
+      "buildFocus": "Warden",
+      "weaponPath": [
+        {
+          "mainWeapon": "Laser Pistol",
+          "offhandWeapon": "Light Shield",
+          "listPriceCredits": 108000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": "Aegis Bulwark",
+          "listPriceCredits": 834000
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "Hone",
+          "weapon": "Volt Sabre",
+          "weaponSlot": "main",
+          "attribute": "Combat Power",
+          "baseValue": 8,
+          "magnitude": 2,
+          "resultValue": 10,
+          "costCredits": 40000,
+          "workshopLevel": 1,
+          "step": 1
+        },
+        {
+          "tier": "Augment",
+          "weapon": "Volt Sabre",
+          "weaponSlot": "main",
+          "attribute": "Adaptive AI",
+          "magnitude": 3,
+          "resultValue": 3,
+          "costCredits": 180000,
+          "workshopLevel": 3,
+          "step": 2
+        }
+      ],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Battered floating-canister robot with worn red panels, large optics and visible damage repairs.",
+        "refinementNote": "Apply in order after stage 1. Dual-wield refinements affect the main-hand copy only; the offhand stays unrefined unless explicitly targeted.",
+        "refinementTotalCredits": 220000,
+        "minimumRosterExpansionLevel": 1,
+        "imageConvention": "app/frontend/public/assets/automatons/cygnus-robotics-division/2.webp"
+      }
+    },
+    {
+      "blueprintId": "cygnus-robotics-division:3:maximilian",
+      "slot": 3,
+      "name": "Maximilian",
+      "sourceAlias": "Maximilian",
+      "nameBasis": "Source character or machine designation",
+      "availability": "reserve",
+      "loadout": "dual_wield",
+      "stance": "offensive",
+      "yieldThreshold": 0,
+      "buildFocus": "Bruiser",
+      "weaponPath": [
+        {
+          "mainWeapon": "Combat Knife",
+          "offhandWeapon": "Combat Knife",
+          "listPriceCredits": 186000
+        },
+        {
+          "mainWeapon": "Vibro Mace",
+          "offhandWeapon": "Vibro Mace",
+          "listPriceCredits": 850000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "melee",
+        "artBrief": "Tall red armoured robot with a narrow visor and blade-bearing arm assemblies.",
+        "refinementNote": "Equipment upgrades and tuning only: no verified Hone/Augment facts for this final weapon are supplied, and no unreachable refinement tier is added.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 2,
+        "imageConvention": "app/frontend/public/assets/automatons/cygnus-robotics-division/3.webp"
+      }
+    }
+  ],
+  "alternativeBlueprints": [],
+  "review": {
+    "openingWeaponCredits": 222000,
+    "finalWeaponCreditsAtTarget": 1684000,
+    "equippedWeaponCountAtTarget": 4,
+    "purchaseOrder": [
+      1,
+      2
+    ],
+    "reserveSlots": [
+      3
+    ],
+    "alternativeRule": "Choose an alternative before catalogue approval; it replaces the specified slot and never adds another live robot."
+  }
+}

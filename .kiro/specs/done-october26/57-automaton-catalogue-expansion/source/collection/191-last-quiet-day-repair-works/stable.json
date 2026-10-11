@@ -1,0 +1,177 @@
+{
+  "number": 191,
+  "catalogue_key": "last-quiet-day-repair-works",
+  "name": "Last Quiet Day Repair Works",
+  "franchise": "The Uncertain: Last Quiet Day — 2016 game",
+  "strategy": "Paragon",
+  "opening_robots": 1,
+  "target_robots": 1,
+  "max_planned_robots": 1,
+  "strategy_review_limit": 2,
+  "backstory": "A curious engineering machine restores its workshop by taking practical arena contracts. Measured mid-range equipment and gradual refinement come after funded repairs.",
+  "strategy_personality": "A curious engineering robot from a world after humanity, with a clearly mechanical head and utilitarian body. Use the first game's model consistently, retaining its source proportions and equipment details. Gradual workshop investment and practical loadouts fit the character. Combat gear is an arena adaptation; philosophical curiosity and engineering skill do not create automatic enemy hacking or unrestricted self-repair.",
+  "teams": {
+    "2v2": [],
+    "3v3": []
+  },
+  "event_order": [
+    "league_1v1",
+    "tournament_1v1",
+    "koth",
+    "grand_melee",
+    "league_2v2",
+    "tag_team",
+    "tournament_2v2",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "robots": [
+    {
+      "slot": 1,
+      "name": "RT-217NP",
+      "source_identity": "RT-217NP",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 15,
+      "build_focus": "Tactician",
+      "range_from_weapons": "mid",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Bolt Carbine",
+          "offhand_weapon": null,
+          "list_price_credits": 93000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Nova Caster",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Sharpen",
+          "weapon": "Nova Caster",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 1,
+          "cost_credits": 300000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 1
+        },
+        {
+          "operation": "Sharpen",
+          "weapon": "Nova Caster",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 2,
+          "cost_credits": 900000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 2
+        },
+        {
+          "operation": "Forge",
+          "weapon": "Nova Caster",
+          "hand": "main",
+          "workshop_level": 8,
+          "occurrence": 1,
+          "cost_credits": 400000,
+          "prestige_gate": 15000,
+          "effect": "+8% damage",
+          "step": 3
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE RT-217NP from the FIRST The Uncertain game, Last Quiet Day, using the attached final developer model reference: slim humanoid utility robot with worn white curved body panels over a black articulated mechanical frame, elongated smooth oval head with a broad black face screen, two small cyan rectangular LED eyes, rounded shoulder caps, black ribbed abdominal section, slender mechanical hands and white full feet. Preserve final model geometry; no human face or hair, no alternate earlier concept head. One compact lowered service pistol held in the right hand is an original arena addition. Left hand free. Complete body and both feet, restrained curious posture.\nMetadata only, do not render text: #191 slot 1 RT-217NP.",
+      "role": "Measured mid-range fighter",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 1600000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "RT-217NP fills the measured mid-range fighter role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Tactician tuning supports the mid equipment role; balanced stance and a 15% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Paragon strategy tuning rules with the Tactician Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "last-quiet-day-repair-works:1:rt-217np",
+      "folder": "stables/191-last-quiet-day-repair-works/robots/01-rt-217np",
+      "files": {
+        "png": "stables/191-last-quiet-day-repair-works/robots/01-rt-217np/portrait.png",
+        "webp": "stables/191-last-quiet-day-repair-works/robots/01-rt-217np/portrait.webp",
+        "blueprint": "stables/191-last-quiet-day-repair-works/robots/01-rt-217np/blueprint.json",
+        "profile": "stables/191-last-quiet-day-repair-works/robots/01-rt-217np/profile.md",
+        "prompt": "stables/191-last-quiet-day-repair-works/robots/01-rt-217np/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/last-quiet-day-repair-works/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 191,
+          "stable_name": "Last Quiet Day Repair Works",
+          "catalogue_key": "last-quiet-day-repair-works",
+          "slot": 1,
+          "robot_name": "RT-217NP",
+          "source_identity": "RT-217NP",
+          "source_edition": "The Uncertain: Last Quiet Day (2016), final white model from developer artbook page 3",
+          "source_references": [
+            "https://store.steampowered.com/app/406970/The_Uncertain_Last_Quiet_Day/",
+            "https://theuncertaingame.com/The%20Uncertain%20Episode%201%20Artbook.pdf"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE RT-217NP from the FIRST The Uncertain game, Last Quiet Day, using the attached final developer model reference: slim humanoid utility robot with worn white curved body panels over a black articulated mechanical frame, elongated smooth oval head with a broad black face screen, two small cyan rectangular LED eyes, rounded shoulder caps, black ribbed abdominal section, slender mechanical hands and white full feet. Preserve final model geometry; no human face or hair, no alternate earlier concept head. One compact lowered service pistol held in the right hand is an original arena addition. Left hand free. Complete body and both feet, restrained curious posture.\nMetadata only, do not render text: #191 slot 1 RT-217NP.",
+          "referenced_image_paths": [
+            "/tmp/armoured-rt217-final-reference.png"
+          ],
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-862c8c54-2a7c-4232-8f45-4e9114ce1383.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "last-quiet-day-repair-works:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/last-quiet-day-repair-works/1.webp",
+          "master": "outputs/automaton-portraits/masters/last-quiet-day-repair-works/1.png",
+          "output": "app/frontend/public/assets/automatons/last-quiet-day-repair-works/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "901e156b28b4ef1139de07ec70bea9979470c97ee2043af01eeb795c3e55bfe2",
+          "bytes": 32144
+        },
+        "sha256": "901e156b28b4ef1139de07ec70bea9979470c97ee2043af01eeb795c3e55bfe2",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "alternatives": [],
+  "blueprint_status": "detailed",
+  "source_notes": "\n**Franchise:** The Uncertain: Last Quiet Day — 2016 game  \n**Strategy:** Paragon · **Target roster:** 1 robot\n\n**Proposed robots:** RT-217NP.\n\n**Direction:** A curious engineering robot from a world after humanity, with a clearly mechanical head and utilitarian body. Use the first game's model consistently, retaining its source proportions and equipment details. Gradual workshop investment and practical loadouts fit the character. Combat gear is an arena adaptation; philosophical curiosity and engineering skill do not create automatic enemy hacking or unrestricted self-repair.\n\nReferences: [official game description identifying RT-217NP](https://store.steampowered.com/app/406970/The_Uncertain_Last_Quiet_Day/).\n\n**Production edition:** The Uncertain: Last Quiet Day (2016), final white model from developer artbook page 3.  \n**Catalogue key:** `last-quiet-day-repair-works`\n\n",
+  "source_documents": [
+    "reference/AUTOMATON_STABLE_EXPANSION.md"
+  ],
+  "blueprint_origin": "completed during collection",
+  "purchasing_plan": "Open and remain at one robot. Buy its complete stage-1 loadout before refinement. Execute the listed steps in order, progressing Workshop L1/L3/L5/L8 as required. Keep prestige-gated steps pending; fund repairs and maintenance before every purchase.",
+  "target_overrides": {},
+  "equipment_budget": {
+    "stage_0_credits": 93000,
+    "stage_1_credits": 425000,
+    "refinement_credits": 1600000,
+    "excludes": "Frames, facilities, training, repairs, upkeep, discounts and resale; stage-1 total replaces stage-0 gear and is not a simultaneous equipment inventory."
+  },
+  "folder": "stables/191-last-quiet-day-repair-works",
+  "history_image_count": 0
+}

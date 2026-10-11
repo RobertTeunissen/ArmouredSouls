@@ -1,0 +1,331 @@
+{
+  "stable_number": 105,
+  "catalogue_key": "rebel-droid-network",
+  "robots": [
+    {
+      "slot": 1,
+      "name": "Chopper C1-10P",
+      "source_identity": "C1-10P Chopper — Star Wars Rebels",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 20,
+      "build_focus": "Sprinter",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": null,
+          "list_price_credits": 57000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Hone",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 1,
+          "attribute": "Attack Speed",
+          "magnitude": 3,
+          "result_value": 7,
+          "cost_credits": 90000,
+          "base_value": 4,
+          "effect": "Attack Speed 4→7",
+          "step": 1
+        },
+        {
+          "operation": "Augment",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 3,
+          "attribute": "Evasion Thrusters",
+          "magnitude": 2,
+          "result_value": 2,
+          "cost_credits": 80000,
+          "effect": "Evasion Thrusters, new +2",
+          "step": 2
+        },
+        {
+          "operation": "Sharpen",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 1,
+          "cost_credits": 300000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 3
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 85% of square canvas with breathing room. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\nSubject: Authentic Chopper C1-10P from Rebels: short weathered orange-and-grey flat-topped dome, compact cream-and-orange patched cylindrical astromech body, mismatched mechanical side legs and source feet, small extended articulated dome manipulators, recognizable grumpy sensor layout. Preserve short broad source proportions and rusty scuffed finish. No human arms or humanoid reconstruction.\nCatalogue label for metadata only, do not render text: #105 slot 1 Chopper C1-10P.",
+      "role": "Mobile skirmisher",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 470000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "Chopper C1-10P fills the mobile skirmisher role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Sprinter tuning supports the short equipment role; balanced stance and a 20% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Generalist strategy tuning rules with the Sprinter Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "rebel-droid-network:1:chopper-c1-10p",
+      "folder": "stables/105-rebel-droid-network/robots/01-chopper-c1-10p",
+      "files": {
+        "png": "stables/105-rebel-droid-network/robots/01-chopper-c1-10p/portrait.png",
+        "webp": "stables/105-rebel-droid-network/robots/01-chopper-c1-10p/portrait.webp",
+        "blueprint": "stables/105-rebel-droid-network/robots/01-chopper-c1-10p/blueprint.json",
+        "profile": "stables/105-rebel-droid-network/robots/01-chopper-c1-10p/profile.md",
+        "prompt": "stables/105-rebel-droid-network/robots/01-chopper-c1-10p/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/rebel-droid-network/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 105,
+          "stable_name": "Rebel Droid Network",
+          "catalogue_key": "rebel-droid-network",
+          "slot": 1,
+          "robot_name": "Chopper C1-10P",
+          "source_identity": "C1-10P Chopper — Star Wars Rebels",
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 85% of square canvas with breathing room. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\nSubject: Authentic Chopper C1-10P from Rebels: short weathered orange-and-grey flat-topped dome, compact cream-and-orange patched cylindrical astromech body, mismatched mechanical side legs and source feet, small extended articulated dome manipulators, recognizable grumpy sensor layout. Preserve short broad source proportions and rusty scuffed finish. No human arms or humanoid reconstruction.\nCatalogue label for metadata only, do not render text: #105 slot 1 Chopper C1-10P.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-704bb569-d217-4b89-a2dc-5449ce89a308.png",
+          "visual_review": "Accepted: recognizable source identity, complete body and equipment, matching industrial studio finish.",
+          "asset_id": "rebel-droid-network:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/rebel-droid-network/1.webp",
+          "master": "outputs/automaton-portraits/masters/rebel-droid-network/1.png",
+          "output": "app/frontend/public/assets/automatons/rebel-droid-network/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "343f8bdb3c09dbfbb8298acbe63291b74bfcd0f31dcc07b0a8bcc103d461f53e",
+          "bytes": 60846,
+          "source_edition": "Chopper's short weathered body, orange dome, and characteristic manipulators; AP-5's tall, slim blue-grey inventory-droid form; K-2SO's long black security chassis and pale optics. Base Chopper and AP-5 on Rebels and K-2SO on Rogue One, using the established Armoured Souls material treatment across all three.",
+          "source_references": [
+            "https://www.starwars.com/databank/chopper",
+            "https://www.starwars.com/databank/ap-5",
+            "https://www.starwars.com/databank/k-2so-kay-tuesso"
+          ]
+        },
+        "sha256": "343f8bdb3c09dbfbb8298acbe63291b74bfcd0f31dcc07b0a8bcc103d461f53e",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 2,
+      "name": "AP-5",
+      "source_identity": "AP-5 — Star Wars Rebels",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 20,
+      "build_focus": "Deadeye",
+      "range_from_weapons": "long",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Beam Pistol",
+          "offhand_weapon": null,
+          "list_price_credits": 93000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Particle Lance",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 85% of square canvas with breathing room. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\nSubject: Authentic AP-5 inventory droid from Rebels: tall slender blue-grey mechanical body, elongated narrow protocol-style head and characteristic pale optical sensors, slim limbs and exposed joints, slightly hunched dryly formal pose. Preserve the exact source head and panel shapes. One discreet arena sidearm low by the hip; otherwise source-faithful utility body and muted finish.\nCatalogue label for metadata only, do not render text: #105 slot 2 AP-5.",
+      "role": "Precision fire support",
+      "missing_fields": [],
+      "refinement_note": "Generalist refinement spending is reserved for the slot-1 lead; this supporting robot has an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 1,
+      "equipment_interpretation": "AP-5 fills the precision fire support role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Deadeye tuning supports the long equipment role; balanced stance and a 20% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Generalist strategy tuning rules with the Deadeye Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "rebel-droid-network:2:ap-5",
+      "folder": "stables/105-rebel-droid-network/robots/02-ap-5",
+      "files": {
+        "png": "stables/105-rebel-droid-network/robots/02-ap-5/portrait.png",
+        "webp": "stables/105-rebel-droid-network/robots/02-ap-5/portrait.webp",
+        "blueprint": "stables/105-rebel-droid-network/robots/02-ap-5/blueprint.json",
+        "profile": "stables/105-rebel-droid-network/robots/02-ap-5/profile.md",
+        "prompt": "stables/105-rebel-droid-network/robots/02-ap-5/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/rebel-droid-network/2.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 105,
+          "stable_name": "Rebel Droid Network",
+          "catalogue_key": "rebel-droid-network",
+          "slot": 2,
+          "robot_name": "AP-5",
+          "source_identity": "AP-5 — Star Wars Rebels",
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 85% of square canvas with breathing room. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\nSubject: Authentic AP-5 inventory droid from Rebels: tall slender blue-grey mechanical body, elongated narrow protocol-style head and characteristic pale optical sensors, slim limbs and exposed joints, slightly hunched dryly formal pose. Preserve the exact source head and panel shapes. One discreet arena sidearm low by the hip; otherwise source-faithful utility body and muted finish.\nCatalogue label for metadata only, do not render text: #105 slot 2 AP-5.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-f9c7d20a-ace0-4ea0-a7e6-86107b9a8604.png",
+          "visual_review": "Accepted: recognizable source identity, complete body and equipment, matching industrial studio finish.",
+          "asset_id": "rebel-droid-network:2",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/rebel-droid-network/2.webp",
+          "master": "outputs/automaton-portraits/masters/rebel-droid-network/2.png",
+          "output": "app/frontend/public/assets/automatons/rebel-droid-network/2.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "f8e652801cf77593b09ec903efb43f96e1d2ade7c8daa379f54ef1f722f3cf78",
+          "bytes": 28990,
+          "source_edition": "Chopper's short weathered body, orange dome, and characteristic manipulators; AP-5's tall, slim blue-grey inventory-droid form; K-2SO's long black security chassis and pale optics. Base Chopper and AP-5 on Rebels and K-2SO on Rogue One, using the established Armoured Souls material treatment across all three.",
+          "source_references": [
+            "https://www.starwars.com/databank/chopper",
+            "https://www.starwars.com/databank/ap-5",
+            "https://www.starwars.com/databank/k-2so-kay-tuesso"
+          ]
+        },
+        "sha256": "f8e652801cf77593b09ec903efb43f96e1d2ade7c8daa379f54ef1f722f3cf78",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 3,
+      "name": "K-2SO",
+      "source_identity": "K-2SO — Rogue One",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yield_threshold": 25,
+      "build_focus": "Warden",
+      "range_from_weapons": "melee",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Practice Sword",
+          "offhand_weapon": "Light Shield",
+          "list_price_credits": 101000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Vibro Mace",
+          "offhand_weapon": "Aegis Bulwark",
+          "list_price_credits": 834000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset: one square individual robot portrait for the Armoured Souls game. Create an original robot design with its own construction and proportions. Premium realistic industrial science-fiction 3D render, fine scratches and restrained paint wear, believable materials. Quiet charcoal-to-black studio backdrop, dark floor, faint low haze. Neutral soft key light and cool upper-right rim. Three-quarter view, entire robot, wheels, antennae and tools visible, centered at 80% canvas height with clear margin on all sides. Readable at 512px. One robot only. No text, logos, watermark, frame, interface, collage, firing, explosions or extra characters.\nSubject: Original starship security robot with a broad heavy chassis, muscular hydraulic arms and short stout bipedal legs. Graphite-grey armour with faded ochre shoulder housings. The head is a low flat rectangular sensor box with a thin cyan horizontal visor, recessed between protective collar rails. Rectangular chest battery bay, reinforced knuckles and broad split-toe industrial boots. Grounded three-quarter stance with hands relaxed, all fingers and feet contained in frame. Practical worn retro-space construction, no human facial features.",
+      "role": "Guarded contact anchor",
+      "missing_fields": [],
+      "refinement_note": "Generalist refinement spending is reserved for the slot-1 lead; this supporting robot has an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 2,
+      "equipment_interpretation": "K-2SO fills the guarded contact anchor role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Warden tuning supports the melee equipment role; defensive stance and a 25% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Generalist strategy tuning rules with the Warden Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "rebel-droid-network:3:k-2so",
+      "folder": "stables/105-rebel-droid-network/robots/03-k-2so",
+      "files": {
+        "png": "stables/105-rebel-droid-network/robots/03-k-2so/portrait.png",
+        "webp": "stables/105-rebel-droid-network/robots/03-k-2so/portrait.webp",
+        "blueprint": "stables/105-rebel-droid-network/robots/03-k-2so/blueprint.json",
+        "profile": "stables/105-rebel-droid-network/robots/03-k-2so/profile.md",
+        "prompt": "stables/105-rebel-droid-network/robots/03-k-2so/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/rebel-droid-network/3.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 105,
+          "stable_name": "Rebel Droid Network",
+          "catalogue_key": "rebel-droid-network",
+          "slot": 3,
+          "robot_name": "K-2SO",
+          "source_identity": "K-2SO — Rogue One",
+          "prompt": "Use case: stylized-concept. Asset: one square individual robot portrait for the Armoured Souls game. Create an original robot design with its own construction and proportions. Premium realistic industrial science-fiction 3D render, fine scratches and restrained paint wear, believable materials. Quiet charcoal-to-black studio backdrop, dark floor, faint low haze. Neutral soft key light and cool upper-right rim. Three-quarter view, entire robot, wheels, antennae and tools visible, centered at 80% canvas height with clear margin on all sides. Readable at 512px. One robot only. No text, logos, watermark, frame, interface, collage, firing, explosions or extra characters.\nSubject: Original starship security robot with a broad heavy chassis, muscular hydraulic arms and short stout bipedal legs. Graphite-grey armour with faded ochre shoulder housings. The head is a low flat rectangular sensor box with a thin cyan horizontal visor, recessed between protective collar rails. Rectangular chest battery bay, reinforced knuckles and broad split-toe industrial boots. Grounded three-quarter stance with hands relaxed, all fingers and feet contained in frame. Practical worn retro-space construction, no human facial features.",
+          "source_edition": "Original Armoured Souls visual interpretation; planned source identity retained as roster metadata",
+          "source_references": [
+            "https://www.starwars.com/databank/chopper",
+            "https://www.starwars.com/databank/ap-5",
+            "https://www.starwars.com/databank/k-2so-kay-tuesso"
+          ],
+          "original_plan_prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 85% of square canvas with breathing room. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\nSubject: Authentic K-2SO Rogue One security droid: extremely tall thin black/dark gunmetal body, small rounded mechanical head, round pale white eye lenses, broad shoulder housings, very long arms and legs, source torso and feet. Weathered black steel with restrained Imperial surface marks. One black blaster held low in a relaxed protective pose. Preserve the distinctive lanky screen silhouette; no humanoid helmet or clothing.\nCatalogue label for metadata only, do not render text: #105 slot 3 K-2SO.",
+          "artwork_type": "original interpretation",
+          "art_direction": "Original retro-space robot",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-0edf08b0-0837-4eab-8070-b08acaaccbfe.png",
+          "visual_review": "Accepted — original interpretation reviewed for complete-body framing, correct mechanical anatomy, readable silhouette, matching materials and studio lighting",
+          "asset_id": "rebel-droid-network:3",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/rebel-droid-network/3.webp",
+          "master": "outputs/automaton-portraits/masters/rebel-droid-network/3.png",
+          "output": "app/frontend/public/assets/automatons/rebel-droid-network/3.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "3bd147a16a9140fdaee504bd8212d874ad161997d47025c9d1568ec24cbe06e9",
+          "bytes": 64168,
+          "original_source_edition": "Chopper's short weathered body, orange dome, and characteristic manipulators; AP-5's tall, slim blue-grey inventory-droid form; K-2SO's long black security chassis and pale optics. Base Chopper and AP-5 on Rebels and K-2SO on Rogue One, using the established Armoured Souls material treatment across all three.",
+          "source_reference_note": "References describe the roster background; the final visual design is an original interpretation."
+        },
+        "sha256": "3bd147a16a9140fdaee504bd8212d874ad161997d47025c9d1568ec24cbe06e9",
+        "revision": 1,
+        "artwork_type": "original interpretation",
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "replacement_alternatives": []
+}

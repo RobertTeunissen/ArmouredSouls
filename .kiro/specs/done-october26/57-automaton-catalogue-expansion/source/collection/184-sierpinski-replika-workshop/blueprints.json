@@ -1,0 +1,162 @@
+{
+  "stable_number": 184,
+  "catalogue_key": "sierpinski-replika-workshop",
+  "robots": [
+    {
+      "slot": 1,
+      "name": "Elster",
+      "source_identity": "Elster",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 15,
+      "build_focus": "Versatile",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": null,
+          "list_price_credits": 57000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Hone",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 1,
+          "attribute": "Combat Power",
+          "magnitude": 2,
+          "result_value": 10,
+          "cost_credits": 40000,
+          "base_value": 8,
+          "effect": "Combat Power 8→10",
+          "step": 1
+        },
+        {
+          "operation": "Augment",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 3,
+          "attribute": "Adaptive AI",
+          "magnitude": 3,
+          "result_value": 3,
+          "cost_credits": 180000,
+          "effect": "Adaptive AI, new +3",
+          "step": 2
+        },
+        {
+          "operation": "Sharpen",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 1,
+          "cost_credits": 300000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 3
+        },
+        {
+          "operation": "Sharpen",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 2,
+          "cost_credits": 900000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 4
+        },
+        {
+          "operation": "Forge",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 8,
+          "occurrence": 1,
+          "cost_credits": 400000,
+          "prestige_gate": 15000,
+          "effect": "+8% damage",
+          "step": 5
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE Elster, LSTR-512 Replika from SIGNALIS (2022), recognizably synthetic adult female humanoid with pale humanlike face, short straight black bob hair, source red-and-black technical bodysuit/uniform, red shoulder and upper torso panels, exposed dark mechanical articulated limb segments, dark gloves and full boots. Preserve the original game's proportions and silhouette with faithful realistic materials, not a generic human soldier. One compact service pistol held lowered safely in the right hand, left hand free; no extra weapon. Complete body including boots, calm alert three-quarter pose.\nMetadata only, do not render text: #184 slot 1 Elster.",
+      "role": "Flexible line fighter",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 1820000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "Elster fills the flexible line fighter role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Versatile tuning supports the short equipment role; balanced stance and a 15% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Paragon strategy tuning rules with the Versatile Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "sierpinski-replika-workshop:1:elster",
+      "folder": "stables/184-sierpinski-replika-workshop/robots/01-elster",
+      "files": {
+        "png": "stables/184-sierpinski-replika-workshop/robots/01-elster/portrait.png",
+        "webp": "stables/184-sierpinski-replika-workshop/robots/01-elster/portrait.webp",
+        "blueprint": "stables/184-sierpinski-replika-workshop/robots/01-elster/blueprint.json",
+        "profile": "stables/184-sierpinski-replika-workshop/robots/01-elster/profile.md",
+        "prompt": "stables/184-sierpinski-replika-workshop/robots/01-elster/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/sierpinski-replika-workshop/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 184,
+          "stable_name": "Sierpinski Replika Workshop",
+          "catalogue_key": "sierpinski-replika-workshop",
+          "slot": 1,
+          "robot_name": "Elster",
+          "source_identity": "Elster",
+          "source_edition": "SIGNALIS (2022), LSTR-512 intact dark red-and-black work uniform",
+          "source_references": [
+            "https://store.steampowered.com/app/1262350/SIGNALIS/"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE Elster, LSTR-512 Replika from SIGNALIS (2022), recognizably synthetic adult female humanoid with pale humanlike face, short straight black bob hair, source red-and-black technical bodysuit/uniform, red shoulder and upper torso panels, exposed dark mechanical articulated limb segments, dark gloves and full boots. Preserve the original game's proportions and silhouette with faithful realistic materials, not a generic human soldier. One compact service pistol held lowered safely in the right hand, left hand free; no extra weapon. Complete body including boots, calm alert three-quarter pose.\nMetadata only, do not render text: #184 slot 1 Elster.",
+          "referenced_image_paths": [
+            "/tmp/armoured-game-refs/signalis-1.png",
+            "/tmp/armoured-game-refs/signalis-0.png"
+          ],
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-5466621a-0494-4065-8cf8-253af0e5e88c.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "sierpinski-replika-workshop:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/sierpinski-replika-workshop/1.webp",
+          "master": "outputs/automaton-portraits/masters/sierpinski-replika-workshop/1.png",
+          "output": "app/frontend/public/assets/automatons/sierpinski-replika-workshop/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "f867edd913db5c1fede1731ccf0be7f911f79db4a5e46a5e9431ca5c07c6ba25",
+          "bytes": 29344
+        },
+        "sha256": "f867edd913db5c1fede1731ccf0be7f911f79db4a5e46a5e9431ca5c07c6ba25",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "replacement_alternatives": []
+}

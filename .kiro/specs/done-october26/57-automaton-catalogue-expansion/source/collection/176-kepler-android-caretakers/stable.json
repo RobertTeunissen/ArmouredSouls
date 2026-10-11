@@ -1,0 +1,279 @@
+{
+  "number": 176,
+  "catalogue_key": "kepler-android-caretakers",
+  "name": "Kepler Android Caretakers",
+  "franchise": "Raised by Wolves — television series",
+  "strategy": "Duo",
+  "opening_robots": 2,
+  "target_robots": 2,
+  "max_planned_robots": 2,
+  "strategy_review_limit": 3,
+  "backstory": "Two caretaker androids divide protection and measured ranged work. Their workshop keeps a balanced partner budget and treats exceptional source abilities as narrative context.",
+  "strategy_personality": "A human-looking android pair with contrasting temperaments and recognizable colony clothing. Select Mother's ordinary caretaker appearance and Father's matching source-era body to keep the set coherent. Their complementary equipment priorities are an arena design choice. Mother's alternate appearance and extraordinary abilities should not create a second character or bypass the existing combat rules; preserve the androids' authentic faces and bodies.",
+  "teams": {
+    "2v2": [
+      {
+        "name": "Kepler Pair Pair 01",
+        "slots": [
+          1,
+          2
+        ],
+        "forms": "Opening"
+      }
+    ],
+    "3v3": []
+  },
+  "event_order": [
+    "league_2v2",
+    "tag_team",
+    "tournament_2v2",
+    "league_1v1",
+    "koth",
+    "grand_melee",
+    "tournament_1v1",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "robots": [
+    {
+      "slot": 1,
+      "name": "Mother RW",
+      "source_identity": "Mother, Raised by Wolves; arena suffix disambiguates",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yield_threshold": 25,
+      "build_focus": "Warden",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": "Light Shield",
+          "list_price_credits": 108000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": "Aegis Bulwark",
+          "list_price_credits": 834000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Hone",
+          "weapon": "Aegis Bulwark",
+          "hand": "offhand",
+          "workshop_level": 1,
+          "attribute": "Evasion Thrusters",
+          "magnitude": 5,
+          "result_value": 0,
+          "cost_credits": 250000,
+          "base_value": -5,
+          "effect": "Evasion Thrusters -5→0",
+          "step": 1
+        },
+        {
+          "operation": "Hone",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 1,
+          "attribute": "Combat Power",
+          "magnitude": 2,
+          "result_value": 10,
+          "cost_credits": 40000,
+          "base_value": 8,
+          "effect": "Combat Power 8→10",
+          "step": 2
+        },
+        {
+          "operation": "Augment",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 3,
+          "attribute": "Adaptive AI",
+          "magnitude": 3,
+          "result_value": 3,
+          "cost_credits": 180000,
+          "effect": "Adaptive AI, new +3",
+          "step": 3
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Mother from Raised by Wolves season 1 in her ORDINARY caretaker appearance: authentic adult human-looking face portrayed by Amanda Collin, very short reddish-blond pixie hair, source pale grey fitted colony jumpsuit and practical boots, calm upright protective posture. Keep human-like skin and source clothing, no necromancer gold body, no added metal face or weapon.\nMetadata only, do not render text: #176 slot 1 Mother RW.",
+      "role": "Protected short-range anchor",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 470000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "Mother RW fills the protected short-range anchor role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Warden tuning supports the short equipment role; defensive stance and a 25% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Duo strategy tuning rules with the Warden Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "kepler-android-caretakers:1:mother-rw",
+      "folder": "stables/176-kepler-android-caretakers/robots/01-mother-rw",
+      "files": {
+        "png": "stables/176-kepler-android-caretakers/robots/01-mother-rw/portrait.png",
+        "webp": "stables/176-kepler-android-caretakers/robots/01-mother-rw/portrait.webp",
+        "blueprint": "stables/176-kepler-android-caretakers/robots/01-mother-rw/blueprint.json",
+        "profile": "stables/176-kepler-android-caretakers/robots/01-mother-rw/profile.md",
+        "prompt": "stables/176-kepler-android-caretakers/robots/01-mother-rw/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/kepler-android-caretakers/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 176,
+          "stable_name": "Kepler Android Caretakers",
+          "catalogue_key": "kepler-android-caretakers",
+          "slot": 1,
+          "robot_name": "Mother RW",
+          "source_identity": "Mother, Raised by Wolves; arena suffix disambiguates",
+          "source_edition": "Raised by Wolves season 1 ordinary colony caretaker appearances",
+          "source_references": [
+            "https://www.youtube.com/watch?v=rhcFEujZGTU"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Mother from Raised by Wolves season 1 in her ORDINARY caretaker appearance: authentic adult human-looking face portrayed by Amanda Collin, very short reddish-blond pixie hair, source pale grey fitted colony jumpsuit and practical boots, calm upright protective posture. Keep human-like skin and source clothing, no necromancer gold body, no added metal face or weapon.\nMetadata only, do not render text: #176 slot 1 Mother RW.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-32dbadbb-d166-4437-8974-480b8049c7ef.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "kepler-android-caretakers:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/kepler-android-caretakers/1.webp",
+          "master": "outputs/automaton-portraits/masters/kepler-android-caretakers/1.png",
+          "output": "app/frontend/public/assets/automatons/kepler-android-caretakers/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "eb3e13067562b7f15dee8a814a0509db99f0e173e84e90457e20b443ba5b4ed0",
+          "bytes": 21484
+        },
+        "sha256": "eb3e13067562b7f15dee8a814a0509db99f0e173e84e90457e20b443ba5b4ed0",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 2,
+      "name": "Father",
+      "source_identity": "Father, Raised by Wolves",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 15,
+      "build_focus": "Tactician",
+      "range_from_weapons": "mid",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Bolt Carbine",
+          "offhand_weapon": null,
+          "list_price_credits": 93000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Nova Caster",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Father from Raised by Wolves season 1, authentic adult human-looking Black male android portrayed by Abubakar Salim, shaved head, source pale grey fitted colony jumpsuit and practical boots, warm composed full-body standing stance. Human-like face and skin, not a metal soldier, no added armour or weapon.\nMetadata only, do not render text: #176 slot 2 Father.",
+      "role": "Measured mid-range fighter",
+      "missing_fields": [],
+      "refinement_note": "No verified Hone/Augment combination exists for this final weapon in the supplied references; Duo does not buy Sharpen/Forge. The empty plan is intentional.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 1,
+      "equipment_interpretation": "Father fills the measured mid-range fighter role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Tactician tuning supports the mid equipment role; balanced stance and a 15% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Duo strategy tuning rules with the Tactician Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "kepler-android-caretakers:2:father",
+      "folder": "stables/176-kepler-android-caretakers/robots/02-father",
+      "files": {
+        "png": "stables/176-kepler-android-caretakers/robots/02-father/portrait.png",
+        "webp": "stables/176-kepler-android-caretakers/robots/02-father/portrait.webp",
+        "blueprint": "stables/176-kepler-android-caretakers/robots/02-father/blueprint.json",
+        "profile": "stables/176-kepler-android-caretakers/robots/02-father/profile.md",
+        "prompt": "stables/176-kepler-android-caretakers/robots/02-father/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/kepler-android-caretakers/2.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 176,
+          "stable_name": "Kepler Android Caretakers",
+          "catalogue_key": "kepler-android-caretakers",
+          "slot": 2,
+          "robot_name": "Father",
+          "source_identity": "Father, Raised by Wolves",
+          "source_edition": "Raised by Wolves season 1 ordinary colony caretaker appearances",
+          "source_references": [
+            "https://www.youtube.com/watch?v=rhcFEujZGTU"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Father from Raised by Wolves season 1, authentic adult human-looking Black male android portrayed by Abubakar Salim, shaved head, source pale grey fitted colony jumpsuit and practical boots, warm composed full-body standing stance. Human-like face and skin, not a metal soldier, no added armour or weapon.\nMetadata only, do not render text: #176 slot 2 Father.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-4e1c9200-c9c3-4f40-87a1-cd87df3ea3c9.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "kepler-android-caretakers:2",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/kepler-android-caretakers/2.webp",
+          "master": "outputs/automaton-portraits/masters/kepler-android-caretakers/2.png",
+          "output": "app/frontend/public/assets/automatons/kepler-android-caretakers/2.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "1e52470b1dcede41e7650013117c2cd57297e106f1c205352ecd3f5c86d21faa",
+          "bytes": 25446
+        },
+        "sha256": "1e52470b1dcede41e7650013117c2cd57297e106f1c205352ecd3f5c86d21faa",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "alternatives": [],
+  "blueprint_status": "detailed",
+  "source_notes": "\n**Franchise:** Raised by Wolves — television series  \n**Strategy:** Duo · **Target roster:** 2 robots\n\n**Proposed robots:** Mother RW; Father.\n\n**Direction:** A human-looking android pair with contrasting temperaments and recognizable colony clothing. Select Mother's ordinary caretaker appearance and Father's matching source-era body to keep the set coherent. Their complementary equipment priorities are an arena design choice. Mother's alternate appearance and extraordinary abilities should not create a second character or bypass the existing combat rules; preserve the androids' authentic faces and bodies.\n\nReferences: [HBO Max's official Raised by Wolves podcast, “Robots”](https://www.youtube.com/watch?v=rhcFEujZGTU).\n\n**Production edition:** Raised by Wolves season 1 ordinary colony caretaker appearances.  \n**Catalogue key:** `kepler-android-caretakers`\n\n",
+  "source_documents": [
+    "reference/AUTOMATON_STABLE_EXPANSION.md"
+  ],
+  "blueprint_origin": "completed during collection",
+  "purchasing_plan": "Open with both robots. Alternate stage-1 equipment investment between slots 1 and 2; finish both final loadouts before refining. Visit both robots in each Hone pass, then each Augment pass, buying Workshop L1/L3 only as required. No Sharpen or Forge purchases.",
+  "target_overrides": {},
+  "equipment_budget": {
+    "stage_0_credits": 201000,
+    "stage_1_credits": 1259000,
+    "refinement_credits": 470000,
+    "excludes": "Frames, facilities, training, repairs, upkeep, discounts and resale; stage-1 total replaces stage-0 gear and is not a simultaneous equipment inventory."
+  },
+  "folder": "stables/176-kepler-android-caretakers",
+  "history_image_count": 0
+}

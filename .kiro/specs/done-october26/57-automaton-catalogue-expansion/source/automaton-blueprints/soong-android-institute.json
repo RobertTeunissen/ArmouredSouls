@@ -1,0 +1,160 @@
+{
+  "number": 62,
+  "catalogueKey": "soong-android-institute",
+  "stableName": "Soong Android Institute",
+  "franchiseLabel": "Star Trek",
+  "strategy": "Trio",
+  "fit": "Adapt",
+  "conceptIdentity": "Three android builds with different investment priorities. Exposed synthetic detail helps their portraits read as robots rather than human characters.",
+  "backstory": "Soong Android Institute enters the arena with a clear doctrine. Three android builds with different investment priorities. Every surviving machine returns to the workshop before the next booking.",
+  "openingRobots": 3,
+  "targetRobots": 3,
+  "adminMaximumRobots": 4,
+  "targetOverrides": {},
+  "teamNames": {
+    "2v2": [
+      {
+        "name": "Soong Pair 01",
+        "slots": [
+          1,
+          2
+        ]
+      }
+    ],
+    "3v3": [
+      {
+        "name": "Soong Squad 01",
+        "slots": [
+          1,
+          2,
+          3
+        ]
+      }
+    ]
+  },
+  "eventOrder": [
+    "league_3v3",
+    "tournament_3v3",
+    "league_1v1",
+    "league_2v2",
+    "tag_team",
+    "koth",
+    "grand_melee",
+    "tournament_2v2",
+    "tournament_1v1"
+  ],
+  "robots": [
+    {
+      "blueprintId": "soong-android-institute:1:data",
+      "slot": 1,
+      "name": "Data",
+      "sourceAlias": "Data",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 20,
+      "buildFocus": "Tactician",
+      "weaponPath": [
+        {
+          "mainWeapon": "Beam Pistol",
+          "offhandWeapon": null,
+          "listPriceCredits": 93000
+        },
+        {
+          "mainWeapon": "Particle Lance",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "long",
+        "artBrief": "Soong android with pale skin, gold eyes and a dark gold-accented Starfleet uniform.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 0,
+        "imageConvention": "app/frontend/public/assets/automatons/soong-android-institute/1.webp"
+      }
+    },
+    {
+      "blueprintId": "soong-android-institute:2:lore",
+      "slot": 2,
+      "name": "Lore",
+      "sourceAlias": "Lore",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "dual_wield",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "Deadeye",
+      "weaponPath": [
+        {
+          "mainWeapon": "Bolt Carbine",
+          "offhandWeapon": "Bolt Carbine",
+          "listPriceCredits": 186000
+        },
+        {
+          "mainWeapon": "Nova Caster",
+          "offhandWeapon": "Nova Caster",
+          "listPriceCredits": 850000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "mid",
+        "artBrief": "Soong android with pale skin, gold eyes and a controlled aggressive pose.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 1,
+        "imageConvention": "app/frontend/public/assets/automatons/soong-android-institute/2.webp"
+      }
+    },
+    {
+      "blueprintId": "soong-android-institute:3:b-4",
+      "slot": 3,
+      "name": "B-4",
+      "sourceAlias": "B-4",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yieldThreshold": 30,
+      "buildFocus": "Versatile",
+      "weaponPath": [
+        {
+          "mainWeapon": "Laser Pistol",
+          "offhandWeapon": "Light Shield",
+          "listPriceCredits": 108000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": "Aegis Bulwark",
+          "listPriceCredits": 834000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Soong prototype android with pale skin, gold eyes and a protective stance.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 2,
+        "imageConvention": "app/frontend/public/assets/automatons/soong-android-institute/3.webp"
+      }
+    }
+  ],
+  "alternativeBlueprints": [],
+  "review": {
+    "openingWeaponCredits": 387000,
+    "finalWeaponCreditsAtTarget": 2109000,
+    "equippedWeaponCountAtTarget": 5,
+    "purchaseOrder": [
+      1,
+      2,
+      3
+    ],
+    "reserveSlots": [],
+    "alternativeRule": "Choose an alternative before catalogue approval; it replaces the specified slot and never adds another live robot."
+  }
+}

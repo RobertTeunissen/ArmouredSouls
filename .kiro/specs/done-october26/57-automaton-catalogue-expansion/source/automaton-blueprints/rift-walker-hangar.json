@@ -1,0 +1,160 @@
+{
+  "number": 47,
+  "catalogueKey": "rift-walker-hangar",
+  "stableName": "Rift Walker Hangar",
+  "franchiseLabel": "Into the Breach",
+  "strategy": "Trio",
+  "fit": "Direct",
+  "conceptIdentity": "Complementary melee, ranged, and heavy builds. Small functional military mechs with one coherent colour scheme.",
+  "backstory": "Rift Walker Hangar enters the arena with a clear doctrine. Complementary melee, ranged, and heavy builds. Every surviving machine returns to the workshop before the next booking.",
+  "openingRobots": 3,
+  "targetRobots": 3,
+  "adminMaximumRobots": 4,
+  "targetOverrides": {},
+  "teamNames": {
+    "2v2": [
+      {
+        "name": "Rift Walker Pair 01",
+        "slots": [
+          1,
+          2
+        ]
+      }
+    ],
+    "3v3": [
+      {
+        "name": "Rift Walker Squad 01",
+        "slots": [
+          1,
+          2,
+          3
+        ]
+      }
+    ]
+  },
+  "eventOrder": [
+    "league_3v3",
+    "tournament_3v3",
+    "league_1v1",
+    "league_2v2",
+    "tag_team",
+    "koth",
+    "grand_melee",
+    "tournament_2v2",
+    "tournament_1v1"
+  ],
+  "robots": [
+    {
+      "blueprintId": "rift-walker-hangar:1:combat-mech",
+      "slot": 1,
+      "name": "Combat Mech",
+      "sourceAlias": "Combat Mech",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "two_handed",
+      "stance": "balanced",
+      "yieldThreshold": 10,
+      "buildFocus": "Bruiser",
+      "weaponPath": [
+        {
+          "mainWeapon": "War Club",
+          "offhandWeapon": null,
+          "listPriceCredits": 84000
+        },
+        {
+          "mainWeapon": "Heavy Hammer",
+          "offhandWeapon": null,
+          "listPriceCredits": 478000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "melee",
+        "artBrief": "Compact olive combat mech with a central cockpit and articulated striking arms.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 0,
+        "imageConvention": "app/frontend/public/assets/automatons/rift-walker-hangar/1.webp"
+      }
+    },
+    {
+      "blueprintId": "rift-walker-hangar:2:cannon-mech",
+      "slot": 2,
+      "name": "Cannon Mech",
+      "sourceAlias": "Cannon Mech",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 10,
+      "buildFocus": "Deadeye",
+      "weaponPath": [
+        {
+          "mainWeapon": "Bolt Carbine",
+          "offhandWeapon": null,
+          "listPriceCredits": 93000
+        },
+        {
+          "mainWeapon": "Nova Caster",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "mid",
+        "artBrief": "Compact military mech with a broad ranged cannon and sturdy support legs.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 1,
+        "imageConvention": "app/frontend/public/assets/automatons/rift-walker-hangar/2.webp"
+      }
+    },
+    {
+      "blueprintId": "rift-walker-hangar:3:artillery-mech",
+      "slot": 3,
+      "name": "Artillery Mech",
+      "sourceAlias": "Artillery Mech",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "two_handed",
+      "stance": "defensive",
+      "yieldThreshold": 15,
+      "buildFocus": "Tactician",
+      "weaponPath": [
+        {
+          "mainWeapon": "Training Beam",
+          "offhandWeapon": null,
+          "listPriceCredits": 50000
+        },
+        {
+          "mainWeapon": "Ion Beam",
+          "offhandWeapon": null,
+          "listPriceCredits": 544000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "long",
+        "artBrief": "Compact artillery mech with a long launcher assembly and stable mechanical stance.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 2,
+        "imageConvention": "app/frontend/public/assets/automatons/rift-walker-hangar/3.webp"
+      }
+    }
+  ],
+  "alternativeBlueprints": [],
+  "review": {
+    "openingWeaponCredits": 227000,
+    "finalWeaponCreditsAtTarget": 1447000,
+    "equippedWeaponCountAtTarget": 3,
+    "purchaseOrder": [
+      1,
+      2,
+      3
+    ],
+    "reserveSlots": [],
+    "alternativeRule": "Choose an alternative before catalogue approval; it replaces the specified slot and never adds another live robot."
+  }
+}

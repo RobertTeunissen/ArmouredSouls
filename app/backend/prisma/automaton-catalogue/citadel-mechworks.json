@@ -1,0 +1,167 @@
+{
+  "schemaVersion": 1,
+  "catalogueKey": "citadel-mechworks",
+  "stableName": "Citadel Mechworks",
+  "franchise": "Mass Effect — Security Mechs",
+  "backstory": "A line machine, a low contact specialist and a heavy platform give the mechworks a practical three-role roster. The workshop upgrades the lead while bringing its heavy third chassis online.",
+  "strategy": {
+    "key": "generalist",
+    "version": 1,
+    "targetOverrides": {
+      "14": 3
+    }
+  },
+  "teamNames": {
+    "twoVsTwo": [
+      "C-Sec Patrol"
+    ],
+    "threeVsThree": [
+      "Presidium Security"
+    ]
+  },
+  "eventOrder": [
+    "league_1v1",
+    "league_2v2",
+    "tag_team",
+    "league_3v3",
+    "koth",
+    "grand_melee",
+    "tournament_1v1",
+    "tournament_2v2",
+    "tournament_3v3"
+  ],
+  "blueprints": [
+    {
+      "slot": 1,
+      "robotName": "LOKI",
+      "loadoutType": "single",
+      "stance": "balanced",
+      "yieldThreshold": 15,
+      "buildFocus": "versatile",
+      "weaponPath": [
+        {
+          "main": "Laser Pistol"
+        },
+        {
+          "main": "Volt Sabre"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "magnitude": 2,
+          "targetAttribute": "combatPower"
+        }
+      ]
+    },
+    {
+      "slot": 2,
+      "robotName": "FENRIS",
+      "loadoutType": "single",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "sprinter",
+      "weaponPath": [
+        {
+          "main": "Practice Sword"
+        },
+        {
+          "main": "Vibro Mace"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "magnitude": 2,
+          "targetAttribute": "gyroStabilizers"
+        }
+      ]
+    },
+    {
+      "slot": 3,
+      "robotName": "YMIR",
+      "loadoutType": "two_handed",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "bruiser",
+      "weaponPath": [
+        {
+          "main": "Training Rifle"
+        },
+        {
+          "main": "Plasma Cannon"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "magnitude": 2,
+          "targetAttribute": "combatPower"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,233 @@
+{
+  "number": 69,
+  "catalogueKey": "fix-it-foundry",
+  "stableName": "Fix It Foundry",
+  "franchiseLabel": "batteries not included",
+  "strategy": "Duo",
+  "fit": "Adapt",
+  "conceptIdentity": "Small durable partners with protective build choices. Saucer-like mechanical shapes and warm optics; scale and weapon adaptation need care.",
+  "backstory": "Fix It Foundry enters the arena with a clear doctrine. Small durable partners with protective build choices. Every surviving machine returns to the workshop before the next booking.",
+  "openingRobots": 2,
+  "targetRobots": 2,
+  "adminMaximumRobots": 3,
+  "targetOverrides": {},
+  "teamNames": {
+    "2v2": [
+      {
+        "name": "Fix It Pair 01",
+        "slots": [
+          1,
+          2
+        ]
+      }
+    ],
+    "3v3": [
+      {
+        "name": "Fix It Squad 01",
+        "slots": [
+          1,
+          2,
+          3
+        ]
+      }
+    ]
+  },
+  "eventOrder": [
+    "league_2v2",
+    "tag_team",
+    "tournament_2v2",
+    "league_1v1",
+    "koth",
+    "grand_melee",
+    "tournament_1v1",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "robots": [
+    {
+      "blueprintId": "fix-it-foundry:1:fix-it-parent-01",
+      "slot": 1,
+      "name": "Fix-It Parent 01",
+      "sourceAlias": "Fix-It Parent 01",
+      "nameBasis": "Original arena designation",
+      "availability": "opening",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yieldThreshold": 30,
+      "buildFocus": "Warden",
+      "weaponPath": [
+        {
+          "mainWeapon": "Laser Pistol",
+          "offhandWeapon": "Light Shield",
+          "listPriceCredits": 108000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": "Aegis Bulwark",
+          "listPriceCredits": 834000
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "Hone",
+          "weapon": "Volt Sabre",
+          "weaponSlot": "main",
+          "attribute": "Combat Power",
+          "baseValue": 8,
+          "magnitude": 2,
+          "resultValue": 10,
+          "costCredits": 40000,
+          "workshopLevel": 1,
+          "step": 1
+        },
+        {
+          "tier": "Augment",
+          "weapon": "Volt Sabre",
+          "weaponSlot": "main",
+          "attribute": "Adaptive AI",
+          "magnitude": 3,
+          "resultValue": 3,
+          "costCredits": 180000,
+          "workshopLevel": 3,
+          "step": 2
+        }
+      ],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Small saucer-like parent machine with metallic ribs, compact tool limbs and warm optics.",
+        "refinementNote": "Apply in order after stage 1. Dual-wield refinements affect the main-hand copy only; the offhand stays unrefined unless explicitly targeted.",
+        "refinementTotalCredits": 220000,
+        "minimumRosterExpansionLevel": 0,
+        "imageConvention": "app/frontend/public/assets/automatons/fix-it-foundry/1.webp"
+      }
+    },
+    {
+      "blueprintId": "fix-it-foundry:2:fix-it-parent-02",
+      "slot": 2,
+      "name": "Fix-It Parent 02",
+      "sourceAlias": "Fix-It Parent 02",
+      "nameBasis": "Original arena designation",
+      "availability": "opening",
+      "loadout": "single",
+      "stance": "defensive",
+      "yieldThreshold": 30,
+      "buildFocus": "Tactician",
+      "weaponPath": [
+        {
+          "mainWeapon": "Beam Pistol",
+          "offhandWeapon": null,
+          "listPriceCredits": 93000
+        },
+        {
+          "mainWeapon": "Particle Lance",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "Hone",
+          "weapon": "Particle Lance",
+          "weaponSlot": "main",
+          "attribute": "Targeting Systems",
+          "baseValue": 8,
+          "magnitude": 2,
+          "resultValue": 10,
+          "costCredits": 40000,
+          "workshopLevel": 1,
+          "step": 1
+        },
+        {
+          "tier": "Augment",
+          "weapon": "Particle Lance",
+          "weaponSlot": "main",
+          "attribute": "Weapon Control",
+          "magnitude": 3,
+          "resultValue": 3,
+          "costCredits": 180000,
+          "workshopLevel": 3,
+          "step": 2
+        }
+      ],
+      "review": {
+        "rangeFromWeapons": "long",
+        "artBrief": "Second small saucer-like parent machine with a broader dome and warm focused optics.",
+        "refinementNote": "Apply in order after stage 1. Dual-wield refinements affect the main-hand copy only; the offhand stays unrefined unless explicitly targeted.",
+        "refinementTotalCredits": 220000,
+        "minimumRosterExpansionLevel": 1,
+        "imageConvention": "app/frontend/public/assets/automatons/fix-it-foundry/2.webp"
+      }
+    },
+    {
+      "blueprintId": "fix-it-foundry:3:fix-it-scout-03",
+      "slot": 3,
+      "name": "Fix-It Scout 03",
+      "sourceAlias": "Fix-It Scout 03",
+      "nameBasis": "Original arena designation",
+      "availability": "reserve",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 35,
+      "buildFocus": "Sprinter",
+      "weaponPath": [
+        {
+          "mainWeapon": "Laser Pistol",
+          "offhandWeapon": null,
+          "listPriceCredits": 57000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "Hone",
+          "weapon": "Volt Sabre",
+          "weaponSlot": "main",
+          "attribute": "Attack Speed",
+          "baseValue": 4,
+          "magnitude": 3,
+          "resultValue": 7,
+          "costCredits": 90000,
+          "workshopLevel": 1,
+          "step": 1
+        },
+        {
+          "tier": "Augment",
+          "weapon": "Volt Sabre",
+          "weaponSlot": "main",
+          "attribute": "Evasion Thrusters",
+          "magnitude": 2,
+          "resultValue": 2,
+          "costCredits": 80000,
+          "workshopLevel": 3,
+          "step": 2
+        }
+      ],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Small child-sized saucer machine with compact rim panels and bright mechanical eyes.",
+        "refinementNote": "Apply in order after stage 1. Dual-wield refinements affect the main-hand copy only; the offhand stays unrefined unless explicitly targeted.",
+        "refinementTotalCredits": 170000,
+        "minimumRosterExpansionLevel": 2,
+        "imageConvention": "app/frontend/public/assets/automatons/fix-it-foundry/3.webp"
+      }
+    }
+  ],
+  "alternativeBlueprints": [],
+  "review": {
+    "openingWeaponCredits": 201000,
+    "finalWeaponCreditsAtTarget": 1259000,
+    "equippedWeaponCountAtTarget": 3,
+    "purchaseOrder": [
+      1,
+      2
+    ],
+    "reserveSlots": [
+      3
+    ],
+    "alternativeRule": "Choose an alternative before catalogue approval; it replaces the specified slot and never adds another live robot."
+  }
+}

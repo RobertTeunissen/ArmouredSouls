@@ -1,0 +1,133 @@
+{
+  "stable_number": 174,
+  "catalogue_key": "iron-city-berserker-workshop",
+  "robots": [
+    {
+      "slot": 1,
+      "name": "Alita",
+      "source_identity": "Alita, film Berserker body",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "dual_wield",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Sprinter",
+      "range_from_weapons": "melee",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Practice Sword",
+          "offhand_weapon": "Practice Sword",
+          "list_price_credits": 100000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Vibro Mace",
+          "offhand_weapon": "Vibro Mace",
+          "list_price_credits": 850000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Sharpen",
+          "weapon": "Vibro Mace",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 1,
+          "cost_credits": 300000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 1
+        },
+        {
+          "operation": "Sharpen",
+          "weapon": "Vibro Mace",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 2,
+          "cost_credits": 900000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 2
+        },
+        {
+          "operation": "Forge",
+          "weapon": "Vibro Mace",
+          "hand": "main",
+          "workshop_level": 8,
+          "occurrence": 1,
+          "cost_credits": 400000,
+          "prestige_gate": 15000,
+          "effect": "+8% damage",
+          "step": 3
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Alita from the 2019 Alita: Battle Angel film in her coherent silver-grey Berserker cyborg body. Recognizable human-like face with the film's large brown eyes and short dark bob hair; finely articulated biomechanical limbs and mechanical torso with the source dark fitted body sections. Full body grounded ready stance, source proportions, hands empty so the detailed Berserker construction is readable. Do not mix manga armour or early porcelain body.\nMetadata only, do not render text: #174 slot 1 Alita.",
+      "role": "Paired contact attacker",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 1600000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "Alita fills the paired contact attacker role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Sprinter tuning supports the melee equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Paragon strategy tuning rules with the Sprinter Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "iron-city-berserker-workshop:1:alita",
+      "folder": "stables/174-iron-city-berserker-workshop/robots/01-alita",
+      "files": {
+        "png": "stables/174-iron-city-berserker-workshop/robots/01-alita/portrait.png",
+        "webp": "stables/174-iron-city-berserker-workshop/robots/01-alita/portrait.webp",
+        "blueprint": "stables/174-iron-city-berserker-workshop/robots/01-alita/blueprint.json",
+        "profile": "stables/174-iron-city-berserker-workshop/robots/01-alita/profile.md",
+        "prompt": "stables/174-iron-city-berserker-workshop/robots/01-alita/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/iron-city-berserker-workshop/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 174,
+          "stable_name": "Iron City Berserker Workshop",
+          "catalogue_key": "iron-city-berserker-workshop",
+          "slot": 1,
+          "robot_name": "Alita",
+          "source_identity": "Alita, film Berserker body",
+          "source_edition": "Alita: Battle Angel 2019 film, Berserker body",
+          "source_references": [
+            "https://family.20thcenturystudios.com/movies/alita-battle-angel"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Alita from the 2019 Alita: Battle Angel film in her coherent silver-grey Berserker cyborg body. Recognizable human-like face with the film's large brown eyes and short dark bob hair; finely articulated biomechanical limbs and mechanical torso with the source dark fitted body sections. Full body grounded ready stance, source proportions, hands empty so the detailed Berserker construction is readable. Do not mix manga armour or early porcelain body.\nMetadata only, do not render text: #174 slot 1 Alita.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-605c1232-c545-4520-b4f6-03a88f770139.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "iron-city-berserker-workshop:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/iron-city-berserker-workshop/1.webp",
+          "master": "outputs/automaton-portraits/masters/iron-city-berserker-workshop/1.png",
+          "output": "app/frontend/public/assets/automatons/iron-city-berserker-workshop/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "924ace8a8f7a4d40fef03f6661d8ebb95287d20374e770c92bf99afa2eaa86c9",
+          "bytes": 35992
+        },
+        "sha256": "924ace8a8f7a4d40fef03f6661d8ebb95287d20374e770c92bf99afa2eaa86c9",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "replacement_alternatives": []
+}

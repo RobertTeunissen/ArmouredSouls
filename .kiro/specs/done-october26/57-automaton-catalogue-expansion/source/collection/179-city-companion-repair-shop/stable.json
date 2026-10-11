@@ -1,0 +1,198 @@
+{
+  "number": 179,
+  "catalogue_key": "city-companion-repair-shop",
+  "name": "City Companion Repair Shop",
+  "franchise": "Robot Dreams — animated film",
+  "strategy": "Paragon",
+  "opening_robots": 1,
+  "target_robots": 1,
+  "max_planned_robots": 1,
+  "strategy_review_limit": 2,
+  "backstory": "A simple companion machine rebuilds its arena prospects through modest equipment and careful repairs. The shop improves one body and keeps its retreat policy conservative.",
+  "strategy_personality": "A deliberately simple companion machine with a boxy head, bright eyes, rounded joints, and recognizable proportions. Keep the film's friendly graphic geometry while rendering believable surfaces under the shared portrait lighting. A modest, carefully upgraded arena build suits a civilian companion. DOG remains a source-story companion rather than an extra robot slot; combat equipment would be an original interpretation.",
+  "teams": {
+    "2v2": [],
+    "3v3": []
+  },
+  "event_order": [
+    "league_1v1",
+    "tournament_1v1",
+    "koth",
+    "grand_melee",
+    "league_2v2",
+    "tag_team",
+    "tournament_2v2",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "robots": [
+    {
+      "slot": 1,
+      "name": "ROBOT RD",
+      "source_identity": "ROBOT, Robot Dreams; arena suffix disambiguates",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "defensive",
+      "yield_threshold": 30,
+      "build_focus": "Tactician",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Practice Blaster",
+          "offhand_weapon": null,
+          "list_price_credits": 50000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Hone",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 1,
+          "attribute": "Combat Power",
+          "magnitude": 2,
+          "result_value": 10,
+          "cost_credits": 40000,
+          "base_value": 8,
+          "effect": "Combat Power 8→10",
+          "step": 1
+        },
+        {
+          "operation": "Augment",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 3,
+          "attribute": "Adaptive AI",
+          "magnitude": 3,
+          "result_value": 3,
+          "cost_credits": 180000,
+          "effect": "Adaptive AI, new +3",
+          "step": 2
+        },
+        {
+          "operation": "Sharpen",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 1,
+          "cost_credits": 300000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 3
+        },
+        {
+          "operation": "Sharpen",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 2,
+          "cost_credits": 900000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 4
+        },
+        {
+          "operation": "Forge",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 8,
+          "occurrence": 1,
+          "cost_credits": 400000,
+          "prestige_gate": 15000,
+          "effect": "+8% damage",
+          "step": 5
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: ROBOT from Robot Dreams 2023, intact friendly companion with simple cream/light grey rectangular head, two large round dark-rimmed bright eyes, small straight mouth, simple narrow box torso, rounded jointed arms and legs and flat feet. Preserve the film's charming graphic proportions and minimal construction rendered in subtle worn painted metal, relaxed full-body pose, no extra controls, weapons or elaborate armour.\nMetadata only, do not render text: #179 slot 1 ROBOT RD.",
+      "role": "Cautious utility fighter",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 1820000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "ROBOT RD fills the cautious utility fighter role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Tactician tuning supports the short equipment role; defensive stance and a 30% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Paragon strategy tuning rules with the Tactician Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "city-companion-repair-shop:1:robot-rd",
+      "folder": "stables/179-city-companion-repair-shop/robots/01-robot-rd",
+      "files": {
+        "png": "stables/179-city-companion-repair-shop/robots/01-robot-rd/portrait.png",
+        "webp": "stables/179-city-companion-repair-shop/robots/01-robot-rd/portrait.webp",
+        "blueprint": "stables/179-city-companion-repair-shop/robots/01-robot-rd/blueprint.json",
+        "profile": "stables/179-city-companion-repair-shop/robots/01-robot-rd/profile.md",
+        "prompt": "stables/179-city-companion-repair-shop/robots/01-robot-rd/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/city-companion-repair-shop/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 179,
+          "stable_name": "City Companion Repair Shop",
+          "catalogue_key": "city-companion-repair-shop",
+          "slot": 1,
+          "robot_name": "ROBOT RD",
+          "source_identity": "ROBOT, Robot Dreams; arena suffix disambiguates",
+          "source_edition": "Robot Dreams 2023 animated feature, intact ROBOT",
+          "source_references": [
+            "https://www.neonrated.com/film/robot-dreams-film"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: ROBOT from Robot Dreams 2023, intact friendly companion with simple cream/light grey rectangular head, two large round dark-rimmed bright eyes, small straight mouth, simple narrow box torso, rounded jointed arms and legs and flat feet. Preserve the film's charming graphic proportions and minimal construction rendered in subtle worn painted metal, relaxed full-body pose, no extra controls, weapons or elaborate armour.\nMetadata only, do not render text: #179 slot 1 ROBOT RD.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-b3cfc797-054a-40c4-9067-26f47336435a.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "city-companion-repair-shop:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/city-companion-repair-shop/1.webp",
+          "master": "outputs/automaton-portraits/masters/city-companion-repair-shop/1.png",
+          "output": "app/frontend/public/assets/automatons/city-companion-repair-shop/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "3d4192e66b6a778c2db97e6f50c5f01c3c65a6e91dd3d571c07830c729799115",
+          "bytes": 27544
+        },
+        "sha256": "3d4192e66b6a778c2db97e6f50c5f01c3c65a6e91dd3d571c07830c729799115",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "alternatives": [],
+  "blueprint_status": "detailed",
+  "source_notes": "\n**Franchise:** Robot Dreams — animated film  \n**Strategy:** Paragon · **Target roster:** 1 robot\n\n**Proposed robots:** ROBOT RD.\n\n**Direction:** A deliberately simple companion machine with a boxy head, bright eyes, rounded joints, and recognizable proportions. Keep the film's friendly graphic geometry while rendering believable surfaces under the shared portrait lighting. A modest, carefully upgraded arena build suits a civilian companion. DOG remains a source-story companion rather than an extra robot slot; combat equipment would be an original interpretation.\n\nReferences: [NEON's Robot Dreams film reference](https://www.neonrated.com/film/robot-dreams-film).\n\n**Production edition:** Robot Dreams 2023 animated feature, intact ROBOT.  \n**Catalogue key:** `city-companion-repair-shop`\n\n",
+  "source_documents": [
+    "reference/AUTOMATON_STABLE_EXPANSION.md"
+  ],
+  "blueprint_origin": "completed during collection",
+  "purchasing_plan": "Open and remain at one robot. Buy its complete stage-1 loadout before refinement. Execute the listed steps in order, progressing Workshop L1/L3/L5/L8 as required. Keep prestige-gated steps pending; fund repairs and maintenance before every purchase.",
+  "target_overrides": {},
+  "equipment_budget": {
+    "stage_0_credits": 50000,
+    "stage_1_credits": 425000,
+    "refinement_credits": 1820000,
+    "excludes": "Frames, facilities, training, repairs, upkeep, discounts and resale; stage-1 total replaces stage-0 gear and is not a simultaneous equipment inventory."
+  },
+  "folder": "stables/179-city-companion-repair-shop",
+  "history_image_count": 0
+}

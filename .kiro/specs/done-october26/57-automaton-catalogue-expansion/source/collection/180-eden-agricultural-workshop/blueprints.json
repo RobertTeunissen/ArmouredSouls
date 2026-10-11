@@ -1,0 +1,239 @@
+{
+  "stable_number": 180,
+  "catalogue_key": "eden-agricultural-workshop",
+  "robots": [
+    {
+      "slot": 1,
+      "name": "E92",
+      "source_identity": "E92 agricultural robot",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Bruiser",
+      "range_from_weapons": "melee",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Shock Maul",
+          "offhand_weapon": null,
+          "list_price_credits": 183000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Heavy Hammer",
+          "offhand_weapon": null,
+          "list_price_credits": 478000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Hone",
+          "weapon": "Heavy Hammer",
+          "hand": "main",
+          "workshop_level": 1,
+          "attribute": "Hydraulic Systems",
+          "magnitude": 2,
+          "result_value": 10,
+          "cost_credits": 40000,
+          "base_value": 8,
+          "effect": "Hydraulic Systems 8→10",
+          "step": 1
+        },
+        {
+          "operation": "Augment",
+          "weapon": "Heavy Hammer",
+          "hand": "main",
+          "workshop_level": 3,
+          "attribute": "Armor Plating",
+          "magnitude": 3,
+          "result_value": 3,
+          "cost_credits": 180000,
+          "effect": "Armor Plating, new +3",
+          "step": 2
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Use attached Eden official publicity still as robot identity reference, ONLY the taller teal-blue and orange E92 on the LEFT, remove all other figures and setting. Source tall agricultural robot with headless box-like upper torso, single large cyan circular optic mounted at top left, long massive rounded shoulder housings and articulated working arms, source teal-blue/orange lower body and legs. Preserve proportions and the exact film construction; complete machine alone in Armoured Souls studio. No child or other robot, no text on chest.\nMetadata only, do not render text: #180 slot 1 E92.",
+      "role": "Heavy contact attacker",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 220000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "E92 fills the heavy contact attacker role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Bruiser tuning supports the melee equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Duo strategy tuning rules with the Bruiser Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "eden-agricultural-workshop:1:e92",
+      "folder": "stables/180-eden-agricultural-workshop/robots/01-e92",
+      "files": {
+        "png": "stables/180-eden-agricultural-workshop/robots/01-e92/portrait.png",
+        "webp": "stables/180-eden-agricultural-workshop/robots/01-e92/portrait.webp",
+        "blueprint": "stables/180-eden-agricultural-workshop/robots/01-e92/blueprint.json",
+        "profile": "stables/180-eden-agricultural-workshop/robots/01-e92/profile.md",
+        "prompt": "stables/180-eden-agricultural-workshop/robots/01-e92/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/eden-agricultural-workshop/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 180,
+          "stable_name": "Eden Agricultural Workshop",
+          "catalogue_key": "eden-agricultural-workshop",
+          "slot": 1,
+          "robot_name": "E92",
+          "source_identity": "E92 agricultural robot",
+          "source_edition": "Eden 2021 anime: source teal-blue/orange E92 and yellow spherical-headed A37",
+          "source_references": [
+            "https://media.netflix.com/en/only-on-netflix/80992783",
+            "https://www.qubicpictures.com/"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Use attached Eden official publicity still as robot identity reference, ONLY the taller teal-blue and orange E92 on the LEFT, remove all other figures and setting. Source tall agricultural robot with headless box-like upper torso, single large cyan circular optic mounted at top left, long massive rounded shoulder housings and articulated working arms, source teal-blue/orange lower body and legs. Preserve proportions and the exact film construction; complete machine alone in Armoured Souls studio. No child or other robot, no text on chest.\nMetadata only, do not render text: #180 slot 1 E92.",
+          "referenced_image_paths": [
+            "/tmp/armoured-eden-reference.jpg"
+          ],
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-06e2921a-90ef-41b0-8418-ab11825e293d.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "eden-agricultural-workshop:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/eden-agricultural-workshop/1.webp",
+          "master": "outputs/automaton-portraits/masters/eden-agricultural-workshop/1.png",
+          "output": "app/frontend/public/assets/automatons/eden-agricultural-workshop/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "21814eea99255bbe125d38bad9561a05546507ee71c3cfba67c114ace1d65eca",
+          "bytes": 50766
+        },
+        "sha256": "21814eea99255bbe125d38bad9561a05546507ee71c3cfba67c114ace1d65eca",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 2,
+      "name": "A37",
+      "source_identity": "A37 agricultural robot",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yield_threshold": 25,
+      "build_focus": "Tactician",
+      "range_from_weapons": "mid",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Bolt Carbine",
+          "offhand_weapon": "Light Shield",
+          "list_price_credits": 144000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Nova Caster",
+          "offhand_weapon": "Aegis Bulwark",
+          "list_price_credits": 834000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Hone",
+          "weapon": "Aegis Bulwark",
+          "hand": "offhand",
+          "workshop_level": 1,
+          "attribute": "Evasion Thrusters",
+          "magnitude": 5,
+          "result_value": 0,
+          "cost_credits": 250000,
+          "base_value": -5,
+          "effect": "Evasion Thrusters -5→0",
+          "step": 1
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Use attached Eden still as robot identity reference, ONLY the yellow A37 on the RIGHT. Large spherical yellow/ivory head with orange equatorial bands and three visible cyan round optics around the pale middle band, narrow yellow source torso, long segmented arms with small mechanical hands, source compact lower body and locomotion. Keep the original anime proportions, one complete robot alone, no human or taller robot, no invented humanoid face or large cannon.\nMetadata only, do not render text: #180 slot 2 A37.",
+      "role": "Protected tactical support",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 250000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 1,
+      "equipment_interpretation": "A37 fills the protected tactical support role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Tactician tuning supports the mid equipment role; defensive stance and a 25% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Duo strategy tuning rules with the Tactician Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "eden-agricultural-workshop:2:a37",
+      "folder": "stables/180-eden-agricultural-workshop/robots/02-a37",
+      "files": {
+        "png": "stables/180-eden-agricultural-workshop/robots/02-a37/portrait.png",
+        "webp": "stables/180-eden-agricultural-workshop/robots/02-a37/portrait.webp",
+        "blueprint": "stables/180-eden-agricultural-workshop/robots/02-a37/blueprint.json",
+        "profile": "stables/180-eden-agricultural-workshop/robots/02-a37/profile.md",
+        "prompt": "stables/180-eden-agricultural-workshop/robots/02-a37/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/eden-agricultural-workshop/2.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 180,
+          "stable_name": "Eden Agricultural Workshop",
+          "catalogue_key": "eden-agricultural-workshop",
+          "slot": 2,
+          "robot_name": "A37",
+          "source_identity": "A37 agricultural robot",
+          "source_edition": "Eden 2021 anime: source teal-blue/orange E92 and yellow spherical-headed A37",
+          "source_references": [
+            "https://media.netflix.com/en/only-on-netflix/80992783",
+            "https://www.qubicpictures.com/"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Use attached Eden still as robot identity reference, ONLY the yellow A37 on the RIGHT. Large spherical yellow/ivory head with orange equatorial bands and three visible cyan round optics around the pale middle band, narrow yellow source torso, long segmented arms with small mechanical hands, source compact lower body and locomotion. Keep the original anime proportions, one complete robot alone, no human or taller robot, no invented humanoid face or large cannon.\nMetadata only, do not render text: #180 slot 2 A37.",
+          "referenced_image_paths": [
+            "/tmp/armoured-eden-reference.jpg"
+          ],
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-172a4e55-d4fe-41ab-bbb3-2d42c271aaf6.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "eden-agricultural-workshop:2",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/eden-agricultural-workshop/2.webp",
+          "master": "outputs/automaton-portraits/masters/eden-agricultural-workshop/2.png",
+          "output": "app/frontend/public/assets/automatons/eden-agricultural-workshop/2.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "485986a874b2da134bac6bb949b56351fb2999d5af106720886eee20043b7422",
+          "bytes": 44782
+        },
+        "sha256": "485986a874b2da134bac6bb949b56351fb2999d5af106720886eee20043b7422",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "replacement_alternatives": []
+}

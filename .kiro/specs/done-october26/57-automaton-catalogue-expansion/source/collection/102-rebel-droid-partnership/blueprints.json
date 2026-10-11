@@ -1,0 +1,245 @@
+{
+  "stable_number": 102,
+  "catalogue_key": "rebel-droid-partnership",
+  "robots": [
+    {
+      "slot": 1,
+      "name": "R2-D2",
+      "source_identity": "R2-D2 — original Star Wars trilogy",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 20,
+      "build_focus": "Sprinter",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": null,
+          "list_price_credits": 57000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Hone",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 1,
+          "attribute": "Attack Speed",
+          "magnitude": 3,
+          "result_value": 7,
+          "cost_credits": 90000,
+          "base_value": 4,
+          "effect": "Attack Speed 4→7",
+          "step": 1
+        },
+        {
+          "operation": "Augment",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 3,
+          "attribute": "Evasion Thrusters",
+          "magnitude": 2,
+          "result_value": 2,
+          "cost_credits": 80000,
+          "effect": "Evasion Thrusters, new +2",
+          "step": 2
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset: one square individual robot portrait for the Armoured Souls game. Create an original robot design with its own construction and proportions. Premium realistic industrial science-fiction 3D render, fine scratches and restrained paint wear, believable materials. Quiet charcoal-to-black studio backdrop, dark floor, faint low haze. Neutral soft key light and cool upper-right rim. Three-quarter view, entire robot, wheels, antennae and tools visible, centered at 80% canvas height with clear margin on all sides. Readable at 512px. One robot only. No text, logos, watermark, frame, interface, collage, firing, explosions or extra characters.\nSubject: compact starship maintenance robot with a wide trapezoidal petrol-teal body on two low continuous rubber tracks. Flat slanted upper housing, horizontal amber-glass sensor strip, copper corner guards and access panels. Two small folded precision tool manipulators on the front, recessed cable reels and a short flat communication fin. Rugged practical retro-space machinery, repaired surfaces and calm grounded pose. The unique silhouette is low, broad and tracked; the head is integrated into the sloping body.",
+      "role": "Mobile skirmisher",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 170000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "R2-D2 fills the mobile skirmisher role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Sprinter tuning supports the short equipment role; balanced stance and a 20% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Duo strategy tuning rules with the Sprinter Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "rebel-droid-partnership:1:r2-d2",
+      "folder": "stables/102-rebel-droid-partnership/robots/01-r2-d2",
+      "files": {
+        "png": "stables/102-rebel-droid-partnership/robots/01-r2-d2/portrait.png",
+        "webp": "stables/102-rebel-droid-partnership/robots/01-r2-d2/portrait.webp",
+        "blueprint": "stables/102-rebel-droid-partnership/robots/01-r2-d2/blueprint.json",
+        "profile": "stables/102-rebel-droid-partnership/robots/01-r2-d2/profile.md",
+        "prompt": "stables/102-rebel-droid-partnership/robots/01-r2-d2/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/rebel-droid-partnership/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 102,
+          "stable_name": "Rebel Droid Partnership",
+          "catalogue_key": "rebel-droid-partnership",
+          "slot": 1,
+          "robot_name": "R2-D2",
+          "source_identity": "R2-D2 — original Star Wars trilogy",
+          "source_edition": "Original Armoured Souls visual interpretation; planned source identity retained as roster metadata",
+          "source_references": [
+            "https://www.starwars.com/databank/r2-d2",
+            "https://www.starwars.com/databank/c-3po/",
+            "https://www.starwars.com/databank/abafar"
+          ],
+          "prompt": "Use case: stylized-concept. Asset: one square individual robot portrait for the Armoured Souls game. Create an original robot design with its own construction and proportions. Premium realistic industrial science-fiction 3D render, fine scratches and restrained paint wear, believable materials. Quiet charcoal-to-black studio backdrop, dark floor, faint low haze. Neutral soft key light and cool upper-right rim. Three-quarter view, entire robot, wheels, antennae and tools visible, centered at 80% canvas height with clear margin on all sides. Readable at 512px. One robot only. No text, logos, watermark, frame, interface, collage, firing, explosions or extra characters.\nSubject: compact starship maintenance robot with a wide trapezoidal petrol-teal body on two low continuous rubber tracks. Flat slanted upper housing, horizontal amber-glass sensor strip, copper corner guards and access panels. Two small folded precision tool manipulators on the front, recessed cable reels and a short flat communication fin. Rugged practical retro-space machinery, repaired surfaces and calm grounded pose. The unique silhouette is low, broad and tracked; the head is integrated into the sloping body.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-20950221-682e-49fd-85b7-4d9248a1527e.png",
+          "visual_review": "Accepted — original interpretation reviewed for complete-body framing, correct mechanical anatomy, readable silhouette, matching materials and studio lighting",
+          "artwork_type": "original interpretation",
+          "art_direction": "Original retro-space maintenance robot; broad franchise-era materials only",
+          "asset_id": "rebel-droid-partnership:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/rebel-droid-partnership/1.webp",
+          "master": "outputs/automaton-portraits/masters/rebel-droid-partnership/1.png",
+          "output": "app/frontend/public/assets/automatons/rebel-droid-partnership/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "6939478b8cf7392ef5685e2088c67e6f6a0cf035f826a03d160f7e8dbfad4d0a",
+          "bytes": 67766,
+          "original_plan_prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 85% of square canvas with breathing room. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\nSubject: Authentic R2-D2: compact white cylindrical astromech with precise blue panels and silver hemispherical dome, recognizable coloured dome sensors and holographic lens, two side legs plus the deployed central third foot in a grounded pose. Source proportions, restrained oil stains and weathered paint. No humanoid arms, held gun or invented armour. One complete R2-D2 alone.\nCatalogue label for metadata only, do not render text: #102 slot 1 R2-D2.",
+          "original_source_edition": "original-trilogy appearances. R2-D2 keeps his blue-and-white cylindrical body and silver dome. C-3PO keeps his gold protocol-droid body, exposed midriff wiring, and original film details. Use realistic surface wear and the shared studio lighting while retaining their familiar construction. Added combat equipment should remain visually subordinate to their identities.",
+          "source_reference_note": "References describe the roster background; the final visual design is an original interpretation."
+        },
+        "sha256": "6939478b8cf7392ef5685e2088c67e6f6a0cf035f826a03d160f7e8dbfad4d0a",
+        "revision": 1,
+        "artwork_type": "original interpretation",
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 2,
+      "name": "C-3PO",
+      "source_identity": "C-3PO — original Star Wars trilogy",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yield_threshold": 25,
+      "build_focus": "Tactician",
+      "range_from_weapons": "mid",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Bolt Carbine",
+          "offhand_weapon": "Light Shield",
+          "list_price_credits": 144000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Nova Caster",
+          "offhand_weapon": "Aegis Bulwark",
+          "list_price_credits": 834000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Hone",
+          "weapon": "Aegis Bulwark",
+          "hand": "offhand",
+          "workshop_level": 1,
+          "attribute": "Evasion Thrusters",
+          "magnitude": 5,
+          "result_value": 0,
+          "cost_credits": 250000,
+          "base_value": -5,
+          "effect": "Evasion Thrusters -5→0",
+          "step": 1
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset: one square individual robot portrait for the Armoured Souls game. Create an original robot design with its own construction and proportions. Premium realistic industrial science-fiction 3D render, fine scratches and restrained paint wear, believable materials. Quiet charcoal-to-black studio backdrop, dark floor, faint low haze. Neutral soft key light and cool upper-right rim. Three-quarter view, entire robot, wheels, antennae and tools visible, centered at 80% canvas height with clear margin on all sides. Readable at 512px. One robot only. No text, logos, watermark, frame, interface, collage, firing, explosions or extra characters.\nSubject: Original diplomatic service android for a retro-space setting. Tall slim biped with brushed copper and dark navy protective plates, cylindrical joint bearings and long articulated fingers. Its head is a narrow upright rectangular communication terminal with smoked glass and a small warm dot-matrix glow, not a human face. High asymmetrical collar, folded translator antenna on one shoulder, ribbed sealed waist bellows and narrow flat feet. Calm open-palmed conversational stance. Entirely new faceless design with practical exposed mechanical hinges.",
+      "role": "Protected tactical support",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 250000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 1,
+      "equipment_interpretation": "C-3PO fills the protected tactical support role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Tactician tuning supports the mid equipment role; defensive stance and a 25% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Duo strategy tuning rules with the Tactician Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "rebel-droid-partnership:2:c-3po",
+      "folder": "stables/102-rebel-droid-partnership/robots/02-c-3po",
+      "files": {
+        "png": "stables/102-rebel-droid-partnership/robots/02-c-3po/portrait.png",
+        "webp": "stables/102-rebel-droid-partnership/robots/02-c-3po/portrait.webp",
+        "blueprint": "stables/102-rebel-droid-partnership/robots/02-c-3po/blueprint.json",
+        "profile": "stables/102-rebel-droid-partnership/robots/02-c-3po/profile.md",
+        "prompt": "stables/102-rebel-droid-partnership/robots/02-c-3po/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/rebel-droid-partnership/2.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 102,
+          "stable_name": "Rebel Droid Partnership",
+          "catalogue_key": "rebel-droid-partnership",
+          "slot": 2,
+          "robot_name": "C-3PO",
+          "source_identity": "C-3PO — original Star Wars trilogy",
+          "prompt": "Use case: stylized-concept. Asset: one square individual robot portrait for the Armoured Souls game. Create an original robot design with its own construction and proportions. Premium realistic industrial science-fiction 3D render, fine scratches and restrained paint wear, believable materials. Quiet charcoal-to-black studio backdrop, dark floor, faint low haze. Neutral soft key light and cool upper-right rim. Three-quarter view, entire robot, wheels, antennae and tools visible, centered at 80% canvas height with clear margin on all sides. Readable at 512px. One robot only. No text, logos, watermark, frame, interface, collage, firing, explosions or extra characters.\nSubject: Original diplomatic service android for a retro-space setting. Tall slim biped with brushed copper and dark navy protective plates, cylindrical joint bearings and long articulated fingers. Its head is a narrow upright rectangular communication terminal with smoked glass and a small warm dot-matrix glow, not a human face. High asymmetrical collar, folded translator antenna on one shoulder, ribbed sealed waist bellows and narrow flat feet. Calm open-palmed conversational stance. Entirely new faceless design with practical exposed mechanical hinges.",
+          "source_edition": "Original Armoured Souls visual interpretation; planned source identity retained as roster metadata",
+          "source_references": [
+            "https://www.starwars.com/databank/r2-d2",
+            "https://www.starwars.com/databank/c-3po/",
+            "https://www.starwars.com/databank/abafar"
+          ],
+          "original_plan_prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 85% of square canvas with breathing room. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\nSubject: Authentic original-trilogy C-3PO: slender gold protocol-droid body, round yellow eye lenses, characteristic worried mechanical face, exposed dark midriff wiring, one silver right lower leg, source hands and feet. Gold metal with restrained wear and grime. One small arena-adaptation sidearm lowered unobtrusively in a hand, other hand open. Preserve recognizable screen proportions and face; no extra robot.\nCatalogue label for metadata only, do not render text: #102 slot 2 C-3PO.",
+          "artwork_type": "original interpretation",
+          "art_direction": "Original retro-space robot",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-c90eb5a2-14da-4410-96dc-ca6c6d65fa7b.png",
+          "visual_review": "Accepted — original interpretation reviewed for complete-body framing, correct mechanical anatomy, readable silhouette, matching materials and studio lighting",
+          "asset_id": "rebel-droid-partnership:2",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/rebel-droid-partnership/2.webp",
+          "master": "outputs/automaton-portraits/masters/rebel-droid-partnership/2.png",
+          "output": "app/frontend/public/assets/automatons/rebel-droid-partnership/2.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "2997193ce3b9eb23264f02537aa3021a1678969dbf651d770b10ccff4bd0b0b5",
+          "bytes": 31592,
+          "original_source_edition": "original-trilogy appearances. R2-D2 keeps his blue-and-white cylindrical body and silver dome. C-3PO keeps his gold protocol-droid body, exposed midriff wiring, and original film details. Use realistic surface wear and the shared studio lighting while retaining their familiar construction. Added combat equipment should remain visually subordinate to their identities.",
+          "source_reference_note": "References describe the roster background; the final visual design is an original interpretation."
+        },
+        "sha256": "2997193ce3b9eb23264f02537aa3021a1678969dbf651d770b10ccff4bd0b0b5",
+        "revision": 1,
+        "artwork_type": "original interpretation",
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "replacement_alternatives": []
+}

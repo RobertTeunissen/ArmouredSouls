@@ -1,0 +1,139 @@
+{
+  "stable_number": 104,
+  "catalogue_key": "grievous-war-forge",
+  "robots": [
+    {
+      "slot": 1,
+      "name": "General Grievous",
+      "source_identity": "General Grievous — Revenge of the Sith",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "dual_wield",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Sprinter",
+      "range_from_weapons": "melee",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Practice Sword",
+          "offhand_weapon": "Practice Sword",
+          "list_price_credits": 100000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Vibro Mace",
+          "offhand_weapon": "Vibro Mace",
+          "list_price_credits": 850000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Sharpen",
+          "weapon": "Vibro Mace",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 1,
+          "cost_credits": 300000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 1
+        },
+        {
+          "operation": "Sharpen",
+          "weapon": "Vibro Mace",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 2,
+          "cost_credits": 900000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 2
+        },
+        {
+          "operation": "Forge",
+          "weapon": "Vibro Mace",
+          "hand": "main",
+          "workshop_level": 8,
+          "occurrence": 1,
+          "cost_credits": 400000,
+          "prestige_gate": 15000,
+          "effect": "+8% damage",
+          "step": 3
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset: one square individual robot portrait for the Armoured Souls game. Create an original robot design with its own construction and proportions. Premium realistic industrial science-fiction 3D render, fine scratches and restrained paint wear, believable materials. Quiet charcoal-to-black studio backdrop, dark floor, faint low haze. Neutral soft key light and cool upper-right rim. Three-quarter view, entire robot, wheels, antennae and tools visible, centered at 80% canvas height with clear margin on all sides. Readable at 512px. One robot only. No text, logos, watermark, frame, interface, collage, firing, explosions or extra characters.\nSubject: Original elite arena war machine for a retro-space setting. Broad chest, compact faceless wedge helmet, deep burgundy ceramic armour over gunmetal hydraulics, brass hinge accents. Exactly two arms and two reverse-jointed mechanical legs. One hand holds a single solid-steel curved cleaver lowered safely; the other forearm carries an oval layered shield. Chunky industrial shoulder plates and a rigid layered lower-torso guard. Powerful grounded stance. Fully mechanical with no organic parts, no glowing blades, no cloak.",
+      "role": "Paired contact attacker",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 1600000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "General Grievous fills the paired contact attacker role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Sprinter tuning supports the melee equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Paragon strategy tuning rules with the Sprinter Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "grievous-war-forge:1:general-grievous",
+      "folder": "stables/104-grievous-war-forge/robots/01-general-grievous",
+      "files": {
+        "png": "stables/104-grievous-war-forge/robots/01-general-grievous/portrait.png",
+        "webp": "stables/104-grievous-war-forge/robots/01-general-grievous/portrait.webp",
+        "blueprint": "stables/104-grievous-war-forge/robots/01-general-grievous/blueprint.json",
+        "profile": "stables/104-grievous-war-forge/robots/01-general-grievous/profile.md",
+        "prompt": "stables/104-grievous-war-forge/robots/01-general-grievous/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/grievous-war-forge/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 104,
+          "stable_name": "Grievous War Forge",
+          "catalogue_key": "grievous-war-forge",
+          "slot": 1,
+          "robot_name": "General Grievous",
+          "source_identity": "General Grievous — Revenge of the Sith",
+          "prompt": "Use case: stylized-concept. Asset: one square individual robot portrait for the Armoured Souls game. Create an original robot design with its own construction and proportions. Premium realistic industrial science-fiction 3D render, fine scratches and restrained paint wear, believable materials. Quiet charcoal-to-black studio backdrop, dark floor, faint low haze. Neutral soft key light and cool upper-right rim. Three-quarter view, entire robot, wheels, antennae and tools visible, centered at 80% canvas height with clear margin on all sides. Readable at 512px. One robot only. No text, logos, watermark, frame, interface, collage, firing, explosions or extra characters.\nSubject: Original elite arena war machine for a retro-space setting. Broad chest, compact faceless wedge helmet, deep burgundy ceramic armour over gunmetal hydraulics, brass hinge accents. Exactly two arms and two reverse-jointed mechanical legs. One hand holds a single solid-steel curved cleaver lowered safely; the other forearm carries an oval layered shield. Chunky industrial shoulder plates and a rigid layered lower-torso guard. Powerful grounded stance. Fully mechanical with no organic parts, no glowing blades, no cloak.",
+          "source_edition": "Original Armoured Souls visual interpretation; planned source identity retained as roster metadata",
+          "source_references": [
+            "https://www.starwars.com/databank/general-grievous",
+            "https://www.starwars.com/databank/Count-Dooku"
+          ],
+          "original_plan_prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 85% of square canvas with breathing room. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\nSubject: Source-faithful General Grievous from Revenge of the Sith: hunched skeletal cyborg body, pale bone-white armour, exact long angular skull mask and visible organic yellow eyes, slender metal midsection and digitigrade mechanical legs. All FOUR mechanical arms unfolded, each gripping one lightsaber, two blue and two green blades, all four blades fully contained with spacing. No cape to keep limbs readable. One complete body, no duplicate figures or added limbs. Source design, not a generic skull robot.\nCatalogue label for metadata only, do not render text: #104 slot 1 General Grievous.",
+          "artwork_type": "original interpretation",
+          "art_direction": "Original retro-space robot",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-2ae4dbd7-6dc9-4f17-9932-675916d063a8.png",
+          "visual_review": "Accepted — original interpretation reviewed for complete-body framing, correct mechanical anatomy, readable silhouette, matching materials and studio lighting",
+          "asset_id": "grievous-war-forge:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/grievous-war-forge/1.webp",
+          "master": "outputs/automaton-portraits/masters/grievous-war-forge/1.png",
+          "output": "app/frontend/public/assets/automatons/grievous-war-forge/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "ab1b32a2caea0cb338f10afbf54b1cb0c8830ea25595e411d4f282ef5a3e5f40",
+          "bytes": 62658,
+          "original_source_edition": "Revenge of the Sith design, recognizable pale armour, skeletal construction, hunched posture, and organic eyes. Use an open four-arm combat pose with the signature lightsabers visible and enough space around each blade for thumbnail readability. A cape may be omitted in the combat pose to keep the limbs clear.",
+          "source_reference_note": "References describe the roster background; the final visual design is an original interpretation."
+        },
+        "sha256": "ab1b32a2caea0cb338f10afbf54b1cb0c8830ea25595e411d4f282ef5a3e5f40",
+        "revision": 1,
+        "artwork_type": "original interpretation",
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "replacement_alternatives": []
+}

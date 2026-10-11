@@ -1,0 +1,162 @@
+{
+  "number": 30,
+  "catalogueKey": "hyperion-loader-division",
+  "stableName": "Hyperion Loader Division",
+  "franchiseLabel": "Borderlands",
+  "strategy": "Tycoon",
+  "fit": "Direct",
+  "conceptIdentity": "Corporate income and facilities fund industrial fighting machines. Yellow armour, a wheel-based scout, loader chassis, and broad heavy frame.",
+  "backstory": "Hyperion Loader Division enters the arena with a clear doctrine. Corporate income and facilities fund industrial fighting machines. Every surviving machine returns to the workshop before the next booking.",
+  "openingRobots": 2,
+  "targetRobots": 3,
+  "adminMaximumRobots": 3,
+  "targetOverrides": {
+    "robots": 3
+  },
+  "teamNames": {
+    "2v2": [
+      {
+        "name": "Hyperion Pair 01",
+        "slots": [
+          1,
+          2
+        ]
+      }
+    ],
+    "3v3": [
+      {
+        "name": "Hyperion Squad 01",
+        "slots": [
+          1,
+          2,
+          3
+        ]
+      }
+    ]
+  },
+  "eventOrder": [
+    "koth",
+    "grand_melee",
+    "league_1v1",
+    "league_2v2",
+    "tag_team",
+    "tournament_1v1",
+    "tournament_2v2",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "robots": [
+    {
+      "blueprintId": "hyperion-loader-division:1:claptrap",
+      "slot": 1,
+      "name": "Claptrap",
+      "sourceAlias": "Claptrap",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 35,
+      "buildFocus": "Tactician",
+      "weaponPath": [
+        {
+          "mainWeapon": "Laser Pistol",
+          "offhandWeapon": null,
+          "listPriceCredits": 57000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Yellow one-wheeled service robot, square body, single blue optic and thin arms.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 0,
+        "imageConvention": "app/frontend/public/assets/automatons/hyperion-loader-division/1.webp"
+      }
+    },
+    {
+      "blueprintId": "hyperion-loader-division:2:hyperion-combat-loader-02",
+      "slot": 2,
+      "name": "Hyperion Combat Loader 02",
+      "sourceAlias": "combat Loader",
+      "nameBasis": "Original arena designation",
+      "availability": "opening",
+      "loadout": "dual_wield",
+      "stance": "offensive",
+      "yieldThreshold": 5,
+      "buildFocus": "Bruiser",
+      "weaponPath": [
+        {
+          "mainWeapon": "Laser Pistol",
+          "offhandWeapon": "Laser Pistol",
+          "listPriceCredits": 114000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": "Volt Sabre",
+          "listPriceCredits": 850000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Yellow Hyperion combat loader with angular body and weapon-bearing arms.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 1,
+        "imageConvention": "app/frontend/public/assets/automatons/hyperion-loader-division/2.webp"
+      }
+    },
+    {
+      "blueprintId": "hyperion-loader-division:3:hyperion-constructor-03",
+      "slot": 3,
+      "name": "Hyperion Constructor 03",
+      "sourceAlias": "Constructor",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "two_handed",
+      "stance": "defensive",
+      "yieldThreshold": 10,
+      "buildFocus": "Warden",
+      "weaponPath": [
+        {
+          "mainWeapon": "Training Rifle",
+          "offhandWeapon": null,
+          "listPriceCredits": 50000
+        },
+        {
+          "mainWeapon": "Plasma Cannon",
+          "offhandWeapon": null,
+          "listPriceCredits": 408000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "mid",
+        "artBrief": "Broad yellow industrial Constructor with a large lens and heavy lower assembly.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 2,
+        "imageConvention": "app/frontend/public/assets/automatons/hyperion-loader-division/3.webp"
+      }
+    }
+  ],
+  "alternativeBlueprints": [],
+  "review": {
+    "openingWeaponCredits": 171000,
+    "finalWeaponCreditsAtTarget": 1683000,
+    "equippedWeaponCountAtTarget": 4,
+    "purchaseOrder": [
+      1,
+      2,
+      3
+    ],
+    "reserveSlots": [],
+    "alternativeRule": "Choose an alternative before catalogue approval; it replaces the specified slot and never adds another live robot."
+  }
+}

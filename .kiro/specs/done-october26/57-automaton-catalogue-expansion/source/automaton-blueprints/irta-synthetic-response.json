@@ -1,0 +1,129 @@
+{
+  "number": 38,
+  "catalogueKey": "irta-synthetic-response",
+  "stableName": "IRTA Synthetic Response",
+  "franchiseLabel": "Binary Domain",
+  "strategy": "Paragon",
+  "fit": "Direct",
+  "conceptIdentity": "A precise mobile fighter with focused refinement. Slim tactical chassis, mechanical face, compact firearm, carefully placed armour.",
+  "backstory": "IRTA Synthetic Response enters the arena with a clear doctrine. A precise mobile fighter with focused refinement. Every surviving machine returns to the workshop before the next booking.",
+  "openingRobots": 1,
+  "targetRobots": 1,
+  "adminMaximumRobots": 2,
+  "targetOverrides": {},
+  "teamNames": {
+    "2v2": [],
+    "3v3": []
+  },
+  "eventOrder": [
+    "league_1v1",
+    "tournament_1v1",
+    "koth",
+    "grand_melee",
+    "league_2v2",
+    "tag_team",
+    "tournament_2v2",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "robots": [
+    {
+      "blueprintId": "irta-synthetic-response:1:cain-cn-7",
+      "slot": 1,
+      "name": "Cain CN-7",
+      "sourceAlias": "Cain",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 10,
+      "buildFocus": "Deadeye",
+      "weaponPath": [
+        {
+          "mainWeapon": "Gauss Pistol",
+          "offhandWeapon": null,
+          "listPriceCredits": 291000
+        },
+        {
+          "mainWeapon": "Particle Lance",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "Hone",
+          "weapon": "Particle Lance",
+          "weaponSlot": "main",
+          "attribute": "Targeting Systems",
+          "baseValue": 8,
+          "magnitude": 2,
+          "resultValue": 10,
+          "costCredits": 40000,
+          "workshopLevel": 1,
+          "step": 1
+        },
+        {
+          "tier": "Augment",
+          "weapon": "Particle Lance",
+          "weaponSlot": "main",
+          "attribute": "Weapon Control",
+          "magnitude": 3,
+          "resultValue": 3,
+          "costCredits": 180000,
+          "workshopLevel": 3,
+          "step": 2
+        },
+        {
+          "tier": "Sharpen",
+          "weapon": "Particle Lance",
+          "weaponSlot": "main",
+          "cooldownReductionPercent": 10,
+          "costCredits": 300000,
+          "workshopLevel": 5,
+          "prestigeGate": 3000,
+          "step": 3
+        },
+        {
+          "tier": "Sharpen",
+          "weapon": "Particle Lance",
+          "weaponSlot": "main",
+          "cooldownReductionPercent": 10,
+          "costCredits": 900000,
+          "workshopLevel": 5,
+          "prestigeGate": 3000,
+          "step": 4
+        },
+        {
+          "tier": "Forge",
+          "weapon": "Particle Lance",
+          "weaponSlot": "main",
+          "damageIncreasePercent": 8,
+          "costCredits": 400000,
+          "workshopLevel": 8,
+          "prestigeGate": 15000,
+          "step": 5
+        }
+      ],
+      "review": {
+        "rangeFromWeapons": "long",
+        "artBrief": "Slim tactical combat robot with a mechanical face, dark limbs and precision firearm.",
+        "refinementNote": "Apply in order after stage 1. Dual-wield refinements affect the main-hand copy only; the offhand stays unrefined unless explicitly targeted.",
+        "refinementTotalCredits": 1820000,
+        "minimumRosterExpansionLevel": 0,
+        "imageConvention": "app/frontend/public/assets/automatons/irta-synthetic-response/1.webp"
+      }
+    }
+  ],
+  "alternativeBlueprints": [],
+  "review": {
+    "openingWeaponCredits": 291000,
+    "finalWeaponCreditsAtTarget": 425000,
+    "equippedWeaponCountAtTarget": 1,
+    "purchaseOrder": [
+      1
+    ],
+    "reserveSlots": [],
+    "alternativeRule": "Choose an alternative before catalogue approval; it replaces the specified slot and never adds another live robot."
+  }
+}

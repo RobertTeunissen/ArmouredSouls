@@ -1,0 +1,283 @@
+{
+  "stable_number": 138,
+  "catalogue_key": "evangelion-unit-hangar",
+  "robots": [
+    {
+      "slot": 1,
+      "name": "EVA-00",
+      "source_identity": "EVA-00",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yield_threshold": 25,
+      "build_focus": "Warden",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": "Light Shield",
+          "list_price_credits": 108000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": "Aegis Bulwark",
+          "list_price_credits": 834000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic Evangelion Unit-00 from 1995 TV series, blue-and-white post-refit armour. Very tall slender biomechanical humanoid in segmented restraint armour, single round orange cyclopean eye in compact rounded blue helmet, white forearms and long lower legs, blue torso, black flexible waist, shoulder pylons. Source Pallet Rifle held lowered with both hands. Correct TV proportions and source head, no yellow pre-refit body, no pilot.\nMetadata only, do not render text: #138 slot 1 EVA-00.",
+      "role": "Protected short-range anchor",
+      "missing_fields": [],
+      "refinement_note": "Trio follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "EVA-00 fills the protected short-range anchor role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Warden tuning supports the short equipment role; defensive stance and a 25% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Trio strategy tuning rules with the Warden Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "evangelion-unit-hangar:1:eva-00",
+      "folder": "stables/138-evangelion-unit-hangar/robots/01-eva-00",
+      "files": {
+        "png": "stables/138-evangelion-unit-hangar/robots/01-eva-00/portrait.png",
+        "webp": "stables/138-evangelion-unit-hangar/robots/01-eva-00/portrait.webp",
+        "blueprint": "stables/138-evangelion-unit-hangar/robots/01-eva-00/blueprint.json",
+        "profile": "stables/138-evangelion-unit-hangar/robots/01-eva-00/profile.md",
+        "prompt": "stables/138-evangelion-unit-hangar/robots/01-eva-00/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/evangelion-unit-hangar/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 138,
+          "stable_name": "Evangelion Unit Hangar",
+          "catalogue_key": "evangelion-unit-hangar",
+          "slot": 1,
+          "robot_name": "EVA-00",
+          "source_identity": "EVA-00",
+          "source_edition": "Neon Genesis Evangelion — 1995 TV biomechanical units",
+          "source_references": [
+            "https://tamashiiweb.com/item_character/evangelion/3/?brand=&ck1=1&ck2=1&ck3=1&number=20&order=old&wovn=en"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic Evangelion Unit-00 from 1995 TV series, blue-and-white post-refit armour. Very tall slender biomechanical humanoid in segmented restraint armour, single round orange cyclopean eye in compact rounded blue helmet, white forearms and long lower legs, blue torso, black flexible waist, shoulder pylons. Source Pallet Rifle held lowered with both hands. Correct TV proportions and source head, no yellow pre-refit body, no pilot.\nMetadata only, do not render text: #138 slot 1 EVA-00.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-49a1fd97-8da2-434b-9375-1d47f538d219.png",
+          "visual_review": "Accepted: complete readable silhouette, planned source or original construction and studio finish",
+          "asset_id": "evangelion-unit-hangar:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/evangelion-unit-hangar/1.webp",
+          "master": "outputs/automaton-portraits/masters/evangelion-unit-hangar/1.png",
+          "output": "app/frontend/public/assets/automatons/evangelion-unit-hangar/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "9e976012509f192c885c84873f2242cd96995f8f56b98e9566168ec7e969b59d",
+          "bytes": 32908
+        },
+        "sha256": "9e976012509f192c885c84873f2242cd96995f8f56b98e9566168ec7e969b59d",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 2,
+      "name": "EVA-01",
+      "source_identity": "EVA-01",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "dual_wield",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Sprinter",
+      "range_from_weapons": "melee",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Practice Sword",
+          "offhand_weapon": "Practice Sword",
+          "list_price_credits": 100000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Vibro Mace",
+          "offhand_weapon": "Vibro Mace",
+          "list_price_credits": 850000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic Evangelion Unit-01, 1995 TV design. Tall extremely slender purple biomechanical humanoid with bright green armour accents, black slender waist, orange chest details, long forward forehead horn, two small green eyes and closed mechanical jaw. Tall shoulder pylons, very long legs and source feet. One Progressive Knife held lowered in right hand. Entire horn and pylons visible. No Rebuild accessories or exposed flesh.\nMetadata only, do not render text: #138 slot 2 EVA-01.",
+      "role": "Paired contact attacker",
+      "missing_fields": [],
+      "refinement_note": "Trio follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 1,
+      "equipment_interpretation": "EVA-01 fills the paired contact attacker role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Sprinter tuning supports the melee equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Trio strategy tuning rules with the Sprinter Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "evangelion-unit-hangar:2:eva-01",
+      "folder": "stables/138-evangelion-unit-hangar/robots/02-eva-01",
+      "files": {
+        "png": "stables/138-evangelion-unit-hangar/robots/02-eva-01/portrait.png",
+        "webp": "stables/138-evangelion-unit-hangar/robots/02-eva-01/portrait.webp",
+        "blueprint": "stables/138-evangelion-unit-hangar/robots/02-eva-01/blueprint.json",
+        "profile": "stables/138-evangelion-unit-hangar/robots/02-eva-01/profile.md",
+        "prompt": "stables/138-evangelion-unit-hangar/robots/02-eva-01/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/evangelion-unit-hangar/2.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 138,
+          "stable_name": "Evangelion Unit Hangar",
+          "catalogue_key": "evangelion-unit-hangar",
+          "slot": 2,
+          "robot_name": "EVA-01",
+          "source_identity": "EVA-01",
+          "source_edition": "Neon Genesis Evangelion — 1995 TV biomechanical units",
+          "source_references": [
+            "https://tamashiiweb.com/item_character/evangelion/3/?brand=&ck1=1&ck2=1&ck3=1&number=20&order=old&wovn=en"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic Evangelion Unit-01, 1995 TV design. Tall extremely slender purple biomechanical humanoid with bright green armour accents, black slender waist, orange chest details, long forward forehead horn, two small green eyes and closed mechanical jaw. Tall shoulder pylons, very long legs and source feet. One Progressive Knife held lowered in right hand. Entire horn and pylons visible. No Rebuild accessories or exposed flesh.\nMetadata only, do not render text: #138 slot 2 EVA-01.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-2c806c55-df65-4f1f-901d-718fed124bb8.png",
+          "visual_review": "Accepted: complete readable silhouette, planned source or original construction and studio finish",
+          "asset_id": "evangelion-unit-hangar:2",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/evangelion-unit-hangar/2.webp",
+          "master": "outputs/automaton-portraits/masters/evangelion-unit-hangar/2.png",
+          "output": "app/frontend/public/assets/automatons/evangelion-unit-hangar/2.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "434404f991c508f9ea4f4cca5fab5de1682be8a383cecf9a706afb218470a259",
+          "bytes": 31218
+        },
+        "sha256": "434404f991c508f9ea4f4cca5fab5de1682be8a383cecf9a706afb218470a259",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 3,
+      "name": "EVA-02",
+      "source_identity": "EVA-02",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Bruiser",
+      "range_from_weapons": "mid",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Training Rifle",
+          "offhand_weapon": null,
+          "list_price_credits": 50000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Plasma Cannon",
+          "offhand_weapon": null,
+          "list_price_credits": 408000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic Evangelion Unit-02, 1995 TV design. Tall slender red biomechanical humanoid, characteristic four green eye lenses in red helmet, white forehead plate, source red torso, orange chest elements, black waist and long red legs. Original TV head with no Rebuild horns. Two shoulder pylons, one Pallet Rifle held lowered. Preserve elongated organic-under-restraint proportions, no pilot.\nMetadata only, do not render text: #138 slot 3 EVA-02.",
+      "role": "Heavy mid-range pressure",
+      "missing_fields": [],
+      "refinement_note": "Trio follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 2,
+      "equipment_interpretation": "EVA-02 fills the heavy mid-range pressure role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Bruiser tuning supports the mid equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Trio strategy tuning rules with the Bruiser Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "evangelion-unit-hangar:3:eva-02",
+      "folder": "stables/138-evangelion-unit-hangar/robots/03-eva-02",
+      "files": {
+        "png": "stables/138-evangelion-unit-hangar/robots/03-eva-02/portrait.png",
+        "webp": "stables/138-evangelion-unit-hangar/robots/03-eva-02/portrait.webp",
+        "blueprint": "stables/138-evangelion-unit-hangar/robots/03-eva-02/blueprint.json",
+        "profile": "stables/138-evangelion-unit-hangar/robots/03-eva-02/profile.md",
+        "prompt": "stables/138-evangelion-unit-hangar/robots/03-eva-02/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/evangelion-unit-hangar/3.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 138,
+          "stable_name": "Evangelion Unit Hangar",
+          "catalogue_key": "evangelion-unit-hangar",
+          "slot": 3,
+          "robot_name": "EVA-02",
+          "source_identity": "EVA-02",
+          "source_edition": "Neon Genesis Evangelion — 1995 TV biomechanical units",
+          "source_references": [
+            "https://tamashiiweb.com/item_character/evangelion/3/?brand=&ck1=1&ck2=1&ck3=1&number=20&order=old&wovn=en"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic Evangelion Unit-02, 1995 TV design. Tall slender red biomechanical humanoid, characteristic four green eye lenses in red helmet, white forehead plate, source red torso, orange chest elements, black waist and long red legs. Original TV head with no Rebuild horns. Two shoulder pylons, one Pallet Rifle held lowered. Preserve elongated organic-under-restraint proportions, no pilot.\nMetadata only, do not render text: #138 slot 3 EVA-02.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-d758349c-f569-4e10-bb30-7c6180f7c201.png",
+          "visual_review": "Accepted: complete readable silhouette, planned source or original construction and studio finish",
+          "asset_id": "evangelion-unit-hangar:3",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/evangelion-unit-hangar/3.webp",
+          "master": "outputs/automaton-portraits/masters/evangelion-unit-hangar/3.png",
+          "output": "app/frontend/public/assets/automatons/evangelion-unit-hangar/3.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "7ef11b1cefb3a132986aa7167973503d15cfaedb2d6d322d28fe12a30a84265e",
+          "bytes": 33270
+        },
+        "sha256": "7ef11b1cefb3a132986aa7167973503d15cfaedb2d6d322d28fe12a30a84265e",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "replacement_alternatives": []
+}

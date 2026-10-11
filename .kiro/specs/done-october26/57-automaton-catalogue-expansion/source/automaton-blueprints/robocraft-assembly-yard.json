@@ -1,0 +1,162 @@
+{
+  "number": 58,
+  "catalogueKey": "robocraft-assembly-yard",
+  "stableName": "Robocraft Assembly Yard",
+  "franchiseLabel": "Robocraft",
+  "strategy": "Tycoon",
+  "fit": "Direct",
+  "conceptIdentity": "Facility-led investment in a small modular roster. Block-built armour, interchangeable modules, and a consistent factory palette.",
+  "backstory": "Robocraft Assembly Yard enters the arena with a clear doctrine. Facility-led investment in a small modular roster. Every surviving machine returns to the workshop before the next booking.",
+  "openingRobots": 2,
+  "targetRobots": 3,
+  "adminMaximumRobots": 3,
+  "targetOverrides": {
+    "robots": 3
+  },
+  "teamNames": {
+    "2v2": [
+      {
+        "name": "Robocraft Pair 01",
+        "slots": [
+          1,
+          2
+        ]
+      }
+    ],
+    "3v3": [
+      {
+        "name": "Robocraft Squad 01",
+        "slots": [
+          1,
+          2,
+          3
+        ]
+      }
+    ]
+  },
+  "eventOrder": [
+    "koth",
+    "grand_melee",
+    "league_1v1",
+    "league_2v2",
+    "tag_team",
+    "tournament_1v1",
+    "tournament_2v2",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "robots": [
+    {
+      "blueprintId": "robocraft-assembly-yard:1:robocraft-walker-01",
+      "slot": 1,
+      "name": "Robocraft Walker 01",
+      "sourceAlias": "walker",
+      "nameBasis": "Original arena designation",
+      "availability": "opening",
+      "loadout": "dual_wield",
+      "stance": "balanced",
+      "yieldThreshold": 15,
+      "buildFocus": "Versatile",
+      "weaponPath": [
+        {
+          "mainWeapon": "Bolt Carbine",
+          "offhandWeapon": "Bolt Carbine",
+          "listPriceCredits": 186000
+        },
+        {
+          "mainWeapon": "Nova Caster",
+          "offhandWeapon": "Nova Caster",
+          "listPriceCredits": 850000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "mid",
+        "artBrief": "Original modular walker with block-built armour, jointed legs and twin ranged mounts.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 0,
+        "imageConvention": "app/frontend/public/assets/automatons/robocraft-assembly-yard/1.webp"
+      }
+    },
+    {
+      "blueprintId": "robocraft-assembly-yard:2:robocraft-tank-02",
+      "slot": 2,
+      "name": "Robocraft Tank 02",
+      "sourceAlias": "tank",
+      "nameBasis": "Original arena designation",
+      "availability": "opening",
+      "loadout": "two_handed",
+      "stance": "defensive",
+      "yieldThreshold": 10,
+      "buildFocus": "Warden",
+      "weaponPath": [
+        {
+          "mainWeapon": "Training Rifle",
+          "offhandWeapon": null,
+          "listPriceCredits": 50000
+        },
+        {
+          "mainWeapon": "Plasma Cannon",
+          "offhandWeapon": null,
+          "listPriceCredits": 408000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "mid",
+        "artBrief": "Original modular tank robot with block-built armour, tracks and a heavy cannon.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 1,
+        "imageConvention": "app/frontend/public/assets/automatons/robocraft-assembly-yard/2.webp"
+      }
+    },
+    {
+      "blueprintId": "robocraft-assembly-yard:3:robocraft-scout-03",
+      "slot": 3,
+      "name": "Robocraft Scout 03",
+      "sourceAlias": "light chassis",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 25,
+      "buildFocus": "Sprinter",
+      "weaponPath": [
+        {
+          "mainWeapon": "Laser Pistol",
+          "offhandWeapon": null,
+          "listPriceCredits": 57000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Original light modular chassis with compact panels and a prominent sensor.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 2,
+        "imageConvention": "app/frontend/public/assets/automatons/robocraft-assembly-yard/3.webp"
+      }
+    }
+  ],
+  "alternativeBlueprints": [],
+  "review": {
+    "openingWeaponCredits": 236000,
+    "finalWeaponCreditsAtTarget": 1683000,
+    "equippedWeaponCountAtTarget": 4,
+    "purchaseOrder": [
+      1,
+      2,
+      3
+    ],
+    "reserveSlots": [],
+    "alternativeRule": "Choose an alternative before catalogue approval; it replaces the specified slot and never adds another live robot."
+  }
+}

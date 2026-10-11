@@ -1,0 +1,187 @@
+{
+  "number": 196,
+  "catalogue_key": "series-4000-service-workshop",
+  "name": "Series 4000 Service Workshop",
+  "franchise": "Red Dwarf — television continuity",
+  "strategy": "Paragon",
+  "opening_robots": 1,
+  "target_robots": 1,
+  "max_planned_robots": 1,
+  "strategy_review_limit": 2,
+  "backstory": "A conscientious service mechanoid protects its equipment and keeps meticulous repair accounts. The workshop backs one defensive contender with gradual shield and weapon improvements.",
+  "strategy_personality": "An angular humanoid mechanoid with a distinctive faceted head, service uniform, and comic dignity. Preserve the selected era's face and suit rather than blending the original guest appearance with later versions. A conscientious equipment-maintenance personality differentiates the stable. An arena weapon is an adaptation of the service role; companions such as Rimmer should not be silently counted as additional mechanical robots.",
+  "teams": {
+    "2v2": [],
+    "3v3": []
+  },
+  "event_order": [
+    "league_1v1",
+    "tournament_1v1",
+    "koth",
+    "grand_melee",
+    "league_2v2",
+    "tag_team",
+    "tournament_2v2",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "robots": [
+    {
+      "slot": 1,
+      "name": "Kryten 2X4B-523P",
+      "source_identity": "Kryten 2X4B-523P",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yield_threshold": 25,
+      "build_focus": "Tactician",
+      "range_from_weapons": "mid",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Bolt Carbine",
+          "offhand_weapon": "Light Shield",
+          "list_price_credits": 144000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Nova Caster",
+          "offhand_weapon": "Aegis Bulwark",
+          "list_price_credits": 834000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Hone",
+          "weapon": "Aegis Bulwark",
+          "hand": "offhand",
+          "workshop_level": 1,
+          "attribute": "Evasion Thrusters",
+          "magnitude": 5,
+          "result_value": 0,
+          "cost_credits": 250000,
+          "base_value": -5,
+          "effect": "Evasion Thrusters -5→0",
+          "step": 1
+        },
+        {
+          "operation": "Sharpen",
+          "weapon": "Nova Caster",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 1,
+          "cost_credits": 300000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 2
+        },
+        {
+          "operation": "Sharpen",
+          "weapon": "Nova Caster",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 2,
+          "cost_credits": 900000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 3
+        },
+        {
+          "operation": "Forge",
+          "weapon": "Nova Caster",
+          "hand": "main",
+          "workshop_level": 8,
+          "occurrence": 1,
+          "cost_credits": 400000,
+          "prestige_gate": 15000,
+          "effect": "+8% damage",
+          "step": 4
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE Kryten 2X4B-523P from Red Dwarf, using the familiar Robert Llewellyn-era television mechanoid design. Distinct angular pale beige faceted rubber-like humanoid face and bald squared geometric head, slightly worried dignified expression, broad black angular service uniform with grey geometric chest panels, black sleeves, gloves, trousers and boots. Preserve the recognizable costume and faceted face in realistic materials; no original David Ross design, no full smooth silver robot shell. One compact service pistol held down in the right hand is explicitly an original arena addition. Complete full body, both boots visible, neutral attentive pose.\nMetadata only, do not render text: #196 slot 1 Kryten 2X4B-523P.",
+      "role": "Protected tactical support",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 1850000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "Kryten 2X4B-523P fills the protected tactical support role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Tactician tuning supports the mid equipment role; defensive stance and a 25% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Paragon strategy tuning rules with the Tactician Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "series-4000-service-workshop:1:kryten-2x4b-523p",
+      "folder": "stables/196-series-4000-service-workshop/robots/01-kryten-2x4b-523p",
+      "files": {
+        "png": "stables/196-series-4000-service-workshop/robots/01-kryten-2x4b-523p/portrait.png",
+        "webp": "stables/196-series-4000-service-workshop/robots/01-kryten-2x4b-523p/portrait.webp",
+        "blueprint": "stables/196-series-4000-service-workshop/robots/01-kryten-2x4b-523p/blueprint.json",
+        "profile": "stables/196-series-4000-service-workshop/robots/01-kryten-2x4b-523p/profile.md",
+        "prompt": "stables/196-series-4000-service-workshop/robots/01-kryten-2x4b-523p/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/series-4000-service-workshop/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 196,
+          "stable_name": "Series 4000 Service Workshop",
+          "catalogue_key": "series-4000-service-workshop",
+          "slot": 1,
+          "robot_name": "Kryten 2X4B-523P",
+          "source_identity": "Kryten 2X4B-523P",
+          "source_edition": "Red Dwarf, familiar Robert Llewellyn-era television mechanoid",
+          "source_references": [
+            "https://reddwarf.co.uk/database/index.cfm?entry=kryten2x4b523p&section=mechanicals",
+            "https://reddwarf.co.uk/about/the-crew"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE Kryten 2X4B-523P from Red Dwarf, using the familiar Robert Llewellyn-era television mechanoid design. Distinct angular pale beige faceted rubber-like humanoid face and bald squared geometric head, slightly worried dignified expression, broad black angular service uniform with grey geometric chest panels, black sleeves, gloves, trousers and boots. Preserve the recognizable costume and faceted face in realistic materials; no original David Ross design, no full smooth silver robot shell. One compact service pistol held down in the right hand is explicitly an original arena addition. Complete full body, both boots visible, neutral attentive pose.\nMetadata only, do not render text: #196 slot 1 Kryten 2X4B-523P.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-a757f59a-0a4a-4b3c-9f81-506339bb1dbd.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "series-4000-service-workshop:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/series-4000-service-workshop/1.webp",
+          "master": "outputs/automaton-portraits/masters/series-4000-service-workshop/1.png",
+          "output": "app/frontend/public/assets/automatons/series-4000-service-workshop/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "66b002b7388e9e25db407b021e53941afa93c52f63cb126f9150fed3b30eb529",
+          "bytes": 25786
+        },
+        "sha256": "66b002b7388e9e25db407b021e53941afa93c52f63cb126f9150fed3b30eb529",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "alternatives": [],
+  "blueprint_status": "detailed",
+  "source_notes": "\n**Franchise:** Red Dwarf — television continuity  \n**Strategy:** Paragon · **Target roster:** 1 robot\n\n**Proposed robots:** Kryten 2X4B-523P.\n\n**Direction:** An angular humanoid mechanoid with a distinctive faceted head, service uniform, and comic dignity. Preserve the selected era's face and suit rather than blending the original guest appearance with later versions. A conscientious equipment-maintenance personality differentiates the stable. An arena weapon is an adaptation of the service role; companions such as Rimmer should not be silently counted as additional mechanical robots.\n\nReferences: [official Kryten mechanoid database entry](https://reddwarf.co.uk/database/index.cfm?entry=kryten2x4b523p&section=mechanicals), [official crew reference](https://reddwarf.co.uk/about/the-crew).\n\n**Production edition:** Red Dwarf, familiar Robert Llewellyn-era television mechanoid.  \n**Catalogue key:** `series-4000-service-workshop`\n\n",
+  "source_documents": [
+    "reference/AUTOMATON_STABLE_EXPANSION.md"
+  ],
+  "blueprint_origin": "completed during collection",
+  "purchasing_plan": "Open and remain at one robot. Buy its complete stage-1 loadout before refinement. Execute the listed steps in order, progressing Workshop L1/L3/L5/L8 as required. Keep prestige-gated steps pending; fund repairs and maintenance before every purchase.",
+  "target_overrides": {},
+  "equipment_budget": {
+    "stage_0_credits": 144000,
+    "stage_1_credits": 834000,
+    "refinement_credits": 1850000,
+    "excludes": "Frames, facilities, training, repairs, upkeep, discounts and resale; stage-1 total replaces stage-0 gear and is not a simultaneous equipment inventory."
+  },
+  "folder": "stables/196-series-4000-service-workshop",
+  "history_image_count": 0
+}

@@ -1,0 +1,228 @@
+{
+  "number": 82,
+  "catalogueKey": "tenma-robotics-institute",
+  "stableName": "Tenma Robotics Institute",
+  "franchiseLabel": "Astro Boy",
+  "strategy": "Paragon",
+  "fit": "Direct",
+  "conceptIdentity": "An agile all-rounder with concentrated upgrades. Compact mechanical body and familiar head silhouette; show internal hardware without anime exaggeration.",
+  "backstory": "Tenma Robotics Institute enters the arena with a clear doctrine. An agile all-rounder with concentrated upgrades. Every surviving machine returns to the workshop before the next booking.",
+  "openingRobots": 1,
+  "targetRobots": 1,
+  "adminMaximumRobots": 2,
+  "targetOverrides": {},
+  "teamNames": {
+    "2v2": [
+      {
+        "name": "Tenma Pair 01",
+        "slots": [
+          1,
+          2
+        ]
+      }
+    ],
+    "3v3": []
+  },
+  "eventOrder": [
+    "league_1v1",
+    "tournament_1v1",
+    "koth",
+    "grand_melee",
+    "league_2v2",
+    "tag_team",
+    "tournament_2v2",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "robots": [
+    {
+      "blueprintId": "tenma-robotics-institute:1:astro-boy",
+      "slot": 1,
+      "name": "Astro Boy",
+      "sourceAlias": "Astro Boy",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "dual_wield",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "Versatile",
+      "weaponPath": [
+        {
+          "mainWeapon": "Plasma Rifle",
+          "offhandWeapon": "Plasma Rifle",
+          "listPriceCredits": 516000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": "Volt Sabre",
+          "listPriceCredits": 850000
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "Hone",
+          "weapon": "Volt Sabre",
+          "weaponSlot": "main",
+          "attribute": "Combat Power",
+          "baseValue": 8,
+          "magnitude": 2,
+          "resultValue": 10,
+          "costCredits": 40000,
+          "workshopLevel": 1,
+          "step": 1
+        },
+        {
+          "tier": "Augment",
+          "weapon": "Volt Sabre",
+          "weaponSlot": "main",
+          "attribute": "Adaptive AI",
+          "magnitude": 3,
+          "resultValue": 3,
+          "costCredits": 180000,
+          "workshopLevel": 3,
+          "step": 2
+        },
+        {
+          "tier": "Sharpen",
+          "weapon": "Volt Sabre",
+          "weaponSlot": "main",
+          "cooldownReductionPercent": 10,
+          "costCredits": 300000,
+          "workshopLevel": 5,
+          "prestigeGate": 3000,
+          "step": 3
+        },
+        {
+          "tier": "Sharpen",
+          "weapon": "Volt Sabre",
+          "weaponSlot": "main",
+          "cooldownReductionPercent": 10,
+          "costCredits": 900000,
+          "workshopLevel": 5,
+          "prestigeGate": 3000,
+          "step": 4
+        },
+        {
+          "tier": "Forge",
+          "weapon": "Volt Sabre",
+          "weaponSlot": "main",
+          "damageIncreasePercent": 8,
+          "costCredits": 400000,
+          "workshopLevel": 8,
+          "prestigeGate": 15000,
+          "step": 5
+        }
+      ],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Compact child-shaped robot with recognizable pointed hair, dark trunks and red boots.",
+        "refinementNote": "Apply in order after stage 1. Dual-wield refinements affect the main-hand copy only; the offhand stays unrefined unless explicitly targeted.",
+        "refinementTotalCredits": 1820000,
+        "minimumRosterExpansionLevel": 0,
+        "imageConvention": "app/frontend/public/assets/automatons/tenma-robotics-institute/1.webp"
+      }
+    },
+    {
+      "blueprintId": "tenma-robotics-institute:2:atlas-tenma",
+      "slot": 2,
+      "name": "Atlas Tenma",
+      "sourceAlias": "Atlas",
+      "nameBasis": "Source character or machine designation",
+      "availability": "reserve",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yieldThreshold": 5,
+      "buildFocus": "Bruiser",
+      "weaponPath": [
+        {
+          "mainWeapon": "Shotgun",
+          "offhandWeapon": null,
+          "listPriceCredits": 283000
+        },
+        {
+          "mainWeapon": "Plasma Cannon",
+          "offhandWeapon": null,
+          "listPriceCredits": 408000
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "Hone",
+          "weapon": "Plasma Cannon",
+          "weaponSlot": "main",
+          "attribute": "Combat Power",
+          "baseValue": 7,
+          "magnitude": 3,
+          "resultValue": 10,
+          "costCredits": 90000,
+          "workshopLevel": 1,
+          "step": 1
+        },
+        {
+          "tier": "Hone",
+          "weapon": "Plasma Cannon",
+          "weaponSlot": "main",
+          "attribute": "Critical Systems",
+          "baseValue": 6,
+          "magnitude": 4,
+          "resultValue": 10,
+          "costCredits": 160000,
+          "workshopLevel": 1,
+          "step": 2
+        },
+        {
+          "tier": "Augment",
+          "weapon": "Plasma Cannon",
+          "weaponSlot": "main",
+          "attribute": "Hull Integrity",
+          "magnitude": 3,
+          "resultValue": 3,
+          "costCredits": 180000,
+          "workshopLevel": 3,
+          "step": 3
+        },
+        {
+          "tier": "Sharpen",
+          "weapon": "Plasma Cannon",
+          "weaponSlot": "main",
+          "cooldownReductionPercent": 10,
+          "costCredits": 300000,
+          "workshopLevel": 5,
+          "prestigeGate": 3000,
+          "step": 4
+        },
+        {
+          "tier": "Forge",
+          "weapon": "Plasma Cannon",
+          "weaponSlot": "main",
+          "damageIncreasePercent": 8,
+          "costCredits": 400000,
+          "workshopLevel": 8,
+          "prestigeGate": 15000,
+          "step": 5
+        }
+      ],
+      "review": {
+        "rangeFromWeapons": "mid",
+        "artBrief": "Astro Boy setting combat robot with broad metallic armour and a strong humanoid silhouette.",
+        "refinementNote": "Apply in order after stage 1. Dual-wield refinements affect the main-hand copy only; the offhand stays unrefined unless explicitly targeted.",
+        "refinementTotalCredits": 1130000,
+        "minimumRosterExpansionLevel": 1,
+        "imageConvention": "app/frontend/public/assets/automatons/tenma-robotics-institute/2.webp"
+      }
+    }
+  ],
+  "alternativeBlueprints": [],
+  "review": {
+    "openingWeaponCredits": 516000,
+    "finalWeaponCreditsAtTarget": 850000,
+    "equippedWeaponCountAtTarget": 2,
+    "purchaseOrder": [
+      1
+    ],
+    "reserveSlots": [
+      2
+    ],
+    "alternativeRule": "Choose an alternative before catalogue approval; it replaces the specified slot and never adds another live robot."
+  }
+}

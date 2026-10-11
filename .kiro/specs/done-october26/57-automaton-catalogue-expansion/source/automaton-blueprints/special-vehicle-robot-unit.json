@@ -1,0 +1,165 @@
+{
+  "number": 83,
+  "catalogueKey": "special-vehicle-robot-unit",
+  "stableName": "Special Vehicle Robot Unit",
+  "franchiseLabel": "Patlabor",
+  "strategy": "Duo",
+  "fit": "Direct",
+  "conceptIdentity": "A disciplined pair with defensive and precision priorities. White police mecha, black joints, shoulder equipment, identification numbers.",
+  "backstory": "Special Vehicle Robot Unit enters the arena with a clear doctrine. A disciplined pair with defensive and precision priorities. Every surviving machine returns to the workshop before the next booking.",
+  "openingRobots": 2,
+  "targetRobots": 2,
+  "adminMaximumRobots": 3,
+  "targetOverrides": {},
+  "teamNames": {
+    "2v2": [
+      {
+        "name": "Special Vehicle Pair 01",
+        "slots": [
+          1,
+          2
+        ]
+      }
+    ],
+    "3v3": []
+  },
+  "eventOrder": [
+    "league_2v2",
+    "tag_team",
+    "tournament_2v2",
+    "league_1v1",
+    "koth",
+    "grand_melee",
+    "tournament_1v1",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "robots": [
+    {
+      "blueprintId": "special-vehicle-robot-unit:1:av-98-ingram-unit-1",
+      "slot": 1,
+      "name": "AV-98 Ingram Unit 1",
+      "sourceAlias": "AV-98 Ingram Unit 1",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yieldThreshold": 15,
+      "buildFocus": "Warden",
+      "weaponPath": [
+        {
+          "mainWeapon": "Laser Pistol",
+          "offhandWeapon": "Light Shield",
+          "listPriceCredits": 108000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": "Aegis Bulwark",
+          "listPriceCredits": 834000
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "Hone",
+          "weapon": "Volt Sabre",
+          "weaponSlot": "main",
+          "attribute": "Combat Power",
+          "baseValue": 8,
+          "magnitude": 2,
+          "resultValue": 10,
+          "costCredits": 40000,
+          "workshopLevel": 1,
+          "step": 1
+        },
+        {
+          "tier": "Augment",
+          "weapon": "Volt Sabre",
+          "weaponSlot": "main",
+          "attribute": "Adaptive AI",
+          "magnitude": 3,
+          "resultValue": 3,
+          "costCredits": 180000,
+          "workshopLevel": 3,
+          "step": 2
+        }
+      ],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "White police Ingram mecha with black joints, shoulder markings and shield equipment.",
+        "refinementNote": "Apply in order after stage 1. Dual-wield refinements affect the main-hand copy only; the offhand stays unrefined unless explicitly targeted.",
+        "refinementTotalCredits": 220000,
+        "minimumRosterExpansionLevel": 0,
+        "imageConvention": "app/frontend/public/assets/automatons/special-vehicle-robot-unit/1.webp"
+      }
+    },
+    {
+      "blueprintId": "special-vehicle-robot-unit:2:av-98-ingram-unit-2",
+      "slot": 2,
+      "name": "AV-98 Ingram Unit 2",
+      "sourceAlias": "AV-98 Ingram Unit 2",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 15,
+      "buildFocus": "Deadeye",
+      "weaponPath": [
+        {
+          "mainWeapon": "Beam Pistol",
+          "offhandWeapon": null,
+          "listPriceCredits": 93000
+        },
+        {
+          "mainWeapon": "Particle Lance",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "Hone",
+          "weapon": "Particle Lance",
+          "weaponSlot": "main",
+          "attribute": "Targeting Systems",
+          "baseValue": 8,
+          "magnitude": 2,
+          "resultValue": 10,
+          "costCredits": 40000,
+          "workshopLevel": 1,
+          "step": 1
+        },
+        {
+          "tier": "Augment",
+          "weapon": "Particle Lance",
+          "weaponSlot": "main",
+          "attribute": "Weapon Control",
+          "magnitude": 3,
+          "resultValue": 3,
+          "costCredits": 180000,
+          "workshopLevel": 3,
+          "step": 2
+        }
+      ],
+      "review": {
+        "rangeFromWeapons": "long",
+        "artBrief": "White police Ingram mecha with differentiated head detail, unit markings and precision weapon.",
+        "refinementNote": "Apply in order after stage 1. Dual-wield refinements affect the main-hand copy only; the offhand stays unrefined unless explicitly targeted.",
+        "refinementTotalCredits": 220000,
+        "minimumRosterExpansionLevel": 1,
+        "imageConvention": "app/frontend/public/assets/automatons/special-vehicle-robot-unit/2.webp"
+      }
+    }
+  ],
+  "alternativeBlueprints": [],
+  "review": {
+    "openingWeaponCredits": 201000,
+    "finalWeaponCreditsAtTarget": 1259000,
+    "equippedWeaponCountAtTarget": 3,
+    "purchaseOrder": [
+      1,
+      2
+    ],
+    "reserveSlots": [],
+    "alternativeRule": "Choose an alternative before catalogue approval; it replaces the specified slot and never adds another live robot."
+  }
+}

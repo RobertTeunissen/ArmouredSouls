@@ -1,0 +1,133 @@
+{
+  "stable_number": 129,
+  "catalogue_key": "krat-puppet-workshop",
+  "robots": [
+    {
+      "slot": 1,
+      "name": "P",
+      "source_identity": "P",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "dual_wield",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Sprinter",
+      "range_from_weapons": "melee",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Practice Sword",
+          "offhand_weapon": "Practice Sword",
+          "list_price_credits": 100000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Vibro Mace",
+          "offhand_weapon": "Vibro Mace",
+          "list_price_credits": 850000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Sharpen",
+          "weapon": "Vibro Mace",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 1,
+          "cost_credits": 300000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 1
+        },
+        {
+          "operation": "Sharpen",
+          "weapon": "Vibro Mace",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 2,
+          "cost_credits": 900000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 2
+        },
+        {
+          "operation": "Forge",
+          "weapon": "Vibro Mace",
+          "hand": "main",
+          "workshop_level": 8,
+          "occurrence": 1,
+          "cost_credits": 400000,
+          "prestige_gate": 15000,
+          "effect": "+8% damage",
+          "step": 3
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: P, Geppetto's protagonist puppet from Lies of P (2023). Slender young male humanlike porcelain face, curly dark brown hair, blue Victorian coat and white ruffled shirt, slim dark trousers and leather boots. Exposed brass mechanical left Legion arm, humanlike right hand holds the slender Wintry Rapier at rest. Refined artificial puppet identity with fully clothed source costume, no bulky robot helmet or modern tactical armour.\nCatalogue label for metadata only, do not render text: #129 slot 1 P.",
+      "role": "Paired contact attacker",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 1600000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "P fills the paired contact attacker role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Sprinter tuning supports the melee equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Paragon strategy tuning rules with the Sprinter Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "krat-puppet-workshop:1:p",
+      "folder": "stables/129-krat-puppet-workshop/robots/01-p",
+      "files": {
+        "png": "stables/129-krat-puppet-workshop/robots/01-p/portrait.png",
+        "webp": "stables/129-krat-puppet-workshop/robots/01-p/portrait.webp",
+        "blueprint": "stables/129-krat-puppet-workshop/robots/01-p/blueprint.json",
+        "profile": "stables/129-krat-puppet-workshop/robots/01-p/profile.md",
+        "prompt": "stables/129-krat-puppet-workshop/robots/01-p/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/krat-puppet-workshop/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 129,
+          "stable_name": "Krat Puppet Workshop",
+          "catalogue_key": "krat-puppet-workshop",
+          "slot": 1,
+          "robot_name": "P",
+          "source_identity": "P",
+          "source_edition": "Lies of P — 2023 protagonist default costume",
+          "source_references": [
+            "https://store.steampowered.com/app/1627720/Lies_of_P/"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: P, Geppetto's protagonist puppet from Lies of P (2023). Slender young male humanlike porcelain face, curly dark brown hair, blue Victorian coat and white ruffled shirt, slim dark trousers and leather boots. Exposed brass mechanical left Legion arm, humanlike right hand holds the slender Wintry Rapier at rest. Refined artificial puppet identity with fully clothed source costume, no bulky robot helmet or modern tactical armour.\nCatalogue label for metadata only, do not render text: #129 slot 1 P.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-4a6319b8-0c1a-4ed1-8f0e-3d29512d5643.png",
+          "visual_review": "Accepted: complete readable silhouette, planned source or original construction and studio finish",
+          "asset_id": "krat-puppet-workshop:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/krat-puppet-workshop/1.webp",
+          "master": "outputs/automaton-portraits/masters/krat-puppet-workshop/1.png",
+          "output": "app/frontend/public/assets/automatons/krat-puppet-workshop/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "e137959b458a61b7b9efdfb9b5b7e590e51a06dd24bf43f90a22ee7af4227338",
+          "bytes": 37704
+        },
+        "sha256": "e137959b458a61b7b9efdfb9b5b7e590e51a06dd24bf43f90a22ee7af4227338",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "replacement_alternatives": []
+}

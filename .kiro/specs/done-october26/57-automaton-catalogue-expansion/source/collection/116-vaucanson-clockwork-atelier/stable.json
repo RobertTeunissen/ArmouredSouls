@@ -1,0 +1,186 @@
+{
+  "number": 116,
+  "catalogue_key": "vaucanson-clockwork-atelier",
+  "name": "Vaucanson Clockwork Atelier",
+  "franchise": "Steelrising",
+  "strategy": "Paragon",
+  "opening_robots": 1,
+  "target_robots": 1,
+  "max_planned_robots": 1,
+  "strategy_review_limit": 2,
+  "backstory": "Fine mechanisms and a disciplined guard make this atelier a patient champion's workshop. Its one automaton earns carefully staged shield and weapon improvements.",
+  "strategy_personality": "A particularly good visual expansion: ornate clockwork, fine metalwork, fabric, and an unmistakable automaton combatant. Give this flagship a precise equipment/refinement personality while preserving its source design. [Publisher description](https://store.steampowered.com/app/1283400/Steelrising/).",
+  "teams": {
+    "2v2": [],
+    "3v3": []
+  },
+  "event_order": [
+    "league_1v1",
+    "tournament_1v1",
+    "koth",
+    "grand_melee",
+    "league_2v2",
+    "tag_team",
+    "tournament_2v2",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "robots": [
+    {
+      "slot": 1,
+      "name": "Aegis",
+      "source_identity": "Aegis — Steelrising — Aegis default promotional design",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yield_threshold": 25,
+      "build_focus": "Warden",
+      "range_from_weapons": "melee",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Practice Sword",
+          "offhand_weapon": "Light Shield",
+          "list_price_credits": 101000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Vibro Mace",
+          "offhand_weapon": "Aegis Bulwark",
+          "list_price_credits": 834000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Hone",
+          "weapon": "Aegis Bulwark",
+          "hand": "offhand",
+          "workshop_level": 1,
+          "attribute": "Evasion Thrusters",
+          "magnitude": 5,
+          "result_value": 0,
+          "cost_credits": 250000,
+          "base_value": -5,
+          "effect": "Evasion Thrusters -5→0",
+          "step": 1
+        },
+        {
+          "operation": "Sharpen",
+          "weapon": "Vibro Mace",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 1,
+          "cost_credits": 300000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 2
+        },
+        {
+          "operation": "Sharpen",
+          "weapon": "Vibro Mace",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 2,
+          "cost_credits": 900000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 3
+        },
+        {
+          "operation": "Forge",
+          "weapon": "Vibro Mace",
+          "hand": "main",
+          "workshop_level": 8,
+          "occurrence": 1,
+          "cost_credits": 400000,
+          "prestige_gate": 15000,
+          "effect": "+8% damage",
+          "step": 4
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around EVERY extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic Aegis from Steelrising, an elegant female clockwork automaton with porcelain-like sculpted face, finely engraved brass/steel mechanisms, intricate exposed joints, source eighteenth-century blue French court costume and ornamental metalwork, authentic source hat/headdress. One pair of source metal fan weapons, opened enough to read clearly, graceful grounded ready stance. Preserve game Aegis face/body/outfit, full figure and feet visible, no living human substitute or futuristic robot armour.\nCatalogue label for metadata only, do not render text: #116 slot 1 Aegis.",
+      "role": "Guarded contact anchor",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 1850000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "Aegis fills the guarded contact anchor role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Warden tuning supports the melee equipment role; defensive stance and a 25% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Paragon strategy tuning rules with the Warden Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "vaucanson-clockwork-atelier:1:aegis",
+      "folder": "stables/116-vaucanson-clockwork-atelier/robots/01-aegis",
+      "files": {
+        "png": "stables/116-vaucanson-clockwork-atelier/robots/01-aegis/portrait.png",
+        "webp": "stables/116-vaucanson-clockwork-atelier/robots/01-aegis/portrait.webp",
+        "blueprint": "stables/116-vaucanson-clockwork-atelier/robots/01-aegis/blueprint.json",
+        "profile": "stables/116-vaucanson-clockwork-atelier/robots/01-aegis/profile.md",
+        "prompt": "stables/116-vaucanson-clockwork-atelier/robots/01-aegis/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/vaucanson-clockwork-atelier/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 116,
+          "stable_name": "Vaucanson Clockwork Atelier",
+          "catalogue_key": "vaucanson-clockwork-atelier",
+          "slot": 1,
+          "robot_name": "Aegis",
+          "source_identity": "Aegis — Steelrising — Aegis default promotional design",
+          "source_edition": "Steelrising — Aegis default promotional design",
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around EVERY extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic Aegis from Steelrising, an elegant female clockwork automaton with porcelain-like sculpted face, finely engraved brass/steel mechanisms, intricate exposed joints, source eighteenth-century blue French court costume and ornamental metalwork, authentic source hat/headdress. One pair of source metal fan weapons, opened enough to read clearly, graceful grounded ready stance. Preserve game Aegis face/body/outfit, full figure and feet visible, no living human substitute or futuristic robot armour.\nCatalogue label for metadata only, do not render text: #116 slot 1 Aegis.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-3fa0511b-4c17-4a53-84dc-f542762063e0.png",
+          "visual_review": "Accepted — complete framing, limb count, equipment representation and shared portrait style checked.",
+          "asset_id": "vaucanson-clockwork-atelier:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/vaucanson-clockwork-atelier/1.webp",
+          "master": "outputs/automaton-portraits/masters/vaucanson-clockwork-atelier/1.png",
+          "output": "app/frontend/public/assets/automatons/vaucanson-clockwork-atelier/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "59a95d62e85969dff88325e5aeaa42c2a4651fd192dd66df311d87b92cced483",
+          "bytes": 59754,
+          "source_references": [
+            "https://store.steampowered.com/app/1283400/Steelrising/"
+          ]
+        },
+        "sha256": "59a95d62e85969dff88325e5aeaa42c2a4651fd192dd66df311d87b92cced483",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "alternatives": [],
+  "blueprint_status": "detailed",
+  "source_notes": "\n**Franchise:** Steelrising  \n**Strategy:** Paragon · **Target roster:** 1 robot\n**Catalogue key:** `vaucanson-clockwork-atelier`\n\n**Proposed robots:** Aegis\n\n**Direction:** A particularly good visual expansion: ornate clockwork, fine metalwork, fabric, and an unmistakable automaton combatant. Give this flagship a precise equipment/refinement personality while preserving its source design. [Publisher description](https://store.steampowered.com/app/1283400/Steelrising/).\n\n**Production edition:** Steelrising — Aegis default promotional design. Slot order follows the roster above.\n\n",
+  "source_documents": [
+    "reference/AUTOMATON_STABLE_EXPANSION.md"
+  ],
+  "blueprint_origin": "completed during collection",
+  "purchasing_plan": "Open and remain at one robot. Buy its complete stage-1 loadout before refinement. Execute the listed steps in order, progressing Workshop L1/L3/L5/L8 as required. Keep prestige-gated steps pending; fund repairs and maintenance before every purchase.",
+  "target_overrides": {},
+  "equipment_budget": {
+    "stage_0_credits": 101000,
+    "stage_1_credits": 834000,
+    "refinement_credits": 1850000,
+    "excludes": "Frames, facilities, training, repairs, upkeep, discounts and resale; stage-1 total replaces stage-0 gear and is not a simultaneous equipment inventory."
+  },
+  "folder": "stables/116-vaucanson-clockwork-atelier",
+  "history_image_count": 0
+}

@@ -1,0 +1,476 @@
+{
+  "number": 60,
+  "catalogueKey": "citadel-robot-security",
+  "stableName": "Citadel Robot Security",
+  "franchiseLabel": "System Shock",
+  "strategy": "Swarm",
+  "fit": "Direct",
+  "conceptIdentity": "A practical progression from utility frames to stronger weapons platforms. Cold metallic bodies and red sensors; SHODAN is background identity, not a physical robot slot.",
+  "backstory": "Citadel Robot Security enters the arena with a clear doctrine. A practical progression from utility frames to stronger weapons platforms. Every surviving machine returns to the workshop before the next booking.",
+  "openingRobots": 3,
+  "targetRobots": 11,
+  "adminMaximumRobots": 11,
+  "targetOverrides": {},
+  "teamNames": {
+    "2v2": [
+      {
+        "name": "Citadel Pair 01",
+        "slots": [
+          1,
+          2
+        ]
+      },
+      {
+        "name": "Citadel Pair 02",
+        "slots": [
+          3,
+          4
+        ]
+      },
+      {
+        "name": "Citadel Pair 03",
+        "slots": [
+          5,
+          6
+        ]
+      },
+      {
+        "name": "Citadel Pair 04",
+        "slots": [
+          7,
+          8
+        ]
+      },
+      {
+        "name": "Citadel Pair 05",
+        "slots": [
+          9,
+          10
+        ]
+      }
+    ],
+    "3v3": [
+      {
+        "name": "Citadel Squad 01",
+        "slots": [
+          1,
+          2,
+          3
+        ]
+      },
+      {
+        "name": "Citadel Squad 02",
+        "slots": [
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "Citadel Squad 03",
+        "slots": [
+          7,
+          8,
+          9
+        ]
+      }
+    ]
+  },
+  "eventOrder": [
+    "league_1v1",
+    "league_3v3",
+    "league_2v2",
+    "grand_melee",
+    "koth",
+    "tag_team",
+    "tournament_3v3",
+    "tournament_2v2",
+    "tournament_1v1"
+  ],
+  "robots": [
+    {
+      "blueprintId": "citadel-robot-security:1:citadel-maintenance-01",
+      "slot": 1,
+      "name": "Citadel Maintenance 01",
+      "sourceAlias": "maintenance robot",
+      "nameBasis": "Original arena designation",
+      "availability": "opening",
+      "loadout": "single",
+      "stance": "offensive",
+      "yieldThreshold": 15,
+      "buildFocus": "Tactician",
+      "weaponPath": [
+        {
+          "mainWeapon": "Practice Sword",
+          "offhandWeapon": null,
+          "listPriceCredits": 50000
+        },
+        {
+          "mainWeapon": "Vibro Mace",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "melee",
+        "artBrief": "Arena-designated Citadel service robot with dark industrial plates and articulated tool arms.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 0,
+        "imageConvention": "app/frontend/public/assets/automatons/citadel-robot-security/1.webp"
+      }
+    },
+    {
+      "blueprintId": "citadel-robot-security:2:citadel-security-02",
+      "slot": 2,
+      "name": "Citadel Security 02",
+      "sourceAlias": "security robot",
+      "nameBasis": "Original arena designation",
+      "availability": "opening",
+      "loadout": "single",
+      "stance": "offensive",
+      "yieldThreshold": 0,
+      "buildFocus": "Versatile",
+      "weaponPath": [
+        {
+          "mainWeapon": "Laser Pistol",
+          "offhandWeapon": null,
+          "listPriceCredits": 57000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Arena-designated Citadel security robot with cold metal casing and red sensors.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 1,
+        "imageConvention": "app/frontend/public/assets/automatons/citadel-robot-security/2.webp"
+      }
+    },
+    {
+      "blueprintId": "citadel-robot-security:3:citadel-combat-03",
+      "slot": 3,
+      "name": "Citadel Combat 03",
+      "sourceAlias": "combat robot",
+      "nameBasis": "Original arena designation",
+      "availability": "opening",
+      "loadout": "two_handed",
+      "stance": "defensive",
+      "yieldThreshold": 0,
+      "buildFocus": "Warden",
+      "weaponPath": [
+        {
+          "mainWeapon": "Training Rifle",
+          "offhandWeapon": null,
+          "listPriceCredits": 50000
+        },
+        {
+          "mainWeapon": "Plasma Cannon",
+          "offhandWeapon": null,
+          "listPriceCredits": 408000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "mid",
+        "artBrief": "Arena-designated Citadel combat machine with heavy black armour and an emitter assembly.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 2,
+        "imageConvention": "app/frontend/public/assets/automatons/citadel-robot-security/3.webp"
+      }
+    },
+    {
+      "blueprintId": "citadel-robot-security:4:citadel-sentry-04",
+      "slot": 4,
+      "name": "Citadel Sentry 04",
+      "sourceAlias": "Citadel Sentry 04",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 10,
+      "buildFocus": "Versatile",
+      "weaponPath": [
+        {
+          "mainWeapon": "Laser Pistol",
+          "offhandWeapon": null,
+          "listPriceCredits": 57000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Arena-designated Citadel security robot with cold metal casing and red sensors. Arena unit 04 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 3,
+        "imageConvention": "app/frontend/public/assets/automatons/citadel-robot-security/4.webp"
+      }
+    },
+    {
+      "blueprintId": "citadel-robot-security:5:citadel-sentry-05",
+      "slot": 5,
+      "name": "Citadel Sentry 05",
+      "sourceAlias": "Citadel Sentry 05",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 10,
+      "buildFocus": "Deadeye",
+      "weaponPath": [
+        {
+          "mainWeapon": "Beam Pistol",
+          "offhandWeapon": null,
+          "listPriceCredits": 93000
+        },
+        {
+          "mainWeapon": "Particle Lance",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "long",
+        "artBrief": "Arena-designated Citadel security robot with cold metal casing and red sensors. Arena unit 05 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 4,
+        "imageConvention": "app/frontend/public/assets/automatons/citadel-robot-security/5.webp"
+      }
+    },
+    {
+      "blueprintId": "citadel-robot-security:6:citadel-sentry-06",
+      "slot": 6,
+      "name": "Citadel Sentry 06",
+      "sourceAlias": "Citadel Sentry 06",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yieldThreshold": 10,
+      "buildFocus": "Warden",
+      "weaponPath": [
+        {
+          "mainWeapon": "Laser Pistol",
+          "offhandWeapon": "Light Shield",
+          "listPriceCredits": 108000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": "Aegis Bulwark",
+          "listPriceCredits": 834000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Arena-designated Citadel security robot with cold metal casing and red sensors. Arena unit 06 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 5,
+        "imageConvention": "app/frontend/public/assets/automatons/citadel-robot-security/6.webp"
+      }
+    },
+    {
+      "blueprintId": "citadel-robot-security:7:citadel-sentry-07",
+      "slot": 7,
+      "name": "Citadel Sentry 07",
+      "sourceAlias": "Citadel Sentry 07",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 10,
+      "buildFocus": "Deadeye",
+      "weaponPath": [
+        {
+          "mainWeapon": "Bolt Carbine",
+          "offhandWeapon": null,
+          "listPriceCredits": 93000
+        },
+        {
+          "mainWeapon": "Nova Caster",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "mid",
+        "artBrief": "Arena-designated Citadel security robot with cold metal casing and red sensors. Arena unit 07 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 6,
+        "imageConvention": "app/frontend/public/assets/automatons/citadel-robot-security/7.webp"
+      }
+    },
+    {
+      "blueprintId": "citadel-robot-security:8:citadel-sentry-08",
+      "slot": 8,
+      "name": "Citadel Sentry 08",
+      "sourceAlias": "Citadel Sentry 08",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "Bruiser",
+      "weaponPath": [
+        {
+          "mainWeapon": "Scatter Cannon",
+          "offhandWeapon": null,
+          "listPriceCredits": 84000
+        },
+        {
+          "mainWeapon": "Arc Projector",
+          "offhandWeapon": null,
+          "listPriceCredits": 488000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Arena-designated Citadel security robot with cold metal casing and red sensors. Arena unit 08 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 7,
+        "imageConvention": "app/frontend/public/assets/automatons/citadel-robot-security/8.webp"
+      }
+    },
+    {
+      "blueprintId": "citadel-robot-security:9:citadel-sentry-09",
+      "slot": 9,
+      "name": "Citadel Sentry 09",
+      "sourceAlias": "Citadel Sentry 09",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "dual_wield",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "Sprinter",
+      "weaponPath": [
+        {
+          "mainWeapon": "Combat Knife",
+          "offhandWeapon": "Combat Knife",
+          "listPriceCredits": 186000
+        },
+        {
+          "mainWeapon": "Vibro Mace",
+          "offhandWeapon": "Vibro Mace",
+          "listPriceCredits": 850000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "melee",
+        "artBrief": "Arena-designated Citadel security robot with cold metal casing and red sensors. Arena unit 09 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 8,
+        "imageConvention": "app/frontend/public/assets/automatons/citadel-robot-security/9.webp"
+      }
+    },
+    {
+      "blueprintId": "citadel-robot-security:10:citadel-sentry-10",
+      "slot": 10,
+      "name": "Citadel Sentry 10",
+      "sourceAlias": "Citadel Sentry 10",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "Bruiser",
+      "weaponPath": [
+        {
+          "mainWeapon": "Training Rifle",
+          "offhandWeapon": null,
+          "listPriceCredits": 50000
+        },
+        {
+          "mainWeapon": "Plasma Cannon",
+          "offhandWeapon": null,
+          "listPriceCredits": 408000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "mid",
+        "artBrief": "Arena-designated Citadel security robot with cold metal casing and red sensors. Arena unit 10 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 9,
+        "imageConvention": "app/frontend/public/assets/automatons/citadel-robot-security/10.webp"
+      }
+    },
+    {
+      "blueprintId": "citadel-robot-security:11:citadel-sentry-11",
+      "slot": 11,
+      "name": "Citadel Sentry 11",
+      "sourceAlias": "Citadel Sentry 11",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "two_handed",
+      "stance": "defensive",
+      "yieldThreshold": 10,
+      "buildFocus": "Deadeye",
+      "weaponPath": [
+        {
+          "mainWeapon": "Training Beam",
+          "offhandWeapon": null,
+          "listPriceCredits": 50000
+        },
+        {
+          "mainWeapon": "Ion Beam",
+          "offhandWeapon": null,
+          "listPriceCredits": 544000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "long",
+        "artBrief": "Arena-designated Citadel security robot with cold metal casing and red sensors. Arena unit 11 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 10,
+        "imageConvention": "app/frontend/public/assets/automatons/citadel-robot-security/11.webp"
+      }
+    }
+  ],
+  "alternativeBlueprints": [],
+  "review": {
+    "openingWeaponCredits": 157000,
+    "finalWeaponCreditsAtTarget": 5657000,
+    "equippedWeaponCountAtTarget": 13,
+    "purchaseOrder": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+    ],
+    "reserveSlots": [],
+    "alternativeRule": "Choose an alternative before catalogue approval; it replaces the specified slot and never adds another live robot."
+  }
+}

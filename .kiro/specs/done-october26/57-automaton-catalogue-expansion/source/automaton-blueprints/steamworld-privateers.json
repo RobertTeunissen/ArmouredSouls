@@ -1,0 +1,162 @@
+{
+  "number": 29,
+  "catalogueKey": "steamworld-privateers",
+  "stableName": "SteamWorld Privateers",
+  "franchiseLabel": "SteamWorld",
+  "strategy": "Tycoon",
+  "fit": "Direct",
+  "conceptIdentity": "Build income before overextending the crew. Brass boilers, worn steel, pressure gauges, and practical mechanical gunfighters.",
+  "backstory": "SteamWorld Privateers enters the arena with a clear doctrine. Build income before overextending the crew. Every surviving machine returns to the workshop before the next booking.",
+  "openingRobots": 2,
+  "targetRobots": 3,
+  "adminMaximumRobots": 3,
+  "targetOverrides": {
+    "robots": 3
+  },
+  "teamNames": {
+    "2v2": [
+      {
+        "name": "SteamWorld Pair 01",
+        "slots": [
+          1,
+          2
+        ]
+      }
+    ],
+    "3v3": [
+      {
+        "name": "SteamWorld Squad 01",
+        "slots": [
+          1,
+          2,
+          3
+        ]
+      }
+    ]
+  },
+  "eventOrder": [
+    "koth",
+    "grand_melee",
+    "league_1v1",
+    "league_2v2",
+    "tag_team",
+    "tournament_1v1",
+    "tournament_2v2",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "robots": [
+    {
+      "blueprintId": "steamworld-privateers:1:piper-faraday",
+      "slot": 1,
+      "name": "Piper Faraday",
+      "sourceAlias": "Piper Faraday",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 20,
+      "buildFocus": "Tactician",
+      "weaponPath": [
+        {
+          "mainWeapon": "Beam Pistol",
+          "offhandWeapon": null,
+          "listPriceCredits": 93000
+        },
+        {
+          "mainWeapon": "Particle Lance",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "long",
+        "artBrief": "Brass and steel robot captain with a practical gunfighter silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 0,
+        "imageConvention": "app/frontend/public/assets/automatons/steamworld-privateers/1.webp"
+      }
+    },
+    {
+      "blueprintId": "steamworld-privateers:2:sea-brass",
+      "slot": 2,
+      "name": "Sea Brass",
+      "sourceAlias": "Sea Brass",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 15,
+      "buildFocus": "Deadeye",
+      "weaponPath": [
+        {
+          "mainWeapon": "Bolt Carbine",
+          "offhandWeapon": null,
+          "listPriceCredits": 93000
+        },
+        {
+          "mainWeapon": "Nova Caster",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "mid",
+        "artBrief": "Weathered mechanical gunfighter with a broad head and worn nautical styling.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 1,
+        "imageConvention": "app/frontend/public/assets/automatons/steamworld-privateers/2.webp"
+      }
+    },
+    {
+      "blueprintId": "steamworld-privateers:3:ivanski",
+      "slot": 3,
+      "name": "Ivanski",
+      "sourceAlias": "Ivanski",
+      "nameBasis": "Source character or machine designation",
+      "availability": "growth",
+      "loadout": "two_handed",
+      "stance": "balanced",
+      "yieldThreshold": 15,
+      "buildFocus": "Bruiser",
+      "weaponPath": [
+        {
+          "mainWeapon": "War Club",
+          "offhandWeapon": null,
+          "listPriceCredits": 84000
+        },
+        {
+          "mainWeapon": "Heavy Hammer",
+          "offhandWeapon": null,
+          "listPriceCredits": 478000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "melee",
+        "artBrief": "Large boiler-bodied robot strongman with heavy arms and exposed mechanical joints.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 2,
+        "imageConvention": "app/frontend/public/assets/automatons/steamworld-privateers/3.webp"
+      }
+    }
+  ],
+  "alternativeBlueprints": [],
+  "review": {
+    "openingWeaponCredits": 186000,
+    "finalWeaponCreditsAtTarget": 1328000,
+    "equippedWeaponCountAtTarget": 3,
+    "purchaseOrder": [
+      1,
+      2,
+      3
+    ],
+    "reserveSlots": [],
+    "alternativeRule": "Choose an alternative before catalogue approval; it replaces the specified slot and never adds another live robot."
+  }
+}

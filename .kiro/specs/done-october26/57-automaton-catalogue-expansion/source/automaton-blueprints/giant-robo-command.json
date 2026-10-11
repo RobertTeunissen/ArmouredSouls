@@ -1,0 +1,131 @@
+{
+  "number": 93,
+  "catalogueKey": "giant-robo-command",
+  "stableName": "Giant Robo Command",
+  "franchiseLabel": "Giant Robo",
+  "strategy": "Paragon",
+  "fit": "Direct",
+  "conceptIdentity": "One durable heavy machine with major weapon investment. Huge metal body, recognizable head profile, rivets and sober industrial lighting.",
+  "backstory": "Giant Robo Command enters the arena with a clear doctrine. One durable heavy machine with major weapon investment. Every surviving machine returns to the workshop before the next booking.",
+  "openingRobots": 1,
+  "targetRobots": 1,
+  "adminMaximumRobots": 2,
+  "targetOverrides": {},
+  "teamNames": {
+    "2v2": [],
+    "3v3": []
+  },
+  "eventOrder": [
+    "league_1v1",
+    "tournament_1v1",
+    "koth",
+    "grand_melee",
+    "league_2v2",
+    "tag_team",
+    "tournament_2v2",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "robots": [
+    {
+      "blueprintId": "giant-robo-command:1:giant-robo",
+      "slot": 1,
+      "name": "Giant Robo",
+      "sourceAlias": "Giant Robo",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "two_handed",
+      "stance": "defensive",
+      "yieldThreshold": 5,
+      "buildFocus": "Warden",
+      "weaponPath": [
+        {
+          "mainWeapon": "Shotgun",
+          "offhandWeapon": null,
+          "listPriceCredits": 283000
+        },
+        {
+          "mainWeapon": "Plasma Cannon",
+          "offhandWeapon": null,
+          "listPriceCredits": 408000
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "Hone",
+          "weapon": "Plasma Cannon",
+          "weaponSlot": "main",
+          "attribute": "Combat Power",
+          "baseValue": 7,
+          "magnitude": 3,
+          "resultValue": 10,
+          "costCredits": 90000,
+          "workshopLevel": 1,
+          "step": 1
+        },
+        {
+          "tier": "Hone",
+          "weapon": "Plasma Cannon",
+          "weaponSlot": "main",
+          "attribute": "Critical Systems",
+          "baseValue": 6,
+          "magnitude": 4,
+          "resultValue": 10,
+          "costCredits": 160000,
+          "workshopLevel": 1,
+          "step": 2
+        },
+        {
+          "tier": "Augment",
+          "weapon": "Plasma Cannon",
+          "weaponSlot": "main",
+          "attribute": "Hull Integrity",
+          "magnitude": 3,
+          "resultValue": 3,
+          "costCredits": 180000,
+          "workshopLevel": 3,
+          "step": 3
+        },
+        {
+          "tier": "Sharpen",
+          "weapon": "Plasma Cannon",
+          "weaponSlot": "main",
+          "cooldownReductionPercent": 10,
+          "costCredits": 300000,
+          "workshopLevel": 5,
+          "prestigeGate": 3000,
+          "step": 4
+        },
+        {
+          "tier": "Forge",
+          "weapon": "Plasma Cannon",
+          "weaponSlot": "main",
+          "damageIncreasePercent": 8,
+          "costCredits": 400000,
+          "workshopLevel": 8,
+          "prestigeGate": 15000,
+          "step": 5
+        }
+      ],
+      "review": {
+        "rangeFromWeapons": "mid",
+        "artBrief": "Huge dark steel robot with recognizable head profile, broad chest and riveted military panels.",
+        "refinementNote": "Apply in order after stage 1. Dual-wield refinements affect the main-hand copy only; the offhand stays unrefined unless explicitly targeted.",
+        "refinementTotalCredits": 1130000,
+        "minimumRosterExpansionLevel": 0,
+        "imageConvention": "app/frontend/public/assets/automatons/giant-robo-command/1.webp"
+      }
+    }
+  ],
+  "alternativeBlueprints": [],
+  "review": {
+    "openingWeaponCredits": 283000,
+    "finalWeaponCreditsAtTarget": 408000,
+    "equippedWeaponCountAtTarget": 1,
+    "purchaseOrder": [
+      1
+    ],
+    "reserveSlots": [],
+    "alternativeRule": "Choose an alternative before catalogue approval; it replaces the specified slot and never adds another live robot."
+  }
+}

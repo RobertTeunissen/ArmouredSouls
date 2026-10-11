@@ -1,0 +1,476 @@
+{
+  "number": 96,
+  "catalogueKey": "nindroid-assembly-line",
+  "stableName": "Nindroid Assembly Line",
+  "franchiseLabel": "Ninjago",
+  "strategy": "Swarm",
+  "fit": "Direct",
+  "conceptIdentity": "Numerous agile melee-oriented machines. Black and grey armour, mechanical masks, red optics; keep the roster specifically robotic.",
+  "backstory": "Nindroid Assembly Line enters the arena with a clear doctrine. Numerous agile melee-oriented machines. Every surviving machine returns to the workshop before the next booking.",
+  "openingRobots": 3,
+  "targetRobots": 11,
+  "adminMaximumRobots": 11,
+  "targetOverrides": {},
+  "teamNames": {
+    "2v2": [
+      {
+        "name": "Nindroid Pair 01",
+        "slots": [
+          1,
+          2
+        ]
+      },
+      {
+        "name": "Nindroid Pair 02",
+        "slots": [
+          3,
+          4
+        ]
+      },
+      {
+        "name": "Nindroid Pair 03",
+        "slots": [
+          5,
+          6
+        ]
+      },
+      {
+        "name": "Nindroid Pair 04",
+        "slots": [
+          7,
+          8
+        ]
+      },
+      {
+        "name": "Nindroid Pair 05",
+        "slots": [
+          9,
+          10
+        ]
+      }
+    ],
+    "3v3": [
+      {
+        "name": "Nindroid Squad 01",
+        "slots": [
+          1,
+          2,
+          3
+        ]
+      },
+      {
+        "name": "Nindroid Squad 02",
+        "slots": [
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "Nindroid Squad 03",
+        "slots": [
+          7,
+          8,
+          9
+        ]
+      }
+    ]
+  },
+  "eventOrder": [
+    "league_3v3",
+    "league_2v2",
+    "grand_melee",
+    "koth",
+    "league_1v1",
+    "tag_team",
+    "tournament_3v3",
+    "tournament_2v2",
+    "tournament_1v1"
+  ],
+  "robots": [
+    {
+      "blueprintId": "nindroid-assembly-line:1:general-cryptor",
+      "slot": 1,
+      "name": "General Cryptor",
+      "sourceAlias": "General Cryptor",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "dual_wield",
+      "stance": "offensive",
+      "yieldThreshold": 5,
+      "buildFocus": "Tactician",
+      "weaponPath": [
+        {
+          "mainWeapon": "Combat Knife",
+          "offhandWeapon": "Combat Knife",
+          "listPriceCredits": 186000
+        },
+        {
+          "mainWeapon": "Vibro Mace",
+          "offhandWeapon": "Vibro Mace",
+          "listPriceCredits": 850000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "melee",
+        "artBrief": "Black-grey robotic ninja commander with mechanical mask, red optics and layered armour.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 0,
+        "imageConvention": "app/frontend/public/assets/automatons/nindroid-assembly-line/1.webp"
+      }
+    },
+    {
+      "blueprintId": "nindroid-assembly-line:2:min-droid",
+      "slot": 2,
+      "name": "Min-Droid",
+      "sourceAlias": "Min-Droid",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "single",
+      "stance": "offensive",
+      "yieldThreshold": 15,
+      "buildFocus": "Sprinter",
+      "weaponPath": [
+        {
+          "mainWeapon": "Practice Sword",
+          "offhandWeapon": null,
+          "listPriceCredits": 50000
+        },
+        {
+          "mainWeapon": "Vibro Mace",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "melee",
+        "artBrief": "Small black-grey robotic ninja with compact mechanical mask and red optics.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 1,
+        "imageConvention": "app/frontend/public/assets/automatons/nindroid-assembly-line/2.webp"
+      }
+    },
+    {
+      "blueprintId": "nindroid-assembly-line:3:nindroid-03",
+      "slot": 3,
+      "name": "Nindroid 03",
+      "sourceAlias": "Nindroid 03",
+      "nameBasis": "Original arena designation",
+      "availability": "opening",
+      "loadout": "dual_wield",
+      "stance": "offensive",
+      "yieldThreshold": 5,
+      "buildFocus": "Sprinter",
+      "weaponPath": [
+        {
+          "mainWeapon": "Combat Knife",
+          "offhandWeapon": "Combat Knife",
+          "listPriceCredits": 186000
+        },
+        {
+          "mainWeapon": "Vibro Mace",
+          "offhandWeapon": "Vibro Mace",
+          "listPriceCredits": 850000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "melee",
+        "artBrief": "Black-grey robotic ninja with red optics, articulated limbs and paired blade equipment.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 2,
+        "imageConvention": "app/frontend/public/assets/automatons/nindroid-assembly-line/3.webp"
+      }
+    },
+    {
+      "blueprintId": "nindroid-assembly-line:4:nindroid-04",
+      "slot": 4,
+      "name": "Nindroid 04",
+      "sourceAlias": "Nindroid 04",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 10,
+      "buildFocus": "Versatile",
+      "weaponPath": [
+        {
+          "mainWeapon": "Laser Pistol",
+          "offhandWeapon": null,
+          "listPriceCredits": 57000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Black-grey robotic ninja with red optics, articulated limbs and paired blade equipment. Arena unit 04 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 3,
+        "imageConvention": "app/frontend/public/assets/automatons/nindroid-assembly-line/4.webp"
+      }
+    },
+    {
+      "blueprintId": "nindroid-assembly-line:5:nindroid-05",
+      "slot": 5,
+      "name": "Nindroid 05",
+      "sourceAlias": "Nindroid 05",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 10,
+      "buildFocus": "Deadeye",
+      "weaponPath": [
+        {
+          "mainWeapon": "Beam Pistol",
+          "offhandWeapon": null,
+          "listPriceCredits": 93000
+        },
+        {
+          "mainWeapon": "Particle Lance",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "long",
+        "artBrief": "Black-grey robotic ninja with red optics, articulated limbs and paired blade equipment. Arena unit 05 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 4,
+        "imageConvention": "app/frontend/public/assets/automatons/nindroid-assembly-line/5.webp"
+      }
+    },
+    {
+      "blueprintId": "nindroid-assembly-line:6:nindroid-06",
+      "slot": 6,
+      "name": "Nindroid 06",
+      "sourceAlias": "Nindroid 06",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yieldThreshold": 10,
+      "buildFocus": "Warden",
+      "weaponPath": [
+        {
+          "mainWeapon": "Laser Pistol",
+          "offhandWeapon": "Light Shield",
+          "listPriceCredits": 108000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": "Aegis Bulwark",
+          "listPriceCredits": 834000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Black-grey robotic ninja with red optics, articulated limbs and paired blade equipment. Arena unit 06 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 5,
+        "imageConvention": "app/frontend/public/assets/automatons/nindroid-assembly-line/6.webp"
+      }
+    },
+    {
+      "blueprintId": "nindroid-assembly-line:7:nindroid-07",
+      "slot": 7,
+      "name": "Nindroid 07",
+      "sourceAlias": "Nindroid 07",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 10,
+      "buildFocus": "Deadeye",
+      "weaponPath": [
+        {
+          "mainWeapon": "Bolt Carbine",
+          "offhandWeapon": null,
+          "listPriceCredits": 93000
+        },
+        {
+          "mainWeapon": "Nova Caster",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "mid",
+        "artBrief": "Black-grey robotic ninja with red optics, articulated limbs and paired blade equipment. Arena unit 07 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 6,
+        "imageConvention": "app/frontend/public/assets/automatons/nindroid-assembly-line/7.webp"
+      }
+    },
+    {
+      "blueprintId": "nindroid-assembly-line:8:nindroid-08",
+      "slot": 8,
+      "name": "Nindroid 08",
+      "sourceAlias": "Nindroid 08",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "Bruiser",
+      "weaponPath": [
+        {
+          "mainWeapon": "Scatter Cannon",
+          "offhandWeapon": null,
+          "listPriceCredits": 84000
+        },
+        {
+          "mainWeapon": "Arc Projector",
+          "offhandWeapon": null,
+          "listPriceCredits": 488000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Black-grey robotic ninja with red optics, articulated limbs and paired blade equipment. Arena unit 08 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 7,
+        "imageConvention": "app/frontend/public/assets/automatons/nindroid-assembly-line/8.webp"
+      }
+    },
+    {
+      "blueprintId": "nindroid-assembly-line:9:nindroid-09",
+      "slot": 9,
+      "name": "Nindroid 09",
+      "sourceAlias": "Nindroid 09",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "dual_wield",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "Sprinter",
+      "weaponPath": [
+        {
+          "mainWeapon": "Combat Knife",
+          "offhandWeapon": "Combat Knife",
+          "listPriceCredits": 186000
+        },
+        {
+          "mainWeapon": "Vibro Mace",
+          "offhandWeapon": "Vibro Mace",
+          "listPriceCredits": 850000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "melee",
+        "artBrief": "Black-grey robotic ninja with red optics, articulated limbs and paired blade equipment. Arena unit 09 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 8,
+        "imageConvention": "app/frontend/public/assets/automatons/nindroid-assembly-line/9.webp"
+      }
+    },
+    {
+      "blueprintId": "nindroid-assembly-line:10:nindroid-10",
+      "slot": 10,
+      "name": "Nindroid 10",
+      "sourceAlias": "Nindroid 10",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "Bruiser",
+      "weaponPath": [
+        {
+          "mainWeapon": "Training Rifle",
+          "offhandWeapon": null,
+          "listPriceCredits": 50000
+        },
+        {
+          "mainWeapon": "Plasma Cannon",
+          "offhandWeapon": null,
+          "listPriceCredits": 408000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "mid",
+        "artBrief": "Black-grey robotic ninja with red optics, articulated limbs and paired blade equipment. Arena unit 10 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 9,
+        "imageConvention": "app/frontend/public/assets/automatons/nindroid-assembly-line/10.webp"
+      }
+    },
+    {
+      "blueprintId": "nindroid-assembly-line:11:nindroid-11",
+      "slot": 11,
+      "name": "Nindroid 11",
+      "sourceAlias": "Nindroid 11",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "two_handed",
+      "stance": "defensive",
+      "yieldThreshold": 10,
+      "buildFocus": "Deadeye",
+      "weaponPath": [
+        {
+          "mainWeapon": "Training Beam",
+          "offhandWeapon": null,
+          "listPriceCredits": 50000
+        },
+        {
+          "mainWeapon": "Ion Beam",
+          "offhandWeapon": null,
+          "listPriceCredits": 544000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "long",
+        "artBrief": "Black-grey robotic ninja with red optics, articulated limbs and paired blade equipment. Arena unit 11 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 10,
+        "imageConvention": "app/frontend/public/assets/automatons/nindroid-assembly-line/11.webp"
+      }
+    }
+  ],
+  "alternativeBlueprints": [],
+  "review": {
+    "openingWeaponCredits": 422000,
+    "finalWeaponCreditsAtTarget": 6524000,
+    "equippedWeaponCountAtTarget": 15,
+    "purchaseOrder": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+    ],
+    "reserveSlots": [],
+    "alternativeRule": "Choose an alternative before catalogue approval; it replaces the specified slot and never adds another live robot."
+  }
+}

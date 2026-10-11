@@ -1,0 +1,195 @@
+{
+  "schemaVersion": 1,
+  "catalogueKey": "robocraft-assembly-yard",
+  "stableName": "Robocraft Assembly Yard",
+  "franchise": "Robocraft",
+  "backstory": "Robocraft Assembly Yard enters the arena with a clear doctrine. Facility-led investment in a small modular roster. Every surviving machine returns to the workshop before the next booking.",
+  "strategy": {
+    "key": "tycoon",
+    "version": 1,
+    "targetOverrides": {
+      "20": 3
+    }
+  },
+  "teamNames": {
+    "twoVsTwo": [
+      "Tech Tree Climbers"
+    ],
+    "threeVsThree": [
+      "Battle Arena Crew"
+    ]
+  },
+  "eventOrder": [
+    "koth",
+    "grand_melee",
+    "league_1v1",
+    "league_2v2",
+    "tag_team",
+    "tournament_1v1",
+    "tournament_2v2",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "blueprints": [
+    {
+      "slot": 1,
+      "robotName": "Ion Strider",
+      "loadoutType": "dual_wield",
+      "stance": "balanced",
+      "yieldThreshold": 15,
+      "buildFocus": "versatile",
+      "weaponPath": [
+        {
+          "main": "Bolt Carbine",
+          "offhand": "Bolt Carbine"
+        },
+        {
+          "main": "Nova Caster",
+          "offhand": "Nova Caster"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "offhand",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "offhand",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "offhand",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "offhand",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "magnitude": 2,
+          "targetAttribute": "combatPower"
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "magnitude": 2,
+          "targetAttribute": "combatPower"
+        }
+      ]
+    },
+    {
+      "slot": 2,
+      "robotName": "Plasma Crawler",
+      "loadoutType": "two_handed",
+      "stance": "defensive",
+      "yieldThreshold": 10,
+      "buildFocus": "warden",
+      "weaponPath": [
+        {
+          "main": "Training Rifle"
+        },
+        {
+          "main": "Plasma Cannon"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "augment",
+          "hand": "main",
+          "magnitude": 1,
+          "targetAttribute": "armorPlating"
+        }
+      ]
+    },
+    {
+      "slot": 3,
+      "robotName": "SMG Sprinter",
+      "loadoutType": "single",
+      "stance": "balanced",
+      "yieldThreshold": 25,
+      "buildFocus": "sprinter",
+      "weaponPath": [
+        {
+          "main": "Laser Pistol"
+        },
+        {
+          "main": "Volt Sabre"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "magnitude": 2,
+          "targetAttribute": "powerCore"
+        }
+      ]
+    }
+  ]
+}

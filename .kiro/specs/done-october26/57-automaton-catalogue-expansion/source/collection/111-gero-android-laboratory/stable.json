@@ -1,0 +1,342 @@
+{
+  "number": 111,
+  "catalogue_key": "gero-android-laboratory",
+  "name": "Gero Android Laboratory",
+  "franchise": "Dragon Ball",
+  "strategy": "Trio",
+  "opening_robots": 3,
+  "target_robots": 3,
+  "max_planned_robots": 3,
+  "strategy_review_limit": 4,
+  "backstory": "Heavy firepower, protected endurance and mobile pressure give the laboratory three different answers to an arena contract. All three receive equipment before any luxury spending.",
+  "strategy_personality": "A conspicuous missing franchise and an established three-character grouping. Android 16 is fully synthetic; 17 and 18 are human-based androids, so retain their authentic human appearance under the existing cyborg convention. Green armour and familiar clothing distinguish them. [Official android background](https://en.dragon-ball-official.com/news/01_531.html).",
+  "teams": {
+    "2v2": [
+      {
+        "name": "Android Lab Pair 01",
+        "slots": [
+          1,
+          2
+        ],
+        "forms": "Opening"
+      }
+    ],
+    "3v3": [
+      {
+        "name": "Android Lab Squad 01",
+        "slots": [
+          1,
+          2,
+          3
+        ],
+        "forms": "Opening"
+      }
+    ]
+  },
+  "event_order": [
+    "league_3v3",
+    "tournament_3v3",
+    "league_2v2",
+    "tag_team",
+    "league_1v1",
+    "koth",
+    "grand_melee",
+    "tournament_2v2",
+    "tournament_1v1"
+  ],
+  "robots": [
+    {
+      "slot": 1,
+      "name": "Android 16",
+      "source_identity": "Android 16 — Dragon Ball Z — Cell saga appearances",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Bruiser",
+      "range_from_weapons": "mid",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Training Rifle",
+          "offhand_weapon": null,
+          "list_price_credits": 50000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Plasma Cannon",
+          "offhand_weapon": null,
+          "list_price_credits": 408000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 85% of square canvas with breathing room. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic adult Android 16 from Dragon Ball Z Cell saga, tall exceptionally muscular humanoid with human face, short upright red mohawk and stern expression, broad green segmented armour over a black bodysuit, thick green forearm guards and boots. Preserve human skin and source clothing proportions. Both arms at relaxed ready angle, no gun or invented metal face.\nCatalogue label for metadata only, do not render text: #111 slot 1 Android 16.",
+      "role": "Heavy mid-range pressure",
+      "missing_fields": [],
+      "refinement_note": "Trio follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "Android 16 fills the heavy mid-range pressure role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Bruiser tuning supports the mid equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Trio strategy tuning rules with the Bruiser Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "gero-android-laboratory:1:android-16",
+      "folder": "stables/111-gero-android-laboratory/robots/01-android-16",
+      "files": {
+        "png": "stables/111-gero-android-laboratory/robots/01-android-16/portrait.png",
+        "webp": "stables/111-gero-android-laboratory/robots/01-android-16/portrait.webp",
+        "blueprint": "stables/111-gero-android-laboratory/robots/01-android-16/blueprint.json",
+        "profile": "stables/111-gero-android-laboratory/robots/01-android-16/profile.md",
+        "prompt": "stables/111-gero-android-laboratory/robots/01-android-16/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/gero-android-laboratory/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 111,
+          "stable_name": "Gero Android Laboratory",
+          "catalogue_key": "gero-android-laboratory",
+          "slot": 1,
+          "robot_name": "Android 16",
+          "source_identity": "Android 16 — Dragon Ball Z — Cell saga appearances",
+          "source_edition": "Dragon Ball Z — Cell saga appearances",
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 85% of square canvas with breathing room. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic adult Android 16 from Dragon Ball Z Cell saga, tall exceptionally muscular humanoid with human face, short upright red mohawk and stern expression, broad green segmented armour over a black bodysuit, thick green forearm guards and boots. Preserve human skin and source clothing proportions. Both arms at relaxed ready angle, no gun or invented metal face.\nCatalogue label for metadata only, do not render text: #111 slot 1 Android 16.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-c3ae4279-baed-4ef2-8ae3-2b3f34f10235.png",
+          "visual_review": "Accepted — full body, silhouette, material style and source details checked; corrected Fugitoid lights/display and Anubis framing selected where applicable.",
+          "asset_id": "gero-android-laboratory:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/gero-android-laboratory/1.webp",
+          "master": "outputs/automaton-portraits/masters/gero-android-laboratory/1.png",
+          "output": "app/frontend/public/assets/automatons/gero-android-laboratory/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "766e1a0d46d99868678f02986ec1e5f5d1e6c8163ff4ab1d57b377846ba808d7",
+          "bytes": 34870,
+          "source_references": [
+            "https://en.dragon-ball-official.com/news/01_531.html"
+          ]
+        },
+        "sha256": "766e1a0d46d99868678f02986ec1e5f5d1e6c8163ff4ab1d57b377846ba808d7",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 2,
+      "name": "Android 17",
+      "source_identity": "Android 17 — Dragon Ball Z — Cell saga appearances",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yield_threshold": 25,
+      "build_focus": "Warden",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": "Light Shield",
+          "list_price_credits": 108000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": "Aegis Bulwark",
+          "list_price_credits": 834000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 85% of square canvas with breathing room. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic adult Android 17 from Dragon Ball Z Cell saga, slim athletic human-looking male with pale skin, chin-length straight black hair parted at middle, red/orange neck scarf, short-sleeved black shirt over white long sleeves, blue jeans, belt and green socks with source shoes. Full figure, calm ready stance, hands visible, no weapons or mechanical face. Render as premium realistic game character while keeping recognisable source style.\nCatalogue label for metadata only, do not render text: #111 slot 2 Android 17.",
+      "role": "Protected short-range anchor",
+      "missing_fields": [],
+      "refinement_note": "Trio follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 1,
+      "equipment_interpretation": "Android 17 fills the protected short-range anchor role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Warden tuning supports the short equipment role; defensive stance and a 25% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Trio strategy tuning rules with the Warden Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "gero-android-laboratory:2:android-17",
+      "folder": "stables/111-gero-android-laboratory/robots/02-android-17",
+      "files": {
+        "png": "stables/111-gero-android-laboratory/robots/02-android-17/portrait.png",
+        "webp": "stables/111-gero-android-laboratory/robots/02-android-17/portrait.webp",
+        "blueprint": "stables/111-gero-android-laboratory/robots/02-android-17/blueprint.json",
+        "profile": "stables/111-gero-android-laboratory/robots/02-android-17/profile.md",
+        "prompt": "stables/111-gero-android-laboratory/robots/02-android-17/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/gero-android-laboratory/2.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 111,
+          "stable_name": "Gero Android Laboratory",
+          "catalogue_key": "gero-android-laboratory",
+          "slot": 2,
+          "robot_name": "Android 17",
+          "source_identity": "Android 17 — Dragon Ball Z — Cell saga appearances",
+          "source_edition": "Dragon Ball Z — Cell saga appearances",
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 85% of square canvas with breathing room. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic adult Android 17 from Dragon Ball Z Cell saga, slim athletic human-looking male with pale skin, chin-length straight black hair parted at middle, red/orange neck scarf, short-sleeved black shirt over white long sleeves, blue jeans, belt and green socks with source shoes. Full figure, calm ready stance, hands visible, no weapons or mechanical face. Render as premium realistic game character while keeping recognisable source style.\nCatalogue label for metadata only, do not render text: #111 slot 2 Android 17.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-f0c154b1-6c7f-47e8-8472-b1a5622a4306.png",
+          "visual_review": "Accepted — full body, silhouette, material style and source details checked; corrected Fugitoid lights/display and Anubis framing selected where applicable.",
+          "asset_id": "gero-android-laboratory:2",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/gero-android-laboratory/2.webp",
+          "master": "outputs/automaton-portraits/masters/gero-android-laboratory/2.png",
+          "output": "app/frontend/public/assets/automatons/gero-android-laboratory/2.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "e00c958564cdd99817d460c947e8799c4fb932b22407d8694cc08aed7195871e",
+          "bytes": 39304,
+          "source_references": [
+            "https://en.dragon-ball-official.com/news/01_531.html"
+          ]
+        },
+        "sha256": "e00c958564cdd99817d460c947e8799c4fb932b22407d8694cc08aed7195871e",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 3,
+      "name": "Android 18",
+      "source_identity": "Android 18 — Dragon Ball Z — Cell saga appearances",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "dual_wield",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Sprinter",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": "Laser Pistol",
+          "list_price_credits": 114000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": "Volt Sabre",
+          "list_price_credits": 850000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 85% of square canvas with breathing room. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic adult Android 18 from Dragon Ball Z Cell saga, human-looking athletic woman, fair skin, chin-length side-parted straight blonde bob and blue eyes, denim vest and short denim skirt over black shirt with blue-and-white striped long sleeves, brown boots. Full figure, neutral confident ready stance and hands visible, source outfit, no sexualised pose, no invented metal skin or firearm.\nCatalogue label for metadata only, do not render text: #111 slot 3 Android 18.",
+      "role": "Mobile paired-fire attacker",
+      "missing_fields": [],
+      "refinement_note": "Trio follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 2,
+      "equipment_interpretation": "Android 18 fills the mobile paired-fire attacker role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Sprinter tuning supports the short equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Trio strategy tuning rules with the Sprinter Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "gero-android-laboratory:3:android-18",
+      "folder": "stables/111-gero-android-laboratory/robots/03-android-18",
+      "files": {
+        "png": "stables/111-gero-android-laboratory/robots/03-android-18/portrait.png",
+        "webp": "stables/111-gero-android-laboratory/robots/03-android-18/portrait.webp",
+        "blueprint": "stables/111-gero-android-laboratory/robots/03-android-18/blueprint.json",
+        "profile": "stables/111-gero-android-laboratory/robots/03-android-18/profile.md",
+        "prompt": "stables/111-gero-android-laboratory/robots/03-android-18/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/gero-android-laboratory/3.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 111,
+          "stable_name": "Gero Android Laboratory",
+          "catalogue_key": "gero-android-laboratory",
+          "slot": 3,
+          "robot_name": "Android 18",
+          "source_identity": "Android 18 — Dragon Ball Z — Cell saga appearances",
+          "source_edition": "Dragon Ball Z — Cell saga appearances",
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 85% of square canvas with breathing room. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic adult Android 18 from Dragon Ball Z Cell saga, human-looking athletic woman, fair skin, chin-length side-parted straight blonde bob and blue eyes, denim vest and short denim skirt over black shirt with blue-and-white striped long sleeves, brown boots. Full figure, neutral confident ready stance and hands visible, source outfit, no sexualised pose, no invented metal skin or firearm.\nCatalogue label for metadata only, do not render text: #111 slot 3 Android 18.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-b5f9b4d7-d7e3-4f35-bb27-73b80bbcd89e.png",
+          "visual_review": "Accepted — full body, silhouette, material style and source details checked; corrected Fugitoid lights/display and Anubis framing selected where applicable.",
+          "asset_id": "gero-android-laboratory:3",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/gero-android-laboratory/3.webp",
+          "master": "outputs/automaton-portraits/masters/gero-android-laboratory/3.png",
+          "output": "app/frontend/public/assets/automatons/gero-android-laboratory/3.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "705f90fed6b5c0e472e13c5b9301b4d162ae4133b5f4d765945e64ebc6ce2b80",
+          "bytes": 32488,
+          "source_references": [
+            "https://en.dragon-ball-official.com/news/01_531.html"
+          ]
+        },
+        "sha256": "705f90fed6b5c0e472e13c5b9301b4d162ae4133b5f4d765945e64ebc6ce2b80",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "alternatives": [],
+  "blueprint_status": "detailed",
+  "source_notes": "\n**Franchise:** Dragon Ball  \n**Strategy:** Trio · **Target roster:** 3 robots\n**Catalogue key:** `gero-android-laboratory`\n\n**Proposed robots:** Android 16; Android 17; Android 18\n\n**Direction:** A conspicuous missing franchise and an established three-character grouping. Android 16 is fully synthetic; 17 and 18 are human-based androids, so retain their authentic human appearance under the existing cyborg convention. Green armour and familiar clothing distinguish them. [Official android background](https://en.dragon-ball-official.com/news/01_531.html).\n\n**Production edition:** Dragon Ball Z — Cell saga appearances. Slot order follows the roster above.\n\n",
+  "source_documents": [
+    "reference/AUTOMATON_STABLE_EXPANSION.md"
+  ],
+  "blueprint_origin": "completed during collection",
+  "purchasing_plan": "Open with all three robots. Maintain and tune the trio together; complete stage-1 equipment in slot order. No weapon refinement purchases.",
+  "target_overrides": {},
+  "equipment_budget": {
+    "stage_0_credits": 272000,
+    "stage_1_credits": 2092000,
+    "refinement_credits": 0,
+    "excludes": "Frames, facilities, training, repairs, upkeep, discounts and resale; stage-1 total replaces stage-0 gear and is not a simultaneous equipment inventory."
+  },
+  "folder": "stables/111-gero-android-laboratory",
+  "history_image_count": 0
+}

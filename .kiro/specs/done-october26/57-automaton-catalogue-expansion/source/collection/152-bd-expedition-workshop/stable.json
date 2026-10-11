@@ -1,0 +1,198 @@
+{
+  "number": 152,
+  "catalogue_key": "bd-expedition-workshop",
+  "name": "BD Expedition Workshop",
+  "franchise": "Star Wars",
+  "strategy": "Paragon",
+  "opening_robots": 1,
+  "target_robots": 1,
+  "max_planned_robots": 1,
+  "strategy_review_limit": 2,
+  "backstory": "A small expedition machine survives through mobility, careful retreat and a compact arena weapon. The workshop keeps its one familiar body intact while buying measured upgrades.",
+  "strategy_personality": "Excellent miniature robot identity, but its source role is exploration assistance, so it needs a careful arena adaptation. [BD-1](https://www.starwars.com/databank/bd-1).",
+  "teams": {
+    "2v2": [],
+    "3v3": []
+  },
+  "event_order": [
+    "league_1v1",
+    "tournament_1v1",
+    "koth",
+    "grand_melee",
+    "league_2v2",
+    "tag_team",
+    "tournament_2v2",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "robots": [
+    {
+      "slot": 1,
+      "name": "BD-1",
+      "source_identity": "BD-1",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 20,
+      "build_focus": "Sprinter",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": null,
+          "list_price_credits": 57000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Hone",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 1,
+          "attribute": "Attack Speed",
+          "magnitude": 3,
+          "result_value": 7,
+          "cost_credits": 90000,
+          "base_value": 4,
+          "effect": "Attack Speed 4→7",
+          "step": 1
+        },
+        {
+          "operation": "Augment",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 3,
+          "attribute": "Evasion Thrusters",
+          "magnitude": 2,
+          "result_value": 2,
+          "cost_credits": 80000,
+          "effect": "Evasion Thrusters, new +2",
+          "step": 2
+        },
+        {
+          "operation": "Sharpen",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 1,
+          "cost_credits": 300000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 3
+        },
+        {
+          "operation": "Sharpen",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 2,
+          "cost_credits": 900000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 4
+        },
+        {
+          "operation": "Forge",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 8,
+          "occurrence": 1,
+          "cost_credits": 400000,
+          "prestige_gate": 15000,
+          "effect": "+8% damage",
+          "step": 5
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic BD-1 from Jedi Fallen Order. Tiny white and red explorer droid, horizontal binocular head with mismatched camera lenses, side aerial, compact slim white body and two long birdlike reverse-jointed mechanical legs with little foot pads. Source base colours and back details, curious three-quarter stance with tilted head, entire antenna and both feet visible. No humanlike arms, no oversized new weapon or carrying human.\nMetadata only, do not render text: #152 slot 1 BD-1.",
+      "role": "Mobile skirmisher",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 1770000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "BD-1 fills the mobile skirmisher role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Sprinter tuning supports the short equipment role; balanced stance and a 20% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Paragon strategy tuning rules with the Sprinter Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "bd-expedition-workshop:1:bd-1",
+      "folder": "stables/152-bd-expedition-workshop/robots/01-bd-1",
+      "files": {
+        "png": "stables/152-bd-expedition-workshop/robots/01-bd-1/portrait.png",
+        "webp": "stables/152-bd-expedition-workshop/robots/01-bd-1/portrait.webp",
+        "blueprint": "stables/152-bd-expedition-workshop/robots/01-bd-1/blueprint.json",
+        "profile": "stables/152-bd-expedition-workshop/robots/01-bd-1/profile.md",
+        "prompt": "stables/152-bd-expedition-workshop/robots/01-bd-1/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/bd-expedition-workshop/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 152,
+          "stable_name": "BD Expedition Workshop",
+          "catalogue_key": "bd-expedition-workshop",
+          "slot": 1,
+          "robot_name": "BD-1",
+          "source_identity": "BD-1",
+          "source_edition": "Star Wars Jedi Fallen Order — 2019 default BD-1",
+          "source_references": [
+            "https://www.starwars.com/databank/bd-1"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic BD-1 from Jedi Fallen Order. Tiny white and red explorer droid, horizontal binocular head with mismatched camera lenses, side aerial, compact slim white body and two long birdlike reverse-jointed mechanical legs with little foot pads. Source base colours and back details, curious three-quarter stance with tilted head, entire antenna and both feet visible. No humanlike arms, no oversized new weapon or carrying human.\nMetadata only, do not render text: #152 slot 1 BD-1.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-159704fc-bbd3-44f9-b8e8-4d460d142dfb.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "bd-expedition-workshop:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/bd-expedition-workshop/1.webp",
+          "master": "outputs/automaton-portraits/masters/bd-expedition-workshop/1.png",
+          "output": "app/frontend/public/assets/automatons/bd-expedition-workshop/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "baa4928f10b6718a4bbb035c5ffe2be784a3c2ae700f0e6afa89755cf870a259",
+          "bytes": 43448
+        },
+        "sha256": "baa4928f10b6718a4bbb035c5ffe2be784a3c2ae700f0e6afa89755cf870a259",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "alternatives": [],
+  "blueprint_status": "detailed",
+  "source_notes": "\n**Franchise:** Star Wars  \n**Strategy:** Paragon · **Target roster:** 1 robot\n\n**Proposed robots:** BD-1.\n\n**Direction:** Excellent miniature robot identity, but its source role is exploration assistance, so it needs a careful arena adaptation. [BD-1](https://www.starwars.com/databank/bd-1).\n\n**Production edition:** Star Wars Jedi Fallen Order — 2019 default BD-1.  \n**Catalogue key:** `bd-expedition-workshop`\n\n",
+  "source_documents": [
+    "reference/AUTOMATON_STABLE_EXPANSION.md"
+  ],
+  "blueprint_origin": "completed during collection",
+  "purchasing_plan": "Open and remain at one robot. Buy its complete stage-1 loadout before refinement. Execute the listed steps in order, progressing Workshop L1/L3/L5/L8 as required. Keep prestige-gated steps pending; fund repairs and maintenance before every purchase.",
+  "target_overrides": {},
+  "equipment_budget": {
+    "stage_0_credits": 57000,
+    "stage_1_credits": 425000,
+    "refinement_credits": 1770000,
+    "excludes": "Frames, facilities, training, repairs, upkeep, discounts and resale; stage-1 total replaces stage-0 gear and is not a simultaneous equipment inventory."
+  },
+  "folder": "stables/152-bd-expedition-workshop",
+  "history_image_count": 0
+}

@@ -1,0 +1,476 @@
+{
+  "number": 59,
+  "catalogueKey": "ptmc-mining-rebellion",
+  "stableName": "PTMC Mining Rebellion",
+  "franchiseLabel": "Descent",
+  "strategy": "Swarm",
+  "fit": "Direct",
+  "conceptIdentity": "Varied industrial drones built around ranged pressure. Retro mining hardware, utilitarian sensors, chunky plating, orange safety paint.",
+  "backstory": "PTMC Mining Rebellion enters the arena with a clear doctrine. Varied industrial drones built around ranged pressure. Every surviving machine returns to the workshop before the next booking.",
+  "openingRobots": 3,
+  "targetRobots": 11,
+  "adminMaximumRobots": 11,
+  "targetOverrides": {},
+  "teamNames": {
+    "2v2": [
+      {
+        "name": "PTMC Pair 01",
+        "slots": [
+          1,
+          2
+        ]
+      },
+      {
+        "name": "PTMC Pair 02",
+        "slots": [
+          3,
+          4
+        ]
+      },
+      {
+        "name": "PTMC Pair 03",
+        "slots": [
+          5,
+          6
+        ]
+      },
+      {
+        "name": "PTMC Pair 04",
+        "slots": [
+          7,
+          8
+        ]
+      },
+      {
+        "name": "PTMC Pair 05",
+        "slots": [
+          9,
+          10
+        ]
+      }
+    ],
+    "3v3": [
+      {
+        "name": "PTMC Squad 01",
+        "slots": [
+          1,
+          2,
+          3
+        ]
+      },
+      {
+        "name": "PTMC Squad 02",
+        "slots": [
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "PTMC Squad 03",
+        "slots": [
+          7,
+          8,
+          9
+        ]
+      }
+    ]
+  },
+  "eventOrder": [
+    "league_3v3",
+    "league_2v2",
+    "grand_melee",
+    "koth",
+    "league_1v1",
+    "tag_team",
+    "tournament_3v3",
+    "tournament_2v2",
+    "tournament_1v1"
+  ],
+  "robots": [
+    {
+      "blueprintId": "ptmc-mining-rebellion:1:ptmc-miner-01",
+      "slot": 1,
+      "name": "PTMC Miner 01",
+      "sourceAlias": "mining robot",
+      "nameBasis": "Original arena designation",
+      "availability": "opening",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 15,
+      "buildFocus": "Tactician",
+      "weaponPath": [
+        {
+          "mainWeapon": "Laser Pistol",
+          "offhandWeapon": null,
+          "listPriceCredits": 57000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Arena-designated mining robot with retro orange safety paint and a utility lens.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 0,
+        "imageConvention": "app/frontend/public/assets/automatons/ptmc-mining-rebellion/1.webp"
+      }
+    },
+    {
+      "blueprintId": "ptmc-mining-rebellion:2:ptmc-security-02",
+      "slot": 2,
+      "name": "PTMC Security 02",
+      "sourceAlias": "security robot",
+      "nameBasis": "Original arena designation",
+      "availability": "opening",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 5,
+      "buildFocus": "Deadeye",
+      "weaponPath": [
+        {
+          "mainWeapon": "Bolt Carbine",
+          "offhandWeapon": null,
+          "listPriceCredits": 93000
+        },
+        {
+          "mainWeapon": "Nova Caster",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "mid",
+        "artBrief": "Arena-designated mining security robot with angular sensor housing and ranged mounts.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 1,
+        "imageConvention": "app/frontend/public/assets/automatons/ptmc-mining-rebellion/2.webp"
+      }
+    },
+    {
+      "blueprintId": "ptmc-mining-rebellion:3:ptmc-heavy-03",
+      "slot": 3,
+      "name": "PTMC Heavy 03",
+      "sourceAlias": "heavy combat robot",
+      "nameBasis": "Original arena designation",
+      "availability": "opening",
+      "loadout": "two_handed",
+      "stance": "defensive",
+      "yieldThreshold": 0,
+      "buildFocus": "Warden",
+      "weaponPath": [
+        {
+          "mainWeapon": "Training Rifle",
+          "offhandWeapon": null,
+          "listPriceCredits": 50000
+        },
+        {
+          "mainWeapon": "Plasma Cannon",
+          "offhandWeapon": null,
+          "listPriceCredits": 408000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "mid",
+        "artBrief": "Arena-designated heavy mining combat robot with thick plates and broad weapon pods.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 2,
+        "imageConvention": "app/frontend/public/assets/automatons/ptmc-mining-rebellion/3.webp"
+      }
+    },
+    {
+      "blueprintId": "ptmc-mining-rebellion:4:ptmc-drone-04",
+      "slot": 4,
+      "name": "PTMC Drone 04",
+      "sourceAlias": "PTMC Drone 04",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 10,
+      "buildFocus": "Versatile",
+      "weaponPath": [
+        {
+          "mainWeapon": "Laser Pistol",
+          "offhandWeapon": null,
+          "listPriceCredits": 57000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Arena-designated mining robot with retro orange safety paint and a utility lens. Arena unit 04 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 3,
+        "imageConvention": "app/frontend/public/assets/automatons/ptmc-mining-rebellion/4.webp"
+      }
+    },
+    {
+      "blueprintId": "ptmc-mining-rebellion:5:ptmc-drone-05",
+      "slot": 5,
+      "name": "PTMC Drone 05",
+      "sourceAlias": "PTMC Drone 05",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 10,
+      "buildFocus": "Deadeye",
+      "weaponPath": [
+        {
+          "mainWeapon": "Beam Pistol",
+          "offhandWeapon": null,
+          "listPriceCredits": 93000
+        },
+        {
+          "mainWeapon": "Particle Lance",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "long",
+        "artBrief": "Arena-designated mining robot with retro orange safety paint and a utility lens. Arena unit 05 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 4,
+        "imageConvention": "app/frontend/public/assets/automatons/ptmc-mining-rebellion/5.webp"
+      }
+    },
+    {
+      "blueprintId": "ptmc-mining-rebellion:6:ptmc-drone-06",
+      "slot": 6,
+      "name": "PTMC Drone 06",
+      "sourceAlias": "PTMC Drone 06",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yieldThreshold": 10,
+      "buildFocus": "Warden",
+      "weaponPath": [
+        {
+          "mainWeapon": "Laser Pistol",
+          "offhandWeapon": "Light Shield",
+          "listPriceCredits": 108000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": "Aegis Bulwark",
+          "listPriceCredits": 834000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Arena-designated mining robot with retro orange safety paint and a utility lens. Arena unit 06 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 5,
+        "imageConvention": "app/frontend/public/assets/automatons/ptmc-mining-rebellion/6.webp"
+      }
+    },
+    {
+      "blueprintId": "ptmc-mining-rebellion:7:ptmc-drone-07",
+      "slot": 7,
+      "name": "PTMC Drone 07",
+      "sourceAlias": "PTMC Drone 07",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 10,
+      "buildFocus": "Deadeye",
+      "weaponPath": [
+        {
+          "mainWeapon": "Bolt Carbine",
+          "offhandWeapon": null,
+          "listPriceCredits": 93000
+        },
+        {
+          "mainWeapon": "Nova Caster",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "mid",
+        "artBrief": "Arena-designated mining robot with retro orange safety paint and a utility lens. Arena unit 07 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 6,
+        "imageConvention": "app/frontend/public/assets/automatons/ptmc-mining-rebellion/7.webp"
+      }
+    },
+    {
+      "blueprintId": "ptmc-mining-rebellion:8:ptmc-drone-08",
+      "slot": 8,
+      "name": "PTMC Drone 08",
+      "sourceAlias": "PTMC Drone 08",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "Bruiser",
+      "weaponPath": [
+        {
+          "mainWeapon": "Scatter Cannon",
+          "offhandWeapon": null,
+          "listPriceCredits": 84000
+        },
+        {
+          "mainWeapon": "Arc Projector",
+          "offhandWeapon": null,
+          "listPriceCredits": 488000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Arena-designated mining robot with retro orange safety paint and a utility lens. Arena unit 08 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 7,
+        "imageConvention": "app/frontend/public/assets/automatons/ptmc-mining-rebellion/8.webp"
+      }
+    },
+    {
+      "blueprintId": "ptmc-mining-rebellion:9:ptmc-drone-09",
+      "slot": 9,
+      "name": "PTMC Drone 09",
+      "sourceAlias": "PTMC Drone 09",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "dual_wield",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "Sprinter",
+      "weaponPath": [
+        {
+          "mainWeapon": "Combat Knife",
+          "offhandWeapon": "Combat Knife",
+          "listPriceCredits": 186000
+        },
+        {
+          "mainWeapon": "Vibro Mace",
+          "offhandWeapon": "Vibro Mace",
+          "listPriceCredits": 850000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "melee",
+        "artBrief": "Arena-designated mining robot with retro orange safety paint and a utility lens. Arena unit 09 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 8,
+        "imageConvention": "app/frontend/public/assets/automatons/ptmc-mining-rebellion/9.webp"
+      }
+    },
+    {
+      "blueprintId": "ptmc-mining-rebellion:10:ptmc-drone-10",
+      "slot": 10,
+      "name": "PTMC Drone 10",
+      "sourceAlias": "PTMC Drone 10",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "Bruiser",
+      "weaponPath": [
+        {
+          "mainWeapon": "Training Rifle",
+          "offhandWeapon": null,
+          "listPriceCredits": 50000
+        },
+        {
+          "mainWeapon": "Plasma Cannon",
+          "offhandWeapon": null,
+          "listPriceCredits": 408000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "mid",
+        "artBrief": "Arena-designated mining robot with retro orange safety paint and a utility lens. Arena unit 10 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 9,
+        "imageConvention": "app/frontend/public/assets/automatons/ptmc-mining-rebellion/10.webp"
+      }
+    },
+    {
+      "blueprintId": "ptmc-mining-rebellion:11:ptmc-drone-11",
+      "slot": 11,
+      "name": "PTMC Drone 11",
+      "sourceAlias": "PTMC Drone 11",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "two_handed",
+      "stance": "defensive",
+      "yieldThreshold": 10,
+      "buildFocus": "Deadeye",
+      "weaponPath": [
+        {
+          "mainWeapon": "Training Beam",
+          "offhandWeapon": null,
+          "listPriceCredits": 50000
+        },
+        {
+          "mainWeapon": "Ion Beam",
+          "offhandWeapon": null,
+          "listPriceCredits": 544000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "long",
+        "artBrief": "Arena-designated mining robot with retro orange safety paint and a utility lens. Arena unit 11 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 10,
+        "imageConvention": "app/frontend/public/assets/automatons/ptmc-mining-rebellion/11.webp"
+      }
+    }
+  ],
+  "alternativeBlueprints": [],
+  "review": {
+    "openingWeaponCredits": 200000,
+    "finalWeaponCreditsAtTarget": 5657000,
+    "equippedWeaponCountAtTarget": 13,
+    "purchaseOrder": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+    ],
+    "reserveSlots": [],
+    "alternativeRule": "Choose an alternative before catalogue approval; it replaces the specified slot and never adds another live robot."
+  }
+}

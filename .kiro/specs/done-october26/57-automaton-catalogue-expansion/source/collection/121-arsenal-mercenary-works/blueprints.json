@@ -1,0 +1,316 @@
+{
+  "stable_number": 121,
+  "catalogue_key": "arsenal-mercenary-works",
+  "robots": [
+    {
+      "slot": 1,
+      "name": "Mercenary Vanguard 01",
+      "source_identity": "Custom Arsenal using Long Sword armour family",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 15,
+      "build_focus": "Versatile",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": null,
+          "list_price_credits": 57000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: precise-object-edit. Edit the reference portrait only to improve framing. Preserve exactly the same Mercenary Vanguard Arsenal, warm-grey crimson paint, geometry, face, weapon, feet, material wear, camera angle, lighting and charcoal studio. Pull the camera back so the COMPLETE upper ends of BOTH tall back assemblies and all feet have at least 7% clear space to the square image edges. Entire figure occupies no more than 80% of image height. Do not crop the back pod tips. No text, extra figures or other changes.",
+      "role": "Flexible line fighter",
+      "missing_fields": [],
+      "refinement_note": "Tycoon follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "Mercenary Vanguard 01 fills the flexible line fighter role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Versatile tuning supports the short equipment role; balanced stance and a 15% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Tycoon strategy tuning rules with the Versatile Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "arsenal-mercenary-works:1:mercenary-vanguard-01",
+      "folder": "stables/121-arsenal-mercenary-works/robots/01-mercenary-vanguard-01",
+      "files": {
+        "png": "stables/121-arsenal-mercenary-works/robots/01-mercenary-vanguard-01/portrait.png",
+        "webp": "stables/121-arsenal-mercenary-works/robots/01-mercenary-vanguard-01/portrait.webp",
+        "blueprint": "stables/121-arsenal-mercenary-works/robots/01-mercenary-vanguard-01/blueprint.json",
+        "profile": "stables/121-arsenal-mercenary-works/robots/01-mercenary-vanguard-01/profile.md",
+        "prompt": "stables/121-arsenal-mercenary-works/robots/01-mercenary-vanguard-01/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/arsenal-mercenary-works/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 121,
+          "stable_name": "Arsenal Mercenary Works",
+          "catalogue_key": "arsenal-mercenary-works",
+          "slot": 1,
+          "robot_name": "Mercenary Vanguard 01",
+          "source_identity": "Custom Arsenal using Long Sword armour family",
+          "source_edition": "Daemon X Machina — original 2019 game; three custom Armoured Souls Arsenal builds",
+          "source_references": [
+            "https://dxm.marv.jp/"
+          ],
+          "prompt": "Use case: precise-object-edit. Edit the reference portrait only to improve framing. Preserve exactly the same Mercenary Vanguard Arsenal, warm-grey crimson paint, geometry, face, weapon, feet, material wear, camera angle, lighting and charcoal studio. Pull the camera back so the COMPLETE upper ends of BOTH tall back assemblies and all feet have at least 7% clear space to the square image edges. Entire figure occupies no more than 80% of image height. Do not crop the back pod tips. No text, extra figures or other changes.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-d197d8f9-1f1a-4af5-a3b2-8cd7ff1b4bb7.png",
+          "visual_review": "Accepted: complete readable figure, source silhouette and shared studio finish",
+          "asset_id": "arsenal-mercenary-works:1",
+          "status": "generated",
+          "revision": 2,
+          "runtime_output": "app/frontend/public/assets/automatons/arsenal-mercenary-works/1.webp",
+          "master": "outputs/automaton-portraits/masters/arsenal-mercenary-works/1-v2.png",
+          "output": "app/frontend/public/assets/automatons/arsenal-mercenary-works/1-v2.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "a997caf1a6cc7280d11019b5c548a814a08721edce1bb9d6957f8ca5bbaa0a61",
+          "bytes": 38592,
+          "previous_versions": [
+            {
+              "stable_number": 121,
+              "stable_name": "Arsenal Mercenary Works",
+              "catalogue_key": "arsenal-mercenary-works",
+              "slot": 1,
+              "robot_name": "Mercenary Vanguard 01",
+              "source_identity": "Custom Arsenal using Long Sword armour family",
+              "source_edition": "Daemon X Machina — original 2019 game; three custom Armoured Souls Arsenal builds",
+              "source_references": [
+                "https://dxm.marv.jp/"
+              ],
+              "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete custom Arsenal assembled from authentic source armour parts.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: A custom player Arsenal from the original 2019 Daemon X Machina, using the recognizable Long Sword armour family for head, torso, arms and legs. Angular compact helmet and mechanical face, original Arsenal proportions and back thruster arrangement, humanoid hands and pointed mechanical feet. Original arena paint: warm grey with crimson accents. One source assault rifle held at rest. This is a custom machine with an original arena unit label, not a human mercenary.\nCatalogue label for metadata only, do not render text: #121 slot 1 Mercenary Vanguard 01.",
+              "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-442f6306-682c-49e9-9243-e2da361b52f2.png",
+              "visual_review": "Superseded by selected refined portrait; original retained",
+              "asset_id": "arsenal-mercenary-works:1",
+              "status": "generated",
+              "revision": 1,
+              "runtime_output": "app/frontend/public/assets/automatons/arsenal-mercenary-works/1.webp",
+              "master": "outputs/automaton-portraits/masters/arsenal-mercenary-works/1.png",
+              "output": "app/frontend/public/assets/automatons/arsenal-mercenary-works/1.webp",
+              "master_dimensions": [
+                1254,
+                1254
+              ],
+              "export_dimensions": [
+                512,
+                512
+              ],
+              "sha256": "b2d7f313d725730275ddd1a8451af247c47bd3645e2fd8127e662a091ef5c984",
+              "bytes": 46128
+            }
+          ]
+        },
+        "sha256": "a997caf1a6cc7280d11019b5c548a814a08721edce1bb9d6957f8ca5bbaa0a61",
+        "revision": 2,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 2,
+      "name": "Mercenary Aegis 02",
+      "source_identity": "Custom Arsenal using Liberator armour family",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yield_threshold": 25,
+      "build_focus": "Warden",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": "Light Shield",
+          "list_price_credits": 108000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": "Aegis Bulwark",
+          "list_price_credits": 834000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete custom Arsenal assembled from authentic source armour parts.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: A custom player Arsenal from the original 2019 Daemon X Machina using the heavy Liberator armour family, its broad unusual head and torso, huge protective lower-leg armour and structural prong-like feet. Blackened steel and muted yellow custom arena paint. One source heavy machine gun held in both mechanical hands. Preserve heavy Arsenal construction, fully enclosed pilot compartment, no human visible.\nCatalogue label for metadata only, do not render text: #121 slot 2 Mercenary Aegis 02.",
+      "role": "Protected short-range anchor",
+      "missing_fields": [],
+      "refinement_note": "Tycoon follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 1,
+      "equipment_interpretation": "Mercenary Aegis 02 fills the protected short-range anchor role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Warden tuning supports the short equipment role; defensive stance and a 25% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Tycoon strategy tuning rules with the Warden Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "arsenal-mercenary-works:2:mercenary-aegis-02",
+      "folder": "stables/121-arsenal-mercenary-works/robots/02-mercenary-aegis-02",
+      "files": {
+        "png": "stables/121-arsenal-mercenary-works/robots/02-mercenary-aegis-02/portrait.png",
+        "webp": "stables/121-arsenal-mercenary-works/robots/02-mercenary-aegis-02/portrait.webp",
+        "blueprint": "stables/121-arsenal-mercenary-works/robots/02-mercenary-aegis-02/blueprint.json",
+        "profile": "stables/121-arsenal-mercenary-works/robots/02-mercenary-aegis-02/profile.md",
+        "prompt": "stables/121-arsenal-mercenary-works/robots/02-mercenary-aegis-02/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/arsenal-mercenary-works/2.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 121,
+          "stable_name": "Arsenal Mercenary Works",
+          "catalogue_key": "arsenal-mercenary-works",
+          "slot": 2,
+          "robot_name": "Mercenary Aegis 02",
+          "source_identity": "Custom Arsenal using Liberator armour family",
+          "source_edition": "Daemon X Machina — original 2019 game; three custom Armoured Souls Arsenal builds",
+          "source_references": [
+            "https://dxm.marv.jp/"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete custom Arsenal assembled from authentic source armour parts.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: A custom player Arsenal from the original 2019 Daemon X Machina using the heavy Liberator armour family, its broad unusual head and torso, huge protective lower-leg armour and structural prong-like feet. Blackened steel and muted yellow custom arena paint. One source heavy machine gun held in both mechanical hands. Preserve heavy Arsenal construction, fully enclosed pilot compartment, no human visible.\nCatalogue label for metadata only, do not render text: #121 slot 2 Mercenary Aegis 02.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-fc309d5a-b2fa-49b1-a407-edb0e26d1c42.png",
+          "visual_review": "Accepted: complete figure, distinct readable silhouette, shared collection finish and lighting",
+          "asset_id": "arsenal-mercenary-works:2",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/arsenal-mercenary-works/2.webp",
+          "master": "outputs/automaton-portraits/masters/arsenal-mercenary-works/2.png",
+          "output": "app/frontend/public/assets/automatons/arsenal-mercenary-works/2.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "ab98c8d80ef1d7527e22741e3eceb60befdb5809c454deff9943e194c5126bab",
+          "bytes": 61832
+        },
+        "sha256": "ab98c8d80ef1d7527e22741e3eceb60befdb5809c454deff9943e194c5126bab",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 3,
+      "name": "Mercenary Longshot 03",
+      "source_identity": "Custom Arsenal using Hecatonchier armour family",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 20,
+      "build_focus": "Deadeye",
+      "range_from_weapons": "long",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Beam Pistol",
+          "offhand_weapon": null,
+          "list_price_credits": 93000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Particle Lance",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete custom Arsenal assembled from authentic source armour parts.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: A custom player Arsenal from the original 2019 Daemon X Machina built from the recognizable Hecatonchier armour family, heavy angular mechanical torso, low source helmet, distinct original shoulder and leg plates, exposed dark joints, back thrusters inactive. Custom pale sand-grey paint and muted blue identifiers. One source sniper rifle carried at rest in two hands. The unit name is an original arena label, not a canonical pilot name.\nCatalogue label for metadata only, do not render text: #121 slot 3 Mercenary Longshot 03.",
+      "role": "Precision fire support",
+      "missing_fields": [],
+      "refinement_note": "Tycoon follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 2,
+      "equipment_interpretation": "Mercenary Longshot 03 fills the precision fire support role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Deadeye tuning supports the long equipment role; balanced stance and a 20% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Tycoon strategy tuning rules with the Deadeye Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "arsenal-mercenary-works:3:mercenary-longshot-03",
+      "folder": "stables/121-arsenal-mercenary-works/robots/03-mercenary-longshot-03",
+      "files": {
+        "png": "stables/121-arsenal-mercenary-works/robots/03-mercenary-longshot-03/portrait.png",
+        "webp": "stables/121-arsenal-mercenary-works/robots/03-mercenary-longshot-03/portrait.webp",
+        "blueprint": "stables/121-arsenal-mercenary-works/robots/03-mercenary-longshot-03/blueprint.json",
+        "profile": "stables/121-arsenal-mercenary-works/robots/03-mercenary-longshot-03/profile.md",
+        "prompt": "stables/121-arsenal-mercenary-works/robots/03-mercenary-longshot-03/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/arsenal-mercenary-works/3.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 121,
+          "stable_name": "Arsenal Mercenary Works",
+          "catalogue_key": "arsenal-mercenary-works",
+          "slot": 3,
+          "robot_name": "Mercenary Longshot 03",
+          "source_identity": "Custom Arsenal using Hecatonchier armour family",
+          "source_edition": "Daemon X Machina — original 2019 game; three custom Armoured Souls Arsenal builds",
+          "source_references": [
+            "https://dxm.marv.jp/"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete custom Arsenal assembled from authentic source armour parts.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: A custom player Arsenal from the original 2019 Daemon X Machina built from the recognizable Hecatonchier armour family, heavy angular mechanical torso, low source helmet, distinct original shoulder and leg plates, exposed dark joints, back thrusters inactive. Custom pale sand-grey paint and muted blue identifiers. One source sniper rifle carried at rest in two hands. The unit name is an original arena label, not a canonical pilot name.\nCatalogue label for metadata only, do not render text: #121 slot 3 Mercenary Longshot 03.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-f3d3a5db-1047-47a5-a8c7-1ec311f47eb0.png",
+          "visual_review": "Accepted: complete figure, distinct readable silhouette, shared collection finish and lighting",
+          "asset_id": "arsenal-mercenary-works:3",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/arsenal-mercenary-works/3.webp",
+          "master": "outputs/automaton-portraits/masters/arsenal-mercenary-works/3.png",
+          "output": "app/frontend/public/assets/automatons/arsenal-mercenary-works/3.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "5a91eb0347bb65dff027b523ca976dbef01c5e0c507b18ece2ae2b6b8618e05f",
+          "bytes": 50118
+        },
+        "sha256": "5a91eb0347bb65dff027b523ca976dbef01c5e0c507b18ece2ae2b6b8618e05f",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "replacement_alternatives": []
+}

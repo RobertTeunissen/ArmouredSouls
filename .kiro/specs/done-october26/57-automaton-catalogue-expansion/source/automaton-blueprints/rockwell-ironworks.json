@@ -1,0 +1,129 @@
+{
+  "number": 23,
+  "catalogueKey": "rockwell-ironworks",
+  "stableName": "Rockwell Ironworks",
+  "franchiseLabel": "The Iron Giant",
+  "strategy": "Paragon",
+  "fit": "Direct",
+  "conceptIdentity": "A slow, resilient heavyweight with a major refinement budget. Riveted gunmetal, broad chest, immense hands, small expressive optics.",
+  "backstory": "Rockwell Ironworks enters the arena with a clear doctrine. A slow, resilient heavyweight with a major refinement budget. Every surviving machine returns to the workshop before the next booking.",
+  "openingRobots": 1,
+  "targetRobots": 1,
+  "adminMaximumRobots": 2,
+  "targetOverrides": {},
+  "teamNames": {
+    "2v2": [],
+    "3v3": []
+  },
+  "eventOrder": [
+    "league_1v1",
+    "grand_melee",
+    "tournament_1v1",
+    "koth",
+    "league_2v2",
+    "tag_team",
+    "tournament_2v2",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "robots": [
+    {
+      "blueprintId": "rockwell-ironworks:1:iron-giant",
+      "slot": 1,
+      "name": "Iron Giant",
+      "sourceAlias": "Iron Giant",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "two_handed",
+      "stance": "defensive",
+      "yieldThreshold": 0,
+      "buildFocus": "Warden",
+      "weaponPath": [
+        {
+          "mainWeapon": "Shock Maul",
+          "offhandWeapon": null,
+          "listPriceCredits": 183000
+        },
+        {
+          "mainWeapon": "Heavy Hammer",
+          "offhandWeapon": null,
+          "listPriceCredits": 478000
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "Hone",
+          "weapon": "Heavy Hammer",
+          "weaponSlot": "main",
+          "attribute": "Hydraulic Systems",
+          "baseValue": 8,
+          "magnitude": 2,
+          "resultValue": 10,
+          "costCredits": 40000,
+          "workshopLevel": 1,
+          "step": 1
+        },
+        {
+          "tier": "Augment",
+          "weapon": "Heavy Hammer",
+          "weaponSlot": "main",
+          "attribute": "Armor Plating",
+          "magnitude": 3,
+          "resultValue": 3,
+          "costCredits": 180000,
+          "workshopLevel": 3,
+          "step": 2
+        },
+        {
+          "tier": "Sharpen",
+          "weapon": "Heavy Hammer",
+          "weaponSlot": "main",
+          "cooldownReductionPercent": 10,
+          "costCredits": 300000,
+          "workshopLevel": 5,
+          "prestigeGate": 3000,
+          "step": 3
+        },
+        {
+          "tier": "Sharpen",
+          "weapon": "Heavy Hammer",
+          "weaponSlot": "main",
+          "cooldownReductionPercent": 10,
+          "costCredits": 900000,
+          "workshopLevel": 5,
+          "prestigeGate": 3000,
+          "step": 4
+        },
+        {
+          "tier": "Forge",
+          "weapon": "Heavy Hammer",
+          "weaponSlot": "main",
+          "damageIncreasePercent": 8,
+          "costCredits": 400000,
+          "workshopLevel": 8,
+          "prestigeGate": 15000,
+          "step": 5
+        }
+      ],
+      "review": {
+        "rangeFromWeapons": "melee",
+        "artBrief": "Towering riveted gunmetal robot, broad chest, circular eyes and enormous hands.",
+        "refinementNote": "Apply in order after stage 1. Dual-wield refinements affect the main-hand copy only; the offhand stays unrefined unless explicitly targeted.",
+        "refinementTotalCredits": 1820000,
+        "minimumRosterExpansionLevel": 0,
+        "imageConvention": "app/frontend/public/assets/automatons/rockwell-ironworks/1.webp"
+      }
+    }
+  ],
+  "alternativeBlueprints": [],
+  "review": {
+    "openingWeaponCredits": 183000,
+    "finalWeaponCreditsAtTarget": 478000,
+    "equippedWeaponCountAtTarget": 1,
+    "purchaseOrder": [
+      1
+    ],
+    "reserveSlots": [],
+    "alternativeRule": "Choose an alternative before catalogue approval; it replaces the specified slot and never adds another live robot."
+  }
+}

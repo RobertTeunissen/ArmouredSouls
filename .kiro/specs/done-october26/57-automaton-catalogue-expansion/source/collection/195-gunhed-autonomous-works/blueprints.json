@@ -1,0 +1,164 @@
+{
+  "stable_number": 195,
+  "catalogue_key": "gunhed-autonomous-works",
+  "robots": [
+    {
+      "slot": 1,
+      "name": "GUNHED 507",
+      "source_identity": "GUNHED 507",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Bruiser",
+      "range_from_weapons": "mid",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Training Rifle",
+          "offhand_weapon": null,
+          "list_price_credits": 50000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Plasma Cannon",
+          "offhand_weapon": null,
+          "list_price_credits": 408000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Hone",
+          "weapon": "Plasma Cannon",
+          "hand": "main",
+          "workshop_level": 1,
+          "attribute": "Combat Power",
+          "magnitude": 3,
+          "result_value": 10,
+          "cost_credits": 90000,
+          "base_value": 7,
+          "effect": "Combat Power 7→10",
+          "step": 1
+        },
+        {
+          "operation": "Hone",
+          "weapon": "Plasma Cannon",
+          "hand": "main",
+          "workshop_level": 1,
+          "attribute": "Critical Systems",
+          "magnitude": 4,
+          "result_value": 10,
+          "cost_credits": 160000,
+          "base_value": 6,
+          "effect": "Critical Systems 6→10",
+          "step": 2
+        },
+        {
+          "operation": "Augment",
+          "weapon": "Plasma Cannon",
+          "hand": "main",
+          "workshop_level": 3,
+          "attribute": "Hull Integrity",
+          "magnitude": 3,
+          "result_value": 3,
+          "cost_credits": 180000,
+          "effect": "Hull Integrity, new +3",
+          "step": 3
+        },
+        {
+          "operation": "Sharpen",
+          "weapon": "Plasma Cannon",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 1,
+          "cost_credits": 300000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 4
+        },
+        {
+          "operation": "Forge",
+          "weapon": "Plasma Cannon",
+          "hand": "main",
+          "workshop_level": 8,
+          "occurrence": 1,
+          "cost_credits": 400000,
+          "prestige_gate": 15000,
+          "effect": "+8% damage",
+          "step": 5
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE GUNHED 507 in the 1989 film's STANDING GII robot mode, matching the attached licensed source model photograph's complex nonstandard geometry exactly. Dense pale grey military machine, huge broad upper weapons assembly with paired shoulder boxes, tall thin articulated sensor mast and small sensor head, recessed central upper cockpit housing and forward chain gun, two long low extendable manipulator arms with pincer hands, two bent chunky mechanical legs ending in long front claw feet with vehicle wheels grouped toward the heels. Preserve this specific heavy industrial silhouette; no generic humanoid face or conventional human torso. All guns inactive, no people or base display stand. Entire mast, arms, claw tips, wheels and feet contained within the square.\nMetadata only, do not render text: #195 slot 1 GUNHED 507.",
+      "role": "Heavy mid-range pressure",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 1130000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "GUNHED 507 fills the heavy mid-range pressure role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Bruiser tuning supports the mid equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Paragon strategy tuning rules with the Bruiser Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "gunhed-autonomous-works:1:gunhed-507",
+      "folder": "stables/195-gunhed-autonomous-works/robots/01-gunhed-507",
+      "files": {
+        "png": "stables/195-gunhed-autonomous-works/robots/01-gunhed-507/portrait.png",
+        "webp": "stables/195-gunhed-autonomous-works/robots/01-gunhed-507/portrait.webp",
+        "blueprint": "stables/195-gunhed-autonomous-works/robots/01-gunhed-507/blueprint.json",
+        "profile": "stables/195-gunhed-autonomous-works/robots/01-gunhed-507/profile.md",
+        "prompt": "stables/195-gunhed-autonomous-works/robots/01-gunhed-507/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/gunhed-autonomous-works/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 195,
+          "stable_name": "GUNHED Autonomous Works",
+          "catalogue_key": "gunhed-autonomous-works",
+          "slot": 1,
+          "robot_name": "GUNHED 507",
+          "source_identity": "GUNHED 507",
+          "source_edition": "GUNHED (1989), standing GII configuration, licensed Kotobukiya model",
+          "source_references": [
+            "https://www.kotobukiya.co.jp/en/product/detail/p4934054048397/",
+            "https://hobby.watch.impress.co.jp/docs/news/1417281.html"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE GUNHED 507 in the 1989 film's STANDING GII robot mode, matching the attached licensed source model photograph's complex nonstandard geometry exactly. Dense pale grey military machine, huge broad upper weapons assembly with paired shoulder boxes, tall thin articulated sensor mast and small sensor head, recessed central upper cockpit housing and forward chain gun, two long low extendable manipulator arms with pincer hands, two bent chunky mechanical legs ending in long front claw feet with vehicle wheels grouped toward the heels. Preserve this specific heavy industrial silhouette; no generic humanoid face or conventional human torso. All guns inactive, no people or base display stand. Entire mast, arms, claw tips, wheels and feet contained within the square.\nMetadata only, do not render text: #195 slot 1 GUNHED 507.",
+          "referenced_image_paths": [
+            "/tmp/armoured-gunhed-reference.jpg"
+          ],
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-f39b2407-d8c8-42cc-8091-12b3e85826e5.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "gunhed-autonomous-works:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/gunhed-autonomous-works/1.webp",
+          "master": "outputs/automaton-portraits/masters/gunhed-autonomous-works/1.png",
+          "output": "app/frontend/public/assets/automatons/gunhed-autonomous-works/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "3fdc0e96ed9a39542ace2ee0124b4a6d50ade0bf6ff530a866cd0340bd40f8cd",
+          "bytes": 63286
+        },
+        "sha256": "3fdc0e96ed9a39542ace2ee0124b4a6d50ade0bf6ff530a866cd0340bd40f8cd",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "replacement_alternatives": []
+}

@@ -1,0 +1,250 @@
+{
+  "stable_number": 200,
+  "catalogue_key": "steamworks-robot-partnership",
+  "robots": [
+    {
+      "slot": 1,
+      "name": "Axis Model 014",
+      "source_identity": "Axis Model 014",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 15,
+      "build_focus": "Versatile",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": null,
+          "list_price_credits": 57000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Hone",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 1,
+          "attribute": "Combat Power",
+          "magnitude": 2,
+          "result_value": 10,
+          "cost_credits": 40000,
+          "base_value": 8,
+          "effect": "Combat Power 8→10",
+          "step": 1
+        },
+        {
+          "operation": "Augment",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 3,
+          "attribute": "Adaptive AI",
+          "magnitude": 3,
+          "result_value": 3,
+          "cost_credits": 180000,
+          "effect": "Adaptive AI, new +3",
+          "step": 2
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE Axis Model 014 from Undertale Yellow, accurate to the released fan game's normal robot body. Grey metal robot with a large box-shaped head, TWO unevenly sized PINK eyes, four small holes arranged as a horizontal mouth, vertical antennae ending in little round lights at each side, and a large top lightbulb beside a curled exhaust pipe. Compact ROUND torso with a dark heart-shaped chest plate and four bolts, a light yellow side gear, lateral shoulder exhaust pipes. His TWO light-yellow mechanical gloves hover independently in front of the pipe ends with a faint steam connection, a canonical unusual anatomy: do not invent solid human arms. A SINGLE central leg ending in ONE wheel supports the body. Preserve these exact odd proportions in realistic painted metal. Neutral complete body with all gloves, antennae and wheel in frame, no Daisy or other figures, no injury or firing.\nMetadata only, do not render text: #200 slot 1 Axis Model 014.",
+      "role": "Flexible line fighter",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 220000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "Axis Model 014 fills the flexible line fighter role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Versatile tuning supports the short equipment role; balanced stance and a 15% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Duo strategy tuning rules with the Versatile Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "steamworks-robot-partnership:1:axis-model-014",
+      "folder": "stables/200-steamworks-robot-partnership/robots/01-axis-model-014",
+      "files": {
+        "png": "stables/200-steamworks-robot-partnership/robots/01-axis-model-014/portrait.png",
+        "webp": "stables/200-steamworks-robot-partnership/robots/01-axis-model-014/portrait.webp",
+        "blueprint": "stables/200-steamworks-robot-partnership/robots/01-axis-model-014/blueprint.json",
+        "profile": "stables/200-steamworks-robot-partnership/robots/01-axis-model-014/profile.md",
+        "prompt": "stables/200-steamworks-robot-partnership/robots/01-axis-model-014/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/steamworks-robot-partnership/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 200,
+          "stable_name": "Steamworks Robot Partnership",
+          "catalogue_key": "steamworks-robot-partnership",
+          "slot": 1,
+          "robot_name": "Axis Model 014",
+          "source_identity": "Axis Model 014",
+          "source_edition": "Undertale Yellow, released Team Undertale Yellow fan game, normal Model 014",
+          "source_references": [
+            "https://gamejolt.com/games/UndertaleYellow/136925",
+            "https://undertaleyellow.wiki.gg/wiki/Axis",
+            "https://www.spriters-resource.com/pc_computer/undertaleyellow/asset/213054/"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE Axis Model 014 from Undertale Yellow, accurate to the released fan game's normal robot body. Grey metal robot with a large box-shaped head, TWO unevenly sized PINK eyes, four small holes arranged as a horizontal mouth, vertical antennae ending in little round lights at each side, and a large top lightbulb beside a curled exhaust pipe. Compact ROUND torso with a dark heart-shaped chest plate and four bolts, a light yellow side gear, lateral shoulder exhaust pipes. His TWO light-yellow mechanical gloves hover independently in front of the pipe ends with a faint steam connection, a canonical unusual anatomy: do not invent solid human arms. A SINGLE central leg ending in ONE wheel supports the body. Preserve these exact odd proportions in realistic painted metal. Neutral complete body with all gloves, antennae and wheel in frame, no Daisy or other figures, no injury or firing.\nMetadata only, do not render text: #200 slot 1 Axis Model 014.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-193bcb2e-5fa7-4ef3-8047-336dc10fe996.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "steamworks-robot-partnership:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/steamworks-robot-partnership/1.webp",
+          "master": "outputs/automaton-portraits/masters/steamworks-robot-partnership/1.png",
+          "output": "app/frontend/public/assets/automatons/steamworks-robot-partnership/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "91e07ffb8d36d9e1f1ee3213b69b95b259a6b0aaf17e7ac5898d06fc07371650",
+          "bytes": 42456
+        },
+        "sha256": "91e07ffb8d36d9e1f1ee3213b69b95b259a6b0aaf17e7ac5898d06fc07371650",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 2,
+      "name": "Guardener",
+      "source_identity": "Guardener",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Bruiser",
+      "range_from_weapons": "melee",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Shock Maul",
+          "offhand_weapon": null,
+          "list_price_credits": 183000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Heavy Hammer",
+          "offhand_weapon": null,
+          "list_price_credits": 478000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Hone",
+          "weapon": "Heavy Hammer",
+          "hand": "main",
+          "workshop_level": 1,
+          "attribute": "Hydraulic Systems",
+          "magnitude": 2,
+          "result_value": 10,
+          "cost_credits": 40000,
+          "base_value": 8,
+          "effect": "Hydraulic Systems 8→10",
+          "step": 1
+        },
+        {
+          "operation": "Augment",
+          "weapon": "Heavy Hammer",
+          "hand": "main",
+          "workshop_level": 3,
+          "attribute": "Armor Plating",
+          "magnitude": 3,
+          "result_value": 3,
+          "cost_credits": 180000,
+          "effect": "Armor Plating, new +3",
+          "step": 2
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE Guardener Model 02 from Undertale Yellow, precisely the large robot labelled Guardener in the TOP RIGHT of the attached original designer's reference. Large PURPLE metal gardening robot, broad shallow planter-tray top supporting a few small growing flowers, flat rectangular mechanical head below it with dark eye strip and red eyes, tapered hanging torso with the source Delta Rune chest motif. TWO huge long articulated piston arms reach down to broad knuckle hands resting on the floor; preserve the released game's unusual legless construction, no invented humanoid legs, wheels or tank treads. The original plant tray is part of this single robot, no additional characters or small helper bots. Full planter, flowers, all arm joints, torso and both knuckle hands inside frame. Translate the actual sprite silhouette to realistic industrial materials with restrained purple paint wear, no designer text.\nMetadata only, do not render text: #200 slot 2 Guardener.",
+      "role": "Heavy contact attacker",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 220000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 1,
+      "equipment_interpretation": "Guardener fills the heavy contact attacker role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Bruiser tuning supports the melee equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Duo strategy tuning rules with the Bruiser Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "steamworks-robot-partnership:2:guardener",
+      "folder": "stables/200-steamworks-robot-partnership/robots/02-guardener",
+      "files": {
+        "png": "stables/200-steamworks-robot-partnership/robots/02-guardener/portrait.png",
+        "webp": "stables/200-steamworks-robot-partnership/robots/02-guardener/portrait.webp",
+        "blueprint": "stables/200-steamworks-robot-partnership/robots/02-guardener/blueprint.json",
+        "profile": "stables/200-steamworks-robot-partnership/robots/02-guardener/profile.md",
+        "prompt": "stables/200-steamworks-robot-partnership/robots/02-guardener/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/steamworks-robot-partnership/2.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 200,
+          "stable_name": "Steamworks Robot Partnership",
+          "catalogue_key": "steamworks-robot-partnership",
+          "slot": 2,
+          "robot_name": "Guardener",
+          "source_identity": "Guardener",
+          "source_edition": "Undertale Yellow, released Team Undertale Yellow fan game, Guardener Model 02",
+          "source_references": [
+            "https://gamejolt.com/games/UndertaleYellow/136925",
+            "https://undertaleyellow.wiki.gg/wiki/Guardener",
+            "https://x.com/figburn/status/1745631401817383015"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE Guardener Model 02 from Undertale Yellow, precisely the large robot labelled Guardener in the TOP RIGHT of the attached original designer's reference. Large PURPLE metal gardening robot, broad shallow planter-tray top supporting a few small growing flowers, flat rectangular mechanical head below it with dark eye strip and red eyes, tapered hanging torso with the source Delta Rune chest motif. TWO huge long articulated piston arms reach down to broad knuckle hands resting on the floor; preserve the released game's unusual legless construction, no invented humanoid legs, wheels or tank treads. The original plant tray is part of this single robot, no additional characters or small helper bots. Full planter, flowers, all arm joints, torso and both knuckle hands inside frame. Translate the actual sprite silhouette to realistic industrial materials with restrained purple paint wear, no designer text.\nMetadata only, do not render text: #200 slot 2 Guardener.",
+          "referenced_image_paths": [
+            "/tmp/armoured-guardener-reference.png"
+          ],
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-e5450b23-a2b2-4a55-889d-6e7acf744167.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "steamworks-robot-partnership:2",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/steamworks-robot-partnership/2.webp",
+          "master": "outputs/automaton-portraits/masters/steamworks-robot-partnership/2.png",
+          "output": "app/frontend/public/assets/automatons/steamworks-robot-partnership/2.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "2e55eeac357a9eb8cacbbb13d878259bcd9b066f66440a0430b198bb6f4c157f",
+          "bytes": 58848
+        },
+        "sha256": "2e55eeac357a9eb8cacbbb13d878259bcd9b066f66440a0430b198bb6f4c157f",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "replacement_alternatives": []
+}

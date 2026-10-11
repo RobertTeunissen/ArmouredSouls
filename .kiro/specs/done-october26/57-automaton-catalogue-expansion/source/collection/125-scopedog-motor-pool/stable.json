@@ -1,0 +1,380 @@
+{
+  "number": 125,
+  "catalogue_key": "scopedog-motor-pool",
+  "name": "Scopedog Motor Pool",
+  "franchise": "Armored Trooper VOTOMS",
+  "strategy": "Trio",
+  "opening_robots": 3,
+  "target_robots": 3,
+  "max_planned_robots": 3,
+  "strategy_review_limit": 4,
+  "backstory": "Compact military walkers bring practical fire, protected endurance and heavy pressure to the same maintenance bay. The motor pool equips the whole trio before chasing prestige purchases.",
+  "strategy_personality": "Compact, utilitarian military machines add a different scale and construction style. Choose three distinct builds/chassis with clear role silhouettes. [Sunrise series reference](https://www.sunrise-inc.co.jp/international/work/detail.php?cid=100).",
+  "teams": {
+    "2v2": [
+      {
+        "name": "Motor Pool Pair 01",
+        "slots": [
+          1,
+          2
+        ],
+        "forms": "Opening"
+      }
+    ],
+    "3v3": [
+      {
+        "name": "Motor Pool Squad 01",
+        "slots": [
+          1,
+          2,
+          3
+        ],
+        "forms": "Opening"
+      }
+    ]
+  },
+  "event_order": [
+    "league_3v3",
+    "tournament_3v3",
+    "league_2v2",
+    "tag_team",
+    "league_1v1",
+    "koth",
+    "grand_melee",
+    "tournament_2v2",
+    "tournament_1v1"
+  ],
+  "robots": [
+    {
+      "slot": 1,
+      "name": "Scopedog",
+      "source_identity": "Standard Scopedog",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 15,
+      "build_focus": "Tactician",
+      "range_from_weapons": "mid",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Bolt Carbine",
+          "offhand_weapon": null,
+          "list_price_credits": 93000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Nova Caster",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic 1983 VOTOMS standard green Scopedog, squat military biped with its iconic round three-lens turret head, boxy olive torso cockpit, rounded shoulder plates, short heavy legs and rectangular roller-dash feet. Hold source heavy machine gun in both hands at rest. No Red Shoulder Custom paint or visible pilot; preserve compact source proportions.\nCatalogue label for metadata only, do not render text: #125 slot 1 Scopedog.",
+      "role": "Measured mid-range fighter",
+      "missing_fields": [],
+      "refinement_note": "Trio follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "Scopedog fills the measured mid-range fighter role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Tactician tuning supports the mid equipment role; balanced stance and a 15% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Trio strategy tuning rules with the Tactician Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "scopedog-motor-pool:1:scopedog",
+      "folder": "stables/125-scopedog-motor-pool/robots/01-scopedog",
+      "files": {
+        "png": "stables/125-scopedog-motor-pool/robots/01-scopedog/portrait.png",
+        "webp": "stables/125-scopedog-motor-pool/robots/01-scopedog/portrait.webp",
+        "blueprint": "stables/125-scopedog-motor-pool/robots/01-scopedog/blueprint.json",
+        "profile": "stables/125-scopedog-motor-pool/robots/01-scopedog/profile.md",
+        "prompt": "stables/125-scopedog-motor-pool/robots/01-scopedog/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/scopedog-motor-pool/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 125,
+          "stable_name": "Scopedog Motor Pool",
+          "catalogue_key": "scopedog-motor-pool",
+          "slot": 1,
+          "robot_name": "Scopedog",
+          "source_identity": "Standard Scopedog",
+          "source_edition": "Armored Trooper VOTOMS — 1983 television standard Armored Trooper designs",
+          "source_references": [
+            "https://www.votoms.net/about/at/8.php"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic 1983 VOTOMS standard green Scopedog, squat military biped with its iconic round three-lens turret head, boxy olive torso cockpit, rounded shoulder plates, short heavy legs and rectangular roller-dash feet. Hold source heavy machine gun in both hands at rest. No Red Shoulder Custom paint or visible pilot; preserve compact source proportions.\nCatalogue label for metadata only, do not render text: #125 slot 1 Scopedog.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-b16a715d-7bba-4c29-90c5-06ae1e7d76a6.png",
+          "visual_review": "Accepted: complete figure, distinct readable silhouette, shared collection finish and lighting",
+          "asset_id": "scopedog-motor-pool:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/scopedog-motor-pool/1.webp",
+          "master": "outputs/automaton-portraits/masters/scopedog-motor-pool/1.png",
+          "output": "app/frontend/public/assets/automatons/scopedog-motor-pool/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "ca067ca88e63d5bd8daa2d3bf1ee7acc772f8e494a67ff955ea31e1f78a0ec5a",
+          "bytes": 50854
+        },
+        "sha256": "ca067ca88e63d5bd8daa2d3bf1ee7acc772f8e494a67ff955ea31e1f78a0ec5a",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 2,
+      "name": "Standing Tortoise",
+      "source_identity": "Standard Standing Tortoise",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yield_threshold": 25,
+      "build_focus": "Warden",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": "Light Shield",
+          "list_price_credits": 108000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": "Aegis Bulwark",
+          "list_price_credits": 834000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nEDIT the second attached portrait to correct its source identity using the FIRST attached official Standing Tortoise ATH-14-ST character sheet from the original VOTOMS television series. The first image defines the ENTIRE exact anatomy, silhouette, chest shape, head/sensor structure, shoulder geometry, legs, feet and colours; the second image supplies ONLY the established realistic Armoured Souls materials and dark studio art direction. Replace the incorrect Scopedog-like separate dome helmet and wrong torso with the correct Standing Tortoise source anatomy: three small round camera lenses in a compact triangular arrangement INSIDE A DARK BURGUNDY RECESSED TRIANGULAR SENSOR HOOD integrated high into the massive sloping chest, no protruding separate dome head; broad sloping olive chest with paired small red machine-gun openings low across front; large outward rounded shoulder arches above grey cylindrical upper arms; rounded olive elbow panels and boxy olive forearms; broad waist with central polygonal opening and side hip panels, grey upper legs, rounded olive knees, wide olive shin shells, long broad grey toes. Follow source sheet closely, not a Scopedog. One hand holds a compact source-style handheld rocket gun low, other hand relaxed. Complete full body, antenna, weapon and both feet inside canvas with 5% margin, three-quarter front view. Same quiet charcoal black studio floor, premium realistic worn industrial materials and cool upper-right rim light. One robot only, no text, no explosions, no borders. Preserve official olive/grey/burgundy palette.",
+      "role": "Protected short-range anchor",
+      "missing_fields": [],
+      "refinement_note": "Trio follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 1,
+      "equipment_interpretation": "Standing Tortoise fills the protected short-range anchor role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Warden tuning supports the short equipment role; defensive stance and a 25% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Trio strategy tuning rules with the Warden Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "scopedog-motor-pool:2:standing-tortoise",
+      "folder": "stables/125-scopedog-motor-pool/robots/02-standing-tortoise",
+      "files": {
+        "png": "stables/125-scopedog-motor-pool/robots/02-standing-tortoise/portrait.png",
+        "webp": "stables/125-scopedog-motor-pool/robots/02-standing-tortoise/portrait.webp",
+        "blueprint": "stables/125-scopedog-motor-pool/robots/02-standing-tortoise/blueprint.json",
+        "profile": "stables/125-scopedog-motor-pool/robots/02-standing-tortoise/profile.md",
+        "prompt": "stables/125-scopedog-motor-pool/robots/02-standing-tortoise/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/scopedog-motor-pool/2.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 125,
+          "stable_name": "Scopedog Motor Pool",
+          "catalogue_key": "scopedog-motor-pool",
+          "slot": 2,
+          "robot_name": "Standing Tortoise",
+          "source_identity": "Standard Standing Tortoise",
+          "source_edition": "Armored Trooper VOTOMS — 1983 television standard Armored Trooper designs",
+          "source_references": [
+            "https://www.votoms.net/about/at/8.php",
+            "https://www.votoms.net/about/at/6.php"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nEDIT the second attached portrait to correct its source identity using the FIRST attached official Standing Tortoise ATH-14-ST character sheet from the original VOTOMS television series. The first image defines the ENTIRE exact anatomy, silhouette, chest shape, head/sensor structure, shoulder geometry, legs, feet and colours; the second image supplies ONLY the established realistic Armoured Souls materials and dark studio art direction. Replace the incorrect Scopedog-like separate dome helmet and wrong torso with the correct Standing Tortoise source anatomy: three small round camera lenses in a compact triangular arrangement INSIDE A DARK BURGUNDY RECESSED TRIANGULAR SENSOR HOOD integrated high into the massive sloping chest, no protruding separate dome head; broad sloping olive chest with paired small red machine-gun openings low across front; large outward rounded shoulder arches above grey cylindrical upper arms; rounded olive elbow panels and boxy olive forearms; broad waist with central polygonal opening and side hip panels, grey upper legs, rounded olive knees, wide olive shin shells, long broad grey toes. Follow source sheet closely, not a Scopedog. One hand holds a compact source-style handheld rocket gun low, other hand relaxed. Complete full body, antenna, weapon and both feet inside canvas with 5% margin, three-quarter front view. Same quiet charcoal black studio floor, premium realistic worn industrial materials and cool upper-right rim light. One robot only, no text, no explosions, no borders. Preserve official olive/grey/burgundy palette.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-cbdeb6b7-53ae-4f44-bdf3-cb2dec6693c3.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "scopedog-motor-pool:2",
+          "status": "generated",
+          "revision": 2,
+          "runtime_output": "app/frontend/public/assets/automatons/scopedog-motor-pool/2.webp",
+          "master": "outputs/automaton-portraits/masters/scopedog-motor-pool/2-v2.png",
+          "output": "app/frontend/public/assets/automatons/scopedog-motor-pool/2-v2.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "7647516ec7fdfef81ef0519f8c92c993899750209b22df34ca8bb863be42420f",
+          "bytes": 53630,
+          "referenced_image_paths": [
+            "/tmp/armoured-standing-tortoise-source.png",
+            "/Users/robertteunissen/.codex/.chatgpt-projects/g-p-697c65205aa4819195676e871f22833f/outputs/automaton-portraits/masters/scopedog-motor-pool/2.png"
+          ],
+          "previous_versions": [
+            {
+              "stable_number": 125,
+              "stable_name": "Scopedog Motor Pool",
+              "catalogue_key": "scopedog-motor-pool",
+              "slot": 2,
+              "robot_name": "Standing Tortoise",
+              "source_identity": "Standard Standing Tortoise",
+              "source_edition": "Armored Trooper VOTOMS — 1983 television standard Armored Trooper designs",
+              "source_references": [
+                "https://www.votoms.net/about/at/8.php"
+              ],
+              "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic 1983 VOTOMS standard Standing Tortoise heavy Armored Trooper, source rounded green cockpit/torso, characteristic Tortoise head and three optical sensors, bulky curved shoulder armour, thick lower legs and broad military feet. Original back construction and heavy machine gun held at rest. Distinct wide Tortoise frame, not Scopedog recolour or Snapping Turtle.\nCatalogue label for metadata only, do not render text: #125 slot 2 Standing Tortoise.",
+              "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-5b949e28-1eef-419f-b8c1-6ad15480fa73.png",
+              "visual_review": "Superseded by selected refined portrait; original retained",
+              "asset_id": "scopedog-motor-pool:2",
+              "status": "generated",
+              "revision": 1,
+              "runtime_output": "app/frontend/public/assets/automatons/scopedog-motor-pool/2.webp",
+              "master": "outputs/automaton-portraits/masters/scopedog-motor-pool/2.png",
+              "output": "app/frontend/public/assets/automatons/scopedog-motor-pool/2.webp",
+              "master_dimensions": [
+                1254,
+                1254
+              ],
+              "export_dimensions": [
+                512,
+                512
+              ],
+              "sha256": "5213211d9e3c8c51246a97be081446003b760b388f4d6ccaa9767e4f32dcdbb9",
+              "bytes": 56740
+            }
+          ]
+        },
+        "sha256": "7647516ec7fdfef81ef0519f8c92c993899750209b22df34ca8bb863be42420f",
+        "revision": 2,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 3,
+      "name": "Diving Beetle",
+      "source_identity": "Standard Diving Beetle ATH-06-WP",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Bruiser",
+      "range_from_weapons": "mid",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Training Rifle",
+          "offhand_weapon": null,
+          "list_price_credits": 50000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Plasma Cannon",
+          "offhand_weapon": null,
+          "list_price_credits": 408000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic VOTOMS Diving Beetle standard blue heavy Armored Trooper, characteristic helmet with three sensor lenses, rounded sealed torso cockpit and shoulders, thick blue legs with source Swampy Crag foot hardware folded in walking mode. Carry GAT-19 mid machine gun at rest. Exact compact television proportions, no water scene or pilot.\nCatalogue label for metadata only, do not render text: #125 slot 3 Diving Beetle.",
+      "role": "Heavy mid-range pressure",
+      "missing_fields": [],
+      "refinement_note": "Trio follows the supplied strategy rule: no weapon refinements. This is an explicit empty plan.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 2,
+      "equipment_interpretation": "Diving Beetle fills the heavy mid-range pressure role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Bruiser tuning supports the mid equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Trio strategy tuning rules with the Bruiser Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "scopedog-motor-pool:3:diving-beetle",
+      "folder": "stables/125-scopedog-motor-pool/robots/03-diving-beetle",
+      "files": {
+        "png": "stables/125-scopedog-motor-pool/robots/03-diving-beetle/portrait.png",
+        "webp": "stables/125-scopedog-motor-pool/robots/03-diving-beetle/portrait.webp",
+        "blueprint": "stables/125-scopedog-motor-pool/robots/03-diving-beetle/blueprint.json",
+        "profile": "stables/125-scopedog-motor-pool/robots/03-diving-beetle/profile.md",
+        "prompt": "stables/125-scopedog-motor-pool/robots/03-diving-beetle/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/scopedog-motor-pool/3.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 125,
+          "stable_name": "Scopedog Motor Pool",
+          "catalogue_key": "scopedog-motor-pool",
+          "slot": 3,
+          "robot_name": "Diving Beetle",
+          "source_identity": "Standard Diving Beetle ATH-06-WP",
+          "source_edition": "Armored Trooper VOTOMS — 1983 television standard Armored Trooper designs",
+          "source_references": [
+            "https://www.votoms.net/about/at/8.php"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic VOTOMS Diving Beetle standard blue heavy Armored Trooper, characteristic helmet with three sensor lenses, rounded sealed torso cockpit and shoulders, thick blue legs with source Swampy Crag foot hardware folded in walking mode. Carry GAT-19 mid machine gun at rest. Exact compact television proportions, no water scene or pilot.\nCatalogue label for metadata only, do not render text: #125 slot 3 Diving Beetle.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-ddbac01d-18c8-402f-b949-e96d4b082a52.png",
+          "visual_review": "Accepted: complete figure, distinct readable silhouette, shared collection finish and lighting",
+          "asset_id": "scopedog-motor-pool:3",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/scopedog-motor-pool/3.webp",
+          "master": "outputs/automaton-portraits/masters/scopedog-motor-pool/3.png",
+          "output": "app/frontend/public/assets/automatons/scopedog-motor-pool/3.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "6846daf5dc62a810d5cd7ba74488c87d5a4db764cc66cdea7d341d379d90fce3",
+          "bytes": 53166
+        },
+        "sha256": "6846daf5dc62a810d5cd7ba74488c87d5a4db764cc66cdea7d341d379d90fce3",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "alternatives": [],
+  "blueprint_status": "detailed",
+  "source_notes": "\n**Franchise:** Armored Trooper VOTOMS  \n**Strategy:** Trio · **Target roster:** 3 robots\n\n**Catalogue key:** `scopedog-motor-pool`\n\n**Proposed robots:** Scopedog; Standing Tortoise; Diving Beetle.\n\n**Direction:** Compact, utilitarian military machines add a different scale and construction style. Choose three distinct builds/chassis with clear role silhouettes. [Sunrise series reference](https://www.sunrise-inc.co.jp/international/work/detail.php?cid=100).\n\n**Production edition:** Armored Trooper VOTOMS — 1983 television standard Armored Trooper designs. Custom arena names and equipment are adaptations; source machine identities remain as specified.\n\n\n",
+  "source_documents": [
+    "reference/AUTOMATON_STABLE_EXPANSION.md"
+  ],
+  "blueprint_origin": "completed during collection",
+  "purchasing_plan": "Open with all three robots. Maintain and tune the trio together; complete stage-1 equipment in slot order. No weapon refinement purchases.",
+  "target_overrides": {},
+  "equipment_budget": {
+    "stage_0_credits": 251000,
+    "stage_1_credits": 1667000,
+    "refinement_credits": 0,
+    "excludes": "Frames, facilities, training, repairs, upkeep, discounts and resale; stage-1 total replaces stage-0 gear and is not a simultaneous equipment inventory."
+  },
+  "folder": "stables/125-scopedog-motor-pool",
+  "history_image_count": 2
+}

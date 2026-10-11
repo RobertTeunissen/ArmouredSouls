@@ -1,0 +1,837 @@
+{
+  "stable_number": 127,
+  "catalogue_key": "gutsy-robot-command",
+  "robots": [
+    {
+      "slot": 1,
+      "name": "GaoGaiGar",
+      "source_identity": "GaoGaiGar",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Bruiser",
+      "range_from_weapons": "melee",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "War Club",
+          "offhand_weapon": null,
+          "list_price_credits": 84000,
+          "source_text": "War Club (₡84,000)"
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Heavy Hammer",
+          "offhand_weapon": null,
+          "list_price_credits": 478000,
+          "source_text": "Heavy Hammer (₡478,000)"
+        }
+      ],
+      "refinement_plan": [
+        {
+          "step": 1,
+          "operation": "Hone",
+          "weapon": "Heavy Hammer",
+          "hand": "main",
+          "effect": "Hydraulic Systems 8→10",
+          "cost_credits": 40000,
+          "workshop_level": 1,
+          "requirements": "Workshop L1",
+          "magnitude": 2,
+          "attribute": "Hydraulic Systems",
+          "base_value": 8,
+          "result_value": 10,
+          "source_text": "Main Heavy Hammer: Hone Hydraulic Systems 8→10"
+        },
+        {
+          "step": 2,
+          "operation": "Augment",
+          "weapon": "Heavy Hammer",
+          "hand": "main",
+          "effect": "Armor Plating +3 (new)",
+          "cost_credits": 180000,
+          "workshop_level": 3,
+          "requirements": "Workshop L3",
+          "magnitude": 3,
+          "attribute": "Armor Plating",
+          "result_value": 3,
+          "source_text": "Main Heavy Hammer: Augment Armor Plating +3 (new)"
+        },
+        {
+          "step": 3,
+          "operation": "Sharpen",
+          "weapon": "Heavy Hammer",
+          "hand": "main",
+          "effect": "1 (−10% cooldown)",
+          "cost_credits": 300000,
+          "workshop_level": 5,
+          "requirements": "Workshop L5; 3,000 prestige",
+          "prestige_gate": 3000,
+          "source_text": "Main Heavy Hammer: Sharpen 1 (−10% cooldown)"
+        },
+        {
+          "step": 4,
+          "operation": "Forge",
+          "weapon": "Heavy Hammer",
+          "hand": "main",
+          "effect": "1 (+8% damage)",
+          "cost_credits": 400000,
+          "workshop_level": 8,
+          "requirements": "Workshop L8; 15,000 prestige",
+          "prestige_gate": 15000,
+          "source_text": "Main Heavy Hammer: Forge 1 (+8% damage)"
+        }
+      ],
+      "art_brief": "Preserve the complete television GaoGaiGar design, lion chest, crest, and source palette. Use an original two-handed arena hammer; it is not the Goldion Hammer or another robot.",
+      "role": "Close-combat lead",
+      "missing_fields": [],
+      "refinement_total_credits": 920000,
+      "blueprint_origin": "preserved existing design",
+      "minimum_roster_expansion_level": 0,
+      "blueprint_id": "gutsy-robot-command:1:gaogaigar",
+      "folder": "stables/127-gutsy-robot-command/robots/01-gaogaigar",
+      "files": {
+        "png": "stables/127-gutsy-robot-command/robots/01-gaogaigar/portrait.png",
+        "webp": "stables/127-gutsy-robot-command/robots/01-gaogaigar/portrait.webp",
+        "blueprint": "stables/127-gutsy-robot-command/robots/01-gaogaigar/blueprint.json",
+        "profile": "stables/127-gutsy-robot-command/robots/01-gaogaigar/profile.md",
+        "prompt": "stables/127-gutsy-robot-command/robots/01-gaogaigar/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/gutsy-robot-command/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 127,
+          "stable_name": "Gutsy Robot Command",
+          "catalogue_key": "gutsy-robot-command",
+          "slot": 1,
+          "robot_name": "GaoGaiGar",
+          "source_identity": "GaoGaiGar",
+          "source_edition": "The King of Braves GaoGaiGar — 1997 television individual base robot forms",
+          "source_references": [
+            "https://www.gaogaigar.net/TV/mecha/index.html"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic 1997 television GaoGaiGar complete combined robot as ONE character, unmistakable gold-maned lion chest, white helmet with red/gold crest, black torso, red and blue source components, massive shoulder drill/vehicle construction and original feet. Hold ONE simple original arena two-handed heavy hammer at rest; hammer is equipment, not Goldymarg or Goldion Hammer. Preserve complete source robot proportions.\nCatalogue label for metadata only, do not render text: #127 slot 1 GaoGaiGar.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-2561589c-c4e9-46fc-8501-45fe0b9a4420.png",
+          "visual_review": "Accepted: complete figure, distinct readable silhouette, shared collection finish and lighting",
+          "asset_id": "gutsy-robot-command:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/gutsy-robot-command/1.webp",
+          "master": "outputs/automaton-portraits/masters/gutsy-robot-command/1.png",
+          "output": "app/frontend/public/assets/automatons/gutsy-robot-command/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "347632621c22d318799b3230294a54db9f364313afddeafcdd2ad76d3daaaed1",
+          "bytes": 75450
+        },
+        "sha256": "347632621c22d318799b3230294a54db9f364313afddeafcdd2ad76d3daaaed1",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 2,
+      "name": "HyoRyu",
+      "source_identity": "HyoRyu",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 20,
+      "build_focus": "Deadeye",
+      "range_from_weapons": "long",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Beam Pistol",
+          "offhand_weapon": null,
+          "list_price_credits": 93000,
+          "source_text": "Beam Pistol (₡93,000)"
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Particle Lance",
+          "offhand_weapon": null,
+          "list_price_credits": 425000,
+          "source_text": "Particle Lance (₡425,000)"
+        }
+      ],
+      "refinement_plan": [
+        {
+          "step": 1,
+          "operation": "Hone",
+          "weapon": "Particle Lance",
+          "hand": "main",
+          "effect": "Targeting Systems 8→10",
+          "cost_credits": 40000,
+          "workshop_level": 1,
+          "requirements": "Workshop L1",
+          "magnitude": 2,
+          "attribute": "Targeting Systems",
+          "base_value": 8,
+          "result_value": 10,
+          "source_text": "Main Particle Lance: Hone Targeting Systems 8→10"
+        },
+        {
+          "step": 2,
+          "operation": "Augment",
+          "weapon": "Particle Lance",
+          "hand": "main",
+          "effect": "Weapon Control +3 (new)",
+          "cost_credits": 180000,
+          "workshop_level": 3,
+          "requirements": "Workshop L3",
+          "magnitude": 3,
+          "attribute": "Weapon Control",
+          "result_value": 3,
+          "source_text": "Main Particle Lance: Augment Weapon Control +3 (new)"
+        },
+        {
+          "step": 3,
+          "operation": "Sharpen",
+          "weapon": "Particle Lance",
+          "hand": "main",
+          "effect": "1 (−10% cooldown)",
+          "cost_credits": 300000,
+          "workshop_level": 5,
+          "requirements": "Workshop L5; 3,000 prestige",
+          "prestige_gate": 3000,
+          "source_text": "Main Particle Lance: Sharpen 1 (−10% cooldown)"
+        },
+        {
+          "step": 4,
+          "operation": "Forge",
+          "weapon": "Particle Lance",
+          "hand": "main",
+          "effect": "1 (+8% damage)",
+          "cost_credits": 400000,
+          "workshop_level": 8,
+          "requirements": "Workshop L8; 15,000 prestige",
+          "prestige_gate": 15000,
+          "source_text": "Main Particle Lance: Forge 1 (+8% damage)"
+        }
+      ],
+      "art_brief": "Blue HyoRyu vehicle-robot form with source head and body construction. One long-range arena weapon; do not depict ChoRyuJin or add freezing mechanics.",
+      "role": "Precision support",
+      "missing_fields": [],
+      "refinement_total_credits": 920000,
+      "blueprint_origin": "preserved existing design",
+      "minimum_roster_expansion_level": 1,
+      "blueprint_id": "gutsy-robot-command:2:hyoryu",
+      "folder": "stables/127-gutsy-robot-command/robots/02-hyoryu",
+      "files": {
+        "png": "stables/127-gutsy-robot-command/robots/02-hyoryu/portrait.png",
+        "webp": "stables/127-gutsy-robot-command/robots/02-hyoryu/portrait.webp",
+        "blueprint": "stables/127-gutsy-robot-command/robots/02-hyoryu/blueprint.json",
+        "profile": "stables/127-gutsy-robot-command/robots/02-hyoryu/profile.md",
+        "prompt": "stables/127-gutsy-robot-command/robots/02-hyoryu/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/gutsy-robot-command/2.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 127,
+          "stable_name": "Gutsy Robot Command",
+          "catalogue_key": "gutsy-robot-command",
+          "slot": 2,
+          "robot_name": "HyoRyu",
+          "source_identity": "HyoRyu individual robot",
+          "source_edition": "The King of Braves GaoGaiGar — 1997 television individual base robot forms",
+          "source_references": [
+            "https://www.gaogaigar.net/TV/mecha/index.html"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic 1997 GaoGaiGar HyoRyu BLUE vehicle robot in individual humanoid robot form, original blue and white truck-derived body, correct helmet, shoulder details, source lower leg vehicle panels and wheels. One long-range arena rifle in one hand, offhand empty. No ChoRyuJin combination, no other robot or ice effect.\nCatalogue label for metadata only, do not render text: #127 slot 2 HyoRyu.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-eb74a469-b7a6-4f01-a605-ecb40f90868e.png",
+          "visual_review": "Accepted: complete figure, distinct readable silhouette, shared collection finish and lighting",
+          "asset_id": "gutsy-robot-command:2",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/gutsy-robot-command/2.webp",
+          "master": "outputs/automaton-portraits/masters/gutsy-robot-command/2.png",
+          "output": "app/frontend/public/assets/automatons/gutsy-robot-command/2.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "9896520fa4a358cd6e2c1a98f71fa83f4bc31402497ae6962774dc8636e752e7",
+          "bytes": 57432
+        },
+        "sha256": "9896520fa4a358cd6e2c1a98f71fa83f4bc31402497ae6962774dc8636e752e7",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 3,
+      "name": "EnRyu",
+      "source_identity": "EnRyu",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "offensive",
+      "yield_threshold": 15,
+      "build_focus": "Versatile",
+      "range_from_weapons": "mid",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Bolt Carbine",
+          "offhand_weapon": null,
+          "list_price_credits": 93000,
+          "source_text": "Bolt Carbine (₡93,000)"
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Nova Caster",
+          "offhand_weapon": null,
+          "list_price_credits": 425000,
+          "source_text": "Nova Caster (₡425,000)"
+        }
+      ],
+      "refinement_plan": [
+        {
+          "step": 1,
+          "operation": "Sharpen",
+          "weapon": "Nova Caster",
+          "hand": "main",
+          "effect": "1 (−10% cooldown)",
+          "cost_credits": 300000,
+          "workshop_level": 5,
+          "requirements": "Workshop L5; 3,000 prestige",
+          "prestige_gate": 3000,
+          "source_text": "Main Nova Caster: Sharpen 1 (−10% cooldown)"
+        },
+        {
+          "step": 2,
+          "operation": "Forge",
+          "weapon": "Nova Caster",
+          "hand": "main",
+          "effect": "1 (+8% damage)",
+          "cost_credits": 400000,
+          "workshop_level": 8,
+          "requirements": "Workshop L8; 15,000 prestige",
+          "prestige_gate": 15000,
+          "source_text": "Main Nova Caster: Forge 1 (+8% damage)"
+        }
+      ],
+      "art_brief": "Red EnRyu individual robot form and correct source equipment silhouette. One mid-range weapon; preserve the source body rather than a combined or alternate vehicle form.",
+      "role": "Mid-range assault",
+      "missing_fields": [],
+      "refinement_total_credits": 700000,
+      "blueprint_origin": "preserved existing design",
+      "minimum_roster_expansion_level": 2,
+      "blueprint_id": "gutsy-robot-command:3:enryu",
+      "folder": "stables/127-gutsy-robot-command/robots/03-enryu",
+      "files": {
+        "png": "stables/127-gutsy-robot-command/robots/03-enryu/portrait.png",
+        "webp": "stables/127-gutsy-robot-command/robots/03-enryu/portrait.webp",
+        "blueprint": "stables/127-gutsy-robot-command/robots/03-enryu/blueprint.json",
+        "profile": "stables/127-gutsy-robot-command/robots/03-enryu/profile.md",
+        "prompt": "stables/127-gutsy-robot-command/robots/03-enryu/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/gutsy-robot-command/3.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 127,
+          "stable_name": "Gutsy Robot Command",
+          "catalogue_key": "gutsy-robot-command",
+          "slot": 3,
+          "robot_name": "EnRyu",
+          "source_identity": "EnRyu individual robot",
+          "source_edition": "The King of Braves GaoGaiGar — 1997 television individual base robot forms",
+          "source_references": [
+            "https://www.gaogaigar.net/TV/mecha/index.html"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic 1997 GaoGaiGar EnRyu RED vehicle robot in individual humanoid form, correct original head, red and white truck-derived torso and limbs, source crane/vehicle construction and wheels. One compact mid-range arena rifle in one hand. Preserve individual EnRyu form; no combination, no fire effect or other robots.\nCatalogue label for metadata only, do not render text: #127 slot 3 EnRyu.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-2d2f6e87-44bd-48d5-b9a6-c5f4ff2ff06c.png",
+          "visual_review": "Accepted: complete figure, distinct readable silhouette, shared collection finish and lighting",
+          "asset_id": "gutsy-robot-command:3",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/gutsy-robot-command/3.webp",
+          "master": "outputs/automaton-portraits/masters/gutsy-robot-command/3.png",
+          "output": "app/frontend/public/assets/automatons/gutsy-robot-command/3.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "80a3dba928cfcdac035a5c8c037e10df69c3831f59e022dda620127b4e226721",
+          "bytes": 64964
+        },
+        "sha256": "80a3dba928cfcdac035a5c8c037e10df69c3831f59e022dda620127b4e226721",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 4,
+      "name": "FuuRyu",
+      "source_identity": "FuuRyu",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yield_threshold": 20,
+      "build_focus": "Warden",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": "Light Shield",
+          "list_price_credits": 108000,
+          "source_text": "Laser Pistol + Light Shield (₡108,000)"
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": "Aegis Bulwark",
+          "list_price_credits": 834000,
+          "source_text": "Volt Sabre + Aegis Bulwark (₡834,000)"
+        }
+      ],
+      "refinement_plan": [
+        {
+          "step": 1,
+          "operation": "Hone",
+          "weapon": "Aegis Bulwark",
+          "hand": "offhand",
+          "effect": "Evasion Thrusters −5→0",
+          "cost_credits": 250000,
+          "workshop_level": 1,
+          "requirements": "Workshop L1",
+          "magnitude": 5,
+          "attribute": "Evasion Thrusters",
+          "base_value": -5,
+          "result_value": 0,
+          "source_text": "Offhand Aegis Bulwark: Hone Evasion Thrusters −5→0"
+        },
+        {
+          "step": 2,
+          "operation": "Hone",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "effect": "Combat Power 8→10",
+          "cost_credits": 40000,
+          "workshop_level": 1,
+          "requirements": "Workshop L1",
+          "magnitude": 2,
+          "attribute": "Combat Power",
+          "base_value": 8,
+          "result_value": 10,
+          "source_text": "Main Volt Sabre: Hone Combat Power 8→10"
+        },
+        {
+          "step": 3,
+          "operation": "Augment",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "effect": "Adaptive AI +3 (new)",
+          "cost_credits": 180000,
+          "workshop_level": 3,
+          "requirements": "Workshop L3",
+          "magnitude": 3,
+          "attribute": "Adaptive AI",
+          "result_value": 3,
+          "source_text": "Main Volt Sabre: Augment Adaptive AI +3 (new)"
+        },
+        {
+          "step": 4,
+          "operation": "Sharpen",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "effect": "1 (−10% cooldown)",
+          "cost_credits": 300000,
+          "workshop_level": 5,
+          "requirements": "Workshop L5; 3,000 prestige",
+          "prestige_gate": 3000,
+          "source_text": "Main Volt Sabre: Sharpen 1 (−10% cooldown)"
+        },
+        {
+          "step": 5,
+          "operation": "Forge",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "effect": "1 (+8% damage)",
+          "cost_credits": 400000,
+          "workshop_level": 8,
+          "requirements": "Workshop L8; 15,000 prestige",
+          "prestige_gate": 15000,
+          "source_text": "Main Volt Sabre: Forge 1 (+8% damage)"
+        }
+      ],
+      "art_brief": "Green FuuRyu individual robot form, preserving source torso and limbs. One short-range weapon and an original arena shield; wind powers provide no additional engine effect.",
+      "role": "Protected reinforcement",
+      "missing_fields": [],
+      "refinement_total_credits": 1170000,
+      "blueprint_origin": "preserved existing design",
+      "minimum_roster_expansion_level": 3,
+      "blueprint_id": "gutsy-robot-command:4:fuuryu",
+      "folder": "stables/127-gutsy-robot-command/robots/04-fuuryu",
+      "files": {
+        "png": "stables/127-gutsy-robot-command/robots/04-fuuryu/portrait.png",
+        "webp": "stables/127-gutsy-robot-command/robots/04-fuuryu/portrait.webp",
+        "blueprint": "stables/127-gutsy-robot-command/robots/04-fuuryu/blueprint.json",
+        "profile": "stables/127-gutsy-robot-command/robots/04-fuuryu/profile.md",
+        "prompt": "stables/127-gutsy-robot-command/robots/04-fuuryu/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/gutsy-robot-command/4.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 127,
+          "stable_name": "Gutsy Robot Command",
+          "catalogue_key": "gutsy-robot-command",
+          "slot": 4,
+          "robot_name": "FuuRyu",
+          "source_identity": "FuuRyu individual robot",
+          "source_edition": "The King of Braves GaoGaiGar — 1997 television individual base robot forms",
+          "source_references": [
+            "https://www.gaogaigar.net/TV/mecha/index.html"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic 1997 GaoGaiGar FuuRyu GREEN individual vehicle robot, original green and white torso, exact source helmet and truck-derived arms, leg panels and wheels. Hold one compact short-range arena pistol and one modest original arena shield. Preserve FuuRyu shape, no GekiRyuJin combination, wind effect or secondary robot.\nCatalogue label for metadata only, do not render text: #127 slot 4 FuuRyu.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-8bd862b0-1a34-457d-9c72-b92421e1a6bb.png",
+          "visual_review": "Accepted: complete figure, distinct readable silhouette, shared collection finish and lighting",
+          "asset_id": "gutsy-robot-command:4",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/gutsy-robot-command/4.webp",
+          "master": "outputs/automaton-portraits/masters/gutsy-robot-command/4.png",
+          "output": "app/frontend/public/assets/automatons/gutsy-robot-command/4.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "0cb96cc3ed59a6cc32f928d9789b194121318f259b9687e1a31ee7e8ab9e032d",
+          "bytes": 59302
+        },
+        "sha256": "0cb96cc3ed59a6cc32f928d9789b194121318f259b9687e1a31ee7e8ab9e032d",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 5,
+      "name": "RaiRyu",
+      "source_identity": "RaiRyu",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Bruiser",
+      "range_from_weapons": "mid",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Training Rifle",
+          "offhand_weapon": null,
+          "list_price_credits": 50000,
+          "source_text": "Training Rifle (₡50,000)"
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Plasma Cannon",
+          "offhand_weapon": null,
+          "list_price_credits": 408000,
+          "source_text": "Plasma Cannon (₡408,000)"
+        }
+      ],
+      "refinement_plan": [
+        {
+          "step": 1,
+          "operation": "Hone",
+          "weapon": "Plasma Cannon",
+          "hand": "main",
+          "effect": "Combat Power 7→10",
+          "cost_credits": 90000,
+          "workshop_level": 1,
+          "requirements": "Workshop L1",
+          "magnitude": 3,
+          "attribute": "Combat Power",
+          "base_value": 7,
+          "result_value": 10,
+          "source_text": "Main Plasma Cannon: Hone Combat Power 7→10"
+        },
+        {
+          "step": 2,
+          "operation": "Hone",
+          "weapon": "Plasma Cannon",
+          "hand": "main",
+          "effect": "Critical Systems 6→10",
+          "cost_credits": 160000,
+          "workshop_level": 1,
+          "requirements": "Workshop L1",
+          "magnitude": 4,
+          "attribute": "Critical Systems",
+          "base_value": 6,
+          "result_value": 10,
+          "source_text": "Main Plasma Cannon: Hone Critical Systems 6→10"
+        },
+        {
+          "step": 3,
+          "operation": "Augment",
+          "weapon": "Plasma Cannon",
+          "hand": "main",
+          "effect": "Hull Integrity +3 (new)",
+          "cost_credits": 180000,
+          "workshop_level": 3,
+          "requirements": "Workshop L3",
+          "magnitude": 3,
+          "attribute": "Hull Integrity",
+          "result_value": 3,
+          "source_text": "Main Plasma Cannon: Augment Hull Integrity +3 (new)"
+        },
+        {
+          "step": 4,
+          "operation": "Sharpen",
+          "weapon": "Plasma Cannon",
+          "hand": "main",
+          "effect": "1 (−10% cooldown)",
+          "cost_credits": 300000,
+          "workshop_level": 5,
+          "requirements": "Workshop L5; 3,000 prestige",
+          "prestige_gate": 3000,
+          "source_text": "Main Plasma Cannon: Sharpen 1 (−10% cooldown)"
+        },
+        {
+          "step": 5,
+          "operation": "Forge",
+          "weapon": "Plasma Cannon",
+          "hand": "main",
+          "effect": "1 (+8% damage)",
+          "cost_credits": 400000,
+          "workshop_level": 8,
+          "requirements": "Workshop L8; 15,000 prestige",
+          "prestige_gate": 15000,
+          "source_text": "Main Plasma Cannon: Forge 1 (+8% damage)"
+        }
+      ],
+      "art_brief": "Yellow RaiRyu individual robot form and source proportions. One heavy mid-range arena weapon; do not depict GekiRyuJin or grant a separate electrical attack.",
+      "role": "Heavy mid-range fire",
+      "missing_fields": [],
+      "refinement_total_credits": 1130000,
+      "blueprint_origin": "preserved existing design",
+      "minimum_roster_expansion_level": 4,
+      "blueprint_id": "gutsy-robot-command:5:rairyu",
+      "folder": "stables/127-gutsy-robot-command/robots/05-rairyu",
+      "files": {
+        "png": "stables/127-gutsy-robot-command/robots/05-rairyu/portrait.png",
+        "webp": "stables/127-gutsy-robot-command/robots/05-rairyu/portrait.webp",
+        "blueprint": "stables/127-gutsy-robot-command/robots/05-rairyu/blueprint.json",
+        "profile": "stables/127-gutsy-robot-command/robots/05-rairyu/profile.md",
+        "prompt": "stables/127-gutsy-robot-command/robots/05-rairyu/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/gutsy-robot-command/5.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 127,
+          "stable_name": "Gutsy Robot Command",
+          "catalogue_key": "gutsy-robot-command",
+          "slot": 5,
+          "robot_name": "RaiRyu",
+          "source_identity": "RaiRyu individual robot",
+          "source_edition": "The King of Braves GaoGaiGar — 1997 television individual base robot forms",
+          "source_references": [
+            "https://www.gaogaigar.net/TV/mecha/index.html"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic 1997 GaoGaiGar RaiRyu YELLOW individual vehicle robot, source yellow and white body, original helmet, truck-derived shoulders and mechanical limbs, original vehicle components and wheels. One heavy mid-range arena cannon held in both hands. No GekiRyuJin, no electrical effect or extra robots.\nCatalogue label for metadata only, do not render text: #127 slot 5 RaiRyu.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-8c872fe3-4029-4353-aff2-4fd195b481dd.png",
+          "visual_review": "Accepted: complete figure, distinct readable silhouette, shared collection finish and lighting",
+          "asset_id": "gutsy-robot-command:5",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/gutsy-robot-command/5.webp",
+          "master": "outputs/automaton-portraits/masters/gutsy-robot-command/5.png",
+          "output": "app/frontend/public/assets/automatons/gutsy-robot-command/5.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "4bf39935e32a140bca323f5edd466c8b270301516d4a7d8ae550b33e4d7e1a6d",
+          "bytes": 63918
+        },
+        "sha256": "4bf39935e32a140bca323f5edd466c8b270301516d4a7d8ae550b33e4d7e1a6d",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 6,
+      "name": "Volfogg",
+      "source_identity": "Volfogg",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "offensive",
+      "yield_threshold": 15,
+      "build_focus": "Sprinter",
+      "range_from_weapons": "melee",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Practice Sword",
+          "offhand_weapon": null,
+          "list_price_credits": 50000,
+          "source_text": "Practice Sword (₡50,000)"
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Vibro Mace",
+          "offhand_weapon": null,
+          "list_price_credits": 425000,
+          "source_text": "Vibro Mace (₡425,000)"
+        }
+      ],
+      "refinement_plan": [
+        {
+          "step": 1,
+          "operation": "Sharpen",
+          "weapon": "Vibro Mace",
+          "hand": "main",
+          "effect": "1 (−10% cooldown)",
+          "cost_credits": 300000,
+          "workshop_level": 5,
+          "requirements": "Workshop L5; 3,000 prestige",
+          "prestige_gate": 3000,
+          "source_text": "Main Vibro Mace: Sharpen 1 (−10% cooldown)"
+        },
+        {
+          "step": 2,
+          "operation": "Forge",
+          "weapon": "Vibro Mace",
+          "hand": "main",
+          "effect": "1 (+8% damage)",
+          "cost_credits": 400000,
+          "workshop_level": 8,
+          "requirements": "Workshop L8; 15,000 prestige",
+          "prestige_gate": 15000,
+          "source_text": "Main Vibro Mace: Forge 1 (+8% damage)"
+        }
+      ],
+      "art_brief": "Base purple Volfogg robot form with recognizable stealth-police styling. One melee arena weapon; no Big Volfogg components, extra figures, or transformation mechanic.",
+      "role": "Close flanker",
+      "missing_fields": [],
+      "refinement_total_credits": 700000,
+      "blueprint_origin": "preserved existing design",
+      "minimum_roster_expansion_level": 5,
+      "blueprint_id": "gutsy-robot-command:6:volfogg",
+      "folder": "stables/127-gutsy-robot-command/robots/06-volfogg",
+      "files": {
+        "png": "stables/127-gutsy-robot-command/robots/06-volfogg/portrait.png",
+        "webp": "stables/127-gutsy-robot-command/robots/06-volfogg/portrait.webp",
+        "blueprint": "stables/127-gutsy-robot-command/robots/06-volfogg/blueprint.json",
+        "profile": "stables/127-gutsy-robot-command/robots/06-volfogg/profile.md",
+        "prompt": "stables/127-gutsy-robot-command/robots/06-volfogg/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/gutsy-robot-command/6.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 127,
+          "stable_name": "Gutsy Robot Command",
+          "catalogue_key": "gutsy-robot-command",
+          "slot": 6,
+          "robot_name": "Volfogg",
+          "source_identity": "Volfogg base individual robot",
+          "source_edition": "The King of Braves GaoGaiGar — 1997 television individual base robot forms",
+          "source_references": [
+            "https://www.gaogaigar.net/TV/mecha/index.html"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic 1997 GaoGaiGar base Volfogg in purple stealth-police robot form, original small angular helmet, narrow athletic torso and source vehicle-derived panels and limbs. One compact original arena melee mace held in right hand, left hand empty. Preserve base Volfogg only; no Big Volfogg components or extra robots, no cloak or invisibility effect.\nCatalogue label for metadata only, do not render text: #127 slot 6 Volfogg.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-588f022a-ca3e-43bc-8b44-51e9e12ae011.png",
+          "visual_review": "Accepted: complete figure, distinct readable silhouette, shared collection finish and lighting",
+          "asset_id": "gutsy-robot-command:6",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/gutsy-robot-command/6.webp",
+          "master": "outputs/automaton-portraits/masters/gutsy-robot-command/6.png",
+          "output": "app/frontend/public/assets/automatons/gutsy-robot-command/6.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "6f0091ef7bce087642d78ac633d73d656bbd1bffca6ee47176c40210062b3615",
+          "bytes": 55156
+        },
+        "sha256": "6f0091ef7bce087642d78ac633d73d656bbd1bffca6ee47176c40210062b3615",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "replacement_alternatives": []
+}

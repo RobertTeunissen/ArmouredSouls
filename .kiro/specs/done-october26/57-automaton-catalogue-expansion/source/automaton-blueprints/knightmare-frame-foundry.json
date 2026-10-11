@@ -1,0 +1,160 @@
+{
+  "number": 90,
+  "catalogueKey": "knightmare-frame-foundry",
+  "stableName": "Knightmare Frame Foundry",
+  "franchiseLabel": "Code Geass",
+  "strategy": "Trio",
+  "fit": "Direct",
+  "conceptIdentity": "Fast, heavy, and defensive specialist frames. Sharp mechanical silhouettes, contrasting armour colours, enclosed cockpit details.",
+  "backstory": "Knightmare Frame Foundry enters the arena with a clear doctrine. Fast, heavy, and defensive specialist frames. Every surviving machine returns to the workshop before the next booking.",
+  "openingRobots": 3,
+  "targetRobots": 3,
+  "adminMaximumRobots": 4,
+  "targetOverrides": {},
+  "teamNames": {
+    "2v2": [
+      {
+        "name": "Knightmare Pair 01",
+        "slots": [
+          1,
+          2
+        ]
+      }
+    ],
+    "3v3": [
+      {
+        "name": "Knightmare Squad 01",
+        "slots": [
+          1,
+          2,
+          3
+        ]
+      }
+    ]
+  },
+  "eventOrder": [
+    "league_3v3",
+    "tournament_3v3",
+    "league_1v1",
+    "league_2v2",
+    "tag_team",
+    "koth",
+    "grand_melee",
+    "tournament_2v2",
+    "tournament_1v1"
+  ],
+  "robots": [
+    {
+      "blueprintId": "knightmare-frame-foundry:1:lancelot",
+      "slot": 1,
+      "name": "Lancelot",
+      "sourceAlias": "Lancelot",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "dual_wield",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "Sprinter",
+      "weaponPath": [
+        {
+          "mainWeapon": "Combat Knife",
+          "offhandWeapon": "Combat Knife",
+          "listPriceCredits": 186000
+        },
+        {
+          "mainWeapon": "Vibro Mace",
+          "offhandWeapon": "Vibro Mace",
+          "listPriceCredits": 850000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "melee",
+        "artBrief": "White-gold Knightmare frame with articulated limbs, sharp armour and blade equipment.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 0,
+        "imageConvention": "app/frontend/public/assets/automatons/knightmare-frame-foundry/1.webp"
+      }
+    },
+    {
+      "blueprintId": "knightmare-frame-foundry:2:guren-mk-ii",
+      "slot": 2,
+      "name": "Guren Mk-II",
+      "sourceAlias": "Guren Mk-II",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yieldThreshold": 5,
+      "buildFocus": "Bruiser",
+      "weaponPath": [
+        {
+          "mainWeapon": "Scatter Cannon",
+          "offhandWeapon": null,
+          "listPriceCredits": 84000
+        },
+        {
+          "mainWeapon": "Arc Projector",
+          "offhandWeapon": null,
+          "listPriceCredits": 488000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Red Knightmare frame with broad armour and an oversized mechanical right arm.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 1,
+        "imageConvention": "app/frontend/public/assets/automatons/knightmare-frame-foundry/2.webp"
+      }
+    },
+    {
+      "blueprintId": "knightmare-frame-foundry:3:shinkiro",
+      "slot": 3,
+      "name": "Shinkiro",
+      "sourceAlias": "Shinkiro",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yieldThreshold": 15,
+      "buildFocus": "Tactician",
+      "weaponPath": [
+        {
+          "mainWeapon": "Bolt Carbine",
+          "offhandWeapon": "Combat Shield",
+          "listPriceCredits": 171000
+        },
+        {
+          "mainWeapon": "Nova Caster",
+          "offhandWeapon": "Aegis Bulwark",
+          "listPriceCredits": 834000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "mid",
+        "artBrief": "Dark-gold Knightmare frame with geometric armour and a defensive equipment layout.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 2,
+        "imageConvention": "app/frontend/public/assets/automatons/knightmare-frame-foundry/3.webp"
+      }
+    }
+  ],
+  "alternativeBlueprints": [],
+  "review": {
+    "openingWeaponCredits": 441000,
+    "finalWeaponCreditsAtTarget": 2172000,
+    "equippedWeaponCountAtTarget": 5,
+    "purchaseOrder": [
+      1,
+      2,
+      3
+    ],
+    "reserveSlots": [],
+    "alternativeRule": "Choose an alternative before catalogue approval; it replaces the specified slot and never adds another live robot."
+  }
+}

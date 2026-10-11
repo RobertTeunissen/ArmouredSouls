@@ -1,0 +1,299 @@
+{
+  "number": 112,
+  "catalogue_key": "aumaan-orbital-foundry",
+  "name": "Aumaan Orbital Foundry",
+  "franchise": "Zone of the Enders",
+  "strategy": "Duo",
+  "opening_robots": 2,
+  "target_robots": 2,
+  "max_planned_robots": 2,
+  "strategy_review_limit": 3,
+  "backstory": "Two sculpted combat frames trade mobility against distant firepower. Their arena partnership depends on balanced investment rather than either machine dominating the workshop budget.",
+  "strategy_personality": "One of the strongest missing combat-machine pairs. Slender, sculpted Orbital Frames contrast with the bulkier Titans and BattleMechs already present. They are rivals in the source, not a canonical allied team. [Konami machine profiles](https://www.konami.com/games/zoe_hd/en_us/characters_anubis.html).",
+  "teams": {
+    "2v2": [
+      {
+        "name": "Orbital Pair Pair 01",
+        "slots": [
+          1,
+          2
+        ],
+        "forms": "Opening"
+      }
+    ],
+    "3v3": []
+  },
+  "event_order": [
+    "league_2v2",
+    "tag_team",
+    "tournament_2v2",
+    "league_1v1",
+    "koth",
+    "grand_melee",
+    "tournament_1v1",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "robots": [
+    {
+      "slot": 1,
+      "name": "Jehuty",
+      "source_identity": "Jehuty orbital frame — Zone of the Enders: The 2nd Runner — standard game bodies",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 20,
+      "build_focus": "Sprinter",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": null,
+          "list_price_credits": 57000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Hone",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 1,
+          "attribute": "Attack Speed",
+          "magnitude": 3,
+          "result_value": 7,
+          "cost_credits": 90000,
+          "base_value": 4,
+          "effect": "Attack Speed 4→7",
+          "step": 1
+        },
+        {
+          "operation": "Augment",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 3,
+          "attribute": "Evasion Thrusters",
+          "magnitude": 2,
+          "result_value": 2,
+          "cost_credits": 80000,
+          "effect": "Evasion Thrusters, new +2",
+          "step": 2
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 85% of square canvas with breathing room. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic standard Jehuty orbital frame from Zone of the Enders: The 2nd Runner: elegant slender sculpted blue-grey and off-white humanoid mecha, orange/gold accents, turquoise Metatron lines, distinctive angular small head, long digitigrade legs with narrow pointed foot supports and iconic forward projecting cockpit structure at pelvis. Preserve exact orbital-frame anatomy and proportions, forearm blade retracted, full robot including all projections visible. No human pilot.\nCatalogue label for metadata only, do not render text: #112 slot 1 Jehuty.",
+      "role": "Mobile skirmisher",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 170000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "Jehuty fills the mobile skirmisher role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Sprinter tuning supports the short equipment role; balanced stance and a 20% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Duo strategy tuning rules with the Sprinter Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "aumaan-orbital-foundry:1:jehuty",
+      "folder": "stables/112-aumaan-orbital-foundry/robots/01-jehuty",
+      "files": {
+        "png": "stables/112-aumaan-orbital-foundry/robots/01-jehuty/portrait.png",
+        "webp": "stables/112-aumaan-orbital-foundry/robots/01-jehuty/portrait.webp",
+        "blueprint": "stables/112-aumaan-orbital-foundry/robots/01-jehuty/blueprint.json",
+        "profile": "stables/112-aumaan-orbital-foundry/robots/01-jehuty/profile.md",
+        "prompt": "stables/112-aumaan-orbital-foundry/robots/01-jehuty/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/aumaan-orbital-foundry/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 112,
+          "stable_name": "Aumaan Orbital Foundry",
+          "catalogue_key": "aumaan-orbital-foundry",
+          "slot": 1,
+          "robot_name": "Jehuty",
+          "source_identity": "Jehuty orbital frame — Zone of the Enders: The 2nd Runner — standard game bodies",
+          "source_edition": "Zone of the Enders: The 2nd Runner — standard game bodies",
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 85% of square canvas with breathing room. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic standard Jehuty orbital frame from Zone of the Enders: The 2nd Runner: elegant slender sculpted blue-grey and off-white humanoid mecha, orange/gold accents, turquoise Metatron lines, distinctive angular small head, long digitigrade legs with narrow pointed foot supports and iconic forward projecting cockpit structure at pelvis. Preserve exact orbital-frame anatomy and proportions, forearm blade retracted, full robot including all projections visible. No human pilot.\nCatalogue label for metadata only, do not render text: #112 slot 1 Jehuty.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-e37163e8-e395-491f-9954-ccfb142137d7.png",
+          "visual_review": "Accepted — full body, silhouette, material style and source details checked; corrected Fugitoid lights/display and Anubis framing selected where applicable.",
+          "asset_id": "aumaan-orbital-foundry:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/aumaan-orbital-foundry/1.webp",
+          "master": "outputs/automaton-portraits/masters/aumaan-orbital-foundry/1.png",
+          "output": "app/frontend/public/assets/automatons/aumaan-orbital-foundry/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "56751912619ed20c378b49e4bc4ed78a8718e21d8ca7c531782fda3b2497c8d0",
+          "bytes": 50126,
+          "source_references": [
+            "https://www.konami.com/games/zoe_hd/en_us/characters_anubis.html"
+          ]
+        },
+        "sha256": "56751912619ed20c378b49e4bc4ed78a8718e21d8ca7c531782fda3b2497c8d0",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 2,
+      "name": "Anubis",
+      "source_identity": "Anubis orbital frame — Zone of the Enders: The 2nd Runner standard body",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "balanced",
+      "yield_threshold": 15,
+      "build_focus": "Deadeye",
+      "range_from_weapons": "long",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Training Beam",
+          "offhand_weapon": null,
+          "list_price_credits": 50000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Ion Beam",
+          "offhand_weapon": null,
+          "list_price_credits": 544000
+        }
+      ],
+      "refinement_plan": [],
+      "art_brief": "Refine ONLY the framing of this Anubis robot portrait. Pull the camera back enough to give approximately 6% clear margin on ALL four sides around the ENTIRE robot and staff. Its upper head tips currently touch the top edge: restore the complete pointed tips and leave dark background above them. Preserve the robot's design, bronze-black colours, turquoise lines, six back propulsion modules, staff, pose, realistic finish, studio lighting and square canvas. All six back tips, both head tips, feet and both ends of staff must fit with visible breathing room. No other figures, text or border.",
+      "role": "Heavy long-range support",
+      "missing_fields": [],
+      "refinement_note": "No verified Hone/Augment combination exists for this final weapon in the supplied references; Duo does not buy Sharpen/Forge. The empty plan is intentional.",
+      "refinement_total_credits": 0,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 1,
+      "equipment_interpretation": "Anubis fills the heavy long-range support role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Deadeye tuning supports the long equipment role; balanced stance and a 15% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Duo strategy tuning rules with the Deadeye Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "aumaan-orbital-foundry:2:anubis",
+      "folder": "stables/112-aumaan-orbital-foundry/robots/02-anubis",
+      "files": {
+        "png": "stables/112-aumaan-orbital-foundry/robots/02-anubis/portrait.png",
+        "webp": "stables/112-aumaan-orbital-foundry/robots/02-anubis/portrait.webp",
+        "blueprint": "stables/112-aumaan-orbital-foundry/robots/02-anubis/blueprint.json",
+        "profile": "stables/112-aumaan-orbital-foundry/robots/02-anubis/profile.md",
+        "prompt": "stables/112-aumaan-orbital-foundry/robots/02-anubis/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/aumaan-orbital-foundry/2.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 112,
+          "stable_name": "Aumaan Orbital Foundry",
+          "catalogue_key": "aumaan-orbital-foundry",
+          "slot": 2,
+          "robot_name": "Anubis",
+          "source_identity": "Anubis orbital frame — Zone of the Enders: The 2nd Runner standard body",
+          "revision": 2,
+          "prompt": "Refine ONLY the framing of this Anubis robot portrait. Pull the camera back enough to give approximately 6% clear margin on ALL four sides around the ENTIRE robot and staff. Its upper head tips currently touch the top edge: restore the complete pointed tips and leave dark background above them. Preserve the robot's design, bronze-black colours, turquoise lines, six back propulsion modules, staff, pose, realistic finish, studio lighting and square canvas. All six back tips, both head tips, feet and both ends of staff must fit with visible breathing room. No other figures, text or border.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-03d9730b-6042-4c59-92a6-256318afcb51.png",
+          "visual_review": "Accepted — full body, silhouette, material style and source details checked; corrected Fugitoid lights/display and Anubis framing selected where applicable.",
+          "asset_id": "aumaan-orbital-foundry:2",
+          "status": "generated",
+          "runtime_output": "app/frontend/public/assets/automatons/aumaan-orbital-foundry/2.webp",
+          "master": "outputs/automaton-portraits/masters/aumaan-orbital-foundry/2-v2.png",
+          "output": "app/frontend/public/assets/automatons/aumaan-orbital-foundry/2-v2.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "9d76648bf5251a7e00e660795e7df330713fcab77e988a0387b64746cf380c8c",
+          "bytes": 49602,
+          "previous_versions": [
+            {
+              "stable_number": 112,
+              "stable_name": "Aumaan Orbital Foundry",
+              "catalogue_key": "aumaan-orbital-foundry",
+              "slot": 2,
+              "robot_name": "Anubis",
+              "source_identity": "Anubis orbital frame — Zone of the Enders: The 2nd Runner — standard game bodies",
+              "source_edition": "Zone of the Enders: The 2nd Runner — standard game bodies",
+              "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 85% of square canvas with breathing room. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic standard Anubis orbital frame from Zone of the Enders: The 2nd Runner: dark bronze/black sculpted angular humanoid mecha with jackal-inspired narrow head, elongated reverse-jointed legs, turquoise Metatron seams, distinctive SIX large radiating wing-like propulsion modules behind torso. Hold one source long staff diagonally beside body with complete tips contained. Exact Anubis silhouette, not an Egyptian human costume; all six back modules readable, no extra robots.\nCatalogue label for metadata only, do not render text: #112 slot 2 Anubis.",
+              "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-4767ea24-e50f-4e6d-8196-d7e9849083b5.png",
+              "visual_review": "Superseded by selected refined portrait; original retained",
+              "asset_id": "aumaan-orbital-foundry:2",
+              "status": "generated",
+              "revision": 1,
+              "runtime_output": "app/frontend/public/assets/automatons/aumaan-orbital-foundry/2.webp",
+              "master": "outputs/automaton-portraits/masters/aumaan-orbital-foundry/2.png",
+              "output": "app/frontend/public/assets/automatons/aumaan-orbital-foundry/2.webp",
+              "master_dimensions": [
+                1254,
+                1254
+              ],
+              "export_dimensions": [
+                512,
+                512
+              ],
+              "sha256": "6a6933d10516bef54b96e76f1a64183e2a04fdf437d98e61a0347baadbc3ed7d",
+              "bytes": 49010,
+              "source_references": [
+                "https://www.konami.com/games/zoe_hd/en_us/characters_anubis.html"
+              ]
+            }
+          ],
+          "source_edition": "Zone of the Enders: The 2nd Runner — standard game bodies. Slot order follows the roster above.",
+          "source_references": [
+            "https://www.konami.com/games/zoe_hd/en_us/characters_anubis.html"
+          ]
+        },
+        "sha256": "9d76648bf5251a7e00e660795e7df330713fcab77e988a0387b64746cf380c8c",
+        "revision": 2,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "alternatives": [],
+  "blueprint_status": "detailed",
+  "source_notes": "\n**Franchise:** Zone of the Enders  \n**Strategy:** Duo · **Target roster:** 2 robots\n**Catalogue key:** `aumaan-orbital-foundry`\n\n**Proposed robots:** Jehuty; Anubis\n\n**Direction:** One of the strongest missing combat-machine pairs. Slender, sculpted Orbital Frames contrast with the bulkier Titans and BattleMechs already present. They are rivals in the source, not a canonical allied team. [Konami machine profiles](https://www.konami.com/games/zoe_hd/en_us/characters_anubis.html).\n\n**Production edition:** Zone of the Enders: The 2nd Runner — standard game bodies. Slot order follows the roster above.\n\n",
+  "source_documents": [
+    "reference/AUTOMATON_STABLE_EXPANSION.md"
+  ],
+  "blueprint_origin": "completed during collection",
+  "purchasing_plan": "Open with both robots. Alternate stage-1 equipment investment between slots 1 and 2; finish both final loadouts before refining. Visit both robots in each Hone pass, then each Augment pass, buying Workshop L1/L3 only as required. No Sharpen or Forge purchases.",
+  "target_overrides": {},
+  "equipment_budget": {
+    "stage_0_credits": 107000,
+    "stage_1_credits": 969000,
+    "refinement_credits": 170000,
+    "excludes": "Frames, facilities, training, repairs, upkeep, discounts and resale; stage-1 total replaces stage-0 gear and is not a simultaneous equipment inventory."
+  },
+  "folder": "stables/112-aumaan-orbital-foundry",
+  "history_image_count": 2
+}

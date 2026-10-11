@@ -1,0 +1,159 @@
+{
+  "stable_number": 198,
+  "catalogue_key": "virgil-test-facility-workshop",
+  "robots": [
+    {
+      "slot": 1,
+      "name": "Virgil",
+      "source_identity": "Virgil canonical core; original arena cradle and tracked transport base",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 20,
+      "build_focus": "Sprinter",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": null,
+          "list_price_credits": 57000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Hone",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 1,
+          "attribute": "Attack Speed",
+          "magnitude": 3,
+          "result_value": 7,
+          "cost_credits": 90000,
+          "base_value": 4,
+          "effect": "Attack Speed 4→7",
+          "step": 1
+        },
+        {
+          "operation": "Augment",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 3,
+          "attribute": "Evasion Thrusters",
+          "magnitude": 2,
+          "result_value": 2,
+          "cost_credits": 80000,
+          "effect": "Evasion Thrusters, new +2",
+          "step": 2
+        },
+        {
+          "operation": "Sharpen",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 1,
+          "cost_credits": 300000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 3
+        },
+        {
+          "operation": "Sharpen",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 2,
+          "cost_credits": 900000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 4
+        },
+        {
+          "operation": "Forge",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 8,
+          "occurrence": 1,
+          "cost_credits": 400000,
+          "prestige_gate": 15000,
+          "effect": "+8% damage",
+          "step": 5
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE Virgil maintenance personality core from the released fan-made Portal Stories: Mel, preserve his actual compact spherical core body: worn dark orange/red casing with faded mustard-yellow floral pattern panels, dark mechanical handle supports, one large orange optic with the characteristic old segmented aperture pattern and a fine cracked lens. NOT a white Wheatley shell and not a blue eye. Mount this intact source core in one explicitly ORIGINAL arena mobility adaptation: a low, restrained industrial gimbal cradle on two small complete caterpillar tracks, with one small side service emitter. The added base is subordinate to the recognizable original core, not claimed as source canon. One unified machine, no humanoid arms or legs, no Mel. Complete core, handles, gimbal and both tracks visible.\nMetadata only, do not render text: #198 slot 1 Virgil.",
+      "role": "Mobile skirmisher",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 1770000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "Virgil fills the mobile skirmisher role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Sprinter tuning supports the short equipment role; balanced stance and a 20% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Paragon strategy tuning rules with the Sprinter Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "virgil-test-facility-workshop:1:virgil",
+      "folder": "stables/198-virgil-test-facility-workshop/robots/01-virgil",
+      "files": {
+        "png": "stables/198-virgil-test-facility-workshop/robots/01-virgil/portrait.png",
+        "webp": "stables/198-virgil-test-facility-workshop/robots/01-virgil/portrait.webp",
+        "blueprint": "stables/198-virgil-test-facility-workshop/robots/01-virgil/blueprint.json",
+        "profile": "stables/198-virgil-test-facility-workshop/robots/01-virgil/profile.md",
+        "prompt": "stables/198-virgil-test-facility-workshop/robots/01-virgil/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/virgil-test-facility-workshop/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 198,
+          "stable_name": "Virgil Test Facility Workshop",
+          "catalogue_key": "virgil-test-facility-workshop",
+          "slot": 1,
+          "robot_name": "Virgil",
+          "source_identity": "Virgil canonical core; original arena cradle and tracked transport base",
+          "source_edition": "Portal Stories: Mel, Prism Game Studios fan continuity; core plus original mobile arena cradle",
+          "source_references": [
+            "https://store.steampowered.com/app/317400/Portal_Stories_Mel/",
+            "https://www.theportalwiki.com/wiki/Portal_Stories%3A_Mel"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: ONE Virgil maintenance personality core from the released fan-made Portal Stories: Mel, preserve his actual compact spherical core body: worn dark orange/red casing with faded mustard-yellow floral pattern panels, dark mechanical handle supports, one large orange optic with the characteristic old segmented aperture pattern and a fine cracked lens. NOT a white Wheatley shell and not a blue eye. Mount this intact source core in one explicitly ORIGINAL arena mobility adaptation: a low, restrained industrial gimbal cradle on two small complete caterpillar tracks, with one small side service emitter. The added base is subordinate to the recognizable original core, not claimed as source canon. One unified machine, no humanoid arms or legs, no Mel. Complete core, handles, gimbal and both tracks visible.\nMetadata only, do not render text: #198 slot 1 Virgil.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-7b4892f8-3dd5-45bf-ad99-bbefe19c5266.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "virgil-test-facility-workshop:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/virgil-test-facility-workshop/1.webp",
+          "master": "outputs/automaton-portraits/masters/virgil-test-facility-workshop/1.png",
+          "output": "app/frontend/public/assets/automatons/virgil-test-facility-workshop/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "59e5f8eb3f775bb0d55fcce129543593bd8da25d4308ec71d41a5ed7f933d222",
+          "bytes": 64356
+        },
+        "sha256": "59e5f8eb3f775bb0d55fcce129543593bd8da25d4308ec71d41a5ed7f933d222",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "replacement_alternatives": []
+}

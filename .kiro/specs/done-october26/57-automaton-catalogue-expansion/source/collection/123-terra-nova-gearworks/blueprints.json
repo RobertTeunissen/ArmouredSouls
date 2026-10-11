@@ -1,0 +1,837 @@
+{
+  "stable_number": 123,
+  "catalogue_key": "terra-nova-gearworks",
+  "robots": [
+    {
+      "slot": 1,
+      "name": "Hunter Northwind",
+      "source_identity": "Hunter",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "weapon_shield",
+      "stance": "balanced",
+      "yield_threshold": 20,
+      "build_focus": "Warden",
+      "range_from_weapons": "mid",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Bolt Carbine",
+          "offhand_weapon": "Combat Shield",
+          "list_price_credits": 171000,
+          "source_text": "Bolt Carbine + Combat Shield (₡171,000)"
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Nova Caster",
+          "offhand_weapon": "Aegis Bulwark",
+          "list_price_credits": 834000,
+          "source_text": "Nova Caster + Aegis Bulwark (₡834,000)"
+        }
+      ],
+      "refinement_plan": [
+        {
+          "step": 1,
+          "operation": "Hone",
+          "weapon": "Aegis Bulwark",
+          "hand": "offhand",
+          "effect": "Evasion Thrusters −5→0",
+          "cost_credits": 250000,
+          "workshop_level": 1,
+          "requirements": "Workshop L1",
+          "magnitude": 5,
+          "attribute": "Evasion Thrusters",
+          "base_value": -5,
+          "result_value": 0,
+          "source_text": "Offhand Aegis Bulwark: Hone Evasion Thrusters −5→0"
+        },
+        {
+          "step": 2,
+          "operation": "Sharpen",
+          "weapon": "Nova Caster",
+          "hand": "main",
+          "effect": "1 (−10% cooldown)",
+          "cost_credits": 300000,
+          "workshop_level": 5,
+          "requirements": "Workshop L5; 3,000 prestige",
+          "prestige_gate": 3000,
+          "source_text": "Main Nova Caster: Sharpen 1 (−10% cooldown)"
+        },
+        {
+          "step": 3,
+          "operation": "Forge",
+          "weapon": "Nova Caster",
+          "hand": "main",
+          "effect": "1 (+8% damage)",
+          "cost_credits": 400000,
+          "workshop_level": 8,
+          "requirements": "Workshop L8; 15,000 prestige",
+          "prestige_gate": 15000,
+          "source_text": "Main Nova Caster: Forge 1 (+8% damage)"
+        }
+      ],
+      "art_brief": "Standard Northern Hunter chassis with its source head, armour, and mechanical joints. A mid-range arena weapon plus a clearly visible shield; retain the original Gear proportions.",
+      "role": "Protected line fighter",
+      "missing_fields": [],
+      "refinement_total_credits": 950000,
+      "blueprint_origin": "preserved existing design",
+      "minimum_roster_expansion_level": 0,
+      "blueprint_id": "terra-nova-gearworks:1:hunter-northwind",
+      "folder": "stables/123-terra-nova-gearworks/robots/01-hunter-northwind",
+      "files": {
+        "png": "stables/123-terra-nova-gearworks/robots/01-hunter-northwind/portrait.png",
+        "webp": "stables/123-terra-nova-gearworks/robots/01-hunter-northwind/portrait.webp",
+        "blueprint": "stables/123-terra-nova-gearworks/robots/01-hunter-northwind/blueprint.json",
+        "profile": "stables/123-terra-nova-gearworks/robots/01-hunter-northwind/profile.md",
+        "prompt": "stables/123-terra-nova-gearworks/robots/01-hunter-northwind/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/terra-nova-gearworks/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 123,
+          "stable_name": "Terra Nova Gearworks",
+          "catalogue_key": "terra-nova-gearworks",
+          "slot": 1,
+          "robot_name": "Hunter Northwind",
+          "source_identity": "Standard Northern Hunter",
+          "source_edition": "Heavy Gear — Dream Pod 9 ordinary Northern chassis, no named alternate variants",
+          "source_references": [
+            "https://www.dp9community.com/guides/northern-models/"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic Heavy Gear standard Northern Hunter Gear, recognizable compact source helmet, boxy military torso, rounded joint covers, armoured hands and original lower leg/heel wheel construction. Olive drab source finish. One mid-range carbine in right hand and one modest original arena combat shield on left forearm. Correct original Gear proportions, not Hunter XMG or giant Gundam.\nCatalogue label for metadata only, do not render text: #123 slot 1 Hunter Northwind.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-d0357998-c5f4-4f24-9d10-cdfda8cb1b9d.png",
+          "visual_review": "Accepted: complete figure, distinct readable silhouette, shared collection finish and lighting",
+          "asset_id": "terra-nova-gearworks:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/terra-nova-gearworks/1.webp",
+          "master": "outputs/automaton-portraits/masters/terra-nova-gearworks/1.png",
+          "output": "app/frontend/public/assets/automatons/terra-nova-gearworks/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "504d2404e77b6f7c9311dd5b71a7bb7847b2872fdb125a3c558b49b754796970",
+          "bytes": 60672
+        },
+        "sha256": "504d2404e77b6f7c9311dd5b71a7bb7847b2872fdb125a3c558b49b754796970",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 2,
+      "name": "Jaguar Talon",
+      "source_identity": "Jaguar",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Versatile",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": null,
+          "list_price_credits": 57000,
+          "source_text": "Laser Pistol (₡57,000)"
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": null,
+          "list_price_credits": 425000,
+          "source_text": "Volt Sabre (₡425,000)"
+        }
+      ],
+      "refinement_plan": [
+        {
+          "step": 1,
+          "operation": "Hone",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "effect": "Combat Power 8→10",
+          "cost_credits": 40000,
+          "workshop_level": 1,
+          "requirements": "Workshop L1",
+          "magnitude": 2,
+          "attribute": "Combat Power",
+          "base_value": 8,
+          "result_value": 10,
+          "source_text": "Main Volt Sabre: Hone Combat Power 8→10"
+        },
+        {
+          "step": 2,
+          "operation": "Augment",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "effect": "Adaptive AI +3 (new)",
+          "cost_credits": 180000,
+          "workshop_level": 3,
+          "requirements": "Workshop L3",
+          "magnitude": 3,
+          "attribute": "Adaptive AI",
+          "result_value": 3,
+          "source_text": "Main Volt Sabre: Augment Adaptive AI +3 (new)"
+        },
+        {
+          "step": 3,
+          "operation": "Sharpen",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "effect": "1 (−10% cooldown)",
+          "cost_credits": 300000,
+          "workshop_level": 5,
+          "requirements": "Workshop L5; 3,000 prestige",
+          "prestige_gate": 3000,
+          "source_text": "Main Volt Sabre: Sharpen 1 (−10% cooldown)"
+        },
+        {
+          "step": 4,
+          "operation": "Forge",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "effect": "1 (+8% damage)",
+          "cost_credits": 400000,
+          "workshop_level": 8,
+          "requirements": "Workshop L8; 15,000 prestige",
+          "prestige_gate": 15000,
+          "source_text": "Main Volt Sabre: Forge 1 (+8% damage)"
+        }
+      ],
+      "art_brief": "Preserve the standard Jaguar scout-combat silhouette and source armour geometry. One short-range weapon in a poised stance, without changing the chassis into a Hunter variant.",
+      "role": "Mobile line shooter",
+      "missing_fields": [],
+      "refinement_total_credits": 920000,
+      "blueprint_origin": "preserved existing design",
+      "minimum_roster_expansion_level": 1,
+      "blueprint_id": "terra-nova-gearworks:2:jaguar-talon",
+      "folder": "stables/123-terra-nova-gearworks/robots/02-jaguar-talon",
+      "files": {
+        "png": "stables/123-terra-nova-gearworks/robots/02-jaguar-talon/portrait.png",
+        "webp": "stables/123-terra-nova-gearworks/robots/02-jaguar-talon/portrait.webp",
+        "blueprint": "stables/123-terra-nova-gearworks/robots/02-jaguar-talon/blueprint.json",
+        "profile": "stables/123-terra-nova-gearworks/robots/02-jaguar-talon/profile.md",
+        "prompt": "stables/123-terra-nova-gearworks/robots/02-jaguar-talon/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/terra-nova-gearworks/2.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 123,
+          "stable_name": "Terra Nova Gearworks",
+          "catalogue_key": "terra-nova-gearworks",
+          "slot": 2,
+          "robot_name": "Jaguar Talon",
+          "source_identity": "Standard Northern Jaguar",
+          "source_edition": "Heavy Gear — Dream Pod 9 ordinary Northern chassis, no named alternate variants",
+          "source_references": [
+            "https://www.dp9community.com/guides/northern-models/"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic Heavy Gear standard Northern Jaguar, its own recognizable angular helmet and sensor visor, agile shoulder/torso plates and source mechanical leg and heel construction, military olive and grey finish. One compact short-range pistol held at rest, empty offhand. Preserve Jaguar design distinct from Hunter; no pilot or alternate variant.\nCatalogue label for metadata only, do not render text: #123 slot 2 Jaguar Talon.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-0fb3dca7-a05f-452d-bb54-ccd288d9edaf.png",
+          "visual_review": "Accepted: complete figure, distinct readable silhouette, shared collection finish and lighting",
+          "asset_id": "terra-nova-gearworks:2",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/terra-nova-gearworks/2.webp",
+          "master": "outputs/automaton-portraits/masters/terra-nova-gearworks/2.png",
+          "output": "app/frontend/public/assets/automatons/terra-nova-gearworks/2.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "bc24fb62ad9aa5438657f34f46d769a148d2540b6306636af96253becf0de08c",
+          "bytes": 52790
+        },
+        "sha256": "bc24fb62ad9aa5438657f34f46d769a148d2540b6306636af96253becf0de08c",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 3,
+      "name": "Grizzly Longwatch",
+      "source_identity": "Grizzly",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "balanced",
+      "yield_threshold": 15,
+      "build_focus": "Deadeye",
+      "range_from_weapons": "long",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Training Beam",
+          "offhand_weapon": null,
+          "list_price_credits": 50000,
+          "source_text": "Training Beam (₡50,000)"
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Ion Beam",
+          "offhand_weapon": null,
+          "list_price_credits": 544000,
+          "source_text": "Ion Beam (₡544,000)"
+        }
+      ],
+      "refinement_plan": [
+        {
+          "step": 1,
+          "operation": "Sharpen",
+          "weapon": "Ion Beam",
+          "hand": "main",
+          "effect": "1 (−10% cooldown)",
+          "cost_credits": 300000,
+          "workshop_level": 5,
+          "requirements": "Workshop L5; 3,000 prestige",
+          "prestige_gate": 3000,
+          "source_text": "Main Ion Beam: Sharpen 1 (−10% cooldown)"
+        },
+        {
+          "step": 2,
+          "operation": "Forge",
+          "weapon": "Ion Beam",
+          "hand": "main",
+          "effect": "1 (+8% damage)",
+          "cost_credits": 400000,
+          "workshop_level": 8,
+          "requirements": "Workshop L8; 15,000 prestige",
+          "prestige_gate": 15000,
+          "source_text": "Main Ion Beam: Forge 1 (+8% damage)"
+        }
+      ],
+      "art_brief": "Standard Grizzly heavy-fire-support frame and source upper-body equipment silhouette. One heavy long-range arena weapon; additional visible source housings remain passive.",
+      "role": "Heavy ranged support",
+      "missing_fields": [],
+      "refinement_total_credits": 700000,
+      "blueprint_origin": "preserved existing design",
+      "minimum_roster_expansion_level": 2,
+      "blueprint_id": "terra-nova-gearworks:3:grizzly-longwatch",
+      "folder": "stables/123-terra-nova-gearworks/robots/03-grizzly-longwatch",
+      "files": {
+        "png": "stables/123-terra-nova-gearworks/robots/03-grizzly-longwatch/portrait.png",
+        "webp": "stables/123-terra-nova-gearworks/robots/03-grizzly-longwatch/portrait.webp",
+        "blueprint": "stables/123-terra-nova-gearworks/robots/03-grizzly-longwatch/blueprint.json",
+        "profile": "stables/123-terra-nova-gearworks/robots/03-grizzly-longwatch/profile.md",
+        "prompt": "stables/123-terra-nova-gearworks/robots/03-grizzly-longwatch/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/terra-nova-gearworks/3.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 123,
+          "stable_name": "Terra Nova Gearworks",
+          "catalogue_key": "terra-nova-gearworks",
+          "slot": 3,
+          "robot_name": "Grizzly Longwatch",
+          "source_identity": "Standard Northern Grizzly",
+          "source_edition": "Heavy Gear — Dream Pod 9 ordinary Northern chassis, no named alternate variants",
+          "source_references": [
+            "https://www.dp9community.com/guides/northern-models/"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic Heavy Gear standard Northern Grizzly heavy fire-support Gear, very broad source shoulders, original support-pod/back housing silhouette, stocky torso, small original helmet and thick mechanical legs. Olive military finish with grey joints. One long-barrel arena beam rifle held in both hands. Other source housings passive and closed; source chassis unchanged.\nCatalogue label for metadata only, do not render text: #123 slot 3 Grizzly Longwatch.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-9cbf9531-d06d-4a40-997d-1f22c4508d7e.png",
+          "visual_review": "Accepted: complete figure, distinct readable silhouette, shared collection finish and lighting",
+          "asset_id": "terra-nova-gearworks:3",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/terra-nova-gearworks/3.webp",
+          "master": "outputs/automaton-portraits/masters/terra-nova-gearworks/3.png",
+          "output": "app/frontend/public/assets/automatons/terra-nova-gearworks/3.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "1efd129626a7d8893ae48a1fad759d109a4d8714bc7b737bc56c4bcf0fcb9c6b",
+          "bytes": 55724
+        },
+        "sha256": "1efd129626a7d8893ae48a1fad759d109a4d8714bc7b737bc56c4bcf0fcb9c6b",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 4,
+      "name": "Cheetah Slipstream",
+      "source_identity": "Cheetah",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "dual_wield",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Sprinter",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": "Laser Pistol",
+          "list_price_credits": 114000,
+          "source_text": "Laser Pistol x2 (₡114,000)"
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": "Volt Sabre",
+          "list_price_credits": 850000,
+          "source_text": "Volt Sabre x2 (₡850,000)"
+        }
+      ],
+      "refinement_plan": [
+        {
+          "step": 1,
+          "operation": "Hone",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "effect": "Attack Speed 4→7",
+          "cost_credits": 90000,
+          "workshop_level": 1,
+          "requirements": "Workshop L1",
+          "magnitude": 3,
+          "attribute": "Attack Speed",
+          "base_value": 4,
+          "result_value": 7,
+          "source_text": "Main Volt Sabre: Hone Attack Speed 4→7"
+        },
+        {
+          "step": 2,
+          "operation": "Augment",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "effect": "Evasion Thrusters +2 (new)",
+          "cost_credits": 80000,
+          "workshop_level": 3,
+          "requirements": "Workshop L3",
+          "magnitude": 2,
+          "attribute": "Evasion Thrusters",
+          "result_value": 2,
+          "source_text": "Main Volt Sabre: Augment Evasion Thrusters +2 (new)"
+        },
+        {
+          "step": 3,
+          "operation": "Sharpen",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "effect": "1 (−10% cooldown)",
+          "cost_credits": 300000,
+          "workshop_level": 5,
+          "requirements": "Workshop L5; 3,000 prestige",
+          "prestige_gate": 3000,
+          "source_text": "Main Volt Sabre: Sharpen 1 (−10% cooldown)"
+        },
+        {
+          "step": 4,
+          "operation": "Forge",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "effect": "1 (+8% damage)",
+          "cost_credits": 400000,
+          "workshop_level": 8,
+          "requirements": "Workshop L8; 15,000 prestige",
+          "prestige_gate": 15000,
+          "source_text": "Main Volt Sabre: Forge 1 (+8% damage)"
+        }
+      ],
+      "art_brief": "Use the ordinary Northern Cheetah body, not Mark Two. Two short-range arena weapons; preserve the lighter source frame and readable complete feet.",
+      "role": "Fast close escort",
+      "missing_fields": [],
+      "refinement_total_credits": 870000,
+      "blueprint_origin": "preserved existing design",
+      "minimum_roster_expansion_level": 3,
+      "blueprint_id": "terra-nova-gearworks:4:cheetah-slipstream",
+      "folder": "stables/123-terra-nova-gearworks/robots/04-cheetah-slipstream",
+      "files": {
+        "png": "stables/123-terra-nova-gearworks/robots/04-cheetah-slipstream/portrait.png",
+        "webp": "stables/123-terra-nova-gearworks/robots/04-cheetah-slipstream/portrait.webp",
+        "blueprint": "stables/123-terra-nova-gearworks/robots/04-cheetah-slipstream/blueprint.json",
+        "profile": "stables/123-terra-nova-gearworks/robots/04-cheetah-slipstream/profile.md",
+        "prompt": "stables/123-terra-nova-gearworks/robots/04-cheetah-slipstream/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/terra-nova-gearworks/4.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 123,
+          "stable_name": "Terra Nova Gearworks",
+          "catalogue_key": "terra-nova-gearworks",
+          "slot": 4,
+          "robot_name": "Cheetah Slipstream",
+          "source_identity": "Standard Northern Cheetah",
+          "source_edition": "Heavy Gear — Dream Pod 9 ordinary Northern chassis, no named alternate variants",
+          "source_references": [
+            "https://www.dp9community.com/guides/northern-models/"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic Heavy Gear ordinary Northern Cheetah scout Gear, small narrow source helmet and slim torso, characteristic lighter arms, compact mechanical joints and heel mobility hardware; no Mark Two redesign. Source olive drab and grey finish. Two small short-range pistols, one in each hand, pointed safely downward. Full lightweight source silhouette.\nCatalogue label for metadata only, do not render text: #123 slot 4 Cheetah Slipstream.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-90c0c2e4-39ee-419f-99bb-ffd356414bdf.png",
+          "visual_review": "Accepted: complete figure, distinct readable silhouette, shared collection finish and lighting",
+          "asset_id": "terra-nova-gearworks:4",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/terra-nova-gearworks/4.webp",
+          "master": "outputs/automaton-portraits/masters/terra-nova-gearworks/4.png",
+          "output": "app/frontend/public/assets/automatons/terra-nova-gearworks/4.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "929b972ffbd3e0e35eb7d7f3ddb912a379a175b192634aa3b3ccf3be0566ee2f",
+          "bytes": 41978
+        },
+        "sha256": "929b972ffbd3e0e35eb7d7f3ddb912a379a175b192634aa3b3ccf3be0566ee2f",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 5,
+      "name": "Ferret Needle",
+      "source_identity": "Ferret",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 20,
+      "build_focus": "Deadeye",
+      "range_from_weapons": "long",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Beam Pistol",
+          "offhand_weapon": null,
+          "list_price_credits": 93000,
+          "source_text": "Beam Pistol (₡93,000)"
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Particle Lance",
+          "offhand_weapon": null,
+          "list_price_credits": 425000,
+          "source_text": "Particle Lance (₡425,000)"
+        }
+      ],
+      "refinement_plan": [
+        {
+          "step": 1,
+          "operation": "Hone",
+          "weapon": "Particle Lance",
+          "hand": "main",
+          "effect": "Targeting Systems 8→10",
+          "cost_credits": 40000,
+          "workshop_level": 1,
+          "requirements": "Workshop L1",
+          "magnitude": 2,
+          "attribute": "Targeting Systems",
+          "base_value": 8,
+          "result_value": 10,
+          "source_text": "Main Particle Lance: Hone Targeting Systems 8→10"
+        },
+        {
+          "step": 2,
+          "operation": "Augment",
+          "weapon": "Particle Lance",
+          "hand": "main",
+          "effect": "Weapon Control +3 (new)",
+          "cost_credits": 180000,
+          "workshop_level": 3,
+          "requirements": "Workshop L3",
+          "magnitude": 3,
+          "attribute": "Weapon Control",
+          "result_value": 3,
+          "source_text": "Main Particle Lance: Augment Weapon Control +3 (new)"
+        },
+        {
+          "step": 3,
+          "operation": "Sharpen",
+          "weapon": "Particle Lance",
+          "hand": "main",
+          "effect": "1 (−10% cooldown)",
+          "cost_credits": 300000,
+          "workshop_level": 5,
+          "requirements": "Workshop L5; 3,000 prestige",
+          "prestige_gate": 3000,
+          "source_text": "Main Particle Lance: Sharpen 1 (−10% cooldown)"
+        },
+        {
+          "step": 4,
+          "operation": "Forge",
+          "weapon": "Particle Lance",
+          "hand": "main",
+          "effect": "1 (+8% damage)",
+          "cost_credits": 400000,
+          "workshop_level": 8,
+          "requirements": "Workshop L8; 15,000 prestige",
+          "prestige_gate": 15000,
+          "source_text": "Main Particle Lance: Forge 1 (+8% damage)"
+        }
+      ],
+      "art_brief": "Standard Ferret source chassis with its distinctive head and light equipment arrangement. One long-range weapon; keep the compact scout silhouette distinct from Cheetah.",
+      "role": "Reconnaissance shooter",
+      "missing_fields": [],
+      "refinement_total_credits": 920000,
+      "blueprint_origin": "preserved existing design",
+      "minimum_roster_expansion_level": 4,
+      "blueprint_id": "terra-nova-gearworks:5:ferret-needle",
+      "folder": "stables/123-terra-nova-gearworks/robots/05-ferret-needle",
+      "files": {
+        "png": "stables/123-terra-nova-gearworks/robots/05-ferret-needle/portrait.png",
+        "webp": "stables/123-terra-nova-gearworks/robots/05-ferret-needle/portrait.webp",
+        "blueprint": "stables/123-terra-nova-gearworks/robots/05-ferret-needle/blueprint.json",
+        "profile": "stables/123-terra-nova-gearworks/robots/05-ferret-needle/profile.md",
+        "prompt": "stables/123-terra-nova-gearworks/robots/05-ferret-needle/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/terra-nova-gearworks/5.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 123,
+          "stable_name": "Terra Nova Gearworks",
+          "catalogue_key": "terra-nova-gearworks",
+          "slot": 5,
+          "robot_name": "Ferret Needle",
+          "source_identity": "Standard Northern Ferret",
+          "source_edition": "Heavy Gear — Dream Pod 9 ordinary Northern chassis, no named alternate variants",
+          "source_references": [
+            "https://www.dp9community.com/guides/northern-models/"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic Heavy Gear ordinary Northern Ferret scout, original distinct compact sensor head, narrow light torso and characteristic small scout limb, wheel and leg arrangement in upright walking mode. Source olive drab armour with dark joints. One long-range arena rifle in one hand, other hand empty. Preserve Ferret body; not a Cheetah recolour, no ground-mode transformation.\nCatalogue label for metadata only, do not render text: #123 slot 5 Ferret Needle.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-943837ad-442b-410f-8a7e-d016578370a4.png",
+          "visual_review": "Accepted: complete figure, distinct readable silhouette, shared collection finish and lighting",
+          "asset_id": "terra-nova-gearworks:5",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/terra-nova-gearworks/5.webp",
+          "master": "outputs/automaton-portraits/masters/terra-nova-gearworks/5.png",
+          "output": "app/frontend/public/assets/automatons/terra-nova-gearworks/5.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "910505a050489b4b7ce7c56822bbdd6bbbeb8cfe0908a80de1dde659012f52e9",
+          "bytes": 40578
+        },
+        "sha256": "910505a050489b4b7ce7c56822bbdd6bbbeb8cfe0908a80de1dde659012f52e9",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 6,
+      "name": "Kodiak Rampart",
+      "source_identity": "Kodiak",
+      "availability": "growth",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "defensive",
+      "yield_threshold": 20,
+      "build_focus": "Bruiser",
+      "range_from_weapons": "mid",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Training Rifle",
+          "offhand_weapon": null,
+          "list_price_credits": 50000,
+          "source_text": "Training Rifle (₡50,000)"
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Plasma Cannon",
+          "offhand_weapon": null,
+          "list_price_credits": 408000,
+          "source_text": "Plasma Cannon (₡408,000)"
+        }
+      ],
+      "refinement_plan": [
+        {
+          "step": 1,
+          "operation": "Hone",
+          "weapon": "Plasma Cannon",
+          "hand": "main",
+          "effect": "Combat Power 7→10",
+          "cost_credits": 90000,
+          "workshop_level": 1,
+          "requirements": "Workshop L1",
+          "magnitude": 3,
+          "attribute": "Combat Power",
+          "base_value": 7,
+          "result_value": 10,
+          "source_text": "Main Plasma Cannon: Hone Combat Power 7→10"
+        },
+        {
+          "step": 2,
+          "operation": "Hone",
+          "weapon": "Plasma Cannon",
+          "hand": "main",
+          "effect": "Critical Systems 6→10",
+          "cost_credits": 160000,
+          "workshop_level": 1,
+          "requirements": "Workshop L1",
+          "magnitude": 4,
+          "attribute": "Critical Systems",
+          "base_value": 6,
+          "result_value": 10,
+          "source_text": "Main Plasma Cannon: Hone Critical Systems 6→10"
+        },
+        {
+          "step": 3,
+          "operation": "Augment",
+          "weapon": "Plasma Cannon",
+          "hand": "main",
+          "effect": "Hull Integrity +3 (new)",
+          "cost_credits": 180000,
+          "workshop_level": 3,
+          "requirements": "Workshop L3",
+          "magnitude": 3,
+          "attribute": "Hull Integrity",
+          "result_value": 3,
+          "source_text": "Main Plasma Cannon: Augment Hull Integrity +3 (new)"
+        },
+        {
+          "step": 4,
+          "operation": "Sharpen",
+          "weapon": "Plasma Cannon",
+          "hand": "main",
+          "effect": "1 (−10% cooldown)",
+          "cost_credits": 300000,
+          "workshop_level": 5,
+          "requirements": "Workshop L5; 3,000 prestige",
+          "prestige_gate": 3000,
+          "source_text": "Main Plasma Cannon: Sharpen 1 (−10% cooldown)"
+        },
+        {
+          "step": 5,
+          "operation": "Forge",
+          "weapon": "Plasma Cannon",
+          "hand": "main",
+          "effect": "1 (+8% damage)",
+          "cost_credits": 400000,
+          "workshop_level": 8,
+          "requirements": "Workshop L8; 15,000 prestige",
+          "prestige_gate": 15000,
+          "source_text": "Main Plasma Cannon: Forge 1 (+8% damage)"
+        }
+      ],
+      "art_brief": "Standard Northern Kodiak body and heavy armour proportions. One mid-range heavy weapon; do not silently substitute the Kodiak Destroyer model.",
+      "role": "Heavy formation anchor",
+      "missing_fields": [],
+      "refinement_total_credits": 1130000,
+      "blueprint_origin": "preserved existing design",
+      "minimum_roster_expansion_level": 5,
+      "blueprint_id": "terra-nova-gearworks:6:kodiak-rampart",
+      "folder": "stables/123-terra-nova-gearworks/robots/06-kodiak-rampart",
+      "files": {
+        "png": "stables/123-terra-nova-gearworks/robots/06-kodiak-rampart/portrait.png",
+        "webp": "stables/123-terra-nova-gearworks/robots/06-kodiak-rampart/portrait.webp",
+        "blueprint": "stables/123-terra-nova-gearworks/robots/06-kodiak-rampart/blueprint.json",
+        "profile": "stables/123-terra-nova-gearworks/robots/06-kodiak-rampart/profile.md",
+        "prompt": "stables/123-terra-nova-gearworks/robots/06-kodiak-rampart/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/terra-nova-gearworks/6.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 123,
+          "stable_name": "Terra Nova Gearworks",
+          "catalogue_key": "terra-nova-gearworks",
+          "slot": 6,
+          "robot_name": "Kodiak Rampart",
+          "source_identity": "Standard Northern Kodiak",
+          "source_edition": "Heavy Gear — Dream Pod 9 ordinary Northern chassis, no named alternate variants",
+          "source_references": [
+            "https://www.dp9community.com/guides/northern-models/"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\n\nSubject: Authentic Heavy Gear standard Northern Kodiak heavy Gear, distinctive massive source shoulder and torso armour, original head and bulky mechanical limbs and feet. Military olive source finish and dark steel joints. One heavy mid-range cannon held in both hands, other visible source housings inactive. Standard Kodiak, not Kodiak Destroyer. Defensive grounded pose.\nCatalogue label for metadata only, do not render text: #123 slot 6 Kodiak Rampart.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-5b8f611e-6904-4710-8eb9-23607a22a0f6.png",
+          "visual_review": "Accepted: complete figure, distinct readable silhouette, shared collection finish and lighting",
+          "asset_id": "terra-nova-gearworks:6",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/terra-nova-gearworks/6.webp",
+          "master": "outputs/automaton-portraits/masters/terra-nova-gearworks/6.png",
+          "output": "app/frontend/public/assets/automatons/terra-nova-gearworks/6.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "aa1c98e6df942bc9240a48127393b9a129f75c56c46c422c7dc8c0a6f0bc60f5",
+          "bytes": 56794
+        },
+        "sha256": "aa1c98e6df942bc9240a48127393b9a129f75c56c46c422c7dc8c0a6f0bc60f5",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "replacement_alternatives": []
+}

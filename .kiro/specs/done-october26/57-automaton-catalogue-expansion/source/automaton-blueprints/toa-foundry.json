@@ -1,0 +1,204 @@
+{
+  "number": 61,
+  "catalogueKey": "toa-foundry",
+  "stableName": "Toa Foundry",
+  "franchiseLabel": "Bionicle",
+  "strategy": "Generalist",
+  "fit": "Direct",
+  "conceptIdentity": "Three different build focuses tied to distinct silhouettes. Masks and articulated bodies rendered in metal; acknowledge the source's biomechanical nature.",
+  "backstory": "Toa Foundry enters the arena with a clear doctrine. Three different build focuses tied to distinct silhouettes. Every surviving machine returns to the workshop before the next booking.",
+  "openingRobots": 2,
+  "targetRobots": 3,
+  "adminMaximumRobots": 4,
+  "targetOverrides": {
+    "robots": 3
+  },
+  "teamNames": {
+    "2v2": [
+      {
+        "name": "Toa Pair 01",
+        "slots": [
+          1,
+          2
+        ]
+      },
+      {
+        "name": "Toa Pair 02",
+        "slots": [
+          3,
+          4
+        ]
+      }
+    ],
+    "3v3": [
+      {
+        "name": "Toa Squad 01",
+        "slots": [
+          1,
+          2,
+          3
+        ]
+      }
+    ]
+  },
+  "eventOrder": [
+    "league_1v1",
+    "league_2v2",
+    "league_3v3",
+    "tag_team",
+    "koth",
+    "grand_melee",
+    "tournament_1v1",
+    "tournament_2v2",
+    "tournament_3v3"
+  ],
+  "robots": [
+    {
+      "blueprintId": "toa-foundry:1:tahu",
+      "slot": 1,
+      "name": "Tahu",
+      "sourceAlias": "Tahu",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "dual_wield",
+      "stance": "offensive",
+      "yieldThreshold": 5,
+      "buildFocus": "Bruiser",
+      "weaponPath": [
+        {
+          "mainWeapon": "Combat Knife",
+          "offhandWeapon": "Combat Knife",
+          "listPriceCredits": 186000
+        },
+        {
+          "mainWeapon": "Vibro Mace",
+          "offhandWeapon": "Vibro Mace",
+          "listPriceCredits": 850000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "melee",
+        "artBrief": "Red Toa with recognizable mask, articulated biomechanical limbs and blade equipment.",
+        "refinementNote": "Equipment upgrades and tuning only: no verified Hone/Augment facts for this final weapon are supplied, and no unreachable refinement tier is added.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 0,
+        "imageConvention": "app/frontend/public/assets/automatons/toa-foundry/1.webp"
+      }
+    },
+    {
+      "blueprintId": "toa-foundry:2:kopaka",
+      "slot": 2,
+      "name": "Kopaka",
+      "sourceAlias": "Kopaka",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yieldThreshold": 15,
+      "buildFocus": "Warden",
+      "weaponPath": [
+        {
+          "mainWeapon": "Practice Sword",
+          "offhandWeapon": "Light Shield",
+          "listPriceCredits": 101000
+        },
+        {
+          "mainWeapon": "Vibro Mace",
+          "offhandWeapon": "Aegis Bulwark",
+          "listPriceCredits": 834000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "melee",
+        "artBrief": "White Toa with recognizable mask, defensive shield and close-combat weapon.",
+        "refinementNote": "Generalist refinement is reserved for the flagship in slot 1; this robot receives equipment upgrades and tuning.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 1,
+        "imageConvention": "app/frontend/public/assets/automatons/toa-foundry/2.webp"
+      }
+    },
+    {
+      "blueprintId": "toa-foundry:3:onua",
+      "slot": 3,
+      "name": "Onua",
+      "sourceAlias": "Onua",
+      "nameBasis": "Source character or machine designation",
+      "availability": "growth",
+      "loadout": "two_handed",
+      "stance": "balanced",
+      "yieldThreshold": 10,
+      "buildFocus": "Bruiser",
+      "weaponPath": [
+        {
+          "mainWeapon": "War Club",
+          "offhandWeapon": null,
+          "listPriceCredits": 84000
+        },
+        {
+          "mainWeapon": "Heavy Hammer",
+          "offhandWeapon": null,
+          "listPriceCredits": 478000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "melee",
+        "artBrief": "Black broad-shouldered Toa with powerful arms and recognizable mask.",
+        "refinementNote": "Generalist refinement is reserved for the flagship in slot 1; this robot receives equipment upgrades and tuning.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 2,
+        "imageConvention": "app/frontend/public/assets/automatons/toa-foundry/3.webp"
+      }
+    },
+    {
+      "blueprintId": "toa-foundry:4:lewa",
+      "slot": 4,
+      "name": "Lewa",
+      "sourceAlias": "Lewa",
+      "nameBasis": "Source character or machine designation",
+      "availability": "reserve",
+      "loadout": "single",
+      "stance": "offensive",
+      "yieldThreshold": 15,
+      "buildFocus": "Sprinter",
+      "weaponPath": [
+        {
+          "mainWeapon": "Practice Sword",
+          "offhandWeapon": null,
+          "listPriceCredits": 50000
+        },
+        {
+          "mainWeapon": "Vibro Mace",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "melee",
+        "artBrief": "Green lean Toa with recognizable mask and long agile biomechanical limbs.",
+        "refinementNote": "Generalist refinement is reserved for the flagship in slot 1; this robot receives equipment upgrades and tuning.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 3,
+        "imageConvention": "app/frontend/public/assets/automatons/toa-foundry/4.webp"
+      }
+    }
+  ],
+  "alternativeBlueprints": [],
+  "review": {
+    "openingWeaponCredits": 287000,
+    "finalWeaponCreditsAtTarget": 2162000,
+    "equippedWeaponCountAtTarget": 5,
+    "purchaseOrder": [
+      1,
+      2,
+      3
+    ],
+    "reserveSlots": [
+      4
+    ],
+    "alternativeRule": "Choose an alternative before catalogue approval; it replaces the specified slot and never adds another live robot."
+  }
+}

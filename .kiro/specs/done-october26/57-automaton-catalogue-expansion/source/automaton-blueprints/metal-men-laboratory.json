@@ -1,0 +1,269 @@
+{
+  "number": 99,
+  "catalogueKey": "metal-men-laboratory",
+  "stableName": "Metal Men Laboratory",
+  "franchiseLabel": "DC",
+  "strategy": "Trio",
+  "fit": "Direct",
+  "conceptIdentity": "A balanced synthetic leader, durable heavy, and agile specialist. Metallic material identity distinguishes the robots; fluidity stays visual flavour.",
+  "backstory": "Metal Men Laboratory enters the arena with a clear doctrine. A balanced synthetic leader, durable heavy, and agile specialist. Every surviving machine returns to the workshop before the next booking.",
+  "openingRobots": 3,
+  "targetRobots": 3,
+  "adminMaximumRobots": 4,
+  "targetOverrides": {},
+  "teamNames": {
+    "2v2": [
+      {
+        "name": "Metal Men Pair 01",
+        "slots": [
+          1,
+          2
+        ]
+      },
+      {
+        "name": "Metal Men Pair 02",
+        "slots": [
+          3,
+          4
+        ]
+      }
+    ],
+    "3v3": [
+      {
+        "name": "Metal Men Squad 01",
+        "slots": [
+          1,
+          2,
+          3
+        ]
+      }
+    ]
+  },
+  "eventOrder": [
+    "league_3v3",
+    "tournament_3v3",
+    "league_1v1",
+    "league_2v2",
+    "tag_team",
+    "koth",
+    "grand_melee",
+    "tournament_2v2",
+    "tournament_1v1"
+  ],
+  "robots": [
+    {
+      "blueprintId": "metal-men-laboratory:1:gold",
+      "slot": 1,
+      "name": "Gold",
+      "sourceAlias": "Gold",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 15,
+      "buildFocus": "Versatile",
+      "weaponPath": [
+        {
+          "mainWeapon": "Laser Pistol",
+          "offhandWeapon": null,
+          "listPriceCredits": 57000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Gold-coloured humanoid Metal Man with a reflective metal face and composed stance.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 0,
+        "imageConvention": "app/frontend/public/assets/automatons/metal-men-laboratory/1.webp"
+      }
+    },
+    {
+      "blueprintId": "metal-men-laboratory:2:iron",
+      "slot": 2,
+      "name": "Iron",
+      "sourceAlias": "Iron",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "two_handed",
+      "stance": "defensive",
+      "yieldThreshold": 10,
+      "buildFocus": "Warden",
+      "weaponPath": [
+        {
+          "mainWeapon": "War Club",
+          "offhandWeapon": null,
+          "listPriceCredits": 84000
+        },
+        {
+          "mainWeapon": "Heavy Hammer",
+          "offhandWeapon": null,
+          "listPriceCredits": 478000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "melee",
+        "artBrief": "Broad iron-grey humanoid Metal Man with powerful metallic limbs and heavy proportions.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 1,
+        "imageConvention": "app/frontend/public/assets/automatons/metal-men-laboratory/2.webp"
+      }
+    },
+    {
+      "blueprintId": "metal-men-laboratory:3:mercury",
+      "slot": 3,
+      "name": "Mercury",
+      "sourceAlias": "Mercury",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "dual_wield",
+      "stance": "offensive",
+      "yieldThreshold": 15,
+      "buildFocus": "Sprinter",
+      "weaponPath": [
+        {
+          "mainWeapon": "Combat Knife",
+          "offhandWeapon": "Combat Knife",
+          "listPriceCredits": 186000
+        },
+        {
+          "mainWeapon": "Vibro Mace",
+          "offhandWeapon": "Vibro Mace",
+          "listPriceCredits": 850000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "melee",
+        "artBrief": "Slim reflective silver Metal Man with narrow mechanical silhouette and quick striking pose.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 2,
+        "imageConvention": "app/frontend/public/assets/automatons/metal-men-laboratory/3.webp"
+      }
+    },
+    {
+      "blueprintId": "metal-men-laboratory:4:tin",
+      "slot": 4,
+      "name": "Tin",
+      "sourceAlias": "Tin",
+      "nameBasis": "Source character or machine designation",
+      "availability": "reserve",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yieldThreshold": 30,
+      "buildFocus": "Warden",
+      "weaponPath": [
+        {
+          "mainWeapon": "Beam Pistol",
+          "offhandWeapon": "Combat Shield",
+          "listPriceCredits": 171000
+        },
+        {
+          "mainWeapon": "Particle Lance",
+          "offhandWeapon": "Aegis Bulwark",
+          "listPriceCredits": 834000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "long",
+        "artBrief": "Small tin-grey Metal Man with a modest body and protective defensive equipment.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 3,
+        "imageConvention": "app/frontend/public/assets/automatons/metal-men-laboratory/4.webp"
+      }
+    }
+  ],
+  "alternativeBlueprints": [
+    {
+      "blueprintId": "metal-men-laboratory:alternative:4:platinum",
+      "slot": 4,
+      "name": "Platinum",
+      "sourceAlias": "Platinum",
+      "nameBasis": "Source character or machine designation",
+      "availability": "alternative",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 20,
+      "buildFocus": "Deadeye",
+      "weaponPath": [
+        {
+          "mainWeapon": "Beam Pistol",
+          "offhandWeapon": null,
+          "listPriceCredits": 93000
+        },
+        {
+          "mainWeapon": "Particle Lance",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "long",
+        "artBrief": "Sleek platinum-coloured humanoid Metal Woman with a reflective face and precise stance.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 3,
+        "imageConvention": "app/frontend/public/assets/automatons/metal-men-laboratory/4.webp"
+      }
+    },
+    {
+      "blueprintId": "metal-men-laboratory:alternative:4:lead",
+      "slot": 4,
+      "name": "Lead",
+      "sourceAlias": "Lead",
+      "nameBasis": "Source character or machine designation",
+      "availability": "alternative",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yieldThreshold": 20,
+      "buildFocus": "Warden",
+      "weaponPath": [
+        {
+          "mainWeapon": "Laser Pistol",
+          "offhandWeapon": "Light Shield",
+          "listPriceCredits": 108000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": "Aegis Bulwark",
+          "listPriceCredits": 834000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Heavy lead-grey humanoid Metal Man with broad face and thick defensive proportions.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 3,
+        "imageConvention": "app/frontend/public/assets/automatons/metal-men-laboratory/4.webp"
+      }
+    }
+  ],
+  "review": {
+    "openingWeaponCredits": 327000,
+    "finalWeaponCreditsAtTarget": 1753000,
+    "equippedWeaponCountAtTarget": 4,
+    "purchaseOrder": [
+      1,
+      2,
+      3
+    ],
+    "reserveSlots": [
+      4
+    ],
+    "alternativeRule": "Choose an alternative before catalogue approval; it replaces the specified slot and never adds another live robot."
+  }
+}

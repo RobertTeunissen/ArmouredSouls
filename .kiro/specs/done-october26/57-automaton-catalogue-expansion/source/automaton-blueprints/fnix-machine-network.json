@@ -1,0 +1,476 @@
+{
+  "number": 36,
+  "catalogueKey": "fnix-machine-network",
+  "stableName": "FNIX Machine Network",
+  "franchiseLabel": "Generation Zero",
+  "strategy": "Swarm",
+  "fit": "Direct",
+  "conceptIdentity": "Advance from smaller machines toward heavy platforms. Exposed cables, skeletal industrial frames, military green and hazard markings.",
+  "backstory": "FNIX Machine Network enters the arena with a clear doctrine. Advance from smaller machines toward heavy platforms. Every surviving machine returns to the workshop before the next booking.",
+  "openingRobots": 3,
+  "targetRobots": 11,
+  "adminMaximumRobots": 11,
+  "targetOverrides": {},
+  "teamNames": {
+    "2v2": [
+      {
+        "name": "FNIX Pair 01",
+        "slots": [
+          1,
+          2
+        ]
+      },
+      {
+        "name": "FNIX Pair 02",
+        "slots": [
+          3,
+          4
+        ]
+      },
+      {
+        "name": "FNIX Pair 03",
+        "slots": [
+          5,
+          6
+        ]
+      },
+      {
+        "name": "FNIX Pair 04",
+        "slots": [
+          7,
+          8
+        ]
+      },
+      {
+        "name": "FNIX Pair 05",
+        "slots": [
+          9,
+          10
+        ]
+      }
+    ],
+    "3v3": [
+      {
+        "name": "FNIX Squad 01",
+        "slots": [
+          1,
+          2,
+          3
+        ]
+      },
+      {
+        "name": "FNIX Squad 02",
+        "slots": [
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "FNIX Squad 03",
+        "slots": [
+          7,
+          8,
+          9
+        ]
+      }
+    ]
+  },
+  "eventOrder": [
+    "league_3v3",
+    "league_2v2",
+    "grand_melee",
+    "koth",
+    "league_1v1",
+    "tag_team",
+    "tournament_3v3",
+    "tournament_2v2",
+    "tournament_1v1"
+  ],
+  "robots": [
+    {
+      "blueprintId": "fnix-machine-network:1:fnix-runner-01",
+      "slot": 1,
+      "name": "FNIX Runner 01",
+      "sourceAlias": "Runner",
+      "nameBasis": "Original arena designation",
+      "availability": "opening",
+      "loadout": "single",
+      "stance": "offensive",
+      "yieldThreshold": 5,
+      "buildFocus": "Sprinter",
+      "weaponPath": [
+        {
+          "mainWeapon": "Laser Pistol",
+          "offhandWeapon": null,
+          "listPriceCredits": 57000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Low quadruped Runner machine with exposed cables, red sensor and mounted firearm.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 0,
+        "imageConvention": "app/frontend/public/assets/automatons/fnix-machine-network/1.webp"
+      }
+    },
+    {
+      "blueprintId": "fnix-machine-network:2:fnix-hunter-02",
+      "slot": 2,
+      "name": "FNIX Hunter 02",
+      "sourceAlias": "Hunter",
+      "nameBasis": "Original arena designation",
+      "availability": "opening",
+      "loadout": "dual_wield",
+      "stance": "offensive",
+      "yieldThreshold": 0,
+      "buildFocus": "Sprinter",
+      "weaponPath": [
+        {
+          "mainWeapon": "Laser Pistol",
+          "offhandWeapon": "Laser Pistol",
+          "listPriceCredits": 114000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": "Volt Sabre",
+          "listPriceCredits": 850000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Tall Hunter machine with narrow military head, dark frame and practical weapon mounts.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 1,
+        "imageConvention": "app/frontend/public/assets/automatons/fnix-machine-network/2.webp"
+      }
+    },
+    {
+      "blueprintId": "fnix-machine-network:3:fnix-tank-03",
+      "slot": 3,
+      "name": "FNIX Tank 03",
+      "sourceAlias": "Tank",
+      "nameBasis": "Original arena designation",
+      "availability": "opening",
+      "loadout": "two_handed",
+      "stance": "defensive",
+      "yieldThreshold": 0,
+      "buildFocus": "Warden",
+      "weaponPath": [
+        {
+          "mainWeapon": "Training Rifle",
+          "offhandWeapon": null,
+          "listPriceCredits": 50000
+        },
+        {
+          "mainWeapon": "Plasma Cannon",
+          "offhandWeapon": null,
+          "listPriceCredits": 408000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "mid",
+        "artBrief": "Large two-legged Tank machine with broad armoured torso and heavy weapon platforms.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 2,
+        "imageConvention": "app/frontend/public/assets/automatons/fnix-machine-network/3.webp"
+      }
+    },
+    {
+      "blueprintId": "fnix-machine-network:4:fnix-harvester-04",
+      "slot": 4,
+      "name": "FNIX Harvester 04",
+      "sourceAlias": "Harvester",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "two_handed",
+      "stance": "defensive",
+      "yieldThreshold": 5,
+      "buildFocus": "Tactician",
+      "weaponPath": [
+        {
+          "mainWeapon": "Training Beam",
+          "offhandWeapon": null,
+          "listPriceCredits": 50000
+        },
+        {
+          "mainWeapon": "Ion Beam",
+          "offhandWeapon": null,
+          "listPriceCredits": 544000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "long",
+        "artBrief": "Broad industrial Harvester machine with heavy support legs and weapon pods.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 3,
+        "imageConvention": "app/frontend/public/assets/automatons/fnix-machine-network/4.webp"
+      }
+    },
+    {
+      "blueprintId": "fnix-machine-network:5:fnix-runner-05",
+      "slot": 5,
+      "name": "FNIX Runner 05",
+      "sourceAlias": "FNIX Runner 05",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 10,
+      "buildFocus": "Deadeye",
+      "weaponPath": [
+        {
+          "mainWeapon": "Beam Pistol",
+          "offhandWeapon": null,
+          "listPriceCredits": 93000
+        },
+        {
+          "mainWeapon": "Particle Lance",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "long",
+        "artBrief": "Low quadruped Runner machine with exposed cables, red sensor and mounted firearm. Arena unit 05 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 4,
+        "imageConvention": "app/frontend/public/assets/automatons/fnix-machine-network/5.webp"
+      }
+    },
+    {
+      "blueprintId": "fnix-machine-network:6:fnix-runner-06",
+      "slot": 6,
+      "name": "FNIX Runner 06",
+      "sourceAlias": "FNIX Runner 06",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yieldThreshold": 10,
+      "buildFocus": "Warden",
+      "weaponPath": [
+        {
+          "mainWeapon": "Laser Pistol",
+          "offhandWeapon": "Light Shield",
+          "listPriceCredits": 108000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": "Aegis Bulwark",
+          "listPriceCredits": 834000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Low quadruped Runner machine with exposed cables, red sensor and mounted firearm. Arena unit 06 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 5,
+        "imageConvention": "app/frontend/public/assets/automatons/fnix-machine-network/6.webp"
+      }
+    },
+    {
+      "blueprintId": "fnix-machine-network:7:fnix-runner-07",
+      "slot": 7,
+      "name": "FNIX Runner 07",
+      "sourceAlias": "FNIX Runner 07",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 10,
+      "buildFocus": "Deadeye",
+      "weaponPath": [
+        {
+          "mainWeapon": "Bolt Carbine",
+          "offhandWeapon": null,
+          "listPriceCredits": 93000
+        },
+        {
+          "mainWeapon": "Nova Caster",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "mid",
+        "artBrief": "Low quadruped Runner machine with exposed cables, red sensor and mounted firearm. Arena unit 07 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 6,
+        "imageConvention": "app/frontend/public/assets/automatons/fnix-machine-network/7.webp"
+      }
+    },
+    {
+      "blueprintId": "fnix-machine-network:8:fnix-runner-08",
+      "slot": 8,
+      "name": "FNIX Runner 08",
+      "sourceAlias": "FNIX Runner 08",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "Bruiser",
+      "weaponPath": [
+        {
+          "mainWeapon": "Scatter Cannon",
+          "offhandWeapon": null,
+          "listPriceCredits": 84000
+        },
+        {
+          "mainWeapon": "Arc Projector",
+          "offhandWeapon": null,
+          "listPriceCredits": 488000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "Low quadruped Runner machine with exposed cables, red sensor and mounted firearm. Arena unit 08 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 7,
+        "imageConvention": "app/frontend/public/assets/automatons/fnix-machine-network/8.webp"
+      }
+    },
+    {
+      "blueprintId": "fnix-machine-network:9:fnix-runner-09",
+      "slot": 9,
+      "name": "FNIX Runner 09",
+      "sourceAlias": "FNIX Runner 09",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "dual_wield",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "Sprinter",
+      "weaponPath": [
+        {
+          "mainWeapon": "Combat Knife",
+          "offhandWeapon": "Combat Knife",
+          "listPriceCredits": 186000
+        },
+        {
+          "mainWeapon": "Vibro Mace",
+          "offhandWeapon": "Vibro Mace",
+          "listPriceCredits": 850000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "melee",
+        "artBrief": "Low quadruped Runner machine with exposed cables, red sensor and mounted firearm. Arena unit 09 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 8,
+        "imageConvention": "app/frontend/public/assets/automatons/fnix-machine-network/9.webp"
+      }
+    },
+    {
+      "blueprintId": "fnix-machine-network:10:fnix-runner-10",
+      "slot": 10,
+      "name": "FNIX Runner 10",
+      "sourceAlias": "FNIX Runner 10",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "Bruiser",
+      "weaponPath": [
+        {
+          "mainWeapon": "Training Rifle",
+          "offhandWeapon": null,
+          "listPriceCredits": 50000
+        },
+        {
+          "mainWeapon": "Plasma Cannon",
+          "offhandWeapon": null,
+          "listPriceCredits": 408000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "mid",
+        "artBrief": "Low quadruped Runner machine with exposed cables, red sensor and mounted firearm. Arena unit 10 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 9,
+        "imageConvention": "app/frontend/public/assets/automatons/fnix-machine-network/10.webp"
+      }
+    },
+    {
+      "blueprintId": "fnix-machine-network:11:fnix-runner-11",
+      "slot": 11,
+      "name": "FNIX Runner 11",
+      "sourceAlias": "FNIX Runner 11",
+      "nameBasis": "Original arena designation",
+      "availability": "growth",
+      "loadout": "two_handed",
+      "stance": "defensive",
+      "yieldThreshold": 10,
+      "buildFocus": "Deadeye",
+      "weaponPath": [
+        {
+          "mainWeapon": "Training Beam",
+          "offhandWeapon": null,
+          "listPriceCredits": 50000
+        },
+        {
+          "mainWeapon": "Ion Beam",
+          "offhandWeapon": null,
+          "listPriceCredits": 544000
+        }
+      ],
+      "refinementPlan": [],
+      "review": {
+        "rangeFromWeapons": "long",
+        "artBrief": "Low quadruped Runner machine with exposed cables, red sensor and mounted firearm. Arena unit 11 uses a distinct role-specific equipment silhouette.",
+        "refinementNote": "This strategy does not refine weapons in the starter catalogue.",
+        "refinementTotalCredits": 0,
+        "minimumRosterExpansionLevel": 10,
+        "imageConvention": "app/frontend/public/assets/automatons/fnix-machine-network/11.webp"
+      }
+    }
+  ],
+  "alternativeBlueprints": [],
+  "review": {
+    "openingWeaponCredits": 221000,
+    "finalWeaponCreditsAtTarget": 6201000,
+    "equippedWeaponCountAtTarget": 14,
+    "purchaseOrder": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+    ],
+    "reserveSlots": [],
+    "alternativeRule": "Choose an alternative before catalogue approval; it replaces the specified slot and never adds another live robot."
+  }
+}

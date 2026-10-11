@@ -1,0 +1,154 @@
+{
+  "number": 85,
+  "catalogueKey": "olympus-landmate-hangar",
+  "stableName": "Olympus Landmate Hangar",
+  "franchiseLabel": "Appleseed",
+  "strategy": "Duo",
+  "fit": "Direct",
+  "conceptIdentity": "Two heavy mechanical combat builds. Broad powered-armour frames and dense actuator detail. These are piloted powered suits, included under the starter set's mecha convention.",
+  "backstory": "Olympus Landmate Hangar enters the arena with a clear doctrine. Two heavy mechanical combat builds. Every surviving machine returns to the workshop before the next booking.",
+  "openingRobots": 2,
+  "targetRobots": 2,
+  "adminMaximumRobots": 3,
+  "targetOverrides": {},
+  "teamNames": {
+    "2v2": [
+      {
+        "name": "Olympus Pair 01",
+        "slots": [
+          1,
+          2
+        ]
+      }
+    ],
+    "3v3": []
+  },
+  "eventOrder": [
+    "league_2v2",
+    "tag_team",
+    "tournament_2v2",
+    "league_1v1",
+    "koth",
+    "grand_melee",
+    "tournament_1v1",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "robots": [
+    {
+      "blueprintId": "olympus-landmate-hangar:1:guges-landmate",
+      "slot": 1,
+      "name": "Guges Landmate",
+      "sourceAlias": "Guges",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "two_handed",
+      "stance": "balanced",
+      "yieldThreshold": 10,
+      "buildFocus": "Bruiser",
+      "weaponPath": [
+        {
+          "mainWeapon": "War Club",
+          "offhandWeapon": null,
+          "listPriceCredits": 84000
+        },
+        {
+          "mainWeapon": "Heavy Hammer",
+          "offhandWeapon": null,
+          "listPriceCredits": 478000
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "Hone",
+          "weapon": "Heavy Hammer",
+          "weaponSlot": "main",
+          "attribute": "Hydraulic Systems",
+          "baseValue": 8,
+          "magnitude": 2,
+          "resultValue": 10,
+          "costCredits": 40000,
+          "workshopLevel": 1,
+          "step": 1
+        },
+        {
+          "tier": "Augment",
+          "weapon": "Heavy Hammer",
+          "weaponSlot": "main",
+          "attribute": "Armor Plating",
+          "magnitude": 3,
+          "resultValue": 3,
+          "costCredits": 180000,
+          "workshopLevel": 3,
+          "step": 2
+        }
+      ],
+      "review": {
+        "rangeFromWeapons": "melee",
+        "artBrief": "Broad powered Landmate suit with secondary articulated arms, dense actuators and olive armour.",
+        "refinementNote": "Apply in order after stage 1. Dual-wield refinements affect the main-hand copy only; the offhand stays unrefined unless explicitly targeted.",
+        "refinementTotalCredits": 220000,
+        "minimumRosterExpansionLevel": 0,
+        "imageConvention": "app/frontend/public/assets/automatons/olympus-landmate-hangar/1.webp"
+      }
+    },
+    {
+      "blueprintId": "olympus-landmate-hangar:2:cadmos-landmate",
+      "slot": 2,
+      "name": "Cadmos Landmate",
+      "sourceAlias": "Cadmos",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yieldThreshold": 20,
+      "buildFocus": "Warden",
+      "weaponPath": [
+        {
+          "mainWeapon": "Bolt Carbine",
+          "offhandWeapon": "Combat Shield",
+          "listPriceCredits": 171000
+        },
+        {
+          "mainWeapon": "Nova Caster",
+          "offhandWeapon": "Aegis Bulwark",
+          "listPriceCredits": 834000
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "Hone",
+          "weapon": "Aegis Bulwark",
+          "weaponSlot": "offhand",
+          "attribute": "Evasion Thrusters",
+          "baseValue": -5,
+          "magnitude": 5,
+          "resultValue": 0,
+          "costCredits": 250000,
+          "workshopLevel": 1,
+          "step": 1
+        }
+      ],
+      "review": {
+        "rangeFromWeapons": "mid",
+        "artBrief": "Broad police Landmate suit with heavy service armour and protective equipment.",
+        "refinementNote": "Apply in order after stage 1. Dual-wield refinements affect the main-hand copy only; the offhand stays unrefined unless explicitly targeted.",
+        "refinementTotalCredits": 250000,
+        "minimumRosterExpansionLevel": 1,
+        "imageConvention": "app/frontend/public/assets/automatons/olympus-landmate-hangar/2.webp"
+      }
+    }
+  ],
+  "alternativeBlueprints": [],
+  "review": {
+    "openingWeaponCredits": 255000,
+    "finalWeaponCreditsAtTarget": 1312000,
+    "equippedWeaponCountAtTarget": 3,
+    "purchaseOrder": [
+      1,
+      2
+    ],
+    "reserveSlots": [],
+    "alternativeRule": "Choose an alternative before catalogue approval; it replaces the specified slot and never adds another live robot."
+  }
+}

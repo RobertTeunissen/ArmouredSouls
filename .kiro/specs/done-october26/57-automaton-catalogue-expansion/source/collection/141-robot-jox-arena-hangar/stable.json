@@ -1,0 +1,293 @@
+{
+  "number": 141,
+  "catalogue_key": "robot-jox-arena-hangar",
+  "name": "Robot Jox Arena Hangar",
+  "franchise": "Robot Jox",
+  "strategy": "Duo",
+  "opening_robots": 2,
+  "target_robots": 2,
+  "max_planned_robots": 2,
+  "strategy_review_limit": 3,
+  "backstory": "Two giant contenders divide a gladiator workshop between protected contact and heavy ranged pressure. Both receive final equipment before the owners expand their workshop ambitions.",
+  "strategy_personality": "The giant-robot gladiator premise is especially appropriate. Name the machines, not just their pilots; verify actual chassis designations during authoring. [Film reference, secondary](https://en.wikipedia.org/wiki/Robot_Jox).",
+  "teams": {
+    "2v2": [
+      {
+        "name": "Arena Champions Pair 01",
+        "slots": [
+          1,
+          2
+        ],
+        "forms": "Opening"
+      }
+    ],
+    "3v3": []
+  },
+  "event_order": [
+    "league_2v2",
+    "tag_team",
+    "tournament_2v2",
+    "league_1v1",
+    "koth",
+    "grand_melee",
+    "tournament_1v1",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "robots": [
+    {
+      "slot": 1,
+      "name": "Atlantic Champion 01",
+      "source_identity": "Atlantic Champion 01",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yield_threshold": 25,
+      "build_focus": "Warden",
+      "range_from_weapons": "melee",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Practice Sword",
+          "offhand_weapon": "Light Shield",
+          "list_price_credits": 101000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Vibro Mace",
+          "offhand_weapon": "Aegis Bulwark",
+          "list_price_credits": 834000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Hone",
+          "weapon": "Aegis Bulwark",
+          "hand": "offhand",
+          "workshop_level": 1,
+          "attribute": "Evasion Thrusters",
+          "magnitude": 5,
+          "result_value": 0,
+          "cost_credits": 250000,
+          "base_value": -5,
+          "effect": "Evasion Thrusters -5→0",
+          "step": 1
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: The authentic Robot Jox 1990 arena mech piloted by Achilles, labelled Atlantic Champion 01 only in catalogue. Ron Cobb film design, huge broad white and grey humanoid machine, red and blue geometric armour panels, blocky broad shoulders with distinctive raised housings, compact recessed head/sensors, heavily mechanical waist and enormous squared feet. One recognizable film biped in grounded ready stance. No human pilot, no flight mode, no writing.\nMetadata only, do not render text: #141 slot 1 Atlantic Champion 01.",
+      "role": "Guarded contact anchor",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 250000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "Atlantic Champion 01 fills the guarded contact anchor role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Warden tuning supports the melee equipment role; defensive stance and a 25% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Duo strategy tuning rules with the Warden Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "robot-jox-arena-hangar:1:atlantic-champion-01",
+      "folder": "stables/141-robot-jox-arena-hangar/robots/01-atlantic-champion-01",
+      "files": {
+        "png": "stables/141-robot-jox-arena-hangar/robots/01-atlantic-champion-01/portrait.png",
+        "webp": "stables/141-robot-jox-arena-hangar/robots/01-atlantic-champion-01/portrait.webp",
+        "blueprint": "stables/141-robot-jox-arena-hangar/robots/01-atlantic-champion-01/blueprint.json",
+        "profile": "stables/141-robot-jox-arena-hangar/robots/01-atlantic-champion-01/profile.md",
+        "prompt": "stables/141-robot-jox-arena-hangar/robots/01-atlantic-champion-01/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/robot-jox-arena-hangar/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 141,
+          "stable_name": "Robot Jox Arena Hangar",
+          "catalogue_key": "robot-jox-arena-hangar",
+          "slot": 1,
+          "robot_name": "Atlantic Champion 01",
+          "source_identity": "Atlantic Champion 01",
+          "source_edition": "Robot Jox — 1990; original arena unit labels for the two film mechs",
+          "source_references": [
+            "https://www.roncobb.net/20-Robo_Jox.html"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: The authentic Robot Jox 1990 arena mech piloted by Achilles, labelled Atlantic Champion 01 only in catalogue. Ron Cobb film design, huge broad white and grey humanoid machine, red and blue geometric armour panels, blocky broad shoulders with distinctive raised housings, compact recessed head/sensors, heavily mechanical waist and enormous squared feet. One recognizable film biped in grounded ready stance. No human pilot, no flight mode, no writing.\nMetadata only, do not render text: #141 slot 1 Atlantic Champion 01.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-947c4c72-58c3-4301-b29c-4bd2b210ed0d.png",
+          "visual_review": "Accepted: complete readable silhouette, planned source or original construction and studio finish",
+          "asset_id": "robot-jox-arena-hangar:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/robot-jox-arena-hangar/1.webp",
+          "master": "outputs/automaton-portraits/masters/robot-jox-arena-hangar/1.png",
+          "output": "app/frontend/public/assets/automatons/robot-jox-arena-hangar/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "920ec8fb8ba93a1c79c23da040dddb90d3c06b87c5923fe728990f03189aa64c",
+          "bytes": 63462
+        },
+        "sha256": "920ec8fb8ba93a1c79c23da040dddb90d3c06b87c5923fe728990f03189aa64c",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 2,
+      "name": "Eurasian Champion 02",
+      "source_identity": "Eurasian Champion 02",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Bruiser",
+      "range_from_weapons": "mid",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Training Rifle",
+          "offhand_weapon": null,
+          "list_price_credits": 50000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Plasma Cannon",
+          "offhand_weapon": null,
+          "list_price_credits": 408000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Hone",
+          "weapon": "Plasma Cannon",
+          "hand": "main",
+          "workshop_level": 1,
+          "attribute": "Combat Power",
+          "magnitude": 3,
+          "result_value": 10,
+          "cost_credits": 90000,
+          "base_value": 7,
+          "effect": "Combat Power 7→10",
+          "step": 1
+        },
+        {
+          "operation": "Hone",
+          "weapon": "Plasma Cannon",
+          "hand": "main",
+          "workshop_level": 1,
+          "attribute": "Critical Systems",
+          "magnitude": 4,
+          "result_value": 10,
+          "cost_credits": 160000,
+          "base_value": 6,
+          "effect": "Critical Systems 6→10",
+          "step": 2
+        },
+        {
+          "operation": "Augment",
+          "weapon": "Plasma Cannon",
+          "hand": "main",
+          "workshop_level": 3,
+          "attribute": "Hull Integrity",
+          "magnitude": 3,
+          "result_value": 3,
+          "cost_credits": 180000,
+          "effect": "Hull Integrity, new +3",
+          "step": 3
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: The authentic Robot Jox 1990 opposing arena mech piloted by Alexander, labelled Eurasian Champion 02 only in catalogue. Preserve its distinctive film red-and-grey heavy chassis, rounded upper armour and thick mechanical hands, compact recessed sensor head, broad industrial chest and very heavy jointed legs. Different source silhouette from Achilles' white/blue mech, not a recolour. One complete film biped in grounded combat-ready pose. No pilot or text.\nMetadata only, do not render text: #141 slot 2 Eurasian Champion 02.",
+      "role": "Heavy mid-range pressure",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 430000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 1,
+      "equipment_interpretation": "Eurasian Champion 02 fills the heavy mid-range pressure role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Bruiser tuning supports the mid equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Duo strategy tuning rules with the Bruiser Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "robot-jox-arena-hangar:2:eurasian-champion-02",
+      "folder": "stables/141-robot-jox-arena-hangar/robots/02-eurasian-champion-02",
+      "files": {
+        "png": "stables/141-robot-jox-arena-hangar/robots/02-eurasian-champion-02/portrait.png",
+        "webp": "stables/141-robot-jox-arena-hangar/robots/02-eurasian-champion-02/portrait.webp",
+        "blueprint": "stables/141-robot-jox-arena-hangar/robots/02-eurasian-champion-02/blueprint.json",
+        "profile": "stables/141-robot-jox-arena-hangar/robots/02-eurasian-champion-02/profile.md",
+        "prompt": "stables/141-robot-jox-arena-hangar/robots/02-eurasian-champion-02/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/robot-jox-arena-hangar/2.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 141,
+          "stable_name": "Robot Jox Arena Hangar",
+          "catalogue_key": "robot-jox-arena-hangar",
+          "slot": 2,
+          "robot_name": "Eurasian Champion 02",
+          "source_identity": "Eurasian Champion 02",
+          "source_edition": "Robot Jox — 1990; original arena unit labels for the two film mechs",
+          "source_references": [
+            "https://www.roncobb.net/20-Robo_Jox.html"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: The authentic Robot Jox 1990 opposing arena mech piloted by Alexander, labelled Eurasian Champion 02 only in catalogue. Preserve its distinctive film red-and-grey heavy chassis, rounded upper armour and thick mechanical hands, compact recessed sensor head, broad industrial chest and very heavy jointed legs. Different source silhouette from Achilles' white/blue mech, not a recolour. One complete film biped in grounded combat-ready pose. No pilot or text.\nMetadata only, do not render text: #141 slot 2 Eurasian Champion 02.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-2a3070d9-2701-4ef3-9e2f-a62d2b8da186.png",
+          "visual_review": "Accepted: complete readable silhouette, planned source or original construction and studio finish",
+          "asset_id": "robot-jox-arena-hangar:2",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/robot-jox-arena-hangar/2.webp",
+          "master": "outputs/automaton-portraits/masters/robot-jox-arena-hangar/2.png",
+          "output": "app/frontend/public/assets/automatons/robot-jox-arena-hangar/2.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "89b5166782e1b1fde66bec0357c0d0236f705ecb4a18a21fe43ff76d01ca4213",
+          "bytes": 61730
+        },
+        "sha256": "89b5166782e1b1fde66bec0357c0d0236f705ecb4a18a21fe43ff76d01ca4213",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "alternatives": [],
+  "blueprint_status": "detailed",
+  "source_notes": "\n**Franchise:** Robot Jox  \n**Strategy:** Duo · **Target roster:** 2 robots\n\n**Proposed robots:** Atlantic Champion 01; Eurasian Champion 02.\n\n**Direction:** The giant-robot gladiator premise is especially appropriate. Name the machines, not just their pilots; verify actual chassis designations during authoring. [Film reference, secondary](https://en.wikipedia.org/wiki/Robot_Jox).\n\n**Production edition:** Robot Jox — 1990; original arena unit labels for the two film mechs.  \n**Catalogue key:** `robot-jox-arena-hangar`\n\n",
+  "source_documents": [
+    "reference/AUTOMATON_STABLE_EXPANSION.md"
+  ],
+  "blueprint_origin": "completed during collection",
+  "purchasing_plan": "Open with both robots. Alternate stage-1 equipment investment between slots 1 and 2; finish both final loadouts before refining. Visit both robots in each Hone pass, then each Augment pass, buying Workshop L1/L3 only as required. No Sharpen or Forge purchases.",
+  "target_overrides": {},
+  "equipment_budget": {
+    "stage_0_credits": 151000,
+    "stage_1_credits": 1242000,
+    "refinement_credits": 680000,
+    "excludes": "Frames, facilities, training, repairs, upkeep, discounts and resale; stage-1 total replaces stage-0 gear and is not a simultaneous equipment inventory."
+  },
+  "folder": "stables/141-robot-jox-arena-hangar",
+  "history_image_count": 0
+}

@@ -1,0 +1,38 @@
+{
+  "date": "2026-10-09",
+  "result": "PASS — local design validation only",
+  "stableCount": 89,
+  "slottedRobotBlueprints": 326,
+  "alternativeRobotBlueprints": 7,
+  "totalRobotDesigns": 333,
+  "weaponStagesChecked": 666,
+  "refinementStepsChecked": 231,
+  "existingStarterRobotNamesChecked": 50,
+  "checksPassed": [
+    "All 89 stable numbers and keys are covered exactly once.",
+    "All named proposed robots and reserves are covered; open generic selections are resolved.",
+    "Names are unique, use allowed characters, and fit local length rules, including comparison against all 50 existing starter robot names.",
+    "All slots, opening counts, targets, reserves and alternatives fit the conservative strategy sizes used from the supplied examples.",
+    "Every possible 2v2/3v3 team has correct fixed members and a valid unique name.",
+    "All nine stable event types appear exactly once.",
+    "All 333 blueprints contain resolved combat, equipment, refinement and art values.",
+    "All 666 weapon stages fit their loadout, hand types and stated derived ranges.",
+    "Weapon prices and final weapon maxima match the supplied starter facts.",
+    "Every refinement uses a known weapon fact, respects the step/stack/tier caps, and names its target hand.",
+    "Every alternative replaces an existing eligible slot rather than silently enlarging a roster.",
+    "Individual JSON records, bundle, blueprint document and updated proposal agree."
+  ],
+  "notVerified": [
+    "Backend catalogue JSON schema/importer (not provided).",
+    "Full STRATEGIES.md parameter/goal schema and numerical tuning allocations (not provided).",
+    "Live weapon database and balance changes since the supplied references.",
+    "Starting-credit affordability including robot and facility purchases.",
+    "Profanity service, existing live stable/robot availability, and Catalogue_Sync.",
+    "Actual portrait generation; this request produces blueprint art briefs only."
+  ],
+  "assumptions": [
+    "The newer starter reference accompanying the portrait pack governs field and progression rules.",
+    "Conservative main-roster review limits use sizes illustrated/allowed by the supplied starter examples; full strategy limits remain a repository check.",
+    "Template-backed weapon paths and refinements are fully resolved per robot; no extra engine mechanics are assumed."
+  ]
+}

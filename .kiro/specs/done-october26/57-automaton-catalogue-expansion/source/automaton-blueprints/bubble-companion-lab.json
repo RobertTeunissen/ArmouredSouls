@@ -1,0 +1,129 @@
+{
+  "number": 78,
+  "catalogueKey": "bubble-companion-lab",
+  "stableName": "Bubble Companion Lab",
+  "franchiseLabel": "Ron's Gone Wrong",
+  "strategy": "Paragon",
+  "fit": "Adapt",
+  "conceptIdentity": "A compact evasive machine upgraded beyond its civilian origins. White capsule body and screen face; an intentionally adapted arena design.",
+  "backstory": "Bubble Companion Lab enters the arena with a clear doctrine. A compact evasive machine upgraded beyond its civilian origins. Every surviving machine returns to the workshop before the next booking.",
+  "openingRobots": 1,
+  "targetRobots": 1,
+  "adminMaximumRobots": 2,
+  "targetOverrides": {},
+  "teamNames": {
+    "2v2": [],
+    "3v3": []
+  },
+  "eventOrder": [
+    "league_1v1",
+    "tournament_1v1",
+    "koth",
+    "grand_melee",
+    "league_2v2",
+    "tag_team",
+    "tournament_2v2",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "robots": [
+    {
+      "blueprintId": "bubble-companion-lab:1:ron",
+      "slot": 1,
+      "name": "Ron",
+      "sourceAlias": "Ron",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "single",
+      "stance": "balanced",
+      "yieldThreshold": 35,
+      "buildFocus": "Sprinter",
+      "weaponPath": [
+        {
+          "mainWeapon": "Plasma Rifle",
+          "offhandWeapon": null,
+          "listPriceCredits": 258000
+        },
+        {
+          "mainWeapon": "Volt Sabre",
+          "offhandWeapon": null,
+          "listPriceCredits": 425000
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "Hone",
+          "weapon": "Volt Sabre",
+          "weaponSlot": "main",
+          "attribute": "Attack Speed",
+          "baseValue": 4,
+          "magnitude": 3,
+          "resultValue": 7,
+          "costCredits": 90000,
+          "workshopLevel": 1,
+          "step": 1
+        },
+        {
+          "tier": "Augment",
+          "weapon": "Volt Sabre",
+          "weaponSlot": "main",
+          "attribute": "Evasion Thrusters",
+          "magnitude": 2,
+          "resultValue": 2,
+          "costCredits": 80000,
+          "workshopLevel": 3,
+          "step": 2
+        },
+        {
+          "tier": "Sharpen",
+          "weapon": "Volt Sabre",
+          "weaponSlot": "main",
+          "cooldownReductionPercent": 10,
+          "costCredits": 300000,
+          "workshopLevel": 5,
+          "prestigeGate": 3000,
+          "step": 3
+        },
+        {
+          "tier": "Sharpen",
+          "weapon": "Volt Sabre",
+          "weaponSlot": "main",
+          "cooldownReductionPercent": 10,
+          "costCredits": 900000,
+          "workshopLevel": 5,
+          "prestigeGate": 3000,
+          "step": 4
+        },
+        {
+          "tier": "Forge",
+          "weapon": "Volt Sabre",
+          "weaponSlot": "main",
+          "damageIncreasePercent": 8,
+          "costCredits": 400000,
+          "workshopLevel": 8,
+          "prestigeGate": 15000,
+          "step": 5
+        }
+      ],
+      "review": {
+        "rangeFromWeapons": "short",
+        "artBrief": "White capsule-shaped companion robot with screen face, small arms and rounded feet.",
+        "refinementNote": "Apply in order after stage 1. Dual-wield refinements affect the main-hand copy only; the offhand stays unrefined unless explicitly targeted.",
+        "refinementTotalCredits": 1770000,
+        "minimumRosterExpansionLevel": 0,
+        "imageConvention": "app/frontend/public/assets/automatons/bubble-companion-lab/1.webp"
+      }
+    }
+  ],
+  "alternativeBlueprints": [],
+  "review": {
+    "openingWeaponCredits": 258000,
+    "finalWeaponCreditsAtTarget": 425000,
+    "equippedWeaponCountAtTarget": 1,
+    "purchaseOrder": [
+      1
+    ],
+    "reserveSlots": [],
+    "alternativeRule": "Choose an alternative before catalogue approval; it replaces the specified slot and never adds another live robot."
+  }
+}

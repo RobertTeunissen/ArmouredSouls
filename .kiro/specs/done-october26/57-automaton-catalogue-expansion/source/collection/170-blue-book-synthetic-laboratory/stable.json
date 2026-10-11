@@ -1,0 +1,198 @@
+{
+  "number": 170,
+  "catalogue_key": "blue-book-synthetic-laboratory",
+  "name": "Blue Book Synthetic Laboratory",
+  "franchise": "Ex Machina — 2014 film",
+  "strategy": "Paragon",
+  "opening_robots": 1,
+  "target_robots": 1,
+  "max_planned_robots": 1,
+  "strategy_review_limit": 2,
+  "backstory": "A precise synthetic carries the laboratory's single arena account. Mobile equipment and staged refinement reward careful investment while its source body remains intact.",
+  "strategy_personality": "A precise synthetic Paragon with a human face, transparent and mesh body sections, and visible internal mechanisms. Maintain the selected film configuration rather than blending it with Ava's later fully covered appearance. Refined equipment and careful resource investment suit the stable. Her arena weapon is an adaptation; intelligence and manipulation do not become automatic hacking, persuasion, or opponent-control abilities.",
+  "teams": {
+    "2v2": [],
+    "3v3": []
+  },
+  "event_order": [
+    "league_1v1",
+    "tournament_1v1",
+    "koth",
+    "grand_melee",
+    "league_2v2",
+    "tag_team",
+    "tournament_2v2",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "robots": [
+    {
+      "slot": 1,
+      "name": "Ava",
+      "source_identity": "Ava",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 20,
+      "build_focus": "Sprinter",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": null,
+          "list_price_credits": 57000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Hone",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 1,
+          "attribute": "Attack Speed",
+          "magnitude": 3,
+          "result_value": 7,
+          "cost_credits": 90000,
+          "base_value": 4,
+          "effect": "Attack Speed 4→7",
+          "step": 1
+        },
+        {
+          "operation": "Augment",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 3,
+          "attribute": "Evasion Thrusters",
+          "magnitude": 2,
+          "result_value": 2,
+          "cost_credits": 80000,
+          "effect": "Evasion Thrusters, new +2",
+          "step": 2
+        },
+        {
+          "operation": "Sharpen",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 1,
+          "cost_credits": 300000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 3
+        },
+        {
+          "operation": "Sharpen",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 5,
+          "occurrence": 2,
+          "cost_credits": 900000,
+          "prestige_gate": 3000,
+          "effect": "−10% cooldown",
+          "step": 4
+        },
+        {
+          "operation": "Forge",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 8,
+          "occurrence": 1,
+          "cost_credits": 400000,
+          "prestige_gate": 15000,
+          "effect": "+8% damage",
+          "step": 5
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Ava from Ex Machina 2014, adult female android with recognizable human face, bare smooth synthetic scalp and visible dark metallic internal structures, silver fine-mesh-covered torso, hips and limbs, clear mechanical abdominal sections and delicate hands. Preserve the film's nonsexual technical mesh-bodied laboratory configuration and authentic face; standing calmly full body, no added battle armour or gun, no hair wig, no doll stylization.\nMetadata only, do not render text: #170 slot 1 Ava.",
+      "role": "Mobile skirmisher",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 1770000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "Ava fills the mobile skirmisher role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Sprinter tuning supports the short equipment role; balanced stance and a 20% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Paragon strategy tuning rules with the Sprinter Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "blue-book-synthetic-laboratory:1:ava",
+      "folder": "stables/170-blue-book-synthetic-laboratory/robots/01-ava",
+      "files": {
+        "png": "stables/170-blue-book-synthetic-laboratory/robots/01-ava/portrait.png",
+        "webp": "stables/170-blue-book-synthetic-laboratory/robots/01-ava/portrait.webp",
+        "blueprint": "stables/170-blue-book-synthetic-laboratory/robots/01-ava/blueprint.json",
+        "profile": "stables/170-blue-book-synthetic-laboratory/robots/01-ava/profile.md",
+        "prompt": "stables/170-blue-book-synthetic-laboratory/robots/01-ava/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/blue-book-synthetic-laboratory/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 170,
+          "stable_name": "Blue Book Synthetic Laboratory",
+          "catalogue_key": "blue-book-synthetic-laboratory",
+          "slot": 1,
+          "robot_name": "Ava",
+          "source_identity": "Ava",
+          "source_edition": "Ex Machina 2014 Ava mesh-bodied laboratory configuration",
+          "source_references": [
+            "https://a24films.com/films/ex-machina"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Ava from Ex Machina 2014, adult female android with recognizable human face, bare smooth synthetic scalp and visible dark metallic internal structures, silver fine-mesh-covered torso, hips and limbs, clear mechanical abdominal sections and delicate hands. Preserve the film's nonsexual technical mesh-bodied laboratory configuration and authentic face; standing calmly full body, no added battle armour or gun, no hair wig, no doll stylization.\nMetadata only, do not render text: #170 slot 1 Ava.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-0b2808a6-c902-4583-b7dc-e2ff54f335df.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "blue-book-synthetic-laboratory:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/blue-book-synthetic-laboratory/1.webp",
+          "master": "outputs/automaton-portraits/masters/blue-book-synthetic-laboratory/1.png",
+          "output": "app/frontend/public/assets/automatons/blue-book-synthetic-laboratory/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "4f869a2e1ed6e8df64a17b7d3ebc0cb379c6188dcf5e4b8c42c050e74efb3b1b",
+          "bytes": 29426
+        },
+        "sha256": "4f869a2e1ed6e8df64a17b7d3ebc0cb379c6188dcf5e4b8c42c050e74efb3b1b",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "alternatives": [],
+  "blueprint_status": "detailed",
+  "source_notes": "\n**Franchise:** Ex Machina — 2014 film  \n**Strategy:** Paragon · **Target roster:** 1 robot\n\n**Proposed robots:** Ava.\n\n**Direction:** A precise synthetic Paragon with a human face, transparent and mesh body sections, and visible internal mechanisms. Maintain the selected film configuration rather than blending it with Ava's later fully covered appearance. Refined equipment and careful resource investment suit the stable. Her arena weapon is an adaptation; intelligence and manipulation do not become automatic hacking, persuasion, or opponent-control abilities.\n\nReferences: [A24's Ex Machina page](https://a24films.com/films/ex-machina).\n\n**Production edition:** Ex Machina 2014 Ava mesh-bodied laboratory configuration.  \n**Catalogue key:** `blue-book-synthetic-laboratory`\n\n",
+  "source_documents": [
+    "reference/AUTOMATON_STABLE_EXPANSION.md"
+  ],
+  "blueprint_origin": "completed during collection",
+  "purchasing_plan": "Open and remain at one robot. Buy its complete stage-1 loadout before refinement. Execute the listed steps in order, progressing Workshop L1/L3/L5/L8 as required. Keep prestige-gated steps pending; fund repairs and maintenance before every purchase.",
+  "target_overrides": {},
+  "equipment_budget": {
+    "stage_0_credits": 57000,
+    "stage_1_credits": 425000,
+    "refinement_credits": 1770000,
+    "excludes": "Frames, facilities, training, repairs, upkeep, discounts and resale; stage-1 total replaces stage-0 gear and is not a simultaneous equipment inventory."
+  },
+  "folder": "stables/170-blue-book-synthetic-laboratory",
+  "history_image_count": 0
+}

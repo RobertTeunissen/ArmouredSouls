@@ -1,0 +1,118 @@
+{
+  "number": 44,
+  "catalogueKey": "new-jerusalem-foundry",
+  "stableName": "New Jerusalem Foundry",
+  "franchiseLabel": "The Talos Principle",
+  "strategy": "Paragon",
+  "fit": "Adapt",
+  "conceptIdentity": "A calm tactical build with steady refinement. Clean humanoid metal, exposed artificial anatomy, restrained bronze and dark steel.",
+  "backstory": "New Jerusalem Foundry enters the arena with a clear doctrine. A calm tactical build with steady refinement. Every surviving machine returns to the workshop before the next booking.",
+  "openingRobots": 1,
+  "targetRobots": 1,
+  "adminMaximumRobots": 2,
+  "targetOverrides": {},
+  "teamNames": {
+    "2v2": [],
+    "3v3": []
+  },
+  "eventOrder": [
+    "league_1v1",
+    "tournament_1v1",
+    "koth",
+    "grand_melee",
+    "league_2v2",
+    "tag_team",
+    "tournament_2v2",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "robots": [
+    {
+      "blueprintId": "new-jerusalem-foundry:1:1k",
+      "slot": 1,
+      "name": "1k",
+      "sourceAlias": "1k",
+      "nameBasis": "Source character or machine designation",
+      "availability": "opening",
+      "loadout": "weapon_shield",
+      "stance": "defensive",
+      "yieldThreshold": 20,
+      "buildFocus": "Tactician",
+      "weaponPath": [
+        {
+          "mainWeapon": "Disruptor Cannon",
+          "offhandWeapon": "Combat Shield",
+          "listPriceCredits": 371000
+        },
+        {
+          "mainWeapon": "Nova Caster",
+          "offhandWeapon": "Aegis Bulwark",
+          "listPriceCredits": 834000
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "Hone",
+          "weapon": "Aegis Bulwark",
+          "weaponSlot": "offhand",
+          "attribute": "Evasion Thrusters",
+          "baseValue": -5,
+          "magnitude": 5,
+          "resultValue": 0,
+          "costCredits": 250000,
+          "workshopLevel": 1,
+          "step": 1
+        },
+        {
+          "tier": "Sharpen",
+          "weapon": "Nova Caster",
+          "weaponSlot": "main",
+          "cooldownReductionPercent": 10,
+          "costCredits": 300000,
+          "workshopLevel": 5,
+          "prestigeGate": 3000,
+          "step": 2
+        },
+        {
+          "tier": "Sharpen",
+          "weapon": "Nova Caster",
+          "weaponSlot": "main",
+          "cooldownReductionPercent": 10,
+          "costCredits": 900000,
+          "workshopLevel": 5,
+          "prestigeGate": 3000,
+          "step": 3
+        },
+        {
+          "tier": "Forge",
+          "weapon": "Nova Caster",
+          "weaponSlot": "main",
+          "damageIncreasePercent": 8,
+          "costCredits": 400000,
+          "workshopLevel": 8,
+          "prestigeGate": 15000,
+          "step": 4
+        }
+      ],
+      "review": {
+        "rangeFromWeapons": "mid",
+        "artBrief": "New Jerusalem humanoid android with clean manufactured limbs and exposed metal anatomy.",
+        "refinementNote": "Apply in order after stage 1. Dual-wield refinements affect the main-hand copy only; the offhand stays unrefined unless explicitly targeted.",
+        "refinementTotalCredits": 1850000,
+        "minimumRosterExpansionLevel": 0,
+        "imageConvention": "app/frontend/public/assets/automatons/new-jerusalem-foundry/1.webp"
+      }
+    }
+  ],
+  "alternativeBlueprints": [],
+  "review": {
+    "openingWeaponCredits": 371000,
+    "finalWeaponCreditsAtTarget": 834000,
+    "equippedWeaponCountAtTarget": 2,
+    "purchaseOrder": [
+      1
+    ],
+    "reserveSlots": [],
+    "alternativeRule": "Choose an alternative before catalogue approval; it replaces the specified slot and never adds another live robot."
+  }
+}

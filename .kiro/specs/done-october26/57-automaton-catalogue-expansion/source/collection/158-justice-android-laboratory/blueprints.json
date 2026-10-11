@@ -1,0 +1,258 @@
+{
+  "stable_number": 158,
+  "catalogue_key": "justice-android-laboratory",
+  "robots": [
+    {
+      "slot": 1,
+      "name": "Amazo",
+      "source_identity": "Amazo",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "two_handed",
+      "stance": "offensive",
+      "yield_threshold": 10,
+      "build_focus": "Bruiser",
+      "range_from_weapons": "mid",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Training Rifle",
+          "offhand_weapon": null,
+          "list_price_credits": 50000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Plasma Cannon",
+          "offhand_weapon": null,
+          "list_price_credits": 408000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Hone",
+          "weapon": "Plasma Cannon",
+          "hand": "main",
+          "workshop_level": 1,
+          "attribute": "Combat Power",
+          "magnitude": 3,
+          "result_value": 10,
+          "cost_credits": 90000,
+          "base_value": 7,
+          "effect": "Combat Power 7→10",
+          "step": 1
+        },
+        {
+          "operation": "Hone",
+          "weapon": "Plasma Cannon",
+          "hand": "main",
+          "workshop_level": 1,
+          "attribute": "Critical Systems",
+          "magnitude": 4,
+          "result_value": 10,
+          "cost_credits": 160000,
+          "base_value": 6,
+          "effect": "Critical Systems 6→10",
+          "step": 2
+        },
+        {
+          "operation": "Augment",
+          "weapon": "Plasma Cannon",
+          "hand": "main",
+          "workshop_level": 3,
+          "attribute": "Hull Integrity",
+          "magnitude": 3,
+          "result_value": 3,
+          "cost_credits": 180000,
+          "effect": "Hull Integrity, new +3",
+          "step": 3
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic golden Amazo from Justice League Unlimited 2004, adult humanoid android with tall athletic entirely gold body, bald gold head, pointed ears, angular humanlike face and small pale eyes. Smooth source body construction with restrained fine mechanical seams, gold torso/limbs and complete gold feet. No clothing added, no human skin or sexual anatomy, no giant armour or copied superhero logos, neutral still pose.\nMetadata only, do not render text: #158 slot 1 Amazo.",
+      "role": "Heavy mid-range pressure",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 430000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 0,
+      "equipment_interpretation": "Amazo fills the heavy mid-range pressure role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Bruiser tuning supports the mid equipment role; offensive stance and a 10% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Duo strategy tuning rules with the Bruiser Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "justice-android-laboratory:1:amazo",
+      "folder": "stables/158-justice-android-laboratory/robots/01-amazo",
+      "files": {
+        "png": "stables/158-justice-android-laboratory/robots/01-amazo/portrait.png",
+        "webp": "stables/158-justice-android-laboratory/robots/01-amazo/portrait.webp",
+        "blueprint": "stables/158-justice-android-laboratory/robots/01-amazo/blueprint.json",
+        "profile": "stables/158-justice-android-laboratory/robots/01-amazo/profile.md",
+        "prompt": "stables/158-justice-android-laboratory/robots/01-amazo/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/justice-android-laboratory/1.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 158,
+          "stable_name": "Justice Android Laboratory",
+          "catalogue_key": "justice-android-laboratory",
+          "slot": 1,
+          "robot_name": "Amazo",
+          "source_identity": "Amazo",
+          "source_edition": "DC — Amazo Justice League Unlimited 2004 golden body; Red Tornado classic comics body",
+          "source_references": [
+            "https://www.dc.com/comics/justice-league-unlimited-2004/justice-league-unlimited-26",
+            "https://www.dc.com/comics/justice-league-of-america-2006/justice-league-of-america-22"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic golden Amazo from Justice League Unlimited 2004, adult humanoid android with tall athletic entirely gold body, bald gold head, pointed ears, angular humanlike face and small pale eyes. Smooth source body construction with restrained fine mechanical seams, gold torso/limbs and complete gold feet. No clothing added, no human skin or sexual anatomy, no giant armour or copied superhero logos, neutral still pose.\nMetadata only, do not render text: #158 slot 1 Amazo.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-84fc514d-5806-47c2-93cd-9da88ac06108.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "justice-android-laboratory:1",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/justice-android-laboratory/1.webp",
+          "master": "outputs/automaton-portraits/masters/justice-android-laboratory/1.png",
+          "output": "app/frontend/public/assets/automatons/justice-android-laboratory/1.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "b594b4abb0d7d8d4ba3951ef728989a843c133778396ab07f0f365c9f64a91fc",
+          "bytes": 37206
+        },
+        "sha256": "b594b4abb0d7d8d4ba3951ef728989a843c133778396ab07f0f365c9f64a91fc",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    },
+    {
+      "slot": 2,
+      "name": "Red Tornado",
+      "source_identity": "Red Tornado",
+      "availability": "opening",
+      "blueprint_status": "detailed",
+      "loadout": "single",
+      "stance": "balanced",
+      "yield_threshold": 20,
+      "build_focus": "Sprinter",
+      "range_from_weapons": "short",
+      "weapon_path": [
+        {
+          "stage": 0,
+          "main_weapon": "Laser Pistol",
+          "offhand_weapon": null,
+          "list_price_credits": 57000
+        },
+        {
+          "stage": 1,
+          "main_weapon": "Volt Sabre",
+          "offhand_weapon": null,
+          "list_price_credits": 425000
+        }
+      ],
+      "refinement_plan": [
+        {
+          "operation": "Hone",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 1,
+          "attribute": "Attack Speed",
+          "magnitude": 3,
+          "result_value": 7,
+          "cost_credits": 90000,
+          "base_value": 4,
+          "effect": "Attack Speed 4→7",
+          "step": 1
+        },
+        {
+          "operation": "Augment",
+          "weapon": "Volt Sabre",
+          "hand": "main",
+          "workshop_level": 3,
+          "attribute": "Evasion Thrusters",
+          "magnitude": 2,
+          "result_value": 2,
+          "cost_credits": 80000,
+          "effect": "Evasion Thrusters, new +2",
+          "step": 2
+        }
+      ],
+      "art_brief": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic classic DC comics Red Tornado android. Red smooth humanlike mechanical face, yellow eyes and yellow arrow forehead detail, red fitted synthetic suit, yellow gloves/boots/belt and high-collared blue cape. Source adult athletic humanoid proportions, subtle artificial materials, complete calm upright stance with cape inside frame. No tornado effects, no exposed robot skull or heavy armour.\nMetadata only, do not render text: #158 slot 2 Red Tornado.",
+      "role": "Mobile skirmisher",
+      "missing_fields": [],
+      "refinement_note": "Apply only after the final loadout is equipped. Main-hand operations affect that item instance only; a second weapon copy stays unrefined. The shield receives only its listed Hone. No unverified weapon attribute is added.",
+      "refinement_total_credits": 170000,
+      "blueprint_origin": "completed during collection",
+      "minimum_roster_expansion_level": 1,
+      "equipment_interpretation": "Red Tornado fills the mobile skirmisher role. Its source body and selected portrait are retained. Arena main/offhand allocations can use fitted mounts or tool adapters; extra limbs, integrated source weapons and alternate forms grant no additional slots or combat effects.",
+      "combat_rationale": "Sprinter tuning supports the short equipment role; balanced stance and a 20% yield threshold implement its pressure or survival priority. Range follows the equipped weapons at both stages.",
+      "tuning_plan": "Use the existing Duo strategy tuning rules with the Sprinter Build_Focus and its free pool; equipment refinements do not replace robot tuning.",
+      "design_basis": "New arena build authored for this collection using supplied equipment prices, hand compatibility and verified refinement examples. Original source identity and final artwork remain authoritative for appearance.",
+      "blueprint_id": "justice-android-laboratory:2:red-tornado",
+      "folder": "stables/158-justice-android-laboratory/robots/02-red-tornado",
+      "files": {
+        "png": "stables/158-justice-android-laboratory/robots/02-red-tornado/portrait.png",
+        "webp": "stables/158-justice-android-laboratory/robots/02-red-tornado/portrait.webp",
+        "blueprint": "stables/158-justice-android-laboratory/robots/02-red-tornado/blueprint.json",
+        "profile": "stables/158-justice-android-laboratory/robots/02-red-tornado/profile.md",
+        "prompt": "stables/158-justice-android-laboratory/robots/02-red-tornado/prompt.txt",
+        "runtime_webp": "runtime-assets/app/frontend/public/assets/automatons/justice-android-laboratory/2.webp"
+      },
+      "selected_image": {
+        "original_record": {
+          "stable_number": 158,
+          "stable_name": "Justice Android Laboratory",
+          "catalogue_key": "justice-android-laboratory",
+          "slot": 2,
+          "robot_name": "Red Tornado",
+          "source_identity": "Red Tornado",
+          "source_edition": "DC — Amazo Justice League Unlimited 2004 golden body; Red Tornado classic comics body",
+          "source_references": [
+            "https://www.dc.com/comics/justice-league-unlimited-2004/justice-league-unlimited-26",
+            "https://www.dc.com/comics/justice-league-of-america-2006/justice-league-of-america-22"
+          ],
+          "prompt": "Use case: stylized-concept. Asset type: Armoured Souls individual robot game portrait. Generate ONE square 1:1 image of ONE complete source-faithful robot, not an original substitute.\nScene/backdrop: quiet charcoal-to-black industrial studio gradient, subtle dark floor and restrained low haze.\nStyle/medium: premium realistic industrial sci-fi hard-surface 3D rendering, believable metal, fine scratches and restrained paint wear, preserving source geometry and colours. Match the established Armoured Souls portrait collection.\nComposition: three-quarter view, complete full body with head, all feet/legs and equipment contained in frame, centered at about 80% of square canvas with at least 5% clear margin around every extremity. Readable silhouette at 512px.\nLighting: neutral soft key, cool upper-right rim light, controlled cinematic contrast and subtle source-appropriate sensors.\nConstraints: one character, no additional figures, no collage/grid, no text/captions, watermark, UI or border, no firing or explosions. Keep canonical proportions and anatomy; do not add humanoid arms to walkers or astromechs. Full-resolution square master for 512x512 WebP export.\n\nSubject: Authentic classic DC comics Red Tornado android. Red smooth humanlike mechanical face, yellow eyes and yellow arrow forehead detail, red fitted synthetic suit, yellow gloves/boots/belt and high-collared blue cape. Source adult athletic humanoid proportions, subtle artificial materials, complete calm upright stance with cape inside frame. No tornado effects, no exposed robot skull or heavy armour.\nMetadata only, do not render text: #158 slot 2 Red Tornado.",
+          "generated_path": "/Users/robertteunissen/.codex/generated_images/01a12660-9699-7f12-a7fc-c240f400b6ba/exec-4f8d0a86-404f-44da-964b-9819993f2653.png",
+          "visual_review": "Accepted — reviewed for source identity, complete-body framing, readable silhouette, materials and arena equipment",
+          "asset_id": "justice-android-laboratory:2",
+          "status": "generated",
+          "revision": 1,
+          "runtime_output": "app/frontend/public/assets/automatons/justice-android-laboratory/2.webp",
+          "master": "outputs/automaton-portraits/masters/justice-android-laboratory/2.png",
+          "output": "app/frontend/public/assets/automatons/justice-android-laboratory/2.webp",
+          "master_dimensions": [
+            1254,
+            1254
+          ],
+          "export_dimensions": [
+            512,
+            512
+          ],
+          "sha256": "29876e64c24c5fd52190b50568aa04251bbe894e8aa80bbd8a3c2214dcff7931",
+          "bytes": 39852
+        },
+        "sha256": "29876e64c24c5fd52190b50568aa04251bbe894e8aa80bbd8a3c2214dcff7931",
+        "revision": 1,
+        "artwork_type": null,
+        "master_dimensions": [
+          1254,
+          1254
+        ],
+        "export_dimensions": [
+          512,
+          512
+        ]
+      }
+    }
+  ],
+  "replacement_alternatives": []
+}
