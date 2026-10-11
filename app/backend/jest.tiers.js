@@ -126,6 +126,8 @@ const DB_DEPENDENT = [
   'tests/integration/automatonStrategyUpgrade.test.ts',
   'tests/integration/automatonDraftPreview.test.ts',
   'tests/integration/automatonAdminRoutes.test.ts',
+  // Achievement unlock serialization (pre-existing duplicate-insert fix)
+  'tests/integration/achievementUnlockSerialization.test.ts',
   // Spec #55 — Domain_Service_Extraction (task group 2)
   'src/services/economy/__tests__/facilityUpgradeService.test.ts',
   'src/services/economy/__tests__/weaponPurchaseService.test.ts',

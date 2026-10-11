@@ -642,6 +642,8 @@ export async function didRobotLosePreviousBattle(robotId: number, currentBattleI
  *
  * Wraps achievementService.checkAndAward() with battle-specific event data.
  * Achievement failures MUST NOT block battle processing — wrapped in try-catch.
+ * Concurrent calls for one stable are serialized by `achievementService`, so
+ * orchestrators may call this for all participants in parallel.
  *
  * @returns Array of newly unlocked achievements (empty on failure)
  */
