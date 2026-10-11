@@ -26,6 +26,7 @@ import { AutomatonError, AutomatonErrorCode } from '../../../errors/automatonErr
 import type { StrategyParametersV1, TeamNames } from '../../../types/automaton';
 import {
   buildableBlueprintCount,
+  compareCatalogueKeys,
   requiredTeamNameCountsFor,
   robotsTargetIssues,
   teamNamesIssues,
@@ -215,10 +216,15 @@ function toSubject(row: SubjectRow): UpgradeSubject & { id: number } {
   };
 }
 
+/** Subjects in code-point Catalogue_Key order (never database collation order). */
+function toSortedSubjects(rows: SubjectRow[]): (UpgradeSubject & { id: number })[] {
+  return [...rows].sort((a, b) => compareCatalogueKeys(a.catalogueKey, b.catalogueKey)).map(toSubject);
+}
+
 /** Every profile of a strategy (any version, drafts included), ordered by Catalogue_Key. */
 export async function loadStrategySubjects(strategyKey: string): Promise<(UpgradeSubject & { id: number })[]> {
-  const rows = await prisma.automatonProfile.findMany({ where: { strategyKey }, select: SUBJECT_SELECT, orderBy: { catalogueKey: 'asc' } });
-  return rows.map(toSubject);
+  const rows = await prisma.automatonProfile.findMany({ where: { strategyKey }, select: SUBJECT_SELECT });
+  return toSortedSubjects(rows);
 }
 
 function notApplicable(catalogueKey: string, strategyKey: string, toVersion: number): AutomatonError {
@@ -243,18 +249,17 @@ async function selectSubjects(strategyKey: string, request: UpgradeRequest): Pro
     const rows = await prisma.automatonProfile.findMany({
       where: { strategyKey, strategyVersion: { lt: request.toVersion } },
       select: SUBJECT_SELECT,
-      orderBy: { catalogueKey: 'asc' },
     });
-    return rows.map(toSubject);
+    return toSortedSubjects(rows);
   }
-  const keys = [...new Set(request.catalogueKeys)].sort();
-  const rows = await prisma.automatonProfile.findMany({ where: { catalogueKey: { in: keys } }, select: SUBJECT_SELECT, orderBy: { catalogueKey: 'asc' } });
+  const keys = [...new Set(request.catalogueKeys)].sort(compareCatalogueKeys);
+  const rows = await prisma.automatonProfile.findMany({ where: { catalogueKey: { in: keys } }, select: SUBJECT_SELECT });
   for (const catalogueKey of keys) {
     const row = rows.find((r) => r.catalogueKey === catalogueKey);
     if (!row) throw new AutomatonError(AutomatonErrorCode.AUTOMATON_NOT_FOUND, `No Automaton stable ${catalogueKey}`, 404);
     if (row.strategyKey !== strategyKey || row.strategyVersion >= request.toVersion) throw notApplicable(catalogueKey, strategyKey, request.toVersion);
   }
-  return rows.map(toSubject);
+  return toSortedSubjects(rows);
 }
 
 // ── Entry points ─────────────────────────────────────────────────────

@@ -32,6 +32,7 @@ import { SUBSCRIBABLE_EVENT_TYPES } from '../subscription/eventRegistry';
 import type { BuildFocusKey, RefinementStep, StrategyParametersV1, TeamNames, WeaponStage } from '../../types/automaton';
 import {
   buildableBlueprintCount,
+  compareCatalogueKeys,
   eventOrderIssues,
   requiredTeamNameCountsFor,
   robotsTargetIssues,
@@ -1025,11 +1026,10 @@ export async function activateProfile(catalogueKey: string, deps: ProfileService
  */
 export async function activateAllDrafts(deps: ProfileServiceDeps = {}): Promise<ActivateAllOutcome[]> {
   const resolvedDeps: ProfileServiceDeps = { registry: registryOf(deps), weapons: await weaponsOf(deps) };
-  const drafts = await prisma.automatonProfile.findMany({
+  const drafts = (await prisma.automatonProfile.findMany({
     where: { status: 'draft' },
     select: { catalogueKey: true },
-    orderBy: { catalogueKey: 'asc' },
-  });
+  })).sort((a, b) => compareCatalogueKeys(a.catalogueKey, b.catalogueKey));
   const outcomes: ActivateAllOutcome[] = [];
   const inScope = deps.draftScope ?? ((): boolean => true);
   for (const { catalogueKey } of drafts.filter((d) => inScope(d.catalogueKey))) {

@@ -60,6 +60,21 @@ export const REPOSITORY_IMAGE_URL_PREFIX = '/assets/automatons';
 export const CATALOGUE_SCHEMA_VERSION = 1;
 /** Lowercase letters, digits and hyphens, 3–40 characters (`review/CATALOGUE.md` §2). */
 export const CATALOGUE_KEY_PATTERN = /^[a-z0-9-]{3,40}$/;
+
+/**
+ * Ascending Catalogue_Key order (R2.5, R10.7, R11.2): plain code-point
+ * comparison, so `-` < `0-9` < `a-z`.
+ *
+ * Never rely on database collation or `localeCompare` for this order: they
+ * differ per platform. PostgreSQL on glibc (`en_US.utf8`) ignores hyphens at
+ * the first comparison level and sorts `t55e-draft` before `t-exp`, while
+ * musl (Alpine) and code-point order put `t-exp` first. Sort in JS with this
+ * comparator wherever the order is observable.
+ */
+export function compareCatalogueKeys(a: string, b: string): number {
+  if (a < b) return -1;
+  return a > b ? 1 : 0;
+}
 export const MAX_BLUEPRINTS = MAX_AUTOMATON_BLUEPRINTS;
 export const MAX_WEAPON_STAGES = 4;
 export const MAX_REFINEMENT_STEPS_PER_WEAPON = 5;
@@ -574,7 +589,7 @@ export function loadCatalogueDirectory(context: CatalogueContext, directory: str
     if (other) problems.push(`${entry.catalogueKey}.json: stable name "${entry.stableName}" is also used by ${other}`);
     byStableName.set(entry.stableName, entry.catalogueKey);
   }
-  entries.sort((a, b) => a.entry.catalogueKey.localeCompare(b.entry.catalogueKey));
+  entries.sort((a, b) => compareCatalogueKeys(a.entry.catalogueKey, b.entry.catalogueKey));
   return { entries, problems };
 }
 

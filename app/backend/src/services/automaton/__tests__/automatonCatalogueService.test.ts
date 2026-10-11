@@ -10,6 +10,7 @@ import {
   blueprintRuleIssues,
   buildableBlueprintCount,
   catalogueIssueCode,
+  compareCatalogueKeys,
   eventOrderIssues,
   requiredTeamNameCountsFor,
   robotsTargetIssues,
@@ -47,6 +48,25 @@ const SINGLE_BLUEPRINT: BlueprintFields = {
 };
 
 const ruleCodes = (blueprint: BlueprintFields): CatalogueRule[] => blueprintRuleIssues(blueprint, SEED_WEAPON_MAP).map((i) => i.rule);
+
+describe('compareCatalogueKeys (code-point order, never collation)', () => {
+  it.each([
+    ['t-exp', 't55e-draft'],
+    ['a-b', 'a0'],
+    ['clone-legion', 'dalek-empire'],
+    ['abc', 'abc-1'],
+    ['a9z', 'aaa'],
+  ])('%s sorts before %s', (first, second) => {
+    expect(compareCatalogueKeys(first, second)).toBeLessThan(0);
+    expect(compareCatalogueKeys(second, first)).toBeGreaterThan(0);
+  });
+
+  it('is 0 for equal keys and sorts hyphen < digits < letters', () => {
+    expect(compareCatalogueKeys('white-base', 'white-base')).toBe(0);
+    expect(['t55e-draft-x', 'a0', 'dalek-empire', 't-expx', 'a-b', 'clone-legion'].sort(compareCatalogueKeys))
+      .toEqual(['a-b', 'a0', 'clone-legion', 'dalek-empire', 't-expx', 't55e-draft-x']);
+  });
+});
 
 describe('catalogue entry: accept', () => {
   it('accepts a valid entry and merges overrides into Strategy_Parameters', () => {

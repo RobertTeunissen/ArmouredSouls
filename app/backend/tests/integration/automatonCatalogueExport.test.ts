@@ -14,7 +14,7 @@ import { exportCatalogue } from '../../src/services/automaton/catalogueExport';
 import { runCatalogueUnpackCli, unpackDocument } from '../../src/services/automaton/catalogueUnpack';
 import { runCatalogueSyncCli } from '../../src/services/automaton/catalogueSync';
 import { getStrategyRegistry } from '../../src/services/automaton/strategies/defaultRegistry';
-import { loadCatalogueDirectory } from '../../src/services/automaton/automatonCatalogueService';
+import { compareCatalogueKeys, loadCatalogueDirectory } from '../../src/services/automaton/automatonCatalogueService';
 import { SEED_WEAPON_MAP } from '../../src/services/automaton/strategies/__tests__/helpers/strategyTestSupport';
 import { validEntry } from '../../src/services/automaton/__tests__/helpers/catalogueTestSupport';
 import { createAutomatonStable, deleteAutomatonStables } from '../helpers/automatonStable';
@@ -93,7 +93,7 @@ describe('Catalogue_Export (R10.7)', () => {
   it('exports one entry per profile, the active stable name, overrides, and only admin uploads as images', async () => {
     const document = await exportOurs();
     expect(document).toMatchObject({ schemaVersion: 1, environment: 'test' });
-    expect(document.entries.map((e) => e.catalogueKey)).toEqual([DRAFT_KEY, activeKey].sort());
+    expect(document.entries.map((e) => e.catalogueKey)).toEqual([DRAFT_KEY, activeKey].sort(compareCatalogueKeys));
     const draft = document.entries.find((e) => e.catalogueKey === DRAFT_KEY);
     const active = document.entries.find((e) => e.catalogueKey === activeKey);
     expect(draft?.stableName).toBe(`T55 Export ${suffix}`);

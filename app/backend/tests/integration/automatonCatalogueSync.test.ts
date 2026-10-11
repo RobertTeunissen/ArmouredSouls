@@ -10,7 +10,7 @@ import path from 'path';
 import prisma from '../../src/lib/prisma';
 import { runCatalogueSyncCli, type CatalogueCliIo } from '../../src/services/automaton/catalogueSync';
 import { getStrategyRegistry } from '../../src/services/automaton/strategies/defaultRegistry';
-import type { CatalogueEntry } from '../../src/services/automaton/automatonCatalogueService';
+import { compareCatalogueKeys, type CatalogueEntry } from '../../src/services/automaton/automatonCatalogueService';
 import type { CatalogueSyncSummary } from '../../src/types/automaton';
 import { validEntry } from '../../src/services/automaton/__tests__/helpers/catalogueTestSupport';
 import { createAutomatonStable, deleteAutomatonStables } from '../helpers/automatonStable';
@@ -114,12 +114,12 @@ describe('Catalogue_Sync (R10.3–R10.5)', () => {
     expect(profile?.blueprints[1].refinementPlan).toEqual(entryFor(withImage, 'x').blueprints[1].refinementPlan);
     expect((await profileOf(withoutImage))?.blueprints.every((b) => b.imageUrl === null)).toBe(true);
     const summary = await storedSummary();
-    expect(summary).toMatchObject({ added: [withImage, withoutImage].sort(), present: [], filled: [], conflicts: [] });
+    expect(summary).toMatchObject({ added: [withImage, withoutImage].sort(compareCatalogueKeys), present: [], filled: [], conflicts: [] });
 
     const before = await profileOf(withImage);
     const second = await run(d);
     expect(second.code).toBe(0);
-    expect(await storedSummary()).toMatchObject({ added: [], present: [withImage, withoutImage].sort(), filled: [], conflicts: [] });
+    expect(await storedSummary()).toMatchObject({ added: [], present: [withImage, withoutImage].sort(compareCatalogueKeys), filled: [], conflicts: [] });
     expect((await profileOf(withImage))?.updatedAt).toEqual(before?.updatedAt);
   });
 

@@ -18,6 +18,7 @@ import { AutomatonError, AutomatonErrorCode } from '../../errors/automatonErrors
 import {
   CATALOGUE_SCHEMA_VERSION,
   catalogueKeySchema,
+  compareCatalogueKeys,
   type CatalogueEntry,
   type CatalogueExportDocument,
 } from './automatonCatalogueService';
@@ -69,11 +70,10 @@ export async function exportCatalogue(options: CatalogueExportOptions = {}): Pro
   const strategies = options.strategies ?? getStrategyRegistry();
   const uploadsDirectory = options.uploadsDirectory ?? UPLOADS_DIRECTORY;
 
-  const profiles = await prisma.automatonProfile.findMany({
+  const profiles = (await prisma.automatonProfile.findMany({
     where: keys.length > 0 ? { catalogueKey: { in: keys } } : {},
-    orderBy: { catalogueKey: 'asc' },
     include: { user: { select: { stableName: true } }, blueprints: { orderBy: { slotIndex: 'asc' } } },
-  });
+  })).sort((a, b) => compareCatalogueKeys(a.catalogueKey, b.catalogueKey));
 
   const entries: CatalogueEntry[] = [];
   const images: Record<string, string> = {};
