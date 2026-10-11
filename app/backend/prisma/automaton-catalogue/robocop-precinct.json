@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "catalogueKey": "robocop-precinct",
+  "stableName": "Old Detroit Precinct",
+  "franchise": "RoboCop",
+  "backstory": "Part man, part machine, all paperwork. One unit, one sidearm, and an upgrade budget signed off by the board. The precinct does not field a team — it does not need one.",
+  "strategy": { "key": "paragon", "version": 1, "targetOverrides": {} },
+  "teamNames": {
+    "twoVsTwo": ["Delta City Patrol"],
+    "threeVsThree": []
+  },
+  "eventOrder": ["league_1v1", "tournament_1v1", "koth", "grand_melee", "league_2v2", "tag_team", "tournament_2v2", "league_3v3", "tournament_3v3"],
+  "blueprints": [
+    {
+      "slot": 1,
+      "robotName": "RoboCop",
+      "loadoutType": "single",
+      "stance": "balanced",
+      "yieldThreshold": 15,
+      "buildFocus": "deadeye",
+      "weaponPath": [{ "main": "Gauss Pistol" }, { "main": "Particle Lance" }],
+      "refinementPlan": [
+        { "tier": "sharpen", "hand": "main", "magnitude": 1 },
+        { "tier": "sharpen", "hand": "main", "magnitude": 1 },
+        { "tier": "forge", "hand": "main", "magnitude": 1 },
+        { "tier": "forge", "hand": "main", "magnitude": 1 }
+      ]
+    },
+    {
+      "slot": 2,
+      "robotName": "ED-209",
+      "loadoutType": "two_handed",
+      "stance": "offensive",
+      "yieldThreshold": 0,
+      "buildFocus": "bruiser",
+      "weaponPath": [{ "main": "Grenade Launcher" }, { "main": "Plasma Cannon" }],
+      "refinementPlan": [
+        { "tier": "sharpen", "hand": "main", "magnitude": 1 },
+        { "tier": "sharpen", "hand": "main", "magnitude": 1 },
+        { "tier": "forge", "hand": "main", "magnitude": 1 },
+        { "tier": "forge", "hand": "main", "magnitude": 1 }
+      ]
+    }
+  ]
+}

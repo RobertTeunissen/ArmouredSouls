@@ -2358,8 +2358,33 @@ total_revenue = battle_winnings + merchandising_daily + streaming_daily + achiev
 
 ---
 
+## Automaton Stables (Spec #55)
+
+Automaton_Stables play the same economy as human stables. Details: [PRD_AUTOMATON_STABLES.md](PRD_AUTOMATON_STABLES.md).
+
+**Spending paths.** An Automaton spends only through the domain services a player route uses, each charge through `Credit_Mutation_Service` with one Financial_Pair:
+
+| Action | Service | Taxonomy |
+|---|---|---|
+| Buy a robot | `createRobotTransaction` | `robot_creation` |
+| Upgrade attributes | `executeUpgradeTransaction` | `attribute_upgrade` |
+| Upgrade a facility | `facilityUpgradeService.upgradeFacility` | `facility_upgrade` |
+| Buy / sell a weapon | `weaponPurchaseService.purchaseWeapon` / `weaponSaleService.sellWeapon` | `weapon_purchase` / `weapon_sale` |
+| Refine a weapon | `weaponRefinementService.refineWeapon` | `weapon_refinement` |
+
+Free actions (equip, loadout, stance and yield, team registration, subscriptions, tuning) use the same services as the player routes. Prices, discounts, Prestige_Gates, caps and the Booking_Cap are computed with the shared formulas (`app/shared/utils/`, `config/facilities.ts`); no formula is duplicated. The planner buys a step only when its cost is at most the current balance; nothing is held back as a reserve.
+
+**No grants.** An Automaton receives exactly what a human receives: ₡3,000,000 at Activation and at every Season_Rollover, plus the normal passive income, battle rewards, streaming revenue and prestige. There is no catch-up money, no discount and no direct `User.currency` write anywhere in `services/automaton/`.
+
+**Manual_Repair handicap.** Automatons never use Manual_Repair and so never get the 50% manual discount. Automatic_Repair before each battle job charges them the full quote, like a human who did not repair manually. This is the only economic disadvantage, and it is deliberate.
+
+**Negative balances.** Operating costs can push an Automaton below zero, as they can a human. While negative it buys nothing (every charged step fails the balance check, including zero-cost reuse steps) but still runs free upkeep, and a negative-balance alert is raised at the start of its turn.
+
+---
+
 ## See Also
 
+- **[PRD_AUTOMATON_STABLES.md](PRD_AUTOMATON_STABLES.md)** - Computer-run stables that play this economy
 - **[STABLE_SYSTEM.md](STABLE_SYSTEM.md)** - Complete facility system, prestige, daily income examples
 - **[PRD_ROBOT_ATTRIBUTES.md](PRD_ROBOT_ATTRIBUTES.md)** - Attribute upgrade costs, repair formulas
 - **[PRD_WEAPONS_LOADOUT.md](PRD_WEAPONS_LOADOUT.md)** - Weapon catalog with prices

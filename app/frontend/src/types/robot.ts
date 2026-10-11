@@ -5,6 +5,7 @@
  * These 23 attributes map to the Prisma Robot model's Decimal fields.
  * Values are serialized as numbers in API responses.
  */
+import type { StableType } from './stable';
 
 /** All 23 robot attribute keys */
 export type RobotAttributeKey =
@@ -114,6 +115,8 @@ export interface RobotWithAttributes extends RobotAttributes {
     id?: number;
     username: string;
     stableName?: string | null;
+    /** Spec #55: Stable_Type of the owner (drives the Automaton_Badge). */
+    stableType?: StableType;
   };
   /** Allow dynamic string key access for attribute lookups */
   [key: string]: unknown;

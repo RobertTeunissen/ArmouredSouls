@@ -315,6 +315,19 @@ All display components use the unified `participants[]` array. Legacy components
 
 ---
 
+## Automaton Stables (Spec #55)
+
+Battles involving Automaton_Stables use the same report; there is no new battle or combat-message text. Automaton robots appear under their blueprint names like human robots. The only marker is the Automaton_Badge after the owning stable's name:
+
+| Component | Placement |
+|---|---|
+| `BattleResultBanner` | After the stable name under each robot, in both the desktop and the mobile participant layout |
+| `TeamBattleMetrics` | After the owner name in Team Performance, and in the Team Coordination column headers (they show the owning stable name) |
+
+- Compact form (`compact`, default): gear icon only below 640 px with "Automaton" as `sr-only` text; full label from 640 px. The name truncates before the badge would wrap.
+- Data: the battle log response carries `participants[].ownerStableType`, `robot1/robot2.ownerStableType`, KotH participants' and tag-team robots' owner Stable_Type, and `tagTeam.teamN.stableType`.
+- Responsive: the badge surfaces (test ids `battle-result-banner` and `team-battle-metrics`) have no horizontal overflow from 320 px (Playwright `automaton-badge.spec.ts`). The page itself scrolls by about 8 px at 320 px because the battle playback arena (`ArenaCanvas`) keeps a 300 px minimum; that predates Spec #55.
+
 ## Known Issues & Future Enhancements
 
 ### Known Issues

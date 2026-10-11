@@ -62,6 +62,8 @@ const createMockRobot = (overrides?: Partial<Robot>): Robot => ({
   mainWeaponId: null,
   offhandWeaponId: null,
   imageUrl: null,
+  automatonBlueprintId: null,
+  automatonSlotIndex: null,
   offensiveWins: 0,
   defensiveWins: 0,
   balancedWins: 0,

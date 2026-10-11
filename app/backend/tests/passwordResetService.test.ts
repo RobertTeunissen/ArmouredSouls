@@ -94,7 +94,8 @@ describe('PasswordResetService', () => {
       // Verify user lookup
       expect(mockFindUnique).toHaveBeenCalledWith({
         where: { id: 42 },
-        select: { id: true, username: true, tokenVersion: true },
+        // Spec #55 R2.11: stableType is read inside the transaction.
+        select: { id: true, username: true, tokenVersion: true, stableType: true },
       });
 
       // Verify hash was generated

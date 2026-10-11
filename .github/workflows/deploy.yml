@@ -413,6 +413,9 @@ jobs:
         working-directory: ./app/frontend
         env:
           PLAYWRIGHT_BASE_URL: http://localhost:4173
+          # Spec #55 decision 43: the admin-teardown project deletes the e2e
+          # Automaton stables through a backend script on the backend's database.
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_e2e?connection_limit=20
         run: |
           pnpm exec vite preview --port 4173 &
           echo "Waiting for frontend preview server to start..."
@@ -695,6 +698,24 @@ jobs:
             export PATH="$HOME/.npm-global/bin:$PATH"
             cd /opt/armouredsouls/backend
             NODE_ENV=acceptance bash /opt/armouredsouls/scripts/with-db-retry.sh pnpm exec prisma db seed
+
+      # Spec #55 (R10.6): add Draft_Automatons for new Catalogue_Entries in
+      # prisma/automaton-catalogue/ and fill missing Repository_Images from
+      # /opt/armouredsouls/frontend/public/assets/automatons/ (rsynced above).
+      # Insert-only; exits non-zero (failing the deploy) on an invalid file.
+      # Runs after the seed because entries are validated against the weapons table.
+      - name: Sync Automaton catalogue
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.ACC_VPS_IP }}
+          username: ${{ secrets.ACC_VPS_USER }}
+          key: ${{ secrets.ACC_SSH_KEY }}
+          command_timeout: 5m
+          script: |
+            set -euo pipefail
+            export PATH="$HOME/.npm-global/bin:$PATH"
+            cd /opt/armouredsouls/backend
+            bash /opt/armouredsouls/scripts/with-db-retry.sh pnpm run automaton:sync
 
       - name: Ensure logrotate config
         continue-on-error: true

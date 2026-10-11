@@ -52,6 +52,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: 'Players', path: '/admin/players', icon: '👥' },
       { label: 'Economy', path: '/admin/economy', icon: '💰' },
+      { label: 'Automatons', path: '/admin/automatons', icon: '🤖' },
     ],
   },
   {
@@ -94,6 +95,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/admin/weapons': 'Weapons',
   '/admin/players': 'Players',
   '/admin/economy': 'Economy',
+  '/admin/automatons': 'Automaton Stables',
   '/admin/security': 'Security',
   '/admin/image-uploads': 'Image Uploads',
   '/admin/changelog': 'Changelog',

@@ -1,5 +1,6 @@
 import { RecordSection } from './RecordSection';
 import { RecordCard } from './RecordCard';
+import { RecordStableName } from './RecordStableName';
 import type { RecordsData } from './types';
 
 export interface CareerRecordsProps {
@@ -19,7 +20,7 @@ export function CareerRecords({ records }: CareerRecordsProps) {
               key={record.robotId}
               rank={index + 1}
               value={`${record.totalBattles} battles`}
-              description={`${record.robotName} by ${record.username}`}
+              description={<>{record.robotName} by <RecordStableName name={record.username} stableType={record.stableType} /></>}
               details={[
                 `Record: ${record.wins}-${record.losses}-${record.draws}`,
                 `Win Rate: ${record.winRate}%`,
@@ -40,7 +41,7 @@ export function CareerRecords({ records }: CareerRecordsProps) {
               key={record.robotId}
               rank={index + 1}
               value={`${record.winRate}%`}
-              description={`${record.robotName} by ${record.username}`}
+              description={<>{record.robotName} by <RecordStableName name={record.username} stableType={record.stableType} /></>}
               details={[
                 `Wins: ${record.wins} / ${record.totalBattles}`,
                 `ELO: ${record.elo}`,
@@ -61,7 +62,7 @@ export function CareerRecords({ records }: CareerRecordsProps) {
               key={record.robotId}
               rank={index + 1}
               value={`${record.damageDealt.toLocaleString()} damage`}
-              description={`${record.robotName} by ${record.username}`}
+              description={<>{record.robotName} by <RecordStableName name={record.username} stableType={record.stableType} /></>}
               details={[
                 `Total Battles: ${record.totalBattles}`,
                 `Avg per Battle: ${record.avgDamagePerBattle.toLocaleString()}`,
@@ -81,7 +82,7 @@ export function CareerRecords({ records }: CareerRecordsProps) {
               key={record.robotId}
               rank={index + 1}
               value={`${record.elo} ELO`}
-              description={`${record.robotName} by ${record.username}`}
+              description={<>{record.robotName} by <RecordStableName name={record.username} stableType={record.stableType} /></>}
               details={[
                 `League: ${record.league}`,
                 `Record: ${record.wins}-${record.losses}-${record.draws}`,
@@ -101,7 +102,7 @@ export function CareerRecords({ records }: CareerRecordsProps) {
               key={record.robotId}
               rank={index + 1}
               value={`${record.kills} kills`}
-              description={`${record.robotName} by ${record.username}`}
+              description={<>{record.robotName} by <RecordStableName name={record.username} stableType={record.stableType} /></>}
               details={[
                 `Total Battles: ${record.totalBattles}`,
                 `Kill Rate: ${record.killRate}%`,

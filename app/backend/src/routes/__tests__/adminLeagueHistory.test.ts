@@ -171,6 +171,8 @@ jest.mock('../../utils/validation', () => ({
 }));
 
 jest.mock('../../utils/buildUserFilter', () => ({
+  // Spec #55: the routes build their Zod filter enums from USER_FILTER_TYPES.
+  USER_FILTER_TYPES: ['all', 'real', 'auto', 'automaton'],
   buildUserFilter: jest.fn().mockReturnValue({}),
 }));
 

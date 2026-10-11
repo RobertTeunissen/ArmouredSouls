@@ -35,6 +35,7 @@ import {
   validateAttributeStackCap,
   validateRefinementSlotAvailable,
   validateShieldCompatibility,
+  REQUIRED_WORKSHOP_LEVELS,
   type RefinementRow,
   type RefinementTier,
 } from '../../../../shared/utils/weaponRefinement';
@@ -54,13 +55,8 @@ import {
 
 // ── Constants ────────────────────────────────────────────────────────
 
-/** Workshop level required per tier — mirrors the backend route handler. */
-const TIER_WORKSHOP_REQUIREMENT: Record<RefinementTier, number> = {
-  hone: 1,
-  augment: 3,
-  sharpen: 5,
-  forge: 8,
-};
+/** Workshop level required per tier — the shared gate the backend enforces. */
+const TIER_WORKSHOP_REQUIREMENT: Readonly<Record<RefinementTier, number>> = REQUIRED_WORKSHOP_LEVELS;
 
 /** Brief one-line description for each tier, shown on the tier card. */
 const TIER_DESCRIPTION: Record<RefinementTier, string> = {

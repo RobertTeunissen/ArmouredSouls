@@ -4,6 +4,7 @@
  * Requirements: R9.20
  */
 
+import { RecordStableName } from './RecordStableName';
 import type { RecordsData, TournamentChampionRecord } from './types';
 
 interface TournamentChampionsRecordsProps {
@@ -100,7 +101,9 @@ function ChampionSection({ title, icon, badgeColor, badgeLabel, champions, forma
             <div className="flex items-center gap-4 text-xs text-secondary flex-shrink-0">
               <div>
                 <span className="text-tertiary">Stable: </span>
-                <span className="text-white">{champion.ownerStableName}</span>
+                <span className="text-white">
+                  <RecordStableName name={champion.ownerStableName} stableType={champion.ownerStableType} />
+                </span>
               </div>
               <div>
                 <span className="text-tertiary">Won: </span>

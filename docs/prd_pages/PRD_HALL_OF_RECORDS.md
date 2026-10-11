@@ -603,6 +603,18 @@ HallOfRecordsPage.tsx
 
 ---
 
+## Automaton Stables (Spec #55)
+
+**Automatons hold records like humans** (decision 33). Every record category counts Automaton robots and stables on the same terms as human ones; nothing is filtered out. On a local or otherwise empty environment Automatons will hold most records; that is expected. Season accolades captured at rollover record the holder's Stable_Type in `season_accolades.subject_stable_type`.
+
+**Automaton_Badge on every record** (Spec #55 decision 42). Every record that names a stable shows the badge directly after an Automaton stable's name: compact gear below 640 px, full label from 640 px, never wrapped onto its own line.
+
+- Stable records (richest stables, highest prestige, most titles) render the holder through `OwnerNameLink` with its `stableType`.
+- Robot records ("Robot by Stable" rows: career, economic highest fame, KotH, Grand Melee, win streaks, team battle survival and damage), battle details ("Robot:", "Winner:", "Underdog:", "Underdog stable:"), team line-ups ("Robot (Stable)") and tournament champions ("Stable:") render the stable name as plain text through `components/hall-of-records/RecordStableName.tsx`, which adds the badge in the same `flex-nowrap` wrapper.
+- `recordsQueryService` ships `stableType` on every owner display object through `getRecordOwner()` (also for opponents, losers and favourites, so every name carries its type), and `ownerStableType` on tournament champions.
+
+---
+
 ## Privacy Considerations
 
 - All records are public information (battles are public)

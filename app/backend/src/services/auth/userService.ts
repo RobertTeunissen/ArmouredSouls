@@ -1,4 +1,6 @@
 import prisma from '../../lib/prisma';
+import type { StableType } from '../../../generated/prisma';
+import { stableTypeForCreation } from '../../utils/stableType';
 
 /**
  * User Service
@@ -32,6 +34,8 @@ export interface User {
   prestige: number;
   role: string;
   tokenVersion: number;
+  /** Spec #55: login rejects `automaton` before comparing the password (R2.9). */
+  stableType: StableType;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -69,6 +73,9 @@ export async function createUser(userData: CreateUserData): Promise<User> {
       email: userData.email,
       passwordHash: userData.passwordHash,
       stableName: userData.stableName,
+      // Spec #55 I1: registration creates Human_Stables only (isGenerated
+      // keeps its schema default, false).
+      stableType: stableTypeForCreation(false),
     },
   });
 

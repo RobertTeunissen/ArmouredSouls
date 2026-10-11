@@ -6,6 +6,7 @@ import TabNavigation from '../components/TabNavigation';
 import BattleConfigTab from '../components/BattleConfigTab';
 import EffectiveStatsDisplay from '../components/EffectiveStatsDisplay';
 import RobotImage from '../components/RobotImage';
+import AutomatonBadge from '../components/AutomatonBadge';
 import RobotImageSelector from '../components/RobotImageSelector';
 import StatisticalRankings from '../components/StatisticalRankings';
 import PerformanceByContext from '../components/PerformanceByContext';
@@ -139,10 +140,17 @@ function RobotDetailPage() {
                 <div className="flex flex-col sm:flex-row items-center sm:items-start sm:justify-between mb-3 gap-1">
                   <h1 className="text-2xl sm:text-3xl font-bold text-center sm:text-left">{robot.name}</h1>
                   {robot.user && (
-                    <div className="text-center sm:text-right text-sm">
+                    <div className="text-center sm:text-right text-sm max-w-full min-w-0">
                       <div className="text-secondary">Owner</div>
                       <div className="text-white font-semibold">
-                        {robot.user.stableName || robot.user.username}
+                        {robot.user.stableType === 'automaton' ? (
+                          <span className="inline-flex min-w-0 max-w-full flex-nowrap items-center gap-1.5 align-middle">
+                            <span className="min-w-0 truncate">{robot.user.stableName || robot.user.username}</span>
+                            <AutomatonBadge stableType={robot.user.stableType} compact={false} />
+                          </span>
+                        ) : (
+                          robot.user.stableName || robot.user.username
+                        )}
                       </div>
                     </div>
                   )}

@@ -64,9 +64,10 @@ function rowToAllocations(row: Record<string, unknown>): TuningAttributeMap {
 
 /**
  * Build the per-attribute max map for a robot given its base attributes
- * and the user's academy facility levels.
+ * and the user's academy facility levels. Exported so the Automaton tuning
+ * upkeep (Spec #55, R4.5) uses the same limits `setTuningAllocation` validates.
  */
-function buildPerAttributeMaxes(
+export function buildPerAttributeMaxes(
   robot: Record<string, unknown>,
   academyLevels: Record<string, number>,
 ): Record<RobotAttribute, number> {

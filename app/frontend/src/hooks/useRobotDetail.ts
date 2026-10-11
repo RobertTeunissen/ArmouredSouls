@@ -26,6 +26,7 @@ import { getRosterCapacity } from '../../../shared/utils/rosterCapacity';
 import type { RangeBand } from '../utils/weaponRange';
 import { getMatchHistory, BattleHistory } from '../utils/matchmakingApi';
 import type { RobotWithAttributes } from '../types/robot';
+import type { StableType } from '../types/stable';
 import { createLogger } from '../utils/logger';
 
 const log = createLogger('useRobotDetail');
@@ -52,6 +53,8 @@ export interface RobotDetail {
   user?: {
     username: string;
     stableName: string | null;
+    /** Spec #55: Stable_Type of the owner (drives the Automaton_Badge). */
+    stableType?: StableType;
   };
   // 23 Core Attributes
   combatPower: number;

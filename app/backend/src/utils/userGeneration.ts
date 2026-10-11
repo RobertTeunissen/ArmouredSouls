@@ -13,6 +13,7 @@ import {
 } from './tierConfig';
 import { generateStableName } from './stableNameGenerator';
 import { selectWeapon, selectShield, WeaponRecord } from './weaponSelection';
+import { stableTypeForCreation } from './stableType';
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -167,6 +168,8 @@ export async function generateBattleReadyUsers(
               // Spec #45: marks this as a Generated_Stable, deleted rather than
               // reset at each Season_Rollover.
               isGenerated: true,
+              // Spec #55 I1: Stable_Type follows isGenerated.
+              stableType: stableTypeForCreation(true),
             },
           });
 

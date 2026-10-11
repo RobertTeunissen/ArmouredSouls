@@ -180,11 +180,18 @@ export async function performAccountReset(userId: number, reason?: string): Prom
   // Get current state before reset for logging
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { currency: true },
+    select: { currency: true, stableType: true },
   });
 
   if (!user) {
     throw new AuthError(AuthErrorCode.USER_NOT_FOUND, 'User not found', 404);
+  }
+
+  // Spec #55 (task 1.2): an Automaton_Stable's robots, weapons and facilities
+  // are managed only by its Upgrade_Strategy; an account reset would delete
+  // them outside the engine (R2.4), so it is rejected.
+  if (user.stableType === 'automaton') {
+    throw new AuthError(AuthErrorCode.AUTOMATON_ACCOUNT_LOCKED, 'Account reset is not available for this account', 409);
   }
 
   const robotsCount = await prisma.robot.count({ where: { userId } });

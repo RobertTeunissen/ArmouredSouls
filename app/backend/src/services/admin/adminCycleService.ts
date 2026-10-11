@@ -35,6 +35,22 @@ import {
   getActiveFinancialCycleNumber,
   getSerializedCycleCutoverUserIdWatermark,
 } from '../cycle/canonicalCycleIdentity';
+import type { TurnStepInput, TurnStepOutcome } from '../automaton/automatonTurnService';
+
+/**
+ * Run an Automaton Turn_Step for a bulk cycle (Spec #55 R7.3, R7.4) and
+ * return its outcome for the bulk response. Never throws (R7.8).
+ */
+async function runAutomatonTurnStep(input: TurnStepInput): Promise<TurnStepOutcome> {
+  try {
+    const { runTurnStepNonFatal } = await import('../automaton');
+    return await runTurnStepNonFatal(input);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    logger.error(`[Admin] Automaton Turn_Step failed (non-fatal) — ${message}`);
+    return { ok: false, code: 'UNEXPECTED_ERROR', message };
+  }
+}
 
 /** Options accepted by the bulk cycle executor (mirrors req.body fields). */
 export interface BulkCycleOptions {
@@ -66,6 +82,8 @@ export interface CycleResult {
     snapshot: unknown;
     orphanCleanup: unknown;
     endOfCycleBalances: unknown;
+    /** Spec #55: the Automaton Turn_Step run after this cycle (summary or failure). */
+    automatonTurns?: TurnStepOutcome;
   };
   // Reserved slots that fired this cycle
   reservedSlotsFired?: string[];
@@ -237,6 +255,13 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
     for (let i = 0; i < cycleCount; i += 1) {
       const cycleStart = Date.now();
       const advanced = await advancePreparationCycle();
+      // Spec #55 R7.3: the preparation Automaton turn, as in scheduled settlement.
+      const automatonTurns = await runAutomatonTurnStep({
+        trigger: 'preparation',
+        seasonNumber: advanced.seasonNumber,
+        slot: advanced.preparationCyclesCompleted,
+        source: 'admin_bulk',
+      });
       preparationResults.push({
         cycle: cycleMetadata.totalCycles + 1,
         reservedSlotsFired: [],
@@ -248,6 +273,7 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
           snapshot: null,
           orphanCleanup: null,
           endOfCycleBalances: null,
+          automatonTurns,
         },
       });
     }
@@ -999,6 +1025,16 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
         {},
       );
 
+      // 10.5a Spec #55 R7.4: the settlement Automaton turn for the closed
+      // cycle. Admin bulk cycles never advance the season counter, so the
+      // season read at the start is still current. Non-fatal.
+      const automatonTurns = await runAutomatonTurnStep({
+        trigger: 'settlement',
+        seasonNumber: seasonAtStart.seasonNumber,
+        slot: currentCycleNumber,
+        source: 'admin_bulk',
+      });
+
       // 10.6 Orphan cleanup is operational maintenance, not closing evidence.
       stepNumber++;
       logger.info(`[Admin] Step ${stepNumber}: Orphan Image Cleanup`);
@@ -1074,6 +1110,7 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
           snapshot: snapshotResult,
           orphanCleanup: orphanResult,
           endOfCycleBalances: { usersLogged: endOfCycleUserCount },
+          automatonTurns,
         },
         reservedSlotsFired,
         duration: Date.now() - cycleStart,

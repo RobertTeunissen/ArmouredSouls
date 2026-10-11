@@ -1,5 +1,6 @@
 import { RecordSection } from './RecordSection';
 import { RecordCard } from './RecordCard';
+import { RecordStableName } from './RecordStableName';
 import type { RecordsData } from './types';
 
 export interface GrandMeleeRecordsProps {
@@ -16,7 +17,7 @@ export function GrandMeleeRecords({ records }: GrandMeleeRecordsProps) {
               key={record.robotId}
               rank={index + 1}
               value={`${record.grandMeleeWins} wins`}
-              description={`${record.robotName} by ${record.username}`}
+              description={<>{record.robotName} by <RecordStableName name={record.username} stableType={record.stableType} /></>}
             />
           ))}
         </RecordSection>
@@ -29,7 +30,7 @@ export function GrandMeleeRecords({ records }: GrandMeleeRecordsProps) {
               key={record.robotId}
               rank={index + 1}
               value={`${record.leaguePoints} LP`}
-              description={`${record.robotName} by ${record.username}`}
+              description={<>{record.robotName} by <RecordStableName name={record.username} stableType={record.stableType} /></>}
               details={[`Tier: ${record.tier}`]}
             />
           ))}
@@ -43,7 +44,7 @@ export function GrandMeleeRecords({ records }: GrandMeleeRecordsProps) {
               key={record.robotId}
               rank={index + 1}
               value={`${record.totalKills} kills`}
-              description={`${record.robotName} by ${record.username}`}
+              description={<>{record.robotName} by <RecordStableName name={record.username} stableType={record.stableType} /></>}
               details={[
                 `Matches: ${record.grandMeleeMatches}`,
                 // Spec #46 R4.17: total kills alone rewards volume, so the rate

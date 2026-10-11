@@ -10,7 +10,12 @@ import { RobotError, RobotErrorCode } from '../../errors/robotErrors';
 import { assignLeagueInstance } from '../league/leagueInstanceService';
 import { applyCreditMutationInTransaction } from '../financial/creditMutationService';
 import { runFinancialWriteTransaction } from '../cycle/financialWriteTransaction';
-import { createEconomicRequestIdentity, findEconomicRequestReplay, buildEconomicRequestAuditContext } from '../financial/economicRequestReplayService';
+import {
+  createEconomicRequestIdentity,
+  findEconomicRequestReplay,
+  buildEconomicAuditMetadata,
+  type EconomicServiceOptions,
+} from '../financial/economicRequestReplayService';
 import { buildPurchaseBreakdown } from '../financial/financialBreakdowns';
 
 export const ROBOT_CREATION_COST = 500000;
@@ -79,10 +84,31 @@ export async function checkRosterCapacity(userId: number) {
 }
 
 /**
+ * Robot_Blueprint link of an Automaton robot (Spec #55, invariant I4). Written
+ * in the creating transaction, so an Automaton robot never exists unlinked.
+ */
+export interface AutomatonRobotLink {
+  blueprintId: number;
+  slotIndex: number;
+  /** Blueprint image copied at purchase (R3.10); null = no image. */
+  imageUrl: string | null;
+}
+
+export interface RobotCreationOptions extends EconomicServiceOptions {
+  automatonLink?: AutomatonRobotLink;
+}
+
+/**
  * Create a robot inside a locked transaction.
  * Returns the created robot and updated user.
  */
-export async function createRobotTransaction(userId: number, trimmedName: string, requestKey: string) {
+export async function createRobotTransaction(
+  userId: number,
+  trimmedName: string,
+  requestKey: string,
+  options: RobotCreationOptions = {},
+) {
+  const link = options.automatonLink;
   const identity = createEconomicRequestIdentity(userId, 'robot_creation', requestKey, { name: trimmedName });
   return runFinancialWriteTransaction(async (tx, financialCycleNumber) => {
     await lockUserForSpending(tx, userId);
@@ -127,6 +153,9 @@ export async function createRobotTransaction(userId: number, trimmedName: string
         maxHP,
         currentShield: maxShield,
         maxShield,
+        ...(link
+          ? { automatonBlueprintId: link.blueprintId, automatonSlotIndex: link.slotIndex, imageUrl: link.imageUrl }
+          : {}),
       },
       include: {
         mainWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
@@ -186,7 +215,7 @@ export async function createRobotTransaction(userId: number, trimmedName: string
         basePrice: ROBOT_CREATION_COST,
         discountAmount: 0,
       }),
-      auditContext: buildEconomicRequestAuditContext(identity, coreResponse),
+      auditContext: buildEconomicAuditMetadata(identity, coreResponse, options.auditContext),
     });
 
     return { user: { currency: financialResult.balanceAfter }, robot, replayed: false };

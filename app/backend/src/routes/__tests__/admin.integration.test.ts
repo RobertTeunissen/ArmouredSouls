@@ -426,6 +426,16 @@ describe('Admin API — New Endpoints Integration Tests', () => {
       expect(mockGetDashboardKpis).toHaveBeenCalledWith(buildUserFilter('real'));
     });
 
+    // Spec #55 R1.6: `automaton` is an accepted filter value.
+    it('should accept filter=automaton and pass the built user filter', async () => {
+      mockGetDashboardKpis.mockResolvedValue(sampleKpis);
+
+      const res = await request(app).get('/api/admin/dashboard/kpis?filter=automaton');
+
+      expect(res.status).toBe(200);
+      expect(mockGetDashboardKpis).toHaveBeenCalledWith(buildUserFilter('automaton'));
+    });
+
     it('should reject invalid filter values via Zod validation', async () => {
       const res = await request(app).get('/api/admin/dashboard/kpis?filter=invalid');
 

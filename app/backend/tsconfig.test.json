@@ -18,6 +18,7 @@
     "rootDir": "..",
     "incremental": false
   },
-  "include": ["src/**/*", "tests/**/*"],
+  // The Automaton catalogue scripts run from source with tsx, so they are checked here.
+  "include": ["src/**/*", "tests/**/*", "scripts/automatonCatalogueSync.ts", "scripts/automatonCatalogueUnpack.ts"],
   "exclude": ["node_modules", "dist"]
 }

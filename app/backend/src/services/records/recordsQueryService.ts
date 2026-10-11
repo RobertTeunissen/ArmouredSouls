@@ -1,4 +1,5 @@
 import prisma from '../../lib/prisma';
+import type { StableType } from '../../../generated/prisma';
 import { getTopModeKills } from '../battle/modeKillsQueries';
 
 // Helper to get display name (stableName or username fallback)
@@ -6,11 +7,30 @@ export const getUserDisplayName = (user: { username: string; stableName?: string
   return user.stableName || user.username;
 };
 
-// User select for records (includes stableName)
+// User select for records (includes stableName and, Spec #55, stableType)
 export const userSelect = {
   username: true,
   stableName: true,
+  stableType: true,
 };
+
+interface RecordOwnerUser {
+  username: string;
+  stableName?: string | null;
+  stableType: StableType;
+}
+
+/** Display name and Stable_Type of a record holder's stable. */
+export interface RecordOwnerDisplay {
+  username: string;
+  /** Spec #55 decision 42: drives the Automaton_Badge on every Hall of Records record. */
+  stableType: StableType | null;
+}
+
+/** The owning stable as every record mapping ships it (decision 42). */
+export const getRecordOwner = (user: RecordOwnerUser | null | undefined): RecordOwnerDisplay => (
+  user ? { username: getUserDisplayName(user), stableType: user.stableType } : { username: '', stableType: null }
+);
 
 const participantInclude = {
   robot: { include: { user: { select: userSelect } } },
@@ -30,7 +50,7 @@ interface ParticipantWithRobot {
   destroyed: boolean;
   yielded: boolean;
   team: number;
-  robot: { id: number; name: string; user: { username: string; stableName?: string | null } };
+  robot: { id: number; name: string; user: RecordOwnerUser };
 }
 
 interface BattleWithParticipants {
@@ -46,7 +66,7 @@ interface BattleWithParticipants {
 // were the Longest Battle and Fastest Victory mappers.
 
 function mapParticipantDisplay(p: ParticipantWithRobot) {
-  return { id: p.robot.id, name: p.robot.name, username: getUserDisplayName(p.robot.user) };
+  return { id: p.robot.id, name: p.robot.name, ...getRecordOwner(p.robot.user) };
 }
 
 // Standard include for battle queries using participants
@@ -103,15 +123,15 @@ async function fetchMostDamageForMode(battleType: DamageRecordMode) {
       robot: {
         id: participant.robot.id,
         name: participant.robot.name,
-        username: getUserDisplayName(participant.robot.user),
+        ...getRecordOwner(participant.robot.user),
       },
       // Multi-participant modes omit the opponent entirely rather than picking
       // an arbitrary one of many.
       ...(namesOpponent
         ? {
             opponent: opponent
-              ? { id: opponent.robot.id, name: opponent.robot.name, username: getUserDisplayName(opponent.robot.user) }
-              : { id: 0, name: 'Unknown', username: '' },
+              ? { id: opponent.robot.id, name: opponent.robot.name, ...getRecordOwner(opponent.robot.user) }
+              : { id: 0, name: 'Unknown', ...getRecordOwner(null) },
           }
         : {}),
       durationSeconds: participant.battle.durationSeconds,
@@ -161,10 +181,10 @@ export async function fetchCombatRecords() {
       return {
         battleId: p.battle.id,
         remainingHP: p.finalHP,
-        winner: { id: p.robot.id, name: p.robot.name, username: getUserDisplayName(p.robot.user) },
+        winner: { id: p.robot.id, name: p.robot.name, ...getRecordOwner(p.robot.user) },
         loser: loser
-          ? { id: loser.robot.id, name: loser.robot.name, username: getUserDisplayName(loser.robot.user) }
-          : { id: 0, name: 'Unknown', username: '' },
+          ? { id: loser.robot.id, name: loser.robot.name, ...getRecordOwner(loser.robot.user) }
+          : { id: 0, name: 'Unknown', ...getRecordOwner(null) },
         date: p.battle.createdAt,
       };
     });
@@ -217,11 +237,11 @@ export async function fetchUpsetRecords() {
         battleId: battle.id,
         eloDifference: Number(upset.upset_diff),
         underdog: {
-          id: winner.robot.id, name: winner.robot.name, username: getUserDisplayName(winner.robot.user),
+          id: winner.robot.id, name: winner.robot.name, ...getRecordOwner(winner.robot.user),
           eloBefore: winner.eloBefore,
         },
         favorite: {
-          id: loser.robot.id, name: loser.robot.name, username: getUserDisplayName(loser.robot.user),
+          id: loser.robot.id, name: loser.robot.name, ...getRecordOwner(loser.robot.user),
           eloBefore: loser.eloBefore,
         },
         date: battle.createdAt,
@@ -324,11 +344,12 @@ export async function fetchCareerRecords() {
     tier: string | null;
     username: string;
     stable_name: string | null;
+    stable_type: StableType;
   }
   const winRateRows = await prisma.$queryRaw<WinRateRow[]>`
     SELECT r.id, r.name, r.wins, r."total_battles", r.elo,
            s."tier",
-           u.username, u."stable_name"
+           u.username, u."stable_name", u."stable_type"::text AS stable_type
     FROM "robots" r
     JOIN "users" u ON u.id = r."user_id"
     LEFT JOIN "standings" s ON s."entity_type" = 'robot' AND s."entity_id" = r.id AND s."mode" = 'league_1v1'
@@ -340,7 +361,7 @@ export async function fetchCareerRecords() {
     id: r.id, name: r.name, wins: r.wins, totalBattles: r.total_battles,
     elo: r.elo, league: r.tier ?? 'bronze',
     winRate: r.wins / r.total_battles,
-    user: { username: r.username, stableName: r.stable_name },
+    user: { username: r.username, stableName: r.stable_name, stableType: r.stable_type },
   }));
 
   const mostLifetimeDamageRobots = await prisma.robot.findMany({
@@ -357,28 +378,28 @@ export async function fetchCareerRecords() {
 
   return {
     mostBattles: mostBattlesRobots.map(robot => ({
-      robotId: robot.id, robotName: robot.name, username: getUserDisplayName(robot.user),
+      robotId: robot.id, robotName: robot.name, ...getRecordOwner(robot.user),
       totalBattles: robot.totalBattles, wins: robot.wins, losses: robot.losses, draws: robot.draws,
       winRate: robot.totalBattles > 0 ? Number((robot.wins / robot.totalBattles * 100).toFixed(1)) : 0,
       elo: robot.elo,
     })),
     highestWinRate: robotsWithWinRate.map(robot => ({
-      robotId: robot.id, robotName: robot.name, username: getUserDisplayName(robot.user),
+      robotId: robot.id, robotName: robot.name, ...getRecordOwner(robot.user),
       totalBattles: robot.totalBattles, wins: robot.wins,
       winRate: Number((robot.winRate * 100).toFixed(1)),
       elo: robot.elo, league: robot.league,
     })),
     mostLifetimeDamage: mostLifetimeDamageRobots.map(robot => ({
-      robotId: robot.id, robotName: robot.name, username: getUserDisplayName(robot.user),
+      robotId: robot.id, robotName: robot.name, ...getRecordOwner(robot.user),
       damageDealt: robot.damageDealtLifetime, totalBattles: robot.totalBattles,
       avgDamagePerBattle: robot.totalBattles > 0 ? Number((robot.damageDealtLifetime / robot.totalBattles).toFixed(0)) : 0,
     })),
     highestElo: highestEloRobots.map(robot => ({
-      robotId: robot.id, robotName: robot.name, username: getUserDisplayName(robot.user),
+      robotId: robot.id, robotName: robot.name, ...getRecordOwner(robot.user),
       elo: robot.elo, wins: robot.wins, losses: robot.losses, draws: robot.draws,
     })),
     mostKills: mostKillsRobots.map(robot => ({
-      robotId: robot.id, robotName: robot.name, username: getUserDisplayName(robot.user),
+      robotId: robot.id, robotName: robot.name, ...getRecordOwner(robot.user),
       kills: robot.kills, totalBattles: robot.totalBattles,
       killRate: robot.totalBattles > 0 ? Number((robot.kills / robot.totalBattles * 100).toFixed(1)) : 0,
     })),
@@ -397,7 +418,7 @@ export async function fetchEconomicRecords() {
   const richestStables = await prisma.user.findMany({
     orderBy: { currency: 'desc' }, take: 10,
     select: {
-      id: true, username: true, stableName: true, currency: true, prestige: true,
+      id: true, username: true, stableName: true, stableType: true, currency: true, prestige: true,
       robots: { where: byeRobotFilter, select: { id: true, name: true } },
     },
   });
@@ -405,11 +426,11 @@ export async function fetchEconomicRecords() {
   return {
     mostExpensiveBattle: [],
     highestFame: highestFameRobots.map(robot => ({
-      robotId: robot.id, robotName: robot.name, username: getUserDisplayName(robot.user),
+      robotId: robot.id, robotName: robot.name, ...getRecordOwner(robot.user),
       fame: robot.fame, elo: robot.elo,
     })),
     richestStables: richestStables.map(stable => ({
-      userId: stable.id, username: getUserDisplayName(stable),
+      userId: stable.id, ...getRecordOwner(stable),
       currency: stable.currency, prestige: stable.prestige, robotCount: stable.robots.length,
     })),
   };
@@ -419,7 +440,7 @@ export async function fetchEconomicRecords() {
 
 export async function fetchPrestigeRecords() {
   const stableSelect = {
-    id: true, username: true, stableName: true, prestige: true, championshipTitles: true,
+    id: true, username: true, stableName: true, stableType: true, prestige: true, championshipTitles: true,
     robots: { where: byeRobotFilter, select: { id: true, name: true } },
   };
 
@@ -434,11 +455,11 @@ export async function fetchPrestigeRecords() {
 
   return {
     highestPrestige: highestPrestigeStables.map(stable => ({
-      userId: stable.id, username: getUserDisplayName(stable),
+      userId: stable.id, ...getRecordOwner(stable),
       prestige: stable.prestige, championshipTitles: stable.championshipTitles, robotCount: stable.robots.length,
     })),
     mostTitles: mostTitlesStables.map(stable => ({
-      userId: stable.id, username: getUserDisplayName(stable),
+      userId: stable.id, ...getRecordOwner(stable),
       championshipTitles: stable.championshipTitles, prestige: stable.prestige, robotCount: stable.robots.length,
     })),
   };
@@ -514,7 +535,7 @@ export async function fetchKothRecords(): Promise<Record<string, unknown> | unde
     return {
       robotId: s.entityId,
       robotName: robot?.name ?? 'Unknown',
-      username: robot ? getUserDisplayName(robot.user) : '',
+      ...getRecordOwner(robot?.user),
     };
   };
 
@@ -533,7 +554,7 @@ export async function fetchKothRecords(): Promise<Record<string, unknown> | unde
       return {
         robotId: k.robotId,
         robotName: robot?.name ?? 'Unknown',
-        username: robot ? getUserDisplayName(robot.user) : '',
+        ...getRecordOwner(robot?.user),
         kothKills: k.kills,
         kothMatches: killLeaderMatches.get(k.robotId) ?? 0,
       };
@@ -563,6 +584,7 @@ interface TeamBattleSurvivalRow {
   robot_name: string;
   username: string;
   stable_name: string | null;
+  stable_type: StableType;
 }
 
 interface TeamBattleDecisiveRow {
@@ -592,7 +614,8 @@ async function fetchTeamBattleRecordsForSize(battleType: 'league_2v2' | 'league_
       b.created_at,
       r.name AS robot_name,
       u.username,
-      u.stable_name
+      u.stable_name,
+      u.stable_type::text AS stable_type
     FROM battles b
     JOIN battle_summaries bs ON bs.battle_id = b.id,
       jsonb_array_elements(bs.participants) AS p(value)
@@ -670,13 +693,17 @@ async function fetchTeamBattleRecordsForSize(battleType: 'league_2v2' | 'league_
     longestSurvival: survivalRows.map(row => ({
       battleId: row.battle_id,
       survivalSeconds: row.survival_seconds,
-      robot: { id: row.robot_id, name: row.robot_name, username: row.stable_name || row.username },
+      robot: {
+        id: row.robot_id,
+        name: row.robot_name,
+        ...getRecordOwner({ username: row.username, stableName: row.stable_name, stableType: row.stable_type }),
+      },
       date: row.created_at,
     })),
     mostDamageDealt: mostDamageParticipants.map(p => ({
       battleId: p.battle.id,
       damageDealt: p.damageDealt,
-      robot: { id: p.robot.id, name: p.robot.name, username: getUserDisplayName(p.robot.user) },
+      robot: { id: p.robot.id, name: p.robot.name, ...getRecordOwner(p.robot.user) },
       durationSeconds: p.battle.durationSeconds,
       date: p.battle.createdAt,
     })),
@@ -719,6 +746,8 @@ export interface TournamentChampionEntry {
   championName: string; // Robot name for 1v1, team name for 2v2/3v3
   memberRobots?: string[]; // Only for team tournaments
   ownerStableName: string;
+  /** Spec #55 decision 42: Stable_Type of the owning stable (Automaton_Badge). */
+  ownerStableType: StableType | null;
   completedAt: Date;
   participantType: string;
 }
@@ -736,13 +765,14 @@ async function fetchChampionsByType(participantType: string): Promise<Tournament
     if (participantType === 'robot') {
       const robot = await prisma.robot.findUnique({
         where: { id: t.winnerId! },
-        include: { user: { select: { stableName: true, username: true } } },
+        include: { user: { select: userSelect } },
       });
       return {
         tournamentId: t.id,
         tournamentName: t.name,
         championName: robot?.name ?? 'Unknown',
         ownerStableName: robot?.user ? getUserDisplayName(robot.user) : 'Unknown',
+        ownerStableType: robot?.user.stableType ?? null,
         completedAt: t.completedAt!,
         participantType,
       };
@@ -751,7 +781,7 @@ async function fetchChampionsByType(participantType: string): Promise<Tournament
         where: { id: t.winnerId! },
         include: {
           members: { include: { robot: { select: { name: true } } }, orderBy: { slotIndex: 'asc' } },
-          stable: { select: { stableName: true, username: true } },
+          stable: { select: userSelect },
         },
       });
       return {
@@ -760,6 +790,7 @@ async function fetchChampionsByType(participantType: string): Promise<Tournament
         championName: team?.teamName ?? 'Unknown',
         memberRobots: team?.members.map(m => m.robot.name) ?? [],
         ownerStableName: team?.stable ? getUserDisplayName(team.stable) : 'Unknown',
+        ownerStableType: team?.stable.stableType ?? null,
         completedAt: t.completedAt!,
         participantType,
       };
@@ -836,7 +867,7 @@ export async function fetchGrandMeleeRecords(): Promise<Record<string, unknown> 
     return {
       robotId: s.entityId,
       robotName: robot?.name ?? 'Unknown',
-      username: robot ? getUserDisplayName(robot.user) : '',
+      ...getRecordOwner(robot?.user),
     };
   };
 
@@ -844,7 +875,7 @@ export async function fetchGrandMeleeRecords(): Promise<Record<string, unknown> 
     mostWins: mostWinsRobots.map(r => ({
       robotId: r.id,
       robotName: r.name,
-      username: getUserDisplayName(r.user),
+      ...getRecordOwner(r.user),
       grandMeleeWins: r.grandMeleeWins,
     })),
     highestLp: highestLpStandings.map(s => ({
@@ -858,7 +889,7 @@ export async function fetchGrandMeleeRecords(): Promise<Record<string, unknown> 
       return {
         robotId: k.robotId,
         robotName: robot?.name ?? 'Unknown',
-        username: robot ? getUserDisplayName(robot.user) : '',
+        ...getRecordOwner(robot?.user),
         totalKills: k.kills,
         grandMeleeMatches: matches,
         // Spec #46 R4.17: total kills alone rewards volume — a robot subscribed
@@ -894,6 +925,8 @@ export interface WinStreakEntry {
   entityId: number;
   entityName: string;
   username: string;
+  /** Spec #55 decision 42: Stable_Type of the owning stable (Automaton_Badge). */
+  stableType: StableType | null;
   bestWinStreak: number;
   currentWinStreak: number;
   /** True when the best streak is the one currently running. */
@@ -962,11 +995,7 @@ export async function fetchWinStreakRecords(): Promise<Record<WinStreakMode, Win
       return {
         entityId: row.entityId,
         entityName: team?.teamName ?? robot?.name ?? 'Unknown',
-        username: team?.stable
-          ? getUserDisplayName(team.stable)
-          : robot?.user
-            ? getUserDisplayName(robot.user)
-            : '',
+        ...getRecordOwner(team?.stable ?? robot?.user),
         bestWinStreak: row.bestWinStreak,
         currentWinStreak: row.currentWinStreak,
         isActive: row.currentWinStreak === row.bestWinStreak,

@@ -30,6 +30,9 @@ export function createByeRobot(id: number): RobotWithWeapons {
     frameId: 1,
     paintJob: null,
     imageUrl: null,
+    // Spec #55: the bye robot is never built from a Robot_Blueprint.
+    automatonBlueprintId: null,
+    automatonSlotIndex: null,
     // Combat Systems
     combatPower: DECIMAL_10,
     targetingSystems: DECIMAL_10,

@@ -21,20 +21,32 @@ const SYSTEM_PREFIXES = ['test_user_', 'archetype_', 'attr_'] as const;
  */
 const SYSTEM_EXACT_USERNAMES = ['bye_robot_user'] as const;
 
-export type UserFilterType = 'all' | 'real' | 'auto';
+export type UserFilterType = 'all' | 'real' | 'auto' | 'automaton';
+
+/** Every accepted filter value, for Zod enums at the route boundary. */
+export const USER_FILTER_TYPES = ['all', 'real', 'auto', 'automaton'] as const satisfies readonly UserFilterType[];
 
 /**
  * Builds a Prisma `UserWhereInput` clause to filter users by type.
  *
- * - `'all'`  — no filter (returns all users)
- * - `'real'` — excludes auto-generated bots and system/test accounts
- * - `'auto'` — includes only auto-generated bot accounts
+ * - `'all'`       — no filter (returns all users)
+ * - `'real'`      — excludes auto-generated bots, system/test accounts and
+ *                   Automaton_Stables (Spec #55 R1.6)
+ * - `'auto'`      — includes only auto-generated bot accounts
+ * - `'automaton'` — includes exactly the users with `stableType = automaton`
  *
  * The returned object can be spread into a Prisma query's `where` clause.
  */
 export function buildUserFilter(filter: UserFilterType): Prisma.UserWhereInput {
+  if (filter === 'automaton') {
+    return { stableType: 'automaton' };
+  }
+
   if (filter === 'real') {
+    // Top-level keys of a Prisma where clause are combined with AND, so this is
+    // "none of the excluded usernames AND not an Automaton_Stable".
     return {
+      stableType: { not: 'automaton' },
       NOT: [
         ...AUTO_BOT_PREFIXES.map((prefix) => ({
           username: { startsWith: prefix },

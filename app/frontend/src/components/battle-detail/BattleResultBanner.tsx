@@ -4,6 +4,7 @@ import { getLeagueTierName, getLeagueTierIcon } from '../../utils/matchmakingApi
 import { getTournamentRoundName } from '../../utils/matchmakingApi';
 import { isTeamBattleType } from '../../utils/matchmakingApi';
 import RobotImage from '../RobotImage';
+import AutomatonBadge from '../AutomatonBadge';
 import type { BattleResultBannerProps } from './types';
 import type { BattleLogResponse, BattleLogParticipant } from '../../utils/matchmakingApi';
 
@@ -137,7 +138,7 @@ function ParticipantCard({ p, isLoser, showPlacement }: {
   showPlacement: boolean;
 }) {
   return (
-    <div className={`flex flex-col items-center ${isLoser ? 'opacity-50' : ''}`}>
+    <div className={`flex min-w-0 max-w-full flex-col items-center ${isLoser ? 'opacity-50' : ''}`}>
       <Link to={`/robots/${p.robotId}`}>
         <RobotImage
           imageUrl={p.imageUrl}
@@ -149,9 +150,18 @@ function ParticipantCard({ p, isLoser, showPlacement }: {
       <Link to={`/robots/${p.robotId}`} className="text-sm text-primary hover:text-white mt-1 transition-colors">
         {p.robotName}
       </Link>
-      <Link to={`/stables/${p.ownerId}`} className="text-xs text-secondary hover:text-primary transition-colors">
-        {p.owner}
-      </Link>
+      {p.ownerStableType === 'automaton' ? (
+        <span className="flex min-w-0 max-w-full flex-nowrap items-center justify-center gap-1.5">
+          <Link to={`/stables/${p.ownerId}`} className="min-w-0 truncate text-xs text-secondary hover:text-primary transition-colors">
+            {p.owner}
+          </Link>
+          <AutomatonBadge stableType={p.ownerStableType} />
+        </span>
+      ) : (
+        <Link to={`/stables/${p.ownerId}`} className="text-xs text-secondary hover:text-primary transition-colors">
+          {p.owner}
+        </Link>
+      )}
       {showPlacement && p.placement != null && (
         <span className={`text-xs font-bold ${getPlacementColor(p.placement)}`}>
           {formatPlacement(p.placement)}
@@ -207,7 +217,7 @@ export function BattleResultBanner({ battleLog, userId, isMobile }: BattleResult
   // Participants are already in canonical order (winner first) from the page.
 
   return (
-    <div className={`mb-3 p-3 rounded-lg text-center border-2 ${theme.bgClass} ${theme.borderClass}`}>
+    <div data-testid="battle-result-banner" className={`mb-3 p-3 rounded-lg text-center border-2 ${theme.bgClass} ${theme.borderClass}`}>
       <div className={`text-3xl font-bold mb-1 ${theme.headingColor}`}>{heading}</div>
       {endMethod && <div className={`text-sm font-medium mb-2 ${theme.headingColor} opacity-80`}>{endMethod}</div>}
 

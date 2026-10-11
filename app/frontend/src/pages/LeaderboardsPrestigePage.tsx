@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { api } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 import OwnerNameLink from '../components/OwnerNameLink';
+import type { StableType } from '../types/stable';
 import { createLogger } from '../utils/logger';
 
 const log = createLogger('LeaderboardsPrestigePage');
@@ -11,6 +12,8 @@ interface PrestigeLeaderboardEntry {
   userId: number;
   username: string;
   stableName: string;
+  /** Spec #55: Stable_Type of the owning stable (drives the Automaton_Badge). */
+  stableType?: StableType;
   prestige: number;
   prestigeRank: string;
   totalRobots: number;
@@ -140,7 +143,7 @@ function LeaderboardsPrestigePage() {
                       <td className="px-4 py-3 text-primary font-medium">#{entry.rank}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
-                          <OwnerNameLink userId={entry.userId} displayName={entry.stableName} />
+                          <OwnerNameLink userId={entry.userId} displayName={entry.stableName} stableType={entry.stableType} />
                           {isOwnStable && <span className="text-xs px-2 py-0.5 bg-primary text-white rounded font-semibold">YOU</span>}
                         </div>
                       </td>
@@ -166,7 +169,7 @@ function LeaderboardsPrestigePage() {
                   <div className="flex justify-between items-start mb-2">
                     <div>
                       <span className="text-secondary text-sm">#{entry.rank}</span>
-                      <OwnerNameLink userId={entry.userId} displayName={entry.stableName} className="ml-2" />
+                      <OwnerNameLink userId={entry.userId} displayName={entry.stableName} stableType={entry.stableType} className="ml-2" />
                       {isOwnStable && <span className="text-xs px-2 py-0.5 bg-primary text-white rounded font-semibold ml-2">YOU</span>}
                     </div>
                     <span className="text-primary font-semibold">{entry.prestige.toLocaleString()}</span>
@@ -201,7 +204,7 @@ function LeaderboardsPrestigePage() {
       {/* Legend */}
       <div className="mt-8 bg-surface-elevated border border-white/10 rounded-lg p-6">
         <h3 className="text-lg font-semibold text-primary mb-4">Prestige Ranks</h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           <div>
             <span className="text-secondary font-medium">Novice:</span>
             <span className="text-secondary ml-2">0-999</span>

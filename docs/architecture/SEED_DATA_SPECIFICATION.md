@@ -2,7 +2,7 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Technical Specification  
-**Last Updated**: March 21, 2026  
+**Last Updated**: October 10, 2026 (Automaton catalogue and strategy files, Spec #55)  
 **Status**: Current Implementation  
 **Version**: v1.5
 
@@ -693,6 +693,90 @@ pnpm exec prisma db seed
 - PostgreSQL database running
 - DATABASE_URL environment variable set
 - Prisma client generated
+
+---
+
+## Automaton Catalogue and Strategy Files (Spec #55)
+
+Automaton stables and strategies are repository data, but **not** seed data: `prisma db seed` never creates Automaton_Profiles and never reads these files. They reach a database through Catalogue_Sync (catalogue) or are loaded at server start (strategies). Operator procedures: `docs/guides/AUTOMATON_OPERATIONS_GUIDE.md`.
+
+### Automaton_Catalogue
+
+**Location**: `app/backend/prisma/automaton-catalogue/{catalogueKey}.json`, one Catalogue_Entry per file. The repository holds the 11 starter stables (decision 32).
+
+**Format** (`schemaVersion` 1, validated by `catalogueEntrySchema` in `services/automaton/automatonCatalogueService.ts`; strict, unknown keys rejected):
+
+```json
+{
+  "schemaVersion": 1,
+  "catalogueKey": "robocop-precinct",
+  "stableName": "Old Detroit Precinct",
+  "franchise": "RoboCop",
+  "backstory": "…",
+  "strategy": { "key": "paragon", "version": 1, "targetOverrides": {} },
+  "teamNames": { "twoVsTwo": ["…"], "threeVsThree": [] },
+  "eventOrder": ["league_1v1", "tournament_1v1", "koth", "grand_melee", "league_2v2", "tag_team", "tournament_2v2", "league_3v3", "tournament_3v3"],
+  "blueprints": [
+    {
+      "slot": 1, "robotName": "RoboCop", "loadoutType": "single", "stance": "balanced",
+      "yieldThreshold": 15, "buildFocus": "deadeye",
+      "weaponPath": [{ "main": "…" }, { "main": "…" }],
+      "refinementPlan": [{ "tier": "sharpen", "hand": "main", "magnitude": 1 }]
+    }
+  ]
+}
+```
+
+Rules enforced by the schema (the admin create and update endpoints reuse them):
+- `targetOverrides` (Goal position → Goal_Target) merge over the strategy defaults and must fit the strategy bounds. Robots Goal_Targets may not exceed the buildable blueprints (slots 1…k without a gap) → `AUTOMATON_BLUEPRINTS_TOO_FEW`.
+- `teamNames` must have exactly the counts the Team_Rule needs; each name 3–32 characters, `safeName`, distinct within the entry.
+- `eventOrder` lists all 9 subscribable event types once.
+- Weapon names must exist in `WEAPON_DEFINITIONS` (CI) and the `weapons` table (sync); weapons must fit the loadout.
+- Every blueprint has a `refinementPlan` with at least one step on each non-shield weapon of the final stage, at most 5 per weapon, checked cumulatively with the shared refinement validators.
+- There is **no image field**.
+
+### Repository_Images
+
+**Location**: `app/frontend/public/assets/automatons/{catalogueKey}/{slot}.webp`, 512 × 512 px square WebP, found by convention and served as `/assets/automatons/{catalogueKey}/{slot}.webp`. `catalogueImages.test.ts` fails on a file that is not a 512 × 512 WebP named for an existing Catalogue_Key and Blueprint_Slot; missing images are allowed (the robot shows the generic frame).
+
+### Catalogue_Sync (separate from `prisma db seed`)
+
+```bash
+cd app/backend
+pnpm run automaton:sync            # writes
+pnpm run automaton:sync --dry-run  # reports what it would add and fill
+```
+
+- Validates every file first; any invalid file → exit 1, nothing written.
+- **Insert-only**: a new Catalogue_Key becomes a Draft_Automaton; an existing key is never updated from its file. A stable name already taken is a conflict: the entry is skipped and an alert raised.
+- **Fill-only image exception**: for an existing profile, a blueprint with `imageUrl` null gets its Repository_Image when the file exists, and in the same transaction the live robot built from it gets it if it has none. A set image (admin upload or repository) is never replaced or deleted.
+- Idempotent; the summary (`added`, `present`, `filled`, `conflicts`) is stored in `automaton_program_settings.last_sync_summary`.
+- Runs on every ACC deploy after `prisma migrate deploy` and `prisma db seed` (it validates weapon names against the seeded `weapons` table). See `docs/guides/operations/DEPLOYMENT.md`.
+
+### Strategy_Definition_Files
+
+**Location**: `app/backend/src/config/automaton-strategies/{key}.v{version}.json`; six files at version 1 (`swarm`, `paragon`, `duo`, `trio`, `tycoon`, `generalist`). `pnpm run build` copies the directory into `dist/config/automaton-strategies/`.
+
+**Format** (`schemaVersion` 1, validated by `strategyDefinitionSchema` plus the builder rules):
+
+```json
+{
+  "schemaVersion": 1,
+  "key": "swarm",
+  "version": 1,
+  "displayName": "Swarm",
+  "description": "Goes wide. …",
+  "buildOrder": [
+    { "position": 1, "goal": { "type": "robots" }, "defaultTarget": 3, "bounds": { "min": 1, "max": 3 } },
+    { "position": 2, "goal": { "type": "facility", "facilityType": "booking_office" }, "defaultTarget": 1, "bounds": { "min": 0, "max": 6 } },
+    { "position": 25, "goal": { "type": "attributes" }, "defaultTarget": "max", "bounds": { "min": "max", "max": "max" } }
+  ]
+}
+```
+
+- Loaded into the Strategy_Registry **at server start**, never seeded into the database. An invalid file, or a missing file that a profile is pinned to, stops the server with a clear error.
+- Goal ids are derived (`{key}.v{version}.{position:02}.{type}[.{facilityType}]`), so they are stable within a version.
+- New files arrive through `pnpm run automaton:unpack` and a pull request; a file still used by a profile must never be deleted.
 
 ---
 

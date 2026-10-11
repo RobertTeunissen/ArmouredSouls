@@ -228,6 +228,7 @@ function LeagueStandingsPage() {
         teamName: entry.teamName,
         stableId: entry.stableId,
         stableName: entry.stableName,
+        stableType: entry.stableType,
         teamSize: 2,
         teamLp: entry.tagTeamLp,
         teamELO: entry.combinedELO,
@@ -642,6 +643,7 @@ function LeagueStandingsPage() {
                               <OwnerNameLink
                                 userId={robot.userId}
                                 displayName={robot.user.stableName || robot.user.username}
+                                stableType={robot.user.stableType}
                                 className="truncate max-w-[80px] lg:max-w-none"
                               />
                               {isMyBot && (
@@ -821,6 +823,7 @@ function LeagueStandingsPage() {
                               <OwnerNameLink
                                 userId={team.stableId}
                                 displayName={team.stableName}
+                                stableType={team.stableType}
                                 className="truncate max-w-[80px] lg:max-w-none"
                               />
                               {isMyTeam && (

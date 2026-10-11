@@ -27,6 +27,11 @@ import { ROBOT_ATTRIBUTES, type RobotAttribute } from './robotAttributes';
  */
 export type RefinementTier = 'hone' | 'augment' | 'sharpen' | 'forge';
 
+/** Weapons Workshop level each tier needs (the gates listed above). */
+export const REQUIRED_WORKSHOP_LEVELS: Readonly<Record<RefinementTier, number>> = {
+  hone: 1, augment: 3, sharpen: 5, forge: 8,
+};
+
 /**
  * Visual identity label derived from the count of filled refinement slots:
  *  - 0   → null      (no prefix)

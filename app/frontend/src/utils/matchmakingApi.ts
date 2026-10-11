@@ -1,4 +1,5 @@
 import { api } from './api';
+import type { StableType } from '../types/stable';
 
 // Re-export formatters from their new home for backwards compatibility.
 // New code should import directly from './battleFormatters'.
@@ -253,6 +254,8 @@ export interface LeagueRobot {
   user: {
     username: string;
     stableName: string | null;
+    /** Spec #55: Stable_Type of the owning stable (drives the Automaton_Badge). */
+    stableType?: StableType;
   };
   zone: 'promotion' | 'demotion' | null;
 }
@@ -427,6 +430,8 @@ export interface BattleLogParticipant {
   robotName: string;
   owner: string;
   ownerId: number;
+  /** Spec #55: Stable_Type of the owning stable (drives the Automaton_Badge). */
+  ownerStableType?: StableType;
   imageUrl: string | null;
   teamIndex: number;
   team: number;
@@ -487,6 +492,7 @@ export interface BattleLogResponse {
     name: string;
     owner: string;
     ownerId?: number;
+    ownerStableType?: StableType;
     maxHP?: number;
     maxShield?: number;
     eloBefore: number;
@@ -521,6 +527,7 @@ export interface BattleLogResponse {
     name: string;
     owner: string;
     ownerId?: number;
+    ownerStableType?: StableType;
     maxHP?: number;
     maxShield?: number;
     eloBefore: number;
@@ -576,6 +583,7 @@ export interface BattleLogResponse {
         id: number;
         name: string;
         owner: string;
+        ownerStableType?: StableType;
         maxHP?: number;
         maxShield?: number;
         imageUrl?: string | null;
@@ -584,12 +592,14 @@ export interface BattleLogResponse {
         id: number;
         name: string;
         owner: string;
+        ownerStableType?: StableType;
         maxHP?: number;
         maxShield?: number;
         imageUrl?: string | null;
       } | null;
       tagOutTime: number | null;
       stableName?: string | null;
+      stableType?: StableType | null;
       teamId?: number;
     };
     team2: {
@@ -597,6 +607,7 @@ export interface BattleLogResponse {
         id: number;
         name: string;
         owner: string;
+        ownerStableType?: StableType;
         maxHP?: number;
         maxShield?: number;
         imageUrl?: string | null;
@@ -605,12 +616,14 @@ export interface BattleLogResponse {
         id: number;
         name: string;
         owner: string;
+        ownerStableType?: StableType;
         maxHP?: number;
         maxShield?: number;
         imageUrl?: string | null;
       } | null;
       tagOutTime: number | null;
       stableName?: string | null;
+      stableType?: StableType | null;
       teamId?: number;
     };
   };
@@ -652,6 +665,7 @@ export interface BattleLogResponse {
     robotName: string;
     owner: string;
     ownerId?: number;
+    ownerStableType?: StableType;
     placement: number;
     zoneScore: number;
     zoneTime: number;

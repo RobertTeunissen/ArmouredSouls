@@ -18,6 +18,7 @@
 - v3.0 - **MAJOR OVERHAUL**: Decomposed monolithic AdminPage into thin shell + 6 tab components. Consolidated to 7 tabs (Dashboard, Cycle Controls, Tournaments, Battle Logs, Robot Stats, Bankruptcy Monitor, Recent Users). Integrated System Health into Dashboard as collapsible section. Promoted Bankruptcy Monitor to dedicated tab. Added tag team battle support in Battle Logs and BattleDetailsModal. Removed broken onboarding analytics link. Rewrote test suite as per-component tests.
 - v3.1 - Added Repair Log tab (8th tab) for viewing manual and automatic repair events with cost breakdowns.
 - v3.2 - Added Security tab (9th tab) consuming backend security monitoring APIs from spec 11. Displays security event summary with severity counts, flagged users, filterable events table with expandable detail rows.
+- v3.3 (Oct 10, 2026) - Added the Automatons page (`/admin/automatons`) and the Automatons user filter (Spec #55).
 
 ---
 
@@ -288,6 +289,31 @@ The battle viewer provides deep debugging capabilities for administrators:
 - **Critical Hits**: Reveals crit chance calculation and multiplier application
 - **Counter-Attacks**: Shows counter probability based on counter protocols and stance
 - All formulas verify that ELO is NOT used in combat (only for matchmaking and ranking)
+
+### Automatons Page (`/admin/automatons`, Spec #55) ✅
+
+Admin_Automaton_Control for Automaton_Stables. Route under the `/admin` `AdminRoute`/`AdminLayout`; NAV "🤖 Automatons" in Player Management; title "Automaton Stables". Page `pages/admin/AutomatonsPage.tsx`, components in `components/admin/automatons/`, API module `utils/automatonAdminApi.ts`; local state only (no global store). All text is the approved `PLAYER_FACING_TEXT.md` §6; layout follows `mockups/admin-automatons.html`. Product rules: `docs/game-systems/PRD_AUTOMATON_STABLES.md`; walkthrough: `docs/guides/ADMIN_PANEL_GUIDE.md`.
+
+**Requirements:**
+- `AutomatonStatusBar` above every section: Program_Switch (confirmation dialog), last Turn_Step, failed count and Needs attention count (links to the filtered Stables section).
+- Four sections — Stables, Strategies (Strategy_Comparison, Strategy_Library, Strategy_Builder), Editor, Catalogue — with the `TabLayout` pattern (`components/battle-detail/TabLayout.tsx`): tabs at ≥ 1024 px, stacked sections from 320 px to 1023 px, empty sections hidden, active tab kept in `?tab=`.
+- Editor: Stable card with Backstory (1–400 characters, live count) and the `EventOrderList` (9 numbered events, Move up / Move down buttons with accessible names "Move up: {n} {event label}", first up and last down disabled, focus stays on the pressed button); Teams card; `BuildOrderPanel` with editable targets, bounds, Turn_Preview statuses and expandable attribute plans; `BlueprintEditor` per slot (Weapon_Path per hand limited to weapons that fit the loadout, derived range per stage, Refinement_Plan steps with per-weapon errors, image upload); Cycle history; Activate, New stable, Delete draft stable, Export, Save changes.
+- Inline validation with the server's per-field issues; the approved error texts (for example "Error: too few blueprints") unchanged.
+- No controls to run a turn, delete an active stable, change balances, or edit live robots, teams, subscriptions or weapons.
+
+**Mobile and accessibility (R11.9, R11.10):**
+
+| Width | Behaviour |
+|---|---|
+| 320–767 px | Single column, inputs full width, tables collapse to cards (Teams card one card per team), no horizontal overflow at 320 px |
+| 768–1023 px | Stacked sections; Teams card as a table; Build order rows and Strategy_Builder Goal rows wrap (the Build order table layout starts at 1024 px because it overflowed inside the admin layout at 768 px) |
+| ≥ 1024 px | Tabs; Event_Order in two columns (events 1–5 left, 6–9 right) while the DOM order stays 1–9 |
+
+Every interactive element is at least 44 × 44 px (narrow number inputs keep `min-w-11`), focus rings are visible, the tab order is logical, and confirmations are accessible dialogs. Verified by Vitest (`components/admin/automatons/__tests__/`, `pages/admin/__tests__/AutomatonsPage.test.tsx`) and Playwright `tests/e2e/admin-automatons.spec.ts` at 320, 768 and 1024 px (status bar, tabs vs stacked, overflow, 44 px targets, keyboard moves in the Strategy_Builder and Event_Order control). The Playwright spec creates its own Draft_Automaton through the API and skips unless both the frontend and the API are on localhost.
+
+**API:** `/api/admin/automatons/*` (`authenticateToken` + `requireAdmin`, Zod-validated, every mutation audited). Endpoint list: `ADMIN_PANEL_GUIDE.md`; errors: `ERROR_CODES.md` "Automaton Errors".
+
+**Analytics filter:** the user filter on Dashboard, Weapons, Achievements, Tuning and Refinement gains **Automatons** (`filter=automaton`); **Real Players** now excludes Automatons.
 
 ### Backend API Endpoints ✅
 

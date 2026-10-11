@@ -1,22 +1,13 @@
 import express, { Response } from 'express';
 import { z } from 'zod';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
-import { FACILITY_TYPES, getFacilityUpgradeCost, getFacilityConfig } from '../config/facilities';
+import { FACILITY_TYPES, getFacilityUpgradeCost } from '../config/facilities';
 import { calculateFacilityOperatingCost, getRosterCapacity } from '../utils/economyFormulas';
 import prisma from '../lib/prisma';
-import { lockUserForSpending } from '../lib/creditGuard';
-import { eventLogger } from '../services/common/eventLogger';
-import { trackSpending } from '../services/economy/spendingTracker';
-import logger from '../config/logger';
 import { AuthError, AuthErrorCode } from '../errors/authErrors';
-import { EconomyError, EconomyErrorCode } from '../errors/economyErrors';
 import { validateRequest } from '../middleware/schemaValidator';
-import { applyCreditMutationInTransaction } from '../services/financial/creditMutationService';
-import { runFinancialWriteTransaction } from '../services/cycle/financialWriteTransaction';
 import { getIdempotencyKey, idempotencyHeadersSchema } from '../utils/idempotency';
-import { createEconomicRequestIdentity, findCompletedEconomicRequest, findEconomicRequestReplay, buildEconomicRequestAuditContext } from '../services/financial/economicRequestReplayService';
-import { buildPurchaseBreakdown } from '../services/financial/financialBreakdowns';
-import { securityMonitor } from '../services/security/securityMonitor';
+import { upgradeFacility } from '../services/economy/facilityUpgradeService';
 import { achievementService, type UnlockedAchievement } from '../services/achievement';
 // Spec #46 R11: Training Facility discount is roster-dependent.
 import { calculateTrainingFacilityDiscount } from '../shared/utils/discounts';
@@ -165,228 +156,26 @@ router.post('/upgrade', authenticateToken, validateRequest({ body: upgradeBodySc
     const userId = req.user!.userId;
     const { facilityType } = req.body;
     const requestKey = getIdempotencyKey(req.headers);
-    const identity = createEconomicRequestIdentity(userId, 'facility_upgrade', requestKey, { facilityType });
-    const replay = await findCompletedEconomicRequest<{ facility: unknown; currency: number; message: string }>(userId, 'facility_upgrade', requestKey, { facilityType });
-    if (replay) {
-      res.json({ ...replay.response, achievementUnlocks: [], replayed: true });
-      return;
-    }
 
-    if (!facilityType) {
-      throw new EconomyError(EconomyErrorCode.INVALID_FACILITY_TYPE, 'Facility type is required', 400);
-    }
-
-    // Get facility config
-    const config = getFacilityConfig(facilityType);
-    if (!config) {
-      throw new EconomyError(EconomyErrorCode.INVALID_FACILITY_TYPE, 'Invalid facility type', 400, { facilityType });
-    }
-
-    // Get user's current currency, prestige, and facility level
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-    });
-
-    if (!user) {
-      throw new AuthError(AuthErrorCode.USER_NOT_FOUND, 'User not found', 404, { userId });
-    }
-
-    // Get or create facility
-    const facility = await prisma.facility.findUnique({
-      where: {
-        userId_facilityType: {
-          userId,
-          facilityType,
-        },
-      },
-    });
-
-    const currentLevel = facility?.level || 0;
-    const targetLevel = currentLevel + 1;
-
-    // Check if already at max level
-    if (currentLevel >= config.maxLevel) {
-      throw new EconomyError(
-        EconomyErrorCode.FACILITY_MAX_LEVEL,
-        'Facility is already at maximum level',
-        400,
-        { facilityType, currentLevel, maxLevel: config.maxLevel }
-      );
-    }
-
-    // Validate prestige requirement (unified curve, raw prestige).
-    // A facility already owned above its current gate keeps its level — no downgrade path.
-    if (config.prestigeRequirements && config.prestigeRequirements[targetLevel - 1]) {
-      const requiredPrestige = config.prestigeRequirements[targetLevel - 1];
-
-      if (user.prestige < requiredPrestige) {
-        throw new AuthError(
-          AuthErrorCode.FORBIDDEN,
-          `${config.name} Level ${targetLevel} requires ${requiredPrestige.toLocaleString()} prestige`,
-          403,
-          { required: requiredPrestige, current: Math.floor(user.prestige) }
-        );
-      }
-    }
-
-    // Calculate upgrade cost
-    const upgradeCost = getFacilityUpgradeCost(facilityType, currentLevel);
-
-    if (upgradeCost === 0) {
-      throw new EconomyError(
-        EconomyErrorCode.FACILITY_MAX_LEVEL,
-        'Facility is already at maximum level',
-        400,
-        { facilityType, currentLevel }
-      );
-    }
-
-    // Check if user has enough currency
-    if (user.currency < upgradeCost) {
-      throw new EconomyError(
-        EconomyErrorCode.INSUFFICIENT_CREDITS,
-        'Insufficient credits',
-        400,
-        { required: upgradeCost, current: user.currency }
-      );
-    }
-
-    // Perform upgrade in a transaction with row-level locking
-    const result = await runFinancialWriteTransaction(async (tx, financialCycleNumber) => {
-      // Acquire exclusive row lock — blocks concurrent purchases for this user
-      const lockedUser = await lockUserForSpending(tx, userId);
-      const replayInTransaction = await findEconomicRequestReplay<{ facility: unknown; currency: number; message: string }>(tx, identity);
-      if (replayInTransaction) {
-        return { user: { currency: replayInTransaction.response.currency }, facility: replayInTransaction.response.facility, replayed: true };
-      }
-
-      if (lockedUser.currency < upgradeCost) {
-        throw new EconomyError(
-          EconomyErrorCode.INSUFFICIENT_CREDITS,
-          'Insufficient credits',
-          400,
-          { required: upgradeCost, current: lockedUser.currency }
-        );
-      }
-
-      // Re-read facility inside transaction to prevent concurrent level bumps
-      const freshFacility = await tx.facility.findUnique({
-        where: {
-          userId_facilityType: {
-            userId,
-            facilityType,
-          },
-        },
-      });
-
-      const freshLevel = freshFacility?.level || 0;
-
-      // Verify level hasn't changed since our initial read
-      if (freshLevel !== currentLevel) {
-        throw new EconomyError(
-          EconomyErrorCode.FACILITY_MAX_LEVEL,
-          'Facility level changed, please retry',
-          409,
-          { expected: currentLevel, actual: freshLevel }
-        );
-      }
-
-      // Upgrade or create facility
-      let updatedFacility;
-      if (freshFacility) {
-        updatedFacility = await tx.facility.update({
-          where: { id: freshFacility.id },
-          data: { level: freshLevel + 1 },
-        });
-      } else {
-        updatedFacility = await tx.facility.create({
-          data: {
-            userId,
-            facilityType,
-            level: 1,
-          },
-        });
-      }
-
-      const financialEventId = identity.financialEventId;
-      const coreResponse = {
-        facility: updatedFacility,
-        currency: lockedUser.currency - upgradeCost,
-        message: 'Facility upgraded successfully',
-      };
-      const financialResult = await applyCreditMutationInTransaction(tx, {
-        cycleNumber: financialCycleNumber,
-        userId,
-        transactionType: 'facility_upgrade',
-        amount: -upgradeCost,
-        description: `Upgraded ${facilityType} to level ${targetLevel}`,
-        financialEventId,
-        breakdown: buildPurchaseBreakdown({
-          transactionType: 'facility_upgrade',
-          sourceEventId: financialEventId,
-          amount: -upgradeCost,
-          operation: currentLevel === 0 ? 'facility_purchase' : 'facility_upgrade',
-          facilityType,
-          previousLevel: currentLevel,
-          newLevel: targetLevel,
-          basePrice: upgradeCost,
-          discountAmount: 0,
-        }),
-        auditContext: buildEconomicRequestAuditContext(identity, coreResponse),
-      });
-
-      return { user: { currency: financialResult.balanceAfter }, facility: updatedFacility, replayed: false };
+    // Spec #55 task 2.1: the purchase itself lives in facilityUpgradeService.
+    const result = await upgradeFacility(userId, facilityType, requestKey, {
+      spendingMonitor: { sourceIp: req.ip || undefined, endpoint: req.originalUrl },
     });
 
     if (result.replayed) {
-      res.json({ facility: result.facility, currency: result.user.currency, message: 'Facility upgraded successfully', achievementUnlocks: [], replayed: true });
+      res.json({ ...result.response, achievementUnlocks: [], replayed: true });
       return;
-    }
-
-    // Log facility transaction event
-    try {
-      // Get current cycle number
-      const cycleMetadata = await prisma.cycleMetadata.findUnique({
-        where: { id: 1 },
-      });
-      const currentCycle = (cycleMetadata?.totalCycles || 0) + 1;
-
-      // Log the facility upgrade/purchase event with balance tracking
-      await eventLogger.logFacilityTransaction(
-        currentCycle,
-        userId,
-        facilityType,
-        currentLevel,
-        targetLevel,
-        upgradeCost,
-        currentLevel === 0 ? 'purchase' : 'upgrade',
-        user.currency,
-        result.user.currency
-      );
-
-      // Console log for cycle logs
-      const action = currentLevel === 0 ? 'Purchased' : 'Upgraded';
-      logger.info(`[Facility] User ${userId} | ${action}: ${config.name} | Level: ${targetLevel} | Cost: ₡${upgradeCost.toLocaleString()} | Balance: ₡${user.currency.toLocaleString()} → ₡${result.user.currency.toLocaleString()}`);
-
-      // Track spending for onboarding budget comparison
-      await trackSpending(userId, 'facilities', upgradeCost);
-
-      // Security monitoring: track spending
-      securityMonitor.trackSpending(userId, upgradeCost, { sourceIp: req.ip || undefined, endpoint: req.originalUrl });
-    } catch (logError) {
-      logger.error('Failed to log facility transaction event:', logError);
-      // Don't fail the request if logging fails
     }
 
     res.json({
       facility: result.facility,
-      currency: result.user.currency,
-      message: 'Facility upgraded successfully',
+      currency: result.currency,
+      message: result.message,
       achievementUnlocks: await (async (): Promise<UnlockedAchievement[]> => {
         try {
           return await achievementService.checkAndAward(userId, null, {
             type: 'facility_upgraded',
-            data: { facilityType, newLevel: targetLevel },
+            data: { facilityType, newLevel: result.newLevel },
           });
         } catch { return []; }
       })(),

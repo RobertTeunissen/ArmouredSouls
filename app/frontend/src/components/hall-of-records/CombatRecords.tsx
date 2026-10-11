@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { RecordSection } from './RecordSection';
 import { RecordCard } from './RecordCard';
+import { RecordStableName } from './RecordStableName';
 import {
   DAMAGE_RECORD_MODES,
   DAMAGE_RECORD_MODE_LABELS,
@@ -91,7 +92,7 @@ export function CombatRecords({ records, formatDuration, formatDate, onBattleCli
                     : `${record.robot.name} — ${DAMAGE_RECORD_MODE_LABELS[activeMode]}`
                 }
                 details={[
-                  `Robot: ${record.robot.username}`,
+                  <>Robot: <RecordStableName name={record.robot.username} stableType={record.robot.stableType} /></>,
                   `Duration: ${formatDuration(record.durationSeconds)}`,
                   `Date: ${formatDate(record.date)}`,
                 ]}
@@ -111,7 +112,7 @@ export function CombatRecords({ records, formatDuration, formatDate, onBattleCli
               value={`${record.remainingHP} HP remaining`}
               description={`${record.winner.name} barely survived against ${record.loser.name}`}
               details={[
-                `Winner: ${record.winner.username}`,
+                <>Winner: <RecordStableName name={record.winner.username} stableType={record.winner.stableType} /></>,
                 `Date: ${formatDate(record.date)}`,
               ]}
               onClick={() => onBattleClick(record.battleId)}

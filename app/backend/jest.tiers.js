@@ -72,6 +72,10 @@ const HEAVY_TESTS = [
   'tests/financeCenterPerformance.integration.test.ts',
   'tests/integration.test.ts',
   'tests/integration/adminCycleGeneration.test.ts',
+  // Spec #55 task 12.2: two seasons, 100 Automatons, one rollover, bulk battles.
+  'tests/integration/automatonMultiSeason.test.ts',
+  // Spec #55 task 7.4: a full Season_Rollover truncates history tables.
+  'tests/integration/automatonSeasonRollover.test.ts',
   'tests/integration/bronzeLeagueRebalancing.test.ts',
   'tests/integration/byeInvariant.test.ts',
   'tests/integration/byeScopeAndShape.test.ts',
@@ -101,6 +105,36 @@ const HEAVY_TESTS = [
  * checked by `pnpm run test:tiers:verify`.
  */
 const DB_DEPENDENT = [
+  // Spec #55 — Automaton Stables
+  'tests/integration/automatonAccess.test.ts',
+  'tests/integration/automatonPublicExposure.test.ts',
+  'tests/integration/automatonRarity.test.ts',
+  'tests/integration/automatonStableTypeMigration.test.ts',
+  'tests/integration/automatonUserFilter.test.ts',
+  'tests/integration/automatonStableFacts.test.ts',
+  'tests/integration/automatonExecution.test.ts',
+  'tests/integration/automatonSeasonArchive.test.ts',
+  'tests/integration/automatonPreservedStateAchievement.test.ts',
+  'tests/integration/automatonCatalogueSync.test.ts',
+  'tests/integration/automatonCatalogueExport.test.ts',
+  'tests/integration/automatonProfile.test.ts',
+  'tests/integration/automatonTurnWiring.test.ts',
+  'tests/integration/automatonSettlementWiring.test.ts',
+  'tests/integration/automatonNeedAttention.test.ts',
+  'tests/integration/automatonStrategyComparison.test.ts',
+  'tests/integration/automatonStrategyDrafts.test.ts',
+  'tests/integration/automatonStrategyUpgrade.test.ts',
+  'tests/integration/automatonDraftPreview.test.ts',
+  'tests/integration/automatonAdminRoutes.test.ts',
+  // Achievement unlock serialization (pre-existing duplicate-insert fix)
+  'tests/integration/achievementUnlockSerialization.test.ts',
+  // Spec #55 — Domain_Service_Extraction (task group 2)
+  'src/services/economy/__tests__/facilityUpgradeService.test.ts',
+  'src/services/economy/__tests__/weaponPurchaseService.test.ts',
+  'src/services/economy/__tests__/weaponSaleService.test.ts',
+  'src/services/economy/__tests__/weaponRefinementService.test.ts',
+  'src/services/robot/__tests__/robotSettingsService.test.ts',
+  'src/services/robot/__tests__/economicAuditContext.test.ts',
   'tests/auditSequenceConcurrency.test.ts',
   'src/__tests__/guide/guide-routes.test.ts',
   'src/routes/__tests__/search.integration.test.ts',

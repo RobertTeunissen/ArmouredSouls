@@ -14,3 +14,4 @@ export * from './seasonArchiveTypes';
 export * from './financialTypes';
 export * from './prestigeTypes';
 export * from './financeReport';
+export * from './automaton';

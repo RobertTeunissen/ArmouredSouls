@@ -2,12 +2,13 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Design Document  
-**Version**: v1.3  
-**Last Updated**: July 26, 2026  
+**Version**: v1.4  
+**Last Updated**: October 10, 2026  
 **Status**: ✅ Implemented 
 
 ## Version History
 
+- **v1.4** (October 10, 2026): Added Stable_Type (`human`, `generated`, `automaton`) for Automaton stables (Spec #55).
 - **v1.3** (July 26, 2026): Training Facility discount is now roster-dependent — `max(0, 10 - Roster_Capacity)` percentage points per level, clamped to 90%. maxLevel raised 9 → 10, since the old flat formula saturated at level 9 and made level 10 worthless (Spec #46 R11).
 - **v1.2** (April 16, 2026): Added Tuning Bay (facility #16) to the facility list with pool size formula, operating costs, prestige requirements, and combat integration summary. Updated facility count from 15 to 16.
 - **v1.1** (April 2, 2026): Audit against codebase. Fixed operating cost formulas (Repair Bay, Training Facility). Fixed Training Facility maxLevel (9, not 10). Fixed streaming studio multiplier formula inconsistency. Removed stale User model fields (totalBattles, totalWins, highestELO — computed at query time). Updated facility count to 15 (added Streaming Studio). Updated file path references for backend service consolidation.
@@ -61,6 +62,18 @@ Statistics are captured at both stable-level and robot-level for comprehensive t
 - Individual robot stats drive rankings and matchmaking
 - Stable stats used for prestige calculations and leaderboards
 - Both levels tracked for complete performance picture
+
+### Stable_Type (Spec #55)
+
+Every stable has a Stable_Type in `users.stable_type`:
+
+| Value | Who | Rollover | Player-visible |
+|---|---|---|---|
+| `human` | Registered players and the `admin` account (default) | Archived and reset | — |
+| `generated` | Generated_Stables: `auto_*` bots, seeded `test_user_*` (`is_generated = true`) | Deleted | "bot" chip in the season archive |
+| `automaton` | Active Automaton_Stables (`automaton_{catalogueKey}`) | Archived and reset like humans, then rebuilt from the profile | Automaton_Badge after the stable name |
+
+`is_generated = true` ⇔ `stable_type = generated`. Automaton stables use the same facilities, prices, Prestige_Gates and income as every stable, cannot log in, and never use Manual_Repair. A Draft_Automaton has no `users` row and is not a stable yet. See [PRD_AUTOMATON_STABLES.md](PRD_AUTOMATON_STABLES.md).
 
 ---
 

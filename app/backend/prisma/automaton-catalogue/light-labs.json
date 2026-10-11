@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "catalogueKey": "light-labs",
+  "stableName": "Light Labs",
+  "franchise": "Mega Man",
+  "backstory": "Built to help, upgraded to fight. Light Labs sends its two brothers into the tag-team circuit with a simple philosophy: learn from every opponent, charge the shot, and never leave a teammate behind.",
+  "strategy": { "key": "duo", "version": 1, "targetOverrides": {} },
+  "teamNames": {
+    "twoVsTwo": ["Blue Bomber Brothers"],
+    "threeVsThree": ["Light Family"]
+  },
+  "eventOrder": ["tag_team", "league_2v2", "tournament_2v2", "league_1v1", "tournament_1v1", "koth", "grand_melee", "league_3v3", "tournament_3v3"],
+  "blueprints": [
+    {
+      "slot": 1,
+      "robotName": "Mega Man",
+      "loadoutType": "single",
+      "stance": "balanced",
+      "yieldThreshold": 15,
+      "buildFocus": "versatile",
+      "weaponPath": [{ "main": "Laser Pistol" }, { "main": "Volt Sabre" }],
+      "refinementPlan": [
+        { "tier": "sharpen", "hand": "main", "magnitude": 1 },
+        { "tier": "sharpen", "hand": "main", "magnitude": 1 },
+        { "tier": "forge", "hand": "main", "magnitude": 1 },
+        { "tier": "forge", "hand": "main", "magnitude": 1 },
+        { "tier": "hone", "hand": "main", "targetAttribute": "combatPower", "magnitude": 1 }
+      ]
+    },
+    {
+      "slot": 2,
+      "robotName": "Proto Man",
+      "loadoutType": "weapon_shield",
+      "stance": "defensive",
+      "yieldThreshold": 20,
+      "buildFocus": "warden",
+      "weaponPath": [{ "main": "Machine Pistol", "offhand": "Light Shield" }, { "main": "Volt Sabre", "offhand": "Aegis Bulwark" }],
+      "refinementPlan": [
+        { "tier": "sharpen", "hand": "main", "magnitude": 1 },
+        { "tier": "sharpen", "hand": "main", "magnitude": 1 },
+        { "tier": "forge", "hand": "main", "magnitude": 1 },
+        { "tier": "forge", "hand": "main", "magnitude": 1 },
+        { "tier": "hone", "hand": "main", "targetAttribute": "combatPower", "magnitude": 1 },
+        { "tier": "hone", "hand": "offhand", "targetAttribute": "evasionThrusters", "magnitude": 1 },
+        { "tier": "hone", "hand": "offhand", "targetAttribute": "evasionThrusters", "magnitude": 1 },
+        { "tier": "hone", "hand": "offhand", "targetAttribute": "evasionThrusters", "magnitude": 1 },
+        { "tier": "hone", "hand": "offhand", "targetAttribute": "evasionThrusters", "magnitude": 1 },
+        { "tier": "hone", "hand": "offhand", "targetAttribute": "evasionThrusters", "magnitude": 1 }
+      ]
+    },
+    {
+      "slot": 3,
+      "robotName": "Roll",
+      "loadoutType": "single",
+      "stance": "defensive",
+      "yieldThreshold": 30,
+      "buildFocus": "tactician",
+      "weaponPath": [{ "main": "Beam Pistol" }, { "main": "Particle Lance" }],
+      "refinementPlan": [
+        { "tier": "sharpen", "hand": "main", "magnitude": 1 },
+        { "tier": "sharpen", "hand": "main", "magnitude": 1 },
+        { "tier": "forge", "hand": "main", "magnitude": 1 },
+        { "tier": "forge", "hand": "main", "magnitude": 1 },
+        { "tier": "hone", "hand": "main", "targetAttribute": "combatPower", "magnitude": 1 }
+      ]
+    }
+  ]
+}

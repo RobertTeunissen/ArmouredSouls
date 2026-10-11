@@ -1,0 +1,769 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Spec 55 — Automaton Stables — Admin Page Mockups</title>
+  <style>
+    :root { --bg:#0a0e14; --surface:#1a1f29; --elevated:#252b38; --primary:#58a6ff; --secondary:#8b949e; --tertiary:#57606a; --success:#3fb950; --warning:#d29922; --error:#f85149; --info:#a371f7; --line:rgba(255,255,255,.1); }
+    * { box-sizing:border-box; }
+    body { margin:0; background:#05070a; color:#fff; font:14px/1.45 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    a { color:var(--primary); text-decoration:none; }
+    .doc { max-width:1560px; margin:0 auto; padding:32px 24px 80px; }
+    .doc > header h1 { font-size:26px; margin:0 0 6px; }
+    .doc > header p { color:var(--secondary); margin:0 0 4px; max-width:960px; }
+    .section { margin-top:44px; }
+    .section > h2 { font-size:18px; margin:0 0 4px; }
+    .section > p.note { color:var(--secondary); margin:0 0 14px; max-width:980px; }
+    .frames { display:flex; flex-wrap:wrap; gap:24px; align-items:flex-start; }
+    .frame { container-type:inline-size; background:var(--bg); border:1px solid #30363d; border-radius:12px; overflow:hidden; }
+    .frame.m { width:360px; } .frame.d { width:1280px; max-width:100%; }
+    .frame .cap { background:#11151c; color:var(--secondary); font-size:12px; padding:6px 12px; border-bottom:1px solid #30363d; }
+
+    /* Admin shell (AdminLayout) */
+    .shell { display:flex; min-height:560px; }
+    .side { width:64px; flex:none; background:var(--elevated); border-right:1px solid var(--line); }
+    .side .logo { height:56px; display:flex; align-items:center; padding:0 16px; border-bottom:1px solid var(--line); color:var(--primary); font-weight:700; font-size:18px; }
+    .side .logo .full { display:none; }
+    .side h4 { display:none; margin:14px 16px 4px; font-size:11px; color:var(--tertiary); text-transform:uppercase; letter-spacing:.08em; }
+    .side ul { list-style:none; margin:8px 0; padding:0; }
+    .side li { display:flex; align-items:center; gap:12px; padding:8px 20px; color:var(--secondary); font-size:13px; min-height:40px; }
+    .side li .lbl { display:none; }
+    .side li.on { background:rgba(88,166,255,.12); color:var(--primary); border-left:3px solid var(--primary); padding-left:17px; }
+    .main { flex:1; min-width:0; display:flex; flex-direction:column; }
+    .topbar { height:56px; display:flex; align-items:center; justify-content:space-between; padding:0 16px; background:var(--surface); border-bottom:1px solid var(--line); }
+    .topbar h1 { font-size:17px; margin:0; }
+    .content { padding:16px; }
+    @container (min-width:768px) {
+      .side { width:240px; } .side .logo .full { display:inline; } .side .logo .short { display:none; }
+      .side h4 { display:block; } .side li .lbl { display:inline; }
+      .content { padding:24px; } .topbar { padding:0 24px; }
+    }
+
+    .subtitle { color:var(--secondary); margin:0 0 16px; }
+    .tabs { display:flex; border-bottom:1px solid var(--line); margin-bottom:20px; overflow-x:auto; }
+    .tab { min-height:44px; padding:0 16px; display:flex; align-items:center; color:var(--secondary); border-bottom:3px solid transparent; white-space:nowrap; }
+    .tab.on { color:var(--primary); border-bottom-color:var(--primary); }
+    .stack-h { font-size:16px; font-weight:700; margin:24px 0 12px; padding-top:16px; border-top:1px solid var(--line); }
+    .stack-h:first-child { margin-top:0; padding-top:0; border-top:0; }
+
+    .card { background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:16px; }
+    .card h3 { margin:0 0 4px; font-size:15px; }
+    .muted { color:var(--secondary); } .faint { color:var(--tertiary); }
+    .small { font-size:12px; }
+    .grid { display:grid; gap:12px; }
+    .tiles { grid-template-columns:1fr 1fr; }
+    @container (min-width:900px) { .tiles { grid-template-columns:repeat(4,1fr); } }
+    .tile .v { font-size:22px; font-weight:700; margin-top:2px; font-variant-numeric:tabular-nums; }
+    .ok { color:var(--success); } .warn { color:var(--warning); } .bad { color:var(--error); } .info { color:var(--info); }
+
+    .btn { display:inline-flex; align-items:center; justify-content:center; min-height:44px; min-width:44px; padding:0 16px; border-radius:6px; border:1px solid var(--line); background:var(--elevated); color:#fff; font:inherit; font-weight:600; }
+    .btn.primary { background:var(--primary); border-color:var(--primary); }
+    .btn.danger { border-color:rgba(248,81,73,.5); color:var(--error); background:transparent; }
+    .btn.ghost { background:transparent; }
+    .btn-row { display:flex; flex-wrap:wrap; gap:8px; }
+
+    .switch { display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+    .toggle { width:52px; height:30px; border-radius:15px; background:var(--success); position:relative; flex:none; }
+    .toggle::after { content:""; position:absolute; top:3px; right:3px; width:24px; height:24px; border-radius:50%; background:#fff; }
+
+    .statusbar { display:flex; flex-wrap:wrap; gap:12px 28px; align-items:center; margin-bottom:16px; }
+    .statusbar .switch { flex:1 1 220px; }
+    .sb-item { min-height:44px; display:flex; flex-direction:column; justify-content:center; color:#fff; }
+    .sb-item.attn { border:1px solid rgba(210,153,34,.45); border-radius:6px; padding:4px 12px; }
+    .chips { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+    .chip { min-height:44px; padding:0 14px; display:inline-flex; align-items:center; border:1px solid var(--line); border-radius:18px; color:var(--secondary); font-size:13px; }
+    .chip.on { background:rgba(88,166,255,.15); border-color:var(--primary); color:var(--primary); }
+
+    table { width:100%; border-collapse:collapse; }
+    th { text-align:left; color:var(--secondary); font-weight:600; font-size:12px; padding:8px 10px; border-bottom:1px solid var(--line); white-space:nowrap; }
+    td { padding:10px; border-bottom:1px solid rgba(255,255,255,.05); vertical-align:top; }
+    .tbl { display:none; } .cards { display:grid; gap:10px; }
+    @container (min-width:900px) { .tbl { display:table; } .cards { display:none; } }
+    .scard { background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:12px; }
+    .scard .r { display:flex; justify-content:space-between; gap:8px; font-size:13px; margin-top:4px; }
+
+    .status { font-size:11px; font-weight:700; padding:2px 8px; border-radius:10px; text-transform:uppercase; letter-spacing:.04em; }
+    .st-active { background:rgba(63,185,80,.15); color:var(--success); }
+    .st-draft { background:rgba(210,153,34,.15); color:var(--warning); }
+    .st-failed { background:rgba(248,81,73,.15); color:var(--error); }
+
+    .form { display:grid; gap:14px; grid-template-columns:1fr; }
+    @container (min-width:900px) { .form.two { grid-template-columns:1fr 1fr; } .form.three { grid-template-columns:repeat(3,1fr); } }
+    .field label { display:block; font-size:13px; font-weight:600; margin-bottom:4px; }
+    .field .help { font-size:12px; color:var(--secondary); margin-top:4px; }
+    .input { min-height:44px; width:100%; padding:10px 12px; border-radius:6px; border:1px solid #3d4756; background:var(--bg); color:#fff; font:inherit; display:flex; align-items:center; }
+    .input.locked { color:var(--secondary); background:#11151c; }
+    .input.area { min-height:88px; align-items:flex-start; }
+    .input.sel::after { content:"▾"; margin-left:auto; color:var(--secondary); }
+
+    .editor { display:grid; gap:16px; grid-template-columns:1fr; }
+    @container (min-width:1100px) { .editor { grid-template-columns:minmax(0,1.6fr) minmax(320px,1fr); } }
+
+    .bp { border:1px solid var(--line); border-radius:8px; margin-top:10px; background:var(--bg); }
+    .bp .bp-h { display:flex; align-items:center; gap:12px; padding:10px 12px; min-height:56px; }
+    .thumb { width:44px; height:44px; border-radius:6px; background:linear-gradient(135deg,#2b3446,#151a23); border:1px solid var(--line); flex:none; }
+    .bp .bp-h .t { flex:1; min-width:0; }
+    .bp .bp-h .t b { display:block; }
+    .bp .bp-b { padding:12px; border-top:1px solid var(--line); }
+    .live { font-size:12px; background:rgba(88,166,255,.1); border:1px solid rgba(88,166,255,.35); color:#cfe3ff; border-radius:6px; padding:8px 10px; margin-bottom:12px; }
+    .path { display:grid; gap:6px; }
+    .path .stage { display:flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid var(--line); border-radius:6px; flex-wrap:wrap; }
+    .path .stage .n { color:var(--secondary); font-size:12px; width:58px; }
+    .prefs { display:grid; gap:6px; }
+    .pref { display:flex; align-items:center; gap:8px; border:1px solid var(--line); border-radius:6px; padding:4px 4px 4px 10px; }
+    .pref .ix { color:var(--secondary); width:18px; }
+    .pref .ev { flex:1; }
+    .mv { width:44px; height:44px; border-radius:6px; border:1px solid var(--line); background:var(--elevated); color:#fff; display:grid; place-items:center; }
+    /* Event_Order control (decision 26): one column below 1024 px, two columns (1–5, 6–9) from 1024 px; DOM order stays 1–9 */
+    ol.evo { list-style:none; margin:0; padding:0; }
+    .evo .pref { min-width:0; }
+    .evo .ev { min-width:0; overflow-wrap:anywhere; }
+    .evo button.mv { padding:0; font:inherit; cursor:pointer; flex:none; }
+    .evo button.mv:disabled { opacity:.4; cursor:default; }
+    .evo button.mv:focus-visible { outline:2px solid var(--primary); outline-offset:2px; }
+    @container (min-width:1024px) { ol.evo { grid-auto-flow:column; grid-template-rows:repeat(5,auto); grid-template-columns:1fr 1fr; column-gap:12px; } }
+    .teams td .input.sm { min-width:0; width:100%; max-width:220px; }
+
+    .outcomes { display:grid; gap:6px; }
+    .oc { display:grid; grid-template-columns:72px 1fr; gap:8px; align-items:start; font-size:13px; padding:6px 0; border-bottom:1px solid rgba(255,255,255,.05); }
+    .tag { font-size:11px; font-weight:700; text-transform:uppercase; padding:2px 6px; border-radius:4px; text-align:center; }
+    .t-done { background:rgba(139,148,158,.15); color:var(--secondary); }
+    .t-bought { background:rgba(63,185,80,.15); color:var(--success); }
+    .t-saving { background:rgba(210,153,34,.15); color:var(--warning); }
+    .t-blocked { background:rgba(248,81,73,.12); color:#ff9b94; }
+
+    .bo td, .bo th { padding:6px 8px; vertical-align:middle; }
+    .bo td.num { color:var(--secondary); width:28px; text-align:right; font-variant-numeric:tabular-nums; }
+    .bo td.goal { white-space:nowrap; }
+    .bo tr.focus td { background:rgba(210,153,34,.08); }
+    .bo tr.dim td.goal, .bo tr.dim td.num { color:var(--secondary); }
+    .input.sm { min-height:44px; padding:6px 10px; width:auto; min-width:56px; display:inline-flex; }
+    .tin { display:inline-flex; align-items:center; gap:2px; color:var(--secondary); }
+    .bo tr.plan td { background:rgba(255,255,255,.02); padding-top:2px; }
+    @container (max-width:899px) { .bo tr.plan { display:block; } .bo tr.plan td:first-child { display:none; } }
+    .t-wait { background:rgba(139,148,158,.1); color:var(--secondary); }
+    .wp td, .wp th { padding:6px 6px; vertical-align:middle; }
+    @container (max-width:899px) {
+      .bo thead { display:none; }
+      .bo tr { display:grid; grid-template-columns:28px 1fr auto; gap:4px 8px; padding:8px 0; border-bottom:1px solid rgba(255,255,255,.05); }
+      .bo td { border:0; padding:0; }
+      .bo td:nth-child(4) { display:none; }
+      .bo td:nth-child(5) { grid-column:2 / 4; }
+    }
+    /* Strategy Library and Builder */
+    .lib { display:grid; gap:12px; grid-template-columns:1fr; }
+    @container (min-width:900px) { .lib { grid-template-columns:repeat(3,1fr); } }
+    .ver { display:flex; justify-content:space-between; gap:8px; font-size:13px; padding:6px 0; border-top:1px solid rgba(255,255,255,.05); }
+    .builder { display:grid; gap:16px; grid-template-columns:1fr; }
+    @container (min-width:1100px) { .builder { grid-template-columns:minmax(0,1.5fr) minmax(320px,1fr); } }
+    .gl { display:grid; gap:6px; }
+    .gl .g { display:grid; grid-template-columns:28px minmax(0,1fr) 96px 190px auto; gap:8px; align-items:center; padding:4px 4px 4px 8px; border:1px solid var(--line); border-radius:6px; }
+    .gl .g .dflt, .gl .g .bnds { display:inline-flex; align-items:center; gap:4px; white-space:nowrap; }
+    .gl .g .input.sm { min-width:48px; }
+    .gl .g .num { color:var(--secondary); text-align:right; font-variant-numeric:tabular-nums; }
+    .gl .g .acts { display:flex; gap:4px; }
+    .gl .g.err { border-color:rgba(248,81,73,.6); }
+    .gl .g .msg, .card > .msg { grid-column:2 / -1; color:#ff9b94; font-size:12px; }
+    .gl .g.fixed { background:rgba(255,255,255,.02); }
+    @container (max-width:899px) {
+      .gl .g { grid-template-columns:28px 1fr 1fr; padding:8px; }
+      .gl .g .gname { grid-column:2 / 4; }
+      .gl .g .dflt, .gl .g .bnds { grid-column:2 / 4; }
+      .gl .g .acts { grid-column:2 / 4; }
+    }
+    .addrow { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+    .btn[aria-disabled="true"] { opacity:.45; }
+    ol.buy { margin:6px 0 0; padding-left:22px; font-size:13px; }
+    ol.buy li { padding:2px 0; }
+    .dialog.wide { max-width:520px; }
+    .dialog-wrap { background:rgba(0,0,0,.6); padding:40px 16px; display:grid; place-items:center; }
+    .dialog { max-width:460px; width:100%; background:var(--elevated); border:1px solid var(--line); border-radius:10px; padding:20px; }
+    .dialog h3 { margin:0 0 8px; font-size:17px; }
+    .dialog p { margin:0 0 16px; color:#d0d7de; }
+    .dialog .btn-row { justify-content:flex-end; }
+  </style>
+</head>
+<body>
+<div class="doc">
+  <header>
+    <h1>Spec 55 — Automaton Stables: admin page mockups</h1>
+    <p>Static mockups of <code>/admin/automatons</code> inside the existing admin layout. Desktop (≥ 1024 px) shows tabs; from 320 to 1023 px the four sections stack vertically below the status bar (the <code>TabLayout</code> pattern), as in the mobile frames. All touch targets are at least 44 px.</p>
+    <p>Sample data comes from the starter catalogue. Numbers are illustrative.</p>
+  </header>
+
+  <!-- ═══ 1. Status bar + Stables (desktop) ═══ -->
+  <section class="section">
+    <h2>1 · Status bar and Stables tab</h2>
+    <p class="note">The status bar sits above the tabs and is the same on every tab: the on/off switch, when the Automatons last acted, whether any stable failed, and how many need attention. "Needs attention" opens the Stables tab with that filter on. The Stables tab lists every Automaton with its progress; click a row to open it in the Editor.</p>
+    <div class="frames">
+      <div class="frame d"><div class="cap">Desktop · 1280 px · Stables tab selected</div>
+        <div class="shell">
+          <aside class="side">
+            <div class="logo"><span class="full">Admin Portal</span><span class="short">⚡</span></div>
+            <h4>Player Management</h4>
+            <ul><li><span>👥</span><span class="lbl">Players</span></li><li><span>💰</span><span class="lbl">Economy</span></li><li class="on"><span>🤖</span><span class="lbl">Automatons</span></li></ul>
+          </aside>
+          <div class="main">
+            <div class="topbar"><h1>Automaton Stables</h1><a class="small muted" href="#">← Back to game</a></div>
+            <div class="content">
+              <p class="subtitle">Computer-run stables that build and upgrade themselves after each settlement.</p>
+              <div class="card statusbar">
+                <div class="switch"><span class="toggle" role="switch" aria-checked="true" aria-label="Automatons act each cycle"></span><div><b>Automatons act each cycle</b><div class="small muted">On</div></div></div>
+                <div class="sb-item"><div class="small muted">Last acted</div><b>Cycle 42 · 8 Oct, 00:01</b><div class="small muted">11 stables · 38 s</div></div>
+                <div class="sb-item"><div class="small muted">Failed last cycle</div><b class="ok">None</b></div>
+                <a class="sb-item attn" href="#"><div class="small muted">Needs attention</div><b class="warn">2 stables →</b></a>
+              </div>
+              <div class="tabs"><span class="tab on">Stables</span><span class="tab">Strategies</span><span class="tab">Editor</span><span class="tab">Catalogue</span></div>
+              <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center">
+                <div class="chips"><span class="chip on">All · 14</span><span class="chip">Active · 11</span><span class="chip">Draft · 3</span><span class="chip">Needs attention · 2</span></div>
+                <span class="btn primary">Activate all drafts</span>
+              </div>
+              <div class="card" style="padding:0;overflow:hidden">
+                <table class="tbl">
+                  <thead><tr><th>Stable</th><th>Strategy</th><th>Status</th><th>Robots</th><th>Credits</th><th>Prestige</th><th>Best tier</th><th>Last cycle</th><th>Needs attention</th></tr></thead>
+                  <tbody>
+                    <tr><td><a href="#">Kamino Clone Legion</a></td><td>Swarm</td><td><span class="status st-active">Active</span></td><td>3 / 11</td><td>₡412,000</td><td>820</td><td>Silver</td><td>Bought 1 · saving for Booking Office L2</td><td class="faint">—</td></tr>
+                    <tr><td><a href="#">Old Detroit Precinct</a></td><td>Paragon</td><td><span class="status st-active">Active</span></td><td>1 / 1</td><td>₡61,200</td><td>4,820</td><td>Gold</td><td>Bought 3</td><td class="faint">—</td></tr>
+                    <tr><td><a href="#">Pan Pacific Defense Corps</a></td><td>Duo</td><td><span class="status st-active">Active</span></td><td>2 / 2</td><td>₡158,000</td><td>1,640</td><td>Silver</td><td>Bought 2</td><td class="faint">—</td></tr>
+                    <tr><td><a href="#">Planet Express Crew</a></td><td>Tycoon</td><td><span class="status st-active">Active</span></td><td>2 / 2</td><td>₡288,400</td><td>960</td><td>Bronze</td><td>Saving for Merchandising Hub L3</td><td class="warn">Nothing bought for 16 cycles</td></tr>
+                    <tr><td><a href="#">Decepticon Armada</a></td><td>Trio</td><td><span class="status st-active">Active</span></td><td>3 / 3</td><td class="bad">−₡12,400</td><td>1,210</td><td>Silver</td><td>Saving for Repair Bay L1</td><td class="bad">Balance negative</td></tr>
+                    <tr><td><a href="#">Grim Reaper Works</a></td><td>Generalist</td><td><span class="status st-draft">Draft</span></td><td>— / 2</td><td class="faint">—</td><td class="faint">—</td><td class="faint">—</td><td class="faint">Not active yet</td><td class="faint">—</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <p class="small muted" style="margin-top:10px">A stable needs attention when its last cycle failed, its balance is negative, or it has bought nothing for 14 cycles or more.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="frame m"><div class="cap">Mobile · 360 px · status bar and stacked section "Stables"</div>
+        <div class="content">
+          <div class="card statusbar">
+                <div class="switch"><span class="toggle" role="switch" aria-checked="true" aria-label="Automatons act each cycle"></span><div><b>Automatons act each cycle</b><div class="small muted">On</div></div></div>
+                <div class="sb-item"><div class="small muted">Last acted</div><b>Cycle 42 · 8 Oct, 00:01</b><div class="small muted">11 stables · 38 s</div></div>
+                <div class="sb-item"><div class="small muted">Failed last cycle</div><b class="ok">None</b></div>
+                <a class="sb-item attn" href="#"><div class="small muted">Needs attention</div><b class="warn">2 stables →</b></a>
+              </div>
+          <div class="stack-h">Stables</div>
+          <div class="chips"><span class="chip on">All · 14</span><span class="chip">Active · 11</span><span class="chip">Draft · 3</span><span class="chip">Needs attention · 2</span></div>
+          <span class="btn primary" style="width:100%;margin-bottom:12px">Activate all drafts</span>
+          <div class="cards">
+            <div class="scard"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><a href="#"><b>Decepticon Armada</b></a><span class="status st-active">Active</span></div>
+              <div class="small muted">Trio</div>
+              <div class="r"><span class="muted">Robots</span><span>3 / 3</span></div><div class="r"><span class="muted">Credits</span><span class="bad">−₡12,400</span></div><div class="r"><span class="muted">Prestige · tier</span><span>1,210 · Silver</span></div>
+              <div class="r"><span class="muted">Last cycle</span><span>Saving for Repair Bay L1</span></div>
+              <div class="r"><span class="muted">Needs attention</span><span class="bad">Balance negative</span></div></div>
+            <div class="scard"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><a href="#"><b>Kamino Clone Legion</b></a><span class="status st-active">Active</span></div>
+              <div class="small muted">Swarm</div>
+              <div class="r"><span class="muted">Robots</span><span>3 / 11</span></div><div class="r"><span class="muted">Credits</span><span>₡412,000</span></div><div class="r"><span class="muted">Prestige · tier</span><span>820 · Silver</span></div>
+              <div class="r"><span class="muted">Last cycle</span><span>Bought 1 · saving for Booking Office L2</span></div></div>
+            <div class="scard"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><a href="#"><b>Grim Reaper Works</b></a><span class="status st-draft">Draft</span></div>
+              <div class="small muted">Generalist</div>
+              <div class="r"><span class="muted">Last cycle</span><span class="faint">Not active yet</span></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ 2. Strategies (desktop + mobile) ═══ -->
+  <section class="section">
+    <h2>2 · Strategies tab</h2>
+    <p class="note">How each strategy is doing this season, averaged over its active stables, with human stables as the reference row. This is the view for deciding which strategy parameters to tune. "Win rate vs humans" counts this season's head-to-head battles (1v1, 2v2 and 3v3 leagues and tournaments, Tag Team) between the strategy's robots or teams and a human stable's; byes, King of the Hill and Grand Melee are left out because they are free-for-alls. Click a strategy to see its stables in the Stables tab.</p>
+    <div class="frames">
+      <div class="frame d"><div class="cap">Desktop · 1280 px · Strategies tab selected (sidebar and status bar omitted)</div>
+        <div class="content">
+          <div class="tabs"><span class="tab">Stables</span><span class="tab on">Strategies</span><span class="tab">Editor</span><span class="tab">Catalogue</span></div>
+          <div class="chips"><span class="chip on">Comparison</span><span class="chip">Library</span></div>
+          <div class="small muted" style="margin-bottom:10px">Season 3 · cycle 42 of 100 · averages over active stables</div>
+          <div class="card" style="padding:0;overflow:hidden">
+            <table class="tbl">
+              <thead><tr><th>Strategy</th><th>Stables</th><th>Robots (avg / target)</th><th>Prestige (avg)</th><th>Best tier reached</th><th>Credits (avg)</th><th>Win rate vs humans</th></tr></thead>
+              <tbody>
+                <tr><td><a href="#">Swarm</a></td><td>2</td><td>3.5 / 11</td><td>910</td><td>Silver (2)</td><td>₡296,000</td><td>44% <span class="small muted">· 61–78–3 of 142</span></td></tr>
+                <tr><td><a href="#">Paragon</a></td><td>2</td><td>1 / 1</td><td>4,105</td><td>Gold (2)</td><td>₡88,700</td><td>63% <span class="small muted">· 52–30–1 of 83</span></td></tr>
+                <tr><td><a href="#">Duo</a></td><td>2</td><td>2 / 2</td><td>1,520</td><td>Silver (2)</td><td>₡171,000</td><td>51% <span class="small muted">· 48–46–0 of 94</span></td></tr>
+                <tr><td><a href="#">Trio</a></td><td>2</td><td>3 / 3</td><td>1,180</td><td>Silver (1)</td><td>₡41,300</td><td>47% <span class="small muted">· 55–62–2 of 119</span></td></tr>
+                <tr><td><a href="#">Tycoon</a></td><td>2</td><td>2 / 2.5</td><td>890</td><td>Bronze (2)</td><td>₡402,500</td><td>38% <span class="small muted">· 29–47–0 of 76</span></td></tr>
+                <tr><td><a href="#">Generalist</a></td><td>1</td><td>2 / 3</td><td>1,340</td><td>Silver (1)</td><td>₡133,000</td><td>49% <span class="small muted">· 22–23–1 of 46</span></td></tr>
+                <tr style="background:rgba(255,255,255,.03)"><td><b>Human stables</b> <span class="small muted">(reference)</span></td><td>9</td><td>2.7</td><td>2,260</td><td>Gold (3)</td><td>₡514,000</td><td class="muted">—</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="small muted" style="margin-top:10px">Best tier reached: the highest league tier any robot or team of the strategy currently holds in any mode, with the number of stables at that tier. Win rate: wins ÷ all head-to-head battles against humans (wins–losses–draws of total).</p>
+        </div>
+      </div>
+
+      <div class="frame m"><div class="cap">Mobile · 360 px · stacked section "Strategies"</div>
+        <div class="content">
+          <div class="stack-h">Strategies</div>
+          <div class="small muted" style="margin-bottom:10px">Season 3 · cycle 42 of 100</div>
+          <div class="cards">
+            <div class="scard"><div style="display:flex;justify-content:space-between;gap:8px"><a href="#"><b>Swarm</b></a><span class="small muted">2 stables</span></div>
+              <div class="r"><span class="muted">Robots (avg / target)</span><span>3.5 / 11</span></div><div class="r"><span class="muted">Prestige (avg)</span><span>910</span></div><div class="r"><span class="muted">Best tier</span><span>Silver (2)</span></div><div class="r"><span class="muted">Credits (avg)</span><span>₡296,000</span></div><div class="r"><span class="muted">Win rate vs humans</span><span>44% · 142 battles</span></div></div>
+            <div class="scard"><div style="display:flex;justify-content:space-between;gap:8px"><a href="#"><b>Paragon</b></a><span class="small muted">2 stables</span></div>
+              <div class="r"><span class="muted">Robots (avg / target)</span><span>1 / 1</span></div><div class="r"><span class="muted">Prestige (avg)</span><span>4,105</span></div><div class="r"><span class="muted">Best tier</span><span>Gold (2)</span></div><div class="r"><span class="muted">Credits (avg)</span><span>₡88,700</span></div><div class="r"><span class="muted">Win rate vs humans</span><span>63% · 83 battles</span></div></div>
+            <div class="small muted">… one card per strategy, then the "Human stables" reference card …</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ 2b. Strategy Library and Strategy Builder (added after approval, decision 20) ═══ -->
+  <section class="section">
+    <h2>2b · Strategies tab: Strategy library and Strategy builder</h2>
+    <p class="note">Added after approval (README decision 20). The Strategies tab has two views: Comparison (above) and Library. The library lists every strategy and version in the repository and how many stables use each version. "New strategy" and "New version" open the builder. A draft can be previewed and exported, but never used by a stable: the exported file reaches stables only through a pull request whose CI runs the shared strategy tests. Stables stay on their version until you upgrade them. Swarm v2 and the two drafts are illustrative: they show the state after a future pull request. The builder frame shows a draft with three rule errors, so Export is disabled. Changed after approval (decisions 29–30): the Paragon build order has 24 goals; the builder shows the rule that every goal type is needed at least once, with a Build_Order-level error above the goal list (here: the draft has no Tuning Bay goal). Changed after approval (decisions 35–36): Refine targets count plan steps per robot, allowed 0–10 (Paragon goal 16: 10 steps; the Swarm draft's goal 23: 8 steps).</p>
+    <div class="frames">
+      <div class="frame d"><div class="cap">Desktop · 1280 px · Strategies tab, Library view (sidebar and status bar omitted)</div>
+        <div class="content">
+          <div class="tabs"><span class="tab">Stables</span><span class="tab on">Strategies</span><span class="tab">Editor</span><span class="tab">Catalogue</span></div>
+          <div class="chips"><span class="chip">Comparison</span><span class="chip on">Library</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+            <div><h3 style="margin:0 0 4px;font-size:15px">Strategy library</h3><div class="small muted" style="max-width:720px">Every strategy and version in the repository. Stables stay on their version until you upgrade them. New strategies reach stables through a pull request.</div></div>
+            <span class="btn primary">New strategy</span>
+          </div>
+          <div class="lib">
+            <div class="card">
+              <h3>Swarm · v2 <span class="small muted" style="font-weight:400">(latest)</span></h3>
+              <div class="small muted">Goes wide. Buys roster slots, storage and booking capacity to field as many robots as prestige allows …</div>
+              <div class="ver" style="margin-top:8px"><span>v2</span><span class="muted">0 stables</span></div>
+              <div class="ver"><span>v1</span><span class="muted">2 stables on v1</span></div>
+              <div class="small" style="margin:6px 0 10px"><a href="#">▸ Show build order</a></div>
+              <div class="btn-row"><span class="btn ghost">New version</span><span class="btn">Upgrade stables</span></div>
+            </div>
+            <div class="card">
+              <h3>Paragon · v1 <span class="small muted" style="font-weight:400">(latest)</span></h3>
+              <div class="small muted">Goes tall. One robot, built as far as the facilities allow …</div>
+              <div class="ver" style="margin-top:8px"><span>v1</span><span class="muted">2 stables on v1</span></div>
+              <div class="small" style="margin:6px 0 10px"><a href="#">▾ Hide build order</a></div>
+              <table class="bo" style="margin-bottom:10px">
+                <thead><tr><th>#</th><th>Goal</th><th>Default</th><th>Allowed</th><th>What it buys</th></tr></thead>
+                <tbody>
+                  <tr><td class="num">1</td><td class="goal">Weapons Workshop</td><td>L1</td><td class="small muted">L0–L10</td><td class="small muted">Workshop levels</td></tr>
+                  <tr><td class="num">2</td><td class="goal">Robots</td><td>1</td><td class="small muted">1</td><td class="small muted">robot chain, starter weapon</td></tr>
+                  <tr><td class="num">3</td><td class="goal">Booking Office</td><td>L1</td><td class="small muted">L0–L6</td><td class="small muted">Booking Office levels</td></tr>
+                  <tr><td class="num">…</td><td class="goal muted">…</td><td></td><td></td><td></td></tr>
+                  <tr><td class="num">16</td><td class="goal">Refine</td><td>10 steps</td><td class="small muted">0–10 steps</td><td class="small muted">every plan step + Workshop levels</td></tr>
+                  <tr><td class="num">…</td><td class="goal muted">…</td><td></td><td></td><td></td></tr>
+                  <tr><td class="num">24</td><td class="goal">Attributes</td><td>Max</td><td class="small muted">Max</td><td class="small muted">attributes + academies</td></tr>
+                </tbody>
+              </table>
+              <div class="btn-row"><span class="btn ghost">New version</span></div>
+            </div>
+            <div class="card">
+              <h3>Drafts on this environment</h3>
+              <div class="small muted">Drafts are never used by a stable.</div>
+              <div class="ver" style="margin-top:8px"><span><a href="#">Swarm v3</a> <span class="small muted">· from v2</span></span><span class="bad small">3 errors</span></div>
+              <div class="ver"><span><a href="#">Turtle v1</a> <span class="small muted">· new strategy</span></span><span class="ok small">ready to export</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="frame d"><div class="cap">Desktop · 1280 px · Strategy builder: new version of Swarm (sidebar and status bar omitted)</div>
+        <div class="content">
+          <div class="tabs"><span class="tab">Stables</span><span class="tab on">Strategies</span><span class="tab">Editor</span><span class="tab">Catalogue</span></div>
+          <div class="small" style="margin-bottom:10px"><a href="#">← Strategy library</a></div>
+          <div class="builder">
+            <div class="card">
+              <h3>Strategy builder <span class="small muted" style="font-weight:400">· new version of Swarm</span></h3>
+              <div class="form three" style="margin-top:10px">
+                <div class="field"><label>Strategy key</label><div class="input locked">swarm</div><div class="help">A new version keeps the key.</div></div>
+                <div class="field"><label>Version</label><div class="input locked">v3</div><div class="help">Set automatically.</div></div>
+                <div class="field"><label>Display name</label><div class="input">Swarm</div><div class="help">Shown on the admin page only.</div></div>
+              </div>
+              <div class="field" style="margin-top:14px"><label>Description</label><div class="input area">Goes wide. Buys roster slots, storage and booking capacity early, then repairs before attributes …</div><div class="help">One or two sentences on how this strategy spends.</div></div>
+
+              <h3 style="margin-top:18px">Build order</h3>
+              <div class="small muted" style="margin-bottom:8px">Goal 1 is bought first. The last goal is always "Attributes → Max". Every goal type is needed at least once.</div>
+              <div class="msg" style="margin-bottom:8px">Every strategy needs a Tuning Bay goal with a default above 0.</div>
+              <div class="gl" role="list">
+                <div class="g" role="listitem"><span class="num">1</span><span class="gname">Robots</span><span class="dflt"><span class="input sm">3</span></span><span class="bnds small muted">Allowed <span class="input sm">1</span>–<span class="input sm">3</span></span><span class="acts"><span class="mv" aria-label="Move up: 1 Robots" aria-disabled="true" style="opacity:.4">▲</span><span class="mv" aria-label="Move down: 1 Robots">▼</span><span class="mv" aria-label="Remove: 1 Robots">✕</span></span></div>
+                <div class="g" role="listitem"><span class="num">2</span><span class="gname">Booking Office</span><span class="dflt">L<span class="input sm">1</span></span><span class="bnds small muted">Allowed L<span class="input sm">0</span>–L<span class="input sm">6</span></span><span class="acts"><span class="mv" aria-label="Move up: 2 Booking Office">▲</span><span class="mv" aria-label="Move down: 2 Booking Office">▼</span><span class="mv" aria-label="Remove: 2 Booking Office">✕</span></span></div>
+                <div class="g" role="listitem"><span class="num">3</span><span class="gname">Repair Bay</span><span class="dflt">L<span class="input sm">2</span></span><span class="bnds small muted">Allowed L<span class="input sm">0</span>–L<span class="input sm">10</span></span><span class="acts"><span class="mv" aria-label="Move up: 3 Repair Bay">▲</span><span class="mv" aria-label="Move down: 3 Repair Bay">▼</span><span class="mv" aria-label="Remove: 3 Repair Bay">✕</span></span></div>
+                <div class="g" role="listitem"><span class="num">4</span><span class="gname">Attributes</span><span class="dflt"><span class="input sm">5</span></span><span class="bnds small muted">Allowed <span class="input sm">1</span>–<span class="input sm">10</span></span><span class="acts"><span class="mv" aria-label="Move up: 4 Attributes">▲</span><span class="mv" aria-label="Move down: 4 Attributes">▼</span><span class="mv" aria-label="Remove: 4 Attributes">✕</span></span></div>
+                <div class="g err" role="listitem"><span class="num">5</span><span class="gname">Booking Office</span><span class="dflt">L<span class="input sm">6</span></span><span class="bnds small muted">Allowed L<span class="input sm">0</span>–L<span class="input sm" style="border-color:var(--error)">8</span></span><span class="acts"><span class="mv" aria-label="Move up: 5 Booking Office">▲</span><span class="mv" aria-label="Move down: 5 Booking Office">▼</span><span class="mv" aria-label="Remove: 5 Booking Office">✕</span></span><span class="msg">Booking Office cannot go above L6.</span></div>
+                <div class="g" role="listitem"><span class="num">6</span><span class="gname">Robots</span><span class="dflt"><span class="input sm">11</span></span><span class="bnds small muted">Allowed <span class="input sm">4</span>–<span class="input sm">11</span></span><span class="acts"><span class="mv" aria-label="Move up: 6 Robots">▲</span><span class="mv" aria-label="Move down: 6 Robots">▼</span><span class="mv" aria-label="Remove: 6 Robots">✕</span></span></div>
+                <div class="g" role="listitem"><span class="num muted">…</span><span class="gname muted">goals 7–22</span><span></span><span></span><span></span></div>
+                <div class="g" role="listitem"><span class="num">23</span><span class="gname">Refine</span><span class="dflt"><span class="input sm">8</span> steps</span><span class="bnds small muted">Allowed <span class="input sm">0</span>–<span class="input sm">10</span></span><span class="acts"><span class="mv" aria-label="Move up: 23 Refine">▲</span><span class="mv" aria-label="Move down: 23 Refine">▼</span><span class="mv" aria-label="Remove: 23 Refine">✕</span></span></div>
+                <div class="g" role="listitem"><span class="num muted">…</span><span class="gname muted">goals 24–25</span><span></span><span></span><span></span></div>
+                <div class="g err" role="listitem"><span class="num">26</span><span class="gname">Weapons</span><span class="dflt"><span class="input sm sel">final</span></span><span class="bnds small muted">Allowed 0–3</span><span class="acts"><span class="mv" aria-label="Move up: 26 Weapons">▲</span><span class="mv" aria-label="Move down: 26 Weapons">▼</span><span class="mv" aria-label="Remove: 26 Weapons">✕</span></span><span class="msg">The last goal must be "Attributes → Max".</span></div>
+              </div>
+              <div class="addrow"><span class="btn ghost">Add goal ▾</span><span class="small muted" style="align-self:center">Robots · Facility · Attributes · Weapons · Refine</span></div>
+              <div class="btn-row" style="margin-top:16px;justify-content:space-between">
+                <span class="btn danger">Delete draft</span>
+                <span class="btn-row"><span class="btn">Save draft</span><span class="btn primary" aria-disabled="true">Export strategy file</span></span>
+              </div>
+              <div class="small muted" style="margin-top:6px;text-align:right">Export is disabled while the draft has errors (3).</div>
+            </div>
+
+            <div class="card">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h3>Preview draft</h3><span class="btn ghost">Preview draft</span></div>
+              <div class="field" style="margin-top:10px"><label>Preview on</label><div class="input sel">Kamino Clone Legion</div></div>
+              <div class="outcomes" style="margin-top:10px">
+                <div class="oc"><span class="tag t-done">Done</span><span>1 Robots → 3 <span class="muted">· has 3</span></span></div>
+                <div class="oc"><span class="tag t-done">Done</span><span>2 Booking Office → L1 <span class="muted">· has L1</span></span></div>
+                <div class="oc"><span class="tag t-bought">Bought</span><span>3 Repair Bay → L2 <span class="muted">· L1 and L2 for ₡150,000</span></span></div>
+                <div class="oc"><span class="tag t-saving">Saving</span><span>4 Attributes → 5 <span class="muted">· needs ₡96,000, has ₡62,000</span></span></div>
+                <div class="oc"><span class="tag t-wait">Waiting</span><span class="muted">5–26 below the goal it is saving for</span></div>
+              </div>
+              <div style="margin-top:14px"><b class="small">New stable with ₡3,000,000 would buy first:</b>
+                <ol class="buy">
+                  <li>Roster Expansion L1, L2 · ₡450,000</li>
+                  <li>Robots 1–3 with starter weapons · ~₡1,800,000</li>
+                  <li>Booking Office L1 · ₡75,000</li>
+                  <li>Repair Bay L1, L2 · ₡150,000</li>
+                  <li>Attributes towards 5 on 3 robots · ~₡525,000 (everything left)</li>
+                  <li class="muted">saving for the rest of Attributes → 5</li>
+                </ol>
+              </div>
+              <div class="small muted" style="margin-top:10px">This is a preview. Nothing has been bought and no stable uses this draft.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="frame m"><div class="cap">Mobile · 360 px · stacked section "Strategies", builder open</div>
+        <div class="content">
+          <div class="stack-h">Strategies</div>
+          <div class="chips"><span class="chip">Comparison</span><span class="chip on">Library</span></div>
+          <div class="small" style="margin-bottom:10px"><a href="#">← Strategy library</a></div>
+          <div class="card">
+            <h3>Strategy builder</h3>
+            <div class="small muted" style="margin-bottom:10px">New version of Swarm · v3</div>
+            <div class="msg" style="margin-bottom:8px">Every strategy needs a Tuning Bay goal with a default above 0.</div>
+            <div class="gl" role="list">
+              <div class="g" role="listitem"><span class="num">1</span><span class="gname"><b>Robots</b></span><span class="dflt small muted">Default <span class="input sm">3</span></span><span class="bnds small muted">Allowed <span class="input sm">1</span>–<span class="input sm">3</span></span><span class="acts"><span class="mv" aria-label="Move up: 1 Robots" aria-disabled="true" style="opacity:.4">▲</span><span class="mv" aria-label="Move down: 1 Robots">▼</span><span class="mv" aria-label="Remove: 1 Robots">✕</span></span></div>
+              <div class="g err" role="listitem"><span class="num">5</span><span class="gname"><b>Booking Office</b></span><span class="dflt small muted">Default L<span class="input sm">6</span></span><span class="bnds small muted">Allowed L<span class="input sm">0</span>–L<span class="input sm" style="border-color:var(--error)">8</span></span><span class="acts"><span class="mv" aria-label="Move up: 5 Booking Office">▲</span><span class="mv" aria-label="Move down: 5 Booking Office">▼</span><span class="mv" aria-label="Remove: 5 Booking Office">✕</span></span><span class="msg">Booking Office cannot go above L6.</span></div>
+              <div class="small muted">… one card per goal …</div>
+            </div>
+            <div class="addrow"><span class="btn ghost" style="width:100%">Add goal ▾</span></div>
+            <div class="btn-row" style="margin-top:12px"><span class="btn" style="flex:1">Save draft</span><span class="btn primary" style="flex:1" aria-disabled="true">Export</span></div>
+            <div class="btn-row" style="margin-top:8px"><span class="btn ghost" style="flex:1">Preview draft</span><span class="btn danger" style="flex:1">Delete</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ 3. Editor (desktop) ═══ -->
+  <section class="section">
+    <h2>3 · Editor tab</h2>
+    <p class="note">One stable at a time. Left: the stable card (identity, backstory and the stable's event order), the numbered build order with editable targets and a status per goal, the team names and robot blueprints (one expanded). Right: what the stable would do next cycle, and its cycle history. The build order comes from the strategy; only the targets can be changed. A 🔒 marks a goal that is (or will be, when reached) blocked by a prestige gate. Both Swarm stables use the default goal 10 (Robots → 11): robots behind a prestige gate are Blocked and cost nothing. Changed after approval (decisions 21–26): Backstory replaces Bio, the event order moved from the blueprint to the stable, Teams shows the fixed team rule with team names, the extra-robot fields are gone, and weapon paths go starter → final. Changed after approval (decisions 29–30): the Swarm build order has 25 goals with every goal type, and Rex has a refinement plan. Changed after approval (decisions 35–36): goal 23 is "Refine → 8 steps" (allowed 0–10), and Rex's plan covers both Volt Sabres, Sharpen and Forge first, interleaved by hand, with the two Hones last. Changed after approval (consistency fix): the Editor header gains New stable and Delete draft stable (enabled for drafts only, disabled for an active stable as here); blueprints gain Delete blueprint, disabled while a robot built from it is in play.</p>
+    <div class="frames">
+      <div class="frame d"><div class="cap">Desktop · 1280 px · Editor tab selected (sidebar omitted)</div>
+        <div class="content">
+          <div class="tabs"><span class="tab">Stables</span><span class="tab">Strategies</span><span class="tab on">Editor</span><span class="tab">Catalogue</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+            <div><div class="small muted">Editing</div><div style="font-size:20px;font-weight:700">Kamino Clone Legion <span class="status st-active" style="vertical-align:middle">Active</span></div></div>
+            <div class="btn-row"><span class="btn ghost">New stable</span><span class="btn danger" aria-disabled="true" title="Drafts only">Delete draft stable</span><span class="btn ghost">Export</span><span class="btn primary">Save changes</span></div>
+          </div>
+
+          <div class="editor">
+            <div class="grid" style="gap:16px">
+              <div class="card">
+                <h3>Stable</h3>
+                <div class="form two" style="margin-top:12px">
+                  <div class="field"><label>Catalogue key</label><div class="input locked">clone-legion</div><div class="help">Permanent identifier used for export and sync. Cannot be changed later.</div></div>
+                  <div class="field"><label>Stable name</label><div class="input">Kamino Clone Legion</div><div class="help">Shown to players. Same rules as player stable names.</div></div>
+                  <div class="field"><label>Franchise</label><div class="input">Star Wars — Clone Troopers</div><div class="help">Admin only. Used to group stables here; not shown to players.</div></div>
+                  <div class="field"><label>Strategy</label><div class="input sel">Swarm · v1</div><div class="help">How this stable spends its credits. <span class="info">v2 available — upgrade in the Strategy library</span></div></div>
+                </div>
+                <div class="field" style="margin-top:14px"><label>Backstory</label><div class="input area">Grown, drilled and shipped in batches. The Legion fields more robots than anyone else in the arena, every one of them identical in discipline if not in paint…</div><div class="help">Admin only for now; not shown to players. Up to 400 characters · 248 / 400</div></div>
+                <div class="field" style="margin-top:14px"><label id="evo-label">Event order</label>
+                  <ol class="prefs evo" aria-label="Event order">
+                    <li class="pref"><span class="ix">1</span><span class="ev">2v2 League</span><button type="button" class="mv" aria-label="Move up: 1 2v2 League" disabled>▲</button><button type="button" class="mv" aria-label="Move down: 1 2v2 League">▼</button></li>
+                    <li class="pref"><span class="ix">2</span><span class="ev">Tag Team</span><button type="button" class="mv" aria-label="Move up: 2 Tag Team">▲</button><button type="button" class="mv" aria-label="Move down: 2 Tag Team">▼</button></li>
+                    <li class="pref"><span class="ix">3</span><span class="ev">3v3 League</span><button type="button" class="mv" aria-label="Move up: 3 3v3 League">▲</button><button type="button" class="mv" aria-label="Move down: 3 3v3 League">▼</button></li>
+                    <li class="pref"><span class="ix">4</span><span class="ev">1v1 League</span><button type="button" class="mv" aria-label="Move up: 4 1v1 League">▲</button><button type="button" class="mv" aria-label="Move down: 4 1v1 League">▼</button></li>
+                    <li class="pref"><span class="ix">5</span><span class="ev">King of the Hill</span><button type="button" class="mv" aria-label="Move up: 5 King of the Hill">▲</button><button type="button" class="mv" aria-label="Move down: 5 King of the Hill">▼</button></li>
+                    <li class="pref"><span class="ix">6</span><span class="ev">Grand Melee</span><button type="button" class="mv" aria-label="Move up: 6 Grand Melee">▲</button><button type="button" class="mv" aria-label="Move down: 6 Grand Melee">▼</button></li>
+                    <li class="pref"><span class="ix">7</span><span class="ev">3v3 Tournament</span><button type="button" class="mv" aria-label="Move up: 7 3v3 Tournament">▲</button><button type="button" class="mv" aria-label="Move down: 7 3v3 Tournament">▼</button></li>
+                    <li class="pref"><span class="ix">8</span><span class="ev">1v1 Tournament</span><button type="button" class="mv" aria-label="Move up: 8 1v1 Tournament">▲</button><button type="button" class="mv" aria-label="Move down: 8 1v1 Tournament">▼</button></li>
+                    <li class="pref"><span class="ix">9</span><span class="ev">2v2 Tournament</span><button type="button" class="mv" aria-label="Move up: 9 2v2 Tournament">▲</button><button type="button" class="mv" aria-label="Move down: 9 2v2 Tournament" disabled>▼</button></li>
+                  </ol>
+                  <div class="help">All 9 event types in order of preference. Team events are entered by a whole team or not at all.</div></div>
+              </div>
+
+              <div class="card">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h3>Build order <span class="small muted" style="font-weight:400">· Swarm v1</span></h3><span class="btn ghost">Preview next cycle</span></div>
+                <div class="small muted" style="margin:2px 0 10px">What this stable buys, in order of priority: goal 1 first. Change a target to tune it; the order comes from the strategy. Changes apply from the next settlement.</div>
+                <table class="bo">
+                  <thead><tr><th>#</th><th>Goal</th><th>Target</th><th>Allowed</th><th>Status (preview)</th></tr></thead>
+                  <tbody>
+                    <tr><td class="num">1</td><td class="goal">Robots</td><td><span class="tin"><span class="input sm">3</span></span></td><td class="small muted">1–3</td><td><span class="tag t-done">Done</span> <span class="small muted">has 3</span></td></tr>
+                    <tr><td class="num">2</td><td class="goal">Booking Office</td><td><span class="tin">L<span class="input sm">1</span></span></td><td class="small muted">L0–L6</td><td><span class="tag t-done">Done</span> <span class="small muted">has L1</span></td></tr>
+                    <tr><td class="num">3</td><td class="goal">Attributes</td><td><span class="tin"><span class="input sm">5</span></span></td><td class="small muted">1–10</td><td><span class="tag t-bought">Bought</span> <span class="small muted">14 upgrades on Rex, Cody, Fives · ₡96,000</span></td></tr>
+                    <tr class="focus"><td class="num">4</td><td class="goal">Booking Office</td><td><span class="tin">L<span class="input sm">3</span></span></td><td class="small muted">L0–L6</td><td><span class="tag t-saving">Saving</span> <span class="small muted">bought L2 for ₡150,000 · L3 needs ₡225,000, has ₡166,000</span></td></tr>
+                    <tr class="dim"><td class="num">5</td><td class="goal">Robots</td><td><span class="tin"><span class="input sm">4</span></span></td><td class="small muted">3–4</td><td><span class="tag t-wait">Waiting</span> </td></tr>
+                    <tr class="dim"><td class="num">6</td><td class="goal">Attributes</td><td><span class="tin"><span class="input sm">8</span></span></td><td class="small muted">1–10</td><td><span class="tag t-wait">Waiting</span> </td></tr>
+                    <tr class="dim"><td class="num">7</td><td class="goal">Repair Bay</td><td><span class="tin">L<span class="input sm">3</span></span></td><td class="small muted">L0–L10</td><td><span class="tag t-wait">Waiting</span> </td></tr>
+                    <tr class="dim"><td class="num">8</td><td class="goal">Streaming Studio</td><td><span class="tin">L<span class="input sm">2</span></span></td><td class="small muted">L0–L10</td><td><span class="tag t-wait">Waiting</span> </td></tr>
+                    <tr class="dim"><td class="num">9</td><td class="goal">Merchandising Hub</td><td><span class="tin">L<span class="input sm">1</span></span></td><td class="small muted">L0–L10</td><td><span class="tag t-wait">Waiting</span> </td></tr>
+                    <tr class="dim"><td class="num">10</td><td class="goal">Robots</td><td><span class="tin"><span class="input sm">11</span></span></td><td class="small muted">4–11</td><td><span class="tag t-wait">Waiting 🔒</span> <span class="small bad">Roster Expansion L4 needs 1,000 prestige (has 820)</span></td></tr>
+                    <tr class="dim"><td class="num">11</td><td class="goal">Booking Office</td><td><span class="tin">L<span class="input sm">6</span></span></td><td class="small muted">L0–L6</td><td><span class="tag t-wait">Waiting 🔒</span> <span class="small bad">Booking Office L4 needs 1,000 prestige (has 820)</span></td></tr>
+                    <tr class="dim"><td class="num">12</td><td class="goal">Weapons Workshop</td><td><span class="tin">L<span class="input sm">3</span></span></td><td class="small muted">L0–L10</td><td><span class="tag t-wait">Waiting</span> </td></tr>
+                    <tr class="dim"><td class="num">13</td><td class="goal">Tuning Bay</td><td><span class="tin">L<span class="input sm">1</span></span></td><td class="small muted">L0–L10</td><td><span class="tag t-wait">Waiting</span> </td></tr>
+                    <tr class="dim"><td class="num">14</td><td class="goal">Attributes</td><td><span class="tin"><span class="input sm">15</span></span></td><td class="small muted">1–50</td><td><span class="tag t-wait">Waiting</span> <span class="small muted">▾ Hide plan</span></td></tr>
+                    <tr class="plan"><td></td><td colspan="4"><div class="small"><b>Plan for Attributes → 15</b> <span class="muted">(groups in Build Focus order; ▸ academy bought on the way)</span>
+                      <div class="muted">Rex (Versatile): Combat 15 ▸ Combat Academy L1 → Defense 15 ▸ Defense Academy L1 → Mobility 15 ▸ Mobility Academy L1 → AI 15 ▸ AI Academy L1</div>
+                      <div class="muted">Cody (Deadeye): Combat 15 → AI 12 → Mobility 8 → Defense 6</div>
+                      <div class="muted">Fives (Warden): Defense 15 → Combat 9 → Mobility 9 → AI 8</div>
+                      <div class="muted">Academies bought: Combat L1, Defense L1, Mobility L1, AI L1 (no prestige needed)</div></div></td></tr>
+                    <tr class="dim"><td class="num">15</td><td class="goal">Repair Bay</td><td><span class="tin">L<span class="input sm">7</span></span></td><td class="small muted">L0–L10</td><td><span class="tag t-wait">Waiting 🔒</span> <span class="small bad">Repair Bay L4 needs 1,000 prestige (has 820)</span></td></tr>
+                    <tr class="dim"><td class="num">16</td><td class="goal">Streaming Studio</td><td><span class="tin">L<span class="input sm">5</span></span></td><td class="small muted">L0–L10</td><td><span class="tag t-wait">Waiting 🔒</span> <span class="small bad">Streaming Studio L4 needs 1,000 prestige (has 820)</span></td></tr>
+                    <tr class="dim"><td class="num">17</td><td class="goal">Weapons Workshop</td><td><span class="tin">L<span class="input sm">7</span></span></td><td class="small muted">L0–L10</td><td><span class="tag t-wait">Waiting 🔒</span> <span class="small bad">Weapons Workshop L4 needs 1,000 prestige (has 820)</span></td></tr>
+                    <tr class="dim"><td class="num">18</td><td class="goal">Weapons</td><td><span class="input sm sel">final</span></td><td class="small muted">0–3</td><td><span class="tag t-wait">Waiting</span> </td></tr>
+                    <tr class="dim"><td class="num">19</td><td class="goal">Tuning Bay</td><td><span class="tin">L<span class="input sm">2</span></span></td><td class="small muted">L0–L10</td><td><span class="tag t-wait">Waiting</span> </td></tr>
+                    <tr class="dim"><td class="num">20</td><td class="goal">Streaming Studio</td><td><span class="tin">L<span class="input sm">8</span></span></td><td class="small muted">L0–L10</td><td><span class="tag t-wait">Waiting 🔒</span> <span class="small bad">Streaming Studio L4 needs 1,000 prestige (has 820)</span></td></tr>
+                    <tr class="dim"><td class="num">21</td><td class="goal">Attributes</td><td><span class="tin"><span class="input sm">20</span></span></td><td class="small muted">1–50</td><td><span class="tag t-wait">Waiting</span> </td></tr>
+                    <tr class="dim"><td class="num">22</td><td class="goal">Attributes</td><td><span class="tin"><span class="input sm">25</span></span></td><td class="small muted">1–50</td><td><span class="tag t-wait">Waiting</span> <span class="small muted">▸ Show plan</span></td></tr>
+                    <tr class="dim"><td class="num">23</td><td class="goal">Refine</td><td><span class="tin"><span class="input sm">8</span> steps</span></td><td class="small muted">0–10</td><td><span class="tag t-wait">Waiting</span> </td></tr>
+                    <tr class="dim"><td class="num">24</td><td class="goal">Training Facility</td><td><span class="tin">L<span class="input sm">1</span></span></td><td class="small muted">L0–L10</td><td><span class="tag t-wait">Waiting</span> </td></tr>
+                    <tr class="dim"><td class="num">25</td><td class="goal">Attributes</td><td><span class="input sm locked">Max</span></td><td class="small muted">Max</td><td><span class="tag t-wait">Waiting 🔒</span> <span class="small bad">every attribute to 50 · academies L4+ need prestige</span></td></tr>
+                  </tbody>
+                </table>
+                <div class="form two" style="margin-top:12px">
+                                    <div class="field"><label>Legend</label><div class="small muted"><span class="tag t-done">Done</span> <span class="tag t-bought">Bought</span> <span class="tag t-saving">Saving</span> — stops here this cycle · <span class="tag t-blocked">Blocked 🔒</span> skipped, gated · <span class="tag t-wait">Waiting 🔒</span> will be blocked when reached</div></div>
+                </div>
+              </div>
+
+              <div class="card">
+                <h3>Teams</h3>
+                <div class="small muted">Names for the teams this stable forms: robots 1+2, 3+4 … in 2v2; 1–3, 4–6, 7–9 in 3v3. A team that already exists keeps its name.</div>
+                <table class="teams" style="margin-top:8px">
+                  <thead><tr><th>Team</th><th>Size</th><th>Robots</th><th>State</th></tr></thead>
+                  <tbody>
+                    <tr><td><span class="input sm" aria-label="Team name: Torrent Company">Torrent Company</span></td><td>2v2</td><td>Rex, Cody (1+2)</td><td class="ok">Formed</td></tr>
+                    <tr><td><span class="input sm" aria-label="Team name: Domino Squad">Domino Squad</span></td><td>2v2</td><td>Fives, robot 4 (3+4)</td><td class="muted">Waits for robot 4</td></tr>
+                    <tr><td><span class="input sm" aria-label="Team name: Ghost Company">Ghost Company</span></td><td>2v2</td><td>robots 5+6</td><td class="muted">Waits for robot 6</td></tr>
+                    <tr><td><span class="input sm" aria-label="Team name: Foxtrot Company">Foxtrot Company</span></td><td>2v2</td><td>robots 7+8</td><td class="muted">Waits for robot 8</td></tr>
+                    <tr><td><span class="input sm" aria-label="Team name: Coruscant Guard">Coruscant Guard</span></td><td>2v2</td><td>robots 9+10</td><td class="muted">Waits for robot 10</td></tr>
+                    <tr><td><span class="input sm" aria-label="Team name: Bad Batch">Bad Batch</span></td><td>3v3</td><td>Rex, Cody, Fives (1–3)</td><td class="ok">Formed</td></tr>
+                    <tr><td><span class="input sm" aria-label="Team name: Delta Squad">Delta Squad</span></td><td>3v3</td><td>robots 4–6</td><td class="muted">Waits for robot 6</td></tr>
+                    <tr><td><span class="input sm" aria-label="Team name: Omega Squad">Omega Squad</span></td><td>3v3</td><td>robots 7–9</td><td class="muted">Waits for robot 9</td></tr>
+                  </tbody>
+                </table>
+                <div class="small muted" style="margin-top:8px">Robot 11 is in no team; robots 10 and 11 are in no 3v3 team.</div>
+              </div>
+
+              <div class="card">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h3>Robot blueprints</h3><span class="btn ghost">Add blueprint</span></div>
+
+                <div class="bp">
+                  <div class="bp-h"><span class="thumb"></span><div class="t"><b>1 · CT-7567 Rex</b><span class="small muted">Dual wield · offensive · Versatile · range short (from weapons) · in play</span></div><span class="mv" aria-label="Collapse">▴</span></div>
+                  <div class="bp-b">
+                    <div class="live">A robot built from this blueprint is in play. Its name will not change; other changes apply from the next settlement. This blueprint cannot be deleted while the robot exists.</div>
+                    <div class="btn-row" style="margin:8px 0"><span class="btn danger" aria-disabled="true">Delete blueprint</span></div>
+                    <div class="form three">
+                      <div class="field"><label>Robot name</label><div class="input">CT-7567 Rex</div><div class="help">Used when this robot is next bought.</div></div>
+                      <div class="field"><label>Image</label><div class="btn-row"><span class="thumb"></span><span class="btn ghost">Upload image</span></div><div class="help">512×512. Applies to the live robot straight away.</div></div>
+                      <div class="field"><label>Build focus</label><div class="input sel">Versatile</div></div>
+                      <div class="field"><label>Loadout</label><div class="input sel">Dual wield</div></div>
+                      <div class="field"><label>Stance</label><div class="input sel">Offensive</div></div>
+                      <div class="field"><label>Yield threshold</label><div class="input">10 %</div></div>
+                    </div>
+                    <div class="form" style="margin-top:14px">
+                      <div class="field"><label>Weapon path</label>
+                        <table class="wp">
+                          <thead><tr><th>Stage</th><th>Main hand</th><th>Off hand</th><th>Range</th><th>Cost</th></tr></thead>
+                          <tbody>
+                            <tr><td>0 <span class="small ok">current</span></td><td><span class="input sm sel">Laser Pistol</span></td><td><span class="input sm sel">Laser Pistol</span></td><td class="small muted">short</td><td class="small muted">₡114,000</td></tr>
+                            <tr><td>1 <span class="small muted">final</span></td><td><span class="input sm sel">Volt Sabre</span></td><td><span class="input sm sel">Volt Sabre</span></td><td class="small muted">short</td><td class="small muted">₡850,000</td></tr>
+                          </tbody>
+                        </table>
+                        <div class="help">Dual wield: each hand has its own weapon; both may differ. Only one-handed weapons can be picked. A hand that does not change keeps its weapon and costs nothing. Range is worked out from the weapons; with two different ranges the robot fights at the range of the weapon with the higher damage per second, and the main hand decides on a tie (example: Dalek X stage 1: Volt Sabre + Nova Caster; equal damage per second, so the main hand decides).</div>
+                      </div>
+                    </div>
+                    <div class="field" style="margin-top:14px"><label>Refinement plan</label>
+                      <table class="wp">
+                        <thead><tr><th>Step</th><th>Weapon (hand)</th><th>Tier</th><th>Target</th><th>Cost</th><th>Needs</th></tr></thead>
+                        <tbody>
+                          <tr><td>1</td><td>Volt Sabre (main)</td><td>Sharpen</td><td>−10% cooldown</td><td class="small muted">₡300,000</td><td class="small muted">Workshop L5</td></tr>
+                          <tr><td>2</td><td>Volt Sabre (off)</td><td>Sharpen</td><td>−10% cooldown</td><td class="small muted">₡300,000</td><td class="small muted">Workshop L5</td></tr>
+                          <tr><td>3</td><td>Volt Sabre (main)</td><td>Sharpen</td><td>−10% cooldown</td><td class="small muted">₡900,000</td><td class="small muted">Workshop L5</td></tr>
+                          <tr><td>4</td><td>Volt Sabre (off)</td><td>Sharpen</td><td>−10% cooldown</td><td class="small muted">₡900,000</td><td class="small muted">Workshop L5</td></tr>
+                          <tr><td>5</td><td>Volt Sabre (main)</td><td>Forge</td><td>+8% damage</td><td class="small muted">₡400,000</td><td class="small muted">Workshop L8</td></tr>
+                          <tr><td>6</td><td>Volt Sabre (off)</td><td>Forge</td><td>+8% damage</td><td class="small muted">₡400,000</td><td class="small muted">Workshop L8</td></tr>
+                          <tr><td>7</td><td>Volt Sabre (main)</td><td>Forge</td><td>+8% damage</td><td class="small muted">₡1,200,000</td><td class="small muted">Workshop L8</td></tr>
+                          <tr><td>8</td><td>Volt Sabre (off)</td><td>Forge</td><td>+8% damage</td><td class="small muted">₡1,200,000</td><td class="small muted">Workshop L8</td></tr>
+                          <tr class="dim"><td>9</td><td>Volt Sabre (main)</td><td>Hone</td><td>Targeting Systems +4 (6 → 10)</td><td class="small muted">₡160,000</td><td class="small muted">Workshop L1</td></tr>
+                          <tr class="dim"><td>10</td><td>Volt Sabre (off)</td><td>Hone</td><td>Targeting Systems +4 (6 → 10)</td><td class="small muted">₡160,000</td><td class="small muted">Workshop L1</td></tr>
+                        </tbody>
+                      </table>
+                      <div class="help">Applied in order to both Volt Sabres by goal 23 (Refine → 8 steps) once Rex is on his final weapons. Steps 9–10 apply only with a target of 10. At most 5 steps per weapon; total ₡5,920,000.</div></div>
+                  </div>
+                </div>
+
+                <div class="bp"><div class="bp-h"><span class="thumb"></span><div class="t"><b>2 · CC-2224 Cody</b><span class="small muted">Single · balanced · Deadeye · range mid · in play</span></div><span class="mv">▾</span></div></div>
+                <div class="bp"><div class="bp-h"><span class="thumb"></span><div class="t"><b>3 · CT-5555 Fives</b><span class="small muted">Weapon + shield · defensive · Warden · range short · in play</span></div><span class="mv">▾</span></div></div>
+                <div class="bp"><div class="bp-h"><span class="thumb"></span><div class="t"><b>4 · CT-21-0408 Echo</b><span class="small muted">Single · balanced · Deadeye · range long · not bought yet</span></div><span class="mv">▾</span></div></div>
+                <div class="small muted" style="margin-top:8px">+ 7 more blueprints</div>
+              </div>
+            </div>
+
+            <div class="grid" style="gap:16px;align-content:start">
+              <div class="card">
+                <h3>Next cycle</h3>
+                <div class="small muted" style="margin:4px 0 10px">If settlement ran now, Kamino Clone Legion would:</div>
+                <div class="outcomes">
+                  <div class="oc"><span class="tag t-bought">Buy</span><span>Goal 3 · Attributes → 5: 14 upgrades for ₡96,000</span></div>
+                  <div class="oc"><span class="tag t-bought">Buy</span><span>Goal 4 · Booking Office L2 for ₡150,000</span></div>
+                  <div class="oc"><span class="tag t-saving">Save</span><span>Goal 4 · Booking Office L3: needs ₡225,000, has ₡166,000. Goals 5–25 wait.</span></div>
+                </div>
+                <div class="small muted" style="margin-top:10px">Gated further down: goal 10 (Roster Expansion L4), goal 11 (Booking Office L4), goals 15–17 and 20 (Repair Bay, Streaming Studio, Weapons Workshop L4) — each needs 1,000 prestige — and goal 25 (academies L4+).</div>
+                <div class="small faint" style="margin-top:6px">This is a preview. Nothing has been bought.</div>
+              </div>
+
+              <div class="card">
+                <h3>Cycle history</h3>
+                <table style="margin-top:6px">
+                  <thead><tr><th>Cycle</th><th>Status</th><th>Spent</th><th>Ended on</th></tr></thead>
+                  <tbody>
+                    <tr><td>42</td><td class="ok">Completed</td><td>₡188,500</td><td class="warn">Saving for Booking Office L2</td></tr>
+                    <tr><td>41</td><td class="ok">Completed</td><td>₡0</td><td class="warn">Saving for Booking Office L2</td></tr>
+                    <tr><td>40</td><td class="ok">Completed</td><td>₡642,000</td><td>Bought Robot 3</td></tr>
+                    <tr><td>39</td><td class="muted">Skipped</td><td>—</td><td class="muted">Automatons stopped</td></tr>
+                    <tr><td>Prep 2</td><td class="ok">Completed</td><td>₡75,000</td><td>Attributes → 5</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ 4. Catalogue (desktop) ═══ -->
+  <section class="section">
+    <h2>4 · Catalogue tab</h2>
+    <p class="note">Result of the last deploy sync and the export buttons. "Images filled" added to the sync line after approval (README decision 28): the number of blueprints of existing stables that had no image and received their repository image. Approved 8 Oct 2026.</p>
+    <div class="frames">
+      <div class="frame d" style="width:1000px"><div class="cap">Desktop · Catalogue tab selected (sidebar omitted)</div>
+        <div class="content">
+          <div class="tabs"><span class="tab">Stables</span><span class="tab">Strategies</span><span class="tab">Editor</span><span class="tab on">Catalogue</span></div>
+          <div class="card">
+            <h3>Catalogue</h3>
+            <p class="muted" style="margin:4px 0 14px">Catalogue files in the repository are added here as drafts on every deploy. Existing stables are never overwritten. Use Export to turn stables built here into catalogue files.</p>
+            <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:12px"><b>Last sync: 8 Oct 2026, 14:02</b><span class="muted">Added 0 · Already present 11 · Images filled 3 · Conflicts 1</span></div>
+            <div class="card" style="background:rgba(248,81,73,.08);border-color:rgba(248,81,73,.35);padding:10px 12px;margin-bottom:14px"><span class="bad">minion-horde</span>: stable name "Minion Mayhem" is already taken. Skipped.</div>
+            <div class="btn-row"><span class="btn ghost">Export this stable</span><span class="btn primary">Export all</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ 5. Mobile stacked ═══ -->
+  <section class="section">
+    <h2>5 · Mobile (360 px): sections stacked</h2>
+    <p class="note">Below 1024 px there are no tabs: the status bar comes first, then Stables, Strategies, Editor and Catalogue follow each other on one scrolling page. The sidebar collapses to the existing icon rail. Shown: the status bar and the top of the Editor. Changed after approval (consistency fix): the Editor gains New stable and Delete draft stable (enabled for drafts only, disabled for an active stable as here).</p>
+    <div class="frames">
+      <div class="frame m"><div class="cap">Mobile · 360 px</div>
+        <div class="shell">
+          <aside class="side"><div class="logo"><span class="full">Admin Portal</span><span class="short">⚡</span></div><ul><li><span>👥</span></li><li><span>💰</span></li><li class="on"><span>🤖</span></li></ul></aside>
+          <div class="main">
+            <div class="topbar"><h1>Automaton Stables</h1></div>
+            <div class="content">
+              <div class="card statusbar">
+                <div class="switch"><span class="toggle" role="switch" aria-checked="true" aria-label="Automatons act each cycle"></span><div><b>Automatons act each cycle</b><div class="small muted">On</div></div></div>
+                <div class="sb-item"><div class="small muted">Last acted</div><b>Cycle 42 · 8 Oct, 00:01</b><div class="small muted">11 stables · 38 s</div></div>
+                <div class="sb-item"><div class="small muted">Failed last cycle</div><b class="ok">None</b></div>
+                <a class="sb-item attn" href="#"><div class="small muted">Needs attention</div><b class="warn">2 stables →</b></a>
+              </div>
+              <div class="stack-h">Stables</div>
+              <div class="small muted">… filter chips and cards as in section 1 …</div>
+              <div class="stack-h">Strategies</div>
+              <div class="small muted">… cards as in section 2 …</div>
+              <div class="stack-h">Editor</div>
+              <div class="field"><label>Stable</label><div class="input sel">Kamino Clone Legion</div></div>
+              <span class="btn ghost" style="width:100%;margin-top:8px">New stable</span>
+              <span class="btn danger" aria-disabled="true" style="width:100%;margin-top:8px">Delete draft stable</span>
+              <div class="form" style="margin-top:12px">
+                <div class="field"><label>Stable name</label><div class="input">Kamino Clone Legion</div></div>
+                <div class="field"><label>Strategy</label><div class="input sel">Swarm · v1</div></div>
+                <div class="field"><label>Build order</label>
+                  <table class="bo"><tbody>
+                    <tr><td class="num">1</td><td class="goal">Robots</td><td><span class="tin"><span class="input sm">3</span></span></td><td class="small muted">1–3</td><td><span class="tag t-done">Done</span> <span class="small muted">has 3</span></td></tr>
+                    <tr><td class="num">2</td><td class="goal">Booking Office</td><td><span class="tin">L<span class="input sm">1</span></span></td><td class="small muted">L0–L6</td><td><span class="tag t-done">Done</span> <span class="small muted">has L1</span></td></tr>
+                    <tr><td class="num">3</td><td class="goal">Attributes</td><td><span class="tin"><span class="input sm">5</span></span></td><td class="small muted">1–10</td><td><span class="tag t-bought">Bought</span> <span class="small muted">14 upgrades on Rex, Cody, Fives · ₡96,000</span></td></tr>
+                    <tr class="focus"><td class="num">4</td><td class="goal">Booking Office</td><td><span class="tin">L<span class="input sm">3</span></span></td><td class="small muted">L0–L6</td><td><span class="tag t-saving">Saving</span> <span class="small muted">bought L2 for ₡150,000 · L3 needs ₡225,000, has ₡166,000</span></td></tr>
+                    <tr class="dim"><td class="num">5</td><td class="goal">Robots</td><td><span class="tin"><span class="input sm">4</span></span></td><td class="small muted">3–4</td><td><span class="tag t-wait">Waiting</span> </td></tr>
+                  </tbody></table>
+                  <div class="help">… goals 6–25 …</div></div>
+                <div class="field"><label>Event order</label>
+                  <ol class="prefs evo" aria-label="Event order">
+                    <li class="pref"><span class="ix">1</span><span class="ev">2v2 League</span><button type="button" class="mv" aria-label="Move up: 1 2v2 League" disabled>▲</button><button type="button" class="mv" aria-label="Move down: 1 2v2 League">▼</button></li>
+                    <li class="pref"><span class="ix">2</span><span class="ev">Tag Team</span><button type="button" class="mv" aria-label="Move up: 2 Tag Team">▲</button><button type="button" class="mv" aria-label="Move down: 2 Tag Team">▼</button></li>
+                    <li class="pref"><span class="ix">3</span><span class="ev">3v3 League</span><button type="button" class="mv" aria-label="Move up: 3 3v3 League">▲</button><button type="button" class="mv" aria-label="Move down: 3 3v3 League">▼</button></li>
+                    <li class="pref"><span class="ix">4</span><span class="ev">1v1 League</span><button type="button" class="mv" aria-label="Move up: 4 1v1 League">▲</button><button type="button" class="mv" aria-label="Move down: 4 1v1 League">▼</button></li>
+                    <li class="pref"><span class="ix">5</span><span class="ev">King of the Hill</span><button type="button" class="mv" aria-label="Move up: 5 King of the Hill">▲</button><button type="button" class="mv" aria-label="Move down: 5 King of the Hill">▼</button></li>
+                    <li class="pref"><span class="ix">6</span><span class="ev">Grand Melee</span><button type="button" class="mv" aria-label="Move up: 6 Grand Melee">▲</button><button type="button" class="mv" aria-label="Move down: 6 Grand Melee">▼</button></li>
+                    <li class="pref"><span class="ix">7</span><span class="ev">3v3 Tournament</span><button type="button" class="mv" aria-label="Move up: 7 3v3 Tournament">▲</button><button type="button" class="mv" aria-label="Move down: 7 3v3 Tournament">▼</button></li>
+                    <li class="pref"><span class="ix">8</span><span class="ev">1v1 Tournament</span><button type="button" class="mv" aria-label="Move up: 8 1v1 Tournament">▲</button><button type="button" class="mv" aria-label="Move down: 8 1v1 Tournament">▼</button></li>
+                    <li class="pref"><span class="ix">9</span><span class="ev">2v2 Tournament</span><button type="button" class="mv" aria-label="Move up: 9 2v2 Tournament">▲</button><button type="button" class="mv" aria-label="Move down: 9 2v2 Tournament" disabled>▼</button></li>
+                  </ol>
+                  <div class="help">All 9 event types in order of preference. Team events are entered by a whole team or not at all.</div></div>
+                <div class="field"><label>Teams</label><div class="small">Torrent Company and Bad Batch: Formed · 6 more wait for robots (next: Domino Squad, robot 4)</div></div>
+              </div>
+              <span class="btn primary" style="width:100%;margin-top:14px">Preview next cycle</span>
+              <span class="btn" style="width:100%;margin-top:8px">Save changes</span>
+              <div class="stack-h">Catalogue</div>
+              <div class="small muted">… as in section 4, buttons full width …</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ 6. Dialogs ═══ -->
+  <section class="section">
+    <h2>6 · Confirmations</h2>
+    <p class="note">Irreversible or wide-reaching actions ask first. Dialogs trap focus and close with Escape. The upgrade dialog was added after approval (decision 20). Changed after approval (decisions 29–30): the upgrade dialog's goal numbers follow the 25-goal Swarm v1 build order and an illustrative 26-goal v2 (Repair Bay moved up, a second Merchandising Hub goal and a third Repair Bay goal added, the last Streaming Studio goal removed; goals are matched by type and occurrence).</p>
+    <div class="frames">
+      <div class="frame" style="width:540px"><div class="cap">Activate a draft</div>
+        <div class="dialog-wrap"><div class="dialog" role="dialog" aria-modal="true">
+          <h3>Activate Grim Reaper Works?</h3>
+          <p>It joins the game with ₡3,000,000 and starts building after the next settlement. Activation cannot be undone.</p>
+          <div class="btn-row"><span class="btn ghost">Cancel</span><span class="btn primary">Activate stable</span></div>
+        </div></div>
+      </div>
+      <div class="frame" style="width:540px"><div class="cap">Turn the switch off</div>
+        <div class="dialog-wrap"><div class="dialog" role="dialog" aria-modal="true">
+          <h3>Stop all Automatons?</h3>
+          <p>Their robots keep fighting, but no Automaton will buy, upgrade or re-subscribe anything until you turn this back on.</p>
+          <div class="btn-row"><span class="btn ghost">Cancel</span><span class="btn danger">Stop Automatons</span></div>
+        </div></div>
+      </div>
+      <div class="frame" style="width:600px"><div class="cap">Upgrade stables to a newer strategy version</div>
+        <div class="dialog-wrap"><div class="dialog wide" role="dialog" aria-modal="true">
+          <h3>Upgrade Swarm stables to v2</h3>
+          <div class="chips"><span class="chip">This stable: Kamino Clone Legion</span><span class="chip on">All 2 stables on v1</span></div>
+          <table class="small" style="margin-bottom:12px">
+            <thead><tr><th>Goal (# v1 → v2)</th><th>Old target</th><th>New target</th></tr></thead>
+            <tbody>
+              <tr><td>Robots (1 → 1)</td><td>3</td><td>3</td></tr>
+              <tr><td>Repair Bay (7 → 3)</td><td>L3</td><td>L3</td></tr>
+              <tr><td>Merchandising Hub (— → 10)</td><td>—</td><td>L2 <span class="info">new goal</span></td></tr>
+              <tr><td>Robots (10 → 11)</td><td>11</td><td>11</td></tr>
+              <tr><td>Attributes (14 → 15)</td><td>15</td><td>12 <span class="warn">clamped</span></td></tr>
+              <tr><td>Repair Bay (15 → 16)</td><td>L7</td><td>L7</td></tr>
+              <tr><td>Repair Bay (— → 17)</td><td>—</td><td>L8 <span class="info">new goal</span></td></tr>
+              <tr><td>Streaming Studio (20 → —)</td><td>L8</td><td class="muted">removed</td></tr>
+              <tr><td class="muted" colspan="3">… other goals renumbered, targets unchanged …</td></tr>
+            </tbody>
+          </table>
+          <p>Shown for Kamino Clone Legion; each stable keeps its own targets. Changes apply from the next settlement.</p>
+          <div class="btn-row"><span class="btn ghost">Cancel</span><span class="btn primary">Upgrade 2 stables</span></div>
+        </div></div>
+      </div>
+    </div>
+  </section>
+</div>
+</body>
+</html>

@@ -365,6 +365,90 @@ describe('AchievementService.checkAndAward', () => {
   });
 });
 
+// ─── Tests: per-user serialization ───────────────────────────────────
+
+interface Deferred<T> {
+  promise: Promise<T>;
+  resolve: (value: T) => void;
+}
+
+function deferred<T>(): Deferred<T> {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((r) => {
+    resolve = r;
+  });
+  return { promise, resolve };
+}
+
+const flush = (): Promise<void> => new Promise((r) => setImmediate(r));
+
+const createdAchievementIds = (): string[] =>
+  mockPrisma.userAchievement.create.mock.calls.map(
+    (c: unknown[]) => (c[0] as { data: { achievementId: string } }).data.achievementId,
+  );
+
+describe('AchievementService.checkAndAward — per-user serialization', () => {
+  const battleComplete: AchievementEvent = { type: 'battle_complete', data: { won: true, finalHpPercent: 50 } };
+
+  it('runs calls for one user one at a time, so the second sees the first unlock', async () => {
+    const firstUnlocks = deferred<{ achievementId: string }[]>();
+    mockPrisma.userAchievement.findMany
+      .mockReturnValueOnce(firstUnlocks.promise)
+      .mockResolvedValueOnce([{ achievementId: 'C1' }]);
+    mockPrisma.robot.findUnique.mockResolvedValue({ wins: 1, name: 'Bot' });
+
+    const first = achievementService.checkAndAward(1, 1, battleComplete);
+    const second = achievementService.checkAndAward(1, 2, battleComplete);
+    await flush();
+    expect(mockPrisma.userAchievement.findMany).toHaveBeenCalledTimes(1);
+
+    firstUnlocks.resolve([]);
+    const [firstResult, secondResult] = await Promise.all([first, second]);
+
+    expect(createdAchievementIds().filter((id) => id === 'C1')).toHaveLength(1);
+    const c1Credits = mockApplyCreditMutationInTransaction.mock.calls.filter(
+      (c: unknown[]) => (c[1] as { auditContext: { achievementId: string } }).auditContext.achievementId === 'C1',
+    );
+    expect(c1Credits).toHaveLength(1);
+    expect(c1Credits[0][1]).toEqual(expect.objectContaining({ amount: 25_000 }));
+    expect(firstResult.map((a) => a.id)).toContain('C1');
+    expect(secondResult.map((a) => a.id)).not.toContain('C1');
+  });
+
+  it('runs calls for different users concurrently', async () => {
+    const userOneUnlocks = deferred<{ achievementId: string }[]>();
+    mockPrisma.userAchievement.findMany.mockImplementation((args: { where: { userId: number } }) =>
+      args.where.userId === 1 ? userOneUnlocks.promise : Promise.resolve([]));
+
+    const userOne = achievementService.checkAndAward(1, 1, battleComplete);
+    const userTwo = achievementService.checkAndAward(2, 3, battleComplete);
+    await flush();
+
+    const queriedUsers = mockPrisma.userAchievement.findMany.mock.calls.map(
+      (c: unknown[]) => (c[0] as { where: { userId: number } }).where.userId,
+    );
+    expect(queriedUsers).toEqual(expect.arrayContaining([1, 2]));
+
+    userOneUnlocks.resolve([]);
+    await Promise.all([userOne, userTwo]);
+  });
+
+  it('does not block the next call for a user when an earlier call fails', async () => {
+    mockPrisma.userAchievement.findMany
+      .mockRejectedValueOnce(new Error('DB connection lost'))
+      .mockResolvedValueOnce([]);
+    mockPrisma.robot.findUnique.mockResolvedValue({ wins: 1, name: 'Bot' });
+
+    const failed = achievementService.checkAndAward(1, 1, battleComplete);
+    const next = achievementService.checkAndAward(1, 1, battleComplete);
+
+    await expect(failed).resolves.toEqual([]);
+    const nextResult = await next;
+    expect(nextResult.map((a) => a.id)).toContain('C1');
+    expect(mockPrisma.userAchievement.findMany).toHaveBeenCalledTimes(2);
+  });
+});
+
 // ─── Tests: Trigger Evaluation ───────────────────────────────────────
 
 describe('AchievementService trigger evaluation', () => {

@@ -9,7 +9,7 @@
 
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { AdminFilterBar, type FilterChip } from '../AdminFilterBar';
+import { AdminFilterBar, REAL_PLAYERS_HELP, type FilterChip } from '../AdminFilterBar';
 
 const filters: FilterChip[] = [
   { key: 'league', label: 'League', active: true },
@@ -101,6 +101,24 @@ describe('AdminFilterBar', () => {
     );
 
     expect(screen.queryByText('Clear all')).not.toBeInTheDocument();
+  });
+
+  it('describes a chip with its help text (Spec #55: Real Players excludes Automatons)', () => {
+    render(
+      <AdminFilterBar
+        filters={[
+          { key: 'real', label: 'Real Players', active: true, description: REAL_PLAYERS_HELP },
+          { key: 'auto', label: 'Auto-Generated', active: false },
+          { key: 'automaton', label: 'Automatons', active: false },
+          { key: 'all', label: 'All', active: false },
+        ]}
+        onFilterToggle={vi.fn()}
+      />,
+    );
+    expect(REAL_PLAYERS_HELP).toBe('Human players only. Excludes auto-generated bots and Automatons.');
+    expect(screen.getByRole('button', { name: 'Real Players' })).toHaveAccessibleDescription(REAL_PLAYERS_HELP);
+    expect(screen.getByRole('button', { name: 'Real Players' })).toHaveAttribute('title', REAL_PLAYERS_HELP);
+    expect(screen.getByRole('button', { name: 'Automatons' })).not.toHaveAttribute('aria-describedby');
   });
 
   it('should render children in the trailing slot', () => {

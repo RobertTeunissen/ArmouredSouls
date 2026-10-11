@@ -3,6 +3,7 @@
  *
  * Extracted from HallOfRecordsPage.tsx during component splitting (Spec 18).
  */
+import type { StableType } from '../../types/stable';
 
 /**
  * Battle modes Most Damage is ranked within (Spec #46 R4.5).
@@ -55,6 +56,8 @@ export interface WinStreakEntry {
   /** Robot name for `league_1v1`, team name for the three team modes. */
   entityName: string;
   username: string;
+  /** Spec #55 decision 42: Stable_Type of the owning stable (drives the Automaton_Badge). */
+  stableType?: StableType | null;
   bestWinStreak: number;
   currentWinStreak: number;
   /** True when the best streak is the one currently running. */
@@ -121,13 +124,13 @@ export interface RecordsData {
 export interface MostDamageInBattle {
   battleId: number;
   damageDealt: number;
-  robot: { id: number; name: string; username: string };
+  robot: { id: number; name: string; username: string; stableType?: StableType | null };
   /**
    * Present only for the two 1v1 modes. In 2v2, 3v3, KotH, and Grand Melee a
    * single opponent is not well defined, so the field is omitted rather than
    * populated with an arbitrary one of many.
    */
-  opponent?: { id: number; name: string; username: string };
+  opponent?: { id: number; name: string; username: string; stableType?: StableType | null };
   durationSeconds: number;
   date: string;
 }
@@ -135,16 +138,16 @@ export interface MostDamageInBattle {
 export interface NarrowestVictory {
   battleId: number;
   remainingHP: number;
-  winner: { id: number; name: string; username: string };
-  loser: { id: number; name: string; username: string };
+  winner: { id: number; name: string; username: string; stableType?: StableType | null };
+  loser: { id: number; name: string; username: string; stableType?: StableType | null };
   date: string;
 }
 
 export interface BiggestUpset {
   battleId: number;
   eloDifference: number;
-  underdog: { id: number; name: string; username: string; eloBefore: number };
-  favorite: { id: number; name: string; username: string; eloBefore: number };
+  underdog: { id: number; name: string; username: string; stableType?: StableType | null; eloBefore: number };
+  favorite: { id: number; name: string; username: string; stableType?: StableType | null; eloBefore: number };
   date: string;
 }
 
@@ -157,8 +160,8 @@ export interface BiggestTeamUpset {
   battleId: number;
   battleType: string;
   eloDifference: number;
-  underdog: { robots: { id: number; name: string; username: string }[]; teamEloBefore: number };
-  favorite: { robots: { id: number; name: string; username: string }[]; teamEloBefore: number };
+  underdog: { robots: { id: number; name: string; username: string; stableType?: StableType | null }[]; teamEloBefore: number };
+  favorite: { robots: { id: number; name: string; username: string; stableType?: StableType | null }[]; teamEloBefore: number };
   date: string;
 }
 
@@ -166,6 +169,8 @@ export interface MostBattles {
   robotId: number;
   robotName: string;
   username: string;
+  /** Spec #55 decision 42: Stable_Type of the owning stable (drives the Automaton_Badge). */
+  stableType?: StableType | null;
   totalBattles: number;
   wins: number;
   losses: number;
@@ -178,6 +183,8 @@ export interface HighestWinRate {
   robotId: number;
   robotName: string;
   username: string;
+  /** Spec #55 decision 42: Stable_Type of the owning stable (drives the Automaton_Badge). */
+  stableType?: StableType | null;
   totalBattles: number;
   wins: number;
   winRate: number;
@@ -189,6 +196,8 @@ export interface MostLifetimeDamage {
   robotId: number;
   robotName: string;
   username: string;
+  /** Spec #55 decision 42: Stable_Type of the owning stable (drives the Automaton_Badge). */
+  stableType?: StableType | null;
   damageDealt: number;
   totalBattles: number;
   avgDamagePerBattle: number;
@@ -198,6 +207,8 @@ export interface HighestElo {
   robotId: number;
   robotName: string;
   username: string;
+  /** Spec #55 decision 42: Stable_Type of the owning stable (drives the Automaton_Badge). */
+  stableType?: StableType | null;
   elo: number;
   league: string;
   wins: number;
@@ -209,6 +220,8 @@ export interface MostKills {
   robotId: number;
   robotName: string;
   username: string;
+  /** Spec #55 decision 42: Stable_Type of the owning stable (drives the Automaton_Badge). */
+  stableType?: StableType | null;
   kills: number;
   totalBattles: number;
   killRate: number;
@@ -217,8 +230,8 @@ export interface MostKills {
 export interface MostExpensiveBattle {
   battleId: number;
   totalRepairCost: number;
-  robot1: { id: number; name: string; username: string; repairCost: number };
-  robot2: { id: number; name: string; username: string; repairCost: number };
+  robot1: { id: number; name: string; username: string; stableType?: StableType | null; repairCost: number };
+  robot2: { id: number; name: string; username: string; stableType?: StableType | null; repairCost: number };
   winnerId: number;
   date: string;
 }
@@ -227,6 +240,8 @@ export interface HighestFame {
   robotId: number;
   robotName: string;
   username: string;
+  /** Spec #55 decision 42: Stable_Type of the owning stable (drives the Automaton_Badge). */
+  stableType?: StableType | null;
   fame: number;
   league: string;
   elo: number;
@@ -235,6 +250,8 @@ export interface HighestFame {
 export interface RichestStables {
   userId: number;
   username: string;
+  /** Spec #55 decision 42: Stable_Type of the owning stable (drives the Automaton_Badge). */
+  stableType?: StableType | null;
   currency: number;
   totalBattles: number;
   prestige: number;
@@ -244,6 +261,8 @@ export interface RichestStables {
 export interface HighestPrestige {
   userId: number;
   username: string;
+  /** Spec #55 decision 42: Stable_Type of the owning stable (drives the Automaton_Badge). */
+  stableType?: StableType | null;
   prestige: number;
   totalBattles: number;
   totalWins: number;
@@ -254,6 +273,8 @@ export interface HighestPrestige {
 export interface MostTitles {
   userId: number;
   username: string;
+  /** Spec #55 decision 42: Stable_Type of the owning stable (drives the Automaton_Badge). */
+  stableType?: StableType | null;
   championshipTitles: number;
   prestige: number;
   totalBattles: number;
@@ -264,6 +285,8 @@ export interface KothMostWins {
   robotId: number;
   robotName: string;
   username: string;
+  /** Spec #55 decision 42: Stable_Type of the owning stable (drives the Automaton_Badge). */
+  stableType?: StableType | null;
   kothWins: number;
   kothMatches: number;
   winRate: number;
@@ -273,6 +296,8 @@ export interface KothHighestAvgZoneScore {
   robotId: number;
   robotName: string;
   username: string;
+  /** Spec #55 decision 42: Stable_Type of the owning stable (drives the Automaton_Badge). */
+  stableType?: StableType | null;
   avgZoneScore: number;
   kothMatches: number;
 }
@@ -281,6 +306,8 @@ export interface KothMostKillsCareer {
   robotId: number;
   robotName: string;
   username: string;
+  /** Spec #55 decision 42: Stable_Type of the owning stable (drives the Automaton_Badge). */
+  stableType?: StableType | null;
   kothKills: number;
   kothMatches: number;
 }
@@ -289,6 +316,8 @@ export interface KothLongestWinStreak {
   robotId: number;
   robotName: string;
   username: string;
+  /** Spec #55 decision 42: Stable_Type of the owning stable (drives the Automaton_Badge). */
+  stableType?: StableType | null;
   bestWinStreak: number;
   kothWins: number;
 }
@@ -297,6 +326,8 @@ export interface KothMostZoneTime {
   robotId: number;
   robotName: string;
   username: string;
+  /** Spec #55 decision 42: Stable_Type of the owning stable (drives the Automaton_Badge). */
+  stableType?: StableType | null;
   totalZoneTime: number;
   kothMatches: number;
 }
@@ -305,6 +336,8 @@ export interface KothZoneDominator {
   robotId: number;
   robotName: string;
   username: string;
+  /** Spec #55 decision 42: Stable_Type of the owning stable (drives the Automaton_Badge). */
+  stableType?: StableType | null;
   avgZoneScore: number;
   kothMatches: number;
   totalZoneScore: number;
@@ -326,6 +359,8 @@ export interface TeamBattleParticipantDisplay {
   id: number;
   name: string;
   username: string;
+  /** Spec #55 decision 42: Stable_Type of the owning stable (drives the Automaton_Badge). */
+  stableType?: StableType | null;
 }
 
 export interface TeamBattleFastestVictory {
@@ -339,14 +374,14 @@ export interface TeamBattleFastestVictory {
 export interface TeamBattleLongestSurvival {
   battleId: number;
   survivalSeconds: number;
-  robot: { id: number; name: string; username: string };
+  robot: { id: number; name: string; username: string; stableType?: StableType | null };
   date: string;
 }
 
 export interface TeamBattleMostDamage {
   battleId: number;
   damageDealt: number;
-  robot: { id: number; name: string; username: string };
+  robot: { id: number; name: string; username: string; stableType?: StableType | null };
   durationSeconds: number;
   date: string;
 }
@@ -374,6 +409,8 @@ export interface GrandMeleeMostWins {
   robotId: number;
   robotName: string;
   username: string;
+  /** Spec #55 decision 42: Stable_Type of the owning stable (drives the Automaton_Badge). */
+  stableType?: StableType | null;
   grandMeleeWins: number;
 }
 
@@ -381,6 +418,8 @@ export interface GrandMeleeHighestLp {
   robotId: number;
   robotName: string;
   username: string;
+  /** Spec #55 decision 42: Stable_Type of the owning stable (drives the Automaton_Badge). */
+  stableType?: StableType | null;
   leaguePoints: number;
   tier: string;
 }
@@ -389,6 +428,8 @@ export interface GrandMeleeMostKills {
   robotId: number;
   robotName: string;
   username: string;
+  /** Spec #55 decision 42: Stable_Type of the owning stable (drives the Automaton_Badge). */
+  stableType?: StableType | null;
   totalKills: number;
   grandMeleeMatches: number;
   /** Spec #46 R4.17 — total kills alone rewards match volume over lethality. */
@@ -403,6 +444,8 @@ export interface TournamentChampionRecord {
   championName: string; // Robot name for 1v1, team name for 2v2/3v3
   memberRobots?: string[]; // Only for team tournaments
   ownerStableName: string;
+  /** Spec #55 decision 42: Stable_Type of the owning stable (drives the Automaton_Badge). */
+  ownerStableType?: StableType | null;
   completedAt: string;
   participantType: string;
 }

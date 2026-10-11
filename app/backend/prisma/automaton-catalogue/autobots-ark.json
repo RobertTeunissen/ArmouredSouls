@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "catalogueKey": "autobots-ark",
+  "stableName": "Autobots of the Ark",
+  "franchise": "Transformers — Autobots",
+  "backstory": "Disciplined, adaptable and stubbornly decent. The Autobots bring a little of everything to the arena — a leader, a scout, a heavy and a medic — and grow carefully, one well-equipped robot at a time.",
+  "strategy": { "key": "generalist", "version": 1, "targetOverrides": { "14": 3 } },
+  "teamNames": {
+    "twoVsTwo": ["Autobot Vanguard", "Ark Repair Crew"],
+    "threeVsThree": ["Ark Defenders"]
+  },
+  "eventOrder": ["league_1v1", "league_2v2", "league_3v3", "koth", "tag_team", "grand_melee", "tournament_1v1", "tournament_2v2", "tournament_3v3"],
+  "blueprints": [
+    {
+      "slot": 1,
+      "robotName": "Optimus Prime",
+      "loadoutType": "single",
+      "stance": "balanced",
+      "yieldThreshold": 10,
+      "buildFocus": "versatile",
+      "weaponPath": [{ "main": "Laser Pistol" }, { "main": "Volt Sabre" }],
+      "refinementPlan": [
+        { "tier": "sharpen", "hand": "main", "magnitude": 1 },
+        { "tier": "sharpen", "hand": "main", "magnitude": 1 },
+        { "tier": "forge", "hand": "main", "magnitude": 1 },
+        { "tier": "forge", "hand": "main", "magnitude": 1 },
+        { "tier": "hone", "hand": "main", "targetAttribute": "combatPower", "magnitude": 2 }
+      ]
+    },
+    {
+      "slot": 2,
+      "robotName": "Bumblebee",
+      "loadoutType": "dual_wield",
+      "stance": "offensive",
+      "yieldThreshold": 20,
+      "buildFocus": "sprinter",
+      "weaponPath": [{ "main": "Laser Pistol", "offhand": "Laser Pistol" }, { "main": "Volt Sabre", "offhand": "Volt Sabre" }],
+      "refinementPlan": [
+        { "tier": "sharpen", "hand": "main", "magnitude": 1 },
+        { "tier": "sharpen", "hand": "offhand", "magnitude": 1 },
+        { "tier": "sharpen", "hand": "main", "magnitude": 1 },
+        { "tier": "sharpen", "hand": "offhand", "magnitude": 1 },
+        { "tier": "forge", "hand": "main", "magnitude": 1 },
+        { "tier": "forge", "hand": "offhand", "magnitude": 1 },
+        { "tier": "forge", "hand": "main", "magnitude": 1 },
+        { "tier": "forge", "hand": "offhand", "magnitude": 1 },
+        { "tier": "hone", "hand": "main", "targetAttribute": "powerCore", "magnitude": 2 },
+        { "tier": "hone", "hand": "offhand", "targetAttribute": "powerCore", "magnitude": 2 }
+      ]
+    },
+    {
+      "slot": 3,
+      "robotName": "Ironhide",
+      "loadoutType": "two_handed",
+      "stance": "defensive",
+      "yieldThreshold": 10,
+      "buildFocus": "warden",
+      "weaponPath": [{ "main": "Training Rifle" }, { "main": "Plasma Cannon" }],
+      "refinementPlan": [
+        { "tier": "sharpen", "hand": "main", "magnitude": 1 },
+        { "tier": "sharpen", "hand": "main", "magnitude": 1 },
+        { "tier": "forge", "hand": "main", "magnitude": 1 },
+        { "tier": "forge", "hand": "main", "magnitude": 1 },
+        { "tier": "hone", "hand": "main", "targetAttribute": "combatPower", "magnitude": 1 }
+      ]
+    },
+    {
+      "slot": 4,
+      "robotName": "Ratchet",
+      "loadoutType": "weapon_shield",
+      "stance": "defensive",
+      "yieldThreshold": 25,
+      "buildFocus": "tactician",
+      "weaponPath": [{ "main": "Beam Pistol", "offhand": "Combat Shield" }, { "main": "Particle Lance", "offhand": "Aegis Bulwark" }],
+      "refinementPlan": [
+        { "tier": "sharpen", "hand": "main", "magnitude": 1 },
+        { "tier": "sharpen", "hand": "main", "magnitude": 1 },
+        { "tier": "forge", "hand": "main", "magnitude": 1 },
+        { "tier": "forge", "hand": "main", "magnitude": 1 },
+        { "tier": "hone", "hand": "main", "targetAttribute": "combatPower", "magnitude": 1 },
+        { "tier": "hone", "hand": "offhand", "targetAttribute": "evasionThrusters", "magnitude": 1 },
+        { "tier": "hone", "hand": "offhand", "targetAttribute": "evasionThrusters", "magnitude": 1 },
+        { "tier": "hone", "hand": "offhand", "targetAttribute": "evasionThrusters", "magnitude": 1 },
+        { "tier": "hone", "hand": "offhand", "targetAttribute": "evasionThrusters", "magnitude": 1 },
+        { "tier": "hone", "hand": "offhand", "targetAttribute": "evasionThrusters", "magnitude": 1 }
+      ]
+    }
+  ]
+}

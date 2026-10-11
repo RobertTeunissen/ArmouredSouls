@@ -2,50 +2,21 @@ import express, { Response } from 'express';
 import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
-import { calculateStorageCapacity, getStorageStatus } from '../utils/storageCalculations';
+import { getStorageStatus } from '../utils/storageCalculations';
 import prisma from '../lib/prisma';
-import { lockUserForSpending } from '../lib/creditGuard';
-import { eventLogger } from '../services/common/eventLogger';
-import { trackSpending } from '../services/economy/spendingTracker';
-import logger from '../config/logger';
-import { AppError, EconomyError, EconomyErrorCode, AuthError, AuthErrorCode } from '../errors';
+import { EconomyError, EconomyErrorCode } from '../errors';
 import { validateRequest } from '../middleware/schemaValidator';
 import { positiveIntParam, safeName } from '../utils/securityValidation';
 import { verifyWeaponOwnership } from '../middleware/ownership';
 import { securityMonitor } from '../services/security/securityMonitor';
 import { achievementService, type UnlockedAchievement } from '../services/achievement';
-import { calculateWeaponWorkshopDiscount, applyDiscount, calculateWeaponResaleRate, applyResaleRate } from '../shared/utils/discounts';
-import {
-  calculateRefinementCost,
-  validateRefinementSlotAvailable,
-  validateAttributeStackCap,
-  validateAttributeOnWeapon,
-  validateShieldCompatibility,
-  type RefinementTier,
-} from '../shared/utils/weaponRefinement';
 import { ROBOT_ATTRIBUTES } from '../shared/utils/robotAttributes';
-import type { Weapon } from '../../generated/prisma';
-import { applyCreditMutationInTransaction } from '../services/financial/creditMutationService';
-import { runFinancialWriteTransaction } from '../services/cycle/financialWriteTransaction';
 import { getIdempotencyKey, idempotencyHeadersSchema } from '../utils/idempotency';
-import { createEconomicRequestIdentity, findCompletedEconomicRequest, findEconomicRequestReplay, buildEconomicRequestAuditContext } from '../services/financial/economicRequestReplayService';
-import { buildPurchaseBreakdown } from '../services/financial/financialBreakdowns';
+import { purchaseWeapon } from '../services/economy/weaponPurchaseService';
+import { sellWeapon } from '../services/economy/weaponSaleService';
+import { refineWeapon } from '../services/economy/weaponRefinementService';
 
 const router = express.Router();
-
-// ── Spec #34 helpers (refinement) ─────────────────────────────────────
-
-/**
- * Read a numeric `<attribute>Bonus` field from a weapon catalog row.
- *
- * The Prisma `Weapon` type has 23 explicit `<attr>Bonus` fields, but indexed
- * access requires a structural cast. Encapsulated here so the route handler
- * stays readable.
- */
-function getCatalogBonus(weapon: Weapon, attribute: string): number {
-  const v = (weapon as unknown as Record<string, unknown>)[`${attribute}Bonus`];
-  return typeof v === 'number' ? v : 0;
-}
 
 // --- Zod schemas for weapon inventory routes ---
 
@@ -158,7 +129,7 @@ const refineRateLimiter = rateLimit({
 const refineBodySchema = z.object({
   tier: z.enum(['hone', 'augment', 'sharpen', 'forge']),
   magnitude: z.number().int().min(1).max(5),
-  targetAttribute: z.enum([...ROBOT_ATTRIBUTES] as [string, ...string[]]).optional(),
+  targetAttribute: z.enum(ROBOT_ATTRIBUTES).optional(),
 }).refine(
   (b) => {
     if (b.tier === 'sharpen' || b.tier === 'forge') {
@@ -233,172 +204,26 @@ router.post('/purchase', authenticateToken, validateRequest({ body: purchaseBody
   const { weaponId } = req.body;
   const requestKey = getIdempotencyKey(req.headers);
   const weaponIdNum = Number(weaponId);
-  const identity = createEconomicRequestIdentity(userId, 'weapon_purchase', requestKey, { weaponId: weaponIdNum });
-  const replay = await findCompletedEconomicRequest<{ weaponInventory: unknown; currency: number; message: string }>(userId, 'weapon_purchase', requestKey, { weaponId: weaponIdNum });
-  if (replay) {
-    res.status(201).json({ ...replay.response, achievementUnlocks: [], replayed: true });
-    return;
-  }
 
-  // Get weapon details
-  const weapon = await prisma.weapon.findUnique({
-    where: { id: weaponIdNum },
-  });
-
-  if (!weapon) {
-    throw new EconomyError(EconomyErrorCode.WEAPON_NOT_FOUND, 'Weapon not found', 404);
-  }
-
-  // Get user's current currency, Weapon Workshop level, and Storage Facility level
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    include: {
-      facilities: {
-        where: { facilityType: { in: ['weapons_workshop', 'storage_facility'] } },
-      },
-    },
-  });
-
-  if (!user) {
-    throw new AuthError(AuthErrorCode.USER_NOT_FOUND, 'User not found', 404);
-  }
-
-  // Get Storage Facility level
-  const storageFacility = user.facilities.find(f => f.facilityType === 'storage_facility');
-  const storageFacilityLevel = storageFacility?.level || 0;
-
-  // Check storage capacity before purchase
-  const currentWeaponCount = await prisma.weaponInventory.count({ where: { userId } });
-  const maxCapacity = calculateStorageCapacity(storageFacilityLevel);
-
-  if (currentWeaponCount >= maxCapacity) {
-    const storageStatus = getStorageStatus(currentWeaponCount, storageFacilityLevel);
-    throw new EconomyError(EconomyErrorCode.STORAGE_CAPACITY_FULL, 'Storage capacity full', 400, {
-      currentWeapons: storageStatus.currentWeapons,
-      maxCapacity: storageStatus.maxCapacity,
-      message: 'Upgrade Storage Facility to increase capacity',
-    });
-  }
-
-  // Apply Weapon Workshop discount
-  const weaponWorkshop = user.facilities.find(f => f.facilityType === 'weapons_workshop');
-  const weaponWorkshopLevel = weaponWorkshop?.level || 0;
-  const discountPercent = calculateWeaponWorkshopDiscount(weaponWorkshopLevel);
-  const finalCost = applyDiscount(weapon.cost, discountPercent);
-
-  // Check if user has enough currency
-  if (user.currency < finalCost) {
-    throw new EconomyError(EconomyErrorCode.INSUFFICIENT_CREDITS, 'Insufficient credits', 400, {
-      required: finalCost,
-      available: user.currency,
-    });
-  }
-
-  // Purchase weapon in a transaction with row-level locking
-  const result = await runFinancialWriteTransaction(async (tx, financialCycleNumber) => {
-    const lockedUser = await lockUserForSpending(tx, userId);
-    const replayInTransaction = await findEconomicRequestReplay<{ weaponInventory: unknown; currency: number; message: string }>(tx, identity);
-    if (replayInTransaction) {
-      return { user: { currency: replayInTransaction.response.currency }, weaponInventory: replayInTransaction.response.weaponInventory, replayed: true };
-    }
-
-    if (lockedUser.currency < finalCost) {
-      throw new EconomyError(EconomyErrorCode.INSUFFICIENT_CREDITS, 'Insufficient credits', 400, {
-        required: finalCost,
-        available: lockedUser.currency,
-      });
-    }
-
-    // Re-verify workshop level hasn't changed (guards against concurrent facility upgrade race)
-    const freshFacilities = await tx.facility.findMany({
-      where: { userId, facilityType: { in: ['weapons_workshop', 'storage_facility'] } },
-    });
-    const freshWorkshop = freshFacilities.find(f => f.facilityType === 'weapons_workshop');
-    const freshWorkshopLevel = freshWorkshop?.level || 0;
-    if (freshWorkshopLevel !== weaponWorkshopLevel) {
-      throw new EconomyError(EconomyErrorCode.INVALID_TRANSACTION, 'Facility level changed, please retry', 409);
-    }
-
-    // Re-verify storage capacity inside transaction
-    const freshWeaponCount = await tx.weaponInventory.count({ where: { userId } });
-    const freshStorage = freshFacilities.find(f => f.facilityType === 'storage_facility');
-    const freshMaxCapacity = calculateStorageCapacity(freshStorage?.level || 0);
-    if (freshWeaponCount >= freshMaxCapacity) {
-      throw new EconomyError(EconomyErrorCode.STORAGE_CAPACITY_FULL, 'Storage capacity full', 400);
-    }
-
-    const weaponInventory = await tx.weaponInventory.create({
-      data: { userId, weaponId: weaponIdNum, pricePaid: finalCost },
-      include: { weapon: true },
-    });
-
-    const financialEventId = identity.financialEventId;
-    const coreResponse = {
-      weaponInventory,
-      currency: lockedUser.currency - finalCost,
-      message: 'Weapon purchased successfully',
-    };
-    const financialResult = await applyCreditMutationInTransaction(tx, {
-      cycleNumber: financialCycleNumber,
-      userId,
-      transactionType: 'weapon_purchase',
-      amount: -finalCost,
-      description: `Purchased weapon: ${weapon.name}`,
-      financialEventId,
-      breakdown: buildPurchaseBreakdown({
-        transactionType: 'weapon_purchase',
-        sourceEventId: financialEventId,
-        amount: -finalCost,
-        operation: 'weapon_purchase',
-        itemId: weaponInventory.id,
-        basePrice: weapon.cost,
-        discountAmount: weapon.cost - finalCost,
-        inputs: [
-          { name: 'catalogPrice', value: weapon.cost, unit: 'credits', source: 'weapon_catalog' },
-          { name: 'workshopLevel', value: freshWorkshopLevel, unit: 'levels', source: 'facility' },
-          { name: 'finalCost', value: finalCost, unit: 'credits', source: 'shared_discount_formula' },
-        ],
-        modifiers: [{ name: 'workshopDiscount', value: discountPercent, unit: 'percent', source: 'shared_discount_formula', applied: discountPercent > 0 }],
-        roundingMode: 'floor',
-        operationOrder: ['catalogPrice', 'workshopDiscount', 'finalCost'],
-      }),
-      auditContext: buildEconomicRequestAuditContext(identity, coreResponse),
-    });
-
-    return { user: { currency: financialResult.balanceAfter }, weaponInventory, replayed: false };
+  // Spec #55 task 2.2: the purchase itself lives in weaponPurchaseService.
+  const result = await purchaseWeapon(userId, weaponIdNum, requestKey, {
+    spendingMonitor: { sourceIp: req.ip || undefined, endpoint: req.originalUrl },
   });
 
   if (result.replayed) {
-    res.status(201).json({ weaponInventory: result.weaponInventory, currency: result.user.currency, message: 'Weapon purchased successfully', achievementUnlocks: [], replayed: true });
+    res.status(201).json({ ...result.response, achievementUnlocks: [], replayed: true });
     return;
-  }
-
-  // Log weapon purchase event (non-blocking)
-  try {
-    const cycleMetadata = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
-    const currentCycle = (cycleMetadata?.totalCycles || 0) + 1;
-
-    await eventLogger.logWeaponPurchase(currentCycle, userId, weaponIdNum, finalCost);
-
-    const discountInfo = discountPercent > 0 ? ` | Discount: ${discountPercent}% (base: ₡${weapon.cost.toLocaleString()})` : '';
-    const previousBalance = result.user.currency + finalCost;
-    logger.info(`[Weapon] User ${userId} | Purchased: ${weapon.name} | Cost: ₡${finalCost.toLocaleString()}${discountInfo} | Balance: ₡${previousBalance.toLocaleString()} → ₡${result.user.currency.toLocaleString()}`);
-
-    await trackSpending(userId, 'weapons', finalCost);
-    securityMonitor.trackSpending(userId, finalCost, { sourceIp: req.ip || undefined, endpoint: req.originalUrl });
-  } catch (logError) {
-    logger.error('Failed to log weapon purchase event:', logError);
   }
 
   res.status(201).json({
     weaponInventory: result.weaponInventory,
-    currency: result.user.currency,
-    message: 'Weapon purchased successfully',
+    currency: result.currency,
+    message: result.message,
     achievementUnlocks: await (async (): Promise<UnlockedAchievement[]> => {
       try {
         return await achievementService.checkAndAward(userId, null, {
           type: 'weapon_purchased',
-          data: { weaponId: weaponIdNum, weaponType: weapon.weaponType, weaponName: weapon.name },
+          data: { weaponId: weaponIdNum, weaponType: result.weapon.weaponType, weaponName: result.weapon.name },
         });
       } catch { return []; }
     })(),
@@ -477,175 +302,15 @@ router.delete(
     const userId = req.user!.userId;
     const inventoryId = parseInt(String(req.params.id));
     const requestKey = getIdempotencyKey(req.headers);
-    const identity = createEconomicRequestIdentity(userId, 'weapon_sale', requestKey, { inventoryId });
-    const replay = await findCompletedEconomicRequest<{ salePrice: number; currency: number; weaponName: string; message: string }>(userId, 'weapon_sale', requestKey, { inventoryId });
-    if (replay) {
-      res.json({ ...replay.response, achievementUnlocks: [], replayed: true });
-      return;
-    }
 
-    await verifyWeaponOwnership(prisma, inventoryId, userId);
-
-    const result = await runFinancialWriteTransaction(async (tx, financialCycleNumber) => {
-      // 1. Lock user row first (existing convention for credit-affecting endpoints)
-      const lockedUser = await lockUserForSpending(tx, userId);
-      const replayInTransaction = await findEconomicRequestReplay<{ salePrice: number; currency: number; weaponName: string; message: string }>(tx, identity);
-      if (replayInTransaction) {
-        return { ...replayInTransaction.response, weaponId: 0, pricePaid: 0, workshopLevel: 0, resaleRate: 0, previousBalance: lockedUser.currency, replayed: true };
-      }
-
-      // 2. Lock the weapon_inventory row second.
-      //    Serializes resale-vs-resale on the same row AND resale-vs-equip on
-      //    the same weapon. The equip handlers acquire this same lock.
-      const lockedInvRows = await tx.$queryRaw<{
-        id: number;
-        userId: number;
-        weaponId: number;
-        pricePaid: number;
-      }[]>`
-        SELECT id, user_id as "userId", weapon_id as "weaponId", price_paid as "pricePaid"
-        FROM weapon_inventory WHERE id = ${inventoryId} FOR UPDATE
-      `;
-      if (lockedInvRows.length === 0) {
-        throw new EconomyError(EconomyErrorCode.WEAPON_NOT_FOUND, 'Weapon not found', 404);
-      }
-      const weaponInv = lockedInvRows[0];
-
-      // 3. Re-verify ownership inside the transaction (TOCTOU)
-      if (weaponInv.userId !== userId) {
-        securityMonitor.logAuthorizationFailure(userId, 'weapon', inventoryId);
-        throw new AppError('FORBIDDEN', 'Access denied', 403);
-      }
-
-      // 4. Defensive bounds check on pricePaid.
-      //    NOT NULL is enforced by schema; this guards against migration
-      //    tampering or future bugs that could write a negative value.
-      if (weaponInv.pricePaid < 0) {
-        logger.error(`[Weapon] Invariant violation: negative pricePaid (${weaponInv.pricePaid}) on inventory ${inventoryId}`);
-        throw new EconomyError(EconomyErrorCode.INVALID_TRANSACTION, 'Invalid weapon state', 500);
-      }
-
-      // 5. Equipped check under both locks
-      const equippedOn = await tx.robot.findFirst({
-        where: {
-          userId,
-          OR: [{ mainWeaponId: inventoryId }, { offhandWeaponId: inventoryId }],
-        },
-        select: { id: true, name: true },
-      });
-      if (equippedOn) {
-        throw new EconomyError(
-          EconomyErrorCode.WEAPON_EQUIPPED,
-          `Weapon is equipped on ${equippedOn.name}. Unequip before selling.`,
-          409,
-          { robotId: equippedOn.id, robotName: equippedOn.name },
-        );
-      }
-
-      // 6. Workshop level + weapon details
-      const [workshop, weaponMeta] = await Promise.all([
-        tx.facility.findUnique({
-          where: { userId_facilityType: { userId, facilityType: 'weapons_workshop' } },
-          select: { level: true },
-        }),
-        tx.weapon.findUnique({
-          where: { id: weaponInv.weaponId },
-          select: { id: true, name: true },
-        }),
-      ]);
-      const workshopLevel = workshop?.level || 0;
-
-      const resaleRate = calculateWeaponResaleRate(workshopLevel);
-      const salePrice = applyResaleRate(weaponInv.pricePaid, resaleRate);
-
-      const financialEventId = identity.financialEventId;
-      const coreResponse = {
-        salePrice,
-        currency: lockedUser.currency + salePrice,
-        weaponName: weaponMeta?.name ?? 'Weapon',
-        message: `Sold ${weaponMeta?.name ?? 'Weapon'} for ₡${salePrice.toLocaleString()}`,
-      };
-      const financialResult = await applyCreditMutationInTransaction(tx, {
-        cycleNumber: financialCycleNumber,
-        userId,
-        transactionType: 'weapon_sale',
-        amount: salePrice,
-        description: `Sold weapon: ${weaponMeta?.name ?? 'Weapon'}`,
-        financialEventId,
-        breakdown: buildPurchaseBreakdown({
-          transactionType: 'weapon_sale',
-          sourceEventId: financialEventId,
-          amount: salePrice,
-          operation: 'weapon_sale',
-          itemId: inventoryId,
-          basePrice: weaponInv.pricePaid,
-          discountAmount: weaponInv.pricePaid - salePrice,
-          saleValue: salePrice,
-          inputs: [
-            { name: 'pricePaid', value: weaponInv.pricePaid, unit: 'credits', source: 'weapon_inventory' },
-            { name: 'workshopLevel', value: workshopLevel, unit: 'levels', source: 'facility' },
-            { name: 'resaleRate', value: resaleRate, unit: 'percent', source: 'shared_resale_formula' },
-          ],
-          modifiers: [{ name: 'resaleRate', value: resaleRate, unit: 'percent', source: 'shared_resale_formula', applied: true }],
-          roundingMode: 'floor',
-          operationOrder: ['pricePaid', 'resaleRate', 'saleValue'],
-        }),
-        auditContext: buildEconomicRequestAuditContext(identity, coreResponse),
-      });
-
-      await tx.weaponInventory.delete({ where: { id: inventoryId } });
-
-      return {
-        user: { currency: financialResult.balanceAfter },
-        weaponName: weaponMeta?.name ?? 'Weapon',
-        weaponId: weaponInv.weaponId,
-        salePrice,
-        pricePaid: weaponInv.pricePaid,
-        workshopLevel,
-        resaleRate,
-        previousBalance: lockedUser.currency,
-        replayed: false,
-      };
-    });
+    // Spec #55 task 2.3: the sale itself lives in weaponSaleService.
+    const result = await sellWeapon(userId, inventoryId, requestKey);
 
     if (result.replayed) {
-      const replayedSale = result as {
-        salePrice: number;
-        currency: number;
-        weaponName: string;
-        message: string;
-      };
-      res.json({ ...replayedSale, achievementUnlocks: [], replayed: true });
+      res.json({ ...result.response, achievementUnlocks: [], replayed: true });
       return;
     }
-    const completedSale = result as {
-      user: { currency: number };
-      weaponName: string;
-      weaponId: number;
-      salePrice: number;
-      pricePaid: number;
-      workshopLevel: number;
-      resaleRate: number;
-      previousBalance: number;
-    };
-
-    // Non-blocking audit log + structured log.
-    // Note: does NOT call securityMonitor.trackSpending — resale is income,
-    // not spending; audit_log is the canonical tracking surface.
-    try {
-      const cycleMetadata = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
-      const currentCycle = (cycleMetadata?.totalCycles || 0) + 1;
-      await eventLogger.logWeaponSale(currentCycle, userId, completedSale.weaponId, completedSale.salePrice);
-
-      logger.info(
-        `[Weapon] User ${userId} | Sold: ${completedSale.weaponName} | ` +
-        `Price: ₡${completedSale.salePrice.toLocaleString()} (paid ₡${completedSale.pricePaid.toLocaleString()}) | ` +
-        `Workshop L${completedSale.workshopLevel} (${completedSale.resaleRate}% rate) | ` +
-        `Balance: ₡${completedSale.previousBalance.toLocaleString()} → ₡${completedSale.user.currency.toLocaleString()}`,
-      );
-    } catch (logError) {
-      logger.error('Failed to log weapon sale event:', logError);
-    }
+    const completedSale = result;
 
     // Achievement check (Spec #33 R7.10–R7.11)
     const achievementUnlocks = await (async (): Promise<UnlockedAchievement[]> => {
@@ -666,9 +331,9 @@ router.delete(
 
     res.json({
       salePrice: completedSale.salePrice,
-      currency: completedSale.user.currency,
+      currency: completedSale.currency,
       weaponName: completedSale.weaponName,
-      message: `Sold ${completedSale.weaponName} for ₡${completedSale.salePrice.toLocaleString()}`,
+      message: completedSale.message,
       achievementUnlocks,
     });
   },
@@ -719,309 +384,17 @@ router.post(
     const { tier, magnitude, targetAttribute } = req.body as z.infer<typeof refineBodySchema>;
     const requestKey = getIdempotencyKey(req.headers);
 
-    // Sharpen/Forge always store magnitude 1 (the Zod schema enforces this on
-    // input; we mirror it on the storage path so an audit log of the row
-    // never disagrees with the formula module's expectations).
-    const magnitudeForStorage = (tier === 'sharpen' || tier === 'forge') ? 1 : magnitude;
-    const requestFacts = { inventoryId, tier, magnitude: magnitudeForStorage, targetAttribute: targetAttribute ?? null };
-    const identity = createEconomicRequestIdentity(userId, 'weapon_refinement', requestKey, requestFacts);
-    const replay = await findCompletedEconomicRequest<{ weaponInventory: unknown; currency: number; cost: number; message: string }>(userId, 'weapon_refinement', requestKey, requestFacts);
-    if (replay) {
-      res.json({ ...replay.response, achievementUnlocks: [], replayed: true });
-      return;
-    }
-
-    await verifyWeaponOwnership(prisma, inventoryId, userId);
-
-    const result = await runFinancialWriteTransaction(async (tx, financialCycleNumber) => {
-      // 1. Lock user row first (matches Spec #33 lock acquisition order)
-      const lockedUser = await lockUserForSpending(tx, userId);
-      const replayInTransaction = await findEconomicRequestReplay<{ weaponInventory: unknown; currency: number; cost: number; message: string }>(tx, identity);
-      if (replayInTransaction) {
-        return { user: { currency: replayInTransaction.response.currency }, weapon: { id: 0, name: '' }, weaponInventory: replayInTransaction.response.weaponInventory, newRefinement: { slotIndex: 0 }, cost: replayInTransaction.response.cost, workshopLevel: 0, previousBalance: lockedUser.currency, message: replayInTransaction.response.message, replayed: true };
-      }
-
-      // 2. Lock the weapon_inventory row second.
-      //    Serialises refine-vs-refine, refine-vs-resale, and refine-vs-equip
-      //    on the same weapon. Equip handlers acquire the same lock.
-      const lockedInvRows = await tx.$queryRaw<{
-        id: number;
-        userId: number;
-        weaponId: number;
-        pricePaid: number;
-      }[]>`
-        SELECT id, user_id as "userId", weapon_id as "weaponId", price_paid as "pricePaid"
-        FROM weapon_inventory WHERE id = ${inventoryId} FOR UPDATE
-      `;
-      if (lockedInvRows.length === 0) {
-        throw new EconomyError(EconomyErrorCode.WEAPON_NOT_FOUND, 'Weapon not found', 404);
-      }
-      const weaponInv = lockedInvRows[0];
-
-      // 3. Re-verify ownership inside the transaction (TOCTOU)
-      if (weaponInv.userId !== userId) {
-        securityMonitor.logAuthorizationFailure(userId, 'weapon', inventoryId);
-        throw new AppError('FORBIDDEN', 'Access denied', 403);
-      }
-
-      // 4. Defensive bounds check on pricePaid.
-      if (weaponInv.pricePaid < 0) {
-        logger.error(`[Refine] Invariant violation: negative pricePaid (${weaponInv.pricePaid}) on inventory ${inventoryId}`);
-        throw new EconomyError(EconomyErrorCode.INVALID_TRANSACTION, 'Invalid weapon state', 500);
-      }
-
-      // 5. Fetch dependencies inside the transaction.
-      const [weapon, refinements, workshop] = await Promise.all([
-        tx.weapon.findUniqueOrThrow({ where: { id: weaponInv.weaponId } }),
-        tx.weaponRefinement.findMany({ where: { weaponInventoryId: inventoryId } }),
-        tx.facility.findUnique({
-          where: { userId_facilityType: { userId, facilityType: 'weapons_workshop' } },
-          select: { level: true },
-        }),
-      ]);
-      const workshopLevel = workshop?.level ?? 0;
-
-      // 6. Tier gating (Workshop-only, no separate prestige gates).
-      const requiredLevels: Record<RefinementTier, number> = {
-        hone: 1, augment: 3, sharpen: 5, forge: 8,
-      };
-      const requiredWorkshopLevel = requiredLevels[tier];
-      if (workshopLevel < requiredWorkshopLevel) {
-        throw new EconomyError(
-          EconomyErrorCode.WEAPON_REFINEMENT_TIER_LOCKED,
-          `Weapons Workshop level ${requiredWorkshopLevel} required to ${tier}.`,
-          403,
-          { requiredWorkshopLevel, currentWorkshopLevel: workshopLevel },
-        );
-      }
-
-      // 7. Validation chain — each validator returns a discriminated union;
-      //    we map failed results onto a specific EconomyError code.
-      const refinementRows = refinements.map((r) => ({
-        tier: r.tier as RefinementTier,
-        magnitude: r.magnitude,
-        targetAttribute: r.targetAttribute,
-      }));
-
-      const slotCheck = validateRefinementSlotAvailable(refinementRows, tier);
-      if (!slotCheck.ok) {
-        if (slotCheck.code === 'SLOT_CAP_EXCEEDED') {
-          throw new EconomyError(
-            EconomyErrorCode.WEAPON_REFINEMENT_SLOT_CAP_EXCEEDED,
-            'Weapon already has the maximum of 5 refinements.',
-            409,
-            slotCheck.details,
-          );
-        }
-        // TIER_CAP_EXCEEDED
-        throw new EconomyError(
-          EconomyErrorCode.WEAPON_REFINEMENT_TIER_CAP_EXCEEDED,
-          `${tier} can only be applied a maximum of 2 times per weapon.`,
-          409,
-          slotCheck.details,
-        );
-      }
-
-      const shieldCheck = validateShieldCompatibility(weapon.weaponType, tier);
-      if (!shieldCheck.ok) {
-        throw new EconomyError(
-          EconomyErrorCode.WEAPON_REFINEMENT_SHIELD_CANNOT_TAKE_DPS_TIER,
-          'Shields cannot be Sharpened or Forged.',
-          400,
-        );
-      }
-
-      if (tier === 'hone' || tier === 'augment') {
-        // Zod has already enforced targetAttribute is present for hone/augment.
-        const attribute = targetAttribute as string;
-        const catalogBonus = getCatalogBonus(weapon, attribute);
-
-        const attrCheck = validateAttributeOnWeapon(catalogBonus, refinementRows, attribute, tier);
-        if (!attrCheck.ok) {
-          if (attrCheck.code === 'ATTRIBUTE_NOT_ON_WEAPON') {
-            throw new EconomyError(
-              EconomyErrorCode.WEAPON_REFINEMENT_ATTRIBUTE_NOT_ON_WEAPON,
-              `Cannot Hone ${attribute}: this weapon does not grant that attribute.`,
-              400,
-              { attribute },
-            );
-          }
-          // ATTRIBUTE_ALREADY_ON_WEAPON
-          throw new EconomyError(
-            EconomyErrorCode.WEAPON_REFINEMENT_ATTRIBUTE_ALREADY_ON_WEAPON,
-            `Cannot Augment ${attribute}: this weapon already grants that attribute.`,
-            400,
-            { attribute },
-          );
-        }
-
-        const stackCheck = validateAttributeStackCap(catalogBonus, refinementRows, attribute, magnitude);
-        if (!stackCheck.ok) {
-          throw new EconomyError(
-            EconomyErrorCode.WEAPON_REFINEMENT_ATTRIBUTE_STACK_CAP_EXCEEDED,
-            `Combined ${attribute} bonus would exceed the per-attribute cap of +10.`,
-            409,
-            {
-              attribute,
-              currentTotal: stackCheck.currentTotal,
-              requestedAddition: magnitude,
-            },
-          );
-        }
-      }
-
-      // 8. Cost calculation (shared formula module is the single source of truth).
-      const existingInstancesOfTier = refinementRows.filter((r) => r.tier === tier).length;
-      const cost = calculateRefinementCost(tier, magnitudeForStorage, existingInstancesOfTier);
-
-      // 9. Affordability — generic INSUFFICIENT_CREDITS with HTTP 402 (Payment Required).
-      if (lockedUser.currency < cost) {
-        throw new EconomyError(
-          EconomyErrorCode.INSUFFICIENT_CREDITS,
-          'Insufficient credits for refinement.',
-          402,
-          { requiredCurrency: cost, availableCurrency: lockedUser.currency },
-        );
-      }
-
-      // 10. Compute the next available slotIndex (1..5, lowest unused).
-      //     Stable per weapon — once filled, a slot's index never changes.
-      const usedSlots = new Set(refinements.map((r) => r.slotIndex));
-      let slotIndex = 1;
-      while (usedSlots.has(slotIndex)) slotIndex++;
-      // slotIndex is guaranteed to be in [1..5] because slotCheck above passed.
-
-      // 11. Mutations: increment pricePaid and insert refinement row.
-      await tx.weaponInventory.update({
-        where: { id: inventoryId },
-        data: { pricePaid: { increment: cost } },
-      });
-
-      const newRefinement = await tx.weaponRefinement.create({
-        data: {
-          weaponInventoryId: inventoryId,
-          tier,
-          magnitude: magnitudeForStorage,
-          targetAttribute: targetAttribute ?? null,
-          costPaid: cost,
-          slotIndex,
-        },
-      });
-
-      // 12. Re-fetch the updated inventory with refinements for the response.
-      const updatedInventory = await tx.weaponInventory.findUniqueOrThrow({
-        where: { id: inventoryId },
-        include: {
-          weapon: true,
-          refinements: { orderBy: { slotIndex: 'asc' } },
-        },
-      });
-
-      const financialEventId = identity.financialEventId;
-      const coreResponse = {
-        weaponInventory: updatedInventory,
-        currency: lockedUser.currency - cost,
-        cost,
-        message: `Refined ${weapon.name}: ${tier}${targetAttribute ? ` ${targetAttribute} +${magnitudeForStorage}` : ''}`,
-      };
-      const financialResult = await applyCreditMutationInTransaction(tx, {
-        cycleNumber: financialCycleNumber,
-        userId,
-        transactionType: 'weapon_refinement',
-        amount: -cost,
-        description: `Refined weapon slot ${slotIndex}`,
-        financialEventId,
-        breakdown: buildPurchaseBreakdown({
-          transactionType: 'weapon_refinement',
-          sourceEventId: financialEventId,
-          amount: -cost,
-          operation: 'weapon_refinement',
-          itemId: inventoryId,
-          basePrice: cost,
-          discountAmount: 0,
-          inputs: [
-            { name: 'tier', value: tier, unit: 'refinement_tier', source: 'request' },
-            { name: 'magnitude', value: magnitudeForStorage, unit: 'points', source: 'request' },
-            { name: 'workshopLevel', value: workshopLevel, unit: 'levels', source: 'facility' },
-            { name: 'slotIndex', value: slotIndex, unit: 'slot', source: 'weapon_inventory' },
-          ],
-        }),
-        auditContext: buildEconomicRequestAuditContext(identity, coreResponse),
-      });
-
-      return {
-        user: { currency: financialResult.balanceAfter },
-        weapon,
-        weaponInventory: updatedInventory,
-        newRefinement,
-        cost,
-        workshopLevel,
-        previousBalance: lockedUser.currency,
-        replayed: false,
-      };
+    // Spec #55 task 2.4: the refinement itself lives in weaponRefinementService.
+    const result = await refineWeapon(userId, inventoryId, { tier, magnitude, targetAttribute }, requestKey, {
+      spendingMonitor: { sourceIp: req.ip || undefined, endpoint: req.originalUrl },
     });
 
     if (result.replayed) {
-      const replayedRefinement = result as {
-        user: { currency: number };
-        weaponInventory: unknown;
-        cost: number;
-        message: string;
-      };
-      res.json({
-        weaponInventory: replayedRefinement.weaponInventory,
-        currency: replayedRefinement.user.currency,
-        cost: replayedRefinement.cost,
-        message: replayedRefinement.message,
-        achievementUnlocks: [],
-        replayed: true,
-      });
+      res.json({ ...result.response, achievementUnlocks: [], replayed: true });
       return;
     }
-    const completedRefinement = result as {
-      user: { currency: number };
-      weapon: { id: number; name: string };
-      weaponInventory: { id: number };
-      newRefinement: { slotIndex: number };
-      cost: number;
-      workshopLevel: number;
-      previousBalance: number;
-    };
-
-    // ── Post-commit ───────────────────────────────────────────────────
-
-    // Refinement IS spending — purchase tracks it, resale doesn't, refinement does.
-    securityMonitor.trackSpending(userId, completedRefinement.cost, {
-      sourceIp: req.ip || undefined,
-      endpoint: req.originalUrl,
-    });
-
-    // Non-blocking audit log + structured log.
-    try {
-      const cycleMetadata = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
-      const currentCycle = (cycleMetadata?.totalCycles || 0) + 1;
-      await eventLogger.logWeaponRefinement(currentCycle, userId, {
-        weaponInventoryId: completedRefinement.weaponInventory.id,
-        weaponId: completedRefinement.weapon.id,
-        tier,
-        magnitude: magnitudeForStorage,
-        targetAttribute: targetAttribute ?? null,
-        costPaid: completedRefinement.cost,
-        workshopLevel: completedRefinement.workshopLevel,
-      });
-
-      const attrInfo = targetAttribute ? ` (${targetAttribute} +${magnitudeForStorage})` : '';
-      logger.info(
-        `[Refine] User ${userId} | Weapon: ${completedRefinement.weapon.name} (inv ${completedRefinement.weaponInventory.id}) | ` +
-        `Tier: ${tier}${attrInfo} | ` +
-        `Cost: ₡${completedRefinement.cost.toLocaleString()} | ` +
-        `Workshop L${completedRefinement.workshopLevel} | ` +
-        `Slot: ${completedRefinement.newRefinement.slotIndex}/5 | ` +
-        `Balance: ₡${completedRefinement.previousBalance.toLocaleString()} → ₡${completedRefinement.user.currency.toLocaleString()}`,
-      );
-    } catch (logError) {
-      logger.error('Failed to log weapon refinement event:', logError);
-    }
+    const completedRefinement = result;
+    const magnitudeForStorage = completedRefinement.magnitude;
 
     // Achievement check (wired in Task 14; the trigger map already includes
     // 'weapon_refined'). Failures must NOT block the response.
@@ -1044,12 +417,11 @@ router.post(
       }
     })();
 
-    const messageAttr = targetAttribute ? ` ${targetAttribute} +${magnitudeForStorage}` : '';
     res.json({
       weaponInventory: completedRefinement.weaponInventory,
-      currency: completedRefinement.user.currency,
+      currency: completedRefinement.currency,
       cost: completedRefinement.cost,
-      message: `Refined ${completedRefinement.weapon.name}: ${tier}${messageAttr}`,
+      message: completedRefinement.message,
       achievementUnlocks,
     });
   },

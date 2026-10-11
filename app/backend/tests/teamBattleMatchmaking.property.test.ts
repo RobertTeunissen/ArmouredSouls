@@ -87,6 +87,8 @@ function createMockRobot(id: number, elo: number = 1000): Robot {
     frameId: 1,
     paintJob: null,
     imageUrl: null,
+    automatonBlueprintId: null,
+    automatonSlotIndex: null,
     combatPower: new Prisma.Decimal(20),
     targetingSystems: new Prisma.Decimal(20),
     criticalSystems: new Prisma.Decimal(10),

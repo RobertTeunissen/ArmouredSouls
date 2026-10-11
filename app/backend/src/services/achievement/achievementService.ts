@@ -4,7 +4,8 @@
  * Single entry point: `checkAndAward(userId, robotId, event)` maps event types
  * to a subset of achievements to evaluate, reads existing unlocks, evaluates
  * conditions, inserts new UserAchievement records, awards credits and prestige,
- * and returns newly unlocked achievements.
+ * and returns newly unlocked achievements. Calls for the same user run one at
+ * a time, so a later call sees the unlocks an earlier one recorded.
  *
  * All heavy logic is delegated to focused sub-modules:
  * - triggerEvaluator.ts — trigger condition evaluation
@@ -68,9 +69,49 @@ class AchievementService implements IAchievementService {
     refreshedAt: new Date(0),
   };
 
+  /** Tail of the pending `checkAndAward` chain per user; dropped once drained. */
+  private readonly userChains = new Map<number, Promise<void>>();
+
   // ─── Core Entry Point ────────────────────────────────────────────
 
   async checkAndAward(
+    userId: number,
+    robotId: number | null,
+    event: AchievementEvent,
+  ): Promise<UnlockedAchievement[]> {
+    return this.serializeForUser(userId, () => this.evaluateAndAward(userId, robotId, event));
+  }
+
+  /**
+   * Run `task` after every earlier queued task for the same user has settled.
+   *
+   * `evaluateAndAward` reads the user's unlocks once, up front, and filters
+   * candidates against that snapshot. Battle orchestrators call it for every
+   * participant in one `Promise.all`, and several participants can belong to
+   * one stable. Overlapping calls for that stable read the same snapshot and
+   * insert the same `(userId, achievementId)`, which `@@unique([userId,
+   * achievementId])` rejects with P2002. Queuing per user means the next call
+   * reads the earlier unlock and never attempts the insert. Different users
+   * still run concurrently.
+   *
+   * This is an in-process chain rather than a Postgres advisory lock: the
+   * evaluation reads outside any transaction and opens one transaction per
+   * unlock, so an xact lock cannot span it. Correctness does not depend on the
+   * chain — the unique index and the P2002 catch in `evaluateAndAward` remain
+   * the safety net for races across processes, which only cost a log line.
+   */
+  private serializeForUser<T>(userId: number, task: () => Promise<T>): Promise<T> {
+    const previous = this.userChains.get(userId) ?? Promise.resolve();
+    const run = previous.then(task, task);
+    const tail: Promise<void> = run.then(() => undefined, () => undefined);
+    this.userChains.set(userId, tail);
+    void tail.then(() => {
+      if (this.userChains.get(userId) === tail) this.userChains.delete(userId);
+    });
+    return run;
+  }
+
+  private async evaluateAndAward(
     userId: number,
     robotId: number | null,
     event: AchievementEvent,

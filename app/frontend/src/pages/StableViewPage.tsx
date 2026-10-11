@@ -4,16 +4,20 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import RobotDashboardCard from '../components/RobotDashboardCard';
 import AchievementBadge from '../components/AchievementBadge';
 import AchievementPinnerModal from '../components/AchievementPinnerModal';
+import AutomatonBadge from '../components/AutomatonBadge';
 import { api } from '../utils/api';
 import { ApiError } from '../utils/ApiError';
 import { useAuth } from '../contexts/AuthContext';
 import { FACILITY_CATEGORIES } from '../utils/facilityCategories';
 import type { AchievementWithProgress, AchievementsResponse } from '../utils/achievementUtils';
+import type { StableType } from '../types/stable';
 
 interface StableUser {
   id: number;
   username: string;
   stableName: string | null;
+  /** Spec #55: Stable_Type of the owning stable (drives the Automaton_Badge). */
+  stableType?: StableType;
   prestige: number;
   prestigeRank: string;
   championshipTitles: number;
@@ -217,7 +221,9 @@ function StableViewPage() {
 
         {/* Stable Header */}
         <div className="bg-surface border border-white/10 rounded-lg p-6 mb-8">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-2">{displayName}</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold mb-2">
+            <StableHeadingName name={displayName} stableType={user.stableType} />
+          </h2>
           <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm sm:text-base">
             <div>
               <span className="text-secondary">Prestige:</span>{' '}
@@ -299,7 +305,7 @@ function StableViewPage() {
         {achievements && (
           <div className="bg-surface border border-white/10 rounded-lg p-6 mb-8">
             <h3 className="text-xl font-semibold mb-4">Achievement Showcase</h3>
-            <div className="flex items-center gap-3 mb-4">
+            <div className="flex flex-wrap items-center gap-3 mb-4">
               {Array.from({ length: 6 }).map((_, i) => {
                 const pinned = achievements.pinned[i];
                 if (pinned) {
@@ -435,6 +441,26 @@ function StableViewPage() {
         )}
       </div>
     </div>
+  );
+}
+
+/**
+ * Stable heading text. For an Automaton the badge (full label, Spec #55 §18)
+ * is kept on the line of the name's last word, so a wrapping heading never
+ * leaves the badge on a line of its own.
+ */
+function StableHeadingName({ name, stableType }: { name: string; stableType?: StableType }) {
+  if (stableType !== 'automaton') return <>{name}</>;
+  const lastSpace = name.lastIndexOf(' ');
+  const head = lastSpace >= 0 ? name.slice(0, lastSpace + 1) : '';
+  const lastWord = name.slice(lastSpace + 1);
+  return (
+    <>
+      {head}
+      <span className="whitespace-nowrap">
+        {lastWord} <AutomatonBadge stableType={stableType} compact={false} />
+      </span>
+    </>
   );
 }
 

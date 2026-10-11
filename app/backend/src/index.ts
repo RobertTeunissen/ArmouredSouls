@@ -29,6 +29,7 @@ import teamBattlesRoutes from './routes/teamBattles';
 import seasonsRoutes from './routes/seasons';
 import imagesRoutes from './routes/images';
 import adminSeasonsRoutes from './routes/adminSeasons';
+import adminAutomatonsRoutes from './routes/adminAutomatons';
 import searchRoutes from './routes/search';
 import { loadEnvConfig } from './config/env';
 import {
@@ -184,6 +185,7 @@ app.use('/api/weapon-inventory', weaponInventoryRoutes);
 // Mount the more specific admin router first so it cannot be shadowed by
 // fall-through ordering in the generic /api/admin router.
 app.use('/api/admin/seasons', adminSeasonsRoutes);
+app.use('/api/admin/automatons', adminAutomatonsRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/matches', matchesRoutes);
 app.use('/api/leagues', leaguesRoutes);
@@ -242,11 +244,25 @@ const host = (config.nodeEnv === 'production' || config.nodeEnv === 'acceptance'
 
 // Run startup self-test before accepting connections
 import { runStartupSelfTest } from './utils/startupSelfTest';
+import { runStrategyStartupCheck } from './services/automaton/strategies/registry';
 
 (async () => {
   const selfTest = await runStartupSelfTest();
   if (!selfTest.passed) {
     // Self-test handles logging and alerting internally
+    process.exit(1);
+  }
+
+  // Spec #55 (R6.2, R6.6): refuse to start on an invalid Strategy_Definition_File
+  // or when an Automaton_Profile references a Strategy_Version without a file.
+  const strategyCheck = await runStrategyStartupCheck({
+    listStoredVersions: () => prisma.automatonProfile.findMany({
+      distinct: ['strategyKey', 'strategyVersion'],
+      select: { strategyKey: true, strategyVersion: true },
+    }),
+  });
+  if (!strategyCheck.passed) {
+    // The check handles logging and alerting internally
     process.exit(1);
   }
 

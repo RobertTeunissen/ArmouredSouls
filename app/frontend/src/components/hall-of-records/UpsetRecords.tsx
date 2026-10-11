@@ -1,5 +1,6 @@
 import { RecordSection } from './RecordSection';
 import { RecordCard } from './RecordCard';
+import { RecordStableName } from './RecordStableName';
 import type { RecordsData } from './types';
 
 export interface UpsetRecordsProps {
@@ -39,7 +40,7 @@ export function UpsetRecords({ records, formatDate, onBattleClick }: UpsetRecord
               value={`${record.eloDifference} ELO underdog`}
               description={`${record.underdog.name} (${record.underdog.eloBefore} ELO) defeated ${record.favorite.name} (${record.favorite.eloBefore} ELO)`}
               details={[
-                `Underdog: ${record.underdog.username}`,
+                <>Underdog: <RecordStableName name={record.underdog.username} stableType={record.underdog.stableType} /></>,
                 `Date: ${formatDate(record.date)}`,
               ]}
               onClick={() => onBattleClick(record.battleId)}
@@ -58,7 +59,13 @@ export function UpsetRecords({ records, formatDate, onBattleClick }: UpsetRecord
               description={`${record.underdog.robots.map((r) => r.name).join(' + ')} (${record.underdog.teamEloBefore} combined) defeated ${record.favorite.robots.map((r) => r.name).join(' + ')} (${record.favorite.teamEloBefore} combined)`}
               details={[
                 `Mode: ${TEAM_UPSET_LABEL[record.battleType] ?? record.battleType}`,
-                `Underdog stable: ${record.underdog.robots[0]?.username ?? '—'}`,
+                <>
+                  Underdog stable:{' '}
+                  <RecordStableName
+                    name={record.underdog.robots[0]?.username ?? '—'}
+                    stableType={record.underdog.robots[0]?.stableType}
+                  />
+                </>,
                 `Date: ${formatDate(record.date)}`,
               ]}
               onClick={() => onBattleClick(record.battleId)}

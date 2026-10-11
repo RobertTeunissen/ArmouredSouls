@@ -64,6 +64,8 @@ const createMockRobot = (overrides?: Partial<Robot>): Robot => ({
   mainWeaponId: null,
   offhandWeaponId: null,
   imageUrl: null,
+  automatonBlueprintId: null,
+  automatonSlotIndex: null,
   // Legacy tag-team fields (moving to standings table in Spec #40)
   // Legacy league win counters (moving to standings table in Spec #40)
   // Legacy KotH fields (moving to standings table in Spec #40)

@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { RecordSection } from './RecordSection';
 import { RecordCard } from './RecordCard';
-import type { RecordsData, TeamBattleSizeRecords } from './types';
+import { RecordStableName } from './RecordStableName';
+import type { RecordsData, TeamBattleParticipantDisplay, TeamBattleSizeRecords } from './types';
 
 export interface TeamBattleRecordsProps {
   records: RecordsData;
@@ -15,9 +16,13 @@ export function TeamBattleRecords({ records, formatDuration, formatDate, onBattl
 
   const sizeRecords: TeamBattleSizeRecords = records.teamBattle[activeSize];
 
-  const formatTeamNames = (team: { id: number; name: string; username: string }[]): string => {
-    return team.map(r => `${r.name} (${r.username})`).join(', ');
-  };
+  // "Robot (Stable), Robot (Stable)"; an Automaton stable carries its badge (decision 42).
+  const formatTeamNames = (team: TeamBattleParticipantDisplay[]) => team.map((r, index) => (
+    <Fragment key={r.id}>
+      {index > 0 && ', '}
+      {r.name} (<RecordStableName name={r.username} stableType={r.stableType} />)
+    </Fragment>
+  ));
 
   return (
     <>
@@ -53,9 +58,9 @@ export function TeamBattleRecords({ records, formatDuration, formatDate, onBattl
               key={`${record.battleId}-fast`}
               rank={index + 1}
               value={formatDuration(record.durationSeconds)}
-              description={`Team 1: ${formatTeamNames(record.team1)}`}
+              description={<>Team 1: {formatTeamNames(record.team1)}</>}
               details={[
-                `vs Team 2: ${formatTeamNames(record.team2)}`,
+                <>vs Team 2: {formatTeamNames(record.team2)}</>,
                 formatDate(record.date),
               ]}
               onClick={() => onBattleClick(record.battleId)}
@@ -72,7 +77,7 @@ export function TeamBattleRecords({ records, formatDuration, formatDate, onBattl
               key={`${record.battleId}-${record.robot.id}-surv`}
               rank={index + 1}
               value={formatDuration(record.survivalSeconds)}
-              description={`${record.robot.name} by ${record.robot.username}`}
+              description={<>{record.robot.name} by <RecordStableName name={record.robot.username} stableType={record.robot.stableType} /></>}
               details={[formatDate(record.date)]}
               onClick={() => onBattleClick(record.battleId)}
             />
@@ -88,7 +93,7 @@ export function TeamBattleRecords({ records, formatDuration, formatDate, onBattl
               key={`${record.battleId}-${record.robot.id}-dmg`}
               rank={index + 1}
               value={`${record.damageDealt.toLocaleString()} dmg`}
-              description={`${record.robot.name} by ${record.robot.username}`}
+              description={<>{record.robot.name} by <RecordStableName name={record.robot.username} stableType={record.robot.stableType} /></>}
               details={[
                 `Duration: ${formatDuration(record.durationSeconds)}`,
                 formatDate(record.date),
@@ -107,9 +112,9 @@ export function TeamBattleRecords({ records, formatDuration, formatDate, onBattl
               key={`${record.battleId}-decisive`}
               rank={index + 1}
               value={`${record.hpDifference} HP diff`}
-              description={`Team 1: ${formatTeamNames(record.team1)}`}
+              description={<>Team 1: {formatTeamNames(record.team1)}</>}
               details={[
-                `vs Team 2: ${formatTeamNames(record.team2)}`,
+                <>vs Team 2: {formatTeamNames(record.team2)}</>,
                 formatDate(record.date),
               ]}
               onClick={() => onBattleClick(record.battleId)}
@@ -126,9 +131,9 @@ export function TeamBattleRecords({ records, formatDuration, formatDate, onBattl
               key={`${record.battleId}-long`}
               rank={index + 1}
               value={formatDuration(record.durationSeconds)}
-              description={`Team 1: ${formatTeamNames(record.team1)}`}
+              description={<>Team 1: {formatTeamNames(record.team1)}</>}
               details={[
-                `vs Team 2: ${formatTeamNames(record.team2)}`,
+                <>vs Team 2: {formatTeamNames(record.team2)}</>,
                 formatDate(record.date),
               ]}
               onClick={() => onBattleClick(record.battleId)}

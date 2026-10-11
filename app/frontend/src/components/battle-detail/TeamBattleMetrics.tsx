@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import type { BattleLogResponse, BattleLogParticipant, TeamBattleLog } from '../../utils/matchmakingApi';
 import { isTeamBattleLog } from '../../utils/matchmakingApi';
+import AutomatonBadge from '../AutomatonBadge';
 
 interface TeamBattleMetricsProps {
   battleLog: BattleLogResponse;
@@ -48,7 +49,7 @@ export function TeamBattleMetrics({ battleLog, isMobile }: TeamBattleMetricsProp
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" data-testid="team-battle-metrics">
       {/* Per-Robot Stats by Team */}
       <TeamRobotStats
         team1={homeParticipants}
@@ -140,6 +141,7 @@ function TeamStatsBlock({
 }) {
   const winnerBadge = isWinner ? ' 🏆' : '';
   const ownerName = participants[0]?.owner ?? 'Unknown';
+  const ownerStableType = participants[0]?.ownerStableType;
 
   return (
     <div>
@@ -147,9 +149,18 @@ function TeamStatsBlock({
         <h4 className={`text-sm font-bold ${isWinner ? 'text-success' : 'text-secondary'}`}>
           {label}{winnerBadge}
         </h4>
-        <span className="text-xs text-secondary">
-          (<Link to={`/stables/${participants[0]?.ownerId}`} className="text-primary hover:text-white transition-colors">{ownerName}</Link>)
-        </span>
+        {ownerStableType === 'automaton' ? (
+          <span className="flex min-w-0 flex-nowrap items-center gap-1.5 text-xs text-secondary">
+            <span className="min-w-0 truncate">
+              (<Link to={`/stables/${participants[0]?.ownerId}`} className="text-primary hover:text-white transition-colors">{ownerName}</Link>)
+            </span>
+            <AutomatonBadge stableType={ownerStableType} />
+          </span>
+        ) : (
+          <span className="text-xs text-secondary">
+            (<Link to={`/stables/${participants[0]?.ownerId}`} className="text-primary hover:text-white transition-colors">{ownerName}</Link>)
+          </span>
+        )}
       </div>
 
       <div className="overflow-x-auto">
@@ -242,6 +253,17 @@ function StatRow({
 
 // ── Team Coordination Metrics ────────────────────────────────────────
 
+/** Owning stable name with the Automaton_Badge directly after it (Spec #55 R12.2). */
+function OwnerHeading({ name, stableType }: { name: string; stableType?: BattleLogParticipant['ownerStableType'] }) {
+  if (stableType !== 'automaton') return <>{name}</>;
+  return (
+    <span className="inline-flex min-w-0 max-w-full flex-nowrap items-center gap-1.5 align-middle">
+      <span className="min-w-0 truncate">{name}</span>
+      <AutomatonBadge stableType={stableType} />
+    </span>
+  );
+}
+
 function TeamCoordinationMetrics({
   log,
   team1,
@@ -271,8 +293,12 @@ function TeamCoordinationMetrics({
           <thead>
             <tr className="text-secondary">
               <th className="text-left py-1 pr-2 font-medium" style={{ width: '45%' }} />
-              <th className="text-left py-1 px-2 font-bold text-white">{team1Owner}</th>
-              <th className="text-left py-1 px-2 font-bold text-white">{team2Owner}</th>
+              <th className="text-left py-1 px-2 font-bold text-white">
+                <OwnerHeading name={team1Owner} stableType={team1[0]?.ownerStableType} />
+              </th>
+              <th className="text-left py-1 px-2 font-bold text-white">
+                <OwnerHeading name={team2Owner} stableType={team2[0]?.ownerStableType} />
+              </th>
             </tr>
           </thead>
           <tbody>

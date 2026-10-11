@@ -17,7 +17,7 @@ export function PrestigeRecords({ records }: PrestigeRecordsProps) {
               key={record.userId}
               rank={index + 1}
               value={`${record.prestige.toLocaleString()} prestige`}
-              description={<><OwnerNameLink userId={record.userId} displayName={record.username} />'s stable</>}
+              description={<><OwnerNameLink userId={record.userId} displayName={record.username} stableType={record.stableType} />'s stable</>}
               details={[
                 `Robots: ${record.robotCount}`,
                 `Championships: ${record.championshipTitles}`,
@@ -34,7 +34,7 @@ export function PrestigeRecords({ records }: PrestigeRecordsProps) {
               key={record.userId}
               rank={index + 1}
               value={`${record.championshipTitles} titles`}
-              description={<><OwnerNameLink userId={record.userId} displayName={record.username} />'s stable</>}
+              description={<><OwnerNameLink userId={record.userId} displayName={record.username} stableType={record.stableType} />'s stable</>}
               details={[
                 `Prestige: ${record.prestige.toLocaleString()}`,
                 `Robots: ${record.robotCount}`,

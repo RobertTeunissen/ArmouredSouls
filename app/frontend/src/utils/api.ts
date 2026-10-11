@@ -40,6 +40,8 @@ export interface ApiRequestConfig {
   responseType?: AxiosRequestConfig['responseType'];
   /** Abort signal for cancellation. */
   signal?: AbortSignal;
+  /** Request body for methods without a body argument (e.g. a DELETE that carries data). */
+  data?: unknown;
 }
 
 /**
@@ -104,6 +106,7 @@ const buildAxiosConfig = (config?: ApiRequestConfig): AxiosRequestConfig | undef
   if (config.headers !== undefined) out.headers = config.headers;
   if (config.responseType !== undefined) out.responseType = config.responseType;
   if (config.signal !== undefined) out.signal = config.signal;
+  if (config.data !== undefined) out.data = config.data;
   return out;
 };
 

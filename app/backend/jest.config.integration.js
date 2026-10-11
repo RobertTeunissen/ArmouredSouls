@@ -17,5 +17,11 @@ module.exports = {
   testRegex: undefined,
   testMatch: testMatchFor('integration'),
   maxWorkers: 1,
+  // In-band runs keep every suite's module registry alive (~30 MB per suite);
+  // at 141 suites the tier reached the 4 GB V8 heap limit and crashed with an
+  // OOM after all suites had passed. A memory limit makes Jest use one worker
+  // process (still serialized: maxWorkers stays 1) and recycle it between
+  // files once its heap exceeds the limit.
+  workerIdleMemoryLimit: '1GB',
   testTimeout: 60000,
 };

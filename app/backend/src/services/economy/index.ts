@@ -44,3 +44,20 @@ export type {
   FacilityRecommendation,
   RecommendationSummary,
 } from './facilityRecommendationService';
+
+// Spec #55 Domain_Service_Extraction
+export {
+  upgradeFacility,
+  getFacilityUpgradeRequirement,
+} from './facilityUpgradeService';
+export type {
+  FacilityUpgradeResult,
+  FacilityUpgradeRequirement,
+} from './facilityUpgradeService';
+export { purchaseWeapon } from './weaponPurchaseService';
+export type { WeaponPurchaseResult } from './weaponPurchaseService';
+export { sellWeapon } from './weaponSaleService';
+export type { WeaponSaleResult } from './weaponSaleService';
+export { refineWeapon, refinementMagnitudeForStorage } from './weaponRefinementService';
+export type { RefinementRequest, WeaponRefinementResult } from './weaponRefinementService';
+export type { PurchaseServiceOptions, SpendingMonitorContext } from './purchaseOptions';

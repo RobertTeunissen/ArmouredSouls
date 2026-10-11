@@ -8,6 +8,8 @@
  *   Stage 3 PURGE    — delete and reset, batched by user.
  *   Stage 4 POST     — orphan sweep, reclamation, preserved-state achievement
  *                      re-award. Failures non-fatal.
+ *   Stage 5 AUTOMATON — the `season_open` Automaton Turn_Step for the new
+ *                      season (Spec #55). Non-fatal.
  *
  * The ordering is the whole point: nothing is deleted until the archive exists
  * and has been counted. A crash between stages is safe because Stage 1 is
@@ -209,6 +211,24 @@ export async function executeSeasonRollover(options: RolloverOptions): Promise<R
     }
 
     await reclaimSpace();
+
+    // ── Stage 5: Automaton `season_open` turn (Spec #55 R7.2; non-fatal) ──
+    // Every Active_Automaton rebuilds from its reset balance in the new
+    // season, for every rollover trigger. The turn runner records and alerts
+    // its own failures; this guard also covers the module load.
+    try {
+      const { runTurnStepNonFatal } = await import('../automaton');
+      await runTurnStepNonFatal({
+        trigger: 'season_open',
+        seasonNumber: newSeasonNumber,
+        slot: 0,
+        source: 'rollover',
+      });
+    } catch (error) {
+      logger.error(
+        `[season-rollover] Automaton season_open turn failed (non-fatal) — ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
     const postMs = Date.now() - postStart;
 
     const totalMs = Date.now() - totalStart;

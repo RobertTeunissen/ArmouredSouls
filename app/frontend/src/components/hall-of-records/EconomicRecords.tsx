@@ -1,5 +1,6 @@
 import { RecordSection } from './RecordSection';
 import { RecordCard } from './RecordCard';
+import { RecordStableName } from './RecordStableName';
 import OwnerNameLink from '../OwnerNameLink';
 import { formatCurrency } from '../../utils/formatters';
 import type { RecordsData } from './types';
@@ -18,7 +19,7 @@ export function EconomicRecords({ records }: EconomicRecordsProps) {
               key={record.robotId}
               rank={index + 1}
               value={`${record.fame.toLocaleString()} fame`}
-              description={`${record.robotName} by ${record.username}`}
+              description={<>{record.robotName} by <RecordStableName name={record.username} stableType={record.stableType} /></>}
               details={[
                 `League: ${record.league}`,
                 `ELO: ${record.elo}`,
@@ -35,7 +36,7 @@ export function EconomicRecords({ records }: EconomicRecordsProps) {
               key={record.userId}
               rank={index + 1}
               value={formatCurrency(record.currency)}
-              description={<><OwnerNameLink userId={record.userId} displayName={record.username} />'s stable</>}
+              description={<><OwnerNameLink userId={record.userId} displayName={record.username} stableType={record.stableType} />'s stable</>}
               details={[
                 `Robots: ${record.robotCount}`,
                 `Prestige: ${record.prestige.toLocaleString()}`,

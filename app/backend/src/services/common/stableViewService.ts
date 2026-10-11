@@ -33,6 +33,7 @@ export async function getStableProfile(userId: number) {
       id: true,
       username: true,
       stableName: true,
+      stableType: true,
       prestige: true,
       championshipTitles: true,
       championshipTitles1v1: true,
@@ -135,6 +136,8 @@ export async function getStableProfile(userId: number) {
       id: user.id,
       username: user.username,
       stableName: user.stableName,
+      // Spec #55 R1.7: Stable_Type only; no Automaton_Profile field is selected.
+      stableType: user.stableType,
       prestige: user.prestige,
       prestigeRank: getPrestigeRank(user.prestige),
       championshipTitles: user.championshipTitles,

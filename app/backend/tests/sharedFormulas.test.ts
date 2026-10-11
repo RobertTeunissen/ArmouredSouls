@@ -7,8 +7,10 @@ import { getCapForLevel, ACADEMY_CAP_MAP } from '../../shared/utils/academyCaps'
 import {
   calculateBaseCost,
   calculateDiscountedUpgradeCost,
+  calculateTrainingDiscountedUpgradeCost,
   calculateUpgradeCostRange,
 } from '../../shared/utils/upgradeCosts';
+import { applyDiscount } from '../../shared/utils/discounts';
 
 describe('academyCaps', () => {
   describe('getCapForLevel', () => {
@@ -107,6 +109,32 @@ describe('upgradeCosts', () => {
     it('should handle large ranges', () => {
       // 0→10: sum of (i+1)*1500 for i=0..9 = 1500*(1+2+...+10) = 1500*55 = 82500
       expect(calculateUpgradeCostRange(0, 10)).toBe(82500);
+    });
+  });
+
+  // Spec #55 task 2.6: the charge formula of robotUpgradeService, shared with Automaton pricing.
+  describe('calculateTrainingDiscountedUpgradeCost', () => {
+    it('equals the undiscounted range at 0% discount', () => {
+      expect(calculateTrainingDiscountedUpgradeCost(0, 10, 0)).toBe(calculateUpgradeCostRange(0, 10));
+      expect(calculateTrainingDiscountedUpgradeCost(4, 4, 30)).toBe(0);
+    });
+
+    it('floors each level with applyDiscount before summing', () => {
+      // 7% off: level 0 → floor(1500 × 0.93) and level 1 → floor(3000 × 0.93)
+      const expected = applyDiscount(1500, 7) + applyDiscount(3000, 7);
+      expect(calculateTrainingDiscountedUpgradeCost(0, 2, 7)).toBe(expected);
+    });
+
+    it('matches the per-level loop robotUpgradeService charged before the extraction', () => {
+      for (let discount = 0; discount <= 90; discount++) {
+        for (const [from, to] of [[0, 1], [1, 10], [9, 25], [24, 50]] as const) {
+          let legacy = 0;
+          for (let level = from; level < to; level++) {
+            legacy += Math.floor(calculateBaseCost(level) * (1 - discount / 100));
+          }
+          expect(calculateTrainingDiscountedUpgradeCost(from, to, discount)).toBe(legacy);
+        }
+      }
     });
   });
 });

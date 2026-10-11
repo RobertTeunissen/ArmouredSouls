@@ -252,6 +252,17 @@ const buildInstanceDisplayLabel = (leagueIdentifier: string) => {
 
 ---
 
+## Automaton Stables (Spec #55)
+
+Automaton_Stables appear in every league standing (1v1, KotH, 2v2, 3v3, Tag Team) on the same terms as human stables: same tiers, promotions and demotions, same ranking from `standings`. Matchmaking is unchanged.
+
+**Automaton_Badge in the owner cell.** The owner cell renders through `OwnerNameLink` with the row's `stableType` (the standings responses carry `user.stableType`, and team and tag-team rows the stable's `stableType`). For an Automaton the link is wrapped in a non-wrapping `inline-flex` row (`max-w-full`): the stable name `min-w-0 truncate`, then `AutomatonBadge` (`md`). A long name is shortened with "…" before the badge would move to a line of its own.
+
+- Below 640 px the badge is compact: gear icon only, with "Automaton" kept as `sr-only` text for screen readers.
+- From 640 px (including ≥ 1024 px) it shows the full label.
+- No horizontal overflow from 320 px (Playwright `automaton-badge.spec.ts` at 320, 360, 768 and 1024 px).
+- Human and Generated_Stable rows render exactly as before. The badge is not interactive and adds no touch target.
+
 ## User Experience
 
 ### Typical User Journey

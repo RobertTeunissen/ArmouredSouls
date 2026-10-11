@@ -1,4 +1,5 @@
 import {
+  buildEconomicAuditMetadata,
   buildEconomicRequestAuditContext,
   createEconomicRequestIdentity,
 } from '../economicRequestReplayService';
@@ -32,6 +33,26 @@ describe('economic request identity', () => {
         requestFacts: { inventoryId: 8 },
         response,
       },
+    });
+  });
+
+  // Spec #55 task 2.6: optional audit-context extension.
+  it('should store exactly the idempotency context when no extension is given', () => {
+    const identity = createEconomicRequestIdentity(42, 'weapon_sale', key, { inventoryId: 8 });
+    const response = { salePrice: 120, currency: 1120, weaponName: 'Arc', message: 'Sold Arc for ₡120' };
+
+    expect(buildEconomicAuditMetadata(identity, response)).toEqual(buildEconomicRequestAuditContext(identity, response));
+    expect(Object.keys(buildEconomicAuditMetadata(identity, response))).toEqual(['idempotency']);
+  });
+
+  it('should merge an extension without letting it replace the idempotency context', () => {
+    const identity = createEconomicRequestIdentity(42, 'facility_upgrade', key, { facilityType: 'storage_facility' });
+    const response = { facility: { level: 1 }, currency: 10, message: 'ok' };
+    const automaton = { catalogueKey: 'clone-legion', goalId: 'swarm.v1.2.facility' };
+
+    expect(buildEconomicAuditMetadata(identity, response, { automaton, idempotency: 'spoofed' })).toEqual({
+      automaton,
+      ...buildEconomicRequestAuditContext(identity, response),
     });
   });
 

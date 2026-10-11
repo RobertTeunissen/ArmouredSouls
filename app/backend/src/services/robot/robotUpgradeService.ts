@@ -7,7 +7,7 @@
  */
 
 import { getCapForLevel } from '../../shared/utils/academyCaps';
-import { calculateBaseCost } from '../../shared/utils/upgradeCosts';
+import { calculateTrainingDiscountedUpgradeCost } from '../../shared/utils/upgradeCosts';
 import { calculateTrainingFacilityDiscount } from '../../shared/utils/discounts';
 import { getRosterCapacity } from '../../shared/utils/rosterCapacity';
 import { RobotError, RobotErrorCode } from '../../errors/robotErrors';
@@ -149,16 +149,10 @@ export function validateAndCalculateUpgrades(
       );
     }
 
-    // Calculate cost with Training Facility discount
+    // Calculate cost with Training Facility discount (shared formula, Spec #55 task 2.6)
     const discountPercent = calculateTrainingFacilityDiscount(trainingLevel, rosterCapacity);
-    let attributeCost = 0;
-
     const fromLevel = verifyCurrentLevel ? Math.floor(currentLevel) : robotCurrentLevelInt;
-    for (let level = fromLevel; level < plannedLevel; level++) {
-      const baseCost = calculateBaseCost(level);
-      const discountedCost = Math.floor(baseCost * (1 - discountPercent / 100));
-      attributeCost += discountedCost;
-    }
+    const attributeCost = calculateTrainingDiscountedUpgradeCost(fromLevel, plannedLevel, discountPercent);
 
     totalCost += attributeCost;
     upgradeOperations.push({
@@ -221,15 +215,9 @@ export function validateUpgradesFresh(
       );
     }
 
-    // Recalculate cost with fresh Training Facility discount
+    // Recalculate cost with fresh Training Facility discount (shared formula)
     const freshDiscountPercent = calculateTrainingFacilityDiscount(freshTrainingLevel, freshRosterCapacity);
-    let attributeCost = 0;
-
-    for (let level = freshCurrentLevelInt; level < plannedLevel; level++) {
-      const baseCost = calculateBaseCost(level);
-      const discountedCost = Math.floor(baseCost * (1 - freshDiscountPercent / 100));
-      attributeCost += discountedCost;
-    }
+    const attributeCost = calculateTrainingDiscountedUpgradeCost(freshCurrentLevelInt, plannedLevel, freshDiscountPercent);
 
     totalCost += attributeCost;
     upgradeOperations.push({
@@ -251,7 +239,12 @@ import { lockUserForSpending } from '../../lib/creditGuard';
 import { calculateMaxHP, calculateMaxShield } from '../../utils/robotCalculations';
 import { applyCreditMutationInTransaction } from '../financial/creditMutationService';
 import { runFinancialWriteTransaction } from '../cycle/financialWriteTransaction';
-import { createEconomicRequestIdentity, findEconomicRequestReplay, buildEconomicRequestAuditContext } from '../financial/economicRequestReplayService';
+import {
+  createEconomicRequestIdentity,
+  findEconomicRequestReplay,
+  buildEconomicAuditMetadata,
+  type EconomicServiceOptions,
+} from '../financial/economicRequestReplayService';
 import { buildPurchaseBreakdown } from '../financial/financialBreakdowns';
 
 const FACILITY_TYPES = [
@@ -288,6 +281,7 @@ export async function executeUpgradeTransaction(
   robotId: number,
   upgrades: Record<string, UpgradeRequest>,
   requestKey: string,
+  options: EconomicServiceOptions = {},
 ): Promise<UpgradeTransactionResult & { replayed: boolean }> {
   const identity = createEconomicRequestIdentity(userId, 'attribute_upgrade', requestKey, { robotId, upgrades });
   const robot = await prisma.robot.findFirst({ where: { id: robotId, userId } });
@@ -413,7 +407,7 @@ export async function executeUpgradeTransaction(
           { name: `${op.attribute}.cost`, value: op.cost, unit: 'credits', source: 'shared_upgrade_formula' },
         ]),
       }),
-      auditContext: buildEconomicRequestAuditContext(identity, coreResponse),
+      auditContext: buildEconomicAuditMetadata(identity, coreResponse, options.auditContext),
     });
 
     return {

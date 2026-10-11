@@ -103,6 +103,8 @@ Example with details:
 | `WEAPON_REFINEMENT_ATTRIBUTE_NOT_ON_WEAPON` | 400 | Hone target attribute is not present on the weapon (catalog or prior Augment) |
 | `WEAPON_REFINEMENT_ATTRIBUTE_ALREADY_ON_WEAPON` | 400 | Augment target attribute is already granted (catalog or prior Augment) |
 | `WEAPON_REFINEMENT_SHIELD_CANNOT_TAKE_DPS_TIER` | 400 | Sharpen or Forge attempted on a shield weapon |
+| `WEAPON_REFINEMENT_INVALID_TIER` | 400 | Refinement tier is not one of hone, augment, sharpen or forge (service-level guard for non-HTTP callers; the route's Zod schema rejects this first) |
+| `WEAPON_REFINEMENT_INVALID_TARGET_ATTRIBUTE` | 400 | Hone/Augment without a valid robot attribute target, or Sharpen/Forge with a target (service-level guard for non-HTTP callers; the route's Zod schema rejects this first) |
 
 ### League Errors
 
@@ -174,6 +176,35 @@ Example with details:
 every event, so nothing raises it. A booked match no longer blocks the change — it
 keeps its slot until it has been fought, which surfaces as
 `SUBSCRIPTION_CAP_EXCEEDED` with the event listed in `details.heldSlots`.
+
+### Automaton Errors (Spec #55)
+
+Raised by the Admin_Automaton_Control endpoints (`/api/admin/automatons`, admin only), Catalogue_Sync and the Automaton_Turn. Validation failures carry every failed rule in `details.issues` (`{ rule, message, path }`); when several rules fail at once the code is `AUTOMATON_BLUEPRINTS_TOO_FEW`, then `AUTOMATON_TEAM_NAMES_MISMATCH`, else `AUTOMATON_CATALOGUE_INVALID`.
+
+| Code | HTTP Status | Description |
+|------|-------------|-------------|
+| `AUTOMATON_ACCOUNT_LOCKED` | 409 | Password reset for an Automaton_Stable account, which has no usable password (`authErrors.ts`) |
+| `AUTOMATON_BLUEPRINTS_TOO_FEW` | 400 | A robots Goal_Target would exceed the stable's buildable Robot_Blueprints (Blueprint_Slots 1…k without a gap): strategy or parameter update, blueprint deletion or slot move, Activation, Catalogue_Entry |
+| `AUTOMATON_TEAM_NAMES_MISMATCH` | 400 | Team_Names do not have the count the Team_Rule needs for the strategy and blueprints; send `teamNames` in the same request |
+| `AUTOMATON_CATALOGUE_INVALID` | 400 / 409 | 400: a Catalogue_Entry or admin profile/blueprint input fails the catalogue rules (weapons, loadout, Refinement_Plan, Event_Order, stable name, strategy, Goal_Targets), or an export cannot be built. 409: the profile's pinned Strategy_Version has no Strategy_Definition_File (Catalogue_Export, profile edits) |
+| `AUTOMATON_NOT_FOUND` | 404 | No Automaton_Profile has this Catalogue_Key |
+| `AUTOMATON_BLUEPRINT_NOT_FOUND` | 404 | The profile has no Robot_Blueprint in this Blueprint_Slot |
+| `AUTOMATON_KEY_EXISTS` | 409 | The Catalogue_Key is already used by another Automaton_Profile |
+| `AUTOMATON_STABLE_NAME_TAKEN` | 409 | The stable name is taken by a stable or another Automaton_Profile |
+| `AUTOMATON_USERNAME_TAKEN` | 409 | Activation: the username `automaton_{catalogueKey}` already exists |
+| `AUTOMATON_NOT_DRAFT` | 409 | The operation needs a Draft_Automaton (delete, Activation); the profile is active |
+| `AUTOMATON_BLUEPRINT_IN_PLAY` | 409 | A live robot is linked to the Robot_Blueprint, so it cannot be deleted or moved to another slot |
+| `AUTOMATON_SLOT_TAKEN` | 409 | The Blueprint_Slot is taken, or all 11 slots are used |
+| `AUTOMATON_IMAGE_INVALID` | 400 | An uploaded blueprint image failed validation or processing |
+| `AUTOMATON_STRATEGY_NOT_FOUND` | 404 | No Strategy_Definition_File has this `key.vN` (Strategy_Draft created from a version) or upgrade target version |
+| `AUTOMATON_STRATEGY_DRAFT_NOT_FOUND` | 404 | No Strategy_Draft has this id |
+| `AUTOMATON_STRATEGY_DRAFT_EXISTS` | 409 | Another Strategy_Draft already has this strategy key and version |
+| `AUTOMATON_STRATEGY_DRAFT_INVALID` | 400 | The Strategy_Draft fails the definition schema or a builder rule, so it cannot be exported or previewed (`details.issues` lists every rule, with the Goal `position` for a Goal-level rule), or a new-version draft tries to change its key |
+| `AUTOMATON_UPGRADE_NOT_APPLICABLE` | 409 | A Strategy_Version upgrade names a stable that is not on an older version of that strategy; nothing is upgraded. Per-stable rejections of a confirmed upgrade are not errors: they are listed in the response's `rejected` with `AUTOMATON_BLUEPRINTS_TOO_FEW` or `AUTOMATON_TEAM_NAMES_MISMATCH` |
+| `AUTOMATON_WEAPON_UNKNOWN` | — | Turn only: a Robot_Blueprint names a weapon that is not in the weapon catalogue; the turn fails and raises an alert |
+| `AUTOMATON_PROFILE_INVALID` | 409 / — | Turn: the stored Team_Names or Event_Order fail their shape; the turn fails. Turn_Preview (409): the pinned Strategy_Version has no file or the stored Goal_Targets do not fit it |
+| `AUTOMATON_NO_PROGRESS` | — | Turn only: an executed action changed nothing (defect guard); the turn fails instead of looping |
+| `AUTOMATON_CUTOVER_IN_PROGRESS` | — | Turn only, defensive: a Turn_Step was requested during a Serialized_Cycle_Cutover |
 
 ### Database Errors (Prisma)
 

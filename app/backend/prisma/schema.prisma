@@ -63,6 +63,11 @@ model User {
   // Highest Season_Number whose summary modal this user has dismissed.
   lastSeenSeasonNumber Int     @default(0) @map("last_seen_season_number")
 
+  // ===== STABLE TYPE (Spec #55) =====
+  // Explicit stable classification. Invariant I1: isGenerated = true ⇔
+  // stableType = generated. `automaton` rows are created only by Activation.
+  stableType StableType @default(human) @map("stable_type")
+
   // ===== TIMESTAMPS =====
   lastLoginAt DateTime? @map("last_login_at")
   createdAt   DateTime  @default(now()) @map("created_at")
@@ -76,8 +81,145 @@ model User {
   achievements         UserAchievement[]
   leagueHistory        LeagueHistory[]
   searchAnalyticsEvents SearchAnalyticsEvent[]
+  automatonProfile     AutomatonProfile?
 
+  @@index([stableType])
   @@map("users")
+}
+
+// ===== AUTOMATON STABLES (Spec #55) =====
+
+enum StableType {
+  human
+  generated
+  automaton
+}
+
+enum AutomatonStatus {
+  draft
+  active
+}
+
+enum AutomatonTurnTrigger {
+  settlement
+  preparation
+  season_open
+}
+
+enum AutomatonTurnStatus {
+  in_progress
+  completed
+  failed
+  skipped
+}
+
+model AutomatonProfile {
+  id                 Int             @id @default(autoincrement())
+  catalogueKey       String          @unique @map("catalogue_key") @db.VarChar(40)
+  userId             Int?            @unique @map("user_id")
+  user               User?           @relation(fields: [userId], references: [id], onDelete: Restrict)
+  /// Stable name while Draft. Cleared at Activation; afterwards User.stableName is authoritative.
+  plannedStableName  String?         @unique @map("planned_stable_name") @db.VarChar(30)
+  /// Admin-only for now; player display is backlog item #61.
+  franchise          String          @db.VarChar(60)
+  /// Backstory: admin-only in-world flavour text about the stable as a whole, 1–400 characters.
+  backstory          String          @db.VarChar(400)
+  strategyKey        String          @map("strategy_key") @db.VarChar(40)
+  strategyVersion    Int             @map("strategy_version")
+  strategyParameters Json            @map("strategy_parameters")
+  /// Team_Names in Team_Rule order (TeamNames shape, src/types/automaton.ts).
+  teamNames          Json            @default("{\"twoVsTwo\":[],\"threeVsThree\":[]}") @map("team_names")
+  /// Event_Order: all 9 SUBSCRIBABLE_EVENT_TYPES, each once (EventOrder shape).
+  eventOrder         Json            @map("event_order")
+  status             AutomatonStatus @default(draft)
+  origin             String          @db.VarChar(20) // 'catalogue' | 'admin'
+  activatedAt        DateTime?       @map("activated_at")
+  createdAt          DateTime        @default(now()) @map("created_at")
+  updatedAt          DateTime        @updatedAt @map("updated_at")
+
+  blueprints AutomatonRobotBlueprint[]
+  turns      AutomatonTurn[]
+
+  @@index([status])
+  @@map("automaton_profiles")
+}
+
+model AutomatonRobotBlueprint {
+  id             Int              @id @default(autoincrement())
+  profileId      Int              @map("profile_id")
+  profile        AutomatonProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  slotIndex      Int              @map("slot_index")
+  robotName      String           @map("robot_name") @db.VarChar(50)
+  imageUrl       String?          @map("image_url") @db.VarChar(255) // null = no image (R3.2)
+  loadoutType    String           @map("loadout_type") @db.VarChar(20)
+  stance         String           @db.VarChar(20)
+  yieldThreshold Int              @map("yield_threshold")
+  buildFocus     String           @map("build_focus") @db.VarChar(20)
+  weaponPath     Json             @map("weapon_path")
+  refinementPlan Json             @default("[]") @map("refinement_plan")
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+
+  robots Robot[]
+
+  @@unique([profileId, slotIndex])
+  @@map("automaton_robot_blueprints")
+}
+
+model AutomatonTurn {
+  id              Int                  @id @default(autoincrement())
+  profileId       Int                  @map("profile_id")
+  profile         AutomatonProfile     @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  seasonNumber    Int                  @map("season_number")
+  trigger         AutomatonTurnTrigger
+  slot            Int
+  attempt         Int                  @default(1)
+  status          AutomatonTurnStatus
+  reason          String?              @db.VarChar(40) // program_off | step_budget_exhausted | turn_budget_exhausted | invalid_parameters | error code
+  strategyKey     String               @map("strategy_key") @db.VarChar(40)
+  strategyVersion Int                  @map("strategy_version")
+  startBalance    Int                  @map("start_balance")
+  endBalance      Int?                 @map("end_balance")
+  creditsSpent    Int                  @default(0) @map("credits_spent")
+  creditsReceived Int                  @default(0) @map("credits_received") // weapon_sale proceeds
+  actions         Json                 @default("[]")
+  goalOutcomes    Json                 @default("[]") @map("goal_outcomes")
+  /// Free_Upkeep issues of the turn (part, code, message), retried next turn and alerted.
+  upkeepIssues    Json                 @default("[]") @map("upkeep_issues")
+  durationMs      Int?                 @map("duration_ms")
+  startedAt       DateTime             @default(now()) @map("started_at")
+  finishedAt      DateTime?            @map("finished_at")
+
+  @@unique([profileId, seasonNumber, trigger, slot])
+  @@index([seasonNumber, trigger, slot])
+  @@index([profileId, startedAt])
+  @@map("automaton_turns")
+}
+
+model AutomatonStrategyDraft {
+  id         Int      @id @default(autoincrement())
+  key        String   @db.VarChar(40)
+  version    Int
+  basedOn    String?  @map("based_on") @db.VarChar(50)
+  definition Json
+  createdBy  Int      @map("created_by")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@unique([key, version])
+  @@map("automaton_strategy_drafts")
+}
+
+/// Single row (id = 1): the Program_Switch, the Turn_Step lease and the last Catalogue_Sync summary.
+model AutomatonProgramSetting {
+  id                 Int       @id @default(1)
+  turnsEnabled       Boolean   @default(true) @map("turns_enabled")
+  turnStepLeaseUntil DateTime? @map("turn_step_lease_until")
+  lastSyncSummary    Json?     @map("last_sync_summary")
+  updatedByUserId    Int?      @map("updated_by_user_id")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  @@map("automaton_program_settings")
 }
 
 model SearchAnalyticsEvent {
@@ -234,6 +376,12 @@ model Robot {
   // ===== APPEARANCE (Optional - null means use default icon) =====
   imageUrl String? @map("image_url") @db.VarChar(255) // Path to selected image, null = no image selected
 
+  // ===== AUTOMATON (Spec #55) =====
+  automatonBlueprintId Int?                     @map("automaton_blueprint_id")
+  automatonBlueprint   AutomatonRobotBlueprint? @relation(fields: [automatonBlueprintId], references: [id], onDelete: SetNull)
+  /// Blueprint_Slot this robot occupies (equals the blueprint's slot).
+  automatonSlotIndex   Int?                     @map("automaton_slot_index")
+
   // ===== TIMESTAMPS =====
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -253,6 +401,7 @@ model Robot {
   @@index([userId])
   @@index([elo])
   @@index([totalBattles])
+  @@index([automatonBlueprintId])
   @@map("robots")
 }
 
@@ -1095,6 +1244,9 @@ model StableSeasonArchive {
   // Number of competitive cycles the season ran (Spec #45 R17.8).
   competitiveCycles Int @map("competitive_cycles")
 
+  // Stable_Type of the archived stable (Spec #55 R9.4).
+  stableType StableType @default(human) @map("stable_type")
+
   createdAt DateTime @default(now()) @map("created_at")
 
   season Season               @relation(fields: [seasonNumber], references: [seasonNumber], onDelete: Cascade)
@@ -1157,7 +1309,8 @@ model SeasonAccolade {
   valueLabel  String  @map("value_label") @db.VarChar(40)
   mode        String? @db.VarChar(20)
 
-  isGeneratedSubject Boolean @default(false) @map("is_generated_subject")
+  isGeneratedSubject Boolean    @default(false) @map("is_generated_subject")
+  subjectStableType  StableType @default(human) @map("subject_stable_type")
 
   createdAt DateTime @default(now()) @map("created_at")
 
@@ -1188,7 +1341,8 @@ model SeasonStandingSnapshot {
   losses       Int
   draws        Int
 
-  isGeneratedSubject Boolean @default(false) @map("is_generated_subject")
+  isGeneratedSubject Boolean    @default(false) @map("is_generated_subject")
+  subjectStableType  StableType @default(human) @map("subject_stable_type")
 
   createdAt DateTime @default(now()) @map("created_at")
 

@@ -209,7 +209,8 @@ export async function getTuningAdoption(userFilter: Prisma.UserWhereInput = {}) 
  *   - topSpenders: top 10 users by refinement credits spent (username, total spent, weapon count)
  *
  * Always excludes the `bye_robot_user` system account, regardless of filter mode.
- * The `real` and `auto` filters already exclude it via `buildUserFilter`; this extra
+ * The `real`, `auto` and `automaton` filters already exclude it via `buildUserFilter`
+ * (`real` also excludes Automaton_Stables, Spec #55 R1.6); this extra
  * guard keeps the `all` filter honest so the system user can never appear in the
  * adoption stats even if a future filter mode forgets to exclude it.
  */

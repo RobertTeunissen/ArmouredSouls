@@ -10,8 +10,7 @@ import {
   AdminPageHeader,
   AdminStatCard,
   AdminDataTable,
-  AdminFilterBar,
-} from '../../components/admin/shared';
+  AdminFilterBar, REAL_PLAYERS_HELP, type UserFilterType } from '../../components/admin/shared';
 import { api } from '../../utils/api';
 import { ApiError } from '../../utils/ApiError';
 
@@ -35,7 +34,7 @@ interface WeaponAnalyticsData {
   totalWeaponsOwned: number;
 }
 
-type UserFilter = 'all' | 'real' | 'auto';
+type UserFilter = UserFilterType;
 
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */
@@ -108,8 +107,9 @@ function WeaponAnalyticsPage() {
       <AdminFilterBar
         filters={[
           { key: 'all', label: 'All Users', active: userFilter === 'all' },
-          { key: 'real', label: 'Real Players', active: userFilter === 'real' },
+          { key: 'real', label: 'Real Players', active: userFilter === 'real', description: REAL_PLAYERS_HELP },
           { key: 'auto', label: 'Auto-Generated', active: userFilter === 'auto' },
+          { key: 'automaton', label: 'Automatons', active: userFilter === 'automaton' },
         ]}
         onFilterToggle={(key) => setUserFilter(key as UserFilter)}
       />

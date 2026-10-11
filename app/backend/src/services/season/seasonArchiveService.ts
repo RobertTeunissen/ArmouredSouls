@@ -23,6 +23,7 @@
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { loadEnvConfig } from '../../config/env';
+import type { StableType } from '../../../generated/prisma';
 import type {
   ArchivedStanding,
   ArchivedTeamMembership,
@@ -85,7 +86,7 @@ export async function writeStableAndRobotArchives(
 
   const humanStables = await prisma.user.findMany({
     where: { isGenerated: false },
-    select: { id: true, username: true, stableName: true, currency: true, prestige: true,
+    select: { id: true, username: true, stableName: true, stableType: true, currency: true, prestige: true,
       championshipTitles: true, championshipTitles1v1: true,
       championshipTitles2v2: true, championshipTitles3v3: true },
     orderBy: { id: 'asc' },
@@ -158,6 +159,7 @@ export async function writeStableAndRobotArchives(
             seasonNumber,
             userId: user.id,
             stableName: stableDisplayName(user),
+            stableType: user.stableType,
             finalCredits: user.currency,
             prestigeEarned: user.prestige,
             totalBattles: totals.battles,
@@ -265,14 +267,14 @@ export async function writeStandingSnapshot(
       where: { id: { in: robotIds } },
       select: {
         id: true, name: true,
-        user: { select: { username: true, stableName: true, isGenerated: true } },
+        user: { select: { username: true, stableName: true, isGenerated: true, stableType: true } },
       },
     }),
     prisma.teamBattle.findMany({
       where: { id: { in: teamIds } },
       select: {
         id: true, teamName: true,
-        stable: { select: { username: true, stableName: true, isGenerated: true } },
+        stable: { select: { username: true, stableName: true, isGenerated: true, stableType: true } },
       },
     }),
   ]);
@@ -293,6 +295,7 @@ export async function writeStandingSnapshot(
     instanceRank: number; entityType: string; entityName: string; stableName: string;
     leaguePoints: number; wins: number; losses: number; draws: number;
     isGeneratedSubject: boolean;
+    subjectStableType: StableType;
   }> = [];
 
   for (const group of groups.values()) {
@@ -301,6 +304,7 @@ export async function writeStandingSnapshot(
       let entityName = `${s.entityType} ${s.entityId}`;
       let stableName = 'Unknown';
       let isGenerated = false;
+      let subjectStableType: StableType = 'human';
 
       if (s.entityType === 'robot') {
         const robot = robotById.get(s.entityId);
@@ -308,12 +312,14 @@ export async function writeStandingSnapshot(
         entityName = robot.name;
         stableName = stableDisplayName(robot.user);
         isGenerated = robot.user.isGenerated;
+        subjectStableType = robot.user.stableType;
       } else if (s.entityType === 'team') {
         const team = teamById.get(s.entityId);
         if (!team) return;
         entityName = team.teamName;
         stableName = stableDisplayName(team.stable);
         isGenerated = team.stable.isGenerated;
+        subjectStableType = team.stable.stableType;
       }
 
       rows.push({
@@ -330,6 +336,7 @@ export async function writeStandingSnapshot(
         losses: s.losses,
         draws: s.draws,
         isGeneratedSubject: isGenerated,
+        subjectStableType,
       });
     });
   }
@@ -349,6 +356,7 @@ interface Owner {
   userId: number | null;
   stableName: string;
   isGeneratedSubject: boolean;
+  subjectStableType: StableType;
 }
 
 interface AccoladeRow {
@@ -363,6 +371,7 @@ interface AccoladeRow {
   valueLabel: string;
   mode: string | null;
   isGeneratedSubject: boolean;
+  subjectStableType: StableType;
 }
 
 /**
@@ -408,25 +417,25 @@ export async function writeAccolades(seasonNumber: number): Promise<number> {
         id: true,
         name: true,
         userId: true,
-        user: { select: { username: true, stableName: true, isGenerated: true } },
+        user: { select: { username: true, stableName: true, isGenerated: true, stableType: true } },
       },
     }),
     prisma.teamBattle.findMany({
       select: {
         id: true,
         teamName: true,
-        stable: { select: { id: true, username: true, stableName: true, isGenerated: true } },
+        stable: { select: { id: true, username: true, stableName: true, isGenerated: true, stableType: true } },
       },
     }),
     prisma.user.findMany({
-      select: { id: true, username: true, stableName: true, isGenerated: true },
+      select: { id: true, username: true, stableName: true, isGenerated: true, stableType: true },
     }),
   ]);
   const robotById = new Map(robots.map((r) => [r.id, r]));
   const teamById = new Map(teams.map((t) => [t.id, t]));
   const userById = new Map(users.map((u) => [u.id, u]));
 
-  const UNKNOWN_OWNER: Owner = { userId: null, stableName: 'Unknown', isGeneratedSubject: false };
+  const UNKNOWN_OWNER: Owner = { userId: null, stableName: 'Unknown', isGeneratedSubject: false, subjectStableType: 'human' };
 
   const robotOwner = (robotId: number): Owner => {
     const r = robotById.get(robotId);
@@ -435,6 +444,7 @@ export async function writeAccolades(seasonNumber: number): Promise<number> {
       userId: r.user.isGenerated ? null : r.userId,
       stableName: r.user.stableName ?? r.user.username,
       isGeneratedSubject: r.user.isGenerated,
+      subjectStableType: r.user.stableType,
     };
   };
   const teamOwner = (teamId: number): Owner => {
@@ -444,6 +454,7 @@ export async function writeAccolades(seasonNumber: number): Promise<number> {
       userId: t.stable.isGenerated ? null : t.stable.id,
       stableName: t.stable.stableName ?? t.stable.username,
       isGeneratedSubject: t.stable.isGenerated,
+      subjectStableType: t.stable.stableType,
     };
   };
   const stableOwner = (userId: number): Owner => {
@@ -453,6 +464,7 @@ export async function writeAccolades(seasonNumber: number): Promise<number> {
       userId: u.isGenerated ? null : u.id,
       stableName: u.stableName ?? u.username,
       isGeneratedSubject: u.isGenerated,
+      subjectStableType: u.stableType,
     };
   };
 
@@ -481,6 +493,7 @@ export async function writeAccolades(seasonNumber: number): Promise<number> {
         userId: entry.owner.userId,
         stableName: trunc(entry.owner.stableName || 'Unknown', 30),
         isGeneratedSubject: entry.owner.isGeneratedSubject,
+        subjectStableType: entry.owner.subjectStableType,
       });
     });
   };
@@ -659,6 +672,7 @@ export async function writeAccolades(seasonNumber: number): Promise<number> {
         userId: owner.userId,
         stableName: trunc(owner.stableName || 'Unknown', 30),
         isGeneratedSubject: owner.isGeneratedSubject,
+        subjectStableType: owner.subjectStableType,
       });
     }
   });

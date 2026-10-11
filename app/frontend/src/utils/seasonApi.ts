@@ -7,6 +7,7 @@
  */
 
 import { api } from './api';
+import type { StableType } from '../types/stable';
 
 /** Current season state, as returned by `GET /api/seasons/current`. */
 export interface SeasonState {
@@ -133,6 +134,8 @@ export interface SnapshotEntry {
   losses: number;
   draws: number;
   isGeneratedSubject: boolean;
+  /** Spec #55: Stable_Type of the subject's stable (drives the Automaton_Badge). */
+  subjectStableType?: StableType;
   modeRank: number;
 }
 
@@ -145,7 +148,7 @@ export interface SeasonDetail {
   humanStableCount: number;
   generatedStableCount: number;
   standingsByMode: Record<string, SnapshotEntry[]>;
-  accolades: Array<ArchivedAccolade & { stableName: string; isGeneratedSubject: boolean }>;
+  accolades: Array<ArchivedAccolade & { stableName: string; isGeneratedSubject: boolean; subjectStableType?: StableType }>;
 }
 
 /** Payload of the once-per-season summary modal. */

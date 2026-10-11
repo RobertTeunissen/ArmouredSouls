@@ -1,6 +1,6 @@
 # Armoured Souls Documentation
 
-**Last updated**: September 21, 2026
+**Last updated**: October 10, 2026
 
 ## Quick Start
 
@@ -44,6 +44,7 @@ docs/
 │   ├── PRD_ACHIEVEMENT_SYSTEM.md   77-achievement progression layer
 │   ├── PRD_ONBOARDING_SYSTEM.md    New player flow
 │   ├── PRD_AUTO_USER_GENERATION.md Auto-generated opponents
+│   ├── PRD_AUTOMATON_STABLES.md    Automaton stables: computer-run stables that play by human rules
 │   ├── PRD_SEASON_SYSTEM.md        100-cycle competitive seasons
 │   ├── PRD_ROBOT_SETUP_WIZARD.md   7-step guided robot configuration
 │   ├── STABLE_SYSTEM.md            Facilities and stable mechanics
@@ -81,6 +82,7 @@ docs/
 │   │   ├── TROUBLESHOOTING.md      Common issues and fixes
 │   │   └── README.md               Section index
 │   ├── ADMIN_PANEL_GUIDE.md         Admin portal usage
+│   ├── AUTOMATON_OPERATIONS_GUIDE.md  Running Automaton stables, catalogue and strategies
 │   ├── ERROR_CODES.md               Error code reference
 │   ├── ONBOARDING_ANALYTICS_GUIDE.md
 │   ├── ONBOARDING_TROUBLESHOOTING.md
@@ -118,6 +120,7 @@ docs/
 │
 ├── implementation_notes/    # Implementation contracts and release evidence
 │   ├── BATTLE_CARD_DISPLAY.md
+│   ├── automaton-stables-verification.md
 │   ├── finance-center-reporting-contract.md
 │   └── financial-ledger-coverage.md
 │
@@ -145,6 +148,8 @@ docs/
 | Check weapon stats | `game-systems/PRD_WEAPON_ECONOMY.md` |
 | See achievement details | `game-systems/PRD_ACHIEVEMENT_SYSTEM.md` |
 | Understand season resets | `game-systems/PRD_SEASON_SYSTEM.md` |
+| Understand Automaton stables | `game-systems/PRD_AUTOMATON_STABLES.md` |
+| Operate Automaton stables (activate, tune, incidents, catalogue, strategies) | `guides/AUTOMATON_OPERATIONS_GUIDE.md` |
 | See robot setup wizard | `game-systems/PRD_ROBOT_SETUP_WIZARD.md` |
 | Deploy to VPS | `guides/operations/DEPLOYMENT.md` |
 | Troubleshoot production | `guides/operations/TROUBLESHOOTING.md` |
