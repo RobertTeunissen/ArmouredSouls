@@ -13,7 +13,8 @@ import {
   resumeIncompleteFitouts,
 } from '../fitoutRecovery';
 import { buyWeapon, equipHand, setLoadout, sellInventoryItem, buyFacilityLevel, type ExecutionContext, type ExecutionCursor } from '../executionSteps';
-import { loadStableFacts, type StableFacts } from '../stableFacts';
+import { loadStableFacts, type BlueprintFacts, type StableFacts } from '../stableFacts';
+import { TURN_TIME_BUDGET_MS } from '../turnBudget';
 import logger from '../../../config/logger';
 import { armedRobot, blueprint, item, robot, stable, weaponMap } from './helpers/automatonFixtures';
 
@@ -35,15 +36,15 @@ jest.mock('../executionSteps', () => ({
   buyFacilityLevel: jest.fn(),
 }));
 
-const mockBuy = buyWeapon as jest.MockedFunction<typeof buyWeapon>;
-const mockEquip = equipHand as jest.MockedFunction<typeof equipHand>;
-const mockSetLoadout = setLoadout as jest.MockedFunction<typeof setLoadout>;
-const mockSell = sellInventoryItem as jest.MockedFunction<typeof sellInventoryItem>;
-const mockFacility = buyFacilityLevel as jest.MockedFunction<typeof buyFacilityLevel>;
-const mockLoad = loadStableFacts as jest.MockedFunction<typeof loadStableFacts>;
-const mockLogger = logger as jest.Mocked<typeof logger>;
+const mockBuy = jest.mocked(buyWeapon);
+const mockEquip = jest.mocked(equipHand);
+const mockSetLoadout = jest.mocked(setLoadout);
+const mockSell = jest.mocked(sellInventoryItem);
+const mockFacility = jest.mocked(buyFacilityLevel);
+const mockLoad = jest.mocked(loadStableFacts);
+const mockLogger = jest.mocked(logger);
 
-const BLUEPRINTS = [
+const BLUEPRINTS: BlueprintFacts[] = [
   blueprint(1),
   blueprint(2, { loadoutType: 'weapon_shield', weaponPath: [{ main: 'Practice Blade', offhand: 'Aegis Bulwark' }] }),
 ];
@@ -52,13 +53,13 @@ const BLUEPRINTS = [
 let db: StableFacts;
 let nextInventoryId: number;
 
-function ctx(): ExecutionContext {
+function ctx(blueprints: BlueprintFacts[] = BLUEPRINTS): ExecutionContext {
   return {
     identity: {
       profileId: 1, userId: 1, catalogueKey: 'test-stable', strategyKey: 'fixture', strategyVersion: 1,
       seasonNumber: 1, trigger: 'settlement', slot: 1, attempt: 1,
     },
-    blueprints: BLUEPRINTS,
+    blueprints,
     weapons: weaponMap(),
     teamNames: { twoVsTwo: [], threeVsThree: [] },
     eventOrder: [],
@@ -94,6 +95,14 @@ beforeEach(() => {
     if (!r) return;
     if (hand === 'main') r.mainInventoryId = inventoryId;
     else r.offhandInventoryId = inventoryId;
+  });
+  mockSell.mockImplementation(async (_ctx, cur, _goal, inventoryId) => {
+    db.inventory = db.inventory.filter((i) => i.inventoryId !== inventoryId);
+    cur.chargedSteps++;
+  });
+  mockFacility.mockImplementation(async (_ctx, cur, _goal, facilityType, toLevel) => {
+    db.facilities[facilityType] = toLevel;
+    cur.chargedSteps++;
   });
 });
 
@@ -198,6 +207,94 @@ describe('resumeIncompleteFitouts', () => {
     expect(result.unresolved).toEqual([1005]);
     expect(result.resumed).toEqual([1001]);
     expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('robot 1005 (slot 5) is not battle-ready and its fit-out cannot resume: no_blueprint'));
+  });
+});
+
+describe('resumeIncompleteFitouts — storage room and Turn_Budget', () => {
+  /** Storage Facility L0 holds 5 weapons. */
+  const fullOf = (weaponName: string, firstId: number) =>
+    Array.from({ length: 5 }, (_, i) => item(firstId + i, weaponName));
+
+  it('sells an unequipped item off every Weapon_Path to make room, then buys and equips', async () => {
+    db = stable({ robots: [robot(1, { stageIndex: -1 })], inventory: fullOf('Railgun', 20) });
+    const cur = cursor();
+
+    const result = await resumeIncompleteFitouts(snapshot(), ctx(), cur, budget);
+
+    expect(mockSell).toHaveBeenCalledTimes(1);
+    expect(mockSell).toHaveBeenCalledWith(expect.anything(), cur, FITOUT_RECOVERY_GOAL_ID, 20);
+    expect(mockBuy).toHaveBeenCalledWith(expect.anything(), cur, FITOUT_RECOVERY_GOAL_ID, 'Practice Blade');
+    expect(mockEquip).toHaveBeenCalledWith(expect.anything(), 1001, 'main', 500);
+    expect(mockSell.mock.invocationCallOrder[0]).toBeLessThan(mockBuy.mock.invocationCallOrder[0]);
+    expect(mockBuy.mock.invocationCallOrder[0]).toBeLessThan(mockEquip.mock.invocationCallOrder[0]);
+    expect(mockFacility).not.toHaveBeenCalled();
+    expect(result.resumed).toEqual([1001]);
+  });
+
+  it('buys a Storage Facility level when every stored item is equipped', async () => {
+    db = stable({
+      robots: [3, 4, 5, 6, 7].map((slot, i) => armedRobot(slot, 30 + i)).concat(robot(1, { stageIndex: -1 })),
+      inventory: fullOf('Practice Blade', 30),
+    });
+    const cur = cursor();
+
+    const result = await resumeIncompleteFitouts(snapshot(), ctx(), cur, budget);
+
+    expect(mockSell).not.toHaveBeenCalled();
+    expect(mockFacility).toHaveBeenCalledTimes(1);
+    expect(mockFacility).toHaveBeenCalledWith(expect.anything(), cur, FITOUT_RECOVERY_GOAL_ID, 'storage_facility', 1);
+    expect(mockFacility.mock.invocationCallOrder[0]).toBeLessThan(mockBuy.mock.invocationCallOrder[0]);
+    expect(mockBuy).toHaveBeenCalledWith(expect.anything(), cur, FITOUT_RECOVERY_GOAL_ID, 'Practice Blade');
+    expect(mockEquip).toHaveBeenCalledWith(expect.anything(), 1001, 'main', 500);
+    expect(result.resumed).toEqual([1001]);
+  });
+
+  it('never sells a weapon another unready robot will equip, so it is not bought again', async () => {
+    // Full storage: one blade per unready robot and three Laser Pistols, all on a
+    // Weapon_Path (blueprint 3) and of equal resale value, so the oldest unreserved
+    // item is the one sold. Robot 1002 is resumed first and needs a shield bought.
+    const blueprints = [...BLUEPRINTS, blueprint(3, { weaponPath: [{ main: 'Laser Pistol' }] })];
+    db = stable({
+      robots: [robot(2, { stageIndex: -1 }), robot(1, { stageIndex: -1 })],
+      inventory: [item(10, 'Practice Blade'), item(11, 'Practice Blade'), ...fullOf('Laser Pistol', 12).slice(0, 3)],
+    });
+
+    const result = await resumeIncompleteFitouts(snapshot(), ctx(blueprints), cursor(), budget);
+
+    // The sale for 1002's shield takes a Laser Pistol, not blade 11 that 1001 reuses.
+    expect(mockSell).toHaveBeenCalledTimes(1);
+    expect(mockSell).toHaveBeenCalledWith(expect.anything(), expect.anything(), FITOUT_RECOVERY_GOAL_ID, 12);
+    expect(mockSell).not.toHaveBeenCalledWith(expect.anything(), expect.anything(), expect.anything(), 11);
+    // Only the shield is bought; 1001's blade is not bought again.
+    expect(mockBuy).toHaveBeenCalledTimes(1);
+    expect(mockBuy).toHaveBeenCalledWith(expect.anything(), expect.anything(), FITOUT_RECOVERY_GOAL_ID, 'Aegis Bulwark');
+    expect(mockEquip).toHaveBeenCalledWith(expect.anything(), 1002, 'main', 10);
+    expect(mockEquip).toHaveBeenCalledWith(expect.anything(), 1002, 'offhand', 500);
+    expect(mockEquip).toHaveBeenCalledWith(expect.anything(), 1001, 'main', 11);
+    expect(result.resumed).toEqual([1002, 1001]);
+  });
+
+  it('skips cleanly when the Turn_Budget is spent, charges nothing, and resumes next turn', async () => {
+    db = stable({ robots: [robot(1, { stageIndex: -1 })] });
+    const spent = cursor();
+
+    // Turn 1: the turn's time budget is used up before recovery starts.
+    const first = await resumeIncompleteFitouts(snapshot(), ctx(), spent, { startedAtMs: 0, now: () => TURN_TIME_BUDGET_MS });
+
+    expect(first.unresolved).toEqual([1001]);
+    expect(first.resumed).toEqual([]);
+    for (const mock of [mockBuy, mockEquip, mockSetLoadout, mockSell, mockFacility, mockLoad]) {
+      expect(mock).not.toHaveBeenCalled();
+    }
+    expect(spent).toEqual(cursor());
+    expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('turn budget spent before the fit-out recovery of robot 1001; next turn resumes it'));
+
+    // Turn 2: a fresh budget; the fit-out runs.
+    const second = await resumeIncompleteFitouts(snapshot(), ctx(), cursor(), budget);
+
+    expect(mockBuy).toHaveBeenCalledTimes(1);
+    expect(mockEquip).toHaveBeenCalledWith(expect.anything(), 1001, 'main', 500);
+    expect(second.resumed).toEqual([1001]);
   });
 });
 

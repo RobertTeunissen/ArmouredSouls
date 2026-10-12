@@ -13,7 +13,8 @@
  * - the blueprint loadout through `changeLoadoutType` (skipped when it matches);
  * - for every empty hand of the target stage, an unequipped inventory item of
  *   that name first (Weapon_Reuse), a purchase only for what is still missing;
- * - storage room for those purchases by the Storage_Overflow_Rule.
+ * - storage room for those purchases by the Storage_Overflow_Rule, never
+ *   selling an item this or another unready robot will equip from inventory.
  *
  * Every charged step goes through the same primitives as the Robot_Chain
  * (`weaponPurchaseService`, `weaponSaleService`, `facilityUpgradeService` and
@@ -41,7 +42,7 @@ import { planStartingStage } from './goals/robotCountGoal';
 import { planStorageRoom, stageHands, takeReusable, unequippedItems, weaponByName } from './goals/goalSupport';
 import type { EquipSource, WeaponPurchasePart, WeaponSaleStep, FacilityLevelStep } from './goals/goalTypes';
 import { checkTurnBudget } from './turnBudget';
-import { loadStableFacts, type BlueprintFacts, type Hand, type RobotFacts, type StableFacts } from './stableFacts';
+import { loadStableFacts, type BlueprintFacts, type Hand, type InventoryFacts, type RobotFacts, type StableFacts } from './stableFacts';
 
 /** Goal id recorded on the charged steps (Turn_Record actions, audit context). */
 export const FITOUT_RECOVERY_GOAL_ID = 'fitout_recovery';
@@ -89,7 +90,40 @@ function targetStageIndex(facts: StableFacts, robot: RobotFacts, blueprint: Blue
   return planStartingStage(facts, blueprint.weaponPath).stageIndex;
 }
 
-/** Pure plan that brings one unready robot back to its blueprint's starting loadout. */
+/** The hands of the robot's target stage that hold nothing yet (a held hand is left as it is). */
+function emptyStageHands(facts: StableFacts, robot: RobotFacts, blueprint: BlueprintFacts): { hand: Hand; weaponName: string }[] {
+  const stage = blueprint.weaponPath[targetStageIndex(facts, robot, blueprint)];
+  return stageHands(stage).filter(({ hand }) => (hand === 'main' ? robot.mainInventoryId : robot.offhandInventoryId) === null);
+}
+
+/**
+ * Reserve, from `pool`, the inventory items the stable's other unready robots
+ * will equip by Weapon_Reuse when their recovery runs. A storage sale for this
+ * robot must not remove one of them, or that robot would buy it again.
+ */
+function reserveForOtherUnreadyRobots(
+  facts: StableFacts,
+  robot: RobotFacts,
+  blueprints: readonly BlueprintFacts[],
+  pool: InventoryFacts[],
+  reserved: Set<number>,
+): void {
+  for (const other of facts.robots) {
+    if (other.robotId === robot.robotId || isLoadoutReady(other)) continue;
+    const blueprint = blueprints.find((b) => b.blueprintId === other.blueprintId);
+    if (!blueprint || blueprint.weaponPath.length === 0) continue;
+    for (const { weaponName } of emptyStageHands(facts, other, blueprint)) {
+      const reused = takeReusable(pool, weaponName);
+      if (reused) reserved.add(reused.inventoryId);
+    }
+  }
+}
+
+/**
+ * Pure plan that brings one unready robot back to its blueprint's starting
+ * loadout. The storage room it plans never sells an item this robot or any
+ * other unready robot of the stable will equip from inventory.
+ */
 export function planFitoutRecovery(
   facts: StableFacts,
   robot: RobotFacts,
@@ -100,17 +134,14 @@ export function planFitoutRecovery(
   if (!blueprint) return { kind: 'skip', reason: 'no_blueprint' };
   if (blueprint.weaponPath.length === 0) return { kind: 'skip', reason: 'empty_weapon_path' };
 
-  const stage = blueprint.weaponPath[targetStageIndex(facts, robot, blueprint)];
   const pool = unequippedItems(facts);
   const reserved = new Set<number>();
   const purchases: WeaponPurchasePart[] = [];
   const equip: FitoutRecoveryPlan['equip'] = [];
   const workshopLevel = facts.facilities.weapons_workshop;
 
-  // Only empty hands: a hand that holds a weapon is left as it is.
-  for (const { hand, weaponName } of stageHands(stage)) {
-    const held = hand === 'main' ? robot.mainInventoryId : robot.offhandInventoryId;
-    if (held !== null) continue;
+  // This robot picks first (it is the one being recovered), then the others reserve theirs.
+  for (const { hand, weaponName } of emptyStageHands(facts, robot, blueprint)) {
     const reused = takeReusable(pool, weaponName);
     if (reused) {
       reserved.add(reused.inventoryId);
@@ -121,6 +152,7 @@ export function planFitoutRecovery(
       equip.push({ hand, weaponName, source: { kind: 'purchase' } });
     }
   }
+  reserveForOtherUnreadyRobots(facts, robot, blueprints, pool, reserved);
 
   const storage = planStorageRoom(facts, blueprints, purchases.length, reserved);
   if (storage.kind === 'blocked') return { kind: 'skip', reason: storage.reason };

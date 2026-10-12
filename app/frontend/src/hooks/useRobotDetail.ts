@@ -118,29 +118,28 @@ const OWNER_ONLY_FIELDS = [
 type OwnerOnlyField = (typeof OWNER_ONLY_FIELDS)[number];
 type OwnerWeaponField = 'mainWeapon' | 'offhandWeapon';
 
-// The owner tabs take `RobotWithAttributes`, which carries `[key: string]: unknown`
-// and `weapon: Record<string, unknown>`. Interfaces get no implicit index
-// signature, so the owner-narrowed types below declare one explicitly. That
-// keeps `RobotDetail` / `WeaponDetail` strict and the tabs free of casts.
-
-/** A weapon as the owner tabs read it (string-keyed, like `RobotWithAttributes`). */
-export interface OwnerWeaponDetail extends WeaponDetail {
-  [key: string]: unknown;
-}
-
-/** An equipped weapon on an owner payload. */
-export interface OwnerWeaponInventoryItem extends WeaponInventoryItem {
-  weapon: OwnerWeaponDetail;
-}
-
-/** A robot payload as the owner receives it: every owner-only field present. */
+/**
+ * A robot payload as the owner receives it: every owner-only field present.
+ * Structurally a `RobotWithAttributes` (the owner tabs' prop type), so it is
+ * passed to them without casts. No index signature: a misspelt property is a
+ * compile error (see `OwnerRobotDetailRejectsUnknownFields` below).
+ */
 export interface OwnerRobotDetail
   extends Omit<RobotDetail, OwnerOnlyField>,
     Required<Pick<RobotDetail, Exclude<OwnerOnlyField, OwnerWeaponField>>> {
-  [key: string]: unknown;
-  mainWeapon: OwnerWeaponInventoryItem | null;
-  offhandWeapon: OwnerWeaponInventoryItem | null;
+  mainWeapon: WeaponInventoryItem | null;
+  offhandWeapon: WeaponInventoryItem | null;
 }
+
+/**
+ * Compile-time guard (tests are not type-checked by `tsc`, so it lives here):
+ * reading a property `OwnerRobotDetail` does not declare must fail to compile.
+ * If an index signature comes back, the expected error disappears and the
+ * `@ts-expect-error` itself fails the build.
+ */
+// @ts-expect-error — `stanse` is a misspelling of `stance`.
+type OwnerRobotDetailRejectsUnknownFields = OwnerRobotDetail['stanse'];
+export type { OwnerRobotDetailRejectsUnknownFields };
 
 /** Whether the payload carries the owner-only fields (it was not sanitized). */
 export function isOwnerRobotDetail(robot: RobotDetail): robot is OwnerRobotDetail {

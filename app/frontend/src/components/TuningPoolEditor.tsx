@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { fetchTuningAllocation, updateTuningAllocation } from '../utils/robotApi';
 import ConfirmationModal from './ConfirmationModal';
 import Toast from './Toast';
-import type { RobotWithAttributes } from '../types/robot';
+import type { RobotAttributeKey, RobotWithAttributes } from '../types/robot';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -31,7 +31,7 @@ const categoryColors: Record<string, { bg: string; text: string; icon: string }>
   'Team Coordination': { bg: 'bg-purple-900/30', text: 'text-purple-400', icon: '🤝' },
 };
 
-const attributeCategories: Record<string, { attributes: { key: string; label: string; icon: string }[] }> = {
+const attributeCategories: Record<string, { attributes: { key: RobotAttributeKey; label: string; icon: string }[] }> = {
   'Combat Systems': {
     attributes: [
       { key: 'combatPower', label: 'Combat Power', icon: '💥' },

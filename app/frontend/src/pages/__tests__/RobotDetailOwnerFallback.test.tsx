@@ -67,53 +67,82 @@ vi.mock('../../utils/matchmakingApi', () => ({
 import apiClient from '../../utils/apiClient';
 import { fetchRobotById } from '../../utils/robotApi';
 import type { Robot } from '../../utils/robotApi';
+import type { RobotDetail } from '../../hooks/useRobotDetail';
 
-const ATTRIBUTES = [
-  'combatPower', 'targetingSystems', 'criticalSystems', 'penetration', 'weaponControl', 'attackSpeed',
-  'armorPlating', 'shieldCapacity', 'evasionThrusters', 'damageDampeners', 'counterProtocols',
-  'hullIntegrity', 'servoMotors', 'gyroStabilizers', 'hydraulicSystems', 'powerCore',
-  'combatAlgorithms', 'threatAnalysis', 'adaptiveAI', 'logicCores', 'syncProtocols', 'supportSystems', 'formationTactics',
-];
+/** The owner payload: `Robot` plus the fields the page reads that `Robot` does not declare. */
+type OwnerRobotPayload = Robot & Pick<
+  RobotDetail,
+  'stance' | 'user' | 'titles' | 'damageDealtLifetime' | 'damageTakenLifetime' | 'kills' | 'lifetimeRepairCreditsPaid'
+>;
 
-/** The robot as its owner (user 1) receives it, minus `omit`. */
-function ownerRobot(omit: string[] = []): Robot {
-  const payload: Record<string, unknown> = {
-    id: 5,
-    name: 'RoboCop',
-    userId: 1,
-    imageUrl: null,
-    elo: 1412,
-    currentLeague: 'gold',
-    leagueId: 'gold_1',
-    leaguePoints: 40,
-    fame: 50,
-    mainWeaponId: null,
-    offhandWeaponId: null,
-    loadoutType: 'single',
-    stance: 'balanced',
-    yieldThreshold: 10,
-    mainWeapon: null,
-    offhandWeapon: null,
-    ...Object.fromEntries(ATTRIBUTES.map((a) => [a, 10])),
-    currentHP: 100,
-    maxHP: 100,
-    currentShield: 0,
-    maxShield: 0,
-    battleReadiness: 100,
-    repairQuoteCredits: 0,
-    totalBattles: 21,
-    wins: 15,
-    draws: 1,
-    losses: 5,
-    damageDealtLifetime: 0,
-    damageTakenLifetime: 0,
-    kills: 0,
-    lifetimeRepairCreditsPaid: 0,
-    titles: null,
-    user: { id: 1, username: 'owner', stableName: 'Owner Stable', stableType: 'human' },
-  };
-  for (const key of omit) delete payload[key];
-  return payload as unknown as Robot;
+const OWNER_ROBOT: OwnerRobotPayload = {
+  id: 5,
+  name: 'RoboCop',
+  userId: 1,
+  imageUrl: null,
+  level: 1,
+  createdAt: '2026-01-01T00:00:00.000Z',
+  elo: 1412,
+  currentLeague: 'gold',
+  leagueId: 'gold_1',
+  leaguePoints: 40,
+  fame: 50,
+  mainWeaponId: null,
+  offhandWeaponId: null,
+  loadoutType: 'single',
+  stance: 'balanced',
+  yieldThreshold: 10,
+  mainWeapon: null,
+  offhandWeapon: null,
+  combatPower: 10,
+  targetingSystems: 10,
+  criticalSystems: 10,
+  penetration: 10,
+  weaponControl: 10,
+  attackSpeed: 10,
+  armorPlating: 10,
+  shieldCapacity: 10,
+  evasionThrusters: 10,
+  damageDampeners: 10,
+  counterProtocols: 10,
+  hullIntegrity: 10,
+  servoMotors: 10,
+  gyroStabilizers: 10,
+  hydraulicSystems: 10,
+  powerCore: 10,
+  combatAlgorithms: 10,
+  threatAnalysis: 10,
+  adaptiveAI: 10,
+  logicCores: 10,
+  syncProtocols: 10,
+  supportSystems: 10,
+  formationTactics: 10,
+  currentHP: 100,
+  maxHP: 100,
+  currentShield: 0,
+  maxShield: 0,
+  battleReadiness: 100,
+  repairQuoteCredits: 0,
+  totalBattles: 21,
+  wins: 15,
+  draws: 1,
+  losses: 5,
+  totalLeague1v1Wins: 15,
+  totalLeague1v1Losses: 5,
+  totalLeague1v1Draws: 1,
+  totalLeague2v2Wins: 0,
+  totalLeague3v3Wins: 0,
+  damageDealtLifetime: 0,
+  damageTakenLifetime: 0,
+  kills: 0,
+  lifetimeRepairCreditsPaid: 0,
+  titles: null,
+  user: { username: 'owner', stableName: 'Owner Stable', stableType: 'human' },
+};
+
+/** The robot as its owner (user 1) receives it, with `overrides` applied. */
+function ownerRobot(overrides: Partial<OwnerRobotPayload> = {}): OwnerRobotPayload {
+  return { ...OWNER_ROBOT, ...overrides };
 }
 
 function renderPage(tab: string): void {
@@ -139,7 +168,7 @@ describe('RobotDetailPage — owner tab with an incomplete payload', () => {
   });
 
   it('shows the reload notice instead of an empty tab when an owner-only field is missing', async () => {
-    vi.mocked(fetchRobotById).mockResolvedValue(ownerRobot(['stance']));
+    vi.mocked(fetchRobotById).mockResolvedValue(ownerRobot({ stance: undefined }));
     renderPage('battle-config');
 
     const notice = await screen.findByTestId('owner-details-unavailable');
@@ -158,7 +187,7 @@ describe('RobotDetailPage — owner tab with an incomplete payload', () => {
   });
 
   it('shows no notice on a tab that does not need the owner payload', async () => {
-    vi.mocked(fetchRobotById).mockResolvedValue(ownerRobot(['stance']));
+    vi.mocked(fetchRobotById).mockResolvedValue(ownerRobot({ stance: undefined }));
     renderPage('overview');
 
     expect(await screen.findByText('RoboCop')).toBeInTheDocument();

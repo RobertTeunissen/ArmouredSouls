@@ -74,10 +74,18 @@ export interface WeaponInventoryItem {
   };
 }
 
+/** An equipped weapon as the owner tabs read it. */
+export interface EquippedWeapon {
+  id: number;
+  weapon: WeaponInventoryItem['weapon'];
+  refinements?: Array<{ tier: string; magnitude: number; targetAttribute: string | null }>;
+}
+
 /**
  * Base robot interface with attributes accessible by key.
  * Components that need dynamic attribute access (e.g., `robot[attrKey]`)
- * should use this type.
+ * should use this type with a `RobotAttributeKey` key. No index signature:
+ * a misspelt property is a compile error, not `unknown`.
  */
 export interface RobotWithAttributes extends RobotAttributes {
   id: number;
@@ -94,8 +102,8 @@ export interface RobotWithAttributes extends RobotAttributes {
   maxShield: number;
   mainWeaponId: number | null;
   offhandWeaponId: number | null;
-  mainWeapon: { id: number; weapon: Record<string, unknown>; refinements?: Array<{ tier: string; magnitude: number; targetAttribute: string | null }> } | null;
-  offhandWeapon: { id: number; weapon: Record<string, unknown>; refinements?: Array<{ tier: string; magnitude: number; targetAttribute: string | null }> } | null;
+  mainWeapon: EquippedWeapon | null;
+  offhandWeapon: EquippedWeapon | null;
   loadoutType: string;
   stance: string;
   yieldThreshold: number;
@@ -118,6 +126,4 @@ export interface RobotWithAttributes extends RobotAttributes {
     /** Spec #55: Stable_Type of the owner (drives the Automaton_Badge). */
     stableType?: StableType;
   };
-  /** Allow dynamic string key access for attribute lookups */
-  [key: string]: unknown;
 }

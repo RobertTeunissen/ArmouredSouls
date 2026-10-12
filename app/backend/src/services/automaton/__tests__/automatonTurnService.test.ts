@@ -23,6 +23,7 @@ import type { Goal, GoalOutcome, PlannedAction } from '../goals/goalTypes';
 import type { ExecutionCursor } from '../executionSteps';
 import type { StableFacts } from '../stableFacts';
 import { setAlertSender } from '../automatonObservability';
+import { resumeIncompleteFitouts } from '../fitoutRecovery';
 import {
   runTurnStep,
   runTurnStepNonFatal,
@@ -57,11 +58,17 @@ jest.mock('../actionExecutor', () => ({
   createExecutionCursor: () => ({ chargedSteps: 0, creditsSpent: 0, creditsReceived: 0, steps: [] }),
   executeAction: jest.fn(),
 }));
+// The real fit-out recovery (a no-op for these robot-less stables), spied on for call order.
+jest.mock('../fitoutRecovery', () => {
+  const actual = jest.requireActual<typeof import('../fitoutRecovery')>('../fitoutRecovery');
+  return { ...actual, resumeIncompleteFitouts: jest.fn(actual.resumeIncompleteFitouts) };
+});
 
 const mockIdentity = resolveCanonicalCycleIdentity as jest.MockedFunction<typeof resolveCanonicalCycleIdentity>;
 const mockLoadFacts = loadStableFacts as jest.MockedFunction<typeof loadStableFacts>;
 const mockUpkeep = runFreeUpkeep as jest.MockedFunction<typeof runFreeUpkeep>;
 const mockExecute = executeAction as jest.MockedFunction<typeof executeAction>;
+const mockResume = jest.mocked(resumeIncompleteFitouts);
 
 const GOAL_ID = 'fixture.v1.01.facility.training_facility';
 const STEP_COST = 1_000;
@@ -229,6 +236,40 @@ describe('runTurnStep — cohort, Turn_Records and retries (R7.6, R7.9)', () => 
 
     expect(turnsOf(1).map((t) => `${t.seasonNumber}/${t.trigger}/${t.slot}/${t.status}`))
       .toEqual(['3/settlement/42/completed', '3/preparation/2/completed', '4/season_open/0/completed']);
+  });
+});
+
+describe('runAutomatonTurn — fit-out recovery wiring (PR #534)', () => {
+  it('resumes incomplete fit-outs before Free_Upkeep and the planner, and continues on its facts', async () => {
+    addProfile(1, 10);
+    const order: string[] = [];
+    let recovered: StableFacts | undefined;
+    mockResume.mockImplementationOnce(async (facts) => {
+      order.push('recovery');
+      recovered = { ...facts, balance: facts.balance - 1 };
+      return { facts: recovered, resumed: [], unresolved: [] };
+    });
+    mockUpkeep.mockImplementation(async (facts) => {
+      order.push('upkeep');
+      return { facts, teamsRegistered: 0, subscriptionsChanged: 0, settingsChanged: 0, tuningChanged: 0, issues: [] };
+    });
+    script = () => {
+      order.push('planner');
+      return saving;
+    };
+
+    await runTurnStep(INPUT, { registry });
+
+    expect(order.slice(0, 3)).toEqual(['recovery', 'upkeep', 'planner']);
+    expect(mockResume).toHaveBeenCalledTimes(1);
+    expect(mockResume).toHaveBeenCalledWith(
+      factsByProfile.get(1),
+      expect.objectContaining({ identity: expect.objectContaining({ profileId: 1, userId: 10 }) }),
+      expect.objectContaining({ chargedSteps: 0 }),
+      expect.objectContaining({ startedAtMs: expect.any(Number) }),
+    );
+    // Free_Upkeep runs on the facts recovery returned.
+    expect(mockUpkeep.mock.calls[0][0]).toBe(recovered);
   });
 });
 
