@@ -10,6 +10,7 @@ import {
   computeStreamingRevenue,
   STREAMING_STUDIO_PER_LEVEL,
 } from './streamingRevenueService';
+import { getAllModesBattleCounts } from '../robot/all-modes-battle-count';
 
 export interface FacilityRecommendation {
   facilityType: string;
@@ -449,21 +450,16 @@ export class FacilityRecommendationService {
       return computeStreamingRevenue(0, 0, currentStudioLevel).totalRevenue;
     }
 
-    // KotH matches are the one mode `Robot.totalBattles` does not count, so they
-    // come from `standings` — the same correction `calculateStreamingRevenue`
-    // applies before awarding. Without it this estimate sits below what the
-    // player actually earns.
-    const kothStandings = await prisma.standing.findMany({
-      where: { entityType: 'robot', entityId: { in: robots.map((r) => r.id) }, mode: 'koth' },
-      select: { entityId: true, totalMatches: true },
-    });
-    const kothMatchesByRobot = new Map(kothStandings.map((s) => [s.entityId, s.totalMatches ?? 0]));
+    // Same all-modes battle count the award path uses (`robots.total_battles` +
+    // KotH + Grand Melee standings matches, #530/#532). Without it this estimate
+    // sits below what the player actually earns.
+    const battleCounts = await getAllModesBattleCounts(robots);
 
     // Average of the per-robot awards, each derived from the same function the
     // award path calls.
     let totalRevenue = 0;
     for (const robot of robots) {
-      const totalBattleCount = robot.totalBattles + (kothMatchesByRobot.get(robot.id) ?? 0);
+      const totalBattleCount = battleCounts.get(robot.id) ?? robot.totalBattles;
       totalRevenue += computeStreamingRevenue(totalBattleCount, robot.fame, currentStudioLevel).totalRevenue;
     }
 

@@ -378,10 +378,12 @@ Example:
 **Data Fields:**
 
 **Combat Record:**
-- Total Battles: `robot.totalBattles`
+- Total Battles: `robot.allModesBattleCount ?? robot.totalBattles` (all modes, #532: `totalBattles` + KotH + Grand Melee `standings.total_matches`, from `services/robot/all-modes-battle-count.ts`)
 - Wins: `robot.wins`
 - Losses: `robot.losses`
 - Win Rate: `(wins / totalBattles * 100).toFixed(1)%`
+- Win Rate and Record cover win/loss modes only (`robot.totalBattles` stays the denominator). When the all-modes count differs from `totalBattles`, a muted note under the stats row reads "Record and win rate exclude KotH and Grand Melee, which are placement events."
+- Battle Performance panel (`GET /api/robots/:id/performance-context`): team-mode W/L/D (2v2/3v3 League, team tournaments, tag team) derive from the permanent `battles.winning_side` column, never from the ephemeral `battle_log` (#531). A legacy row with a winner but no side counts as neither W, L nor D.
 
 **Rankings:**
 - ELO Rating: `robot.elo` (with trend indicator if available)

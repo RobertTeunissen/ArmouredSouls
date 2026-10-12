@@ -474,7 +474,8 @@ Where:
 // Awarded per battle (not daily passive income)
 // Both winner and loser receive streaming revenue
 // No revenue for bye matches
-// total_battles includes all modes: 1v1 + tournament + tag team + KotH
+// robot_battles is the all-modes count: league 1v1 + tournaments + tag team
+//   + 2v2/3v3 League (robots.total_battles) + KotH + Grand Melee (standings.total_matches)
 
 Example:
 - Robot with 500 battles, 2500 fame

@@ -49,7 +49,10 @@ export interface Robot {
   wins: number;
   losses: number;
   draws: number;
+  /** Win/loss-mode battles only; the denominator for win rate. */
   totalBattles: number;
+  /** #532: battles across every mode (totalBattles + KotH + Grand Melee). Sent by GET /api/robots/:id. */
+  allModesBattleCount?: number;
   battleReadiness: number;
   yieldThreshold: number;
   loadoutType: string;

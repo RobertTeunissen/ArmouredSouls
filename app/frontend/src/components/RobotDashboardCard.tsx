@@ -29,6 +29,8 @@ interface RobotDashboardCardProps {
     losses?: number;
     draws?: number;
     totalBattles?: number;
+    /** #532: battles across every mode (totalBattles + KotH + Grand Melee). */
+    allModesBattleCount?: number;
     mainWeapon?: { weapon: { name: string; weaponType: string } } | null;
     offhandWeapon?: { weapon: { name: string; weaponType: string } } | null;
     loadoutType?: string;
@@ -202,7 +204,7 @@ function RobotDashboardCard({ robot, variant = 'owner' }: RobotDashboardCardProp
               )}
               <div className="flex items-center gap-1">
                 <span className="text-secondary">Battles:</span>
-                <span className="font-semibold text-white">{totalBattles.toLocaleString()}</span>
+                <span className="font-semibold text-white">{(robot.allModesBattleCount ?? totalBattles).toLocaleString()}</span>
               </div>
               {robot.kills != null && (
                 <div className="flex items-center gap-1">

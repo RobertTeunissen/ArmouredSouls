@@ -16,6 +16,7 @@ import {
 } from '../../utils/economyCalculations';
 // Spec #46 R10: the Streaming_Revenue_Formula has exactly one implementation.
 import { computeStreamingRevenue } from './streamingRevenueService';
+import { getAllModesBattleCounts } from '../robot/all-modes-battle-count';
 
 export async function getDailyFinancialReport(userId: number) {
   // Parallel group 1: all queries that only depend on userId
@@ -76,10 +77,12 @@ export async function getDailyFinancialReport(userId: number) {
     }
   }
 
-  // Parallel group 2: report generation and passive income are independent
-  const [report, passiveIncome] = await Promise.all([
+  // Parallel group 2: report generation, passive income and the all-modes battle
+  // counts (used by the streaming breakdown) are independent
+  const [report, passiveIncome, battleCounts] = await Promise.all([
     generateFinancialReport(userId, recentBattleWinnings),
     calculateDailyPassiveIncome(userId),
+    getAllModesBattleCounts(userRobots),
   ]);
   const prestigeMultiplier = getPrestigeMultiplier(user.prestige);
 
@@ -109,14 +112,20 @@ export async function getDailyFinancialReport(userId: number) {
   //
   // Both are fixed by deriving every figure from `computeStreamingRevenue()`, the
   // same function the award path calls, and by presenting the formula per robot.
+  //
+  // The battle input is the same all-modes count the award path uses
+  // (`robots.total_battles` + KotH + Grand Melee standings matches, #530/#532).
+  // This used raw `robots.total_battles`, which excludes both placement modes,
+  // so the breakdown showed a lower battle multiplier than the one paid.
   const streamingStudioLevel = streamingStudio?.level || 0;
 
   const perRobot = userRobots.map((robot) => {
-    const breakdown = computeStreamingRevenue(robot.totalBattles, robot.fame, streamingStudioLevel);
+    const battles = battleCounts.get(robot.id) ?? robot.totalBattles;
+    const breakdown = computeStreamingRevenue(battles, robot.fame, streamingStudioLevel);
     return {
       robotId: robot.id,
       robotName: robot.name,
-      battles: robot.totalBattles,
+      battles,
       fame: robot.fame,
       battleMultiplier: breakdown.battleMultiplier,
       fameMultiplier: breakdown.fameMultiplier,
@@ -127,7 +136,7 @@ export async function getDailyFinancialReport(userId: number) {
   });
 
   // Roster aggregates, labelled as such rather than fed into a multiplier.
-  const totalBattles = userRobots.reduce((sum, r) => sum + r.totalBattles, 0);
+  const totalBattles = perRobot.reduce((sum, r) => sum + r.battles, 0);
   const totalFame = userRobots.reduce((sum, r) => sum + r.fame, 0);
 
   // The headline multipliers describe a representative robot — the roster mean —

@@ -168,6 +168,9 @@ export function useRobotDetail() {
   const [showImageSelector, setShowImageSelector] = useState(false);
   const [recentBattles, setRecentBattles] = useState<BattleHistory[]>([]);
   const [leagueRank, setLeagueRank] = useState<{ rank: number; total: number; percentile: number } | null>(null);
+  // #532: kept apart from `robot` because equip/upgrade/appearance responses
+  // replace `robot` without this field, and those mutations never change it.
+  const [allModesBattleCount, setAllModesBattleCount] = useState<number | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
 
   const { user, logout, refreshUser } = useAuth();
@@ -233,6 +236,7 @@ export function useRobotDetail() {
     try {
       const robotData = await fetchRobotById(parseInt(id!));
       setRobot(robotData as unknown as RobotDetail);
+      setAllModesBattleCount(robotData.allModesBattleCount ?? null);
 
       // Fetch independent data in parallel — these don't depend on each other
       const [leagueResult, weaponsResult, facilitiesResult, battlesResult] = await Promise.allSettled([
@@ -460,6 +464,7 @@ export function useRobotDetail() {
     recentBattles,
     battleReadiness,
     leagueRank,
+    allModesBattleCount,
 
     // Tab state
     activeTab,

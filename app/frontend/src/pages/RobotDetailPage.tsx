@@ -7,6 +7,7 @@ import BattleConfigTab from '../components/BattleConfigTab';
 import EffectiveStatsDisplay from '../components/EffectiveStatsDisplay';
 import RobotImage from '../components/RobotImage';
 import AutomatonBadge from '../components/AutomatonBadge';
+import PlacementModesRecordNote from '../components/PlacementModesRecordNote';
 import RobotImageSelector from '../components/RobotImageSelector';
 import StatisticalRankings from '../components/StatisticalRankings';
 import PerformanceByContext from '../components/PerformanceByContext';
@@ -41,6 +42,7 @@ function RobotDetailPage() {
     recentBattles,
     battleReadiness,
     leagueRank,
+    allModesBattleCount,
     activeTab,
     handleTabChange,
     showImageSelector,
@@ -176,7 +178,7 @@ function RobotDetailPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-secondary">Battles:</span>
-                    <span className="text-white font-semibold">{robot.totalBattles}</span>
+                    <span className="text-white font-semibold">{allModesBattleCount ?? robot.totalBattles}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-secondary">Record:</span>
@@ -185,6 +187,13 @@ function RobotDetailPage() {
                     </span>
                   </div>
                 </div>
+                {/* #532: Battles covers every mode; Record and Win Rate only cover win/loss modes. */}
+                <PlacementModesRecordNote
+                  allModesBattleCount={allModesBattleCount}
+                  totalBattles={robot.totalBattles}
+                  className="text-xs text-secondary mb-4"
+                />
+
 
                 {/* Performance Stats */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">

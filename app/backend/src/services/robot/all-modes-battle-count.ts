@@ -1,0 +1,80 @@
+/**
+ * All-modes battle count (#532, #530).
+ *
+ * The one authoritative "battles played across every mode" figure for a robot.
+ * Use it wherever the meaning is "how many battles has this robot played"
+ * (streaming revenue, Finance Center breakdown, robot profile headline).
+ *
+ * Query-time, no stored counter:
+ *   allModes = robots.total_battles
+ *            + standings.total_matches for every PLACEMENT_COUNTED_MODES row
+ *
+ * - `robots.total_battles` already counts league 1v1, tournaments (1v1/2v2/3v3),
+ *   tag team (active and reserve) and 2v2/3v3 League. Do not add those again
+ *   from team standings: that would double count them.
+ * - KotH and Grand Melee pass `skipBattleCounters: true`, so they never touch
+ *   `total_battles`; their matches live in `standings.total_matches`, the source
+ *   of truth for competitive data. Placement-mode byes write no standing, so only
+ *   fought matches are added.
+ * - `robots.total_battles` stays the W/L/D denominator for win rates. Placement
+ *   modes have no win/loss, so they must not be folded into that column.
+ *
+ * Both sides are current-season data (robots and standings are purged together at
+ * rollover), so the sum never mixes seasons.
+ */
+import prisma from '../../lib/prisma';
+import type { StandingsMode } from '../../../generated/prisma';
+
+/**
+ * Modes whose orchestrators call `updateRobotCombatStats` with
+ * `skipBattleCounters: true`. Their matches are counted from
+ * `standings.total_matches` instead of `robots.total_battles`.
+ */
+export const PLACEMENT_COUNTED_MODES: readonly StandingsMode[] = ['koth', 'grand_melee'];
+
+/** Combine the stored win/loss-mode count with the placement-mode match count. */
+export function combineAllModesBattleCount(totalBattles: number, placementMatches: number): number {
+  return totalBattles + placementMatches;
+}
+
+/**
+ * Placement-mode (KotH + Grand Melee) match counts per robot, in one query.
+ * Robots without placement standings are absent from the map (treat as 0).
+ */
+export async function getPlacementMatchCounts(robotIds: readonly number[]): Promise<Map<number, number>> {
+  const counts = new Map<number, number>();
+  const ids = Array.from(new Set(robotIds));
+  if (ids.length === 0) return counts;
+
+  const rows = await prisma.standing.findMany({
+    where: {
+      entityType: 'robot',
+      entityId: { in: ids },
+      mode: { in: [...PLACEMENT_COUNTED_MODES] },
+    },
+    select: { entityId: true, totalMatches: true },
+  });
+
+  for (const row of rows) {
+    counts.set(row.entityId, (counts.get(row.entityId) ?? 0) + (row.totalMatches ?? 0));
+  }
+  return counts;
+}
+
+/** All-modes battle count per robot id, in one query. */
+export async function getAllModesBattleCounts(
+  robots: ReadonlyArray<{ id: number; totalBattles: number }>,
+): Promise<Map<number, number>> {
+  const placement = await getPlacementMatchCounts(robots.map((r) => r.id));
+  const result = new Map<number, number>();
+  for (const robot of robots) {
+    result.set(robot.id, combineAllModesBattleCount(robot.totalBattles, placement.get(robot.id) ?? 0));
+  }
+  return result;
+}
+
+/** All-modes battle count for one robot. */
+export async function getAllModesBattleCount(robot: { id: number; totalBattles: number }): Promise<number> {
+  const counts = await getAllModesBattleCounts([robot]);
+  return counts.get(robot.id) ?? robot.totalBattles;
+}
