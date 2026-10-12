@@ -181,7 +181,7 @@ describe('GET /api/user/stats - Stable Overview', () => {
   // returns are grouped per stable and that `userId` comes back as a JS number
   // (a bigint or string would miss the Map lookup and report no overlap).
   describe('getStableBattleOverlapsByUser (batch overlap SQL)', () => {
-    let otherUser: any;
+    let otherUser: Awaited<ReturnType<typeof createTestUser>>;
 
     beforeAll(async () => {
       otherUser = await createTestUser();
@@ -195,8 +195,9 @@ describe('GET /api/user/stats - Stable Overview', () => {
       const overlaps = await getStableBattleOverlapsByUser([testUser.id, otherUser.id]);
 
       expect([...overlaps.keys()]).toEqual([testUser.id, otherUser.id]);
-      for (const key of overlaps.keys()) expect(typeof key).toBe('number');
       // Two robots of one stable on side 1, side 1 won: k - 1 = 1 surplus win.
+      // The map keys come from the input ids; this value comes from the SQL rows,
+      // so it is non-zero only when the row `userId` matched as a JS number.
       expect(overlaps.get(testUser.id)).toEqual({ battles: 1, wins: 1, losses: 0, draws: 0 });
       // A stable that shared no side gets a zero entry.
       expect(overlaps.get(otherUser.id)).toEqual({ battles: 0, wins: 0, losses: 0, draws: 0 });
@@ -215,10 +216,11 @@ describe('GET /api/user/stats - Stable Overview', () => {
         });
         // Robot counters sum to 20 battles / 12 wins; the shared side is 1 / 1.
         expect(archive).toMatchObject({ totalBattles: 19, wins: 11, losses: 7, draws: 1 });
+        if (!archive) throw new Error('stable archive row was not written');
 
         // Robot archive rows keep each robot's own counters.
         const robotArchives = await prisma.robotSeasonArchive.findMany({
-          where: { stableArchiveId: archive!.id },
+          where: { stableArchiveId: archive.id },
           select: { robotName: true, totalBattles: true },
         });
         const byName = new Map(robotArchives.map((r) => [r.robotName, r.totalBattles]));

@@ -80,29 +80,44 @@ export async function getAllModesBattleCount(robot: { id: number; totalBattles: 
   return counts.get(robot.id) ?? robot.totalBattles;
 }
 
+/** One ranked robot with the all-modes count the rank was computed on. */
+export interface RankedAllModesBattleCount {
+  robotId: number;
+  allModesBattleCount: number;
+}
+
 /**
- * Ids of the `limit` robots with the highest all-modes battle count, best first
- * (Hall of Records "Most Battles" and its season accolade).
+ * The `limit` robots with the highest all-modes battle count, best first, each
+ * with that count (Hall of Records "Most Battles" and its season accolade).
  *
  * Ranked in SQL on the combined value, so a robot whose KotH / Grand Melee
  * matches lift it into the top N is never dropped by a pre-filter on
  * `total_battles`. Ties: more win/loss-mode battles first (the column the
  * ranking used before), then the lower robot id, so the order is deterministic.
  * Robots and standings are both current-season, so the ranking is too.
+ *
+ * The SQL sum is the same as `getAllModesBattleCounts` (total_battles + KotH and
+ * Grand Melee total_matches, NULL as 0). The returned count is built from the
+ * same row with `combineAllModesBattleCount`, so rank and displayed value come
+ * from one read. Arithmetic is bigint: `SUM(int)` is bigint already, and int4 +
+ * int4 overflows (PostgreSQL 22003) once the two parts pass 2^31 together.
  */
-export async function getTopRobotIdsByAllModesBattleCount(limit: number): Promise<number[]> {
-  const rows = await prisma.$queryRaw<Array<{ id: number }>>`
-    SELECT r.id
+export async function getTopRobotsByAllModesBattleCount(limit: number): Promise<RankedAllModesBattleCount[]> {
+  const rows = await prisma.$queryRaw<Array<{ id: number; total_battles: number; placement_matches: bigint }>>`
+    SELECT r.id, r.total_battles, COALESCE(p.placement_matches, 0::bigint) AS placement_matches
     FROM robots r
     LEFT JOIN (
-      SELECT s.entity_id, SUM(COALESCE(s.total_matches, 0))::int AS placement_matches
+      SELECT s.entity_id, SUM(COALESCE(s.total_matches, 0))::bigint AS placement_matches
       FROM standings s
       WHERE s.entity_type = 'robot'
         AND s.mode::text = ANY(${[...PLACEMENT_COUNTED_MODES]}::text[])
       GROUP BY s.entity_id
     ) p ON p.entity_id = r.id
-    ORDER BY r.total_battles + COALESCE(p.placement_matches, 0) DESC, r.total_battles DESC, r.id ASC
+    ORDER BY r.total_battles::bigint + COALESCE(p.placement_matches, 0::bigint) DESC, r.total_battles DESC, r.id ASC
     LIMIT ${limit}
   `;
-  return rows.map((row) => row.id);
+  return rows.map((row) => ({
+    robotId: row.id,
+    allModesBattleCount: combineAllModesBattleCount(Number(row.total_battles), Number(row.placement_matches)),
+  }));
 }

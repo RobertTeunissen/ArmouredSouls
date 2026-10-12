@@ -1,10 +1,7 @@
 import prisma from '../../lib/prisma';
 import type { StableType } from '../../../generated/prisma';
 import { getTopModeKills } from '../battle/modeKillsQueries';
-import {
-  getAllModesBattleCounts,
-  getTopRobotIdsByAllModesBattleCount,
-} from '../robot/all-modes-battle-count';
+import { getTopRobotsByAllModesBattleCount } from '../robot/all-modes-battle-count';
 
 // Helper to get display name (stableName or username fallback)
 export const getUserDisplayName = (user: { username: string; stableName?: string | null }): string => {
@@ -335,17 +332,20 @@ export async function fetchCareerRecords() {
   const robotUserInclude = { user: { select: userSelect } };
 
   // Most Battles ranks on the all-modes count (a battle is a battle: KotH and
-  // Grand Melee matches count too). Ranked in SQL on the combined value, then
-  // loaded and counted with the shared batch helper: three queries, no N+1.
-  const mostBattlesIds = await getTopRobotIdsByAllModesBattleCount(10);
+  // Grand Melee matches count too). The ranking query returns the count it
+  // ranked on, so the displayed value and the rank come from one read; the
+  // robot load only adds name, owner and W/L/D. Two queries, no N+1.
+  const mostBattlesRanked = await getTopRobotsByAllModesBattleCount(10);
   const mostBattlesById = new Map(
-    (await prisma.robot.findMany({ where: { id: { in: mostBattlesIds } }, include: robotUserInclude }))
-      .map((robot) => [robot.id, robot]),
+    (await prisma.robot.findMany({
+      where: { id: { in: mostBattlesRanked.map((entry) => entry.robotId) } },
+      include: robotUserInclude,
+    })).map((robot) => [robot.id, robot]),
   );
-  const mostBattlesRobots = mostBattlesIds
-    .map((id) => mostBattlesById.get(id))
-    .filter((robot): robot is NonNullable<typeof robot> => robot !== undefined);
-  const mostBattlesCounts = await getAllModesBattleCounts(mostBattlesRobots);
+  const mostBattlesRows = mostBattlesRanked.flatMap(({ robotId, allModesBattleCount }) => {
+    const robot = mostBattlesById.get(robotId);
+    return robot ? [{ robot, allModesBattleCount }] : [];
+  });
 
   // Highest win rate — use raw SQL to compute and sort at DB level
   interface WinRateRow {
@@ -390,10 +390,10 @@ export async function fetchCareerRecords() {
   });
 
   return {
-    mostBattles: mostBattlesRobots.map(robot => ({
+    mostBattles: mostBattlesRows.map(({ robot, allModesBattleCount }) => ({
       robotId: robot.id, robotName: robot.name, ...getRecordOwner(robot.user),
-      // The ranked value: battles in every mode.
-      allModesBattleCount: mostBattlesCounts.get(robot.id) ?? robot.totalBattles,
+      // The ranked value: battles in every mode, from the ranking query.
+      allModesBattleCount,
       // W/L/D and win rate stay on the win/loss modes (`totalBattles`).
       totalBattles: robot.totalBattles, wins: robot.wins, losses: robot.losses, draws: robot.draws,
       winRate: robot.totalBattles > 0 ? Number((robot.wins / robot.totalBattles * 100).toFixed(1)) : 0,

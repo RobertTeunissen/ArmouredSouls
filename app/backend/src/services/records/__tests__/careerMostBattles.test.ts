@@ -1,15 +1,14 @@
 /**
  * Hall of Records "Most Battles" uses the all-modes battle count.
  *
- * The ranking itself runs in SQL (`getTopRobotIdsByAllModesBattleCount`, pinned
+ * The ranking itself runs in SQL (`getTopRobotsByAllModesBattleCount`, pinned
  * in allModesBattleCount.test.ts and executed in tests/integration/
  * mostBattlesAllModes.test.ts). This suite pins how `fetchCareerRecords` uses
- * it: ranked order kept, value from the shared batch helper, one batch call.
+ * it: ranked order kept, displayed value taken from the ranking row.
  */
 const mockRobotFindMany = jest.fn();
 const mockQueryRaw = jest.fn();
-const mockTopIds = jest.fn();
-const mockAllModesCounts = jest.fn();
+const mockTopRobots = jest.fn();
 
 jest.mock('../../../lib/prisma', () => ({
   __esModule: true,
@@ -20,8 +19,7 @@ jest.mock('../../../lib/prisma', () => ({
 }));
 
 jest.mock('../../robot/all-modes-battle-count', () => ({
-  getTopRobotIdsByAllModesBattleCount: (...args: unknown[]) => mockTopIds(...args),
-  getAllModesBattleCounts: (...args: unknown[]) => mockAllModesCounts(...args),
+  getTopRobotsByAllModesBattleCount: (...args: unknown[]) => mockTopRobots(...args),
 }));
 
 import { fetchCareerRecords } from '../recordsQueryService';
@@ -48,9 +46,11 @@ beforeEach(() => {
     return [...ids].reverse().map((id) => ROBOTS.get(id)).filter(Boolean);
   });
   // Robot 2 has fewer win/loss-mode battles but 500 KotH/Grand Melee matches.
-  mockTopIds.mockResolvedValue([2, 1, 3]);
-  mockAllModesCounts.mockImplementation(async (robots: Array<{ id: number; totalBattles: number }>) =>
-    new Map(robots.map((r) => [r.id, r.id === 2 ? 600 : r.totalBattles])));
+  mockTopRobots.mockResolvedValue([
+    { robotId: 2, allModesBattleCount: 600 },
+    { robotId: 1, allModesBattleCount: 400 },
+    { robotId: 3, allModesBattleCount: 50 },
+  ]);
 });
 
 describe('fetchCareerRecords().mostBattles', () => {
@@ -61,14 +61,13 @@ describe('fetchCareerRecords().mostBattles', () => {
 
   it('asks for the top 10 and loads exactly those robots', async () => {
     await fetchCareerRecords();
-    expect(mockTopIds).toHaveBeenCalledWith(10);
+    expect(mockTopRobots).toHaveBeenCalledWith(10);
     expect(mockRobotFindMany).toHaveBeenCalledWith(expect.objectContaining({ where: { id: { in: [2, 1, 3] } } }));
   });
 
-  it('reports the all-modes count from one batch-helper call (no N+1)', async () => {
+  it('displays the all-modes count the ranking query returned, not a second read', async () => {
+    // The robot rows say nothing about placement matches: the value must come from the rank row.
     const { mostBattles } = await fetchCareerRecords();
-
-    expect(mockAllModesCounts).toHaveBeenCalledTimes(1);
     expect(mostBattles.map((e) => e.allModesBattleCount)).toEqual([600, 400, 50]);
   });
 
@@ -79,7 +78,11 @@ describe('fetchCareerRecords().mostBattles', () => {
   });
 
   it('skips a ranked id whose robot vanished between the two queries', async () => {
-    mockTopIds.mockResolvedValue([2, 99, 1]);
+    mockTopRobots.mockResolvedValue([
+      { robotId: 2, allModesBattleCount: 600 },
+      { robotId: 99, allModesBattleCount: 500 },
+      { robotId: 1, allModesBattleCount: 400 },
+    ]);
     const { mostBattles } = await fetchCareerRecords();
     expect(mostBattles.map((e) => e.robotId)).toEqual([2, 1]);
   });

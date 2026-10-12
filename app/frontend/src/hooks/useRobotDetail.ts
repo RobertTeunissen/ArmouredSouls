@@ -34,12 +34,7 @@ const log = createLogger('useRobotDetail');
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-// `RobotDetail` and `WeaponDetail` are type aliases, not interfaces, on purpose:
-// an object type alias gets an implicit index signature, so a narrowed
-// `OwnerRobotDetail` is structurally assignable to `RobotWithAttributes` (which
-// the owner tabs take and which carries `[key: string]: unknown` and
-// `weapon: Record<string, unknown>`). An interface would need a cast there.
-export type RobotDetail = {
+export interface RobotDetail {
   id: number;
   name: string;
   userId: number;
@@ -105,7 +100,7 @@ export type RobotDetail = {
   kills: number;
   lifetimeRepairCreditsPaid: number;
   titles: string | null;
-};
+}
 
 /** Fields `GET /api/robots/:id` returns only to the robot's owner. */
 const OWNER_ONLY_FIELDS = [
@@ -121,9 +116,31 @@ const OWNER_ONLY_FIELDS = [
 ] as const satisfies ReadonlyArray<keyof RobotDetail>;
 
 type OwnerOnlyField = (typeof OWNER_ONLY_FIELDS)[number];
+type OwnerWeaponField = 'mainWeapon' | 'offhandWeapon';
+
+// The owner tabs take `RobotWithAttributes`, which carries `[key: string]: unknown`
+// and `weapon: Record<string, unknown>`. Interfaces get no implicit index
+// signature, so the owner-narrowed types below declare one explicitly. That
+// keeps `RobotDetail` / `WeaponDetail` strict and the tabs free of casts.
+
+/** A weapon as the owner tabs read it (string-keyed, like `RobotWithAttributes`). */
+export interface OwnerWeaponDetail extends WeaponDetail {
+  [key: string]: unknown;
+}
+
+/** An equipped weapon on an owner payload. */
+export interface OwnerWeaponInventoryItem extends WeaponInventoryItem {
+  weapon: OwnerWeaponDetail;
+}
 
 /** A robot payload as the owner receives it: every owner-only field present. */
-export type OwnerRobotDetail = RobotDetail & Required<Pick<RobotDetail, OwnerOnlyField>>;
+export interface OwnerRobotDetail
+  extends Omit<RobotDetail, OwnerOnlyField>,
+    Required<Pick<RobotDetail, Exclude<OwnerOnlyField, OwnerWeaponField>>> {
+  [key: string]: unknown;
+  mainWeapon: OwnerWeaponInventoryItem | null;
+  offhandWeapon: OwnerWeaponInventoryItem | null;
+}
 
 /** Whether the payload carries the owner-only fields (it was not sanitized). */
 export function isOwnerRobotDetail(robot: RobotDetail): robot is OwnerRobotDetail {
@@ -142,7 +159,7 @@ export interface WeaponInventoryItem {
   robotsOffhand?: Array<{ id: number; name: string }>;
 }
 
-export type WeaponDetail = {
+export interface WeaponDetail {
   id: number;
   name: string;
   weaponType: string;
@@ -168,7 +185,7 @@ export type WeaponDetail = {
   hydraulicSystemsBonus: number;
   powerCoreBonus: number;
   threatAnalysisBonus: number;
-};
+}
 
 // ─── Hook ────────────────────────────────────────────────────────────────────
 

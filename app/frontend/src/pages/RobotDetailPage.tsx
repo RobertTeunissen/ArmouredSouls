@@ -25,6 +25,13 @@ import { getProfile } from '../utils/userApi';
 import { isOwnerRobotDetail, useRobotDetail } from '../hooks/useRobotDetail';
 import RobotEligibilityChecklist from '../components/robot-setup/RobotEligibilityChecklist';
 
+/** Tabs that render only from the owner payload (`OwnerRobotDetail`). */
+const OWNER_ONLY_TABS: ReadonlySet<string> = new Set(['battle-config', 'upgrades', 'tuning', 'stats']);
+
+function isOwnerOnlyTab(tab: string): boolean {
+  return OWNER_ONLY_TABS.has(tab);
+}
+
 function RobotDetailPage() {
   const {
     robot,
@@ -338,8 +345,22 @@ function RobotDetailPage() {
             </div>
           )}
 
+          {/* Owner whose payload lacks an owner-only field: say so instead of an empty tab. */}
+          {isOwner && !ownerRobot && isOwnerOnlyTab(activeTab) && (
+            <div className="bg-surface p-6 rounded-lg text-center" role="alert" data-testid="owner-details-unavailable">
+              <p className="text-secondary text-lg">Robot details unavailable. Reload the page to try again.</p>
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                className="mt-4 bg-primary hover:bg-blue-700 px-6 py-2 rounded"
+              >
+                Reload
+              </button>
+            </div>
+          )}
+
           {/* Non-Owner View for owner-only tabs */}
-          {!isOwner && (activeTab === 'battle-config' || activeTab === 'upgrades' || activeTab === 'tuning' || activeTab === 'stats') && (
+          {!isOwner && isOwnerOnlyTab(activeTab) && (
             <div className="bg-surface p-6 rounded-lg text-center">
               <p className="text-secondary text-lg">
                 {activeTab === 'stats' 

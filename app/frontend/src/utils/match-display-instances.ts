@@ -173,6 +173,9 @@ function createTeamInstances(match: ScheduledMatch, userId: number): UpcomingMat
     });
 }
 
+// `perspectiveRobotIds` differs by context: here (Robot Detail) it is only the
+// viewed robot; `createTeamInstances` (Dashboard) lists every robot the stable
+// fields on the side. No card reads it today (BATTLE_CARD_DISPLAY.md).
 function createRobotPerspectiveTeamInstances(match: ScheduledMatch, robotId: number): UpcomingMatchInstance[] {
   return ([1, 2] as const)
     .map(sideNumber => getTeamSide(match, sideNumber))

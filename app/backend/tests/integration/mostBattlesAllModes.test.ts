@@ -10,7 +10,7 @@
  */
 import prisma from '../../src/lib/prisma';
 import { fetchCareerRecords } from '../../src/services/records/recordsQueryService';
-import { getTopRobotIdsByAllModesBattleCount } from '../../src/services/robot/all-modes-battle-count';
+import { getTopRobotsByAllModesBattleCount } from '../../src/services/robot/all-modes-battle-count';
 import { writeAccolades } from '../../src/services/season/seasonArchiveService';
 
 const suffix = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
@@ -65,14 +65,14 @@ describe('Most Battles ranks on the all-modes battle count', () => {
     await prisma.standing.deleteMany({ where: { entityType: 'robot', entityId: { in: robotIds } } });
     await prisma.robot.deleteMany({ where: { id: { in: robotIds } } });
     if (userId) await prisma.user.deleteMany({ where: { id: userId } });
-    await prisma.$disconnect();
   });
 
   const expectedOrder = () => [ids.placement, ids.counter, ids.tieFewer, ids.idFirst, ids.idSecond];
 
   it('ranks on the combined value, so placement matches can lift a robot above one with more total_battles', async () => {
-    const top = await getTopRobotIdsByAllModesBattleCount(5);
-    expect(top).toEqual(expectedOrder());
+    const top = await getTopRobotsByAllModesBattleCount(5);
+    expect(top.map((e) => e.robotId)).toEqual(expectedOrder());
+    expect(top.map((e) => e.allModesBattleCount)).toEqual([BASE + 500, BASE + 400, BASE + 400, BASE + 50, BASE + 50]);
   });
 
   it('fetchCareerRecords().mostBattles carries the all-modes count and keeps W/L/D on total_battles', async () => {
@@ -96,4 +96,76 @@ describe('Most Battles ranks on the all-modes battle count', () => {
     expect(rows[0].subjectName).toBe(`mb_placement_${suffix}`.slice(0, 50));
     expect(rows.every((r) => r.valueLabel === 'battles')).toBe(true);
   });
+});
+
+// Regression (PR #534, CI run 38268924418): the ranking added two int4 values
+// and cast SUM() back to int, so counts whose parts together pass 2^31 failed
+// the whole Hall of Records with PostgreSQL 22003 "integer out of range". Each
+// stored column stays inside int4 here; only the sums exceed it.
+describe('Most Battles survives all-modes counts above the int4 range', () => {
+  const INT4_MAX = 2_147_483_647;
+  const overflowSeason = 90_000 + Math.floor(Math.random() * 9_000);
+  let overflowUserId = 0;
+  const overflowIds: number[] = [];
+
+  beforeAll(async () => {
+    await prisma.season.create({
+      data: { seasonNumber: overflowSeason, phase: 'completed', startedAt: new Date(), endedAt: new Date() },
+    });
+    const user = await prisma.user.create({
+      data: { username: `mbo_${suffix}`, passwordHash: 'x', stableName: `MBO ${suffix}`.slice(0, 30) },
+    });
+    overflowUserId = user.id;
+    const create = async (name: string, totalBattles: number) => {
+      const created = await prisma.robot.create({
+        data: {
+          userId: overflowUserId, name: `mbo_${name}_${suffix}`.slice(0, 50), totalBattles,
+          currentHP: 55, maxHP: 55, currentShield: 4, maxShield: 4,
+        },
+      });
+      overflowIds.push(created.id);
+      return created.id;
+    };
+    // total_battles + one KotH standing: int4 + int4 > INT4_MAX.
+    const single = await create('single', 2_000_000_000);
+    await prisma.standing.create({ data: { entityType: 'robot', entityId: single, mode: 'koth', totalMatches: 2_000_000_000 } });
+    // Two placement standings whose SUM() alone passes INT4_MAX.
+    const summed = await create('summed', INT4_MAX);
+    await prisma.standing.create({ data: { entityType: 'robot', entityId: summed, mode: 'koth', totalMatches: 1_500_000_000 } });
+    await prisma.standing.create({ data: { entityType: 'robot', entityId: summed, mode: 'grand_melee', totalMatches: 1_500_000_000 } });
+  });
+
+  afterAll(async () => {
+    await prisma.season.deleteMany({ where: { seasonNumber: overflowSeason } });
+    await prisma.standing.deleteMany({ where: { entityType: 'robot', entityId: { in: overflowIds } } });
+    await prisma.robot.deleteMany({ where: { id: { in: overflowIds } } });
+    if (overflowUserId) await prisma.user.deleteMany({ where: { id: overflowUserId } });
+  });
+
+  const expectedCounts = [INT4_MAX + 3_000_000_000, 4_000_000_000];
+
+  it('ranks and returns counts past int4 without a 22003 error', async () => {
+    const top = await getTopRobotsByAllModesBattleCount(2);
+    expect(top).toEqual([
+      { robotId: overflowIds[1], allModesBattleCount: expectedCounts[0] },
+      { robotId: overflowIds[0], allModesBattleCount: expectedCounts[1] },
+    ]);
+  });
+
+  it('fetchCareerRecords and the season accolade carry the full value', async () => {
+    const { mostBattles } = await fetchCareerRecords();
+    expect(mostBattles.slice(0, 2).map((e) => e.allModesBattleCount)).toEqual(expectedCounts);
+
+    await writeAccolades(overflowSeason);
+    const rows = await prisma.seasonAccolade.findMany({
+      where: { seasonNumber: overflowSeason, category: 'mostBattles', rank: { lte: 2 } },
+      select: { value: true },
+      orderBy: { rank: 'asc' },
+    });
+    expect(rows.map((r) => r.value)).toEqual(expectedCounts);
+  });
+});
+
+afterAll(async () => {
+  await prisma.$disconnect();
 });

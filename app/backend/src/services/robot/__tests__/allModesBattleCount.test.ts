@@ -24,7 +24,7 @@ import {
   getAllModesBattleCount,
   getAllModesBattleCounts,
   getPlacementMatchCounts,
-  getTopRobotIdsByAllModesBattleCount,
+  getTopRobotsByAllModesBattleCount,
 } from '../all-modes-battle-count';
 import { PLACEMENT_MODE_BATTLE_TYPES } from '../../auth/userProfileService';
 
@@ -143,7 +143,7 @@ describe('getAllModesBattleCounts (batch)', () => {
   });
 });
 
-describe('getTopRobotIdsByAllModesBattleCount (Most Battles ranking)', () => {
+describe('getTopRobotsByAllModesBattleCount (Most Battles ranking)', () => {
   /** Collapse the tagged-template SQL to one line for text assertions. */
   function sentSql(): string {
     const [strings] = mockQueryRaw.mock.calls[0] as [TemplateStringsArray, ...unknown[]];
@@ -152,7 +152,7 @@ describe('getTopRobotIdsByAllModesBattleCount (Most Battles ranking)', () => {
 
   it('ranks in one query on the combined value, not on a total_battles pre-filter', async () => {
     mockQueryRaw.mockResolvedValue([]);
-    await getTopRobotIdsByAllModesBattleCount(10);
+    await getTopRobotsByAllModesBattleCount(10);
 
     expect(mockQueryRaw).toHaveBeenCalledTimes(1);
     const sql = sentSql();
@@ -160,27 +160,44 @@ describe('getTopRobotIdsByAllModesBattleCount (Most Battles ranking)', () => {
     expect(sql).toMatch(/FROM robots r LEFT JOIN \(/);
     expect(sql).not.toMatch(/WHERE r\./);
     expect(sql).toContain("s.entity_type = 'robot'");
-    expect(sql).toContain('ORDER BY r.total_battles + COALESCE(p.placement_matches, 0) DESC');
+    expect(sql).toContain('ORDER BY r.total_battles::bigint + COALESCE(p.placement_matches, 0::bigint) DESC');
+  });
+
+  it('adds in bigint so two int4 parts cannot overflow (PostgreSQL 22003)', async () => {
+    mockQueryRaw.mockResolvedValue([]);
+    await getTopRobotsByAllModesBattleCount(10);
+
+    const sql = sentSql();
+    expect(sql).toContain('SUM(COALESCE(s.total_matches, 0))::bigint AS placement_matches');
+    expect(sql).not.toMatch(/::int\b/);
   });
 
   it('breaks ties on more win/loss-mode battles, then the lower robot id', async () => {
     mockQueryRaw.mockResolvedValue([]);
-    await getTopRobotIdsByAllModesBattleCount(10);
+    await getTopRobotsByAllModesBattleCount(10);
 
     expect(sentSql()).toContain('DESC, r.total_battles DESC, r.id ASC LIMIT ?');
   });
 
   it('binds the placement modes and the limit as parameters', async () => {
     mockQueryRaw.mockResolvedValue([]);
-    await getTopRobotIdsByAllModesBattleCount(7);
+    await getTopRobotsByAllModesBattleCount(7);
 
     const [, ...values] = mockQueryRaw.mock.calls[0] as [TemplateStringsArray, ...unknown[]];
     expect(values).toEqual([[...PLACEMENT_COUNTED_MODES], 7]);
   });
 
-  it('returns the ids in the order the query ranked them', async () => {
-    mockQueryRaw.mockResolvedValue([{ id: 9 }, { id: 3 }, { id: 5 }]);
-    await expect(getTopRobotIdsByAllModesBattleCount(3)).resolves.toEqual([9, 3, 5]);
+  it('returns the robots in rank order with the count from the same row', async () => {
+    mockQueryRaw.mockResolvedValue([
+      { id: 9, total_battles: 2_000_000_000, placement_matches: BigInt(2_000_000_000) },
+      { id: 3, total_battles: 40, placement_matches: BigInt(260) },
+      { id: 5, total_battles: 12, placement_matches: BigInt(0) },
+    ]);
+    await expect(getTopRobotsByAllModesBattleCount(3)).resolves.toEqual([
+      { robotId: 9, allModesBattleCount: 4_000_000_000 },
+      { robotId: 3, allModesBattleCount: 300 },
+      { robotId: 5, allModesBattleCount: 12 },
+    ]);
   });
 });
 
