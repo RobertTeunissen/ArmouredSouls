@@ -8,11 +8,13 @@ import * as path from 'path';
 import * as fc from 'fast-check';
 
 const mockStandingFindMany = jest.fn();
+const mockQueryRaw = jest.fn();
 
 jest.mock('../../../lib/prisma', () => ({
   __esModule: true,
   default: {
     standing: { findMany: (...args: unknown[]) => mockStandingFindMany(...args) },
+    $queryRaw: (...args: unknown[]) => mockQueryRaw(...args),
   },
 }));
 
@@ -22,6 +24,7 @@ import {
   getAllModesBattleCount,
   getAllModesBattleCounts,
   getPlacementMatchCounts,
+  getTopRobotIdsByAllModesBattleCount,
 } from '../all-modes-battle-count';
 import { PLACEMENT_MODE_BATTLE_TYPES } from '../../auth/userProfileService';
 
@@ -137,6 +140,47 @@ describe('getAllModesBattleCounts (batch)', () => {
       ),
       { numRuns: 100 },
     );
+  });
+});
+
+describe('getTopRobotIdsByAllModesBattleCount (Most Battles ranking)', () => {
+  /** Collapse the tagged-template SQL to one line for text assertions. */
+  function sentSql(): string {
+    const [strings] = mockQueryRaw.mock.calls[0] as [TemplateStringsArray, ...unknown[]];
+    return strings.join('?').replace(/\s+/g, ' ');
+  }
+
+  it('ranks in one query on the combined value, not on a total_battles pre-filter', async () => {
+    mockQueryRaw.mockResolvedValue([]);
+    await getTopRobotIdsByAllModesBattleCount(10);
+
+    expect(mockQueryRaw).toHaveBeenCalledTimes(1);
+    const sql = sentSql();
+    // Every robot is a candidate: no WHERE on robots, placement matches joined in.
+    expect(sql).toMatch(/FROM robots r LEFT JOIN \(/);
+    expect(sql).not.toMatch(/WHERE r\./);
+    expect(sql).toContain("s.entity_type = 'robot'");
+    expect(sql).toContain('ORDER BY r.total_battles + COALESCE(p.placement_matches, 0) DESC');
+  });
+
+  it('breaks ties on more win/loss-mode battles, then the lower robot id', async () => {
+    mockQueryRaw.mockResolvedValue([]);
+    await getTopRobotIdsByAllModesBattleCount(10);
+
+    expect(sentSql()).toContain('DESC, r.total_battles DESC, r.id ASC LIMIT ?');
+  });
+
+  it('binds the placement modes and the limit as parameters', async () => {
+    mockQueryRaw.mockResolvedValue([]);
+    await getTopRobotIdsByAllModesBattleCount(7);
+
+    const [, ...values] = mockQueryRaw.mock.calls[0] as [TemplateStringsArray, ...unknown[]];
+    expect(values).toEqual([[...PLACEMENT_COUNTED_MODES], 7]);
+  });
+
+  it('returns the ids in the order the query ranked them', async () => {
+    mockQueryRaw.mockResolvedValue([{ id: 9 }, { id: 3 }, { id: 5 }]);
+    await expect(getTopRobotIdsByAllModesBattleCount(3)).resolves.toEqual([9, 3, 5]);
   });
 });
 

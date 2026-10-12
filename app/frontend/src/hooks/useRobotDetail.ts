@@ -34,7 +34,12 @@ const log = createLogger('useRobotDetail');
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-export interface RobotDetail {
+// `RobotDetail` and `WeaponDetail` are type aliases, not interfaces, on purpose:
+// an object type alias gets an implicit index signature, so a narrowed
+// `OwnerRobotDetail` is structurally assignable to `RobotWithAttributes` (which
+// the owner tabs take and which carries `[key: string]: unknown` and
+// `weapon: Record<string, unknown>`). An interface would need a cast there.
+export type RobotDetail = {
   id: number;
   name: string;
   userId: number;
@@ -100,7 +105,7 @@ export interface RobotDetail {
   kills: number;
   lifetimeRepairCreditsPaid: number;
   titles: string | null;
-}
+};
 
 /** Fields `GET /api/robots/:id` returns only to the robot's owner. */
 const OWNER_ONLY_FIELDS = [
@@ -137,7 +142,7 @@ export interface WeaponInventoryItem {
   robotsOffhand?: Array<{ id: number; name: string }>;
 }
 
-export interface WeaponDetail {
+export type WeaponDetail = {
   id: number;
   name: string;
   weaponType: string;
@@ -163,7 +168,7 @@ export interface WeaponDetail {
   hydraulicSystemsBonus: number;
   powerCoreBonus: number;
   threatAnalysisBonus: number;
-}
+};
 
 // ─── Hook ────────────────────────────────────────────────────────────────────
 

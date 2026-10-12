@@ -22,7 +22,6 @@ import type { LeagueHistoryEntry } from '../components/LeagueTimeline';
 import TeamBattleLeagueHistory from '../components/TeamBattleLeagueHistory';
 import type { BattleHistory } from '../utils/matchmakingApi';
 import { getProfile } from '../utils/userApi';
-import type { RobotWithAttributes } from '../types/robot';
 import { isOwnerRobotDetail, useRobotDetail } from '../hooks/useRobotDetail';
 import RobotEligibilityChecklist from '../components/robot-setup/RobotEligibilityChecklist';
 
@@ -295,7 +294,7 @@ function RobotDetailPage() {
 
           {activeTab === 'battle-config' && ownerRobot && (
             <BattleConfigTab
-              robot={ownerRobot as unknown as RobotWithAttributes}
+              robot={ownerRobot}
               weapons={weapons}
               repairBayLevel={repairBayLevel}
               activeRobotCount={activeRobotCount}
@@ -307,7 +306,7 @@ function RobotDetailPage() {
 
           {activeTab === 'upgrades' && ownerRobot && (
             <UpgradePlanner
-              robot={ownerRobot as unknown as RobotWithAttributes}
+              robot={ownerRobot}
               currentCredits={currency}
               trainingLevel={trainingLevel}
               rosterCapacity={rosterCapacity}
@@ -320,14 +319,14 @@ function RobotDetailPage() {
           {activeTab === 'tuning' && ownerRobot && (
             <TuningPoolEditor
               robotId={ownerRobot.id}
-              robot={ownerRobot as unknown as RobotWithAttributes}
+              robot={ownerRobot}
             />
           )}
 
           {/* Owner-only like the tab itself: a non-owner reaching ?tab=stats gets the notice below. */}
           {activeTab === 'stats' && ownerRobot && (
             <div className="mb-6">
-              <EffectiveStatsDisplay robot={ownerRobot as unknown as RobotWithAttributes} />
+              <EffectiveStatsDisplay robot={ownerRobot} />
             </div>
           )}
 

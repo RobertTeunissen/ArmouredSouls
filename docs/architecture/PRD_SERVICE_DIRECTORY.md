@@ -269,7 +269,7 @@ Robot management — the full lifecycle from creation to combat.
 | `robotWeaponService` | Weapon equip/unequip transactions (main, offhand, loadout type) |
 | `robotSettingsService` | `updateStance`, `updateYieldThreshold` (extracted from `routes/robots.ts`, Spec #55) |
 | `robotSanitizer` | Strips sensitive data for public robot viewing |
-| `all-modes-battle-count` | All-modes battle count (`totalBattles` + KotH + Grand Melee `standings.total_matches`), single and batch. Used by streaming revenue, the financial report, facility recommendations and the robot detail/stable view payloads (#530, #532) |
+| `all-modes-battle-count` | All-modes battle count (`totalBattles` + KotH + Grand Melee `standings.total_matches`), single and batch, plus `getTopRobotIdsByAllModesBattleCount` (SQL ranking on the combined value). Used by streaming revenue, the financial report, facility recommendations, the robot detail/stable view payloads (#530, #532) and the Hall of Records "Most Battles" list and its season accolade |
 
 ### security/
 Security monitoring and logging.

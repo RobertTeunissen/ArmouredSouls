@@ -254,6 +254,8 @@ This includes zero-valued components. A zero component records a completed calcu
 
 Existing domain `passive_income` and `operating_costs` audit events and cycle snapshot fields remain compatible while identified paired `financial_transaction` rows provide the accounting source. A future report may derive a net value from the two components; it must not create or expect `settlement_adjustment`.
 
+The domain `passive_income` payload carries an informational `winLossModeBattles`: the stable's summed `robots.total_battles` at settlement, which covers the win/loss modes only (KotH and Grand Melee are not in it). Rows written before the rename carry the same value as `totalBattles`. There is no data migration; read the value through `readPassiveIncomeWinLossModeBattles` (`services/financial/passive-income-payload-keys.ts`), which prefers the new key and falls back to the old one. No income, cost, snapshot or report figure is derived from it.
+
 ## 9. Canonical-source map
 
 | Reporting or operational question | `Canonical_Source` |

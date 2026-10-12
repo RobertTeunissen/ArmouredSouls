@@ -13,6 +13,7 @@ import {
   buildPassiveIncomeBreakdown,
 } from './financialBreakdowns';
 import { buildSettlementEventId } from './financialEventIdentity';
+import { PASSIVE_INCOME_WIN_LOSS_BATTLES_KEY } from './passive-income-payload-keys';
 import {
   creditMutationService,
   type CreditMutationResult,
@@ -87,7 +88,12 @@ export interface SettlementFacts {
   operatingCostComponents: readonly SettlementOperatingCostComponent[];
   robotCount: number;
   rosterCostPerAdditionalRobot: number;
-  totalBattles: number;
+  /**
+   * Sum of the stable's `robots.total_battles`: win/loss modes only (KotH and
+   * Grand Melee are not in it). Informational; recorded on the `passive_income`
+   * audit payload as `winLossModeBattles` (formerly `totalBattles`).
+   */
+  winLossModeBattles: number;
   totalFame: number;
 }
 
@@ -178,7 +184,7 @@ export function calculateSettlementFacts(
     operatingCostComponents,
     robotCount: robots.length,
     rosterCostPerAdditionalRobot,
-    totalBattles: robots.reduce((total, robot) => total + robot.totalBattles, 0),
+    winLossModeBattles: robots.reduce((total, robot) => total + robot.totalBattles, 0),
     totalFame: robots.reduce((total, robot) => total + robot.fame, 0),
   };
 }
@@ -481,7 +487,9 @@ async function settleUserInTransaction(
       prestige: facts.prestige,
       rosterCapacity: facts.rosterCapacity,
       prestigePerSlot: Number(facts.prestigePerSlot.toFixed(2)),
-      totalBattles: facts.totalBattles,
+      // Raw win/loss-mode counter sum; renamed from `totalBattles` (read both
+      // through readPassiveIncomeWinLossModeBattles).
+      [PASSIVE_INCOME_WIN_LOSS_BATTLES_KEY]: facts.winLossModeBattles,
       totalFame: facts.totalFame,
     },
   });

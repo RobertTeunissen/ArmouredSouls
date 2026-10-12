@@ -91,6 +91,8 @@ Unified player management page combining player listing, engagement monitoring, 
 
 Stable-level Battles and Win % (this table, the detail summary, and `GET /api/admin/engagement/players`) count each battle once per stable, as on the player dashboard: summed robot counters minus the shared-side overlap (`services/auth/stable-battle-overlap.ts`, one batch query per list). Per-robot figures in the detail slide-over are the robot's own counters. Churn risk still reads the summed robot counters as its activity signal.
 
+**List size:** `GET /api/admin/users/recent` lists at most the 500 newest users in range (`RECENT_USER_ACTIVITY_LIMIT`), also on "All" or when no cycle cutoff exists. Generated stables grow to thousands, and every listed user's robots and shared-side overlap are loaded per request. `totalUsers` (the Real Players / Auto-Generated card) still counts every user in range. When the list is capped the page says "Listing the N newest of M …"; sorting, the churn filter and the With Issues count then cover the listed users.
+
 **Search:** Username, stable name, or robot name search across all users
 
 **Detail slide-over** (click any row):

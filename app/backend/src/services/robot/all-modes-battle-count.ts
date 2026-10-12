@@ -3,7 +3,8 @@
  *
  * The one authoritative "battles played across every mode" figure for a robot.
  * Use it wherever the meaning is "how many battles has this robot played"
- * (streaming revenue, Finance Center breakdown, robot profile headline).
+ * (streaming revenue, Finance Center breakdown, robot profile headline, Hall of
+ * Records "Most Battles" and its season accolade).
  *
  * Query-time, no stored counter:
  *   allModes = robots.total_battles
@@ -77,4 +78,31 @@ export async function getAllModesBattleCounts(
 export async function getAllModesBattleCount(robot: { id: number; totalBattles: number }): Promise<number> {
   const counts = await getAllModesBattleCounts([robot]);
   return counts.get(robot.id) ?? robot.totalBattles;
+}
+
+/**
+ * Ids of the `limit` robots with the highest all-modes battle count, best first
+ * (Hall of Records "Most Battles" and its season accolade).
+ *
+ * Ranked in SQL on the combined value, so a robot whose KotH / Grand Melee
+ * matches lift it into the top N is never dropped by a pre-filter on
+ * `total_battles`. Ties: more win/loss-mode battles first (the column the
+ * ranking used before), then the lower robot id, so the order is deterministic.
+ * Robots and standings are both current-season, so the ranking is too.
+ */
+export async function getTopRobotIdsByAllModesBattleCount(limit: number): Promise<number[]> {
+  const rows = await prisma.$queryRaw<Array<{ id: number }>>`
+    SELECT r.id
+    FROM robots r
+    LEFT JOIN (
+      SELECT s.entity_id, SUM(COALESCE(s.total_matches, 0))::int AS placement_matches
+      FROM standings s
+      WHERE s.entity_type = 'robot'
+        AND s.mode::text = ANY(${[...PLACEMENT_COUNTED_MODES]}::text[])
+      GROUP BY s.entity_id
+    ) p ON p.entity_id = r.id
+    ORDER BY r.total_battles + COALESCE(p.placement_matches, 0) DESC, r.total_battles DESC, r.id ASC
+    LIMIT ${limit}
+  `;
+  return rows.map((row) => row.id);
 }

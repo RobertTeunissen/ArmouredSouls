@@ -7,9 +7,14 @@
  * can then assert that a stable's totals count each battle once, without
  * hand-computing either side.
  *
- * The shared-side derivation mirrors the WHERE / GROUP BY / HAVING of
- * `getStableBattleOverlapsByUser`. The SQL text itself is pinned in
- * `stableBattleOverlap.test.ts` and executed in CI by the integration tier.
+ * The shared-side derivation is a TypeScript copy of the WHERE / GROUP BY /
+ * HAVING of `getStableBattleOverlapsByUser`; it does not run that SQL. The SQL
+ * text and bound values are pinned in `stableBattleOverlap.test.ts` (unit tier,
+ * mocked). The query itself runs against a real database in one integration
+ * case only: `tests/userStableStats.test.ts` (one same-stable tag-team side,
+ * the batch result and the archived stable total). The cases built from this
+ * fixture (byes, 2v2/3v3, cross-stable pairs, placement modes) are covered at
+ * unit level only.
  */
 import { NO_COUNTER_BYE_BATTLE_TYPES } from '../../src/services/auth/stable-battle-overlap';
 import { PLACEMENT_COUNTED_MODES } from '../../src/services/robot/all-modes-battle-count';

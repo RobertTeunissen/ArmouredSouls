@@ -238,13 +238,14 @@ No data remediation accompanies the fix. The orphaned rows cannot be reconstruct
 #### 3. **Career Records** (Lifetime Stats) ✅ Implemented
 
 ##### 3.1 Most Battles Fought ✅
-- **Metric:** Robot with most lifetime battles
+- **Metric:** Robot with the most battles in every mode. A battle is a battle: KotH and Grand Melee matches count as well.
 - **Display:**
   - Robot name and owner
-  - Total battles (e.g., "1,247 battles")
-  - Win rate percentage
+  - All-modes battles (e.g., "1,247 battles"), the ranked value (`allModesBattleCount` in the API)
+  - W/L/D record and win rate, which cover the win/loss modes only (`totalBattles`). The section subtitle says so, with the shared placement-modes note.
   - Current ELO
-- **Database Query:** `MAX(totalBattles)` from Robot table (excludes "Bye Robot")
+- **Database Query:** `getTopRobotIdsByAllModesBattleCount` (`services/robot/all-modes-battle-count.ts`) ranks every robot in SQL on `robots.total_battles` + KotH and Grand Melee `standings.total_matches`. No `total_battles` pre-filter, so placement matches can lift a robot into the top 10. Ties go to more win/loss-mode battles, then the lower robot id. The displayed count comes from the shared batch helper `getAllModesBattleCounts`. Live data, so current-season scoped.
+- **Season accolade:** `writeAccolades` stores the same all-modes value (label "battles") under `mostBattles` at rollover. Accolades already archived for earlier seasons (Season 0 included) keep the win/loss-mode value they were written with; nothing rewrites past-season accolades.
 - **Why It's Cool:** Recognizes dedication and experience
 - **Implementation**: Lines 227-237 in `records.ts`
 

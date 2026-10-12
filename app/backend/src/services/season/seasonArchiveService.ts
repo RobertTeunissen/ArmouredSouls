@@ -571,8 +571,11 @@ export async function writeAccolades(seasonNumber: number): Promise<number> {
   // ── Career leaderboards (robot-level, all modes combined) ──
   await capture('career', async () => {
     const career = await records.fetchCareerRecords();
+    // Battles in every mode (KotH and Grand Melee included), as the Hall of
+    // Records ranks them. Accolades already written for past seasons keep the
+    // value they were archived with; nothing rewrites them.
     pushRanked('mostBattles', null, 'battles', 'robot',
-      career.mostBattles.map((e) => ({ subjectName: e.robotName, value: e.totalBattles, owner: robotOwner(e.robotId) })));
+      career.mostBattles.map((e) => ({ subjectName: e.robotName, value: e.allModesBattleCount, owner: robotOwner(e.robotId) })));
     pushRanked('highestWinRate', null, 'win %', 'robot',
       career.highestWinRate.map((e) => ({ subjectName: e.robotName, value: e.winRate, owner: robotOwner(e.robotId) })));
     pushRanked('mostLifetimeDamage', null, 'lifetime damage', 'robot',

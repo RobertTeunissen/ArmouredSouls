@@ -31,7 +31,7 @@ jest.mock('../../standings/robotLeagueTiers', () => ({
 }));
 
 import { getEngagementPlayers } from '../adminDashboardService';
-import { getRecentUserActivity } from '../adminSystemStatsService';
+import { RECENT_USER_ACTIVITY_LIMIT, getRecentUserActivity } from '../adminSystemStatsService';
 import {
   robotCountersFrom,
   sharedSidesFrom,
@@ -166,4 +166,45 @@ it('reads the overlap for the whole page in one query', async () => {
 
   expect(mockQueryRaw).toHaveBeenCalledTimes(1);
   expect(mockQueryRaw.mock.calls[0][1]).toEqual([1, 2]);
+});
+
+describe('getRecentUserActivity is bounded', () => {
+  it('lists at most RECENT_USER_ACTIVITY_LIMIT newest users', async () => {
+    serve([]);
+    await getRecentUserActivity(200, 'all');
+
+    expect(RECENT_USER_ACTIVITY_LIMIT).toBe(500);
+    expect(mockUserFindMany).toHaveBeenCalledWith(expect.objectContaining({
+      take: RECENT_USER_ACTIVITY_LIMIT,
+      orderBy: { createdAt: 'desc' },
+    }));
+  });
+
+  it('caps the list even without a cycle cutoff (no cycle metadata)', async () => {
+    serve([]);
+    mockCycleMetadataFindUnique.mockResolvedValue(null);
+    const result = await getRecentUserActivity(10, 'all');
+
+    expect(result.cutoffDate).toBeNull();
+    expect(mockUserFindMany).toHaveBeenCalledWith(expect.objectContaining({ take: RECENT_USER_ACTIVITY_LIMIT }));
+  });
+
+  it('reads the overlap once, for the listed users only', async () => {
+    serve([]);
+    await getRecentUserActivity(200, 'all');
+
+    expect(mockQueryRaw).toHaveBeenCalledTimes(1);
+    expect(mockQueryRaw.mock.calls[0][1]).toEqual([1, 2]);
+  });
+
+  it('keeps totalUsers as every user in range when the list is capped', async () => {
+    serve([]);
+    mockUserCount.mockResolvedValue(1_234);
+    const result = await getRecentUserActivity(200, 'all');
+
+    expect(result.users).toHaveLength(2);
+    expect(result.totalUsers).toBe(1_234);
+    // Count and list share one where clause.
+    expect(mockUserCount.mock.calls[0][0]).toEqual({ where: mockUserFindMany.mock.calls[0][0].where });
+  });
 });

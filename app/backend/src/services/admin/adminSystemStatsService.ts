@@ -795,8 +795,23 @@ export async function getRobotAttributeStats() {
 }
 
 /**
+ * Most users `getRecentUserActivity` lists, newest first.
+ *
+ * The list loads every listed user's robots and reads their shared-side overlap
+ * from `battle_participants` in one query. Unbounded, a long look-back ("All")
+ * or a missing cycle cutoff covers every account — generated stables alone grow
+ * to thousands — and that query aggregates nearly the whole participants table
+ * on each admin load. The Players page pages this list 25 rows at a time on the
+ * client, so 500 newest users is 20 pages; `totalUsers` still reports every
+ * matching user, so the admin can see when the list is capped.
+ */
+export const RECENT_USER_ACTIVITY_LIMIT = 500;
+
+/**
  * Get recent real (non-auto-generated) user activity across cycles.
  * Returns the exact shape that the /users/recent route handler sends as JSON.
+ * `users` holds at most RECENT_USER_ACTIVITY_LIMIT newest users; `totalUsers`
+ * counts every user in range and `usersWithIssues` counts the listed users.
  */
 export async function getRecentUserActivity(cyclesBack: number, filter: string = 'real') {
   // Get current cycle number
@@ -821,11 +836,14 @@ export async function getRecentUserActivity(cyclesBack: number, filter: string =
 
   // Apply user filter (real/auto/all)
   const userFilter = buildUserFilter(filter as UserFilterType);
+  const recentUserWhere = {
+    ...userFilter,
+    ...(cutoffDate ? { createdAt: { gte: cutoffDate } } : {}),
+  };
+  const matchingUserCount = await prisma.user.count({ where: recentUserWhere });
   const recentUsers = await prisma.user.findMany({
-    where: {
-      ...userFilter,
-      ...(cutoffDate ? { createdAt: { gte: cutoffDate } } : {}),
-    },
+    where: recentUserWhere,
+    take: RECENT_USER_ACTIVITY_LIMIT,
     select: {
       id: true,
       username: true,
@@ -962,7 +980,8 @@ export async function getRecentUserActivity(cyclesBack: number, filter: string =
     currentCycle,
     cyclesBack,
     cutoffDate: cutoffDate?.toISOString() || null,
-    totalUsers: usersWithActivity.length,
+    // Every user in range, also when `users` is capped at RECENT_USER_ACTIVITY_LIMIT.
+    totalUsers: matchingUserCount,
     usersWithIssues: usersWithActivity.filter((u) => u.issues.length > 0).length,
     users: usersWithActivity,
     timestamp: new Date().toISOString(),

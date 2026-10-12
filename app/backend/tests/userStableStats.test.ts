@@ -7,6 +7,8 @@ import dotenv from 'dotenv';
 import userRoutes from '../src/routes/user';
 import { createTestUser, createTestRobot, deleteTestUser } from './testHelpers';
 import { errorHandler } from '../src/middleware/errorHandler';
+import { getStableBattleOverlapsByUser } from '../src/services/auth/stable-battle-overlap';
+import { writeStableAndRobotArchives } from '../src/services/season/seasonArchiveService';
 
 dotenv.config();
 
@@ -172,5 +174,59 @@ describe('GET /api/user/stats - Stable Overview', () => {
       .get('/api/user/stats');
 
     expect(response.status).toBe(401);
+  });
+
+  // The batch variant used by the admin lists and the season archive, against a
+  // real database. The unit tier only pins its SQL text; this proves the rows it
+  // returns are grouped per stable and that `userId` comes back as a JS number
+  // (a bigint or string would miss the Map lookup and report no overlap).
+  describe('getStableBattleOverlapsByUser (batch overlap SQL)', () => {
+    let otherUser: any;
+
+    beforeAll(async () => {
+      otherUser = await createTestUser();
+    });
+
+    afterAll(async () => {
+      await deleteTestUser(otherUser.id);
+    });
+
+    it('returns the shared tag-team side as a surplus of one win, keyed by the numeric user id', async () => {
+      const overlaps = await getStableBattleOverlapsByUser([testUser.id, otherUser.id]);
+
+      expect([...overlaps.keys()]).toEqual([testUser.id, otherUser.id]);
+      for (const key of overlaps.keys()) expect(typeof key).toBe('number');
+      // Two robots of one stable on side 1, side 1 won: k - 1 = 1 surplus win.
+      expect(overlaps.get(testUser.id)).toEqual({ battles: 1, wins: 1, losses: 0, draws: 0 });
+      // A stable that shared no side gets a zero entry.
+      expect(overlaps.get(otherUser.id)).toEqual({ battles: 0, wins: 0, losses: 0, draws: 0 });
+    });
+
+    it('archives the stable total with the shared battle counted once', async () => {
+      // Throwaway `completed` season; its archive rows cascade away with it.
+      const season = 70_000 + Math.floor(Math.random() * 9_000);
+      await prisma.season.create({ data: { seasonNumber: season, phase: 'completed', startedAt: new Date(), endedAt: new Date() } });
+      try {
+        await writeStableAndRobotArchives(season, 10, new Map(), new Map());
+
+        const archive = await prisma.stableSeasonArchive.findUnique({
+          where: { seasonNumber_userId: { seasonNumber: season, userId: testUser.id } },
+          select: { id: true, totalBattles: true, wins: true, losses: true, draws: true },
+        });
+        // Robot counters sum to 20 battles / 12 wins; the shared side is 1 / 1.
+        expect(archive).toMatchObject({ totalBattles: 19, wins: 11, losses: 7, draws: 1 });
+
+        // Robot archive rows keep each robot's own counters.
+        const robotArchives = await prisma.robotSeasonArchive.findMany({
+          where: { stableArchiveId: archive!.id },
+          select: { robotName: true, totalBattles: true },
+        });
+        const byName = new Map(robotArchives.map((r) => [r.robotName, r.totalBattles]));
+        expect(byName.get(robot1.name)).toBe(11);
+        expect(byName.get(robot2.name)).toBe(9);
+      } finally {
+        await prisma.season.deleteMany({ where: { seasonNumber: season } });
+      }
+    });
   });
 });

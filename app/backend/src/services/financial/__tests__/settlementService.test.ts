@@ -125,8 +125,18 @@ describe('Settlement_Service', () => {
       expect.objectContaining({ facilityType: 'streaming_studio', cost: 200 }),
       expect.objectContaining({ facilityType: 'roster_expansion', cost: 500 }),
     ]);
-    expect(facts.totalBattles).toBe(20);
+    expect(facts.winLossModeBattles).toBe(20);
     expect(facts.totalFame).toBe(60);
+  });
+
+  it('records the raw win/loss-mode counter sum under winLossModeBattles, not totalBattles', async () => {
+    await settleCycle({ cycleNumber: 15 });
+
+    const passiveCall = mockLogSettlementComponent.mock.calls
+      .map((call) => call[1] as { componentType: string; payload: Record<string, unknown> })
+      .find((input) => input.componentType === 'passive_income');
+    expect(passiveCall?.payload).toMatchObject({ winLossModeBattles: 20, totalFame: 60 });
+    expect(passiveCall?.payload).not.toHaveProperty('totalBattles');
   });
 
   it('should write both positive and negative components, including a zero component, with deterministic identities', async () => {
