@@ -1,3 +1,4 @@
+import type { ComponentProps } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
@@ -65,11 +66,11 @@ function makeMatch(overrides: Partial<ScheduledMatch> = {}): ScheduledMatch {
   };
 }
 
-function renderPage(): void {
+function renderPage(props: ComponentProps<typeof UpcomingMatches> = {}): void {
   vi.mocked(localStorage.getItem).mockReturnValue('test-token');
   render(
     <MemoryRouter>
-      <UpcomingMatches />
+      <UpcomingMatches {...props} />
     </MemoryRouter>,
   );
 }
@@ -137,5 +138,84 @@ describe('UpcomingMatches shared display routing', () => {
     await waitFor(() => expect(mockedGetUpcomingMatches).toHaveBeenCalledTimes(1));
     expect(screen.queryByText('BYE')).toBeNull();
     expect(screen.queryByText('PENDING')).toBeNull();
+  });
+});
+
+describe('UpcomingMatches perspective and readiness', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    cleanup();
+  });
+
+  it('Dashboard (no robotId) should only render the viewer\'s own sides', async () => {
+    mockedGetUpcomingMatches.mockResolvedValue([
+      makeMatch({ robot1: makeRobot(10, 7), robot2: makeRobot(20, 8) }),
+      makeMatch({ robot1: makeRobot(30, 8), robot2: makeRobot(40, 9) }),
+    ]);
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getAllByText('PENDING')).toHaveLength(2);
+    });
+    expect(screen.queryByText('Robot 30')).toBeNull();
+    expect(screen.queryByText('Robot 40')).toBeNull();
+  });
+
+  it('Robot Detail should render a match card for a robot the viewer does not own', async () => {
+    mockedGetUpcomingMatches.mockResolvedValue([
+      makeMatch({ robot1: makeRobot(20, 8), robot2: makeRobot(30, 9) }),
+    ]);
+    renderPage({ robotId: 20 });
+
+    await waitFor(() => {
+      expect(screen.getAllByText('PENDING')).toHaveLength(2);
+    });
+    expect(screen.getAllByText('Robot 20').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Robot 30').length).toBeGreaterThan(0);
+    expect(mockedGetUpcomingMatches).toHaveBeenCalledWith(20);
+  });
+
+  it('Robot Detail should render a team card when the viewer owns neither side', async () => {
+    mockedGetUpcomingMatches.mockResolvedValue([
+      makeMatch({
+        matchType: 'league_2v2',
+        teamBattleTeam1: makeTeam(201, 8, 2),
+        teamBattleTeam2: makeTeam(301, 9, 2),
+      }),
+    ]);
+    renderPage({ robotId: 3010 });
+
+    await waitFor(() => {
+      expect(screen.getAllByText('Team 301').length).toBeGreaterThan(0);
+    });
+    expect(screen.getAllByText('Team 201').length).toBeGreaterThan(0);
+  });
+
+  it('should not show the readiness badge when readiness is unknown', async () => {
+    mockedGetUpcomingMatches.mockResolvedValue([
+      makeMatch({ robot1: makeRobot(20, 8), robot2: makeRobot(30, 9) }),
+    ]);
+    renderPage({ robotId: 20, battleReadiness: undefined });
+
+    await waitFor(() => {
+      expect(screen.getAllByText('PENDING').length).toBeGreaterThan(0);
+    });
+    expect(screen.queryByText('Not Battle Ready')).toBeNull();
+  });
+
+  it('should show the readiness badge and warnings when not ready', async () => {
+    mockedGetUpcomingMatches.mockResolvedValue([
+      makeMatch({ robot1: makeRobot(10, 7), robot2: makeRobot(20, 8) }),
+    ]);
+    renderPage({ robotId: 10, battleReadiness: { isReady: false, warnings: ['No main weapon equipped'] } });
+
+    await waitFor(() => {
+      expect(screen.getByText('Not Battle Ready')).toBeTruthy();
+    });
+    expect(screen.getByText(/⚠️ No main weapon equipped/)).toBeTruthy();
   });
 });

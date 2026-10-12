@@ -4,7 +4,7 @@
  * Extracted from RobotDetailPage.tsx during hook extraction (Backlog #50).
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../utils/api';
 import {
@@ -28,6 +28,7 @@ import { getMatchHistory, BattleHistory } from '../utils/matchmakingApi';
 import type { RobotWithAttributes } from '../types/robot';
 import type { StableType } from '../types/stable';
 import { createLogger } from '../utils/logger';
+import { getOwnerBattleReadiness } from '../utils/robot-battle-readiness';
 
 const log = createLogger('useRobotDetail');
 
@@ -166,7 +167,6 @@ export function useRobotDetail() {
   const [successMessage, setSuccessMessage] = useState('');
   const [showImageSelector, setShowImageSelector] = useState(false);
   const [recentBattles, setRecentBattles] = useState<BattleHistory[]>([]);
-  const [battleReadiness, setBattleReadiness] = useState<{ isReady: boolean; warnings: string[] }>({ isReady: true, warnings: [] });
   const [leagueRank, setLeagueRank] = useState<{ rank: number; total: number; percentile: number } | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
 
@@ -314,21 +314,6 @@ export function useRobotDetail() {
       } else {
         log.error('Failed to fetch recent battles', { err: battlesResult.reason });
       }
-
-      // Calculate battle readiness
-      const hpPercentage = (robotData.currentHP / robotData.maxHP) * 100;
-      const hasWeapons = robotData.mainWeaponId !== null;
-      const isReady = hpPercentage >= 50 && hasWeapons;
-      const warnings: string[] = [];
-
-      if (hpPercentage < 50) {
-        warnings.push('HP below 50%');
-      }
-      if (!hasWeapons) {
-        warnings.push('No weapons equipped');
-      }
-
-      setBattleReadiness({ isReady, warnings });
     } catch (err: unknown) {
       if (err instanceof ApiError) {
         if (err.statusCode === 401) {
@@ -446,6 +431,14 @@ export function useRobotDetail() {
   };
 
   const isOwner = user && robot ? robot.userId === user.id : false;
+
+  // Owner-only: non-owner payloads are sanitized (no loadout/weapon fields),
+  // so readiness is unknown and no badge is shown. Derived from `robot` so it
+  // stays current after equip/unequip/loadout changes.
+  const battleReadiness = useMemo(
+    () => (isOwner && robot ? getOwnerBattleReadiness(robot) : undefined),
+    [isOwner, robot],
+  );
 
   return {
     // Core data

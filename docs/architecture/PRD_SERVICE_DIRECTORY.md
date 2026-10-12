@@ -402,4 +402,4 @@ All schedule env vars are overridable via `.env` for rollback or per-environment
 | `src/types/` | Shared TypeScript interfaces for JSON payloads (snapshot types, battle log types) |
 | `src/config/` | Configuration (logger, environment, facilities) |
 | `src/lib/` | Singleton instances (Prisma client, credit guard) |
-| `app/shared/utils/` | Game formulas shared between frontend and backend (upgrade costs, discounts, academy caps) |
+| `app/shared/utils/` | Game formulas shared between frontend and backend (upgrade costs, discounts, academy caps, loadout battle readiness) |

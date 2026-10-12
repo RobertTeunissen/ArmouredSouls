@@ -136,7 +136,7 @@ function getOwnedTeamRobotIds(side: ScheduledTeamSide, userId: number): number[]
     .map(robot => robot.id);
 }
 
-function createRobotInstances(match: ScheduledMatch, robots: ScheduledRobot[]): UpcomingMatchInstance[] {
+function createRobotInstances(match: ScheduledMatch, robots: Array<{ id: number }>): UpcomingMatchInstance[] {
   const seen = new Set<number>();
 
   return robots
@@ -173,29 +173,65 @@ function createTeamInstances(match: ScheduledMatch, userId: number): UpcomingMat
     });
 }
 
+function createRobotPerspectiveTeamInstances(match: ScheduledMatch, robotId: number): UpcomingMatchInstance[] {
+  return ([1, 2] as const)
+    .map(sideNumber => getTeamSide(match, sideNumber))
+    .filter((side): side is ScheduledTeamSide => (
+      side != null && getTeamRobotIds(side).includes(robotId)
+    ))
+    .map(side => ({
+      ...match,
+      displayInstanceKey: `match:${String(match.id)}:team:${side.id}`,
+      perspectiveRobotId: robotId,
+      perspectiveRobotIds: [robotId],
+      perspectiveTeamId: side.id,
+    }));
+}
+
 /**
- * Expand one scheduled Match into the authenticated stable's represented
- * sides. This is presentation-only: it neither mutates the API row nor
- * performs additional ownership or team lookups.
+ * Expand one scheduled Match into display instances for the given context.
+ * - `robotId` (Robot Detail): only the side containing that robot, for any
+ *   viewer. Takes precedence over `userId`.
+ * - `userId` (Dashboard): the authenticated stable's represented sides.
+ * - neither: no instances.
+ * This is presentation-only: it neither mutates the API row nor performs
+ * additional ownership or team lookups.
  */
 export function expandUpcomingMatchInstances(
   match: ScheduledMatch,
-  userId: number,
+  context: { userId?: number; robotId?: number },
 ): UpcomingMatchInstance[] {
-  if (isPlacementMode(match.matchType)) {
-    const ownedRobots = (match.kothParticipants ?? [])
-      .filter(participant => participant.userId === userId)
-      .map(participant => ({
-        id: participant.id,
-        name: participant.name,
-        elo: participant.elo,
-        currentHP: 0,
-        maxHP: 0,
-        userId,
-        user: participant.user ?? { username: '' },
-      }));
+  const { userId, robotId } = context;
 
-    return createRobotInstances(match, ownedRobots);
+  if (robotId !== undefined) {
+    if (isPlacementMode(match.matchType)) {
+      return createRobotInstances(
+        match,
+        (match.kothParticipants ?? []).filter(participant => participant.id === robotId),
+      );
+    }
+
+    if (isTeamMatch(match.matchType)) {
+      return createRobotPerspectiveTeamInstances(match, robotId);
+    }
+
+    return createRobotInstances(
+      match,
+      [match.robot1, match.robot2].filter((robot): robot is ScheduledRobot => (
+        robot != null && robot.id === robotId
+      )),
+    );
+  }
+
+  if (userId === undefined) {
+    return [];
+  }
+
+  if (isPlacementMode(match.matchType)) {
+    return createRobotInstances(
+      match,
+      (match.kothParticipants ?? []).filter(participant => participant.userId === userId),
+    );
   }
 
   if (isTeamMatch(match.matchType)) {

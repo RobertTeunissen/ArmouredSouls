@@ -1383,6 +1383,20 @@ The existing `RobotImageSelector` modal has been extended with a new "Upload Cus
 | 1.1 | 2026-02-10 | Robert Teunissen | Implementation complete |
 | 1.2 | 2026-03-05 | GitHub Copilot | Added onboarding GuidedUIOverlay integration (Battle-Ready Setup) |
 | 1.3 | 2026-10-10 | Kiro | Automaton_Badge after the owner name in the robot header (Spec #55) |
+| 1.4 | 2026-10-12 | Kiro | Owner-only readiness badge aligned with backend loadout rule; robot-perspective Upcoming Matches |
+
+---
+
+## Upcoming Matches and battle readiness
+
+The Matches tab renders `UpcomingMatches` with the viewed robot's `robotId`:
+
+- **All viewers** see the robot's upcoming matches from that robot's perspective. `expandUpcomingMatchInstances(match, { robotId })` keeps the side containing the robot (1v1, team side, or FFA participant) regardless of who owns it. `GET /api/matches/upcoming?robotId=` is public by design, so no extra data is exposed. The Dashboard keeps using `{ userId }` (viewer's own sides).
+- **"Not Battle Ready" badge is owner-only.** `useRobotDetail` derives `battleReadiness` from the current `robot` only when `isOwner`, via `getOwnerBattleReadiness` (`app/frontend/src/utils/robot-battle-readiness.ts`), which calls `evaluateLoadoutReadiness` from `app/shared/utils/loadout-readiness.ts`, the same rule backend scheduling uses (`checkBattleReadiness`): `single`/`two_handed` need a main weapon, `dual_wield`/`weapon_shield` need main + offhand, any other loadout is not ready. Warnings use the backend reason strings (e.g. "No main weapon equipped", "No shield equipped").
+- **HP is not a readiness criterion.** Automatic repair runs before every battle for every stable type (see `PRD_MATCHMAKING.md` D5 and `PRD_ECONOMY_SYSTEM.md`), so a damaged but armed robot is ready. HP stays visible elsewhere on the page.
+- **Non-owners never see the badge.** `GET /api/robots/:id` strips HP, weapon and loadout fields for non-owners (`robotSanitizer.ts`); with those fields missing readiness is unknown, so no badge is rendered. This includes every Automaton robot, since Automaton stables have no login.
+
+Verified by `RobotDetailUpcomingMatches.test.tsx`, `UpcomingMatches.test.tsx`, `match-display-instances.test.ts` and `robot-battle-readiness.test.ts`.
 
 ---
 

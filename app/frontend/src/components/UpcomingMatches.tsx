@@ -6,11 +6,7 @@ import axios from 'axios';
 import { KothMatchCard, ByeMatchCard, StandardMatchCard, TeamBattleMatchCard } from './match-cards';
 import { expandUpcomingMatchInstances, type UpcomingMatchInstance } from '../utils/match-display-instances';
 import { resolveByeCardSubject } from './match-cards/bye-match-data';
-
-interface BattleReadiness {
-  isReady: boolean;
-  warnings: string[];
-}
+import type { BattleReadiness } from '../utils/robot-battle-readiness';
 
 interface UpcomingMatchesProps {
   robotId?: number;
@@ -190,7 +186,11 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
   };
 
   const displayInstances = user
-    ? matches.flatMap(match => expandUpcomingMatchInstances(match, user.id))
+    ? matches.flatMap(match => expandUpcomingMatchInstances(
+      match,
+      // Robot Detail: that robot's perspective (any viewer). Dashboard: viewer's own sides.
+      robotId !== undefined ? { robotId } : { userId: user.id },
+    ))
     : [];
 
   return (

@@ -42,11 +42,15 @@ Each instance carries `displayInstanceKey`, `perspectiveRobotId`, `perspectiveRo
 
 ## Upcoming Match expansion and bye subjects
 
-`expandUpcomingMatchInstances` applies the same perspective rule to one raw `ScheduledMatch`:
+`expandUpcomingMatchInstances(match, context: { userId?, robotId? })` applies the same perspective rule to one raw `ScheduledMatch`, mirroring `expandBattleDisplayInstances`.
+
+With `userId` (Dashboard, the authenticated stable):
 
 - robot modes create an instance for each authenticated-stable robot side;
 - `league_2v2`, `tournament_2v2`, `league_3v3`, `tournament_3v3`, and `tag_team` create one instance for each authenticated-stable team side; and
 - `koth` and `grand_melee` create one instance per authenticated-stable robot in `kothParticipants`.
+
+With `robotId` (Robot Detail, any viewer; takes precedence over `userId`), only the viewed robot's perspective is kept: the 1v1 side (including byes) or FFA participant whose id matches, or the team side containing the robot (`perspectiveRobotId`/`perspectiveRobotIds` = that robot, `perspectiveTeamId` = that side). A same-stable opposite-side 1v1 therefore yields one card on Robot Detail, matching `RecentBattles`. An empty context yields no instances. `UpcomingMatches` passes `{ robotId }` when it receives a `robotId` prop and `{ userId: user.id }` otherwise.
 
 Instances carry a unique `displayInstanceKey`, `perspectiveRobotId`/`perspectiveRobotIds`, and, for team instances, `perspectiveTeamId`. `UpcomingMatches` uses these explicit fields rather than selecting the first side from `myUserId`.
 

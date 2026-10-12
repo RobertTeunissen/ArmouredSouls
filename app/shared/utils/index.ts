@@ -68,4 +68,12 @@ export {
   type TuningAttributeMap,
 } from './robotStats';
 
+export {
+  evaluateLoadoutReadiness,
+  LOADOUT_READINESS_REASONS,
+  type ReadinessLoadoutType,
+  type LoadoutReadinessInput,
+  type LoadoutReadinessResult,
+} from './loadout-readiness';
+
 export { PRESTIGE_GATES, PRESTIGE_GATES_10, getUnlockedFacilityLevel, getNextPrestigeThreshold } from './prestigeGates';

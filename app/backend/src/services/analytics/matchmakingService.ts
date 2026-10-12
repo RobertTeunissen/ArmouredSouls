@@ -10,6 +10,7 @@ import {
   defaultScheduledFor,
 } from '../matchmaking/teamMatchmakingUtils';
 import { createByeRobot } from '../battle/byeRobot';
+import { evaluateLoadoutReadiness } from '../../shared/utils/loadout-readiness';
 
 export interface BattleReadinessCheck {
   isReady: boolean;
@@ -31,44 +32,14 @@ export interface MatchPair {
  * robots are always repaired before battles execute.
  */
 export function checkBattleReadiness(robot: Robot): BattleReadinessCheck {
-  const reasons: string[] = [];
-
-  // Weapon Check: Must have all required weapons equipped based on loadout type
-  let weaponCheck: boolean;
-
-  switch (robot.loadoutType) {
-    case 'single':
-      weaponCheck = robot.mainWeaponId !== null;
-      if (!weaponCheck) reasons.push('No main weapon equipped');
-      break;
-
-    case 'dual_wield':
-      weaponCheck = robot.mainWeaponId !== null && robot.offhandWeaponId !== null;
-      if (robot.mainWeaponId === null) reasons.push('No main weapon equipped');
-      if (robot.offhandWeaponId === null) reasons.push('No offhand weapon equipped');
-      break;
-
-    case 'weapon_shield':
-      weaponCheck = robot.mainWeaponId !== null && robot.offhandWeaponId !== null;
-      if (robot.mainWeaponId === null) reasons.push('No main weapon equipped');
-      if (robot.offhandWeaponId === null) reasons.push('No shield equipped');
-      break;
-
-    case 'two_handed':
-      weaponCheck = robot.mainWeaponId !== null;
-      if (!weaponCheck) reasons.push('No two-handed weapon equipped');
-      break;
-
-    default:
-      weaponCheck = false;
-      reasons.push('Invalid loadout type');
-  }
+  // Weapon loadout rule is shared with the frontend Robot Detail badge.
+  const { isReady, reasons } = evaluateLoadoutReadiness(robot);
 
   return {
-    isReady: weaponCheck,
+    isReady,
     reasons,
     hpCheck: true, // HP not checked — repairs run before battles
-    weaponCheck,
+    weaponCheck: isReady,
   };
 }
 /**
