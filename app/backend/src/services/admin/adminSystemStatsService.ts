@@ -8,6 +8,7 @@ import {
   readRepairPreDiscountCredits,
 } from '../economy/repairPayloadKeys';
 import { classifyChurnRisk } from './adminDashboardService';
+import { getStableBattleOverlapsByUser } from '../auth/stable-battle-overlap';
 
 const BANKRUPTCY_RISK_THRESHOLD = 10000; // Credits below which a user is considered at risk
 
@@ -873,6 +874,10 @@ export async function getRecentUserActivity(cyclesBack: number, filter: string =
     recentUsers.flatMap((user) => user.robots.map((r) => r.id)),
   );
 
+  // Stable totals count each battle once per stable (the robot counters count a
+  // team battle once per member). One query for every user listed.
+  const stableOverlaps = await getStableBattleOverlapsByUser(recentUsers.map((user) => user.id));
+
   // Enrich each user with activity indicators
   const usersWithActivity = recentUsers.map((user) => {
     const robots = user.robots;
@@ -881,8 +886,9 @@ export async function getRecentUserActivity(cyclesBack: number, filter: string =
       (r) => r.battleReadiness >= 80 && r.mainWeaponId !== null
     ).length;
     const robotsWithBattles = robots.filter((r) => r.totalBattles > 0).length;
-    const totalBattles = robots.reduce((sum, r) => sum + r.totalBattles, 0);
-    const totalWins = robots.reduce((sum, r) => sum + r.wins, 0);
+    const overlap = stableOverlaps.get(user.id);
+    const totalBattles = robots.reduce((sum, r) => sum + r.totalBattles, 0) - (overlap?.battles ?? 0);
+    const totalWins = robots.reduce((sum, r) => sum + r.wins, 0) - (overlap?.wins ?? 0);
 
     // Determine user status / potential issues
     const issues: string[] = [];

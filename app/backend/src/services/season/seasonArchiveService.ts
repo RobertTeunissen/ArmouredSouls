@@ -39,6 +39,7 @@ import {
   type RankableStanding,
   type RankKey,
 } from './instanceRank';
+import { getStableBattleOverlapsByUser } from '../auth/stable-battle-overlap';
 
 /** Batch size for archive writes — small enough that a crash loses little. */
 const ARCHIVE_BATCH_SIZE = 50;
@@ -99,7 +100,10 @@ export async function writeStableAndRobotArchives(
     const batch = humanStables.slice(i, i + ARCHIVE_BATCH_SIZE);
     const userIds = batch.map((u) => u.id);
 
-    const [robots, facilities, achievements, teams] = await Promise.all([
+    // The archive is written before the purge, so every robot and battle row
+    // still present belongs to the season being archived: the shared-side
+    // overlap is season-scoped exactly as the robot counters it corrects.
+    const [robots, facilities, achievements, teams, overlaps] = await Promise.all([
       prisma.robot.findMany({
         where: { userId: { in: userIds } },
         include: {
@@ -116,6 +120,7 @@ export async function writeStableAndRobotArchives(
         where: { stableId: { in: userIds } },
         include: { members: { select: { robotId: true } } },
       }),
+      getStableBattleOverlapsByUser(userIds),
     ]);
 
     await prisma.$transaction(async (tx) => {
@@ -125,7 +130,7 @@ export async function writeStableAndRobotArchives(
         const userAchievements = achievements.filter((a) => a.userId === user.id);
         const userTeams = teams.filter((t) => t.stableId === user.id);
 
-        const totals = userRobots.reduce(
+        const counterSums = userRobots.reduce(
           (acc, r) => ({
             battles: acc.battles + r.totalBattles,
             wins: acc.wins + r.wins,
@@ -136,6 +141,17 @@ export async function writeStableAndRobotArchives(
           }),
           { battles: 0, wins: 0, losses: 0, draws: 0, fame: 0, highestElo: 0 },
         );
+        // Each battle counts once per stable: the robot counters count a team
+        // battle once per member, so the shared-side overlap is subtracted.
+        // Byes count as the counters count them.
+        const overlap = overlaps.get(user.id);
+        const totals = {
+          ...counterSums,
+          battles: counterSums.battles - (overlap?.battles ?? 0),
+          wins: counterSums.wins - (overlap?.wins ?? 0),
+          losses: counterSums.losses - (overlap?.losses ?? 0),
+          draws: counterSums.draws - (overlap?.draws ?? 0),
+        };
 
         const archivedFacilities: ArchivedFacility[] = userFacilities.map((f) => ({
           facilityType: f.facilityType,

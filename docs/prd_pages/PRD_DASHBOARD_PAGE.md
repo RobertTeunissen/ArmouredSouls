@@ -426,6 +426,17 @@ const { user, logout } = useAuth();
 - Two of the stable's teams meeting (possible in tournaments) count as one win and one loss.
 - `cycleChanges.wins`/`losses` follow the same rule: audit rows sharing a battle and a result
   count once.
+- The same rule produces every other counter-based stable total: the admin Players list and
+  detail summary (`getEngagementPlayers`, `getRecentUserActivity`) and the season archive's
+  `stable_season_archives` record, through the batch `getStableBattleOverlapsByUser` (one
+  query for the whole list or archive batch).
+- Stable View (`stableViewService.getStableProfile`) counts distinct battle rows instead and
+  still differs in three cases: it includes tournament byes (1v1, 2v2, 3v3; their Bye_Mode_Table
+  entry has `updatesElo: false`, so the robot counters never record them); a same-stable 1v1
+  meeting is one win there but a win and a loss here, and a same-stable draw is one draw there
+  but one per side here; a legacy team row with a `winner_id` but no `winning_side` is not
+  counted there but stays in the robot counters here. Aligning them would change how one of the
+  two views counts byes, so they are left as they are.
 
 **Edge Cases Handled**:
 - 0 robots → Returns all zeros

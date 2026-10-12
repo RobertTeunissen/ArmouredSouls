@@ -23,7 +23,7 @@ import TeamBattleLeagueHistory from '../components/TeamBattleLeagueHistory';
 import type { BattleHistory } from '../utils/matchmakingApi';
 import { getProfile } from '../utils/userApi';
 import type { RobotWithAttributes } from '../types/robot';
-import { useRobotDetail } from '../hooks/useRobotDetail';
+import { isOwnerRobotDetail, useRobotDetail } from '../hooks/useRobotDetail';
 import RobotEligibilityChecklist from '../components/robot-setup/RobotEligibilityChecklist';
 
 function RobotDetailPage() {
@@ -82,6 +82,10 @@ function RobotDetailPage() {
       </div>
     );
   }
+
+  // Owner-only tabs need the fields the API strips for non-owners; they render
+  // only when the viewer owns the robot and the payload actually carries them.
+  const ownerRobot = isOwner && isOwnerRobotDetail(robot) ? robot : null;
 
   return (
     <div className="min-h-screen bg-background text-white">
@@ -289,9 +293,9 @@ function RobotDetailPage() {
             <RobotPerformanceAnalytics robotId={robot.id} lastNCycles={10} />
           )}
 
-          {activeTab === 'battle-config' && isOwner && (
+          {activeTab === 'battle-config' && ownerRobot && (
             <BattleConfigTab
-              robot={robot as unknown as RobotWithAttributes}
+              robot={ownerRobot as unknown as RobotWithAttributes}
               weapons={weapons}
               repairBayLevel={repairBayLevel}
               activeRobotCount={activeRobotCount}
@@ -301,9 +305,9 @@ function RobotDetailPage() {
             />
           )}
 
-          {activeTab === 'upgrades' && isOwner && (
+          {activeTab === 'upgrades' && ownerRobot && (
             <UpgradePlanner
-              robot={robot as unknown as RobotWithAttributes}
+              robot={ownerRobot as unknown as RobotWithAttributes}
               currentCredits={currency}
               trainingLevel={trainingLevel}
               rosterCapacity={rosterCapacity}
@@ -313,16 +317,17 @@ function RobotDetailPage() {
             />
           )}
 
-          {activeTab === 'tuning' && isOwner && (
+          {activeTab === 'tuning' && ownerRobot && (
             <TuningPoolEditor
-              robotId={robot.id}
-              robot={robot as unknown as RobotWithAttributes}
+              robotId={ownerRobot.id}
+              robot={ownerRobot as unknown as RobotWithAttributes}
             />
           )}
 
-          {activeTab === 'stats' && (
+          {/* Owner-only like the tab itself: a non-owner reaching ?tab=stats gets the notice below. */}
+          {activeTab === 'stats' && ownerRobot && (
             <div className="mb-6">
-              <EffectiveStatsDisplay robot={robot as unknown as RobotWithAttributes} />
+              <EffectiveStatsDisplay robot={ownerRobot as unknown as RobotWithAttributes} />
             </div>
           )}
 

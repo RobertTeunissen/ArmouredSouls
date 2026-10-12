@@ -44,13 +44,15 @@ export interface RobotDetail {
   leagueId: string;
   leaguePoints: number;
   fame: number;
-  mainWeaponId: number | null;
-  offhandWeaponId: number | null;
-  loadoutType: string;
-  stance: string;
-  yieldThreshold: number;
-  mainWeapon: WeaponInventoryItem | null;
-  offhandWeapon: WeaponInventoryItem | null;
+  // Owner-only: `GET /api/robots/:id` strips these for non-owners
+  // (backend `robotSanitizer.SENSITIVE_ROBOT_FIELDS`). Use `isOwnerRobotDetail`.
+  mainWeaponId?: number | null;
+  offhandWeaponId?: number | null;
+  loadoutType?: string;
+  stance?: string;
+  yieldThreshold?: number;
+  mainWeapon?: WeaponInventoryItem | null;
+  offhandWeapon?: WeaponInventoryItem | null;
   user?: {
     username: string;
     stableName: string | null;
@@ -81,10 +83,10 @@ export interface RobotDetail {
   syncProtocols: number;
   supportSystems: number;
   formationTactics: number;
-  // Combat State
-  currentHP: number;
+  // Combat State (currentHP / currentShield are owner-only, like the loadout above)
+  currentHP?: number;
   maxHP: number;
-  currentShield: number;
+  currentShield?: number;
   maxShield: number;
   battleReadiness: number;
   repairQuoteCredits: number;
@@ -98,6 +100,29 @@ export interface RobotDetail {
   kills: number;
   lifetimeRepairCreditsPaid: number;
   titles: string | null;
+}
+
+/** Fields `GET /api/robots/:id` returns only to the robot's owner. */
+const OWNER_ONLY_FIELDS = [
+  'mainWeaponId',
+  'offhandWeaponId',
+  'loadoutType',
+  'stance',
+  'yieldThreshold',
+  'mainWeapon',
+  'offhandWeapon',
+  'currentHP',
+  'currentShield',
+] as const satisfies ReadonlyArray<keyof RobotDetail>;
+
+type OwnerOnlyField = (typeof OWNER_ONLY_FIELDS)[number];
+
+/** A robot payload as the owner receives it: every owner-only field present. */
+export type OwnerRobotDetail = RobotDetail & Required<Pick<RobotDetail, OwnerOnlyField>>;
+
+/** Whether the payload carries the owner-only fields (it was not sanitized). */
+export function isOwnerRobotDetail(robot: RobotDetail): robot is OwnerRobotDetail {
+  return OWNER_ONLY_FIELDS.every((field) => robot[field] !== undefined);
 }
 
 export interface WeaponInventoryItem {

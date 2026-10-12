@@ -37,6 +37,7 @@ import {
   classifySharedSideOutcome,
   computeStableBattleOverlap,
   getStableBattleOverlap,
+  getStableBattleOverlapsByUser,
   NO_COUNTER_BYE_BATTLE_TYPES,
   type SharedSideGroup,
 } from '../stable-battle-overlap';
@@ -137,6 +138,47 @@ describe('getStableBattleOverlap', () => {
 
   it('derives the bye exclusion from the Bye_Mode_Table (updatesElo: false, not placement)', () => {
     expect([...NO_COUNTER_BYE_BATTLE_TYPES]).toEqual(['tournament_1v1', 'tournament_2v2', 'tournament_3v3']);
+  });
+});
+
+describe('getStableBattleOverlapsByUser (batch variant)', () => {
+  it('issues no query for an empty user list', async () => {
+    await expect(getStableBattleOverlapsByUser([])).resolves.toEqual(new Map());
+    expect(mockQueryRaw).not.toHaveBeenCalled();
+  });
+
+  it('reads every stable in one parameterized query, grouped per stable', async () => {
+    mockQueryRaw.mockResolvedValue([]);
+    await getStableBattleOverlapsByUser([7, 8, 7]);
+
+    expect(mockQueryRaw).toHaveBeenCalledTimes(1);
+    const [strings, ...values] = mockQueryRaw.mock.calls[0] as [TemplateStringsArray, ...unknown[]];
+    const sql = strings.join('?');
+    // Every value is a bound parameter; nothing is interpolated into the text.
+    expect(values).toEqual([
+      [7, 8],
+      ['koth', 'grand_melee'],
+      ['tournament_1v1', 'tournament_2v2', 'tournament_3v3'],
+    ]);
+    expect(sql).toContain('JOIN robots r ON r.id = bp.robot_id');
+    expect(sql).toContain('r.user_id = ANY(?)');
+    expect(sql).toContain('GROUP BY r.user_id, bp.battle_id, bp.team, b.winner_id, b.winning_side');
+    expect(sql).toContain('HAVING COUNT(*) > 1');
+    expect(sql).not.toContain('battle_log');
+  });
+
+  it('returns each stable its own overlap, zero for a stable with no shared side', async () => {
+    mockQueryRaw.mockResolvedValue([
+      { userId: 7, ...side({ battleId: 1, robotCount: 2, winningSide: 1 }) }, // tag-team win
+      { userId: 7, ...side({ battleId: 2, robotCount: 3, team: 2, winningSide: 1 }) }, // 3v3 loss
+      { userId: 8, ...side({ battleId: 1, robotCount: 2, team: 2, winningSide: 1 }) }, // the other side of battle 1
+    ]);
+
+    const overlaps = await getStableBattleOverlapsByUser([7, 8, 9]);
+
+    expect(overlaps.get(7)).toEqual({ battles: 3, wins: 1, losses: 2, draws: 0 });
+    expect(overlaps.get(8)).toEqual({ battles: 1, wins: 0, losses: 1, draws: 0 });
+    expect(overlaps.get(9)).toEqual({ battles: 0, wins: 0, losses: 0, draws: 0 });
   });
 });
 

@@ -218,4 +218,19 @@ describe('UpcomingMatches perspective and readiness', () => {
     });
     expect(screen.getByText(/⚠️ No main weapon equipped/)).toBeTruthy();
   });
+
+  it('should always show the not-ready badge in yellow (readiness has no HP state)', async () => {
+    mockedGetUpcomingMatches.mockResolvedValue([
+      makeMatch({ robot1: makeRobot(10, 7), robot2: makeRobot(20, 8) }),
+    ]);
+    // A warning that happens to mention HP no longer switches the badge to red.
+    renderPage({ robotId: 10, battleReadiness: { isReady: false, warnings: ['Shield HP check'] } });
+
+    const badge = await screen.findByText('Not Battle Ready');
+    const badgeRow = badge.parentElement;
+    expect(badgeRow?.className).toContain('text-[#d29922]');
+    expect(badgeRow?.textContent).toContain('🟡');
+    expect(badgeRow?.textContent).not.toContain('🔴');
+    expect(screen.getByText(/⚠️ Shield HP check/).className).toContain('text-[#d29922]');
+  });
 });

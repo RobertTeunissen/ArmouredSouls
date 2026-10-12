@@ -153,7 +153,7 @@ Authentication and user management.
 | `passwordService` | Bcrypt password hashing and comparison |
 | `userService` | User CRUD, profile updates, email management |
 | `userProfileService` | Profile retrieval and `GET /api/user/stats` stable totals (`getStableStats`) |
-| `stable-battle-overlap` | Shared-side surplus subtracted from summed robot counters so each battle counts once per stable in `getStableStats` |
+| `stable-battle-overlap` | Shared-side surplus subtracted from summed robot counters so each battle counts once per stable: `getStableBattleOverlap` (one stable, `getStableStats`) and `getStableBattleOverlapsByUser` (batch, one query: admin player lists, season archive) |
 
 ### battle/
 Core combat engine — the simulator and shared orchestration helpers.

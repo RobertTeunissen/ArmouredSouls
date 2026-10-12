@@ -327,6 +327,51 @@ describe('expandUpcomingMatchInstances with robotId', () => {
     });
   });
 
+  it('should create one instance for the viewed robot in a KotH, even with stablemates in the field', () => {
+    const match = makeMatch({
+      matchType: 'koth',
+      kothParticipants: [
+        { id: 10, name: 'Robot 10', elo: 1200, userId: 7 },
+        { id: 11, name: 'Robot 11', elo: 1200, userId: 7 },
+        { id: 20, name: 'Robot 20', elo: 1200, userId: 8 },
+      ],
+      kothParticipantCount: 3,
+    });
+
+    const instances = expandUpcomingMatchInstances(match, { robotId: 11 });
+
+    expect(instances).toHaveLength(1);
+    expect(instances[0]).toMatchObject({
+      displayInstanceKey: 'match:scheduled-42:robot:11',
+      perspectiveRobotId: 11,
+      perspectiveRobotIds: [11],
+    });
+    expect(instances[0].perspectiveTeamId).toBeUndefined();
+  });
+
+  it('should select the tag-team side (activeRobot/reserveRobot shape) for either robot on it', () => {
+    const match = makeMatch({
+      matchType: 'tag_team',
+      team1: { id: 301, activeRobot: makeRobot(10, 7), reserveRobot: makeRobot(11, 7), combinedELO: 2400 },
+      team2: { id: 302, activeRobot: makeRobot(20, 8), reserveRobot: makeRobot(21, 8), combinedELO: 2400 },
+    });
+
+    // The reserve robot of the opposing side, viewed by anyone.
+    expect(expandUpcomingMatchInstances(match, { robotId: 21 })).toEqual([
+      expect.objectContaining({
+        displayInstanceKey: 'match:scheduled-42:team:302',
+        perspectiveTeamId: 302,
+        perspectiveRobotId: 21,
+        perspectiveRobotIds: [21],
+      }),
+    ]);
+    // The active robot of side one.
+    expect(expandUpcomingMatchInstances(match, { robotId: 10 })).toEqual([
+      expect.objectContaining({ perspectiveTeamId: 301, perspectiveRobotId: 10, perspectiveRobotIds: [10] }),
+    ]);
+    expect(expandUpcomingMatchInstances(match, { robotId: 999 })).toEqual([]);
+  });
+
   it('should create one instance for the viewed robot on a bye', () => {
     const match = makeMatch({
       isByeMatch: true,

@@ -7,7 +7,7 @@
  * `RobotDetailAutomatonBadge.test.tsx`, except UpcomingMatches is NOT mocked.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import RobotDetailPage from '../RobotDetailPage';
 import type { ScheduledMatch } from '../../utils/matchmakingApi';
@@ -56,7 +56,21 @@ vi.mock('../../components/StatisticalRankings', () => ({ default: () => <div /> 
 vi.mock('../../components/PerformanceByContext', () => ({ default: () => <div /> }));
 vi.mock('../../components/RecentBattles', () => ({ default: () => <div /> }));
 vi.mock('../../components/RobotPerformanceAnalytics', () => ({ default: () => <div /> }));
-vi.mock('../../components/BattleConfigTab', () => ({ default: () => <div /> }));
+// Buttons drive the page's real equip / unequip / robot-update handlers.
+vi.mock('../../components/BattleConfigTab', () => ({
+  default: ({ onEquipWeapon, onUnequipWeapon, onRobotUpdate }: {
+    onEquipWeapon: (slot: 'main' | 'offhand', weaponInventoryId: number) => Promise<void>;
+    onUnequipWeapon: (slot: 'main' | 'offhand') => Promise<void>;
+    onRobotUpdate: (updates: Record<string, unknown>) => void;
+  }) => (
+    <div>
+      <button type="button" onClick={() => { void onUnequipWeapon('main'); }}>unequip main</button>
+      <button type="button" onClick={() => { void onEquipWeapon('main', 11); }}>equip main</button>
+      <button type="button" onClick={() => onRobotUpdate({ mainWeaponId: null })}>update: no main</button>
+      <button type="button" onClick={() => onRobotUpdate({ mainWeaponId: 11 })}>update: main 11</button>
+    </div>
+  ),
+}));
 vi.mock('../../components/UpgradePlanner', () => ({ default: () => <div /> }));
 vi.mock('../../components/TuningPoolEditor', () => ({ default: () => <div /> }));
 vi.mock('../../components/EffectiveStatsDisplay', () => ({ default: () => <div /> }));
@@ -74,7 +88,7 @@ vi.mock('../../utils/matchmakingApi', async () => {
 });
 
 import apiClient from '../../utils/apiClient';
-import { fetchRobotById } from '../../utils/robotApi';
+import { equipMainWeapon, fetchRobotById, unequipMainWeapon } from '../../utils/robotApi';
 import type { Robot } from '../../utils/robotApi';
 
 const ROBOT_ID = 5;
@@ -157,10 +171,10 @@ function upcomingMatch(robotUserId: number): ScheduledMatch {
   };
 }
 
-function renderPage(): void {
+function renderPage(tab = 'matches'): void {
   vi.mocked(localStorage.getItem).mockReturnValue('test-token');
   render(
-    <MemoryRouter initialEntries={[`/robots/${ROBOT_ID}?tab=matches`]}>
+    <MemoryRouter initialEntries={[`/robots/${ROBOT_ID}?tab=${tab}`]}>
       <Routes>
         <Route path="/robots/:id" element={<RobotDetailPage />} />
       </Routes>
@@ -231,6 +245,71 @@ describe('RobotDetailPage — Upcoming Matches and battle readiness', () => {
     renderPage();
 
     expect((await screen.findAllByText('PENDING')).length).toBeGreaterThan(0);
+    expect(screen.queryByText('Not Battle Ready')).toBeNull();
+  });
+});
+
+describe('RobotDetailPage — battle readiness follows loadout changes', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockedGetMatchHistory.mockResolvedValue({ data: [], pagination: { page: 1, pageSize: 10, total: 0, totalPages: 0 } });
+    mockedGetUpcomingMatches.mockResolvedValue([upcomingMatch(VIEWER_ID)]);
+    vi.mocked(apiClient.get).mockImplementation((url: string) => {
+      if (url === '/api/facilities') return Promise.resolve({ data: { facilities: [] } });
+      if (url.includes('/grand-melee-standing')) return Promise.resolve({ data: { standing: null } });
+      if (url.includes('/scheduling-eligibility')) return Promise.resolve({ data: { robotId: ROBOT_ID, isEligible: true, isFullyConfigured: true, gates: [] } });
+      if (url.includes('/standings')) return Promise.resolve({ data: { data: [] } });
+      return Promise.resolve({ data: [] });
+    });
+    // Starts fully armed: single loadout, main weapon 11.
+    vi.mocked(fetchRobotById).mockResolvedValue(robot() as unknown as Robot);
+  });
+
+  /** Open the Matches tab and wait for its cards (UpcomingMatches remounts per visit). */
+  async function openMatchesTab(): Promise<void> {
+    fireEvent.click(screen.getByRole('tab', { name: /Matches/ }));
+    expect((await screen.findAllByText('PENDING')).length).toBeGreaterThan(0);
+  }
+
+  async function openBattleConfigTab(): Promise<void> {
+    fireEvent.click(screen.getByRole('tab', { name: /Battle Config/ }));
+    await screen.findByRole('button', { name: 'equip main' });
+  }
+
+  it('shows the badge after the main weapon is unequipped and hides it after re-equipping', async () => {
+    vi.mocked(unequipMainWeapon).mockResolvedValue(
+      { robot: robot({ mainWeaponId: null }) } as unknown as Awaited<ReturnType<typeof unequipMainWeapon>>,
+    );
+    vi.mocked(equipMainWeapon).mockResolvedValue(
+      { robot: robot({ mainWeaponId: 11 }) } as unknown as Awaited<ReturnType<typeof equipMainWeapon>>,
+    );
+    renderPage('battle-config');
+    await screen.findByRole('button', { name: 'unequip main' });
+
+    fireEvent.click(screen.getByRole('button', { name: 'unequip main' }));
+    expect(await screen.findByText('Weapon unequipped!')).toBeInTheDocument();
+    await openMatchesTab();
+    expect(screen.getByText('Not Battle Ready')).toBeInTheDocument();
+    expect(screen.getByText(/⚠️ No main weapon equipped/)).toBeInTheDocument();
+
+    await openBattleConfigTab();
+    fireEvent.click(screen.getByRole('button', { name: 'equip main' }));
+    expect(await screen.findByText('Weapon equipped successfully!')).toBeInTheDocument();
+    await openMatchesTab();
+    expect(screen.queryByText('Not Battle Ready')).toBeNull();
+  });
+
+  it('follows handleRobotUpdate: badge appears without a main weapon, disappears once it is back', async () => {
+    renderPage('battle-config');
+    await screen.findByRole('button', { name: 'update: no main' });
+
+    fireEvent.click(screen.getByRole('button', { name: 'update: no main' }));
+    await openMatchesTab();
+    expect(screen.getByText('Not Battle Ready')).toBeInTheDocument();
+
+    await openBattleConfigTab();
+    fireEvent.click(screen.getByRole('button', { name: 'update: main 11' }));
+    await openMatchesTab();
     expect(screen.queryByText('Not Battle Ready')).toBeNull();
   });
 });

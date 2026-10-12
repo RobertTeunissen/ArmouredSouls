@@ -109,6 +109,8 @@ The rollover is idempotent per season: a retry detects a complete archive and sk
 
 Every value is denormalized text or numbers. The only foreign keys are `stable_season_archives.user_id` and the internal archive link.
 
+The aggregate record on `stable_season_archives` (`total_battles`, `wins`, `losses`, `draws`, `win_rate`) counts each battle once per stable, by the same rule as the dashboard ([PRD_DASHBOARD_PAGE.md](../prd_pages/PRD_DASHBOARD_PAGE.md) "Counting rule"): the stable's summed robot counters minus the shared-side overlap from `services/auth/stable-battle-overlap.ts` (`getStableBattleOverlapsByUser`, one query per archive batch). The archive is written before the purge, so the robots and battles it reads all belong to the season being archived. Byes count as the robot counters count them; KotH and Grand Melee stay out of the record. `robot_season_archives` keeps each robot's own counters. Archive rows are never rewritten: rows written before this rule (Season 0 and any season archived earlier) keep the summed robot counters, which count a team battle once per member.
+
 `Instance_Rank` is computed at archive time by ordering standings on `leaguePoints DESC, wins DESC, entityId ASC` within each mode/tier/instance, counting Generated_Stable entities so an archived rank is the robot's true position.
 
 ## Season 0

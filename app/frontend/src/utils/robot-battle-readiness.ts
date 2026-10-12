@@ -6,9 +6,9 @@ export interface BattleReadiness {
 }
 
 /**
- * Loadout fields the readiness rule needs. Typed as `unknown` because
- * `GET /api/robots/:id` strips them for non-owners, so at runtime they may
- * be absent even though `RobotDetail` declares them.
+ * Loadout fields the readiness rule needs. Optional and typed as `unknown`
+ * because `GET /api/robots/:id` strips them for non-owners (`RobotDetail`
+ * declares them optional), so the values are checked at runtime.
  */
 export interface OwnerReadinessSubject {
   loadoutType?: unknown;

@@ -89,6 +89,8 @@ Unified player management page combining player listing, engagement monitoring, 
 
 **Table columns:** Player name, Balance, Robots, Battles, Win %, Last Login, Churn Risk, Issues count
 
+Stable-level Battles and Win % (this table, the detail summary, and `GET /api/admin/engagement/players`) count each battle once per stable, as on the player dashboard: summed robot counters minus the shared-side overlap (`services/auth/stable-battle-overlap.ts`, one batch query per list). Per-robot figures in the detail slide-over are the robot's own counters. Churn risk still reads the summed robot counters as its activity signal.
+
 **Search:** Username, stable name, or robot name search across all users
 
 **Detail slide-over** (click any row):

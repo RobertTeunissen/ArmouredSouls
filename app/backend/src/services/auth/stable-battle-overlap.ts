@@ -121,3 +121,61 @@ export async function getStableBattleOverlap(robotIds: readonly number[]): Promi
 
   return computeStableBattleOverlap(groups);
 }
+
+/** A shared side, attributed to the stable that owns the robots on it. */
+interface StableSharedSideGroup extends SharedSideGroup {
+  userId: number;
+}
+
+/**
+ * Batch variant of `getStableBattleOverlap` for lists covering many stables
+ * (admin player lists, the season archive). One query for every stable; each
+ * requested stable gets an entry, zero when it shared no side. Robots are
+ * attributed through `robots.user_id`, so the overlap covers exactly the robots
+ * whose counters the caller sums. Empty input issues no query.
+ */
+export async function getStableBattleOverlapsByUser(
+  userIds: readonly number[],
+): Promise<Map<number, StableBattleOverlap>> {
+  const ids = Array.from(new Set(userIds));
+  const overlaps = new Map<number, StableBattleOverlap>();
+  if (ids.length === 0) return overlaps;
+
+  // Same filters as getStableBattleOverlap; grouped per stable as well, so a
+  // side is only shared when one stable fielded more than one robot on it.
+  const groups = await prisma.$queryRaw<StableSharedSideGroup[]>`
+    SELECT
+      r.user_id AS "userId",
+      bp.battle_id AS "battleId",
+      bp.team AS "team",
+      COUNT(*)::int AS "robotCount",
+      b.winner_id AS "winnerId",
+      b.winning_side::int AS "winningSide"
+    FROM battle_participants bp
+    JOIN robots r ON r.id = bp.robot_id
+    JOIN battles b ON b.id = bp.battle_id
+    WHERE r.user_id = ANY(${ids})
+      AND b.battle_type <> ALL(${[...NO_COUNTER_BATTLE_TYPES]})
+      -- A bye in these modes has no opposing side and never touched the counters.
+      AND NOT (
+        b.battle_type = ANY(${[...NO_COUNTER_BYE_BATTLE_TYPES]})
+        AND NOT EXISTS (
+          SELECT 1 FROM battle_participants opp
+          WHERE opp.battle_id = bp.battle_id AND opp.team <> bp.team
+        )
+      )
+    GROUP BY r.user_id, bp.battle_id, bp.team, b.winner_id, b.winning_side
+    HAVING COUNT(*) > 1
+  `;
+
+  const groupsByUser = new Map<number, SharedSideGroup[]>();
+  for (const group of groups) {
+    const bucket = groupsByUser.get(group.userId);
+    if (bucket) bucket.push(group);
+    else groupsByUser.set(group.userId, [group]);
+  }
+  for (const id of ids) {
+    overlaps.set(id, computeStableBattleOverlap(groupsByUser.get(id) ?? []));
+  }
+  return overlaps;
+}
