@@ -4,7 +4,7 @@
  * Extracted from RobotDetailPage.tsx during hook extraction (Backlog #50).
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../utils/api';
 import {
@@ -28,6 +28,7 @@ import { getMatchHistory, BattleHistory } from '../utils/matchmakingApi';
 import type { RobotWithAttributes } from '../types/robot';
 import type { StableType } from '../types/stable';
 import { createLogger } from '../utils/logger';
+import { getOwnerBattleReadiness } from '../utils/robot-battle-readiness';
 
 const log = createLogger('useRobotDetail');
 
@@ -43,13 +44,15 @@ export interface RobotDetail {
   leagueId: string;
   leaguePoints: number;
   fame: number;
-  mainWeaponId: number | null;
-  offhandWeaponId: number | null;
-  loadoutType: string;
-  stance: string;
-  yieldThreshold: number;
-  mainWeapon: WeaponInventoryItem | null;
-  offhandWeapon: WeaponInventoryItem | null;
+  // Owner-only: `GET /api/robots/:id` strips these for non-owners
+  // (backend `robotSanitizer.SENSITIVE_ROBOT_FIELDS`). Use `isOwnerRobotDetail`.
+  mainWeaponId?: number | null;
+  offhandWeaponId?: number | null;
+  loadoutType?: string;
+  stance?: string;
+  yieldThreshold?: number;
+  mainWeapon?: WeaponInventoryItem | null;
+  offhandWeapon?: WeaponInventoryItem | null;
   user?: {
     username: string;
     stableName: string | null;
@@ -80,10 +83,10 @@ export interface RobotDetail {
   syncProtocols: number;
   supportSystems: number;
   formationTactics: number;
-  // Combat State
-  currentHP: number;
+  // Combat State (currentHP / currentShield are owner-only, like the loadout above)
+  currentHP?: number;
   maxHP: number;
-  currentShield: number;
+  currentShield?: number;
   maxShield: number;
   battleReadiness: number;
   repairQuoteCredits: number;
@@ -97,6 +100,50 @@ export interface RobotDetail {
   kills: number;
   lifetimeRepairCreditsPaid: number;
   titles: string | null;
+}
+
+/** Fields `GET /api/robots/:id` returns only to the robot's owner. */
+const OWNER_ONLY_FIELDS = [
+  'mainWeaponId',
+  'offhandWeaponId',
+  'loadoutType',
+  'stance',
+  'yieldThreshold',
+  'mainWeapon',
+  'offhandWeapon',
+  'currentHP',
+  'currentShield',
+] as const satisfies ReadonlyArray<keyof RobotDetail>;
+
+type OwnerOnlyField = (typeof OWNER_ONLY_FIELDS)[number];
+type OwnerWeaponField = 'mainWeapon' | 'offhandWeapon';
+
+/**
+ * A robot payload as the owner receives it: every owner-only field present.
+ * Structurally a `RobotWithAttributes` (the owner tabs' prop type), so it is
+ * passed to them without casts. No index signature: a misspelt property is a
+ * compile error (see `OwnerRobotDetailRejectsUnknownFields` below).
+ */
+export interface OwnerRobotDetail
+  extends Omit<RobotDetail, OwnerOnlyField>,
+    Required<Pick<RobotDetail, Exclude<OwnerOnlyField, OwnerWeaponField>>> {
+  mainWeapon: WeaponInventoryItem | null;
+  offhandWeapon: WeaponInventoryItem | null;
+}
+
+/**
+ * Compile-time guard (tests are not type-checked by `tsc`, so it lives here):
+ * reading a property `OwnerRobotDetail` does not declare must fail to compile.
+ * If an index signature comes back, the expected error disappears and the
+ * `@ts-expect-error` itself fails the build.
+ */
+// @ts-expect-error — `stanse` is a misspelling of `stance`.
+type OwnerRobotDetailRejectsUnknownFields = OwnerRobotDetail['stanse'];
+export type { OwnerRobotDetailRejectsUnknownFields };
+
+/** Whether the payload carries the owner-only fields (it was not sanitized). */
+export function isOwnerRobotDetail(robot: RobotDetail): robot is OwnerRobotDetail {
+  return OWNER_ONLY_FIELDS.every((field) => robot[field] !== undefined);
 }
 
 export interface WeaponInventoryItem {
@@ -166,8 +213,10 @@ export function useRobotDetail() {
   const [successMessage, setSuccessMessage] = useState('');
   const [showImageSelector, setShowImageSelector] = useState(false);
   const [recentBattles, setRecentBattles] = useState<BattleHistory[]>([]);
-  const [battleReadiness, setBattleReadiness] = useState<{ isReady: boolean; warnings: string[] }>({ isReady: true, warnings: [] });
   const [leagueRank, setLeagueRank] = useState<{ rank: number; total: number; percentile: number } | null>(null);
+  // #532: kept apart from `robot` because equip/upgrade/appearance responses
+  // replace `robot` without this field, and those mutations never change it.
+  const [allModesBattleCount, setAllModesBattleCount] = useState<number | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
 
   const { user, logout, refreshUser } = useAuth();
@@ -233,6 +282,7 @@ export function useRobotDetail() {
     try {
       const robotData = await fetchRobotById(parseInt(id!));
       setRobot(robotData as unknown as RobotDetail);
+      setAllModesBattleCount(robotData.allModesBattleCount ?? null);
 
       // Fetch independent data in parallel — these don't depend on each other
       const [leagueResult, weaponsResult, facilitiesResult, battlesResult] = await Promise.allSettled([
@@ -314,21 +364,6 @@ export function useRobotDetail() {
       } else {
         log.error('Failed to fetch recent battles', { err: battlesResult.reason });
       }
-
-      // Calculate battle readiness
-      const hpPercentage = (robotData.currentHP / robotData.maxHP) * 100;
-      const hasWeapons = robotData.mainWeaponId !== null;
-      const isReady = hpPercentage >= 50 && hasWeapons;
-      const warnings: string[] = [];
-
-      if (hpPercentage < 50) {
-        warnings.push('HP below 50%');
-      }
-      if (!hasWeapons) {
-        warnings.push('No weapons equipped');
-      }
-
-      setBattleReadiness({ isReady, warnings });
     } catch (err: unknown) {
       if (err instanceof ApiError) {
         if (err.statusCode === 401) {
@@ -447,6 +482,14 @@ export function useRobotDetail() {
 
   const isOwner = user && robot ? robot.userId === user.id : false;
 
+  // Owner-only: non-owner payloads are sanitized (no loadout/weapon fields),
+  // so readiness is unknown and no badge is shown. Derived from `robot` so it
+  // stays current after equip/unequip/loadout changes.
+  const battleReadiness = useMemo(
+    () => (isOwner && robot ? getOwnerBattleReadiness(robot) : undefined),
+    [isOwner, robot],
+  );
+
   return {
     // Core data
     robot,
@@ -467,6 +510,7 @@ export function useRobotDetail() {
     recentBattles,
     battleReadiness,
     leagueRank,
+    allModesBattleCount,
 
     // Tab state
     activeTab,

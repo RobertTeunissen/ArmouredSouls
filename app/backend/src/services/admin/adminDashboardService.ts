@@ -1,5 +1,6 @@
 import prisma from '../../lib/prisma';
 import type { Prisma } from '../../../generated/prisma';
+import { getStableBattleOverlapsByUser } from '../auth/stable-battle-overlap';
 
 const BANKRUPTCY_RISK_THRESHOLD = 10000; // Credits below which a user is considered at risk
 
@@ -100,9 +101,15 @@ export async function getEngagementPlayers(
     prisma.user.count({ where: userFilter }),
   ]);
 
+  // Stable totals count each battle once per stable, as on the dashboard: the
+  // robot counters count a team battle once per member, so the shared-side
+  // overlap is subtracted. One query for the whole page.
+  const overlaps = await getStableBattleOverlapsByUser(users.map((u) => u.id));
+
   const players = users.map((u) => {
-    const totalBattles = u.robots.reduce((sum, r) => sum + r.totalBattles, 0);
-    const totalWins = u.robots.reduce((sum, r) => sum + r.wins, 0);
+    const overlap = overlaps.get(u.id);
+    const totalBattles = u.robots.reduce((sum, r) => sum + r.totalBattles, 0) - (overlap?.battles ?? 0);
+    const totalWins = u.robots.reduce((sum, r) => sum + r.wins, 0) - (overlap?.wins ?? 0);
     return {
       userId: u.id,
       username: u.username,

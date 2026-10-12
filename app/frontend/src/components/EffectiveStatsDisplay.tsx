@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { getLoadoutBonus, getStanceModifier } from '../utils/robotStats';
 import { applyRefinementsToWeapon, type WeaponLike, type RefinementRow } from '../../../shared/utils/weaponRefinement';
 import { fetchTuningAllocation } from '../utils/robotApi';
-import type { RobotWithAttributes } from '../types/robot';
+import type { RobotAttributeKey, RobotWithAttributes } from '../types/robot';
 
 interface EffectiveStatsDisplayProps {
   robot: RobotWithAttributes;
@@ -52,7 +52,7 @@ const attributeCategories = {
     { key: 'supportSystems', label: 'Support Systems', icon: '🆘' },
     { key: 'formationTactics', label: 'Formation Tactics', icon: '📐' },
   ],
-};
+} satisfies Record<string, { key: RobotAttributeKey; label: string; icon: string }[]>;
 
 function EffectiveStatsDisplay({ robot }: EffectiveStatsDisplayProps) {
   const [expandedAttribute, setExpandedAttribute] = useState<string | null>(null);
@@ -98,7 +98,7 @@ function EffectiveStatsDisplay({ robot }: EffectiveStatsDisplayProps) {
     return bonuses;
   }, [robot.mainWeapon, robot.offhandWeapon]);
 
-  const getEffectiveStat = (attributeKey: string) => {
+  const getEffectiveStat = (attributeKey: RobotAttributeKey) => {
     const baseValue = robot[attributeKey] as number;
     const numericBase = typeof baseValue === 'string' ? parseFloat(baseValue) : baseValue;
     

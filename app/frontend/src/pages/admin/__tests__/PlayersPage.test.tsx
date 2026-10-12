@@ -62,10 +62,25 @@ const mockRecentResponse = {
   currentCycle: 50,
   cyclesBack: 10,
   cutoffDate: null,
-  totalUsers: 5,
-  usersWithIssues: 1,
+  totalUsers: 0,
+  usersWithIssues: 0,
   users: [],
   timestamp: '2025-01-01T00:00:00Z',
+};
+
+const listedUser = {
+  userId: 7,
+  username: 'newbie',
+  stableName: 'Newbie Stable',
+  currency: 50000,
+  role: 'user',
+  createdAt: '2025-01-01T00:00:00Z',
+  lastLoginAt: null,
+  churnRisk: 'low',
+  onboarding: { completed: true, skipped: false, currentStep: 9, strategy: null },
+  robots: [],
+  summary: { totalRobots: 0, battleReadyRobots: 0, robotsWithBattles: 0, totalBattles: 0, totalWins: 0, winRate: 0, facilitiesPurchased: 0 },
+  issues: [],
 };
 
 // ----------------------------------------------------------------
@@ -194,5 +209,33 @@ describe('PlayersPage', () => {
     await waitFor(() => {
       expect(mockPost).toHaveBeenCalledWith('/api/admin/users/1/reset-password', { password: 'NewPass123' });
     });
+  });
+
+  it('says when the recent-users list is capped below the number of users in range', async () => {
+    mockRecentResponse.totalUsers = 1200;
+    mockRecentResponse.users = [listedUser] as never[];
+    try {
+      renderPage();
+
+      const note = await screen.findByTestId('players-list-capped');
+      expect(note).toHaveTextContent('Listing the 1 newest of 1,200 players in this range.');
+    } finally {
+      mockRecentResponse.totalUsers = 0;
+      mockRecentResponse.users = [];
+    }
+  });
+
+  it('shows no cap note when every user in range is listed', async () => {
+    mockRecentResponse.totalUsers = 1;
+    mockRecentResponse.users = [listedUser] as never[];
+    try {
+      renderPage();
+
+      await screen.findByText('Newbie Stable');
+      expect(screen.queryByTestId('players-list-capped')).not.toBeInTheDocument();
+    } finally {
+      mockRecentResponse.totalUsers = 0;
+      mockRecentResponse.users = [];
+    }
   });
 });

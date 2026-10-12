@@ -10,6 +10,7 @@ import { StandingsMode } from '../../../generated/prisma';
 import { getPrestigeRank } from '../../utils/prestigeUtils';
 import { EventType } from '../common/eventLogger';
 import type { StableMetric, RobotMetric } from '../../types/snapshotTypes';
+import { getStableBattleOverlap } from './stable-battle-overlap';
 
 const LEAGUE_HIERARCHY = [
   'bronze_4', 'bronze_3', 'bronze_2', 'bronze_1',
@@ -83,10 +84,11 @@ export async function getStableStats(userId: number) {
     select: { id: true },
   });
 
-  // Read tag team stats from standings (source of truth since Spec #40)
+  // Tag team tiers from standings (source of truth since Spec #40). Only the tier
+  // is read: tag-team results are already inside each member's robot counters.
   const tagTeamStandings = tagTeams.length > 0 ? await prisma.standing.findMany({
     where: { entityType: 'team', entityId: { in: tagTeams.map(t => t.id) }, mode: StandingsMode.tag_team },
-    select: { tier: true, wins: true, losses: true, draws: true },
+    select: { tier: true },
   }) : [];
 
   const cycleChanges = await computeCycleChanges(userId, robots);
@@ -108,15 +110,16 @@ export async function getStableStats(userId: number) {
     };
   }
 
-  const totalTagTeamWins = tagTeamStandings.reduce((sum, s) => sum + s.wins, 0);
-  const totalTagTeamLosses = tagTeamStandings.reduce((sum, s) => sum + s.losses, 0);
-  const totalTagTeamDraws = tagTeamStandings.reduce((sum, s) => sum + s.draws, 0);
-  const totalTagTeamBattles = totalTagTeamWins + totalTagTeamLosses + totalTagTeamDraws;
+  // Each battle counts once per stable. The robot counters count a team battle
+  // once per member (tag team, 2v2/3v3 League and tournament, team byes), so
+  // the surplus from sides the stable shared is subtracted. Per-robot counters
+  // are unchanged, and byes still count as battles.
+  const overlap = await getStableBattleOverlap(robots.map(r => r.id));
 
-  const totalBattles = robots.reduce((sum, r) => sum + r.totalBattles, 0) + totalTagTeamBattles;
-  const wins = robots.reduce((sum, r) => sum + r.wins, 0) + totalTagTeamWins;
-  const losses = robots.reduce((sum, r) => sum + r.losses, 0) + totalTagTeamLosses;
-  const draws = robots.reduce((sum, r) => sum + r.draws, 0) + totalTagTeamDraws;
+  const totalBattles = robots.reduce((sum, r) => sum + r.totalBattles, 0) - overlap.battles;
+  const wins = robots.reduce((sum, r) => sum + r.wins, 0) - overlap.wins;
+  const losses = robots.reduce((sum, r) => sum + r.losses, 0) - overlap.losses;
+  const draws = robots.reduce((sum, r) => sum + r.draws, 0) - overlap.draws;
   const winRate = totalBattles > 0 ? (wins / totalBattles) * 100 : 0;
   const highestELO = Math.max(...robots.map(r => r.elo));
 
@@ -180,6 +183,11 @@ export const PLACEMENT_MODE_BATTLE_TYPES = ['koth', 'grand_melee'];
 /**
  * Count this cycle's wins and losses for a set of robots, covering the same
  * modes as the career win/loss counters.
+ *
+ * Each battle counts once per stable, like the career totals: a team battle
+ * writes one audit row per member, so rows sharing a battle and a result are
+ * counted once. Opposite results in one battle (two of the stable's teams
+ * meeting) stay separate.
  */
 async function countCareerCycleResults(
   cycleNumber: number,
@@ -193,15 +201,21 @@ async function countCareerCycleResults(
       eventType: EventType.BATTLE_COMPLETE,
       robotId: { in: robotIds },
     },
-    select: { payload: true },
+    select: { payload: true, battleId: true },
   });
 
   let wins = 0;
   let losses = 0;
+  const counted = new Set<string>();
 
   for (const event of events) {
     const payload = event.payload as unknown as { result?: string; battleType?: string };
     if (payload.battleType && PLACEMENT_MODE_BATTLE_TYPES.includes(payload.battleType)) continue;
+    if (event.battleId != null) {
+      const key = `${event.battleId}:${payload.result}`;
+      if (counted.has(key)) continue;
+      counted.add(key);
+    }
     if (payload.result === 'win') wins++;
     else if (payload.result === 'loss') losses++;
   }

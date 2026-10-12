@@ -1604,7 +1604,9 @@ studio_multiplier = 1 + (streaming_studio_level × 1.0)  // Facility bonus (0-10
 streaming_revenue = base_streaming × battle_multiplier × fame_multiplier × studio_multiplier
 ```
 
-Neither the battle multiplier nor the fame multiplier is capped. `robot_battles` counts every mode: `robots.total_battles` excludes KotH, so callers add the KotH `standings.total_matches`.
+Neither the battle multiplier nor the fame multiplier is capped. `robot_battles` counts every mode: `robots.total_battles` (league 1v1, tournaments, tag team, 2v2/3v3 League) plus the KotH and Grand Melee `standings.total_matches`. Both placement modes pass `skipBattleCounters`, so their matches never reach `total_battles`. Every caller gets the count from the shared helper `app/backend/src/services/robot/all-modes-battle-count.ts` (`getAllModesBattleCount` / `getAllModesBattleCounts`); no caller adds modes itself.
+
+**All-modes battle count fix (#530, #532).** Before this fix the award paths and the facility recommendation added KotH but not Grand Melee, and the legacy daily financial report (`GET /api/finances/daily`) used raw `robots.total_battles`, which excludes both. Grand Melee matches now raise the battle multiplier like every other mode (+0.1% per match) on future awards. Amounts already paid are stored ledger/audit facts and are not recalculated.
 
 #### Single source of truth (Spec #46 R10)
 
@@ -2435,7 +2437,7 @@ Example: 1st place with zone dominance earns ₡25,000 × 1.25 = ₡31,250.
 
 ### Streaming Revenue
 
-Streaming revenue is awarded to **all 5–6 participants** in a KotH match, using the same per-battle streaming formula as league battles. Participation in KotH counts toward the robot's `totalBattles` for streaming revenue scaling.
+Streaming revenue is awarded to **all 5–6 participants** in a KotH match, using the same per-battle streaming formula as league battles. KotH matches do not increment the robot's `totalBattles`; they count toward the streaming battle count through the KotH `standings.total_matches`, via the shared all-modes battle count (#530, #532).
 
 ### No ELO Change
 

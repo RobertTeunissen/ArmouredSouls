@@ -11,6 +11,7 @@ import { Prisma } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import type { RefinementTier } from '../../shared/utils/weaponRefinement';
 import { REPAIR_CHARGED_KEY, REPAIR_PRE_DISCOUNT_KEY } from '../economy/repairPayloadKeys';
+import { PASSIVE_INCOME_WIN_LOSS_BATTLES_KEY } from '../financial/passive-income-payload-keys';
 import { withAuditSequence } from './auditSequence';
 
 /**
@@ -348,7 +349,8 @@ export class EventLogger {
     streaming: number,
     facilityLevel: number,
     prestige: number,
-    totalBattles: number,
+    /** Summed `robots.total_battles`: win/loss modes only. */
+    winLossModeBattles: number,
     totalFame: number
   ): Promise<void> {
     await this.logEvent(
@@ -360,7 +362,8 @@ export class EventLogger {
         totalIncome: merchandising + streaming,
         facilityLevel,
         prestige,
-        totalBattles,
+        // Formerly `totalBattles`; read via readPassiveIncomeWinLossModeBattles.
+        [PASSIVE_INCOME_WIN_LOSS_BATTLES_KEY]: winLossModeBattles,
         totalFame,
       },
       { userId }

@@ -203,7 +203,7 @@ describe('CycleSnapshotService Property-Based Tests', () => {
                 data.streaming,
                 5, // facilityLevel
                 1000, // prestige
-                50, // totalBattles
+                50, // winLossModeBattles
                 200 // totalFame
               );
               

@@ -561,6 +561,12 @@ function PlayersListView({ data, loading, onSelectUser, label, churnFilter = 'al
         <AdminStatCard label="With Issues" value={data.usersWithIssues} color={data.usersWithIssues > 0 ? 'warning' : 'success'} icon={<span>⚠️</span>} />
         <AdminStatCard label="Current Cycle" value={data.currentCycle} color="info" icon={<span>🔄</span>} />
       </div>
+      {/* The endpoint lists at most the 500 newest users in range; totalUsers counts them all. */}
+      {data.users.length < data.totalUsers && (
+        <p data-testid="players-list-capped" className="text-sm text-secondary">
+          Listing the {data.users.length.toLocaleString()} newest of {data.totalUsers.toLocaleString()} {label === 'real' ? 'players' : 'accounts'} in this range. Sorting, filters and the issue count cover the listed ones.
+        </p>
+      )}
       {sortedAndFiltered.length === 0 ? (
         <div className="bg-surface rounded-lg p-8 text-center">
           <p className="text-3xl mb-2">{churnFilter !== 'all' ? '🔍' : label === 'real' ? '👥' : '🤖'}</p>

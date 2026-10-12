@@ -4,7 +4,7 @@ import ConfirmationModal from './ConfirmationModal';
 import { getCapForLevel } from '../../../shared/utils/academyCaps';
 import { calculateBaseCost } from '../../../shared/utils/upgradeCosts';
 import { calculateTrainingFacilityDiscount } from '../../../shared/utils/discounts';
-import type { RobotWithAttributes } from '../types/robot';
+import type { RobotAttributeKey, RobotWithAttributes } from '../types/robot';
 import { createLogger } from '../utils/logger';
 
 const log = createLogger('UpgradePlanner');
@@ -96,7 +96,7 @@ const attributeCategories = {
       { key: 'formationTactics', label: 'Formation Tactics', icon: '📐' },
     ],
   },
-};
+} satisfies Record<string, { academy: string; attributes: { key: RobotAttributeKey; label: string; icon: string }[] }>;
 
 function UpgradePlanner({ 
   robot, 
@@ -150,7 +150,7 @@ function UpgradePlanner({
   const remainingCredits = currentCredits - totalPlannedCost;
 
   // Handle increment
-  const handleIncrement = (attributeKey: string, categoryAcademy: string) => {
+  const handleIncrement = (attributeKey: RobotAttributeKey, categoryAcademy: string) => {
     const currentLevel = Math.floor(robot[attributeKey] as number);
     const academyLevel = academyLevels[categoryAcademy as keyof typeof academyLevels];
     const cap = getCapForLevel(academyLevel);
@@ -178,7 +178,7 @@ function UpgradePlanner({
   };
 
   // Handle maximize a single attribute to cap (or as far as credits allow)
-  const handleMaxAttribute = (attributeKey: string, categoryAcademy: string) => {
+  const handleMaxAttribute = (attributeKey: RobotAttributeKey, categoryAcademy: string) => {
     const currentLevel = Math.floor(robot[attributeKey] as number);
     const academyLevel = academyLevels[categoryAcademy as keyof typeof academyLevels];
     const cap = getCapForLevel(academyLevel);
@@ -229,7 +229,7 @@ function UpgradePlanner({
     const cap = getCapForLevel(academyLevel);
 
     // Calculate cost of all upgrades NOT in this category
-    const categoryAttrKeys = new Set(config.attributes.map(a => a.key));
+    const categoryAttrKeys = new Set<string>(config.attributes.map(a => a.key));
     const otherCosts = Object.entries(upgradePlan)
       .filter(([key]) => !categoryAttrKeys.has(key))
       .reduce((sum, [, plan]) => sum + plan.cost, 0);
@@ -323,7 +323,7 @@ function UpgradePlanner({
   };
 
   // Handle decrement
-  const handleDecrement = (attributeKey: string) => {
+  const handleDecrement = (attributeKey: RobotAttributeKey) => {
     const currentLevel = Math.floor(robot[attributeKey] as number);
     const currentPlan = upgradePlan[attributeKey];
     

@@ -19,7 +19,8 @@
  * `runAutomatonTurn` is one stable's turn (design §11.2): the pinned
  * Strategy_Version and its stored Goal_Targets (a missing version or invalid
  * targets end the turn `failed` / `invalid_parameters` with an alert; no
- * automatic migration, R6.6), facts, Free_Upkeep, the planner loop under the
+ * automatic migration, R6.6), facts, fit-out recovery for robots a failed
+ * Robot_Chain left unarmed (`fitoutRecovery.ts`), Free_Upkeep, the planner loop under the
  * Turn_Budget (an action starts only when all its charged steps fit,
  * `checkTurnBudget(…, chargedStepCount(action))`), Free_Upkeep again, and the
  * completed Turn_Record. Committed actions are kept when a turn fails (R7.8).
@@ -42,6 +43,7 @@ import { planNextStep, type PlanResult } from './turnPlanner';
 import { checkTurnBudget, isStepBudgetExhausted, STEP_BUDGET_EXHAUSTED, TURN_BUDGET_EXHAUSTED, TURN_STEP_BUDGET_MS } from './turnBudget';
 import { loadBlueprintFacts, loadStableFacts, loadWeaponCatalogue, type StableFacts, type WeaponFacts } from './stableFacts';
 import { runFreeUpkeep, type FreeUpkeepIssue } from './upkeep/freeUpkeep';
+import { resumeIncompleteFitouts } from './fitoutRecovery';
 import { ensureProgramSettings, isProgramEnabled, PROGRAM_SETTINGS_ID } from './programSwitch';
 import type { StrategyRegistry } from './strategies/registry';
 import { getStrategyRegistry } from './strategies/defaultRegistry';
@@ -350,6 +352,10 @@ export async function runAutomatonTurn(
       teamNames,
       eventOrder,
     };
+
+    // 2b. Resume any fit-out a failed Robot_Chain left unfinished, before the
+    //     planner can buy anything else (an unarmed robot is never scheduled).
+    facts = (await resumeIncompleteFitouts(facts, execCtx, cursor, { startedAtMs: started, now: env.now })).facts;
 
     // 3. Free_Upkeep at turn start.
     const startUpkeep = await runFreeUpkeep(facts, upkeepCtx);

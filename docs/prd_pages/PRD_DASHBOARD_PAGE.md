@@ -410,6 +410,34 @@ const { user, logout } = useAuth();
 }
 ```
 
+**Counting rule** (`services/auth/userProfileService.getStableStats`):
+- `totalBattles`/`wins`/`losses`/`draws` count each battle once per stable: the sum of the
+  stable's robot career counters minus the shared-side overlap from
+  `services/auth/stable-battle-overlap.ts`. A team battle (tag team, 2v2/3v3 League,
+  2v2/3v3 tournament) adds +1 to every member's counter, so a side on which the stable
+  fielded k robots is k counter entries for one battle; the k − 1 surplus is subtracted under
+  that side's `battles.winning_side` outcome (never `battle_log`). Per-robot counters are
+  unchanged.
+- Tag-team standings are read for `highestTagTeamLeague` only; their W/L/D are already inside
+  the robot counters and are not added again (before this fix a same-stable tag-team battle
+  counted three times).
+- Byes count as battles (and wins), once per stable, exactly as the robot counters record
+  them. Placement modes (KotH, Grand Melee) are not in these totals.
+- Two of the stable's teams meeting (possible in tournaments) count as one win and one loss.
+- `cycleChanges.wins`/`losses` follow the same rule: audit rows sharing a battle and a result
+  count once.
+- The same rule produces every other counter-based stable total: the admin Players list and
+  detail summary (`getEngagementPlayers`, `getRecentUserActivity`) and the season archive's
+  `stable_season_archives` record, through the batch `getStableBattleOverlapsByUser` (one
+  query for the whole list or archive batch).
+- Stable View (`stableViewService.getStableProfile`) counts distinct battle rows instead and
+  still differs in three cases: it includes tournament byes (1v1, 2v2, 3v3; their Bye_Mode_Table
+  entry has `updatesElo: false`, so the robot counters never record them); a same-stable 1v1
+  meeting is one win there but a win and a loss here, and a same-stable draw is one draw there
+  but one per side here; a legacy team row with a `winner_id` but no `winning_side` is not
+  counted there but stays in the robot counters here. Aligning them would change how one of the
+  two views counts byes, so they are left as they are.
+
 **Edge Cases Handled**:
 - 0 robots → Returns all zeros
 - 0 battles → Win rate 0%

@@ -93,6 +93,7 @@ Automaton_Stables: computer-run stables that play by human rules. Public API in 
 | `turnPlanner` | Pure planner: walks the Build_Order and returns the next Goal_Outcome |
 | `goals/` | Goal_Library: `robotCountGoal`, `facilityGoal`, `attributeGoal`, `weaponStageGoal`, `refinementGoal` (+ `goalTypes`, `goalSupport`) |
 | `actionExecutor`, `executionSteps`, `robotFitout` | Execute planned actions through the domain services; Robot_Chain and Robot_Fitout |
+| `fitoutRecovery` | Turn start: resume the fit-out of robots that fail the loadout readiness rule (reuse storage first, buy only what is missing) |
 | `upkeep/` | Free_Upkeep: `teamUpkeep`, `subscriptionUpkeep` (Event_Allocation), `blueprintSync`, `tuningUpkeep`, `freeUpkeep` |
 | `stableFacts`, `factProjector`, `pricing`, `buildFocus`, `teamRule`, `standingsTier` | Fact loading, pure projection, shared-formula pricing, Build_Focus maths, Team_Rule, tier ordering |
 | `robotNaming`, `requestKeys`, `turnBudget` | Blueprint names with "Mk II" suffixing, deterministic request keys, `TURN_*` budget constants |
@@ -152,6 +153,8 @@ Authentication and user management.
 | `jwtService` | JWT token generation and verification |
 | `passwordService` | Bcrypt password hashing and comparison |
 | `userService` | User CRUD, profile updates, email management |
+| `userProfileService` | Profile retrieval and `GET /api/user/stats` stable totals (`getStableStats`) |
+| `stable-battle-overlap` | Shared-side surplus subtracted from summed robot counters so each battle counts once per stable: `getStableBattleOverlap` (one stable, `getStableStats`) and `getStableBattleOverlapsByUser` (batch, one query: admin player lists, season archive) |
 
 ### battle/
 Core combat engine — the simulator and shared orchestration helpers.
@@ -267,6 +270,7 @@ Robot management — the full lifecycle from creation to combat.
 | `robotWeaponService` | Weapon equip/unequip transactions (main, offhand, loadout type) |
 | `robotSettingsService` | `updateStance`, `updateYieldThreshold` (extracted from `routes/robots.ts`, Spec #55) |
 | `robotSanitizer` | Strips sensitive data for public robot viewing |
+| `all-modes-battle-count` | All-modes battle count (`totalBattles` + KotH + Grand Melee `standings.total_matches`), single and batch, plus `getTopRobotsByAllModesBattleCount` (SQL ranking on the combined value, bigint sum, returns each robot's count from the same row). Used by streaming revenue, the financial report, facility recommendations, the robot detail/stable view payloads (#530, #532) and the Hall of Records "Most Battles" list and its season accolade |
 
 ### security/
 Security monitoring and logging.
@@ -402,4 +406,4 @@ All schedule env vars are overridable via `.env` for rollback or per-environment
 | `src/types/` | Shared TypeScript interfaces for JSON payloads (snapshot types, battle log types) |
 | `src/config/` | Configuration (logger, environment, facilities) |
 | `src/lib/` | Singleton instances (Prisma client, credit guard) |
-| `app/shared/utils/` | Game formulas shared between frontend and backend (upgrade costs, discounts, academy caps) |
+| `app/shared/utils/` | Game formulas shared between frontend and backend (upgrade costs, discounts, academy caps, loadout battle readiness) |
