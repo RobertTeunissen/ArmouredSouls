@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import RobotDashboardCard from '../RobotDashboardCard';
+import { PLACEMENT_MODES_RECORD_NOTE } from '../PlacementModesRecordNote';
 
 // Mock useNavigate
 const mockNavigate = vi.fn();
@@ -85,6 +86,31 @@ describe('RobotDashboardCard', () => {
       expect(screen.getByText('9,800')).toBeInTheDocument();
     });
 
+    it('should render the all-modes battle count when provided (#532)', () => {
+      renderCard({ robot: makeRobot({ totalBattles: 211, allModesBattleCount: 1280 }), variant: 'public' });
+      expect(screen.getByText('Battles:').nextElementSibling).toHaveTextContent('1,280');
+    });
+
+    it('should fall back to totalBattles for battles when the all-modes count is absent', () => {
+      renderCard({ robot: makeRobot({ totalBattles: 17 }), variant: 'public' });
+      expect(screen.getByText('Battles:').nextElementSibling).toHaveTextContent('17');
+    });
+
+    it('should explain the record when the all-modes count differs from totalBattles', () => {
+      renderCard({ robot: makeRobot({ totalBattles: 211, allModesBattleCount: 280 }), variant: 'public' });
+      expect(screen.getByText(PLACEMENT_MODES_RECORD_NOTE)).toBeInTheDocument();
+    });
+
+    it('should hide the note when the all-modes count equals totalBattles', () => {
+      renderCard({ robot: makeRobot({ totalBattles: 17, allModesBattleCount: 17 }), variant: 'public' });
+      expect(screen.queryByText(PLACEMENT_MODES_RECORD_NOTE)).not.toBeInTheDocument();
+    });
+
+    it('should hide the note when the all-modes count is absent', () => {
+      renderCard({ robot: makeRobot({ totalBattles: 17 }), variant: 'public' });
+      expect(screen.queryByText(PLACEMENT_MODES_RECORD_NOTE)).not.toBeInTheDocument();
+    });
+
     it('should NOT render HP bar', () => {
       renderCard({ robot: makeRobot(), variant: 'public' });
       // HPBar renders "HP:" label with percentage
@@ -123,6 +149,11 @@ describe('RobotDashboardCard', () => {
       expect(screen.queryByText('Kills:')).not.toBeInTheDocument();
       expect(screen.queryByText('Dmg Dealt:')).not.toBeInTheDocument();
       expect(screen.queryByText('Dmg Taken:')).not.toBeInTheDocument();
+    });
+
+    it('should NOT render the placement-modes note (no Battles count on this variant)', () => {
+      renderCard({ robot: makeRobot({ totalBattles: 211, allModesBattleCount: 280 }) });
+      expect(screen.queryByText(PLACEMENT_MODES_RECORD_NOTE)).not.toBeInTheDocument();
     });
   });
 

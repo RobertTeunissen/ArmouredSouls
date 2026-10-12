@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import HPBar from './HPBar';
 import BattleReadinessBadge from './BattleReadinessBadge';
 import RobotImage from './RobotImage';
+import PlacementModesRecordNote from './PlacementModesRecordNote';
 import { getFameTier } from '../utils/fameTiers';
 
 interface RobotDashboardCardProps {
@@ -225,6 +226,14 @@ function RobotDashboardCard({ robot, variant = 'owner' }: RobotDashboardCardProp
                 </div>
               )}
             </div>
+          )}
+          {/* #532: Battles above is all modes; Record and win rate are win/loss modes only. */}
+          {isPublic && (
+            <PlacementModesRecordNote
+              allModesBattleCount={robot.allModesBattleCount}
+              totalBattles={totalBattles}
+              className="mt-1 text-xs text-secondary"
+            />
           )}
         </div>
       </div>

@@ -152,6 +152,8 @@ Authentication and user management.
 | `jwtService` | JWT token generation and verification |
 | `passwordService` | Bcrypt password hashing and comparison |
 | `userService` | User CRUD, profile updates, email management |
+| `userProfileService` | Profile retrieval and `GET /api/user/stats` stable totals (`getStableStats`) |
+| `stable-battle-overlap` | Shared-side surplus subtracted from summed robot counters so each battle counts once per stable in `getStableStats` |
 
 ### battle/
 Core combat engine — the simulator and shared orchestration helpers.

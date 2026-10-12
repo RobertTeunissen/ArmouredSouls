@@ -71,8 +71,9 @@ The Stable View Page (`/stables/:userId`) is the first social/scouting feature i
 │   │   ├── ELO, league, league points
 │   │   ├── W/D/L record, win rate
 │   │   ├── Fame + fame tier badge
-│   │   ├── Total battles, kills
+│   │   ├── Battles (all modes, `allModesBattleCount`), kills
 │   │   ├── Lifetime damage dealt/taken
+│   │   ├── Placement-modes note (only when all-modes count ≠ totalBattles)
 │   │   └── Click navigates to /robots/:robotId
 │   └── Sorted by ELO descending
 ├── Facilities Section ✅
@@ -123,7 +124,9 @@ All stats are computed server-side from robot data.
 
 Grid of `RobotDashboardCard` components using the `"public"` variant:
 - Sorted by ELO rating descending
-- Each card shows: image, name, ELO, league, league points, W/D/L record, win rate, fame, fame tier, total battles, kills, lifetime damage dealt, lifetime damage taken
+- Each card shows: image, name, ELO, league, league points, W/D/L record, win rate, fame, fame tier, battles, kills, lifetime damage dealt, lifetime damage taken
+- **Battles** is the all-modes count (`allModesBattleCount`: `totalBattles` + KotH + Grand Melee matches, #532), falling back to `totalBattles` when the field is absent. The W/D/L record and win rate stay win/loss modes only (`wins / totalBattles`).
+- When `allModesBattleCount` differs from `totalBattles`, the card shows one muted line below the stats: "Record and win rate exclude KotH and Grand Melee, which are placement events." It is the same `PlacementModesRecordNote` component (and wording) the robot detail page uses; hidden when the counts match or the field is absent.
 - Each card omits: HP bar, shield bar, battle readiness badge, weapon details
 - Clicking a card navigates to `/robots/:robotId`
 - Bye Robots are excluded from the response
@@ -196,7 +199,8 @@ Deliberately **not** shown: the franchise, the backstory and the strategy name. 
     prestigeRank: string;
     championshipTitles: number;
   };
-  robots: PublicRobot[];       // Sanitized, sorted by ELO desc
+  robots: PublicRobot[];       // Sanitized, sorted by ELO desc; each robot also carries
+                               // allModesBattleCount: number (totalBattles + KotH + Grand Melee, #532)
   facilities: FacilitySummary[];
   stats: {
     totalBattles: number;
@@ -250,6 +254,7 @@ app/frontend/src/pages/
 
 app/frontend/src/components/
 ├── RobotDashboardCard.tsx     # Extended with variant="public" support
+├── PlacementModesRecordNote.tsx # Shared "Record and win rate exclude…" note (also robot detail page)
 └── OwnerNameLink.tsx          # Reusable owner name link component
 ```
 
