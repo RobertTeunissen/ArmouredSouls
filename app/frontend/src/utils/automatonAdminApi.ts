@@ -9,6 +9,9 @@
  * Errors arrive as `ApiError` with `details.issues` for rule failures.
  */
 import { api } from './api';
+import type { TieredStandingsMode } from '@shared/utils/automatonStandingsTier';
+
+export type { TieredStandingsMode } from '@shared/utils/automatonStandingsTier';
 
 const BASE = '/api/admin/automatons';
 
@@ -145,7 +148,10 @@ export interface ProfileListItem {
   robots: { current: number; target: number | null };
   credits: number | null;
   prestige: number | null;
+  /** Highest current tier over the modes the stable has played (unplayed default rows ignored). */
   bestTier: LeagueTier | null;
+  /** The mode that holds `bestTier`; null when `bestTier` is null. */
+  bestTierMode: TieredStandingsMode | null;
   lastTurn: TurnSummary | null;
   activatedAt: string | null;
   needAttention: NeedAttentionReason[];
@@ -465,6 +471,31 @@ export interface ComparisonRow {
   bestTier: { tier: LeagueTier; stables: number } | null;
   creditsAverage: number;
   winRate: WinRate | null;
+  /** Six entries in `TIERED_STANDINGS_MODES` order, zero-filled. */
+  modes: ModePerformance[];
+}
+
+/** One strategy's standings in one tiered mode, played rows only (backend `strategyModePerformance.ts`). */
+export interface ModePerformance {
+  mode: TieredStandingsMode;
+  /** `placement` = King of the Hill and Grand Melee. */
+  kind: 'head_to_head' | 'placement';
+  /** `team` = 2v2, 3v3 and Tag Team. */
+  entityType: 'robot' | 'team';
+  stablesPlayed: number;
+  entitiesPlayed: number;
+  /** Placement modes: first places. */
+  wins: number;
+  /** Placement modes: always 0 (not recorded). */
+  losses: number;
+  /** Placement modes: always 0 (not recorded). */
+  draws: number;
+  /** Head-to-head: W + L + D; placement: matches played. */
+  matches: number;
+  winPercentage: number | null;
+  /** Placement modes only. */
+  bestPlacement: number | null;
+  lowSample: boolean;
 }
 
 export interface StrategyComparison {

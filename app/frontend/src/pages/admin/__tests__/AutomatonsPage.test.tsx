@@ -30,6 +30,11 @@ function LocationProbe() {
   return <output data-testid="location">{location.search}</output>;
 }
 
+/** The decoded query of the current location. */
+function search(): URLSearchParams {
+  return new URLSearchParams(screen.getByTestId('location').textContent ?? '');
+}
+
 function renderPage(path = '/admin/automatons') {
   return render(
     <MemoryRouter initialEntries={[path]}>
@@ -140,9 +145,59 @@ describe('AutomatonsPage (task 10.2)', () => {
 
   it('opens the Stables tab filtered on a strategy from the comparison', async () => {
     desktop = true;
-    renderPage('/admin/automatons?tab=strategies');
+    renderPage('/admin/automatons?tab=strategies&q=decep');
     fireEvent.click((await screen.findAllByRole('button', { name: 'Swarm' }))[0]);
     expect(screen.getByTestId('location')).toHaveTextContent('strategy=swarm');
+    expect(search().has('q')).toBe(false);
     expect(await screen.findByRole('button', { name: 'All · 1' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Strategy: Swarm/ })).toBeInTheDocument();
+  });
+
+  it('writes the strategy, search and sort of the Stables toolbar to the URL', async () => {
+    desktop = true;
+    renderPage();
+    await screen.findByText('3 of 3 stables');
+    fireEvent.change(screen.getByRole('combobox', { name: 'Strategy' }), { target: { value: 'trio' } });
+    expect(search().get('strategy')).toBe('trio');
+    expect(await screen.findByText('1 of 3 stables')).toBeInTheDocument();
+    fireEvent.change(screen.getByRole('combobox', { name: 'Strategy' }), { target: { value: '' } });
+    expect(search().has('strategy')).toBe(false);
+
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Search stables' }), { target: { value: 'Grim' } });
+    expect(search().get('q')).toBe('Grim');
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Search stables' }), { target: { value: '' } });
+    expect(search().has('q')).toBe(false);
+
+    fireEvent.click(within(screen.getByRole('table')).getByRole('button', { name: /^Credits/ }));
+    expect(search().get('sort')).toBe('credits:desc');
+    expect(within(screen.getByRole('table')).getByRole('columnheader', { name: /^Credits/ })).toHaveAttribute('aria-sort', 'descending');
+    fireEvent.change(screen.getByRole('combobox', { name: 'Sort by' }), { target: { value: '' } });
+    expect(search().has('sort')).toBe(false);
+  });
+
+  it('applies ?q= and ?sort= from a deep link and clears the filters', async () => {
+    desktop = true;
+    renderPage('/admin/automatons?q=decep&sort=name:desc');
+    expect(await screen.findByText('1 of 3 stables')).toBeInTheDocument();
+    expect(screen.getByRole('searchbox', { name: 'Search stables' })).toHaveValue('decep');
+    expect(screen.getByRole('combobox', { name: 'Sort by' })).toHaveValue('name');
+    expect(screen.getAllByText('Decepticon Armada').length).toBeGreaterThan(0);
+    expect(screen.queryByText('Kamino Clone Legion')).not.toBeInTheDocument();
+    expect(screen.queryByText('Grim Reaper Works')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Draft · 0' }));
+    expect(await screen.findByText('No stables match these filters.')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
+    expect(search().has('q')).toBe(false);
+    expect(search().has('filter')).toBe(false);
+    expect(search().get('sort')).toBe('name:desc');
+    expect(await screen.findByText('3 of 3 stables')).toBeInTheDocument();
+  });
+
+  it('clears the search when the status bar opens Needs attention', async () => {
+    desktop = true;
+    renderPage('/admin/automatons?q=kamino');
+    fireEvent.click(await screen.findByRole('button', { name: '2 stables →' }));
+    expect(search().get('filter')).toBe('attention');
+    expect(search().has('q')).toBe(false);
   });
 });

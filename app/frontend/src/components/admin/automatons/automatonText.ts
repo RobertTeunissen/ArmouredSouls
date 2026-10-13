@@ -25,10 +25,12 @@ import type {
   Stance,
   TargetBounds,
   TurnStatus,
+  TieredStandingsMode,
   TurnTrigger,
   UpgradeConfirmation,
   UpgradeWarningEntry,
   WeaponStage,
+  WinRate,
 } from '../../../utils/automatonAdminApi';
 
 // ── Labels ───────────────────────────────────────────────────────────
@@ -131,6 +133,28 @@ export function tierLabel(tier: LeagueTier | null | undefined): string {
   return tier ? tier.charAt(0).toUpperCase() + tier.slice(1) : '—';
 }
 
+/** Highest tier with its mode: "Gold · 3v3 League"; "—" when either is missing. */
+export function highestTierText(tier: LeagueTier | null | undefined, mode: TieredStandingsMode | null | undefined): string {
+  if (!tier || !mode) return '—';
+  return `${tierLabel(tier)} · ${EVENT_LABELS[mode] ?? mode}`;
+}
+
+/** 1st, 2nd, 3rd, 4th, 11th, 12th, 13th, 21st. */
+export function ordinal(n: number): string {
+  const lastTwo = Math.abs(n) % 100;
+  if (lastTwo >= 11 && lastTwo <= 13) return `${n}th`;
+  switch (Math.abs(n) % 10) {
+    case 1:
+      return `${n}st`;
+    case 2:
+      return `${n}nd`;
+    case 3:
+      return `${n}rd`;
+    default:
+      return `${n}th`;
+  }
+}
+
 // ── Numbers ──────────────────────────────────────────────────────────
 
 const NUMBER = new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 });
@@ -159,6 +183,18 @@ export function formatDateTime(iso: string): string {
   const day = date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
   const time = date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
   return `${day}, ${time}`;
+}
+
+/**
+ * Win rate vs humans with its sample size: "43% · 61–78–3 (n = 142)", short
+ * "43% (n = 142)", "— (n = 0)" without battles, "—" when there is no figure.
+ */
+export function winRateVsHumansText(rate: WinRate | null, short = false): string {
+  if (!rate) return '—';
+  const n = `(n = ${rate.total})`;
+  if (rate.total === 0 || rate.percentage === null) return `— ${n}`;
+  const percent = `${formatNumber(rate.percentage)}%`;
+  return short ? `${percent} ${n}` : `${percent} · ${rate.wins}–${rate.losses}–${rate.draws} ${n}`;
 }
 
 export function formatSeconds(ms: number | null): string {
