@@ -4,9 +4,10 @@
  *
  * Seeded battles cover win, loss and draw in 1v1 and team modes, byes,
  * King of the Hill and Grand Melee (excluded), Automaton-vs-Automaton and
- * mixed sides (excluded), the human reference row with its best tier from
- * `standings`, a strategy without head-to-head battles (null percentage) and
- * the reference row disappearing when no Human_Stable owns a robot.
+ * mixed sides (excluded), the human reference row with its highest tier from
+ * `standings` (played rows only), the per-mode block from `standings`, a
+ * strategy without head-to-head battles (null percentage) and the reference
+ * row disappearing when no Human_Stable owns a robot.
  *
  * The dev database is shared, so the exact assertions run inside a
  * transaction that is rolled back: it parks every other Active_Automaton as
@@ -20,6 +21,9 @@ import {
   getStrategyComparison,
   type StrategyComparison,
 } from '../../src/services/automaton/strategyComparisonService';
+import { bestTiersForUsers } from '../../src/services/automaton/standingsTier';
+import type { ModePerformance } from '../../src/services/automaton/strategyModePerformance';
+import { TIERED_STANDINGS_MODES } from '../../src/shared/utils/automatonStandingsTier';
 import { getStrategyRegistry } from '../../src/services/automaton/strategies/defaultRegistry';
 import { defaultParameters, highestRobotsTarget } from '../../src/services/automaton/strategies/strategyParameters';
 import { createAutomatonStable, deleteAutomatonStables } from '../helpers/automatonStable';
@@ -47,8 +51,15 @@ describe('Strategy_Comparison (Spec #55 task 9.7)', () => {
     return created.id;
   }
 
-  async function standing(entityType: 'robot' | 'team', entityId: number, mode: Prisma.StandingCreateInput['mode'], tier: string): Promise<void> {
-    await prisma.standing.create({ data: { entityType, entityId, mode, tier, leagueInstanceId: `${tier}_1` } });
+  /** A standings row; without `played` it is a default, unplayed row (W/L/D 0, no placement match). */
+  async function standing(
+    entityType: 'robot' | 'team',
+    entityId: number,
+    mode: Prisma.StandingCreateInput['mode'],
+    tier: string,
+    played: Partial<{ wins: number; losses: number; draws: number; totalMatches: number; bestPlacement: number }> = {},
+  ): Promise<void> {
+    await prisma.standing.create({ data: { entityType, entityId, mode, tier, leagueInstanceId: `${tier}_1`, ...played } });
   }
 
   async function battle(battleType: string, sides: number[][], winnerId: number | null, winningSide: number | null = null): Promise<void> {
@@ -99,6 +110,9 @@ describe('Strategy_Comparison (Spec #55 task 9.7)', () => {
       automatonUserIds.push(s.userId);
       profileIds.push(s.profileId);
     }
+    r.s1 = s1.userId;
+    r.s2 = s2.userId;
+    r.p1 = p1.userId;
     await robot(r.h1, 'h1a');
     await robot(r.h1, 'h1b');
     await robot(r.h2, 'h2a');
@@ -108,15 +122,22 @@ describe('Strategy_Comparison (Spec #55 task 9.7)', () => {
     await robot(s2.userId, 's2b');
     await robot(p1.userId, 'p1a');
 
-    // Best tiers: S1 silver robot + gold team, S2 gold robot, P1 bronze; humans platinum and diamond ×2.
+    // Highest tiers (played rows only): S1 silver robot + gold team (gold · 2v2), S2 gold robot + gold KotH
+    // (gold · KotH: 5 matches beat 3), P1 none (unplayed bronze only); humans platinum and diamond ×2.
+    // Unplayed rows (no `played` argument) must be ignored: S1's diamond KotH and H1's champion KotH.
     const s1Team = await prisma.teamBattle.create({ data: { stableId: s1.userId, teamSize: 2, teamName: `Cmp Team ${tag}` } });
-    await standing('robot', r.s1a, 'league_1v1', 'silver');
-    await standing('team', s1Team.id, 'league_2v2', 'gold');
-    await standing('robot', r.s2a, 'league_1v1', 'gold');
+    const h2Team = await prisma.teamBattle.create({ data: { stableId: r.h2, teamSize: 2, teamName: `Cmp Human Team ${tag}` } });
+    await standing('robot', r.s1a, 'league_1v1', 'silver', { wins: 2, losses: 1 });
+    await standing('team', s1Team.id, 'league_2v2', 'gold', { wins: 3, losses: 1, draws: 1 });
+    await standing('robot', r.s1a, 'koth', 'diamond');
+    await standing('robot', r.s2a, 'league_1v1', 'gold', { wins: 1, losses: 2 });
+    await standing('robot', r.s2b, 'koth', 'gold', { totalMatches: 5, wins: 1, bestPlacement: 1 });
+    await standing('robot', r.s2a, 'grand_melee', 'bronze', { totalMatches: 4, bestPlacement: 3 });
     await standing('robot', r.p1a, 'league_1v1', 'bronze');
-    await standing('robot', r.h1a, 'league_1v1', 'platinum');
-    await standing('robot', r.h2a, 'league_1v1', 'diamond');
-    await standing('robot', r.h2b, 'tag_team', 'diamond');
+    await standing('robot', r.h1a, 'league_1v1', 'platinum', { wins: 1 });
+    await standing('robot', r.h1b, 'koth', 'champion');
+    await standing('robot', r.h2a, 'league_1v1', 'diamond', { wins: 4, losses: 1 });
+    await standing('team', h2Team.id, 'tag_team', 'diamond', { draws: 1 });
 
     // Head-to-head, counted for Swarm: 2 wins, 2 losses, 2 draws.
     await battle('league_1v1', [[r.s1a], [r.h1a]], r.s1a); // win
@@ -135,9 +156,10 @@ describe('Strategy_Comparison (Spec #55 task 9.7)', () => {
 
   afterAll(async () => {
     await prisma.battle.deleteMany({ where: { id: { in: battleIds } } });
-    const teams = await prisma.teamBattle.findMany({ where: { stableId: { in: automatonUserIds } }, select: { id: true } });
+    const teams = await prisma.teamBattle.findMany({ where: { stableId: { in: [...automatonUserIds, ...humanIds] } }, select: { id: true } });
     await prisma.standing.deleteMany({ where: { entityType: 'robot', entityId: { in: robotIds } } });
     await prisma.standing.deleteMany({ where: { entityType: 'team', entityId: { in: teams.map((t) => t.id) } } });
+    await prisma.teamBattle.deleteMany({ where: { stableId: { in: humanIds } } });
     await prisma.robot.deleteMany({ where: { id: { in: robotIds } } });
     await deleteAutomatonStables(automatonUserIds);
     await prisma.user.deleteMany({ where: { id: { in: humanIds } } });
@@ -151,7 +173,7 @@ describe('Strategy_Comparison (Spec #55 task 9.7)', () => {
     const registry = getStrategyRegistry();
     const swarm = registry.getStrategy('swarm', 1)!;
     const paragon = registry.getStrategy('paragon', 1)!;
-    expect(comparison.rows).toEqual([
+    expect(comparison.rows.map(({ modes: _modes, ...rest }) => rest)).toEqual([
       {
         strategyKey: 'paragon',
         displayName: paragon.displayName,
@@ -159,7 +181,7 @@ describe('Strategy_Comparison (Spec #55 task 9.7)', () => {
         stables: 1,
         robots: { average: 1, targetAverage: highestRobotsTarget(paragon.buildOrder, defaultParameters(paragon.buildOrder)) },
         prestigeAverage: 5,
-        bestTier: { tier: 'bronze', stables: 1 },
+        bestTier: null, // its only standings row is an unplayed default
         creditsAverage: 70_000,
         winRate: { wins: 0, losses: 0, draws: 0, total: 0, percentage: null },
       },
@@ -187,6 +209,40 @@ describe('Strategy_Comparison (Spec #55 task 9.7)', () => {
       },
     ]);
     expect(comparison.season).toEqual(expect.objectContaining({ seasonNumber: expect.any(Number), cycle: expect.any(Number), lengthCycles: expect.any(Number) }));
+  });
+
+  it('bestTiersForUsers returns tier and mode, played rows only', async () => {
+    const tiers = await bestTiersForUsers([r.s1, r.s2, r.p1]);
+    expect(tiers.get(r.s1)).toEqual({ tier: 'gold', mode: 'league_2v2' });
+    expect(tiers.get(r.s2)).toEqual({ tier: 'gold', mode: 'koth' }); // 5 KotH matches beat 3 league battles at gold
+    expect(tiers.get(r.p1)).toBeNull();
+  });
+
+  it('reports per-mode performance from standings (played rows only)', async () => {
+    const { comparison } = await isolatedComparison();
+    const modesOf = (key: string | null): ModePerformance[] => {
+      const row = comparison.rows.find((candidate) => candidate.strategyKey === key);
+      if (!row) throw new Error(`no row for ${String(key)}`);
+      return row.modes;
+    };
+    const byMode = (key: string | null, mode: string): ModePerformance | undefined => modesOf(key).find((m) => m.mode === mode);
+    for (const row of comparison.rows) expect(row.modes.map((m) => m.mode)).toEqual([...TIERED_STANDINGS_MODES]);
+
+    expect(byMode('swarm', 'league_1v1')).toEqual({
+      mode: 'league_1v1', kind: 'head_to_head', entityType: 'robot', stablesPlayed: 2, entitiesPlayed: 2,
+      wins: 3, losses: 3, draws: 0, matches: 6, winPercentage: 50, bestPlacement: null, lowSample: true,
+    });
+    expect(byMode('swarm', 'league_2v2')).toMatchObject({ entityType: 'team', stablesPlayed: 1, entitiesPlayed: 1, wins: 3, losses: 1, draws: 1, matches: 5, winPercentage: 60 });
+    expect(byMode('swarm', 'koth')).toMatchObject({ kind: 'placement', stablesPlayed: 1, entitiesPlayed: 1, wins: 1, matches: 5, winPercentage: 20, bestPlacement: 1 });
+    expect(byMode('swarm', 'grand_melee')).toMatchObject({ kind: 'placement', wins: 0, matches: 4, winPercentage: 0, bestPlacement: 3 });
+    for (const mode of ['league_3v3', 'tag_team']) {
+      expect(byMode('swarm', mode)).toMatchObject({ stablesPlayed: 0, entitiesPlayed: 0, matches: 0, winPercentage: null });
+    }
+    for (const entry of modesOf('paragon')) expect(entry).toMatchObject({ stablesPlayed: 0, entitiesPlayed: 0, wins: 0, matches: 0, winPercentage: null });
+
+    expect(byMode(null, 'league_1v1')).toMatchObject({ stablesPlayed: 2, wins: 5, losses: 1, draws: 0, matches: 6, winPercentage: 83.3 });
+    expect(byMode(null, 'tag_team')).toMatchObject({ entityType: 'team', entitiesPlayed: 1, draws: 1, matches: 1, winPercentage: 0 });
+    expect(byMode(null, 'koth')).toMatchObject({ matches: 0, winPercentage: null }); // H1's champion KotH row is unplayed
   });
 
   it('reads battle results from battles and battle_participants, never battle_log (R11.14)', async () => {

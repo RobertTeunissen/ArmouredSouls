@@ -590,7 +590,24 @@ describe('Admin automaton profile endpoints (Spec #55 tasks 9.1–9.4)', () => {
       expect(mine.length).toBeGreaterThan(0);
       for (const item of res.body.items) expect(item).toMatchObject({ status: 'active', strategyKey: 'paragon' });
       const live = (res.body.items as { catalogueKey: string }[]).find((i) => i.catalogueKey === key('live'));
-      expect(live).toMatchObject({ robots: { current: 1, target: 1 }, credits: 3_000_000, strategyDisplayName: 'Paragon' });
+      // Precondition for the tier: the live stable's robot and teams have no played standings row in this suite.
+      const liveUserId = (await prisma.automatonProfile.findUniqueOrThrow({ where: { catalogueKey: key('live') } })).userId ?? -1;
+      const [liveRobots, liveTeams] = await Promise.all([
+        prisma.robot.findMany({ where: { userId: liveUserId }, select: { id: true } }),
+        prisma.teamBattle.findMany({ where: { stableId: liveUserId }, select: { id: true } }),
+      ]);
+      const played = await prisma.standing.count({
+        where: {
+          AND: [
+            { OR: [{ entityType: 'robot', entityId: { in: liveRobots.map((x) => x.id) } }, { entityType: 'team', entityId: { in: liveTeams.map((x) => x.id) } }] },
+            { OR: [{ wins: { gt: 0 } }, { losses: { gt: 0 } }, { draws: { gt: 0 } }, { totalMatches: { gt: 0 } }] },
+          ],
+        },
+      });
+      expect(played).toBe(0);
+      expect(live).toMatchObject({
+        robots: { current: 1, target: 1 }, credits: 3_000_000, strategyDisplayName: 'Paragon', bestTier: null, bestTierMode: null,
+      });
       expect((await api('get', '/?status=retired')).status).toBe(400);
     });
 
