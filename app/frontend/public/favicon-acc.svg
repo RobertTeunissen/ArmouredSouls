@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="16 8 96 96" width="128" height="128" fill="none">
+  <title>Armoured Souls (ACC)</title>
+  <rect x="16" y="8" width="96" height="96" rx="20" fill="#d29922"/>
+  <path d="M64 16L96 32V64C96 81.6731 81.6731 96 64 96C46.3269 96 32 81.6731 32 64V32L64 16Z" fill="#0a0e14" stroke="#0a0e14" stroke-width="2" stroke-linejoin="miter"/>
+  <path d="M64 32L80 40V64C80 72.8366 72.8366 80 64 80C55.1634 80 48 72.8366 48 64V40L64 32Z" fill="#d29922" stroke="#0a0e14" stroke-width="1.5" stroke-linejoin="miter"/>
+  <path d="M64 48L72 52V64C72 68.4183 68.4183 72 64 72C59.5817 72 56 68.4183 56 64V52L64 48Z" fill="#0a0e14" stroke-linejoin="miter"/>
+</svg>

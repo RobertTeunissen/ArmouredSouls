@@ -18,6 +18,7 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "lint": "eslint src",
+    "icons:generate": "node scripts/generate-favicons.ts",
     "test": "vitest",
     "test:run": "vitest --run",
     "test:ci": "vitest --run --reporter=dot --bail=5",

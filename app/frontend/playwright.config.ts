@@ -39,9 +39,18 @@ export default defineConfig({
         storageState: { cookies: [], origins: [] },
       },
     },
+    // Issue #174: tab title prefix and favicon per hostname. No auth or backend needed.
+    {
+      name: 'env-branding',
+      testMatch: /env-branding\.spec\.ts/,
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: { cookies: [], origins: [] },
+      },
+    },
     {
       name: 'chromium',
-      testIgnore: [/login\.spec\.ts/, /admin-automatons\.spec\.ts/, /automaton-badge\.spec\.ts/],
+      testIgnore: [/login\.spec\.ts/, /admin-automatons\.spec\.ts/, /automaton-badge\.spec\.ts/, /env-branding\.spec\.ts/],
       use: {
         ...devices['Desktop Chrome'],
         screenshot: 'on',

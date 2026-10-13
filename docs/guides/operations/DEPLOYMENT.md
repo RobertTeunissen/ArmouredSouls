@@ -180,6 +180,28 @@ curl -sf -o /dev/null -w "%{http_code}" -X POST \
   https://acc.armouredsouls.com/api/auth/login
 ```
 
+### Environment Branding
+
+ACC and production deploy the same frontend build artifact, so the browser-tab title prefix and favicon are chosen at runtime from the hostname (`app/frontend/src/utils/environment-branding.ts`):
+
+| Hostname | Environment | Tab title | Icon files |
+|----------|-------------|-----------|------------|
+| `acc.armouredsouls.com` | acceptance | `[ACC] Armoured Souls` | `favicon-acc.svg`, `favicon-acc.ico`, `apple-touch-icon-acc.png` (amber) |
+| `localhost`, `127.0.0.1`, `::1` | development | `[TST] Armoured Souls` | `favicon-dev.*`, `apple-touch-icon-dev.png` (green) |
+| anything else (incl. `armouredsouls.com`) | production | `Armoured Souls` | `favicon.svg`, `favicon.ico`, `apple-touch-icon.png` |
+
+Unknown hosts fall back to production, so the live site never shows a false label. If the ACC hostname changes, update `ACCEPTANCE_HOSTNAME` in that module.
+
+Manual check after a deploy. Every line must show `200` and an `image/*` type; `text/html` means the SPA fallback is serving `index.html` instead of the icon:
+
+```bash
+for p in /favicon.svg /favicon.ico /apple-touch-icon.png /favicon-acc.svg; do
+  curl -s -o /dev/null -w "$p %{http_code} %{content_type}\n" "https://acc.armouredsouls.com$p"
+done
+```
+
+Safari caches favicons aggressively; testers may need to clear its favicon cache to see a changed icon.
+
 ### PM2 Status
 
 ```bash

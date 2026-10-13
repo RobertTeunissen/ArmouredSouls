@@ -2,9 +2,9 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
 import './index.css'
-import { applyEnvFavicon } from './utils/envFavicon'
+import { applyEnvironmentBranding } from './utils/environment-branding'
 
-applyEnvFavicon()
+applyEnvironmentBranding()
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
