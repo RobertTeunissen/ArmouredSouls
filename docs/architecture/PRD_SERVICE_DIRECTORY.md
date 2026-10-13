@@ -94,12 +94,12 @@ Automaton_Stables: computer-run stables that play by human rules. Public API in 
 | `goals/` | Goal_Library: `robotCountGoal`, `facilityGoal`, `attributeGoal`, `weaponStageGoal`, `refinementGoal` (+ `goalTypes`, `goalSupport`) |
 | `actionExecutor`, `executionSteps`, `robotFitout` | Execute planned actions through the domain services; Robot_Chain and Robot_Fitout |
 | `upkeep/` | Free_Upkeep: `teamUpkeep`, `subscriptionUpkeep` (Event_Allocation), `blueprintSync`, `tuningUpkeep`, `freeUpkeep` |
-| `stableFacts`, `factProjector`, `pricing`, `buildFocus`, `teamRule`, `standingsTier` | Fact loading, pure projection, shared-formula pricing, Build_Focus maths, Team_Rule, tier ordering |
+| `stableFacts`, `factProjector`, `pricing`, `buildFocus`, `teamRule`, `standingsTier` | Fact loading, pure projection, shared-formula pricing, Build_Focus maths, Team_Rule, played-only highest tier with mode (rules in `app/shared/utils/automatonStandingsTier.ts`) |
 | `robotNaming`, `requestKeys`, `turnBudget` | Blueprint names with "Mk II" suffixing, deterministic request keys, `TURN_*` budget constants |
 | `strategies/` | `registry` (loads Strategy_Definition_Files, startup check), `strategyDefinitionSchema`, `strategyParameters`, `migrateTargets`, `strategyLibrary`, `strategyDraftService`, `strategyUpgradeService`, `scenarioProjector`, `defaultRegistry` |
 | `automatonProfileService`, `automatonProfileRules` | Profile and blueprint CRUD, validation, Activation |
 | `turnPreview`, `attributePlanView` | Read-only Turn_Preview and per-robot attribute plan |
-| `needAttention`, `automatonStatus`, `turnRecords`, `strategyComparisonService` | Admin read models: Need_Attention, Status_Bar, Turn_Records, Strategy_Comparison (60 s cache) |
+| `needAttention`, `automatonStatus`, `turnRecords`, `strategyComparisonService`, `strategyModePerformance` | Admin read models: Need_Attention, Status_Bar, Turn_Records, Strategy_Comparison (60 s cache) and its per-mode performance from played `standings` |
 | `programSwitch` | Program_Switch in `automaton_program_settings` |
 | `automatonCatalogueService`, `catalogueSync`, `catalogueExport`, `catalogueUnpack` | Catalogue_Entry schema, insert-only Catalogue_Sync with image fill, export and unpack |
 | `automatonImageService` | Admin blueprint image uploads in `uploads/automatons/{catalogueKey}/` |

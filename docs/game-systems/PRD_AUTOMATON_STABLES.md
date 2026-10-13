@@ -157,6 +157,19 @@ The only player-visible marker is the Automaton_Badge (gear icon and "Automaton"
 
 `/admin/automatons` (admin only, audited) has a Status_Bar and four sections: Stables (with Needs attention), Strategies (Strategy_Comparison, Strategy_Library, Strategy_Builder), Editor (stable, teams, Event_Order, numbered Build_Order with Turn_Preview statuses, blueprints, cycle history) and Catalogue. There are deliberately no controls to run a turn, delete an active stable, edit live robots, teams, subscriptions or weapons, or change a balance. See `docs/guides/ADMIN_PANEL_GUIDE.md` and `docs/prd_pages/PRD_ADMIN_PAGE.md`.
 
+### Highest tier and strategy performance
+
+Both the Stables list ("Highest tier (any mode)") and the Strategy_Comparison ("Highest current tier", "Performance by mode") read the current season's `standings`, never entity models or `battle_log`. The shared rules live in `app/shared/utils/automatonStandingsTier.ts` so the frontend sort and the backend selection cannot drift.
+
+- **Played rows only.** A standing counts when `wins + losses + draws > 0` or `totalMatches > 0`; a bye is a recorded league result and counts. Unplayed default rows are ignored because matchmaking scopes candidates by `standings.leagueInstanceId` (Spec #40), so rows are created before anything is played: Bronze `league_1v1` and `koth` rows for every robot at creation (`robotCreationService`), Bronze `koth` / `grand_melee` rows when a robot is subscribed to those events in the Booking Office (`subscriptionService`, Spec #44), and `league_2v2` / `league_3v3` rows (plus `tag_team` for a 2v2 team) when a team is registered (`teamBattleAdapter`). Without the rule every robot would show at least "Bronze".
+- **Tiered modes:** 1v1, 2v2 and 3v3 League, Tag Team, King of the Hill and Grand Melee. Tournaments have no tier. The tier is the one held right now, not the season's peak.
+- **Tie-break:** when several modes hold the highest tier, the mode with the most matches played at that tier wins (W+L+D, or `totalMatches` for King of the Hill and Grand Melee); then the fixed order 1v1, 2v2, 3v3, Tag Team, King of the Hill, Grand Melee. The Stables list shows the tier with that mode ("Gold · 3v3 League"); the Comparison shows the tier with the number of stables at it.
+- **Win rate vs humans** shows its sample size: "43% · 61–78–3 (n = 142)", "— (n = 0)" without battles. Byes, King of the Hill and Grand Melee are not counted.
+- **Performance by mode** (one mode at a time, default 1v1 League), per strategy and the human reference row, played rows only: stables played out of the strategy's stables, robots or teams played, and for head-to-head modes W–L–D, win % and battles (n). King of the Hill and Grand Melee only record first places (`wins`), matches (`totalMatches`) and the best placement (`bestPlacement`); losses and draws are never written and no placement sum is stored. They therefore show matches (n), 1st places, the first-place rate (first places ÷ matches) and the best placement, not W–L–D or an average placement. The first-place rate is not comparable with a head-to-head win %. The figures include Automaton-vs-Automaton battles and mirror matches between stables of the same strategy, which pull the win % toward 50%, and byes count as wins.
+- **Low sample:** fewer than 5 stables (`LOW_SAMPLE_MIN_STABLES`) or fewer than 20 battles or matches (`LOW_SAMPLE_MIN_MATCHES`) in the mode; the row carries a visible "Low sample" pill.
+
+These labels replace the approved Spec #55 wording in `PLAYER_FACING_TEXT.md` §6.3 ("Best tier") and §6.4 ("Best tier reached" and its footnote), which counted unplayed default rows and gave no sample size. The done spec files are history and are not edited.
+
 ## Related documents
 
 - `docs/guides/AUTOMATON_OPERATIONS_GUIDE.md` — operator procedures
