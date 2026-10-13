@@ -514,7 +514,7 @@ The browser-tab icon set lives in `app/frontend/public/` and is linked from `app
 | Acceptance (ACC) | `-acc` | `#d29922` | `#0a0e14` | `#0a0e14` |
 | Local development (TST) | `-dev` | `#3fb950` | `#0a0e14` | `#0a0e14` |
 
-The source of truth is `app/frontend/scripts/generate-favicons.ts`. Regenerate with `pnpm run icons:generate` (from `app/frontend`) and commit the outputs; the script is deterministic, so a re-run produces no diff. The runtime picks the variant per hostname in `app/frontend/src/utils/environment-branding.ts`.
+The source of truth is `app/frontend/scripts/generate-favicons.ts`. Regenerate with `pnpm run icons:generate` (from `app/frontend`) and commit the outputs; the script is deterministic for a given Playwright/Chromium build, so a re-run produces no diff. After a Playwright upgrade, anti-aliasing may change the PNG/ICO bytes; that diff is expected and safe to commit. The runtime picks the variant per hostname in `app/frontend/src/utils/environment-branding.ts`.
 
 ---
 

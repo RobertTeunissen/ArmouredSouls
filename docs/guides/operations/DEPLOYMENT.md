@@ -195,7 +195,7 @@ Unknown hosts fall back to production, so the live site never shows a false labe
 Manual check after a deploy. Every line must show `200` and an `image/*` type; `text/html` means the SPA fallback is serving `index.html` instead of the icon:
 
 ```bash
-for p in /favicon.svg /favicon.ico /apple-touch-icon.png /favicon-acc.svg; do
+for p in /favicon.svg /favicon.ico /apple-touch-icon.png /favicon-acc.svg /favicon-acc.ico /apple-touch-icon-acc.png; do
   curl -s -o /dev/null -w "$p %{http_code} %{content_type}\n" "https://acc.armouredsouls.com$p"
 done
 ```
