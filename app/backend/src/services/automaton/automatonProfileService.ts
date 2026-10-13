@@ -62,6 +62,7 @@ import { describeBuildOrder, highestRobotsTarget, resolveGoalTarget, type BuildO
 import type { StrategyRegistry } from './strategies/registry';
 import type { UpgradeStrategy } from './strategies/strategyTypes';
 import { bestTiersForUsers, type LeagueTier } from './standingsTier';
+import type { TieredStandingsMode } from '../../shared/utils/automatonStandingsTier';
 import { loadActiveNeedAttention, loadNeedAttention, type NeedAttentionReason } from './needAttention';
 import { teamNameMaxRobots, teamsForSlots } from './teamRule';
 import { BUILD_FOCUS_WEIGHTS, GROUP_ACADEMY } from './buildFocus';
@@ -343,7 +344,10 @@ export interface ProfileListItem {
   robots: { current: number; target: number | null };
   credits: number | null;
   prestige: number | null;
+  /** Highest current tier over played standings rows only; null when the stable has not played a tiered mode. */
   bestTier: LeagueTier | null;
+  /** The mode holding `bestTier`; null exactly when `bestTier` is null. */
+  bestTierMode: TieredStandingsMode | null;
   lastTurn: TurnSummary | null;
   activatedAt: string | null;
   /** Need_Attention reasons in the approved order; empty for a draft (R11.12). */
@@ -404,6 +408,7 @@ export async function listProfiles(query: ProfileListQuery, deps: ProfileService
   const items = rows.map((row): ProfileListItem => {
     const strategy = registry.getStrategy(row.strategyKey, row.strategyVersion);
     const params = strategy ? storedParameters(strategy, row.strategyParameters) : null;
+    const best = row.userId === null ? null : tiers.get(row.userId) ?? null;
     return {
       catalogueKey: row.catalogueKey,
       stableName: profileStableName(row),
@@ -417,7 +422,8 @@ export async function listProfiles(query: ProfileListQuery, deps: ProfileService
       robots: { current: row.user?._count.robots ?? 0, target: robotTarget(strategy, params) },
       credits: row.user?.currency ?? null,
       prestige: row.user?.prestige ?? null,
-      bestTier: row.userId === null ? null : tiers.get(row.userId) ?? null,
+      bestTier: best?.tier ?? null,
+      bestTierMode: best?.mode ?? null,
       lastTurn: row.turns[0] ? turnSummary(row.turns[0], strategy, params) : null,
       activatedAt: row.activatedAt?.toISOString() ?? null,
       needAttention: attentionByProfile.get(row.id) ?? [],

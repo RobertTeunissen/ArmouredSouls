@@ -17,7 +17,10 @@
  * row), so the two-sides rule excludes it.
  *
  * Reads `battles` and `battle_participants` columns only — never
- * `battle_log` — and `standings` for the best tier. Cached for 60 seconds.
+ * `battle_log` — and `standings` for the highest current tier and the
+ * per-mode block (`modes`, see `strategyModePerformance.ts`). Both standings
+ * reads count played rows only (default Bronze rows are ignored). Cached for
+ * 60 seconds.
  */
 import prisma from '../../lib/prisma';
 import { Prisma } from '../../../generated/prisma';
@@ -26,7 +29,11 @@ import { getStrategyRegistry } from './strategies/defaultRegistry';
 import { highestRobotsTarget } from './strategies/strategyParameters';
 import type { StrategyRegistry } from './strategies/registry';
 import { storedParameters } from './automatonProfileRules';
-import { bestTiersForUsers, LEAGUE_TIER_ORDER, type LeagueTier } from './standingsTier';
+import { bestTiersForUsers, LEAGUE_TIER_ORDER, PLAYED_STANDING_SQL, TIERED_MODE_SQL, type LeagueTier } from './standingsTier';
+import type { HighestTier } from '../../shared/utils/automatonStandingsTier';
+import { buildModePerformance, readModeAggregates, winPercentage, type ModePerformance } from './strategyModePerformance';
+
+export { winPercentage };
 
 /** The seven head-to-head modes of R11.13, as stored in `battles.battle_type`. */
 export const HEAD_TO_HEAD_BATTLE_TYPES = [
@@ -63,12 +70,17 @@ export interface ComparisonRow {
   stables: number;
   robots: { average: number; targetAverage: number | null };
   prestigeAverage: number;
-  /** The highest tier any robot or team holds, with the number of stables whose own best equals it. */
+  /** The highest current tier any robot or team holds (played rows only), with the number of stables whose own highest equals it. */
   bestTier: { tier: LeagueTier; stables: number } | null;
   creditsAverage: number;
   /** Null on the reference row. */
   winRate: WinRate | null;
+  /** Six entries in `TIERED_STANDINGS_MODES` order, zero-filled. */
+  modes: ModePerformance[];
 }
+
+/** A row before its per-mode block is attached. */
+type ComparisonRowBase = Omit<ComparisonRow, 'modes'>;
 
 export interface StrategyComparison {
   season: {
@@ -99,18 +111,13 @@ function average(values: readonly number[], decimals = 1): number {
   return Math.round((values.reduce((sum, v) => sum + v, 0) / values.length) * factor) / factor;
 }
 
-/** Win percentage: one decimal, null with no battles (never divides by zero). */
-export function winPercentage(wins: number, total: number): number | null {
-  return total === 0 ? null : Math.round((wins / total) * 1000) / 10;
-}
-
-/** The best tier over stables' own best tiers and how many stables hold it. */
-export function bestTierOf(tiers: readonly (LeagueTier | null)[]): { tier: LeagueTier; stables: number } | null {
+/** The best tier over stables' own highest tiers and how many stables hold it. */
+export function bestTierOf(tiers: readonly (Pick<HighestTier, 'tier'> | null)[]): { tier: LeagueTier; stables: number } | null {
   let best = -1;
   let count = 0;
-  for (const tier of tiers) {
-    if (tier === null) continue;
-    const rank = LEAGUE_TIER_ORDER.indexOf(tier);
+  for (const highest of tiers) {
+    if (highest === null) continue;
+    const rank = LEAGUE_TIER_ORDER.indexOf(highest.tier);
     if (rank > best) {
       best = rank;
       count = 1;
@@ -204,7 +211,7 @@ const TIER_RANK_SQL = Prisma.sql`CASE s."tier" ${Prisma.join(
 )} ELSE -1 END`;
 
 /** The reference row: Human_Stables with at least one robot; null when there are none. */
-async function readHumanReference(db: ComparisonDb): Promise<ComparisonRow | null> {
+async function readHumanReference(db: ComparisonDb): Promise<ComparisonRowBase | null> {
   const [aggregate] = await db.$queryRaw<HumanAggregateRow[]>`
     SELECT COUNT(*)::int AS "stables",
            AVG(h."robot_count")::float AS "robots",
@@ -223,9 +230,11 @@ async function readHumanReference(db: ComparisonDb): Promise<ComparisonRow | nul
     FROM (
       SELECT r."user_id" AS "owner_id", ${TIER_RANK_SQL} AS "tier_rank"
       FROM "standings" s JOIN "robots" r ON s."entity_type" = 'robot' AND r."id" = s."entity_id"
+      WHERE ${TIERED_MODE_SQL} AND ${PLAYED_STANDING_SQL}
       UNION ALL
       SELECT t."stable_id" AS "owner_id", ${TIER_RANK_SQL} AS "tier_rank"
       FROM "standings" s JOIN "team_battles" t ON s."entity_type" = 'team' AND t."id" = s."entity_id"
+      WHERE ${TIERED_MODE_SQL} AND ${PLAYED_STANDING_SQL}
     ) o
     JOIN "users" u ON u."id" = o."owner_id"
     WHERE u."stable_type" = 'human' AND o."tier_rank" >= 0
@@ -241,14 +250,17 @@ async function readHumanReference(db: ComparisonDb): Promise<ComparisonRow | nul
     stables: aggregate.stables,
     robots: { average: round(aggregate.robots, 1), targetAverage: null },
     prestigeAverage: round(aggregate.prestige, 0),
-    bestTier: bestTierOf(tiers.map((t) => LEAGUE_TIER_ORDER[t.tier_rank] ?? null)),
+    bestTier: bestTierOf(tiers.map((t) => {
+      const tier: LeagueTier | undefined = LEAGUE_TIER_ORDER[t.tier_rank];
+      return tier === undefined ? null : { tier };
+    })),
     creditsAverage: round(aggregate.credits, 0),
     winRate: null,
   };
 }
 
 /** One row per strategy with at least one Active_Automaton, ordered by strategy key. */
-async function readStrategyRows(registry: StrategyRegistry, db: ComparisonDb): Promise<ComparisonRow[]> {
+async function readStrategyRows(registry: StrategyRegistry, db: ComparisonDb): Promise<ComparisonRowBase[]> {
   const profiles = await db.automatonProfile.findMany({
     where: { status: 'active', userId: { not: null } },
     select: {
@@ -271,7 +283,7 @@ async function readStrategyRows(registry: StrategyRegistry, db: ComparisonDb): P
     group.push(profile);
     byStrategy.set(profile.strategyKey, group);
   }
-  return [...byStrategy.keys()].sort().map((strategyKey): ComparisonRow => {
+  return [...byStrategy.keys()].sort().map((strategyKey): ComparisonRowBase => {
     const group = byStrategy.get(strategyKey) ?? [];
     const latest = registry.latestVersion(strategyKey);
     const displayName = (latest === undefined ? undefined : registry.getStrategy(strategyKey, latest)?.displayName) ?? strategyKey;
@@ -309,7 +321,14 @@ export async function getStrategyComparison(deps: StrategyComparisonDeps = {}, n
   if (cache && cache.expiresAt > now()) return cache.value;
   const registry = deps.registry ?? getStrategyRegistry();
   const db = deps.db ?? prisma;
-  const [season, rows, reference] = await Promise.all([getCurrentSeason(), readStrategyRows(registry, db), readHumanReference(db)]);
+  const [season, strategyRows, reference, modeAggregates] = await Promise.all([
+    getCurrentSeason(),
+    readStrategyRows(registry, db),
+    readHumanReference(db),
+    readModeAggregates(db),
+  ]);
+  const withModes = (row: ComparisonRowBase): ComparisonRow => ({ ...row, modes: buildModePerformance(modeAggregates, row.strategyKey) });
+  const rows = (reference ? [...strategyRows, reference] : strategyRows).map(withModes);
   const value: StrategyComparison = {
     season: {
       seasonNumber: season.seasonNumber,
@@ -318,7 +337,7 @@ export async function getStrategyComparison(deps: StrategyComparisonDeps = {}, n
       lengthCycles: season.seasonLengthCycles,
       preparationDay: season.preparationDay,
     },
-    rows: reference ? [...rows, reference] : rows,
+    rows,
     generatedAt: new Date(now()).toISOString(),
   };
   cache = { value, expiresAt: now() + COMPARISON_CACHE_TTL_MS };
