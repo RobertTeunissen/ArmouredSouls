@@ -124,6 +124,7 @@ const PILL: Record<string, string> = {
   waiting: 'bg-white/5 text-secondary',
   active: 'bg-green-900/60 text-green-200',
   draft: 'bg-white/10 text-secondary',
+  warning: 'bg-amber-900/60 text-amber-200',
 };
 
 export function Pill({ tone, children }: { tone: keyof typeof PILL | string; children: ReactNode }): ReactNode {
