@@ -88,13 +88,25 @@ describe('stablesView', () => {
     ['robots', ['b-silver', 'e-never', 'c-gold-1v1', 'a-gold-3v3', 'd-draft'], ['a-gold-3v3', 'c-gold-1v1', 'b-silver', 'e-never', 'd-draft']],
     ['credits', ['a-gold-3v3', 'b-silver', 'c-gold-1v1', 'e-never', 'd-draft'], ['e-never', 'c-gold-1v1', 'b-silver', 'a-gold-3v3', 'd-draft']],
     ['prestige', ['e-never', 'a-gold-3v3', 'b-silver', 'c-gold-1v1', 'd-draft'], ['c-gold-1v1', 'b-silver', 'a-gold-3v3', 'e-never', 'd-draft']],
-    // Silver < Gold · 1v1 < Gold · 3v3; never played and draft last.
-    ['tier', ['b-silver', 'c-gold-1v1', 'a-gold-3v3', 'd-draft', 'e-never'], ['a-gold-3v3', 'c-gold-1v1', 'b-silver', 'd-draft', 'e-never']],
+    // Silver < Gold; Gold · 3v3 and Gold · 1v1 are a tie → catalogue key ascending in both directions; never played and draft last.
+    ['tier', ['b-silver', 'a-gold-3v3', 'c-gold-1v1', 'd-draft', 'e-never'], ['a-gold-3v3', 'c-gold-1v1', 'b-silver', 'd-draft', 'e-never']],
     // Failed (−1) < Bought nothing (0) < Bought 4; no cycle and draft last.
     ['lastCycle', ['b-silver', 'c-gold-1v1', 'a-gold-3v3', 'd-draft', 'e-never'], ['a-gold-3v3', 'c-gold-1v1', 'b-silver', 'd-draft', 'e-never']],
   ])('sorts by %s in both directions with nulls last', (key, asc, desc) => {
     expect(order({ key, direction: 'asc' })).toEqual(asc);
     expect(order({ key, direction: 'desc' })).toEqual(desc);
+  });
+
+  it('breaks a tier tie by catalogue key, not by mode, in both directions', () => {
+    // The catalogue key order (x < y) disagrees with the mode order (Grand Melee after 1v1 League).
+    const gold = [
+      listItem({ catalogueKey: 'y-gold-gm', bestTier: 'gold', bestTierMode: 'grand_melee' }),
+      listItem({ catalogueKey: 'x-gold-1v1', bestTier: 'gold', bestTierMode: 'league_1v1' }),
+    ];
+    const tierOrder = (direction: 'asc' | 'desc'): string[] =>
+      deriveStablesView(gold, { ...ALL, sort: { key: 'tier', direction } }).rows.map((r) => r.catalogueKey);
+    expect(tierOrder('asc')).toEqual(['x-gold-1v1', 'y-gold-gm']);
+    expect(tierOrder('desc')).toEqual(['x-gold-1v1', 'y-gold-gm']);
   });
 
   it('parses and serializes ?sort=key:dir', () => {

@@ -10,14 +10,14 @@
  * have no tier and are ignored.
  *
  * Shared by the backend (selection, SQL mirror in `standingsTier.ts`) and the
- * admin frontend (sorting), so both order tiers and modes the same way.
+ * admin frontend (sorting), so both order tiers the same way.
  */
 
 /** Tier order, lowest first. */
 export const LEAGUE_TIER_ORDER = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'] as const;
 export type StandingsTier = (typeof LEAGUE_TIER_ORDER)[number];
 
-/** Modes that carry a tier, in display order (also the tie-break order). */
+/** Modes that carry a tier, in display order (also `highestTierOf`'s last tie-break between modes). */
 export const TIERED_STANDINGS_MODES = ['league_1v1', 'league_2v2', 'league_3v3', 'tag_team', 'koth', 'grand_melee'] as const;
 export type TieredStandingsMode = (typeof TIERED_STANDINGS_MODES)[number];
 
@@ -96,11 +96,14 @@ export function highestTierOf(rows: readonly StandingPlayInput[]): HighestTier |
   return best === null ? null : { tier: LEAGUE_TIER_ORDER[topRank], mode: best };
 }
 
-/** Ascending order: tier rank, then `TIERED_STANDINGS_MODES` index. */
+/**
+ * Ascending order by tier rank only. Equal tiers compare 0 whatever their
+ * mode, so callers break ties themselves: the admin Stables sort falls back
+ * to the catalogue key, ascending in both directions (PRD_ADMIN_PAGE "ties by
+ * catalogue key"). The mode only decides which tier `highestTierOf` reports.
+ */
 export function compareHighestTier(a: HighestTier, b: HighestTier): number {
-  const byTier = tierRank(a.tier) - tierRank(b.tier);
-  if (byTier !== 0) return byTier;
-  return TIERED_STANDINGS_MODES.indexOf(a.mode) - TIERED_STANDINGS_MODES.indexOf(b.mode);
+  return tierRank(a.tier) - tierRank(b.tier);
 }
 
 /** Low sample: fewer than 5 stables or fewer than 20 matches. */

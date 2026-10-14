@@ -121,12 +121,23 @@ describe('automatonStandingsTier', () => {
   });
 
   describe('compareHighestTier', () => {
-    it('orders by tier rank first, then by mode order', () => {
-      const silver1v1 = { tier: 'silver', mode: 'league_1v1' } as const;
-      const gold1v1 = { tier: 'gold', mode: 'league_1v1' } as const;
-      const gold3v3 = { tier: 'gold', mode: 'league_3v3' } as const;
-      expect([gold3v3, silver1v1, gold1v1].sort(compareHighestTier)).toEqual([silver1v1, gold1v1, gold3v3]);
+    const silver1v1 = { tier: 'silver', mode: 'league_1v1' } as const;
+    const gold1v1 = { tier: 'gold', mode: 'league_1v1' } as const;
+    const gold3v3 = { tier: 'gold', mode: 'league_3v3' } as const;
+    const goldGrandMelee = { tier: 'gold', mode: 'grand_melee' } as const;
+    const diamondKoth = { tier: 'diamond', mode: 'koth' } as const;
+
+    it('orders by tier rank', () => {
+      expect(compareHighestTier(silver1v1, gold1v1)).toBeLessThan(0);
+      expect(compareHighestTier(diamondKoth, goldGrandMelee)).toBeGreaterThan(0);
+      expect([diamondKoth, gold1v1, silver1v1].sort(compareHighestTier)).toEqual([silver1v1, gold1v1, diamondKoth]);
       expect(compareHighestTier(gold1v1, gold1v1)).toBe(0);
+    });
+
+    it('treats the same tier in different modes as a tie (callers break it)', () => {
+      expect(compareHighestTier(gold1v1, gold3v3)).toBe(0);
+      expect(compareHighestTier(gold3v3, gold1v1)).toBe(0);
+      expect(compareHighestTier(goldGrandMelee, gold1v1)).toBe(0);
     });
   });
 

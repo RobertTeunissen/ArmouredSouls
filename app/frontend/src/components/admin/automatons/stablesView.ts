@@ -8,8 +8,9 @@
  * - Sorting puts null values (drafts, never played, no cycle yet) last in both
  *   directions; ties fall back to the catalogue key. Without a sort the list
  *   is in catalogue key order, like the API returns it.
- * - The tier sort uses `compareHighestTier` from the shared module, the same
- *   order the backend uses to pick the highest tier.
+ * - The tier sort uses `compareHighestTier` from the shared module, which
+ *   compares the tier only: the same tier in any mode is a tie, so within a
+ *   tier the catalogue key decides, ascending in both directions.
  */
 import { compareHighestTier, type HighestTier } from '@shared/utils/automatonStandingsTier';
 import type { LibraryStrategy, ProfileListItem } from '../../../utils/automatonAdminApi';
