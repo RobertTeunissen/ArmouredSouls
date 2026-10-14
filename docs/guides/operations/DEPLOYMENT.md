@@ -145,7 +145,7 @@ Automaton Turn_Step tuning (optional; unset means the default, which is the same
 | `AUTOMATON_TURN_STEP_MAX_MS` | `21600000` (6 h) | 300000–82800000 | Longest a Turn_Step keeps starting turns; the only bound when the scheduler is off |
 | `AUTOMATON_TURN_STEP_SCHEDULE_MARGIN_MS` | `900000` (15 min) | 0–7200000 | Stop starting turns this long before the next scheduled job |
 
-The Turn_Step deadline is min(start + max, next scheduled job − margin), never below 300 s. See `docs/implementation_notes/AUTOMATON_TURN_STEP_DEADLINE.md`.
+The Turn_Step deadline is min(start + max, next scheduled job − margin), never below 300 s. Only cron schedules with a fixed minute and hour count as "next scheduled job"; an interval schedule (for example `*/30 * * * *`) is ignored with a warning, so a job on such a schedule would queue behind the Turn_Step until the cap. See `docs/implementation_notes/AUTOMATON_TURN_STEP_DEADLINE.md`.
 
 ---
 
