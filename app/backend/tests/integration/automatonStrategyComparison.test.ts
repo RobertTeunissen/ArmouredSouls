@@ -6,8 +6,11 @@
  * King of the Hill and Grand Melee (excluded), Automaton-vs-Automaton and
  * mixed sides (excluded), the human reference row with its highest tier from
  * `standings` (played rows only), the per-mode block from `standings`, a
- * strategy without head-to-head battles (null percentage) and the reference
- * row disappearing when no Human_Stable owns a robot.
+ * strategy without head-to-head battles (null percentage), the reference
+ * row disappearing when no Human_Stable owns a robot, and the exclusion of
+ * played standings rows that belong to a non-active (draft) Automaton whose
+ * user still exists and to a generated stable (neither counts for a strategy
+ * row nor for the human reference row).
  *
  * The dev database is shared, so the exact assertions run inside a
  * transaction that is rolled back: it parks every other Active_Automaton as
@@ -38,6 +41,7 @@ describe('Strategy_Comparison (Spec #55 task 9.7)', () => {
   const humanIds: number[] = [];
   const automatonUserIds: number[] = [];
   const profileIds: number[] = [];
+  const generatedIds: number[] = [];
   const robotIds: number[] = [];
   const battleIds: number[] = [];
   const r: Record<string, number> = {};
@@ -152,6 +156,24 @@ describe('Strategy_Comparison (Spec #55 task 9.7)', () => {
     await battle('grand_melee', [[r.s1a], [r.h1a]], r.s1a);
     await battle('league_1v1', [[r.s1a], [r.p1a]], r.s1a); // Automaton vs Automaton
     await battle('league_2v2', [[r.s1a, r.h1a], [r.h2a, r.h2b]], null, 1); // mixed side
+
+    // Excluded stables with played rows above every counted tier, so a leak would change counts and tiers.
+    // A non-active (draft) Swarm Automaton whose user still exists (AutomatonStatus is draft | active only):
+    // the same state isolatedComparison gives every other profile. Its profile is not in profileIds.
+    const sd = await createAutomatonStable({ tag: `cmpsd${tag}`, balance: 90_000, prestige: 50, blueprints: [], strategyKey: 'swarm' });
+    await prisma.automatonProfile.update({ where: { id: sd.profileId }, data: { status: 'draft' } });
+    automatonUserIds.push(sd.userId);
+    await robot(sd.userId, 'sda');
+    await standing('robot', r.sda, 'league_1v1', 'champion', { wins: 9, losses: 1 });
+    await standing('robot', r.sda, 'koth', 'champion', { totalMatches: 7, wins: 3, bestPlacement: 1 });
+    // A generated stable (not a Human_Stable, not an Automaton).
+    const generated = await prisma.user.create({
+      data: { username: `t55cmp_gen_${tag}`, passwordHash: 'unused', stableType: 'generated', isGenerated: true, prestige: 5000, currency: 99_999 },
+    });
+    generatedIds.push(generated.id);
+    await robot(generated.id, 'g1a');
+    await standing('robot', r.g1a, 'league_1v1', 'champion', { wins: 6 });
+    await standing('robot', r.g1a, 'koth', 'champion', { totalMatches: 4, wins: 2, bestPlacement: 1 });
   });
 
   afterAll(async () => {
@@ -162,7 +184,7 @@ describe('Strategy_Comparison (Spec #55 task 9.7)', () => {
     await prisma.teamBattle.deleteMany({ where: { stableId: { in: humanIds } } });
     await prisma.robot.deleteMany({ where: { id: { in: robotIds } } });
     await deleteAutomatonStables(automatonUserIds);
-    await prisma.user.deleteMany({ where: { id: { in: humanIds } } });
+    await prisma.user.deleteMany({ where: { id: { in: [...humanIds, ...generatedIds] } } });
     clearStrategyComparisonCache();
     await harness.close();
     await prisma.$disconnect();
@@ -243,6 +265,27 @@ describe('Strategy_Comparison (Spec #55 task 9.7)', () => {
     expect(byMode(null, 'league_1v1')).toMatchObject({ stablesPlayed: 2, wins: 5, losses: 1, draws: 0, matches: 6, winPercentage: 83.3 });
     expect(byMode(null, 'tag_team')).toMatchObject({ entityType: 'team', entitiesPlayed: 1, draws: 1, matches: 1, winPercentage: 0 });
     expect(byMode(null, 'koth')).toMatchObject({ matches: 0, winPercentage: null }); // H1's champion KotH row is unplayed
+  });
+
+  it('excludes played rows of a non-active Automaton and of a generated stable from the strategy rows and the human reference row', async () => {
+    const { comparison } = await isolatedComparison();
+    expect(comparison.rows.map((row) => row.strategyKey)).toEqual(['paragon', 'swarm', null]);
+    const rowOf = (key: string | null): StrategyComparison['rows'][number] => {
+      const row = comparison.rows.find((candidate) => candidate.strategyKey === key);
+      if (!row) throw new Error(`no row for ${String(key)}`);
+      return row;
+    };
+    const modeOf = (key: string | null, mode: string): ModePerformance | undefined => rowOf(key).modes.find((m) => m.mode === mode);
+
+    // The draft Swarm stable (champion 1v1 9–1, champion KotH 7 matches) is not counted.
+    expect(rowOf('swarm')).toMatchObject({ stables: 2, bestTier: { tier: 'gold', stables: 2 } });
+    expect(modeOf('swarm', 'league_1v1')).toMatchObject({ stablesPlayed: 2, entitiesPlayed: 2, wins: 3, losses: 3, matches: 6 });
+    expect(modeOf('swarm', 'koth')).toMatchObject({ stablesPlayed: 1, matches: 5, wins: 1 });
+
+    // The generated stable (champion 1v1 6–0, champion KotH 4 matches) is not a Human_Stable.
+    expect(rowOf(null)).toMatchObject({ stables: 2, bestTier: { tier: 'diamond', stables: 1 } });
+    expect(modeOf(null, 'league_1v1')).toMatchObject({ stablesPlayed: 2, wins: 5, losses: 1, matches: 6 });
+    expect(modeOf(null, 'koth')).toMatchObject({ matches: 0 });
   });
 
   it('reads battle results from battles and battle_participants, never battle_log (R11.14)', async () => {
