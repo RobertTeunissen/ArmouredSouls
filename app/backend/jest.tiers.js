@@ -122,6 +122,7 @@ const DB_DEPENDENT = [
   'tests/integration/automatonProfile.test.ts',
   'tests/integration/automatonTurnWiring.test.ts',
   'tests/integration/automatonTurnConcurrency.test.ts',
+  'tests/integration/automatonTurnStandingsConcurrency.test.ts',
   'tests/integration/automatonSettlementWiring.test.ts',
   'tests/integration/automatonNeedAttention.test.ts',
   'tests/integration/automatonStrategyComparison.test.ts',
