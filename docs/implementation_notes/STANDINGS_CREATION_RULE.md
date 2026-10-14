@@ -58,7 +58,7 @@ Postgres aborts an interactive transaction on a unique violation, so "create →
 
 ## Player-visible effects
 
-Robots without a `league_1v1` row show "Unranked" (robot list, robot detail, dashboard). The swap modal lists every eligible robot, not only subscribed ones. Guide articles updated: `team-battles/overview`, `team-battles/tag-team`, `leagues/league-tiers`, `leagues/tier-progression`, `facilities/booking-office`, `king-of-the-hill/entry-requirements`, `grand-melee/entry-requirements`.
+Robots without a `league_1v1` row show "Unranked" (robot list, robot detail, dashboard). Teams without a row in a team league show "Unranked" and "—" LP for that league (team cards, dashboard standings card, robot detail team league history); the team-battle routes return `null` tier, instance and LP for them instead of the former `bronze` / `bronze_1` / 0 fallback. The swap modal lists every eligible robot, not only subscribed ones. Guide articles updated: `team-battles/overview`, `team-battles/tag-team`, `leagues/league-tiers`, `leagues/tier-progression`, `facilities/booking-office`, `king-of-the-hill/entry-requirements`, `grand-melee/entry-requirements`.
 
 ## Tests
 

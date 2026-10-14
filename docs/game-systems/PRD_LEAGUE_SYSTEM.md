@@ -46,7 +46,7 @@ One rule applies to every standing-backed mode (`league_1v1`, `koth`, `grand_mel
 - **Kept:** unsubscribing or swapping a team member keeps the row, so the entity keeps its tier, LP and record and simply stops being matched. Resubscribing picks up where it left off.
 - **Deleted:** team disband deletes the team's rows (re-registering starts fresh in Bronze), account reset deletes the user's robot and team rows, and the season rollover wipes all rows.
 
-Robots without a `league_1v1` row are shown as "Unranked" in the UI and are not counted in that mode's league population.
+Robots without a `league_1v1` row, and teams without a row in their 2v2/3v3 or Tag Team league, are shown as "Unranked" in the UI and are not counted in that mode's league population.
 
 ### League Points
 

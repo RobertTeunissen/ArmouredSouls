@@ -391,8 +391,10 @@ interface TeamStandingCardProps {
 }
 
 function TeamStandingCard({ team, readiness }: TeamStandingCardProps) {
+  // teamLeague/teamLp are null when the team has no standing in the league (Unranked)
   const tierColor = getLeagueTierColor(team.teamLeague);
   const tierName = getLeagueTierName(team.teamLeague);
+  const lpLabel = typeof team.teamLp === 'number' ? `${team.teamLp} LP` : '— LP';
   const totalMatches = team.totalLeagueWins + team.totalLeagueLosses + team.totalLeagueDraws;
 
   return (
@@ -404,7 +406,7 @@ function TeamStandingCard({ team, readiness }: TeamStandingCardProps) {
           <div className="flex items-center gap-2 mt-0.5">
             <span className={`text-xs ${tierColor}`}>{tierName}</span>
             <span className="text-xs text-secondary">•</span>
-            <span className="text-xs text-secondary">{team.teamLp} LP</span>
+            <span className="text-xs text-secondary">{lpLabel}</span>
           </div>
         </div>
         <div className="flex-shrink-0 text-xs text-secondary">
@@ -431,7 +433,7 @@ function TeamStandingCard({ team, readiness }: TeamStandingCardProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className={`text-xs ${tierColor}`}>{tierName}</span>
-            <span className="text-xs text-secondary">{team.teamLp} LP</span>
+            <span className="text-xs text-secondary">{lpLabel}</span>
           </div>
           <div className="text-xs text-secondary">
             <span className="text-[#3fb950]">{team.totalLeagueWins}W</span>
@@ -447,8 +449,10 @@ function TeamStandingCard({ team, readiness }: TeamStandingCardProps) {
 }
 
 function TagTeamStandingCard({ team, readiness }: TeamStandingCardProps) {
-  const tierColor = getLeagueTierColor(team.tagTeamLeague || 'bronze');
-  const tierName = getLeagueTierName(team.tagTeamLeague || 'bronze');
+  // tagTeamLeague/tagTeamLp are null when the team has no Tag Team standing (Unranked)
+  const tierColor = getLeagueTierColor(team.tagTeamLeague);
+  const tierName = getLeagueTierName(team.tagTeamLeague);
+  const lpLabel = typeof team.tagTeamLp === 'number' ? `${team.tagTeamLp} LP` : '— LP';
   const totalMatches = (team.totalTagTeamWins || 0) + (team.totalTagTeamLosses || 0) + (team.totalTagTeamDraws || 0);
 
   return (
@@ -460,7 +464,7 @@ function TagTeamStandingCard({ team, readiness }: TeamStandingCardProps) {
           <div className="flex items-center gap-2 mt-0.5">
             <span className={`text-xs ${tierColor}`}>{tierName}</span>
             <span className="text-xs text-secondary">•</span>
-            <span className="text-xs text-secondary">{team.tagTeamLp || 0} LP</span>
+            <span className="text-xs text-secondary">{lpLabel}</span>
           </div>
         </div>
         <div className="flex-shrink-0 text-xs text-secondary">
@@ -487,7 +491,7 @@ function TagTeamStandingCard({ team, readiness }: TeamStandingCardProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className={`text-xs ${tierColor}`}>{tierName}</span>
-            <span className="text-xs text-secondary">{team.tagTeamLp || 0} LP</span>
+            <span className="text-xs text-secondary">{lpLabel}</span>
           </div>
           <div className="text-xs text-secondary">
             <span className="text-[#3fb950]">{team.totalTagTeamWins || 0}W</span>

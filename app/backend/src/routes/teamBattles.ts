@@ -144,19 +144,21 @@ router.get(
       const leagueStanding = teamStandingsMap?.get(leagueMode);
       const tagTeamStanding = teamStandingsMap?.get('tag_team');
 
+      // A team has no row in a mode until it is complete and every member is
+      // subscribed; tier, instance and LP are then null (shown as Unranked).
       return {
         ...team,
         // Override legacy columns with standings data (source of truth)
-        teamLp: leagueStanding?.leaguePoints ?? 0,
-        teamLeague: leagueStanding?.tier ?? 'bronze',
-        teamLeagueId: leagueStanding?.leagueInstanceId ?? 'bronze_1',
+        teamLp: leagueStanding?.leaguePoints ?? null,
+        teamLeague: leagueStanding?.tier ?? null,
+        teamLeagueId: leagueStanding?.leagueInstanceId ?? null,
         cyclesInLeague: leagueStanding?.cyclesInTier ?? 0,
         totalLeagueWins: leagueStanding?.wins ?? 0,
         totalLeagueLosses: leagueStanding?.losses ?? 0,
         totalLeagueDraws: leagueStanding?.draws ?? 0,
-        tagTeamLp: tagTeamStanding?.leaguePoints ?? 0,
-        tagTeamLeague: tagTeamStanding?.tier ?? 'bronze',
-        tagTeamLeagueId: tagTeamStanding?.leagueInstanceId ?? 'bronze_1',
+        tagTeamLp: tagTeamStanding?.leaguePoints ?? null,
+        tagTeamLeague: tagTeamStanding?.tier ?? null,
+        tagTeamLeagueId: tagTeamStanding?.leagueInstanceId ?? null,
         cyclesInTagTeamLeague: tagTeamStanding?.cyclesInTier ?? 0,
         totalTagTeamWins: tagTeamStanding?.wins ?? 0,
         totalTagTeamLosses: tagTeamStanding?.losses ?? 0,
@@ -745,13 +747,14 @@ router.get(
       teamId: number;
       teamSize: number;
       teamName: string;
-      currentLeague: string;
-      currentLeagueId: string;
-      currentLp: number;
+      // null when the team has no standing in the mode yet (Unranked)
+      currentLeague: string | null;
+      currentLeagueId: string | null;
+      currentLp: number | null;
       history: Awaited<ReturnType<typeof getEntityHistory>>;
       tagTeamHistory: Awaited<ReturnType<typeof getEntityHistory>>;
-      tagTeamCurrentLeague: string;
-      tagTeamCurrentLp: number;
+      tagTeamCurrentLeague: string | null;
+      tagTeamCurrentLp: number | null;
     }[] = [];
 
     for (const membership of memberships) {
@@ -763,8 +766,8 @@ router.get(
 
       // Also fetch tag team history and standing for 2v2 teams
       let tagTeamHistory: Awaited<ReturnType<typeof getEntityHistory>> = [];
-      let tagTeamCurrentLeague = 'bronze';
-      let tagTeamCurrentLp = 0;
+      let tagTeamCurrentLeague: string | null = null;
+      let tagTeamCurrentLp: number | null = null;
 
       if (membership.team.teamSize === 2) {
         tagTeamHistory = await getEntityHistory('tag_team', membership.team.id);
@@ -781,9 +784,9 @@ router.get(
         teamId: membership.team.id,
         teamSize: membership.team.teamSize,
         teamName: membership.team.teamName,
-        currentLeague: standing?.tier ?? 'bronze',
-        currentLeagueId: standing?.leagueInstanceId ?? 'bronze_1',
-        currentLp: standing?.leaguePoints ?? 0,
+        currentLeague: standing?.tier ?? null,
+        currentLeagueId: standing?.leagueInstanceId ?? null,
+        currentLp: standing?.leaguePoints ?? null,
         history,
         tagTeamHistory,
         tagTeamCurrentLeague,

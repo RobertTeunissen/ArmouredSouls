@@ -421,7 +421,7 @@ function TeamBattleCard({ team, onDisband, onRename, onSwap, onSwapPositions }: 
               )}
               <div className="text-center">
                 <div className="text-xs text-secondary mb-1">League Points</div>
-                <div className="text-lg font-semibold text-primary">{team.teamLp}</div>
+                <div className="text-lg font-semibold text-primary">{team.teamLp ?? '—'}</div>
               </div>
               <div className="text-center">
                 <div className="text-xs text-secondary mb-1">Record</div>
@@ -449,7 +449,7 @@ function TeamBattleCard({ team, onDisband, onRename, onSwap, onSwapPositions }: 
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                 <div className="text-center">
                   <div className="text-xs text-secondary mb-1">Tag Team LP</div>
-                  <div className="text-lg font-semibold text-primary">{team.tagTeamLp}</div>
+                  <div className="text-lg font-semibold text-primary">{team.tagTeamLp ?? '—'}</div>
                 </div>
                 <div className="text-center">
                   <div className="text-xs text-secondary mb-1">Record</div>

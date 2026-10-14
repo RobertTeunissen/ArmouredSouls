@@ -183,13 +183,14 @@ export interface TeamBattleLeagueHistoryEntry {
   teamId: number;
   teamSize: number;
   teamName: string;
-  currentLeague: string;
-  currentLeagueId: string;
-  currentLp: number;
+  /** null when the team has no standing in that league yet (Unranked). */
+  currentLeague: string | null;
+  currentLeagueId: string | null;
+  currentLp: number | null;
   history: LeagueHistoryEntry[];
   tagTeamHistory: LeagueHistoryEntry[];
-  tagTeamCurrentLeague: string;
-  tagTeamCurrentLp: number;
+  tagTeamCurrentLeague: string | null;
+  tagTeamCurrentLp: number | null;
 }
 
 export const fetchRobotTeamBattleLeagueHistory = async (robotId: number): Promise<{ teams: TeamBattleLeagueHistoryEntry[] }> => {

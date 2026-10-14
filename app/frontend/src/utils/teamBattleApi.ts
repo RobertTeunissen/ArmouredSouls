@@ -43,17 +43,19 @@ export interface TeamBattle {
   stableId: number;
   teamSize: number;
   teamName: string;
-  teamLp: number;
-  teamLeague: string;
-  teamLeagueId: string;
+  /** null when the team has no standing in its 2v2/3v3 League yet (Unranked). */
+  teamLp: number | null;
+  teamLeague: string | null;
+  teamLeagueId: string | null;
   cyclesInLeague: number;
   totalLeagueWins: number;
   totalLeagueLosses: number;
   totalLeagueDraws: number;
-  // Tag team fields (only populated when teamSize === 2)
-  tagTeamLp: number;
-  tagTeamLeague: string;
-  tagTeamLeagueId: string;
+  // Tag team fields (only populated when teamSize === 2); null when the team
+  // has no Tag Team standing yet (Unranked).
+  tagTeamLp: number | null;
+  tagTeamLeague: string | null;
+  tagTeamLeagueId: string | null;
   totalTagTeamWins: number;
   totalTagTeamLosses: number;
   totalTagTeamDraws: number;

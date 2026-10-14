@@ -13,14 +13,20 @@
  *
  * Cases 10d2 and 10e2 park a subscription on a lock held by a blocker
  * transaction to force the disband/reset interleavings that would orphan a
- * team row or deadlock without the team and robot locks.
+ * team row or deadlock without the team and robot locks. Case 14 checks that
+ * the team-battle routes report an unplaced team as unranked (null).
  *
  * Every write goes through the real services. Cases 2 and 10c fill a mode's
  * Bronze instances to exact sizes, so they clear that mode's Bronze rows before
  * and after (the whole-mode isolation the rebalancing suites use).
  */
+import express from 'express';
+import request from 'supertest';
 import prisma from '../../src/lib/prisma';
 import type { Standing, StandingsMode } from '../../generated/prisma';
+import teamBattlesRoutes from '../../src/routes/teamBattles';
+import { errorHandler } from '../../src/middleware/errorHandler';
+import { generateToken } from '../../src/services/auth/jwtService';
 import { createRobotTransaction } from '../../src/services/robot/robotCreationService';
 import {
   getEventDefinition,
@@ -792,5 +798,53 @@ describe('case 13: end to end with 1v1 matchmaking', () => {
       });
       expect(matches).toBe(1);
     }
+  });
+});
+
+describe('case 14: team-battle routes report a team without a standing as unranked', () => {
+  const app = express();
+  app.use(express.json());
+  app.use('/api/team-battles', teamBattlesRoutes);
+  app.use(errorHandler);
+
+  function tokenFor(userId: number, username: string): string {
+    return generateToken({ id: String(userId), username, role: 'user', tokenVersion: 0 });
+  }
+
+  it('GET /api/team-battles returns null tier, instance and LP for modes the team is not placed in', async () => {
+    const { userId, teamId, robotIds: [a, b] } = await createTeam(2);
+    for (const robotId of [a, b]) await subscribeRobot(robotId, 'league_2v2', userId);
+    const user = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { username: true } });
+
+    const res = await request(app).get('/api/team-battles').set('Authorization', `Bearer ${tokenFor(userId, user.username)}`);
+
+    expect(res.status).toBe(200);
+    const team = (res.body.teams as Array<Record<string, unknown>>).find((t) => t.id === teamId);
+    // Placed in league_2v2 (both members subscribed) …
+    expect(team).toMatchObject({ teamLeague: 'bronze', teamLp: 0 });
+    expect(team?.teamLeagueId).toMatch(/^bronze_\d+$/);
+    // … not in tag_team (nobody subscribed): no Bronze fallback.
+    expect(team).toMatchObject({ tagTeamLeague: null, tagTeamLeagueId: null, tagTeamLp: null });
+  });
+
+  it('GET /api/team-battles/robot/:robotId/league-history returns null for an unplaced team', async () => {
+    const { userId, teamId, robotIds: [a] } = await createTeam(2);
+    const user = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { username: true } });
+
+    const res = await request(app)
+      .get(`/api/team-battles/robot/${a}/league-history`)
+      .set('Authorization', `Bearer ${tokenFor(userId, user.username)}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.teams).toEqual([
+      expect.objectContaining({
+        teamId,
+        currentLeague: null,
+        currentLeagueId: null,
+        currentLp: null,
+        tagTeamCurrentLeague: null,
+        tagTeamCurrentLp: null,
+      }),
+    ]);
   });
 });
