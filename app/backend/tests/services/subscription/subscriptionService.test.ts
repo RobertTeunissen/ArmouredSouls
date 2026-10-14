@@ -36,10 +36,6 @@ const mockTx = {
   teamBattle: {
     update: jest.fn().mockResolvedValue(undefined),
   },
-  standing: {
-    findUnique: jest.fn().mockResolvedValue(null),
-    create: jest.fn().mockResolvedValue(undefined),
-  },
   // Spec #51: audit sequence numbers are allocated by `withAuditSequence`, which
   // takes pg_advisory_xact_lock(3, cycle) on the transaction client. The real
   // Prisma.TransactionClient has always exposed $executeRaw; this mock simply
@@ -89,6 +85,18 @@ jest.mock('../../../src/services/scheduling/eventCronSchedule', () => ({
 jest.mock('../../../src/services/battle/baseOrchestrator', () => ({
   __esModule: true,
   getCurrentCycleNumber: jest.fn().mockResolvedValue(42),
+}));
+
+// The placement rule has its own suites (standingPlacement*.test.ts); here we
+// only pin that the subscription path hands it exactly the gained events.
+const mockEnsureStandingsForSubscriptionGain = jest.fn().mockResolvedValue(undefined);
+const mockLockRobotTeamMembership = jest.fn().mockResolvedValue(undefined);
+jest.mock('../../../src/services/standings/standingPlacement', () => ({
+  __esModule: true,
+  ...jest.requireActual('../../../src/services/standings/standingPlacement'),
+  ensureStandingsForSubscriptionGain: (...args: unknown[]) =>
+    mockEnsureStandingsForSubscriptionGain(...args),
+  lockRobotTeamMembership: (...args: unknown[]) => mockLockRobotTeamMembership(...args),
 }));
 
 import {
@@ -218,21 +226,45 @@ describe('subscriptionService', () => {
       );
     });
 
-    it('should seed a Standing for placement modes so the matchmaker can see the robot', async () => {
-      await subscribeRobot(1, 'grand_melee', 1);
+    it.each(['league_1v1', 'koth', 'grand_melee'])(
+      'should hand the gained %s subscription to the standings placement rule',
+      async (eventType) => {
+        await subscribeRobot(1, eventType, 1);
 
-      expect(mockTx.standing.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({ entityType: 'robot', entityId: 1, mode: 'grand_melee' }),
-        }),
-      );
+        expect(mockEnsureStandingsForSubscriptionGain).toHaveBeenCalledTimes(1);
+        expect(mockEnsureStandingsForSubscriptionGain).toHaveBeenCalledWith(mockTx, 1, [eventType]);
+      },
+    );
+
+    it('should write the audit entry before placing standings (lock order)', async () => {
+      await subscribeRobot(1, 'koth', 1);
+
+      const auditOrder = mockTx.auditLog.create.mock.invocationCallOrder[0];
+      const placementOrder = mockEnsureStandingsForSubscriptionGain.mock.invocationCallOrder[0];
+      expect(auditOrder).toBeLessThan(placementOrder);
     });
 
-    it('should not seed a Standing for non-placement modes', async () => {
-      await subscribeRobot(1, 'league_1v1', 1);
+    it.each(['league_2v2', 'tag_team', 'league_3v3'])(
+      'should take the robot team-membership lock before any write when adding %s',
+      async (eventType) => {
+        await subscribeRobot(1, eventType, 1);
 
-      expect(mockTx.standing.create).not.toHaveBeenCalled();
-    });
+        expect(mockLockRobotTeamMembership).toHaveBeenCalledTimes(1);
+        expect(mockLockRobotTeamMembership).toHaveBeenCalledWith(mockTx, 1);
+        const lockOrder = mockLockRobotTeamMembership.mock.invocationCallOrder[0];
+        expect(lockOrder).toBeLessThan(mockTx.subscription.createMany.mock.invocationCallOrder[0]);
+        expect(mockEnsureStandingsForSubscriptionGain).toHaveBeenCalledWith(mockTx, 1, [eventType]);
+      },
+    );
+
+    it.each(['league_1v1', 'koth', 'grand_melee', 'tournament_1v1'])(
+      'should not take the robot team-membership lock when adding %s',
+      async (eventType) => {
+        await subscribeRobot(1, eventType, 1);
+
+        expect(mockLockRobotTeamMembership).not.toHaveBeenCalled();
+      },
+    );
   });
 
   // ── unsubscribeRobot: the unified rule ───────────────────────────
@@ -351,6 +383,30 @@ describe('subscriptionService', () => {
       });
     });
 
+    it('should place standings for exactly the added events, not the kept ones', async () => {
+      mockTx.facility.findUnique.mockResolvedValue({ level: 1 }); // cap = 4
+      given(['league_1v1', 'koth']);
+
+      await setSubscriptionsForRobot(1, ['league_1v1', 'grand_melee', 'tournament_1v1', 'league_2v2'], 1);
+
+      expect(mockEnsureStandingsForSubscriptionGain).toHaveBeenCalledTimes(1);
+      expect(mockEnsureStandingsForSubscriptionGain).toHaveBeenCalledWith(
+        mockTx,
+        1,
+        ['grand_melee', 'tournament_1v1', 'league_2v2'],
+      );
+      expect(mockLockRobotTeamMembership).toHaveBeenCalledTimes(1);
+    });
+
+    it('should not place standings or lock for a pure removal', async () => {
+      given(['league_1v1', 'league_2v2']);
+
+      await setSubscriptionsForRobot(1, ['league_1v1'], 1);
+
+      expect(mockEnsureStandingsForSubscriptionGain).not.toHaveBeenCalled();
+      expect(mockLockRobotTeamMembership).not.toHaveBeenCalled();
+    });
+
     it('should write nothing at all when the requested set exceeds the cap', async () => {
       given(['league_1v1']);
 
@@ -393,6 +449,7 @@ describe('subscriptionService', () => {
       expect(mockTx.subscription.createMany).not.toHaveBeenCalled();
       expect(mockTx.subscription.deleteMany).not.toHaveBeenCalled();
       expect(mockTx.auditLog.create).not.toHaveBeenCalled();
+      expect(mockEnsureStandingsForSubscriptionGain).not.toHaveBeenCalled();
     });
 
     it('should ignore duplicates in the requested set', async () => {

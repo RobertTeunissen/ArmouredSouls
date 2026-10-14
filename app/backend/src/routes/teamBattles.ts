@@ -182,12 +182,6 @@ router.post(
 
     const team = await registerTeam(userId, robotIds, teamName, teamSize, userId);
 
-    // Standings are what matchmaking scopes on, so a team without them is
-    // unmatchable. registerTeam leaves this to the caller; the shared helper
-    // keeps every caller (and the tests) on one implementation.
-    const { createInitialTeamStandings } = await import('../services/team-battle/teamBattleAdapter');
-    await createInitialTeamStandings(team.id, teamSize);
-
     res.status(201).json({ team });
   },
 );

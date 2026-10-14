@@ -2,8 +2,9 @@
  * Team Battle League Adapter
  *
  * Implements `LeagueAdapter<any>` for the generic league engine using the
- * unified `createStandingsAdapter` factory. Handles promotion/demotion,
- * instance assignment, and rebalancing for 2v2, 3v3, and tag team leagues.
+ * unified `createStandingsAdapter` factory. Handles promotion/demotion and
+ * rebalancing for 2v2, 3v3, and tag team leagues. Initial placement (a team's
+ * first standings row) is `services/standings/standingPlacement`.
  *
  * All modes share the same code path with the only differences being:
  *  - mode string ('league_2v2' | 'league_3v3' | 'tag_team')
@@ -17,8 +18,7 @@
  * @module services/team-battle/teamBattleAdapter
  */
 
-import { TeamBattle, StandingsMode } from '../../../generated/prisma';
-import prisma from '../../lib/prisma';
+import { TeamBattle } from '../../../generated/prisma';
 import {
   LeagueAdapter,
   LeagueEngineConfig,
@@ -30,10 +30,8 @@ import {
 } from '../league/leagueEngine';
 import { createStandingsAdapter } from '../league/leagueRebalancingService';
 import {
-  assignLeagueInstanceWithLock,
   LEAGUE_TIERS,
   MAX_TEAMS_PER_INSTANCE,
-  LeagueTier,
 } from '../league/leagueInstanceService';
 import { HEAD_TO_HEAD_LEAGUE_RULES } from '../league/league-rules';
 
@@ -48,12 +46,6 @@ export type TeamBattleLeagueTier = typeof TEAM_BATTLE_LEAGUE_TIERS[number];
 
 export { MAX_TEAMS_PER_INSTANCE };
 
-/** Starting tier for new teams */
-export const STARTING_TIER: TeamBattleLeagueTier = 'bronze';
-
-/** Starting LP for new teams */
-export const STARTING_LP = 0;
-
 // ─── Configuration ───────────────────────────────────────────────────────────
 
 export const TEAM_BATTLE_LEAGUE_CONFIG: LeagueEngineConfig = {
@@ -61,78 +53,6 @@ export const TEAM_BATTLE_LEAGUE_CONFIG: LeagueEngineConfig = {
   logPrefix: 'TeamBattleRebalancing',
   entityLabel: 'team',
 };
-
-// ─── Instance Assignment (public, for team creation) ─────────────────────────
-
-/**
- * Assign a team battle to an appropriate league instance.
- * Uses advisory locking to prevent race conditions during concurrent team creation.
- * Delegates to the unified leagueInstanceService.
- */
-export async function assignTeamBattleLeagueInstance(tier: TeamBattleLeagueTier, teamSize: 2 | 3 = 2): Promise<string> {
-  const mode = teamSize === 2 ? 'league_2v2' : 'league_3v3';
-  return assignLeagueInstanceWithLock(tier as LeagueTier, { mode, maxPerInstance: MAX_TEAMS_PER_INSTANCE });
-}
-
-/**
- * Assign a tag team to an appropriate tag team league instance.
- * Uses advisory locking to prevent race conditions.
- * Delegates to the unified leagueInstanceService.
- */
-export async function assignTagTeamLeagueInstanceOnTeamBattle(tier: TeamBattleLeagueTier): Promise<string> {
-  return assignLeagueInstanceWithLock(tier as LeagueTier, { mode: 'tag_team', maxPerInstance: MAX_TEAMS_PER_INSTANCE });
-}
-
-/**
- * Create the standing rows a freshly registered team needs to be matchable.
- *
- * `registerTeam` deliberately does not do this — it leaves placement to the
- * caller. But matchmaking scopes candidates by `standings.leagueInstanceId`
- * (the source of truth since Spec #40), so a team with no standing is invisible
- * to it: `getEligibleTeams` returns early and books nothing. That made the step
- * mandatory rather than optional, and it was only implemented inline in
- * `POST /api/team-battles`, so any other caller silently produced unmatchable
- * teams.
- *
- * Idempotent: existing standings are left untouched, so re-registration and
- * retries cannot reset a team's placement or LP.
- *
- * A 2v2 team also gets a `tag_team` standing, because one 2v2 roster competes in
- * both the simultaneous 2v2 league and sequential tag team, on separate LP
- * tracks.
- */
-export async function createInitialTeamStandings(teamId: number, teamSize: 2 | 3): Promise<void> {
-  const leagueMode: StandingsMode = teamSize === 2 ? 'league_2v2' : 'league_3v3';
-
-  const modes: Array<{ mode: StandingsMode; leagueInstanceId: string }> = [
-    { mode: leagueMode, leagueInstanceId: await assignTeamBattleLeagueInstance(STARTING_TIER, teamSize) },
-  ];
-
-  if (teamSize === 2) {
-    modes.push({
-      mode: 'tag_team',
-      leagueInstanceId: await assignTagTeamLeagueInstanceOnTeamBattle(STARTING_TIER),
-    });
-  }
-
-  for (const { mode, leagueInstanceId } of modes) {
-    await prisma.standing.upsert({
-      where: { entityType_entityId_mode: { entityType: 'team', entityId: teamId, mode } },
-      update: {},
-      create: {
-        entityType: 'team',
-        entityId: teamId,
-        mode,
-        tier: STARTING_TIER,
-        leagueInstanceId,
-        leaguePoints: STARTING_LP,
-        cyclesInTier: 0,
-        wins: 0, losses: 0, draws: 0,
-        currentWinStreak: 0, bestWinStreak: 0, currentLoseStreak: 0,
-      },
-    });
-  }
-}
 
 // ─── Adapters (all use unified createStandingsAdapter) ───────────────────────
 

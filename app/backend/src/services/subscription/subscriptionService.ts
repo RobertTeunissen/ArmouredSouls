@@ -23,6 +23,12 @@
  * from `services/scheduling/eventScheduleScope`, the same module pre-battle
  * repair uses to decide who is fighting next.
  *
+ * Standings rows are created here, on the first matchable subscription: gaining
+ * a robot mode (league_1v1, koth, grand_melee) places the robot in Bronze, and
+ * gaining a team mode places each of the robot's teams that is now complete and
+ * fully subscribed. Rows are never created at robot or team creation and are
+ * kept on unsubscribe. The rule lives in `services/standings/standingPlacement`.
+ *
  * @module services/subscription/subscriptionService
  */
 
@@ -43,10 +49,22 @@ import { SubscriptionError, SubscriptionErrorCode } from '../../errors/subscript
 import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
 import logger from '../../config/logger';
 import { withAuditSequence } from '../common/auditSequence';
+import {
+  STANDING_BACKED_EVENTS,
+  ensureStandingsForSubscriptionGain,
+  lockRobotTeamMembership,
+} from '../standings/standingPlacement';
 
 // ── Types ────────────────────────────────────────────────────────────
 
 type Tx = Prisma.TransactionClient;
+
+/** Events whose standings row belongs to a team (league_2v2, tag_team, league_3v3). */
+const TEAM_STANDING_EVENTS: ReadonlySet<string> = new Set(
+  STANDING_BACKED_EVENTS
+    .filter((definition) => definition.entityType === 'team')
+    .map((definition) => definition.event),
+);
 
 export interface RobotSubscriptionInfo {
   subscriptions: { id: number; robotId: number; eventType: string; status: string; createdAt: Date }[];
@@ -211,6 +229,13 @@ async function applySubscriptionChange(
     return { added: [], removed: [], heldSlots: held, occupiedCount: occupied.size, cap, level };
   }
 
+  // Lock order (see standingPlacement): the robot's team-membership lock comes
+  // before every other lock, so take it before any write when a team mode is
+  // added — a concurrent swap must not change the robot's teams mid-check.
+  if (toAdd.some((eventType) => TEAM_STANDING_EVENTS.has(eventType))) {
+    await lockRobotTeamMembership(tx, robotId);
+  }
+
   if (toRemove.length > 0) {
     await tx.subscription.deleteMany({ where: { robotId, eventType: { in: toRemove } } });
   }
@@ -219,10 +244,15 @@ async function applySubscriptionChange(
     await tx.subscription.createMany({
       data: toAdd.map((eventType) => ({ robotId, eventType, status: 'active' })),
     });
-    await ensurePlacementStandings(robotId, toAdd, tx);
   }
 
+  // The audit sequence lock precedes the team and mode locks the standings
+  // helper takes, so audit first.
   await writeAuditEntries(robotId, requestingUserId, toAdd, toRemove, occupied.size, level, tx);
+
+  if (toAdd.length > 0) {
+    await ensureStandingsForSubscriptionGain(tx, robotId, toAdd);
+  }
 
   logger.info('[Subscription] Changed', {
     robotId,
@@ -235,38 +265,6 @@ async function applySubscriptionChange(
   });
 
   return { added: toAdd, removed: toRemove, heldSlots: held, occupiedCount: occupied.size, cap, level };
-}
-
-/**
- * Placement-based modes rank from a Standing row, so one has to exist before the
- * matchmaker can see the robot at all. (Spec #44: R6.5)
- */
-async function ensurePlacementStandings(robotId: number, added: string[], tx: Tx): Promise<void> {
-  const placementModes = added.filter((e) => e === 'koth' || e === 'grand_melee');
-
-  for (const mode of placementModes as ('koth' | 'grand_melee')[]) {
-    const existing = await tx.standing.findUnique({
-      where: { entityType_entityId_mode: { entityType: 'robot', entityId: robotId, mode } },
-    });
-    if (existing) continue;
-
-    await tx.standing.create({
-      data: {
-        entityType: 'robot',
-        entityId: robotId,
-        mode,
-        tier: 'bronze',
-        leagueInstanceId: 'bronze_1',
-        leaguePoints: 0,
-        cyclesInTier: 0,
-        wins: 0,
-        losses: 0,
-        draws: 0,
-        currentWinStreak: 0,
-        bestWinStreak: 0,
-      },
-    });
-  }
 }
 
 /** One audit row per event added or removed, so admin trend charts stay per-event. */

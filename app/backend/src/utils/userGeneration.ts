@@ -1,8 +1,8 @@
 import bcrypt from 'bcrypt';
 import prisma from '../lib/prisma';
 import logger from '../config/logger';
-import { StandingsMode } from '../../generated/prisma';
 import { registerTeam } from '../services/team-battle/teamBattleService';
+import { STANDING_BACKED_EVENTS, ensureStanding } from '../services/standings/standingPlacement';
 import {
   TIER_CONFIGS,
   TierConfig,
@@ -354,26 +354,14 @@ export async function generateBattleReadyUsers(
               skipDuplicates: true,
             });
 
-            // Create standings ONLY for subscribed league modes (no inactive inflation)
-            const robotStandingModes: string[] = [];
-            if (stableSubscriptions.includes('league_1v1')) robotStandingModes.push('league_1v1');
-            if (stableSubscriptions.includes('koth')) robotStandingModes.push('koth');
-            if (stableSubscriptions.includes('grand_melee')) robotStandingModes.push('grand_melee');
-
-            if (robotStandingModes.length > 0) {
-              await tx.standing.createMany({
-                data: robotStandingModes.map(mode => ({
-                  entityType: 'robot',
-                  entityId: robot.id,
-                  mode: mode as StandingsMode,
-                  tier: 'bronze',
-                  leagueInstanceId: 'bronze_1',
-                  leaguePoints: 0,
-                  cyclesInTier: 0,
-                  wins: 0, losses: 0, draws: 0,
-                  currentWinStreak: 0, bestWinStreak: 0, currentLoseStreak: 0,
-                })),
-              });
+            // Standings only for subscribed robot modes (no inactive inflation),
+            // placed by the shared rule (least-full Bronze instance).
+            const robotStandingModes = STANDING_BACKED_EVENTS
+              .filter((definition) => definition.entityType === 'robot')
+              .map((definition) => definition.event)
+              .filter((mode) => stableSubscriptions.includes(mode));
+            for (const mode of robotStandingModes) {
+              await ensureStanding(tx, 'robot', robot.id, mode);
             }
 
             robotsWithSubscriptions.push({ id: robot.id, subscriptions: stableSubscriptions });
@@ -400,43 +388,9 @@ export async function generateBattleReadyUsers(
             if (has2v2Mode) {
               const teamRobotIds = createdRobotsForTeams.slice(0, 2).map(r => r.id);
               const teamName = `${stableNameForTeams} 2v2`;
-              const team = await registerTeam(userIdForTeams, teamRobotIds, teamName, 2, userIdForTeams);
-
-              // Create standings for subscribed modes only
-              const { assignTagTeamLeagueInstanceOnTeamBattle } = await import('../services/team-battle/teamBattleAdapter');
-
-              if (createdRobotsForTeams[0]?.subscriptions.includes('league_2v2')) {
-                await prisma.standing.create({
-                  data: {
-                    entityType: 'team',
-                    entityId: team.id,
-                    mode: StandingsMode.league_2v2,
-                    tier: 'bronze',
-                    leagueInstanceId: 'bronze_1',
-                    leaguePoints: 0,
-                    cyclesInTier: 0,
-                    wins: 0, losses: 0, draws: 0,
-                    currentWinStreak: 0, bestWinStreak: 0, currentLoseStreak: 0,
-                  },
-                });
-              }
-
-              if (createdRobotsForTeams[0]?.subscriptions.includes('tag_team')) {
-                const tagTeamLeagueId = await assignTagTeamLeagueInstanceOnTeamBattle('bronze');
-                await prisma.standing.create({
-                  data: {
-                    entityType: 'team',
-                    entityId: team.id,
-                    mode: StandingsMode.tag_team,
-                    tier: 'bronze',
-                    leagueInstanceId: tagTeamLeagueId,
-                    leaguePoints: 0,
-                    cyclesInTier: 0,
-                    wins: 0, losses: 0, draws: 0,
-                    currentWinStreak: 0, bestWinStreak: 0, currentLoseStreak: 0,
-                  },
-                });
-              }
+              // registerTeam places the team in every team mode all members hold
+              // (every robot of a generated stable shares one subscription set).
+              await registerTeam(userIdForTeams, teamRobotIds, teamName, 2, userIdForTeams);
 
               totalLeague2v2TeamsCreated++;
               logger.info(`[UserGeneration] Created 2v2 team for ${username}`);
@@ -457,22 +411,8 @@ export async function generateBattleReadyUsers(
             if (subscribedTo3v3.length >= 3) {
               const teamRobotIds = subscribedTo3v3.slice(0, 3).map(r => r.id);
               const teamName = `${stableNameForTeams} 3v3`;
-              const team = await registerTeam(userIdForTeams, teamRobotIds, teamName, 3, userIdForTeams);
-
-              // Create league_3v3 standing
-              await prisma.standing.create({
-                data: {
-                  entityType: 'team',
-                  entityId: team.id,
-                  mode: StandingsMode.league_3v3,
-                  tier: 'bronze',
-                  leagueInstanceId: 'bronze_1',
-                  leaguePoints: 0,
-                  cyclesInTier: 0,
-                  wins: 0, losses: 0, draws: 0,
-                  currentWinStreak: 0, bestWinStreak: 0, currentLoseStreak: 0,
-                },
-              });
+              // registerTeam places the team in league_3v3 (all members hold it).
+              await registerTeam(userIdForTeams, teamRobotIds, teamName, 3, userIdForTeams);
 
               totalLeague3v3TeamsCreated++;
               logger.info(`[UserGeneration] Created 3v3 team for ${username}`);

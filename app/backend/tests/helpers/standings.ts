@@ -75,26 +75,55 @@ function standingData(
   };
 }
 
-/** Enter one robot into a mode's competition. */
+/**
+ * Put one entity at the given standing, creating or overwriting its row.
+ *
+ * An upsert rather than a create: standings are created on the first matchable
+ * subscription (`services/standings/standingPlacement`), so a fixture that
+ * subscribes through the service — or registers a team whose robots are
+ * subscribed — may already have a Bronze/0 LP row. "Put this entity at this
+ * standing" is what the fixture means either way.
+ */
+async function putStanding(
+  entityType: 'robot' | 'team',
+  entityId: number,
+  mode: StandingsMode,
+  options: StandingFixtureOptions,
+): Promise<void> {
+  const data = standingData(entityType, entityId, mode, options);
+  const { entityType: _entityType, entityId: _entityId, mode: _mode, ...placement } = data;
+  await prisma.standing.upsert({
+    where: { entityType_entityId_mode: { entityType, entityId, mode } },
+    create: data,
+    update: placement,
+  });
+}
+
+/** Enter one robot into a mode's competition (overwrites an existing row). */
 export async function enterRobotStanding(
   robotId: number,
   mode: StandingsMode,
   options: StandingFixtureOptions = {},
 ): Promise<void> {
-  await prisma.standing.create({ data: standingData('robot', robotId, mode, options) });
+  await putStanding('robot', robotId, mode, options);
 }
 
-/** Enter one team into a mode's competition (`league_2v2`, `league_3v3`, `tag_team`). */
+/**
+ * Enter one team into a mode's competition (`league_2v2`, `league_3v3`,
+ * `tag_team`; overwrites an existing row).
+ */
 export async function enterTeamStanding(
   teamId: number,
   mode: StandingsMode,
   options: StandingFixtureOptions = {},
 ): Promise<void> {
-  await prisma.standing.create({ data: standingData('team', teamId, mode, options) });
+  await putStanding('team', teamId, mode, options);
 }
 
 /**
  * Enter many robots into one mode and instance in a single insert.
+ *
+ * Plain `createMany` (no upsert): callers pass robots that hold no row yet.
  *
  * The bulk form exists because the rebalancing suites place hundreds of robots and a
  * per-robot round trip dominates their runtime.

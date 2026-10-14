@@ -7,7 +7,6 @@
 import prisma from '../../lib/prisma';
 import { lockUserForSpending } from '../../lib/creditGuard';
 import { RobotError, RobotErrorCode } from '../../errors/robotErrors';
-import { assignLeagueInstance } from '../league/leagueInstanceService';
 import { applyCreditMutationInTransaction } from '../financial/creditMutationService';
 import { runFinancialWriteTransaction } from '../cycle/financialWriteTransaction';
 import {
@@ -143,8 +142,6 @@ export async function createRobotTransaction(
     const maxHP = 50 + (hullIntegrity * 5);
     const maxShield = shieldCapacity * 4;
 
-    const bronzeLeagueId = await assignLeagueInstance('bronze');
-
     const robot = await tx.robot.create({
       data: {
         userId,
@@ -163,34 +160,8 @@ export async function createRobotTransaction(
       },
     });
 
-    // Create default standings entries (Spec #40 — unified standings)
-    // Without these, the robot would be invisible to rebalancing/matchmaking
-    await tx.standing.createMany({
-      data: [
-        {
-          entityType: 'robot',
-          entityId: robot.id,
-          mode: 'league_1v1',
-          tier: 'bronze',
-          leagueInstanceId: bronzeLeagueId,
-          leaguePoints: 0,
-          cyclesInTier: 0,
-          wins: 0, losses: 0, draws: 0,
-          currentWinStreak: 0, bestWinStreak: 0, currentLoseStreak: 0,
-        },
-        {
-          entityType: 'robot',
-          entityId: robot.id,
-          mode: 'koth',
-          tier: 'bronze',
-          leagueInstanceId: 'bronze_1',
-          leaguePoints: 0,
-          cyclesInTier: 0,
-          wins: 0, losses: 0, draws: 0,
-          currentWinStreak: 0, bestWinStreak: 0, currentLoseStreak: 0,
-        },
-      ],
-    });
+    // No standings rows here: a robot enters a mode's Bronze league the first
+    // time it subscribes to it (services/standings/standingPlacement).
 
     const cycleNumber = financialCycleNumber;
     const financialEventId = identity.financialEventId;

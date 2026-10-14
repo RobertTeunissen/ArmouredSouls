@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import { generateStableName } from '../src/utils/stableNameGenerator';
 import { LOADOUT_TITLES, WEAPON_CODENAMES } from '../src/utils/tierConfig';
 import { stableTypeForCreation } from '../src/utils/stableType';
+import { ensureStandingsForSubscriptionGain } from '../src/services/standings/standingPlacement';
 
 // Load environment variables
 dotenv.config();
@@ -954,45 +955,8 @@ export async function upsertRobot(data: Record<string, unknown>) {
 
   const robot = await prisma.robot.create({ data: robotData as any });
 
-  // Create default standings entries (Spec #40 — unified standings)
-  await prisma.standing.createMany({
-    data: [
-      {
-        entityType: 'robot',
-        entityId: robot.id,
-        mode: 'league_1v1',
-        tier: (data.currentLeague as string) || 'bronze',
-        leagueInstanceId: (data.leagueId as string) || 'bronze_1',
-        leaguePoints: 0,
-        cyclesInTier: 0,
-        wins: 0, losses: 0, draws: 0,
-        currentWinStreak: 0, bestWinStreak: 0, currentLoseStreak: 0,
-      },
-      {
-        entityType: 'robot',
-        entityId: robot.id,
-        mode: 'koth',
-        tier: 'bronze',
-        leagueInstanceId: 'bronze_1',
-        leaguePoints: 0,
-        cyclesInTier: 0,
-        wins: 0, losses: 0, draws: 0,
-        currentWinStreak: 0, bestWinStreak: 0, currentLoseStreak: 0,
-      },
-      {
-        entityType: 'robot',
-        entityId: robot.id,
-        mode: 'grand_melee',
-        tier: 'bronze',
-        leagueInstanceId: 'bronze_1',
-        leaguePoints: 0,
-        cyclesInTier: 0,
-        wins: 0, losses: 0, draws: 0,
-        currentWinStreak: 0, bestWinStreak: 0, currentLoseStreak: 0,
-      },
-    ],
-  });
-
+  // No standings rows here: a robot enters a mode's Bronze league the first
+  // time it subscribes to it (src/services/standings/standingPlacement).
   return robot;
 }
 
@@ -1193,6 +1157,12 @@ async function seedWimpBotUsers(weapons: { id: number; name: string }[]) {
           create: { robotId: robot.id, eventType, status: 'active' },
         });
       }
+      // Seeded subscriptions bypass the subscription service, so place the
+      // robot through the same rule. Robots are created one league at a time,
+      // so least-full placement fills bronze_1 then bronze_2 with 100 each.
+      await prisma.$transaction((tx) =>
+        ensureStandingsForSubscriptionGain(tx, robot.id, defaultSubscriptions),
+      );
     }
     console.log(`   Created league bronze_${leagueNum} (${MAX_ROBOTS_PER_LEAGUE} robots, mixed weapons)`);
   }

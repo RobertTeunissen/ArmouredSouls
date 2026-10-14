@@ -24,6 +24,19 @@ import {
 } from '../src/services/team-battle/teamBattleRewardService';
 import { TeamBattleParticipantResult } from '../src/types/teamBattleLogTypes';
 
+/**
+ * Delete the team standings of a stable's teams. `standings` is polymorphic
+ * with no foreign key, so these rows outlive their team unless removed first —
+ * and registerTeam now creates them whenever the members are subscribed.
+ */
+async function deleteTeamStandingsOfStable(stableId: number): Promise<void> {
+  const teams = await prisma.teamBattle.findMany({ where: { stableId }, select: { id: true } });
+  if (teams.length === 0) return;
+  await prisma.standing.deleteMany({
+    where: { entityType: 'team', entityId: { in: teams.map((t) => t.id) } },
+  });
+}
+
 describe('Team Battle Property Tests', () => {
   /**
    * Property 7: Team Composition Validation
@@ -51,6 +64,7 @@ describe('Team Battle Property Tests', () => {
     });
 
     afterAll(async () => {
+      await deleteTeamStandingsOfStable(testUserId);
       await prisma.teamBattleMember.deleteMany({
         where: { team: { stableId: testUserId } },
       });
@@ -69,6 +83,7 @@ describe('Team Battle Property Tests', () => {
     });
 
     afterEach(async () => {
+      await deleteTeamStandingsOfStable(testUserId);
       await prisma.teamBattleMember.deleteMany({
         where: { team: { stableId: testUserId } },
       });
@@ -500,6 +515,7 @@ describe('Team Battle Property Tests', () => {
           where: { participants: { some: { participantType: 'team', participantId: { in: userTeamIds } } } },
         });
       }
+      await deleteTeamStandingsOfStable(testUserId);
       await prisma.teamBattleMember.deleteMany({
         where: { team: { stableId: testUserId } },
       });
@@ -533,6 +549,7 @@ describe('Team Battle Property Tests', () => {
           where: { participants: { some: { participantType: 'team', participantId: { in: userTeamIds } } } },
         });
       }
+      await deleteTeamStandingsOfStable(testUserId);
       await prisma.teamBattleMember.deleteMany({
         where: { team: { stableId: testUserId } },
       });
@@ -851,6 +868,7 @@ describe('Team Battle Property Tests', () => {
           where: { participants: { some: { participantType: 'team', participantId: { in: userTeamIds2 } } } },
         });
       }
+      await deleteTeamStandingsOfStable(testUserId);
       await prisma.teamBattleMember.deleteMany({
         where: { team: { stableId: testUserId } },
       });
@@ -890,6 +908,7 @@ describe('Team Battle Property Tests', () => {
           where: { participants: { some: { participantType: 'team', participantId: { in: userTeamIds3 } } } },
         });
       }
+      await deleteTeamStandingsOfStable(testUserId);
       await prisma.teamBattleMember.deleteMany({
         where: { team: { stableId: testUserId } },
       });

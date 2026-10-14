@@ -90,6 +90,11 @@ async function cleanup(): Promise<void> {
         participants: { some: { participantType: 'team', participantId: { in: cleanupTeamIds } } },
       },
     });
+    // standings is polymorphic (no FK): registerTeam places subscribed teams,
+    // so their rows must go before the teams do.
+    await prisma.standing.deleteMany({
+      where: { entityType: 'team', entityId: { in: cleanupTeamIds } },
+    });
     await prisma.teamBattleMember.deleteMany({
       where: { teamId: { in: cleanupTeamIds } },
     });
@@ -117,6 +122,9 @@ async function cleanup(): Promise<void> {
         where: {
           participants: { some: { participantType: 'team', participantId: { in: userTeamIds } } },
         },
+      });
+      await prisma.standing.deleteMany({
+        where: { entityType: 'team', entityId: { in: userTeamIds } },
       });
       await prisma.teamBattleMember.deleteMany({
         where: { teamId: { in: userTeamIds } },
@@ -364,6 +372,13 @@ describe('Team Battle Race Condition Stress Test', () => {
         cleanupTeamIds.push(team.id);
       }
 
+      // The robots were subscribed before registration, so every team was
+      // placed in the 2v2 league and is visible to matchmaking.
+      const placed = await prisma.standing.count({
+        where: { entityType: 'team', entityId: { in: teams.map(t => t.id) }, mode: 'league_2v2' },
+      });
+      expect(placed).toBe(teams.length);
+
       // Fire 3 concurrent matchmaking runs
       const matchmakingAttempts = Array.from({ length: 3 }, () =>
         runTeamBattleMatchmaking(2)
@@ -384,6 +399,11 @@ describe('Team Battle Race Condition Stress Test', () => {
           participants: true,
         },
       });
+
+      // Placed teams are matchable, so the concurrent runs book at least one
+      // match — the invariants below are checked against real match records.
+      expect(results.some(r => r.success)).toBe(true);
+      expect(allScheduled.length).toBeGreaterThan(0);
 
       // KEY INVARIANT 1: Every match record references valid teams with correct participant counts
       for (const match of allScheduled) {
@@ -456,6 +476,11 @@ describe('Team Battle Race Condition Stress Test', () => {
         teams.push(team);
         cleanupTeamIds.push(team.id);
       }
+
+      const placed = await prisma.standing.count({
+        where: { entityType: 'team', entityId: { in: teams.map(t => t.id) }, mode: 'league_2v2' },
+      });
+      expect(placed).toBe(teams.length);
 
       // Concurrently: run matchmaking AND remove subscription from team[0]'s first robot
       const [matchResult, _unsubResult] = await Promise.all([

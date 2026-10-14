@@ -4,11 +4,14 @@
  *
  * Applies the pure upkeep plans through the services the player routes use:
  * 1. Teams: every Team_Rule team that is due (`teamsDue`), registered with
- *    `registerTeam` then `createInitialTeamStandings` (the pair
- *    `POST /api/team-battles` runs), `robotIds` in ascending Blueprint_Slot
- *    order so the lower slot is `TeamBattleMember.slotIndex` 0.
+ *    `registerTeam` (as `POST /api/team-battles` does), `robotIds` in
+ *    ascending Blueprint_Slot order so the lower slot is
+ *    `TeamBattleMember.slotIndex` 0.
  * 2. Subscriptions: Event_Allocation, applied with `setSubscriptionsForRobot`
- *    only for robots whose desired set differs.
+ *    only for robots whose desired set differs. This is where team standings
+ *    appear: Event_Allocation subscribes whole teams, so the last member's
+ *    subscription makes the team matchable and the subscription path places
+ *    it (robot standings likewise come from the subscriptions).
  * 3. Robot_Blueprint sync: stance and yield via `robotSettingsService`.
  * 4. Tuning: `setTuningAllocation` only where the allocation differs.
  *
@@ -23,7 +26,6 @@ import prisma from '../../../lib/prisma';
 import logger from '../../../config/logger';
 import { AppError } from '../../../errors/AppError';
 import { registerTeam } from '../../team-battle/teamBattleService';
-import { createInitialTeamStandings } from '../../team-battle/teamBattleAdapter';
 import { setSubscriptionsForRobot } from '../../subscription/subscriptionService';
 import { setTuningAllocation } from '../../tuning-pool/tuningPoolService';
 import { updateStance, updateYieldThreshold } from '../../robot/robotSettingsService';
@@ -117,8 +119,7 @@ async function registerDueTeams(facts: StableFacts, ctx: FreeUpkeepContext, issu
       continue;
     }
     try {
-      const team = await registerTeam(ctx.userId, [...due.robotIds], due.name, due.size, ctx.userId);
-      await createInitialTeamStandings(team.id, due.size);
+      await registerTeam(ctx.userId, [...due.robotIds], due.name, due.size, ctx.userId);
       registered++;
     } catch (error) {
       issues.push({ part: 'teams', code: errorCode(error), message: errorMessage(error), teamSize: due.size, teamIndex: due.index });

@@ -74,6 +74,15 @@ jest.mock('../../../src/services/subscription/subscriptionService', () => ({
   hasSubscription: (...args: unknown[]) => mockHasSubscription(...args),
 }));
 
+// Placement has its own suites (standingPlacement*.test.ts); here we only pin
+// that registration hands the new team to it inside the transaction.
+const mockEnsureTeamStandings = jest.fn().mockResolvedValue([]);
+jest.mock('../../../src/services/standings/standingPlacement', () => ({
+  __esModule: true,
+  ...jest.requireActual('../../../src/services/standings/standingPlacement'),
+  ensureTeamStandings: (...args: unknown[]) => mockEnsureTeamStandings(...args),
+}));
+
 // ── Import under test ────────────────────────────────────────────────
 
 import {
@@ -111,6 +120,7 @@ describe('teamBattleService', () => {
     mockHasSubscription.mockResolvedValue(true);
     mockTx.$executeRaw.mockResolvedValue(undefined);
     mockTx.scheduledMatchParticipant.count.mockResolvedValue(0);
+    mockEnsureTeamStandings.mockResolvedValue([]);
   });
 
   // ── registerTeam ─────────────────────────────────────────────────
@@ -210,6 +220,7 @@ describe('teamBattleService', () => {
         .rejects.toMatchObject({
           code: TeamBattleErrorCode.TEAM_MEMBER_CONFLICT,
         });
+      expect(mockEnsureTeamStandings).not.toHaveBeenCalled();
     });
 
     it('should create team successfully with valid inputs for 2v2', async () => {
@@ -225,6 +236,11 @@ describe('teamBattleService', () => {
       const result = await registerTeam(100, [10, 11], 'MyTeam', 2, 100);
 
       expect(result).toEqual(createdTeam);
+      // Standings come from the placement rule, inside the same transaction.
+      expect(mockEnsureTeamStandings).toHaveBeenCalledTimes(1);
+      expect(mockEnsureTeamStandings).toHaveBeenCalledWith(mockTx, 42);
+      expect(mockEnsureTeamStandings.mock.invocationCallOrder[0])
+        .toBeGreaterThan(mockTx.teamBattle.create.mock.invocationCallOrder[0]);
       expect(mockTx.teamBattle.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
@@ -250,6 +266,7 @@ describe('teamBattleService', () => {
       const result = await registerTeam(100, [10, 11, 12], 'Trio', 3, 100);
 
       expect(result).toEqual(createdTeam);
+      expect(mockEnsureTeamStandings).toHaveBeenCalledWith(mockTx, 43);
       expect(mockTx.teamBattle.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({

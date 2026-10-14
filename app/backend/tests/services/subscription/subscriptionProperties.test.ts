@@ -43,10 +43,6 @@ const mockTx = {
   teamBattle: {
     update: jest.fn().mockResolvedValue(undefined),
   },
-  standing: {
-    findUnique: jest.fn().mockResolvedValue(null),
-    create: jest.fn().mockResolvedValue(undefined),
-  },
   // Read by the shared slot resolver: an empty schedule means no held slots, so
   // these properties exercise the cap against subscriptions alone.
   scheduledMatchParticipant: { findMany: jest.fn().mockResolvedValue([]) },
@@ -85,6 +81,18 @@ jest.mock('../../../src/services/scheduling/eventCronSchedule', () => ({
   __esModule: true,
   getNextSchedulingMoments: jest.fn(() => ({})),
   getNextSchedulingMoment: jest.fn(() => new Date('2026-07-31T08:00:00.000Z')),
+}));
+
+// Standings placement has its own unit and property suites; here it is a spy so
+// these properties exercise the subscription rule alone.
+const mockEnsureStandingsForSubscriptionGain = jest.fn().mockResolvedValue(undefined);
+const mockLockRobotTeamMembership = jest.fn().mockResolvedValue(undefined);
+jest.mock('../../../src/services/standings/standingPlacement', () => ({
+  __esModule: true,
+  ...jest.requireActual('../../../src/services/standings/standingPlacement'),
+  ensureStandingsForSubscriptionGain: (...args: unknown[]) =>
+    mockEnsureStandingsForSubscriptionGain(...args),
+  lockRobotTeamMembership: (...args: unknown[]) => mockLockRobotTeamMembership(...args),
 }));
 
 // Use real event registry for property tests
@@ -367,11 +375,22 @@ describe('Subscription System Property-Based Tests', () => {
                 : [],
             );
 
+            mockEnsureStandingsForSubscriptionGain.mockClear();
+            mockLockRobotTeamMembership.mockClear();
+
             await subscribeRobot(1, eventType, 1);
+            // The gain, and only the gain, is handed to standings placement;
+            // team events also take the robot team-membership lock first.
+            expect(mockEnsureStandingsForSubscriptionGain).toHaveBeenCalledTimes(1);
+            expect(mockEnsureStandingsForSubscriptionGain).toHaveBeenCalledWith(mockTx, 1, [eventType]);
+            expect(mockLockRobotTeamMembership).toHaveBeenCalledTimes(eventType === 'tag_team' ? 1 : 0);
+
             const result = await unsubscribeRobot(1, eventType, 1);
 
             expect(result.removed).toEqual([eventType]);
             expect(subscriptionStore.has(`1:${eventType}`)).toBe(false);
+            // Unsubscribing never creates (or removes) standings.
+            expect(mockEnsureStandingsForSubscriptionGain).toHaveBeenCalledTimes(1);
           },
         ),
         { numRuns: 100 },

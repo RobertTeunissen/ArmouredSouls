@@ -14,6 +14,7 @@ import logger from '../../config/logger';
 import { safeName } from '../../utils/securityValidation';
 import { hasSubscription } from '../subscription/subscriptionService';
 import { TeamBattleError, TeamBattleErrorCode } from '../../errors/teamBattleErrors';
+import { ensureTeamStandings } from '../standings/standingPlacement';
 
 // ── Constants ────────────────────────────────────────────────────────
 
@@ -75,16 +76,20 @@ async function isTeamLockedForBattle(teamId: number, tx: typeof prisma): Promise
 // ── Public API ───────────────────────────────────────────────────────
 
 /**
- * Register a new team for 2v2 or 3v3 League.
+ * Register a new team of 2 or 3 robots.
  *
  * Validates:
  * - Team size is 2 or 3
  * - Exactly N distinct robot IDs provided
  * - All robots owned by the stable
- * - All robots subscribed to at least one corresponding team event (league_2v2/tournament_2v2 or league_3v3/tournament_3v3)
  * - No robot already on another team of the same size
  * - Team name passes safeName validation (3-32 chars)
  * - Stable has ≥ N robots
+ *
+ * No subscription is required to form a team. The team enters a mode's Bronze
+ * league (gets its standings row) once it is complete and every member holds
+ * that mode's subscription; `ensureTeamStandings` checks this inside the
+ * transaction, so a team whose robots are already subscribed is placed at once.
  *
  * Uses Prisma interactive transaction with advisory locks on robot IDs.
  */
@@ -194,8 +199,9 @@ export async function registerTeam(
       include: { members: true },
     });
 
-    // Standing records are created by the caller based on subscriptions.
-    // This avoids creating standings for modes the team isn't subscribed to.
+    // Place the team in every team mode all its members already hold. The
+    // (2, robotId) locks above precede the team lock this takes (lock order).
+    await ensureTeamStandings(tx, newTeam.id);
 
     return newTeam;
   });

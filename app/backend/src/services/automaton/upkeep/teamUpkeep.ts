@@ -4,9 +4,9 @@
  * Pure part: the Team_Rule teams that are due — every member slot alive and
  * no registered team of that size with exactly those robots — named from the
  * profile's Team_Names. The executor (task 5.4) registers them with
- * `registerTeam` + `createInitialTeamStandings`, passing `robotIds` in
- * ascending Blueprint_Slot order. Teams are never disbanded, swapped or
- * renamed.
+ * `registerTeam`, passing `robotIds` in ascending Blueprint_Slot order. Team
+ * standings appear in the subscriptions part, because Event_Allocation
+ * subscribes whole teams. Teams are never disbanded, swapped or renamed.
  */
 import { teamsForSlots } from '../teamRule';
 import type { StableFacts } from '../stableFacts';
