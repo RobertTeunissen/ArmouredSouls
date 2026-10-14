@@ -10,8 +10,8 @@ inclusion: manual
 - Use structured, secret-safe application logging from `error-handling-logging.md`; do not invent a second logger or metrics contract.
 
 ## Automaton signals (Spec #55)
-- One `[automaton-turns]` info line per Turn_Step: trigger, season, slot, source, processed, completed, skipped by reason, failed, actions by kind, credits spent/received, saving, blocked, `durationMs`.
-- `[automaton-alert]` errors also go to the monitoring webhook (`sendMonitoringAlert`), with Catalogue_Key and reason, never secrets: `automaton_turn_failed`, `automaton_turn_step_failed`, `automaton_step_budget_exhausted` (Turn_Step > 300 s), `automaton_invalid_parameters`, `automaton_negative_balance`, `automaton_saving_streak` (informational), `automaton_upkeep_issues`, `automaton_upgrade_rejected`, `automaton_catalogue_sync_conflicts`. A failed strategy-file check at startup alerts and stops the server.
+- One `[automaton-turns]` info line per Turn_Step: trigger, season, slot, source, processed, completed, skipped by reason, failed, actions by kind, credits spent/received, saving, blocked, `durationMs`, `concurrency`, `budgetMs`, `deadline` (`schedule` | `cap` | `floor`).
+- `[automaton-alert]` errors also go to the monitoring webhook (`sendMonitoringAlert`), with Catalogue_Key and reason, never secrets: `automaton_turn_failed`, `automaton_turn_step_failed` (also a mid-step cutover, `AUTOMATON_CUTOVER_IN_PROGRESS`, and a lost lease, `TURN_STEP_LEASE_LOST`), `automaton_step_budget_exhausted` ("Turn_Step deadline reached": stables not started before the deadline — next scheduled job minus margin, the `AUTOMATON_TURN_STEP_MAX_MS` cap, or the 300 s floor; the fixed 300 s limit is superseded), `automaton_invalid_parameters`, `automaton_negative_balance`, `automaton_saving_streak` (informational), `automaton_upkeep_issues`, `automaton_upgrade_rejected`, `automaton_catalogue_sync_conflicts`. A failed strategy-file check at startup alerts and stops the server.
 - Incident lever: the Program_Switch in `/admin/automatons`. Procedure: `docs/guides/AUTOMATON_OPERATIONS_GUIDE.md`.
 
 ## Logs and checks
