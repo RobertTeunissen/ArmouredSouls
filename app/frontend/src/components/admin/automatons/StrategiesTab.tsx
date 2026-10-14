@@ -1,7 +1,8 @@
 /**
  * Strategies tab (Spec #55, R6.6, R6.9–R6.14, R11.13, PLAYER_FACING_TEXT
- * §6.4–§6.4b, design §17.2, task 10.4): two views, Comparison and Library;
- * the Strategy_Builder opens as a sub-view of the Library.
+ * §6.4–§6.4b, design §17.2, task 10.4): two views, Comparison and Library,
+ * chosen with `ToggleChip`s (the selected view shows a check mark); the
+ * Strategy_Builder opens as a sub-view of the Library.
  */
 import { useCallback, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
@@ -14,7 +15,7 @@ import {
   type ProfileListItem,
   type StrategyComparison,
 } from '../../../utils/automatonAdminApi';
-import { FOCUS_RING } from './ui';
+import { ToggleChip } from './ui';
 import { errorText } from './requestErrors';
 import { StrategyComparisonTable } from './StrategyComparisonTable';
 import { StrategyLibrary } from './StrategyLibrary';
@@ -68,15 +69,9 @@ export function StrategiesTab({ view, draftId, strategies, libraryError, profile
     <div className="space-y-4 min-w-0">
       <div className="flex flex-wrap gap-2" role="group" aria-label="Strategies view">
         {views.map((v) => (
-          <button
-            key={v.key}
-            type="button"
-            aria-pressed={view === v.key}
-            onClick={() => { onOpenDraft(null); onViewChange(v.key); }}
-            className={`min-h-11 px-4 rounded-full text-sm font-medium ${FOCUS_RING} ${view === v.key ? 'bg-primary text-white' : 'bg-surface-elevated text-secondary hover:text-white'}`}
-          >
+          <ToggleChip key={v.key} pressed={view === v.key} onClick={() => { onOpenDraft(null); onViewChange(v.key); }} className="px-4">
             {v.label}
-          </button>
+          </ToggleChip>
         ))}
       </div>
 

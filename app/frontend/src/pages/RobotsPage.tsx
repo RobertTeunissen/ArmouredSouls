@@ -11,6 +11,7 @@ import {
   calculateReadiness,
   getReadinessStatus,
 } from '../hooks/useRobotsList';
+import { UNRANKED_LABEL } from '../utils/tierHelpers';
 
 function RobotsPage() {
   const navigate = useNavigate();
@@ -296,8 +297,8 @@ function RobotsPage() {
                             {/* League */}
                             <td className="px-4 py-3">
                               <div className="flex flex-col">
-                                <span className="font-semibold capitalize">{robot.currentLeague}</span>
-                                <span className="text-xs text-secondary">LP: {robot.leaguePoints}</span>
+                                <span className="font-semibold capitalize">{robot.currentLeague ?? UNRANKED_LABEL}</span>
+                                <span className="text-xs text-secondary">LP: {robot.leaguePoints ?? '—'}</span>
                               </div>
                             </td>
                             

@@ -372,9 +372,9 @@ const directCurrencyEntries: readonly CoverageManifestEntry[] = [
     finalService: 'Credit_Mutation_Service',
     expectedTaxonomy: ['robot_creation'],
     identityStrategy: 'durable robot-creation operation + user + created robot identity',
-    pairedOrDomainRecords: ['FinancialLedger', 'AuditLog:eventType=financial_transaction', 'Robot', 'Standing rows'],
+    pairedOrDomainRecords: ['FinancialLedger', 'AuditLog:eventType=financial_transaction', 'Robot'],
     targetTestTiers: ALL_CRITICAL_TIERS,
-    notes: 'The balance charge and robot/standing creation currently share a transaction but not a financial pair.',
+    notes: 'The balance charge and robot creation currently share a transaction but not a financial pair.',
   },
   {
     id: 'currency-attribute-upgrade',

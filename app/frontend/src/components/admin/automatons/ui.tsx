@@ -1,7 +1,7 @@
 /**
  * Small building blocks of the admin Automatons page (Spec #55, task 10.2):
  * buttons with 44 × 44 px touch targets and a visible focus ring, form
- * fields with label and help text, cards, status pills and an accessible
+ * fields with label and help text, toggle chips, cards, status pills and an accessible
  * dialog (focus trap, Escape, `aria-modal`).
  */
 import { useEffect, useId, useRef } from 'react';
@@ -52,6 +52,34 @@ export function IconButton({ label, children, className = '', ref, ...rest }: Om
       {...rest}
     >
       <span aria-hidden="true">{children}</span>
+    </button>
+  );
+}
+
+/**
+ * A pressed-state toggle chip (`aria-pressed`) of at least 44 px high. The
+ * pressed state is never shown by colour alone: a pressed chip also carries
+ * a leading check mark and a 2 px white border (both states have `border-2`,
+ * so only the check mark shifts the label). The check mark is `aria-hidden`,
+ * so the accessible name stays the label (`{label} · {count}`, `{mode label}`)
+ * that RTL and Playwright selectors depend on.
+ */
+export function ToggleChip({ pressed, onClick, children, className = '' }: {
+  pressed: boolean;
+  onClick: () => void;
+  children: ReactNode;
+  className?: string;
+}): ReactNode {
+  const state = pressed ? 'bg-primary text-white border-white' : 'bg-surface-elevated text-secondary border-transparent hover:text-white';
+  return (
+    <button
+      type="button"
+      aria-pressed={pressed}
+      onClick={onClick}
+      className={`inline-flex items-center gap-1.5 min-h-11 rounded-full border-2 text-sm font-medium transition-colors motion-reduce:transition-none ${FOCUS_RING} ${state} ${className}`}
+    >
+      {pressed && <span aria-hidden="true">✓</span>}
+      {children}
     </button>
   );
 }
@@ -124,6 +152,7 @@ const PILL: Record<string, string> = {
   waiting: 'bg-white/5 text-secondary',
   active: 'bg-green-900/60 text-green-200',
   draft: 'bg-white/10 text-secondary',
+  warning: 'bg-amber-900/60 text-amber-200',
 };
 
 export function Pill({ tone, children }: { tone: keyof typeof PILL | string; children: ReactNode }): ReactNode {

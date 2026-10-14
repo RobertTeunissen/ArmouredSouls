@@ -10,6 +10,7 @@ import { useState, useEffect } from 'react';
 import { fetchRobotTeamBattleLeagueHistory, TeamBattleLeagueHistoryEntry } from '../utils/robotApi';
 import LeagueTimeline from './LeagueTimeline';
 import type { LeagueHistoryEntry } from './LeagueTimeline';
+import { UNRANKED_LABEL } from '../utils/tierHelpers';
 
 interface TeamBattleLeagueHistoryProps {
   robotId: number;
@@ -127,19 +128,63 @@ function TeamLeagueSection({ team }: { team: TeamBattleLeagueHistoryEntry }) {
   }));
 
   return (
+    <TeamStandingSection
+      teamName={team.teamName}
+      leagueLabel={`${team.teamSize}v${team.teamSize} League`}
+      currentTier={team.currentLeague}
+      currentLp={team.currentLp}
+      history={historyEntries}
+    />
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Shared section body                                                */
+/* ------------------------------------------------------------------ */
+
+interface TeamStandingSectionProps {
+  teamName: string;
+  /** Used in the unranked message, e.g. "2v2 League" or "Tag Team League". */
+  leagueLabel: string;
+  /** null when the team has no standing in this league yet (Unranked). */
+  currentTier: string | null;
+  currentLp: number | null;
+  history: LeagueHistoryEntry[];
+  /** Word between the tier and "league" in the empty-history message. */
+  tierSuffix?: string;
+}
+
+function TeamStandingSection({ teamName, leagueLabel, currentTier, currentLp, history, tierSuffix = '' }: TeamStandingSectionProps) {
+  const unrankedMessage = `${teamName} is ${UNRANKED_LABEL} in the ${leagueLabel}. No tier changes recorded yet.`;
+
+  return (
     <div className="mt-4">
       <div className="flex items-center gap-3 mb-3">
-        <span className="text-white font-medium text-sm">{team.teamName}</span>
+        <span className="text-white font-medium text-sm">{teamName}</span>
         <span className="text-xs text-secondary">
-          <span className="font-medium text-white">{team.teamName}</span>
-          {' '}is currently in <span className="capitalize font-medium text-white">{team.currentLeague}</span> league
-          {' • LP: '}<span className="font-medium text-warning">{team.currentLp}</span>
+          {currentTier ? (
+            <>
+              <span className="font-medium text-white">{teamName}</span>
+              {' '}is currently in <span className="capitalize font-medium text-white">{currentTier}</span> league
+              {' • LP: '}<span className="font-medium text-warning">{currentLp ?? '—'}</span>
+            </>
+          ) : (
+            <>
+              <span className="font-medium text-white">{teamName}</span>
+              {' '}is <span className="font-medium text-white">{UNRANKED_LABEL}</span> in the {leagueLabel}
+              {' • LP: '}<span className="font-medium text-warning">—</span>
+            </>
+          )}
         </span>
       </div>
       <LeagueTimeline
-        history={historyEntries}
-        currentTier={team.currentLeague}
-        emptyMessage={`${team.teamName} is currently in ${team.currentLeague} league. No tier changes recorded yet.`}
+        history={history}
+        currentTier={currentTier ?? UNRANKED_LABEL}
+        emptyMessage={
+          currentTier
+            ? `${teamName} is currently in ${currentTier} ${tierSuffix}league. No tier changes recorded yet.`
+            : unrankedMessage
+        }
       />
     </div>
   );
@@ -158,21 +203,14 @@ function TagTeamLeagueSection({ team }: { team: TeamBattleLeagueHistoryEntry }) 
   }));
 
   return (
-    <div className="mt-4">
-      <div className="flex items-center gap-3 mb-3">
-        <span className="text-white font-medium text-sm">{team.teamName}</span>
-        <span className="text-xs text-secondary">
-          <span className="font-medium text-white">{team.teamName}</span>
-          {' '}is currently in <span className="capitalize font-medium text-white">{team.tagTeamCurrentLeague}</span> league
-          {' • LP: '}<span className="font-medium text-warning">{team.tagTeamCurrentLp}</span>
-        </span>
-      </div>
-      <LeagueTimeline
-        history={historyEntries}
-        currentTier={team.tagTeamCurrentLeague}
-        emptyMessage={`${team.teamName} is currently in ${team.tagTeamCurrentLeague} tag team league. No tier changes recorded yet.`}
-      />
-    </div>
+    <TeamStandingSection
+      teamName={team.teamName}
+      leagueLabel="Tag Team League"
+      currentTier={team.tagTeamCurrentLeague}
+      currentLp={team.tagTeamCurrentLp}
+      history={historyEntries}
+      tierSuffix="tag team "
+    />
   );
 }
 

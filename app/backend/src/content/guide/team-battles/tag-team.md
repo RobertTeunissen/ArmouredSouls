@@ -2,7 +2,7 @@
 title: "Tag Team Battles"
 description: "How Tag Team combat works — phased 1v1 battles with tag-in mechanics, Active/Reserve roles, rewards, LP, and how it differs from simultaneous 2v2 League."
 order: 2
-lastUpdated: "2026-08-27"
+lastUpdated: "2026-10-14"
 relatedArticles:
   - team-battles/overview
   - facilities/booking-office
@@ -105,7 +105,7 @@ ELO changes are calculated from the combined team ELO (sum of both members' ELO)
 
 Tag Team has its own 6-tier league, independent from 2v2 League:
 
-- New teams start in **Bronze**
+- A team enters Tag Team's **Bronze** tier the first time both members are subscribed to `tag_team`, independently of its 2v2 League tier
 - Promotion/demotion thresholds are the same as other leagues (top/bottom 10%)
 - Requires 5 cycles in a tier before promotion/demotion applies
 - Your tag team tier has no effect on your 2v2 League tier and vice versa

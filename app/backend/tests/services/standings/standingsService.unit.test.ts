@@ -5,7 +5,7 @@
  * - recordBattleResult (win/loss/draw with LP and streak tracking)
  * - awardKothPoints (KotH F1-style point scale)
  * - awardGrandMeleePoints (Grand Melee F1-style point scale)
- * - getOrCreateStanding (idempotent initialization)
+ * - getOrCreateStanding (safety net placing through standingPlacement.ensureStanding)
  * - getStandings (paginated query)
  * - getEntityStandings (per-entity multi-mode query)
  */
@@ -16,26 +16,39 @@ const mockStandingFindUnique = jest.fn();
 const mockStandingFindMany = jest.fn();
 const mockStandingCreate = jest.fn();
 const mockStandingUpdate = jest.fn();
-const mockStandingUpsert = jest.fn();
 const mockStandingCount = jest.fn();
+const mockTransaction = jest.fn();
+const mockLoggerWarn = jest.fn();
+
+/** The prisma singleton mock; `$transaction` hands it to the callback as `tx`. */
+const mockPrismaClient = {
+  standing: {
+    findUnique: (...args: unknown[]) => mockStandingFindUnique(...args),
+    findMany: (...args: unknown[]) => mockStandingFindMany(...args),
+    create: (...args: unknown[]) => mockStandingCreate(...args),
+    update: (...args: unknown[]) => mockStandingUpdate(...args),
+    count: (...args: unknown[]) => mockStandingCount(...args),
+  },
+  $transaction: (...args: unknown[]) => mockTransaction(...args),
+};
 
 jest.mock('../../../src/lib/prisma', () => ({
   __esModule: true,
-  default: {
-    standing: {
-      findUnique: (...args: unknown[]) => mockStandingFindUnique(...args),
-      findMany: (...args: unknown[]) => mockStandingFindMany(...args),
-      create: (...args: unknown[]) => mockStandingCreate(...args),
-      update: (...args: unknown[]) => mockStandingUpdate(...args),
-      upsert: (...args: unknown[]) => mockStandingUpsert(...args),
-      count: (...args: unknown[]) => mockStandingCount(...args),
-    },
-  },
+  default: mockPrismaClient,
 }));
 
 jest.mock('../../../src/config/logger', () => ({
   __esModule: true,
-  default: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
+  default: { info: jest.fn(), warn: (...args: unknown[]) => mockLoggerWarn(...args), error: jest.fn(), debug: jest.fn() },
+}));
+
+// Placement (instance pick, locks, skipDuplicates) is covered by the
+// standingPlacement suites; here it is a stub returning the row to update.
+const mockEnsureStanding = jest.fn();
+jest.mock('../../../src/services/standings/standingPlacement', () => ({
+  __esModule: true,
+  ...jest.requireActual('../../../src/services/standings/standingPlacement'),
+  ensureStanding: (...args: unknown[]) => mockEnsureStanding(...args),
 }));
 
 import standingsService, { getOrCreateStanding, KOTH_POINT_SCALE } from '../../../src/services/standings/standingsService';
@@ -74,39 +87,76 @@ function makeStanding(overrides: Partial<Record<string, unknown>> = {}) {
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
 
+/** The standing the placement rule returns for the entity (already existing). */
+function givenStanding(standing: ReturnType<typeof makeStanding>): void {
+  mockEnsureStanding.mockResolvedValue({ standing, created: false });
+}
+
 beforeEach(() => {
   jest.clearAllMocks();
+  mockTransaction.mockImplementation((fn: (tx: unknown) => unknown) => fn(mockPrismaClient));
 });
 
 describe('getOrCreateStanding', () => {
-  it('should return existing standing if found', async () => {
+  it('should return the existing standing through the placement rule without warning', async () => {
     const existing = makeStanding();
-    mockStandingFindUnique.mockResolvedValue(existing);
+    givenStanding(existing);
 
     const result = await getOrCreateStanding('robot', 1, 'league_1v1' as any);
 
     expect(result).toBe(existing);
+    expect(mockTransaction).toHaveBeenCalledTimes(1);
+    expect(mockEnsureStanding).toHaveBeenCalledWith(mockPrismaClient, 'robot', 1, 'league_1v1');
     expect(mockStandingCreate).not.toHaveBeenCalled();
+    expect(mockLoggerWarn).not.toHaveBeenCalled();
   });
 
-  it('should create and return a new standing if not found', async () => {
-    mockStandingFindUnique.mockResolvedValue(null);
-    const created = makeStanding({ leaguePoints: 0, wins: 0, losses: 0, draws: 0 });
-    mockStandingCreate.mockResolvedValue(created);
+  it('should place a missing standing through the placement rule and warn', async () => {
+    const created = makeStanding({ entityId: 42, mode: 'koth', leagueInstanceId: 'bronze_3', leaguePoints: 0 });
+    mockEnsureStanding.mockResolvedValue({ standing: created, created: true });
 
     const result = await getOrCreateStanding('robot', 42, 'koth' as any);
 
     expect(result).toEqual(created);
+    expect(mockEnsureStanding).toHaveBeenCalledWith(mockPrismaClient, 'robot', 42, 'koth');
+    // No hard-coded instance: the row comes from the placement rule only.
+    expect(mockStandingCreate).not.toHaveBeenCalled();
+    expect(mockLoggerWarn).toHaveBeenCalledWith('[Standings] Safety net created a missing standing', {
+      entityType: 'robot',
+      entityId: 42,
+      mode: 'koth',
+      leagueInstanceId: 'bronze_3',
+    });
+  });
+
+  it('should run inside the caller transaction when one is given', async () => {
+    const tx = { standing: {} };
+    const existing = makeStanding({ entityType: 'team', entityId: 7, mode: 'tag_team' });
+    givenStanding(existing);
+
+    await getOrCreateStanding('team', 7, 'tag_team' as any, tx as any);
+
+    expect(mockTransaction).not.toHaveBeenCalled();
+    expect(mockEnsureStanding).toHaveBeenCalledWith(tx, 'team', 7, 'tag_team');
+  });
+
+  it('should find-or-create a tournament standing (no league instances) and warn on create', async () => {
+    mockStandingFindUnique.mockResolvedValue(null);
+    const created = makeStanding({ mode: 'tournament_1v1', leaguePoints: 0 });
+    mockStandingCreate.mockResolvedValue(created);
+
+    const result = await getOrCreateStanding('robot', 1, 'tournament_1v1' as any);
+
+    expect(result).toBe(created);
+    expect(mockEnsureStanding).not.toHaveBeenCalled();
     expect(mockStandingCreate).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({
-          entityType: 'robot',
-          entityId: 42,
-          mode: 'koth',
-          tier: 'bronze',
-          leaguePoints: 0,
-        }),
+        data: expect.objectContaining({ entityType: 'robot', entityId: 1, mode: 'tournament_1v1', leaguePoints: 0 }),
       }),
+    );
+    expect(mockLoggerWarn).toHaveBeenCalledWith(
+      '[Standings] Safety net created a missing standing',
+      expect.objectContaining({ entityType: 'robot', entityId: 1, mode: 'tournament_1v1' }),
     );
   });
 });
@@ -114,9 +164,9 @@ describe('getOrCreateStanding', () => {
 describe('recordBattleResult', () => {
   it('should increment wins and win streak on win', async () => {
     const current = makeStanding({ leaguePoints: 50, wins: 5, currentWinStreak: 2, bestWinStreak: 4, currentLoseStreak: 0 });
-    mockStandingFindUnique.mockResolvedValue(current);
+    givenStanding(current);
     const updated = makeStanding({ leaguePoints: 60, wins: 6, currentWinStreak: 3, bestWinStreak: 4, currentLoseStreak: 0 });
-    mockStandingUpsert.mockResolvedValue(updated);
+    mockStandingUpdate.mockResolvedValue(updated);
 
     const result = await standingsService.recordBattleResult({
       entityType: 'robot',
@@ -127,9 +177,9 @@ describe('recordBattleResult', () => {
     });
 
     expect(result.leaguePoints).toBe(60);
-    expect(mockStandingUpsert).toHaveBeenCalledWith(
+    expect(mockStandingUpdate).toHaveBeenCalledWith(
       expect.objectContaining({
-        update: expect.objectContaining({
+        data: expect.objectContaining({
           wins: 6,
           currentWinStreak: 3,
           bestWinStreak: 4,
@@ -142,8 +192,8 @@ describe('recordBattleResult', () => {
 
   it('should update bestWinStreak when new streak exceeds it', async () => {
     const current = makeStanding({ currentWinStreak: 4, bestWinStreak: 4 });
-    mockStandingFindUnique.mockResolvedValue(current);
-    mockStandingUpsert.mockResolvedValue(makeStanding({ currentWinStreak: 5, bestWinStreak: 5 }));
+    givenStanding(current);
+    mockStandingUpdate.mockResolvedValue(makeStanding({ currentWinStreak: 5, bestWinStreak: 5 }));
 
     await standingsService.recordBattleResult({
       entityType: 'robot',
@@ -153,9 +203,9 @@ describe('recordBattleResult', () => {
       lpDelta: 10,
     });
 
-    expect(mockStandingUpsert).toHaveBeenCalledWith(
+    expect(mockStandingUpdate).toHaveBeenCalledWith(
       expect.objectContaining({
-        update: expect.objectContaining({
+        data: expect.objectContaining({
           currentWinStreak: 5,
           bestWinStreak: 5,
         }),
@@ -165,8 +215,8 @@ describe('recordBattleResult', () => {
 
   it('should increment losses and lose streak on loss, reset win streak', async () => {
     const current = makeStanding({ losses: 3, currentLoseStreak: 0, currentWinStreak: 2, leaguePoints: 50 });
-    mockStandingFindUnique.mockResolvedValue(current);
-    mockStandingUpsert.mockResolvedValue(makeStanding({ losses: 4, currentLoseStreak: 1, currentWinStreak: 0, leaguePoints: 42 }));
+    givenStanding(current);
+    mockStandingUpdate.mockResolvedValue(makeStanding({ losses: 4, currentLoseStreak: 1, currentWinStreak: 0, leaguePoints: 42 }));
 
     await standingsService.recordBattleResult({
       entityType: 'robot',
@@ -176,9 +226,9 @@ describe('recordBattleResult', () => {
       lpDelta: -8,
     });
 
-    expect(mockStandingUpsert).toHaveBeenCalledWith(
+    expect(mockStandingUpdate).toHaveBeenCalledWith(
       expect.objectContaining({
-        update: expect.objectContaining({
+        data: expect.objectContaining({
           losses: 4,
           currentLoseStreak: 1,
           currentWinStreak: 0,
@@ -190,8 +240,8 @@ describe('recordBattleResult', () => {
 
   it('should enforce LP floor at 0 on large negative delta', async () => {
     const current = makeStanding({ leaguePoints: 5 });
-    mockStandingFindUnique.mockResolvedValue(current);
-    mockStandingUpsert.mockResolvedValue(makeStanding({ leaguePoints: 0 }));
+    givenStanding(current);
+    mockStandingUpdate.mockResolvedValue(makeStanding({ leaguePoints: 0 }));
 
     await standingsService.recordBattleResult({
       entityType: 'robot',
@@ -201,9 +251,9 @@ describe('recordBattleResult', () => {
       lpDelta: -20,
     });
 
-    expect(mockStandingUpsert).toHaveBeenCalledWith(
+    expect(mockStandingUpdate).toHaveBeenCalledWith(
       expect.objectContaining({
-        update: expect.objectContaining({
+        data: expect.objectContaining({
           leaguePoints: 0, // floor at 0, not -15
         }),
       }),
@@ -212,8 +262,8 @@ describe('recordBattleResult', () => {
 
   it('should reset both streaks on draw', async () => {
     const current = makeStanding({ currentWinStreak: 3, currentLoseStreak: 0, draws: 1, leaguePoints: 50 });
-    mockStandingFindUnique.mockResolvedValue(current);
-    mockStandingUpsert.mockResolvedValue(makeStanding({ currentWinStreak: 0, currentLoseStreak: 0, draws: 2 }));
+    givenStanding(current);
+    mockStandingUpdate.mockResolvedValue(makeStanding({ currentWinStreak: 0, currentLoseStreak: 0, draws: 2 }));
 
     await standingsService.recordBattleResult({
       entityType: 'robot',
@@ -223,9 +273,9 @@ describe('recordBattleResult', () => {
       lpDelta: 2,
     });
 
-    expect(mockStandingUpsert).toHaveBeenCalledWith(
+    expect(mockStandingUpdate).toHaveBeenCalledWith(
       expect.objectContaining({
-        update: expect.objectContaining({
+        data: expect.objectContaining({
           draws: 2,
           currentWinStreak: 0,
           currentLoseStreak: 0,
@@ -237,8 +287,8 @@ describe('recordBattleResult', () => {
 
   it('should work for team entities', async () => {
     const current = makeStanding({ entityType: 'team', entityId: 7, mode: 'league_2v2' });
-    mockStandingFindUnique.mockResolvedValue(current);
-    mockStandingUpsert.mockResolvedValue(current);
+    givenStanding(current);
+    mockStandingUpdate.mockResolvedValue(current);
 
     await standingsService.recordBattleResult({
       entityType: 'team',
@@ -248,18 +298,19 @@ describe('recordBattleResult', () => {
       lpDelta: 15,
     });
 
-    expect(mockStandingFindUnique).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: { entityType_entityId_mode: { entityType: 'team', entityId: 7, mode: 'league_2v2' } },
-      }),
+    expect(mockEnsureStanding).toHaveBeenCalledWith(mockPrismaClient, 'team', 7, 'league_2v2');
+    // The row is updated by id; nothing is upserted or created here.
+    expect(mockStandingUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: current.id } }),
     );
+    expect(mockStandingCreate).not.toHaveBeenCalled();
   });
 });
 
 describe('awardKothPoints', () => {
   it('should award points from F1 scale for 1st place', async () => {
     const current = makeStanding({ mode: 'koth', leaguePoints: 20, totalMatches: 5, totalZoneScore: 100, totalZoneTime: 60, bestPlacement: 2, currentWinStreak: 0, wins: 1, bestWinStreak: 1 });
-    mockStandingFindUnique.mockResolvedValue(current);
+    givenStanding(current);
     mockStandingUpdate.mockResolvedValue({ ...current, leaguePoints: 30 });
 
     await standingsService.awardKothPoints({
@@ -287,7 +338,7 @@ describe('awardKothPoints', () => {
 
   it('should award 0 points for 6th place', async () => {
     const current = makeStanding({ mode: 'koth', leaguePoints: 20, totalMatches: 5, totalZoneScore: 0, totalZoneTime: 0, bestPlacement: 3 });
-    mockStandingFindUnique.mockResolvedValue(current);
+    givenStanding(current);
     mockStandingUpdate.mockResolvedValue(current);
 
     await standingsService.awardKothPoints({
@@ -310,7 +361,7 @@ describe('awardKothPoints', () => {
 
   it('should update bestPlacement when new placement is better', async () => {
     const current = makeStanding({ mode: 'koth', bestPlacement: 3, totalMatches: 10, totalZoneScore: 200, totalZoneTime: 100, leaguePoints: 50 });
-    mockStandingFindUnique.mockResolvedValue(current);
+    givenStanding(current);
     mockStandingUpdate.mockResolvedValue({ ...current, bestPlacement: 1 });
 
     await standingsService.awardKothPoints({
@@ -338,7 +389,7 @@ describe('awardKothPoints', () => {
 describe('awardGrandMeleePoints', () => {
   it('should award 25 LP for 1st place', async () => {
     const current = makeStanding({ mode: 'grand_melee', leaguePoints: 100, totalMatches: 3, totalZoneScore: 1000, totalZoneTime: 300, bestPlacement: 2, wins: 1, currentWinStreak: 0, bestWinStreak: 1, currentLoseStreak: 0 });
-    mockStandingFindUnique.mockResolvedValue(current);
+    givenStanding(current);
     mockStandingUpdate.mockResolvedValue({ ...current, leaguePoints: 125 });
 
     await standingsService.awardGrandMeleePoints({
@@ -366,7 +417,7 @@ describe('awardGrandMeleePoints', () => {
 
   it('should award 0 LP for 11th+ place', async () => {
     const current = makeStanding({ mode: 'grand_melee', leaguePoints: 50, totalMatches: 1, totalZoneScore: 100, totalZoneTime: 60, bestPlacement: 15, currentWinStreak: 1 });
-    mockStandingFindUnique.mockResolvedValue(current);
+    givenStanding(current);
     mockStandingUpdate.mockResolvedValue(current);
 
     await standingsService.awardGrandMeleePoints({
@@ -409,7 +460,7 @@ describe('awardGrandMeleePoints', () => {
         totalZoneTime: 0,
         bestPlacement: 99,
       });
-      mockStandingFindUnique.mockResolvedValue(current);
+      givenStanding(current);
       mockStandingUpdate.mockResolvedValue(current);
       mockStandingUpdate.mockClear();
 

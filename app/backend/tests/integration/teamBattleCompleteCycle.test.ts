@@ -23,10 +23,7 @@ import { MatchType } from '../../generated/prisma';
 import { registerTeam } from '../../src/services/team-battle/teamBattleService';
 import { runTeamBattleMatchmaking } from '../../src/services/team-battle/teamBattleMatchmakingService';
 import { executeScheduledTeamBattles } from '../../src/services/team-battle/teamBattleOrchestrator';
-import {
-  createInitialTeamStandings,
-  rebalanceTeamBattleLeagues,
-} from '../../src/services/team-battle/teamBattleAdapter';
+import { rebalanceTeamBattleLeagues } from '../../src/services/team-battle/teamBattleAdapter';
 import { battlesForRobots, scheduledMatchesForTeams } from '../cleanupHelper';
 import { useFinancialCaptureTestEnvironment } from '../financialCaptureTestHelper';
 
@@ -118,6 +115,22 @@ describe('Team Battle Complete Cycle Integration Test', () => {
   });
 
   /**
+   * Registration places the team in exactly the team modes all its members are
+   * subscribed to (Bronze, 0 LP) — matchmaking scopes on these rows, so without
+   * them the team would be invisible to it.
+   */
+  async function expectRegisteredTeamStandings(teamId: number, modes: string[]): Promise<void> {
+    const rows = await prisma.standing.findMany({
+      where: { entityType: 'team', entityId: teamId },
+      select: { mode: true, tier: true, leaguePoints: true },
+    });
+    expect(rows.map((r) => r.mode).sort()).toEqual([...modes].sort());
+    for (const row of rows) {
+      expect(row).toMatchObject({ tier: 'bronze', leaguePoints: 0 });
+    }
+  }
+
+  /**
    * Helper: Create a test user (stable) with N robots, all subscribed to the given event.
    */
   async function createStableWithRobots(
@@ -205,9 +218,9 @@ describe('Team Battle Complete Cycle Integration Test', () => {
       );
       teams.push(team);
       testTeamIds.push(team.id);
-      // Matchmaking finds candidates through standings, not through TeamBattle
-      // rows, so a team without a standing is invisible to it.
-      await createInitialTeamStandings(team.id, 2);
+      // The robots are subscribed to league_2v2 only, so registration places
+      // the team in league_2v2 and not in tag_team.
+      await expectRegisteredTeamStandings(team.id, ['league_2v2']);
     }
 
     expect(teams.length).toBe(4);
@@ -399,7 +412,7 @@ describe('Team Battle Complete Cycle Integration Test', () => {
       );
       teams.push(team);
       testTeamIds.push(team.id);
-      await createInitialTeamStandings(team.id, 3);
+      await expectRegisteredTeamStandings(team.id, ['league_3v3']);
     }
 
     expect(teams.length).toBe(4);
@@ -577,7 +590,7 @@ describe('Team Battle Complete Cycle Integration Test', () => {
       );
       teams2v2.push(team);
       testTeamIds.push(team.id);
-      await createInitialTeamStandings(team.id, 2);
+      await expectRegisteredTeamStandings(team.id, ['league_2v2']);
     }
 
     // Register 3v3 teams (all 3 robots from each stable)
@@ -593,7 +606,7 @@ describe('Team Battle Complete Cycle Integration Test', () => {
       );
       teams3v3.push(team);
       testTeamIds.push(team.id);
-      await createInitialTeamStandings(team.id, 3);
+      await expectRegisteredTeamStandings(team.id, ['league_3v3']);
     }
 
     // ─── Execute 2v2 cycle (simulating 09:00 UTC slot) ───────────────────────

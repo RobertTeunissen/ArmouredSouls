@@ -1,0 +1,21 @@
+{
+  // Typecheck for Node scripts run with native type stripping
+  // (`node scripts/<name>.ts`). Erasable syntax only: no enums, namespaces
+  // or parameter properties.
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "strict": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "types": ["node"],
+    "skipLibCheck": true
+  },
+  "include": ["scripts"]
+}

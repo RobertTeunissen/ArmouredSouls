@@ -15,6 +15,7 @@ This file contains only cross-domain mechanics that must be visible while changi
 - The shared “does this robot owe a match?” question lives in `services/scheduling/eventScheduleScope`, including pre-battle repair scope. Do not reintroduce per-event locking predicates or `EVENT_SUBSCRIPTION_LOCKED`.
 - All writes use `applySubscriptionChange`; single and bulk subscription endpoints must behave identically. Scheduling changes apply at the next event moment exposed by `nextSchedulingMoments`.
 - Subscription state is active-only; old pending/activation behavior is not a valid state model.
+- Standings rows are created on the first matchable subscription (robot subscribed; team complete with every member subscribed) via `ensureStanding`/`ensureTeamStandings` in `services/standings/standingPlacement`, never at robot/team creation. Rows survive unsubscribe and swaps; disband and account reset delete them. See `docs/implementation_notes/STANDINGS_CREATION_RULE.md`.
 
 ## Cycle and team modes
 - All registered battle events run daily; subscriptions gate participation. See `docs/game-systems/PRD_CYCLE_SYSTEM.md` and `PRD_SERVICE_DIRECTORY.md` for cadence.

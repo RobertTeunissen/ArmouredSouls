@@ -1,15 +1,24 @@
 /**
- * Turn runner (Spec #55, R2.7, R5.11, R6.6, R7.5–R7.10, R11.7, R11.8,
- * design §5.2, §11.1, §11.2, task 6.2).
+ * Turn runner (Spec #55, R2.7, R5.11, R6.6, R7.5–R7.9, R11.7, R11.8,
+ * design §5.2, §11.1, §11.2, task 6.2; R7.10's fixed 300 s Turn_Step budget
+ * is superseded by docs/implementation_notes/AUTOMATON_TURN_STEP_DEADLINE.md,
+ * section "Design").
  *
  * `runTurnStep` runs one Automaton_Turn for every Active_Automaton of one
  * Turn_Trigger and Turn_Slot:
- * - never while a Serialized_Cycle_Cutover is in progress (R7.5);
- * - under the Turn_Step lease (`withTurnStepLease`), so a scheduler step and
- *   an admin bulk cycle run one after the other, across processes;
- * - over a cohort fixed at the start, in ascending `User.id` order (R7.9);
- * - within the 300 s Turn_Step budget; later profiles are recorded
- *   `skipped` / `step_budget_exhausted` and an alert is raised (R7.10);
+ * - never while a Serialized_Cycle_Cutover is in progress (R7.5): checked at
+ *   the start and again before each stable; a cutover seen mid-step records
+ *   the remaining stables `skipped` / `cutover_in_progress` and alerts;
+ * - under the Turn_Step lease (`withTurnStepLease`, a 120 s heartbeat lease
+ *   renewed every 30 s), so a scheduler step and an admin bulk cycle run one
+ *   after the other, across processes; a lost lease starts no further stables;
+ * - over a cohort fixed at the start; turns START in ascending `User.id`
+ *   order (R7.9), at most `effectiveTurnConcurrency` at once
+ *   (AUTOMATON_TURN_CONCURRENCY clamped to the pg pool);
+ * - until the Turn_Step deadline (`resolveTurnStepDeadline`: the next
+ *   scheduled job minus a margin, capped, never under 300 s); stables not
+ *   started by then are recorded `skipped` / `step_budget_exhausted` and one
+ *   "Turn_Step deadline reached" alert is raised;
  * - one Turn_Record per profile and key (`claimTurnRecord`, R7.6);
  * - Program_Switch off: every due turn `skipped` / `program_off`, nothing
  *   upkept or bought (R2.7);
@@ -33,14 +42,26 @@ import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { AppError } from '../../errors/AppError';
 import { AutomatonError, AutomatonErrorCode } from '../../errors/automatonErrors';
+import { getConfig } from '../../config/env';
+import { resolveDbPoolMax } from '../../lib/dbPoolConfig';
 import { resolveCanonicalCycleIdentity } from '../cycle/canonicalCycleIdentity';
+import { nextScheduledJobRunAt } from '../cycle/schedulerWindow';
 import { SUBSCRIBABLE_EVENT_TYPES } from '../subscription/eventRegistry';
 import type { AutomatonTurnTrigger, Prisma } from '../../../generated/prisma';
 import type { EventOrder, StrategyParametersV1, TeamNames } from '../../types/automaton';
 import { createExecutionCursor, executeAction, type ExecutionContext } from './actionExecutor';
 import { chargedStepCount } from './factProjector';
 import { planNextStep, type PlanResult } from './turnPlanner';
-import { checkTurnBudget, isStepBudgetExhausted, STEP_BUDGET_EXHAUSTED, TURN_BUDGET_EXHAUSTED, TURN_STEP_BUDGET_MS } from './turnBudget';
+import {
+  checkTurnBudget,
+  effectiveTurnConcurrency,
+  isStepDeadlineReached,
+  resolveTurnStepDeadline,
+  STEP_BUDGET_EXHAUSTED,
+  TURN_BUDGET_EXHAUSTED,
+  type TurnStepDeadline,
+} from './turnBudget';
+import { runWithConcurrency } from './turnStepPool';
 import { loadBlueprintFacts, loadStableFacts, loadWeaponCatalogue, type StableFacts, type WeaponFacts } from './stableFacts';
 import { runFreeUpkeep, type FreeUpkeepIssue } from './upkeep/freeUpkeep';
 import { resumeIncompleteFitouts } from './fitoutRecovery';
@@ -63,6 +84,7 @@ import {
 } from './automatonObservability';
 import {
   claimTurnRecord,
+  CUTOVER_IN_PROGRESS,
   finishTurnRecord,
   INVALID_PARAMETERS,
   markTurnFailed,
@@ -75,22 +97,38 @@ import {
   toGoalOutcomeRecords,
   toUpkeepIssueRecords,
   type ClaimedTurnRecord,
+  type TurnRecordClaimInput,
 } from './turnRecords';
 
 export {
   TURN_ACTION_LIMIT,
   TURN_TIME_BUDGET_MS,
-  TURN_STEP_BUDGET_MS,
+  TURN_STEP_MIN_BUDGET_MS,
   TURN_BUDGET_EXHAUSTED,
   STEP_BUDGET_EXHAUSTED,
 } from './turnBudget';
-export { claimTurnRecord, PROGRAM_OFF, INVALID_PARAMETERS } from './turnRecords';
+export { claimTurnRecord, CUTOVER_IN_PROGRESS, PROGRAM_OFF, INVALID_PARAMETERS } from './turnRecords';
 export type { TurnStepSummary } from './automatonObservability';
 
-/** Extra lease time beyond the Turn_Step budget, so a slow last turn keeps the lease (design §11.1). */
-export const TURN_STEP_LEASE_MARGIN_MS = 60_000;
+/** Error code of the alert raised when a running Turn_Step lost its lease (AUTOMATON_TURN_STEP_DEADLINE.md, "Heartbeat lease"). */
+export const TURN_STEP_LEASE_LOST = 'TURN_STEP_LEASE_LOST';
+
+/**
+ * Lifetime of one Turn_Step lease claim or renewal: a crashed holder blocks
+ * other callers for at most this long (docs/implementation_notes/
+ * AUTOMATON_TURN_STEP_DEADLINE.md, "Heartbeat lease").
+ */
+export const TURN_STEP_LEASE_TTL_MS = 120_000;
+/** How often the holder renews its lease while the step runs ("Heartbeat lease"). */
+export const TURN_STEP_LEASE_RENEW_MS = 30_000;
 /** How often a waiting caller retries the lease (design §11.1). */
 export const TURN_STEP_LEASE_POLL_MS = 1_000;
+
+/** What the step sees of its lease while it runs. */
+export interface TurnStepLease {
+  /** True once a renewal found the lease taken over; start no further turns. */
+  readonly lost: boolean;
+}
 
 export type TurnStepSource = TurnStepSummary['source'];
 
@@ -106,6 +144,23 @@ export interface TurnStepDependencies {
   now?: () => number;
   /** Lease poll interval; TURN_STEP_LEASE_POLL_MS by default. */
   leasePollMs?: number;
+  /** Lease lifetime per claim or renewal; TURN_STEP_LEASE_TTL_MS by default. */
+  leaseTtlMs?: number;
+  /** Lease renewal interval; TURN_STEP_LEASE_RENEW_MS by default. */
+  leaseRenewMs?: number;
+  /** Requested parallel turns; AUTOMATON_TURN_CONCURRENCY by default (always clamped to the pool). */
+  concurrency?: number;
+  /** pg pool size the concurrency is clamped to; DB_POOL_MAX (`resolveDbPoolMax`) by default. */
+  poolMax?: number;
+  /** Deadline cap from the step start (ms); AUTOMATON_TURN_STEP_MAX_MS by default. */
+  maxMs?: number;
+  /** Stop this long before the next scheduled job (ms); AUTOMATON_TURN_STEP_SCHEDULE_MARGIN_MS by default. */
+  scheduleMarginMs?: number;
+  /**
+   * Epoch ms of the next scheduled cycle-scheduler job after `nowMs`, or
+   * null when none is known; `nextScheduledJobRunAt(getConfig(), nowMs)` by default.
+   */
+  nextScheduledJobAt?: (nowMs: number) => number | null;
   /**
    * Tests on a shared database: which Active_Automatons of the cohort take
    * part (default: all), so a test never runs turns for stables it did not
@@ -155,34 +210,92 @@ function sleep(ms: number): Promise<void> {
 
 /**
  * Run `fn` while holding the Turn_Step lease (`automaton_program_settings.
- * turnStepLeaseUntil`, design §11.1). One conditional update claims it when
- * it is empty or expired (a crashed holder's lease is taken over); otherwise
- * the caller polls. The lease is cleared in `finally`, only if still ours.
- * Raw parameterised SQL keeps the switch's `updatedAt` for switch changes.
+ * turnStepLeaseUntil`, design §11.1, heartbeat per AUTOMATON_TURN_STEP_DEADLINE.md).
+ *
+ * One conditional update claims it for TURN_STEP_LEASE_TTL_MS when it is
+ * empty or expired (a crashed holder's lease is taken over); otherwise the
+ * caller polls. While `fn` runs, the holder renews it every
+ * TURN_STEP_LEASE_RENEW_MS with an update that matches only its own value.
+ * A renewal that matches no row means another caller took the lease over:
+ * `lease.lost` turns true and renewing stops. A renewal that throws is logged
+ * and retried at the next tick. The lease is cleared in `finally`, only if
+ * still ours. Raw parameterised SQL keeps the switch's `updatedAt` for switch
+ * changes.
  */
-export async function withTurnStepLease<T>(fn: () => Promise<T>, deps: TurnStepDependencies = {}): Promise<T> {
+export async function withTurnStepLease<T>(fn: (lease: TurnStepLease) => Promise<T>, deps: TurnStepDependencies = {}): Promise<T> {
   const now = deps.now ?? Date.now;
   const pollMs = deps.leasePollMs ?? TURN_STEP_LEASE_POLL_MS;
+  const ttlMs = deps.leaseTtlMs ?? TURN_STEP_LEASE_TTL_MS;
   await ensureProgramSettings();
   for (;;) {
     const current = new Date(now());
-    const until = new Date(current.getTime() + TURN_STEP_BUDGET_MS + TURN_STEP_LEASE_MARGIN_MS);
+    const until = new Date(current.getTime() + ttlMs);
     const claimed = await prisma.$executeRaw`
       UPDATE "automaton_program_settings"
       SET "turn_step_lease_until" = ${until}
       WHERE "id" = ${PROGRAM_SETTINGS_ID}
         AND ("turn_step_lease_until" IS NULL OR "turn_step_lease_until" < ${current})`;
-    if (claimed === 1) {
-      try {
-        return await fn();
-      } finally {
-        await prisma.$executeRaw`
-          UPDATE "automaton_program_settings"
-          SET "turn_step_lease_until" = NULL
-          WHERE "id" = ${PROGRAM_SETTINGS_ID} AND "turn_step_lease_until" = ${until}`;
-      }
-    }
+    if (claimed === 1) return holdTurnStepLease(fn, until, deps);
     await sleep(pollMs);
+  }
+}
+
+/** Run `fn` under a claimed lease (value `claimedUntil`), renewing it until `fn` settles. */
+async function holdTurnStepLease<T>(
+  fn: (lease: TurnStepLease) => Promise<T>,
+  claimedUntil: Date,
+  deps: TurnStepDependencies,
+): Promise<T> {
+  const now = deps.now ?? Date.now;
+  const ttlMs = deps.leaseTtlMs ?? TURN_STEP_LEASE_TTL_MS;
+  const renewMs = deps.leaseRenewMs ?? TURN_STEP_LEASE_RENEW_MS;
+  const state: { current: Date; lost: boolean; renewal: Promise<void> | null } = { current: claimedUntil, lost: false, renewal: null };
+  const lease: TurnStepLease = {
+    get lost(): boolean {
+      return state.lost;
+    },
+  };
+
+  const renew = async (): Promise<void> => {
+    const next = new Date(now() + ttlMs);
+    try {
+      const renewed = await prisma.$executeRaw`
+        UPDATE "automaton_program_settings"
+        SET "turn_step_lease_until" = ${next}
+        WHERE "id" = ${PROGRAM_SETTINGS_ID} AND "turn_step_lease_until" = ${state.current}`;
+      if (renewed === 1) {
+        state.current = next;
+        return;
+      }
+      state.lost = true;
+      clearInterval(timer);
+      logger.error('[automaton-turns] Turn_Step lease lost: another caller took it over; no further turns start');
+    } catch (error) {
+      // Not lost: the lease is still ours until it expires; retry at the next tick.
+      logger.error(`[automaton-turns] Turn_Step lease renewal failed, retrying — ${errorMessageOf(error)}`);
+    }
+  };
+
+  const timer = setInterval(() => {
+    // Never overlap renewals: each one compares against the value the previous one wrote.
+    if (state.lost || state.renewal !== null) return;
+    state.renewal = renew().finally(() => {
+      state.renewal = null;
+    });
+  }, renewMs);
+  timer.unref();
+
+  try {
+    return await fn(lease);
+  } finally {
+    clearInterval(timer);
+    if (state.renewal !== null) await state.renewal;
+    if (!state.lost) {
+      await prisma.$executeRaw`
+        UPDATE "automaton_program_settings"
+        SET "turn_step_lease_until" = NULL
+        WHERE "id" = ${PROGRAM_SETTINGS_ID} AND "turn_step_lease_until" = ${state.current}`;
+    }
   }
 }
 
@@ -479,74 +592,156 @@ function addSkipped(summary: TurnStepSummary, reason: string): void {
   summary.skipped[reason] = (summary.skipped[reason] ?? 0) + 1;
 }
 
-/** One Turn_Step (design §11.1). Throws on a cutover in progress or an infrastructure failure. */
+/** Shared, mutable state of one running Turn_Step (counters change synchronously between awaits). */
+interface TurnStepRun {
+  turn: TurnLabel;
+  summary: TurnStepSummary;
+  deadline: TurnStepDeadline;
+  lease: TurnStepLease;
+  env: TurnEnvironment | null;
+  now: () => number;
+  /**
+   * A cutover was seen mid-step; it sticks. Kept apart from `lease.lost` so a
+   * later lease loss cannot hide the cutover alert.
+   */
+  cutoverSeen: boolean;
+  /** Profiles left unclaimed after the lease was lost. */
+  notStarted: number;
+}
+
+/** Claim the record of a profile that will not run and record it `skipped` (unless already final). */
+async function skipProfile(run: TurnStepRun, claimInput: TurnRecordClaimInput, reason: string): Promise<void> {
+  const record = await claimTurnRecord(claimInput);
+  if (record.alreadyFinal) {
+    run.summary.alreadyFinal++;
+    return;
+  }
+  await markTurnSkipped(record.id, reason);
+  addSkipped(run.summary, reason);
+}
+
+/**
+ * One profile of the Turn_Step, in this order: lease lost (leave it
+ * unclaimed: another holder may be running the key) → cutover started
+ * mid-step (`cutover_in_progress`, R7.5) → deadline reached
+ * (`step_budget_exhausted`) → the turn itself.
+ */
+async function runCohortProfile(run: TurnStepRun, profile: CohortProfile): Promise<void> {
+  const { summary, turn } = run;
+  if (run.lease.lost) {
+    run.notStarted++;
+    return;
+  }
+  const claimInput: TurnRecordClaimInput = {
+    profileId: profile.profileId,
+    seasonNumber: turn.seasonNumber,
+    trigger: turn.trigger,
+    slot: turn.slot,
+    strategyKey: profile.strategyKey,
+    strategyVersion: profile.strategyVersion,
+    startBalance: profile.balance,
+  };
+  // An admin bulk cycle can start a cutover while a scheduler step runs; once seen, it sticks.
+  if (!run.cutoverSeen && (await resolveCanonicalCycleIdentity()).isClosing) run.cutoverSeen = true;
+  if (run.cutoverSeen) {
+    await skipProfile(run, claimInput, CUTOVER_IN_PROGRESS);
+    return;
+  }
+  if (isStepDeadlineReached(run.deadline, run.now())) {
+    summary.budgetExhausted = true;
+    await skipProfile(run, claimInput, STEP_BUDGET_EXHAUSTED);
+    return;
+  }
+  const record = await claimTurnRecord(claimInput);
+  if (record.alreadyFinal) {
+    summary.alreadyFinal++;
+    return;
+  }
+  if (!run.env) {
+    await markTurnSkipped(record.id, PROGRAM_OFF);
+    addSkipped(summary, PROGRAM_OFF);
+    return;
+  }
+  try {
+    addResult(summary, await runAutomatonTurn(profile, record, turn, run.env));
+  } catch (error) {
+    // The turn could not even record its own outcome.
+    const code = errorCodeOf(error);
+    logger.error(`[automaton-turns] ${profile.catalogueKey}: turn record write failed — ${errorMessageOf(error)}`);
+    try {
+      await markTurnFailed(record.id, code);
+    } catch (markError) {
+      logger.error(`[automaton-turns] ${profile.catalogueKey}: could not mark the turn failed — ${errorMessageOf(markError)}`);
+    }
+    await alertTurnFailed(profile.catalogueKey, turn, code, errorMessageOf(error));
+    summary.failed++;
+  }
+}
+
+/**
+ * One Turn_Step (design §11.1, AUTOMATON_TURN_STEP_DEADLINE.md "Design"). Throws on a cutover
+ * in progress at the start or an infrastructure failure (after in-flight
+ * turns settle); a cutover that starts mid-step only stops new turns.
+ */
 export async function runTurnStep(input: TurnStepInput, deps: TurnStepDependencies = {}): Promise<TurnStepSummary> {
   const now = deps.now ?? Date.now;
   const turn: TurnLabel = { trigger: input.trigger, seasonNumber: input.seasonNumber, slot: input.slot };
   await assertNoCutoverInProgress();
-  return withTurnStepLease(async () => {
+  return withTurnStepLease(async (lease) => {
     // A cutover may have started while this caller waited for the lease.
     const phase = await assertNoCutoverInProgress();
     const started = now();
-    const summary = emptyTurnStepSummary(turn, input.source);
+    const config = getConfig();
+    const concurrency = effectiveTurnConcurrency(
+      deps.concurrency ?? config.automatonTurnConcurrency,
+      deps.poolMax ?? resolveDbPoolMax(),
+    );
+    const nextScheduledJobAt = deps.nextScheduledJobAt ?? ((ms: number): number | null => nextScheduledJobRunAt(config, ms));
+    const deadline = resolveTurnStepDeadline({
+      stepStartedAtMs: started,
+      maxMs: deps.maxMs ?? config.automatonTurnStepMaxMs,
+      scheduleMarginMs: deps.scheduleMarginMs ?? config.automatonTurnStepScheduleMarginMs,
+      nextScheduledJobAtMs: nextScheduledJobAt(started),
+    });
+    const summary = emptyTurnStepSummary(turn, input.source, {
+      concurrency,
+      budgetMs: deadline.budgetMs,
+      deadlineSource: deadline.source,
+    });
     const enabled = await isProgramEnabled();
     const cohort = (await listActiveProfilesOrderedByUserId()).filter(deps.cohortFilter ?? ((): boolean => true));
     summary.processed = cohort.length;
     const env: TurnEnvironment | null = enabled && cohort.length > 0
       ? { registry: deps.registry ?? getStrategyRegistry(), weapons: await loadWeaponCatalogue(), phase, now }
       : null;
+    const run: TurnStepRun = { turn, summary, deadline, lease, env, now, cutoverSeen: false, notStarted: 0 };
 
-    for (const profile of cohort) {
-      const claimInput = {
-        profileId: profile.profileId,
-        seasonNumber: turn.seasonNumber,
-        trigger: turn.trigger,
-        slot: turn.slot,
-        strategyKey: profile.strategyKey,
-        strategyVersion: profile.strategyVersion,
-        startBalance: profile.balance,
-      };
-      if (isStepBudgetExhausted(started, now())) {
-        summary.budgetExhausted = true;
-        const record = await claimTurnRecord(claimInput);
-        if (record.alreadyFinal) {
-          summary.alreadyFinal++;
-          continue;
-        }
-        await markTurnSkipped(record.id, STEP_BUDGET_EXHAUSTED);
-        addSkipped(summary, STEP_BUDGET_EXHAUSTED);
-        continue;
-      }
-      const record = await claimTurnRecord(claimInput);
-      if (record.alreadyFinal) {
-        summary.alreadyFinal++;
-        continue;
-      }
-      if (!env) {
-        await markTurnSkipped(record.id, PROGRAM_OFF);
-        addSkipped(summary, PROGRAM_OFF);
-        continue;
-      }
-      try {
-        addResult(summary, await runAutomatonTurn(profile, record, turn, env));
-      } catch (error) {
-        // The turn could not even record its own outcome.
-        const code = errorCodeOf(error);
-        logger.error(`[automaton-turns] ${profile.catalogueKey}: turn record write failed — ${errorMessageOf(error)}`);
-        try {
-          await markTurnFailed(record.id, code);
-        } catch (markError) {
-          logger.error(`[automaton-turns] ${profile.catalogueKey}: could not mark the turn failed — ${errorMessageOf(markError)}`);
-        }
-        await alertTurnFailed(profile.catalogueKey, turn, code, errorMessageOf(error));
-        summary.failed++;
-      }
-    }
+    // Starts in ascending User.id order (R7.9); at most `concurrency` turns at once.
+    await runWithConcurrency(cohort, concurrency, (profile) => runCohortProfile(run, profile));
 
     summary.durationMs = now() - started;
+    summary.leaseLost = lease.lost;
     logTurnStepSummary(summary);
+    const seconds = Math.round(summary.durationMs / 1000);
     if (summary.budgetExhausted) {
-      await alertStepBudgetExhausted(turn, summary.skipped[STEP_BUDGET_EXHAUSTED] ?? 0, summary.durationMs);
+      await alertStepBudgetExhausted(turn, {
+        skipped: summary.skipped[STEP_BUDGET_EXHAUSTED] ?? 0,
+        durationMs: summary.durationMs,
+        budgetMs: deadline.budgetMs,
+        deadlineSource: deadline.source,
+        nextScheduledJobAtMs: deadline.nextScheduledJobAtMs,
+        concurrency,
+      });
+    }
+    if (run.cutoverSeen) {
+      await alertTurnStepFailed(
+        turn,
+        AutomatonErrorCode.AUTOMATON_CUTOVER_IN_PROGRESS,
+        `${summary.skipped[CUTOVER_IN_PROGRESS] ?? 0} stable(s) skipped (${CUTOVER_IN_PROGRESS}) after ${seconds} s`,
+      );
+    }
+    if (summary.leaseLost) {
+      await alertTurnStepFailed(turn, TURN_STEP_LEASE_LOST, `${run.notStarted} stable(s) not started after ${seconds} s`);
     }
     return summary;
   }, deps);

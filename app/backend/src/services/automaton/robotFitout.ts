@@ -5,7 +5,8 @@
  * Runs the chain steps in order — Storage_Overflow_Rule sales, Roster
  * Expansion and Storage Facility levels, the robot, its fit-out — each charged
  * step in its own transaction (R7.7). The fit-out follows design §9.1:
- * 1. `createRobotTransaction` (₡500,000, league and KotH standings);
+ * 1. `createRobotTransaction` (₡500,000; no standings rows, those come with
+ *    the robot's first subscription in step 6);
  * 2. link the robot to its Robot_Blueprint and Blueprint_Slot and copy the
  *    blueprint image (a direct column write; not a balance write);
  * 3. `changeLoadoutType` to the blueprint loadout;

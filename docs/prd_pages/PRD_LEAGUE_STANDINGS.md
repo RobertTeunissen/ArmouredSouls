@@ -2,13 +2,14 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: v1.1
-**Date**: September 12, 2026
+**Version**: v1.2
+**Date**: October 14, 2026
 **Status**: ✅ Implemented & Verified
 
 ---
 
 ## Version History
+- v1.2 - Documented who appears in standings: robots and teams enter on their first matchable subscription; robots and teams without a standing show "Unranked" (October 14, 2026)
 - v1.1 - Unified all head-to-head modes behind the canonical fixed-zone planner; added tier-wide effective promotion/demotion display and cohort-hold messaging (September 12, 2026)
 - v1.0 - Initial draft by GitHub Copilot (February 5, 2026)
 
@@ -34,6 +35,14 @@ When promotion would open an empty destination tier, candidates from all source 
 Displayed standings use the same LP-descending, entity-ID-ascending canonical ranking from which the planner takes both ends, so tied rows keep the same rank and fixed-zone boundaries in the API and executor.
 
 The labels explicitly state “top/bottom 10% of total instance.” White rows with sufficient residency are not necessarily candidates: position and LP still apply, and no-backfill is intentional.
+
+### Who Appears
+
+A robot or team appears in a mode's standings once it has a standings row, which is created the first time it becomes matchable by subscription (robot subscribed; team complete with every member subscribed) and placed in the least-full Bronze instance. Robot and team creation create no rows. Unsubscribing keeps the row, so an unsubscribed entity stays listed with its tier and LP until the season ends; disbanding a team removes its rows. The full rule is in `docs/game-systems/PRD_LEAGUE_SYSTEM.md` ("Entering a League").
+
+A robot without a `league_1v1` standing is **Unranked**: the robot list, robot detail page and dashboard standings card show "Unranked" instead of a tier, "—" for LP, and no rank. On this page, the 1v1 highlighting of tiers and instances that hold the player's robots skips those robots.
+
+A team without a standing in its 2v2/3v3 League or in Tag Team is **Unranked** in that league in the same way: the team cards (Team Battles page, dashboard standings card) and the robot detail team league history show "Unranked" and "—" for LP. `GET /api/team-battles` and `GET /api/team-battles/robot/:robotId/league-history` return `null` tier, instance and LP for such a team. The team highlighting on this page skips it.
 
 ---
 

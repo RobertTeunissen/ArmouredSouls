@@ -1,6 +1,8 @@
 import prisma from '../../lib/prisma';
 import { OnboardingError, OnboardingErrorCode } from '../../errors/onboardingErrors';
 import { AuthError, AuthErrorCode } from '../../errors/authErrors';
+import { lockUserForSpending } from '../../lib/creditGuard';
+import { lockRobotTeamMembership, lockTeamStandings } from '../standings/standingPlacement';
 // Spec #45: uploaded images survive an account reset (Image_Library), so this
 // service no longer deletes files from storage.
 
@@ -206,11 +208,40 @@ export async function performAccountReset(userId: number, reason?: string): Prom
     // Season_Rollover, so the player can re-apply their artwork to new robots.
     // Archived seasons also reference these paths.
 
-    // Delete standings for all user's robots (Spec #40 — must happen before robot deletion)
+    // Lock the user row first (global order: own `users` row before
+    // (2, robotId)). Robot creation serialises on this row, so no robot can be
+    // created after the snapshot below and then be deleted without its
+    // standings rows by `robot.deleteMany({ userId })`.
+    await lockUserForSpending(tx, userId);
+
     const userRobotIds = await tx.robot.findMany({
       where: { userId },
       select: { id: true },
+      orderBy: { id: 'asc' },
     });
+    // Take the standing locks before any write, in the global order of
+    // standingPlacement: (2, robotId) ascending, then (5, teamId) ascending.
+    // The team locks stop a concurrent member subscription from inserting a
+    // team row after the delete below (an orphan, as standings has no FK). The
+    // robot locks come first so that subscription — which holds (2, robotId)
+    // and a key-share lock on the robot row while it waits for (5, teamId) —
+    // cannot deadlock with the robot delete further down.
+    for (const { id } of userRobotIds) {
+      await lockRobotTeamMembership(tx, id);
+    }
+    // Read the team ids only after the robot locks are held: registerTeam takes
+    // the same (2, robotId) locks, so a team registered while we waited has
+    // committed by now and is included, and its standings rows are deleted too.
+    const userTeamIds = await tx.teamBattle.findMany({
+      where: { stableId: userId },
+      select: { id: true },
+      orderBy: { id: 'asc' },
+    });
+    for (const { id } of userTeamIds) {
+      await lockTeamStandings(tx, id);
+    }
+
+    // Delete standings for all user's robots (Spec #40 — must happen before robot deletion)
     if (userRobotIds.length > 0) {
       await tx.standing.deleteMany({
         where: {
@@ -234,6 +265,15 @@ export async function performAccountReset(userId: number, reason?: string): Prom
     await tx.teamBattleMember.deleteMany({
       where: { robotId: { in: userRobotIds.map(r => r.id) } },
     });
+    // Team standings are polymorphic (no FK), so they go before their teams.
+    if (userTeamIds.length > 0) {
+      await tx.standing.deleteMany({
+        where: {
+          entityType: 'team',
+          entityId: { in: userTeamIds.map(t => t.id) },
+        },
+      });
+    }
     await tx.teamBattle.deleteMany({ where: { stableId: userId } });
 
     // Delete all robots (battle history and team membership cascade)

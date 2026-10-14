@@ -5,12 +5,15 @@ import type {
   CatalogueWeapon,
   DraftView,
   LibraryStrategy,
+  ModePerformance,
   ProfileDetail,
   ProfileListItem,
   ProfileTurnPreview,
   StrategyComparison,
+  TieredStandingsMode,
   UpgradeDryRun,
 } from '../../../../utils/automatonAdminApi';
+import { PLACEMENT_STANDINGS_MODES, TEAM_STANDINGS_MODES, TIERED_STANDINGS_MODES } from '@shared/utils/automatonStandingsTier';
 
 export const EVENT_ORDER = [
   'league_2v2', 'tag_team', 'league_3v3', 'league_1v1', 'koth', 'grand_melee', 'tournament_3v3', 'tournament_1v1', 'tournament_2v2',
@@ -40,7 +43,8 @@ export function listItem(overrides: Partial<ProfileListItem> = {}): ProfileListI
     robots: { current: 3, target: 11 },
     credits: 412_000,
     prestige: 820,
-    bestTier: 'silver',
+    bestTier: 'gold',
+    bestTierMode: 'league_3v3',
     lastTurn: {
       seasonNumber: 3, trigger: 'settlement', slot: 42, attempt: 1, status: 'completed', reason: null,
       creditsSpent: 96_000, creditsReceived: 0, actionCount: 1,
@@ -57,13 +61,37 @@ export const PROFILES: ProfileListItem[] = [
   listItem(),
   listItem({
     catalogueKey: 'decepticon-armada', stableName: 'Decepticon Armada', strategyKey: 'trio', strategyDisplayName: 'Trio',
-    credits: -12_400, needAttention: [{ code: 'balance_negative', label: 'Balance negative' }],
+    credits: -12_400, bestTier: 'silver', bestTierMode: 'league_1v1', needAttention: [{ code: 'balance_negative', label: 'Balance negative' }],
   }),
   listItem({
     catalogueKey: 'grim-reaper', stableName: 'Grim Reaper Works', status: 'draft', strategyKey: 'generalist', strategyDisplayName: 'Generalist',
-    robots: { current: 0, target: 2 }, credits: null, prestige: null, bestTier: null, lastTurn: null, activatedAt: null,
+    robots: { current: 0, target: 2 }, credits: null, prestige: null, bestTier: null, bestTierMode: null, lastTurn: null, activatedAt: null,
   }),
 ];
+
+/** A zero-filled per-mode entry with the mode's kind and entity type. */
+export function modePerformance(mode: TieredStandingsMode, overrides: Partial<ModePerformance> = {}): ModePerformance {
+  return {
+    mode,
+    kind: PLACEMENT_STANDINGS_MODES.includes(mode) ? 'placement' : 'head_to_head',
+    entityType: TEAM_STANDINGS_MODES.includes(mode) ? 'team' : 'robot',
+    stablesPlayed: 0,
+    entitiesPlayed: 0,
+    wins: 0,
+    losses: 0,
+    draws: 0,
+    matches: 0,
+    winPercentage: null,
+    bestPlacement: null,
+    lowSample: true,
+    ...overrides,
+  };
+}
+
+/** Six entries in display order; `overrides` per mode. */
+function modes(overrides: Partial<Record<TieredStandingsMode, Partial<ModePerformance>>> = {}): ModePerformance[] {
+  return TIERED_STANDINGS_MODES.map((mode) => modePerformance(mode, overrides[mode]));
+}
 
 export function blueprint(slot: number, overrides: Partial<BlueprintView> = {}): BlueprintView {
   return {
@@ -167,14 +195,22 @@ export const COMPARISON: StrategyComparison = {
       strategyKey: 'swarm', displayName: 'Swarm', reference: false, stables: 2, robots: { average: 3.5, targetAverage: 11 },
       prestigeAverage: 910, bestTier: { tier: 'silver', stables: 2 }, creditsAverage: 296_000,
       winRate: { wins: 61, losses: 78, draws: 3, total: 142, percentage: 43 },
+      modes: modes({
+        league_1v1: { stablesPlayed: 2, entitiesPlayed: 5, wins: 40, losses: 38, draws: 2, matches: 80, winPercentage: 50, lowSample: true },
+        koth: { stablesPlayed: 2, entitiesPlayed: 4, wins: 3, matches: 30, winPercentage: 10, bestPlacement: 1, lowSample: true },
+      }),
     },
     {
       strategyKey: 'paragon', displayName: 'Paragon', reference: false, stables: 1, robots: { average: 1, targetAverage: 1 },
       prestigeAverage: 4105, bestTier: null, creditsAverage: 88_700, winRate: { wins: 0, losses: 0, draws: 0, total: 0, percentage: null },
+      modes: modes(),
     },
     {
       strategyKey: null, displayName: 'Human stables', reference: true, stables: 9, robots: { average: 2.7, targetAverage: null },
       prestigeAverage: 2260, bestTier: { tier: 'gold', stables: 3 }, creditsAverage: 514_000, winRate: null,
+      modes: modes({
+        league_1v1: { stablesPlayed: 9, entitiesPlayed: 24, wins: 120, losses: 80, draws: 0, matches: 200, winPercentage: 60, lowSample: false },
+      }),
     },
   ],
   generatedAt: '2026-10-08T00:00:00.000Z',

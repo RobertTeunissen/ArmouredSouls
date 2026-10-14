@@ -12,8 +12,8 @@ import { TeamBattle } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { safeName } from '../../utils/securityValidation';
-import { hasSubscription } from '../subscription/subscriptionService';
 import { TeamBattleError, TeamBattleErrorCode } from '../../errors/teamBattleErrors';
+import { ensureTeamStandings, lockTeamStandings } from '../standings/standingPlacement';
 
 // ── Constants ────────────────────────────────────────────────────────
 
@@ -22,16 +22,6 @@ const TEAM_NAME_MIN_LENGTH = 3;
 const TEAM_NAME_MAX_LENGTH = 32;
 
 // ── Helpers ──────────────────────────────────────────────────────────
-
-/**
- * Returns the event types that allow team formation for a given team size.
- * A robot can form a team if it's subscribed to EITHER the league OR the tournament event.
- */
-function getEventTypesForSize(teamSize: 2 | 3): string[] {
-  return teamSize === 2
-    ? ['league_2v2', 'tournament_2v2']
-    : ['league_3v3', 'tournament_3v3'];
-}
 
 /**
  * Validates team name against safeName rules and length constraints (3-32 chars).
@@ -75,16 +65,20 @@ async function isTeamLockedForBattle(teamId: number, tx: typeof prisma): Promise
 // ── Public API ───────────────────────────────────────────────────────
 
 /**
- * Register a new team for 2v2 or 3v3 League.
+ * Register a new team of 2 or 3 robots.
  *
  * Validates:
  * - Team size is 2 or 3
  * - Exactly N distinct robot IDs provided
  * - All robots owned by the stable
- * - All robots subscribed to at least one corresponding team event (league_2v2/tournament_2v2 or league_3v3/tournament_3v3)
  * - No robot already on another team of the same size
  * - Team name passes safeName validation (3-32 chars)
  * - Stable has ≥ N robots
+ *
+ * No subscription is required to form a team. The team enters a mode's Bronze
+ * league (gets its standings row) once it is complete and every member holds
+ * that mode's subscription; `ensureTeamStandings` checks this inside the
+ * transaction, so a team whose robots are already subscribed is placed at once.
  *
  * Uses Prisma interactive transaction with advisory locks on robot IDs.
  */
@@ -194,8 +188,9 @@ export async function registerTeam(
       include: { members: true },
     });
 
-    // Standing records are created by the caller based on subscriptions.
-    // This avoids creating standings for modes the team isn't subscribed to.
+    // Place the team in every team mode all its members already hold. The
+    // (2, robotId) locks above precede the team lock this takes (lock order).
+    await ensureTeamStandings(tx, newTeam.id);
 
     return newTeam;
   });
@@ -208,7 +203,10 @@ export async function registerTeam(
  * Swap a team member with a new robot.
  *
  * Rejects if team is locked for battle (has scheduled match).
- * Validates new robot ownership, subscription, and uniqueness (not already on same-size team).
+ * Validates new robot ownership and uniqueness (not already on a same-size
+ * team). No subscription is required: the team keeps its id, tier and LP, and
+ * enters any mode it becomes matchable in (complete, every member holding that
+ * mode's subscription) via `ensureTeamStandings`.
  */
 export async function swapTeamMember(
   teamId: number,
@@ -284,21 +282,6 @@ export async function swapTeamMember(
       );
     }
 
-    // Validate new robot is subscribed to at least one team event for this size
-    const eventTypes = getEventTypesForSize(team.teamSize as 2 | 3);
-    const eventLabel = team.teamSize === 2 ? '2v2 League or 2v2 Tournament' : '3v3 League or 3v3 Tournament';
-    let subscribed = false;
-    for (const et of eventTypes) {
-      if (await hasSubscription(newRobotId, et)) { subscribed = true; break; }
-    }
-    if (!subscribed) {
-      throw new TeamBattleError(
-        TeamBattleErrorCode.TEAM_INVALID_COMPOSITION,
-        `"${newRobot.name}" is not subscribed to ${eventLabel}. Subscribe via the Booking Office first.`,
-        400,
-      );
-    }
-
     // Validate new robot is not already on another team of the same size
     const existingMember = await tx.teamBattleMember.findFirst({
       where: {
@@ -315,11 +298,20 @@ export async function swapTeamMember(
       );
     }
 
+    // Take (5, teamId) before writing the member row. Disband holds this lock
+    // while it deletes the team (cascading to members); taking it after the
+    // update would let swap and disband deadlock on the member row.
+    await lockTeamStandings(tx, teamId);
+
     // Perform the swap
     await tx.teamBattleMember.update({
       where: { id: memberToSwap.id },
       data: { robotId: newRobotId },
     });
+
+    // The new line-up may complete a mode's subscription set. The team lock
+    // is already held; re-taking it here is a no-op (advisory locks re-enter).
+    await ensureTeamStandings(tx, teamId);
   });
 
   logger.info(`[TeamBattle] Swapped robot ${oldRobotId} → ${newRobotId} on team ${teamId}`);
@@ -408,187 +400,6 @@ export async function swapPositions(
 }
 
 /**
- * Remove a member from a team.
- *
- * Rejects if team is locked for battle.
- */
-export async function removeTeamMember(
-  teamId: number,
-  robotId: number,
-  userId: number,
-): Promise<void> {
-  await prisma.$transaction(async (tx) => {
-    // Load team
-    const team = await tx.teamBattle.findUnique({
-      where: { id: teamId },
-      include: { members: true },
-    });
-
-    if (!team) {
-      throw new TeamBattleError(
-        TeamBattleErrorCode.TEAM_NOT_FOUND,
-        'Team not found',
-        404,
-      );
-    }
-
-    // Ownership check (R10.6)
-    if (team.stableId !== userId) {
-      throw new TeamBattleError(
-        TeamBattleErrorCode.TEAM_OWNERSHIP_VIOLATION,
-        'Access denied',
-        403,
-      );
-    }
-
-    // Check if team is locked for battle
-    if (await isTeamLockedForBattle(teamId, tx as unknown as typeof prisma)) {
-      throw new TeamBattleError(
-        TeamBattleErrorCode.TEAM_LOCKED_FOR_BATTLE,
-        'Cannot modify team while a battle is scheduled',
-        409,
-      );
-    }
-
-    // Find the member to remove
-    const memberToRemove = team.members.find((m) => m.robotId === robotId);
-    if (!memberToRemove) {
-      throw new TeamBattleError(
-        TeamBattleErrorCode.TEAM_INVALID_COMPOSITION,
-        `Robot ${robotId} is not a member of this team`,
-        400,
-      );
-    }
-
-    // Remove the member
-    await tx.teamBattleMember.delete({
-      where: { id: memberToRemove.id },
-    });
-  });
-
-  logger.info(`[TeamBattle] Removed robot ${robotId} from team ${teamId} — team now INELIGIBLE`);
-}
-
-/**
- * Add a member to a team.
- *
- * Validates robot ownership, subscription, and uniqueness.
- * Rejects if team already has N members.
- */
-export async function addTeamMember(
-  teamId: number,
-  robotId: number,
-  userId: number,
-): Promise<void> {
-  await prisma.$transaction(async (tx) => {
-    // Load team with members
-    const team = await tx.teamBattle.findUnique({
-      where: { id: teamId },
-      include: { members: true },
-    });
-
-    if (!team) {
-      throw new TeamBattleError(
-        TeamBattleErrorCode.TEAM_NOT_FOUND,
-        'Team not found',
-        404,
-      );
-    }
-
-    // Ownership check (R10.6)
-    if (team.stableId !== userId) {
-      throw new TeamBattleError(
-        TeamBattleErrorCode.TEAM_OWNERSHIP_VIOLATION,
-        'Access denied',
-        403,
-      );
-    }
-
-    // Reject if team already has N members
-    if (team.members.length >= team.teamSize) {
-      throw new TeamBattleError(
-        TeamBattleErrorCode.TEAM_INVALID_COMPOSITION,
-        `Team already has ${team.teamSize} members`,
-        400,
-      );
-    }
-
-    // Acquire advisory lock on robot
-    await tx.$executeRaw`SELECT pg_advisory_xact_lock(2, ${robotId})`;
-
-    // Validate robot exists and is owned by the stable
-    const robot = await tx.robot.findUnique({
-      where: { id: robotId },
-      select: { id: true, userId: true, name: true },
-    });
-
-    if (!robot) {
-      throw new TeamBattleError(
-        TeamBattleErrorCode.TEAM_INVALID_COMPOSITION,
-        'Robot not found',
-        400,
-      );
-    }
-
-    if (robot.userId !== userId) {
-      throw new TeamBattleError(
-        TeamBattleErrorCode.TEAM_OWNERSHIP_VIOLATION,
-        'Access denied',
-        403,
-      );
-    }
-
-    // Validate robot is subscribed to at least one team event for this size
-    const eventTypes = getEventTypesForSize(team.teamSize as 2 | 3);
-    const eventLabel = team.teamSize === 2 ? '2v2 League or 2v2 Tournament' : '3v3 League or 3v3 Tournament';
-    let subscribed = false;
-    for (const et of eventTypes) {
-      if (await hasSubscription(robotId, et)) { subscribed = true; break; }
-    }
-    if (!subscribed) {
-      throw new TeamBattleError(
-        TeamBattleErrorCode.TEAM_INVALID_COMPOSITION,
-        `"${robot.name}" is not subscribed to ${eventLabel}. Subscribe via the Booking Office first.`,
-        400,
-      );
-    }
-
-    // Validate robot is not already on another team of the same size
-    const existingMember = await tx.teamBattleMember.findFirst({
-      where: {
-        robotId,
-        team: { teamSize: team.teamSize },
-      },
-    });
-
-    if (existingMember) {
-      throw new TeamBattleError(
-        TeamBattleErrorCode.TEAM_MEMBER_CONFLICT,
-        `Robot ${robotId} is already on a ${team.teamSize}v${team.teamSize} team`,
-        400,
-      );
-    }
-
-    // Determine next slot index
-    const maxSlot = team.members.length > 0
-      ? Math.max(...team.members.map((m) => m.slotIndex))
-      : -1;
-    const nextSlot = maxSlot + 1;
-
-    // Add the member
-    await tx.teamBattleMember.create({
-      data: {
-        teamId,
-        robotId,
-        slotIndex: nextSlot,
-      },
-    });
-  });
-
-  logger.info(`[TeamBattle] Added robot ${robotId} to team ${teamId}`);
-}
-
-/**
  * Rename a team.
  *
  * Validates against safeName (3-32 chars).
@@ -635,7 +446,9 @@ export async function renameTeam(
  * Disband a team.
  *
  * Rejects if team is locked for battle.
- * Deletes team and cascade-deletes members.
+ * Takes the `(5, teamId)` team-standing lock, deletes the team's standings rows
+ * (polymorphic, no foreign key), then the team; members cascade-delete. A team
+ * registered later starts again in Bronze.
  */
 export async function disbandTeam(
   teamId: number,
@@ -672,6 +485,14 @@ export async function disbandTeam(
         409,
       );
     }
+
+    // (5, teamId) serialises this delete with every team-standing check: a
+    // member subscription either commits its team row before the delete reads,
+    // or waits and then finds the team gone. Without it the row is orphaned.
+    await lockTeamStandings(tx, teamId);
+
+    // standings has no FK to team_battles, so remove the team's rows first.
+    await tx.standing.deleteMany({ where: { entityType: 'team', entityId: teamId } });
 
     // Delete team (members cascade-deleted via onDelete: Cascade in schema)
     await tx.teamBattle.delete({

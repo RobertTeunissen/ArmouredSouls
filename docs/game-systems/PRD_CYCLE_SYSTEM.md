@@ -493,7 +493,7 @@ Active_Automatons act once per cycle in a Turn_Step (`runTurnStep` in `services/
 
 On the boundary settlement no `settlement` turn runs; the rollover's Stage 5 gives every Automaton its `season_open` turn instead. If the rollover fails, no Automaton turn runs for that settlement and the retried rollover runs Stage 5.
 
-Every call is non-fatal: a failing Turn_Step is logged and alerted and never fails settlement, the bulk cycle or the rollover. A lease in `automaton_program_settings.turn_step_lease_until` serialises scheduler and admin bulk Turn_Steps across processes; `assertNoCutoverInProgress` is a defensive guard.
+Every call is non-fatal: a failing Turn_Step is logged and alerted and never fails settlement, the bulk cycle or the rollover. A heartbeat lease in `automaton_program_settings.turn_step_lease_until` (120 s TTL, renewed every 30 s) serialises scheduler and admin bulk Turn_Steps across processes; `assertNoCutoverInProgress` guards the step start, and before each stable the step re-checks for a cutover and records the rest `skipped` / `cutover_in_progress` if one has started.
 
 **Turn_Budget** (`services/automaton/turnBudget.ts`):
 
@@ -501,6 +501,7 @@ Every call is non-fatal: a failing Turn_Step is logged and alerted and never fai
 |---|---|---|
 | Charged actions per Automaton_Turn | 60 (`TURN_ACTION_LIMIT`) | turn ends `completed`, reason `turn_budget_exhausted` |
 | Wall clock per Automaton_Turn | 10 s (`TURN_TIME_BUDGET_MS`) | same |
-| Wall clock per Turn_Step | 300 s (`TURN_STEP_BUDGET_MS`) | remaining stables `skipped` with `step_budget_exhausted`, alert |
+| Turn_Step deadline | min(step start + `AUTOMATON_TURN_STEP_MAX_MS` [6 h], next scheduled job − `AUTOMATON_TURN_STEP_SCHEDULE_MARGIN_MS` [15 min]), at least 300 s (`TURN_STEP_MIN_BUDGET_MS`) | no new turn starts; remaining stables `skipped` with `step_budget_exhausted`, "Turn_Step deadline reached" alert |
+| Turns in parallel | `AUTOMATON_TURN_CONCURRENCY` (default 3), clamped to ⌊(`DB_POOL_MAX` − 5) / 2⌋ | — |
 
-Free_Upkeep counts against the time budget but not the action limit. Measured with 100 Active_Automatons (heavy simulation, local): opening-build steps 244–260 s, steady-state settlement steps 5–12 s. The design target for opening builds is 180 s, so a large activation batch on a slow host can reach the 300 s limit; see `docs/guides/AUTOMATON_OPERATIONS_GUIDE.md` (activate in batches) and `docs/game-systems/PRD_AUTOMATON_STABLES.md`.
+Free_Upkeep counts against the per-turn time budget but not the action limit. The deadline replaces the former fixed 300 s Turn_Step budget (spec 55 R7.10, superseded): after the 00:00 settlement the next scheduled job is the 08:00 league job (07:45 after the margin), which is later than the 6 h cap, so on the default schedule the cap binds and the step may start turns until about 06:00 UTC. The schedule term binds only when a step starts less than 6 h 15 min before the next job, such as after a late settlement. With the scheduler disabled (local runs, tests) the 6 h cap applies. The next job is computed from the configured cron schedules (`services/cycle/schedulerWindow.ts`), not from scheduler state; every cron form the scheduler accepts is honoured (including intervals such as `*/30 * * * *`); a day-of-week restriction is ignored, which can only make the deadline earlier. The Turn_Step still runs inside the settlement job, so other scheduler jobs queue behind it until it ends. Timings and the ACC capacity estimate: `docs/implementation_notes/AUTOMATON_TURN_STEP_DEADLINE.md`; product rules: `docs/game-systems/PRD_AUTOMATON_STABLES.md`.

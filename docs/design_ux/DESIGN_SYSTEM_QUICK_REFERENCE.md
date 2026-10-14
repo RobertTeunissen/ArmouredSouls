@@ -310,6 +310,23 @@ type TabId = 'overview' | 'playback' | 'combat-log';
 - On mobile (<1024px): render all sections stacked without tabs
 - Respect `prefers-reduced-motion` media query
 
+### Toggle chip (aria-pressed)
+
+For filter chips and view/mode switches inside a `role="group"` (admin Automatons: "Filter stables", "Mode", "Strategies view"). Implemented as `ToggleChip` in `components/admin/automatons/ui.tsx`.
+
+```jsx
+<ToggleChip pressed={filter === 'active'} onClick={() => setFilter('active')} className="px-3">
+  Active · 2
+</ToggleChip>
+```
+
+**Rules:**
+- Pressed: `bg-primary text-white` + leading `✓` + 2 px white border (`border-2 border-white`)
+- Unpressed: `bg-surface-elevated text-secondary`, `border-2 border-transparent` (nothing shifts except the ✓)
+- Never show the pressed state by colour alone; `aria-pressed` carries it for assistive technology
+- The `✓` is `aria-hidden`, so the accessible name stays the label (`Active · 2`)
+- Minimum height 44 px (`min-h-11`); visible focus ring
+
 ### Modal Component
 
 ```jsx
@@ -427,9 +444,7 @@ member, which is what stops three tiles from drifting apart.
     logo-b.svg              (Direction B)
     logo-c.svg              (Direction C)
     logo-d.svg              (Direction D)
-    logo-d-16.png           (Favicon 16×16)
-    logo-d-32.png           (Favicon 32×32)
-    logo-d-512.png          (PWA icon)
+    logo-d-512.png          (PWA icon — not yet produced; the app is not a PWA)
   
   /robots/
     portrait-humanoid-256.webp
@@ -499,6 +514,24 @@ member, which is what stops three tiles from drifting apart.
 
 **Naming Pattern**: `{type}-{name}-{size}.{ext}`
 **Arena Sprites**: `robot-{loadoutType}-{rangeBand}.png` (64×64px, transparent PNG)
+
+### Favicons (implemented)
+
+The browser-tab icon set lives in `app/frontend/public/` and is linked from `app/frontend/index.html`. It uses the Direction D shield on a rounded-square background so it stays legible at 16px on light and dark tab bars.
+
+| File | Purpose |
+|------|---------|
+| `favicon{suffix}.svg` | Primary icon (modern browsers) |
+| `favicon{suffix}.ico` | 16/32/48 PNG frames (fallback and the implicit `/favicon.ico` request) |
+| `apple-touch-icon{suffix}.png` | 180×180, opaque, full bleed (iOS rounds the corners) |
+
+| Environment | Suffix | Background | Shield | Accent |
+|-------------|--------|------------|--------|--------|
+| Production | (none) | `#0a0e14` | `#e6edf3` | `#58a6ff` |
+| Acceptance (ACC) | `-acc` | `#d29922` | `#0a0e14` | `#0a0e14` |
+| Local development (TST) | `-dev` | `#3fb950` | `#0a0e14` | `#0a0e14` |
+
+The source of truth is `app/frontend/scripts/generate-favicons.ts`. Regenerate with `pnpm run icons:generate` (from `app/frontend`) and commit the outputs; the script is deterministic for a given Playwright/Chromium build, so a re-run produces no diff. After a Playwright upgrade, anti-aliasing may change the PNG/ICO bytes; that diff is expected and safe to commit. The runtime picks the variant per hostname in `app/frontend/src/utils/environment-branding.ts`.
 
 ---
 

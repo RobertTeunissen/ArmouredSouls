@@ -2,7 +2,7 @@
 title: "Entry Requirements"
 description: "What your robot needs to participate in Grand Melee — subscriptions, weapon readiness, and minimum player thresholds."
 order: 2
-lastUpdated: "2026-08-27"
+lastUpdated: "2026-10-14"
 relatedArticles:
   - grand-melee/basics
   - grand-melee/scoring-and-placement
@@ -27,7 +27,7 @@ When 8–19 robots are available, the match runs with fewer than 20 participants
 
 ## Starting Tier
 
-All robots begin their Grand Melee competitive standing in **Bronze tier**. As you accumulate LP through strong placements, you'll promote into higher tiers where competition is fiercer and rewards are greater.
+Your robot enters Grand Melee's **Bronze tier** the first time you subscribe it. Unsubscribing later keeps its tier and points. As you accumulate LP through strong placements, you'll promote into higher tiers where competition is fiercer and rewards are greater.
 
 ## No Other Prerequisites
 

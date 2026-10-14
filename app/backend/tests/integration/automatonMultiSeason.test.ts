@@ -1,7 +1,9 @@
 /**
  * Spec #55 task 12.2, extended by Spec #57 R5.4 — heavy multi-season
- * simulation with every repository Catalogue_Entry active (R7.10, R11.14,
- * R14.4, design §19, §21 Heavy row).
+ * simulation with every repository Catalogue_Entry active (R11.14, R14.4,
+ * design §21 Heavy row). Spec 55 R7.10 (300 s Turn_Step budget, design §19)
+ * is superseded by the Turn_Step deadline rule
+ * (`docs/implementation_notes/AUTOMATON_TURN_STEP_DEADLINE.md`).
  *
  * HEAVY tier: it runs a Season_Rollover, which archives, deletes generated
  * stables, resets every stable and truncates the history tables of the whole
@@ -24,16 +26,19 @@
  * Season 2's boundary is not run: the spec asks for one rollover.
  *
  * After every settlement: exactly one Turn_Step with one Turn_Record per
- * Automaton (attempt 1, none failed or budget-skipped), the step within the
- * 300 s Turn_Step budget, no Turn_Record key twice, no Automaton purchase
- * ledger row below zero, every Automaton robot armed. Battle events are not
- * run (no battle job is part of settlement); the bulk battles stand in for a
- * season of results at ACC volume.
+ * Automaton (attempt 1, none failed or skipped: every stable must take its
+ * turn), the step within its deadline (SCHEDULER_ENABLED is off in tests, so
+ * the deadline is the AUTOMATON_TURN_STEP_MAX_MS cap), no Turn_Record key
+ * twice, no Automaton purchase ledger row below zero, every Automaton robot
+ * armed. Battle events are not run (no battle job is part of settlement); the
+ * bulk battles stand in for a season of results at ACC volume.
  *
- * Measured step durations, the Automatons processed, their quotient and the
- * budget-skip count are logged per Turn_Step and per Turn_Trigger with the
- * `[automaton-heavy]` prefix for the implementation record
- * (`docs/implementation_notes/AUTOMATON_CATALOGUE_EXPANSION.md`); any
+ * Measured step durations, the Automatons processed, their quotient, the
+ * effective concurrency (AUTOMATON_TURN_CONCURRENCY clamped by DB_POOL_MAX),
+ * turns stopped by their own Turn_Budget (`turn_budget_exhausted`) and the
+ * peak database connections are logged per Turn_Step and per Turn_Trigger
+ * with the `[automaton-heavy]` prefix for the implementation record
+ * (`docs/implementation_notes/AUTOMATON_TURN_STEP_DEADLINE.md`); any
  * `step_budget_exhausted` Turn_Record fails the test.
  */
 import { performance } from 'node:perf_hooks';
@@ -48,7 +53,14 @@ import { CATALOGUE_DIRECTORY, validateCatalogueEntry, BUILD_FOCUS_KEYS } from '.
 import { getStrategyRegistry } from '../../src/services/automaton/strategies/defaultRegistry';
 import { loadWeaponCatalogue } from '../../src/services/automaton/stableFacts';
 import { clearStrategyComparisonCache, type StrategyComparison } from '../../src/services/automaton/strategyComparisonService';
-import { TURN_ACTION_LIMIT, TURN_STEP_BUDGET_MS, STEP_BUDGET_EXHAUSTED } from '../../src/services/automaton/turnBudget';
+import {
+  TURN_ACTION_LIMIT,
+  STEP_BUDGET_EXHAUSTED,
+  TURN_BUDGET_EXHAUSTED,
+  effectiveTurnConcurrency,
+} from '../../src/services/automaton/turnBudget';
+import { resolveDbPoolMax } from '../../src/lib/dbPoolConfig';
+import { getConfig } from '../../src/config/env';
 import { SUBSCRIBABLE_EVENT_TYPES, isRegisteredEvent, registerSubscribableEvent } from '../../src/services/subscription/eventRegistry';
 import type { TurnActionRecord } from '../../src/types/automaton';
 import {
@@ -71,12 +83,16 @@ const POPULATION = loadRepositoryEntries();
  * Per phase (`beforeAll`, each `it`, `afterAll`). Spec 55 measured ~14 min in
  * all for 100 Automatons, dominated by the two opening-build Turn_Steps
  * (~250 s each), with a 15-minute phase timeout. 9 s per Automaton reproduces
- * that timeout at 100 and grows with the catalogue; there is no cap, and the
- * Turn_Step budget (`TURN_STEP_BUDGET_MS`) is unchanged. CI's heavy job has
- * 30 minutes for the whole tier.
+ * that timeout at 100 and grows with the catalogue; there is no cap. The
+ * Turn_Step itself is no longer bounded at 300 s (spec 55 R7.10 superseded):
+ * it runs until its deadline, so this phase timeout, not the step, is what
+ * fails a pathologically slow run. CI's heavy job has 30 minutes for the
+ * whole tier.
  */
 const PHASE_TIMEOUT_MS = Math.max(15 * 60_000, POPULATION.length * 9_000);
 const COMPARISON_BUDGET_MS = 2_000;
+/** pg_stat_activity sampling interval while a settlement runs. */
+const CONNECTION_SAMPLE_MS = 500;
 const SEASON_LENGTH = 6;
 const PREPARATION_LENGTH = 2;
 const HUMAN_STABLES = 12;
@@ -102,6 +118,42 @@ interface StepRecord {
   chargedActions: number;
   robotsBought: number;
   maxTurnMs: number;
+  /** Effective Turn_Step concurrency (configured value clamped by the pool). */
+  concurrency: number;
+  /** Turns that stopped on their own 60-action / 10 s Turn_Budget. */
+  turnBudgetStops: number;
+  /** Highest connection count to this database sampled during the settlement. */
+  peakConnections: number;
+}
+
+/** The concurrency the Turn_Step uses with the current environment. */
+function currentConcurrency(): number {
+  return effectiveTurnConcurrency(getConfig().automatonTurnConcurrency, resolveDbPoolMax());
+}
+
+/** Sample connections to the current database every CONNECTION_SAMPLE_MS until stopped. */
+function startConnectionSampler(): { stop: () => Promise<number> } {
+  let peak = 0;
+  let inFlight: Promise<void> | null = null;
+  const sample = async (): Promise<void> => {
+    try {
+      const rows = await prisma.$queryRaw<{ n: number }[]>`
+        SELECT count(*)::int AS n FROM pg_stat_activity WHERE datname = current_database()`;
+      peak = Math.max(peak, Number(rows[0]?.n ?? 0));
+    } catch {
+      // Sampling is evidence only; a failed sample never fails the step.
+    }
+  };
+  const timer = setInterval(() => {
+    if (inFlight === null) inFlight = sample().finally(() => { inFlight = null; });
+  }, CONNECTION_SAMPLE_MS);
+  return {
+    stop: async (): Promise<number> => {
+      clearInterval(timer);
+      if (inFlight !== null) await inFlight;
+      return peak;
+    },
+  };
 }
 
 async function resetSeasonTables(): Promise<void> {
@@ -166,8 +218,15 @@ describe('Automaton multi-season simulation (Spec #55 task 12.2, Spec #57 R5.4)'
   /** Run one real settlement and check the single Turn_Step it ran. */
   async function settle(label: string): Promise<StepRecord> {
     const since = new Date();
+    const concurrency = currentConcurrency();
+    const sampler = startConnectionSampler();
     const started = performance.now();
-    await executeSettlement();
+    let peakConnections = 0;
+    try {
+      await executeSettlement();
+    } finally {
+      peakConnections = await sampler.stop();
+    }
     const settlementMs = Math.round(performance.now() - started);
     const turns = await prisma.automatonTurn.findMany({
       where: { profileId: { in: profileIds }, startedAt: { gte: since } },
@@ -196,13 +255,17 @@ describe('Automaton multi-season simulation (Spec #55 task 12.2, Spec #57 R5.4)'
       chargedActions: actions.reduce((sum, list) => sum + list.length, 0),
       robotsBought: actions.reduce((sum, list) => sum + list.filter((a) => a.kind === 'robot_creation').length, 0),
       maxTurnMs: Math.max(0, ...turns.map((t) => t.durationMs ?? 0)),
+      concurrency,
+      turnBudgetStops: turns.filter((t) => t.reason === TURN_BUDGET_EXHAUSTED).length,
+      peakConnections,
     };
     steps.push(record);
     logger.info(
       `[automaton-heavy] ${label}: season=${record.seasonNumber} trigger=${record.trigger} slot=${record.slot} `
       + `turns=${record.turns} stepMs=${record.stepMs} processed=${record.processed} budgetSkipped=${record.budgetSkipped} `
       + `msPerAutomaton=${record.msPerAutomaton} maxTurnMs=${record.maxTurnMs} settlementMs=${settlementMs} `
-      + `chargedActions=${record.chargedActions} robotsBought=${record.robotsBought}`,
+      + `chargedActions=${record.chargedActions} robotsBought=${record.robotsBought} `
+      + `concurrency=${record.concurrency} turnBudgetStops=${record.turnBudgetStops} peakConnections=${record.peakConnections}`,
     );
 
     const groups = new Set(turns.map((t) => `${t.seasonNumber}/${t.trigger}/${t.slot}`));
@@ -216,8 +279,8 @@ describe('Automaton multi-season simulation (Spec #55 task 12.2, Spec #57 R5.4)'
     expect({ label, turns: record.turns, profiles: record.profiles })
       .toEqual({ label, turns: POPULATION.length, profiles: POPULATION.length });
     for (const list of actions) expect(list.length).toBeLessThanOrEqual(TURN_ACTION_LIMIT);
-    // R7.10: every Turn_Step within the 300 s budget.
-    expect(record.stepMs).toBeLessThanOrEqual(TURN_STEP_BUDGET_MS);
+    // Deadline rule (supersedes R7.10): the scheduler is off in tests, so the cap is the deadline.
+    expect(record.stepMs).toBeLessThanOrEqual(getConfig().automatonTurnStepMaxMs);
     await assertEndOfSettlement(label);
     return record;
   }
@@ -309,14 +372,26 @@ describe('Automaton multi-season simulation (Spec #55 task 12.2, Spec #57 R5.4)'
     else process.env.PREPARATION_LENGTH_CYCLES = previousEnv.preparation;
     // Durations for the implementation record.
     logger.info(`[automaton-heavy] population: ${POPULATION.length} repository Catalogue_Entries`);
+    logger.info(
+      `[automaton-heavy] concurrency: effective=${currentConcurrency()} configured=${getConfig().automatonTurnConcurrency} `
+      + `dbPoolMax=${resolveDbPoolMax()} stepMaxMs=${getConfig().automatonTurnStepMaxMs}`,
+    );
     logger.info(`[automaton-heavy] steps: ${JSON.stringify(steps)}`);
-    const perTrigger: Record<string, { steps: number; stepMs: number; processed: number; budgetSkipped: number; secondsPerAutomaton: number }> = {};
+    interface TriggerRow {
+      steps: number; stepMs: number; processed: number; budgetSkipped: number; secondsPerAutomaton: number;
+      concurrency: number; turnBudgetStops: number; peakConnections: number;
+    }
+    const perTrigger: Record<string, TriggerRow> = {};
     for (const step of steps) {
-      const row = perTrigger[step.trigger] ?? { steps: 0, stepMs: 0, processed: 0, budgetSkipped: 0, secondsPerAutomaton: 0 };
+      const row = perTrigger[step.trigger] ?? {
+        steps: 0, stepMs: 0, processed: 0, budgetSkipped: 0, secondsPerAutomaton: 0, concurrency: step.concurrency, turnBudgetStops: 0, peakConnections: 0,
+      };
       row.steps += 1;
       row.stepMs += step.stepMs;
       row.processed += step.processed;
       row.budgetSkipped += step.budgetSkipped;
+      row.turnBudgetStops += step.turnBudgetStops;
+      row.peakConnections = Math.max(row.peakConnections, step.peakConnections);
       row.secondsPerAutomaton = Math.round((row.stepMs / Math.max(row.processed, 1)) * 1000) / 1_000_000;
       perTrigger[step.trigger] = row;
     }
@@ -387,6 +462,6 @@ describe('Automaton multi-season simulation (Spec #55 task 12.2, Spec #57 R5.4)'
       expect(await settle(`s2 cycle ${cycle}`)).toMatchObject({ seasonNumber: 2, trigger: 'settlement' });
     }
     await measureComparison('s2 end', 552);
-    expect(steps.every((s) => s.stepMs <= TURN_STEP_BUDGET_MS)).toBe(true);
+    expect(steps.every((s) => s.stepMs <= getConfig().automatonTurnStepMaxMs)).toBe(true);
   }, PHASE_TIMEOUT_MS);
 });

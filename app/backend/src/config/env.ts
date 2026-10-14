@@ -133,6 +133,11 @@ const EnvSchema = z
     TEAM_3V3_TOURNAMENT_SCHEDULE: z.string().default('0 18 * * *'),
     GRAND_MELEE_SCHEDULE: z.string().default('0 17 * * *'),
 
+    // ── Automaton Turn_Step (supersedes spec 55 R7.10) ────────────────
+    AUTOMATON_TURN_CONCURRENCY: numericString(3, { min: 1, max: 8 }),
+    AUTOMATON_TURN_STEP_MAX_MS: numericString(21_600_000, { min: 300_000, max: 82_800_000 }),
+    AUTOMATON_TURN_STEP_SCHEDULE_MARGIN_MS: numericString(900_000, { min: 0, max: 7_200_000 }),
+
     // ── Season System (Spec #45) ──────────────────────────────────────
     SEASON_LENGTH_CYCLES: numericString(100, { min: 1 }),
     PREPARATION_LENGTH_CYCLES: numericString(2, { min: 0 }),
@@ -234,6 +239,23 @@ export interface EnvConfig {
   team2v2TournamentSchedule: string;
   team3v3TournamentSchedule: string;
   grandMeleeSchedule: string;
+  // ── Automaton Turn_Step (supersedes spec 55 R7.10) ────────────────
+  /**
+   * Automaton_Turns run in parallel within one Turn_Step (1–8, default 3).
+   * The runner clamps it to ⌊(DB_POOL_MAX − 5) / 2⌋ so 5 pool connections
+   * always stay free for players; 1 restores sequential turns.
+   */
+  automatonTurnConcurrency: number;
+  /**
+   * Longest a Turn_Step keeps starting turns, from its start (ms, default
+   * 6 h). The only bound when no scheduler job is known (scheduler off).
+   */
+  automatonTurnStepMaxMs: number;
+  /**
+   * A Turn_Step stops starting turns this long before the next scheduled
+   * cycle-scheduler job (ms, default 15 min).
+   */
+  automatonTurnStepScheduleMarginMs: number;
   // ── Season System (Spec #45) ──────────────────────────────────────
   /** Competitive cycles per season. */
   seasonLengthCycles: number;
@@ -290,6 +312,9 @@ const toEnvConfig = (parsed: z.infer<typeof EnvSchema>): EnvConfig => ({
   team2v2TournamentSchedule: parsed.TEAM_2V2_TOURNAMENT_SCHEDULE,
   team3v3TournamentSchedule: parsed.TEAM_3V3_TOURNAMENT_SCHEDULE,
   grandMeleeSchedule: parsed.GRAND_MELEE_SCHEDULE,
+  automatonTurnConcurrency: parsed.AUTOMATON_TURN_CONCURRENCY,
+  automatonTurnStepMaxMs: parsed.AUTOMATON_TURN_STEP_MAX_MS,
+  automatonTurnStepScheduleMarginMs: parsed.AUTOMATON_TURN_STEP_SCHEDULE_MARGIN_MS,
   seasonLengthCycles: parsed.SEASON_LENGTH_CYCLES,
   preparationLengthCycles: parsed.PREPARATION_LENGTH_CYCLES,
   countdownCycles: parsed.COUNTDOWN_CYCLES,

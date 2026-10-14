@@ -38,6 +38,9 @@ const MODES: { value: LeagueMode; label: string; shortLabel: string }[] = [
 
 const TIERS = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'];
 
+/** Drops the null tier/instance of an unranked team. */
+const isPresent = (value: string | null): value is string => value !== null;
+
 function LeagueStandingsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -140,8 +143,13 @@ function LeagueStandingsPage() {
   useEffect(() => {
     let cancelled = false;
     if (mode === '1v1' && storeRobots.length > 0) {
-      const tiers = new Set<string>(storeRobots.map((r) => r.currentLeague));
-      const instanceIds = new Set<string>(storeRobots.map((r) => r.leagueId).filter(Boolean) as string[]);
+      // Unranked robots (no league_1v1 standing) have no tier/instance to highlight
+      const tiers = new Set<string>(
+        storeRobots.map((r) => r.currentLeague).filter((t): t is string => t !== undefined),
+      );
+      const instanceIds = new Set<string>(
+        storeRobots.map((r) => r.leagueId).filter((id): id is string => typeof id === 'string' && id !== ''),
+      );
       setUserRobotTiers(tiers);
       setUserRobotInstances(instanceIds);
     } else if ((mode === 'koth' || mode === 'grand_melee') && storeRobots.length > 0) {
@@ -201,8 +209,9 @@ function LeagueStandingsPage() {
       setTeamInstances(instancesData);
       // Build set of instance IDs and tiers where user has teams of this size
       const myTeamsOfSize = myTeams.filter(t => t.teamSize === teamSize);
-      const myInstanceIds = new Set(myTeamsOfSize.map(t => t.teamLeagueId));
-      const myTierIds = new Set(myTeamsOfSize.map(t => t.teamLeague));
+      // Unranked teams (no standing in this league) have no tier/instance to highlight
+      const myInstanceIds = new Set(myTeamsOfSize.map(t => t.teamLeagueId).filter(isPresent));
+      const myTierIds = new Set(myTeamsOfSize.map(t => t.teamLeague).filter(isPresent));
       setUserTeamInstances(myInstanceIds);
       setUserTeamTiers(myTierIds);
       setError(null);
@@ -259,8 +268,8 @@ function LeagueStandingsPage() {
       setTeamZoneMeta(standingsData.zoneMeta ? standingsData.zoneMeta as ZoneMeta : null);
       setTeamInstances(instancesData);
       // Build user team tier/instance sets from tag team fields
-      const myTierIds = new Set(myTeams.map(t => t.tagTeamLeague));
-      const myInstanceIds = new Set(myTeams.map(t => t.tagTeamLeagueId));
+      const myTierIds = new Set(myTeams.map(t => t.tagTeamLeague).filter(isPresent));
+      const myInstanceIds = new Set(myTeams.map(t => t.tagTeamLeagueId).filter(isPresent));
       setUserTeamTiers(myTierIds);
       setUserTeamInstances(myInstanceIds);
       setError(null);

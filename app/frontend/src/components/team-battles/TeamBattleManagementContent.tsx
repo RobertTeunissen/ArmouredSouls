@@ -193,7 +193,7 @@ function TeamBattleManagementContent({ teamSize }: TeamBattleManagementContentPr
       {showRegisterModal && (
         <RegisterTeamModal
           teamSize={teamSize}
-          subscribedRobots={allRobots}
+          candidateRobots={allRobots}
           existingTeams={teams}
           onClose={() => setShowRegisterModal(false)}
           onComplete={handleRegisterComplete}
@@ -214,7 +214,7 @@ function TeamBattleManagementContent({ teamSize }: TeamBattleManagementContentPr
         <SwapMemberModal
           team={teamToSwap.team}
           memberToSwap={teamToSwap.member}
-          subscribedRobots={allRobots}
+          candidateRobots={allRobots}
           existingTeams={teams}
           onClose={() => setTeamToSwap(null)}
           onComplete={handleSwapComplete}
@@ -421,7 +421,7 @@ function TeamBattleCard({ team, onDisband, onRename, onSwap, onSwapPositions }: 
               )}
               <div className="text-center">
                 <div className="text-xs text-secondary mb-1">League Points</div>
-                <div className="text-lg font-semibold text-primary">{team.teamLp}</div>
+                <div className="text-lg font-semibold text-primary">{team.teamLp ?? '—'}</div>
               </div>
               <div className="text-center">
                 <div className="text-xs text-secondary mb-1">Record</div>
@@ -449,7 +449,7 @@ function TeamBattleCard({ team, onDisband, onRename, onSwap, onSwapPositions }: 
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                 <div className="text-center">
                   <div className="text-xs text-secondary mb-1">Tag Team LP</div>
-                  <div className="text-lg font-semibold text-primary">{team.tagTeamLp}</div>
+                  <div className="text-lg font-semibold text-primary">{team.tagTeamLp ?? '—'}</div>
                 </div>
                 <div className="text-center">
                   <div className="text-xs text-secondary mb-1">Record</div>
@@ -525,13 +525,13 @@ function ModeEligibilityBadge({ label, eligible, missingMembers }: { label: stri
 
 interface RegisterTeamModalProps {
   teamSize: 2 | 3;
-  subscribedRobots: { robotId: number; robotName: string; subscriptions: { eventType: string; status: string }[] }[];
+  candidateRobots: { robotId: number; robotName: string; subscriptions: { eventType: string; status: string }[] }[];
   existingTeams: TeamBattle[];
   onClose: () => void;
   onComplete: () => void;
 }
 
-function RegisterTeamModal({ teamSize, subscribedRobots, existingTeams, onClose, onComplete }: RegisterTeamModalProps) {
+function RegisterTeamModal({ teamSize, candidateRobots, existingTeams, onClose, onComplete }: RegisterTeamModalProps) {
   const [teamName, setTeamName] = useState('');
   const [selectedRobotIds, setSelectedRobotIds] = useState<number[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -543,7 +543,7 @@ function RegisterTeamModal({ teamSize, subscribedRobots, existingTeams, onClose,
   const robotsOnTeams = new Set(
     existingTeams.flatMap((t) => t.members.map((m) => m.robotId)),
   );
-  const availableRobots = subscribedRobots.filter(
+  const availableRobots = candidateRobots.filter(
     (r) => !robotsOnTeams.has(r.robotId),
   );
 
@@ -769,18 +769,18 @@ function RenameTeamModal({ team, onClose, onComplete }: RenameTeamModalProps) {
 interface SwapMemberModalProps {
   team: TeamBattle;
   memberToSwap: TeamBattleMember;
-  subscribedRobots: { robotId: number; robotName: string; subscriptions: { eventType: string; status: string }[] }[];
+  candidateRobots: { robotId: number; robotName: string; subscriptions: { eventType: string; status: string }[] }[];
   existingTeams: TeamBattle[];
   onClose: () => void;
   onComplete: () => void;
 }
 
-function SwapMemberModal({ team, memberToSwap, subscribedRobots, existingTeams, onClose, onComplete }: SwapMemberModalProps) {
+function SwapMemberModal({ team, memberToSwap, candidateRobots, existingTeams, onClose, onComplete }: SwapMemberModalProps) {
   const [selectedRobotId, setSelectedRobotId] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Filter: subscribed robots not already on a team of this size
+  // Filter: robots not already on a team of this size
   const robotsOnTeams = new Set(
     existingTeams.flatMap((t) => t.members.map((m) => m.robotId)),
   );
@@ -789,7 +789,7 @@ function SwapMemberModal({ team, memberToSwap, subscribedRobots, existingTeams, 
     team.members.filter((m) => m.id !== memberToSwap.id).map((m) => m.robotId),
   );
 
-  const availableRobots = subscribedRobots.filter(
+  const availableRobots = candidateRobots.filter(
     (r) =>
       r.robotId !== memberToSwap.robotId &&
       !currentTeamRobotIds.has(r.robotId) &&
@@ -829,7 +829,7 @@ function SwapMemberModal({ team, memberToSwap, subscribedRobots, existingTeams, 
         <div className="px-6 py-4 space-y-4">
           {availableRobots.length === 0 ? (
             <p className="text-warning text-sm">
-              No other robots available. Subscribe more robots to this league via the Booking Office.
+              {`No other robots available. Every other robot is already on a ${team.teamSize}v${team.teamSize} team or on this team.`}
             </p>
           ) : (
             <div className="space-y-2 max-h-60 overflow-y-auto">

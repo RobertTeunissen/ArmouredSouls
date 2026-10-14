@@ -2,8 +2,8 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: v1.3  
-**Date**: February 7, 2026  
+**Version**: v1.5
+**Date**: October 14, 2026  
 **Author**: GitHub Copilot  
 **Status**: Phase 1 & 2 Complete - Implementation Active  
 **Owner**: Robert Teunissen  
@@ -44,6 +44,8 @@
   - Specified UI requirements for prestige lock indicators
   - Added backend validation requirements
   - Cross-referenced with PRD_PRESTIGE_AND_FAME.md and STABLE_SYSTEM.md
+- v1.5 - Booking Office: subscriptions place robots and teams in a league (October 14, 2026)
+  - Added "Subscriptions and League Standings": the first matchable subscription places the robot or team in Bronze; unsubscribing keeps tier and LP
 
 ---
 
@@ -1654,6 +1656,29 @@ drift apart, because they read one scope map keyed by event type.
 
 The right-hand column is not a permission rule — nothing in it blocks a change. It
 is only when the slot stays occupied after leaving.
+
+### Subscriptions and League Standings
+
+Subscribing is also how a robot or team enters a league. The first time an entity
+becomes matchable in a standing-backed event (`league_1v1`, `koth`, `grand_melee`,
+`league_2v2`, `tag_team`, `league_3v3`) it is placed in that event's Bronze tier with
+0 LP, in the least-full Bronze instance. Creating a robot or registering a team
+places it nowhere.
+
+- A robot enters 1v1 League, KotH or Grand Melee when it subscribes to that event.
+- A team enters 2v2 League or Tag Team (2-robot teams) or 3v3 League (3-robot teams)
+  when the team is complete and **every** member holds that event's subscription.
+  2v2 League and Tag Team are independent: a team can be in one without the other.
+- **Unsubscribing keeps the standing.** The robot or team keeps its tier, LP and
+  record and simply stops being matched; resubscribing continues from there.
+- Swapping a team member keeps the team's standings. A swap needs no subscription;
+  if the new line-up completes an event's set, the team enters that event.
+- Disbanding a team deletes its standings (a re-registered team starts again in
+  Bronze); an account reset deletes all of the stable's standings; the season
+  rollover resets every standing.
+
+Robots without a 1v1 League standing are shown as **Unranked** on the robot pages
+and dashboard. The rule is documented in `PRD_LEAGUE_SYSTEM.md` ("Entering a League").
 
 ### Roster Eligibility Filter
 

@@ -2,7 +2,7 @@
 title: "Entry Requirements"
 description: "Weapon readiness, stable separation, schedule, and eligibility rules."
 order: 6
-lastUpdated: "2026-08-27"
+lastUpdated: "2026-10-14"
 relatedArticles:
   - king-of-the-hill/match-formats
   - king-of-the-hill/rewards
@@ -12,6 +12,7 @@ relatedArticles:
 ## Eligibility
 
 To enter King of the Hill, a robot needs:
+- **Booking Office subscription** — Subscribed to King of the Hill. The first subscription places the robot in KotH's Bronze tier
 - **Weapon readiness** — At least one weapon equipped
 - **Not already scheduled** — Can't be in another pending KotH match
 

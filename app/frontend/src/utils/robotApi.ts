@@ -41,9 +41,10 @@ export interface Robot {
   maxShield: number;
   repairQuoteCredits: number;
   level: number;
-  currentLeague: string;
-  leagueId: string | null;
-  leaguePoints: number;
+  /** Omitted when the robot has no league_1v1 standing (not subscribed). */
+  currentLeague?: string;
+  leagueId?: string | null;
+  leaguePoints?: number;
   userId: number;
   createdAt: string;
   wins: number;
@@ -88,9 +89,9 @@ export interface Robot {
   supportSystems: number;
   formationTactics: number;
   // Team Battle Statistics
-  totalLeague1v1Wins: number;
-  totalLeague1v1Losses: number;
-  totalLeague1v1Draws: number;
+  totalLeague1v1Wins?: number;
+  totalLeague1v1Losses?: number;
+  totalLeague1v1Draws?: number;
   totalLeague2v2Wins: number;
   totalLeague3v3Wins: number;
   // Team memberships (included from teamBattleMembers relation)
@@ -185,13 +186,14 @@ export interface TeamBattleLeagueHistoryEntry {
   teamId: number;
   teamSize: number;
   teamName: string;
-  currentLeague: string;
-  currentLeagueId: string;
-  currentLp: number;
+  /** null when the team has no standing in that league yet (Unranked). */
+  currentLeague: string | null;
+  currentLeagueId: string | null;
+  currentLp: number | null;
   history: LeagueHistoryEntry[];
   tagTeamHistory: LeagueHistoryEntry[];
-  tagTeamCurrentLeague: string;
-  tagTeamCurrentLp: number;
+  tagTeamCurrentLeague: string | null;
+  tagTeamCurrentLp: number | null;
 }
 
 export const fetchRobotTeamBattleLeagueHistory = async (robotId: number): Promise<{ teams: TeamBattleLeagueHistoryEntry[] }> => {

@@ -23,6 +23,7 @@ import TeamBattleLeagueHistory from '../components/TeamBattleLeagueHistory';
 import type { BattleHistory } from '../utils/matchmakingApi';
 import { getProfile } from '../utils/userApi';
 import { isOwnerRobotDetail, useRobotDetail } from '../hooks/useRobotDetail';
+import { UNRANKED_LABEL } from '../utils/tierHelpers';
 import RobotEligibilityChecklist from '../components/robot-setup/RobotEligibilityChecklist';
 
 /** Tabs that render only from the owner payload (`OwnerRobotDetail`). */
@@ -175,7 +176,9 @@ function RobotDetailPage() {
                   <div className="flex items-center gap-2">
                     <span className="text-secondary">Current League:</span>
                     <span className="text-white font-semibold capitalize">
-                      {robot.currentLeague} {robot.leagueId ? robot.leagueId.split('_')[1] : ''}
+                      {robot.currentLeague
+                        ? `${robot.currentLeague} ${robot.leagueId ? robot.leagueId.split('_')[1] : ''}`
+                        : UNRANKED_LABEL}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -210,8 +213,8 @@ function RobotDetailPage() {
                   <div className="bg-surface-elevated p-2 rounded">
                     <div className="text-secondary mb-1">League Points</div>
                     <div className="text-white font-semibold">
-                      {robot.leaguePoints}
-                      {leagueRank && (
+                      {robot.leaguePoints ?? '—'}
+                      {robot.currentLeague && leagueRank && (
                         <span className="text-secondary text-xs ml-1">
                           (#{leagueRank.rank}/{leagueRank.total}, Top {leagueRank.percentile.toFixed(0)}%)
                         </span>
@@ -407,7 +410,8 @@ export default RobotDetailPage;
 /*  League History Tab                                                  */
 /* ------------------------------------------------------------------ */
 
-function LeagueHistoryTab({ robotId, currentTier, currentLp, robotName }: { robotId: number; currentTier: string; currentLp: number; robotName: string }) {
+/** currentTier/currentLp are undefined when the robot has no league_1v1 standing (unranked). */
+function LeagueHistoryTab({ robotId, currentTier, currentLp, robotName }: { robotId: number; currentTier?: string; currentLp?: number; robotName: string }) {
   const [allHistory, setAllHistory] = useState<LeagueHistoryEntry[]>([]);
   const [kothStanding, setKothStanding] = useState<KothStandingData | null>(null);
   const [grandMeleeStanding, setGrandMeleeStanding] = useState<KothStandingData | null>(null);
@@ -462,14 +466,26 @@ function LeagueHistoryTab({ robotId, currentTier, currentLp, robotName }: { robo
       <div className="bg-surface p-6 rounded-lg">
         <h3 className="text-lg font-semibold text-white mb-4">⚔️ 1v1 League History</h3>
         <div className="mb-4 text-sm text-secondary">
-          <span className="font-medium text-white">{robotName}</span>
-          {' '}is currently in <span className="capitalize font-medium text-white">{currentTier}</span> league
-          {' • LP: '}<span className="font-medium text-warning">{currentLp}</span>
+          {currentTier ? (
+            <>
+              <span className="font-medium text-white">{robotName}</span>
+              {' '}is currently in <span className="capitalize font-medium text-white">{currentTier}</span> league
+              {' • LP: '}<span className="font-medium text-warning">{currentLp ?? '—'}</span>
+            </>
+          ) : (
+            <>
+              <span className="font-medium text-white">{robotName}</span> is not yet ranked in the 1v1 League.
+            </>
+          )}
         </div>
         <LeagueTimeline
           history={league1v1History}
-          currentTier={currentTier}
-          emptyMessage={`${robotName} is in ${currentTier} league. No tier changes recorded yet.`}
+          currentTier={currentTier ?? UNRANKED_LABEL}
+          emptyMessage={
+            currentTier
+              ? `${robotName} is in ${currentTier} league. No tier changes recorded yet.`
+              : `${robotName} is not yet ranked in the 1v1 League.`
+          }
         />
       </div>
 

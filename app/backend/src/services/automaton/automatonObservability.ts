@@ -4,10 +4,12 @@
  * - One Turn_Step summary log line (`[automaton-turns]` prefix).
  * - Operator alerts through `sendMonitoringAlert` (the helper the rollover's
  *   `notify` wraps; it never throws) plus `logger.error`, for: a failed turn,
- *   an exhausted Turn_Step budget, the same Goal Saving for more than 14
+ *   a Turn_Step that reached its deadline (kind
+ *   `automaton_step_budget_exhausted`), the same Goal Saving for more than 14
  *   consecutive turns (informational), a negative balance at turn start,
  *   `invalid_parameters`, Free_Upkeep issues (the product owner asked to be
- *   told whenever something fails), a failed Turn_Step call, a rejected
+ *   told whenever something fails), a failed Turn_Step call (also a cutover
+ *   or a lost lease that stopped a running step), a rejected
  *   Strategy_Version upgrade (one alert per profile, task 9.9) and
  *   Catalogue_Sync conflicts (task 8.2).
  *
@@ -18,6 +20,7 @@
 import logger from '../../config/logger';
 import { sendMonitoringAlert } from '../../utils/monitoringWebhook';
 import type { AutomatonTurnTrigger } from '../../../generated/prisma';
+import type { TurnStepDeadlineSource } from './turnBudget';
 
 export const AUTOMATON_ALERT_KINDS = [
   'automaton_turn_failed',
@@ -37,7 +40,7 @@ export const ALERT_TEXT_LIMIT = 300;
 
 const TITLES: Record<AutomatonAlertKind, string> = {
   automaton_turn_failed: '🚨 Automaton turn failed',
-  automaton_step_budget_exhausted: '🚨 Automaton Turn_Step budget exhausted',
+  automaton_step_budget_exhausted: '🚨 Automaton Turn_Step deadline reached',
   automaton_saving_streak: 'ℹ️ Automaton saving for the same goal',
   automaton_negative_balance: '⚠️ Automaton balance negative at turn start',
   automaton_invalid_parameters: '🚨 Automaton strategy parameters invalid',
@@ -136,11 +139,44 @@ export function alertUpkeepIssues(catalogueKey: string, turn: TurnLabel, issues:
   );
 }
 
-export function alertStepBudgetExhausted(turn: TurnLabel, skipped: number, durationMs: number): Promise<string> {
+/** What `alertStepBudgetExhausted` reports about a Turn_Step that reached its deadline. */
+export interface StepDeadlineAlertInfo {
+  /** Stables recorded `step_budget_exhausted`. */
+  skipped: number;
+  durationMs: number;
+  /** The deadline minus the step start. */
+  budgetMs: number;
+  deadlineSource: TurnStepDeadlineSource;
+  nextScheduledJobAtMs: number | null;
+  concurrency: number;
+}
+
+function utcClock(ms: number): string {
+  const at = new Date(ms);
+  return `${String(at.getUTCHours()).padStart(2, '0')}:${String(at.getUTCMinutes()).padStart(2, '0')}`;
+}
+
+function describeDeadline(info: StepDeadlineAlertInfo): string {
+  switch (info.deadlineSource) {
+    case 'schedule':
+      return info.nextScheduledJobAtMs === null
+        ? 'before the next scheduled job'
+        : `before the next scheduled job at ${utcClock(info.nextScheduledJobAtMs)} UTC`;
+    case 'cap':
+      return 'AUTOMATON_TURN_STEP_MAX_MS';
+    case 'floor':
+      return '300 s minimum';
+  }
+}
+
+/** The Turn_Step reached its deadline before starting every stable (supersedes R7.10). */
+export function alertStepBudgetExhausted(turn: TurnLabel, info: StepDeadlineAlertInfo): Promise<string> {
   return raiseAutomatonAlert(
     'automaton_step_budget_exhausted',
     `Turn_Step ${describeTurn(turn)}`,
-    `${skipped} stable(s) skipped with step_budget_exhausted after ${Math.round(durationMs / 1000)} s`,
+    `${info.skipped} stable(s) not started before the deadline after ${Math.round(info.durationMs / 1000)} s and skipped `
+      + `(step_budget_exhausted); they act at their next turn. Deadline: ${describeDeadline(info)}, `
+      + `budget ${Math.round(info.budgetMs / 1000)} s, ${info.concurrency} in parallel`,
   );
 }
 
@@ -181,7 +217,7 @@ export interface TurnStepSummary extends TurnLabel {
   /** Profiles in the fixed cohort. */
   processed: number;
   completed: number;
-  /** Skipped by reason (`program_off`, `step_budget_exhausted`). */
+  /** Skipped by reason (`program_off`, `step_budget_exhausted`, `cutover_in_progress`). */
   skipped: Record<string, number>;
   failed: number;
   /** Profiles whose record was already final (retried step). */
@@ -195,10 +231,26 @@ export interface TurnStepSummary extends TurnLabel {
   /** Blocked Goals in the final evaluations. */
   blocked: number;
   durationMs: number;
+  /** True once the deadline stopped the step from starting a stable. */
   budgetExhausted: boolean;
+  /** Turns run at once (`effectiveTurnConcurrency`). */
+  concurrency: number;
+  /** The Turn_Step deadline minus its start. */
+  budgetMs: number;
+  /** What set the deadline. */
+  deadlineSource: TurnStepDeadlineSource;
+  /** True once a lease renewal found the lease taken over. */
+  leaseLost: boolean;
 }
 
-export function emptyTurnStepSummary(turn: TurnLabel, source: TurnStepSummary['source']): TurnStepSummary {
+/** How the Turn_Step runs: concurrency and deadline. */
+export interface TurnStepRunShape {
+  concurrency: number;
+  budgetMs: number;
+  deadlineSource: TurnStepDeadlineSource;
+}
+
+export function emptyTurnStepSummary(turn: TurnLabel, source: TurnStepSummary['source'], run: TurnStepRunShape): TurnStepSummary {
   return {
     ...turn,
     source,
@@ -214,6 +266,10 @@ export function emptyTurnStepSummary(turn: TurnLabel, source: TurnStepSummary['s
     blocked: 0,
     durationMs: 0,
     budgetExhausted: false,
+    concurrency: run.concurrency,
+    budgetMs: run.budgetMs,
+    deadlineSource: run.deadlineSource,
+    leaseLost: false,
   };
 }
 
@@ -241,6 +297,9 @@ export function formatTurnStepSummary(summary: TurnStepSummary): string {
     `saving=${summary.saving}`,
     `blocked=${summary.blocked}`,
     `durationMs=${summary.durationMs}`,
+    `concurrency=${summary.concurrency}`,
+    `budgetMs=${summary.budgetMs}`,
+    `deadline=${summary.deadlineSource}`,
   ].join(' ');
 }
 

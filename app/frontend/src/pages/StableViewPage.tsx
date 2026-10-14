@@ -31,8 +31,9 @@ interface PublicRobot {
   name: string;
   imageUrl: string | null;
   elo: number;
-  currentLeague: string;
-  leaguePoints: number;
+  /** Omitted when the robot has no league_1v1 standing (Unranked). */
+  currentLeague?: string;
+  leaguePoints?: number;
   wins: number;
   losses: number;
   draws: number;

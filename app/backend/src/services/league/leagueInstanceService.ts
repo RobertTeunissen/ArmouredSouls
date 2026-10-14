@@ -1,14 +1,15 @@
 import prisma from '../../lib/prisma';
 import { Prisma, StandingsMode } from '../../../generated/prisma';
 import logger from '../../config/logger';
+import { MAX_ENTITIES_PER_INSTANCE, pickLeagueInstanceInTransaction } from './leagueInstancePlacement';
 
 // League tiers in order
 export const LEAGUE_TIERS = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'] as const;
 export type LeagueTier = typeof LEAGUE_TIERS[number];
 
 // Maximum entities per league instance (unified across all modes)
-export const MAX_ROBOTS_PER_INSTANCE = 100;
-export const MAX_TEAMS_PER_INSTANCE = 100;
+export const MAX_ROBOTS_PER_INSTANCE = MAX_ENTITIES_PER_INSTANCE;
+export const MAX_TEAMS_PER_INSTANCE = MAX_ENTITIES_PER_INSTANCE;
 
 // Threshold for triggering instance rebalancing
 export const REBALANCE_THRESHOLD = 20;
@@ -130,61 +131,12 @@ export async function assignLeagueInstance(tier: LeagueTier, options: InstanceOp
 /**
  * Assign an entity to a league instance with advisory locking (for concurrent writes).
  * Used by team creation where multiple teams may be assigned simultaneously.
+ * Delegates to the shared tx-scoped picker in `leagueInstancePlacement`.
  */
 export async function assignLeagueInstanceWithLock(tier: LeagueTier, options: InstanceOptions): Promise<string> {
-  return await prisma.$transaction(async (tx) => {
-    // Acquire advisory lock scoped to mode + tier to avoid collision
-    const lockId = hashTierName(`${options.mode}_${tier}`);
-    await tx.$executeRaw`SELECT pg_advisory_xact_lock(${lockId})`;
-
-    // Group standings by leagueInstanceId
-    const instances = await tx.standing.groupBy({
-      by: ['leagueInstanceId'],
-      where: {
-        mode: options.mode as StandingsMode,
-        tier,
-      },
-      _count: {
-        id: true,
-      },
-    });
-
-    if (instances.length === 0) {
-      return `${tier}_1`;
-    }
-
-    const leagueInstances = instances
-      .map((instance) => {
-        const instanceNumber = parseInt(instance.leagueInstanceId.split('_')[1] || '1');
-        return {
-          leagueId: instance.leagueInstanceId,
-          instanceNumber,
-          currentEntities: instance._count.id,
-        };
-      })
-      .sort((a, b) => a.currentEntities - b.currentEntities);
-
-    const leastFull = leagueInstances[0];
-
-    if (leastFull.currentEntities >= options.maxPerInstance) {
-      const nextInstanceNumber = Math.max(...leagueInstances.map((i) => i.instanceNumber)) + 1;
-      return `${tier}_${nextInstanceNumber}`;
-    }
-
-    return leastFull.leagueId;
-  });
-}
-
-/**
- * Hash a tier/mode string to a consistent integer for advisory locking.
- */
-function hashTierName(name: string): number {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = ((hash << 5) - hash) + name.charCodeAt(i);
-    hash = hash & hash;
-  }
-  return Math.abs(hash) % 2147483647;
+  return await prisma.$transaction((tx) =>
+    pickLeagueInstanceInTransaction(tx, options.mode as StandingsMode, tier, options.maxPerInstance),
+  );
 }
 
 /**

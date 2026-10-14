@@ -79,6 +79,8 @@ const HEAVY_TESTS = [
   'tests/integration/bronzeLeagueRebalancing.test.ts',
   'tests/integration/byeInvariant.test.ts',
   'tests/integration/byeScopeAndShape.test.ts',
+  // Unified standings creation rule: 60 robots, whole-mode KotH rebalancing.
+  'tests/integration/kothNeverPlayedPromotion.test.ts',
   'tests/integration/seasonPurgeAndReset.test.ts',
   'tests/integration/seasonRollover.test.ts',
   'tests/integration/tagTeamAutoRepair.test.ts',
@@ -119,6 +121,8 @@ const DB_DEPENDENT = [
   'tests/integration/automatonCatalogueExport.test.ts',
   'tests/integration/automatonProfile.test.ts',
   'tests/integration/automatonTurnWiring.test.ts',
+  'tests/integration/automatonTurnConcurrency.test.ts',
+  'tests/integration/automatonTurnStandingsConcurrency.test.ts',
   'tests/integration/automatonSettlementWiring.test.ts',
   'tests/integration/automatonNeedAttention.test.ts',
   'tests/integration/automatonStrategyComparison.test.ts',
@@ -128,6 +132,8 @@ const DB_DEPENDENT = [
   'tests/integration/automatonAdminRoutes.test.ts',
   // Achievement unlock serialization (pre-existing duplicate-insert fix)
   'tests/integration/achievementUnlockSerialization.test.ts',
+  // Unified standings creation rule (create on first matchable subscription)
+  'tests/integration/standingsCreationRule.test.ts',
   // Hall of Records "Most Battles" and its accolade rank on the all-modes count (SQL)
   'tests/integration/mostBattlesAllModes.test.ts',
   // Spec #55 — Domain_Service_Extraction (task group 2)

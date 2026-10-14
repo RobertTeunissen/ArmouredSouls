@@ -2,7 +2,7 @@
 title: "League Tiers & Instances"
 description: "The six competitive tiers in Armoured Souls — from Bronze to Champion — and how the instance system keeps leagues balanced and competitive."
 order: 1
-lastUpdated: "2026-08-27"
+lastUpdated: "2026-10-14"
 relatedArticles:
   - leagues/matchmaking
   - leagues/league-points
@@ -22,14 +22,14 @@ Leagues aren't just labels. Your tier directly affects your battle rewards, the 
 
 | Tier | Color | Description |
 |------|-------|-------------|
-| **Bronze** | 🥉 | The starting tier for all new robots. Competition is forgiving, rewards are modest, and it's the best place to learn the game. |
+| **Bronze** | 🥉 | The starting tier for every robot and team entering a league. Competition is forgiving, rewards are modest, and it's the best place to learn the game. |
 | **Silver** | 🥈 | A step up in competition. Robots here have proven they can win consistently and are starting to specialize their builds. |
 | **Gold** | 🥇 | The middle ground. Gold-tier robots are well-built and strategically configured. Battles become noticeably tougher. |
 | **Platinum** | 💎 | Elite competition begins here. Robots in Platinum have optimized builds and strong attribute investments. |
 | **Diamond** | 💠 | Near the top. Diamond-tier robots are finely tuned machines with high-level attributes and carefully chosen loadouts. |
 | **Champion** | 🏆 | The pinnacle. Only the best robots reach Champion tier. There's no promotion beyond this — Champion is the endgame. |
 
-All new robots start in **Bronze** league with a default ELO of 1200 and 0 League Points. From there, performance determines whether you climb or fall.
+A robot enters a league's **Bronze** tier with 0 League Points the first time you subscribe it to that league in the [Booking Office](/guide/facilities/booking-office). Robots start with a default ELO of 1200. Until a robot is subscribed to the 1v1 League it shows as **Unranked** there. Unsubscribing later keeps its tier and LP — it simply stops being matched. From there, performance determines whether you climb or fall.
 
 ```callout-tip
 Don't rush to leave Bronze. It's the safest place to experiment with different builds, stances, and loadouts. The lower rewards are offset by lower repair costs and weaker opponents — giving you room to learn without going bankrupt.
@@ -54,7 +54,7 @@ Instances serve two purposes:
 
 ### How Robots Are Placed
 
-- **New robots** are placed in the instance with the most free spots, keeping populations balanced naturally.
+- **Newly subscribed robots** are placed in the Bronze instance with the most free spots, keeping populations balanced naturally.
 - **Promoted/demoted robots** are also placed in the instance with the most available space in their new tier.
 - **Rebalancing** occurs when any instance exceeds 100 robots. All robots in that tier are sorted by LP and ELO, then redistributed round-robin across instances to maintain competitive balance.
 

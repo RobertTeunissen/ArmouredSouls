@@ -1,14 +1,15 @@
 # Product Requirements Document: Matchmaking System
 
-**Last Updated**: February 9, 2026  
+**Last Updated**: October 14, 2026
 **Status**: ✅ IMPLEMENTED - All Core Features Complete  
 **Owner**: Robert Teunissen  
 **Epic**: Matchmaking and Battle Scheduling System  
-**Version**: 2.0
+**Version**: 2.1
 
 ## Version History
 - v1.0 - Initial Implemented Version by GitHub Copilot (January 31, 2026)
 - v2.0 - Consolidated Version (February 9, 2025)
+- v2.1 - Unified standings creation: robots and teams enter a mode's Bronze league on their first matchable subscription, never at creation (October 14, 2026)
 
 ---
 
@@ -467,7 +468,7 @@ The scheduled batch model allows:
 - Falls back to adjacent instances if needed
 - Auto-balancing when instances become imbalanced after promotions
 
-**Design Decision**: 100 robots per instance with auto-balancing. When bronze_1 reaches 100, bronze_2 opens. New robots placed in instance with most free spots. After promotions/demotions, system balances instances if deviation >20 robots.
+**Design Decision**: 100 robots per instance with auto-balancing. When bronze_1 reaches 100, bronze_2 opens. A robot or team is placed the first time it becomes matchable by subscription (robot subscribed; team complete with every member subscribed), in the least-full Bronze instance; a new instance opens when every Bronze instance holds 100. See PRD_LEAGUE_SYSTEM.md "Entering a League". After promotions/demotions, system balances instances if deviation >20 robots.
 
 **US-6: Matchmaking Queue Management**
 - **As the** matchmaking system
@@ -583,7 +584,8 @@ The scheduled batch model allows:
 - **So that** new robots can start competing immediately
 
 **Acceptance Criteria:**
-- All new robots start in Bronze league with 0 league points
+- A robot or team enters Bronze with 0 league points the first time it subscribes to a mode (teams: when every member holds the subscription); creating a robot or team creates no standings
+- Unsubscribing or swapping a team member keeps the standing; team disband and account reset delete it; the season rollover wipes all standings
 - Initial ELO: 1200 (default)
 - First matchmaking uses ELO only (no league points yet)
 - Random pairings within ELO range for first batch
@@ -1412,7 +1414,7 @@ See [COMBAT_MESSAGES.md](COMBAT_MESSAGES.md) for 100+ message templates and comp
    - **Solution**: Auto-balance when deviation >20 robots
    - Redistribute robots proportionally
    - Run after each promotion/demotion cycle
-   - New robots placed in instance with most free spots
+   - Newly subscribed robots and teams placed in the least-full Bronze instance
 
 4. **Robots Scheduled But Not Battle-Ready**
    - Solution: Cancel scheduled match if robot HP drops below 50%
@@ -1912,7 +1914,7 @@ curl -X POST http://localhost:3001/api/admin/cycles/bulk \
 - ✅ Small league population (<10 robots, skip rebalancing)
 - ✅ Tied league points (ELO tiebreaker)
 - ✅ Robot promoted while scheduled (battles execute before rebalancing)
-- ✅ First day initialization (all robots start in Bronze)
+- ✅ First day initialization (robots and teams enter Bronze on their first subscription)
 - ✅ Database transaction failures (rollback incomplete battles)
 
 ### Performance Benchmarks
@@ -2740,7 +2742,7 @@ The Armoured Souls matchmaking system is **fully implemented and operational** a
 - ✅ Automated scheduling (daily cycle workflow)
 - ✅ League progression (top 10% promotion AND ≥25 league points, bottom 10% demotion, min 5 cycles)
 - ✅ Transparent display (upcoming matches, history, standings)
-- ✅ First day solution (all robots start in Bronze)
+- ✅ First day solution (robots and teams enter Bronze on their first subscription)
 - ✅ Edge cases handled (odd numbers, no opponents, same-stable, etc.)
 - ✅ Battle readiness warnings (3 locations)
 - ✅ Bye-robot matches (participation reward — Spec #49)

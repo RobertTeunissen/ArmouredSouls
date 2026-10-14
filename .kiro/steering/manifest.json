@@ -38,6 +38,6 @@
     { "name": "test", "path": "app/backend/tests/auth.test.ts" },
     { "name": "prisma-schema", "path": "app/backend/prisma/schema.prisma" },
     { "name": "ci-workflow", "path": ".github/workflows/ci.yml" },
-    { "name": "spec", "path": ".kiro/specs/to-do/8-battle-replay-admin/requirements.md" }
+    { "name": "spec", "path": ".kiro/specs/done-october26/57-automaton-catalogue-expansion/requirements.md" }
   ]
 }

@@ -31,11 +31,17 @@ import {
   STEP_BUDGET_EXHAUSTED,
   TURN_ACTION_LIMIT,
   TURN_BUDGET_EXHAUSTED,
-  TURN_STEP_BUDGET_MS,
+  CUTOVER_IN_PROGRESS,
+  TURN_STEP_LEASE_LOST,
+  TURN_STEP_LEASE_RENEW_MS,
+  TURN_STEP_LEASE_TTL_MS,
+  TURN_STEP_MIN_BUDGET_MS,
+  type TurnStepDependencies,
   type TurnStepInput,
 } from '../automatonTurnService';
 import { setProgramSwitch } from '../programSwitch';
-import { fakeDb, resetFakeDb, seedTurn, type FakeProfileRow } from './helpers/fakeTurnDb';
+import logger from '../../../config/logger';
+import { fakeDb, fakePrisma, resetFakeDb, seedTurn, type FakeProfileRow } from './helpers/fakeTurnDb';
 import { facilities, stable } from './helpers/automatonFixtures';
 
 jest.mock('../../../lib/prisma', () => ({
@@ -68,7 +74,10 @@ const mockIdentity = resolveCanonicalCycleIdentity as jest.MockedFunction<typeof
 const mockLoadFacts = loadStableFacts as jest.MockedFunction<typeof loadStableFacts>;
 const mockUpkeep = runFreeUpkeep as jest.MockedFunction<typeof runFreeUpkeep>;
 const mockExecute = executeAction as jest.MockedFunction<typeof executeAction>;
+const mockLoggerError = logger.error as jest.MockedFunction<typeof logger.error>;
 const mockResume = jest.mocked(resumeIncompleteFitouts);
+
+const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
 const GOAL_ID = 'fixture.v1.01.facility.training_facility';
 const STEP_COST = 1_000;
@@ -91,6 +100,15 @@ const strategy: UpgradeStrategy = {
   definition: { schemaVersion: 1, key: 'fixture', version: 1, displayName: 'Fixture', description: '', buildOrder: [] },
 };
 const registry: StrategyRegistry = createStrategyRegistry([strategy]);
+
+/**
+ * Dependencies of the sequential tests: one turn at a time (so ordering and
+ * fake-clock assertions keep their meaning) and no scheduled job, so the
+ * deadline is the AUTOMATON_TURN_STEP_MAX_MS cap whatever the local `.env` says.
+ */
+function sequential(extra: TurnStepDependencies = {}): TurnStepDependencies {
+  return { registry, concurrency: 1, nextScheduledJobAt: () => null, ...extra };
+}
 
 const facilityAction = (toLevel: number): PlannedAction => ({ kind: 'facility_upgrade', facilityType: 'training_facility', toLevel, cost: STEP_COST });
 const actionable = (action: PlannedAction): GoalOutcome => ({ kind: 'actionable', goalId: GOAL_ID, action, cost: STEP_COST });
@@ -177,7 +195,7 @@ describe('runTurnStep — cohort, Turn_Records and retries (R7.6, R7.9)', () => 
     addProfile(3, 20, { status: 'draft' });
     script = buyUntil(2);
 
-    const summary = await runTurnStep(INPUT, { registry });
+    const summary = await runTurnStep(INPUT, sequential());
 
     expect(summary).toMatchObject({ processed: 2, completed: 2, failed: 0, saving: 2, creditsSpent: 4 * STEP_COST });
     expect(summary.actionsByKind).toEqual({ facility_upgrade: 4 });
@@ -208,7 +226,7 @@ describe('runTurnStep — cohort, Turn_Records and retries (R7.6, R7.9)', () => 
     const failed = seedTurn({ profileId: 3, seasonNumber: 3, trigger: 'settlement', slot: 42, status: 'failed', reason: 'X', attempt: 1 });
     script = buyUntil(1);
 
-    const summary = await runTurnStep(INPUT, { registry });
+    const summary = await runTurnStep(INPUT, sequential());
 
     expect(summary).toMatchObject({ processed: 3, alreadyFinal: 2, completed: 1 });
     expect(mockLoadFacts.mock.calls.map((call) => call[1])).toEqual([3]);
@@ -222,17 +240,17 @@ describe('runTurnStep — cohort, Turn_Records and retries (R7.6, R7.9)', () => 
     addProfile(1, 10);
     const stale = seedTurn({ profileId: 1, seasonNumber: 3, trigger: 'settlement', slot: 42, status: 'in_progress', attempt: 2 });
 
-    await runTurnStep(INPUT, { registry });
+    await runTurnStep(INPUT, sequential());
 
     expect(stale).toMatchObject({ attempt: 3, status: 'completed' });
   });
 
   it('keys records by season, trigger and slot', async () => {
     addProfile(1, 10);
-    await runTurnStep(INPUT, { registry });
-    await runTurnStep({ ...INPUT, trigger: 'preparation', slot: 2 }, { registry });
-    await runTurnStep({ ...INPUT, trigger: 'season_open', seasonNumber: 4, slot: 0, source: 'rollover' }, { registry });
-    await runTurnStep(INPUT, { registry });
+    await runTurnStep(INPUT, sequential());
+    await runTurnStep({ ...INPUT, trigger: 'preparation', slot: 2 }, sequential());
+    await runTurnStep({ ...INPUT, trigger: 'season_open', seasonNumber: 4, slot: 0, source: 'rollover' }, sequential());
+    await runTurnStep(INPUT, sequential());
 
     expect(turnsOf(1).map((t) => `${t.seasonNumber}/${t.trigger}/${t.slot}/${t.status}`))
       .toEqual(['3/settlement/42/completed', '3/preparation/2/completed', '4/season_open/0/completed']);
@@ -280,7 +298,7 @@ describe('runTurnStep — Program_Switch (R2.7, R2.8)', () => {
     script = buyUntil(3);
     await setProgramSwitch(false, 99);
 
-    const summary = await runTurnStep(INPUT, { registry });
+    const summary = await runTurnStep(INPUT, sequential());
 
     expect(summary).toMatchObject({ processed: 2, completed: 0, skipped: { program_off: 2 } });
     expect(fakeDb.turns.map((t) => [t.status, t.reason])).toEqual([['skipped', 'program_off'], ['skipped', 'program_off']]);
@@ -292,33 +310,84 @@ describe('runTurnStep — Program_Switch (R2.7, R2.8)', () => {
   it('applies a switch change from the next Turn_Step', async () => {
     addProfile(1, 10);
     await setProgramSwitch(false, 99);
-    await runTurnStep(INPUT, { registry });
+    await runTurnStep(INPUT, sequential());
     await setProgramSwitch(true, 99);
-    const summary = await runTurnStep({ ...INPUT, slot: 43 }, { registry });
+    const summary = await runTurnStep({ ...INPUT, slot: 43 }, sequential());
 
     expect(summary.completed).toBe(1);
     expect(turnsOf(1).map((t) => t.status)).toEqual(['skipped', 'completed']);
   });
 });
 
-describe('runTurnStep — budgets (R5.11, R7.10)', () => {
-  it('skips the remaining profiles with step_budget_exhausted once 300 s are used, and alerts', async () => {
-    addProfile(1, 10);
-    addProfile(2, 20);
-    addProfile(3, 30);
-    let clock = 0;
-    // Each turn takes 200 s of the step's clock.
-    mockLoadFacts.mockImplementation(async (_db, profileId) => {
-      clock += 200_000;
-      return factsByProfile.get(profileId) as StableFacts;
+const MINUTE = 60_000;
+const CLOCK_START = 1_000_000;
+
+/** Three stables whose turns each take `turnMs` of the step's fake clock. */
+function threeTimedStables(turnMs: number): { now: () => number } {
+  addProfile(1, 10);
+  addProfile(2, 20);
+  addProfile(3, 30);
+  let clock = CLOCK_START;
+  mockLoadFacts.mockImplementation(async (_db, profileId) => {
+    clock += turnMs;
+    return factsByProfile.get(profileId) as StableFacts;
+  });
+  return { now: () => clock };
+}
+
+describe('runTurnStep — budgets (R5.11; Turn_Step deadline supersedes R7.10)', () => {
+  it('stops starting stables before the next scheduled job minus the margin, records them step_budget_exhausted, and alerts', async () => {
+    const { now } = threeTimedStables(25 * MINUTE);
+
+    const summary = await runTurnStep(INPUT, sequential({
+      now,
+      maxMs: 6 * 60 * MINUTE,
+      scheduleMarginMs: 15 * MINUTE,
+      nextScheduledJobAt: (ms) => ms + 60 * MINUTE,
+    }));
+
+    // Deadline = start + 45 min: turns start at 0 and 25 min; the third would start at 50 min.
+    expect(summary).toMatchObject({
+      completed: 2, skipped: { [STEP_BUDGET_EXHAUSTED]: 1 }, budgetExhausted: true,
+      deadlineSource: 'schedule', budgetMs: 45 * MINUTE, concurrency: 1, leaseLost: false,
     });
-
-    const summary = await runTurnStep(INPUT, { registry, now: () => clock });
-
-    expect(summary).toMatchObject({ completed: 2, skipped: { [STEP_BUDGET_EXHAUSTED]: 1 }, budgetExhausted: true });
     expect(turnsOf(3)[0]).toMatchObject({ status: 'skipped', reason: STEP_BUDGET_EXHAUSTED });
-    expect(clock).toBeGreaterThan(TURN_STEP_BUDGET_MS);
-    expect(alerts.some((a) => a.includes('Turn_Step budget exhausted') && a.includes('1 stable(s) skipped'))).toBe(true);
+    const deadlineAlerts = alerts.filter((a) => a.includes('Turn_Step deadline reached'));
+    expect(deadlineAlerts).toHaveLength(1);
+    expect(deadlineAlerts[0]).toContain('1 stable(s) not started before the deadline');
+    expect(deadlineAlerts[0]).toContain('before the next scheduled job at');
+    expect(deadlineAlerts[0]).toContain('budget 2700 s, 1 in parallel');
+  });
+
+  it('uses the AUTOMATON_TURN_STEP_MAX_MS cap when no scheduled job is known', async () => {
+    const { now } = threeTimedStables(400_000);
+
+    const summary = await runTurnStep(INPUT, sequential({ now, maxMs: 600_000, nextScheduledJobAt: () => null }));
+
+    expect(summary).toMatchObject({ completed: 2, skipped: { [STEP_BUDGET_EXHAUSTED]: 1 }, deadlineSource: 'cap', budgetMs: 600_000 });
+    expect(alerts.some((a) => a.includes('Turn_Step deadline reached') && a.includes('Deadline: AUTOMATON_TURN_STEP_MAX_MS'))).toBe(true);
+  });
+
+  it('still gives a late step the 300 s floor', async () => {
+    const { now } = threeTimedStables(200_000);
+
+    const summary = await runTurnStep(INPUT, sequential({
+      now, maxMs: 6 * 60 * MINUTE, scheduleMarginMs: 15 * MINUTE, nextScheduledJobAt: (ms) => ms + MINUTE,
+    }));
+
+    expect(summary).toMatchObject({
+      completed: 2, skipped: { [STEP_BUDGET_EXHAUSTED]: 1 }, deadlineSource: 'floor', budgetMs: TURN_STEP_MIN_BUDGET_MS,
+    });
+    expect(alerts.some((a) => a.includes('Turn_Step deadline reached') && a.includes('Deadline: 300 s minimum'))).toBe(true);
+  });
+
+  it('raises no deadline alert when every stable started in time', async () => {
+    const { now } = threeTimedStables(MINUTE);
+
+    const summary = await runTurnStep(INPUT, sequential({ now, maxMs: 600_000 }));
+
+    expect(summary).toMatchObject({ completed: 3, skipped: {}, budgetExhausted: false, deadlineSource: 'cap' });
+    expect(alerts.some((a) => a.includes('Turn_Step deadline reached'))).toBe(false);
   });
 
   it('never starts an action whose charged steps would pass the 60-action limit (multi-step action at 57)', async () => {
@@ -336,7 +405,7 @@ describe('runTurnStep — budgets (R5.11, R7.10)', () => {
     expect(chargedStepCount(chain)).toBe(4);
     script = (facts) => (facts.facilities.training_facility < 57 ? actionable(facilityAction(facts.facilities.training_facility + 1)) : actionable(chain));
 
-    const summary = await runTurnStep(INPUT, { registry });
+    const summary = await runTurnStep(INPUT, sequential());
 
     expect(mockExecute).toHaveBeenCalledTimes(57);
     expect(mockExecute.mock.calls.every((call) => call[0].kind === 'facility_upgrade')).toBe(true);
@@ -351,7 +420,7 @@ describe('runTurnStep — budgets (R5.11, R7.10)', () => {
     addProfile(1, 10);
     script = buyUntil(100);
 
-    await runTurnStep(INPUT, { registry });
+    await runTurnStep(INPUT, sequential());
 
     expect(mockExecute).toHaveBeenCalledTimes(TURN_ACTION_LIMIT);
     expect(turnsOf(1)[0]).toMatchObject({ status: 'completed', reason: TURN_BUDGET_EXHAUSTED });
@@ -371,7 +440,7 @@ describe('runTurnStep — failures (R6.6, R7.8, R11.8)', () => {
       return executeScripted(action, goalId, facts, ctx, cursor);
     });
 
-    const summary = await runTurnStep(INPUT, { registry });
+    const summary = await runTurnStep(INPUT, sequential());
 
     expect(summary).toMatchObject({ completed: 1, failed: 1 });
     expect(turnsOf(1)[0]).toMatchObject({ status: 'failed', reason: 'INSUFFICIENT_CREDITS', creditsSpent: STEP_COST });
@@ -388,7 +457,7 @@ describe('runTurnStep — failures (R6.6, R7.8, R11.8)', () => {
       throw new AutomatonError(AutomatonErrorCode.AUTOMATON_WEAPON_UNKNOWN, 'Weapon "Ghost Blade" is not in the weapon catalogue', 500);
     };
 
-    const summary = await runTurnStep(INPUT, { registry });
+    const summary = await runTurnStep(INPUT, sequential());
 
     expect(summary.failed).toBe(1);
     expect(turnsOf(1)[0]).toMatchObject({ status: 'failed', reason: 'AUTOMATON_WEAPON_UNKNOWN' });
@@ -398,7 +467,7 @@ describe('runTurnStep — failures (R6.6, R7.8, R11.8)', () => {
   it('ends invalid_parameters with an alert when the pinned Strategy_Version has no file (no migration)', async () => {
     addProfile(1, 10, { strategyVersion: 2 });
 
-    await runTurnStep(INPUT, { registry });
+    await runTurnStep(INPUT, sequential());
 
     expect(turnsOf(1)[0]).toMatchObject({ status: 'failed', reason: 'invalid_parameters', strategyVersion: 2 });
     expect(mockLoadFacts).not.toHaveBeenCalled();
@@ -408,7 +477,7 @@ describe('runTurnStep — failures (R6.6, R7.8, R11.8)', () => {
   it('ends invalid_parameters when the stored Goal_Targets fail the pinned version', async () => {
     addProfile(1, 10, { strategyParameters: { targets: { [GOAL_ID]: 11 } } });
 
-    await runTurnStep(INPUT, { registry });
+    await runTurnStep(INPUT, sequential());
 
     expect(turnsOf(1)[0]).toMatchObject({ status: 'failed', reason: 'invalid_parameters' });
     expect(mockExecute).not.toHaveBeenCalled();
@@ -417,7 +486,7 @@ describe('runTurnStep — failures (R6.6, R7.8, R11.8)', () => {
   it('fails AUTOMATON_PROFILE_INVALID on a malformed Event_Order', async () => {
     addProfile(1, 10, { eventOrder: ['not_an_event'] });
 
-    await runTurnStep(INPUT, { registry });
+    await runTurnStep(INPUT, sequential());
 
     expect(turnsOf(1)[0]).toMatchObject({ status: 'failed', reason: 'AUTOMATON_PROFILE_INVALID' });
   });
@@ -427,7 +496,7 @@ describe('runTurnStep — failures (R6.6, R7.8, R11.8)', () => {
     script = () => actionable({ kind: 'weapon_stage', robotSlot: 1, toStage: 1, steps: [] });
     mockExecute.mockImplementation(async (_action, _goalId, facts) => ({ facts, upkeepIssues: [] }));
 
-    await runTurnStep(INPUT, { registry });
+    await runTurnStep(INPUT, sequential());
 
     expect(mockExecute).toHaveBeenCalledTimes(1);
     expect(turnsOf(1)[0]).toMatchObject({ status: 'failed', reason: 'AUTOMATON_NO_PROGRESS' });
@@ -437,7 +506,7 @@ describe('runTurnStep — failures (R6.6, R7.8, R11.8)', () => {
     addProfile(1, 10, { currency: -5_000 });
     script = (facts) => (facts.balance >= STEP_COST ? actionable(facilityAction(1)) : saving);
 
-    await runTurnStep(INPUT, { registry });
+    await runTurnStep(INPUT, sequential());
 
     expect(mockUpkeep).toHaveBeenCalledTimes(2);
     expect(mockExecute).not.toHaveBeenCalled();
@@ -449,7 +518,7 @@ describe('runTurnStep — failures (R6.6, R7.8, R11.8)', () => {
     addProfile(1, 10);
     upkeepIssues.set(1, [{ part: 'teams', code: 'AUTOMATON_TEAM_NAME_MISSING', message: 'No Team_Names entry for 2v2 team 1', teamSize: 2, teamIndex: 0 }]);
 
-    await runTurnStep(INPUT, { registry });
+    await runTurnStep(INPUT, sequential());
 
     // Start and end upkeep both report it; the record keeps one.
     expect(turnsOf(1)[0].upkeepIssues).toEqual([
@@ -466,11 +535,11 @@ describe('runTurnStep — failures (R6.6, R7.8, R11.8)', () => {
       seedTurn({ profileId: 1, seasonNumber: 3, trigger: 'settlement', slot, goalOutcomes: savingOutcome });
     }
 
-    await runTurnStep(INPUT, { registry });
+    await runTurnStep(INPUT, sequential());
     expect(alerts.filter((a) => a.includes('saving for the same goal'))).toHaveLength(1);
     expect(alerts.find((a) => a.includes('saving for the same goal'))).toContain('15 consecutive turns');
 
-    await runTurnStep({ ...INPUT, slot: 43 }, { registry });
+    await runTurnStep({ ...INPUT, slot: 43 }, sequential());
     expect(alerts.filter((a) => a.includes('saving for the same goal'))).toHaveLength(1);
   });
 
@@ -479,7 +548,7 @@ describe('runTurnStep — failures (R6.6, R7.8, R11.8)', () => {
     for (let slot = 1; slot <= 13; slot++) {
       seedTurn({ profileId: 1, seasonNumber: 3, trigger: 'settlement', slot, goalOutcomes: [{ goalId: GOAL_ID, kind: 'saving', cost: 1, detail: {} }] });
     }
-    await runTurnStep(INPUT, { registry });
+    await runTurnStep(INPUT, sequential());
     expect(alerts.some((a) => a.includes('saving for the same goal'))).toBe(false);
   });
 });
@@ -492,7 +561,7 @@ describe('cutover guard (R7.5)', () => {
       preparationCyclesCompleted: 0, seasonStartedAt: new Date(0), isClosing: true, closingCycle: 43,
     });
 
-    await expect(runTurnStep(INPUT, { registry })).rejects.toMatchObject({ code: 'AUTOMATON_CUTOVER_IN_PROGRESS' });
+    await expect(runTurnStep(INPUT, sequential())).rejects.toMatchObject({ code: 'AUTOMATON_CUTOVER_IN_PROGRESS' });
     expect(fakeDb.turns).toHaveLength(0);
     expect(fakeDb.settings?.turnStepLeaseUntil).toBeNull();
   });
@@ -500,10 +569,244 @@ describe('cutover guard (R7.5)', () => {
   it('runTurnStepNonFatal returns the failure and alerts instead of throwing', async () => {
     mockIdentity.mockRejectedValue(new Error('database unreachable'));
 
-    const outcome = await runTurnStepNonFatal(INPUT, { registry });
+    const outcome = await runTurnStepNonFatal(INPUT, sequential());
 
     expect(outcome).toEqual({ ok: false, code: 'UNEXPECTED_ERROR', message: 'database unreachable' });
     expect(alerts.some((a) => a.includes('Turn_Step failed') && a.includes('season 3 cycle 42'))).toBe(true);
+  });
+});
+
+/** Wait until `condition` holds, letting pending callbacks run (fails after `rounds`). */
+async function until(condition: () => boolean, rounds = 200): Promise<void> {
+  for (let i = 0; i < rounds; i++) {
+    if (condition()) return;
+    await new Promise((resolve) => setImmediate(resolve));
+  }
+  throw new Error('condition not reached');
+}
+
+/** Executor whose turns block until the test opens their profile's gate; tracks turns in flight. */
+function gatedExecutor(): { started: number[]; open: (profileId: number) => void; inFlight: () => number; peak: () => number } {
+  const gates = new Map<number, () => void>();
+  const waiting = new Map<number, Promise<void>>();
+  const started: number[] = [];
+  let running = 0;
+  let peak = 0;
+  const gateOf = (profileId: number): Promise<void> => {
+    let gate = waiting.get(profileId);
+    if (!gate) {
+      gate = new Promise<void>((resolve) => { gates.set(profileId, resolve); });
+      waiting.set(profileId, gate);
+    }
+    return gate;
+  };
+  mockExecute.mockImplementation(async (action, goalId, facts, ctx, cursor) => {
+    started.push(facts.profileId);
+    running++;
+    peak = Math.max(peak, running);
+    try {
+      await gateOf(facts.profileId);
+      return await executeScripted(action, goalId, facts, ctx, cursor);
+    } finally {
+      running--;
+    }
+  });
+  return {
+    started,
+    open: (profileId) => {
+      void gateOf(profileId);
+      gates.get(profileId)?.();
+    },
+    inFlight: () => running,
+    peak: () => peak,
+  };
+}
+
+describe('runTurnStep — bounded concurrency', () => {
+  it('runs at most N turns at once, starts them in ascending User.id order, one Turn_Record each', async () => {
+    addProfile(1, 40);
+    addProfile(2, 10);
+    addProfile(3, 30);
+    addProfile(4, 20);
+    script = buyUntil(1);
+    const gate = gatedExecutor();
+
+    const step = runTurnStep(INPUT, { registry, concurrency: 2, nextScheduledJobAt: () => null });
+    await until(() => gate.started.length === 2);
+    // Users 10 and 20 first; nothing else starts while both are in flight.
+    expect(gate.started).toEqual([2, 4]);
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    expect(gate.started).toEqual([2, 4]);
+    expect(fakeDb.turns.map((t) => t.profileId)).toEqual([2, 4]);
+
+    gate.open(4);
+    await until(() => gate.started.length === 3);
+    expect(gate.started).toEqual([2, 4, 3]);
+    gate.open(2);
+    gate.open(3);
+    gate.open(1);
+    const summary = await step;
+
+    expect(gate.started).toEqual([2, 4, 3, 1]);
+    expect(gate.peak()).toBe(2);
+    // Claims (Turn_Record ids) follow the start order.
+    expect([...fakeDb.turns].sort((a, b) => a.id - b.id).map((t) => t.profileId)).toEqual([2, 4, 3, 1]);
+    for (const profileId of [1, 2, 3, 4]) {
+      expect(turnsOf(profileId)).toHaveLength(1);
+      expect(turnsOf(profileId)[0]).toMatchObject({ status: 'completed', attempt: 1, creditsSpent: STEP_COST });
+    }
+    expect(summary).toMatchObject({
+      processed: 4, completed: 4, failed: 0, skipped: {}, alreadyFinal: 0, saving: 4,
+      creditsSpent: 4 * STEP_COST, concurrency: 2, leaseLost: false,
+    });
+    expect(summary.actionsByKind).toEqual({ facility_upgrade: 4 });
+    expect(fakeDb.settings?.turnStepLeaseUntil).toBeNull();
+  });
+
+  it('clamps the requested concurrency to the pool (poolMax 7 → 1)', async () => {
+    addProfile(1, 10);
+    addProfile(2, 20);
+    addProfile(3, 30);
+    script = buyUntil(1);
+    const gate = gatedExecutor();
+
+    const step = runTurnStep(INPUT, { registry, concurrency: 3, poolMax: 7, nextScheduledJobAt: () => null });
+    await until(() => gate.started.length === 1);
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    expect(gate.started).toEqual([1]);
+    gate.open(1);
+    await until(() => gate.started.length === 2);
+    gate.open(2);
+    gate.open(3);
+    const summary = await step;
+
+    expect(summary.concurrency).toBe(1);
+    expect(gate.peak()).toBe(1);
+    expect(summary.completed).toBe(3);
+  });
+
+  it('a claim that throws stops new starts, lets in-flight turns finish, and fails the step', async () => {
+    addProfile(1, 10);
+    addProfile(2, 20);
+    addProfile(3, 30);
+    addProfile(4, 40);
+    script = buyUntil(1);
+    const gate = gatedExecutor();
+    const realCreateMany = fakePrisma.automatonTurn.createMany;
+    const claimSpy = jest.spyOn(fakePrisma.automatonTurn, 'createMany').mockImplementation(async (args) => {
+      if (args.data[0]?.profileId === 2) throw new Error('claim insert failed');
+      return realCreateMany(args);
+    });
+    try {
+      let settled = false;
+      const step = runTurnStep(INPUT, { registry, concurrency: 2, nextScheduledJobAt: () => null });
+      const outcome = step.then(() => 'resolved', (error: unknown) => error).finally(() => { settled = true; });
+      await until(() => gate.started.length === 1);
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      // Profile 2's claim failed; profile 1 is still in flight; 3 and 4 never start.
+      expect(settled).toBe(false);
+      expect(gate.started).toEqual([1]);
+      gate.open(1);
+
+      expect(await outcome).toMatchObject({ message: 'claim insert failed' });
+      expect(turnsOf(1)[0]).toMatchObject({ status: 'completed' });
+      expect(turnsOf(2)).toHaveLength(0);
+      expect(turnsOf(3)).toHaveLength(0);
+      expect(turnsOf(4)).toHaveLength(0);
+      expect(fakeDb.settings?.turnStepLeaseUntil).toBeNull();
+
+      mockExecute.mockImplementation(executeScripted);
+      const nonFatal = await runTurnStepNonFatal({ ...INPUT, slot: 43 }, { registry, concurrency: 2, nextScheduledJobAt: () => null });
+      expect(nonFatal).toEqual({ ok: false, code: 'UNEXPECTED_ERROR', message: 'claim insert failed' });
+      expect(alerts.some((a) => a.includes('Turn_Step failed') && a.includes('claim insert failed'))).toBe(true);
+    } finally {
+      claimSpy.mockRestore();
+    }
+  });
+});
+
+describe('runTurnStep — mid-step cutover and lost lease', () => {
+  const closing = {
+    activeCycle: 43, completedCycles: 42, seasonNumber: 3, phase: 'competitive' as const, competitiveCyclesCompleted: 12,
+    preparationCyclesCompleted: 0, seasonStartedAt: new Date(0), isClosing: true, closingCycle: 43,
+  };
+  const open = { ...closing, isClosing: false, closingCycle: null };
+
+  it('records the remaining stables cutover_in_progress once a cutover starts mid-step, alerts, and resolves', async () => {
+    addProfile(1, 10);
+    addProfile(2, 20);
+    addProfile(3, 30);
+    // Step start, after the lease, before stable 1: open; from stable 2: closing.
+    mockIdentity.mockReset();
+    mockIdentity.mockResolvedValueOnce(open).mockResolvedValueOnce(open).mockResolvedValueOnce(open).mockResolvedValue(closing);
+
+    const summary = await runTurnStep(INPUT, sequential());
+
+    expect(summary).toMatchObject({ processed: 3, completed: 1, skipped: { [CUTOVER_IN_PROGRESS]: 2 }, budgetExhausted: false });
+    expect(turnsOf(1)[0]).toMatchObject({ status: 'completed' });
+    expect(turnsOf(2)[0]).toMatchObject({ status: 'skipped', reason: CUTOVER_IN_PROGRESS });
+    expect(turnsOf(3)[0]).toMatchObject({ status: 'skipped', reason: CUTOVER_IN_PROGRESS });
+    // Once seen, the cutover sticks: stable 3 does not re-read the identity.
+    expect(mockIdentity).toHaveBeenCalledTimes(4);
+    const cutoverAlerts = alerts.filter((a) => a.includes('Turn_Step failed') && a.includes('AUTOMATON_CUTOVER_IN_PROGRESS'));
+    expect(cutoverAlerts).toHaveLength(1);
+    expect(cutoverAlerts[0]).toContain('2 stable(s) skipped (cutover_in_progress)');
+    expect(fakeDb.settings?.turnStepLeaseUntil).toBeNull();
+  });
+
+  it('starts no further stables after the lease is lost, leaves them unclaimed, and alerts', async () => {
+    addProfile(1, 10);
+    addProfile(2, 20);
+    addProfile(3, 30);
+    const other = new Date(Date.now() + 999_000);
+    mockLoadFacts.mockImplementation(async (_db, profileId) => {
+      if (profileId === 1) {
+        // Another caller takes the lease over while stable 1 runs; the next renewal notices.
+        if (fakeDb.settings) fakeDb.settings.turnStepLeaseUntil = other;
+        await sleep(30);
+      }
+      return factsByProfile.get(profileId) as StableFacts;
+    });
+
+    const summary = await runTurnStep(INPUT, sequential({ leaseRenewMs: 5 }));
+
+    expect(summary).toMatchObject({ processed: 3, completed: 1, leaseLost: true, skipped: {} });
+    expect(turnsOf(1)[0]).toMatchObject({ status: 'completed' });
+    expect(turnsOf(2)).toHaveLength(0);
+    expect(turnsOf(3)).toHaveLength(0);
+    expect(alerts.some((a) => a.includes('Turn_Step failed') && a.includes(TURN_STEP_LEASE_LOST) && a.includes('2 stable(s) not started'))).toBe(true);
+    // The other holder's lease is untouched.
+    expect(fakeDb.settings?.turnStepLeaseUntil).toEqual(other);
+  });
+
+  it('raises both the cutover and the lease-lost alert when a cutover is followed by a lost lease', async () => {
+    addProfile(1, 10);
+    addProfile(2, 20);
+    addProfile(3, 30);
+    const other = new Date(Date.now() + 999_000);
+    // Step start, after the lease, stable 1: open. Stable 2 sees the cutover while
+    // another caller takes the lease over; stable 3 then finds the lease lost.
+    mockIdentity.mockReset();
+    mockIdentity
+      .mockResolvedValueOnce(open)
+      .mockResolvedValueOnce(open)
+      .mockResolvedValueOnce(open)
+      .mockImplementationOnce(async () => {
+        if (fakeDb.settings) fakeDb.settings.turnStepLeaseUntil = other;
+        await sleep(30);
+        return closing;
+      })
+      .mockResolvedValue(closing);
+
+    const summary = await runTurnStep(INPUT, sequential({ leaseRenewMs: 5 }));
+
+    expect(summary).toMatchObject({ processed: 3, completed: 1, leaseLost: true, skipped: { [CUTOVER_IN_PROGRESS]: 1 } });
+    expect(turnsOf(2)[0]).toMatchObject({ status: 'skipped', reason: CUTOVER_IN_PROGRESS });
+    expect(turnsOf(3)).toHaveLength(0);
+    const cutoverAlerts = alerts.filter((a) => a.includes('Turn_Step failed') && a.includes('AUTOMATON_CUTOVER_IN_PROGRESS'));
+    expect(cutoverAlerts).toHaveLength(1);
+    expect(cutoverAlerts[0]).toContain('1 stable(s) skipped (cutover_in_progress)');
+    expect(alerts.some((a) => a.includes('Turn_Step failed') && a.includes(TURN_STEP_LEASE_LOST) && a.includes('1 stable(s) not started'))).toBe(true);
   });
 });
 
@@ -542,5 +845,80 @@ describe('withTurnStepLease (design §11.1)', () => {
   it('releases the lease when the step throws', async () => {
     await expect(withTurnStepLease(async () => { throw new Error('boom'); })).rejects.toThrow('boom');
     expect(fakeDb.settings?.turnStepLeaseUntil).toBeNull();
+  });
+
+  it('claims the lease for TURN_STEP_LEASE_TTL_MS, not for the step budget', async () => {
+    const clock = 5_000_000;
+    let held: Date | null | undefined;
+    await withTurnStepLease(async () => { held = fakeDb.settings?.turnStepLeaseUntil; }, { now: () => clock });
+    expect(TURN_STEP_LEASE_TTL_MS).toBe(120_000);
+    expect(TURN_STEP_LEASE_RENEW_MS).toBe(30_000);
+    expect(held?.getTime()).toBe(clock + TURN_STEP_LEASE_TTL_MS);
+  });
+
+  it('renews the lease while the step runs (heartbeat)', async () => {
+    let first: number | undefined;
+    let later: number | undefined;
+    let lost: boolean | undefined;
+    await withTurnStepLease(async (lease) => {
+      first = fakeDb.settings?.turnStepLeaseUntil?.getTime();
+      await sleep(40);
+      later = fakeDb.settings?.turnStepLeaseUntil?.getTime();
+      lost = lease.lost;
+    }, { leaseRenewMs: 5 });
+
+    expect(first).toBeDefined();
+    expect(later).toBeGreaterThan(first as number);
+    expect(lost).toBe(false);
+    expect(fakeDb.settings?.turnStepLeaseUntil).toBeNull();
+  });
+
+  it('marks the lease lost when another caller took it over and never clears that caller\'s lease', async () => {
+    const other = new Date(Date.now() + 999_000);
+    let lostDuring: boolean | undefined;
+    await withTurnStepLease(async (lease) => {
+      expect(lease.lost).toBe(false);
+      // Our lease expired and another caller claimed it.
+      if (fakeDb.settings) fakeDb.settings.turnStepLeaseUntil = other;
+      await sleep(30);
+      lostDuring = lease.lost;
+    }, { leaseRenewMs: 5 });
+
+    expect(lostDuring).toBe(true);
+    expect(fakeDb.settings?.turnStepLeaseUntil).toEqual(other);
+    expect(mockLoggerError.mock.calls.some(([message]) => String(message).includes('Turn_Step lease lost'))).toBe(true);
+  });
+
+  it('retries a renewal that throws at the next tick instead of marking the lease lost', async () => {
+    const original = fakePrisma.$executeRaw;
+    const rawSpy = jest.spyOn(fakePrisma, '$executeRaw');
+    let failures = 0;
+    rawSpy.mockImplementation(async (strings: TemplateStringsArray, ...values: unknown[]) => {
+      const sql = strings.join('?');
+      if (!sql.includes('IS NULL OR') && !sql.includes('= NULL') && failures === 0) {
+        failures++;
+        throw new Error('connection reset');
+      }
+      return original.call(fakePrisma, strings, ...values);
+    });
+    try {
+      let first: number | undefined;
+      let later: number | undefined;
+      let lost: boolean | undefined;
+      await withTurnStepLease(async (lease) => {
+        first = fakeDb.settings?.turnStepLeaseUntil?.getTime();
+        await sleep(40);
+        later = fakeDb.settings?.turnStepLeaseUntil?.getTime();
+        lost = lease.lost;
+      }, { leaseRenewMs: 5 });
+
+      expect(failures).toBe(1);
+      expect(lost).toBe(false);
+      expect(later).toBeGreaterThan(first as number);
+      expect(mockLoggerError.mock.calls.some(([message]) => String(message).includes('lease renewal failed'))).toBe(true);
+      expect(fakeDb.settings?.turnStepLeaseUntil).toBeNull();
+    } finally {
+      rawSpy.mockRestore();
+    }
   });
 });

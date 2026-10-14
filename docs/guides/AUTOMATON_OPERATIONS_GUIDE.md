@@ -1,6 +1,6 @@
 # Automaton Operations Guide
 
-**Spec:** #55, #57 · **Audience:** administrators and developers · **Last updated:** 11 October 2026
+**Spec:** #55, #57 · **Audience:** administrators and developers · **Last updated:** 14 October 2026
 
 How to run Automaton_Stables: adding and activating stables, tuning them, reading their turns and alerts, handling incidents, and moving definitions and strategies between the admin page and the repository. Product rules are in `docs/game-systems/PRD_AUTOMATON_STABLES.md`.
 
@@ -19,17 +19,17 @@ Everything below happens on `/admin/automatons` (admin login required; every mut
 
 **Activating.** Editor → **Activate** (one stable) or Stables → **Activate all drafts** (each draft on its own, in Catalogue_Key order, with a per-stable result; one rejection does not stop the others). Activation is rejected when the stable name or username is taken or the strategy targets, blueprints, Team_Names or Event_Order fail validation. Activation is one-way: an active stable cannot be deleted or paused on its own. It joins the cohort at the next Turn_Step and builds its opening roster from ₡3,000,000.
 
-Activate new drafts **in batches** rather than all at once (decision 39). A large catalogue addition activated in one go enters matchmaking in one cycle and makes that cycle's Turn_Step an opening build for every new stable, which is the slowest kind of step (see §3). Activate a handful per cycle and check the Status_Bar after each Turn_Step.
+Batch activation is no longer needed for Turn_Step capacity. The Turn_Step keeps starting turns until its deadline (the earlier of step start + 6 h and the next scheduled job minus 15 min; on the default schedule the 6 h cap binds, about 06:00 UTC after the 00:00 settlement) and runs up to 3 turns in parallel, so every Active_Automaton, opening builds included, takes its turn the same night (see `docs/implementation_notes/AUTOMATON_TURN_STEP_DEADLINE.md` for the capacity estimate). Activating many drafts at once still puts them all into matchmaking in the same cycle; check the Status_Bar after the next Turn_Step.
 
-**Expansion_Stables (spec 57).** After the deploy that delivers spec 57, every Expansion_Stable appears as a Draft_Automaton next to the active starter stables; nothing is activated automatically. There is no activation cap (spec 57 decision 19): every draft may be activated. Activate them in batches through the per-stable **Activate** in the Editor, not **Activate all drafts**. Each new Active_Automaton's first turn is an opening build, and the 300 s Turn_Step budget serves only a limited number of opening builds per day. Profiles the budget skips are always the ones with the highest `User.id`, i.e. the most recently activated stables, so activating too many at once leaves the newest stables waiting. How many fit into one Turn_Step, and why, is in `.kiro/specs/done-october26/57-automaton-catalogue-expansion/review/SCALING.md`. The engine changes that very large populations need are open items there (§6), not implemented:
+**Expansion_Stables (spec 57).** After the deploy that delivers spec 57, every Expansion_Stable appears as a Draft_Automaton next to the active starter stables; nothing is activated automatically. There is no activation cap (spec 57 decision 19): every draft may be activated, with the per-stable **Activate** in the Editor or **Activate all drafts**. Each new Active_Automaton's first turn is an opening build, the slowest kind of turn. Spec 57's capacity analysis (`.kiro/specs/done-october26/57-automaton-catalogue-expansion/review/SCALING.md`) assumed the former fixed 300 s Turn_Step budget, which is superseded. Of its open items (§6), bounded parallel turns, a deadline scaled to the night window and a lease heartbeat are done. Still open:
 
-- Bounded parallel Turn_Steps, so one daily Turn_Step serves more Automatons.
-- Fair rotation after budget skips, so the last-activated stables are not always the ones skipped.
-- A Turn_Step budget scaled with the population, or follow-up chunks until the cohort is done.
+- Fair rotation after deadline skips, so the last-activated stables are not always the ones skipped (skips are now exceptional).
 - Fewer SQL statements per charged action (incremental facts, batched event-log and spending writes).
-- Bulk skip marking and a lease heartbeat, so a very large Turn_Step cannot outlive its lease.
+- Bulk skip marking.
 - Batched or background admin operations (a batch size for activate-drafts, a paginated or streamed catalogue export, a cached Need_Attention count).
 - A battle-volume measurement at the target robot count before activating thousands of Automatons.
+
+**Turn_Step knobs** (backend `.env`, defaults shown; details in `docs/guides/operations/DEPLOYMENT.md`): `AUTOMATON_TURN_CONCURRENCY=3` (turns in parallel; `1` makes the step sequential again and is the first lever if parallel turns misbehave), `AUTOMATON_TURN_STEP_MAX_MS=21600000` (6 h cap), `AUTOMATON_TURN_STEP_SCHEDULE_MARGIN_MS=900000` (15 min before the next scheduled job). A changed value applies at the next Turn_Step after a backend restart.
 
 **Deleting.** Only a Draft_Automaton can be deleted; its blueprints and admin-uploaded images go with it. A draft that came from a Catalogue_Entry comes back at the next sync; delete the catalogue file in a pull request to remove it for good.
 
@@ -60,16 +60,18 @@ Editor → Build order panel. Each Goal of the stable's Build_Order has a target
 **Server log.** One line per Turn_Step:
 
 ```
-[automaton-turns] trigger=settlement season=3 slot=41 source=scheduler processed=11 completed=11 skipped=none failed=0 alreadyFinal=0 actions=attribute_upgrade=4,facility_upgrade=1 spent=812000 received=0 saving=9 blocked=2 durationMs=6200
+[automaton-turns] trigger=settlement season=3 slot=41 source=scheduler processed=11 completed=11 skipped=none failed=0 alreadyFinal=0 actions=attribute_upgrade=4,facility_upgrade=1 spent=812000 received=0 saving=9 blocked=2 durationMs=6200 concurrency=3 budgetMs=21600000 deadline=cap
 ```
+
+`concurrency` is the effective number of parallel turns, `budgetMs` the time the step had to start turns, and `deadline` where that came from: `schedule` (next scheduled job minus margin), `cap` (`AUTOMATON_TURN_STEP_MAX_MS`, e.g. scheduler off) or `floor` (the 300 s minimum when settlement ran late).
 
 **Alerts** go to the monitoring webhook (`sendMonitoringAlert`) and `logger.error` with an `[automaton-alert]` prefix, always with the Catalogue_Key and reason:
 
 | Kind | Raised when | Meaning |
 |---|---|---|
 | `automaton_turn_failed` | A turn ended `failed` | Investigate; the next turn re-plans from fresh facts |
-| `automaton_turn_step_failed` | The Turn_Step itself failed | Settlement continued; check the log |
-| `automaton_step_budget_exhausted` | The Turn_Step passed 300 s | The remaining stables were skipped and build at their next turn |
+| `automaton_turn_step_failed` | The Turn_Step itself failed, a cutover started during it (`AUTOMATON_CUTOVER_IN_PROGRESS`, rest skipped `cutover_in_progress`) or it lost its lease (`TURN_STEP_LEASE_LOST`, rest not started) | Settlement continued; check the log. The stables act at their next turn |
+| `automaton_step_budget_exhausted` | "Turn_Step deadline reached": stables were not started before the deadline | They were skipped (`step_budget_exhausted`) and build at their next turn. Should not happen on the default schedule; check the alert's deadline, budget and concurrency |
 | `automaton_invalid_parameters` | Pinned Strategy_Version missing or stored Goal_Targets invalid | Restore the file or fix the targets |
 | `automaton_negative_balance` | Balance below zero at turn start | Upkeep only this turn |
 | `automaton_saving_streak` | Same Goal Saving for more than 14 consecutive turns | Informational; the stable keeps saving |

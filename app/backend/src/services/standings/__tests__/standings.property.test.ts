@@ -12,7 +12,6 @@ jest.mock('../../../lib/prisma', () => ({
       findUnique: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
-      upsert: jest.fn(),
       findMany: jest.fn(),
       updateMany: jest.fn(),
       count: jest.fn(),
@@ -51,6 +50,12 @@ const OUTCOMES = ['win', 'loss', 'draw'] as const;
 
 beforeEach(() => {
   jest.clearAllMocks();
+  // getOrCreateStanding reads standing-backed modes through the placement rule
+  // in a transaction; the mocked client doubles as the transaction client, so
+  // the rule's findUnique returns the fixture row and nothing is created.
+  (mockPrisma.$transaction as jest.Mock).mockImplementation(
+    (fn: (tx: typeof prisma) => unknown) => fn(mockPrisma),
+  );
 });
 
 // =============================================================================
@@ -80,13 +85,13 @@ describe('Property 4: Unified Promotion/Demotion Algorithm', () => {
           const standingA = createStanding({ ...baseStanding, mode: modeA as StandingsMode });
           const standingB = createStanding({ ...baseStanding, mode: modeB as StandingsMode });
 
-          // Track the upsert update data for each mode
+          // Track the update data for each mode
           const updateCalls: Record<string, unknown>[] = [];
 
           (mockPrisma.standing.findUnique as jest.Mock).mockResolvedValueOnce(standingA);
-          (mockPrisma.standing.upsert as jest.Mock).mockImplementationOnce((args: { update: Record<string, unknown> }) => {
-            updateCalls.push(args.update);
-            return Promise.resolve({ ...standingA, ...args.update });
+          (mockPrisma.standing.update as jest.Mock).mockImplementationOnce((args: { data: Record<string, unknown> }) => {
+            updateCalls.push(args.data);
+            return Promise.resolve({ ...standingA, ...args.data });
           });
 
           await standingsService.recordBattleResult({
@@ -100,9 +105,9 @@ describe('Property 4: Unified Promotion/Demotion Algorithm', () => {
           jest.clearAllMocks();
 
           (mockPrisma.standing.findUnique as jest.Mock).mockResolvedValueOnce(standingB);
-          (mockPrisma.standing.upsert as jest.Mock).mockImplementationOnce((args: { update: Record<string, unknown> }) => {
-            updateCalls.push(args.update);
-            return Promise.resolve({ ...standingB, ...args.update });
+          (mockPrisma.standing.update as jest.Mock).mockImplementationOnce((args: { data: Record<string, unknown> }) => {
+            updateCalls.push(args.data);
+            return Promise.resolve({ ...standingB, ...args.data });
           });
 
           await standingsService.recordBattleResult({
@@ -166,9 +171,9 @@ describe('Property 5: Battle Completion Updates Standings', () => {
           let capturedUpdate: Record<string, number> | null = null;
 
           (mockPrisma.standing.findUnique as jest.Mock).mockResolvedValue(existing);
-          (mockPrisma.standing.upsert as jest.Mock).mockImplementation((args: { update: Record<string, number> }) => {
-            capturedUpdate = args.update;
-            return Promise.resolve({ ...existing, ...args.update });
+          (mockPrisma.standing.update as jest.Mock).mockImplementation((args: { data: Record<string, number> }) => {
+            capturedUpdate = args.data;
+            return Promise.resolve({ ...existing, ...args.data });
           });
 
           await standingsService.recordBattleResult({

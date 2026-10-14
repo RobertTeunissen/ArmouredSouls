@@ -23,6 +23,12 @@
  * from `services/scheduling/eventScheduleScope`, the same module pre-battle
  * repair uses to decide who is fighting next.
  *
+ * Standings rows are created here, on the first matchable subscription: gaining
+ * a robot mode (league_1v1, koth, grand_melee) places the robot in Bronze, and
+ * gaining a team mode places each of the robot's teams that is now complete and
+ * fully subscribed. Rows are never created at robot or team creation and are
+ * kept on unsubscribe. The rule lives in `services/standings/standingPlacement`.
+ *
  * @module services/subscription/subscriptionService
  */
 
@@ -43,10 +49,22 @@ import { SubscriptionError, SubscriptionErrorCode } from '../../errors/subscript
 import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
 import logger from '../../config/logger';
 import { withAuditSequence } from '../common/auditSequence';
+import {
+  STANDING_BACKED_EVENTS,
+  ensureStandingsForSubscriptionGain,
+  lockRobotTeamMembership,
+} from '../standings/standingPlacement';
 
 // ── Types ────────────────────────────────────────────────────────────
 
 type Tx = Prisma.TransactionClient;
+
+/** Events whose standings row belongs to a team (league_2v2, tag_team, league_3v3). */
+const TEAM_STANDING_EVENTS: ReadonlySet<string> = new Set(
+  STANDING_BACKED_EVENTS
+    .filter((definition) => definition.entityType === 'team')
+    .map((definition) => definition.event),
+);
 
 export interface RobotSubscriptionInfo {
   subscriptions: { id: number; robotId: number; eventType: string; status: string; createdAt: Date }[];
@@ -165,6 +183,7 @@ async function applySubscriptionChange(
   desiredEventTypes: string[],
   requestingUserId: number,
   tx: Tx,
+  cycleNumber: number,
 ): Promise<SubscriptionChangeResult> {
   const userId = await assertOwnership(robotId, requestingUserId, tx);
 
@@ -211,6 +230,13 @@ async function applySubscriptionChange(
     return { added: [], removed: [], heldSlots: held, occupiedCount: occupied.size, cap, level };
   }
 
+  // Lock order (see standingPlacement): the robot's team-membership lock comes
+  // before every other lock, so take it before any write when a team mode is
+  // added — a concurrent swap must not change the robot's teams mid-check.
+  if (toAdd.some((eventType) => TEAM_STANDING_EVENTS.has(eventType))) {
+    await lockRobotTeamMembership(tx, robotId);
+  }
+
   if (toRemove.length > 0) {
     await tx.subscription.deleteMany({ where: { robotId, eventType: { in: toRemove } } });
   }
@@ -219,10 +245,15 @@ async function applySubscriptionChange(
     await tx.subscription.createMany({
       data: toAdd.map((eventType) => ({ robotId, eventType, status: 'active' })),
     });
-    await ensurePlacementStandings(robotId, toAdd, tx);
   }
 
-  await writeAuditEntries(robotId, requestingUserId, toAdd, toRemove, occupied.size, level, tx);
+  // The audit sequence lock precedes the team and mode locks the standings
+  // helper takes, so audit first.
+  await writeAuditEntries(robotId, requestingUserId, toAdd, toRemove, occupied.size, level, tx, cycleNumber);
+
+  if (toAdd.length > 0) {
+    await ensureStandingsForSubscriptionGain(tx, robotId, toAdd);
+  }
 
   logger.info('[Subscription] Changed', {
     robotId,
@@ -237,38 +268,6 @@ async function applySubscriptionChange(
   return { added: toAdd, removed: toRemove, heldSlots: held, occupiedCount: occupied.size, cap, level };
 }
 
-/**
- * Placement-based modes rank from a Standing row, so one has to exist before the
- * matchmaker can see the robot at all. (Spec #44: R6.5)
- */
-async function ensurePlacementStandings(robotId: number, added: string[], tx: Tx): Promise<void> {
-  const placementModes = added.filter((e) => e === 'koth' || e === 'grand_melee');
-
-  for (const mode of placementModes as ('koth' | 'grand_melee')[]) {
-    const existing = await tx.standing.findUnique({
-      where: { entityType_entityId_mode: { entityType: 'robot', entityId: robotId, mode } },
-    });
-    if (existing) continue;
-
-    await tx.standing.create({
-      data: {
-        entityType: 'robot',
-        entityId: robotId,
-        mode,
-        tier: 'bronze',
-        leagueInstanceId: 'bronze_1',
-        leaguePoints: 0,
-        cyclesInTier: 0,
-        wins: 0,
-        losses: 0,
-        draws: 0,
-        currentWinStreak: 0,
-        bestWinStreak: 0,
-      },
-    });
-  }
-}
-
 /** One audit row per event added or removed, so admin trend charts stay per-event. */
 async function writeAuditEntries(
   robotId: number,
@@ -278,9 +277,8 @@ async function writeAuditEntries(
   occupiedCount: number,
   level: number,
   tx: Tx,
+  cycleNumber: number,
 ): Promise<void> {
-  const cycleNumber = await getCurrentCycleNumber();
-
   const entries = [
     ...added.map((eventType) => ({ eventType, type: 'subscription_create' as const })),
     ...removed.map((eventType) => ({ eventType, type: 'subscription_remove' as const })),
@@ -319,6 +317,21 @@ async function writeAuditEntries(
 // ── Public write API ─────────────────────────────────────────────────
 
 /**
+ * Open the write transaction, reading the audit cycle number first.
+ *
+ * `getCurrentCycleNumber` runs on its own pooled connection. Called inside the
+ * transaction, every concurrent change held one connection while waiting for a
+ * second, so as many concurrent changes as the pool has connections starved it
+ * and the transactions timed out ("Unable to start a transaction").
+ */
+async function inSubscriptionTransaction<T>(
+  fn: (tx: Tx, cycleNumber: number) => Promise<T>,
+): Promise<T> {
+  const cycleNumber = await getCurrentCycleNumber();
+  return prisma.$transaction((tx) => fn(tx, cycleNumber));
+}
+
+/**
  * Replace a robot's subscriptions with the given set — the bulk save behind the
  * Booking Office matrix.
  *
@@ -330,8 +343,8 @@ export async function setSubscriptionsForRobot(
   eventTypes: string[],
   requestingUserId: number,
 ): Promise<SubscriptionChangeResult> {
-  return prisma.$transaction((tx) =>
-    applySubscriptionChange(robotId, eventTypes, requestingUserId, tx),
+  return inSubscriptionTransaction((tx, cycleNumber) =>
+    applySubscriptionChange(robotId, eventTypes, requestingUserId, tx, cycleNumber),
   );
 }
 
@@ -341,7 +354,7 @@ export async function subscribeRobot(
   eventType: string,
   requestingUserId: number,
 ): Promise<SubscriptionChangeResult> {
-  return prisma.$transaction(async (tx) => {
+  return inSubscriptionTransaction(async (tx, cycleNumber) => {
     await assertOwnership(robotId, requestingUserId, tx);
 
     if (!isRegisteredEvent(eventType)) {
@@ -359,7 +372,7 @@ export async function subscribeRobot(
       );
     }
 
-    return applySubscriptionChange(robotId, [...current, eventType], requestingUserId, tx);
+    return applySubscriptionChange(robotId, [...current, eventType], requestingUserId, tx, cycleNumber);
   });
 }
 
@@ -374,7 +387,7 @@ export async function unsubscribeRobot(
   eventType: string,
   requestingUserId: number,
 ): Promise<SubscriptionChangeResult> {
-  return prisma.$transaction(async (tx) => {
+  return inSubscriptionTransaction(async (tx, cycleNumber) => {
     await assertOwnership(robotId, requestingUserId, tx);
 
     const current = await currentEventTypes(robotId, tx);
@@ -391,6 +404,7 @@ export async function unsubscribeRobot(
       current.filter((e) => e !== eventType),
       requestingUserId,
       tx,
+      cycleNumber,
     );
   });
 }

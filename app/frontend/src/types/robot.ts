@@ -92,9 +92,10 @@ export interface RobotWithAttributes extends RobotAttributes {
   name: string;
   userId: number;
   elo: number;
-  currentLeague: string;
-  leagueId: string;
-  leaguePoints: number;
+  /** Omitted when the robot has no league_1v1 standing (not subscribed). */
+  currentLeague?: string;
+  leagueId?: string | null;
+  leaguePoints?: number;
   fame: number;
   currentHP: number;
   maxHP: number;

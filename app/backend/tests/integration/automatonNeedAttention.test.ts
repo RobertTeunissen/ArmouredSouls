@@ -83,10 +83,23 @@ describe('Need_Attention and the Status_Bar (Spec #55 task 9.6)', () => {
     await prisma.$disconnect();
   });
 
-  async function listed(query: string): Promise<Map<string, { needAttention: { code: string; label: string }[] }>> {
-    const res = await harness.api('get', `/?limit=100${query}`);
-    expect(res.status).toBe(200);
-    return new Map((res.body.items as { catalogueKey: string; needAttention: { code: string; label: string }[] }[]).map((i) => [i.catalogueKey, i]));
+  type ListedItem = { catalogueKey: string; needAttention: { code: string; label: string }[] };
+
+  /**
+   * Every page of the list for `query`, keyed by catalogue key. The shared
+   * database can hold the full catalogue (205+ active profiles) sorting before
+   * this suite's keys, so one page is not enough to find them, and the
+   * negative `attention` checks need the whole filtered list.
+   */
+  async function listed(query: string): Promise<Map<string, ListedItem>> {
+    const items = new Map<string, ListedItem>();
+    for (let page = 1; ; page++) {
+      const res = await harness.api('get', `/?limit=100&page=${page}${query}`);
+      expect(res.status).toBe(200);
+      const pageItems = res.body.items as ListedItem[];
+      for (const item of pageItems) items.set(item.catalogueKey, item);
+      if (pageItems.length === 0 || page * 100 >= (res.body.total as number)) return items;
+    }
   }
 
   it('returns every reason in the approved order with the approved labels (R11.12)', async () => {

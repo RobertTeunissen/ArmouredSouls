@@ -2,12 +2,13 @@
 
 **Project**: Armoured Souls
 **Document Type**: Product Requirements Document (PRD)
-**Version**: v1.4
-**Last Updated**: October 10, 2026
+**Version**: v1.5
+**Last Updated**: October 14, 2026
 **Status**: ✅ Implemented
 **Owner**: Robert Teunissen
 
 **Revision History**:
+- v1.5 (Oct 14, 2026): Added `league/leagueInstancePlacement` and `standings/standingPlacement` (unified standings creation rule); updated `teamBattleService` and `subscriptionService` rows.
 
 - v1.4 (Oct 10, 2026): Added the `automaton` domain, the Domain_Service_Extraction services in `economy/` and `robot/`, the admin Automatons router and the catalogue scripts (Spec #55). Inventory now lists 38 directories (also `search`).
 - v1.3 (Sep 21, 2026): Reconciled the service inventory with the current 36 directories and documented newer financial, season, standings, monitoring, retention, and progression domains.
@@ -89,18 +90,19 @@ Automaton_Stables: computer-run stables that play by human rules. Public API in 
 
 | Service | Purpose |
 |---------|---------|
-| `automatonTurnService` | `runTurnStep` / `runTurnStepNonFatal` / `runAutomatonTurn`: cohort, Turn_Records, retries, Turn_Step lease, budgets |
+| `automatonTurnService` | `runTurnStep` / `runTurnStepNonFatal` / `runAutomatonTurn`: cohort, Turn_Records, retries, heartbeat Turn_Step lease, deadline, bounded concurrency, mid-step cutover guard |
+| `turnStepPool` | `runWithConcurrency`: bounded worker pool; items start in index order, the first error stops new starts |
 | `turnPlanner` | Pure planner: walks the Build_Order and returns the next Goal_Outcome |
 | `goals/` | Goal_Library: `robotCountGoal`, `facilityGoal`, `attributeGoal`, `weaponStageGoal`, `refinementGoal` (+ `goalTypes`, `goalSupport`) |
 | `actionExecutor`, `executionSteps`, `robotFitout` | Execute planned actions through the domain services; Robot_Chain and Robot_Fitout |
 | `fitoutRecovery` | Turn start: resume the fit-out of robots that fail the loadout readiness rule (reuse storage first, buy only what is missing) |
 | `upkeep/` | Free_Upkeep: `teamUpkeep`, `subscriptionUpkeep` (Event_Allocation), `blueprintSync`, `tuningUpkeep`, `freeUpkeep` |
-| `stableFacts`, `factProjector`, `pricing`, `buildFocus`, `teamRule`, `standingsTier` | Fact loading, pure projection, shared-formula pricing, Build_Focus maths, Team_Rule, tier ordering |
-| `robotNaming`, `requestKeys`, `turnBudget` | Blueprint names with "Mk II" suffixing, deterministic request keys, `TURN_*` budget constants |
+| `stableFacts`, `factProjector`, `pricing`, `buildFocus`, `teamRule`, `standingsTier` | Fact loading, pure projection, shared-formula pricing, Build_Focus maths, Team_Rule, played-only highest tier with mode (rules in `app/shared/utils/automatonStandingsTier.ts`) |
+| `robotNaming`, `requestKeys`, `turnBudget` | Blueprint names with "Mk II" suffixing, deterministic request keys, per-turn `TURN_*` budget constants, Turn_Step deadline (`resolveTurnStepDeadline`) and concurrency clamp (`effectiveTurnConcurrency`) |
 | `strategies/` | `registry` (loads Strategy_Definition_Files, startup check), `strategyDefinitionSchema`, `strategyParameters`, `migrateTargets`, `strategyLibrary`, `strategyDraftService`, `strategyUpgradeService`, `scenarioProjector`, `defaultRegistry` |
 | `automatonProfileService`, `automatonProfileRules` | Profile and blueprint CRUD, validation, Activation |
 | `turnPreview`, `attributePlanView` | Read-only Turn_Preview and per-robot attribute plan |
-| `needAttention`, `automatonStatus`, `turnRecords`, `strategyComparisonService` | Admin read models: Need_Attention, Status_Bar, Turn_Records, Strategy_Comparison (60 s cache) |
+| `needAttention`, `automatonStatus`, `turnRecords`, `strategyComparisonService`, `strategyModePerformance` | Admin read models: Need_Attention, Status_Bar, Turn_Records, Strategy_Comparison (60 s cache) and its per-mode performance from played `standings` |
 | `programSwitch` | Program_Switch in `automaton_program_settings` |
 | `automatonCatalogueService`, `catalogueSync`, `catalogueExport`, `catalogueUnpack` | Catalogue_Entry schema, insert-only Catalogue_Sync with image fill, export and unpack |
 | `automatonImageService` | Admin blueprint image uploads in `uploads/automatons/{catalogueKey}/` |
@@ -187,6 +189,7 @@ Automated game loop — the scheduler and analytics snapshot system.
 | Service | Purpose |
 |---------|---------|
 | `cycleScheduler` | 10 independent cron jobs (league, team2v2League, tournament, tagTeam, koth, team3v3League, team2v2Tournament, grandMelee, team3v3Tournament, settlement) — all league modes use unified matchmaking pipeline |
+| `schedulerWindow` | Leaf module: `nextScheduledJobRunAt` from the configured cron schedules (null when the scheduler is off); feeds the Automaton Turn_Step deadline without importing `cycleScheduler` |
 | `cycleSnapshotService` | Aggregates AuditLog events into CycleSnapshot for fast analytics |
 | `cycleCsvExportService` | Exports cycle data to CSV files |
 | `cyclePerformanceMonitoringService` | Detects step duration degradation across cycles |
@@ -223,8 +226,17 @@ King of the Hill mode — orchestration and matchmaking.
 | Service | Purpose |
 |---------|---------|
 | `leagueBattleOrchestrator` | League match execution (LP, prestige, fame, streaming, ELO, bye matches) |
-| `leagueInstanceService` | League instance management (max 100 robots per instance, assignment, rebalancing) |
+| `leagueInstanceService` | League instance management (max 100 robots per instance, assignment, rebalancing); `assignLeagueInstanceWithLock` delegates to `leagueInstancePlacement` |
+| `leagueInstancePlacement` | Prisma-free, transaction-scoped instance picker: `MAX_ENTITIES_PER_INSTANCE` (100), `leagueInstanceLockKey`, `pickLeagueInstanceInTransaction` (mode/tier advisory lock, least-full instance, lowest number on ties, opens a new instance when all are full) |
 | `leagueRebalancingService` | Instance-based promotions/demotions (top/bottom 10%, LP retention) |
+
+### standings/
+Authoritative competitive standings (`standings` table, polymorphic robot/team rows).
+
+| Service | Purpose |
+|---------|---------|
+| `standingPlacement` | The single standings creation rule: `ensureStanding`, `ensureTeamStandings`, `ensureStandingsForSubscriptionGain`, `isTeamMatchable`, lock helpers (namespaces 2 and 5). Rows are created on the first matchable subscription, never at robot/team creation. Prisma-free so `prisma/seed.ts` can use it |
+| `standingsService` | Battle result recording (update by id), KotH/Grand Melee points; `getOrCreateStanding` is a logged safety net that places through `ensureStanding` |
 
 ### match/
 Match history queries.
@@ -303,7 +315,7 @@ Shared matchmaking utilities consumed by all league matchmakers and tag team.
 
 | Service | Purpose |
 |---------|---------|
-| `teamBattleService` | Team CRUD — register, swap member, rename, disband. Persistent teams with LP/ELO/tier. |
+| `teamBattleService` | Team CRUD — register, swap member, rename, disband. Registration and swaps need no subscription; both call `ensureTeamStandings` so a team enters each mode once every member holds it. Swaps keep the team's standings; disband deletes them. LP/tier live in `standings`. |
 | `teamBattleMatchmakingService` | 2v2/3v3 matchmaking orchestration per league instance. Subscription-gated eligibility. Creates `ScheduledTeamBattleMatch` rows with `matchMode` discriminator (`'league_2v2'`, `'league_3v3'`, `'tag_team'`, `'tournament_2v2'`, `'tournament_3v3'`). |
 | `teamBattleOrchestrator` | Battle execution — fetch scheduled matches, invoke engine, persist results, distribute rewards. |
 | `teamBattleEngine` | N-vs-N simulation wrapper around `combatSimulator`. All 2N robots active simultaneously. |
@@ -328,7 +340,7 @@ Event Subscription System — per-robot subscription model gating participation 
 | Service | Purpose |
 |---------|---------|
 | `eventRegistry` | `SUBSCRIBABLE_EVENT_TYPES` tuple (source of truth the `SubscribableEventType` union and every Zod schema derive from), plus the runtime singleton registry: `registerSubscribableEvent`, `isRegisteredEvent`, `getRegisteredEvents`. A registration is an identifier and a label — no per-event behaviour hooks |
-| `subscriptionService` | One write path (`applySubscriptionChange`) behind `setSubscriptionsForRobot` (bulk), `subscribeRobot` and `unsubscribeRobot`, so a single toggle and a roster-wide save behave identically. Reads: `getSubscriptionsForRobot`, `getStableOverview`, and `isRobotSubscribedTo` — the single eligibility helper called by every matchmaker |
+| `subscriptionService` | One write path (`applySubscriptionChange`) behind `setSubscriptionsForRobot` (bulk), `subscribeRobot` and `unsubscribeRobot`, so a single toggle and a roster-wide save behave identically. A subscription gain calls `ensureStandingsForSubscriptionGain`, which creates the robot's or team's standings row for that mode; removal keeps rows. Reads: `getSubscriptionsForRobot`, `getStableOverview`, and `isRobotSubscribedTo` — the single eligibility helper called by every matchmaker |
 | `rosterEligibilityFilter` | Filters the Event Registry by Stable robot count to determine which events a robot can subscribe to (e.g. Tag Team requires ≥ 2 robots) |
 
 **Removed:** `lockingPredicates`. Nine per-event predicates decided whether an
@@ -365,7 +377,7 @@ Every battle event job is gated on the current Season_Phase. The check sits in `
 
 **At the season boundary:** the Settlement_Job runs all its normal steps, then advances the season counter, then invokes the Season_Rollover — so the final cycle of a season settles completely before anything is archived or purged. Season 0 is exempt and never rolls over automatically.
 
-**Automaton Turn_Step (Spec #55):** the Settlement_Job ends with an Automaton Turn_Step (`preparation` in a Preparation_Phase, `settlement` otherwise, none on the boundary settlement, where rollover Stage 5 runs `season_open`). It is non-fatal and bounded at 300 s.
+**Automaton Turn_Step (Spec #55):** the Settlement_Job ends with an Automaton Turn_Step (`preparation` in a Preparation_Phase, `settlement` otherwise, none on the boundary settlement, where rollover Stage 5 runs `season_open`). It is non-fatal and keeps starting turns until its deadline: the next scheduled job minus a margin (`services/cycle/schedulerWindow.ts`), capped by `AUTOMATON_TURN_STEP_MAX_MS` and never under 300 s (spec 55's former fixed 300 s bound is superseded).
 
 **On competitive cycle 1:** battle jobs find nothing due to execute, because each executes previously scheduled matches before scheduling new ones and preparation created none. Cycle 1 schedules; cycle 2 is the first battle day.
 
@@ -405,5 +417,5 @@ All schedule env vars are overridable via `.env` for rollback or per-environment
 | `src/errors/` | Domain-specific error classes (AppError hierarchy, 10 domain error classes) |
 | `src/types/` | Shared TypeScript interfaces for JSON payloads (snapshot types, battle log types) |
 | `src/config/` | Configuration (logger, environment, facilities) |
-| `src/lib/` | Singleton instances (Prisma client, credit guard) |
+| `src/lib/` | Singleton instances (Prisma client, credit guard); `dbPoolConfig` (`resolveDbPoolMax`, the `DB_POOL_MAX` parse shared by the pool and the Turn_Step concurrency clamp) |
 | `app/shared/utils/` | Game formulas shared between frontend and backend (upgrade costs, discounts, academy caps, loadout battle readiness) |

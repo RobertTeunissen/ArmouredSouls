@@ -63,9 +63,9 @@ Per Turn_Step (`[automaton-heavy]` lines; s/Automaton = step duration ÷ Automat
 
 Per Turn_Trigger (summary line): preparation 4 steps, 165.6 s, 820 processed, 0 skipped, **0.202 s/Automaton** (the opening build dominates; 0.756 s on its own); settlement 10 steps, 44.2 s, 2050 processed, 0 skipped, **0.022 s/Automaton**; season_open 1 step, 183.1 s, 205 processed, 0 skipped, **0.893 s/Automaton**.
 
-Both opening-build steps finished within the 300 s Turn_Step budget (155 s and 183 s). They are faster than spec 55's 100-Automaton run (244 s and 260 s); this run did not investigate the difference. Strategy_Comparison answered in 305 ms and 300 ms over 100,000 battles / 380,000 participants (limit 2 s). The run raised 101 `automaton_negative_balance` turn-start alerts (decision 40; spec 55 recorded 88 with 100 Automatons).
+Both opening-build steps finished within the then 300 s Turn_Step budget (155 s and 183 s). They are faster than spec 55's 100-Automaton run (244 s and 260 s); this run did not investigate the difference. Strategy_Comparison answered in 305 ms and 300 ms over 100,000 battles / 380,000 participants (limit 2 s). The run raised 101 `automaton_negative_balance` turn-start alerts (decision 40; spec 55 recorded 88 with 100 Automatons).
 
-CI: the `backend-heavy-tests` job has `timeout-minutes: 30` for the whole heavy tier. The two Automaton suites took 8.5 minutes locally; the CI heavy job has not run on this branch yet. The heavy duration grows with the catalogue (`PHASE_TIMEOUT_MS = max(15 min, 9 s × entries)`, no cap), and an opening build at 0.9 s/Automaton would reach the 300 s budget at roughly 330 new Active_Automatons in one step (an estimate from this run, not a measurement).
+CI: the `backend-heavy-tests` job has `timeout-minutes: 30` for the whole heavy tier. The two Automaton suites took 8.5 minutes locally; the CI heavy job has not run on this branch yet. The heavy duration grows with the catalogue (`PHASE_TIMEOUT_MS = max(15 min, 9 s × entries)`, no cap), and an opening build at 0.9 s/Automaton would reach the 300 s budget at roughly 330 new Active_Automatons in one step (an estimate from this run, not a measurement). Superseded: ACC hit the 300 s budget at 189 stables (cycle 72), and the fixed budget and this ~330-stable estimate were replaced by the Turn_Step deadline rule; see `AUTOMATON_TURN_STEP_DEADLINE.md`.
 
 ## Integration tier (local dev DB)
 
@@ -88,6 +88,6 @@ The local drafts were left in place (reversible; delete them through the admin p
 ## Open items for the product owner
 
 - Commit the delivered Catalogue_Entries and their Repository_Images in the same change (task 2.2, deferred by the instruction not to commit). All checks are done.
-- `review/SCALING.md` §6 engine items (parallel Turn_Steps, fair rotation after budget skips, a population-scaled budget or chunked steps, fewer SQL statements per action, bulk skip marking and a lease heartbeat, batched admin operations, a battle-volume measurement). None is needed for the current catalogue at the measured timing, as long as activation happens in batches.
+- `review/SCALING.md` §6 engine items (parallel Turn_Steps, fair rotation after budget skips, a population-scaled budget or chunked steps, fewer SQL statements per action, bulk skip marking and a lease heartbeat, batched admin operations, a battle-volume measurement). None is needed for the current catalogue at the measured timing, as long as activation happens in batches. Update: parallel turns, a deadline scaled to the night window and the lease heartbeat are done and batch activation is no longer needed (`AUTOMATON_TURN_STEP_DEADLINE.md`).
 - First CI heavy run on the PR (30-minute job limit; 8.5 minutes measured locally for the Automaton suites).
 - ACC: the deploy-time Catalogue_Sync may meet stable-name conflicts with ACC human stables. These cannot be checked locally; by design they are skipped and alerted (ops guide §6).

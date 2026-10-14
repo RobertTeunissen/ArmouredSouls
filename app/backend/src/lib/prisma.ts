@@ -3,6 +3,7 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool, type PoolClient } from 'pg';
 import dotenv from 'dotenv';
 import { getConfig } from '../config/env';
+import { resolveDbPoolMax } from './dbPoolConfig';
 
 dotenv.config();
 
@@ -58,7 +59,8 @@ function createPrismaClient(): PrismaClient {
   // rounds). Note: `connection_limit` in DATABASE_URL is a Prisma-engine
   // parameter and is ignored by the pg driver adapter; this is the real cap.
   // Configurable via DB_POOL_MAX; keep it below the server's max_connections.
-  const poolMax = parseInt(process.env.DB_POOL_MAX || '15', 10);
+  // The Automaton Turn_Step sizes its parallelism from the same value.
+  const poolMax = resolveDbPoolMax();
 
   // Statement timeout (ms): kills queries that exceed this duration to prevent
   // pool starvation from runaway queries. Default 30s; configurable via DB_STATEMENT_TIMEOUT_MS.

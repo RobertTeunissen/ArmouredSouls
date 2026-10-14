@@ -20,7 +20,6 @@ export type {
 } from './tagTeamMatchmakingService';
 
 export {
-  assignTagTeamLeagueInstanceOnTeamBattle as assignTagTeamLeagueInstance,
   TEAM_BATTLE_LEAGUE_TIERS as TAG_TEAM_LEAGUE_TIERS,
   MAX_TEAMS_PER_INSTANCE,
 } from '../team-battle/teamBattleAdapter';

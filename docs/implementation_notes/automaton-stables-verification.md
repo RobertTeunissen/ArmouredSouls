@@ -37,7 +37,7 @@ This is the R14.7 record: each Verification Criterion with its result and an out
 
 ## Turn_Step durations (R7.10, design §19)
 
-Measured by `automatonMultiSeason.test.ts` with 100 Active_Automatons (the 11 starter stables plus 89 generated entries). Hard limit 300 s; design target 180 s for opening builds and 60 s for steady-state settlement.
+Measured by `automatonMultiSeason.test.ts` with 100 Active_Automatons (the 11 starter stables plus 89 generated entries). Hard limit at the time 300 s; design target 180 s for opening builds and 60 s for steady-state settlement. The fixed 300 s limit (R7.10) is superseded by the Turn_Step deadline rule; see `AUTOMATON_TURN_STEP_DEADLINE.md`.
 
 | Turn_Step | Charged actions | Run A | Run B | Run C |
 |---|---|---|---|---|
@@ -63,7 +63,7 @@ Each item names what differs from `requirements.md` / `design.md` and why. None 
 Open items for the product owner:
 
 - **Admin text awaiting approval (R13.4, decision 41).** The builder rule messages and admin helper strings in `review/PLAYER_FACING_TEXT.md` §6.9 are in the code but not approved. Reason: they had no approved text when the admin page was built; they follow the style of §6.4b. Approve or replace before merge.
-- **Opening Turn_Step above the 180 s design target in some runs (R7.10, design §19).** The gate measured 64–98 s, but an implementation run measured 244 s and 260 s (hard limit 300 s). Reason: about 130 SQL statements per charged action on the shared human purchase path. Accepted by the product owner (FR-1); the CI heavy job has not run on this branch yet.
+- **Opening Turn_Step above the 180 s design target in some runs (R7.10, design §19).** The gate measured 64–98 s, but an implementation run measured 244 s and 260 s (then hard limit 300 s, since superseded by the Turn_Step deadline rule). Reason: about 130 SQL statements per charged action on the shared human purchase path. Accepted by the product owner (FR-1); the CI heavy job has not run on this branch yet.
 
 Data model and interfaces:
 

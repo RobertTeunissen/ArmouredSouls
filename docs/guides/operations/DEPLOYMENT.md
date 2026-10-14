@@ -137,6 +137,16 @@ Key differences between environments:
 | `JWT_SECRET` | Unique per environment | Unique per environment |
 | `SCHEDULER_ENABLED` | `true` | `true` |
 
+Automaton Turn_Step tuning (optional; unset means the default, which is the same on ACC and PRD). Out-of-range or non-numeric values fall back to the default.
+
+| Variable | Default (ACC and PRD) | Bounds | Meaning |
+|----------|-----------------------|--------|---------|
+| `AUTOMATON_TURN_CONCURRENCY` | `3` | 1–8 | Automaton turns in parallel per Turn_Step; clamped to ⌊(`DB_POOL_MAX` − 5) / 2⌋. `1` = sequential (kill switch) |
+| `AUTOMATON_TURN_STEP_MAX_MS` | `21600000` (6 h) | 300000–82800000 | Longest a Turn_Step keeps starting turns; the only bound when the scheduler is off |
+| `AUTOMATON_TURN_STEP_SCHEDULE_MARGIN_MS` | `900000` (15 min) | 0–7200000 | Stop starting turns this long before the next scheduled job |
+
+The Turn_Step deadline is min(start + max, next scheduled job − margin), never below 300 s. Only cron schedules with a fixed minute and hour count as "next scheduled job"; an interval schedule (for example `*/30 * * * *`) is ignored with a warning, so a job on such a schedule would queue behind the Turn_Step until the cap. See `docs/implementation_notes/AUTOMATON_TURN_STEP_DEADLINE.md`.
+
 ---
 
 ## Verifying a Deployment
@@ -179,6 +189,28 @@ curl -sf -o /dev/null -w "%{http_code}" -X POST \
   -d '{"username":"test","password":"test"}' \
   https://acc.armouredsouls.com/api/auth/login
 ```
+
+### Environment Branding
+
+ACC and production deploy the same frontend build artifact, so the browser-tab title prefix and favicon are chosen at runtime from the hostname (`app/frontend/src/utils/environment-branding.ts`):
+
+| Hostname | Environment | Tab title | Icon files |
+|----------|-------------|-----------|------------|
+| `acc.armouredsouls.com` | acceptance | `[ACC] Armoured Souls` | `favicon-acc.svg`, `favicon-acc.ico`, `apple-touch-icon-acc.png` (amber) |
+| `localhost`, `127.0.0.1`, `::1` | development | `[TST] Armoured Souls` | `favicon-dev.*`, `apple-touch-icon-dev.png` (green) |
+| anything else (incl. `armouredsouls.com`) | production | `Armoured Souls` | `favicon.svg`, `favicon.ico`, `apple-touch-icon.png` |
+
+Unknown hosts fall back to production, so the live site never shows a false label. If the ACC hostname changes, update `ACCEPTANCE_HOSTNAME` in that module.
+
+Manual check after a deploy. Every line must show `200` and an `image/*` type; `text/html` means the SPA fallback is serving `index.html` instead of the icon:
+
+```bash
+for p in /favicon.svg /favicon.ico /apple-touch-icon.png /favicon-acc.svg /favicon-acc.ico /apple-touch-icon-acc.png; do
+  curl -s -o /dev/null -w "$p %{http_code} %{content_type}\n" "https://acc.armouredsouls.com$p"
+done
+```
+
+Safari caches favicons aggressively; testers may need to clear its favicon cache to see a changed icon.
 
 ### PM2 Status
 

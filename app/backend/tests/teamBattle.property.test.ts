@@ -11,8 +11,6 @@ import { Prisma } from '../generated/prisma';
 import prisma from '../src/lib/prisma';
 import {
   registerTeam,
-  addTeamMember,
-  removeTeamMember,
   swapTeamMember,
 } from '../src/services/team-battle/teamBattleService';
 import { TeamBattleError, TeamBattleErrorCode } from '../src/errors/teamBattleErrors';
@@ -23,6 +21,19 @@ import {
   distributeTeamCredits,
 } from '../src/services/team-battle/teamBattleRewardService';
 import { TeamBattleParticipantResult } from '../src/types/teamBattleLogTypes';
+
+/**
+ * Delete the team standings of a stable's teams. `standings` is polymorphic
+ * with no foreign key, so these rows outlive their team unless removed first —
+ * and registerTeam now creates them whenever the members are subscribed.
+ */
+async function deleteTeamStandingsOfStable(stableId: number): Promise<void> {
+  const teams = await prisma.teamBattle.findMany({ where: { stableId }, select: { id: true } });
+  if (teams.length === 0) return;
+  await prisma.standing.deleteMany({
+    where: { entityType: 'team', entityId: { in: teams.map((t) => t.id) } },
+  });
+}
 
 describe('Team Battle Property Tests', () => {
   /**
@@ -51,6 +62,7 @@ describe('Team Battle Property Tests', () => {
     });
 
     afterAll(async () => {
+      await deleteTeamStandingsOfStable(testUserId);
       await prisma.teamBattleMember.deleteMany({
         where: { team: { stableId: testUserId } },
       });
@@ -69,6 +81,7 @@ describe('Team Battle Property Tests', () => {
     });
 
     afterEach(async () => {
+      await deleteTeamStandingsOfStable(testUserId);
       await prisma.teamBattleMember.deleteMany({
         where: { team: { stableId: testUserId } },
       });
@@ -465,7 +478,8 @@ describe('Team Battle Property Tests', () => {
    *   - all members subscribed to the corresponding event
    *   - all member robots exist (not destroyed)
    *
-   * Members can be added, removed, and swapped while respecting subscription rules.
+   * Members are changed only by swapping (there is no add/remove), and a swap
+   * does not require the new robot to be subscribed (D3).
    */
   describe('Property 8: Team Membership State Machine', () => {
     let testUserId: number;
@@ -500,6 +514,7 @@ describe('Team Battle Property Tests', () => {
           where: { participants: { some: { participantType: 'team', participantId: { in: userTeamIds } } } },
         });
       }
+      await deleteTeamStandingsOfStable(testUserId);
       await prisma.teamBattleMember.deleteMany({
         where: { team: { stableId: testUserId } },
       });
@@ -533,6 +548,7 @@ describe('Team Battle Property Tests', () => {
           where: { participants: { some: { participantType: 'team', participantId: { in: userTeamIds } } } },
         });
       }
+      await deleteTeamStandingsOfStable(testUserId);
       await prisma.teamBattleMember.deleteMany({
         where: { team: { stableId: testUserId } },
       });
@@ -590,67 +606,13 @@ describe('Team Battle Property Tests', () => {
     }
 
     /**
-     * **Validates: Requirements R2.1, R2.9, R3.10**
-     *
-     * Property: A fully registered team (N members, all subscribed) can have members
-     * removed and added back. Verifies removeTeamMember and addTeamMember work correctly.
-     */
-    it('should allow member removal and re-addition', async () => {
-      await fc.assert(
-        fc.asyncProperty(
-          // Generate team size (2 or 3)
-          fc.constantFrom(2 as const, 3 as const),
-          async (teamSize) => {
-            const eventType = teamSize === 2 ? 'league_2v2' : 'league_3v3';
-
-            // Create N robots and subscribe them
-            const robotIds: number[] = [];
-            for (let i = 0; i < teamSize; i++) {
-              const robotId = await createRobot(`full_${teamSize}_${i}`);
-              await subscribeRobot(robotId, eventType);
-              robotIds.push(robotId);
-            }
-
-            // Register a full team
-            const team = await registerTeam(
-              testUserId,
-              robotIds,
-              `EligTeam${teamSize}_${Date.now()}`,
-              teamSize,
-              testUserId,
-            );
-
-            // Remove a member
-            const removedRobotId = robotIds[teamSize - 1];
-            await removeTeamMember(team.id, removedRobotId, testUserId);
-
-            const teamAfterRemove = await prisma.teamBattle.findUnique({
-              where: { id: team.id },
-            });
-            expect(teamAfterRemove).not.toBeNull();
-
-            // Add a new subscribed robot
-            const replacementRobotId = await createRobot(`replacement_${teamSize}`);
-            await subscribeRobot(replacementRobotId, eventType);
-            await addTeamMember(team.id, replacementRobotId, testUserId);
-
-            const teamAfterAdd = await prisma.teamBattle.findUnique({
-              where: { id: team.id },
-            });
-            expect(teamAfterAdd).not.toBeNull();
-          },
-        ),
-        { numRuns: 100 },
-      );
-    });
-
-    /**
      * **Validates: Requirements R2.1, R3.10**
      *
-     * Property: A team with all N members rejects a swap with an unsubscribed robot.
-     * A swap with a subscribed robot succeeds.
+     * Property (D3): a swap succeeds whatever the new robot's subscriptions.
+     * The team keeps its id and its existing standings rows (tier, LP); the
+     * swap never removes or resets a row.
      */
-    it('should reject swap when new robot lacks subscription', async () => {
+    it("swap succeeds regardless of the new robot's subscriptions and keeps team id + existing standings rows", async () => {
       await fc.assert(
         fc.asyncProperty(
           // Generate team size and whether the new robot is subscribed
@@ -667,7 +629,7 @@ describe('Team Battle Property Tests', () => {
               robotIds.push(robotId);
             }
 
-            // Register a full team
+            // Register a full team: every member holds the mode, so it is placed.
             const team = await registerTeam(
               testUserId,
               robotIds,
@@ -675,6 +637,11 @@ describe('Team Battle Property Tests', () => {
               teamSize,
               testUserId,
             );
+            const rowsBefore = await prisma.standing.findMany({
+              where: { entityType: 'team', entityId: team.id },
+              orderBy: { mode: 'asc' },
+            });
+            expect(rowsBefore.map((r) => r.mode)).toEqual([eventType]);
 
             // Create a replacement robot
             const newRobotId = await createRobot(`new_${teamSize}`);
@@ -682,72 +649,24 @@ describe('Team Battle Property Tests', () => {
               await subscribeRobot(newRobotId, eventType);
             }
 
-            // Attempt swap
+            // The swap succeeds either way.
             const oldRobotId = robotIds[0];
-            if (!newRobotSubscribed) {
-              // Swap with unsubscribed robot should be rejected
-              await expect(
-                swapTeamMember(team.id, oldRobotId, newRobotId, testUserId),
-              ).rejects.toThrow(TeamBattleError);
-            } else {
-              // Swap with subscribed robot should succeed
-              await swapTeamMember(team.id, oldRobotId, newRobotId, testUserId);
-            }
-          },
-        ),
-        { numRuns: 100 },
-      );
-    });
+            await swapTeamMember(team.id, oldRobotId, newRobotId, testUserId);
 
-    /**
-     * **Validates: Requirements R2.1, R2.9**
-     *
-     * Property: Removing members from a team correctly reduces the member count.
-     * Registration with exactly N members succeeds; members can be removed down to 1.
-     */
-    it('should track member count correctly after removals', async () => {
-      await fc.assert(
-        fc.asyncProperty(
-          // Generate team size and how many members to keep (1 to N)
-          fc.constantFrom(2 as const, 3 as const),
-          fc.integer({ min: 1, max: 3 }),
-          async (teamSize, membersToKeep) => {
-            // Clamp membersToKeep to valid range for this teamSize
-            const actualMembersToKeep = Math.min(membersToKeep, teamSize);
-            const eventType = teamSize === 2 ? 'league_2v2' : 'league_3v3';
-
-            // Create N robots and subscribe them
-            const robotIds: number[] = [];
-            for (let i = 0; i < teamSize; i++) {
-              const robotId = await createRobot(`count_${teamSize}_${i}`);
-              await subscribeRobot(robotId, eventType);
-              robotIds.push(robotId);
-            }
-
-            // Register a full team
-            const team = await registerTeam(
-              testUserId,
-              robotIds,
-              `CntTeam${teamSize}_${Date.now()}`,
-              teamSize,
-              testUserId,
-            );
-
-            // Remove members until we have actualMembersToKeep
-            const membersToRemove = teamSize - actualMembersToKeep;
-            for (let i = 0; i < membersToRemove; i++) {
-              const robotToRemove = robotIds[teamSize - 1 - i];
-              await removeTeamMember(team.id, robotToRemove, testUserId);
-            }
-
-            // Verify member count after removals
             const teamAfter = await prisma.teamBattle.findUnique({
               where: { id: team.id },
               include: { members: true },
             });
+            expect(teamAfter).not.toBeNull();
+            expect(teamAfter!.members.map((m) => m.robotId).sort((x, y) => x - y))
+              .toEqual([newRobotId, ...robotIds.slice(1)].sort((x, y) => x - y));
 
-            const currentMemberCount = teamAfter!.members.length;
-            expect(currentMemberCount).toBe(actualMembersToKeep);
+            // Existing rows are kept unchanged; the swap creates no other row.
+            const rowsAfter = await prisma.standing.findMany({
+              where: { entityType: 'team', entityId: team.id },
+              orderBy: { mode: 'asc' },
+            });
+            expect(rowsAfter).toEqual(rowsBefore);
           },
         ),
         { numRuns: 100 },
@@ -851,6 +770,7 @@ describe('Team Battle Property Tests', () => {
           where: { participants: { some: { participantType: 'team', participantId: { in: userTeamIds2 } } } },
         });
       }
+      await deleteTeamStandingsOfStable(testUserId);
       await prisma.teamBattleMember.deleteMany({
         where: { team: { stableId: testUserId } },
       });
@@ -890,6 +810,7 @@ describe('Team Battle Property Tests', () => {
           where: { participants: { some: { participantType: 'team', participantId: { in: userTeamIds3 } } } },
         });
       }
+      await deleteTeamStandingsOfStable(testUserId);
       await prisma.teamBattleMember.deleteMany({
         where: { team: { stableId: testUserId } },
       });

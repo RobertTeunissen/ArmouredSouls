@@ -5,10 +5,10 @@
  * The Status_Bar sits above four sections — Stables, Strategies, Editor,
  * Catalogue — in the `TabLayout` pattern (`frontend-standards.md`): tabs at
  * ≥ 1024 px, the sections stacked from 320 px to 1023 px. The active tab and
- * the section state (filters, Strategies view, open draft, open stable) live
+ * the section state (filters, `q` search, `sort`, Strategies view, open draft, open stable) live
  * in the URL query, so they survive a refresh. Local state only; no store.
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { KeyboardEvent, ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
@@ -24,6 +24,7 @@ import {
 } from '../../utils/automatonAdminApi';
 import { AutomatonStatusBar } from '../../components/admin/automatons/AutomatonStatusBar';
 import { StablesTab, type StablesFilter } from '../../components/admin/automatons/StablesTab';
+import { parseStableSort, serializeStableSort } from '../../components/admin/automatons/stablesView';
 import { StrategiesTab, type StrategiesView } from '../../components/admin/automatons/StrategiesTab';
 import { EditorTab } from '../../components/admin/automatons/EditorTab';
 import { CatalogueTab } from '../../components/admin/automatons/CatalogueTab';
@@ -52,6 +53,9 @@ export default function AutomatonsPage(): ReactNode {
   const tab = readTab(params.get('tab'));
   const filter: StablesFilter = FILTERS.includes(params.get('filter') as StablesFilter) ? (params.get('filter') as StablesFilter) : 'all';
   const strategyFilter = params.get('strategy');
+  const query = params.get('q') ?? '';
+  const sortParam = params.get('sort');
+  const sort = useMemo(() => parseStableSort(sortParam), [sortParam]);
   const strategiesView: StrategiesView = params.get('view') === 'library' ? 'library' : 'comparison';
   const draftParam = Number(params.get('draft'));
   const draftId = Number.isInteger(draftParam) && draftParam > 0 ? draftParam : null;
@@ -94,7 +98,7 @@ export default function AutomatonsPage(): ReactNode {
     setStatus(await getStatus());
   };
 
-  const showNeedsAttention = (): void => update({ tab: 'stables', filter: 'attention', strategy: null });
+  const showNeedsAttention = (): void => update({ tab: 'stables', filter: 'attention', strategy: null, q: null });
   const openStable = (key: string | null): void => update({ tab: 'editor', stable: key });
 
   const onTabKey = (event: KeyboardEvent<HTMLButtonElement>, index: number): void => {
@@ -110,10 +114,16 @@ export default function AutomatonsPage(): ReactNode {
     stables: (
       <StablesTab
         profiles={profiles}
+        strategies={library}
         filter={filter}
         strategyFilter={strategyFilter}
+        query={query}
+        sort={sort}
         onFilterChange={(f) => update({ filter: f === 'all' ? null : f })}
-        onClearStrategy={() => update({ strategy: null })}
+        onStrategyChange={(key) => update({ strategy: key })}
+        onQueryChange={(q) => update({ q: q === '' ? null : q })}
+        onSortChange={(s) => update({ sort: s === null ? null : serializeStableSort(s) })}
+        onClearFilters={() => update({ filter: null, strategy: null, q: null })}
         onOpenStable={(key) => openStable(key)}
         onActivateAll={async () => {
           const { outcomes } = await activateAllDrafts();
@@ -131,7 +141,7 @@ export default function AutomatonsPage(): ReactNode {
         profiles={profiles ?? []}
         onViewChange={(view) => update({ view: view === 'comparison' ? null : view })}
         onOpenDraft={(id) => update({ draft: id === null ? null : String(id), ...(id === null ? {} : { view: 'library' }) })}
-        onOpenStrategy={(key) => update({ tab: 'stables', strategy: key, filter: null })}
+        onOpenStrategy={(key) => update({ tab: 'stables', strategy: key, filter: null, q: null })}
         onChanged={() => void refresh()}
       />
     ),

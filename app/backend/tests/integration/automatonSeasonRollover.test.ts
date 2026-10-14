@@ -27,6 +27,7 @@ import { setAlertSender } from '../../src/services/automaton/automatonObservabil
 import { getProgramSwitch } from '../../src/services/automaton/programSwitch';
 import { activateProfile, addBlueprint, createDraft } from '../../src/services/automaton/automatonProfileService';
 import { getAutomatonUploadDir, storeBlueprintImage } from '../../src/services/automaton/automatonImageService';
+import { SUBSCRIBABLE_EVENT_TYPES, isRegisteredEvent, registerSubscribableEvent } from '../../src/services/subscription/eventRegistry';
 
 jest.setTimeout(600_000);
 
@@ -100,18 +101,25 @@ describe('Season_Rollover with Automaton Stables (Spec #55 task 7.4)', () => {
 
   beforeAll(async () => {
     previousSender = setAlertSender(async () => undefined);
+    // The registry is filled at app start-up; without it Event_Allocation's
+    // setSubscriptionsForRobot rejects every event, and an Automaton robot is
+    // in no competition (standings come from its first subscriptions).
+    for (const type of SUBSCRIBABLE_EVENT_TYPES) if (!isRegisteredEvent(type)) registerSubscribableEvent({ type, label: type });
     await resetSeasonTables();
     await getCurrentSeason();
     await prisma.automatonProgramSetting.upsert({ where: { id: 1 }, update: { turnsEnabled: true, turnStepLeaseUntil: null }, create: { id: 1 } });
 
     await createDraft({ catalogueKey: keys.paragon, stableName: `Rz Paragon ${run}`, franchise: 'Test', backstory: 'Rollover test stable.', strategyKey: 'paragon' });
-    await addBlueprint(keys.paragon, HAMMER);
+    // Robot names are unique game-wide and the two stables' turns run in
+    // parallel, so each stable gets its own names (as catalogue entries do);
+    // a shared name makes one opening build fail with a P2002 on `robots.name`.
+    await addBlueprint(keys.paragon, { ...HAMMER, robotName: `Rz Hammer P ${run}` });
     await createDraft({
       catalogueKey: keys.duo, stableName: `Rz Duo ${run}`, franchise: 'Test', backstory: 'Rollover test stable.', strategyKey: 'duo',
       eventOrder: ['league_2v2', 'tag_team', 'tournament_2v2', 'league_1v1', 'koth', 'grand_melee', 'tournament_1v1', 'league_3v3', 'tournament_3v3'],
     });
-    await addBlueprint(keys.duo, HAMMER);
-    await addBlueprint(keys.duo, { ...SHIELD, teamNames: { twoVsTwo: ['Rz Pair'], threeVsThree: [] } });
+    await addBlueprint(keys.duo, { ...HAMMER, robotName: `Rz Hammer D ${run}` });
+    await addBlueprint(keys.duo, { ...SHIELD, robotName: `Rz Shield D ${run}`, teamNames: { twoVsTwo: ['Rz Pair'], threeVsThree: [] } });
     await createDraft({ catalogueKey: keys.draft, stableName: `Rz Draft ${run}`, franchise: 'Test', backstory: 'Stays a draft.', strategyKey: 'paragon' });
     await addBlueprint(keys.draft, HAMMER);
 

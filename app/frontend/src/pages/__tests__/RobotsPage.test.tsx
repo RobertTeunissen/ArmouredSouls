@@ -213,6 +213,37 @@ describe('RobotsPage', () => {
     });
   });
 
+  describe('Robot without a 1v1 standing', () => {
+    // The API omits currentLeague/leagueId/leaguePoints when no league_1v1 standing exists
+    const unrankedRobot = (() => {
+      const { currentLeague: _league, leaguePoints: _lp, ...rest } = mockRobots[0];
+      void _league;
+      void _lp;
+      return { ...rest, id: 9, name: 'Fresh Bot' };
+    })();
+
+    afterEach(() => {
+      vi.mocked(localStorage.getItem).mockReset();
+    });
+
+    it('shows Unranked with no LP in the table view instead of undefined', async () => {
+      setupMocks([unrankedRobot as unknown as typeof mockRobots[0]]);
+
+      // The league column only exists in the table view (localStorage is a vi.fn mock in setupTests)
+      vi.mocked(localStorage.getItem).mockImplementation((key: string) =>
+        key === 'robotsViewMode' ? 'table' : null,
+      );
+      renderWithRouter(<RobotsPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Fresh Bot')).toBeInTheDocument();
+      });
+      expect(screen.getByText('Unranked')).toBeInTheDocument();
+      expect(screen.getByText('LP: —')).toBeInTheDocument();
+      expect(screen.queryByText(/undefined/)).not.toBeInTheDocument();
+    });
+  });
+
   describe('Empty State', () => {
     it('should display empty state when no robots', async () => {
       setupMocks([]);

@@ -16,6 +16,7 @@ import { Prisma, StandingsMode, Standing } from '../../../generated/prisma';
 // grandMeleeRewards imports only economyFormulas, and economyFormulas imports
 // nothing. The reverse direction would drag Prisma into a currently pure module.
 import { GRAND_MELEE_LP_SCALE } from '../grand-melee/grandMeleeRewards';
+import { ensureStanding, isStandingBackedEvent } from './standingPlacement';
 
 // --- Types ---
 
@@ -30,12 +31,24 @@ export interface RecordBattleResultParams {
 // --- Helper Functions ---
 
 /**
- * Returns the existing standing for the given entity/mode combination,
- * or creates a default one if none exists yet.
+ * League instance written for a standing in a mode without league instances
+ * (the `tournament_*` modes). The column is required, but nothing ranks by it.
+ */
+const NON_LEAGUE_INSTANCE_ID = 'bronze_1';
+
+/**
+ * Returns the existing standing for the given entity/mode combination.
+ *
+ * Safety net only: standings are created on the first matchable subscription
+ * (`services/standings/standingPlacement`), so a battle result for an entity
+ * without a row means a writer bypassed that rule. Rather than drop the result,
+ * the row is created through the same placement rule (least-full Bronze
+ * instance, 0 LP) and a warning is logged so the gap can be found.
  *
  * @param entityType - 'robot' or 'team'
  * @param entityId - The ID of the robot or team
  * @param mode - The standings mode (e.g., league_1v1, koth, tournament_2v2)
+ * @param tx - Transaction to run in; a new one is opened when omitted
  * @returns The existing or newly created Standing record
  */
 export async function getOrCreateStanding(
@@ -44,6 +57,20 @@ export async function getOrCreateStanding(
   mode: StandingsMode,
   tx?: Prisma.TransactionClient,
 ): Promise<Standing> {
+  if (isStandingBackedEvent(mode)) {
+    const run = (client: Prisma.TransactionClient) => ensureStanding(client, entityType, entityId, mode);
+    const { standing, created } = tx ? await run(tx) : await prisma.$transaction(run);
+    if (created) {
+      logger.warn('[Standings] Safety net created a missing standing', {
+        entityType,
+        entityId,
+        mode,
+        leagueInstanceId: standing.leagueInstanceId,
+      });
+    }
+    return standing;
+  }
+
   const client = tx ?? prisma;
   const existing = await client.standing.findUnique({
     where: {
@@ -55,13 +82,13 @@ export async function getOrCreateStanding(
     return existing;
   }
 
-  return client.standing.create({
+  const standing = await client.standing.create({
     data: {
       entityType,
       entityId,
       mode,
       tier: 'bronze',
-      leagueInstanceId: 'bronze_1',
+      leagueInstanceId: NON_LEAGUE_INSTANCE_ID,
       leaguePoints: 0,
       cyclesInTier: 0,
       wins: 0,
@@ -72,6 +99,13 @@ export async function getOrCreateStanding(
       currentLoseStreak: 0,
     },
   });
+  logger.warn('[Standings] Safety net created a missing standing', {
+    entityType,
+    entityId,
+    mode,
+    leagueInstanceId: standing.leagueInstanceId,
+  });
+  return standing;
 }
 
 /**
@@ -156,26 +190,10 @@ async function recordBattleResult(
       break;
   }
 
-  const updated = await client.standing.upsert({
-    where: {
-      entityType_entityId_mode: { entityType, entityId, mode },
-    },
-    update: updateData,
-    create: {
-      entityType,
-      entityId,
-      mode,
-      tier: 'bronze',
-      leagueInstanceId: 'bronze_1',
-      leaguePoints: Math.max(0, lpDelta),
-      cyclesInTier: 0,
-      wins: outcome === 'win' ? 1 : 0,
-      losses: outcome === 'loss' ? 1 : 0,
-      draws: outcome === 'draw' ? 1 : 0,
-      currentWinStreak: outcome === 'win' ? 1 : 0,
-      bestWinStreak: outcome === 'win' ? 1 : 0,
-      currentLoseStreak: outcome === 'loss' ? 1 : 0,
-    },
+  // getOrCreateStanding guarantees the row, so this is a plain update.
+  const updated = await client.standing.update({
+    where: { id: current.id },
+    data: updateData,
   });
 
   logger.debug(
