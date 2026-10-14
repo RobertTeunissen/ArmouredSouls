@@ -2,7 +2,7 @@
 title: "Booking Office"
 description: "How the Booking Office facility works — event subscriptions, per-robot slot caps, switching between events, and how to manage which battle events your robots participate in."
 order: 7
-lastUpdated: "2026-08-27"
+lastUpdated: "2026-10-14"
 relatedArticles:
   - facilities/facility-overview
   - facilities/facility-progression
@@ -95,6 +95,12 @@ Each event books its next matches once a day, at its own time. The overview show
 When you create your first robot, you'll pick 3 subscriptions from the available events. The defaults are 1v1 League, 1v1 Tournament, and KotH (team modes like 2v2 League and Tag Team aren't available until you form a 2v2 team).
 
 If you want a 4th subscription right away, you can purchase Booking Office Level 1 during onboarding — but only if you have enough credits and there's a 4th event available to you.
+
+## Joining a League
+
+Subscribing is also how you enter a league. The first time a robot subscribes to 1v1 League, King of the Hill or Grand Melee, it joins that event's **Bronze** tier with 0 points. A team joins 2v2 League, Tag Team or 3v3 League the first time **every** member holds that event's subscription. Creating a robot or registering a team doesn't place it anywhere on its own.
+
+Leaving an event keeps your place: the robot or team keeps its tier and points, simply stops being matched, and picks up where it left off if you subscribe again. Swapping a team member keeps the team's tier and points too. Disbanding a team removes its standings, so a new team starts again in Bronze.
 
 ## Leaving an Event
 

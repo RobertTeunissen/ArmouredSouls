@@ -2,7 +2,7 @@
 title: "Team Battles Overview"
 description: "How 2v2 and 3v3 League Team Battles work — team registration, simultaneous combat, coordination effects, matchmaking, rewards, and daily schedule."
 order: 1
-lastUpdated: "2026-08-27"
+lastUpdated: "2026-10-14"
 relatedArticles:
   - facilities/booking-office
   - leagues/matchmaking
@@ -25,8 +25,8 @@ Team Battles are separate from Tag Team. In Tag Team, robots take turns — one 
 
 ## How It Works
 
-1. **Subscribe** your robots to `2v2 League` or `3v3 League` via the [Booking Office](/guide/facilities/booking-office)
-2. **Register a Team** from your subscribed robots on the [Team Battles](/team-battles) page
+1. **Register a Team** from your robots on the [Team Battles](/team-battles) page
+2. **Subscribe** every team member to `2v2 League` or `3v3 League` via the [Booking Office](/guide/facilities/booking-office) (you can also do this before registering)
 3. **Matchmaking** pairs your team against an opponent in the same league tier (daily)
 4. **Battle** — all robots fight simultaneously with coordination effects active
 5. **Rewards** — credits, fame, prestige, and LP/ELO updates based on outcome
@@ -44,25 +44,27 @@ Both modes run every day. You don't need to be online — make your team decisio
 
 Teams are persistent — once registered, your team keeps its name, LP, league tier, and history across battles. Think of it like an F1 team: the team identity persists even if you swap out a driver.
 
-You can form a team **immediately after subscribing** your robots — there's no need to wait for the next matchmaker cycle. As soon as a robot is subscribed to the relevant league, it's eligible for team registration.
+You can form a team at any time — **no subscription is needed** to register. Subscriptions decide which leagues the team plays in:
+
+- A team joins a league's **Bronze** tier the first time every member holds that league's subscription. A 2-robot team can join 2v2 League and Tag Team independently; a 3-robot team joins 3v3 League.
+- It keeps its tier and LP when you swap members, and when members unsubscribe — it simply stops being matched until every member is subscribed again.
 
 ### Rules
 
 - A **2v2 team** requires exactly 2 robots
 - A **3v3 team** requires exactly 3 robots
 - All robots must be owned by your Stable (no cross-stable teams)
-- All robots must hold the corresponding subscription (`2v2 League` or `3v3 League`)
 - A robot can be on **one team per size** (but can be on both a 2v2 team and a 3v3 team simultaneously)
-- You can own **multiple teams** of the same size if you have enough subscribed robots (e.g. 4 robots → 2 teams of 2)
+- You can own **multiple teams** of the same size if you have enough robots (e.g. 4 robots → 2 teams of 2)
 - Team names must be 3–32 characters
 
 ### Managing Your Team
 
 From the [Team Battles](/team-battles) page you can:
 
-- **Swap a member** — Replace one robot with another subscribed robot (blocked while a battle is scheduled)
+- **Swap a member** — Replace one robot with any other robot of yours that isn't already on a team of that size (blocked while a battle is scheduled). The team keeps its tier and LP; if the new robot isn't subscribed yet, subscribe it so the team can be matched again
 - **Rename** — Change your team's name at any time
-- **Disband** — Delete the team entirely (blocked while a battle is scheduled)
+- **Disband** — Delete the team entirely, including its tier and LP (blocked while a battle is scheduled). A team registered later starts again in Bronze
 
 ```callout-warning
 You cannot swap members or disband a team while it has a scheduled battle. Wait for the battle to complete, then make changes before the next matchmaking window.
@@ -70,7 +72,7 @@ You cannot swap members or disband a team while it has a scheduled battle. Wait 
 
 ### Incomplete Rosters
 
-If you remove a team member (via swap or explicit removal), the team won't be scheduled for battles until the roster is filled again. The team's LP, tier, and history are preserved — just fill the empty slot to resume competing.
+If a team is ever missing a member, it won't be scheduled for battles until the roster is filled again. The team's LP, tier, and history are preserved — just fill the empty slot to resume competing.
 
 ### Subscription Warnings
 
@@ -143,7 +145,7 @@ Each team size has its own independent league with six tiers:
 | Diamond | Elite tier |
 | Champion | Top performers only |
 
-- New teams start in **Bronze** with standard starting LP
+- A team enters **Bronze** with 0 LP the first time every member is subscribed to that league
 - **Top 10%** of each tier promote at rebalancing
 - **Bottom 10%** of each tier demote at rebalancing
 - Rebalancing requires at least 5 cycles in the current tier

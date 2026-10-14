@@ -1,14 +1,15 @@
 # Product Requirements Document: Battle Data Architecture
 
-**Last Updated**: June 25, 2026  
+**Last Updated**: October 14, 2026
 **Status**: ✅ Implemented  
 **Owner**: Robert Teunissen  
 **Epic**: Battle System — Data Architecture  
-**Version**: 3.0
+**Version**: 3.1
 
 ---
 
 ## Version History
+- v3.1 (October 14, 2026) — Added "Standings lifecycle": rows are created by `standingPlacement` on the first matchable subscription, never at robot/team creation or by battle recording.
 - v3.0 (June 25, 2026) — Added "Post-Battle Robot State Update (Unified)" section documenting `updateRobotCombatStats()` as the single source of truth for all orchestrators. Added bye-match handling patterns. Updated implementation files table to include team battle and team tournament orchestrators.
 - v2.0 (April 2, 2026) — Full audit against Prisma schema. Fixed BattleParticipant model (removed non-existent `userId` field/relation/index, added `createdAt`, added table mapping). Corrected Battle model documentation (it still has robot1Id/robot2Id, tag team fields, ELO tracking — not the "simplified" version the old doc claimed). Fixed battleType values (`"league"` not `"1v1"`). Updated file paths for backend service consolidation. Removed incorrect "26+ columns removed" claim.
 - v1.0 (February 23, 2026) — Initial document
@@ -252,6 +253,15 @@ Every orchestrator calls `updateRobotCombatStats()` from `battlePostCombat.ts` f
 | Achievements | `checkAndAwardAchievements()` | Context differs per mode (placement, previous battle, etc.) |
 | Streaming revenue | `awardStreamingRevenueForParticipant()` | Mode-specific eligibility rules |
 | KotH points | `standingsService.awardKothPoints()` | Placement-based scoring unique to KotH |
+
+### Standings lifecycle
+
+Battle recording updates existing `standings` rows; it does not decide when a row exists. The rule lives in `services/standings/standingPlacement.ts`:
+
+- **Created** the first time the entity becomes matchable by subscription: a robot holds `league_1v1`/`koth`/`grand_melee`, or a complete team has every member subscribed to `league_2v2`/`tag_team` (2-robot teams) or `league_3v3` (3-robot teams). Callers are `subscriptionService.applySubscriptionChange` (`ensureStandingsForSubscriptionGain`), `teamBattleService.registerTeam` and `swapTeamMember` (`ensureTeamStandings`), plus the generator/seed paths. New rows start in Bronze, 0 LP, in the least-full Bronze instance (`leagueInstancePlacement.pickLeagueInstanceInTransaction`). Robot and team creation create no rows.
+- **Kept** on unsubscribe and on member swap.
+- **Deleted** explicitly (the table is polymorphic with no FK): team disband, account reset, generated-stable purge and the season rollover purge.
+- `standingsService.recordBattleResult()` updates the row by id. `getOrCreateStanding()` is a safety net: for standing-backed modes it places through `ensureStanding` and logs `[Standings] Safety net created a missing standing` when it had to create one, which indicates a caller bypassed the rule.
 
 ### Bye-match handling
 

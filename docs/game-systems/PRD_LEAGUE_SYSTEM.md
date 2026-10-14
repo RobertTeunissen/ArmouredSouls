@@ -1,14 +1,15 @@
 # Product Requirements Document: League System
 
-**Last Updated**: September 12, 2026
+**Last Updated**: October 14, 2026
 **Status**: ✅ Implemented  
 **Owner**: Robert Teunissen  
 **Epic**: League Progression System  
-**Version**: 2.3
+**Version**: 2.4
 
 ---
 
 ## Version History
+- v2.4 (October 14, 2026) — Unified standings creation: a robot or team enters a mode's Bronze league the first time it becomes matchable by subscription, never at robot or team creation. See [Entering a League](#entering-a-league).
 - v2.3 (September 12, 2026) — Unified `league_1v1`, `league_2v2`, `league_3v3`, and `tag_team` behind one policy and planner. Zones now use complete instance population and fixed positions before LP/residency filters; standings previews and history reporting use the same mode-aware results.
 - v2.2 (September 1, 2026) — Spec #50 shared Bye_Card display, durable bye markers, expected/awarded reward display, and all-mode Match/Battle treatment.
 - v2.1 (April 18, 2026) — Per-tier LP promotion thresholds: Bronze 25, Silver 50, Gold 75, Platinum 100, Diamond 125. Replaces flat 25 LP threshold for all tiers.
@@ -33,6 +34,19 @@ Promotion and demotion zones are positional. Their size is calculated from the c
 Bronze → Silver → Gold → Platinum → Diamond → Champion
 
 Each tier can have multiple instances (e.g., `bronze_1`, `bronze_2`, `bronze_3`) with a maximum of 100 robots per instance.
+
+### Entering a League
+
+One rule applies to every standing-backed mode (`league_1v1`, `koth`, `grand_melee`, `league_2v2`, `tag_team`, `league_3v3`). The rule lives in `services/standings/standingPlacement.ts`.
+
+- **When:** a `standings` row is created the first time the entity becomes matchable in that mode through a Booking Office subscription. Creating a robot or registering a team creates no standings.
+  - Robot modes (`league_1v1`, `koth`, `grand_melee`): the robot subscribes to the mode.
+  - Team modes: the team is complete and every member holds the mode's subscription. 2-robot teams can enter `league_2v2` and `tag_team`, independently of each other. 3-robot teams can enter `league_3v3`. The check runs on subscription gain, team registration and member swap, whichever completes the set.
+- **Where:** Bronze, 0 LP, in the least-full Bronze instance (ties go to the lowest instance number). When every Bronze instance holds 100 entities, a new instance is opened.
+- **Kept:** unsubscribing or swapping a team member keeps the row, so the entity keeps its tier, LP and record and simply stops being matched. Resubscribing picks up where it left off.
+- **Deleted:** team disband deletes the team's rows (re-registering starts fresh in Bronze), account reset deletes the user's robot and team rows, and the season rollover wipes all rows.
+
+Robots without a `league_1v1` row are shown as "Unranked" in the UI and are not counted in that mode's league population.
 
 ### League Points
 
@@ -211,7 +225,9 @@ All paths relative to `app/backend/src/`.
 | `services/league/leagueRebalancingService.ts` | 1v1 adapter and orchestration |
 | `services/team-battle/teamBattleAdapter.ts` | 2v2/3v3 persistence adapter |
 | `services/tag-team/tagTeamLeagueRebalancingService.ts` | Tag Team adapter and orchestration |
-| `services/league/leagueInstanceService.ts` | Canonical 100-entity capacity and instance management |
+| `services/league/leagueInstanceService.ts` | Instance management; re-exports the 100-entity capacity |
+| `services/league/leagueInstancePlacement.ts` | Canonical 100-entity capacity and the transaction-scoped least-full instance picker |
+| `services/standings/standingPlacement.ts` | The standings creation rule (`ensureStanding`, `ensureTeamStandings`, `ensureStandingsForSubscriptionGain`) |
 | `services/analytics/matchmakingService.ts` | LP-primary matchmaking, robot pairing, scheduled match creation |
 | `services/tag-team/tagTeamMatchmakingService.ts` | Tag team matchmaking |
 

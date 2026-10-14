@@ -2,14 +2,15 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: v2.0
-**Date**: March 26, 2026  
+**Version**: v2.1
+**Date**: October 14, 2026
 **Status**: ✅ Implemented & Tested (Unit Tests Complete)
 **Testing Status**: ✅ Unit Tests Complete | ✅ Integration Tests Complete
 
 ---
 
 ## Version History
+- v2.1 - Standings follow the unified creation rule: robot rows via `ensureStanding` for each subscribed robot mode, team rows via `registerTeam` (`ensureTeamStandings`) for modes every member holds; subscriptions are still written directly (October 14, 2026)
 - v2.0 - Replaced archetype system with tiered stable system (WimpBot/AverageBot/ExpertBot) (March 26, 2026)
 - v1.3 - Unit tests added and documentation updated (February 9, 2026)
 - v1.2 - Implementation review and status update (February 9, 2026)
@@ -164,8 +165,8 @@ model CycleMetadata {
   - Random yieldThreshold (integer 0-20)
   - HP = 50 + (attributeLevel × 5), Shield = attributeLevel × 4
   - ELO: 1200 (starting rank)
-  - League: Bronze (via `assignLeagueInstance('bronze')`)
-- Tag teams created for multi-robot stables (WimpBot: first 2 robots, AverageBot: both robots)
+  - League: no standings at robot creation. After writing the stable's subscriptions directly (`tx.subscription.createMany`), the generator places each robot in Bronze for every subscribed robot mode (`league_1v1`, `koth`, `grand_melee`) through `ensureStanding` (least-full Bronze instance)
+- Tag teams created for multi-robot stables (WimpBot: first 2 robots, AverageBot: both robots) through `registerTeam`, whose `ensureTeamStandings` creates a team row only for team modes every member holds (`league_2v2`/`tag_team` for 2-robot teams, `league_3v3` for 3-robot teams)
 - Robot naming format: `{Tier} {LoadoutTitle} {WeaponCodename} {Number}`
 
 **Function Signature**:

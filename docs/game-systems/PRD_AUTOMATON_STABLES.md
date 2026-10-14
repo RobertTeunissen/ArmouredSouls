@@ -1,6 +1,6 @@
 # Automaton Stables
 
-**Spec:** #55 (engine and starter stables), #57 (catalogue expansion) · **Status:** Implemented (ACC; the Expansion_Stables of spec 57 arrive with the next ACC deploy) · **Last updated:** 11 October 2026
+**Spec:** #55 (engine and starter stables), #57 (catalogue expansion) · **Status:** Implemented (ACC; the Expansion_Stables of spec 57 arrive with the next ACC deploy) · **Last updated:** 14 October 2026
 
 Automaton_Stables are persistent, themed, computer-run stables that play by the same rules as human players. They buy robots, facilities, attributes, weapons and refinements through the same services and credit paths as a player, enter the same events, survive every Season_Rollover and rebuild themselves from the human starting balance.
 
@@ -65,7 +65,7 @@ Each Robot_Blueprint has one of six Build_Focus presets (Bruiser, Deadeye, Warde
 
 ### Teams and events
 
-- Team_Rule (fixed): 2v2 teams are slots 1+2, 3+4, 5+6, 7+8, 9+10; 3v3 teams are slots 1–3, 4–6, 7–9; slot 11 is in no team. A team registers in the turn its last member joins and is never disbanded, swapped or renamed. The catalogue only supplies Team_Names.
+- Team_Rule (fixed): 2v2 teams are slots 1+2, 3+4, 5+6, 7+8, 9+10; 3v3 teams are slots 1–3, 4–6, 7–9; slot 11 is in no team. A team registers in the turn its last member joins and is never disbanded, swapped or renamed. Registering creates no standings: a team's standings row for a mode appears when Event_Allocation subscribes the whole team to that mode (the unified rule in `PRD_LEAGUE_SYSTEM.md` "Entering a League"). A robot's 1v1 League, KotH and Grand Melee standings likewise appear on its first subscription to that event. The catalogue only supplies Team_Names.
 - Event_Order: each stable lists all 9 subscribable event types in order of preference. Solo events go to every robot with a free Booking Office slot; a team event goes to the whole team or to none of it.
 
 ### Versioning and pinned profiles

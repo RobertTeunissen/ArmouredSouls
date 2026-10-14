@@ -2,12 +2,13 @@
 
 **Project**: Armoured Souls
 **Document Type**: Product Requirements Document (PRD)
-**Version**: v1.4
-**Last Updated**: October 10, 2026
+**Version**: v1.5
+**Last Updated**: October 14, 2026
 **Status**: ✅ Implemented
 **Owner**: Robert Teunissen
 
 **Revision History**:
+- v1.5 (Oct 14, 2026): Added `league/leagueInstancePlacement` and `standings/standingPlacement` (unified standings creation rule); updated `teamBattleService` and `subscriptionService` rows.
 
 - v1.4 (Oct 10, 2026): Added the `automaton` domain, the Domain_Service_Extraction services in `economy/` and `robot/`, the admin Automatons router and the catalogue scripts (Spec #55). Inventory now lists 38 directories (also `search`).
 - v1.3 (Sep 21, 2026): Reconciled the service inventory with the current 36 directories and documented newer financial, season, standings, monitoring, retention, and progression domains.
@@ -222,8 +223,17 @@ King of the Hill mode — orchestration and matchmaking.
 | Service | Purpose |
 |---------|---------|
 | `leagueBattleOrchestrator` | League match execution (LP, prestige, fame, streaming, ELO, bye matches) |
-| `leagueInstanceService` | League instance management (max 100 robots per instance, assignment, rebalancing) |
+| `leagueInstanceService` | League instance management (max 100 robots per instance, assignment, rebalancing); `assignLeagueInstanceWithLock` delegates to `leagueInstancePlacement` |
+| `leagueInstancePlacement` | Prisma-free, transaction-scoped instance picker: `MAX_ENTITIES_PER_INSTANCE` (100), `leagueInstanceLockKey`, `pickLeagueInstanceInTransaction` (mode/tier advisory lock, least-full instance, lowest number on ties, opens a new instance when all are full) |
 | `leagueRebalancingService` | Instance-based promotions/demotions (top/bottom 10%, LP retention) |
+
+### standings/
+Authoritative competitive standings (`standings` table, polymorphic robot/team rows).
+
+| Service | Purpose |
+|---------|---------|
+| `standingPlacement` | The single standings creation rule: `ensureStanding`, `ensureTeamStandings`, `ensureStandingsForSubscriptionGain`, `isTeamMatchable`, lock helpers (namespaces 2 and 5). Rows are created on the first matchable subscription, never at robot/team creation. Prisma-free so `prisma/seed.ts` can use it |
+| `standingsService` | Battle result recording (update by id), KotH/Grand Melee points; `getOrCreateStanding` is a logged safety net that places through `ensureStanding` |
 
 ### match/
 Match history queries.
@@ -301,7 +311,7 @@ Shared matchmaking utilities consumed by all league matchmakers and tag team.
 
 | Service | Purpose |
 |---------|---------|
-| `teamBattleService` | Team CRUD — register, swap member, rename, disband. Persistent teams with LP/ELO/tier. |
+| `teamBattleService` | Team CRUD — register, swap member, rename, disband. Registration and swaps need no subscription; both call `ensureTeamStandings` so a team enters each mode once every member holds it. Swaps keep the team's standings; disband deletes them. LP/tier live in `standings`. |
 | `teamBattleMatchmakingService` | 2v2/3v3 matchmaking orchestration per league instance. Subscription-gated eligibility. Creates `ScheduledTeamBattleMatch` rows with `matchMode` discriminator (`'league_2v2'`, `'league_3v3'`, `'tag_team'`, `'tournament_2v2'`, `'tournament_3v3'`). |
 | `teamBattleOrchestrator` | Battle execution — fetch scheduled matches, invoke engine, persist results, distribute rewards. |
 | `teamBattleEngine` | N-vs-N simulation wrapper around `combatSimulator`. All 2N robots active simultaneously. |
@@ -326,7 +336,7 @@ Event Subscription System — per-robot subscription model gating participation 
 | Service | Purpose |
 |---------|---------|
 | `eventRegistry` | `SUBSCRIBABLE_EVENT_TYPES` tuple (source of truth the `SubscribableEventType` union and every Zod schema derive from), plus the runtime singleton registry: `registerSubscribableEvent`, `isRegisteredEvent`, `getRegisteredEvents`. A registration is an identifier and a label — no per-event behaviour hooks |
-| `subscriptionService` | One write path (`applySubscriptionChange`) behind `setSubscriptionsForRobot` (bulk), `subscribeRobot` and `unsubscribeRobot`, so a single toggle and a roster-wide save behave identically. Reads: `getSubscriptionsForRobot`, `getStableOverview`, and `isRobotSubscribedTo` — the single eligibility helper called by every matchmaker |
+| `subscriptionService` | One write path (`applySubscriptionChange`) behind `setSubscriptionsForRobot` (bulk), `subscribeRobot` and `unsubscribeRobot`, so a single toggle and a roster-wide save behave identically. A subscription gain calls `ensureStandingsForSubscriptionGain`, which creates the robot's or team's standings row for that mode; removal keeps rows. Reads: `getSubscriptionsForRobot`, `getStableOverview`, and `isRobotSubscribedTo` — the single eligibility helper called by every matchmaker |
 | `rosterEligibilityFilter` | Filters the Event Registry by Stable robot count to determine which events a robot can subscribe to (e.g. Tag Team requires ≥ 2 robots) |
 
 **Removed:** `lockingPredicates`. Nine per-event predicates decided whether an

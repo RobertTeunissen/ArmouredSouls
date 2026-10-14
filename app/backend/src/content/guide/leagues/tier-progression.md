@@ -2,7 +2,7 @@
 title: "Tier Progression"
 description: "The complete path from Bronze to Champion — how League Points, LP thresholds, and promotion zones work together to move robots between tiers."
 order: 5
-lastUpdated: "2026-08-03"
+lastUpdated: "2026-10-14"
 relatedArticles:
   - leagues/league-tiers
   - leagues/league-points
@@ -13,7 +13,7 @@ relatedArticles:
 
 ## Overview
 
-Tier progression is the competitive backbone of Armoured Souls. Every robot starts in Bronze and can climb all the way to Champion through consistent performance. The journey is driven by **League Points (LP)** — earn enough, spend enough time in your tier, and rank high enough in your instance, and you earn promotion.
+Tier progression is the competitive backbone of Armoured Souls. A robot enters Bronze the first time you subscribe it to that league, and can climb all the way to Champion through consistent performance. The journey is driven by **League Points (LP)** — earn enough, spend enough time in your tier, and rank high enough in your instance, and you earn promotion.
 
 Understanding how progression works helps you set realistic goals, plan your attribute investments, and know when to push for promotion versus consolidating your position.
 

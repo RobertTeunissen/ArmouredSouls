@@ -2,7 +2,7 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Last Updated**: October 10, 2026 (Automaton tables, Spec #55)  
+**Last Updated**: October 14, 2026 (`standings` lifecycle note)
 **Status**: Current Implementation  
 **Version**: v2.0
 
@@ -36,6 +36,8 @@ This document defines the **complete database schema** for Armoured Souls, inclu
 - ✅ Audit log and cycle snapshot system for event sourcing and analytics
 
 **⚠️ Staleness Warning (July 2026):** This document predates several major models added after April 2026, including: `Standing`, `TeamBattle`, `TeamBattleMember`, `ScheduledTeamBattleMatch`, `BattleSummary`, `EventSubscription`, `LeagueHistoryEntry`, `Achievement`, `AchievementProgress`, `ChangelogEntry`, and `GrandMeleeStanding`. Refer to `app/backend/prisma/schema.prisma` for the canonical, up-to-date schema. The models documented below remain accurate for their respective tables.
+
+**`standings` lifecycle (October 2026):** `standings` is polymorphic (`entityType` `robot`|`team`, `entityId`, `mode`; unique on `entityType_entityId_mode`) and has no foreign key to `robots` or `team_battles`. Rows for `league_1v1`, `koth`, `grand_melee`, `league_2v2`, `tag_team` and `league_3v3` are created only by `services/standings/standingPlacement.ts` on the entity's first matchable subscription (Bronze, 0 LP, least-full Bronze instance), never at robot or team creation. Because there is no FK, rows are deleted explicitly before their entity: team disband, account reset, generated-stable purge and season rollover. See `docs/implementation_notes/STANDINGS_CREATION_RULE.md`.
 
 **This schema represents the implementation** as of April 2, 2026.
 

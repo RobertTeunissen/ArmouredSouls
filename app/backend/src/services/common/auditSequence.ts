@@ -58,10 +58,15 @@ import prisma from '../../lib/prisma';
 /**
  * Advisory lock namespace for audit sequence allocation.
  *
- * Namespace 2 is taken by robot locks (`pg_advisory_xact_lock(2, robotId)` in
- * `team-battle/teamBattleService.ts`), and `league/leagueInstanceService.ts` uses
- * the single-argument form with a hashed tier name. A distinct namespace keeps
- * audit allocation from serialising against team operations.
+ * Other two-argument namespaces: 2 = robot team membership
+ * (`pg_advisory_xact_lock(2, robotId)`, `standings/standingPlacement.ts` and
+ * `team-battle/teamBattleService.ts`), 4 = finance cycle
+ * (`cycle/canonicalCycleIdentity.ts`), 5 = team standings
+ * (`pg_advisory_xact_lock(5, teamId)`, `standings/standingPlacement.ts`).
+ * `league/leagueInstancePlacement.ts` uses the single-argument form with a
+ * hashed `${mode}_${tier}` key. A distinct namespace keeps audit allocation from
+ * serialising against team operations. Lock order:
+ * (2, robot) → (3, cycle) → (5, team) → mode/tier hash.
  */
 const AUDIT_SEQUENCE_LOCK_NAMESPACE = 3;
 
