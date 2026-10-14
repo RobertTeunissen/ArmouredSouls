@@ -1,7 +1,8 @@
 /**
  * Turn runner (Spec #55, R2.7, R5.11, R6.6, R7.5–R7.9, R11.7, R11.8,
  * design §5.2, §11.1, §11.2, task 6.2; R7.10's fixed 300 s Turn_Step budget
- * is superseded by the turn-budget plan "DESIGN (Part B)" D1–D5).
+ * is superseded by docs/implementation_notes/AUTOMATON_TURN_STEP_DEADLINE.md,
+ * section "Design").
  *
  * `runTurnStep` runs one Automaton_Turn for every Active_Automaton of one
  * Turn_Trigger and Turn_Slot:
@@ -107,15 +108,16 @@ export {
 export { claimTurnRecord, CUTOVER_IN_PROGRESS, PROGRAM_OFF, INVALID_PARAMETERS } from './turnRecords';
 export type { TurnStepSummary } from './automatonObservability';
 
-/** Error code of the alert raised when a running Turn_Step lost its lease (plan D2). */
+/** Error code of the alert raised when a running Turn_Step lost its lease (AUTOMATON_TURN_STEP_DEADLINE.md, "Heartbeat lease"). */
 export const TURN_STEP_LEASE_LOST = 'TURN_STEP_LEASE_LOST';
 
 /**
  * Lifetime of one Turn_Step lease claim or renewal: a crashed holder blocks
- * other callers for at most this long (turn-budget plan D2).
+ * other callers for at most this long (docs/implementation_notes/
+ * AUTOMATON_TURN_STEP_DEADLINE.md, "Heartbeat lease").
  */
 export const TURN_STEP_LEASE_TTL_MS = 120_000;
-/** How often the holder renews its lease while the step runs (plan D2). */
+/** How often the holder renews its lease while the step runs ("Heartbeat lease"). */
 export const TURN_STEP_LEASE_RENEW_MS = 30_000;
 /** How often a waiting caller retries the lease (design §11.1). */
 export const TURN_STEP_LEASE_POLL_MS = 1_000;
@@ -206,7 +208,7 @@ function sleep(ms: number): Promise<void> {
 
 /**
  * Run `fn` while holding the Turn_Step lease (`automaton_program_settings.
- * turnStepLeaseUntil`, design §11.1, heartbeat per turn-budget plan D2).
+ * turnStepLeaseUntil`, design §11.1, heartbeat per AUTOMATON_TURN_STEP_DEADLINE.md).
  *
  * One conditional update claims it for TURN_STEP_LEASE_TTL_MS when it is
  * empty or expired (a crashed holder's lease is taken over); otherwise the
@@ -584,9 +586,6 @@ function addSkipped(summary: TurnStepSummary, reason: string): void {
   summary.skipped[reason] = (summary.skipped[reason] ?? 0) + 1;
 }
 
-/** Why a running Turn_Step stopped starting turns before its deadline. */
-type TurnStepStop = 'cutover' | 'lease_lost' | null;
-
 /** Shared, mutable state of one running Turn_Step (counters change synchronously between awaits). */
 interface TurnStepRun {
   turn: TurnLabel;
@@ -595,7 +594,11 @@ interface TurnStepRun {
   lease: TurnStepLease;
   env: TurnEnvironment | null;
   now: () => number;
-  stop: TurnStepStop;
+  /**
+   * A cutover was seen mid-step; it sticks. Kept apart from `lease.lost` so a
+   * later lease loss cannot hide the cutover alert.
+   */
+  cutoverSeen: boolean;
   /** Profiles left unclaimed after the lease was lost. */
   notStarted: number;
 }
@@ -620,7 +623,6 @@ async function skipProfile(run: TurnStepRun, claimInput: TurnRecordClaimInput, r
 async function runCohortProfile(run: TurnStepRun, profile: CohortProfile): Promise<void> {
   const { summary, turn } = run;
   if (run.lease.lost) {
-    run.stop = 'lease_lost';
     run.notStarted++;
     return;
   }
@@ -634,8 +636,8 @@ async function runCohortProfile(run: TurnStepRun, profile: CohortProfile): Promi
     startBalance: profile.balance,
   };
   // An admin bulk cycle can start a cutover while a scheduler step runs; once seen, it sticks.
-  if (run.stop !== 'cutover' && (await resolveCanonicalCycleIdentity()).isClosing) run.stop = 'cutover';
-  if (run.stop === 'cutover') {
+  if (!run.cutoverSeen && (await resolveCanonicalCycleIdentity()).isClosing) run.cutoverSeen = true;
+  if (run.cutoverSeen) {
     await skipProfile(run, claimInput, CUTOVER_IN_PROGRESS);
     return;
   }
@@ -671,7 +673,7 @@ async function runCohortProfile(run: TurnStepRun, profile: CohortProfile): Promi
 }
 
 /**
- * One Turn_Step (design §11.1, turn-budget plan D1–D5). Throws on a cutover
+ * One Turn_Step (design §11.1, AUTOMATON_TURN_STEP_DEADLINE.md "Design"). Throws on a cutover
  * in progress at the start or an infrastructure failure (after in-flight
  * turns settle); a cutover that starts mid-step only stops new turns.
  */
@@ -706,7 +708,7 @@ export async function runTurnStep(input: TurnStepInput, deps: TurnStepDependenci
     const env: TurnEnvironment | null = enabled && cohort.length > 0
       ? { registry: deps.registry ?? getStrategyRegistry(), weapons: await loadWeaponCatalogue(), phase, now }
       : null;
-    const run: TurnStepRun = { turn, summary, deadline, lease, env, now, stop: null, notStarted: 0 };
+    const run: TurnStepRun = { turn, summary, deadline, lease, env, now, cutoverSeen: false, notStarted: 0 };
 
     // Starts in ascending User.id order (R7.9); at most `concurrency` turns at once.
     await runWithConcurrency(cohort, concurrency, (profile) => runCohortProfile(run, profile));
@@ -725,7 +727,7 @@ export async function runTurnStep(input: TurnStepInput, deps: TurnStepDependenci
         concurrency,
       });
     }
-    if (run.stop === 'cutover') {
+    if (run.cutoverSeen) {
       await alertTurnStepFailed(
         turn,
         AutomatonErrorCode.AUTOMATON_CUTOVER_IN_PROGRESS,

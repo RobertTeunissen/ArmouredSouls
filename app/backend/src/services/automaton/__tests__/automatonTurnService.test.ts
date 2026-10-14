@@ -581,7 +581,7 @@ function gatedExecutor(): { started: number[]; open: (profileId: number) => void
   };
 }
 
-describe('runTurnStep — bounded concurrency (plan D3)', () => {
+describe('runTurnStep — bounded concurrency', () => {
   it('runs at most N turns at once, starts them in ascending User.id order, one Turn_Record each', async () => {
     addProfile(1, 40);
     addProfile(2, 10);
@@ -684,7 +684,7 @@ describe('runTurnStep — bounded concurrency (plan D3)', () => {
   });
 });
 
-describe('runTurnStep — mid-step cutover and lost lease (plan D2, D4)', () => {
+describe('runTurnStep — mid-step cutover and lost lease', () => {
   const closing = {
     activeCycle: 43, completedCycles: 42, seasonNumber: 3, phase: 'competitive' as const, competitiveCyclesCompleted: 12,
     preparationCyclesCompleted: 0, seasonStartedAt: new Date(0), isClosing: true, closingCycle: 43,
@@ -736,6 +736,36 @@ describe('runTurnStep — mid-step cutover and lost lease (plan D2, D4)', () => 
     expect(alerts.some((a) => a.includes('Turn_Step failed') && a.includes(TURN_STEP_LEASE_LOST) && a.includes('2 stable(s) not started'))).toBe(true);
     // The other holder's lease is untouched.
     expect(fakeDb.settings?.turnStepLeaseUntil).toEqual(other);
+  });
+
+  it('raises both the cutover and the lease-lost alert when a cutover is followed by a lost lease', async () => {
+    addProfile(1, 10);
+    addProfile(2, 20);
+    addProfile(3, 30);
+    const other = new Date(Date.now() + 999_000);
+    // Step start, after the lease, stable 1: open. Stable 2 sees the cutover while
+    // another caller takes the lease over; stable 3 then finds the lease lost.
+    mockIdentity.mockReset();
+    mockIdentity
+      .mockResolvedValueOnce(open)
+      .mockResolvedValueOnce(open)
+      .mockResolvedValueOnce(open)
+      .mockImplementationOnce(async () => {
+        if (fakeDb.settings) fakeDb.settings.turnStepLeaseUntil = other;
+        await sleep(30);
+        return closing;
+      })
+      .mockResolvedValue(closing);
+
+    const summary = await runTurnStep(INPUT, sequential({ leaseRenewMs: 5 }));
+
+    expect(summary).toMatchObject({ processed: 3, completed: 1, leaseLost: true, skipped: { [CUTOVER_IN_PROGRESS]: 1 } });
+    expect(turnsOf(2)[0]).toMatchObject({ status: 'skipped', reason: CUTOVER_IN_PROGRESS });
+    expect(turnsOf(3)).toHaveLength(0);
+    const cutoverAlerts = alerts.filter((a) => a.includes('Turn_Step failed') && a.includes('AUTOMATON_CUTOVER_IN_PROGRESS'));
+    expect(cutoverAlerts).toHaveLength(1);
+    expect(cutoverAlerts[0]).toContain('1 stable(s) skipped (cutover_in_progress)');
+    expect(alerts.some((a) => a.includes('Turn_Step failed') && a.includes(TURN_STEP_LEASE_LOST) && a.includes('1 stable(s) not started'))).toBe(true);
   });
 });
 
