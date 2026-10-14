@@ -234,6 +234,19 @@ export async function performAccountReset(userId: number, reason?: string): Prom
     await tx.teamBattleMember.deleteMany({
       where: { robotId: { in: userRobotIds.map(r => r.id) } },
     });
+    // Team standings are polymorphic (no FK), so they go before their teams.
+    const userTeamIds = await tx.teamBattle.findMany({
+      where: { stableId: userId },
+      select: { id: true },
+    });
+    if (userTeamIds.length > 0) {
+      await tx.standing.deleteMany({
+        where: {
+          entityType: 'team',
+          entityId: { in: userTeamIds.map(t => t.id) },
+        },
+      });
+    }
     await tx.teamBattle.deleteMany({ where: { stableId: userId } });
 
     // Delete all robots (battle history and team membership cascade)

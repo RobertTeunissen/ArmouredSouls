@@ -39,6 +39,7 @@ const mockTx = {
   standing: {
     findFirst: jest.fn().mockResolvedValue(null),
     findMany: jest.fn().mockResolvedValue([]),
+    deleteMany: jest.fn().mockResolvedValue({ count: 0 }),
   },
 };
 
@@ -347,15 +348,23 @@ describe('teamBattleService', () => {
         });
     });
 
-    it('should throw TEAM_INVALID_COMPOSITION when new robot not subscribed', async () => {
+    // D3: a swap no longer requires the new robot to hold a team-event
+    // subscription; the team keeps its id and rows and is placed in any mode
+    // the new line-up is fully subscribed to.
+    it('should swap successfully when the new robot has no subscription', async () => {
       mockTx.teamBattle.findUnique.mockResolvedValue(makeTeam());
       mockTx.robot.findUnique.mockResolvedValue({ id: 20, userId: 100 });
       mockHasSubscription.mockResolvedValue(false);
+      mockTx.teamBattleMember.findFirst.mockResolvedValue(null);
+      mockTx.teamBattleMember.update.mockResolvedValue({});
 
-      await expect(swapTeamMember(1, 10, 20, 100))
-        .rejects.toMatchObject({
-          code: TeamBattleErrorCode.TEAM_INVALID_COMPOSITION,
-        });
+      await expect(swapTeamMember(1, 10, 20, 100)).resolves.toBeUndefined();
+      expect(mockHasSubscription).not.toHaveBeenCalled();
+      expect(mockTx.teamBattleMember.update).toHaveBeenCalledWith({
+        where: { id: 1 },
+        data: { robotId: 20 },
+      });
+      expect(mockEnsureTeamStandings).toHaveBeenCalledWith(mockTx, 1);
     });
 
     it('should throw TEAM_MEMBER_CONFLICT when new robot already on same-size team', async () => {
@@ -384,6 +393,20 @@ describe('teamBattleService', () => {
 
       await expect(swapTeamMember(1, 10, 20, 100)).resolves.toBeUndefined();
       expect(mockTx.teamBattleMember.update).toHaveBeenCalled();
+      // The new line-up is checked for placement after the member update.
+      expect(mockEnsureTeamStandings).toHaveBeenCalledTimes(1);
+      expect(mockEnsureTeamStandings).toHaveBeenCalledWith(mockTx, 1);
+      expect(mockEnsureTeamStandings.mock.invocationCallOrder[0])
+        .toBeGreaterThan(mockTx.teamBattleMember.update.mock.invocationCallOrder[0]);
+    });
+
+    it('should not place standings when the swap is rejected', async () => {
+      mockTx.teamBattle.findUnique.mockResolvedValue(makeTeam());
+      mockTx.robot.findUnique.mockResolvedValue({ id: 20, userId: 100 });
+      mockTx.teamBattleMember.findFirst.mockResolvedValue({ robotId: 20, teamId: 5 });
+
+      await expect(swapTeamMember(1, 10, 20, 100)).rejects.toBeInstanceOf(TeamBattleError);
+      expect(mockEnsureTeamStandings).not.toHaveBeenCalled();
     });
   });
 
@@ -486,6 +509,30 @@ describe('teamBattleService', () => {
 
       await expect(disbandTeam(1, 100)).resolves.toBeUndefined();
       expect(mockTx.teamBattle.delete).toHaveBeenCalledWith({ where: { id: 1 } });
+    });
+
+    it('should delete the team standings before the team (D5)', async () => {
+      mockTx.teamBattle.findUnique.mockResolvedValue({ id: 1, stableId: 100, teamName: 'T' });
+      mockTx.scheduledMatchParticipant.count.mockResolvedValue(0);
+      mockTx.teamBattle.delete.mockResolvedValue({});
+
+      await disbandTeam(1, 100);
+
+      expect(mockTx.standing.deleteMany).toHaveBeenCalledWith({
+        where: { entityType: 'team', entityId: 1 },
+      });
+      expect(mockTx.standing.deleteMany.mock.invocationCallOrder[0])
+        .toBeLessThan(mockTx.teamBattle.delete.mock.invocationCallOrder[0]);
+    });
+
+    it('should leave standings untouched when disband is rejected', async () => {
+      mockTx.teamBattle.findUnique.mockResolvedValue({ id: 1, stableId: 100, teamName: 'T' });
+      mockTx.scheduledMatchParticipant.count.mockResolvedValue(1);
+
+      await expect(disbandTeam(1, 100)).rejects.toMatchObject({
+        code: TeamBattleErrorCode.TEAM_LOCKED_FOR_BATTLE,
+      });
+      expect(mockTx.standing.deleteMany).not.toHaveBeenCalled();
     });
   });
 

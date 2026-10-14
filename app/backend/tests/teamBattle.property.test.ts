@@ -664,10 +664,11 @@ describe('Team Battle Property Tests', () => {
     /**
      * **Validates: Requirements R2.1, R3.10**
      *
-     * Property: A team with all N members rejects a swap with an unsubscribed robot.
-     * A swap with a subscribed robot succeeds.
+     * Property (D3): a swap succeeds whatever the new robot's subscriptions.
+     * The team keeps its id and its existing standings rows (tier, LP); the
+     * swap never removes or resets a row.
      */
-    it('should reject swap when new robot lacks subscription', async () => {
+    it("swap succeeds regardless of the new robot's subscriptions and keeps team id + existing standings rows", async () => {
       await fc.assert(
         fc.asyncProperty(
           // Generate team size and whether the new robot is subscribed
@@ -684,7 +685,7 @@ describe('Team Battle Property Tests', () => {
               robotIds.push(robotId);
             }
 
-            // Register a full team
+            // Register a full team: every member holds the mode, so it is placed.
             const team = await registerTeam(
               testUserId,
               robotIds,
@@ -692,6 +693,11 @@ describe('Team Battle Property Tests', () => {
               teamSize,
               testUserId,
             );
+            const rowsBefore = await prisma.standing.findMany({
+              where: { entityType: 'team', entityId: team.id },
+              orderBy: { mode: 'asc' },
+            });
+            expect(rowsBefore.map((r) => r.mode)).toEqual([eventType]);
 
             // Create a replacement robot
             const newRobotId = await createRobot(`new_${teamSize}`);
@@ -699,17 +705,24 @@ describe('Team Battle Property Tests', () => {
               await subscribeRobot(newRobotId, eventType);
             }
 
-            // Attempt swap
+            // The swap succeeds either way.
             const oldRobotId = robotIds[0];
-            if (!newRobotSubscribed) {
-              // Swap with unsubscribed robot should be rejected
-              await expect(
-                swapTeamMember(team.id, oldRobotId, newRobotId, testUserId),
-              ).rejects.toThrow(TeamBattleError);
-            } else {
-              // Swap with subscribed robot should succeed
-              await swapTeamMember(team.id, oldRobotId, newRobotId, testUserId);
-            }
+            await swapTeamMember(team.id, oldRobotId, newRobotId, testUserId);
+
+            const teamAfter = await prisma.teamBattle.findUnique({
+              where: { id: team.id },
+              include: { members: true },
+            });
+            expect(teamAfter).not.toBeNull();
+            expect(teamAfter!.members.map((m) => m.robotId).sort((x, y) => x - y))
+              .toEqual([newRobotId, ...robotIds.slice(1)].sort((x, y) => x - y));
+
+            // Existing rows are kept unchanged; the swap creates no other row.
+            const rowsAfter = await prisma.standing.findMany({
+              where: { entityType: 'team', entityId: team.id },
+              orderBy: { mode: 'asc' },
+            });
+            expect(rowsAfter).toEqual(rowsBefore);
           },
         ),
         { numRuns: 100 },

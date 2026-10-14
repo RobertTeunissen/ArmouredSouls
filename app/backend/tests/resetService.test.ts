@@ -3,6 +3,7 @@ import prisma from '../src/lib/prisma';
 import { MatchType } from '../generated/prisma';
 import schedulingService from '../src/services/scheduling/schedulingService';
 import { battlesForRobots, scheduledMatchesForRobots } from './cleanupHelper';
+import { enterRobotStanding, enterTeamStanding } from './helpers/standings';
 import {
   validateResetEligibility,
   performAccountReset,
@@ -86,6 +87,19 @@ describe('ResetService', () => {
     await prisma.scheduledMatch.deleteMany({ where: scheduledMatchesForRobots([testRobotId, testRobotId]) });
     await prisma.scheduledTournamentMatch.deleteMany({ where: { OR: [{ participant1Id: testRobotId }, { participant2Id: testRobotId }] } });
     await prisma.resetLog.deleteMany({ where: { userId: testUserId } });
+    // standings is polymorphic (no FK): remove the user's team and robot rows
+    // before their entities in case a test left any behind.
+    const leftoverTeams = await prisma.teamBattle.findMany({ where: { stableId: testUserId }, select: { id: true } });
+    const leftoverRobots = await prisma.robot.findMany({ where: { userId: testUserId }, select: { id: true } });
+    await prisma.standing.deleteMany({
+      where: {
+        OR: [
+          { entityType: 'team', entityId: { in: leftoverTeams.map((t) => t.id) } },
+          { entityType: 'robot', entityId: { in: leftoverRobots.map((r) => r.id) } },
+        ],
+      },
+    });
+    await prisma.teamBattle.deleteMany({ where: { stableId: testUserId } });
     await prisma.facility.deleteMany({ where: { userId: testUserId } });
     await prisma.weaponInventory.deleteMany({ where: { userId: testUserId } });
     await prisma.robot.deleteMany({ where: { userId: testUserId } });
@@ -448,6 +462,40 @@ describe('ResetService', () => {
       expect(await prisma.resetLog.count({ where: { userId: testUserId } })).toBe(0);
       const user = await prisma.user.findUniqueOrThrow({ where: { id: testUserId } });
       expect(user.currency).toBe(1500000);
+    });
+
+    // D5: a reset deletes the user's team standings with the teams, so no
+    // orphan rows survive (standings has no FK to team_battles).
+    it('should delete the standings of the user\'s teams and robots', async () => {
+      const partner = await prisma.robot.create({
+        data: {
+          userId: testUserId,
+          name: 'Test Robot Partner',
+          currentHP: 100,
+          maxHP: 100,
+          currentShield: 20,
+          maxShield: 20,
+        },
+      });
+      const team = await prisma.teamBattle.create({
+        data: {
+          stableId: testUserId,
+          teamSize: 2,
+          teamName: 'Reset Team',
+          members: { create: [{ robotId: testRobotId, slotIndex: 0 }, { robotId: partner.id, slotIndex: 1 }] },
+        },
+      });
+      await enterTeamStanding(team.id, 'league_2v2', { leaguePoints: 30 });
+      await enterTeamStanding(team.id, 'tag_team');
+      await enterRobotStanding(testRobotId, 'league_1v1', { leaguePoints: 12 });
+
+      await performAccountReset(testUserId, 'Reset with a team');
+
+      expect(await prisma.teamBattle.count({ where: { id: team.id } })).toBe(0);
+      expect(await prisma.standing.count({ where: { entityType: 'team', entityId: team.id } })).toBe(0);
+      expect(
+        await prisma.standing.count({ where: { entityType: 'robot', entityId: { in: [testRobotId, partner.id] } } }),
+      ).toBe(0);
     });
 
     it('should handle multiple robots, weapons, and facilities', async () => {

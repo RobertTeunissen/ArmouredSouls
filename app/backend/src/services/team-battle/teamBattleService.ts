@@ -214,7 +214,10 @@ export async function registerTeam(
  * Swap a team member with a new robot.
  *
  * Rejects if team is locked for battle (has scheduled match).
- * Validates new robot ownership, subscription, and uniqueness (not already on same-size team).
+ * Validates new robot ownership and uniqueness (not already on a same-size
+ * team). No subscription is required: the team keeps its id, tier and LP, and
+ * enters any mode it becomes matchable in (complete, every member holding that
+ * mode's subscription) via `ensureTeamStandings`.
  */
 export async function swapTeamMember(
   teamId: number,
@@ -290,21 +293,6 @@ export async function swapTeamMember(
       );
     }
 
-    // Validate new robot is subscribed to at least one team event for this size
-    const eventTypes = getEventTypesForSize(team.teamSize as 2 | 3);
-    const eventLabel = team.teamSize === 2 ? '2v2 League or 2v2 Tournament' : '3v3 League or 3v3 Tournament';
-    let subscribed = false;
-    for (const et of eventTypes) {
-      if (await hasSubscription(newRobotId, et)) { subscribed = true; break; }
-    }
-    if (!subscribed) {
-      throw new TeamBattleError(
-        TeamBattleErrorCode.TEAM_INVALID_COMPOSITION,
-        `"${newRobot.name}" is not subscribed to ${eventLabel}. Subscribe via the Booking Office first.`,
-        400,
-      );
-    }
-
     // Validate new robot is not already on another team of the same size
     const existingMember = await tx.teamBattleMember.findFirst({
       where: {
@@ -326,6 +314,10 @@ export async function swapTeamMember(
       where: { id: memberToSwap.id },
       data: { robotId: newRobotId },
     });
+
+    // The new line-up may complete a mode's subscription set. The
+    // (2, newRobotId) lock above precedes the team lock this takes.
+    await ensureTeamStandings(tx, teamId);
   });
 
   logger.info(`[TeamBattle] Swapped robot ${oldRobotId} → ${newRobotId} on team ${teamId}`);
@@ -641,7 +633,8 @@ export async function renameTeam(
  * Disband a team.
  *
  * Rejects if team is locked for battle.
- * Deletes team and cascade-deletes members.
+ * Deletes the team's standings rows (polymorphic, no foreign key), then the
+ * team; members cascade-delete. A team registered later starts again in Bronze.
  */
 export async function disbandTeam(
   teamId: number,
@@ -678,6 +671,9 @@ export async function disbandTeam(
         409,
       );
     }
+
+    // standings has no FK to team_battles, so remove the team's rows first.
+    await tx.standing.deleteMany({ where: { entityType: 'team', entityId: teamId } });
 
     // Delete team (members cascade-deleted via onDelete: Cascade in schema)
     await tx.teamBattle.delete({
