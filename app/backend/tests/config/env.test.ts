@@ -129,6 +129,55 @@ describe('Moderation configuration', () => {
   });
 });
 
+describe('Automaton Turn_Step configuration (supersedes spec 55 R7.10)', () => {
+  const VARS = ['AUTOMATON_TURN_CONCURRENCY', 'AUTOMATON_TURN_STEP_MAX_MS', 'AUTOMATON_TURN_STEP_SCHEDULE_MARGIN_MS'] as const;
+
+  beforeEach(() => {
+    for (const name of VARS) delete process.env[name];
+  });
+
+  test('defaults: concurrency 3, cap 6 h, margin 15 min', () => {
+    const config = loadEnvConfig();
+    expect(config.automatonTurnConcurrency).toBe(3);
+    expect(config.automatonTurnStepMaxMs).toBe(21_600_000);
+    expect(config.automatonTurnStepScheduleMarginMs).toBe(900_000);
+  });
+
+  test('in-range overrides are respected', () => {
+    process.env.AUTOMATON_TURN_CONCURRENCY = '1';
+    process.env.AUTOMATON_TURN_STEP_MAX_MS = '300000';
+    process.env.AUTOMATON_TURN_STEP_SCHEDULE_MARGIN_MS = '0';
+    const config = loadEnvConfig();
+    expect(config.automatonTurnConcurrency).toBe(1);
+    expect(config.automatonTurnStepMaxMs).toBe(300_000);
+    expect(config.automatonTurnStepScheduleMarginMs).toBe(0);
+  });
+
+  test('upper bounds are accepted', () => {
+    process.env.AUTOMATON_TURN_CONCURRENCY = '8';
+    process.env.AUTOMATON_TURN_STEP_MAX_MS = '82800000';
+    process.env.AUTOMATON_TURN_STEP_SCHEDULE_MARGIN_MS = '7200000';
+    const config = loadEnvConfig();
+    expect(config.automatonTurnConcurrency).toBe(8);
+    expect(config.automatonTurnStepMaxMs).toBe(82_800_000);
+    expect(config.automatonTurnStepScheduleMarginMs).toBe(7_200_000);
+  });
+
+  test.each([
+    ['AUTOMATON_TURN_CONCURRENCY', '0', 'automatonTurnConcurrency', 3],
+    ['AUTOMATON_TURN_CONCURRENCY', '9', 'automatonTurnConcurrency', 3],
+    ['AUTOMATON_TURN_CONCURRENCY', 'many', 'automatonTurnConcurrency', 3],
+    ['AUTOMATON_TURN_STEP_MAX_MS', '299999', 'automatonTurnStepMaxMs', 21_600_000],
+    ['AUTOMATON_TURN_STEP_MAX_MS', '82800001', 'automatonTurnStepMaxMs', 21_600_000],
+    ['AUTOMATON_TURN_STEP_SCHEDULE_MARGIN_MS', '-1', 'automatonTurnStepScheduleMarginMs', 900_000],
+    ['AUTOMATON_TURN_STEP_SCHEDULE_MARGIN_MS', '7200001', 'automatonTurnStepScheduleMarginMs', 900_000],
+  ] as const)('%s=%s falls back to the default', (name, value, field, expected) => {
+    process.env[name] = value;
+    const config = loadEnvConfig();
+    expect(config[field]).toBe(expected);
+  });
+});
+
 describe('All 5 new schedule fields are exposed on EnvConfig (R1.3, R1.4)', () => {
   test('config object has all new schedule fields', () => {
     const config = loadEnvConfig();
