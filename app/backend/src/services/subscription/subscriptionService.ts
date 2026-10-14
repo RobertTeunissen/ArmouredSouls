@@ -183,6 +183,7 @@ async function applySubscriptionChange(
   desiredEventTypes: string[],
   requestingUserId: number,
   tx: Tx,
+  cycleNumber: number,
 ): Promise<SubscriptionChangeResult> {
   const userId = await assertOwnership(robotId, requestingUserId, tx);
 
@@ -248,7 +249,7 @@ async function applySubscriptionChange(
 
   // The audit sequence lock precedes the team and mode locks the standings
   // helper takes, so audit first.
-  await writeAuditEntries(robotId, requestingUserId, toAdd, toRemove, occupied.size, level, tx);
+  await writeAuditEntries(robotId, requestingUserId, toAdd, toRemove, occupied.size, level, tx, cycleNumber);
 
   if (toAdd.length > 0) {
     await ensureStandingsForSubscriptionGain(tx, robotId, toAdd);
@@ -276,9 +277,8 @@ async function writeAuditEntries(
   occupiedCount: number,
   level: number,
   tx: Tx,
+  cycleNumber: number,
 ): Promise<void> {
-  const cycleNumber = await getCurrentCycleNumber();
-
   const entries = [
     ...added.map((eventType) => ({ eventType, type: 'subscription_create' as const })),
     ...removed.map((eventType) => ({ eventType, type: 'subscription_remove' as const })),
@@ -317,6 +317,21 @@ async function writeAuditEntries(
 // ── Public write API ─────────────────────────────────────────────────
 
 /**
+ * Open the write transaction, reading the audit cycle number first.
+ *
+ * `getCurrentCycleNumber` runs on its own pooled connection. Called inside the
+ * transaction, every concurrent change held one connection while waiting for a
+ * second, so as many concurrent changes as the pool has connections starved it
+ * and the transactions timed out ("Unable to start a transaction").
+ */
+async function inSubscriptionTransaction<T>(
+  fn: (tx: Tx, cycleNumber: number) => Promise<T>,
+): Promise<T> {
+  const cycleNumber = await getCurrentCycleNumber();
+  return prisma.$transaction((tx) => fn(tx, cycleNumber));
+}
+
+/**
  * Replace a robot's subscriptions with the given set — the bulk save behind the
  * Booking Office matrix.
  *
@@ -328,8 +343,8 @@ export async function setSubscriptionsForRobot(
   eventTypes: string[],
   requestingUserId: number,
 ): Promise<SubscriptionChangeResult> {
-  return prisma.$transaction((tx) =>
-    applySubscriptionChange(robotId, eventTypes, requestingUserId, tx),
+  return inSubscriptionTransaction((tx, cycleNumber) =>
+    applySubscriptionChange(robotId, eventTypes, requestingUserId, tx, cycleNumber),
   );
 }
 
@@ -339,7 +354,7 @@ export async function subscribeRobot(
   eventType: string,
   requestingUserId: number,
 ): Promise<SubscriptionChangeResult> {
-  return prisma.$transaction(async (tx) => {
+  return inSubscriptionTransaction(async (tx, cycleNumber) => {
     await assertOwnership(robotId, requestingUserId, tx);
 
     if (!isRegisteredEvent(eventType)) {
@@ -357,7 +372,7 @@ export async function subscribeRobot(
       );
     }
 
-    return applySubscriptionChange(robotId, [...current, eventType], requestingUserId, tx);
+    return applySubscriptionChange(robotId, [...current, eventType], requestingUserId, tx, cycleNumber);
   });
 }
 
@@ -372,7 +387,7 @@ export async function unsubscribeRobot(
   eventType: string,
   requestingUserId: number,
 ): Promise<SubscriptionChangeResult> {
-  return prisma.$transaction(async (tx) => {
+  return inSubscriptionTransaction(async (tx, cycleNumber) => {
     await assertOwnership(robotId, requestingUserId, tx);
 
     const current = await currentEventTypes(robotId, tx);
@@ -389,6 +404,7 @@ export async function unsubscribeRobot(
       current.filter((e) => e !== eventType),
       requestingUserId,
       tx,
+      cycleNumber,
     );
   });
 }

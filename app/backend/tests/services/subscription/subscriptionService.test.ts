@@ -107,6 +107,9 @@ import {
   setSubscriptionsForRobot,
 } from '../../../src/services/subscription/subscriptionService';
 import { SubscriptionError, SubscriptionErrorCode } from '../../../src/errors/subscriptionErrors';
+import { getCurrentCycleNumber } from '../../../src/services/battle/baseOrchestrator';
+
+const mockGetCurrentCycleNumber = getCurrentCycleNumber as jest.MockedFunction<typeof getCurrentCycleNumber>;
 
 /** Current subscriptions, in the shape `subscription.findMany` returns. */
 function given(eventTypes: string[]): void {
@@ -235,6 +238,22 @@ describe('subscriptionService', () => {
         expect(mockEnsureStandingsForSubscriptionGain).toHaveBeenCalledWith(mockTx, 1, [eventType]);
       },
     );
+
+    it.each([
+      ['subscribeRobot', () => subscribeRobot(1, 'koth', 1)],
+      ['unsubscribeRobot', () => { given(['koth']); return unsubscribeRobot(1, 'koth', 1); }],
+      ['setSubscriptionsForRobot', () => setSubscriptionsForRobot(1, ['koth'], 1)],
+    ])('%s should read the audit cycle before opening its transaction', async (_name, run) => {
+      await run();
+
+      // Read inside the transaction it needs a second pooled connection, so
+      // pool-size concurrent changes starve the pool.
+      const cycleRead = mockGetCurrentCycleNumber.mock.invocationCallOrder[0];
+      expect(cycleRead).toBeLessThan(mockPrisma.$transaction.mock.invocationCallOrder[0]);
+      expect(mockTx.auditLog.create).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ cycleNumber: 42 }) }),
+      );
+    });
 
     it('should write the audit entry before placing standings (lock order)', async () => {
       await subscribeRobot(1, 'koth', 1);
