@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
@@ -31,6 +31,8 @@ vi.mock('../../hooks/useSubscriptions', () => ({
         { robotId: 1, robotName: 'Alpha', subscriptions: [{ eventType: 'league_2v2', status: 'active' }, { eventType: 'league_3v3', status: 'active' }] },
         { robotId: 2, robotName: 'Beta', subscriptions: [{ eventType: 'league_2v2', status: 'active' }, { eventType: 'league_3v3', status: 'active' }] },
         { robotId: 3, robotName: 'Gamma', subscriptions: [{ eventType: 'league_3v3', status: 'active' }] },
+        // Not subscribed to any team mode: still a valid registration/swap candidate
+        { robotId: 4, robotName: 'Delta', subscriptions: [] },
       ],
       registeredEvents: [
         { type: 'league_2v2', label: '2v2 League' },
@@ -69,6 +71,7 @@ vi.mock('../ConfirmationModal', () => ({
 
 import TeamBattleManagementContent from '../team-battles/TeamBattleManagementContent';
 import { registerTeamBattle, getMyTeamBattles } from '../../utils/teamBattleApi';
+import type { TeamBattle, TeamBattleRobot } from '../../utils/teamBattleApi';
 
 function renderWithRouter(teamSize: 2 | 3 = 2) {
   return render(
@@ -322,5 +325,104 @@ describe('TeamBattleRegistration', () => {
 
     // Counter should show 2/2
     expect(screen.getByText(/2\/2/)).toBeInTheDocument();
+  });
+
+  describe('SwapMemberModal', () => {
+    function makeRobot(id: number, name: string): TeamBattleRobot {
+      return {
+        id,
+        name,
+        elo: 1200,
+        currentHP: 100,
+        maxHP: 100,
+        currentShield: null,
+        maxShield: null,
+        loadoutType: 'single',
+        mainWeaponId: 1,
+        offhandWeaponId: null,
+        subscriptions: [],
+      };
+    }
+
+    function makeTeam(id: number, teamName: string, robots: TeamBattleRobot[]): TeamBattle {
+      return {
+        id,
+        stableId: 1,
+        teamSize: 2,
+        teamName,
+        teamLp: 0,
+        teamLeague: 'bronze',
+        teamLeagueId: 'bronze_1',
+        cyclesInLeague: 0,
+        totalLeagueWins: 0,
+        totalLeagueLosses: 0,
+        totalLeagueDraws: 0,
+        tagTeamLp: 0,
+        tagTeamLeague: 'bronze',
+        tagTeamLeagueId: 'bronze_1',
+        totalTagTeamWins: 0,
+        totalTagTeamLosses: 0,
+        totalTagTeamDraws: 0,
+        createdAt: '2024-01-01',
+        updatedAt: '2024-01-01',
+        members: robots.map((robot, slotIndex) => ({
+          id: id * 10 + slotIndex,
+          teamId: id,
+          robotId: robot.id,
+          slotIndex,
+          robot,
+        })),
+        isLockedForBattle: false,
+      };
+    }
+
+    beforeEach(() => {
+      // fetchTeams only loads teams when a token is present
+      vi.mocked(localStorage.getItem).mockReturnValue('mock-token');
+    });
+
+    afterEach(() => {
+      vi.mocked(localStorage.getItem).mockReset();
+    });
+
+    async function openSwapFor(memberName: string) {
+      await waitFor(() => {
+        expect(screen.getByText(memberName)).toBeInTheDocument();
+      });
+      fireEvent.click(screen.getAllByTitle('Replace member')[0]);
+      await waitFor(() => {
+        expect(screen.getByRole('heading', { name: 'Swap Team Member' })).toBeInTheDocument();
+      });
+    }
+
+    it('lists robots with no team-mode subscriptions as swap candidates', async () => {
+      vi.mocked(getMyTeamBattles).mockResolvedValue([
+        makeTeam(1, 'Iron Duo', [makeRobot(1, 'Alpha'), makeRobot(2, 'Beta')]),
+      ]);
+      renderWithRouter(2);
+
+      await openSwapFor('Alpha');
+
+      expect(screen.getByRole('button', { name: 'Gamma' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Delta' })).toBeInTheDocument();
+      expect(screen.queryByText(/Booking Office/)).not.toBeInTheDocument();
+    });
+
+    it('explains the empty state without requiring a subscription', async () => {
+      vi.mocked(getMyTeamBattles).mockResolvedValue([
+        makeTeam(1, 'Iron Duo', [makeRobot(1, 'Alpha'), makeRobot(2, 'Beta')]),
+        makeTeam(2, 'Steel Duo', [makeRobot(3, 'Gamma'), makeRobot(4, 'Delta')]),
+      ]);
+      renderWithRouter(2);
+
+      await openSwapFor('Alpha');
+
+      expect(
+        screen.getByText(
+          'No other robots available. Every other robot is already on a 2v2 team or on this team.',
+        ),
+      ).toBeInTheDocument();
+      expect(screen.queryByText(/Subscribe more robots/)).not.toBeInTheDocument();
+    });
   });
 });
