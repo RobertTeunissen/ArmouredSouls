@@ -1,6 +1,6 @@
 /**
- * Turn-budget plan "DESIGN (Part B)" D3 — parallel Automaton_Turns against
- * the real database.
+ * Parallel Automaton_Turns against the real database
+ * (docs/implementation_notes/AUTOMATON_TURN_STEP_DEADLINE.md, "Bounded concurrency").
  *
  * Four freshly activated stables (Paragon and Duo, two blueprints each, 2v2
  * Team_Names when the strategy needs them; Swarm needs at least three

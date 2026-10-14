@@ -49,7 +49,8 @@ describe('alerts (R11.8)', () => {
       await alertSavingStreak('planet-express', 'tycoon.v1.07.facility.training_facility', 15),
       await alertUpkeepIssues('clone-legion', TURN, [{ part: 'teams', code: 'AUTOMATON_TEAM_NAME_MISSING', message: 'No Team_Names entry for 2v2 team 3' }]),
       await alertStepBudgetExhausted(TURN, {
-        skipped: 4, durationMs: 27_901_000, budgetMs: 27_900_000, deadlineSource: 'schedule',
+        // Late settlement: a step starting at 04:00 gets 08:00 − 15 min, earlier than the 6 h cap.
+        skipped: 4, durationMs: 13_501_000, budgetMs: 13_500_000, deadlineSource: 'schedule',
         nextScheduledJobAtMs: Date.UTC(2026, 9, 20, 8, 0), concurrency: 3,
       }),
       await alertCatalogueSyncConflicts(['jaeger-corps: stable name taken']),
@@ -61,8 +62,8 @@ describe('alerts (R11.8)', () => {
     expect(messages[3]).toContain('clone-legion: season 4 cycle 17: 1 issue(s), retried next turn: teams AUTOMATON_TEAM_NAME_MISSING');
     expect(messages[4]).toBe(
       '🚨 Automaton Turn_Step deadline reached — Turn_Step season 4 cycle 17: 4 stable(s) not started before the deadline '
-      + 'after 27901 s and skipped (step_budget_exhausted); they act at their next turn. '
-      + 'Deadline: before the next scheduled job at 08:00 UTC, budget 27900 s, 3 in parallel',
+      + 'after 13501 s and skipped (step_budget_exhausted); they act at their next turn. '
+      + 'Deadline: before the next scheduled job at 08:00 UTC, budget 13500 s, 3 in parallel',
     );
     expect(messages[5]).toContain('Catalogue_Sync: 1 conflict(s): jaeger-corps: stable name taken');
     expect(sendMonitoringAlert).toHaveBeenCalledTimes(6);
@@ -110,7 +111,7 @@ describe('alerts (R11.8)', () => {
 describe('Turn_Step summary log (R11.7)', () => {
   it('logs one [automaton-turns] line with every field', () => {
     const summary = {
-      ...emptyTurnStepSummary(TURN, 'admin_bulk', { concurrency: 3, budgetMs: 27_900_000, deadlineSource: 'schedule' }),
+      ...emptyTurnStepSummary(TURN, 'admin_bulk', { concurrency: 3, budgetMs: 21_600_000, deadlineSource: 'cap' }),
       processed: 11, completed: 9, failed: 1, alreadyFinal: 0,
       skipped: { step_budget_exhausted: 1 },
       actionsByKind: { robot_creation: 3, facility_upgrade: 7 },
@@ -124,7 +125,7 @@ describe('Turn_Step summary log (R11.7)', () => {
       '[automaton-turns] trigger=settlement season=4 slot=17 source=admin_bulk processed=11 completed=9 '
       + 'skipped=step_budget_exhausted=1 failed=1 alreadyFinal=0 actions=facility_upgrade=7,robot_creation=3 '
       + 'spent=2500000 received=40000 saving=6 blocked=2 durationMs=4321 '
-      + 'concurrency=3 budgetMs=27900000 deadline=schedule',
+      + 'concurrency=3 budgetMs=21600000 deadline=cap',
     );
   });
 

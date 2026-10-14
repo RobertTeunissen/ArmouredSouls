@@ -19,7 +19,7 @@ Everything below happens on `/admin/automatons` (admin login required; every mut
 
 **Activating.** Editor → **Activate** (one stable) or Stables → **Activate all drafts** (each draft on its own, in Catalogue_Key order, with a per-stable result; one rejection does not stop the others). Activation is rejected when the stable name or username is taken or the strategy targets, blueprints, Team_Names or Event_Order fail validation. Activation is one-way: an active stable cannot be deleted or paused on its own. It joins the cohort at the next Turn_Step and builds its opening roster from ₡3,000,000.
 
-Batch activation is no longer needed for Turn_Step capacity. The Turn_Step keeps starting turns until its deadline (the next scheduled job minus 15 min, about 07:45 UTC after the 00:00 settlement on the default schedule) and runs up to 3 turns in parallel, so every Active_Automaton, opening builds included, takes its turn the same night (see `docs/implementation_notes/AUTOMATON_TURN_STEP_DEADLINE.md` for the capacity estimate). Activating many drafts at once still puts them all into matchmaking in the same cycle; check the Status_Bar after the next Turn_Step.
+Batch activation is no longer needed for Turn_Step capacity. The Turn_Step keeps starting turns until its deadline (the earlier of step start + 6 h and the next scheduled job minus 15 min; on the default schedule the 6 h cap binds, about 06:00 UTC after the 00:00 settlement) and runs up to 3 turns in parallel, so every Active_Automaton, opening builds included, takes its turn the same night (see `docs/implementation_notes/AUTOMATON_TURN_STEP_DEADLINE.md` for the capacity estimate). Activating many drafts at once still puts them all into matchmaking in the same cycle; check the Status_Bar after the next Turn_Step.
 
 **Expansion_Stables (spec 57).** After the deploy that delivers spec 57, every Expansion_Stable appears as a Draft_Automaton next to the active starter stables; nothing is activated automatically. There is no activation cap (spec 57 decision 19): every draft may be activated, with the per-stable **Activate** in the Editor or **Activate all drafts**. Each new Active_Automaton's first turn is an opening build, the slowest kind of turn. Spec 57's capacity analysis (`.kiro/specs/done-october26/57-automaton-catalogue-expansion/review/SCALING.md`) assumed the former fixed 300 s Turn_Step budget, which is superseded. Of its open items (§6), bounded parallel turns, a deadline scaled to the night window and a lease heartbeat are done. Still open:
 
@@ -60,7 +60,7 @@ Editor → Build order panel. Each Goal of the stable's Build_Order has a target
 **Server log.** One line per Turn_Step:
 
 ```
-[automaton-turns] trigger=settlement season=3 slot=41 source=scheduler processed=11 completed=11 skipped=none failed=0 alreadyFinal=0 actions=attribute_upgrade=4,facility_upgrade=1 spent=812000 received=0 saving=9 blocked=2 durationMs=6200 concurrency=3 budgetMs=27900000 deadline=schedule
+[automaton-turns] trigger=settlement season=3 slot=41 source=scheduler processed=11 completed=11 skipped=none failed=0 alreadyFinal=0 actions=attribute_upgrade=4,facility_upgrade=1 spent=812000 received=0 saving=9 blocked=2 durationMs=6200 concurrency=3 budgetMs=21600000 deadline=cap
 ```
 
 `concurrency` is the effective number of parallel turns, `budgetMs` the time the step had to start turns, and `deadline` where that came from: `schedule` (next scheduled job minus margin), `cap` (`AUTOMATON_TURN_STEP_MAX_MS`, e.g. scheduler off) or `floor` (the 300 s minimum when settlement ran late).
