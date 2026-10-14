@@ -113,7 +113,7 @@ ACC and PRD run Postgres with `max_connections=20` (`docker-compose.production.y
 
 | Client | Max connections | Set by |
 |---|---|---|
-| Backend pool | 15 | `DB_POOL_MAX` (default 15, `src/lib/prisma.ts`) |
+| Backend pool | 15 | `DB_POOL_MAX` (default 15, `src/lib/dbPoolConfig.ts`). The nightly Automaton Turn_Step uses up to 2 × `AUTOMATON_TURN_CONCURRENCY` of these (6 at the default 3) and is clamped to leave 5 free for players |
 | Deploy seed | 2 | `prisma/seed.ts` |
 | Migrations, `pg_dump`, `psql` | 1–2 each | — |
 

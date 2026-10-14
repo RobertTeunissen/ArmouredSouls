@@ -137,6 +137,16 @@ Key differences between environments:
 | `JWT_SECRET` | Unique per environment | Unique per environment |
 | `SCHEDULER_ENABLED` | `true` | `true` |
 
+Automaton Turn_Step tuning (optional; unset means the default, which is the same on ACC and PRD). Out-of-range or non-numeric values fall back to the default.
+
+| Variable | Default (ACC and PRD) | Bounds | Meaning |
+|----------|-----------------------|--------|---------|
+| `AUTOMATON_TURN_CONCURRENCY` | `3` | 1–8 | Automaton turns in parallel per Turn_Step; clamped to ⌊(`DB_POOL_MAX` − 5) / 2⌋. `1` = sequential (kill switch) |
+| `AUTOMATON_TURN_STEP_MAX_MS` | `21600000` (6 h) | 300000–82800000 | Longest a Turn_Step keeps starting turns; the only bound when the scheduler is off |
+| `AUTOMATON_TURN_STEP_SCHEDULE_MARGIN_MS` | `900000` (15 min) | 0–7200000 | Stop starting turns this long before the next scheduled job |
+
+The Turn_Step deadline is min(start + max, next scheduled job − margin), never below 300 s. See `docs/implementation_notes/AUTOMATON_TURN_STEP_DEADLINE.md`.
+
 ---
 
 ## Verifying a Deployment

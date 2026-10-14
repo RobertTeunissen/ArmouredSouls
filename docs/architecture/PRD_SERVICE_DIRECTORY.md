@@ -89,13 +89,14 @@ Automaton_Stables: computer-run stables that play by human rules. Public API in 
 
 | Service | Purpose |
 |---------|---------|
-| `automatonTurnService` | `runTurnStep` / `runTurnStepNonFatal` / `runAutomatonTurn`: cohort, Turn_Records, retries, Turn_Step lease, budgets |
+| `automatonTurnService` | `runTurnStep` / `runTurnStepNonFatal` / `runAutomatonTurn`: cohort, Turn_Records, retries, heartbeat Turn_Step lease, deadline, bounded concurrency, mid-step cutover guard |
+| `turnStepPool` | `runWithConcurrency`: bounded worker pool; items start in index order, the first error stops new starts |
 | `turnPlanner` | Pure planner: walks the Build_Order and returns the next Goal_Outcome |
 | `goals/` | Goal_Library: `robotCountGoal`, `facilityGoal`, `attributeGoal`, `weaponStageGoal`, `refinementGoal` (+ `goalTypes`, `goalSupport`) |
 | `actionExecutor`, `executionSteps`, `robotFitout` | Execute planned actions through the domain services; Robot_Chain and Robot_Fitout |
 | `upkeep/` | Free_Upkeep: `teamUpkeep`, `subscriptionUpkeep` (Event_Allocation), `blueprintSync`, `tuningUpkeep`, `freeUpkeep` |
 | `stableFacts`, `factProjector`, `pricing`, `buildFocus`, `teamRule`, `standingsTier` | Fact loading, pure projection, shared-formula pricing, Build_Focus maths, Team_Rule, played-only highest tier with mode (rules in `app/shared/utils/automatonStandingsTier.ts`) |
-| `robotNaming`, `requestKeys`, `turnBudget` | Blueprint names with "Mk II" suffixing, deterministic request keys, `TURN_*` budget constants |
+| `robotNaming`, `requestKeys`, `turnBudget` | Blueprint names with "Mk II" suffixing, deterministic request keys, per-turn `TURN_*` budget constants, Turn_Step deadline (`resolveTurnStepDeadline`) and concurrency clamp (`effectiveTurnConcurrency`) |
 | `strategies/` | `registry` (loads Strategy_Definition_Files, startup check), `strategyDefinitionSchema`, `strategyParameters`, `migrateTargets`, `strategyLibrary`, `strategyDraftService`, `strategyUpgradeService`, `scenarioProjector`, `defaultRegistry` |
 | `automatonProfileService`, `automatonProfileRules` | Profile and blueprint CRUD, validation, Activation |
 | `turnPreview`, `attributePlanView` | Read-only Turn_Preview and per-robot attribute plan |
@@ -184,6 +185,7 @@ Automated game loop — the scheduler and analytics snapshot system.
 | Service | Purpose |
 |---------|---------|
 | `cycleScheduler` | 10 independent cron jobs (league, team2v2League, tournament, tagTeam, koth, team3v3League, team2v2Tournament, grandMelee, team3v3Tournament, settlement) — all league modes use unified matchmaking pipeline |
+| `schedulerWindow` | Leaf module: `nextScheduledJobRunAt` from the configured cron schedules (null when the scheduler is off); feeds the Automaton Turn_Step deadline without importing `cycleScheduler` |
 | `cycleSnapshotService` | Aggregates AuditLog events into CycleSnapshot for fast analytics |
 | `cycleCsvExportService` | Exports cycle data to CSV files |
 | `cyclePerformanceMonitoringService` | Detects step duration degradation across cycles |
@@ -361,7 +363,7 @@ Every battle event job is gated on the current Season_Phase. The check sits in `
 
 **At the season boundary:** the Settlement_Job runs all its normal steps, then advances the season counter, then invokes the Season_Rollover — so the final cycle of a season settles completely before anything is archived or purged. Season 0 is exempt and never rolls over automatically.
 
-**Automaton Turn_Step (Spec #55):** the Settlement_Job ends with an Automaton Turn_Step (`preparation` in a Preparation_Phase, `settlement` otherwise, none on the boundary settlement, where rollover Stage 5 runs `season_open`). It is non-fatal and bounded at 300 s.
+**Automaton Turn_Step (Spec #55):** the Settlement_Job ends with an Automaton Turn_Step (`preparation` in a Preparation_Phase, `settlement` otherwise, none on the boundary settlement, where rollover Stage 5 runs `season_open`). It is non-fatal and keeps starting turns until its deadline: the next scheduled job minus a margin (`services/cycle/schedulerWindow.ts`), capped by `AUTOMATON_TURN_STEP_MAX_MS` and never under 300 s (spec 55's former fixed 300 s bound is superseded).
 
 **On competitive cycle 1:** battle jobs find nothing due to execute, because each executes previously scheduled matches before scheduling new ones and preparation created none. Cycle 1 schedules; cycle 2 is the first battle day.
 
@@ -401,5 +403,5 @@ All schedule env vars are overridable via `.env` for rollback or per-environment
 | `src/errors/` | Domain-specific error classes (AppError hierarchy, 10 domain error classes) |
 | `src/types/` | Shared TypeScript interfaces for JSON payloads (snapshot types, battle log types) |
 | `src/config/` | Configuration (logger, environment, facilities) |
-| `src/lib/` | Singleton instances (Prisma client, credit guard) |
+| `src/lib/` | Singleton instances (Prisma client, credit guard); `dbPoolConfig` (`resolveDbPoolMax`, the `DB_POOL_MAX` parse shared by the pool and the Turn_Step concurrency clamp) |
 | `app/shared/utils/` | Game formulas shared between frontend and backend (upgrade costs, discounts, academy caps) |

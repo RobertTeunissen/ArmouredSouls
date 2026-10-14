@@ -1073,7 +1073,7 @@ One row per Robot_Blueprint, unique on (`profile_id`, `slot_index`), cascading f
 
 ### `automaton_turns`
 
-One Turn_Record per Automaton_Turn, unique on (`profile_id`, `season_number`, `trigger`, `slot`); indexed on (`season_number`, `trigger`, `slot`) and (`profile_id`, `started_at`). Columns: `attempt` (default 1), `status`, `reason` varchar(40)? (`program_off`, `step_budget_exhausted`, `turn_budget_exhausted`, `invalid_parameters` or an error code), `strategy_key`, `strategy_version`, `start_balance`, `end_balance`?, `credits_spent`, `credits_received` (weapon-sale proceeds), `actions` Json, `goal_outcomes` Json, `upkeep_issues` Json, `duration_ms`?, `started_at`, `finished_at`?. In the `purgeHistory` truncate list.
+One Turn_Record per Automaton_Turn, unique on (`profile_id`, `season_number`, `trigger`, `slot`); indexed on (`season_number`, `trigger`, `slot`) and (`profile_id`, `started_at`). Columns: `attempt` (default 1), `status`, `reason` varchar(40)? (`program_off`, `step_budget_exhausted` (not started before the Turn_Step deadline), `cutover_in_progress` (a cutover started during the Turn_Step), `turn_budget_exhausted`, `invalid_parameters` or an error code), `strategy_key`, `strategy_version`, `start_balance`, `end_balance`?, `credits_spent`, `credits_received` (weapon-sale proceeds), `actions` Json, `goal_outcomes` Json, `upkeep_issues` Json, `duration_ms`?, `started_at`, `finished_at`?. In the `purgeHistory` truncate list.
 
 ### `automaton_strategy_drafts`
 
