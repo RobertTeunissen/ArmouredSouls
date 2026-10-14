@@ -12,6 +12,7 @@ import HPBar from './HPBar';
 import BattleReadinessBadge from './BattleReadinessBadge';
 import RobotImage from './RobotImage';
 import { getFameTier } from '../utils/fameTiers';
+import { UNRANKED_LABEL } from '../utils/tierHelpers';
 
 interface RobotDashboardCardProps {
   robot: {
@@ -71,7 +72,7 @@ function RobotDashboardCard({ robot, variant = 'owner' }: RobotDashboardCardProp
   
   // Format league name
   const formatLeague = (league?: string) => {
-    if (!league) return 'Unranked';
+    if (!league) return UNRANKED_LABEL;
     return league.split('_').map(word => 
       word.charAt(0).toUpperCase() + word.slice(1)
     ).join(' ');

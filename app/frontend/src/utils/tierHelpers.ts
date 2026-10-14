@@ -35,9 +35,20 @@ const TIER_ICONS: Record<LeagueTier, string> = {
   champion: '👑',
 };
 
-/** Get display name for a league tier. Accepts any string for API compatibility. */
-export const getTierName = (tier: string): string => TIER_NAMES[tier.toLowerCase() as LeagueTier] || tier;
+/** Label shown for a robot that has no standing in a league (not subscribed yet). */
+export const UNRANKED_LABEL = 'Unranked';
+/** Get display name for a league tier. Accepts any string for API compatibility; nullish means unranked. */
+export const getTierName = (tier: string | null | undefined): string => {
+  if (tier == null) return UNRANKED_LABEL;
+  return TIER_NAMES[tier.toLowerCase() as LeagueTier] || tier;
+};
 /** Get Tailwind color class for a league tier. */
-export const getTierColor = (tier: string): string => TIER_COLORS[tier.toLowerCase() as LeagueTier] || 'text-gray-400';
+export const getTierColor = (tier: string | null | undefined): string => {
+  if (tier == null) return 'text-secondary';
+  return TIER_COLORS[tier.toLowerCase() as LeagueTier] || 'text-gray-400';
+};
 /** Get emoji icon for a league tier. */
-export const getTierIcon = (tier: string): string => TIER_ICONS[tier.toLowerCase() as LeagueTier] || '⚔️';
+export const getTierIcon = (tier: string | null | undefined): string => {
+  if (tier == null) return '—';
+  return TIER_ICONS[tier.toLowerCase() as LeagueTier] || '⚔️';
+};

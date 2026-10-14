@@ -140,8 +140,13 @@ function LeagueStandingsPage() {
   useEffect(() => {
     let cancelled = false;
     if (mode === '1v1' && storeRobots.length > 0) {
-      const tiers = new Set<string>(storeRobots.map((r) => r.currentLeague));
-      const instanceIds = new Set<string>(storeRobots.map((r) => r.leagueId).filter(Boolean) as string[]);
+      // Unranked robots (no league_1v1 standing) have no tier/instance to highlight
+      const tiers = new Set<string>(
+        storeRobots.map((r) => r.currentLeague).filter((t): t is string => t !== undefined),
+      );
+      const instanceIds = new Set<string>(
+        storeRobots.map((r) => r.leagueId).filter((id): id is string => typeof id === 'string' && id !== ''),
+      );
       setUserRobotTiers(tiers);
       setUserRobotInstances(instanceIds);
     } else if ((mode === 'koth' || mode === 'grand_melee') && storeRobots.length > 0) {

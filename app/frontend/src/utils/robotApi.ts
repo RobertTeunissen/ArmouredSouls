@@ -41,9 +41,10 @@ export interface Robot {
   maxShield: number;
   repairQuoteCredits: number;
   level: number;
-  currentLeague: string;
-  leagueId: string | null;
-  leaguePoints: number;
+  /** Omitted when the robot has no league_1v1 standing (not subscribed). */
+  currentLeague?: string;
+  leagueId?: string | null;
+  leaguePoints?: number;
   userId: number;
   createdAt: string;
   wins: number;
@@ -85,9 +86,9 @@ export interface Robot {
   supportSystems: number;
   formationTactics: number;
   // Team Battle Statistics
-  totalLeague1v1Wins: number;
-  totalLeague1v1Losses: number;
-  totalLeague1v1Draws: number;
+  totalLeague1v1Wins?: number;
+  totalLeague1v1Losses?: number;
+  totalLeague1v1Draws?: number;
   totalLeague2v2Wins: number;
   totalLeague3v3Wins: number;
   // Team memberships (included from teamBattleMembers relation)

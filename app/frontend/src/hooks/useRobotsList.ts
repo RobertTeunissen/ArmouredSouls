@@ -270,8 +270,9 @@ export function useRobotsList() {
           bValue = b.fame;
           break;
         case 'league':
-          aValue = a.leaguePoints;
-          bValue = b.leaguePoints;
+          // Robots without a 1v1 standing (unranked) sort below every ranked robot
+          aValue = a.leaguePoints ?? -1;
+          bValue = b.leaguePoints ?? -1;
           break;
         case 'winRate':
           aValue = a.totalBattles > 0 ? (a.wins / a.totalBattles) : 0;

@@ -312,14 +312,19 @@ function LeagueStandingsSummary() {
 }
 
 interface RobotStandingCardProps {
-  robot: { id: number; name: string; currentLeague: string; leaguePoints: number; totalLeague1v1Wins: number; totalLeague1v1Losses: number; totalLeague1v1Draws: number };
+  /** League fields are omitted by the API when the robot has no league_1v1 standing. */
+  robot: { id: number; name: string; currentLeague?: string; leaguePoints?: number; totalLeague1v1Wins?: number; totalLeague1v1Losses?: number; totalLeague1v1Draws?: number };
   isSubscribed: boolean;
 }
 
 function RobotStandingCard({ robot, isSubscribed }: RobotStandingCardProps) {
   const tierColor = getLeagueTierColor(robot.currentLeague);
   const tierName = getLeagueTierName(robot.currentLeague);
-  const totalMatches = robot.totalLeague1v1Wins + robot.totalLeague1v1Losses + robot.totalLeague1v1Draws;
+  const lpLabel = robot.leaguePoints !== undefined ? `${robot.leaguePoints} LP` : '— LP';
+  const wins = robot.totalLeague1v1Wins ?? 0;
+  const losses = robot.totalLeague1v1Losses ?? 0;
+  const draws = robot.totalLeague1v1Draws ?? 0;
+  const totalMatches = wins + losses + draws;
 
   return (
     <div className="bg-[#252b38] border border-white/10 rounded-lg p-2.5">
@@ -330,15 +335,15 @@ function RobotStandingCard({ robot, isSubscribed }: RobotStandingCardProps) {
           <div className="flex items-center gap-2 mt-0.5">
             <span className={`text-xs ${tierColor}`}>{tierName}</span>
             <span className="text-xs text-secondary">•</span>
-            <span className="text-xs text-secondary">{robot.leaguePoints} LP</span>
+            <span className="text-xs text-secondary">{lpLabel}</span>
           </div>
         </div>
         <div className="flex-shrink-0 text-xs text-secondary">
-          <span className="text-[#3fb950]">{robot.totalLeague1v1Wins}W</span>
+          <span className="text-[#3fb950]">{wins}W</span>
           <span className="mx-1">/</span>
-          <span className="text-[#f85149]">{robot.totalLeague1v1Losses}L</span>
+          <span className="text-[#f85149]">{losses}L</span>
           <span className="mx-1">/</span>
-          <span className="text-[#d29922]">{robot.totalLeague1v1Draws}D</span>
+          <span className="text-[#d29922]">{draws}D</span>
           {totalMatches > 0 && (
             <span className="ml-2 text-secondary">({totalMatches})</span>
           )}
@@ -365,14 +370,14 @@ function RobotStandingCard({ robot, isSubscribed }: RobotStandingCardProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className={`text-xs ${tierColor}`}>{tierName}</span>
-            <span className="text-xs text-secondary">{robot.leaguePoints} LP</span>
+            <span className="text-xs text-secondary">{lpLabel}</span>
           </div>
           <div className="text-xs text-secondary">
-            <span className="text-[#3fb950]">{robot.totalLeague1v1Wins}W</span>
+            <span className="text-[#3fb950]">{wins}W</span>
             <span className="mx-0.5">/</span>
-            <span className="text-[#f85149]">{robot.totalLeague1v1Losses}L</span>
+            <span className="text-[#f85149]">{losses}L</span>
             <span className="mx-0.5">/</span>
-            <span className="text-[#d29922]">{robot.totalLeague1v1Draws}D</span>
+            <span className="text-[#d29922]">{draws}D</span>
           </div>
         </div>
       </div>

@@ -262,4 +262,47 @@ describe('RobotDetailPage - League History Tab', () => {
 
     expect(screen.getByText(/No tier changes recorded yet/)).toBeInTheDocument();
   });
+
+  describe('robot without a league_1v1 standing', () => {
+    // The API omits currentLeague/leagueId/leaguePoints when no standing row exists
+    const unrankedRobot = { ...mockRobot } as Partial<typeof mockRobot>;
+    delete unrankedRobot.currentLeague;
+    delete unrankedRobot.leagueId;
+    delete unrankedRobot.leaguePoints;
+
+    beforeEach(() => {
+      mockedFetchRobotById.mockResolvedValue(unrankedRobot as unknown as Robot);
+      mockedFetchRobotLeagueHistory.mockResolvedValue({ data: [] });
+    });
+
+    it('shows the not-yet-ranked copy instead of "undefined league"', async () => {
+      renderWithRouter('league-history');
+
+      await waitFor(() => {
+        expect(screen.getByTestId('league-timeline-empty')).toBeInTheDocument();
+      });
+
+      expect(screen.getByTestId('league-timeline-empty')).toHaveTextContent(
+        'TestBot is not yet ranked in the 1v1 League.',
+      );
+      expect(screen.getAllByText(/is not yet ranked in the 1v1 League/).length).toBeGreaterThanOrEqual(2);
+      expect(screen.queryByText(/undefined/)).not.toBeInTheDocument();
+    });
+
+    it('shows Unranked on the overview and never requests /api/leagues/undefined/standings', async () => {
+      renderWithRouter('overview');
+
+      await waitFor(() => {
+        expect(screen.getByText('Current League:')).toBeInTheDocument();
+      });
+      await waitFor(() => {
+        expect(mockedApiClient.get.mock.calls.map((call) => String(call[0]))).toContain('/api/weapon-inventory');
+      });
+
+      expect(screen.getByText('Unranked')).toBeInTheDocument();
+      const requestedUrls = mockedApiClient.get.mock.calls.map((call) => String(call[0]));
+      expect(requestedUrls.some((url) => url.includes('/api/leagues/'))).toBe(false);
+      expect(screen.queryByText(/undefined/)).not.toBeInTheDocument();
+    });
+  });
 });

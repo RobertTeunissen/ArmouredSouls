@@ -39,9 +39,10 @@ export interface RobotDetail {
   userId: number;
   imageUrl: string | null;
   elo: number;
-  currentLeague: string;
-  leagueId: string;
-  leaguePoints: number;
+  /** Omitted when the robot has no league_1v1 standing (not subscribed). */
+  currentLeague?: string;
+  leagueId?: string | null;
+  leaguePoints?: number;
   fame: number;
   mainWeaponId: number | null;
   offhandWeaponId: number | null;
@@ -236,11 +237,13 @@ export function useRobotDetail() {
 
       // Fetch independent data in parallel — these don't depend on each other
       const [leagueResult, weaponsResult, facilitiesResult, battlesResult] = await Promise.allSettled([
-        // League rank
-        api.get<{ data?: Array<{ id: number }> } | Array<{ id: number }>>(
-          `/api/leagues/${robotData.currentLeague}/standings`,
-          { params: { instance: robotData.leagueId } },
-        ),
+        // League rank — only for robots with a league_1v1 standing (unranked robots have no tier)
+        robotData.currentLeague
+          ? api.get<{ data?: Array<{ id: number }> } | Array<{ id: number }>>(
+              `/api/leagues/${robotData.currentLeague}/standings`,
+              { params: { instance: robotData.leagueId } },
+            )
+          : Promise.resolve(null),
         // Weapon inventory
         api.get<WeaponInventoryItem[]>('/api/weapon-inventory'),
         // Facilities
@@ -251,7 +254,7 @@ export function useRobotDetail() {
 
       // Process league rank
       if (leagueResult.status === 'fulfilled') {
-        const leagueData = leagueResult.value;
+        const leagueData = leagueResult.value ?? [];
         const standings = Array.isArray(leagueData) ? leagueData : (leagueData.data ?? []);
         const robotIndex = standings.findIndex((r: { id: number }) => r.id === parseInt(id!));
         if (robotIndex !== -1) {
