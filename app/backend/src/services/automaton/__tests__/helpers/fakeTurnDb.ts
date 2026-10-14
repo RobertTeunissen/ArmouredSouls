@@ -150,7 +150,7 @@ export const fakePrisma = {
     },
   },
 
-  /** The two lease statements of `withTurnStepLease`. */
+  /** The three lease statements of `withTurnStepLease`: claim, release, renew. */
   async $executeRaw(strings: TemplateStringsArray, ...values: unknown[]): Promise<number> {
     const sql = strings.join('?');
     const settings = requireSettings();
@@ -167,6 +167,15 @@ export const fakePrisma = {
       const [, until] = values as [number, Date];
       if (settings.turnStepLeaseUntil?.getTime() === until.getTime()) {
         settings.turnStepLeaseUntil = null;
+        return 1;
+      }
+      return 0;
+    }
+    if (sql.includes('SET "turn_step_lease_until" = ?') && sql.includes('AND "turn_step_lease_until" = ?')) {
+      // Renewal: only while the lease still holds the renewer's value.
+      const [next, , current] = values as [Date, number, Date];
+      if (settings.turnStepLeaseUntil?.getTime() === current.getTime()) {
+        settings.turnStepLeaseUntil = next;
         return 1;
       }
       return 0;

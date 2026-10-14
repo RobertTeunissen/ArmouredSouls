@@ -31,10 +31,13 @@ import {
   TURN_ACTION_LIMIT,
   TURN_BUDGET_EXHAUSTED,
   TURN_STEP_BUDGET_MS,
+  TURN_STEP_LEASE_RENEW_MS,
+  TURN_STEP_LEASE_TTL_MS,
   type TurnStepInput,
 } from '../automatonTurnService';
 import { setProgramSwitch } from '../programSwitch';
-import { fakeDb, resetFakeDb, seedTurn, type FakeProfileRow } from './helpers/fakeTurnDb';
+import logger from '../../../config/logger';
+import { fakeDb, fakePrisma, resetFakeDb, seedTurn, type FakeProfileRow } from './helpers/fakeTurnDb';
 import { facilities, stable } from './helpers/automatonFixtures';
 
 jest.mock('../../../lib/prisma', () => ({
@@ -62,6 +65,9 @@ const mockIdentity = resolveCanonicalCycleIdentity as jest.MockedFunction<typeof
 const mockLoadFacts = loadStableFacts as jest.MockedFunction<typeof loadStableFacts>;
 const mockUpkeep = runFreeUpkeep as jest.MockedFunction<typeof runFreeUpkeep>;
 const mockExecute = executeAction as jest.MockedFunction<typeof executeAction>;
+const mockLoggerError = logger.error as jest.MockedFunction<typeof logger.error>;
+
+const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
 const GOAL_ID = 'fixture.v1.01.facility.training_facility';
 const STEP_COST = 1_000;
@@ -501,5 +507,80 @@ describe('withTurnStepLease (design §11.1)', () => {
   it('releases the lease when the step throws', async () => {
     await expect(withTurnStepLease(async () => { throw new Error('boom'); })).rejects.toThrow('boom');
     expect(fakeDb.settings?.turnStepLeaseUntil).toBeNull();
+  });
+
+  it('claims the lease for TURN_STEP_LEASE_TTL_MS, not for the step budget', async () => {
+    const clock = 5_000_000;
+    let held: Date | null | undefined;
+    await withTurnStepLease(async () => { held = fakeDb.settings?.turnStepLeaseUntil; }, { now: () => clock });
+    expect(TURN_STEP_LEASE_TTL_MS).toBe(120_000);
+    expect(TURN_STEP_LEASE_RENEW_MS).toBe(30_000);
+    expect(held?.getTime()).toBe(clock + TURN_STEP_LEASE_TTL_MS);
+  });
+
+  it('renews the lease while the step runs (heartbeat)', async () => {
+    let first: number | undefined;
+    let later: number | undefined;
+    let lost: boolean | undefined;
+    await withTurnStepLease(async (lease) => {
+      first = fakeDb.settings?.turnStepLeaseUntil?.getTime();
+      await sleep(40);
+      later = fakeDb.settings?.turnStepLeaseUntil?.getTime();
+      lost = lease.lost;
+    }, { leaseRenewMs: 5 });
+
+    expect(first).toBeDefined();
+    expect(later).toBeGreaterThan(first as number);
+    expect(lost).toBe(false);
+    expect(fakeDb.settings?.turnStepLeaseUntil).toBeNull();
+  });
+
+  it('marks the lease lost when another caller took it over and never clears that caller\'s lease', async () => {
+    const other = new Date(Date.now() + 999_000);
+    let lostDuring: boolean | undefined;
+    await withTurnStepLease(async (lease) => {
+      expect(lease.lost).toBe(false);
+      // Our lease expired and another caller claimed it.
+      if (fakeDb.settings) fakeDb.settings.turnStepLeaseUntil = other;
+      await sleep(30);
+      lostDuring = lease.lost;
+    }, { leaseRenewMs: 5 });
+
+    expect(lostDuring).toBe(true);
+    expect(fakeDb.settings?.turnStepLeaseUntil).toEqual(other);
+    expect(mockLoggerError.mock.calls.some(([message]) => String(message).includes('Turn_Step lease lost'))).toBe(true);
+  });
+
+  it('retries a renewal that throws at the next tick instead of marking the lease lost', async () => {
+    const original = fakePrisma.$executeRaw;
+    const rawSpy = jest.spyOn(fakePrisma, '$executeRaw');
+    let failures = 0;
+    rawSpy.mockImplementation(async (strings: TemplateStringsArray, ...values: unknown[]) => {
+      const sql = strings.join('?');
+      if (!sql.includes('IS NULL OR') && !sql.includes('= NULL') && failures === 0) {
+        failures++;
+        throw new Error('connection reset');
+      }
+      return original.call(fakePrisma, strings, ...values);
+    });
+    try {
+      let first: number | undefined;
+      let later: number | undefined;
+      let lost: boolean | undefined;
+      await withTurnStepLease(async (lease) => {
+        first = fakeDb.settings?.turnStepLeaseUntil?.getTime();
+        await sleep(40);
+        later = fakeDb.settings?.turnStepLeaseUntil?.getTime();
+        lost = lease.lost;
+      }, { leaseRenewMs: 5 });
+
+      expect(failures).toBe(1);
+      expect(lost).toBe(false);
+      expect(later).toBeGreaterThan(first as number);
+      expect(mockLoggerError.mock.calls.some(([message]) => String(message).includes('lease renewal failed'))).toBe(true);
+      expect(fakeDb.settings?.turnStepLeaseUntil).toBeNull();
+    } finally {
+      rawSpy.mockRestore();
+    }
   });
 });

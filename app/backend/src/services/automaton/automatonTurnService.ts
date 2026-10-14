@@ -39,7 +39,7 @@ import type { EventOrder, StrategyParametersV1, TeamNames } from '../../types/au
 import { createExecutionCursor, executeAction, type ExecutionContext } from './actionExecutor';
 import { chargedStepCount } from './factProjector';
 import { planNextStep, type PlanResult } from './turnPlanner';
-import { checkTurnBudget, isStepBudgetExhausted, STEP_BUDGET_EXHAUSTED, TURN_BUDGET_EXHAUSTED, TURN_STEP_BUDGET_MS } from './turnBudget';
+import { checkTurnBudget, isStepBudgetExhausted, STEP_BUDGET_EXHAUSTED, TURN_BUDGET_EXHAUSTED } from './turnBudget';
 import { loadBlueprintFacts, loadStableFacts, loadWeaponCatalogue, type StableFacts, type WeaponFacts } from './stableFacts';
 import { runFreeUpkeep, type FreeUpkeepIssue } from './upkeep/freeUpkeep';
 import { ensureProgramSettings, isProgramEnabled, PROGRAM_SETTINGS_ID } from './programSwitch';
@@ -85,10 +85,21 @@ export {
 export { claimTurnRecord, PROGRAM_OFF, INVALID_PARAMETERS } from './turnRecords';
 export type { TurnStepSummary } from './automatonObservability';
 
-/** Extra lease time beyond the Turn_Step budget, so a slow last turn keeps the lease (design §11.1). */
-export const TURN_STEP_LEASE_MARGIN_MS = 60_000;
+/**
+ * Lifetime of one Turn_Step lease claim or renewal: a crashed holder blocks
+ * other callers for at most this long (turn-budget plan D2).
+ */
+export const TURN_STEP_LEASE_TTL_MS = 120_000;
+/** How often the holder renews its lease while the step runs (plan D2). */
+export const TURN_STEP_LEASE_RENEW_MS = 30_000;
 /** How often a waiting caller retries the lease (design §11.1). */
 export const TURN_STEP_LEASE_POLL_MS = 1_000;
+
+/** What the step sees of its lease while it runs. */
+export interface TurnStepLease {
+  /** True once a renewal found the lease taken over; start no further turns. */
+  readonly lost: boolean;
+}
 
 export type TurnStepSource = TurnStepSummary['source'];
 
@@ -104,6 +115,10 @@ export interface TurnStepDependencies {
   now?: () => number;
   /** Lease poll interval; TURN_STEP_LEASE_POLL_MS by default. */
   leasePollMs?: number;
+  /** Lease lifetime per claim or renewal; TURN_STEP_LEASE_TTL_MS by default. */
+  leaseTtlMs?: number;
+  /** Lease renewal interval; TURN_STEP_LEASE_RENEW_MS by default. */
+  leaseRenewMs?: number;
   /**
    * Tests on a shared database: which Active_Automatons of the cohort take
    * part (default: all), so a test never runs turns for stables it did not
@@ -153,34 +168,92 @@ function sleep(ms: number): Promise<void> {
 
 /**
  * Run `fn` while holding the Turn_Step lease (`automaton_program_settings.
- * turnStepLeaseUntil`, design §11.1). One conditional update claims it when
- * it is empty or expired (a crashed holder's lease is taken over); otherwise
- * the caller polls. The lease is cleared in `finally`, only if still ours.
- * Raw parameterised SQL keeps the switch's `updatedAt` for switch changes.
+ * turnStepLeaseUntil`, design §11.1, heartbeat per turn-budget plan D2).
+ *
+ * One conditional update claims it for TURN_STEP_LEASE_TTL_MS when it is
+ * empty or expired (a crashed holder's lease is taken over); otherwise the
+ * caller polls. While `fn` runs, the holder renews it every
+ * TURN_STEP_LEASE_RENEW_MS with an update that matches only its own value.
+ * A renewal that matches no row means another caller took the lease over:
+ * `lease.lost` turns true and renewing stops. A renewal that throws is logged
+ * and retried at the next tick. The lease is cleared in `finally`, only if
+ * still ours. Raw parameterised SQL keeps the switch's `updatedAt` for switch
+ * changes.
  */
-export async function withTurnStepLease<T>(fn: () => Promise<T>, deps: TurnStepDependencies = {}): Promise<T> {
+export async function withTurnStepLease<T>(fn: (lease: TurnStepLease) => Promise<T>, deps: TurnStepDependencies = {}): Promise<T> {
   const now = deps.now ?? Date.now;
   const pollMs = deps.leasePollMs ?? TURN_STEP_LEASE_POLL_MS;
+  const ttlMs = deps.leaseTtlMs ?? TURN_STEP_LEASE_TTL_MS;
   await ensureProgramSettings();
   for (;;) {
     const current = new Date(now());
-    const until = new Date(current.getTime() + TURN_STEP_BUDGET_MS + TURN_STEP_LEASE_MARGIN_MS);
+    const until = new Date(current.getTime() + ttlMs);
     const claimed = await prisma.$executeRaw`
       UPDATE "automaton_program_settings"
       SET "turn_step_lease_until" = ${until}
       WHERE "id" = ${PROGRAM_SETTINGS_ID}
         AND ("turn_step_lease_until" IS NULL OR "turn_step_lease_until" < ${current})`;
-    if (claimed === 1) {
-      try {
-        return await fn();
-      } finally {
-        await prisma.$executeRaw`
-          UPDATE "automaton_program_settings"
-          SET "turn_step_lease_until" = NULL
-          WHERE "id" = ${PROGRAM_SETTINGS_ID} AND "turn_step_lease_until" = ${until}`;
-      }
-    }
+    if (claimed === 1) return holdTurnStepLease(fn, until, deps);
     await sleep(pollMs);
+  }
+}
+
+/** Run `fn` under a claimed lease (value `claimedUntil`), renewing it until `fn` settles. */
+async function holdTurnStepLease<T>(
+  fn: (lease: TurnStepLease) => Promise<T>,
+  claimedUntil: Date,
+  deps: TurnStepDependencies,
+): Promise<T> {
+  const now = deps.now ?? Date.now;
+  const ttlMs = deps.leaseTtlMs ?? TURN_STEP_LEASE_TTL_MS;
+  const renewMs = deps.leaseRenewMs ?? TURN_STEP_LEASE_RENEW_MS;
+  const state: { current: Date; lost: boolean; renewal: Promise<void> | null } = { current: claimedUntil, lost: false, renewal: null };
+  const lease: TurnStepLease = {
+    get lost(): boolean {
+      return state.lost;
+    },
+  };
+
+  const renew = async (): Promise<void> => {
+    const next = new Date(now() + ttlMs);
+    try {
+      const renewed = await prisma.$executeRaw`
+        UPDATE "automaton_program_settings"
+        SET "turn_step_lease_until" = ${next}
+        WHERE "id" = ${PROGRAM_SETTINGS_ID} AND "turn_step_lease_until" = ${state.current}`;
+      if (renewed === 1) {
+        state.current = next;
+        return;
+      }
+      state.lost = true;
+      clearInterval(timer);
+      logger.error('[automaton-turns] Turn_Step lease lost: another caller took it over; no further turns start');
+    } catch (error) {
+      // Not lost: the lease is still ours until it expires; retry at the next tick.
+      logger.error(`[automaton-turns] Turn_Step lease renewal failed, retrying — ${errorMessageOf(error)}`);
+    }
+  };
+
+  const timer = setInterval(() => {
+    // Never overlap renewals: each one compares against the value the previous one wrote.
+    if (state.lost || state.renewal !== null) return;
+    state.renewal = renew().finally(() => {
+      state.renewal = null;
+    });
+  }, renewMs);
+  timer.unref();
+
+  try {
+    return await fn(lease);
+  } finally {
+    clearInterval(timer);
+    if (state.renewal !== null) await state.renewal;
+    if (!state.lost) {
+      await prisma.$executeRaw`
+        UPDATE "automaton_program_settings"
+        SET "turn_step_lease_until" = NULL
+        WHERE "id" = ${PROGRAM_SETTINGS_ID} AND "turn_step_lease_until" = ${state.current}`;
+    }
   }
 }
 
