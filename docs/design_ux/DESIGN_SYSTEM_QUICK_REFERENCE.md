@@ -310,6 +310,23 @@ type TabId = 'overview' | 'playback' | 'combat-log';
 - On mobile (<1024px): render all sections stacked without tabs
 - Respect `prefers-reduced-motion` media query
 
+### Toggle chip (aria-pressed)
+
+For filter chips and view/mode switches inside a `role="group"` (admin Automatons: "Filter stables", "Mode", "Strategies view"). Implemented as `ToggleChip` in `components/admin/automatons/ui.tsx`.
+
+```jsx
+<ToggleChip pressed={filter === 'active'} onClick={() => setFilter('active')} className="px-3">
+  Active · 2
+</ToggleChip>
+```
+
+**Rules:**
+- Pressed: `bg-primary text-white` + leading `✓` + 2 px white border (`border-2 border-white`)
+- Unpressed: `bg-surface-elevated text-secondary`, `border-2 border-transparent` (nothing shifts except the ✓)
+- Never show the pressed state by colour alone; `aria-pressed` carries it for assistive technology
+- The `✓` is `aria-hidden`, so the accessible name stays the label (`Active · 2`)
+- Minimum height 44 px (`min-h-11`); visible focus ring
+
 ### Modal Component
 
 ```jsx

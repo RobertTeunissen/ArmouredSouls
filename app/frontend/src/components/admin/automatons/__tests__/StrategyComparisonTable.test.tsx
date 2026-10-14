@@ -47,10 +47,15 @@ describe('StrategyComparisonTable', () => {
     renderTable();
     expect(screen.getByRole('heading', { name: 'Performance by mode' })).toBeInTheDocument();
     const group = screen.getByRole('group', { name: 'Mode' });
+    // The selected mode shows a check mark (aria-hidden, so not part of its accessible name).
     expect(within(group).getAllByRole('button').map((b) => b.textContent))
-      .toEqual(['1v1 League', '2v2 League', '3v3 League', 'Tag Team', 'King of the Hill', 'Grand Melee']);
-    expect(within(group).getByRole('button', { name: '1v1 League' })).toHaveAttribute('aria-pressed', 'true');
-    expect(within(group).getByRole('button', { name: 'King of the Hill' })).toHaveAttribute('aria-pressed', 'false');
+      .toEqual(['✓1v1 League', '2v2 League', '3v3 League', 'Tag Team', 'King of the Hill', 'Grand Melee']);
+    const selected = within(group).getByRole('button', { name: '1v1 League' });
+    expect(selected).toHaveAttribute('aria-pressed', 'true');
+    expect(within(selected).getByText('✓')).toBeInTheDocument();
+    const unselected = within(group).getByRole('button', { name: 'King of the Hill' });
+    expect(unselected).toHaveAttribute('aria-pressed', 'false');
+    expect(within(unselected).queryByText('✓')).not.toBeInTheDocument();
 
     expect(headers(modeTable('1v1 League'))).toEqual(['Strategy', 'Stables played', 'Robots played', 'W–L–D', 'Win %', 'Battles (n)']);
     expect(cellTexts(modeRow('1v1 League', /Swarm/))).toEqual(['2 / 2', '5', '40–38–2', '50%', '80Low sample']);
@@ -71,7 +76,9 @@ describe('StrategyComparisonTable', () => {
     const group = screen.getByRole('group', { name: 'Mode' });
     fireEvent.click(within(group).getByRole('button', { name: 'King of the Hill' }));
     expect(within(group).getByRole('button', { name: 'King of the Hill' })).toHaveAttribute('aria-pressed', 'true');
+    expect(within(within(group).getByRole('button', { name: 'King of the Hill' })).getByText('✓')).toBeInTheDocument();
     expect(within(group).getByRole('button', { name: '1v1 League' })).toHaveAttribute('aria-pressed', 'false');
+    expect(within(within(group).getByRole('button', { name: '1v1 League' })).queryByText('✓')).not.toBeInTheDocument();
 
     const table = modeTable('King of the Hill');
     expect(headers(table)).toEqual(['Strategy', 'Stables played', 'Robots played', 'Matches (n)', '1st places', '1st-place rate', 'Best placement']);

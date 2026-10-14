@@ -122,7 +122,13 @@ describe('StablesTab', () => {
     const chips = screen.getByRole('group', { name: 'Filter stables' });
     expect(within(chips).getByRole('button', { name: 'All · 3' })).toBeInTheDocument();
     expect(within(chips).getByRole('button', { name: 'Needs attention · 1' })).toBeInTheDocument();
-    expect(within(chips).getByRole('button', { name: 'Active · 2' })).toHaveAttribute('aria-pressed', 'true');
+    const active = within(chips).getByRole('button', { name: 'Active · 2' });
+    expect(active).toHaveAttribute('aria-pressed', 'true');
+    // The selected chip is marked by a check mark, not by colour alone.
+    expect(within(active).getByText('✓')).toBeInTheDocument();
+    const all = within(chips).getByRole('button', { name: 'All · 3' });
+    expect(all).toHaveAttribute('aria-pressed', 'false');
+    expect(within(all).queryByText('✓')).not.toBeInTheDocument();
   });
 
   it('chip counts follow the search text', () => {

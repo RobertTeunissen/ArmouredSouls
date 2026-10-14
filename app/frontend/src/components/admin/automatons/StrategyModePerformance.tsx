@@ -5,7 +5,8 @@
  * King of the Hill and Grand Melee record no losses, so they show matches,
  * first places, the first-place rate and the best placement. A row below the
  * low-sample rule carries a visible "Low sample" pill. The selected mode is
- * local state (default 1v1 League). A table from 768 px, cards below.
+ * local state (default 1v1 League); the mode buttons are `ToggleChip`s, so
+ * the selected one shows a check mark. A table from 768 px, cards below.
  */
 import { useId, useState } from 'react';
 import type { ReactNode } from 'react';
@@ -17,7 +18,7 @@ import {
   TEAM_STANDINGS_MODES,
   TIERED_STANDINGS_MODES,
 } from '@shared/utils/automatonStandingsTier';
-import { FOCUS_RING, Pill } from './ui';
+import { Pill, ToggleChip } from './ui';
 import { EVENT_LABELS, formatNumber, ordinal } from './automatonText';
 
 export interface StrategyModePerformanceProps {
@@ -83,15 +84,9 @@ export function StrategyModePerformance({ rows }: StrategyModePerformanceProps):
       <h3 id={headingId} className="text-base font-semibold text-white">Performance by mode</h3>
       <div className="flex flex-wrap gap-2" role="group" aria-label="Mode">
         {TIERED_STANDINGS_MODES.map((m) => (
-          <button
-            key={m}
-            type="button"
-            aria-pressed={mode === m}
-            onClick={() => setMode(m)}
-            className={`min-h-11 px-4 rounded-full text-sm font-medium ${FOCUS_RING} ${mode === m ? 'bg-primary text-white' : 'bg-surface-elevated text-secondary hover:text-white'}`}
-          >
+          <ToggleChip key={m} pressed={mode === m} onClick={() => setMode(m)} className="px-4">
             {EVENT_LABELS[m] ?? m}
-          </button>
+          </ToggleChip>
         ))}
       </div>
 

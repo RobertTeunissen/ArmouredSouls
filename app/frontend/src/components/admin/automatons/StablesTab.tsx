@@ -1,7 +1,8 @@
 /**
  * Stables tab (Spec #55, R11.2, R11.12, PLAYER_FACING_TEXT §6.3, task 10.2):
  * every Automaton with its progress, filter chips with counts (All · Active ·
- * Draft · Needs attention), a toolbar (strategy filter, search, sort), the
+ * Draft · Needs attention; `ToggleChip`, the selected one shows a check
+ * mark), a toolbar (strategy filter, search, sort), the
  * result count, and Activate all drafts with confirmation. Filtering and
  * sorting are client-side over the full list (`stablesView.ts`); the state
  * lives in the URL (`AutomatonsPage`). A table from 768 px, cards below.
@@ -9,7 +10,7 @@
 import { useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { ActivateAllOutcome, LibraryStrategy, ProfileListItem } from '../../../utils/automatonAdminApi';
-import { ActionButton, ConfirmDialog, FOCUS_RING, Notice } from './ui';
+import { ActionButton, ConfirmDialog, FOCUS_RING, Notice, ToggleChip } from './ui';
 import { errorText } from './requestErrors';
 import { deriveStablesView, strategyOptions, type StableSort, type StablesFilter } from './stablesView';
 import { StablesToolbar } from './StablesToolbar';
@@ -80,15 +81,9 @@ export function StablesTab({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-2" role="group" aria-label="Filter stables">
           {CHIPS.map((chip) => (
-            <button
-              key={chip.key}
-              type="button"
-              aria-pressed={filter === chip.key}
-              onClick={() => onFilterChange(chip.key)}
-              className={`min-h-11 px-3 rounded-full text-sm font-medium ${FOCUS_RING} ${filter === chip.key ? 'bg-primary text-white' : 'bg-surface-elevated text-secondary hover:text-white'}`}
-            >
+            <ToggleChip key={chip.key} pressed={filter === chip.key} onClick={() => onFilterChange(chip.key)} className="px-3">
               {chip.label} · {view.counts[chip.key]}
-            </button>
+            </ToggleChip>
           ))}
           {strategyFilter !== null && (
             <button type="button" onClick={() => onStrategyChange(null)} className={`min-h-11 px-3 rounded-full text-sm bg-surface-elevated text-white ${FOCUS_RING}`}>
