@@ -333,9 +333,11 @@ describe('EventLogger Service', () => {
         totalIncome: 8000,
         facilityLevel: 5,
         prestige: 1000,
-        totalBattles: 50,
+        winLossModeBattles: 50,
         totalFame: 200,
       });
+      // Renamed from `totalBattles`; new rows never carry the old key.
+      expect(event!.payload).not.toHaveProperty('totalBattles');
     });
 
     it('should log operating costs', async () => {

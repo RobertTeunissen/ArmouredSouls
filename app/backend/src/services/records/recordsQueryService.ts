@@ -1,6 +1,7 @@
 import prisma from '../../lib/prisma';
 import type { StableType } from '../../../generated/prisma';
 import { getTopModeKills } from '../battle/modeKillsQueries';
+import { getTopRobotsByAllModesBattleCount } from '../robot/all-modes-battle-count';
 
 // Helper to get display name (stableName or username fallback)
 export const getUserDisplayName = (user: { username: string; stableName?: string | null }): string => {
@@ -330,8 +331,20 @@ export async function fetchUpsetRecords() {
 export async function fetchCareerRecords() {
   const robotUserInclude = { user: { select: userSelect } };
 
-  const mostBattlesRobots = await prisma.robot.findMany({
-    where: byeRobotFilter, orderBy: { totalBattles: 'desc' }, take: 10, include: robotUserInclude,
+  // Most Battles ranks on the all-modes count (a battle is a battle: KotH and
+  // Grand Melee matches count too). The ranking query returns the count it
+  // ranked on, so the displayed value and the rank come from one read; the
+  // robot load only adds name, owner and W/L/D. Two queries, no N+1.
+  const mostBattlesRanked = await getTopRobotsByAllModesBattleCount(10);
+  const mostBattlesById = new Map(
+    (await prisma.robot.findMany({
+      where: { id: { in: mostBattlesRanked.map((entry) => entry.robotId) } },
+      include: robotUserInclude,
+    })).map((robot) => [robot.id, robot]),
+  );
+  const mostBattlesRows = mostBattlesRanked.flatMap(({ robotId, allModesBattleCount }) => {
+    const robot = mostBattlesById.get(robotId);
+    return robot ? [{ robot, allModesBattleCount }] : [];
   });
 
   // Highest win rate — use raw SQL to compute and sort at DB level
@@ -377,8 +390,11 @@ export async function fetchCareerRecords() {
   });
 
   return {
-    mostBattles: mostBattlesRobots.map(robot => ({
+    mostBattles: mostBattlesRows.map(({ robot, allModesBattleCount }) => ({
       robotId: robot.id, robotName: robot.name, ...getRecordOwner(robot.user),
+      // The ranked value: battles in every mode, from the ranking query.
+      allModesBattleCount,
+      // W/L/D and win rate stay on the win/loss modes (`totalBattles`).
       totalBattles: robot.totalBattles, wins: robot.wins, losses: robot.losses, draws: robot.draws,
       winRate: robot.totalBattles > 0 ? Number((robot.wins / robot.totalBattles * 100).toFixed(1)) : 0,
       elo: robot.elo,

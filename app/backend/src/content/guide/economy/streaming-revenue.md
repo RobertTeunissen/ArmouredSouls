@@ -2,7 +2,7 @@
 title: "Streaming Revenue"
 description: "How your robots generate streaming income through battle broadcasts — more battles, higher Fame, and the Streaming Studio facility all increase your earnings."
 order: 5
-lastUpdated: "2026-03-11"
+lastUpdated: "2026-10-12"
 relatedArticles:
   - economy/credits-and-income
   - economy/merchandising
@@ -24,6 +24,8 @@ Streaming income is calculated once per cycle during the daily processing. Three
 ### 1. Number of Battles
 
 More battles means more content to stream. A robot that fights every cycle generates more streaming revenue than one that sits idle. This is the most direct lever — if your robot is enlisted in league battles, it's producing streamable content.
+
+Every battle your robot fights builds its streaming audience, whatever the mode: 1v1 League, 2v2 and 3v3 League, Tag Team, tournaments, King of the Hill and Grand Melee all count. Byes (walkovers) are not broadcast, so a bye itself pays no streaming revenue. The **Battles** figure on a robot's profile shows this all-modes total, which is why it can be higher than wins + losses + draws: King of the Hill and Grand Melee are placement events with no win or loss.
 
 | Battle Activity | Streaming Impact |
 |----------------|-----------------|

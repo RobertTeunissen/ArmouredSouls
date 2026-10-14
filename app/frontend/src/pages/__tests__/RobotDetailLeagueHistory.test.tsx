@@ -226,10 +226,12 @@ describe('RobotDetailPage - League History Tab', () => {
   it('fetches and shows timeline when league-history tab is active', async () => {
     renderWithRouter('league-history');
 
-    await waitFor(() => {
-      expect(screen.getByTestId('league-history-tab')).toBeInTheDocument();
-    });
-
+    // Wait for what the fetch produces, not just the tab container. The
+    // container commits before LeagueHistoryTab's passive effect issues the
+    // fetch, so asserting the call synchronously after seeing the container
+    // raced that effect and failed when the worker stalled after the commit.
+    expect(await screen.findByTestId('league-timeline-chart')).toBeInTheDocument();
+    expect(screen.getByTestId('league-history-tab')).toBeInTheDocument();
     expect(mockedFetchRobotLeagueHistory).toHaveBeenCalledWith(1);
   });
 

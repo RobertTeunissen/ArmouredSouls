@@ -69,7 +69,7 @@ const records = {
     }],
   },
   career: {
-    mostBattles: robotRows({ totalBattles: 10, wins: 5, losses: 4, draws: 1, winRate: 50, elo: 1200 }),
+    mostBattles: robotRows({ allModesBattleCount: 14, totalBattles: 10, wins: 5, losses: 4, draws: 1, winRate: 50, elo: 1200 }),
     highestWinRate: robotRows({ totalBattles: 60, wins: 50, winRate: 83.3, elo: 1300, league: 'gold' }),
     mostLifetimeDamage: robotRows({ damageDealt: 9000, totalBattles: 10, avgDamagePerBattle: 900 }),
     highestElo: robotRows({ elo: 1500, league: 'gold', wins: 9, losses: 1, draws: 0 }),

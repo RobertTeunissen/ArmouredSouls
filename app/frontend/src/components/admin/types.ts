@@ -249,7 +249,9 @@ export interface RecentUsersResponse {
   currentCycle: number;
   cyclesBack: number;
   cutoffDate: string | null;
+  /** Every user in range; `users` lists at most the 500 newest of them. */
   totalUsers: number;
+  /** Listed users with at least one issue. */
   usersWithIssues: number;
   users: RecentUser[];
   timestamp: string;

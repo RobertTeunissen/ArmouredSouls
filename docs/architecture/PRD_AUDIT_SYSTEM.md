@@ -287,7 +287,7 @@ The canonical-source map is:
 - Pair rule: one `financial_transaction` row per `FinancialLedger` row; the audit row is not a second currency mutation
 
 **passive_income** - Merchandising income
-- Payload: merchandisingIncome, prestigeMultiplier
+- Payload: `merchandising`, `streaming` (0 on settlement rows), `totalIncome`, `facilityLevel`, `prestige`, `rosterCapacity`, `prestigePerSlot`, `winLossModeBattles` (informational: summed `robots.total_battles`, win/loss modes only; stored as `totalBattles` on rows written before the rename, read both via `readPassiveIncomeWinLossModeBattles`), `totalFame`
 - Created by: Cycle execution (Step 4)
 - Used for: Cycle snapshots, income tracking, and compatibility with the settlement domain event
 

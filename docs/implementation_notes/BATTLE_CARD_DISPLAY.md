@@ -42,13 +42,19 @@ Each instance carries `displayInstanceKey`, `perspectiveRobotId`, `perspectiveRo
 
 ## Upcoming Match expansion and bye subjects
 
-`expandUpcomingMatchInstances` applies the same perspective rule to one raw `ScheduledMatch`:
+`expandUpcomingMatchInstances(match, context: { userId?, robotId? })` applies the same perspective rule to one raw `ScheduledMatch`, mirroring `expandBattleDisplayInstances`.
+
+With `userId` (Dashboard, the authenticated stable):
 
 - robot modes create an instance for each authenticated-stable robot side;
 - `league_2v2`, `tournament_2v2`, `league_3v3`, `tournament_3v3`, and `tag_team` create one instance for each authenticated-stable team side; and
 - `koth` and `grand_melee` create one instance per authenticated-stable robot in `kothParticipants`.
 
+With `robotId` (Robot Detail, any viewer; takes precedence over `userId`), only the viewed robot's perspective is kept: the 1v1 side (including byes) or FFA participant whose id matches, or the team side containing the robot (`perspectiveRobotId`/`perspectiveRobotIds` = that robot, `perspectiveTeamId` = that side). A same-stable opposite-side 1v1 therefore yields one card on Robot Detail, matching `RecentBattles`. An empty context yields no instances. `UpcomingMatches` passes `{ robotId }` when it receives a `robotId` prop and `{ userId: user.id }` otherwise.
+
 Instances carry a unique `displayInstanceKey`, `perspectiveRobotId`/`perspectiveRobotIds`, and, for team instances, `perspectiveTeamId`. `UpcomingMatches` uses these explicit fields rather than selecting the first side from `myUserId`.
+
+`perspectiveRobotIds` on a team instance depends on the context. On Robot Detail (`robotId`) it is always `[robotId]`, the viewed robot only, even when the stable fields more robots on that side. On the Dashboard (`userId`) it is every authenticated-stable robot on that side (for example both partners of a same-stable tag team). No card reads `perspectiveRobotIds` today; cards use `perspectiveRobotId` and `perspectiveTeamId`. A future card that needs "all of my robots on this side" must not rely on the field in the Robot Detail context.
 
 When `isByeMatch === true`, `UpcomingMatches` routes the instance to `ByeMatchCard` before any ordinary mode card. `resolveByeCardSubject` in `app/frontend/src/components/match-cards/bye-match-data.ts` accepts the explicit perspective and returns only the real robot, team, or FFA participant. Negative-id `Bye_Placeholder` values and malformed absent subjects are never rendered as opponents. Ordinary `StandardMatchCard`, `TeamBattleMatchCard`, and `KothMatchCard` paths do not render byes.
 

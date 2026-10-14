@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import HPBar from './HPBar';
 import BattleReadinessBadge from './BattleReadinessBadge';
 import RobotImage from './RobotImage';
+import PlacementModesRecordNote from './PlacementModesRecordNote';
 import { getFameTier } from '../utils/fameTiers';
 import { UNRANKED_LABEL } from '../utils/tierHelpers';
 
@@ -30,6 +31,8 @@ interface RobotDashboardCardProps {
     losses?: number;
     draws?: number;
     totalBattles?: number;
+    /** #532: battles across every mode (totalBattles + KotH + Grand Melee). */
+    allModesBattleCount?: number;
     mainWeapon?: { weapon: { name: string; weaponType: string } } | null;
     offhandWeapon?: { weapon: { name: string; weaponType: string } } | null;
     loadoutType?: string;
@@ -203,7 +206,7 @@ function RobotDashboardCard({ robot, variant = 'owner' }: RobotDashboardCardProp
               )}
               <div className="flex items-center gap-1">
                 <span className="text-secondary">Battles:</span>
-                <span className="font-semibold text-white">{totalBattles.toLocaleString()}</span>
+                <span className="font-semibold text-white">{(robot.allModesBattleCount ?? totalBattles).toLocaleString()}</span>
               </div>
               {robot.kills != null && (
                 <div className="flex items-center gap-1">
@@ -224,6 +227,14 @@ function RobotDashboardCard({ robot, variant = 'owner' }: RobotDashboardCardProp
                 </div>
               )}
             </div>
+          )}
+          {/* #532: Battles above is all modes; Record and win rate are win/loss modes only. */}
+          {isPublic && (
+            <PlacementModesRecordNote
+              allModesBattleCount={robot.allModesBattleCount}
+              totalBattles={totalBattles}
+              className="mt-1 text-xs text-secondary"
+            />
           )}
         </div>
       </div>

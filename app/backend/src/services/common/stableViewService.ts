@@ -8,6 +8,7 @@ import { StandingsMode } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import { getPrestigeRank } from '../../utils/prestigeUtils';
 import { achievementService } from '../achievement';
+import { getAllModesBattleCounts } from '../robot/all-modes-battle-count';
 
 /** Map facility type slug to a human-readable display name. */
 const FACILITY_DISPLAY_NAMES: Record<string, string> = {
@@ -131,6 +132,14 @@ export async function getStableProfile(userId: number) {
 
   const achievements = await achievementService.getStableAchievements(userId);
 
+  // #532: per-robot "Battles" is the all-modes count (totalBattles + KotH + Grand
+  // Melee). Stable-level stats.totalBattles above stays the distinct W/L/D count.
+  const battleCounts = await getAllModesBattleCounts(user.robots);
+  const robots = user.robots.map((robot) => ({
+    ...robot,
+    allModesBattleCount: battleCounts.get(robot.id) ?? robot.totalBattles,
+  }));
+
   return {
     user: {
       id: user.id,
@@ -145,7 +154,7 @@ export async function getStableProfile(userId: number) {
       championshipTitles2v2: user.championshipTitles2v2,
       championshipTitles3v3: user.championshipTitles3v3,
     },
-    robots: user.robots,
+    robots,
     facilities,
     stats: {
       totalBattles,

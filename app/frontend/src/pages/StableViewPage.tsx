@@ -38,6 +38,8 @@ interface PublicRobot {
   losses: number;
   draws: number;
   totalBattles: number;
+  /** #532: battles across every mode (totalBattles + KotH + Grand Melee). */
+  allModesBattleCount?: number;
   fame: number;
   kills: number;
   damageDealtLifetime: number;

@@ -21,6 +21,7 @@ const mockAuditLogFindFirst = jest.fn();
 const mockAuditLogFindMany = jest.fn();
 const mockAuditLogCreate = jest.fn();
 const mockTransaction = jest.fn();
+const mockQueryRaw = jest.fn();
 
 jest.mock('../../../src/lib/prisma', () => ({
   __esModule: true,
@@ -49,6 +50,7 @@ jest.mock('../../../src/lib/prisma', () => ({
       create: (...args: unknown[]) => mockAuditLogCreate(...args),
     },
     $transaction: (...args: unknown[]) => mockTransaction(...args),
+    $queryRaw: (...args: unknown[]) => mockQueryRaw(...args),
   },
 }));
 
@@ -104,6 +106,8 @@ beforeEach(() => {
   // Safe default so tests that reach computeCycleChanges without caring about
   // per-cycle results don't have to stub the audit log lookup.
   mockAuditLogFindMany.mockResolvedValue([]);
+  // No shared team sides unless a test says so.
+  mockQueryRaw.mockResolvedValue([]);
 });
 
 // ═══ userService ═══════════════════════════════════════════════════════════════
@@ -346,24 +350,25 @@ describe('userProfileService', () => {
       expect(result.totalRobots).toBe(0);
     });
 
-    it('should aggregate robot stats and standings', async () => {
+    it('should aggregate robot stats without adding tag team standings on top', async () => {
       mockUserFindUnique.mockResolvedValue({ prestige: 200 });
       mockRobotFindMany.mockResolvedValue([
         { id: 1, elo: 1500, totalBattles: 20, wins: 12, losses: 6, draws: 2, currentHP: 100, maxHP: 100, mainWeapon: {} },
         { id: 2, elo: 1200, totalBattles: 10, wins: 5, losses: 4, draws: 1, currentHP: 80, maxHP: 100, mainWeapon: {} },
       ]);
       mockTeamBattleFindMany.mockResolvedValue([{ id: 10 }]);
-      // First call: tag team standings, second: robot league standings
+      // First call: tag team standings (tier only), second: robot league standings
       mockStandingFindMany
-        .mockResolvedValueOnce([{ tier: 'silver', wins: 3, losses: 2, draws: 0 }]) // tag team
+        .mockResolvedValueOnce([{ tier: 'silver' }]) // tag team
         .mockResolvedValueOnce([{ tier: 'silver' }, { tier: 'bronze' }]); // robot league
       mockCycleSnapshotFindFirst.mockResolvedValue(null);
 
       const result = await getStableStats(1);
 
-      expect(result.totalBattles).toBe(35); // 20 + 10 + 5 (tag team)
-      expect(result.wins).toBe(20); // 12 + 5 + 3
-      expect(result.losses).toBe(12); // 6 + 4 + 2
+      // Tag-team results already live in each member's robot counters.
+      expect(result.totalBattles).toBe(30); // 20 + 10
+      expect(result.wins).toBe(17); // 12 + 5
+      expect(result.losses).toBe(10); // 6 + 4
       expect(result.highestELO).toBe(1500);
       expect(result.totalRobots).toBe(2);
       expect(result.highestLeague).toBe('silver');

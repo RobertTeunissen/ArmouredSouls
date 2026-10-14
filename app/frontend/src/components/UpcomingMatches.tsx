@@ -6,11 +6,11 @@ import axios from 'axios';
 import { KothMatchCard, ByeMatchCard, StandardMatchCard, TeamBattleMatchCard } from './match-cards';
 import { expandUpcomingMatchInstances, type UpcomingMatchInstance } from '../utils/match-display-instances';
 import { resolveByeCardSubject } from './match-cards/bye-match-data';
+import type { BattleReadiness } from '../utils/robot-battle-readiness';
 
-interface BattleReadiness {
-  isReady: boolean;
-  warnings: string[];
-}
+// Readiness is loadout-only (no HP), so the only not-ready state is the yellow warning.
+const NOT_READY_COLOR = 'text-[#d29922]';
+const NOT_READY_ICON = '🟡';
 
 interface UpcomingMatchesProps {
   robotId?: number;
@@ -73,24 +73,6 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
 
     const opponent = myRobot.id === match.robot1.id ? match.robot2 : match.robot1;
     return { myRobot, opponent };
-  };
-
-  const getReadinessWarningColor = (): string => {
-    if (battleReadiness && !battleReadiness.isReady) {
-      const hasLowHP = battleReadiness.warnings.some(w => w.includes('HP'));
-      if (hasLowHP) return 'text-[#f85149]';
-      return 'text-[#d29922]';
-    }
-    return 'text-[#3fb950]';
-  };
-
-  const getReadinessIcon = (): string => {
-    if (battleReadiness && !battleReadiness.isReady) {
-      const hasLowHP = battleReadiness.warnings.some(w => w.includes('HP'));
-      if (hasLowHP) return '🔴';
-      return '🟡';
-    }
-    return '🟢';
   };
 
   if (loading) {
@@ -190,7 +172,11 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
   };
 
   const displayInstances = user
-    ? matches.flatMap(match => expandUpcomingMatchInstances(match, user.id))
+    ? matches.flatMap(match => expandUpcomingMatchInstances(
+      match,
+      // Robot Detail: that robot's perspective (any viewer). Dashboard: viewer's own sides.
+      robotId !== undefined ? { robotId } : { userId: user.id },
+    ))
     : [];
 
   return (
@@ -198,8 +184,8 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-lg font-semibold">Upcoming Matches</h2>
         {battleReadiness && !battleReadiness.isReady && (
-          <div className={`flex items-center gap-2 ${getReadinessWarningColor()}`}>
-            <span>{getReadinessIcon()}</span>
+          <div className={`flex items-center gap-2 ${NOT_READY_COLOR}`}>
+            <span>{NOT_READY_ICON}</span>
             <span className="text-sm font-medium">Not Battle Ready</span>
           </div>
         )}
@@ -207,7 +193,7 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
       {battleReadiness && !battleReadiness.isReady && battleReadiness.warnings.length > 0 && (
         <div className="mb-3 text-sm">
           {battleReadiness.warnings.map((warning, index) => (
-            <div key={index} className={getReadinessWarningColor()}>
+            <div key={index} className={NOT_READY_COLOR}>
               ⚠️ {warning}
             </div>
           ))}

@@ -2,6 +2,7 @@ import { RecordSection } from './RecordSection';
 import { RecordCard } from './RecordCard';
 import { RecordStableName } from './RecordStableName';
 import type { RecordsData } from './types';
+import { PLACEMENT_MODES_RECORD_NOTE } from '../PlacementModesRecordNote';
 
 export interface CareerRecordsProps {
   records: RecordsData;
@@ -13,13 +14,13 @@ export function CareerRecords({ records }: CareerRecordsProps) {
       {records.career.mostBattles.length > 0 && (
         <RecordSection
           title="🎖️ Most Battles Fought"
-          subtitle="Covers 1v1 League, 1v1 Tournament, Tag Team, and 2v2/3v3 League. KotH and Grand Melee resolve by placement, so they do not increment the win/loss counters."
+          subtitle={`Counts battles in every mode, including KotH and Grand Melee. ${PLACEMENT_MODES_RECORD_NOTE}`}
         >
           {records.career.mostBattles.map((record, index) => (
             <RecordCard
               key={record.robotId}
               rank={index + 1}
-              value={`${record.totalBattles} battles`}
+              value={`${record.allModesBattleCount} battles`}
               description={<>{record.robotName} by <RecordStableName name={record.username} stableType={record.stableType} /></>}
               details={[
                 `Record: ${record.wins}-${record.losses}-${record.draws}`,

@@ -171,6 +171,9 @@ export interface MostBattles {
   username: string;
   /** Spec #55 decision 42: Stable_Type of the owning stable (drives the Automaton_Badge). */
   stableType?: StableType | null;
+  /** Battles in every mode, KotH and Grand Melee included. The ranked value. */
+  allModesBattleCount: number;
+  /** Win/loss-mode battles: the denominator of `winRate` and the W/L/D record. */
   totalBattles: number;
   wins: number;
   losses: number;

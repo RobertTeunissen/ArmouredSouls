@@ -5,11 +5,12 @@ import {
   sumAttributes,
   type RepairCostRobot,
 } from '../../../shared/utils/repairCost';
+import type { RobotAttributes } from '../types/robot';
 
 interface YieldThresholdSliderProps {
   robotId: number;
   currentThreshold: number;
-  robotAttributes: Record<string, unknown>;
+  robotAttributes: Partial<RobotAttributes>;
   repairBayLevel?: number;
   activeRobotCount?: number;
   onThresholdChange: (newThreshold: number) => void;

@@ -5,6 +5,9 @@
  * battle count, and Streaming Studio facility level.
  * 
  * Formula: 1000 × (1 + battles/1000) × (1 + fame/5000) × (1 + level×1.0)
+ *
+ * `battles` is the all-modes battle count: robots.total_battles + KotH and
+ * Grand Melee standings.total_matches (services/robot/all-modes-battle-count.ts).
  * 
  * Studio Multiplier: Each level adds 100% (L1 = 2×, L2 = 3×, L3 = 4×, etc.)
  */
@@ -15,6 +18,11 @@ import { RobotError, RobotErrorCode, FinancialError, FinancialErrorCode } from '
 import { applyCreditMutation, applyCreditMutationInTransaction } from '../financial/creditMutationService';
 import { buildStreamingEventId } from '../financial/financialEventIdentity';
 import type { StreamingRevenueBreakdown as FinancialStreamingRevenueBreakdown } from '../../types';
+import {
+  combineAllModesBattleCount,
+  getAllModesBattleCount,
+  getPlacementMatchCounts,
+} from '../robot/all-modes-battle-count';
 
 /**
  * Streaming revenue calculation result for a single robot
@@ -85,8 +93,9 @@ export interface StreamingRevenueBreakdown {
  * The multipliers are uncapped by design: the caps in the old display code were
  * invented there and never existed in the award path.
  *
- * @param totalBattleCount Battles across every mode. `robots.total_battles`
- *   excludes KotH, so callers add the KotH `standings.total_matches`.
+ * @param totalBattleCount Battles across every mode: `robots.total_battles` plus
+ *   the KotH and Grand Melee `standings.total_matches`. Callers obtain it from
+ *   the shared `services/robot/all-modes-battle-count.ts` helper (#530, #532).
  * @param fame Robot fame.
  * @param studioLevel Streaming Studio facility level (0-10).
  */
@@ -163,17 +172,9 @@ export async function calculateStreamingRevenue(
   // Get Streaming Studio level
   const studioLevel = await getStreamingStudioLevel(userId);
 
-  // Get KotH match count from standings (totalBattles on Robot excludes KotH)
-  const kothStanding = await prisma.standing.findUnique({
-    where: { entityType_entityId_mode: { entityType: 'robot', entityId: robotId, mode: 'koth' } },
-    select: { totalMatches: true },
-  });
-  const kothMatches = kothStanding?.totalMatches ?? 0;
-
-  // Calculate total battles including all battle types
-  // robot.totalBattles includes 1v1, tournament, 2v2, 3v3, and tag-team (all non-KotH modes)
-  // KotH matches come from standings since Robot no longer stores kothMatches
-  const totalBattleCount = robot.totalBattles + kothMatches;
+  // Battles across every mode: robot.totalBattles (league, tournaments, tag team,
+  // 2v2/3v3) + KotH and Grand Melee matches from standings (#530, #532).
+  const totalBattleCount = await getAllModesBattleCount(robot);
 
   // Delegate to the single source of truth (Spec #46 R10)
   const breakdown = computeStreamingRevenue(totalBattleCount, robot.fame, studioLevel);
@@ -265,7 +266,7 @@ export async function awardStreamingRevenue(
 }
 
 /**
- * Calculate streaming revenue for multiple robots in batch (2 queries total instead of 2N).
+ * Calculate streaming revenue for multiple robots in batch (3 parallel queries total instead of 3N).
  *
  * Fetches all robot stats and facility levels upfront, then calculates in-memory.
  * Used by orchestrators processing multiple participants (KotH, tag team).
@@ -281,8 +282,8 @@ export async function calculateStreamingRevenueBatch(
   const robotIds = participants.map(p => p.robotId);
   const userIds = [...new Set(participants.map(p => p.userId))];
 
-  // Batch fetch: 1 query for all robots, 1 query for all facilities
-  const [robots, facilities, kothStandings] = await Promise.all([
+  // Batch fetch: robots, facilities and placement-mode (KotH + Grand Melee) match counts
+  const [robots, facilities, placementMatches] = await Promise.all([
     prisma.robot.findMany({
       where: { id: { in: robotIds } },
       select: {
@@ -299,15 +300,11 @@ export async function calculateStreamingRevenueBatch(
       },
       select: { userId: true, level: true },
     }),
-    prisma.standing.findMany({
-      where: { entityType: 'robot', entityId: { in: robotIds }, mode: 'koth' },
-      select: { entityId: true, totalMatches: true },
-    }),
+    getPlacementMatchCounts(robotIds),
   ]);
 
   const robotMap = new Map(robots.map(r => [r.id, r]));
   const facilityMap = new Map(facilities.map(f => [f.userId, f.level]));
-  const kothMatchMap = new Map(kothStandings.map(s => [s.entityId, s.totalMatches ?? 0]));
 
   const result = new Map<number, StreamingRevenueCalculation | null>();
 
@@ -319,7 +316,7 @@ export async function calculateStreamingRevenueBatch(
     }
 
     const studioLevel = facilityMap.get(userId) ?? 0;
-    const totalBattleCount = robot.totalBattles + (kothMatchMap.get(robotId) ?? 0);
+    const totalBattleCount = combineAllModesBattleCount(robot.totalBattles, placementMatches.get(robotId) ?? 0);
 
     // Same delegation as the single path, so batch and single cannot diverge.
     const breakdown = computeStreamingRevenue(totalBattleCount, robot.fame, studioLevel);

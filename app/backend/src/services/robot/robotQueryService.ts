@@ -9,6 +9,7 @@ import prisma from '../../lib/prisma';
 import schedulingService from '../scheduling/schedulingService';
 import type { BattleParticipant, Prisma } from '../../../generated/prisma';
 import { KeyedCache } from '../../lib/keyedCache';
+import { getAllModesBattleCount } from './all-modes-battle-count';
 
 // ── Per-user robot list cache (30s TTL) ──────────────────────────────
 // Eliminates repeated DB hits during normal page navigation.
@@ -43,8 +44,8 @@ type BattleWithParticipants = Prisma.BattleGetPayload<{
     leagueType: true;
     tournamentId: true;
     winnerId: true;
+    winningSide: true;
     createdAt: true;
-    battleLog: true;
     participants: true;
     tournament: {
       select: {
@@ -175,14 +176,19 @@ export async function findRobotById(robotId: number) {
   if (!robot) return null;
 
   // Enrich with standings data (Spec #40 — LP, wins/losses now live in standings table)
-  const standing = await prisma.standing.findFirst({
-    where: { entityType: 'robot', entityId: robot.id, mode: 'league_1v1' },
-    select: { leaguePoints: true, wins: true, losses: true, draws: true, tier: true, leagueInstanceId: true, cyclesInTier: true, currentWinStreak: true, bestWinStreak: true, currentLoseStreak: true },
-  });
+  // and the all-modes battle count (#532: totalBattles + KotH + Grand Melee).
+  const [standing, allModesBattleCount] = await Promise.all([
+    prisma.standing.findFirst({
+      where: { entityType: 'robot', entityId: robot.id, mode: 'league_1v1' },
+      select: { leaguePoints: true, wins: true, losses: true, draws: true, tier: true, leagueInstanceId: true, cyclesInTier: true, currentWinStreak: true, bestWinStreak: true, currentLoseStreak: true },
+    }),
+    getAllModesBattleCount(robot),
+  ]);
 
   if (standing) {
     return {
       ...robot,
+      allModesBattleCount,
       leaguePoints: standing.leaguePoints,
       currentLeague: standing.tier,
       leagueId: standing.leagueInstanceId,
@@ -196,7 +202,7 @@ export async function findRobotById(robotId: number) {
     };
   }
 
-  return robot;
+  return { ...robot, allModesBattleCount };
 }
 
 // ── GET /:id/matches (paginated battle history) ──────────────────────
@@ -376,6 +382,30 @@ export async function getUpcomingMatches(robotId: number, robot: { currentHP: nu
 
 // ── GET /:id/performance-context ─────────────────────────────────────
 
+/**
+ * Outcome of a side-based battle (2v2/3v3 League, team tournaments, tag team)
+ * for the robot fighting on `team`.
+ *
+ * Reads only the permanent `battles.winning_side` / `winner_id` columns. It must
+ * never read `battle_log`: that column is ephemeral and is NULLed after the
+ * retention window, which used to turn every older team battle into a "draw" (#531).
+ *
+ * - `winningSide` 1 or 2 → win/loss compared with `team`
+ * - `winnerId` NULL (and no side) → draw
+ * - `winnerId` set but `winningSide` NULL → `unknown` (legacy row written before
+ *   the side column existed); counted as neither W, L nor D.
+ */
+function getSideBattleOutcome(
+  battle: Pick<BattleWithParticipants, 'winnerId' | 'winningSide'>,
+  team: number,
+): 'win' | 'loss' | 'draw' | 'unknown' {
+  if (battle.winningSide === 1 || battle.winningSide === 2) {
+    return battle.winningSide === team ? 'win' : 'loss';
+  }
+  if (battle.winnerId === null) return 'draw';
+  return 'unknown';
+}
+
 /** Determine if robot won, lost, or drew a battle. */
 function getBattleResult(battle: BattleWithParticipants, robotId: number): 'win' | 'loss' | 'draw' {
   if (battle.winnerId === null) return 'draw';
@@ -383,6 +413,10 @@ function getBattleResult(battle: BattleWithParticipants, robotId: number): 'win'
   if (battle.battleType === 'tag_team') {
     const participant = battle.participants.find((p: BattleParticipant) => p.robotId === robotId);
     if (!participant) return 'draw';
+    // Stored side is authoritative; the ELO-direction heuristic is only a
+    // fallback for side-less legacy rows.
+    const sideOutcome = getSideBattleOutcome(battle, participant.team);
+    if (sideOutcome === 'win' || sideOutcome === 'loss') return sideOutcome;
     const eloChange = participant.eloAfter - participant.eloBefore;
     if (eloChange > 0) return 'win';
     if (eloChange < 0) return 'loss';
@@ -429,8 +463,10 @@ export async function getPerformanceContext(robotId: number) {
       leagueType: true,
       tournamentId: true,
       winnerId: true,
+      // #531: team-mode outcomes come from the permanent winning_side column.
+      // battle_log is ephemeral (NULLed after the retention window) and is not selected.
+      winningSide: true,
       createdAt: true,
-      battleLog: true,
       participants: true,
       tournament: { select: { id: true, name: true, totalParticipants: true } },
     },
@@ -501,14 +537,12 @@ export async function getPerformanceContext(robotId: number) {
     const stats = tournamentStatsMap.get(tournamentId)!;
     // For team tournaments, determine win/loss from participant's team side
     if (battle.battleType === 'tournament_2v2' || battle.battleType === 'tournament_3v3') {
-      const winningSide = (battle as unknown as { winningSide?: number | null }).winningSide
-        ?? (battle.battleLog as unknown as { winningSide?: 1 | 2 | null })?.winningSide
-        ?? null;
       const participant = battle.participants.find(p => p.robotId === robotId);
       if (participant) {
-        if (winningSide === null) { /* draw - no W/L */ }
-        else if (winningSide === participant.team) stats.wins++;
-        else stats.losses++;
+        // Draws/unknown carry no W/L in the tournament panel.
+        const outcome = getSideBattleOutcome(battle, participant.team);
+        if (outcome === 'win') stats.wins++;
+        else if (outcome === 'loss') stats.losses++;
         stats.damageDealt += participant.damageDealt ?? 0;
       }
     } else {
@@ -602,15 +636,12 @@ export async function getPerformanceContext(robotId: number) {
   };
 
   league2v2Battles.forEach(battle => {
-    const winningSide = (battle as unknown as { winningSide?: number | null }).winningSide
-      ?? (battle.battleLog as unknown as { winningSide?: 1 | 2 | null })?.winningSide
-      ?? null;
     const participant = battle.participants.find(p => p.robotId === robotId);
     if (!participant) return;
-    const myTeam = participant.team;
-    if (winningSide === null) league2v2Stats.draws++;
-    else if (winningSide === myTeam) league2v2Stats.wins++;
-    else league2v2Stats.losses++;
+    const outcome = getSideBattleOutcome(battle, participant.team);
+    if (outcome === 'win') league2v2Stats.wins++;
+    else if (outcome === 'loss') league2v2Stats.losses++;
+    else if (outcome === 'draw') league2v2Stats.draws++;
     league2v2Stats.damageDealt += participant.damageDealt ?? 0;
   });
 
@@ -623,15 +654,12 @@ export async function getPerformanceContext(robotId: number) {
   };
 
   league3v3Battles.forEach(battle => {
-    const winningSide = (battle as unknown as { winningSide?: number | null }).winningSide
-      ?? (battle.battleLog as unknown as { winningSide?: 1 | 2 | null })?.winningSide
-      ?? null;
     const participant = battle.participants.find(p => p.robotId === robotId);
     if (!participant) return;
-    const myTeam = participant.team;
-    if (winningSide === null) league3v3Stats.draws++;
-    else if (winningSide === myTeam) league3v3Stats.wins++;
-    else league3v3Stats.losses++;
+    const outcome = getSideBattleOutcome(battle, participant.team);
+    if (outcome === 'win') league3v3Stats.wins++;
+    else if (outcome === 'loss') league3v3Stats.losses++;
+    else if (outcome === 'draw') league3v3Stats.draws++;
     league3v3Stats.damageDealt += participant.damageDealt ?? 0;
   });
 

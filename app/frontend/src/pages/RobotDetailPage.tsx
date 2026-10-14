@@ -7,6 +7,7 @@ import BattleConfigTab from '../components/BattleConfigTab';
 import EffectiveStatsDisplay from '../components/EffectiveStatsDisplay';
 import RobotImage from '../components/RobotImage';
 import AutomatonBadge from '../components/AutomatonBadge';
+import PlacementModesRecordNote from '../components/PlacementModesRecordNote';
 import RobotImageSelector from '../components/RobotImageSelector';
 import StatisticalRankings from '../components/StatisticalRankings';
 import PerformanceByContext from '../components/PerformanceByContext';
@@ -21,10 +22,16 @@ import type { LeagueHistoryEntry } from '../components/LeagueTimeline';
 import TeamBattleLeagueHistory from '../components/TeamBattleLeagueHistory';
 import type { BattleHistory } from '../utils/matchmakingApi';
 import { getProfile } from '../utils/userApi';
-import type { RobotWithAttributes } from '../types/robot';
-import { useRobotDetail } from '../hooks/useRobotDetail';
+import { isOwnerRobotDetail, useRobotDetail } from '../hooks/useRobotDetail';
 import { UNRANKED_LABEL } from '../utils/tierHelpers';
 import RobotEligibilityChecklist from '../components/robot-setup/RobotEligibilityChecklist';
+
+/** Tabs that render only from the owner payload (`OwnerRobotDetail`). */
+const OWNER_ONLY_TABS: ReadonlySet<string> = new Set(['battle-config', 'upgrades', 'tuning', 'stats']);
+
+function isOwnerOnlyTab(tab: string): boolean {
+  return OWNER_ONLY_TABS.has(tab);
+}
 
 function RobotDetailPage() {
   const {
@@ -42,6 +49,7 @@ function RobotDetailPage() {
     recentBattles,
     battleReadiness,
     leagueRank,
+    allModesBattleCount,
     activeTab,
     handleTabChange,
     showImageSelector,
@@ -81,6 +89,10 @@ function RobotDetailPage() {
       </div>
     );
   }
+
+  // Owner-only tabs need the fields the API strips for non-owners; they render
+  // only when the viewer owns the robot and the payload actually carries them.
+  const ownerRobot = isOwner && isOwnerRobotDetail(robot) ? robot : null;
 
   return (
     <div className="min-h-screen bg-background text-white">
@@ -179,7 +191,7 @@ function RobotDetailPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-secondary">Battles:</span>
-                    <span className="text-white font-semibold">{robot.totalBattles}</span>
+                    <span className="text-white font-semibold">{allModesBattleCount ?? robot.totalBattles}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-secondary">Record:</span>
@@ -188,6 +200,13 @@ function RobotDetailPage() {
                     </span>
                   </div>
                 </div>
+                {/* #532: Battles covers every mode; Record and Win Rate only cover win/loss modes. */}
+                <PlacementModesRecordNote
+                  allModesBattleCount={allModesBattleCount}
+                  totalBattles={robot.totalBattles}
+                  className="text-xs text-secondary mb-4"
+                />
+
 
                 {/* Performance Stats */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">
@@ -283,9 +302,9 @@ function RobotDetailPage() {
             <RobotPerformanceAnalytics robotId={robot.id} lastNCycles={10} />
           )}
 
-          {activeTab === 'battle-config' && isOwner && (
+          {activeTab === 'battle-config' && ownerRobot && (
             <BattleConfigTab
-              robot={robot as unknown as RobotWithAttributes}
+              robot={ownerRobot}
               weapons={weapons}
               repairBayLevel={repairBayLevel}
               activeRobotCount={activeRobotCount}
@@ -295,9 +314,9 @@ function RobotDetailPage() {
             />
           )}
 
-          {activeTab === 'upgrades' && isOwner && (
+          {activeTab === 'upgrades' && ownerRobot && (
             <UpgradePlanner
-              robot={robot as unknown as RobotWithAttributes}
+              robot={ownerRobot}
               currentCredits={currency}
               trainingLevel={trainingLevel}
               rosterCapacity={rosterCapacity}
@@ -307,16 +326,17 @@ function RobotDetailPage() {
             />
           )}
 
-          {activeTab === 'tuning' && isOwner && (
+          {activeTab === 'tuning' && ownerRobot && (
             <TuningPoolEditor
-              robotId={robot.id}
-              robot={robot as unknown as RobotWithAttributes}
+              robotId={ownerRobot.id}
+              robot={ownerRobot}
             />
           )}
 
-          {activeTab === 'stats' && (
+          {/* Owner-only like the tab itself: a non-owner reaching ?tab=stats gets the notice below. */}
+          {activeTab === 'stats' && ownerRobot && (
             <div className="mb-6">
-              <EffectiveStatsDisplay robot={robot as unknown as RobotWithAttributes} />
+              <EffectiveStatsDisplay robot={ownerRobot} />
             </div>
           )}
 
@@ -328,8 +348,22 @@ function RobotDetailPage() {
             </div>
           )}
 
+          {/* Owner whose payload lacks an owner-only field: say so instead of an empty tab. */}
+          {isOwner && !ownerRobot && isOwnerOnlyTab(activeTab) && (
+            <div className="bg-surface p-6 rounded-lg text-center" role="alert" data-testid="owner-details-unavailable">
+              <p className="text-secondary text-lg">Robot details unavailable. Reload the page to try again.</p>
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                className="mt-4 bg-primary hover:bg-blue-700 px-6 py-2 rounded"
+              >
+                Reload
+              </button>
+            </div>
+          )}
+
           {/* Non-Owner View for owner-only tabs */}
-          {!isOwner && (activeTab === 'battle-config' || activeTab === 'upgrades' || activeTab === 'tuning' || activeTab === 'stats') && (
+          {!isOwner && isOwnerOnlyTab(activeTab) && (
             <div className="bg-surface p-6 rounded-lg text-center">
               <p className="text-secondary text-lg">
                 {activeTab === 'stats' 
