@@ -216,12 +216,14 @@ Energy weapons bypass armor but shields resist them; ballistic shreds shields bu
 **Source**: Spec #48 review (Aug 2026) — the Overview_Row redesign satisfies its mobile requirements, but the review surfaced a whole-page problem that spec deliberately did not take on
 **Priority**: Medium — the game is played on phones, and the Dashboard is the first page after login
 
-Spec #48 gives the Overview_Row a correct mobile layout: single column below 1024px, three equal columns above, no horizontal overflow between 320px and 1920px, 44px activation regions. What it does **not** do is optimise the Dashboard as a page on a phone. Two known costs, one introduced by #48 itself:
+Spec #48 gives the Overview_Row a correct mobile layout: single column below 1024px, three equal columns above, no horizontal overflow between 320px and 1920px, 44px activation regions. What it does **not** do is optimise the Dashboard as a page on a phone.
 
-- **Reserved tile height is paid three times when stacked.** `DashboardTile` reserves one `min-h` sized from the tallest tile (Credits_Tile: four stat rows plus a link) and applies it in the loading, error and loaded states so nothing reflows as data arrives. Side by side on desktop that is free. Stacked on a phone it reserves roughly 528px before Recent Battles, much of it whitespace under the Prestige_Tile, which has fewer rows. The fix is to reserve height **per tile** from that tile's own loaded content, which keeps the no-reflow guarantee and drops the tallest-tile tax. Accepted knowingly in #48 rather than overlooked.
-- **The page as a whole is long on mobile.** Notification stack, Overview_Row, Recent Battles, Upcoming Matches, Active Tournament, League Standings, then a grid of robot cards. Every section stacks. Nobody has measured how far a phone user scrolls to reach their roster, or decided what should be collapsed, deferred or moved behind a tab.
+- **The page as a whole is long on mobile.** Notification stack (including season countdown and team notices), Season Phase card, Overview_Row, Recent Battles, Upcoming Matches, Active Tournament, League Standings, then a grid of robot cards. Every section stacks. Nobody has decided what should be collapsed, deferred or moved behind a tab.
+- *Resolved:* the tallest-tile height tax is gone — `DashboardTile` now reserves height per tile (`REM_PER_ROW`, commit `f7c1966f`, Aug 2026).
 
-**Suggested scope**: measure the mobile scroll depth first, then decide per section whether it collapses, lazy-loads, or moves. Also revisit whether the robot card grid belongs on the Dashboard at all given `/robots` exists. Pair with the per-tile height fix above, since both are `components/dashboard/` edits.
+**Suggested scope**: use a deterministic Playwright check at phone widths (320/375px) to show the scroll depth to the roster, ask the ACC testers directly, then decide per section whether it collapses, lazy-loads, or moves. Also revisit whether the robot card grid belongs on the Dashboard at all given `/robots` exists.
+
+**Not doing — production usage telemetry.** Spec #52 (Oct 2026) planned first-party event tracking and a measurement window before any change. It was dropped: with ~10 active ACC players the data cannot support decisions, and direct tester feedback is cheaper and better.
 
 **Not in scope for #48**, deliberately: that spec's mobile requirements are about the Overview_Row not breaking, not about the page being pleasant on a phone.
 
