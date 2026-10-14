@@ -13,8 +13,8 @@
  * - Rows are never created at robot or team creation.
  * - Rows are kept on unsubscribe and on member swap (the entity keeps its tier,
  *   LP and record and simply stops being matched).
- * - Rows are deleted on team disband, account reset and robot deletion; the
- *   season rollover wipes them.
+ * - Rows are deleted on team disband, account reset and generated-stable purge;
+ *   the season rollover wipes them.
  * - New rows start in Bronze with 0 LP in the least-full Bronze instance.
  *
  * ## Locking
