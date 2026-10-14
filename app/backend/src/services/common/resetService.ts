@@ -1,6 +1,7 @@
 import prisma from '../../lib/prisma';
 import { OnboardingError, OnboardingErrorCode } from '../../errors/onboardingErrors';
 import { AuthError, AuthErrorCode } from '../../errors/authErrors';
+import { lockUserForSpending } from '../../lib/creditGuard';
 import { lockRobotTeamMembership, lockTeamStandings } from '../standings/standingPlacement';
 // Spec #45: uploaded images survive an account reset (Image_Library), so this
 // service no longer deletes files from storage.
@@ -206,6 +207,12 @@ export async function performAccountReset(userId: number, reason?: string): Prom
     // to the player's Image_Library and survive both an account reset and a
     // Season_Rollover, so the player can re-apply their artwork to new robots.
     // Archived seasons also reference these paths.
+
+    // Lock the user row first (global order: own `users` row before
+    // (2, robotId)). Robot creation serialises on this row, so no robot can be
+    // created after the snapshot below and then be deleted without its
+    // standings rows by `robot.deleteMany({ userId })`.
+    await lockUserForSpending(tx, userId);
 
     const userRobotIds = await tx.robot.findMany({
       where: { userId },

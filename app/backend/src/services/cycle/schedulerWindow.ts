@@ -12,9 +12,9 @@
  * orchestrator graph. The scheduler is initialised exactly when
  * `schedulerEnabled` is true, so the two cannot disagree.
  */
+import cron from 'node-cron';
 import logger from '../../config/logger';
 import type { EnvConfig } from '../../config/env';
-import { getNextCronOccurrence } from '../../utils/scheduleUtils';
 import type { SchedulerJobName } from './schedulerJobNames';
 
 /** The EnvConfig fields this module reads. */
@@ -54,39 +54,56 @@ export function schedulerJobSchedules(config: SchedulerWindowConfig): SchedulerJ
   ];
 }
 
-const PLAIN_INTEGER = /^\d+$/;
+const MINUTE_MS = 60_000;
+const DAY_MS = 24 * 60 * MINUTE_MS;
 
-/** Whether the minute and hour fields are plain integers (`getNextCronOccurrence` can read them). */
-function hasFixedTimeOfDay(schedule: string): boolean {
-  const [minute, hour] = schedule.trim().split(/\s+/);
-  return minute !== undefined && hour !== undefined && PLAIN_INTEGER.test(minute) && PLAIN_INTEGER.test(hour);
+/**
+ * Epoch ms of the next UTC minute strictly after `nowMs` whose hour and
+ * minute both match. Uses node-cron's own parser, so every form the
+ * scheduler accepts (`*`, steps, ranges, lists) is handled exactly.
+ */
+function nextTimeOfDayMatch(schedule: string, nowMs: number): number | null {
+  const { minute, hour } = cron.parse(schedule);
+  const dayStart = Math.floor(nowMs / DAY_MS) * DAY_MS;
+  let next: number | null = null;
+  for (const h of hour) {
+    for (const m of minute) {
+      let at = dayStart + h * 60 * MINUTE_MS + m * MINUTE_MS;
+      if (at <= nowMs) at += DAY_MS;
+      if (next === null || at < next) next = at;
+    }
+  }
+  return next;
 }
 
 /**
  * Epoch ms of the next scheduled cycle-scheduler job after `nowMs`, or null
- * when the scheduler is disabled or no schedule has a fixed time of day.
+ * when the scheduler is disabled or no schedule parses.
  *
- * Every schedule is treated as daily: a day-of-week or day-of-month
- * restriction is ignored, which can only make the answer earlier
- * (conservative). Schedules whose minute or hour field is not a plain
- * integer are skipped with one warning; that is NOT conservative: it can
- * make the answer later (up to the caller's cap).
+ * Every schedule is treated as daily: seconds and day-of-week, day-of-month
+ * and month restrictions are ignored, which can only make the answer earlier
+ * (conservative). A schedule that does not parse is skipped with a warning;
+ * `env.ts` validates schedules at startup, so that should not happen.
  */
 export function nextScheduledJobRunAt(config: SchedulerWindowConfig, nowMs: number): number | null {
   if (!config.schedulerEnabled) return null;
-  const now = new Date(nowMs);
   const skipped: string[] = [];
   let next: number | null = null;
   for (const { job, schedule } of schedulerJobSchedules(config)) {
-    if (!hasFixedTimeOfDay(schedule)) {
+    let at: number | null;
+    try {
+      at = nextTimeOfDayMatch(schedule, nowMs);
+    } catch {
+      at = null;
+    }
+    if (at === null) {
       skipped.push(`${job} "${schedule}"`);
       continue;
     }
-    const at = getNextCronOccurrence(schedule, now).getTime();
     if (next === null || at < next) next = at;
   }
   if (skipped.length > 0) {
-    logger.warn(`[scheduler-window] schedules without a fixed time of day are ignored for the Turn_Step deadline: ${skipped.join(', ')}`);
+    logger.warn(`[scheduler-window] unparseable schedules ignored for the Turn_Step deadline: ${skipped.join(', ')}`);
   }
   return next;
 }

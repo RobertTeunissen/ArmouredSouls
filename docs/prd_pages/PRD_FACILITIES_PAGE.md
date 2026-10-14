@@ -3,7 +3,7 @@
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
 **Version**: v1.5
-**Date**: February 7, 2026  
+**Date**: October 14, 2026  
 **Author**: GitHub Copilot  
 **Status**: Phase 1 & 2 Complete - Implementation Active  
 **Owner**: Robert Teunissen  

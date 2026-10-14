@@ -68,22 +68,22 @@ describe('nextScheduledJobRunAt', () => {
     expect(nextScheduledJobRunAt(config, at('2026-10-20T00:05:00Z'))).toBe(at('2026-10-20T16:00:00Z'));
   });
 
-  it('skips a schedule without a fixed time of day, with one warning', () => {
+  it('honours step schedules: */30 after midnight makes 00:30 the next job', () => {
     const config = { ...DEFAULTS, leagueSchedule: '*/30 * * * *' };
-    expect(nextScheduledJobRunAt(config, at('2026-10-20T00:05:00Z'))).toBe(at('2026-10-20T09:00:00Z'));
-    expect(mockWarn).toHaveBeenCalledTimes(1);
-    expect(mockWarn.mock.calls[0][0]).toContain('league "*/30 * * * *"');
+    expect(nextScheduledJobRunAt(config, at('2026-10-20T00:05:00Z'))).toBe(at('2026-10-20T00:30:00Z'));
+    expect(mockWarn).not.toHaveBeenCalled();
   });
 
-  it('returns null when no schedule has a fixed time of day', () => {
-    const every = '*/30 * * * *';
-    const config: SchedulerWindowConfig = {
-      schedulerEnabled: true,
-      leagueSchedule: every, team2v2LeagueSchedule: every, tournamentSchedule: every, tagTeamSchedule: every,
-      kothSchedule: every, team3v3LeagueSchedule: every, team2v2TournamentSchedule: every, grandMeleeSchedule: '0 */2 * * *',
-      team3v3TournamentSchedule: every, settlementSchedule: '15,45 0 * * *',
-    };
-    expect(nextScheduledJobRunAt(config, at('2026-10-20T00:05:00Z'))).toBeNull();
+  it('honours ranges and lists in the hour and minute fields', () => {
+    const config = { ...DEFAULTS, grandMeleeSchedule: '0 */2 * * *', settlementSchedule: '15,45 0 * * *' };
+    expect(nextScheduledJobRunAt(config, at('2026-10-20T00:05:00Z'))).toBe(at('2026-10-20T00:15:00Z'));
+    expect(nextScheduledJobRunAt(config, at('2026-10-20T00:50:00Z'))).toBe(at('2026-10-20T02:00:00Z'));
+  });
+
+  it('skips an unparseable schedule with one warning', () => {
+    const config = { ...DEFAULTS, leagueSchedule: 'not a cron' };
+    expect(nextScheduledJobRunAt(config, at('2026-10-20T00:05:00Z'))).toBe(at('2026-10-20T09:00:00Z'));
     expect(mockWarn).toHaveBeenCalledTimes(1);
+    expect(mockWarn.mock.calls[0][0]).toContain('league "not a cron"');
   });
 });
