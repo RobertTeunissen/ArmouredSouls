@@ -79,6 +79,8 @@ const HEAVY_TESTS = [
   'tests/integration/bronzeLeagueRebalancing.test.ts',
   'tests/integration/byeInvariant.test.ts',
   'tests/integration/byeScopeAndShape.test.ts',
+  // Unified standings creation rule: 60 robots, whole-mode KotH rebalancing.
+  'tests/integration/kothNeverPlayedPromotion.test.ts',
   'tests/integration/seasonPurgeAndReset.test.ts',
   'tests/integration/seasonRollover.test.ts',
   'tests/integration/tagTeamAutoRepair.test.ts',
@@ -129,6 +131,8 @@ const DB_DEPENDENT = [
   'tests/integration/automatonAdminRoutes.test.ts',
   // Achievement unlock serialization (pre-existing duplicate-insert fix)
   'tests/integration/achievementUnlockSerialization.test.ts',
+  // Unified standings creation rule (create on first matchable subscription)
+  'tests/integration/standingsCreationRule.test.ts',
   // Spec #55 — Domain_Service_Extraction (task group 2)
   'src/services/economy/__tests__/facilityUpgradeService.test.ts',
   'src/services/economy/__tests__/weaponPurchaseService.test.ts',
