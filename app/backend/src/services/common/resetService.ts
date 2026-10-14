@@ -212,12 +212,6 @@ export async function performAccountReset(userId: number, reason?: string): Prom
       select: { id: true },
       orderBy: { id: 'asc' },
     });
-    const userTeamIds = await tx.teamBattle.findMany({
-      where: { stableId: userId },
-      select: { id: true },
-      orderBy: { id: 'asc' },
-    });
-
     // Take the standing locks before any write, in the global order of
     // standingPlacement: (2, robotId) ascending, then (5, teamId) ascending.
     // The team locks stop a concurrent member subscription from inserting a
@@ -228,6 +222,14 @@ export async function performAccountReset(userId: number, reason?: string): Prom
     for (const { id } of userRobotIds) {
       await lockRobotTeamMembership(tx, id);
     }
+    // Read the team ids only after the robot locks are held: registerTeam takes
+    // the same (2, robotId) locks, so a team registered while we waited has
+    // committed by now and is included, and its standings rows are deleted too.
+    const userTeamIds = await tx.teamBattle.findMany({
+      where: { stableId: userId },
+      select: { id: true },
+      orderBy: { id: 'asc' },
+    });
     for (const { id } of userTeamIds) {
       await lockTeamStandings(tx, id);
     }
