@@ -27,6 +27,7 @@ import { setAlertSender } from '../../src/services/automaton/automatonObservabil
 import { getProgramSwitch } from '../../src/services/automaton/programSwitch';
 import { activateProfile, addBlueprint, createDraft } from '../../src/services/automaton/automatonProfileService';
 import { getAutomatonUploadDir, storeBlueprintImage } from '../../src/services/automaton/automatonImageService';
+import { SUBSCRIBABLE_EVENT_TYPES, isRegisteredEvent, registerSubscribableEvent } from '../../src/services/subscription/eventRegistry';
 
 jest.setTimeout(600_000);
 
@@ -100,6 +101,10 @@ describe('Season_Rollover with Automaton Stables (Spec #55 task 7.4)', () => {
 
   beforeAll(async () => {
     previousSender = setAlertSender(async () => undefined);
+    // The registry is filled at app start-up; without it Event_Allocation's
+    // setSubscriptionsForRobot rejects every event, and an Automaton robot is
+    // in no competition (standings come from its first subscriptions).
+    for (const type of SUBSCRIBABLE_EVENT_TYPES) if (!isRegisteredEvent(type)) registerSubscribableEvent({ type, label: type });
     await resetSeasonTables();
     await getCurrentSeason();
     await prisma.automatonProgramSetting.upsert({ where: { id: 1 }, update: { turnsEnabled: true, turnStepLeaseUntil: null }, create: { id: 1 } });
