@@ -11,8 +11,6 @@ import { Prisma } from '../generated/prisma';
 import prisma from '../src/lib/prisma';
 import {
   registerTeam,
-  addTeamMember,
-  removeTeamMember,
   swapTeamMember,
 } from '../src/services/team-battle/teamBattleService';
 import { TeamBattleError, TeamBattleErrorCode } from '../src/errors/teamBattleErrors';
@@ -480,7 +478,8 @@ describe('Team Battle Property Tests', () => {
    *   - all members subscribed to the corresponding event
    *   - all member robots exist (not destroyed)
    *
-   * Members can be added, removed, and swapped while respecting subscription rules.
+   * Members are changed only by swapping (there is no add/remove), and a swap
+   * does not require the new robot to be subscribed (D3).
    */
   describe('Property 8: Team Membership State Machine', () => {
     let testUserId: number;
@@ -607,61 +606,6 @@ describe('Team Battle Property Tests', () => {
     }
 
     /**
-     * **Validates: Requirements R2.1, R2.9, R3.10**
-     *
-     * Property: A fully registered team (N members, all subscribed) can have members
-     * removed and added back. Verifies removeTeamMember and addTeamMember work correctly.
-     */
-    it('should allow member removal and re-addition', async () => {
-      await fc.assert(
-        fc.asyncProperty(
-          // Generate team size (2 or 3)
-          fc.constantFrom(2 as const, 3 as const),
-          async (teamSize) => {
-            const eventType = teamSize === 2 ? 'league_2v2' : 'league_3v3';
-
-            // Create N robots and subscribe them
-            const robotIds: number[] = [];
-            for (let i = 0; i < teamSize; i++) {
-              const robotId = await createRobot(`full_${teamSize}_${i}`);
-              await subscribeRobot(robotId, eventType);
-              robotIds.push(robotId);
-            }
-
-            // Register a full team
-            const team = await registerTeam(
-              testUserId,
-              robotIds,
-              `EligTeam${teamSize}_${Date.now()}`,
-              teamSize,
-              testUserId,
-            );
-
-            // Remove a member
-            const removedRobotId = robotIds[teamSize - 1];
-            await removeTeamMember(team.id, removedRobotId, testUserId);
-
-            const teamAfterRemove = await prisma.teamBattle.findUnique({
-              where: { id: team.id },
-            });
-            expect(teamAfterRemove).not.toBeNull();
-
-            // Add a new subscribed robot
-            const replacementRobotId = await createRobot(`replacement_${teamSize}`);
-            await subscribeRobot(replacementRobotId, eventType);
-            await addTeamMember(team.id, replacementRobotId, testUserId);
-
-            const teamAfterAdd = await prisma.teamBattle.findUnique({
-              where: { id: team.id },
-            });
-            expect(teamAfterAdd).not.toBeNull();
-          },
-        ),
-        { numRuns: 100 },
-      );
-    });
-
-    /**
      * **Validates: Requirements R2.1, R3.10**
      *
      * Property (D3): a swap succeeds whatever the new robot's subscriptions.
@@ -723,61 +667,6 @@ describe('Team Battle Property Tests', () => {
               orderBy: { mode: 'asc' },
             });
             expect(rowsAfter).toEqual(rowsBefore);
-          },
-        ),
-        { numRuns: 100 },
-      );
-    });
-
-    /**
-     * **Validates: Requirements R2.1, R2.9**
-     *
-     * Property: Removing members from a team correctly reduces the member count.
-     * Registration with exactly N members succeeds; members can be removed down to 1.
-     */
-    it('should track member count correctly after removals', async () => {
-      await fc.assert(
-        fc.asyncProperty(
-          // Generate team size and how many members to keep (1 to N)
-          fc.constantFrom(2 as const, 3 as const),
-          fc.integer({ min: 1, max: 3 }),
-          async (teamSize, membersToKeep) => {
-            // Clamp membersToKeep to valid range for this teamSize
-            const actualMembersToKeep = Math.min(membersToKeep, teamSize);
-            const eventType = teamSize === 2 ? 'league_2v2' : 'league_3v3';
-
-            // Create N robots and subscribe them
-            const robotIds: number[] = [];
-            for (let i = 0; i < teamSize; i++) {
-              const robotId = await createRobot(`count_${teamSize}_${i}`);
-              await subscribeRobot(robotId, eventType);
-              robotIds.push(robotId);
-            }
-
-            // Register a full team
-            const team = await registerTeam(
-              testUserId,
-              robotIds,
-              `CntTeam${teamSize}_${Date.now()}`,
-              teamSize,
-              testUserId,
-            );
-
-            // Remove members until we have actualMembersToKeep
-            const membersToRemove = teamSize - actualMembersToKeep;
-            for (let i = 0; i < membersToRemove; i++) {
-              const robotToRemove = robotIds[teamSize - 1 - i];
-              await removeTeamMember(team.id, robotToRemove, testUserId);
-            }
-
-            // Verify member count after removals
-            const teamAfter = await prisma.teamBattle.findUnique({
-              where: { id: team.id },
-              include: { members: true },
-            });
-
-            const currentMemberCount = teamAfter!.members.length;
-            expect(currentMemberCount).toBe(actualMembersToKeep);
           },
         ),
         { numRuns: 100 },
