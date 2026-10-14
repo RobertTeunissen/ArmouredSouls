@@ -26,7 +26,8 @@ export const PROGRAM_OFF = 'program_off';
 
 /**
  * Reason of a turn not started because a Serialized_Cycle_Cutover began
- * while the Turn_Step was running (R7.5, turn-budget plan D4).
+ * while the Turn_Step was running (R7.5, AUTOMATON_TURN_STEP_DEADLINE.md,
+ * "Mid-step cutover guard").
  */
 export const CUTOVER_IN_PROGRESS = 'cutover_in_progress';
 

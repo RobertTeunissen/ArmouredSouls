@@ -1,7 +1,8 @@
 /**
  * Turn_Budget and Turn_Step deadline (Spec #55, R5.11, design §8.8; the
  * Turn_Step rule supersedes spec 55 R7.10 and the 300 s hard limit of
- * design §8.8 / §19, see the turn-budget plan "DESIGN (Part B)" D1, D3).
+ * design §8.8 / §19, see docs/implementation_notes/
+ * AUTOMATON_TURN_STEP_DEADLINE.md, "Deadline" and "Bounded concurrency").
  *
  * - One Automaton_Turn: at most 60 charged actions and 10 s (unchanged).
  * - One Turn_Step: keeps starting turns until a deadline = the earlier of
@@ -70,7 +71,7 @@ export function checkTurnBudget(state: TurnBudgetState, nowMs: number, nextCharg
   return { exhausted: false };
 }
 
-// ─── Turn_Step deadline (D1) ─────────────────────────────────────────
+// ─── Turn_Step deadline ──────────────────────────────────────────────
 
 /**
  * What set the deadline: the next scheduled job minus the margin, the
@@ -128,7 +129,7 @@ export function isStepDeadlineReached(deadline: TurnStepDeadline, nowMs: number)
   return nowMs >= deadline.deadlineAtMs;
 }
 
-// ─── Concurrency (D3) ────────────────────────────────────────────────
+// ─── Concurrency ─────────────────────────────────────────────────────
 
 /**
  * Turns a Turn_Step runs at once: `configured` (floored; 1 when not finite)

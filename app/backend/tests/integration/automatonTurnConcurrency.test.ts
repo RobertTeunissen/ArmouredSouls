@@ -119,7 +119,7 @@ afterAll(async () => {
   await prisma.$disconnect();
 });
 
-describe('parallel opening builds (plan D3)', () => {
+describe('parallel opening builds', () => {
   it('overlap in time and keep paired ledger/audit rows, balances and single Turn_Records; a retry charges nothing', async () => {
     const stables = [
       await activeStable(1, 'paragon'),

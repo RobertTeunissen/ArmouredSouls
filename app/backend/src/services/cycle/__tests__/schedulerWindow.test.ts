@@ -1,6 +1,6 @@
 /**
  * `nextScheduledJobRunAt` (schedulerWindow.ts): the next cycle-scheduler job
- * the Automaton Turn_Step deadline stops before (plan.md D1).
+ * the Automaton Turn_Step deadline stops before (AUTOMATON_TURN_STEP_DEADLINE.md, "Deadline").
  */
 import logger from '../../../config/logger';
 import { nextScheduledJobRunAt, schedulerJobSchedules, type SchedulerWindowConfig } from '../schedulerWindow';

@@ -3,7 +3,8 @@
  *
  * The Automaton Turn_Step runs inside the settlement job and holds the
  * scheduler's job mutex, so it must stop starting turns before the next job
- * is due (plan.md "DESIGN (Part B)" D1; supersedes spec 55 R7.10).
+ * is due (docs/implementation_notes/AUTOMATON_TURN_STEP_DEADLINE.md,
+ * "Deadline"; supersedes spec 55 R7.10).
  *
  * A leaf module, like `schedulerJobNames.ts`: it reads the same EnvConfig
  * schedules `src/index.ts` passes to `initScheduler` instead of scheduler
@@ -68,7 +69,8 @@ function hasFixedTimeOfDay(schedule: string): boolean {
  * Every schedule is treated as daily: a day-of-week or day-of-month
  * restriction is ignored, which can only make the answer earlier
  * (conservative). Schedules whose minute or hour field is not a plain
- * integer are skipped with one warning.
+ * integer are skipped with one warning; that is NOT conservative: it can
+ * make the answer later (up to the caller's cap).
  */
 export function nextScheduledJobRunAt(config: SchedulerWindowConfig, nowMs: number): number | null {
   if (!config.schedulerEnabled) return null;

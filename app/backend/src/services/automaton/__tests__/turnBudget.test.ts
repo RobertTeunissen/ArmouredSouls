@@ -49,7 +49,7 @@ describe('turnBudget (R5.11, design §8.8)', () => {
   });
 });
 
-describe('Turn_Step deadline (supersedes R7.10; plan D1)', () => {
+describe('Turn_Step deadline (supersedes R7.10)', () => {
   const START = 1_000_000;
   const MIN = 60_000;
   const HOUR = 60 * MIN;
@@ -102,7 +102,7 @@ describe('Turn_Step deadline (supersedes R7.10; plan D1)', () => {
   });
 });
 
-describe('effectiveTurnConcurrency (plan D3)', () => {
+describe('effectiveTurnConcurrency', () => {
   it('clamps to ⌊(pool − 5) / 2⌋', () => {
     expect(effectiveTurnConcurrency(8, 15)).toBe(5);
     expect(effectiveTurnConcurrency(5, 15)).toBe(5);

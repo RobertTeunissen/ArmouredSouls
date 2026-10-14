@@ -1,6 +1,6 @@
 /**
- * Bounded-concurrency runner for the Turn_Step (turn-budget plan
- * "DESIGN (Part B)" D3).
+ * Bounded-concurrency runner for the Turn_Step (docs/implementation_notes/
+ * AUTOMATON_TURN_STEP_DEADLINE.md, "Bounded concurrency").
  *
  * `runWithConcurrency` runs `worker` over `items` with at most `concurrency`
  * in flight. Each lane takes the next index when it is free, so items START

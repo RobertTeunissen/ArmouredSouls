@@ -1,6 +1,6 @@
 /**
  * `runWithConcurrency` (turnStepPool.ts): the Turn_Step's bounded pool
- * (turn-budget plan D3).
+ * (AUTOMATON_TURN_STEP_DEADLINE.md, "Bounded concurrency").
  */
 import { runWithConcurrency } from '../turnStepPool';
 
