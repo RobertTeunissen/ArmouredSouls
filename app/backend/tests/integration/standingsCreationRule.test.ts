@@ -11,6 +11,10 @@
  * disband and account reset. New rows start in Bronze, 0 LP, in the least-full
  * Bronze instance.
  *
+ * Cases 10d2 and 10e2 park a subscription on a lock held by a blocker
+ * transaction to force the disband/reset interleavings that would orphan a
+ * team row or deadlock without the team and robot locks.
+ *
  * Every write goes through the real services. Cases 2 and 10c fill a mode's
  * Bronze instances to exact sizes, so they clear that mode's Bronze rows before
  * and after (the whole-mode isolation the rebalancing suites use).
@@ -34,7 +38,14 @@ import { runFreeUpkeep } from '../../src/services/automaton/upkeep/freeUpkeep';
 import { loadBlueprintFacts, loadStableFacts } from '../../src/services/automaton/stableFacts';
 import { generateBattleReadyUsers } from '../../src/utils/userGeneration';
 import { runMatchmakingForTier } from '../../src/services/analytics/matchmakingService';
-import { teamModesForSize, type TeamSize } from '../../src/services/standings/standingPlacement';
+import {
+  ROBOT_TEAM_MEMBERSHIP_LOCK_NAMESPACE,
+  TEAM_STANDING_LOCK_NAMESPACE,
+  teamModesForSize,
+  type TeamSize,
+} from '../../src/services/standings/standingPlacement';
+import { leagueInstanceLockKey } from '../../src/services/league/leagueInstancePlacement';
+import { getCurrentCycleNumber } from '../../src/services/battle/baseOrchestrator';
 import type { EventOrder } from '../../src/types/automaton';
 import { enterRobotStandings } from '../helpers/standings';
 import { createAutomatonStable, deleteAutomatonStables } from '../helpers/automatonStable';
@@ -420,6 +431,79 @@ describe('case 9: disband and account reset', () => {
 
 // ── Case 10: concurrency ─────────────────────────────────────────────
 
+/** Poll until `predicate` holds; fail with `label` after `timeoutMs`. */
+async function waitFor(predicate: () => Promise<boolean> | boolean, label: string, timeoutMs = 5_000): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  while (!(await predicate())) {
+    if (Date.now() > deadline) throw new Error(`Timed out waiting for ${label}`);
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  }
+}
+
+/**
+ * True when a backend holds the (5, teamId) team lock and is waiting on a
+ * single-key advisory lock (the mode/tier instance lock). Two-key advisory
+ * locks show in pg_locks as classid = key1, objid = key2, objsubid = 2.
+ */
+async function subscriptionParkedOnModeLock(teamId: number): Promise<boolean> {
+  const [{ n }] = await prisma.$queryRaw<{ n: number }[]>`
+    SELECT count(*)::int AS n
+    FROM pg_locks held
+    JOIN pg_locks waiting ON waiting.pid = held.pid
+    WHERE held.locktype = 'advisory' AND held.granted
+      AND held.classid = ${TEAM_STANDING_LOCK_NAMESPACE}::int::oid
+      AND held.objid = ${teamId}::int::oid AND held.objsubid = 2
+      AND waiting.locktype = 'advisory' AND NOT waiting.granted AND waiting.objsubid = 1`;
+  return n > 0;
+}
+
+/** True when a backend holds (2, robotId) and is waiting on an audit sequence lock (3, cycle). */
+async function robotLockHolderParkedOnAuditLock(robotId: number): Promise<boolean> {
+  const [{ n }] = await prisma.$queryRaw<{ n: number }[]>`
+    SELECT count(*)::int AS n
+    FROM pg_locks held
+    JOIN pg_locks waiting ON waiting.pid = held.pid
+    WHERE held.locktype = 'advisory' AND held.granted
+      AND held.classid = ${ROBOT_TEAM_MEMBERSHIP_LOCK_NAMESPACE}::int::oid
+      AND held.objid = ${robotId}::int::oid AND held.objsubid = 2
+      AND waiting.locktype = 'advisory' AND NOT waiting.granted
+      AND waiting.classid = 3::oid AND waiting.objsubid = 2`;
+  return n > 0;
+}
+
+/** Lock waits in this database other than on an audit sequence lock (3, cycle). */
+async function waitersExceptAuditLock(): Promise<number> {
+  const [{ n }] = await prisma.$queryRaw<{ n: number }[]>`
+    SELECT count(*)::int AS n
+    FROM pg_locks l
+    JOIN pg_stat_activity a ON a.pid = l.pid
+    WHERE NOT l.granted AND a.datname = current_database()
+      AND NOT (l.locktype = 'advisory' AND l.classid = 3::oid AND l.objsubid = 2)`;
+  return n;
+}
+
+/** Backends waiting for the (2, robotId) team-membership lock. */
+async function robotLockWaiters(robotId: number): Promise<number> {
+  const [{ n }] = await prisma.$queryRaw<{ n: number }[]>`
+    SELECT count(*)::int AS n
+    FROM pg_locks
+    WHERE locktype = 'advisory' AND NOT granted
+      AND classid = ${ROBOT_TEAM_MEMBERSHIP_LOCK_NAMESPACE}::int::oid
+      AND objid = ${robotId}::int::oid AND objsubid = 2`;
+  return n;
+}
+
+/** Backends waiting for the (5, teamId) team lock. */
+async function teamLockWaiters(teamId: number): Promise<number> {
+  const [{ n }] = await prisma.$queryRaw<{ n: number }[]>`
+    SELECT count(*)::int AS n
+    FROM pg_locks
+    WHERE locktype = 'advisory' AND NOT granted
+      AND classid = ${TEAM_STANDING_LOCK_NAMESPACE}::int::oid
+      AND objid = ${teamId}::int::oid AND objsubid = 2`;
+  return n;
+}
+
 describe('case 10: concurrency', () => {
   it('(a) both members subscribing at once give exactly one league_2v2 row (10 teams)', async () => {
     for (let i = 0; i < 10; i++) {
@@ -448,6 +532,127 @@ describe('case 10: concurrency', () => {
       const rows = await rowsOf('team', teamId);
       expect(rows.map((r) => r.mode)).toEqual(['league_2v2']);
     }
+  });
+
+  it('(d) a disband racing the completing subscription leaves no orphan team row (10 teams)', async () => {
+    for (let i = 0; i < 10; i++) {
+      const { userId, teamId, robotIds: [a, b] } = await createTeam(2);
+      await subscribeRobot(a, 'league_2v2', userId);
+
+      // Both succeed in either order: the subscription either commits its row
+      // before the disband deletes, or waits for the team lock and finds the
+      // team gone.
+      await Promise.all([
+        disbandTeam(teamId, userId),
+        subscribeRobot(b, 'league_2v2', userId),
+      ]);
+
+      expect(await prisma.teamBattle.findUnique({ where: { id: teamId } })).toBeNull();
+      expect(await rowsOf('team', teamId)).toEqual([]);
+    }
+  });
+
+  it('(d2) a disband arriving while the subscription is mid-placement waits for it and deletes its row', async () => {
+    // Force the worst interleaving: the subscription has judged the team
+    // matchable (it holds (5, teamId)) and is parked on the league_2v2 Bronze
+    // instance lock, held here by a blocker transaction. A disband that does not
+    // take the team lock deletes the team now, and the subscription then inserts
+    // an orphan row once the blocker lets go.
+    const { userId, teamId, robotIds: [a, b] } = await createTeam(2);
+    await subscribeRobot(a, 'league_2v2', userId);
+
+    let releaseBlocker!: () => void;
+    const blockerReleased = new Promise<void>((resolve) => { releaseBlocker = resolve; });
+    let signalLocked!: () => void;
+    const blockerLocked = new Promise<void>((resolve) => { signalLocked = resolve; });
+    const modeLockKey = leagueInstanceLockKey('league_2v2', 'bronze');
+    const blocker = prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(${modeLockKey})`;
+      signalLocked();
+      await blockerReleased;
+    }, { timeout: 30_000 });
+    await blockerLocked;
+
+    const subscription = subscribeRobot(b, 'league_2v2', userId);
+    const observed = { disbandSettled: false, disbandWaitedForSubscription: false };
+    let disband: Promise<void> | undefined;
+    try {
+      await waitFor(() => subscriptionParkedOnModeLock(teamId), 'subscription to hold the team lock and wait on the mode lock');
+
+      disband = disbandTeam(teamId, userId).finally(() => { observed.disbandSettled = true; });
+      await waitFor(async () => observed.disbandSettled || await teamLockWaiters(teamId) > 0, 'disband to wait on the team lock or finish');
+      observed.disbandWaitedForSubscription = !observed.disbandSettled;
+    } finally {
+      releaseBlocker();
+    }
+    const results = await Promise.allSettled([blocker, subscription, disband]);
+
+    expect(results.map((r) => r.status)).toEqual(['fulfilled', 'fulfilled', 'fulfilled']);
+    expect(observed.disbandWaitedForSubscription).toBe(true);
+    expect(await prisma.teamBattle.findUnique({ where: { id: teamId } })).toBeNull();
+    expect(await rowsOf('team', teamId)).toEqual([]);
+  });
+
+  it('(e) an account reset racing the completing subscription leaves no orphan team row and does not deadlock (5 stables)', async () => {
+    for (let i = 0; i < 5; i++) {
+      const { userId, teamId, robotIds: [a, b] } = await createTeam(2);
+      await subscribeRobot(a, 'league_2v2', userId);
+
+      const [reset, subscription] = await Promise.allSettled([
+        performAccountReset(userId, 'standings creation rule race test'),
+        subscribeRobot(b, 'league_2v2', userId),
+      ]);
+
+      expect(reset.status).toBe('fulfilled');
+      // The subscription may lose the race (its robot is gone), but never to a deadlock.
+      if (subscription.status === 'rejected') {
+        expect(String(subscription.reason)).not.toMatch(/deadlock/i);
+      }
+      expect(await rowsOf('team', teamId)).toEqual([]);
+    }
+  });
+
+  it('(e2) an account reset arriving while the subscription holds its robot lock waits for it, without deadlock', async () => {
+    // Park the subscription after it has taken (2, b) and inserted its
+    // subscription row (a key-share lock on robot b), on the audit sequence
+    // lock (3, cycle) held by a blocker. A reset that took (5, teamId) without
+    // first taking (2, b) would then block on robot b's row while the
+    // subscription blocks on (5, teamId): a deadlock.
+    const { userId, teamId, robotIds: [a, b] } = await createTeam(2);
+    await subscribeRobot(a, 'league_2v2', userId);
+    const cycleNumber = await getCurrentCycleNumber();
+
+    let releaseBlocker!: () => void;
+    const blockerReleased = new Promise<void>((resolve) => { releaseBlocker = resolve; });
+    let signalLocked!: () => void;
+    const blockerLocked = new Promise<void>((resolve) => { signalLocked = resolve; });
+    const blocker = prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(3, ${cycleNumber})`;
+      signalLocked();
+      await blockerReleased;
+    }, { timeout: 30_000 });
+    await blockerLocked;
+
+    const subscription = subscribeRobot(b, 'league_2v2', userId);
+    const observed = { resetSettled: false, resetWaitedOnRobotLock: false };
+    let reset: Promise<void> | undefined;
+    try {
+      await waitFor(() => robotLockHolderParkedOnAuditLock(b), 'subscription to hold (2, b) and wait on the audit lock');
+
+      reset = performAccountReset(userId, 'standings creation rule race test')
+        .finally(() => { observed.resetSettled = true; });
+      // Wait until the reset blocks on something other than the parked audit lock.
+      await waitFor(async () => observed.resetSettled || await waitersExceptAuditLock() > 0, 'reset to block or finish');
+      observed.resetWaitedOnRobotLock = await robotLockWaiters(b) > 0;
+    } finally {
+      releaseBlocker();
+    }
+    const results = await Promise.allSettled([blocker, subscription, reset]);
+
+    expect(results.map((r) => (r.status === 'rejected' ? String(r.reason) : r.status)))
+      .toEqual(['fulfilled', 'fulfilled', 'fulfilled']);
+    expect(observed.resetWaitedOnRobotLock).toBe(true);
+    expect(await rowsOf('team', teamId)).toEqual([]);
   });
 
   describe('(c) 20 robots subscribing to koth at once', () => {

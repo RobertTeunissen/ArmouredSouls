@@ -38,6 +38,8 @@ Lock order, which keeps the wait-for graph acyclic:
 
 - Namespace 2 serialises team membership per robot. `applySubscriptionChange` takes it before writing subscriptions when a team mode is added.
 - Namespace 5 (new) serialises every team-standing check. Without it, two members subscribing at the same time each read the other's uncommitted subscription as missing, and the team row is never created.
+- `disbandTeam` and `performAccountReset` take namespace 5 before deleting team rows. Otherwise a member subscription that judged the team matchable could insert its row after the delete and leave an orphan (no FK).
+- Row locks sit between namespace 2 and namespace 5 when a transaction holds them while it waits for a team lock. `swapTeamMember` therefore takes `(5, teamId)` before it writes the member row, which disband deletes under the team lock. `performAccountReset` takes `(2, robotId)` for all the user's robots, then `(5, teamId)` for all their teams, before any write, because a subscription waiting for `(5, teamId)` holds a key-share lock on its robot row. Cases 10d2 and 10e2 of the integration suite reproduce the orphan and the deadlock when these locks are missing.
 - The single-argument mode/tier hash lock serialises instance picks.
 - The audit cycle number is read before the subscription transaction opens, so a subscription change holds one pool connection, not two.
 

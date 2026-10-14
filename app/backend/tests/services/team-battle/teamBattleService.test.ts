@@ -398,6 +398,15 @@ describe('teamBattleService', () => {
       expect(mockEnsureTeamStandings).toHaveBeenCalledWith(mockTx, 1);
       expect(mockEnsureTeamStandings.mock.invocationCallOrder[0])
         .toBeGreaterThan(mockTx.teamBattleMember.update.mock.invocationCallOrder[0]);
+      // (2, newRobotId) then (5, teamId), both before the member row is written,
+      // so a concurrent disband cannot deadlock with the swap on that row.
+      const calls = mockTx.$executeRaw.mock.calls as unknown[][];
+      const robotLock = calls.findIndex((args) => args[1] === 20);
+      const teamLock = calls.findIndex((args) => args[1] === 5 && args[2] === 1);
+      expect(robotLock).toBeGreaterThanOrEqual(0);
+      expect(teamLock).toBeGreaterThan(robotLock);
+      expect(mockTx.$executeRaw.mock.invocationCallOrder[teamLock])
+        .toBeLessThan(mockTx.teamBattleMember.update.mock.invocationCallOrder[0]);
     });
 
     it('should not place standings when the swap is rejected', async () => {
@@ -523,6 +532,21 @@ describe('teamBattleService', () => {
       });
       expect(mockTx.standing.deleteMany.mock.invocationCallOrder[0])
         .toBeLessThan(mockTx.teamBattle.delete.mock.invocationCallOrder[0]);
+    });
+
+    it('should take the (5, teamId) team lock before deleting the standings', async () => {
+      mockTx.teamBattle.findUnique.mockResolvedValue({ id: 1, stableId: 100, teamName: 'T' });
+      mockTx.scheduledMatchParticipant.count.mockResolvedValue(0);
+      mockTx.teamBattle.delete.mockResolvedValue({});
+
+      await disbandTeam(1, 100);
+
+      const lockCall = mockTx.$executeRaw.mock.calls.findIndex(
+        (args: unknown[]) => args[1] === 5 && args[2] === 1,
+      );
+      expect(lockCall).toBeGreaterThanOrEqual(0);
+      expect(mockTx.$executeRaw.mock.invocationCallOrder[lockCall])
+        .toBeLessThan(mockTx.standing.deleteMany.mock.invocationCallOrder[0]);
     });
 
     it('should leave standings untouched when disband is rejected', async () => {

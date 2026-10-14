@@ -30,7 +30,14 @@
  *   {@link ensureStandingsForSubscriptionGain} must already hold it.
  * - `(5, teamId)` serialises every team-standing check (subscription gain,
  *   registration, swap) so two members subscribing at the same time cannot both
- *   miss each other's subscription.
+ *   miss each other's subscription. Disband and account reset take it before
+ *   deleting team rows, so a concurrent check cannot insert an orphan row.
+ * - Row locks count as coming after `(2, robotId)` and before `(5, teamId)`
+ *   when a caller waits for `(5, …)` while holding them. So swap takes
+ *   `(5, teamId)` before it writes the member row (disband deletes that row
+ *   under the team lock), and account reset takes `(2, robotId)` for all the
+ *   user's robots before its team locks (a subscription waiting for
+ *   `(5, teamId)` holds a key-share lock on its robot row).
  * - The mode/tier hash lock is taken by `pickLeagueInstanceInTransaction` and
  *   serialises instance picks.
  *

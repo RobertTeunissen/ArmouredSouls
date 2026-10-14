@@ -13,7 +13,7 @@ import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { safeName } from '../../utils/securityValidation';
 import { TeamBattleError, TeamBattleErrorCode } from '../../errors/teamBattleErrors';
-import { ensureTeamStandings } from '../standings/standingPlacement';
+import { ensureTeamStandings, lockTeamStandings } from '../standings/standingPlacement';
 
 // ── Constants ────────────────────────────────────────────────────────
 
@@ -298,14 +298,19 @@ export async function swapTeamMember(
       );
     }
 
+    // Take (5, teamId) before writing the member row. Disband holds this lock
+    // while it deletes the team (cascading to members); taking it after the
+    // update would let swap and disband deadlock on the member row.
+    await lockTeamStandings(tx, teamId);
+
     // Perform the swap
     await tx.teamBattleMember.update({
       where: { id: memberToSwap.id },
       data: { robotId: newRobotId },
     });
 
-    // The new line-up may complete a mode's subscription set. The
-    // (2, newRobotId) lock above precedes the team lock this takes.
+    // The new line-up may complete a mode's subscription set. The team lock
+    // is already held; re-taking it here is a no-op (advisory locks re-enter).
     await ensureTeamStandings(tx, teamId);
   });
 
@@ -441,8 +446,9 @@ export async function renameTeam(
  * Disband a team.
  *
  * Rejects if team is locked for battle.
- * Deletes the team's standings rows (polymorphic, no foreign key), then the
- * team; members cascade-delete. A team registered later starts again in Bronze.
+ * Takes the `(5, teamId)` team-standing lock, deletes the team's standings rows
+ * (polymorphic, no foreign key), then the team; members cascade-delete. A team
+ * registered later starts again in Bronze.
  */
 export async function disbandTeam(
   teamId: number,
@@ -479,6 +485,11 @@ export async function disbandTeam(
         409,
       );
     }
+
+    // (5, teamId) serialises this delete with every team-standing check: a
+    // member subscription either commits its team row before the delete reads,
+    // or waits and then finds the team gone. Without it the row is orphaned.
+    await lockTeamStandings(tx, teamId);
 
     // standings has no FK to team_battles, so remove the team's rows first.
     await tx.standing.deleteMany({ where: { entityType: 'team', entityId: teamId } });
