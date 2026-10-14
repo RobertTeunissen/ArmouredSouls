@@ -4,8 +4,8 @@
  * stable's robots (`entityType = robot`) and teams (`entityType = team`) in
  * the six tiered modes, returned with the mode that holds it.
  *
- * Played only: default Bronze rows created at robot creation or placement
- * subscription (W/L/D 0, no placement match) are ignored, so a stable that
+ * Played only: the Bronze rows created on the first matchable subscription
+ * (W/L/D 0, no placement match) are ignored, so a stable that
  * never played has no tier. This is the current tier, not the season's peak;
  * tournament modes have no tier. The rules (played predicate, tie-break) live
  * in `app/shared/utils/automatonStandingsTier.ts`, shared with the admin UI.

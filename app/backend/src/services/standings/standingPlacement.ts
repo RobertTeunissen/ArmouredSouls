@@ -25,6 +25,12 @@
  *   taking mode locks in canonical mode order
  *   (league_1v1, koth, grand_melee, league_2v2, tag_team, league_3v3).
  *
+ * Charged writes (and parallel Automaton turns) put `(4, 1)` shared and the
+ * own `users` row in front of it; none of them takes a mode lock, so a
+ * transaction waiting for a mode lock while holding `(3, cycle)` never waits
+ * on one that wants `(3, cycle)` (docs/implementation_notes/
+ * AUTOMATON_TURN_STEP_DEADLINE.md, "Lock order with standings placement").
+ *
  * - `(2, robotId)` serialises team membership changes for a robot (see
  *   `teamBattleService`). Callers that *add team modes* through
  *   {@link ensureStandingsForSubscriptionGain} must already hold it.

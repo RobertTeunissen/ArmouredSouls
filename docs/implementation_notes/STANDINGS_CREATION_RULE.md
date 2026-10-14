@@ -42,6 +42,7 @@ Lock order, which keeps the wait-for graph acyclic:
 - Row locks sit between namespace 2 and namespace 5 when a transaction holds them while it waits for a team lock. `swapTeamMember` therefore takes `(5, teamId)` before it writes the member row, which disband deletes under the team lock. `performAccountReset` takes `(2, robotId)` for all the user's robots, then `(5, teamId)` for all their teams, before any write, because a subscription waiting for `(5, teamId)` holds a key-share lock on its robot row. Cases 10d2 and 10e2 of the integration suite reproduce the orphan and the deadlock when these locks are missing.
 - The single-argument mode/tier hash lock serialises instance picks.
 - The audit cycle number is read before the subscription transaction opens, so a subscription change holds one pool connection, not two.
+- Parallel Automaton turns extend the same order at the front: `(4, 1)` shared → own `users` row → own rows and `(2, robotId)` → `(3, cycle)` → `(5, teamId)` → mode/tier lock. `(3, cycle)` is therefore no longer the last lock a subscription takes. See `AUTOMATON_TURN_STEP_DEADLINE.md` "Lock order with standings placement".
 
 ## Why `createMany({ skipDuplicates: true })`
 

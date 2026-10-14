@@ -31,8 +31,13 @@ export const PLAYER_POOL_RESERVE = 5;
 
 /**
  * pg pool connections one running turn may hold at once: an interactive
- * transaction plus one nested read on the global client (robot creation's
- * league assignment).
+ * transaction plus one read on the global client. Every turn write path
+ * (purchases, team registration, subscriptions with their standings
+ * placement) runs only on its transaction client; the subscription path
+ * reads the audit cycle before it opens the transaction. One connection is
+ * the sustained need and the second is headroom for reads outside a
+ * transaction; brief parallel reads beyond it (achievement checks) wait in
+ * the pool.
  */
 export const CONNECTIONS_PER_TURN = 2;
 

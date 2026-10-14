@@ -3,9 +3,10 @@
  * (admin Automatons page: Stables list "Highest tier (any mode)" and the
  * Strategy_Comparison "Highest current tier").
  *
- * Only played rows count: every robot gets a default Bronze `league_1v1` and
- * `koth` row at creation (and placement subscriptions create Bronze `koth` /
- * `grand_melee` rows), so an unplayed row says nothing about the stable.
+ * Only played rows count: a robot or team gets a Bronze row with 0 LP on its
+ * first matchable subscription to a mode (`standingPlacement`), before it has
+ * played there, and keeps it after unsubscribing, so an unplayed row says
+ * nothing about the stable.
  * A bye is a recorded league result and counts as played. Tournament modes
  * have no tier and are ignored.
  *
