@@ -22,9 +22,6 @@ export const TURN_ACTION_LIMIT = 60;
 /** Wall-clock budget per Automaton_Turn, Free_Upkeep included. */
 export const TURN_TIME_BUDGET_MS = 10_000;
 
-/** Wall-clock budget per Turn_Step (all Active_Automatons of one trigger). */
-export const TURN_STEP_BUDGET_MS = 300_000;
-
 /** Shortest Turn_Step deadline: spec 55's former hard limit, now the floor. */
 export const TURN_STEP_MIN_BUDGET_MS = 300_000;
 
@@ -71,11 +68,6 @@ export function checkTurnBudget(state: TurnBudgetState, nowMs: number, nextCharg
     return { exhausted: true, reason: TURN_BUDGET_EXHAUSTED, limit: 'time' };
   }
   return { exhausted: false };
-}
-
-/** Whether a Turn_Step started at `stepStartedAtMs` has used its budget (R7.10). */
-export function isStepBudgetExhausted(stepStartedAtMs: number, nowMs: number): boolean {
-  return nowMs - stepStartedAtMs > TURN_STEP_BUDGET_MS;
 }
 
 // ─── Turn_Step deadline (D1) ─────────────────────────────────────────

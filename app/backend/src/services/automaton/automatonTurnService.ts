@@ -1,15 +1,23 @@
 /**
- * Turn runner (Spec #55, R2.7, R5.11, R6.6, R7.5–R7.10, R11.7, R11.8,
- * design §5.2, §11.1, §11.2, task 6.2).
+ * Turn runner (Spec #55, R2.7, R5.11, R6.6, R7.5–R7.9, R11.7, R11.8,
+ * design §5.2, §11.1, §11.2, task 6.2; R7.10's fixed 300 s Turn_Step budget
+ * is superseded by the turn-budget plan "DESIGN (Part B)" D1–D5).
  *
  * `runTurnStep` runs one Automaton_Turn for every Active_Automaton of one
  * Turn_Trigger and Turn_Slot:
- * - never while a Serialized_Cycle_Cutover is in progress (R7.5);
- * - under the Turn_Step lease (`withTurnStepLease`), so a scheduler step and
- *   an admin bulk cycle run one after the other, across processes;
- * - over a cohort fixed at the start, in ascending `User.id` order (R7.9);
- * - within the 300 s Turn_Step budget; later profiles are recorded
- *   `skipped` / `step_budget_exhausted` and an alert is raised (R7.10);
+ * - never while a Serialized_Cycle_Cutover is in progress (R7.5): checked at
+ *   the start and again before each stable; a cutover seen mid-step records
+ *   the remaining stables `skipped` / `cutover_in_progress` and alerts;
+ * - under the Turn_Step lease (`withTurnStepLease`, a 120 s heartbeat lease
+ *   renewed every 30 s), so a scheduler step and an admin bulk cycle run one
+ *   after the other, across processes; a lost lease starts no further stables;
+ * - over a cohort fixed at the start; turns START in ascending `User.id`
+ *   order (R7.9), at most `effectiveTurnConcurrency` at once
+ *   (AUTOMATON_TURN_CONCURRENCY clamped to the pg pool);
+ * - until the Turn_Step deadline (`resolveTurnStepDeadline`: the next
+ *   scheduled job minus a margin, capped, never under 300 s); stables not
+ *   started by then are recorded `skipped` / `step_budget_exhausted` and one
+ *   "Turn_Step deadline reached" alert is raised;
  * - one Turn_Record per profile and key (`claimTurnRecord`, R7.6);
  * - Program_Switch off: every due turn `skipped` / `program_off`, nothing
  *   upkept or bought (R2.7);
@@ -32,14 +40,26 @@ import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { AppError } from '../../errors/AppError';
 import { AutomatonError, AutomatonErrorCode } from '../../errors/automatonErrors';
+import { getConfig } from '../../config/env';
+import { resolveDbPoolMax } from '../../lib/dbPoolConfig';
 import { resolveCanonicalCycleIdentity } from '../cycle/canonicalCycleIdentity';
+import { nextScheduledJobRunAt } from '../cycle/schedulerWindow';
 import { SUBSCRIBABLE_EVENT_TYPES } from '../subscription/eventRegistry';
 import type { AutomatonTurnTrigger, Prisma } from '../../../generated/prisma';
 import type { EventOrder, StrategyParametersV1, TeamNames } from '../../types/automaton';
 import { createExecutionCursor, executeAction, type ExecutionContext } from './actionExecutor';
 import { chargedStepCount } from './factProjector';
 import { planNextStep, type PlanResult } from './turnPlanner';
-import { checkTurnBudget, isStepBudgetExhausted, STEP_BUDGET_EXHAUSTED, TURN_BUDGET_EXHAUSTED } from './turnBudget';
+import {
+  checkTurnBudget,
+  effectiveTurnConcurrency,
+  isStepDeadlineReached,
+  resolveTurnStepDeadline,
+  STEP_BUDGET_EXHAUSTED,
+  TURN_BUDGET_EXHAUSTED,
+  type TurnStepDeadline,
+} from './turnBudget';
+import { runWithConcurrency } from './turnStepPool';
 import { loadBlueprintFacts, loadStableFacts, loadWeaponCatalogue, type StableFacts, type WeaponFacts } from './stableFacts';
 import { runFreeUpkeep, type FreeUpkeepIssue } from './upkeep/freeUpkeep';
 import { ensureProgramSettings, isProgramEnabled, PROGRAM_SETTINGS_ID } from './programSwitch';
@@ -61,6 +81,7 @@ import {
 } from './automatonObservability';
 import {
   claimTurnRecord,
+  CUTOVER_IN_PROGRESS,
   finishTurnRecord,
   INVALID_PARAMETERS,
   markTurnFailed,
@@ -73,17 +94,21 @@ import {
   toGoalOutcomeRecords,
   toUpkeepIssueRecords,
   type ClaimedTurnRecord,
+  type TurnRecordClaimInput,
 } from './turnRecords';
 
 export {
   TURN_ACTION_LIMIT,
   TURN_TIME_BUDGET_MS,
-  TURN_STEP_BUDGET_MS,
+  TURN_STEP_MIN_BUDGET_MS,
   TURN_BUDGET_EXHAUSTED,
   STEP_BUDGET_EXHAUSTED,
 } from './turnBudget';
-export { claimTurnRecord, PROGRAM_OFF, INVALID_PARAMETERS } from './turnRecords';
+export { claimTurnRecord, CUTOVER_IN_PROGRESS, PROGRAM_OFF, INVALID_PARAMETERS } from './turnRecords';
 export type { TurnStepSummary } from './automatonObservability';
+
+/** Error code of the alert raised when a running Turn_Step lost its lease (plan D2). */
+export const TURN_STEP_LEASE_LOST = 'TURN_STEP_LEASE_LOST';
 
 /**
  * Lifetime of one Turn_Step lease claim or renewal: a crashed holder blocks
@@ -119,6 +144,19 @@ export interface TurnStepDependencies {
   leaseTtlMs?: number;
   /** Lease renewal interval; TURN_STEP_LEASE_RENEW_MS by default. */
   leaseRenewMs?: number;
+  /** Requested parallel turns; AUTOMATON_TURN_CONCURRENCY by default (always clamped to the pool). */
+  concurrency?: number;
+  /** pg pool size the concurrency is clamped to; DB_POOL_MAX (`resolveDbPoolMax`) by default. */
+  poolMax?: number;
+  /** Deadline cap from the step start (ms); AUTOMATON_TURN_STEP_MAX_MS by default. */
+  maxMs?: number;
+  /** Stop this long before the next scheduled job (ms); AUTOMATON_TURN_STEP_SCHEDULE_MARGIN_MS by default. */
+  scheduleMarginMs?: number;
+  /**
+   * Epoch ms of the next scheduled cycle-scheduler job after `nowMs`, or
+   * null when none is known; `nextScheduledJobRunAt(getConfig(), nowMs)` by default.
+   */
+  nextScheduledJobAt?: (nowMs: number) => number | null;
   /**
    * Tests on a shared database: which Active_Automatons of the cohort take
    * part (default: all), so a test never runs turns for stables it did not
@@ -546,74 +584,156 @@ function addSkipped(summary: TurnStepSummary, reason: string): void {
   summary.skipped[reason] = (summary.skipped[reason] ?? 0) + 1;
 }
 
-/** One Turn_Step (design §11.1). Throws on a cutover in progress or an infrastructure failure. */
+/** Why a running Turn_Step stopped starting turns before its deadline. */
+type TurnStepStop = 'cutover' | 'lease_lost' | null;
+
+/** Shared, mutable state of one running Turn_Step (counters change synchronously between awaits). */
+interface TurnStepRun {
+  turn: TurnLabel;
+  summary: TurnStepSummary;
+  deadline: TurnStepDeadline;
+  lease: TurnStepLease;
+  env: TurnEnvironment | null;
+  now: () => number;
+  stop: TurnStepStop;
+  /** Profiles left unclaimed after the lease was lost. */
+  notStarted: number;
+}
+
+/** Claim the record of a profile that will not run and record it `skipped` (unless already final). */
+async function skipProfile(run: TurnStepRun, claimInput: TurnRecordClaimInput, reason: string): Promise<void> {
+  const record = await claimTurnRecord(claimInput);
+  if (record.alreadyFinal) {
+    run.summary.alreadyFinal++;
+    return;
+  }
+  await markTurnSkipped(record.id, reason);
+  addSkipped(run.summary, reason);
+}
+
+/**
+ * One profile of the Turn_Step, in this order: lease lost (leave it
+ * unclaimed: another holder may be running the key) → cutover started
+ * mid-step (`cutover_in_progress`, R7.5) → deadline reached
+ * (`step_budget_exhausted`) → the turn itself.
+ */
+async function runCohortProfile(run: TurnStepRun, profile: CohortProfile): Promise<void> {
+  const { summary, turn } = run;
+  if (run.lease.lost) {
+    run.stop = 'lease_lost';
+    run.notStarted++;
+    return;
+  }
+  const claimInput: TurnRecordClaimInput = {
+    profileId: profile.profileId,
+    seasonNumber: turn.seasonNumber,
+    trigger: turn.trigger,
+    slot: turn.slot,
+    strategyKey: profile.strategyKey,
+    strategyVersion: profile.strategyVersion,
+    startBalance: profile.balance,
+  };
+  // An admin bulk cycle can start a cutover while a scheduler step runs; once seen, it sticks.
+  if (run.stop !== 'cutover' && (await resolveCanonicalCycleIdentity()).isClosing) run.stop = 'cutover';
+  if (run.stop === 'cutover') {
+    await skipProfile(run, claimInput, CUTOVER_IN_PROGRESS);
+    return;
+  }
+  if (isStepDeadlineReached(run.deadline, run.now())) {
+    summary.budgetExhausted = true;
+    await skipProfile(run, claimInput, STEP_BUDGET_EXHAUSTED);
+    return;
+  }
+  const record = await claimTurnRecord(claimInput);
+  if (record.alreadyFinal) {
+    summary.alreadyFinal++;
+    return;
+  }
+  if (!run.env) {
+    await markTurnSkipped(record.id, PROGRAM_OFF);
+    addSkipped(summary, PROGRAM_OFF);
+    return;
+  }
+  try {
+    addResult(summary, await runAutomatonTurn(profile, record, turn, run.env));
+  } catch (error) {
+    // The turn could not even record its own outcome.
+    const code = errorCodeOf(error);
+    logger.error(`[automaton-turns] ${profile.catalogueKey}: turn record write failed — ${errorMessageOf(error)}`);
+    try {
+      await markTurnFailed(record.id, code);
+    } catch (markError) {
+      logger.error(`[automaton-turns] ${profile.catalogueKey}: could not mark the turn failed — ${errorMessageOf(markError)}`);
+    }
+    await alertTurnFailed(profile.catalogueKey, turn, code, errorMessageOf(error));
+    summary.failed++;
+  }
+}
+
+/**
+ * One Turn_Step (design §11.1, turn-budget plan D1–D5). Throws on a cutover
+ * in progress at the start or an infrastructure failure (after in-flight
+ * turns settle); a cutover that starts mid-step only stops new turns.
+ */
 export async function runTurnStep(input: TurnStepInput, deps: TurnStepDependencies = {}): Promise<TurnStepSummary> {
   const now = deps.now ?? Date.now;
   const turn: TurnLabel = { trigger: input.trigger, seasonNumber: input.seasonNumber, slot: input.slot };
   await assertNoCutoverInProgress();
-  return withTurnStepLease(async () => {
+  return withTurnStepLease(async (lease) => {
     // A cutover may have started while this caller waited for the lease.
     const phase = await assertNoCutoverInProgress();
     const started = now();
-    const summary = emptyTurnStepSummary(turn, input.source);
+    const config = getConfig();
+    const concurrency = effectiveTurnConcurrency(
+      deps.concurrency ?? config.automatonTurnConcurrency,
+      deps.poolMax ?? resolveDbPoolMax(),
+    );
+    const nextScheduledJobAt = deps.nextScheduledJobAt ?? ((ms: number): number | null => nextScheduledJobRunAt(config, ms));
+    const deadline = resolveTurnStepDeadline({
+      stepStartedAtMs: started,
+      maxMs: deps.maxMs ?? config.automatonTurnStepMaxMs,
+      scheduleMarginMs: deps.scheduleMarginMs ?? config.automatonTurnStepScheduleMarginMs,
+      nextScheduledJobAtMs: nextScheduledJobAt(started),
+    });
+    const summary = emptyTurnStepSummary(turn, input.source, {
+      concurrency,
+      budgetMs: deadline.budgetMs,
+      deadlineSource: deadline.source,
+    });
     const enabled = await isProgramEnabled();
     const cohort = (await listActiveProfilesOrderedByUserId()).filter(deps.cohortFilter ?? ((): boolean => true));
     summary.processed = cohort.length;
     const env: TurnEnvironment | null = enabled && cohort.length > 0
       ? { registry: deps.registry ?? getStrategyRegistry(), weapons: await loadWeaponCatalogue(), phase, now }
       : null;
+    const run: TurnStepRun = { turn, summary, deadline, lease, env, now, stop: null, notStarted: 0 };
 
-    for (const profile of cohort) {
-      const claimInput = {
-        profileId: profile.profileId,
-        seasonNumber: turn.seasonNumber,
-        trigger: turn.trigger,
-        slot: turn.slot,
-        strategyKey: profile.strategyKey,
-        strategyVersion: profile.strategyVersion,
-        startBalance: profile.balance,
-      };
-      if (isStepBudgetExhausted(started, now())) {
-        summary.budgetExhausted = true;
-        const record = await claimTurnRecord(claimInput);
-        if (record.alreadyFinal) {
-          summary.alreadyFinal++;
-          continue;
-        }
-        await markTurnSkipped(record.id, STEP_BUDGET_EXHAUSTED);
-        addSkipped(summary, STEP_BUDGET_EXHAUSTED);
-        continue;
-      }
-      const record = await claimTurnRecord(claimInput);
-      if (record.alreadyFinal) {
-        summary.alreadyFinal++;
-        continue;
-      }
-      if (!env) {
-        await markTurnSkipped(record.id, PROGRAM_OFF);
-        addSkipped(summary, PROGRAM_OFF);
-        continue;
-      }
-      try {
-        addResult(summary, await runAutomatonTurn(profile, record, turn, env));
-      } catch (error) {
-        // The turn could not even record its own outcome.
-        const code = errorCodeOf(error);
-        logger.error(`[automaton-turns] ${profile.catalogueKey}: turn record write failed — ${errorMessageOf(error)}`);
-        try {
-          await markTurnFailed(record.id, code);
-        } catch (markError) {
-          logger.error(`[automaton-turns] ${profile.catalogueKey}: could not mark the turn failed — ${errorMessageOf(markError)}`);
-        }
-        await alertTurnFailed(profile.catalogueKey, turn, code, errorMessageOf(error));
-        summary.failed++;
-      }
-    }
+    // Starts in ascending User.id order (R7.9); at most `concurrency` turns at once.
+    await runWithConcurrency(cohort, concurrency, (profile) => runCohortProfile(run, profile));
 
     summary.durationMs = now() - started;
+    summary.leaseLost = lease.lost;
     logTurnStepSummary(summary);
+    const seconds = Math.round(summary.durationMs / 1000);
     if (summary.budgetExhausted) {
-      await alertStepBudgetExhausted(turn, summary.skipped[STEP_BUDGET_EXHAUSTED] ?? 0, summary.durationMs);
+      await alertStepBudgetExhausted(turn, {
+        skipped: summary.skipped[STEP_BUDGET_EXHAUSTED] ?? 0,
+        durationMs: summary.durationMs,
+        budgetMs: deadline.budgetMs,
+        deadlineSource: deadline.source,
+        nextScheduledJobAtMs: deadline.nextScheduledJobAtMs,
+        concurrency,
+      });
+    }
+    if (run.stop === 'cutover') {
+      await alertTurnStepFailed(
+        turn,
+        AutomatonErrorCode.AUTOMATON_CUTOVER_IN_PROGRESS,
+        `${summary.skipped[CUTOVER_IN_PROGRESS] ?? 0} stable(s) skipped (${CUTOVER_IN_PROGRESS}) after ${seconds} s`,
+      );
+    }
+    if (summary.leaseLost) {
+      await alertTurnStepFailed(turn, TURN_STEP_LEASE_LOST, `${run.notStarted} stable(s) not started after ${seconds} s`);
     }
     return summary;
   }, deps);

@@ -48,7 +48,8 @@ import { CATALOGUE_DIRECTORY, validateCatalogueEntry, BUILD_FOCUS_KEYS } from '.
 import { getStrategyRegistry } from '../../src/services/automaton/strategies/defaultRegistry';
 import { loadWeaponCatalogue } from '../../src/services/automaton/stableFacts';
 import { clearStrategyComparisonCache, type StrategyComparison } from '../../src/services/automaton/strategyComparisonService';
-import { TURN_ACTION_LIMIT, TURN_STEP_BUDGET_MS, STEP_BUDGET_EXHAUSTED } from '../../src/services/automaton/turnBudget';
+import { TURN_ACTION_LIMIT, STEP_BUDGET_EXHAUSTED } from '../../src/services/automaton/turnBudget';
+import { getConfig } from '../../src/config/env';
 import { SUBSCRIBABLE_EVENT_TYPES, isRegisteredEvent, registerSubscribableEvent } from '../../src/services/subscription/eventRegistry';
 import type { TurnActionRecord } from '../../src/types/automaton';
 import {
@@ -217,7 +218,7 @@ describe('Automaton multi-season simulation (Spec #55 task 12.2, Spec #57 R5.4)'
       .toEqual({ label, turns: POPULATION.length, profiles: POPULATION.length });
     for (const list of actions) expect(list.length).toBeLessThanOrEqual(TURN_ACTION_LIMIT);
     // R7.10: every Turn_Step within the 300 s budget.
-    expect(record.stepMs).toBeLessThanOrEqual(TURN_STEP_BUDGET_MS);
+    expect(record.stepMs).toBeLessThanOrEqual(getConfig().automatonTurnStepMaxMs);
     await assertEndOfSettlement(label);
     return record;
   }
@@ -387,6 +388,6 @@ describe('Automaton multi-season simulation (Spec #55 task 12.2, Spec #57 R5.4)'
       expect(await settle(`s2 cycle ${cycle}`)).toMatchObject({ seasonNumber: 2, trigger: 'settlement' });
     }
     await measureComparison('s2 end', 552);
-    expect(steps.every((s) => s.stepMs <= TURN_STEP_BUDGET_MS)).toBe(true);
+    expect(steps.every((s) => s.stepMs <= getConfig().automatonTurnStepMaxMs)).toBe(true);
   }, PHASE_TIMEOUT_MS);
 });

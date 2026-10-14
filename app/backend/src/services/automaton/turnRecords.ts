@@ -24,6 +24,12 @@ export const TURN_REASON_MAX_LENGTH = 40;
 /** Reason of a turn skipped while the Program_Switch is off (R2.7). */
 export const PROGRAM_OFF = 'program_off';
 
+/**
+ * Reason of a turn not started because a Serialized_Cycle_Cutover began
+ * while the Turn_Step was running (R7.5, turn-budget plan D4).
+ */
+export const CUTOVER_IN_PROGRESS = 'cutover_in_progress';
+
 /** Reason of a turn whose pinned Strategy_Version or Goal_Targets are invalid (R6.6). */
 export const INVALID_PARAMETERS = 'invalid_parameters';
 
