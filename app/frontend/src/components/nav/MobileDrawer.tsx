@@ -62,7 +62,7 @@ export function MobileDrawer({ isOpen, onClose, isActive, userRobots, isAdmin, o
           </h2>
           <button
             onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center text-secondary hover:text-primary transition-colors"
+            className="w-11 h-11 -mr-1.5 flex items-center justify-center text-secondary hover:text-primary transition-colors"
             aria-label="Close menu"
           >
             <CloseIcon className="w-6 h-6" />
