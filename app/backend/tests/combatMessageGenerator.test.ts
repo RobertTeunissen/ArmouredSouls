@@ -1,4 +1,6 @@
 import { CombatMessageGenerator } from '../src/services/battle/combatMessageGenerator';
+import * as messageGenerators from '../src/services/battle/combat-messages/messageGenerators';
+import type { CombatEvent } from '../src/services/battle/combatSimulator';
 
 describe('CombatMessageGenerator', () => {
   afterAll(() => {
@@ -355,3 +357,64 @@ describe('CombatMessageGenerator - Credit Formatting', () => {
   });
 });
 
+
+describe('CombatMessageGenerator - events without a weapon name', () => {
+  // Stored historic events may lack `weapon`; they render the neutral word "weapon".
+  const ATTACKER = 'Iron Gladiator';
+  const DEFENDER = 'Steel Warrior';
+  const base = { attacker: ATTACKER, defender: DEFENDER, message: '' };
+  const weaponlessEvents: CombatEvent[] = [
+    { ...base, timestamp: 1, type: 'malfunction' },
+    { ...base, timestamp: 2, type: 'miss' },
+    { ...base, timestamp: 3, type: 'attack', damage: 5 },
+    { ...base, timestamp: 4, type: 'counter', hit: true, damage: 4 },
+    { ...base, timestamp: 5, type: 'counter', hit: false },
+    { ...base, timestamp: 6, type: 'counter_out_of_range' },
+  ] as unknown as CombatEvent[];
+
+  let spies: jest.SpyInstance[];
+  beforeEach(() => {
+    spies = [
+      jest.spyOn(messageGenerators, 'generateAttack'),
+      jest.spyOn(messageGenerators, 'generateCounter'),
+      jest.spyOn(messageGenerators, 'generateCounterMiss'),
+      jest.spyOn(messageGenerators, 'generateCounterOutOfRange'),
+    ];
+  });
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  /** Every weapon name the converter handed to a message generator. */
+  function weaponNamesUsed(): string[] {
+    const [attack, counter, counterMiss, outOfRange] = spies;
+    return [
+      ...attack.mock.calls.map((call) => (call[0] as { weaponName: string }).weaponName),
+      ...counter.mock.calls.map((call) => call[2] as string),
+      ...counterMiss.mock.calls.map((call) => call[2] as string),
+      ...outOfRange.mock.calls.map((call) => call[1] as string),
+    ];
+  }
+
+  it('convertSimulatorEvents renders "weapon"', () => {
+    CombatMessageGenerator.convertSimulatorEvents(weaponlessEvents, {
+      robot1Name: ATTACKER, robot2Name: DEFENDER,
+      robot1Stance: 'balanced', robot2Stance: 'balanced',
+      robot1MaxHP: 100, robot2MaxHP: 100,
+      robot1ELO: 1200, robot2ELO: 1200,
+      leagueType: 'bronze',
+    });
+    const names = weaponNamesUsed();
+    expect(names).toHaveLength(6);
+    expect(new Set(names)).toEqual(new Set(['weapon']));
+  });
+
+  it('convertKothSimulatorEvents renders "weapon"', () => {
+    CombatMessageGenerator.convertKothSimulatorEvents(
+      weaponlessEvents.filter((event) => event.type !== 'counter_out_of_range'),
+    );
+    const names = weaponNamesUsed();
+    expect(names).toHaveLength(5);
+    expect(new Set(names)).toEqual(new Set(['weapon']));
+  });
+});

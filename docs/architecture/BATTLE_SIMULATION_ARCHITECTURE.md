@@ -391,7 +391,7 @@ validates each candidate against its own distance) and a guard at the top of `pe
 (`isWithinWeaponReach`, real positions), which returns `false` for a blocked attempt. A blocked attempt draws
 no random numbers, emits no attack or counter event, deals no damage, and leaves the hand's cooldown and the
 patience timer untouched; only the main hand emits one `out_of_range` message per streak. Seeded replays
-therefore stay deterministic. Unarmed robots (Fists, no `rangeBand`) are unchanged. Counter reach
+therefore stay deterministic. Counter reach
 (`counterAttack.ts`) is unchanged.
 
 ### Key Constants

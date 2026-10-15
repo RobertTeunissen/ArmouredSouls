@@ -919,7 +919,7 @@ describe('teamBattleOrchestrator', () => {
     // Spec #49 R12.1: a bye is never simulated. This assertion was inverted —
     // it previously required `toHaveBeenCalledTimes(1)` with the comment
     // "Simulation should still be called". That simulation ran against
-    // weaponless Bye_Placeholders which, via the Fists fallback and the
+    // weaponless Bye_Placeholders which, via a weaponless fallback and the
     // `!weaponLike` range bypass, dealt real damage that was then persisted to
     // the real team. A walkover was billing players for repairs.
     it('should never simulate combat for a bye match', async () => {

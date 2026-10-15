@@ -13,7 +13,7 @@
  *
  * The central assertion is that a bye leaves every robot exactly as it was.
  * Before this spec, `league_2v2`, `league_3v3` and `tag_team` byes ran a full
- * combat simulation against weaponless Bye_Placeholders which — via the Fists
+ * combat simulation against weaponless Bye_Placeholders which — via a weaponless
  * fallback and the `!weaponLike` range bypass — dealt real damage that was then
  * persisted. A walkover was billing players for repairs.
  */

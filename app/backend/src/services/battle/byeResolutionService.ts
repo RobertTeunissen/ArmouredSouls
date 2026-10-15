@@ -9,8 +9,8 @@
  * Nothing here simulates combat (Spec #49). A bye is a walkover: the opposing
  * side did not turn up, so there is no result to override, no draw to correct,
  * and no damage to persist. Before Spec #49 the team league and tag team paths
- * ran a full simulation against fabricated opponents that punched with the
- * Fists_Fallback, then overwrote the outcome — which billed players to repair a
+ * ran a full simulation against fabricated opponents that punched with a
+ * weaponless fallback, then overwrote the outcome — which billed players to repair a
  * battle nobody fought.
  *
  * There is deliberately no `existingBattleId` parameter. The `battles` row is

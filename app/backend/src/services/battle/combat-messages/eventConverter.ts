@@ -233,7 +233,7 @@ export function convertSimulatorEvents(
         message: generateAttack({
           attackerName,
           defenderName,
-          weaponName: event.weapon || 'Fists',
+          weaponName: event.weapon || 'weapon',
           damage: 0,
           hit: false,
           critical: false,
@@ -251,7 +251,7 @@ export function convertSimulatorEvents(
         message: generateAttack({
           attackerName,
           defenderName,
-          weaponName: event.weapon || 'Fists',
+          weaponName: event.weapon || 'weapon',
           damage: 0,
           hit: false,
           critical: false,
@@ -273,7 +273,7 @@ export function convertSimulatorEvents(
         message: generateAttack({
           attackerName,
           defenderName,
-          weaponName: event.weapon || 'Fists',
+          weaponName: event.weapon || 'weapon',
           damage: event.damage || 0,
           hit: true,
           critical: event.type === 'critical',
@@ -288,7 +288,7 @@ export function convertSimulatorEvents(
       checkDamageStatus(event, context, thresholds, narrativeEvents, ts);
 
     } else if (event.type === 'counter') {
-      const counterWeapon = event.weapon || 'Fists';
+      const counterWeapon = event.weapon || 'weapon';
       const attackerName = getAttackerName();
       const defenderName = getDefenderName();
 
@@ -468,7 +468,7 @@ export function convertSimulatorEvents(
         type: 'counter_out_of_range',
         message: generateCounterOutOfRange(
           event.attacker || '',
-          event.weapon || 'Fists',
+          event.weapon || 'weapon',
           event.defender || '',
         ),
       });

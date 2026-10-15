@@ -8,7 +8,7 @@
  *
  * The central assertion — repeated across modes — is that a bye leaves every
  * robot exactly as it was. Before Spec #49 a team or tag team bye ran a full
- * combat simulation against weaponless Bye_Placeholders which, via the Fists
+ * combat simulation against weaponless Bye_Placeholders which, via a weaponless
  * fallback and the `!weaponLike` range bypass, dealt real damage that was then
  * persisted. A walkover was billing players for repairs.
  */

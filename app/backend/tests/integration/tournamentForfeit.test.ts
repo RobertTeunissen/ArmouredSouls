@@ -347,8 +347,8 @@ describe.each(MODE_CASES.map((c) => [c.mode, c] as const))('%s battle-time forfe
     expect(battles).toHaveLength(1);
     const battle = battles[0];
     expect(battle.id).toBe(row.battleId);
-    // Proof the robot never entered the simulator: no Fists, no combat at all.
-    expect(JSON.stringify(battle.battleLog).includes('Fists')).toBe(false);
+    // Proof the robot never entered the simulator (which would throw
+    // ROBOT_NOT_BATTLE_READY for it): no combat at all.
     expect(battle.participants.every((p) => p.damageDealt === 0)).toBe(true);
     expect(battle).toMatchObject({ battleType: c.mode, leagueType: 'tournament', tournamentId, tournamentRound: 1, durationSeconds: 15 });
     expect(battle.winnerId).toBe(ready.id);

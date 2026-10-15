@@ -1002,7 +1002,6 @@ Range penalty multipliers:
 Reach invariant (#518): a weapon whose rangeBand is 'melee' (melee weapons, energy melee
 such as Shock Maul / Thermal Lance, shields) only resolves an attack when the distance to the
 actual target is <= 2. Every other band reaches any distance (range penalty above applies).
-Unarmed (Fists, no rangeBand) is unrestricted.
 ```
 
 Physical reach is checked per hand, independent of patience, in two places: the `simulationLoop.ts` hand
