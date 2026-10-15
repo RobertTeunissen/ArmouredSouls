@@ -171,6 +171,7 @@ A few important rules about how weapons work across your stable:
 - Each weapon you own can only be **equipped on one robot at a time**. If you want two robots using the same weapon type, you need to buy two copies.
 - Every weapon in your inventory takes up a slot in your **Storage Facility**. Upgrading your storage lets you own more weapons. Plan your purchases around your available capacity.
 - You can **swap weapons between robots freely** at any time outside of battle. There's no cost or cooldown — just unequip from one robot and equip on another. This lets you experiment with different loadouts without buying duplicate weapons.
+- Weapons are checked when each battle starts. If a robot has a **booked match**, re-arm it before the match runs or it **forfeits** (an automatic loss with no credits). A robot that's missing only its offhand or shield fights with its main weapon as a Single loadout for that battle. The Robot Detail page asks you to confirm before you unequip a robot with booked matches.
 
 ## How Loadout Bonuses Work
 

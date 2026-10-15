@@ -2,7 +2,7 @@
 title: "Team Tournaments (2v2 & 3v3)"
 description: "How team tournaments work in Armoured Souls — 2v2 and 3v3 single-elimination brackets with daily round cadence, team eligibility, and championship rewards."
 order: 5
-lastUpdated: "2026-08-27"
+lastUpdated: "2026-10-15"
 relatedArticles:
   - tournaments/tournament-format
   - tournaments/eligibility
@@ -85,6 +85,8 @@ Team tournament entry is automatic — there's no manual sign-up. Here's how to 
 4. **Wait for auto-creation** — When 4 or more eligible teams exist and no active tournament is running, a new tournament is automatically created
 
 The system checks eligibility at tournament creation time. If your team qualifies, it's seeded into the bracket automatically.
+
+Each round checks the team again when its match runs. A team that's no longer eligible, or that has any member without a main weapon, **forfeits** that match and is eliminated; the opponent advances with the same reward as a bye. If both teams forfeit, the higher seed advances. See [Tournament Eligibility](/guide/tournaments/eligibility) for the full rules.
 
 ```callout-tip
 A minimum of 4 eligible teams is required to start a tournament. If fewer than 4 teams are eligible, no tournament is created that cycle. Build your team early and subscribe — the more eligible teams in the game, the more frequently tournaments run.

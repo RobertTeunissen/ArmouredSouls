@@ -2,7 +2,7 @@
 title: "Tournament Eligibility"
 description: "What your robot needs to enter a tournament — weapon checks and how the continuous tournament cycle keeps competition flowing."
 order: 2
-lastUpdated: "2026-03-12"
+lastUpdated: "2026-10-15"
 relatedArticles:
   - tournaments/tournament-format
   - tournaments/rewards
@@ -35,6 +35,19 @@ Your robot must have the correct weapons equipped for its [loadout type](/guide/
 A robot with an incomplete loadout — say, a Dual-Wield configuration with only one weapon — will not be eligible. Make sure your equipment is complete before tournament registration closes.
 
 Tournament eligibility does not check HP. Robots are fully repaired automatically before tournament matches execute — repairs always run before battles in the daily cycle. As long as your weapons are equipped, your robot will be included in the bracket.
+
+### 2. Still Equipped When Each Round Runs
+
+Getting into the bracket isn't the last check. Every round checks your robot's weapons again when that round's match runs:
+
+- **No main weapon:** your robot **forfeits** the match. It's eliminated with no credits and no damage, and the opponent advances with the same reward as a bye. In team tournaments, any unarmed member forfeits the whole team.
+- **Both sides forfeit:** nobody gets credits, and the **higher seed** advances.
+- **Main weapon but no offhand or shield:** your robot fights with its main weapon only, as a Single loadout, for that match.
+- **A match that can't be run because of a system error:** the higher seed advances, and nobody gets rewards for that match. The bracket shows it as cancelled.
+
+```callout-warning
+Unequipping a weapon mid-tournament is allowed, but re-arm the robot before its next round runs or it forfeits and is out of the tournament.
+```
 
 ```callout-tip
 You can check whether your robots are battle-ready in several places: the Dashboard shows notifications for robots with incomplete loadouts, the Robot Detail page displays your current equipment status, and the robot list uses icons to indicate readiness at a glance.

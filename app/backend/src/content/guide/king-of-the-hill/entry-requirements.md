@@ -2,7 +2,7 @@
 title: "Entry Requirements"
 description: "Weapon readiness, stable separation, schedule, and eligibility rules."
 order: 6
-lastUpdated: "2026-10-14"
+lastUpdated: "2026-10-15"
 relatedArticles:
   - king-of-the-hill/match-formats
   - king-of-the-hill/rewards
@@ -13,10 +13,12 @@ relatedArticles:
 
 To enter King of the Hill, a robot needs:
 - **Booking Office subscription** — Subscribed to King of the Hill. The first subscription places the robot in KotH's Bronze tier
-- **Weapon readiness** — At least one weapon equipped
+- **Weapon readiness** — The weapons its loadout needs: a main weapon, plus an offhand for Dual-Wield or a shield for Weapon+Shield
 - **Not already scheduled** — Can't be in another pending KotH match
 
 There are **no league prerequisites**. Robots from any league can participate.
+
+Weapons are checked again when the match starts. A robot without a main weapon takes **last place** with no rewards, and the rest of the group still fights; if too few robots remain to run the match, the remaining robots receive byes instead. A robot with a main weapon but no offhand or shield fights with its main weapon only, as a Single loadout, for that match.
 
 ## Stable Separation
 

@@ -2,7 +2,7 @@
 title: "Matchmaking"
 description: "How the matchmaking algorithm pairs opponents — LP-primary matching with ELO as a secondary quality check, scoring penalties, and special handling for edge cases."
 order: 2
-lastUpdated: "2026-08-27"
+lastUpdated: "2026-10-15"
 relatedArticles:
   - leagues/league-tiers
   - leagues/league-points
@@ -133,11 +133,20 @@ HP is NOT checked at scheduling time. The daily cycle runs repairs before execut
 
 ### Battle Readiness (Execution Time)
 
-Since repairs run automatically before battles execute, the only readiness check that matters is:
+Your robot's weapons are checked again when the battle actually starts, so changes you make after a match is booked count. HP is still not a factor: the auto-repair step ensures every robot enters battle at full health.
 
-- **All required weapons equipped** for your loadout type
+| At battle start | What happens |
+|-----------------|--------------|
+| Main weapon equipped, loadout complete | The battle is fought normally |
+| Main weapon equipped, but the offhand or shield is missing | Your robot fights with its main weapon only, as a Single loadout, for that battle. Your saved loadout doesn't change |
+| No main weapon | Your robot **forfeits**: an automatic loss with no damage and no credits. The opponent wins and gets the same reward as a bye |
+| Both sides have no main weapon | The match is a draw, with no credits for either side |
 
-Keep your robots properly equipped to avoid missed battles. HP is not a factor — the auto-repair step ensures all robots enter battle at full health.
+A robot that forfeited or fought with an incomplete loadout isn't scheduled again until you fix its weapons. The Dashboard warns you about robots that will forfeit a booked match or aren't battle ready.
+
+```callout-warning
+Unequipping a main weapon is always allowed, but if the robot has a booked match, re-arm it before the match runs or it forfeits. You'll be asked to confirm first.
+```
 
 ## League Boundaries
 
