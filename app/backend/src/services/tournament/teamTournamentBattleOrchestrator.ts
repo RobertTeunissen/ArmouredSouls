@@ -41,6 +41,7 @@ import {
 } from '../battle/battlePostCombat';
 import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
 import { completeByeMatch } from './tournamentService';
+import { recoverTournamentMatch } from '../battle/matchFailurePolicy';
 
 // ─── Team Tournament Prestige (Stepped Curve) ────────────────────────────────
 
@@ -94,7 +95,12 @@ export interface TeamTournamentBattleResult {
 
 export interface RoundExecutionResult {
   matchesExecuted: number;
+  /** Matches that threw at least once (matchesResumed + matchesCancelled). */
   matchesFailed: number;
+  /** Matches whose linked fought battle was finalised by the in-run resume after an error. */
+  matchesResumed: number;
+  /** Matches handed to the failure policy (cancelled, R1 higher seed, or finalised after error). */
+  matchesCancelled: number;
 }
 
 interface TeamTournamentAchievementParticipant {
@@ -679,6 +685,9 @@ export async function executeTeamTournamentRound(
 
   let matchesExecuted = 0;
   let matchesFailed = 0;
+  let matchesResumed = 0;
+  let matchesCancelled = 0;
+  const mode = tournament.participantType === 'team_2v2' ? 'tournament_2v2' as const : 'tournament_3v3' as const;
 
   // 3. Execute each match
   for (const match of pendingMatches) {
@@ -719,11 +728,20 @@ export async function executeTeamTournamentRound(
       await processTeamTournamentBattle(match, tournament);
       matchesExecuted++;
     } catch (error) {
+      // Rule 7: one bad match never fails the round. Resume a linked fought
+      // battle once; otherwise the shared failure policy finalises the row.
       matchesFailed++;
-      logger.error(
-        `[TeamTournament] Match ${match.id} failed in tournament ${tournament.name}: ` +
-        `${error instanceof Error ? error.message : String(error)}`,
-      );
+      const recovery = await recoverTournamentMatch({
+        mode,
+        matchId: match.id,
+        error,
+        resume: (row) => processTeamTournamentBattle(row, tournament),
+      });
+      if (recovery.outcome === 'resumed') {
+        matchesResumed++;
+      } else {
+        matchesCancelled++;
+      }
     }
   }
 
@@ -732,7 +750,7 @@ export async function executeTeamTournamentRound(
     `tournament=${tournament.name} executed=${matchesExecuted} failed=${matchesFailed}`,
   );
 
-  return { matchesExecuted, matchesFailed };
+  return { matchesExecuted, matchesFailed, matchesResumed, matchesCancelled };
 }
 
 // ─── Draw Tiebreaking (R4.4) ─────────────────────────────────────────────────

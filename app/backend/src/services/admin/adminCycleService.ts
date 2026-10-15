@@ -16,9 +16,8 @@ import {
   getCurrentRoundMatches,
   autoCreateNextTournament,
   advanceWinnersToNextRound,
-  completeByeMatch,
 } from '../tournament/tournamentService';
-import { processTournamentBattle } from '../tournament/tournamentBattleOrchestrator';
+import { executeSoloTournamentRound } from '../tournament/tournamentBattleOrchestrator';
 import { executeTeamTournamentRound } from '../tournament/teamTournamentBattleOrchestrator';
 import { autoCreateNextTeamTournament } from '../tournament/teamTournamentService';
 import { runOrphanCleanup } from '../moderation/orphanCleanupJob';
@@ -142,39 +141,13 @@ async function executeTournamentStep(): Promise<TournamentStepSummary> {
         const currentRoundMatches = await getCurrentRoundMatches(tournament.id);
 
         if (currentRoundMatches.length > 0) {
-          for (const match of currentRoundMatches) {
-            if (match.isByeMatch) {
-              const advancingParticipantId = match.participant1Id ?? match.participant2Id;
-              if (advancingParticipantId === null) {
-                summary.errors!.push(`Tournament ${tournament.id} Match ${match.id}: Bye has no advancing participant`);
-                continue;
-              }
-
-              // Routed through the shared helper (Spec #49) so the admin
-              // bulk-cycle path pays a bracket bye identically to the cron path.
-              const resolved = await completeByeMatch(match, advancingParticipantId);
-              if (!resolved) {
-                summary.errors!.push(`Tournament ${tournament.id} Match ${match.id}: Bye_Record was not created`);
-                continue;
-              }
-              logger.info(`[Admin] Resolved bye match ${match.id} in tournament ${tournament.id}`);
-              summary.matchesExecuted!++;
-              summary.byeMatchesResolved = (summary.byeMatchesResolved ?? 0) + 1;
-              continue;
-            }
-
-            if (!match.participant1Id || !match.participant2Id) {
-              summary.errors!.push(`Tournament ${tournament.id} Match ${match.id}: No robots assigned`);
-              continue;
-            }
-
-            try {
-              await processTournamentBattle(match);
-              summary.matchesExecuted!++;
-            } catch (error) {
-              const errorMsg = error instanceof Error ? error.message : String(error);
-              summary.errors!.push(`Tournament ${tournament.id} Match ${match.id}: ${errorMsg}`);
-            }
+          // Shared executor (rule 7): byes, fought matches and the failure
+          // policy, identical to the cron path.
+          const roundResult = await executeSoloTournamentRound(tournament.id);
+          summary.matchesExecuted! += roundResult.matchesExecuted + roundResult.byesResolved + roundResult.matchesResumed;
+          summary.byeMatchesResolved = (summary.byeMatchesResolved ?? 0) + roundResult.byesResolved;
+          for (const err of roundResult.errors) {
+            summary.errors!.push(`Tournament ${tournament.id} ${err}`);
           }
 
           await advanceWinnersToNextRound(tournament.id);

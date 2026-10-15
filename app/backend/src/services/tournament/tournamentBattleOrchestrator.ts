@@ -35,6 +35,8 @@ import { TournamentError, TournamentErrorCode } from '../../errors/tournamentErr
 import { prepareRobotForCombat } from '../../utils/robotCalculations';
 import { getTuningBonusesBatch } from '../tuning-pool';
 import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
+import { recoverTournamentMatch } from '../battle/matchFailurePolicy';
+import { completeByeMatch, getCurrentRoundMatches } from './tournamentService';
 
 // Economic constants
 const _REPAIR_COST_PER_HP = 50; // Cost to repair 1 HP
@@ -831,4 +833,81 @@ async function logTournamentParticipantAudit(
   } catch (error) {
     logger.error(`[TournamentBattleOrchestrator] Audit log failed for robot ${robot.id} in battle #${battle.id}: ${error instanceof Error ? error.message : String(error)}`);
   }
+}
+
+/** Outcome of one solo tournament round run by `executeSoloTournamentRound`. */
+export interface SoloRoundExecutionResult {
+  /** Fought matches (including crash-recovery resumes of a linked battle). */
+  matchesExecuted: number;
+  byesResolved: number;
+  /** Matches whose linked fought battle was finalised by the in-run resume after an error. */
+  matchesResumed: number;
+  /** Matches handed to the failure policy (cancelled, R1 higher seed, or finalised after error). */
+  matchesCancelled: number;
+  /** Participants advancing from fought matches, in processing order. */
+  winners: number[];
+  errors: string[];
+}
+
+/**
+ * Run every queued match of a solo tournament's current round (design §5.4).
+ *
+ * The one round executor for the cron job, the admin bulk cycle and the admin
+ * route. A failing match never fails the round (rule 7): its error goes to
+ * `recoverTournamentMatch`, which resumes a linked fought battle once and
+ * otherwise applies the shared failure policy. Callers then run
+ * `advanceWinnersToNextRound` as before.
+ */
+export async function executeSoloTournamentRound(tournamentId: number): Promise<SoloRoundExecutionResult> {
+  const result: SoloRoundExecutionResult = {
+    matchesExecuted: 0,
+    byesResolved: 0,
+    matchesResumed: 0,
+    matchesCancelled: 0,
+    winners: [],
+    errors: [],
+  };
+
+  const matches = await getCurrentRoundMatches(tournamentId);
+  for (const match of matches) {
+    try {
+      if (match.isByeMatch) {
+        const id = match.participant1Id ?? match.participant2Id;
+        // completeByeMatch catches its own errors and returns false; turn that
+        // into a throw so the policy sees it and the row never stays pending.
+        if (id === null || !(await completeByeMatch(match, id))) {
+          throw new TournamentError(
+            TournamentErrorCode.INVALID_MATCH_STATE,
+            `Bye ${match.id} did not produce a Bye_Record`,
+            400,
+            { matchId: match.id }
+          );
+        }
+        result.byesResolved++;
+        continue;
+      }
+      const battle = await processTournamentBattle(match);
+      result.matchesExecuted++;
+      result.winners.push(battle.winnerId);
+    } catch (error) {
+      const recovery = await recoverTournamentMatch({
+        mode: 'tournament_1v1',
+        matchId: match.id,
+        error,
+        resume: (row) => processTournamentBattle(row),
+      });
+      if (recovery.outcome === 'resumed') {
+        result.matchesResumed++;
+      } else {
+        result.matchesCancelled++;
+        result.errors.push(`Match ${match.id}: ${recovery.errorSummary}`);
+      }
+    }
+  }
+
+  logger.info(
+    `[Tournament] Round executed for tournament ${tournamentId}: ${result.matchesExecuted} fought, ` +
+    `${result.byesResolved} byes, ${result.matchesResumed} resumed, ${result.matchesCancelled} failed`
+  );
+  return result;
 }

@@ -11,10 +11,9 @@ import {
   getActiveTournaments,
   getCurrentRoundMatches,
   advanceWinnersToNextRound,
-  completeByeMatch,
   autoCreateNextTournament,
 } from '../tournament/tournamentService';
-import { processTournamentBattle } from '../tournament/tournamentBattleOrchestrator';
+import { executeSoloTournamentRound } from '../tournament/tournamentBattleOrchestrator';
 import { executeScheduledTagTeamBattles } from '../tag-team/tagTeamBattleOrchestrator';
 import { rebalanceTagTeamLeagues } from '../tag-team/tagTeamLeagueRebalancingService';
 import { runTagTeamMatchmaking } from '../tag-team/tagTeamMatchmakingService';
@@ -184,28 +183,12 @@ async function executeTournamentCycle(): Promise<JobContext> {
     logger.info(`Tournament Cycle: Tournament ${tournament.id} — ${currentRoundMatches.length} matches in round ${tournament.currentRound}`);
 
     if (currentRoundMatches.length > 0) {
-      for (const match of currentRoundMatches) {
-        try {
-          if (match.isByeMatch) {
-            const advancingParticipantId = match.participant1Id ?? match.participant2Id;
-            if (advancingParticipantId === null) {
-              throw new Error(`Bye match ${match.id} has no advancing participant`);
-            }
-
-            const resolved = await completeByeMatch(match, advancingParticipantId);
-            if (!resolved) {
-              throw new Error(`Bye match ${match.id} did not produce a Bye_Record`);
-            }
-            totalMatchesExecuted++;
-            continue;
-          }
-
-          await processTournamentBattle(match);
-          totalMatchesExecuted++;
-        } catch (error) {
-          logger.error(`Tournament Cycle: Match ${match.id} failed (participant1=${match.participant1Id}, participant2=${match.participant2Id}): ${error instanceof Error ? error.stack || error.message : String(error)}`);
-          throw error; // Re-throw to fail the job
-        }
+      // Rule 7: one failing match never fails the job. The shared executor
+      // resolves byes, fights matches and hands any error to the failure policy.
+      const roundResult = await executeSoloTournamentRound(tournament.id);
+      totalMatchesExecuted += roundResult.matchesExecuted + roundResult.byesResolved + roundResult.matchesResumed;
+      if (roundResult.errors.length > 0) {
+        logger.warn(`Tournament Cycle: Tournament ${tournament.id} — ${roundResult.errors.length} match(es) handled by the failure policy: ${roundResult.errors.join('; ')}`);
       }
 
       // Step 3: Advance winners to next round
