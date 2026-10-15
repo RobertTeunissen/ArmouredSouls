@@ -7,6 +7,7 @@ import {
 } from '../src/services/league/leagueBattleOrchestrator';
 import schedulingService from '../src/services/scheduling/schedulingService';
 import { calculateELOChange } from '../src/utils/battleMath';
+import * as robotCalculations from '../src/utils/robotCalculations';
 import { useFinancialCaptureTestEnvironment } from './financialCaptureTestHelper';
 
 useFinancialCaptureTestEnvironment();
@@ -359,6 +360,66 @@ describe('Battle Orchestrator', () => {
         expect(updatedRobot2?.kills).toBe(3);
       }
       expect(robot1Participant?.destroyed || robot2Participant?.destroyed).toBeTruthy();
+    });
+
+    // #517: league 1v1 prepares each robot exactly once with the canonical loadout
+    // modifier, and the prepared (effective) values are never persisted as base data.
+    it('should prepare each robot once with loadout modifiers and keep base attributes', async () => {
+      const prepareSpy = jest.spyOn(robotCalculations, 'prepareRobotForCombat');
+      try {
+        const opponentUser = await createOpponentUser();
+        const weaponInv1 = await prisma.weaponInventory.create({
+          data: { userId: testUser.id, weaponId: practiceSword.id, pricePaid: 0 },
+        });
+        const weaponInv2 = await prisma.weaponInventory.create({
+          data: { userId: opponentUser.id, weaponId: practiceSword.id, pricePaid: 0 },
+        });
+        const robot1 = await prisma.robot.create({
+          data: {
+            userId: testUser.id,
+            name: 'Loadout Dualist',
+            currentHP: 10,
+            maxHP: 10,
+            currentShield: 2,
+            maxShield: 2,
+            elo: 1200,
+            loadoutType: 'dual_wield',
+            attackSpeed: 10,
+            mainWeaponId: weaponInv1.id,
+          },
+        });
+        const robot2 = await prisma.robot.create({
+          data: {
+            userId: opponentUser.id,
+            name: 'Loadout Bulwark',
+            currentHP: 10,
+            maxHP: 10,
+            currentShield: 2,
+            maxShield: 2,
+            elo: 1200,
+            loadoutType: 'weapon_shield',
+            shieldCapacity: 10,
+            mainWeaponId: weaponInv2.id,
+          },
+        });
+
+        const scheduledMatch = await createScheduledMatch(robot1.id, robot2.id);
+        await processBattle(scheduledMatch);
+
+        expect(prepareSpy).toHaveBeenCalledTimes(2);
+        const prepared = new Map(prepareSpy.mock.calls.map(([robot]) => [robot.id, robot]));
+        // Practice sword carries no bonuses: Dual Wield 10 × 1.30 = 13; Weapon+Shield 10 × 1.20 = 12
+        expect(Number(prepared.get(robot1.id)!.attackSpeed)).toBe(13);
+        expect(Number(prepared.get(robot2.id)!.shieldCapacity)).toBe(12);
+        expect(prepared.get(robot2.id)!.maxShield).toBe(48);
+
+        const stored1 = await prisma.robot.findUnique({ where: { id: robot1.id } });
+        const stored2 = await prisma.robot.findUnique({ where: { id: robot2.id } });
+        expect(Number(stored1!.attackSpeed)).toBe(10);
+        expect(Number(stored2!.shieldCapacity)).toBe(10);
+      } finally {
+        prepareSpy.mockRestore();
+      }
     });
   });
 

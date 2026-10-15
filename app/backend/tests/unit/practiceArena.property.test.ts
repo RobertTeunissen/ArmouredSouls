@@ -104,6 +104,12 @@ import {
 } from '../../src/services/practice-arena/practiceArenaService';
 import type { SparringPartnerConfig, BotTier } from '../../src/services/practice-arena/practiceArenaService';
 import type { WeaponRecord } from '../../src/utils/weaponSelection';
+import {
+  calculateAttributeBonus,
+  calculateCombatEffectiveStat,
+  getLoadoutBonus,
+  type WeaponInventoryLike,
+} from '../../src/shared/utils/robotStats';
 import { PracticeArenaMetrics } from '../../src/services/practice-arena/practiceArenaMetrics';
 import { z } from 'zod';
 
@@ -333,11 +339,20 @@ describe('Practice Arena Property Tests', () => {
           expect(robot.yieldThreshold).toBe(yieldThreshold);
           expect(robot.loadoutType).toBe(loadoutType);
 
-          // Tier attributes should be preserved (not overridden)
+          // Tier attributes should be preserved (not overridden). The sparring partner is
+          // combat-prepared, so each attribute is the canonical effective value (#517):
+          // (tier base + weapon bonuses) × (1 + loadout modifier).
           const expectedAttr = botTier === 'WimpBot' ? 1 : botTier === 'AverageBot' ? 5 : botTier === 'ExpertBot' ? 10 : 15;
-          expect(Number(robot.combatPower)).toBe(expectedAttr);
-          expect(Number(robot.armorPlating)).toBe(expectedAttr);
-          expect(Number(robot.hullIntegrity)).toBe(expectedAttr);
+          for (const attr of ['combatPower', 'armorPlating', 'hullIntegrity'] as const) {
+            const weaponBonus = calculateAttributeBonus(
+              attr,
+              robot.mainWeapon as unknown as WeaponInventoryLike | null,
+              robot.offhandWeapon as unknown as WeaponInventoryLike | null,
+            );
+            expect(Number(robot[attr])).toBe(
+              calculateCombatEffectiveStat(expectedAttr, weaponBonus, getLoadoutBonus(loadoutType, attr)),
+            );
+          }
         }),
         { numRuns: 100 },
       );

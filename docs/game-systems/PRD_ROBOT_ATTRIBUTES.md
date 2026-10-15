@@ -2,8 +2,8 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: v1.4
-**Date**: March 16, 2026  
+**Version**: v1.5
+**Date**: October 15, 2026  
 **Status**: ✅ Implemented & Verified 
 
 ---
@@ -29,6 +29,8 @@
   - Servo Motors, Gyro Stabilizers, Hydraulic Systems now have arena movement/positioning mechanics
   - Combat Algorithms, Threat Analysis, Adaptive AI, Logic Cores now have spatial AI mechanics
   - Sync Protocols, Support Systems, Formation Tactics now have 1v1 solo bonuses
+- v1.5 - Canonical effective stats (October 15, 2026, #517)
+  - Effective Stat Calculation now matches the shared canonical formula; loadout modifier applied once; stance and facility bonuses are not attribute multipliers
 
 ---
 
@@ -605,56 +607,41 @@ Please refer to ../architecture/COMBAT_FORMULAS.md for the authoritative, up-to-
 ---
 
 ## Effective Stat Calculation
+**How Weapon Bonuses, Tuning and Loadout Modifiers Combine** (canonical since #517)
 
-**How Weapon Bonuses, Loadout Modifiers, Stance Modifiers, and Facility Bonuses Combine**
-
-The effective value of each attribute is calculated by combining multiple modifier sources:
-
+The effective value of each attribute is calculated once, with the same formula for the stat display and for combat
+preparation (`calculateCombatEffectiveStat(s)` in `app/shared/utils/robotStats.ts`):
 ```
-effective_attribute = (base_attribute + weapon_bonuses_total) × (1 + loadout_modifier% + stance_modifier% + facility_bonus%)
+effective_attribute = round2((base_attribute + main_weapon_bonus + offhand_weapon_bonus + tuning_bonus) × (1 + loadout_modifier))
+display_value       = floor(effective_attribute)
 ```
-
 **Step-by-Step Calculation:**
-
 1. **Base Attribute**: Robot's current attribute level (1-50)
-2. **Weapon Bonuses**: Sum of bonuses from all equipped weapons (additive)
-3. **Percentage Modifiers**: Loadout + Stance + Facility bonuses (additive with each other, then multiplicative with base)
+2. **Weapon Bonuses**: Sum of the bonuses of both equipped weapons, including folded refinements (additive)
+3. **Tuning**: Allocated tuning bonus for the attribute (additive)
+4. **Loadout Modifier**: Applied once, multiplicatively, to the sum (`LOADOUT_BONUSES`)
 
 **Example Calculation:**
-
 ```
 Attribute: Combat Power
 Base: 20
 Main Weapon: Plasma Cannon (+5 Combat Power)
 Offhand: None
-Loadout: Two-Handed (+25%)
-Stance: Offensive (+15%)
-Facility: Offensive Coach Level 4 (+5%)
+Loadout: Two-Handed (+10%)
 
-Step 1: Add weapon bonuses
-  subtotal = 20 + 5 = 25
-
-Step 2: Sum percentage modifiers
-  total_modifier = 25% + 15% + 5% = 45%
-
-Step 3: Apply multiplicative bonus
-  effective_combat_power = 25 × (1 + 0.45) = 25 × 1.45 = 36.25 → 36 (rounded)
+subtotal = 20 + 5 = 25
+effective_combat_power = 25 × 1.10 = 27.5 (display: 27)
 ```
-
 **Important Notes:**
-- Weapon bonuses are **additive** (flat values added to base)
-- Percentage modifiers are **additive with each other**, then **multiplicative with base**
-- Facility bonuses (coaches) only apply when active
+- Weapon bonuses and tuning are **additive** (flat values added to base)
+- The loadout modifier is the only attribute multiplier and is applied **exactly once**
+- Stance is **not** an attribute multiplier in combat; stance effects are applied inside the combat formulas
+  (damage, hit chance, counter chance, shield regeneration). The stat screen's stance row is a display aid
 - Negative modifiers work the same way (e.g., -15% Attack Speed)
-
-**Why This Design?**
-- Ensures percentage bonuses remain meaningful at all power levels
-- Prevents exponential scaling from stacking multiplicative bonuses
-- Creates clear, predictable stat calculations
-- Maintains balance across different builds and stages of progression
+- See [../architecture/COMBAT_FORMULAS.md](../architecture/COMBAT_FORMULAS.md#weapon-attribute-bonuses) for the
+  combat preparation contract and formula-level loadout effects
 
 ---
-
 ## Team Battle Formulas (2v2, 3v3, etc.)
 
 **Team Coordination Bonus:**

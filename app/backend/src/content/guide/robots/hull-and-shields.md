@@ -2,7 +2,7 @@
 title: "Hull Integrity & Energy Shields"
 description: "Understand the two HP pools that keep your robot alive — Hull Integrity for permanent structural health and Energy Shields for regenerating protection."
 order: 3
-lastUpdated: "2026-03-11"
+lastUpdated: "2026-10-15"
 relatedArticles:
   - robots/attributes-overview
   - robots/attribute-combat-influence
@@ -18,14 +18,18 @@ Your robot has two separate health pools that work together to keep it in the fi
 
 Hull HP represents your robot's physical structural integrity. When this reaches zero, your robot is destroyed.
 
-**Hull Integrity** is the attribute that determines your maximum Hull HP. The relationship is straightforward: higher Hull Integrity means significantly more HP.
+**Hull Integrity** is the attribute that determines your maximum Hull HP. The relationship is straightforward: every robot has 50 base HP, and each point of effective Hull Integrity adds 5 more.
 
-| Hull Integrity Level | Approximate HP | Context |
-|---------------------|---------------|---------|
-| 1 (starting) | Very low | Fragile — a few solid hits will take you down |
-| 10 | Low-moderate | Enough to survive several exchanges |
-| 25 | Moderate-high | Solid durability for mid-game competition |
-| 50 (maximum) | Very high | Tank-level survivability |
+> **Max Hull HP = 50 + Effective Hull Integrity × 5**
+
+Effective Hull Integrity is your base Hull Integrity plus any weapon bonuses and tuning, with your loadout modifier applied (see [Loadout Types](/guide/weapons/loadout-types)). The table shows base values with no weapon bonuses:
+
+| Hull Integrity Level | Max HP | Context |
+|---------------------|--------|---------|
+| 1 (starting) | 55 | Fragile — a few solid hits will take you down |
+| 10 | 100 | Enough to survive several exchanges |
+| 25 | 175 | Solid durability for mid-game competition |
+| 50 (maximum) | 300 | Tank-level survivability |
 
 ```callout-warning
 Hull HP does **not** regenerate during or between battles. Any damage to your hull persists until you pay Credits to repair it. This is the single most important thing to understand about hull health — every point of hull damage costs you money.
@@ -46,14 +50,20 @@ Hull Integrity is especially valuable for defensive and tank builds that plan to
 
 Energy Shields are a separate HP pool that sits in front of your hull. Incoming damage hits your shields first, and only passes through to your hull once shields are depleted.
 
-**Energy Shield Capacity** determines the maximum size of your shield pool. Higher Shield Capacity means a larger buffer protecting your hull.
+**Energy Shield Capacity** determines the maximum size of your shield pool. Each point of effective Shield Capacity gives 4 shield points.
 
-| Shield Capacity Level | Shield Strength | Context |
-|----------------------|----------------|---------|
-| 1 (starting) | Minimal | Barely noticeable protection |
-| 10 | Light | Absorbs a hit or two before breaking |
-| 25 | Moderate | Meaningful buffer that buys time for regeneration |
-| 50 (maximum) | Heavy | Substantial shield pool that can absorb significant punishment |
+> **Max Energy Shield = Effective Shield Capacity × 4**
+
+The table shows base values with no weapon bonuses and no loadout modifier:
+
+| Shield Capacity Level | Max Shield | Context |
+|----------------------|------------|---------|
+| 1 (starting) | 4 | Barely noticeable protection |
+| 10 | 40 | Absorbs a hit or two before breaking |
+| 25 | 100 | Meaningful buffer that buys time for regeneration |
+| 50 (maximum) | 200 | Substantial shield pool that can absorb significant punishment |
+
+**Worked example:** a robot with 15 Shield Capacity and a weapon that adds +5 Shield Capacity has 20 effective Shield Capacity, so 20 × 4 = **80 shield points**. The same robot in the Weapon + Shield loadout gets +20% Shield Capacity: 20 × 1.20 = 24, so 24 × 4 = **96 shield points**.
 
 ### How Shields Differ from Hull HP
 

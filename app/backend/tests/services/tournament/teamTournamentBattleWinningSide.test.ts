@@ -44,6 +44,8 @@ jest.mock('../../../src/utils/robotCalculations', () => ({
 
 import type { ScheduledTournamentMatch, Tournament } from '../../../generated/prisma';
 import { processTeamTournamentBattle } from '../../../src/services/tournament/teamTournamentBattleOrchestrator';
+import { prepareRobotForCombat } from '../../../src/utils/robotCalculations';
+import { getTuningBonusesBatch } from '../../../src/services/tuning-pool';
 
 const STOP_AFTER_CREATE = new Error('stop after battle.create');
 
@@ -132,5 +134,21 @@ describe('processTeamTournamentBattle winningSide (#453)', () => {
     expect(data.winningSide).toBe(expectedSide);
     expect(data.winnerId).toBe(expectedWinnerId);
     expect(mockBattleUpdate).not.toHaveBeenCalled();
+  });
+
+  // #517: each team member is prepared exactly once, with its own tuning, before simulation.
+  it('prepares every robot exactly once with its tuning before simulating', async () => {
+    (getTuningBonusesBatch as jest.Mock).mockResolvedValueOnce(new Map([[202, { attackSpeed: 4 }]]));
+    mockSimulateTeamBattle.mockReturnValue(battleResult(1, 500, 0));
+
+    await expect(processTeamTournamentBattle(match, tournament)).rejects.toBe(STOP_AFTER_CREATE);
+
+    const prepareMock = prepareRobotForCombat as jest.Mock;
+    const preparedIds = prepareMock.mock.calls.map(([robot]) => (robot as { id: number }).id).sort();
+    expect(preparedIds).toEqual([101, 102, 201, 202]);
+    expect(prepareMock).toHaveBeenCalledWith(expect.objectContaining({ id: 202 }), { attackSpeed: 4 });
+    expect(prepareMock).toHaveBeenCalledWith(expect.objectContaining({ id: 101 }), {});
+    expect(Math.max(...prepareMock.mock.invocationCallOrder))
+      .toBeLessThan(mockSimulateTeamBattle.mock.invocationCallOrder[0]);
   });
 });

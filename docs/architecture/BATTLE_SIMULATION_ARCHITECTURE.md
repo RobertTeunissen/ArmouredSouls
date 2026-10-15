@@ -2,8 +2,8 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: v2.1  
-**Last Updated**: April 10, 2026  
+**Version**: v2.2  
+**Last Updated**: October 15, 2026  
 **Status**: ✅ Implemented  
 **Owner**: Robert Teunissen  
 **Epic**: Battle System — Simulation & Orchestration
@@ -12,7 +12,8 @@
 
 v1.0 (Mar 18, 2026): Initial architecture doc — 4 orchestrators, combat simulator, narrative pipeline  
 v2.0 (Apr 2, 2026): Added Practice Arena (5th consumer), KotH integration, HP/Shield tracking, tag team phase transitions, shared post-combat layer, updated file paths for service consolidation  
-v2.1 (Apr 10, 2026): Added proper versioning, fixed stale CYCLE_PROCESS.md reference
+v2.1 (Apr 10, 2026): Added proper versioning, fixed stale CYCLE_PROCESS.md reference  
+v2.2 (Oct 15, 2026): #517 — Combat Preparation Contract (raw vs prepared input per API, canonical loadout-adjusted attributes, idempotency, HP handling per entry point)
 
 ---
 
@@ -396,7 +397,9 @@ The primary entry point is `simulateBattleMulti(robots[], config)` which support
 │  INPUT: simulateBattleMulti()   │       │  OUTPUT: SpatialCombatResult    │
 │                                 │       │                                 │
 │  robots: RobotWithWeapons[]     │       │  winnerId: number | null        │
-│    All 23 robot attributes:     │       │  robot1FinalHP                  │
+│    PREPARED via                 │       │                                 │
+│    prepareRobotForCombat():     │       │                                 │
+│    All 23 effective attributes: │       │  robot1FinalHP                  │
 │    - combatPower                │ ────► │  robot2FinalHP                  │
 │    - weaponControl              │       │  robot1Damage (taken)           │
 │    - accuracy, evasion          │       │  robot2Damage (taken)           │
@@ -422,6 +425,40 @@ Legacy wrapper: simulateBattle(robot1, robot2, isTournament?)
 ```
 
 ELO is NOT used in combat calculations — it's only for matchmaking.
+
+### Combat Preparation Contract
+
+Every simulator API — `simulateBattle`, `simulateBattleMulti`, `simulateTeamBattle` and `simulateTagTeamBattle` —
+accepts **prepared** robots only. The simulator reads attributes with `Number(robot.x)` and never re-derives weapon,
+tuning or loadout bonuses; a raw robot silently fights with base-only attributes (this is how #517 stayed hidden).
+
+`prepareRobotForCombat(robot, tuning?)` (`app/backend/src/utils/robotCalculations.ts`):
+
+1. Folds weapon refinements into each equipped inventory row's weapon (at most once per row).
+2. Computes all 23 attributes with the canonical shared formula
+   `round2((base + main bonus + offhand bonus + tuning) × (1 + loadout modifier))` from the raw base values, applying
+   the loadout modifier exactly once. Stance modifiers are not applied (stance effects are formula-level).
+3. Writes the values onto the in-memory robot and sets `maxHP = 50 + hull × 5`, `maxShield = shield × 4`,
+   `currentHP = maxHP`, `currentShield = maxShield`.
+4. Marks the robot object as prepared. A second call on the same object is a no-op: no compounding, no
+   re-folding, no HP/shield reset. Contract: prepare only freshly loaded or freshly constructed robots, never a spread
+   copy of a prepared robot.
+
+Prepared values are never persisted: post-combat persistence (`updateRobotCombatStats`) writes only explicit result
+fields, so stored base attributes stay unchanged.
+
+| Entry point | Prepares | Simulator API | HP handling |
+|---|---|---|---|
+| League 1v1 (`leagueBattleOrchestrator.ts`) | once per robot, fresh DB load | `simulateBattle` | full HP |
+| Solo tournament (`tournamentBattleOrchestrator.ts`) | once per robot | `simulateBattle(r1, r2, true)` | full HP |
+| Tag team (`tagTeamScheduler.ts` → `tagTeamSimulation.ts`) | all four robots once, before phase 1 | `simulateTagTeamBattle` → `simulateBattle` per phase, never re-prepares | survivor keeps current HP/shield between phases; reserve set to full by `activateReserveRobot` |
+| League 2v2/3v3 (`teamBattleOrchestrator.ts`) | once per robot | `simulateTeamBattle` → `simulateBattleMulti` | full HP |
+| Team tournaments (`teamTournamentBattleOrchestrator.ts`) | once per robot; resume path does not simulate | `simulateTeamBattle` | full HP |
+| KotH (`kothBattleOrchestrator.ts`) | once per robot | `simulateBattleMulti` | full HP |
+| Grand Melee (`grandMeleeBattleOrchestrator.ts`) | once per robot | `simulateBattleMulti` | full HP |
+| Practice, owned robot (`practiceArenaService.ts`) | once, on a JSON-cloned DB row | `simulateBattle` (batch rebuilds robots per iteration) | full HP |
+| Practice, sparring partner (`practiceArenaService.ts`) | once, freshly constructed, no tuning | `simulateBattle` | full HP |
+| Byes | no simulation | — | — |
 
 ---
 

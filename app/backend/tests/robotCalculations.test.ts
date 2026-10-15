@@ -4,8 +4,13 @@ import {
   calculateMaxShield,
   getLoadoutBonus,
   getLoadoutModifiedAttributes,
-  LOADOUT_BONUSES 
+  prepareRobotForCombat,
+  LOADOUT_BONUSES,
+  BASE_HP,
+  HP_MULTIPLIER,
+  SHIELD_MULTIPLIER,
 } from '../src/utils/robotCalculations';
+import { ROBOT_ATTRIBUTES } from '../src/shared/utils/robotAttributes';
 import { Robot, WeaponInventory, Weapon, Prisma } from '../generated/prisma';
 
 // Mock robot data
@@ -428,6 +433,201 @@ describe('Robot Calculations', () => {
     it('should return empty array for invalid loadout', () => {
       const attrs = getLoadoutModifiedAttributes('invalid');
       expect(attrs).toEqual([]);
+    });
+  });
+
+  // #517 — combat preparation must apply the same loadout modifiers as the
+  // displayed/backend effective-stat calculation, exactly once.
+  describe('prepareRobotForCombat — loadout parity (#517)', () => {
+    type PreparableRobot = Parameters<typeof prepareRobotForCombat>[0];
+    type InventoryRow = NonNullable<PreparableRobot['mainWeapon']>;
+    type RefinementFixture = { tier: 'hone' | 'augment' | 'sharpen' | 'forge'; magnitude: number; targetAttribute: string | null };
+
+    const round2 = (value: number): number => Math.round(value * 100) / 100;
+
+    /** Wrap a catalog weapon in an inventory row, optionally with refinements. */
+    const inventoryRow = (id: number, weapon: Weapon, refinements: RefinementFixture[] = []): InventoryRow => ({
+      id,
+      userId: 1,
+      weaponId: weapon.id,
+      customName: null,
+      pricePaid: 50000,
+      purchasedAt: new Date(),
+      weapon,
+      refinements: refinements.map((r, i) => ({
+        id: i + 1,
+        weaponInventoryId: id,
+        tier: r.tier,
+        magnitude: r.magnitude,
+        targetAttribute: r.targetAttribute,
+        costPaid: 10_000,
+        slotIndex: i + 1,
+        createdAt: new Date(),
+      })),
+    }) as unknown as InventoryRow;
+
+    // Every attribute any loadout modifies, plus hull/shield, gets a weapon
+    // bonus — including negative bonuses — so each loadout bonus AND penalty
+    // is exercised against a non-trivial pre-multiplier sum.
+    const MAIN_BONUSES: Partial<Weapon> = {
+      combatPowerBonus: 5,
+      targetingSystemsBonus: 3,
+      criticalSystemsBonus: 4,
+      penetrationBonus: -3,
+      weaponControlBonus: 2,
+      attackSpeedBonus: 3,
+      armorPlatingBonus: 1,
+      shieldCapacityBonus: 2,
+      evasionThrustersBonus: -2,
+      counterProtocolsBonus: 2,
+      hullIntegrityBonus: 3,
+      servoMotorsBonus: -1,
+      gyroStabilizersBonus: 1,
+    };
+    const OFFHAND_BONUSES: Partial<Weapon> = {
+      combatPowerBonus: 2,
+      targetingSystemsBonus: 0,
+      penetrationBonus: -1,
+      weaponControlBonus: 1,
+      attackSpeedBonus: -2,
+      armorPlatingBonus: 3,
+      shieldCapacityBonus: 5,
+      counterProtocolsBonus: 1,
+      hullIntegrityBonus: 0,
+    };
+    const TUNING: Record<string, number> = {
+      attackSpeed: 2,
+      penetration: 1.5,
+      shieldCapacity: 1,
+      combatPower: 0.5,
+      evasionThrusters: 1,
+      gyroStabilizers: 0.25,
+    };
+    // Hone on a loadout-modified attribute: refinements are folded into the
+    // weapon bonus BEFORE the loadout multiplier.
+    const MAIN_REFINEMENTS: RefinementFixture[] = [
+      { tier: 'hone', magnitude: 2, targetAttribute: 'attackSpeed' },
+    ];
+
+    const OFFHAND_LOADOUTS = new Set(['dual_wield', 'weapon_shield']);
+
+    /** Distinct base value per attribute so a swapped attribute cannot pass. */
+    const distinctBases = (): Partial<Robot> => {
+      const overrides: Record<string, Prisma.Decimal> = {};
+      ROBOT_ATTRIBUTES.forEach((attr, i) => {
+        overrides[attr] = new Prisma.Decimal(10 + i);
+      });
+      return overrides as Partial<Robot>;
+    };
+
+    const buildRobot = (loadoutType: string, withRefinements: boolean): PreparableRobot => {
+      const robot = createMockRobot({ loadoutType, ...distinctBases() });
+      const main = inventoryRow(
+        1,
+        createMockWeapon({ id: 1, ...MAIN_BONUSES }),
+        withRefinements ? MAIN_REFINEMENTS : [],
+      );
+      const offhand = OFFHAND_LOADOUTS.has(loadoutType)
+        ? inventoryRow(2, createMockWeapon({ id: 2, ...OFFHAND_BONUSES }))
+        : null;
+      return { ...robot, mainWeapon: main, offhandWeapon: offhand };
+    };
+
+    /** Independent reference: (base + main + offhand + hone + tuning) × (1 + loadout), 2 decimals. */
+    const expectedAttribute = (loadoutType: string, attr: string, withRefinements: boolean): number => {
+      const index = ROBOT_ATTRIBUTES.indexOf(attr as (typeof ROBOT_ATTRIBUTES)[number]);
+      const base = 10 + index;
+      const field = `${attr}Bonus` as keyof Weapon;
+      const mainBonus = Number(MAIN_BONUSES[field] ?? createMockWeapon()[field] ?? 0);
+      const offBonus = OFFHAND_LOADOUTS.has(loadoutType)
+        ? Number(OFFHAND_BONUSES[field] ?? createMockWeapon()[field] ?? 0)
+        : 0;
+      const hone = withRefinements
+        ? MAIN_REFINEMENTS.filter((r) => r.targetAttribute === attr).reduce((s, r) => s + r.magnitude, 0)
+        : 0;
+      const tuning = TUNING[attr] ?? 0;
+      const loadout = LOADOUT_BONUSES[loadoutType]?.[attr] ?? 0;
+      return round2((base + mainBonus + offBonus + hone + tuning) * (1 + loadout));
+    };
+
+    const LOADOUTS = [...Object.keys(LOADOUT_BONUSES), 'unknown_loadout'];
+
+    describe.each(LOADOUTS)('%s', (loadoutType) => {
+      it.each([false, true])('prepares every attribute canonically (refinements: %s)', (withRefinements) => {
+        const robot = buildRobot(loadoutType, withRefinements);
+        prepareRobotForCombat(robot, TUNING);
+
+        // Displayed/backend calculation on a pristine copy whose weapons carry
+        // the same folded refinement bonuses the prepared robot uses.
+        const pristine = buildRobot(loadoutType, false);
+        const displayed = calculateEffectiveStats(
+          { ...pristine, mainWeapon: robot.mainWeapon, offhandWeapon: robot.offhandWeapon },
+          TUNING,
+        );
+
+        for (const attr of ROBOT_ATTRIBUTES) {
+          const prepared = Number(robot[attr as keyof Robot]);
+          expect({ attr, value: prepared }).toEqual({ attr, value: expectedAttribute(loadoutType, attr, withRefinements) });
+          expect({ attr, value: prepared }).toEqual({ attr, value: displayed[attr] });
+        }
+
+        expect(robot.maxHP).toBeCloseTo(BASE_HP + displayed.hullIntegrity * HP_MULTIPLIER, 10);
+        expect(robot.maxShield).toBeCloseTo(displayed.shieldCapacity * SHIELD_MULTIPLIER, 10);
+        expect(robot.currentHP).toBe(robot.maxHP);
+        expect(robot.currentShield).toBe(robot.maxShield);
+      });
+    });
+
+    it('prepared Dual Wield robot receives its +30% attack speed', () => {
+      const robot: PreparableRobot = {
+        ...createMockRobot({ loadoutType: 'dual_wield' }),
+        mainWeapon: inventoryRow(1, createMockWeapon({ id: 1, attackSpeedBonus: 3 })),
+        offhandWeapon: inventoryRow(2, createMockWeapon({ id: 2, attackSpeedBonus: 3 })),
+      };
+      prepareRobotForCombat(robot);
+      // (10 + 3 + 3) × 1.30 = 20.8
+      expect(Number(robot.attackSpeed)).toBe(20.8);
+    });
+
+    it('prepared Weapon + Shield robot receives its +20% shield capacity in maxShield', () => {
+      const robot: PreparableRobot = {
+        ...createMockRobot({ loadoutType: 'weapon_shield' }),
+        mainWeapon: inventoryRow(1, createMockWeapon({ id: 1, shieldCapacityBonus: 0 })),
+        offhandWeapon: inventoryRow(2, createMockWeapon({ id: 2, shieldCapacityBonus: 5 })),
+      };
+      prepareRobotForCombat(robot);
+      // (10 + 5) × 1.20 = 18 → maxShield 18 × 4 = 72
+      expect(Number(robot.shieldCapacity)).toBe(18);
+      expect(robot.maxShield).toBe(72);
+      expect(robot.currentShield).toBe(72);
+    });
+
+    it('preparing the same robot twice does not compound and does not restore HP', () => {
+      const robot = buildRobot('dual_wield', true);
+      prepareRobotForCombat(robot, TUNING);
+
+      const attributesAfterFirst = Object.fromEntries(
+        ROBOT_ATTRIBUTES.map((attr) => [attr, Number(robot[attr as keyof Robot])]),
+      );
+      const maxHP = robot.maxHP;
+      const maxShield = robot.maxShield;
+      const mainAttackSpeedBonus = robot.mainWeapon!.weapon.attackSpeedBonus;
+
+      // Simulate damage from a previous tag-team phase / retry.
+      robot.currentHP = 10;
+      robot.currentShield = 0;
+
+      prepareRobotForCombat(robot, TUNING);
+
+      const attributesAfterSecond = Object.fromEntries(
+        ROBOT_ATTRIBUTES.map((attr) => [attr, Number(robot[attr as keyof Robot])]),
+      );
+      expect(attributesAfterSecond).toEqual(attributesAfterFirst);
+      expect(robot.maxHP).toBe(maxHP);
+      expect(robot.maxShield).toBe(maxShield);
+      expect(robot.mainWeapon!.weapon.attackSpeedBonus).toBe(mainAttackSpeedBonus);
+      expect(robot.currentHP).toBe(10);
+      expect(robot.currentShield).toBe(0);
     });
   });
 });

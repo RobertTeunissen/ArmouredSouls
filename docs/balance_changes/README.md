@@ -20,6 +20,7 @@ The authoritative weapon catalog and pricing formula lives in [PRD_WEAPON_ECONOM
 - `RANGED_VS_MELEE_REBALANCE.md` — Melee vs ranged balance philosophy and adjustments
 - `WEAPON_CONTROL_IMPLEMENTATION.md` — Weapon control malfunction mechanic
 - `MOVEMENT_EVENT_THROTTLING_REVERT.md` — Reverted movement event throttling
+- `LOADOUT_PARITY_CORRECTION.md` — Season 2: loadout attribute modifiers now applied in combat preparation (#517), with corrected 1v1 baseline
 
 ### AI & Targeting
 - `THREAT_SCORING_TARGET_SELECTION_INTEGRATION.md` — Threat-based target selection in combat

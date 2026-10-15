@@ -116,6 +116,8 @@ jest.mock('../../../src/services/battle/battleSummaryComputer', () => ({
 
 import { executeScheduledGrandMeleeBattles } from '../../../src/services/grand-melee/grandMeleeBattleOrchestrator';
 import { simulateBattleMulti } from '../../../src/services/battle/combatSimulator';
+import { prepareRobotForCombat } from '../../../src/utils/robotCalculations';
+import { getTuningBonusesBatch } from '../../../src/services/tuning-pool';
 import {
   awardBattleStreamingRevenue,
   awardCreditsWithLedger,
@@ -336,6 +338,32 @@ describe('executeScheduledGrandMeleeBattles', () => {
         }),
       }),
     );
+  });
+
+  // #517: every participant is prepared exactly once, with its own tuning, before simulation.
+  it('should prepare each participant exactly once with its tuning before simulating', async () => {
+    (prepareRobotForCombat as jest.Mock).mockClear();
+    (simulateBattleMulti as jest.Mock).mockClear();
+    const match = makeScheduledMatch(1, 8);
+    const robots = Array.from({ length: 8 }, (_, i) => makeRobot(i + 1));
+    const tuning = new Map([[3, { attackSpeed: 2 }]]);
+
+    mockPrisma.scheduledMatch.count.mockResolvedValueOnce(1);
+    mockPrisma.scheduledMatch.findFirst.mockResolvedValueOnce(match);
+    mockPrisma.robot.findMany.mockResolvedValueOnce(robots);
+    (getTuningBonusesBatch as jest.Mock).mockResolvedValueOnce(tuning);
+    (simulateBattleMulti as jest.Mock).mockReturnValueOnce(makeSimResult(8));
+
+    await executeScheduledGrandMeleeBattles();
+
+    const prepareMock = prepareRobotForCombat as jest.Mock;
+    expect(prepareMock).toHaveBeenCalledTimes(8);
+    const preparedIds = prepareMock.mock.calls.map(([robot]) => (robot as { id: number }).id);
+    expect(new Set(preparedIds).size).toBe(8);
+    expect(prepareMock).toHaveBeenCalledWith(expect.objectContaining({ id: 3 }), { attackSpeed: 2 });
+    expect(prepareMock).toHaveBeenCalledWith(expect.objectContaining({ id: 1 }), {});
+    expect(Math.max(...prepareMock.mock.invocationCallOrder))
+      .toBeLessThan((simulateBattleMulti as jest.Mock).mock.invocationCallOrder[0]);
   });
 });
 

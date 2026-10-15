@@ -2,8 +2,8 @@
 
 **Project**: Armoured Souls
 **Document Type**: Comprehensive Reference
-**Version**: v3.1
-**Date**: February 10, 2026
+**Version**: v3.2
+**Date**: October 15, 2026
 **Status**: ✅ Implemented
 
 **⭐ PRIMARY WEAPON REFERENCE**: [SEED_DATA_SPECIFICATION.md](../architecture/SEED_DATA_SPECIFICATION.md)
@@ -12,6 +12,7 @@
 **This Document**: Complete consolidated guide integrating all weapon and loadout system documentation. Includes full user stories, functional requirements, technical design, UI/UX specifications, testing requirements, and implementation details.
 
 **Revision History:**
+- v3.2 (Oct 15, 2026): #517 — canonical effective-attribute formula shared by display and combat preparation; loadout modifier applied exactly once in every battle mode; corrected stat-calculation snippet and utility list
 - v3.1 (Feb 10, 2026): Weapon roster expansion — updated counts, categories, DPS rankings, price tiers, and loadout coverage for 47-weapon catalog; added rangeBand as weapon attribute
 - v3.0 (Feb 10, 2026): Full consolidation - integrated all content from PRD_WEAPON_LOADOUT.md and WEAPONS_AND_LOADOUT.md
 - v2.1 (Feb 10, 2026): Updated to reference authoritative sources, incorporated economy overhaul, updated starting budget to ₡3M
@@ -309,7 +310,8 @@ Body: { loadoutType: "single" | "weapon_shield" | "two_handed" | "dual_wield" }
 
 **Robot Effective Stats Formula:**
 ```
-effective_stat = base_stat + main_weapon_bonus + offhand_weapon_bonus + loadout_bonus
+effective_stat = round2((base_stat + main_weapon_bonus + offhand_weapon_bonus + tuning_bonus) × (1 + loadout_bonus))
+display_stat   = floor(effective_stat)
 ```
 
 **Loadout Bonuses (from ROBOT_ATTRIBUTES.md):**
@@ -320,8 +322,10 @@ effective_stat = base_stat + main_weapon_bonus + offhand_weapon_bonus + loadout_
 - **single**: +10% Gyro Stabilizers, +5% Servo Motors
 
 **Implementation Notes:**
-- Percentage bonuses are multiplicative: `final = base * (1 + bonus_percent / 100)`
-- Weapon attribute bonuses are flat additions
+- Weapon attribute bonuses (both weapons, including folded refinements) and tuning are flat additions
+- The loadout percentage is applied once, after the additions: `effective = sum × (1 + loadout_bonus)`
+- Combat preparation (`prepareRobotForCombat`) uses the same formula as the stat display, in every battle mode (#517)
+- Stance is not part of this formula; stance effects are applied inside the combat formulas
 - Stats must be recalculated whenever weapons or loadout changes
 - maxHP and maxShield must be recalculated based on effective Hull Integrity and Shield Capacity
 
@@ -897,37 +901,27 @@ Errors:
 2. `Navigation.tsx`: ~~Add link to Weapon Inventory page~~ (Removed - functionality integrated into Weapon Shop)
 
 ### Stat Calculation Implementation
-
-**Location**: `/app/backend/src/utils/robotCalculations.ts`
-
+**Canonical formula**: `/app/shared/utils/robotStats.ts` (shared by backend and frontend, #517)
 ```typescript
-interface Robot {
-  // base attributes
-  combatPower: number;
-  // ... all 23 attributes
-  loadoutType: string;
-  mainWeapon?: WeaponInventory;
-  offhandWeapon?: WeaponInventory;
+// 2-decimal combat value — used by combat preparation and backend calculations
+export function calculateCombatEffectiveStat(base, weaponBonus, loadoutBonus, tuningBonus = 0): number {
+  return roundToCombatPrecision((base + weaponBonus + tuningBonus) * (1 + loadoutBonus));
 }
-
-function calculateEffectiveStats(robot: Robot): EffectiveStats {
-  // 1. Start with base attributes
-  // 2. Add weapon bonuses (main + offhand)
-  // 3. Apply loadout percentage modifiers
-  // 4. Return effective stats object
-}
-
-function calculateMaxHP(hullIntegrity: number, weaponBonuses: number, loadoutBonus: number): number {
-  const effective = hullIntegrity + weaponBonuses;
-  return Math.floor(effective * (1 + loadoutBonus / 100) * 10);
-}
-
-function calculateMaxShield(shieldCapacity: number, weaponBonuses: number, loadoutBonus: number): number {
-  const effective = shieldCapacity + weaponBonuses;
-  return Math.floor(effective * (1 + loadoutBonus / 100) * 2);
+// All 23 attributes: weaponBonus = main + offhand bonus, loadoutBonus = LOADOUT_BONUSES[loadoutType][attr] ?? 0
+export function calculateCombatEffectiveStats(robot, tuningBonuses?): Record<string, number>;
+// Integer display value = floor of the combat value
+export function calculateEffectiveStat(base, weaponBonus, loadoutBonus, tuningBonus = 0): number {
+  return Math.floor(calculateCombatEffectiveStat(base, weaponBonus, loadoutBonus, tuningBonus));
 }
 ```
-
+**Backend**: `/app/backend/src/utils/robotCalculations.ts`
+```typescript
+calculateEffectiveStats(robot, tuning?)   // delegates to calculateCombatEffectiveStats
+calculateMaxHP(robot, tuning?)            // BASE_HP (50) + effective hullIntegrity × HP_MULTIPLIER (5)
+calculateMaxShield(robot, tuning?)        // effective shieldCapacity × SHIELD_MULTIPLIER (4)
+prepareRobotForCombat(robot, tuning?)     // folds refinements, writes effective attributes, maxHP/maxShield,
+                                          // full HP/shield; idempotent per robot object
+```
 ### Database Schema Reference
 
 **Weapon Model:**
@@ -952,10 +946,14 @@ function calculateMaxShield(shieldCapacity: number, weaponBonuses: number, loado
 
 ### Utility Files
 
+**Shared: /app/shared/utils/robotStats.ts**
+- LOADOUT_BONUSES, calculateCombatEffectiveStat(s) (canonical 2-decimal values), calculateEffectiveStat(s) (floored display values)
+
 **Backend: /utils/robotCalculations.ts**
-- calculateEffectiveStats(robot)
-- calculateMaxHP(hullIntegrity, weaponBonuses, loadoutBonus)
-- calculateMaxShield(shieldCapacity, weaponBonuses, loadoutBonus)
+- calculateEffectiveStats(robot, tuning?)
+- calculateMaxHP(robot, tuning?)
+- calculateMaxShield(robot, tuning?)
+- prepareRobotForCombat(robot, tuning?)
 
 **Backend: /utils/weaponValidation.ts**
 - isWeaponCompatibleWithLoadout(weapon, loadoutType)
@@ -1329,10 +1327,14 @@ maxShield = effective_shield_capacity × 4
 
 ### Utility Files
 
+**Shared: /app/shared/utils/robotStats.ts**
+- LOADOUT_BONUSES, calculateCombatEffectiveStat(s) (canonical 2-decimal values), calculateEffectiveStat(s) (floored display values)
+
 **Backend: /utils/robotCalculations.ts**
-- calculateEffectiveStats(robot)
-- calculateMaxHP(hullIntegrity, weaponBonuses, loadoutBonus)
-- calculateMaxShield(shieldCapacity, weaponBonuses, loadoutBonus)
+- calculateEffectiveStats(robot, tuning?)
+- calculateMaxHP(robot, tuning?)
+- calculateMaxShield(robot, tuning?)
+- prepareRobotForCombat(robot, tuning?)
 
 **Backend: /utils/weaponValidation.ts**
 - isWeaponCompatibleWithLoadout(weapon, loadoutType)
@@ -1562,6 +1564,6 @@ Effective Penetration: 10 * 0.80 = 8
 
 ---
 
-**Document Version**: v3.0
-**Last Reviewed**: February 10, 2026
+**Document Version**: v3.2
+**Last Reviewed**: October 15, 2026
 **Status**: Complete - All content from PRD_WEAPON_LOADOUT.md and WEAPONS_AND_LOADOUT.md has been integrated

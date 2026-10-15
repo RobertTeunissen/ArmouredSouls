@@ -27,6 +27,12 @@ export type SpatialGameModeState = GameModeState;
  *
  * This simulator uses ALL 23 robot attributes to determine battle outcomes.
  * ELO is NOT used in combat calculations - it's only for matchmaking.
+ *
+ * Simulator inputs must be PREPARED robots: every robot passed to `simulateBattle`,
+ * `simulateBattleMulti`, `simulateTeamBattle` or `simulateTagTeamBattle` must first go
+ * through `prepareRobotForCombat()` (utils/robotCalculations.ts), which writes the
+ * canonical effective attributes (weapons + tuning + loadout modifier). A raw robot
+ * silently fights with base-only attributes.
  */
 
 export interface RobotWithWeapons extends Robot {

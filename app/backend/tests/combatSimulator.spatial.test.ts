@@ -2,7 +2,13 @@
  * Unit tests for the refactored simulateBattle with 2D spatial mechanics.
  * Validates: Requirements 14.1, 14.2, 14.3, 14.6, 14.7, 14.8, 14.9
  */
-import { simulateBattle, RobotWithWeapons, CombatResult, CombatEvent } from '../src/services/battle/combatSimulator';
+import { simulateBattle, simulateBattleMulti, RobotWithWeapons, CombatResult, CombatEvent } from '../src/services/battle/combatSimulator';
+import { prepareRobotForCombat } from '../src/utils/robotCalculations';
+import { ROBOT_ATTRIBUTES } from '../src/shared/utils/robotAttributes';
+import { buildKothGameModeConfig, buildKothInitialState } from '../src/services/arena/koth/kothGameMode';
+import { simulateTeamBattle } from '../src/services/team-battle/teamBattleEngine';
+import { simulateTagTeamBattle } from '../src/services/tag-team/tagTeamSimulation';
+import type { TagTeamWithRobots } from '../src/services/tag-team/tagTeamTypes';
 import { Prisma } from '../generated/prisma';
 
 // ─── Mock Factories ─────────────────────────────────────────────────
@@ -621,6 +627,134 @@ describe('simulateBattle — spatial refactor', () => {
       expect(robot2.currentHP).toBe(r2HP);
       expect(robot1.name).toBe(r1Name);
       expect(robot2.name).toBe(r2Name);
+    });
+  });
+
+  // #517: cooldowns are derived from the prepared (loadout-adjusted) attack speed.
+  describe('prepared Dual Wield robot uses canonical attack speed (#517)', () => {
+    it('derives main and offhand cooldowns from the loadout-adjusted attack speed', () => {
+      const dualWield = createMockRobot({
+        id: 1,
+        name: 'Dualist',
+        loadoutType: 'dual_wield',
+        mainWeapon: createRangedWeaponInventory(1),
+        offhandWeapon: createRangedWeaponInventory(2),
+        mainWeaponId: 1,
+        offhandWeaponId: 2,
+      });
+      const opponent = createMockRobot({
+        id: 2,
+        name: 'Opponent',
+        mainWeapon: createRangedWeaponInventory(3),
+        mainWeaponId: 3,
+      });
+      prepareRobotForCombat(dualWield);
+      prepareRobotForCombat(opponent);
+
+      // Fixture attackSpeed 20, Laser Pistol attackSpeedBonus 0 → (20 + 0 + 0) × 1.30 = 26
+      const canonicalAttackSpeed = 26;
+      expect(Number(dualWield.attackSpeed)).toBe(canonicalAttackSpeed);
+
+      const result = simulateBattleMulti([dualWield, opponent], { allowDraws: true, maxDuration: 5 });
+      const state = result.finalStates![0];
+      expect(state.attackCooldown).toBeCloseTo(3 / (1 + canonicalAttackSpeed / 50), 5);
+      expect(state.offhandCooldown).toBeCloseTo((3 * 1.4) / (1 + canonicalAttackSpeed / 50), 5);
+    });
+  });
+
+  // #517: every simulator entry point consumes prepared robots as-is — it never
+  // re-derives, mutates or compounds the prepared attributes.
+  describe('simulator entry points consume prepared robots without compounding (#517)', () => {
+    const LOADOUT_CYCLE = ['dual_wield', 'weapon_shield', 'two_handed', 'single'] as const;
+
+    function preparedRobots(count: number): RobotWithWeapons[] {
+      return Array.from({ length: count }, (_, i) => {
+        const loadoutType = LOADOUT_CYCLE[i % LOADOUT_CYCLE.length];
+        const robot = createMockRobot({
+          id: i + 1,
+          name: `Entry-${i + 1}`,
+          loadoutType,
+          mainWeapon: createRangedWeaponInventory(100 + i * 2),
+          offhandWeapon: loadoutType === 'dual_wield' ? createRangedWeaponInventory(101 + i * 2) : null,
+          mainWeaponId: 100 + i * 2,
+        });
+        prepareRobotForCombat(robot);
+        return robot;
+      });
+    }
+
+    function attributeSnapshot(robots: RobotWithWeapons[]): Array<Record<string, number>> {
+      return robots.map((robot) => Object.fromEntries(
+        ROBOT_ATTRIBUTES.map((attr) => [attr, Number(robot[attr as keyof RobotWithWeapons])]),
+      ));
+    }
+
+    /** Main-hand cooldown the simulator must derive from the prepared attack speed. */
+    function expectedMainCooldown(robot: RobotWithWeapons): number {
+      return (robot.mainWeapon?.weapon?.cooldown ?? 3) / (1 + Number(robot.attackSpeed) / 50);
+    }
+
+    type EntryPoint = {
+      name: string;
+      count: number;
+      run: (robots: RobotWithWeapons[]) => Promise<unknown>;
+    };
+
+    const entryPoints: EntryPoint[] = [
+      { name: 'simulateBattle (league 1v1 / practice)', count: 2, run: async (r) => simulateBattle(r[0], r[1]) },
+      { name: 'simulateBattle tournament (solo tournament)', count: 2, run: async (r) => simulateBattle(r[0], r[1], true) },
+      {
+        name: 'simulateBattleMulti (Grand Melee shape)',
+        count: 6,
+        run: async (r) => simulateBattleMulti(r, { allowDraws: false, arenaRadius: 16 + (r.length - 2) * 3, maxDuration: 20 }),
+      },
+      {
+        name: 'simulateBattleMulti (KotH game mode)',
+        count: 5,
+        run: async (r) => {
+          const kothConfig = { scoreThreshold: 15, timeLimit: 60, zoneRadius: 5, participantCount: r.length, matchId: 1 };
+          return simulateBattleMulti(r, {
+            allowDraws: false,
+            maxDuration: 60,
+            gameModeConfig: buildKothGameModeConfig(kothConfig),
+            gameModeState: buildKothInitialState(kothConfig, r.map((robot) => robot.id)),
+          });
+        },
+      },
+      { name: 'simulateTeamBattle 2v2', count: 4, run: async (r) => simulateTeamBattle(r.slice(0, 2), r.slice(2), 2) },
+      { name: 'simulateTeamBattle 3v3', count: 6, run: async (r) => simulateTeamBattle(r.slice(0, 3), r.slice(3), 3) },
+      {
+        name: 'simulateTagTeamBattle',
+        count: 4,
+        run: async (r) => {
+          const team = (id: number, active: RobotWithWeapons, reserve: RobotWithWeapons): TagTeamWithRobots => ({
+            id, stableId: id, teamName: `Team-${id}`, teamSize: 2,
+            activeRobotId: active.id, reserveRobotId: reserve.id,
+            activeRobot: active, reserveRobot: reserve,
+            createdAt: new Date('2025-01-01'), updatedAt: new Date('2025-01-01'),
+          });
+          return simulateTagTeamBattle(team(1, r[0], r[1]), team(2, r[2], r[3]));
+        },
+      },
+    ];
+
+    it.each(entryPoints)('$name', async ({ count, run }) => {
+      const robots = preparedRobots(count);
+      const before = attributeSnapshot(robots);
+      const maxBefore = robots.map((r) => ({ maxHP: r.maxHP, maxShield: r.maxShield }));
+
+      const result = await run(robots);
+
+      expect(result).toBeDefined();
+      expect(attributeSnapshot(robots)).toEqual(before);
+      expect(robots.map((r) => ({ maxHP: r.maxHP, maxShield: r.maxShield }))).toEqual(maxBefore);
+
+      const finalStates = (result as { finalStates?: Array<{ attackCooldown: number }> }).finalStates;
+      if (finalStates) {
+        finalStates.forEach((state, i) => {
+          expect(state.attackCooldown).toBeCloseTo(expectedMainCooldown(robots[i]), 5);
+        });
+      }
     });
   });
 

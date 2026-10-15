@@ -210,6 +210,15 @@ const {
 const { calculateStreamingRevenueBatch } = jest.requireMock('../src/services/economy/streamingRevenueService') as {
   calculateStreamingRevenueBatch: jest.Mock;
 };
+const { prepareRobotForCombat } = jest.requireMock('../src/utils/robotCalculations') as {
+  prepareRobotForCombat: jest.Mock;
+};
+const { getTuningBonusesBatch } = jest.requireMock('../src/services/tuning-pool') as {
+  getTuningBonusesBatch: jest.Mock;
+};
+const { simulateBattleMulti } = jest.requireMock('../src/services/battle/combatSimulator') as {
+  simulateBattleMulti: jest.Mock;
+};
 process.env.NODE_ENV = previousNodeEnv;
 
 // ─── Test helpers ────────────────────────────────────────────────────
@@ -319,6 +328,23 @@ describe('KotH Orchestrator Throttling', () => {
 
     // Should start immediately without throttle
     expect(battleCreateTime - startTime).toBeLessThan(500);
+  });
+
+  // #517: each participant is prepared exactly once, with its own tuning, before simulation.
+  it('should prepare each participant exactly once with its tuning before simulating', async () => {
+    setupMatchQueue([makeMatch(1, [1, 2, 3, 4, 5])]);
+    getTuningBonusesBatch.mockResolvedValueOnce(new Map([[4, { armorPlating: 2 }]]));
+
+    const promise = executeScheduledKothBattles();
+    await jest.runAllTimersAsync();
+    await promise;
+
+    const preparedIds = prepareRobotForCombat.mock.calls.map(([robot]) => (robot as { id: number }).id).sort();
+    expect(preparedIds).toEqual([1, 2, 3, 4, 5]);
+    expect(prepareRobotForCombat).toHaveBeenCalledWith(expect.objectContaining({ id: 4 }), { armorPlating: 2 });
+    expect(prepareRobotForCombat).toHaveBeenCalledWith(expect.objectContaining({ id: 1 }), {});
+    expect(Math.max(...prepareRobotForCombat.mock.invocationCallOrder))
+      .toBeLessThan(simulateBattleMulti.mock.invocationCallOrder[0]);
   });
 
   it('should use batched createMany for BattleParticipant records', async () => {

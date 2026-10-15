@@ -104,6 +104,7 @@ export function initializeCombatState(
 export function calcCooldown(robot: RobotWithWeapons, weaponCooldown: number | undefined, hand: 'main' | 'offhand'): number {
   const baseCooldown = weaponCooldown || BASE_WEAPON_COOLDOWN;
   const cooldownWithPenalty = hand === 'offhand' ? baseCooldown * 1.4 : baseCooldown;
+  // Prepared attack speed: base + both weapons + tuning, × loadout modifier (#517).
   const effectiveAttackSpeed = Number(robot.attackSpeed);
   return cooldownWithPenalty / (1 + effectiveAttackSpeed / 50);
 }

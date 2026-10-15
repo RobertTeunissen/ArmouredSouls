@@ -411,6 +411,31 @@ describe('Practice Arena Service', () => {
       expect(robot.offhandWeapon).toBeDefined();
       // Dual wield offhand should NOT be a shield
       expect(robot.offhandWeapon!.weapon.weaponType).not.toBe('shield');
+
+      // #517: sparring partners are combat-prepared with the loadout modifier.
+      // AverageBot attributes are 5 and this catalog carries no attribute bonuses.
+      expect(Number(robot.attackSpeed)).toBe(6.5); // 5 × 1.30
+      expect(Number(robot.weaponControl)).toBe(5.75); // 5 × 1.15
+      expect(Number(robot.penetration)).toBe(4); // 5 × 0.80
+      expect(Number(robot.combatPower)).toBe(4.5); // 5 × 0.90
+    });
+
+    it('should apply the Weapon + Shield modifier to sparring partner shields (#517)', async () => {
+      const config: SparringPartnerConfig = {
+        botTier: 'ExpertBot',
+        loadoutType: 'weapon_shield',
+        rangeBand: 'melee',
+        stance: 'balanced',
+        yieldThreshold: 20,
+      };
+
+      const robot = await buildSparringPartner(config, weapons);
+
+      // ExpertBot attributes are 10: shield capacity 10 × 1.20 = 12 → maxShield 48
+      expect(Number(robot.shieldCapacity)).toBe(12);
+      expect(robot.maxShield).toBe(48);
+      expect(robot.currentShield).toBe(48);
+      expect(Number(robot.attackSpeed)).toBe(8.5); // 10 × 0.85
     });
 
     it('should not assign an offhand weapon for single loadout', async () => {
@@ -533,6 +558,26 @@ describe('Practice Arena Service', () => {
       expect(result.loadoutType).toBe('dual_wield');
       expect(result.stance).toBe('offensive');
       expect(result.yieldThreshold).toBe(40);
+    });
+
+    // #517: the owned-robot path runs the real combat preparation, so the
+    // loadout modifier must be applied on top of weapons and saved tuning.
+    it('should apply the loadout modifier after tuning when preparing an owned robot', async () => {
+      const dbRobot = buildMockDbRobot();
+      mockVerifyRobotOwnership.mockResolvedValue(undefined);
+      mockPrisma.robot.findUnique.mockResolvedValue(dbRobot);
+      mockGetTuningBonuses.mockResolvedValueOnce({ attackSpeed: 1, shieldCapacity: 1 });
+
+      const result = await buildOwnedRobot(1, 42, { loadoutType: 'dual_wield' });
+
+      // attackSpeed: (5 + 0 weapon + 1 tuning) × 1.30 = 7.8
+      expect(Number(result.attackSpeed)).toBe(7.8);
+      // combatPower: 5 × 0.90 = 4.5; penetration: 5 × 0.80 = 4
+      expect(Number(result.combatPower)).toBe(4.5);
+      expect(Number(result.penetration)).toBe(4);
+      // shieldCapacity has no Dual Wield modifier: (5 + 1) × 4 = 24
+      expect(result.maxShield).toBe(24);
+      expect(result.currentHP).toBe(result.maxHP);
     });
 
     it('should swap main weapon when mainWeaponId override is provided', async () => {

@@ -23,6 +23,9 @@ import {
   type CombatEvent,
 } from '../src/services/battle/combatSimulator';
 import { prepareRobotForCombat } from '../src/utils/robotCalculations';
+import { ROBOT_ATTRIBUTES } from '../src/shared/utils/robotAttributes';
+import { simulateTagTeamBattle } from '../src/services/tag-team/tagTeamSimulation';
+import type { TagTeamWithRobots } from '../src/services/tag-team/tagTeamTypes';
 
 // ─── Fixtures ───────────────────────────────────────────────────────
 
@@ -318,5 +321,98 @@ describe('Combat simulator — refinement integration', () => {
 
     // Also confirm at least one trial completed without errors.
     expect(result.winnerId).toBeDefined();
+  });
+
+  // ─── #517: refinements + loadout modifiers, applied exactly once ──────
+
+  it('folds Hone into a loadout-modified attribute before the loadout multiplier (#517)', () => {
+    const robot = makeMockRobot({
+      loadoutType: 'dual_wield',
+      mainWeapon: makeWeaponInventory(1, [
+        { tier: 'hone', magnitude: 2, targetAttribute: 'attackSpeed', slotIndex: 1 },
+      ]) as unknown as RobotWithWeapons['mainWeapon'],
+      offhandWeapon: makeWeaponInventory(2) as unknown as RobotWithWeapons['offhandWeapon'],
+    });
+
+    prepareRobotForCombat(robot);
+
+    // attackSpeed: (base 15 + main 3 + Hone 2 + offhand 3) × 1.30 (Dual Wield) = 29.9
+    expect(Number(robot.attackSpeed)).toBe(29.9);
+    // combatPower: (base 20 + main 5 + offhand 5) × 0.90 (Dual Wield penalty) = 27
+    expect(Number(robot.combatPower)).toBe(27);
+  });
+
+  it('preparing twice does not fold Forge or Hone a second time (#517)', () => {
+    const robot = makeMockRobot({
+      mainWeapon: makeWeaponInventory(1, [
+        { tier: 'forge', magnitude: 1, targetAttribute: null, slotIndex: 1 },
+        { tier: 'hone', magnitude: 2, targetAttribute: 'combatPower', slotIndex: 2 },
+      ]) as unknown as RobotWithWeapons['mainWeapon'],
+    });
+
+    prepareRobotForCombat(robot);
+    prepareRobotForCombat(robot);
+
+    const weapon = robot.mainWeapon!.weapon as unknown as Record<string, number>;
+    expect(weapon.baseDamage).toBeCloseTo(12.96, 5);
+    expect(weapon.combatPowerBonus).toBe(7);
+    // (20 + 7) × 1 (single has no combatPower modifier) = 27
+    expect(Number(robot.combatPower)).toBe(27);
+  });
+
+  it('tag-team phases neither compound prepared attributes nor restore a damaged robot (#517)', async () => {
+    const makeTeamRobot = (id: number, loadoutType: string) => makeMockRobot({
+      id,
+      name: `Tagger-${id}`,
+      loadoutType,
+      yieldThreshold: 0,
+      mainWeapon: makeWeaponInventory(id * 2 - 1) as unknown as RobotWithWeapons['mainWeapon'],
+      offhandWeapon: loadoutType === 'single'
+        ? null
+        : makeWeaponInventory(id * 2) as unknown as RobotWithWeapons['offhandWeapon'],
+      mainWeaponId: id * 2 - 1,
+    });
+    const robots = [
+      makeTeamRobot(1, 'dual_wield'),
+      makeTeamRobot(2, 'weapon_shield'),
+      makeTeamRobot(3, 'weapon_shield'),
+      makeTeamRobot(4, 'dual_wield'),
+    ];
+    for (const robot of robots) prepareRobotForCombat(robot);
+
+    const snapshot = (robot: RobotWithWeapons) => ({
+      attributes: Object.fromEntries(ROBOT_ATTRIBUTES.map((attr) => [attr, Number(robot[attr as keyof RobotWithWeapons])])),
+      maxHP: robot.maxHP,
+      maxShield: robot.maxShield,
+    });
+    const before = robots.map(snapshot);
+
+    const team = (id: number, active: RobotWithWeapons, reserve: RobotWithWeapons): TagTeamWithRobots => ({
+      id,
+      stableId: id,
+      teamName: `Team-${id}`,
+      teamSize: 2,
+      activeRobotId: active.id,
+      reserveRobotId: reserve.id,
+      activeRobot: active,
+      reserveRobot: reserve,
+      createdAt: new Date('2025-01-01'),
+      updatedAt: new Date('2025-01-01'),
+    });
+
+    await simulateTagTeamBattle(team(1, robots[0], robots[1]), team(2, robots[2], robots[3]));
+
+    // The simulator reads prepared attributes; it must never re-derive or compound them.
+    expect(robots.map(snapshot)).toEqual(before);
+
+    // A robot damaged in an earlier phase keeps its HP if preparation is called again.
+    const damaged = robots.find((r) => r.currentHP < r.maxHP);
+    expect(damaged).toBeDefined();
+    const hpBefore = damaged!.currentHP;
+    const shieldBefore = damaged!.currentShield;
+    prepareRobotForCombat(damaged!);
+    expect(damaged!.currentHP).toBe(hpBefore);
+    expect(damaged!.currentShield).toBe(shieldBefore);
+    expect(snapshot(damaged!)).toEqual(before[robots.indexOf(damaged!)]);
   });
 });

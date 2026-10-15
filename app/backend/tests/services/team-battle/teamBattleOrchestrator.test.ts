@@ -195,6 +195,8 @@ import {
   rebalanceTeamBattleLeagues,
 } from '../../../src/services/team-battle/teamBattleAdapter';
 import { TeamBattleResult } from '../../../src/types/teamBattleLogTypes';
+import { prepareRobotForCombat } from '../../../src/utils/robotCalculations';
+import { getTuningBonusesBatch } from '../../../src/services/tuning-pool';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -440,6 +442,32 @@ describe('teamBattleOrchestrator', () => {
 
       // Verify audit logs emitted per robot (2 robots per team × 2 teams = 4)
       expect(mockLogBattleAuditEvent).toHaveBeenCalledTimes(4);
+    });
+
+    // #517: each team member is prepared exactly once, with its own tuning, before simulation.
+    it('should prepare every robot exactly once with its tuning before simulating', async () => {
+      const match = makeScheduledMatch(1, 2);
+      mockUnifiedScheduledMatches([match]);
+      (getTuningBonusesBatch as jest.Mock).mockResolvedValueOnce(new Map([[21, { shieldCapacity: 3 }]]));
+      mockTransaction.mockImplementation(async (cb: (...args: unknown[]) => unknown) => cb({
+        $executeRaw: jest.fn().mockResolvedValue(0),
+        cycleMetadata: { findUnique: jest.fn().mockResolvedValue({ totalCycles: 41, featureFlags: {} }) },
+        season: { findFirst: jest.fn().mockResolvedValue(null) },
+        battle: { create: jest.fn().mockResolvedValue({ id: 99 }), update: jest.fn() },
+        battleParticipant: { createMany: jest.fn(), updateMany: jest.fn() },
+        robot: { update: jest.fn() },
+        scheduledMatch: { update: jest.fn() },
+      }));
+
+      await executeScheduledTeamBattles(2);
+
+      const prepareMock = prepareRobotForCombat as jest.Mock;
+      const preparedIds = prepareMock.mock.calls.map(([robot]) => (robot as { id: number }).id).sort();
+      expect(preparedIds).toEqual([10, 11, 20, 21]);
+      expect(prepareMock).toHaveBeenCalledWith(expect.objectContaining({ id: 21 }), { shieldCapacity: 3 });
+      expect(prepareMock).toHaveBeenCalledWith(expect.objectContaining({ id: 10 }), {});
+      expect(Math.max(...prepareMock.mock.invocationCallOrder))
+        .toBeLessThan(mockSimulateTeamBattle.mock.invocationCallOrder[0]);
     });
 
     it('should set battleType to league_2v2 for 2v2 matches', async () => {

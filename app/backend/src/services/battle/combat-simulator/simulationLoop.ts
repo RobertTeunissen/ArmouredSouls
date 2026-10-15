@@ -41,6 +41,10 @@ import { initializeCombatState, calcCooldown, buildSpatialContext, handleTimeLim
  * Game mode-specific behavior (zone scoring, custom targeting, win conditions)
  * is injected via the optional GameModeConfig/GameModeState in BattleConfig.
  *
+ * Robots must have passed through `prepareRobotForCombat()`; the simulator reads
+ * their attributes as effective values and never re-derives weapon/tuning/loadout
+ * bonuses. It does not mutate the robots' attribute fields.
+ *
  * @param robots Array of robots to fight (N >= 2)
  * @param config Battle configuration (draw rules, duration, game mode hooks)
  * @returns SpatialCombatResult with full arena metadata
@@ -768,6 +772,7 @@ export function simulateBattleMulti(
  * Delegates to simulateBattleMulti() with 2 robots.
  * Preserves the exact same signature and return shape used by
  * league, tournament, and tag team orchestrators.
+ * Robots must have passed through `prepareRobotForCombat()`.
  *
  * @param robot1 First robot
  * @param robot2 Second robot

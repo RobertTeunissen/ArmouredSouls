@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { getLoadoutBonus, getStanceModifier } from '../utils/robotStats';
+import { calculateCombatEffectiveStat, getLoadoutBonus, getStanceModifier } from '../utils/robotStats';
 import { applyRefinementsToWeapon, type WeaponLike, type RefinementRow } from '../../../shared/utils/weaponRefinement';
 import { fetchTuningAllocation } from '../utils/robotApi';
 import type { RobotAttributeKey, RobotWithAttributes } from '../types/robot';
@@ -111,8 +111,11 @@ function EffectiveStatsDisplay({ robot }: EffectiveStatsDisplayProps) {
     // Calculate total modifier percentage
     const totalModifier = loadoutBonus + stanceBonus;
     
-    // Calculate effective value: (base + tuning + weapon) × (1 + loadout) × (1 + stance)
-    const effectiveValue = (numericBase + tuningBonus + weaponBonus) * (1 + loadoutBonus) * (1 + stanceBonus);
+    // Pre-stance value uses the canonical shared formula — the same 2-decimal value
+    // combat preparation writes onto the robot (#517): round2((base + tuning + weapons) × (1 + loadout)).
+    const combatValue = calculateCombatEffectiveStat(numericBase, weaponBonus, loadoutBonus, tuningBonus);
+    // Stance is shown as an extra multiplier on top (balanced stance = combat value).
+    const effectiveValue = combatValue * (1 + stanceBonus);
 
     return {
       base: Math.floor(numericBase),
