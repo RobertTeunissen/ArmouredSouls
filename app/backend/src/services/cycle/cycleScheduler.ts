@@ -172,6 +172,7 @@ async function executeTournamentCycle(): Promise<JobContext> {
   // Step 2: Execute/schedule tournament matches
   logger.info('Tournament Cycle: Step 2 — Executing tournament matches');
   let totalMatchesExecuted = 0;
+  let totalForfeits = 0;
   let totalRoundsExecuted = 0;
   let tournamentsCompleted = 0;
 
@@ -187,6 +188,7 @@ async function executeTournamentCycle(): Promise<JobContext> {
       // resolves byes, fights matches and hands any error to the failure policy.
       const roundResult = await executeSoloTournamentRound(tournament.id);
       totalMatchesExecuted += roundResult.matchesExecuted + roundResult.byesResolved + roundResult.matchesResumed;
+      totalForfeits += roundResult.forfeits;
       if (roundResult.errors.length > 0) {
         logger.warn(`Tournament Cycle: Tournament ${tournament.id} — ${roundResult.errors.length} match(es) handled by the failure policy: ${roundResult.errors.join('; ')}`);
       }
@@ -213,7 +215,7 @@ async function executeTournamentCycle(): Promise<JobContext> {
     };
   }
 
-  logger.info(`Tournament Cycle: ${activeTournaments.length} tournaments processed, ${totalRoundsExecuted} rounds, ${totalMatchesExecuted} matches executed, ${tournamentsCompleted} completed`);
+  logger.info(`Tournament Cycle: ${activeTournaments.length} tournaments processed, ${totalRoundsExecuted} rounds, ${totalMatchesExecuted} matches executed, ${totalForfeits} forfeits, ${tournamentsCompleted} completed`);
 
   // Step 4: Auto-create next tournament if none active
   // Suppressed during a Preparation_Phase for every Participant_Type (Spec #46 R1.8)
@@ -257,7 +259,7 @@ async function executeTagTeamCycle(): Promise<JobContext> {
   // Step 2: Execute tag team battles (daily cadence — no parity check)
   logger.info('Tag Team Cycle: Step 2 — Executing tag team battles');
   const battleSummary = await executeScheduledTagTeamBattles(new Date());
-  logger.info(`Tag Team Cycle: ${battleSummary.totalBattles} tag team battles executed`);
+  logger.info(`Tag Team Cycle: ${battleSummary.totalBattles} tag team battles executed (${battleSummary.forfeits} forfeits)`);
 
   // Step 3: Rebalance tag team leagues
   logger.info('Tag Team Cycle: Step 3 — Rebalancing tag team leagues');
@@ -477,7 +479,7 @@ async function executeKothCycle(): Promise<JobContext> {
   // Step 2: Execute scheduled KotH battles
   logger.info('KotH Cycle: Step 2 — Executing scheduled KotH battles');
   const battleSummary = await executeScheduledKothBattles(new Date());
-  logger.info(`KotH Cycle: ${battleSummary.successfulMatches} KotH matches executed (${battleSummary.failedMatches} failed)`);
+  logger.info(`KotH Cycle: ${battleSummary.successfulMatches} KotH matches executed (${battleSummary.failedMatches} failed, ${battleSummary.belowMinimumMatches} below minimum, ${battleSummary.forfeitedRobots} robots forfeited)`);
 
   // Step 3: Rebalance KotH leagues (same system as other leagues — top 10% promoted, bottom 10% demoted)
   logger.info('KotH Cycle: Step 3 — Rebalancing KotH leagues');
@@ -503,7 +505,7 @@ async function executeGrandMeleeCycle(): Promise<JobContext> {
   // Step 2: Execute all scheduled Grand Melee battles
   logger.info('Grand Melee Cycle: Step 2 — Executing scheduled Grand Melee battles');
   const execResult = await executeScheduledGrandMeleeBattles();
-  logger.info(`Grand Melee Cycle: ${execResult.successfulMatches} matches executed (${execResult.failedMatches} failed)`);
+  logger.info(`Grand Melee Cycle: ${execResult.successfulMatches} matches executed (${execResult.failedMatches} failed, ${execResult.belowMinimumMatches} below minimum, ${execResult.forfeitedRobots} robots forfeited)`);
 
   // Step 3: Rebalance Grand Melee leagues (promotion/demotion)
   logger.info('Grand Melee Cycle: Step 3 — Rebalancing Grand Melee leagues');
