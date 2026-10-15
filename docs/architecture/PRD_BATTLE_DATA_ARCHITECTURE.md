@@ -313,7 +313,7 @@ An unexpected error in one match never stops the run. Every orchestrator's per-m
 |---|---|
 | League 1v1, team league, tag team, KotH, Grand Melee | The queued match is set to `cancelled` with the error summary in `cancelReason`. No rewards. Never retried, reset to `scheduled` or left `error` |
 | Tournament match with a linked fought battle | One in-run resume; if that fails too, the row is finalised `completed` with the battle's winner |
-| Tournament match with nothing fought | `cancelled`, `winnerId` = the higher seed (it advances), no battle row, no rewards, no ELO/stat change |
+| Tournament match with nothing fought | `cancelled`, `winnerId` = the higher seed (it advances), no battle row, no rewards, no ELO/stat change. Exception: the battle row and the robots' ELO/stat updates are written before `battleId` is linked, so an error in that window also lands here while an unlinked fought battle with its ELO/stat changes exists (possibly won by the lower seed). It is never paid (income follows the link); the guide §11 has the query that finds it |
 | Failed tournament bye | The sole participant advances without reward |
 | Already-terminal row | No write; logged as `battle_match_already_terminal` |
 
