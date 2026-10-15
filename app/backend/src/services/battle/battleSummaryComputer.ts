@@ -12,6 +12,7 @@
 import { computeBattleStatistics } from '../../shared/utils/battleStatistics';
 import type { BattleLogEvent, BattleStatistics } from '../../shared/utils/battleStatistics';
 import type { Prisma } from '../../../generated/prisma';
+import type { KothPlacement } from '../../types';
 import logger from '../../config/logger';
 
 export interface BattleSummaryInput {
@@ -30,15 +31,7 @@ export interface BattleSummaryInput {
   /** Tag team / team battle info for team aggregates */
   tagTeamInfo?: { team1Robots: string[]; team2Robots: string[] };
   /** KotH placement data (if applicable) */
-  kothPlacements?: Array<{
-    robotId: number;
-    robotName: string;
-    placement: number;
-    zoneScore: number;
-    zoneTime: number;
-    kills: number;
-    destroyed: boolean;
-  }>;
+  kothPlacements?: KothPlacement[];
   /** KotH metadata (if applicable) */
   kothData?: { participantCount: number; scoreThreshold: number };
   /** Arena spatial data */

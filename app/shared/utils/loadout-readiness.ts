@@ -2,8 +2,10 @@
  * Loadout-based battle readiness rule.
  *
  * Single source of truth for:
- * - backend scheduling/battle readiness (`checkBattleReadiness` in
- *   `services/analytics/matchmakingService.ts`), and
+ * - backend scheduling readiness (`checkSchedulingReadiness` in
+ *   `services/analytics/matchmakingService.ts`),
+ * - the battle-time check on the loaded robots (`evaluateCombatEntry` in
+ *   `services/battle/combatReadiness.ts`), and
  * - the owner's "Not Battle Ready" badge on the Robot Detail page.
  *
  * HP is intentionally excluded: automatic repair runs before every battle,

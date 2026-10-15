@@ -8,7 +8,8 @@
  *
  * At the start of every Automaton_Turn, before the planner can buy anything,
  * `resumeIncompleteFitouts` finds the stable's robots that fail
- * `evaluateLoadoutReadiness` (the rule `checkBattleReadiness` uses) and
+ * `evaluateLoadoutReadiness` (the rule `checkSchedulingReadiness` and the
+ * battle-time `evaluateCombatEntry` use) and
  * resumes their fit-out:
  * - the blueprint loadout through `changeLoadoutType` (skipped when it matches);
  * - for every empty hand of the target stage, an unequipped inventory item of

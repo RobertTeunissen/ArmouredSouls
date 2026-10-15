@@ -1,7 +1,6 @@
 import { Robot } from '../generated/prisma';
 import prisma from '../src/lib/prisma';
 import {
-  checkBattleReadiness,
   checkSchedulingReadiness,
   runMatchmaking,
   runMatchmakingForTier,
@@ -151,7 +150,7 @@ async function enterLeague(
     await prisma.$disconnect();
   });
 
-  describe('checkBattleReadiness', () => {
+  describe('checkSchedulingReadiness', () => {
     it('should mark robot as ready when weapon equipped (HP not checked)', async () => {
       const weaponInv = await prisma.weaponInventory.create({
         data: {
@@ -177,7 +176,7 @@ async function enterLeague(
       });
       testRobotIds.push(robot.id);
 
-      const readiness = checkBattleReadiness(robot);
+      const readiness = checkSchedulingReadiness(robot);
 
       expect(readiness.isReady).toBe(true);
       expect(readiness.hpCheck).toBe(true);
@@ -211,7 +210,7 @@ async function enterLeague(
         },
       });
 
-      const readiness = checkBattleReadiness(robot);
+      const readiness = checkSchedulingReadiness(robot);
 
       expect(readiness.isReady).toBe(true);
       expect(readiness.hpCheck).toBe(true);
@@ -245,7 +244,7 @@ async function enterLeague(
         },
       });
 
-      const readiness = checkBattleReadiness(robot);
+      const readiness = checkSchedulingReadiness(robot);
 
       expect(readiness.isReady).toBe(true);
       expect(readiness.hpCheck).toBe(true);
@@ -256,65 +255,6 @@ async function enterLeague(
       await prisma.weaponInventory.deleteMany({ where: { id: weaponInv.id } });
     });
 
-    it('should mark robot as not ready when weapon not equipped', async () => {
-      const robot = await prisma.robot.create({
-        data: {
-          userId: testUser.id,
-          name: 'No Weapon Robot',
-          currentHP: 10,
-          maxHP: 10,
-          currentShield: 2,
-          maxShield: 2,
-          loadoutType: 'single',
-          mainWeaponId: null, // No weapon
-        },
-      });
-
-      const readiness = checkBattleReadiness(robot);
-
-      expect(readiness.isReady).toBe(false);
-      expect(readiness.hpCheck).toBe(true);
-      expect(readiness.weaponCheck).toBe(false);
-      expect(readiness.reasons).toContain('No main weapon equipped');
-
-      await prisma.robot.deleteMany({ where: { id: robot.id } });
-    });
-
-    it('should check dual wield loadout correctly', async () => {
-      const weaponInv1 = await prisma.weaponInventory.create({
-        data: {
-          userId: testUser.id,
-          weaponId: practiceSword.id,
-          pricePaid: 0,
-        },
-      });
-
-      const robot = await prisma.robot.create({
-        data: {
-          userId: testUser.id,
-          name: 'Dual Wield Robot',
-          currentHP: 10,
-          maxHP: 10,
-          currentShield: 2,
-          maxShield: 2,
-          loadoutType: 'dual_wield',
-          mainWeaponId: weaponInv1.id,
-          offhandWeaponId: null, // Missing offhand
-        },
-      });
-
-      const readiness = checkBattleReadiness(robot);
-
-      expect(readiness.isReady).toBe(false);
-      expect(readiness.weaponCheck).toBe(false);
-      expect(readiness.reasons).toContain('No offhand weapon equipped');
-
-      await prisma.robot.deleteMany({ where: { id: robot.id } });
-      await prisma.weaponInventory.deleteMany({ where: { id: weaponInv1.id } });
-    });
-  });
-
-  describe('checkSchedulingReadiness', () => {
     it('should mark robot as ready when weapon equipped regardless of HP', async () => {
       const weaponInv = await prisma.weaponInventory.create({
         data: {
@@ -329,7 +269,7 @@ async function enterLeague(
         data: {
           userId: testUser.id,
           name: `Low HP Scheduled ${Date.now()}`,
-          currentHP: 1, // Very low HP — would fail checkBattleReadiness
+          currentHP: 1, // Very low HP — irrelevant, repairs run before battles
           maxHP: 10,
           currentShield: 0,
           maxShield: 2,
@@ -369,6 +309,7 @@ async function enterLeague(
       const readiness = checkSchedulingReadiness(robot);
 
       expect(readiness.isReady).toBe(false);
+      expect(readiness.hpCheck).toBe(true);
       expect(readiness.weaponCheck).toBe(false);
       expect(readiness.reasons).toContain('No main weapon equipped');
 
@@ -408,47 +349,6 @@ async function enterLeague(
 
       await prisma.robot.deleteMany({ where: { id: robot.id } });
       await prisma.weaponInventory.deleteMany({ where: { id: weaponInv1.id } });
-    });
-
-    it('should differ from checkBattleReadiness for low HP robots with weapons', async () => {
-      const weaponInv = await prisma.weaponInventory.create({
-        data: {
-          userId: testUser.id,
-          weaponId: practiceSword.id,
-          pricePaid: 0,
-        },
-      });
-      testWeaponInvIds.push(weaponInv.id);
-
-      const robot = await prisma.robot.create({
-        data: {
-          userId: testUser.id,
-          name: `Diff Check ${Date.now()}`,
-          currentHP: 3, // 30% HP — fails battle readiness but passes scheduling
-          maxHP: 10,
-          currentShield: 0,
-          maxShield: 2,
-          loadoutType: 'single',
-          mainWeaponId: weaponInv.id,
-          yieldThreshold: 10,
-        },
-      });
-      testRobotIds.push(robot.id);
-
-      const battleReadiness = checkBattleReadiness(robot);
-      const schedulingReadiness = checkSchedulingReadiness(robot);
-
-      // Both readiness checks are now identical (repairs run before battles)
-      // HP is no longer checked in either - only weapons matter
-      expect(battleReadiness.isReady).toBe(true);
-      expect(battleReadiness.hpCheck).toBe(true);
-
-      // Scheduling readiness should also pass (same as battle readiness)
-      expect(schedulingReadiness.isReady).toBe(true);
-      expect(schedulingReadiness.weaponCheck).toBe(true);
-
-      await prisma.robot.deleteMany({ where: { id: robot.id } });
-      await prisma.weaponInventory.deleteMany({ where: { id: weaponInv.id } });
     });
   });
 

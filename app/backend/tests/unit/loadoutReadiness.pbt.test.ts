@@ -1,8 +1,9 @@
 /**
  * Tests for the shared loadout readiness rule (app/shared/utils/loadout-readiness.ts).
  *
- * The rule backs both backend scheduling readiness (`checkBattleReadiness`)
- * and the owner's "Not Battle Ready" badge on the Robot Detail page.
+ * The rule backs backend scheduling readiness (`checkSchedulingReadiness`),
+ * the battle-time check (`evaluateCombatEntry`) and the owner's
+ * "Not Battle Ready" badge on the Robot Detail page.
  */
 
 import * as fc from 'fast-check';

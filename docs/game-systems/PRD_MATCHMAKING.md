@@ -194,7 +194,7 @@ The Armoured Souls matchmaking system is a **fully implemented** turn-based mult
 - **Rationale**: Since repairs always run before battles, HP checks at scheduling or execution time are unnecessary
 - **Rationale**: With the cycle order repair → execute → schedule, robots may have reduced HP at scheduling time. Since repair runs before execution, HP at scheduling time is irrelevant. Only weapon loadout matters for scheduling eligibility.
 - **Load-bearing under scoped repair (issue #411)**: pre-battle repair now covers only the robots with a match queued for that battle type, so damaged robots are routinely left unrepaired between their own matches. Because readiness ignores HP, those robots are still matched normally and are repaired by the cron that runs their match. **Adding an HP condition to readiness would strand them**: a robot too damaged to be scheduled would never be scheduled, so it would never be repaired, so it would never fight again.
-- **Implementation**: `checkSchedulingReadiness()` for matchmaking, `checkBattleReadiness()` for execution and user-facing validation. `checkBattleReadiness()` delegates the loadout rule to the shared `evaluateLoadoutReadiness()` (`app/shared/utils/loadout-readiness.ts`), which the Robot Detail owner "Not Battle Ready" badge also uses
+- **Implementation**: `checkSchedulingReadiness()` for matchmaking; the battle-time check on the loaded robots is `evaluateCombatEntry()` (`services/battle/combatReadiness.ts`). Both delegate the loadout rule to the shared `evaluateLoadoutReadiness()` (`app/shared/utils/loadout-readiness.ts`), which the Robot Detail owner "Not Battle Ready" badge also uses
 
 **D6: Same-Stable Matching**
 - **Decision**: Strongly deprioritize (allow as last resort)

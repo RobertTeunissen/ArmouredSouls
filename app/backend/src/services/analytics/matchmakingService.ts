@@ -27,14 +27,18 @@ export interface MatchPair {
 }
 
 /**
- * Check if a robot meets battle readiness requirements.
- * Only checks weapon loadout — HP is not checked because
- * robots are always repaired before battles execute.
+ * Check if a robot meets scheduling readiness requirements.
+ *
+ * Every matchmaker calls this when it books future matches. Only the weapon
+ * loadout is checked, NOT HP: robots are repaired before the scheduled match
+ * executes, so HP at scheduling time is irrelevant. The loadout rule is shared
+ * with the frontend Robot Detail badge (`evaluateLoadoutReadiness`).
+ *
+ * Battle time re-checks the loaded robots with `evaluateCombatEntry`
+ * (services/battle/combatReadiness.ts), which uses the same rule.
  */
-export function checkBattleReadiness(robot: Robot): BattleReadinessCheck {
-  // Weapon loadout rule is shared with the frontend Robot Detail badge.
+export function checkSchedulingReadiness(robot: Robot): BattleReadinessCheck {
   const { isReady, reasons } = evaluateLoadoutReadiness(robot);
-
   return {
     isReady,
     reasons,
@@ -42,17 +46,6 @@ export function checkBattleReadiness(robot: Robot): BattleReadinessCheck {
     weaponCheck: isReady,
   };
 }
-/**
- * Check if a robot meets scheduling readiness requirements.
- * Used when scheduling future matches — only checks weapon loadout,
- * NOT HP. Robots will be repaired before the scheduled match executes,
- * so HP status at scheduling time is irrelevant.
- */
-export function checkSchedulingReadiness(robot: Robot): BattleReadinessCheck {
-  return checkBattleReadiness(robot);
-}
-
-
 
 /**
  * Get recent opponents for multiple robots using unified scheduled_matches_v2.
