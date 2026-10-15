@@ -114,6 +114,11 @@ jest.mock('../../../src/services/battle/battleSummaryComputer', () => ({
   computeBattleSummary: jest.fn().mockReturnValue({ perRobotStats: {}, damageFlows: {} }),
 }));
 
+jest.mock('../../../src/services/scheduling/thinInstanceByes', () => ({
+  resolvePlacementBye: jest.fn().mockResolvedValue(undefined),
+  resolveBelowMinimumField: jest.fn().mockResolvedValue({ forfeitBattleId: 200, byeMatchIds: [], alreadyResolved: false }),
+}));
+
 import { executeScheduledGrandMeleeBattles } from '../../../src/services/grand-melee/grandMeleeBattleOrchestrator';
 import { simulateBattleMulti } from '../../../src/services/battle/combatSimulator';
 import { prepareRobotForCombat } from '../../../src/utils/robotCalculations';
@@ -127,6 +132,8 @@ import { calculateStreamingRevenueBatch } from '../../../src/services/economy/st
 import standingsService from '../../../src/services/standings/standingsService';
 import schedulingService from '../../../src/services/scheduling/schedulingService';
 import * as matchFailurePolicy from '../../../src/services/battle/matchFailurePolicy';
+import { calculateGrandMeleeRewards } from '../../../src/services/grand-melee/grandMeleeRewards';
+import { resolveBelowMinimumField } from '../../../src/services/scheduling/thinInstanceByes';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -286,7 +293,9 @@ describe('executeScheduledGrandMeleeBattles', () => {
     }
   });
 
-  it('should fail gracefully when below minimum participants', async () => {
+  it('should resolve a ready field below the minimum through resolveBelowMinimumField, without simulating', async () => {
+    (simulateBattleMulti as jest.Mock).mockClear();
+    (resolveBelowMinimumField as jest.Mock).mockClear();
     const match = makeScheduledMatch(1, 5);
     const robots = Array.from({ length: 5 }, (_, i) => makeRobot(i + 1));
 
@@ -296,25 +305,78 @@ describe('executeScheduledGrandMeleeBattles', () => {
 
     const summary = await executeScheduledGrandMeleeBattles();
 
-    expect(summary.failedMatches).toBe(1);
+    expect(summary.belowMinimumMatches).toBe(1);
+    expect(summary.failedMatches).toBe(0);
     expect(summary.successfulMatches).toBe(0);
-    expect(summary.errors).toHaveLength(1);
-    expect(summary.errors[0]).toContain('expected at least 8 robots');
+    expect(simulateBattleMulti).not.toHaveBeenCalled();
+    expect(resolveBelowMinimumField).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 1, leagueType: 'bronze', leagueInstanceId: 'bronze_1', scheduledFor: match.scheduledFor }),
+      'grand_melee',
+      expect.arrayContaining(robots.map((r) => expect.objectContaining({ id: r.id }))),
+      [],
+    );
+  });
+
+  // Rule 4: an unarmed robot is placed last; it is never prepared or simulated
+  // and earns nothing, and the field size N is used for every robot.
+  it('should place an unarmed robot last without preparing, simulating or paying it', async () => {
+    jest.clearAllMocks();
+    const match = makeScheduledMatch(1, 9);
+    const robots = [
+      ...Array.from({ length: 8 }, (_, i) => makeRobot(i + 1)),
+      { ...makeRobot(9), currentHP: 40, mainWeaponId: null, mainWeapon: null },
+    ];
+    mockPrisma.scheduledMatch.count.mockResolvedValueOnce(1);
+    mockPrisma.scheduledMatch.findFirst.mockResolvedValueOnce(match);
+    mockPrisma.robot.findMany.mockResolvedValueOnce(robots);
+    (simulateBattleMulti as jest.Mock).mockReturnValueOnce(makeSimResult(8));
+
+    const summary = await executeScheduledGrandMeleeBattles();
+
+    expect(summary.successfulMatches).toBe(1);
+    expect(summary.forfeitedRobots).toBe(1);
+    const preparedIds = (prepareRobotForCombat as jest.Mock).mock.calls.map(([r]) => (r as { id: number }).id);
+    expect(preparedIds).not.toContain(9);
+    const [simulated, config] = (simulateBattleMulti as jest.Mock).mock.calls[0] as [Array<{ id: number }>, { arenaRadius: number }];
+    expect(simulated.map((r) => r.id)).not.toContain(9);
+    expect(config.arenaRadius).toBe(16 + (8 - 2) * 3);
+    expect(mockPrisma.battleParticipant.createMany).toHaveBeenCalledWith({
+      data: expect.arrayContaining([
+        expect.objectContaining({ robotId: 9, placement: 9, forfeited: true, credits: 0, finalHP: 40, damageDealt: 0 }),
+      ]),
+    });
+    expect(updateRobotCombatStats).not.toHaveBeenCalledWith(expect.objectContaining({ robotId: 9 }));
+    expect(standingsService.awardGrandMeleePoints).toHaveBeenCalledWith({
+      robotId: 9, placement: 9, totalParticipants: 9, damageDealt: 0, survivalTime: 0, forfeited: true,
+    });
+    expect(standingsService.awardGrandMeleePoints).toHaveBeenCalledWith(
+      expect.objectContaining({ robotId: 1, placement: 1, totalParticipants: 9 }),
+    );
+    expect(calculateGrandMeleeRewards).toHaveBeenCalledWith(1, 'bronze', 9, expect.any(Number));
+    expect(calculateGrandMeleeRewards).not.toHaveBeenCalledWith(9, expect.anything(), expect.anything(), expect.anything());
+    const awardedUsers = (awardCreditsWithLedger as jest.Mock).mock.calls.map(([userId]) => userId);
+    expect(awardedUsers).not.toContain(9);
+    const components = (awardCreditsWithLedger as jest.Mock).mock.calls
+      .flatMap((call) => (call[7] as { placementRewardComponents: Array<{ totalParticipants: number }> }).placementRewardComponents);
+    expect(components.every((c) => c.totalParticipants === 9)).toBe(true);
   });
 
   it('should cancel a failed match through the failure policy and never reset it to scheduled', async () => {
-    const match = makeScheduledMatch(1, 5);
+    const match = makeScheduledMatch(1, 8);
     mockPrisma.scheduledMatch.count.mockResolvedValueOnce(1);
     mockPrisma.scheduledMatch.findFirst.mockResolvedValueOnce(match);
-    mockPrisma.robot.findMany.mockResolvedValueOnce(Array.from({ length: 5 }, (_, i) => makeRobot(i + 1)));
+    mockPrisma.robot.findMany.mockResolvedValueOnce(Array.from({ length: 8 }, (_, i) => makeRobot(i + 1)));
     mockPrisma.scheduledMatch.updateMany.mockResolvedValueOnce({ count: 1 });
+    (simulateBattleMulti as jest.Mock).mockImplementationOnce(() => {
+      throw new Error('engine exploded');
+    });
 
     const summary = await executeScheduledGrandMeleeBattles();
 
     expect(summary.failedMatches).toBe(1);
     expect(mockPrisma.scheduledMatch.updateMany).toHaveBeenCalledWith({
       where: { id: 1, status: { in: ['scheduled', 'error'] } },
-      data: { status: 'cancelled', cancelReason: expect.stringContaining('expected at least 8 robots') },
+      data: { status: 'cancelled', cancelReason: expect.stringContaining('engine exploded') },
     });
     expect(mockPrisma.scheduledMatch.update).not.toHaveBeenCalledWith(
       expect.objectContaining({ data: { status: 'error' } }),
@@ -325,7 +387,7 @@ describe('executeScheduledGrandMeleeBattles', () => {
   });
 
   it('should never re-fetch a match whose cancel write failed in the same run', async () => {
-    const rows = [makeScheduledMatch(1, 5), makeScheduledMatch(2, 10)];
+    const rows = [makeScheduledMatch(1, 10), makeScheduledMatch(2, 10)];
     mockPrisma.scheduledMatch.count.mockResolvedValueOnce(2);
     mockPrisma.scheduledMatch.findFirst.mockImplementation(
       (args: { where: { id?: { notIn?: number[] } } }) => {
@@ -337,9 +399,13 @@ describe('executeScheduledGrandMeleeBattles', () => {
       .spyOn(matchFailurePolicy, 'handleMatchFailure')
       .mockResolvedValue({ cancelled: false, errorSummary: 'GRAND_MELEE_ERROR: boom' });
     mockPrisma.robot.findMany
-      .mockResolvedValueOnce(Array.from({ length: 5 }, (_, i) => makeRobot(i + 1)))
+      .mockResolvedValueOnce(Array.from({ length: 10 }, (_, i) => makeRobot(i + 1)))
       .mockResolvedValueOnce(Array.from({ length: 10 }, (_, i) => makeRobot(i + 1)));
-    (simulateBattleMulti as jest.Mock).mockReturnValueOnce(makeSimResult(10));
+    (simulateBattleMulti as jest.Mock)
+      .mockImplementationOnce(() => {
+        throw new Error('boom');
+      })
+      .mockReturnValueOnce(makeSimResult(10));
 
     const summary = await executeScheduledGrandMeleeBattles();
 

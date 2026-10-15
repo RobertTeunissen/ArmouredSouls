@@ -25,6 +25,7 @@ import * as simulationLoop from '../../src/services/battle/combat-simulator/simu
 import * as byeResolutionService from '../../src/services/battle/byeResolutionService';
 import { BYE_BATTLE_DURATION_SECONDS } from '../../src/services/battle/byeResolutionService';
 import { executeScheduledKothBattles } from '../../src/services/koth/kothBattleOrchestrator';
+import { executeScheduledGrandMeleeBattles } from '../../src/services/grand-melee/grandMeleeBattleOrchestrator';
 import { resolveBelowMinimumField } from '../../src/services/scheduling/thinInstanceByes';
 import { flushDeferredWork } from '../../src/services/common/deferredWork';
 import { getParticipationReward } from '../../src/utils/economyFormulas';
@@ -167,7 +168,7 @@ async function battlesOf(robots: number[]) {
   });
 }
 
-// ── Mode table (5.2 adds Grand Melee) ────────────────────────────────
+// ── Mode table ───────────────────────────────────────────────────────
 
 interface PlacementSummary {
   successfulMatches: number;
@@ -195,6 +196,16 @@ const kothCase: PlacementCase = {
   minimum: 5,
   run: () => executeScheduledKothBattles(),
   forfeitLeagueType: () => 'koth',
+};
+
+const grandMeleeCase: PlacementCase = {
+  mode: 'grand_melee',
+  matchType: 'grand_melee',
+  standingMode: 'grand_melee',
+  minimum: 8,
+  run: () => executeScheduledGrandMeleeBattles(),
+  // Grand Melee rows carry the tier (the fought-row convention).
+  forfeitLeagueType: (tier) => tier,
 };
 
 // ── Lifecycle ────────────────────────────────────────────────────────
@@ -523,5 +534,37 @@ describe('King of the Hill', () => {
 
   it('T8-R6: an incomplete loadout fights as single; the stored loadout is unchanged', async () => {
     await expectT8R6(kothCase);
+  });
+});
+
+// ── Grand Melee ──────────────────────────────────────────────────────
+
+describe('Grand Melee', () => {
+  it('T12: an unarmed robot is placed last with nothing paid; the arena is sized for the ready robots', async () => {
+    const simulate = jest.spyOn(simulationLoop, 'simulateBattleMulti');
+
+    const { battle, field } = await expectT12(grandMeleeCase, 9);
+
+    expect(simulate).toHaveBeenCalledTimes(1);
+    expect(simulate.mock.calls[0][0].map((r) => r.id).sort((a, b) => a - b)).toEqual([...field.ready].sort((a, b) => a - b));
+    // 16 + (ready.length - 2) * 3 with 8 ready robots, not 37 from 9.
+    expect((battle.battleLog as unknown as { arenaRadius: number }).arenaRadius).toBe(34);
+    expect(simulate.mock.calls[0][1]?.arenaRadius).toBe(34);
+  });
+
+  it('T13: below the minimum → a forfeit-only battle at the tier and tier-scaled byes', async () => {
+    await expectT13(grandMeleeCase);
+  });
+
+  it('T13: a crash in the bye step is recovered once, at the gold tier', async () => {
+    await expectT13CrashRerun(grandMeleeCase);
+  });
+
+  it('all unarmed: a forfeit-only battle, zero byes, the match is completed', async () => {
+    await expectAllUnarmed(grandMeleeCase);
+  });
+
+  it('T8-R6: an incomplete loadout fights as single; the stored loadout is unchanged', async () => {
+    await expectT8R6(grandMeleeCase);
   });
 });
