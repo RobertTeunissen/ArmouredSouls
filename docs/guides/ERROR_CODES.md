@@ -147,7 +147,7 @@ Example with details:
 |------|-------------|-------------|
 | `KOTH_NOT_FOUND` | 404 | KotH match does not exist |
 | `KOTH_ALREADY_COMPLETED` | 400 | KotH match has already finished |
-| `INSUFFICIENT_KOTH_PARTICIPANTS` | 400 | Not enough participants for KotH |
+| `INSUFFICIENT_KOTH_PARTICIPANTS` | 400 | Not enough participants for KotH. No longer thrown since #536: a field that drops below the minimum at battle time is resolved by `resolveBelowMinimumField` (byes for the ready robots). The code is kept for compatibility |
 | `INVALID_KOTH_STATE` | 400 | KotH match is in an invalid state |
 
 ### Onboarding Errors

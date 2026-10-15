@@ -2,8 +2,8 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: v1.1  
-**Date**: February 10, 2026  
+**Version**: v1.5\
+**Date**: October 15, 2026\
 **Status**: ✅ Implemented 
 **Page**: `/robots/:id` (Detail view for individual robot)
 
@@ -1386,6 +1386,7 @@ The existing `RobotImageSelector` modal has been extended with a new "Upload Cus
 | 1.2 | 2026-03-05 | GitHub Copilot | Added onboarding GuidedUIOverlay integration (Battle-Ready Setup) |
 | 1.3 | 2026-10-10 | Kiro | Automaton_Badge after the owner name in the robot header (Spec #55) |
 | 1.4 | 2026-10-12 | Kiro | Owner-only readiness badge aligned with backend loadout rule; robot-perspective Upcoming Matches |
+| 1.5 | 2026-10-15 | Kiro | Unequip confirmation for robots with booked matches; readiness is re-checked at battle time (#536) |
 
 ---
 
@@ -1398,7 +1399,21 @@ The Matches tab renders `UpcomingMatches` with the viewed robot's `robotId`:
 - **HP is not a readiness criterion.** Automatic repair runs before every battle for every stable type (see `PRD_MATCHMAKING.md` D5 and `PRD_ECONOMY_SYSTEM.md`), so a damaged but armed robot is ready. HP stays visible elsewhere on the page.
 - **Non-owners never see the badge.** `GET /api/robots/:id` strips HP, weapon and loadout fields for non-owners (`robotSanitizer.ts`); with those fields missing readiness is unknown, so no badge is rendered. This includes every Automaton robot, since Automaton stables have no login.
 
+- **The badge matters at battle time too (#536).** Readiness is checked again when each booked battle starts: a robot without a main weapon forfeits (its team, in team modes; last place in KotH/Grand Melee), and an incomplete loadout fights as Single for that battle. The Dashboard uses the same rule for its readiness alerts (`PRD_DASHBOARD_PAGE.md`).
 Verified by `RobotDetailUpcomingMatches.test.tsx`, `UpcomingMatches.test.tsx`, `match-display-instances.test.ts` and `robot-battle-readiness.test.ts`.
+
+### Unequip confirmation (#536)
+
+Unequipping is never blocked. When the robot has booked matches, the Battle Config tab first shows the shared `ConfirmationModal` (a warning, not a block):
+
+| Slot | Title | Message | Buttons |
+|---|---|---|---|
+| Main | "Unequip main weapon?" | "{robot} has booked matches ({events}). Without a main weapon it will forfeit them unless re-armed before they run." | "Unequip anyway" (destructive) / "Keep weapon" |
+| Offhand | "Unequip offhand weapon?" | "{robot} has booked matches ({events}). Without an offhand it will fight them with a single weapon." | "Unequip anyway" / "Keep offhand" |
+
+- Booked matches are the robot's `heldSlots` from the stable subscription overview (`useSubscriptionStore`), shown with their event labels. The overview is fetched for owners only. With nothing booked, unequip runs directly as before.
+- The dialog has `role="dialog"`, `aria-modal`, a labelled title, focus on the cancel button, and Escape cancels (unless it is loading).
+- Copy lives in `app/frontend/src/utils/unequipWarning.ts`. Verified by `ConfirmationModal.test.tsx`, `BattleConfigTab.unequipWarning.test.tsx` and `unequipWarning.test.ts`.
 
 ---
 

@@ -2,7 +2,7 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: v2.3  
+**Version**: v2.4\
 **Last Updated**: October 15, 2026  
 **Status**: ✅ Implemented  
 **Owner**: Robert Teunissen  
@@ -14,7 +14,8 @@ v1.0 (Mar 18, 2026): Initial architecture doc — 4 orchestrators, combat simula
 v2.0 (Apr 2, 2026): Added Practice Arena (5th consumer), KotH integration, HP/Shield tracking, tag team phase transitions, shared post-combat layer, updated file paths for service consolidation  
 v2.1 (Apr 10, 2026): Added proper versioning, fixed stale CYCLE_PROCESS.md reference  
 v2.2 (Oct 15, 2026): #517 — Combat Preparation Contract (raw vs prepared input per API, canonical loadout-adjusted attributes, idempotency, HP handling per entry point)  
-v2.3 (Oct 15, 2026): #518 — Weapon reach invariant (per-hand reach check before attack resolution, `performAttack()` guard, blocked-attempt contract; patience no longer forces attacks)
+v2.3 (Oct 15, 2026): #518 — Weapon reach invariant (per-hand reach check before attack resolution, `performAttack()` guard, blocked-attempt contract; patience no longer forces attacks)\
+v2.4 (Oct 15, 2026): #536 — Battle-time entry gate (forfeit, last place, single-weapon fallback) and the simulator's `ROBOT_NOT_BATTLE_READY` invariant
 
 ---
 
@@ -179,6 +180,9 @@ Each orchestrator handles a different match type but follows the same core patte
 
 ```
   Load robots with weapons from DB
+           │
+           ▼
+  Battle-time entry gate (combatReadiness.ts): forfeit / last place / single fallback
            │
            ▼
   Reset HP/Shield to max (full repair before combat)
@@ -472,6 +476,28 @@ fields, so stored base attributes stay unchanged.
 | Practice, owned robot (`practiceArenaService.ts`) | once, on a JSON-cloned DB row | `simulateBattle` (batch rebuilds robots per iteration) | full HP |
 | Practice, sparring partner (`practiceArenaService.ts`) | once, freshly constructed, no tuning | `simulateBattle` | full HP |
 | Byes | no simulation | — | — |
+
+### Battle-Time Entry Gate
+
+Scheduling checks loadouts when a match is booked (`checkSchedulingReadiness`), but a player can unequip afterwards.
+Every orchestrator therefore runs the shared pure module `services/battle/combatReadiness.ts` on the robots it
+loaded for the battle, after the bye short-circuit and before tuning and preparation:
+
+| Mode | Gate | Robot without a main weapon | Incomplete loadout |
+|---|---|---|---|
+| League 1v1, solo tournament | `evaluateMatchEntry` | that robot forfeits | fights as `single` |
+| League 2v2/3v3, tag team, team tournaments | `evaluateMatchEntry` (team tournaments: `decideTeamTournamentEntry`, which also folds in the roster check) | the whole team forfeits | fights as `single` |
+| KotH, Grand Melee | `partitionPlacementField` | last place, no rewards; the rest fight. Below the minimum field, `resolveBelowMinimumField` gives the ready robots byes | fights as `single` |
+| Practice arena | its own check | 400 error, as before | fights as `single` |
+
+A forfeit is never simulated: `resolveForfeitEvent` (`forfeitResolutionService.ts`) writes it. Both sides unready is
+a draw (knockout tournaments: the higher seed advances). `applyLoadoutFallbacks` changes only the in-memory
+`loadoutType` and logs one `[Battle] Loadout fallback` warning per robot.
+
+The simulator is the backstop: `simulateBattleMulti` calls `assertAllRobotsArmed` and throws
+`BattleError ROBOT_NOT_BATTLE_READY` (500, `details.robotIds`) if a robot without a main weapon reaches it. There is no
+weaponless default. The orchestrator's per-match catch hands the error to `handleMatchFailure`
+(`matchFailurePolicy.ts`), which cancels the match with no rewards and lets the run continue.
 
 ---
 

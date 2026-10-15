@@ -2,12 +2,13 @@
 
 **Project**: Armoured Souls
 **Document Type**: Product Requirements Document (PRD)
-**Version**: v1.5
-**Last Updated**: October 14, 2026
+**Version**: v1.6
+**Last Updated**: October 15, 2026
 **Status**: ✅ Implemented
 **Owner**: Robert Teunissen
 
 **Revision History**:
+- v1.6 (Oct 15, 2026): Added `battle/combatReadiness`, `battle/walkoverClaim`, `battle/forfeitResolutionService` and `battle/matchFailurePolicy`; `executeSoloTournamentRound` and `resolveBelowMinimumField` (#536).
 - v1.5 (Oct 14, 2026): Added `league/leagueInstancePlacement` and `standings/standingPlacement` (unified standings creation rule); updated `teamBattleService` and `subscriptionService` rows.
 
 - v1.4 (Oct 10, 2026): Added the `automaton` domain, the Domain_Service_Extraction services in `economy/` and `robot/`, the admin Automatons router and the catalogue scripts (Spec #55). Inventory now lists 38 directories (also `search`).
@@ -167,6 +168,10 @@ Core combat engine — the simulator and shared orchestration helpers.
 | `baseOrchestrator` | Shared battle orchestration pipeline (validate → simulate → record) |
 | `battlePostCombat` | Shared post-combat helpers (streaming revenue, audit logging, stat updates, credit/prestige/fame awards) |
 | `byeResolutionService` | The single writer for a Bye_Event in all nine modes — entity resolution, the Bye_Award_Claim, the whole Bye_Record and the credit award. Simulates nothing (Spec #49) |
+| `combatReadiness` | Pure battle-time readiness (#536), run by every orchestrator on the robots loaded for the battle: `evaluateCombatEntry` (no main weapon → forfeit; incomplete loadout → single), `evaluateMatchEntry` (fight / forfeit / double forfeit for two sides), `partitionPlacementField` (KotH/GM ready vs forfeited), `applyLoadoutFallbacks` (in-memory single fallback) and `assertAllRobotsArmed` (the simulator's `ROBOT_NOT_BATTLE_READY` backstop). The scheduling-time rule is `analytics/matchmakingService.checkSchedulingReadiness` |
+| `walkoverClaim` | The queued-match claim shared by byes and forfeits (`claimQueuedMatch`, `readClaimedBattleId`): a conditional update on `scheduled_matches_v2` or `tournament_matches` taken before any payment, so a rerun or a concurrent run pays nothing |
+| `forfeitResolutionService` | `resolveForfeitEvent`, the single writer for a two-sided forfeit (league 1v1, 2v2/3v3, tag team, solo and team tournaments): battle row, claim, bye-level `battle_income` for the ready side with the `forfeit:` identity, participants with `forfeited`, zero-event summary, standings, stats and audit. Double forfeit = draw, no credits |
+| `matchFailurePolicy` | `handleMatchFailure`: one per-match failure handler for every orchestrator — makes the queued match terminal with no rewards (unified rows `cancelled`; tournaments: linked fought battle → its winner, nothing fought → higher seed advances, bye → sole participant), logs a structured `error` event and never throws. `recoverTournamentMatch` first gives a linked fought tournament battle one idempotent resume |
 | `battleStrategy` | Strategy pattern interface + `BattleProcessor` for new match types |
 | `combatMessageGenerator` | Converts raw combat events into narrative battle log messages |
 
@@ -328,7 +333,7 @@ Tournament system — bracket management and battle execution.
 
 | Service | Purpose |
 |---------|---------|
-| `tournamentBattleOrchestrator` | 1v1 tournament match execution (HP tiebreaker, round-based rewards, championship titles) |
+| `tournamentBattleOrchestrator` | 1v1 tournament match execution (HP tiebreaker, round-based rewards, championship titles). `executeSoloTournamentRound(tournamentId)` runs one round for the cycle, admin and route callers: byes, resumes of linked battles, battle-time forfeits (`resolveSoloTournamentForfeit`) and fought matches, with every failure sent to `recoverTournamentMatch`; it never throws for one match |
 | `tournamentService` | Tournament CRUD, entity-agnostic bracket generation (ELO seeding), round advancement, auto-creation |
 | `teamTournamentBattleOrchestrator` | Team tournament match execution — dispatches to Team Battle Engine, draw tiebreaking, N× rewards |
 | `teamTournamentService` | Team eligibility checks, tournament creation, combined-ELO seeding |
@@ -355,7 +360,7 @@ slot until fought. See `scheduling/eventScheduleScope` below and
 |---------|---------|
 | `eventScheduleScope` | The single answer to "is there a queued match?", asked from both directions over one `Record<SubscribableEventType, …>` scope map: `resolveRobotIdsForEvent` (who fights event X next — used by pre-battle repair, issue #411; carries no `isByeMatch` filter on either arm since Spec #49, so a byed robot is repaired like any other booked match) and `resolveOutstandingEventsForRobots` (which events a robot still owes a match to — used by subscription slot accounting). Adding a tenth mode fails to compile until its schedule source is declared |
 | `eventCronSchedule` | `getNextSchedulingMoment(s)` — when each event next books matches, derived from the configured cron slot. Surfaced to players so they know the deadline to be subscribed by |
-| `thinInstanceByes` | Bye creation and resolution for the two Placement_Modes (Spec #49). `planThinInstanceByes` is pure — one entry per eligible robot when a `koth`/`grand_melee` tier instance falls below `MIN_GROUP_SIZE`; `createThinInstanceByes` persists it; `resolvePlacementBye` resolves the resulting rows. Both matchmakers call it, so the two cannot drift apart. Before this, a thin instance was skipped in silence and nothing was written to any table |
+| `thinInstanceByes` | Bye creation and resolution for the two Placement_Modes (Spec #49). `planThinInstanceByes` is pure — one entry per eligible robot when a `koth`/`grand_melee` tier instance falls below `MIN_GROUP_SIZE`; `createThinInstanceByes` persists it; `resolvePlacementBye` resolves the resulting rows. Both matchmakers call it, so the two cannot drift apart. Before this, a thin instance was skipped in silence and nothing was written to any table. `resolveBelowMinimumField` (#536) handles a scheduled KotH/GM match whose ready field fell below `MIN_GROUP_SIZE` at battle time: a forfeit-only battle for the unarmed robots (last places, no rewards) and one tier-scaled bye per ready robot, under the same claim |
 
 ---
 

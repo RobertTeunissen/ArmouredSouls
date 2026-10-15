@@ -77,9 +77,9 @@ All deployed finance routes authenticate, but their responses are unversioned an
 | Manual vs automatic repair spend | Linked `robot_repair.creditsCharged` and `repairType` after exact identity/amount/owner/robot/period validation | The related `repair_cost` pair | A subtype-losing ledger aggregate |
 | Facility operating components | Stored `operating_costs` Financial_Breakdown | Settlement domain audit | Current facility levels/formulas |
 | Weapon-sale proceeds | Positive `weapon_sale` pair | Stored item facts | Earned Credits or negative purchase spend |
-| Robot battle/bye allocation | `BattleParticipant.credits` joined to the related complete `battle_income` pair and owner-scoped conservation check | Battle/schedule identity and stored award breakdown | Dividing a stable award or assuming every ledger row has `robotId` |
+| Robot battle/bye allocation | `BattleParticipant.credits` joined to the related complete `battle_income` pair and owner-scoped conservation check; a forfeit win (`forfeit:` identity, ledger metadata `isBye: true`, `forfeit: true`) is allocated and reported as bye income | Battle/schedule identity and stored award breakdown (`outcome: 'forfeit_win'`) | Dividing a stable award, assuming every ledger row has `robotId`, or adding a separate forfeit report kind |
 | Robot streaming revenue | Complete robot-attributed `streaming_revenue` pair | `BattleParticipant.streamingRevenue` as compatibility/result evidence | Synthetic stable-wide allocation |
-| Fought match count | Retained battle participation/result evidence | Battle summary | A bye event; byes are detail but not fought matches |
+| Fought match count | Retained battle participation/result evidence | Battle summary | A bye event or a forfeit; both are walkovers, shown as detail but not counted as fought matches. The forfeiter earns 0 credits and has no ledger row |
 | Prestige gain | Positive `prestige_change` audit rows with unique `sourceEventId` | Current `User.prestige` as context | A financial amount or ledger line |
 | Full-damage repair reference | Active robots and shared `app/shared/utils/repairCost.ts` functions, rounded per robot | Current Repair Bay context | `repairQuoteCredits` as spend or any statement movement |
 | Cross-season history | Season archive tables only | None | Purged live ledger/audit/snapshot/battle rows |

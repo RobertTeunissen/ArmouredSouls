@@ -2,7 +2,7 @@
 
 **Project**: Armoured Souls
 **Document Type**: Comprehensive Reference
-**Version**: v3.2
+**Version**: v3.3
 **Date**: October 15, 2026
 **Status**: ✅ Implemented
 
@@ -12,6 +12,7 @@
 **This Document**: Complete consolidated guide integrating all weapon and loadout system documentation. Includes full user stories, functional requirements, technical design, UI/UX specifications, testing requirements, and implementation details.
 
 **Revision History:**
+- v3.3 (Oct 15, 2026): #536 — battle readiness at battle time: no main weapon is a forfeit, an incomplete loadout fights as Single for that battle, unequip confirmation for booked robots; the weaponless "Fists" default is removed
 - v3.2 (Oct 15, 2026): #517 — canonical effective-attribute formula shared by display and combat preparation; loadout modifier applied exactly once in every battle mode; corrected stat-calculation snippet and utility list
 - v3.1 (Feb 10, 2026): Weapon roster expansion — updated counts, categories, DPS rankings, price tiers, and loadout coverage for 47-weapon catalog; added rangeBand as weapon attribute
 - v3.0 (Feb 10, 2026): Full consolidation - integrated all content from PRD_WEAPON_LOADOUT.md and WEAPONS_AND_LOADOUT.md
@@ -507,6 +508,20 @@ Loadouts use **percentage-based bonuses** rather than flat bonuses for critical 
 - Require Weapon+Shield loadout
 - Main weapon must also be equipped (configuration incomplete without main)
 - NOT compatible with: Single, Two-Handed, Dual-Wield
+
+### Readiness at Battle Time (#536)
+
+Loadouts are checked twice: when a match is booked (`checkSchedulingReadiness`) and again when the battle starts (`evaluateCombatEntry` on the robots loaded for the battle). Both use the shared rule `evaluateLoadoutReadiness` (`app/shared/utils/loadout-readiness.ts`).
+
+| Loadout at battle start | Result |
+|---|---|
+| No main weapon (any loadout) | The robot does not fight. Two-sided modes: forfeit (a team with any unarmed member forfeits); KotH/Grand Melee: last place with no rewards |
+| Weapon+Shield without a shield, Dual-Wield without an offhand | Fights as **Single** for that battle only: the Single modifier applies and the offhand slot is ignored. The stored loadout and equipment are unchanged; the offhand is never promoted to main |
+| Complete loadout | Fights as configured |
+
+There is no weaponless default weapon. A robot without a main weapon never reaches the combat simulator; if one does, the simulator throws `ROBOT_NOT_BATTLE_READY` and the match is cancelled.
+
+Swapping and unequipping stay free and are never blocked. When the robot has booked matches, the Robot Detail page asks for confirmation first: unequipping the main weapon warns that the robot will forfeit unless it is re-armed before the match runs; unequipping the offhand warns that the robot will fight with a single weapon (see `docs/prd_pages/PRD_ROBOT_DETAIL_PAGE.md`). A robot whose loadout is not battle ready is not scheduled again until it is fixed.
 
 
 ---

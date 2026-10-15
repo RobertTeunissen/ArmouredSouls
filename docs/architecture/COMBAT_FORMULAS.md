@@ -95,6 +95,22 @@ The simulator reads these prepared values directly and never re-derives them. Lo
 Before #517 combat preparation omitted the loadout attribute modifier, so only the formula-level effects applied in
 battle. See `docs/balance_changes/LOADOUT_PARITY_CORRECTION.md` for the corrected baseline.
 
+### Combat Entry Invariant
+
+Every robot that enters combat holds a main weapon. There is no weaponless default, no default cooldown and no
+invented weapon. The battle-time check (`evaluateCombatEntry` in `services/battle/combatReadiness.ts`) runs on the
+robots loaded for the battle, before preparation:
+
+| Robot at battle start | Result |
+|--------|-------|
+| No main weapon | Not simulated. Two-sided modes: forfeit (the robot or its whole team loses, no damage). KotH/Grand Melee: last place with no rewards, the rest fight |
+| Main weapon, loadout complete | Fights with its stored loadout |
+| Main weapon, loadout incomplete (`weapon_shield` without a shield, `dual_wield` without an offhand) | Fights as `single` for this battle only (`applyLoadoutFallbacks`): the single loadout modifier applies and the offhand slot is ignored. The stored loadout is unchanged and the offhand is never promoted to main |
+
+The simulator enforces the invariant: `simulateBattleMulti` calls `assertAllRobotsArmed`, and the per-hand weapon
+lookups (`requireHandWeapon`) throw `BattleError ROBOT_NOT_BATTLE_READY` for a missing main weapon. The match failure
+policy cancels such a match; it is never fought.
+
 ### Negative Bonuses
 Weapons can have negative bonuses (penalties). These are handled correctly:
 - Negative bonuses reduce the effective attribute
@@ -1428,6 +1444,9 @@ Each member robot receives the same ELO delta applied to their individual elo fi
 
 ## Version History
 
+- **2026-10-15:** #536 — combat entry invariant: weaponless robots never enter combat (forfeit or last place), an
+  incomplete loadout fights as `single` for that battle, and the simulator throws `ROBOT_NOT_BATTLE_READY` instead of
+  using a weaponless default
 - **2026-10-15:** #518 — physical reach is an invariant of every resolved attack (melee rangeBand <= 2 units,
   both hands, loop gate + `performAttack()` guard); patience no longer forces attacks; blocked-attempt contract;
   per-hand target-of-opportunity independent of patience; counter-range section corrected

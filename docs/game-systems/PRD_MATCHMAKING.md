@@ -1,15 +1,16 @@
 # Product Requirements Document: Matchmaking System
 
-**Last Updated**: October 14, 2026
+**Last Updated**: October 15, 2026
 **Status**: ✅ IMPLEMENTED - All Core Features Complete  
 **Owner**: Robert Teunissen  
 **Epic**: Matchmaking and Battle Scheduling System  
-**Version**: 2.1
+**Version**: 2.2
 
 ## Version History
 - v1.0 - Initial Implemented Version by GitHub Copilot (January 31, 2026)
 - v2.0 - Consolidated Version (February 9, 2025)
 - v2.1 - Unified standings creation: robots and teams enter a mode's Bronze league on their first matchable subscription, never at creation (October 14, 2026)
+- v2.2 - Battle-time readiness (#536): no main weapon when the battle starts is a forfeit (KotH/GM: last place), an incomplete loadout fights as single, and failed matches are cancelled instead of retried (October 15, 2026)
 
 ---
 
@@ -94,7 +95,7 @@ The Armoured Souls matchmaking system is a **fully implemented** turn-based mult
 
 3. **Matchmaking Algorithm** 
    - Scheduling readiness (for matchmaking): weapons equipped only — HP not checked since robots are repaired before battle execution
-   - Battle readiness (for execution): weapons equipped only — HP not checked since auto-repair runs before battles
+   - Battle readiness (for execution): checked again on the robots loaded for the battle — no main weapon is a forfeit (KotH/GM: last place, the rest fight), an incomplete loadout fights as single for that battle; HP not checked since auto-repair runs before battles
    - ELO-based pairing (±150 ideal, ±300 fallback)
    - Recent opponent tracking (soft deprioritize last 5)
    - Same-stable deprioritization (heavy penalty)
@@ -195,6 +196,12 @@ The Armoured Souls matchmaking system is a **fully implemented** turn-based mult
 - **Rationale**: With the cycle order repair → execute → schedule, robots may have reduced HP at scheduling time. Since repair runs before execution, HP at scheduling time is irrelevant. Only weapon loadout matters for scheduling eligibility.
 - **Load-bearing under scoped repair (issue #411)**: pre-battle repair now covers only the robots with a match queued for that battle type, so damaged robots are routinely left unrepaired between their own matches. Because readiness ignores HP, those robots are still matched normally and are repaired by the cron that runs their match. **Adding an HP condition to readiness would strand them**: a robot too damaged to be scheduled would never be scheduled, so it would never be repaired, so it would never fight again.
 - **Implementation**: `checkSchedulingReadiness()` for matchmaking; the battle-time check on the loaded robots is `evaluateCombatEntry()` (`services/battle/combatReadiness.ts`). Both delegate the loadout rule to the shared `evaluateLoadoutReadiness()` (`app/shared/utils/loadout-readiness.ts`), which the Robot Detail owner "Not Battle Ready" badge also uses
+- **Battle time (#536)**: a player can unequip after a match is booked, so every orchestrator checks again when the battle starts. The outcomes are the same in every mode:
+  - **No main weapon → forfeit.** 1v1: the robot forfeits. 2v2/3v3, tag team and team tournaments: any unarmed member forfeits the whole team. Forfeits are not simulated (no damage, no repair cost). The ready side wins with bye-level rewards (bye LP and a normal ELO gain); the forfeiter takes a normal loss with 0 credits. Both sides unarmed → a draw (knockout tournaments: the higher seed advances).
+  - **KotH and Grand Melee:** an unarmed robot takes last place with no rewards and the rest fight. If fewer than the minimum remain, the ready robots get byes.
+  - **Incomplete loadout with a main weapon** (`weapon_shield` without a shield, `dual_wield` without an offhand): fights as `single` for that battle only. The stored loadout never changes.
+  - **Not rescheduled until fixed.** Matchmaking runs after execution in every job and uses `checkSchedulingReadiness`, so a forfeiting or incomplete robot (or team) gets no new match until its loadout is valid again.
+- **Failures (#536)**: an unexpected error in one match cancels that match with no rewards and an admin `error` log, and the run continues. Nothing is retried, reset to `scheduled` or left in `error` (`services/battle/matchFailurePolicy.ts`).
 
 **D6: Same-Stable Matching**
 - **Decision**: Strongly deprioritize (allow as last resort)

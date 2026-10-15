@@ -1,14 +1,15 @@
 # Product Requirements Document: Battle Data Architecture
 
-**Last Updated**: October 14, 2026
+**Last Updated**: October 15, 2026
 **Status**: ✅ Implemented  
 **Owner**: Robert Teunissen  
 **Epic**: Battle System — Data Architecture  
-**Version**: 3.1
+**Version**: 3.2
 
 ---
 
 ## Version History
+- v3.2 (October 15, 2026) — Added "Forfeit Battle Records" (`battle_participants.forfeited`, the forfeit battle shape, the history classifier) and "Match failure policy" (#536).
 - v3.1 (October 14, 2026) — Added "Standings lifecycle": rows are created by `standingPlacement` on the first matchable subscription, never at robot/team creation or by battle recording.
 - v3.0 (June 25, 2026) — Added "Post-Battle Robot State Update (Unified)" section documenting `updateRobotCombatStats()` as the single source of truth for all orchestrators. Added bye-match handling patterns. Updated implementation files table to include team battle and team tournament orchestrators.
 - v2.0 (April 2, 2026) — Full audit against Prisma schema. Fixed BattleParticipant model (removed non-existent `userId` field/relation/index, added `createdAt`, added table mapping). Corrected Battle model documentation (it still has robot1Id/robot2Id, tag team fields, ELO tracking — not the "simplified" version the old doc claimed). Fixed battleType values (`"league"` not `"1v1"`). Updated file paths for backend service consolidation. Removed incorrect "26+ columns removed" claim.
@@ -54,6 +55,7 @@ model BattleParticipant {
   finalHP     Int     @map("final_hp")
   yielded     Boolean @default(false)
   destroyed   Boolean @default(false)
+  forfeited   Boolean @default(false)    // no main weapon at battle start (#536)
 
   createdAt DateTime @default(now()) @map("created_at")
 
@@ -117,6 +119,35 @@ This document requires a `BattleSummary` at battle creation. The `league_1v1` by
 - Amounts: `app/backend/src/utils/byeRewards.ts` (`resolveByeReward`, `BYE_MODE_SPECS`)
 - Records: `app/backend/src/services/battle/byeResolutionService.ts` (`resolveByeEvent`)
 - Placement_Mode bye creation: `app/backend/src/services/scheduling/thinInstanceByes.ts`
+
+---
+
+## Forfeit Battle Records (#536)
+
+A **forfeit** is what happens when a robot has no main weapon when its battle starts. The battle-time check (`services/battle/combatReadiness.ts`) runs in every orchestrator on the robots loaded for the battle. A forfeit is never simulated.
+
+### Two-sided modes (league 1v1, 2v2/3v3, tag team, solo and team tournaments)
+
+One writer, `resolveForfeitEvent` (`services/battle/forfeitResolutionService.ts`), modelled on the bye writer and sharing its claim (`walkoverClaim.ts`):
+
+| Artefact | Count | Notes |
+|---|---|---|
+| `battles` | 1 | `durationSeconds: 15`, `winnerReward` = the bye-level reward (0 on a double forfeit), `loserReward: 0`; `winnerId`/`winningSide` = the ready side, both `null` on a double forfeit |
+| `battle_participants` | one per robot of both sides | `forfeited: true` on every robot of the forfeiting side; `credits` 0 for the forfeiter; `damageDealt: 0`; `finalHP` = `currentHP` (unchanged) |
+| `battle_summaries` | 1 | `hasData: false`, `totalEvents: 0` |
+| `standings` | per side | the ready side wins, the forfeiter loses (league LP and ELO as for a fought result); a double forfeit is a draw. Tournaments write no standings |
+| `audit_logs` (`battle_complete`) | one per robot | `payload.forfeit: true`, `forfeited`, `forfeitReason`; `isByeMatch: false` |
+| Credit award | 0 or 1 per receiving stable | `battle_income` through `awardCreditsWithLedger`, `forfeit:` identity (see the Financial Ledger and Audit Guide) |
+
+Knockout tournaments set `tournament_matches.status = 'forfeit'`. The forfeiter is eliminated. On a double forfeit the battle row is a draw and `tournament_matches.winnerId` names the higher seed, who advances without credits.
+
+### Placement modes (KotH, Grand Melee)
+
+Unready robots are split off with `partitionPlacementField` and the rest fight. Each forfeiter gets a `battle_participants` row in the fought battle with `forfeited: true`, `credits: 0`, the last placements (`ready + 1 … N`) and no rewards; `BattleSummary.kothPlacements` marks them `forfeited: true`. Standings record the placement with 0 points. When too few ready robots remain, `resolveBelowMinimumField` (`services/scheduling/thinInstanceByes.ts`) writes a forfeit-only battle for the forfeiters and queues normal per-robot byes for the ready robots.
+
+### Classification is permanent
+
+History and battle detail classify a forfeit from permanent data only (`classifyForfeit` in `matchHistoryService.ts`): any participant with `forfeited = true`, or a `tournament_matches` row with `status = 'forfeit'` linked to the battle. The `battleLog.isForfeit` flag is display data and is never read for classification.
 
 ---
 
@@ -273,6 +304,20 @@ All orchestrators fabricate bye opponents in-memory (id < 0). They never exist i
 | 2v2/3v3 League | `match.team2Id === null` | `robot2Id = team1Robots[0].id` | `.filter(p => p.robotId > 0)` |
 | Tag Team | `match.team2Id === null` | `robot2Id = team1.activeRobotId`, team2 fields = null | `.filter(p => p.robotId > 0)` |
 | Team Tournament | Bye = no match scheduled (bracket logic) | N/A | N/A |
+
+### Match failure policy
+
+An unexpected error in one match never stops the run. Every orchestrator's per-match catch calls `handleMatchFailure` (`services/battle/matchFailurePolicy.ts`); tournaments go through `recoverTournamentMatch`, which first gives a linked fought battle one idempotent resume.
+
+| Situation | Result |
+|---|---|
+| League 1v1, team league, tag team, KotH, Grand Melee | The queued match is set to `cancelled` with the error summary in `cancelReason`. No rewards. Never retried, reset to `scheduled` or left `error` |
+| Tournament match with a linked fought battle | One in-run resume; if that fails too, the row is finalised `completed` with the battle's winner |
+| Tournament match with nothing fought | `cancelled`, `winnerId` = the higher seed (it advances), no battle row, no rewards, no ELO/stat change |
+| Failed tournament bye | The sole participant advances without reward |
+| Already-terminal row | No write; logged as `battle_match_already_terminal` |
+
+Each branch logs a structured `error` event (`battle_match_cancelled`, `battle_match_finalized_after_error`, `battle_match_resumed_after_error`, `battle_match_cancel_failed`). Money is never paid twice; the reconciliation signatures for partial payments are in the Financial Ledger and Audit Guide §11.
 
 ---
 
