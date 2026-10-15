@@ -137,9 +137,11 @@ vi.mock('../../stores/seasonStore', () => ({
   selectShouldShowCountdown: () => () => false,
 }));
 
+// Mutable per test: the readiness ladder reads booked matches from the overview.
+const mockSubscriptionState: { overview: any } = { overview: null };
 vi.mock('../../stores/subscriptionStore', () => ({
   useSubscriptionStore: (selector: any) => {
-    const state = { overview: null, loading: false, error: null, fetchOverview: vi.fn(), refresh: vi.fn(), lastFetched: null, inFlight: null, invalidate: vi.fn() };
+    const state = { overview: mockSubscriptionState.overview, loading: false, error: null, fetchOverview: vi.fn(), refresh: vi.fn(), lastFetched: null, inFlight: null, invalidate: vi.fn() };
     return selector(state);
   },
 }));
@@ -178,6 +180,7 @@ describe('DashboardPage - Notifications', () => {
     vi.clearAllMocks();
     mockFetchMyRobots._robots = [];
     mockFetchMyRobots.mockResolvedValue([]);
+    mockSubscriptionState.overview = null;
     mockFetchTuningAllocation.mockResolvedValue({ robotId: 1, facilityLevel: 0, poolSize: 0, allocated: 0, remaining: 0, perAttributeMaxes: {}, allocations: {} });
     mockFetchTuningAllocationSummaries.mockResolvedValue([]);
 
@@ -339,7 +342,7 @@ describe('DashboardPage - Notifications', () => {
   describe('Robot readiness - no weapon', () => {
     beforeEach(() => {
       mockFetchMyRobots._robots = [
-        { id: 1, name: 'Unarmed Bot', elo: 1000, currentHP: 100, maxHP: 100, mainWeaponId: null },
+        { id: 1, name: 'Unarmed Bot', elo: 1000, currentHP: 100, maxHP: 100, mainWeaponId: null, loadoutType: 'single', offhandWeaponId: null },
       ];
       mockGetTutorialState.mockResolvedValue({
         currentStep: 9,
@@ -376,6 +379,51 @@ describe('DashboardPage - Notifications', () => {
 
       await user.click(screen.getByRole('button', { name: /equip weapon/i }));
       expect(mockNavigate).toHaveBeenCalledWith('/robots/1');
+    });
+
+    it('should warn about forfeits when the unarmed robot has booked matches', async () => {
+      mockSubscriptionState.overview = {
+        robots: [{ robotId: 1, robotName: 'Unarmed Bot', subscriptions: [], heldSlots: ['league_1v1'], cap: 1 }],
+        registeredEvents: [{ type: 'league_1v1', label: '1v1 League' }],
+        bookingOfficeLevel: 0,
+        nextSchedulingMoments: {},
+      };
+      renderDashboard();
+      await waitFor(() => {
+        expect(screen.getByText(/Unarmed Bot will forfeit its booked matches unless re-armed/)).toBeInTheDocument();
+      });
+      expect(screen.getByText('No main weapon equipped. Booked: 1v1 League')).toBeInTheDocument();
+      expect(screen.queryByText(/Unarmed Bot has no weapon equipped/)).not.toBeInTheDocument();
+    });
+  });
+
+  // The ACC observation behind rule 9: the robot page shows "Not Battle Ready"
+  // for an incomplete loadout, but the dashboard showed nothing.
+  describe('Robot readiness - incomplete loadout', () => {
+    beforeEach(() => {
+      mockFetchMyRobots._robots = [
+        { id: 2, name: 'Shieldless Bot', elo: 1000, currentHP: 100, maxHP: 100, mainWeaponId: 5, loadoutType: 'weapon_shield', offhandWeaponId: null },
+      ];
+      mockGetTutorialState.mockResolvedValue({
+        currentStep: 9,
+        hasCompletedOnboarding: true,
+        onboardingSkipped: false,
+        strategy: null,
+        choices: {},
+        startedAt: null,
+        completedAt: '2026-01-01T01:00:00Z',
+      });
+    });
+
+    it('should show the same not-battle-ready warning as the robot page, with a Fix Loadout action', async () => {
+      const user = userEvent.setup();
+      renderDashboard();
+      await waitFor(() => {
+        expect(screen.getByText(/Shieldless Bot is not battle ready/)).toBeInTheDocument();
+      });
+      expect(screen.getByText(/^No shield equipped\. It won't be scheduled/)).toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: /fix loadout/i }));
+      expect(mockNavigate).toHaveBeenCalledWith('/robots/2');
     });
   });
 

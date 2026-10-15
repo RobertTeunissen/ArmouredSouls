@@ -15,6 +15,8 @@
  * shows one alert per category, highest priority first.
  */
 
+import { getOwnerBattleReadiness } from './robot-battle-readiness';
+
 // ─── Descriptor ──────────────────────────────────────────────────────────────
 
 export type NotificationVariant = 'success' | 'warning' | 'danger' | 'info';
@@ -45,15 +47,21 @@ export interface NotificationRobot {
   currentHP: number;
   maxHP: number;
   mainWeaponId: number | null;
+  /** With `offhandWeaponId`, feeds the shared loadout-readiness rule. */
+  loadoutType: string;
+  offhandWeaponId: number | null;
 }
 
 export interface NotificationSubscriptionOverview {
   robots: {
     robotId: number;
     subscriptions: { eventType: string }[];
+    /** Events with a match already booked for this robot. */
     heldSlots: string[];
     cap: number;
   }[];
+  /** Display labels for event types; used to name booked events. */
+  registeredEvents?: { type: string; label: string }[];
 }
 
 export interface NotificationTuningState {
@@ -204,7 +212,9 @@ export interface RobotReadinessInput {
  * The priority ladder. At most one alert per rung, and each rung skips robots
  * already covered by a higher one:
  *
- *   1  no weapon equipped   — cannot be scheduled at all
+ *   1a forfeit risk         — no main weapon and matches already booked
+ *   1b no weapon equipped   — no main weapon, nothing booked; cannot be scheduled
+ *   1c incomplete loadout   — armed, but not ready by the shared loadout rule
  *   2  no subscriptions     — has a weapon but will never be entered
  *   3a free subscription slots
  *   3b unallocated tuning points
@@ -222,8 +232,30 @@ export function buildRobotReadinessNotifications(input: RobotReadinessInput): No
   const reminder = buildOnboardingReminder(onboardingState);
   if (reminder) alerts.push(reminder);
 
-  // Priority 1: no weapon equipped.
-  const noWeaponRobots = robots.filter(r => !r.mainWeaponId);
+  // Priority 1: readiness. Booked matches come from the overview's held slots.
+  const heldSlotsFor = (robotId: number): string[] =>
+    subscriptionOverview?.robots.find(or => or.robotId === robotId)?.heldSlots ?? [];
+  const eventLabel = (type: string): string =>
+    subscriptionOverview?.registeredEvents?.find(e => e.type === type)?.label ?? type;
+
+  const unarmedRobots = robots.filter(r => !r.mainWeaponId);
+
+  // 1a: no main weapon with matches booked — those matches will be forfeited.
+  const forfeitRiskRobots = unarmedRobots.filter(r => heldSlotsFor(r.id).length > 0);
+  if (forfeitRiskRobots.length > 0) {
+    const first = forfeitRiskRobots[0];
+    alerts.push({
+      key: 'readiness-forfeit-risk',
+      variant: 'danger',
+      icon: '🔧',
+      message: `${first.name} will forfeit its booked matches unless re-armed${moreSuffix(forfeitRiskRobots.length)}`,
+      detail: `No main weapon equipped. Booked: ${heldSlotsFor(first.id).map(eventLabel).join(', ')}`,
+      action: { label: 'Equip Weapon', to: `/robots/${first.id}` },
+    });
+  }
+
+  // 1b: no main weapon, nothing booked.
+  const noWeaponRobots = unarmedRobots.filter(r => heldSlotsFor(r.id).length === 0);
   if (noWeaponRobots.length > 0) {
     const first = noWeaponRobots[0];
     alerts.push({
@@ -233,6 +265,24 @@ export function buildRobotReadinessNotifications(input: RobotReadinessInput): No
       message: `${first.name} has no weapon equipped${moreSuffix(noWeaponRobots.length)}`,
       detail: 'Cannot be scheduled for any match without a weapon',
       action: { label: 'Equip Weapon', to: `/robots/${first.id}` },
+    });
+  }
+
+  // 1c: armed but not ready by the rule behind the robot page's badge
+  // (`getOwnerBattleReadiness`), so the two views cannot disagree.
+  const incompleteLoadouts = robots
+    .filter(r => !!r.mainWeaponId)
+    .map(r => ({ robot: r, readiness: getOwnerBattleReadiness(r) }))
+    .filter(entry => entry.readiness?.isReady === false);
+  if (incompleteLoadouts.length > 0) {
+    const { robot: first, readiness } = incompleteLoadouts[0];
+    alerts.push({
+      key: 'readiness-incomplete-loadout',
+      variant: 'warning',
+      icon: '⚠️',
+      message: `${first.name} is not battle ready${moreSuffix(incompleteLoadouts.length)}`,
+      detail: `${readiness?.warnings[0]}. It won't be scheduled, and booked matches are fought with a single weapon`,
+      action: { label: 'Fix Loadout', to: `/robots/${first.id}` },
     });
   }
 
