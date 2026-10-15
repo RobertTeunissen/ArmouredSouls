@@ -3,11 +3,16 @@
  *
  * Handles team tournament match execution by dispatching to the Team Battle Engine.
  * Creates Battle + BattleParticipant records, updates match status, and handles
- * draw tiebreaking (Task 5.2), reward distribution (Task 5.3), and forfeit
- * handling with eligibility checks (Task 5.4).
+ * draw tiebreaking (Task 5.2) and reward distribution (Task 5.3).
+ *
+ * Battle-time entry (design §5.5): one per-side decision for both sides,
+ * `decideTeamTournamentEntry` — a side forfeits if its roster/subscriptions are
+ * ineligible or any member has no main weapon. Every forfeit (roster or weapon,
+ * single or double) goes through the shared Forfeit_Resolution_Writer, exactly
+ * like the other two-sided modes.
  *
  * This module implements the core match execution flow:
- *   load teams → prepare → simulate → create battle record → update match
+ *   load teams → entry check → prepare → simulate → create battle record → update match
  *
  * Requirements: R4.1, R4.2, R4.3, R4.5, R4.6, R5.5, R5.6
  *
@@ -40,7 +45,15 @@ import {
   updateRobotCombatStats,
 } from '../battle/battlePostCombat';
 import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
-import { completeByeMatch } from './tournamentService';
+import { completeByeMatch, resolveHigherSeed } from './tournamentService';
+import { recoverTournamentMatch } from '../battle/matchFailurePolicy';
+import {
+  applyLoadoutFallbacks,
+  evaluateCombatEntry,
+  evaluateMatchEntry,
+} from '../battle/combatReadiness';
+import { resolveForfeitEvent, type ForfeitSide } from '../battle/forfeitResolutionService';
+import { BYE_BATTLE_DURATION_SECONDS } from '../battle/byeResolutionService';
 
 // ─── Team Tournament Prestige (Stepped Curve) ────────────────────────────────
 
@@ -86,15 +99,26 @@ export interface TeamBattleParticipantResult {
 
 export interface TeamTournamentBattleResult {
   battleId: number;
-  winnerId: number; // Winning team ID
+  /** The team advancing in the bracket (the higher seed on a double forfeit). */
+  winnerId: number;
   participants: TeamBattleParticipantResult[];
   durationSeconds: number;
   isByeMatch: boolean;
+  /** True when the match was resolved as a forfeit (nothing simulated). */
+  isForfeit: boolean;
 }
 
 export interface RoundExecutionResult {
+  /** Fought matches, byes and empty-placeholder housekeeping. */
   matchesExecuted: number;
+  /** Matches that threw at least once. */
   matchesFailed: number;
+  /** Matches resolved as forfeits (roster or weapon, single or double; nothing simulated). */
+  matchesForfeited: number;
+  /** Matches whose linked fought battle was finalised by a resume (round start or in-run retry). */
+  matchesResumed: number;
+  /** Matches handed to the failure policy (cancelled, R1 higher seed, or finalised after error). */
+  matchesCancelled: number;
 }
 
 interface TeamTournamentAchievementParticipant {
@@ -204,6 +228,30 @@ export async function processTeamTournamentBattle(
       teamSize,
       battleType,
     );
+  }
+
+  // Battle-time readiness backstop (rule 1). The executor's entry decision has
+  // normally passed already, but a player can unequip in between: a side with a
+  // robot lacking a main weapon forfeits through the shared writer, it is never
+  // simulated. An incomplete loadout fights as single (rule 6).
+  const entry = evaluateMatchEntry(team1Robots, team2Robots);
+  if (entry.kind !== 'fight') {
+    const forfeits = (side: 1 | 2): boolean =>
+      entry.kind === 'double_forfeit' || entry.forfeitingSides[0] === side;
+    return resolveTeamTournamentForfeit(match, tournament, [
+      { participantId: team1.id, team: team1, robots: team1Robots, forfeited: forfeits(1) },
+      { participantId: team2.id, team: team2, robots: team2Robots, forfeited: forfeits(2) },
+    ]);
+  }
+  // In memory only, and before prepareRobotForCombat reads loadoutType.
+  for (const robotId of applyLoadoutFallbacks([...team1Robots, ...team2Robots], entry.decisions)) {
+    const decision = entry.decisions.find(d => d.robotId === robotId);
+    logger.warn('[Battle] Loadout fallback', {
+      matchId: match.id,
+      robotId,
+      storedLoadout: decision?.loadoutFallback?.storedLoadout,
+      battleLoadout: 'single',
+    });
   }
 
   // 3. Prepare all 2N robots for combat (full HP, shield, tuning bonuses)
@@ -464,6 +512,7 @@ export async function processTeamTournamentBattle(
     participants,
     durationSeconds: battleResult.durationSeconds,
     isByeMatch: false,
+    isForfeit: false,
   };
 }
 
@@ -577,6 +626,7 @@ async function resumeTeamTournamentBattleFinalization(
     })),
     durationSeconds: battle.durationSeconds,
     isByeMatch: false,
+    isForfeit: false,
   };
 }
 
@@ -626,14 +676,17 @@ async function awardTeamTournamentBattleAchievements(
 /**
  * Execute all pending matches in the current round of a team tournament.
  *
- * For each pending match:
- * 1. Check forfeit conditions (R5.5, R5.6)
- * 2. Execute battle via processTeamTournamentBattle
- * 3. On failure: log error, skip match, continue remaining
+ * For each pending non-bye match, in this order (design §5.5):
+ * 1. Resume first: a match with a linked fought battle is finalised by
+ *    processTeamTournamentBattle and never reaches the entry gate.
+ * 2. One per-side entry decision (`decideTeamTournamentEntry`): a forfeit is
+ *    resolved through the shared writer.
+ * 3. Otherwise fight via processTeamTournamentBattle (with its own backstop).
+ * On failure the shared tournament policy runs (rule 7) and the round goes on.
  *
  * @param tournamentId - ID of the tournament to execute
  * @param teamSize - Team size (2 or 3)
- * @returns Execution summary with matches executed and failed counts
+ * @returns Execution summary per outcome
  */
 export async function executeTeamTournamentRound(
   tournamentId: number,
@@ -679,6 +732,10 @@ export async function executeTeamTournamentRound(
 
   let matchesExecuted = 0;
   let matchesFailed = 0;
+  let matchesForfeited = 0;
+  let matchesResumed = 0;
+  let matchesCancelled = 0;
+  const mode = tournament.participantType === 'team_2v2' ? 'tournament_2v2' as const : 'tournament_3v3' as const;
 
   // 3. Execute each match
   for (const match of pendingMatches) {
@@ -707,32 +764,57 @@ export async function executeTeamTournamentRound(
         continue;
       }
 
-      // Check forfeit conditions (R5.5, R5.6)
-      const forfeit = await checkForfeitConditions(match);
-      if (forfeit.shouldForfeit) {
-        await handleForfeit(match, forfeit);
+      // 1. Resume first: a linked fought battle is finalised, never forfeited,
+      // so the forfeit claim (battleId: null) can never strand its row.
+      if (match.battleId !== null) {
+        await processTeamTournamentBattle(match, tournament);
+        matchesResumed++;
+        continue;
+      }
+
+      // 2. One per-side entry decision: roster/subscriptions and weapons.
+      const entry = await decideTeamTournamentEntry(match, tournament);
+      if (entry.kind === 'forfeit') {
+        matchesForfeited++;
+        continue;
+      }
+      if (entry.kind === 'housekeeping') {
         matchesExecuted++;
         continue;
       }
 
-      // Execute battle
-      await processTeamTournamentBattle(match, tournament);
-      matchesExecuted++;
+      // 3. Battle (its own readiness backstop may still forfeit).
+      const battle = await processTeamTournamentBattle(match, tournament);
+      if (battle.isForfeit) {
+        matchesForfeited++;
+      } else {
+        matchesExecuted++;
+      }
     } catch (error) {
+      // Rule 7: one bad match never fails the round. Resume a linked fought
+      // battle once; otherwise the shared failure policy finalises the row.
       matchesFailed++;
-      logger.error(
-        `[TeamTournament] Match ${match.id} failed in tournament ${tournament.name}: ` +
-        `${error instanceof Error ? error.message : String(error)}`,
-      );
+      const recovery = await recoverTournamentMatch({
+        mode,
+        matchId: match.id,
+        error,
+        resume: (row) => processTeamTournamentBattle(row, tournament),
+      });
+      if (recovery.outcome === 'resumed') {
+        matchesResumed++;
+      } else {
+        matchesCancelled++;
+      }
     }
   }
 
   logger.info(
     `[TeamTournament] Round ${tournament.currentRound} complete | ` +
-    `tournament=${tournament.name} executed=${matchesExecuted} failed=${matchesFailed}`,
+    `tournament=${tournament.name} executed=${matchesExecuted} forfeited=${matchesForfeited} ` +
+    `resumed=${matchesResumed} failed=${matchesFailed}`,
   );
 
-  return { matchesExecuted, matchesFailed };
+  return { matchesExecuted, matchesFailed, matchesForfeited, matchesResumed, matchesCancelled };
 }
 
 // ─── Draw Tiebreaking (R4.4) ─────────────────────────────────────────────────
@@ -790,13 +872,24 @@ export function resolveDraw(
   return { winningSide: 1, winningTeamId: team1Id };
 }
 
-// ─── Forfeit Handling ─────────────────────────────────────────────────────────
+// ─── Battle-Time Entry and Forfeits ──────────────────────────────────────────
 
-interface ForfeitResult {
-  shouldForfeit: boolean;
-  winnerId: number | null;
-  ineligibleSide?: 1 | 2 | 'both';
+/** One side of a team tournament match as loaded for the entry decision. */
+interface TeamTournamentEntrySide {
+  /** Bracket participant id (team id), or null for an empty slot. */
+  participantId: number | null;
+  /** Null when the slot is empty or the team row no longer exists. */
+  team: { id: number; stableId: number; teamName: string } | null;
+  /** Loaded members; may be short (or empty) only for a forfeiting side. */
+  robots: RobotWithWeapons[];
+  forfeited: boolean;
 }
+
+/** Outcome of `decideTeamTournamentEntry`. */
+export type TeamTournamentEntryResult =
+  | { kind: 'fight' }
+  | { kind: 'forfeit'; result: TeamTournamentBattleResult }
+  | { kind: 'housekeeping' };
 
 /**
  * Check if a team is eligible for tournament participation at execution time.
@@ -821,73 +914,197 @@ async function isTeamEligibleForTournament(teamId: number): Promise<boolean> {
   return subscribed === team.members.length;
 }
 
-/**
- * Check if either team should forfeit due to ineligibility.
- *
- * Checks team eligibility at round execution time:
- * - If both participants are null or both ineligible: forfeit with winnerId=null
- * - If only team 1 is ineligible: forfeit, team 2 wins
- * - If only team 2 is ineligible: forfeit, team 1 wins
- * - If both eligible: no forfeit
- *
- * Requirements: R5.5, R5.6
- */
-async function checkForfeitConditions(
-  match: ScheduledTournamentMatch,
-): Promise<ForfeitResult> {
-  // Both participants missing — forfeit with no winner
-  if (!match.participant1Id && !match.participant2Id) {
-    return { shouldForfeit: true, winnerId: null, ineligibleSide: 'both' };
-  }
+async function loadEntrySide(participantId: number | null): Promise<TeamTournamentEntrySide> {
+  const team = participantId === null
+    ? null
+    : await prisma.teamBattle.findUnique({ where: { id: participantId }, include: { members: true } });
+  const rosterEligible = team !== null && (await isTeamEligibleForTournament(team.id));
+  const robots = team ? await loadTeamRobotsWithWeapons(team.members.map(m => m.robotId)) : [];
+  const weaponReady = robots.length > 0 && robots.every(r => evaluateCombatEntry(r).canFight);
+  return {
+    participantId,
+    team: team ? { id: team.id, stableId: team.stableId, teamName: team.teamName } : null,
+    robots,
+    forfeited: !rosterEligible || !weaponReady,
+  };
+}
 
-  // Check team 1 eligibility
-  const team1Eligible = match.participant1Id
-    ? await isTeamEligibleForTournament(match.participant1Id)
-    : false;
-
-  // Check team 2 eligibility
-  const team2Eligible = match.participant2Id
-    ? await isTeamEligibleForTournament(match.participant2Id)
-    : false;
-
-  if (!team1Eligible && !team2Eligible) {
-    return { shouldForfeit: true, winnerId: null, ineligibleSide: 'both' };
-  }
-  if (!team1Eligible) {
-    return { shouldForfeit: true, winnerId: match.participant2Id, ineligibleSide: 1 };
-  }
-  if (!team2Eligible) {
-    return { shouldForfeit: true, winnerId: match.participant1Id, ineligibleSide: 2 };
-  }
-  return { shouldForfeit: false, winnerId: null };
+/** Empty placeholder (or both teams gone): close the row with no battle. */
+async function completeEmptyMatch(match: ScheduledTournamentMatch): Promise<void> {
+  await prisma.scheduledTournamentMatch.update({
+    where: { id: match.id },
+    data: { status: 'completed', winnerId: null, completedAt: new Date() },
+  });
+  logger.info(`[TeamTournament] Match ${match.id} closed with no battle | no loadable team on either side`);
 }
 
 /**
- * Handle a forfeit by updating the match record with status 'forfeit'.
+ * One per-side battle-time entry decision for both sides (design §5.5, rule 2).
  *
- * No rewards are distributed for forfeited matches.
- * If winnerId is null (both ineligible), the next-round slot stays empty,
- * triggering a bye for whoever is placed there.
- *
- * Requirements: R5.5, R5.6
+ * A side forfeits if its team is roster/subscription-ineligible OR any loaded
+ * member has no main weapon. Neither → fight. One → that side forfeits through
+ * the shared writer and the other advances with the bye-level reward. Both →
+ * a double forfeit (a draw battle, no credits) where the higher seed among the
+ * sides whose team still exists advances. No loadable team at all (or an empty
+ * placeholder) → housekeeping with no battle.
  */
-async function handleForfeit(
+export async function decideTeamTournamentEntry(
   match: ScheduledTournamentMatch,
-  forfeit: ForfeitResult,
-): Promise<void> {
-  await prisma.scheduledTournamentMatch.update({
-    where: { id: match.id },
-    data: {
-      winnerId: forfeit.winnerId,
-      status: 'forfeit',
-      completedAt: new Date(),
+  tournament: Tournament,
+): Promise<TeamTournamentEntryResult> {
+  if (match.participant1Id === null && match.participant2Id === null) {
+    await completeEmptyMatch(match);
+    return { kind: 'housekeeping' };
+  }
+
+  const side1 = await loadEntrySide(match.participant1Id);
+  const side2 = await loadEntrySide(match.participant2Id);
+  if (!side1.forfeited && !side2.forfeited) return { kind: 'fight' };
+  if (side1.team === null && side2.team === null) {
+    await completeEmptyMatch(match);
+    return { kind: 'housekeeping' };
+  }
+
+  return { kind: 'forfeit', result: await resolveTeamTournamentForfeit(match, tournament, [side1, side2]) };
+}
+
+/**
+ * Resolve a team tournament forfeit through the Forfeit_Resolution_Writer.
+ *
+ * Nothing is simulated and no standings are written. ELO follows design §4:
+ * a short or missing forfeiter roster counts as equal strength; a double
+ * forfeit uses the draw formula (an incomplete side takes the full side's sum;
+ * neither full → unchanged). Each loaded robot moves by its team's change.
+ */
+async function resolveTeamTournamentForfeit(
+  match: ScheduledTournamentMatch,
+  tournament: Tournament,
+  sides: [TeamTournamentEntrySide, TeamTournamentEntrySide],
+): Promise<TeamTournamentBattleResult> {
+  const teamSize: 2 | 3 = tournament.participantType === 'team_2v2' ? 2 : 3;
+  const mode = teamSize === 2 ? 'tournament_2v2' as const : 'tournament_3v3' as const;
+  const readyIndex = sides.findIndex(s => !s.forfeited);
+  const ready = readyIndex === -1 ? null : sides[readyIndex];
+  const isDraw = ready === null;
+
+  const sum = (s: TeamTournamentEntrySide): number => s.robots.reduce((acc, r) => acc + r.elo, 0);
+  const full = (s: TeamTournamentEntrySide): boolean => s.robots.length === teamSize;
+  let changes = { team1Change: 0, team2Change: 0 };
+  if (ready) {
+    const forfeiter = sides[1 - readyIndex];
+    const forfeiterSum = full(forfeiter) ? sum(forfeiter) : sum(ready);
+    const [sum1, sum2] = readyIndex === 0 ? [sum(ready), forfeiterSum] : [forfeiterSum, sum(ready)];
+    changes = calculateTeamBattleELOChanges(sum1, sum2, readyIndex === 0, false);
+  } else if (full(sides[0]) || full(sides[1])) {
+    const sum1 = full(sides[0]) ? sum(sides[0]) : sum(sides[1]);
+    const sum2 = full(sides[1]) ? sum(sides[1]) : sum(sides[0]);
+    changes = calculateTeamBattleELOChanges(sum1, sum2, false, true);
+  }
+  const teamChange = (side: 0 | 1): number => (side === 0 ? changes.team1Change : changes.team2Change);
+
+  // The team advancing in the bracket: the ready team, or on a double forfeit
+  // the higher seed among the sides whose team row still exists.
+  let tournamentWinnerId: number;
+  if (ready) {
+    tournamentWinnerId = ready.team!.id;
+  } else if (sides[0].team && sides[1].team) {
+    tournamentWinnerId = await resolveHigherSeed(tournament.id, sides[0].team.id, sides[1].team.id);
+  } else {
+    const existing = sides[0].team ?? sides[1].team;
+    if (!existing) {
+      throw new TournamentError(
+        TournamentErrorCode.INVALID_MATCH_STATE,
+        `Team tournament match ${match.id} has no team to advance`,
+        400,
+        { matchId: match.id },
+      );
+    }
+    tournamentWinnerId = existing.id;
+  }
+
+  const newEloByRobotId: Record<number, number> = {};
+  sides.forEach((s, i) => {
+    for (const r of s.robots) newEloByRobotId[r.id] = r.elo + teamChange(i as 0 | 1);
+  });
+  const toParticipant = (r: RobotWithWeapons) => ({
+    id: r.id,
+    name: r.name,
+    userId: r.userId,
+    currentHP: r.currentHP,
+    maxHP: r.maxHP,
+    elo: r.elo,
+  });
+  // Tolerant sides (§4): a deleted team has no stable and no robots.
+  const toForfeitSide = (i: 0 | 1): ForfeitSide => ({
+    side: (i + 1) as 1 | 2,
+    forfeited: sides[i].forfeited,
+    stableUserId: sides[i].team?.stableId ?? null,
+    standingEntity: null,
+    robots: sides[i].robots.map(toParticipant),
+  });
+  const forfeiterNames = sides
+    .filter(s => s.forfeited)
+    .map(s => s.team?.teamName ?? `Team #${s.participantId ?? '?'}`)
+    .join(' and ');
+
+  const resolution = await resolveForfeitEvent({
+    mode,
+    context: {
+      mode,
+      totalParticipants: tournament.totalParticipants,
+      currentRound: tournament.currentRound,
+      maxRounds: tournament.maxRounds,
     },
+    claim: { source: 'tournament_match', tournamentMatchId: match.id },
+    sides: [toForfeitSide(0), toForfeitSide(1)],
+    newEloByRobotId,
+    eloChangeBySide: { 1: changes.team1Change, 2: changes.team2Change },
+    lp: { win: 0, loss: 0, draw: 0 },
+    standingMode: null,
+    battle: {
+      battleType: mode,
+      leagueType: 'tournament',
+      tournamentId: tournament.id,
+      tournamentRound: tournament.currentRound,
+      winnerId: ready ? ready.team!.id : null,
+      winningSide: ready ? ((readyIndex + 1) as 1 | 2) : null,
+      message: `${forfeiterNames} forfeited: the team was not battle-ready (roster, subscriptions or a missing main weapon)`,
+    },
+    tournamentWinnerId,
+    cycleNumber: await getCurrentCycleNumber(),
   });
 
   logger.info(
-    `[TeamTournament] Match ${match.id} forfeited | ` +
-    `ineligible=${forfeit.ineligibleSide} winner=${forfeit.winnerId ?? 'none (both ineligible)'}`,
+    `[TeamTournament] Match ${match.id} forfeit | tournament=${tournament.name} round=${tournament.currentRound} ` +
+    `team1=${match.participant1Id} team2=${match.participant2Id} ` +
+    `outcome=${isDraw ? 'double_forfeit' : readyIndex === 0 ? 'team2_forfeit' : 'team1_forfeit'} ` +
+    `advancing=${tournamentWinnerId} credits=${resolution.creditsPaid}${resolution.alreadyResolved ? ' already_resolved' : ''}`,
   );
+
+  if (resolution.battleId === null) {
+    throw new TournamentError(
+      TournamentErrorCode.BATTLE_RECORD_FAILED,
+      `Forfeit resolution produced no battle for team tournament match ${match.id}`,
+      500,
+      { matchId: match.id },
+    );
+  }
+
+  return {
+    battleId: resolution.battleId,
+    winnerId: tournamentWinnerId,
+    participants: sides.flatMap((s, i) => s.robots.map((r) => ({
+      robotId: r.id,
+      team: (i + 1) as 1 | 2,
+      damageDealt: 0,
+      finalHP: r.currentHP,
+      eloBefore: r.elo,
+      eloAfter: newEloByRobotId[r.id],
+    }))),
+    durationSeconds: BYE_BATTLE_DURATION_SECONDS,
+    isByeMatch: false,
+    isForfeit: true,
+  };
 }
 
 // ─── Reward Distribution ─────────────────────────────────────────────────────

@@ -16,9 +16,8 @@ import {
   getCurrentRoundMatches,
   autoCreateNextTournament,
   advanceWinnersToNextRound,
-  completeByeMatch,
 } from '../tournament/tournamentService';
-import { processTournamentBattle } from '../tournament/tournamentBattleOrchestrator';
+import { executeSoloTournamentRound } from '../tournament/tournamentBattleOrchestrator';
 import { executeTeamTournamentRound } from '../tournament/teamTournamentBattleOrchestrator';
 import { autoCreateNextTeamTournament } from '../tournament/teamTournamentService';
 import { runOrphanCleanup } from '../moderation/orphanCleanupJob';
@@ -72,7 +71,7 @@ export interface CycleResult {
   kothBlock?: { repair: unknown; battles: unknown; matchmaking: unknown };
   team3v3LeagueBlock?: { battles: unknown; rebalancing: unknown; matchmaking: unknown } | { error: string };
   team2v2TournamentBlock?: { skipped: true; message: string } | { repair: unknown; matchesExecuted: number; matchesFailed: number; tournamentName?: string; tournamentRound?: number; tournamentMaxRounds?: number; tournamentCreated?: boolean; skippedReason?: string };
-  grandMeleeBlock?: { matchesExecuted: number; matchesFailed: number; matchesCreated: number } | { error: string };
+  grandMeleeBlock?: GrandMeleeBlockSummary | { error: string };
   team3v3TournamentBlock?: { skipped: true; message: string } | { repair: unknown; matchesExecuted: number; matchesFailed: number; tournamentName?: string; tournamentRound?: number; tournamentMaxRounds?: number; tournamentCreated?: boolean; skippedReason?: string };
   // Settlement results
   settlement?: {
@@ -106,6 +105,17 @@ export interface BulkCycleResult {
   timestamp: string;
 }
 
+/** Result shape for the Grand Melee block of a bulk cycle. */
+// A type alias (not an interface) so it stays assignable to the event logger's Record<string, unknown>.
+export type GrandMeleeBlockSummary = {
+  matchesExecuted: number;
+  matchesFailed: number;
+  /** Matches whose ready field fell below the minimum at battle time (byes and forfeits instead of a fight). */
+  belowMinimumMatches: number;
+  /** Robots placed last because they had no main weapon at battle time. */
+  forfeitedRobots: number;
+  matchesCreated: number;
+};
 /** Result shape for tournament execution step. */
 export interface TournamentStepSummary {
   tournamentsExecuted?: number;
@@ -113,6 +123,8 @@ export interface TournamentStepSummary {
   matchesExecuted?: number;
   /** Bracket Bye_Events resolved and paid this run (Spec #49). */
   byeMatchesResolved?: number;
+  /** Matches resolved as battle-time forfeits (single or double; nothing simulated). */
+  forfeits?: number;
   tournamentsCompleted?: number;
   tournamentsCreated?: number;
   errors?: string[];
@@ -129,6 +141,7 @@ async function executeTournamentStep(): Promise<TournamentStepSummary> {
     roundsExecuted: 0,
     matchesExecuted: 0,
     byeMatchesResolved: 0,
+    forfeits: 0,
     tournamentsCompleted: 0,
     tournamentsCreated: 0,
     errors: [],
@@ -142,39 +155,14 @@ async function executeTournamentStep(): Promise<TournamentStepSummary> {
         const currentRoundMatches = await getCurrentRoundMatches(tournament.id);
 
         if (currentRoundMatches.length > 0) {
-          for (const match of currentRoundMatches) {
-            if (match.isByeMatch) {
-              const advancingParticipantId = match.participant1Id ?? match.participant2Id;
-              if (advancingParticipantId === null) {
-                summary.errors!.push(`Tournament ${tournament.id} Match ${match.id}: Bye has no advancing participant`);
-                continue;
-              }
-
-              // Routed through the shared helper (Spec #49) so the admin
-              // bulk-cycle path pays a bracket bye identically to the cron path.
-              const resolved = await completeByeMatch(match, advancingParticipantId);
-              if (!resolved) {
-                summary.errors!.push(`Tournament ${tournament.id} Match ${match.id}: Bye_Record was not created`);
-                continue;
-              }
-              logger.info(`[Admin] Resolved bye match ${match.id} in tournament ${tournament.id}`);
-              summary.matchesExecuted!++;
-              summary.byeMatchesResolved = (summary.byeMatchesResolved ?? 0) + 1;
-              continue;
-            }
-
-            if (!match.participant1Id || !match.participant2Id) {
-              summary.errors!.push(`Tournament ${tournament.id} Match ${match.id}: No robots assigned`);
-              continue;
-            }
-
-            try {
-              await processTournamentBattle(match);
-              summary.matchesExecuted!++;
-            } catch (error) {
-              const errorMsg = error instanceof Error ? error.message : String(error);
-              summary.errors!.push(`Tournament ${tournament.id} Match ${match.id}: ${errorMsg}`);
-            }
+          // Shared executor (rule 7): byes, fought matches and the failure
+          // policy, identical to the cron path.
+          const roundResult = await executeSoloTournamentRound(tournament.id);
+          summary.matchesExecuted! += roundResult.matchesExecuted + roundResult.byesResolved + roundResult.matchesResumed;
+          summary.byeMatchesResolved = (summary.byeMatchesResolved ?? 0) + roundResult.byesResolved;
+          summary.forfeits = (summary.forfeits ?? 0) + roundResult.forfeits;
+          for (const err of roundResult.errors) {
+            summary.errors!.push(`Tournament ${tournament.id} ${err}`);
           }
 
           await advanceWinnersToNextRound(tournament.id);
@@ -492,7 +480,7 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
       const tournamentExecStart = Date.now();
       if (includeTournaments) {
         tournamentSummary = await executeTournamentStep();
-        logger.info(`[Admin] Tournaments: ${tournamentSummary.tournamentsExecuted || 0} executed, ${tournamentSummary.roundsExecuted || 0} rounds, ${tournamentSummary.matchesExecuted || 0} matches`);
+        logger.info(`[Admin] Tournaments: ${tournamentSummary.tournamentsExecuted || 0} executed, ${tournamentSummary.roundsExecuted || 0} rounds, ${tournamentSummary.matchesExecuted || 0} matches, ${tournamentSummary.forfeits || 0} forfeits`);
       }
       await eventLogger.logCycleStepComplete(
         currentCycleNumber,
@@ -502,6 +490,7 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
         {
           tournamentsExecuted: tournamentSummary?.tournamentsExecuted || 0,
           matchesExecuted: tournamentSummary?.matchesExecuted || 0,
+          forfeits: tournamentSummary?.forfeits || 0,
         }
       );
 
@@ -594,7 +583,11 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
           'execute_koth_battles',
           stepNumber,
           Date.now() - kothBattleStart,
-          { battlesExecuted: kothBattleSummary.totalMatches }
+          {
+            battlesExecuted: kothBattleSummary.totalMatches,
+            belowMinimumMatches: kothBattleSummary.belowMinimumMatches,
+            forfeitedRobots: kothBattleSummary.forfeitedRobots,
+          }
         );
 
         // 5.2b Rebalance KotH leagues (Spec #41 — was missing, must match cron behavior)
@@ -787,7 +780,7 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
       // ═══════════════════════════════════════════════════════════════════
       stepNumber++;
       logger.info(`[Admin] Step ${stepNumber}: Grand Melee — executing cycle (repair → execute → rebalance → matchmake)`);
-      let grandMeleeResult: { matchesExecuted: number; matchesFailed: number; matchesCreated: number } | { error: string };
+      let grandMeleeResult: GrandMeleeBlockSummary | { error: string };
       try {
         const { executeScheduledGrandMeleeBattles } = await import('../grand-melee/grandMeleeBattleOrchestrator');
         const { runGrandMeleeMatchmaking } = await import('../grand-melee/grandMeleeMatchmakingService');
@@ -801,6 +794,8 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
         grandMeleeResult = {
           matchesExecuted: execSummary.successfulMatches,
           matchesFailed: execSummary.failedMatches,
+          belowMinimumMatches: execSummary.belowMinimumMatches,
+          forfeitedRobots: execSummary.forfeitedRobots,
           matchesCreated,
         };
       } catch (err) {

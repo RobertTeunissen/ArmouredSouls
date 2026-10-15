@@ -49,6 +49,25 @@ export function buildByeBattleIncomeEventId(
   ]);
 }
 
+/**
+ * Forfeit-win income: one identity per queued match, stable and mode. The mode
+ * component keeps a v2 match id and a tournament match id with the same number
+ * apart, exactly as for byes.
+ */
+export function buildForfeitBattleIncomeEventId(
+  sourceMatchId: string | number,
+  stableId: number,
+  mode: string,
+): string {
+  return identity([
+    'forfeit',
+    component(sourceMatchId, 'sourceMatchId'),
+    component(stableId, 'stableId'),
+    component(mode, 'mode'),
+    'battle_income',
+  ]);
+}
+
 export function buildStreamingEventId(
   battleId: string | number,
   robotId: number,

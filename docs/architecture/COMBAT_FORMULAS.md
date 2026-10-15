@@ -1,6 +1,6 @@
 # Combat Formulas and Battle Mechanics
 
-**Last Updated**: March 18, 2026  
+**Last Updated**: October 15, 2026  
 **Status**: Authoritative Reference - Defines formulas, implementation, and display formats
 
 This document is the **authoritative source** for all combat formulas, weapon bonus applications, and battle mechanics in Armoured Souls. It defines:
@@ -32,7 +32,7 @@ This document is the **authoritative source** for all combat formulas, weapon bo
 ## Weapon Attribute Bonuses
 
 ### Overview
-Weapons can provide attribute bonuses (positive or negative) that enhance or penalize a robot's base attributes. These bonuses are **only applied to the hand wielding that specific weapon**.
+Weapons can provide attribute bonuses (positive or negative) that enhance or penalize a robot's base attributes. The bonuses of **both equipped weapons are summed** into one set of effective attributes that every attack of the robot uses (#517).
 
 ### Available Weapon Bonuses
 - **Combat Systems:**
@@ -56,18 +56,60 @@ Weapons can provide attribute bonuses (positive or negative) that enhance or pen
 
 ### Application Rules
 
-#### For Single Weapon / Weapon+Shield / Two-Handed
-- Main hand weapon bonuses apply to all attacks
-
-#### For Dual Wield
-- **Main hand attack:** Only main hand weapon bonuses apply
-- **Offhand attack:** Only offhand weapon bonuses apply
-- Bonuses do NOT stack or apply to the opposite hand
+- Main-hand and offhand (including shield) weapon bonuses are **summed** with the base attribute and tuning.
+- Weapon refinements (Hone/Augment) are folded into the weapon's bonus before summing.
+- The loadout attribute modifier (`LOADOUT_BONUSES`) is then applied **exactly once**.
+- The result is kept at **2-decimal combat precision**; integer stat displays show `floor` of the same value.
+- Stance is **not** an attribute multiplier in combat — stance effects are formula-level (see [Combat Preparation](#combat-preparation)).
+- For Dual Wield, both hands use the same effective attributes. Per hand remain: the weapon's own base damage and cooldown, an independent attack timer, and the offhand's 50% base hit chance and ×1.4 cooldown (see [Offhand Attack Rules](#offhand-attack-rules)).
 
 ### Formula
 ```
-Effective Attribute = Robot Base Attribute + Weapon Bonus (for attacking hand only)
+Effective Attribute = round2((Base + Main Weapon Bonus + Offhand Weapon Bonus + Tuning) × (1 + Loadout Modifier))
 ```
+
+Canonical implementation: `calculateCombatEffectiveStat(s)` in `app/shared/utils/robotStats.ts`, used by
+`calculateEffectiveStats()` and `prepareRobotForCombat()` in `app/backend/src/utils/robotCalculations.ts` and by the
+frontend stat display.
+
+### Combat Preparation
+
+Every battle entry point calls `prepareRobotForCombat()` once per robot before simulation. It folds refinements, writes
+the 23 effective attributes above onto the in-memory robot, and derives:
+
+```
+Max HP     = 50 + Effective Hull Integrity × 5
+Max Shield = Effective Shield Capacity × 4
+```
+
+The simulator reads these prepared values directly and never re-derives them. Loadout and stance effects that are
+**not** attribute modifiers live in the combat formulas and **stack** with the prepared attributes:
+
+| Effect | Where |
+|--------|-------|
+| Two-Handed ×1.10 damage, ×2.5 crit multiplier, +10 crit chance | `calculateBaseDamage`, `applyDamage`, `calculateCritChance` |
+| Dual Wield ×0.90 damage | `calculateBaseDamage` |
+| Weapon+Shield ×1.10 counter chance | `calculateCounterChance` |
+| Stance damage (offensive ×1.15 / defensive ×0.90), hit, counter and shield-regen effects | combat formulas and shield regeneration |
+
+Before #517 combat preparation omitted the loadout attribute modifier, so only the formula-level effects applied in
+battle. See `docs/balance_changes/LOADOUT_PARITY_CORRECTION.md` for the corrected baseline.
+
+### Combat Entry Invariant
+
+Every robot that enters combat holds a main weapon. There is no weaponless default, no default cooldown and no
+invented weapon. The battle-time check (`evaluateCombatEntry` in `services/battle/combatReadiness.ts`) runs on the
+robots loaded for the battle, before preparation:
+
+| Robot at battle start | Result |
+|--------|-------|
+| No main weapon | Not simulated. Two-sided modes: forfeit (the robot or its whole team loses, no damage). KotH/Grand Melee: last place with no rewards, the rest fight |
+| Main weapon, loadout complete | Fights with its stored loadout |
+| Main weapon, loadout incomplete (`weapon_shield` without a shield, `dual_wield` without an offhand) | Fights as `single` for this battle only (`applyLoadoutFallbacks`): the single loadout modifier applies and the offhand slot is ignored. The stored loadout is unchanged and the offhand is never promoted to main |
+
+The simulator enforces the invariant: `simulateBattleMulti` calls `assertAllRobotsArmed`, and the per-hand weapon
+lookups (`requireHandWeapon`) throw `BattleError ROBOT_NOT_BATTLE_READY` for a missing main weapon. The match failure
+policy cancels such a match; it is never fought.
 
 ### Negative Bonuses
 Weapons can have negative bonuses (penalties). These are handled correctly:
@@ -76,12 +118,11 @@ Weapons can have negative bonuses (penalties). These are handled correctly:
 - Example: A crude weapon might have `-2 targeting_systems_bonus`
 
 ### Display
-At battle start, weapon bonuses are displayed clearly:
+At battle start, the log lists each robot's weapons with base damage and catalog cooldown (`getWeaponStatsSummary`):
 ```
-Weapon Attribute Bonuses:
-Main (Machine Pistol): CombatPower +1, Targeting +2, Speed +3
-Offhand (Machine Pistol): CombatPower +1, Targeting +2, Speed +3
+RobotA (balanced): 100HP/100HP, 40S/40S | Main: Machine Pistol (4.5 dmg, 2s CD), Offhand: Machine Pistol (4.5 dmg, 2s CD) | Speed: …
 ```
+Attribute bonuses are not listed per weapon; the formula breakdowns show the prepared effective attribute values.
 
 ---
 
@@ -103,7 +144,8 @@ This differentiates Weapon Control from Combat Power, making them no longer redu
 ```
 Base Malfunction Rate = 20%
 Reduction Per Point = 0.4%
-Effective Weapon Control = Robot Weapon Control + Weapon Bonus (for attacking hand)
+Effective Weapon Control = round2((Robot Weapon Control + Main Weapon Bonus + Offhand Weapon Bonus + Tuning) × (1 + Loadout Modifier))
+                           (prepared once; both hands use the same value)
 
 Malfunction Chance = Max(0, Base Malfunction Rate - (Effective Weapon Control × Reduction Per Point))
 ```
@@ -270,50 +312,54 @@ Weapon Control = 50:
 ## Attack Speed and Cooldown Calculation
 
 ### Overview
-Attack cooldown determines how frequently a robot can attack. It's calculated using the weapon's base cooldown, the robot's Attack Speed attribute, and the weapon's Attack Speed Bonus.
+Attack cooldown determines how frequently a robot can attack. It's calculated using each weapon's base cooldown and the robot's prepared (effective) Attack Speed, which already includes both weapons' Attack Speed bonuses, tuning and the loadout modifier.
 
 ### Formula
 ```
-Effective Attack Speed = Robot Attack Speed + Weapon Attack Speed Bonus (per hand)
-Base Cooldown = Weapon Cooldown (or 4 seconds default)
+Effective Attack Speed = round2((Robot Attack Speed + Main Bonus + Offhand Bonus + Tuning) × (1 + Loadout Modifier))
+Base Cooldown = Weapon Cooldown (every robot in combat holds a main weapon; no default)
 Cooldown Penalty = Base Cooldown × 1.4 (only for offhand attacks)
 Final Cooldown = Cooldown (with penalty if offhand) / (1 + Effective Attack Speed / 50)
 ```
 
+Loadout Attack Speed modifiers: Dual Wield +30%, Weapon+Shield −15%, others 0.
+
 ### Implementation
-For each hand (main and offhand), the cooldown is calculated independently:
+`calcCooldown()` in `combat-simulator/simulationState.ts`, once per hand at battle start. The weapon cooldown is
+per hand; the Attack Speed is the robot's shared prepared value:
 ```typescript
-const effectiveAttackSpeed = getEffectiveAttribute(robot, robot.attackSpeed, hand, 'attackSpeedBonus');
 const cooldownWithPenalty = hand === 'offhand' ? baseCooldown * 1.4 : baseCooldown;
-return cooldownWithPenalty / (1 + Number(effectiveAttackSpeed) / 50);
+const effectiveAttackSpeed = Number(robot.attackSpeed); // prepared by prepareRobotForCombat()
+return cooldownWithPenalty / (1 + effectiveAttackSpeed / 50);
 ```
 
 ### Examples
 
-**Example 1: Main Hand with Weapon Bonus**
+**Example 1: Single loadout with Weapon Bonus**
 - Robot Attack Speed: 10
 - Weapon Attack Speed Bonus: +3
-- Effective Attack Speed: 13
+- Effective Attack Speed: 13 (Single has no Attack Speed modifier)
 - Weapon Base Cooldown: 4 seconds
 - Formula: 4 / (1 + 13/50) = 4 / 1.26 = **3.17 seconds**
 
-**Example 2: Offhand with Weapon Bonus**
+**Example 2: Dual Wield, both hands**
 - Robot Attack Speed: 10
-- Weapon Attack Speed Bonus: +3
-- Effective Attack Speed: 13
-- Weapon Base Cooldown: 4 seconds
-- Offhand Penalty Applied: 4 × 1.4 = 5.6 seconds
-- Formula: 5.6 / (1 + 13/50) = 5.6 / 1.26 = **4.44 seconds**
+- Main and offhand weapon Attack Speed Bonus: +3 each
+- Effective Attack Speed: (10 + 3 + 3) × 1.30 = 20.8
+- Weapon Base Cooldown: 4 seconds (both weapons)
+- Main hand: 4 / (1 + 20.8/50) = 4 / 1.416 = **2.82 seconds**
+- Offhand: (4 × 1.4) / 1.416 = 5.6 / 1.416 = **3.95 seconds**
 
 **Example 3: High Attack Speed**
 - Robot Attack Speed: 30
 - Weapon Attack Speed Bonus: +5
-- Effective Attack Speed: 35
+- Effective Attack Speed: 35 (Single loadout)
 - Weapon Base Cooldown: 4 seconds
 - Formula: 4 / (1 + 35/50) = 4 / 1.7 = **2.35 seconds**
 
 ### Notes
-- Each weapon's attack speed bonus only applies to its own hand
+- Both weapons' Attack Speed bonuses are summed into the robot's single effective Attack Speed, used by both hands
+- Each hand keeps its own weapon cooldown and independent attack timer
 - Offhand attacks have a 40% cooldown penalty (applied before attack speed bonuses)
 - Higher attack speed = faster attacks = shorter cooldown
 - Attack Speed bonus from weapons significantly improves DPS
@@ -498,6 +544,10 @@ Weapon `baseDamage` values were compressed in the May 2026 DPS rebalance to redu
 - Two-handed loadout provides +10% to Combat Power attribute (applied before multipliers)
 - Two-handed loadout also provides 1.10× damage multiplier (applied during damage calculation)
 - Combined effect: Robot with 5 Combat Power becomes 5.5 effective CP with two-handed loadout
+- Since #517 both layers actually apply in combat: the attribute modifier is written by `prepareRobotForCombat()`,
+  and the 1.10× / 0.90× damage multipliers are applied here on top of it
+- Throughout this document, "(Robot X + Weapon Bonus)" denotes the prepared effective attribute defined in
+  [Weapon Attribute Bonuses](#weapon-attribute-bonuses) (both weapons, tuning, loadout modifier)
 - See [WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md) for complete loadout attribute bonuses
 
 ### Display Format
@@ -824,20 +874,21 @@ Offhand attacks have a 40% cooldown penalty applied **before** attack speed bonu
 ```
 Base Cooldown = Weapon Cooldown (or 4s default)
 Offhand Base = Base Cooldown × 1.4 (40% penalty)
-Final Cooldown = Offhand Base / (1 + Attack Speed / 50)
+Final Cooldown = Offhand Base / (1 + Effective Attack Speed / 50)
 
-Example: 4s weapon → 5.6s offhand base → ~5.09s with 10% attack speed
+Example: 4s weapon → 5.6s offhand base → 5.6 / 1.2 = ~4.67s with 10 effective Attack Speed
 ```
 
 ### Weapon Bonus Application
-For dual wield loadouts:
-- Main hand attack uses ONLY main hand weapon bonuses
-- Offhand attack uses ONLY offhand weapon bonuses
-- No mixing or stacking of bonuses
+For dual wield loadouts (#517):
+- Both weapons' attribute bonuses are summed with base + tuning, then the Dual Wield loadout modifier is applied once
+- Main hand and offhand attacks use the SAME effective attributes (hit, crit, malfunction, damage scaling, cooldown speed)
+- Per hand: the weapon's own base damage and cooldown, an independent attack timer, and the offhand's 50% base hit chance and ×1.4 cooldown penalty
+- There is no per-hand attribute model
 
 ### Visual Indicators
 - Offhand attacks are labeled with `[OFFHAND]` in combat log
-- Battle start shows offhand cooldown with "(40% penalty applied)"
+- Battle start lists each hand's weapon with base damage and catalog cooldown (before penalty and Attack Speed)
 
 ## Weapon Bonus Design Considerations
 
@@ -878,9 +929,9 @@ For dual wield loadouts:
    - Generic weapons have small, balanced bonuses
 
 3. **Dual Wield Balance:**
-   - Each weapon contributes independently to its hand
-   - Allows asymmetric loadouts (aggressive main, defensive offhand)
-   - Offhand penalties balance the two-attack advantage
+   - Both weapons' attribute bonuses add to the robot's shared effective attributes
+   - Asymmetric loadouts differ per hand in base damage and cooldown, not in attributes
+   - Offhand penalties, the ×0.90 damage multiplier and the −10% Combat Power / −20% Penetration modifiers balance the two-attack advantage
 
 4. **Future Expansion:**
    - Special weapon types could have unique bonus patterns
@@ -964,8 +1015,20 @@ Range penalty multipliers:
   one band away:          0.75   // -25% penalty
   two or more bands away: 0.5    // -50% penalty
 
-Special: Melee weapons cannot attack beyond 2 units (emits out_of_range event).
+Reach invariant (#518): a weapon whose rangeBand is 'melee' (melee weapons, energy melee
+such as Shock Maul / Thermal Lance, shields) only resolves an attack when the distance to the
+actual target is <= 2. Every other band reaches any distance (range penalty above applies).
 ```
+
+Physical reach is checked per hand, independent of patience, in two places: the `simulationLoop.ts` hand
+gates (`canAttack`) and a defensive guard at the top of `performAttack()` (`isWithinWeaponReach`, measured
+from the real positions, not from the spatial context). A blocked attempt:
+
+- draws no random numbers and emits no `attack` / `critical` / `miss` / `malfunction` / `counter` /
+  `counter_out_of_range` event; it deals no damage and changes no adaptation or miss counters;
+- does not consume the hand's cooldown (`lastAttackTime` / `lastOffhandAttackTime` unchanged) and does not
+  reset patience, so the hand attacks on the first tick it is in reach;
+- emits only the main-hand `out_of_range` message, once per streak; a blocked offhand is silent.
 
 ### Hydraulic_Bonus
 
@@ -1023,14 +1086,17 @@ effectiveBonus = max(0, 0.20 - gyroReduction - threatAnalysisReduction)
 
 ### Patience_Timer
 
-Forces engagement after prolonged inactivity:
+Time since the robot's last resolved attack:
 
 ```
-patienceLimit = 15 - (combatAlgorithms / 50) × 5
-// Range: 10s (combatAlgorithms=50) to 15s (combatAlgorithms=0)
-
-When patienceTimer >= patienceLimit: robot is forced to attack at current range.
+patienceTimer: reset to 0 on a resolved attack (either hand); +0.1s on every tick without one.
+patienceLimit = getPatienceLimit(score) = 15 - min(combatAlgorithms / 50, 1) × 5
+// Range: 15s (score 0) down to 10s (combatAlgorithms >= 50) — higher CA shortens the limit.
 ```
+
+Since #518 the limit does not gate attacks: patience never grants an attack and never lets a weapon
+hit beyond its reach. The timer still seeds movement path deviation (`deterministicDeviation()`); any
+movement or targeting role for the limit belongs to #520.
 
 ### Adaptation_Bonus
 
@@ -1110,9 +1176,12 @@ turnSpeed = 180 + gyroStabilizers × 6   // degrees per second
 Spatial constraints on counter-attacks:
 
 ```
-Melee counters: blocked beyond 2 units distance.
-Dual-wield fallback: if main weapon out of range, offhand attacks at 50% damage.
+Melee counters: blocked beyond 2 units distance (counter_out_of_range event, no damage).
+Ranged counters: any distance, with the range penalty of the counter weapon.
+Dual-wield fallback: if the main weapon is melee and out of range, a dual-wield defender
+  counters with its offhand weapon when that weapon can reach.
 Hydraulic bonus applies to melee counters within range.
+An attack blocked by reach (#518) is never resolved, so it cannot be countered.
 ```
 
 ## King of the Hill Zone Scoring Formulas
@@ -1224,7 +1293,7 @@ Each tick, every robot with `hp > 0`:
 2. Executes its attack via the standard combat resolution pipeline (hit → crit → damage → shield/armor)
 3. Team Coordination Effects are applied (see below)
 
-**Target-of-opportunity fallback**: When a robot's primary target is out of range, the engine falls back to the nearest valid target. This fallback respects team membership via `gameModeState.customData.teamOf` — robots will never select a teammate as a fallback target.
+**Target-of-opportunity fallback**: When a hand's weapon can't reach the robot's primary target (n > 2), that hand attacks the nearest opponent within its own reach, measured to that opponent; independent of patience (#518). If none is in reach, the hand does not attack. This fallback respects team membership via `gameModeState.customData.teamOf` — robots will never select a teammate as a fallback target.
 
 **Victory condition**: One side has 0 robots with `hp > 0`.  
 **Draw condition**: 300 seconds of simulated combat elapsed without victory.
@@ -1375,6 +1444,15 @@ Each member robot receives the same ELO delta applied to their individual elo fi
 
 ## Version History
 
+- **2026-10-15:** #536 — combat entry invariant: weaponless robots never enter combat (forfeit or last place), an
+  incomplete loadout fights as `single` for that battle, and the simulator throws `ROBOT_NOT_BATTLE_READY` instead of
+  using a weaponless default
+- **2026-10-15:** #518 — physical reach is an invariant of every resolved attack (melee rangeBand <= 2 units,
+  both hands, loop gate + `performAttack()` guard); patience no longer forces attacks; blocked-attempt contract;
+  per-hand target-of-opportunity independent of patience; counter-range section corrected
+- **2026-10-15:** #517 — combat preparation applies the loadout attribute modifier exactly once via the shared
+  canonical formula; summed (not per-hand) weapon bonuses for Dual Wield; added Combat Preparation subsection;
+  corrected cooldown and malfunction formulas/examples and the battle-start display description
 - **2026-06-XX:** Added Team Battle Engine section (Spec 37 — Team Battles 2v2 and 3v3)
   - Team Coordination Effects formulas (syncProtocols, supportSystems, formationTactics)
   - Focus fire detection mechanics

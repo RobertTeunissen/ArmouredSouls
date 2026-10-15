@@ -2,8 +2,8 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: v2.0  
-**Date**: February 9, 2026  
+**Version**: v2.2\
+**Date**: October 15, 2026\
 **Status**: Phase 1 & 2 Complete ✅
 
 ---
@@ -25,6 +25,8 @@
   - Specified UI requirements for progress bars and next unlock preview
   - Added tooltip mockups and implementation notes
   - Cross-referenced with PRD_PRESTIGE_AND_FAME.md
+- **v2.2 (Oct 15, 2026): Battle-time readiness alerts (#536)**
+  - Robot readiness rung split into forfeit risk, no weapon and incomplete loadout, using the robot page's readiness rule
 
 ---
 
@@ -94,7 +96,13 @@ The Dashboard Page (`/dashboard`) is the most critical page in Armoured Souls - 
    - Consistent layout: border-l-4 accent, icon, message, optional detail line, optional action button, optional dismiss
    - Ordered: tier changes → season countdown → robot readiness → team gaps → team creation suggestions
    - Priority cascade: one notification per tier for robot issues, naming the most urgent robot
-   - Types: tier promotions/demotions, season ending, no weapon, no subscriptions, subscription slots available, unallocated tuning, damaged, team mode gaps, team creation hints, onboarding/welcome
+   - Types: tier promotions/demotions, season ending, forfeit risk, no weapon, incomplete loadout, no subscriptions, subscription slots available, unallocated tuning, damaged, team mode gaps, team creation hints, onboarding/welcome
+   - Robot readiness rungs, in order (`buildRobotReadinessNotifications`, #536). The first three use the same rule as the Robot Detail "Not Battle Ready" badge (`getOwnerBattleReadiness`), so the two views agree:
+     1. `readiness-forfeit-risk` (danger): no main weapon **and** booked matches (`heldSlots` from the subscription overview). "{robot} will forfeit its booked matches unless re-armed", detail lists the booked events by label; action Equip Weapon
+     2. `readiness-no-weapon` (danger): no main weapon and nothing booked (or no overview). "{robot} has no weapon equipped"; action Equip Weapon
+     3. `readiness-incomplete-loadout` (warning): main weapon present but the loadout is not ready (Weapon+Shield without a shield, Dual-Wield without an offhand). "{robot} is not battle ready", detail "{reason}. It won't be scheduled, and booked matches are fought with a single weapon"; action Fix Loadout
+     4. then no subscriptions → slots free → tuning → damaged, unchanged
+   - Each rung names the first matching robot and adds "(+N more)" for the rest
 
 4. **Visual Robot Cards** - `RobotDashboardCard.tsx`
    - Compact layout (96x96px portrait placeholder)
@@ -234,7 +242,7 @@ The Dashboard Page (`/dashboard`) is the most critical page in Armoured Souls - 
 ├── Notification System ✅
 │   ├── Tier change events (promotions/demotions)
 │   ├── Season ending countdown (≤5 cycles, dismissible)
-│   ├── Robot readiness cascade (no weapon → no subs → slots free → tuning → damaged)
+│   ├── Robot readiness cascade (forfeit risk → no weapon → incomplete loadout → no subs → slots free → tuning → damaged)
 │   ├── Team mode subscription gaps
 │   ├── Team creation suggestions
 │   └── Onboarding/welcome (when no robots)

@@ -5,13 +5,18 @@
  * stat calculations used by both the backend (combat simulation, HP/shield
  * derivation) and the frontend (stat display, tooltips, loadout selection).
  *
- * Formula: effective = floor((base + weaponBonus + tuningBonus) × (1 + loadoutBonus))
+ * Canonical effective-attribute formula (#517) — ONE definition for combat and display:
  *
- * Note: The backend's `calculateEffectiveStats` in `robotCalculations.ts` uses
- * `roundToTwo` instead of `Math.floor` because the combat simulator needs fractional
- * precision for chained multiplier calculations (stance modifiers are applied on top).
- * The frontend uses `Math.floor` for display (players see integer stats).
- * Both formulas share the same constants and loadout/stance definitions from this module.
+ *   combat  = round2((base + mainWeaponBonus + offhandWeaponBonus + tuningBonus) × (1 + loadoutBonus))
+ *   display = floor(combat)
+ *
+ * `calculateCombatEffectiveStat(s)` returns the 2-decimal combat value. The backend's
+ * `prepareRobotForCombat` and `calculateEffectiveStats` (robotCalculations.ts) use it
+ * directly, so the simulator, HP/shield derivation and the stat screen agree.
+ * `calculateEffectiveStat(s)` (integer display) floors that same combat value instead
+ * of re-deriving it, so the displayed integer can never disagree with combat by more
+ * than the documented flooring. The loadout multiplier is applied exactly once; stance
+ * modifiers are NOT part of this formula (combat applies stance effects in its formulas).
  */
 
 import { ROBOT_ATTRIBUTES } from './robotAttributes';
@@ -167,13 +172,9 @@ export function calculateAttributeBonus(
   let bonus = 0;
   const bonusKey = `${attributeKey}Bonus` as keyof WeaponBonuses;
 
-  if (mainWeapon?.weapon[bonusKey] !== undefined) {
-    bonus += mainWeapon.weapon[bonusKey] as number;
-  }
-
-  if (offhandWeapon?.weapon[bonusKey] !== undefined) {
-    bonus += offhandWeapon.weapon[bonusKey] as number;
-  }
+  // An inventory row loaded without its `weapon` relation contributes 0.
+  bonus += mainWeapon?.weapon?.[bonusKey] ?? 0;
+  bonus += offhandWeapon?.weapon?.[bonusKey] ?? 0;
 
   return bonus;
 }
@@ -196,11 +197,65 @@ export function getStanceModifier(stance: string, attribute: string): number {
   return modifiers[attribute] || 0;
 }
 
+/** Decimal places kept for combat-precision attribute values. */
+export const COMBAT_STAT_DECIMALS = 2;
+
+const COMBAT_PRECISION_FACTOR = 10 ** COMBAT_STAT_DECIMALS;
+
+/**
+ * Round a value to combat precision (2 decimal places).
+ */
+export function roundToCombatPrecision(value: number): number {
+  return Math.round(value * COMBAT_PRECISION_FACTOR) / COMBAT_PRECISION_FACTOR;
+}
+
+/**
+ * Canonical combat-precision effective value for one attribute.
+ * The loadout multiplier is applied exactly once, after all additive sources.
+ *
+ * Formula: round2((base + weaponBonus + tuningBonus) × (1 + loadoutBonus))
+ *
+ * @param weaponBonus - Sum of BOTH equipped weapons' (refined) bonuses for the attribute
+ */
+export function calculateCombatEffectiveStat(
+  baseValue: number,
+  weaponBonus: number,
+  loadoutBonus: number,
+  tuningBonus: number = 0,
+): number {
+  return roundToCombatPrecision((baseValue + weaponBonus + tuningBonus) * (1 + loadoutBonus));
+}
+
+/**
+ * Canonical combat-precision effective values for all 23 attributes.
+ * Unknown loadout types apply no multiplier.
+ *
+ * @param robot - Robot with numeric attributes and optional weapons
+ * @param tuningBonuses - Optional sparse map of attribute → tuning bonus value
+ */
+export function calculateCombatEffectiveStats(
+  robot: RobotStatsInput,
+  tuningBonuses?: TuningAttributeMap,
+): Record<string, number> {
+  const effectiveStats: Record<string, number> = {};
+
+  for (const attr of ROBOT_ATTRIBUTES) {
+    const baseValue = robot[attr as keyof RobotStatsInput] as number;
+    const weaponBonus = calculateAttributeBonus(attr, robot.mainWeapon, robot.offhandWeapon);
+    const loadoutBonus = getLoadoutBonus(robot.loadoutType, attr);
+    const tuningBonus = tuningBonuses?.[attr] ?? 0;
+    effectiveStats[attr] = calculateCombatEffectiveStat(baseValue, weaponBonus, loadoutBonus, tuningBonus);
+  }
+
+  return effectiveStats;
+}
+
 /**
  * Calculate a single effective stat value including weapon bonuses, tuning bonuses,
  * and loadout modifiers. Returns a floored integer for display purposes.
  *
- * Formula: floor((base + weaponBonus + tuningBonus) × (1 + loadoutBonus))
+ * Formula: floor(calculateCombatEffectiveStat(...)) — the display value is derived
+ * from the combat value, never computed separately.
  */
 export function calculateEffectiveStat(
   baseValue: number,
@@ -208,8 +263,7 @@ export function calculateEffectiveStat(
   loadoutBonus: number,
   tuningBonus: number = 0,
 ): number {
-  const loadoutMultiplier = 1 + loadoutBonus;
-  return Math.floor((baseValue + weaponBonus + tuningBonus) * loadoutMultiplier);
+  return Math.floor(calculateCombatEffectiveStat(baseValue, weaponBonus, loadoutBonus, tuningBonus));
 }
 
 /**
@@ -222,14 +276,11 @@ export function calculateEffectiveStats(
   robot: RobotStatsInput,
   tuningBonuses?: TuningAttributeMap,
 ): Record<string, number> {
+  const combatStats = calculateCombatEffectiveStats(robot, tuningBonuses);
   const effectiveStats: Record<string, number> = {};
 
   for (const attr of ROBOT_ATTRIBUTES) {
-    const baseValue = robot[attr as keyof RobotStatsInput] as number;
-    const weaponBonus = calculateAttributeBonus(attr, robot.mainWeapon, robot.offhandWeapon);
-    const loadoutBonus = getLoadoutBonus(robot.loadoutType, attr);
-    const tuningBonus = tuningBonuses?.[attr] ?? 0;
-    effectiveStats[attr] = calculateEffectiveStat(baseValue, weaponBonus, loadoutBonus, tuningBonus);
+    effectiveStats[attr] = Math.floor(combatStats[attr]);
   }
 
   return effectiveStats;

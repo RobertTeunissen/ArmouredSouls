@@ -7,6 +7,7 @@ import {
 } from '../../src/services/arena/movementAI';
 import { euclideanDistance, Position } from '../../src/services/arena/vector2d';
 import { ArenaConfig, MovementIntent, RobotCombatState, RangeBand } from '../../src/services/arena/types';
+import { BattleErrorCode } from '../../src/errors/battleErrors';
 
 /**
  * Property-based tests for movementAI module.
@@ -258,7 +259,7 @@ describe('movementAI property tests', () => {
       );
     });
 
-    it('should return a valid RangeBand when no weapons are equipped', () => {
+    it('throws ROBOT_NOT_BATTLE_READY when no main weapon is equipped', () => {
       const state = makeState({
         robot: {
           loadoutType: 'single',
@@ -268,8 +269,9 @@ describe('movementAI property tests', () => {
         } as any,
       });
 
-      const range = getPreferredRange(state);
-      expect(validRangeBands).toContain(range);
+      expect(() => getPreferredRange(state)).toThrow(
+        expect.objectContaining({ code: BattleErrorCode.ROBOT_NOT_BATTLE_READY }),
+      );
     });
 
     it('should target the current opponent during the melee final approach', () => {

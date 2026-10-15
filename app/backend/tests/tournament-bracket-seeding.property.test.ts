@@ -132,6 +132,64 @@ describe('Feature: tournament-bracket-seeding', () => {
   });
 });
 
+// Feature: tournament-bracket-seeding, terminal-status elimination rule (design §7, R1)
+describe('Feature: tournament-bracket-seeding', () => {
+  describe('Elimination follows the terminal match statuses', () => {
+    /**
+     * `completed`, `forfeit` and `cancelled` rows with a winner eliminate the
+     * non-winner; a `cancelled` row without a winner eliminates its participants;
+     * `pending`/`scheduled` rows never eliminate anyone.
+     */
+    it('eliminates exactly the losers of terminal matches', () => {
+      const robots: Robot[] = Array.from({ length: 8 }, (_, i) => makeRobot(i + 1, `R${i + 1}`, 2000 - i * 100));
+      const seedOrder = generateStandardSeedOrder(8);
+      const slots: (Robot | null)[] = new Array(8).fill(null);
+      seedRobotsByELO(robots).forEach((r, i) => {
+        slots[seedOrder[i] - 1] = r;
+      });
+      const round1Matches: Round1Match[] = [];
+      for (let i = 0; i < 8; i += 2) {
+        const r1 = slots[i]!;
+        const r2 = slots[i + 1]!;
+        round1Matches.push({
+          matchNumber: i / 2 + 1,
+          participant1Id: r1.id,
+          participant2Id: r2.id,
+          robot1: { id: r1.id, name: r1.name, elo: r1.elo },
+          robot2: { id: r2.id, name: r2.name, elo: r2.elo },
+        });
+      }
+      const statusArb = fc.constantFrom('completed', 'forfeit', 'cancelled', 'pending', 'scheduled');
+
+      fc.assert(
+        fc.property(
+          fc.array(fc.tuple(statusArb, fc.constantFrom<0 | 1 | 2>(0, 1, 2)), { minLength: 4, maxLength: 4 }),
+          (outcomes) => {
+            const matches = round1Matches.map((m, i) => {
+              const [status, pick] = outcomes[i];
+              const winnerId = pick === 0 ? null : pick === 1 ? m.participant1Id : m.participant2Id;
+              return { participant1Id: m.participant1Id, participant2Id: m.participant2Id, winnerId, status };
+            });
+            const seedings = computeSeedings(round1Matches, 8, matches);
+            const expected = new Set<number>();
+            for (const m of matches) {
+              if (!['completed', 'forfeit', 'cancelled'].includes(m.status)) continue;
+              for (const p of [m.participant1Id, m.participant2Id]) {
+                if (p === null) continue;
+                if (m.winnerId === null ? m.status === 'cancelled' : p !== m.winnerId) expected.add(p);
+              }
+            }
+            for (const s of seedings) {
+              expect(s.eliminated).toBe(expected.has(s.robotId));
+            }
+          }
+        ),
+        { numRuns: 100 }
+      );
+    });
+  });
+});
+
 // Feature: tournament-bracket-seeding, Property 1: API returns all matches in correct order
 describe('Feature: tournament-bracket-seeding', () => {
   describe('Property 1: API returns all matches in correct order', () => {

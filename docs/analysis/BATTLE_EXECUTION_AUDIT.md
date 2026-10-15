@@ -165,7 +165,7 @@ In short: League, Tournament, and Tag Team differ only in how they set up the ma
 - **Matchmaking**: `runMatchmaking()` in `matchmakingService.ts`
 - **Scheduling**: Creates `ScheduledMatch` records with 24h lead time
 - **Execution**: `executeScheduledBattles()` → `processBattle()` per match
-- **Readiness**: Weapons-only check (`checkBattleReadiness()`). HP not checked — auto-repair runs first.
+- **Readiness**: Weapons-only check (`checkSchedulingReadiness()`). HP not checked — auto-repair runs first.
 
 ### Matchmaking Algorithm
 - Primary: LP-based (±10 ideal, ±20 fallback)

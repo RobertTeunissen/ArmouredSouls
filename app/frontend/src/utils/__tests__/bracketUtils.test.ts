@@ -210,3 +210,36 @@ describe('getUserFuturePath', () => {
     expect(result).toEqual(new Set([3]));
   });
 });
+
+// T22 — a participant eliminated by a forfeit or an errored (cancelled) match
+// has no future path; the higher seed advanced by a cancelled row keeps it
+// (design §9.3, rule 5, product-owner R1).
+describe('getUserFuturePath after forfeits and cancelled matches', () => {
+  function bracket(status: string, winnerId: number | null): TournamentMatchWithRobots[] {
+    return [
+      makeMatch({ id: 1, round: 1, matchNumber: 1, participant1Id: 10, participant2Id: 20, winnerId, status }),
+      makeMatch({ id: 2, round: 1, matchNumber: 2, participant1Id: 30, participant2Id: 40 }),
+      makeMatch({ id: 3, round: 2, matchNumber: 1 }),
+    ];
+  }
+
+  it('should drop the future path of a robot that forfeited', () => {
+    expect(getUserFuturePath(bracket('forfeit', 20), new Set([10]), 2).size).toBe(0);
+  });
+
+  it('should keep the future path of the robot that won by forfeit', () => {
+    expect(getUserFuturePath(bracket('forfeit', 20), new Set([20]), 2)).toEqual(new Set([3]));
+  });
+
+  it('should drop the future path of the lower seed of a cancelled match', () => {
+    expect(getUserFuturePath(bracket('cancelled', 10), new Set([20]), 2).size).toBe(0);
+  });
+
+  it('should keep the future path of the higher seed advanced by a cancelled match', () => {
+    expect(getUserFuturePath(bracket('cancelled', 10), new Set([10]), 2)).toEqual(new Set([3]));
+  });
+
+  it('should drop the future path when a cancelled match advanced nobody', () => {
+    expect(getUserFuturePath(bracket('cancelled', null), new Set([10]), 2).size).toBe(0);
+  });
+});

@@ -36,6 +36,17 @@ export const BATTLE_MODES = [
 ] as const;
 
 export type BattleMode = (typeof BATTLE_MODES)[number];
+
+/** Two-sided modes: a forfeit gives the other side a walkover (KotH/GM forfeiters take last place instead). */
+export const TWO_SIDED_BATTLE_MODES = [
+  'league_1v1',
+  'league_2v2',
+  'league_3v3',
+  'tag_team',
+  'tournament_1v1',
+  'tournament_2v2',
+  'tournament_3v3',
+] as const satisfies readonly BattleMode[];
 export type TestTier = 'unit' | 'integration' | 'heavy' | 'frontend' | 'e2e';
 export type { CurrencyMutationOperation } from '../../src/services/migration/directWriterCoverage';
 
@@ -56,6 +67,7 @@ export type ManifestEntryStatus =
   | 'shared-prestige-writer'
   | 'bye-caller'
   | 'bye-implementation'
+  | 'forfeit-implementation'
   | 'compatibility-entry-point'
   | 'canonical-source';
 
@@ -70,6 +82,7 @@ export interface CoverageManifestEntry {
     | 'settlement'
     | 'prestige'
     | 'bye'
+    | 'forfeit'
     | 'subscription'
     | 'lifecycle';
   status: ManifestEntryStatus;
@@ -88,6 +101,17 @@ export interface ByeCallerBoundary {
   currentSource: ManifestSource;
   modes: readonly BattleMode[];
   finalService: 'Bye_Reward_Module';
+  identityStrategy: string;
+  pairedOrDomainRecords: readonly string[];
+  targetTestTiers: readonly TestTier[];
+  notes: string;
+}
+
+export interface ForfeitCallerBoundary {
+  id: string;
+  currentSource: ManifestSource;
+  modes: readonly BattleMode[];
+  finalService: 'Forfeit_Resolution_Module';
   identityStrategy: string;
   pairedOrDomainRecords: readonly string[];
   targetTestTiers: readonly TestTier[];
@@ -195,6 +219,7 @@ export interface CoverageManifest {
   battleModes: typeof BATTLE_MODES;
   entries: readonly CoverageManifestEntry[];
   byeCallerBoundaries: readonly ByeCallerBoundary[];
+  forfeitCallerBoundaries: readonly ForfeitCallerBoundary[];
   prestigeSources: readonly PrestigeSourceBoundary[];
   prestigeWriters: readonly PrestigeWriterBoundary[];
   repairSpendSource: RepairSpendSource;
@@ -687,7 +712,73 @@ const byeCallerBoundaries: readonly ByeCallerBoundary[] = [
     identityStrategy: 'scheduled_matches_v2.id + robot stable + battle_income bye component',
     pairedOrDomainRecords: ['Bye_Event Battle row', 'FinancialLedger', 'financial_transaction AuditLog', 'zero-standing/zero-ELO placement compatibility record'],
     targetTestTiers: ALL_CRITICAL_TIERS,
-    notes: 'Direct resolveByeEvent caller #5; covers thin KotH and Grand Melee instances below the minimum field size.',
+    notes: 'Direct resolveByeEvent caller #5; covers thin KotH and Grand Melee instances below the minimum field size, including the per-robot byes that resolveBelowMinimumField queues for the ready robots when battle-time forfeits leave a KotH/GM field below its minimum.',
+  },
+];
+
+const forfeitImplementationEntry: CoverageManifestEntry = {
+  id: 'forfeit-resolution-implementation',
+  area: 'forfeit',
+  status: 'forfeit-implementation',
+  currentSource: { file: 'app/backend/src/services/battle/forfeitResolutionService.ts', symbol: 'resolveForfeitEvent' },
+  finalService: 'Forfeit_Resolution_Module',
+  expectedTaxonomy: ['battle_income'],
+  identityStrategy: 'queued match claim + stable + mode, forfeit: prefix (buildForfeitBattleIncomeEventId); the queued match is claimed before payment',
+  pairedOrDomainRecords: ['FinancialLedger', 'financial_transaction AuditLog', 'Forfeit Battle row', 'BattleParticipant (forfeited flag)', 'zero-event BattleSummary', 'Standing'],
+  targetTestTiers: ['unit', 'integration', 'heavy'],
+  notes: 'The ready side is paid the bye-level reward once through awardCreditsWithLedger (outcome forfeit_win, isBye walkover classification); the forfeiter earns 0 credits; a double forfeit pays nobody. No simulation, streaming, prestige, fame or repair. KotH/GM forfeiters write no credits.',
+};
+
+const forfeitCallerBoundaries: readonly ForfeitCallerBoundary[] = [
+  {
+    id: 'forfeit-caller-league-1v1',
+    currentSource: { file: 'app/backend/src/services/league/leagueBattleOrchestrator.ts', symbol: 'resolveLeagueForfeit' },
+    modes: ['league_1v1'],
+    finalService: 'Forfeit_Resolution_Module',
+    identityStrategy: 'scheduled_matches_v2.id + ready stable + forfeit battle_income component',
+    pairedOrDomainRecords: ['Forfeit Battle row', 'FinancialLedger', 'financial_transaction AuditLog', 'robot Standing/ELO updates'],
+    targetTestTiers: ALL_CRITICAL_TIERS,
+    notes: 'resolveForfeitEvent caller #1.',
+  },
+  {
+    id: 'forfeit-caller-team-league',
+    currentSource: { file: 'app/backend/src/services/team-battle/teamBattleOrchestrator.ts', symbol: 'resolveTeamLeagueForfeit' },
+    modes: ['league_2v2', 'league_3v3'],
+    finalService: 'Forfeit_Resolution_Module',
+    identityStrategy: 'scheduled_matches_v2.id + ready team stable + forfeit battle_income component',
+    pairedOrDomainRecords: ['Forfeit Battle row', 'FinancialLedger', 'financial_transaction AuditLog', 'team Standing/ELO updates'],
+    targetTestTiers: ALL_CRITICAL_TIERS,
+    notes: 'resolveForfeitEvent caller #2; one team-size branch for both league modes. Any unarmed member forfeits the team.',
+  },
+  {
+    id: 'forfeit-caller-tag-team',
+    currentSource: { file: 'app/backend/src/services/tag-team/tagTeamScheduler.ts', symbol: 'resolveTagTeamForfeit' },
+    modes: ['tag_team'],
+    finalService: 'Forfeit_Resolution_Module',
+    identityStrategy: 'scheduled_matches_v2.id + ready team stable + forfeit battle_income component',
+    pairedOrDomainRecords: ['Forfeit Battle row', 'FinancialLedger', 'financial_transaction AuditLog', 'tag-team Standing/ELO updates'],
+    targetTestTiers: ALL_CRITICAL_TIERS,
+    notes: 'resolveForfeitEvent caller #3; an unarmed active or reserve robot forfeits the team.',
+  },
+  {
+    id: 'forfeit-caller-solo-tournament',
+    currentSource: { file: 'app/backend/src/services/tournament/tournamentBattleOrchestrator.ts', symbol: 'resolveSoloTournamentForfeit' },
+    modes: ['tournament_1v1'],
+    finalService: 'Forfeit_Resolution_Module',
+    identityStrategy: 'scheduled_tournament_matches.id + ready stable + forfeit battle_income component',
+    pairedOrDomainRecords: ['Forfeit Battle row', 'FinancialLedger', 'financial_transaction AuditLog', 'bracket row status forfeit'],
+    targetTestTiers: ALL_CRITICAL_TIERS,
+    notes: 'resolveForfeitEvent caller #4; a double forfeit writes a draw battle and the higher seed advances without credits.',
+  },
+  {
+    id: 'forfeit-caller-team-tournament',
+    currentSource: { file: 'app/backend/src/services/tournament/teamTournamentBattleOrchestrator.ts', symbol: 'resolveTeamTournamentForfeit' },
+    modes: ['tournament_2v2', 'tournament_3v3'],
+    finalService: 'Forfeit_Resolution_Module',
+    identityStrategy: 'scheduled_tournament_matches.id + ready team stable + forfeit battle_income component',
+    pairedOrDomainRecords: ['Forfeit Battle row', 'FinancialLedger', 'financial_transaction AuditLog', 'bracket row status forfeit'],
+    targetTestTiers: ALL_CRITICAL_TIERS,
+    notes: 'resolveForfeitEvent caller #5; roster-ineligible and unarmed-member forfeits share this writer (decideTeamTournamentEntry).',
   },
 ];
 
@@ -887,8 +978,9 @@ export const COVERAGE_MANIFEST: CoverageManifest = {
   currencyField: 'User.currency',
   transactionTaxonomy: TRANSACTION_TYPES,
   battleModes: BATTLE_MODES,
-  entries: [...directCurrencyEntries, ...modeEntries, byeImplementationEntry, ...lifecycleEntries],
+  entries: [...directCurrencyEntries, ...modeEntries, byeImplementationEntry, forfeitImplementationEntry, ...lifecycleEntries],
   byeCallerBoundaries,
+  forfeitCallerBoundaries,
   prestigeSources,
   prestigeWriters,
   repairSpendSource: {
@@ -1211,6 +1303,11 @@ export function validateCoverageManifest(manifest: CoverageManifest = COVERAGE_M
   const byeModes = new Set(manifest.byeCallerBoundaries.flatMap((caller) => caller.modes));
   for (const mode of manifest.battleModes) {
     if (!byeModes.has(mode)) errors.push(`missing bye caller coverage for ${mode}`);
+  }
+
+  const forfeitModes = new Set(manifest.forfeitCallerBoundaries.flatMap((caller) => caller.modes));
+  for (const mode of TWO_SIDED_BATTLE_MODES) {
+    if (!forfeitModes.has(mode)) errors.push(`missing forfeit caller coverage for ${mode}`);
   }
 
   for (const entry of manifest.entries) {

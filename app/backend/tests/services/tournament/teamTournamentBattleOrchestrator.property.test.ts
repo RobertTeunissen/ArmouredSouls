@@ -2,29 +2,43 @@
  * Team Tournament Battle Orchestrator - Property-Based Tests
  * Feature: team-battle-tournaments
  *
- * Tests correctness properties of draw tiebreaking, forfeit handling,
+ * Tests correctness properties of draw tiebreaking, the battle-time entry
+ * decision (roster × weapon forfeits),
  * reward formula, and league counter isolation using fast-check.
  */
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
 
-const mockTournamentFindUnique = jest.fn();
-const mockScheduledTournamentMatchFindMany = jest.fn();
 const mockScheduledTournamentMatchUpdate = jest.fn();
 const mockTeamBattleFindUnique = jest.fn();
 const mockSubscriptionCount = jest.fn();
+const mockRobotFindMany = jest.fn();
+const mockResolveForfeitEvent = jest.fn();
+const mockResolveHigherSeed = jest.fn();
 
 jest.mock('../../../src/lib/prisma', () => ({
   __esModule: true,
   default: {
-    tournament: { findUnique: (...args: unknown[]) => mockTournamentFindUnique(...args) },
     scheduledTournamentMatch: {
-      findMany: (...args: unknown[]) => mockScheduledTournamentMatchFindMany(...args),
       update: (...args: unknown[]) => mockScheduledTournamentMatchUpdate(...args),
     },
     teamBattle: { findUnique: (...args: unknown[]) => mockTeamBattleFindUnique(...args) },
     subscription: { count: (...args: unknown[]) => mockSubscriptionCount(...args) },
+    robot: { findMany: (...args: unknown[]) => mockRobotFindMany(...args) },
   },
+}));
+
+jest.mock('../../../src/services/battle/forfeitResolutionService', () => ({
+  resolveForfeitEvent: (...args: unknown[]) => mockResolveForfeitEvent(...args),
+}));
+
+jest.mock('../../../src/services/tournament/tournamentService', () => ({
+  ...jest.requireActual('../../../src/services/tournament/tournamentService'),
+  resolveHigherSeed: (...args: unknown[]) => mockResolveHigherSeed(...args),
+}));
+
+jest.mock('../../../src/services/battle/baseOrchestrator', () => ({
+  getCurrentCycleNumber: jest.fn().mockResolvedValue(7),
 }));
 
 jest.mock('../../../src/config/logger', () => ({
@@ -39,8 +53,9 @@ import {
   resolveDraw,
   DrawResolution,
   calculateTeamTournamentPrestige,
-  executeTeamTournamentRound,
+  decideTeamTournamentEntry,
 } from '../../../src/services/tournament/teamTournamentBattleOrchestrator';
+import type { ScheduledTournamentMatch, Tournament } from '../../../generated/prisma';
 import { calculateTournamentWinReward } from '../../../src/utils/tournamentRewards';
 import { TeamBattleResult } from '../../../src/types/teamBattleLogTypes';
 
@@ -232,249 +247,156 @@ describe('Feature: team-battle-tournaments, Property 11: Draw resolved by HP sum
   });
 });
 
-// ─── Property 14: Forfeit on ineligibility ───────────────────────────────────
+// ─── Property 14: One per-side entry decision (roster × weapons) ─────────────
 
-describe('Feature: team-battle-tournaments, Property 14: Ineligible team forfeits, both ineligible → winnerId null', () => {
+describe('Feature: team-battle-tournaments, Property 14: A side forfeits iff roster-ineligible or a member is unarmed; both → higher seed', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
+  const tournamentFor = (teamSize: 2 | 3) => ({
+    id: 1,
+    name: `${teamSize}v${teamSize} Tournament #1`,
+    status: 'active',
+    participantType: teamSize === 2 ? 'team_2v2' : 'team_3v3',
+    currentRound: 1,
+    maxRounds: 3,
+    totalParticipants: 8,
+  }) as unknown as Tournament;
+
+  const matchFor = (team1Id: number | null, team2Id: number | null) => ({
+    id: 99,
+    tournamentId: 1,
+    round: 1,
+    matchNumber: 1,
+    participantType: 'team_2v2',
+    participant1Id: team1Id,
+    participant2Id: team2Id,
+    winnerId: null,
+    battleId: null,
+    status: 'pending',
+    isByeMatch: false,
+    createdAt: new Date(),
+    completedAt: null,
+  }) as unknown as ScheduledTournamentMatch;
+
+  const sideArb = fc.record({
+    rosterEligible: fc.boolean(),
+    /** How an ineligible roster fails: a missing member or a lapsed subscription. */
+    ineligibleBy: fc.constantFrom('short_roster', 'unsubscribed'),
+    memberUnarmed: fc.boolean(),
+  });
+
   /**
-   * **Validates: Requirements 5.5, 5.6**
+   * **Validates: Requirements 5.5, 5.6; design §5.5 (rule 2, A5)**
    *
-   * For any pending match where one team's eligibility is not 'ELIGIBLE',
-   * that match SHALL be resolved as a forfeit with the eligible opponent advancing.
-   * If both ineligible, winnerId=null.
+   * For any pending match, a side forfeits exactly when its team is
+   * roster/subscription-ineligible OR any loaded member has no main weapon.
+   * Neither → fight (no writer call). One → the shared forfeit writer with the
+   * other team advancing. Both → a double forfeit (draw battle row) where the
+   * higher seed advances in the bracket.
    */
-  it('should forfeit ineligible team and advance eligible opponent', async () => {
+  it('routes every roster × weapon combination through the forfeit writer', async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.record({
-          team1Eligible: fc.boolean(),
-          team2Eligible: fc.boolean(),
-        }),
+        sideArb,
+        sideArb,
         fc.integer({ min: 1, max: 1000 }),
-        fc.integer({ min: 1001, max: 2000 }), // Ensure team IDs are distinct
-        async ({ team1Eligible, team2Eligible }, team1Id, team2Id) => {
-          // Only test forfeit scenarios (at least one team ineligible)
-          if (team1Eligible && team2Eligible) return;
-
+        fc.integer({ min: 1001, max: 2000 }),
+        fc.constantFrom(2, 3) as fc.Arbitrary<2 | 3>,
+        fc.boolean(),
+        async (s1, s2, team1Id, team2Id, teamSize, higherSeedIsTeam2) => {
           jest.clearAllMocks();
+          const spec = new Map([[team1Id, s1], [team2Id, s2]]);
+          const robotIdsOf = (teamId: number) => Array.from({ length: teamSize }, (_, i) => teamId * 10 + i);
+          const teamOfRobot = (robotId: number) => Math.floor(robotId / 10);
 
-          // Setup: tournament exists and is active
-          mockTournamentFindUnique.mockResolvedValue({
-            id: 1,
-            name: '2v2 Tournament #1',
-            status: 'active',
-            participantType: 'team_2v2',
-            currentRound: 1,
-            maxRounds: 3,
-            totalParticipants: 8,
-          });
-
-          // Setup: one pending match
-          const match = {
-            id: 99,
-            tournamentId: 1,
-            round: 1,
-            matchNumber: 1,
-            participantType: 'team_2v2',
-            participant1Id: team1Id,
-            participant2Id: team2Id,
-            winnerId: null,
-            battleId: null,
-            status: 'pending',
-            isByeMatch: false,
-            createdAt: new Date(),
-            completedAt: null,
-          };
-          mockScheduledTournamentMatchFindMany.mockResolvedValue([match]);
-
-          // Setup: team eligibility via teamBattle.findUnique with include: { members: true }
-          // isTeamEligibleForTournament loads team with members, then checks subscription count
-          mockTeamBattleFindUnique.mockImplementation(({ where }: any) => {
-            const isEligible = (where.id === team1Id && team1Eligible) ||
-                               (where.id === team2Id && team2Eligible);
-            if (isEligible) {
-              return Promise.resolve({
-                teamSize: 2,
-                members: [{ robotId: where.id * 10 }, { robotId: where.id * 10 + 1 }],
-              });
-            }
-            // Ineligible: return team with incomplete roster
+          mockTeamBattleFindUnique.mockImplementation(({ where }: { where: { id: number } }) => {
+            const s = spec.get(where.id)!;
+            const ids = robotIdsOf(where.id);
+            const members = !s.rosterEligible && s.ineligibleBy === 'short_roster' ? ids.slice(1) : ids;
             return Promise.resolve({
-              teamSize: 2,
-              members: [{ robotId: where.id * 10 }], // only 1 member for teamSize 2
+              id: where.id,
+              stableId: where.id * 100,
+              teamName: `Team ${where.id}`,
+              teamSize,
+              members: members.map((robotId, slotIndex) => ({ robotId, slotIndex })),
             });
           });
+          mockSubscriptionCount.mockImplementation(({ where }: { where: { robotId: { in: number[] } } }) => {
+            const s = spec.get(teamOfRobot(where.robotId.in[0]))!;
+            const subscribed = s.rosterEligible || s.ineligibleBy !== 'unsubscribed';
+            return Promise.resolve(subscribed ? where.robotId.in.length : 0);
+          });
+          mockRobotFindMany.mockImplementation(({ where }: { where: { id: { in: number[] } } }) =>
+            Promise.resolve(where.id.in.map((id, index) => {
+              // The unarmed member is never slot 0 alone: the rule is "any member".
+              const unarmed = spec.get(teamOfRobot(id))!.memberUnarmed && index === where.id.in.length - 1;
+              return {
+                id,
+                userId: teamOfRobot(id) * 100,
+                name: `Robot ${id}`,
+                elo: 1500,
+                currentHP: 100,
+                maxHP: 100,
+                loadoutType: 'single',
+                mainWeapon: unarmed ? null : { id: id * 7, weapon: { id: 1 } },
+                offhandWeapon: null,
+              };
+            })),
+          );
+          mockResolveForfeitEvent.mockResolvedValue({ battleId: 555, creditsPaid: 0, outcome: 'forfeit_win', alreadyResolved: false });
+          mockResolveHigherSeed.mockResolvedValue(higherSeedIsTeam2 ? team2Id : team1Id);
 
-          // Subscription count mock (only called for teams with full roster)
-          mockSubscriptionCount.mockResolvedValue(2);
+          const entry = await decideTeamTournamentEntry(matchFor(team1Id, team2Id), tournamentFor(teamSize));
 
-          // Track the update call to verify forfeit behavior
-          mockScheduledTournamentMatchUpdate.mockResolvedValue({});
+          const side1Forfeits = !s1.rosterEligible || s1.memberUnarmed;
+          const side2Forfeits = !s2.rosterEligible || s2.memberUnarmed;
 
-          const result = await executeTeamTournamentRound(1, 2);
-
-          // Verify the match was updated as forfeit
-          expect(mockScheduledTournamentMatchUpdate).toHaveBeenCalled();
-          const updateCall = mockScheduledTournamentMatchUpdate.mock.calls[0][0];
-
-          if (!team1Eligible && !team2Eligible) {
-            // Both ineligible → winnerId null
-            expect(updateCall.data.winnerId).toBeNull();
-            expect(updateCall.data.status).toBe('forfeit');
-          } else if (!team1Eligible) {
-            // Team 1 ineligible → team 2 wins
-            expect(updateCall.data.winnerId).toBe(team2Id);
-            expect(updateCall.data.status).toBe('forfeit');
-          } else {
-            // Team 2 ineligible → team 1 wins
-            expect(updateCall.data.winnerId).toBe(team1Id);
-            expect(updateCall.data.status).toBe('forfeit');
+          if (!side1Forfeits && !side2Forfeits) {
+            expect(entry.kind).toBe('fight');
+            expect(mockResolveForfeitEvent).not.toHaveBeenCalled();
+            return;
           }
 
-          expect(result.matchesExecuted).toBe(1);
+          expect(entry.kind).toBe('forfeit');
+          expect(mockResolveForfeitEvent).toHaveBeenCalledTimes(1);
+          expect(mockScheduledTournamentMatchUpdate).not.toHaveBeenCalled();
+          const input = mockResolveForfeitEvent.mock.calls[0][0];
+          expect(input.sides.map((s: { forfeited: boolean }) => s.forfeited)).toEqual([side1Forfeits, side2Forfeits]);
+          expect(input.claim).toEqual({ source: 'tournament_match', tournamentMatchId: 99 });
+          expect(input.standingMode).toBeNull();
+
+          if (side1Forfeits && side2Forfeits) {
+            const higherSeed = higherSeedIsTeam2 ? team2Id : team1Id;
+            expect(mockResolveHigherSeed).toHaveBeenCalledWith(1, team1Id, team2Id);
+            expect(input.battle).toMatchObject({ winnerId: null, winningSide: null });
+            expect(input.tournamentWinnerId).toBe(higherSeed);
+            expect(entry.kind === 'forfeit' && entry.result.winnerId).toBe(higherSeed);
+          } else {
+            const [winnerId, winningSide] = side2Forfeits ? [team1Id, 1] : [team2Id, 2];
+            expect(mockResolveHigherSeed).not.toHaveBeenCalled();
+            expect(input.battle).toMatchObject({ winnerId, winningSide });
+            expect(input.tournamentWinnerId).toBe(winnerId);
+            expect(entry.kind === 'forfeit' && entry.result).toMatchObject({ winnerId, isForfeit: true });
+          }
         },
       ),
-      { numRuns: 100 },
+      { numRuns: 200 },
     );
   });
 
-  it('should set winnerId to null when both teams are ineligible', async () => {
-    await fc.assert(
-      fc.asyncProperty(
-        fc.integer({ min: 1, max: 1000 }),
-        fc.integer({ min: 1001, max: 2000 }), // Ensure distinct IDs
-        async (team1Id, team2Id) => {
-          jest.clearAllMocks();
+  it('closes an empty placeholder (both participants null) as completed with no battle', async () => {
+    mockScheduledTournamentMatchUpdate.mockResolvedValue({});
 
-          // Setup: tournament exists and is active
-          mockTournamentFindUnique.mockResolvedValue({
-            id: 1,
-            name: '2v2 Tournament #1',
-            status: 'active',
-            participantType: 'team_2v2',
-            currentRound: 1,
-            maxRounds: 3,
-            totalParticipants: 8,
-          });
+    const entry = await decideTeamTournamentEntry(matchFor(null, null), tournamentFor(2));
 
-          // Setup: one pending match
-          const match = {
-            id: 99,
-            tournamentId: 1,
-            round: 1,
-            matchNumber: 1,
-            participantType: 'team_2v2',
-            participant1Id: team1Id,
-            participant2Id: team2Id,
-            winnerId: null,
-            battleId: null,
-            status: 'pending',
-            isByeMatch: false,
-            createdAt: new Date(),
-            completedAt: null,
-          };
-          mockScheduledTournamentMatchFindMany.mockResolvedValue([match]);
-
-          // Both teams ineligible — incomplete roster
-          mockTeamBattleFindUnique.mockResolvedValue({
-            teamSize: 2,
-            members: [{ robotId: 1 }], // only 1 member for teamSize 2
-          });
-
-          mockScheduledTournamentMatchUpdate.mockResolvedValue({});
-
-          const result = await executeTeamTournamentRound(1, 2);
-
-          // Verify forfeit with null winner
-          expect(mockScheduledTournamentMatchUpdate).toHaveBeenCalled();
-          const updateCall = mockScheduledTournamentMatchUpdate.mock.calls[0][0];
-          expect(updateCall.data.winnerId).toBeNull();
-          expect(updateCall.data.status).toBe('forfeit');
-          expect(result.matchesExecuted).toBe(1);
-        },
-      ),
-      { numRuns: 100 },
-    );
-  });
-
-  it('should advance eligible team when only opponent is ineligible', async () => {
-    await fc.assert(
-      fc.asyncProperty(
-        fc.integer({ min: 1, max: 1000 }),
-        fc.integer({ min: 1001, max: 2000 }), // Ensure distinct IDs
-        fc.constantFrom(1, 2) as fc.Arbitrary<1 | 2>,
-        async (team1Id, team2Id, ineligibleSide) => {
-          jest.clearAllMocks();
-
-          // Setup: tournament exists and is active
-          mockTournamentFindUnique.mockResolvedValue({
-            id: 1,
-            name: '3v3 Tournament #1',
-            status: 'active',
-            participantType: 'team_3v3',
-            currentRound: 1,
-            maxRounds: 3,
-            totalParticipants: 8,
-          });
-
-          // Setup: one pending match
-          const match = {
-            id: 99,
-            tournamentId: 1,
-            round: 1,
-            matchNumber: 1,
-            participantType: 'team_3v3',
-            participant1Id: team1Id,
-            participant2Id: team2Id,
-            winnerId: null,
-            battleId: null,
-            status: 'pending',
-            isByeMatch: false,
-            createdAt: new Date(),
-            completedAt: null,
-          };
-          mockScheduledTournamentMatchFindMany.mockResolvedValue([match]);
-
-          // One team ineligible (incomplete roster), one eligible (full roster + subscriptions)
-          mockTeamBattleFindUnique.mockImplementation(({ where }: any) => {
-            const isIneligible = (ineligibleSide === 1 && where.id === team1Id) ||
-                                 (ineligibleSide === 2 && where.id === team2Id);
-            if (isIneligible) {
-              return Promise.resolve({
-                teamSize: 3,
-                members: [{ robotId: where.id * 10 }], // incomplete roster
-              });
-            }
-            return Promise.resolve({
-              teamSize: 3,
-              members: [
-                { robotId: where.id * 10 },
-                { robotId: where.id * 10 + 1 },
-                { robotId: where.id * 10 + 2 },
-              ],
-            });
-          });
-
-          // Subscription count: all members subscribed for eligible team
-          mockSubscriptionCount.mockResolvedValue(3);
-
-          mockScheduledTournamentMatchUpdate.mockResolvedValue({});
-
-          const result = await executeTeamTournamentRound(1, 3);
-
-          // Verify the eligible team advances
-          expect(mockScheduledTournamentMatchUpdate).toHaveBeenCalled();
-          const updateCall = mockScheduledTournamentMatchUpdate.mock.calls[0][0];
-          const expectedWinner = ineligibleSide === 1 ? team2Id : team1Id;
-          expect(updateCall.data.winnerId).toBe(expectedWinner);
-          expect(updateCall.data.status).toBe('forfeit');
-        },
-      ),
-      { numRuns: 100 },
-    );
+    expect(entry).toEqual({ kind: 'housekeeping' });
+    expect(mockResolveForfeitEvent).not.toHaveBeenCalled();
+    expect(mockScheduledTournamentMatchUpdate).toHaveBeenCalledWith({
+      where: { id: 99 },
+      data: { status: 'completed', winnerId: null, completedAt: expect.any(Date) },
+    });
   });
 });
 

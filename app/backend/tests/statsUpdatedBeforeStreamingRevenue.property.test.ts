@@ -27,6 +27,10 @@ useFinancialCaptureTestEnvironment();
 async function createTestRobot(
   userId: number, name: string, battles: number, fame: number, league: string = 'bronze'
 ) {
+  // Armed: a robot without a main weapon forfeits at battle time (no streaming revenue).
+  const weapon = await prisma.weapon.findFirst({ orderBy: { id: 'asc' } });
+  if (!weapon) throw new Error('No weapons seeded');
+  const mainWeapon = await prisma.weaponInventory.create({ data: { userId, weaponId: weapon.id, pricePaid: 0 } });
   return await prisma.robot.create({
     data: {
       userId, name, frameId: 1, totalBattles: battles, fame,
@@ -47,7 +51,7 @@ async function createTestRobot(
       elo: 1200, wins: 0, draws: 0, losses: 0,
       damageDealtLifetime: 0, damageTakenLifetime: 0, kills: 0,
       repairQuoteCredits: 0, battleReadiness: 100, lifetimeRepairCreditsPaid: 0,
-      yieldThreshold: 10, loadoutType: 'single', stance: 'balanced', mainWeaponId: null,
+      yieldThreshold: 10, loadoutType: 'single', stance: 'balanced', mainWeaponId: mainWeapon.id,
     },
   });
 }

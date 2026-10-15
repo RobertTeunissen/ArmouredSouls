@@ -2,7 +2,7 @@
 title: "Loadout Types"
 description: "The four loadout configurations in Armoured Souls — Single, Weapon+Shield, Two-Handed, and Dual-Wield — with their bonuses, penalties, range considerations, and strategic trade-offs."
 order: 2
-lastUpdated: "2026-03-17"
+lastUpdated: "2026-10-15"
 relatedArticles:
   - weapons/dual-wield-mechanics
   - combat/battle-flow
@@ -128,7 +128,7 @@ Dual-Wield is the sustained DPS loadout. Two weapons means two independent attac
 **Compatible Weapons:** All 22 one-handed weapons in both slots. You can equip two copies of the same weapon or mix different weapons for asymmetric builds.
 
 ```callout-info
-Dual-Wield's offhand weapon has significant combat penalties — 50% base hit chance (vs 70% for main hand) and a 40% cooldown penalty. These are fundamental to the loadout's balance. See [Dual-Wield Mechanics](/guide/weapons/dual-wield-mechanics) for the full breakdown of how per-hand bonuses and offhand rules work.
+Dual-Wield's offhand weapon has significant combat penalties — 50% base hit chance (vs 70% for main hand) and a 40% cooldown penalty. These are fundamental to the loadout's balance. See [Dual-Wield Mechanics](/guide/weapons/dual-wield-mechanics) for how both weapons' bonuses combine into shared attributes and how the offhand rules work.
 ```
 
 **Best For:**
@@ -164,7 +164,6 @@ Not every weapon works with every loadout. Here's the compatibility matrix:
 You can change your loadout type at any time from the robot detail page. However, if your currently equipped weapons aren't compatible with the new loadout, you'll need to unequip them first. Plan your weapon purchases with your target loadout in mind.
 ```
 
-## How Loadout Bonuses Work
 ## Weapon Ownership Rules
 
 A few important rules about how weapons work across your stable:
@@ -172,13 +171,21 @@ A few important rules about how weapons work across your stable:
 - Each weapon you own can only be **equipped on one robot at a time**. If you want two robots using the same weapon type, you need to buy two copies.
 - Every weapon in your inventory takes up a slot in your **Storage Facility**. Upgrading your storage lets you own more weapons. Plan your purchases around your available capacity.
 - You can **swap weapons between robots freely** at any time outside of battle. There's no cost or cooldown — just unequip from one robot and equip on another. This lets you experiment with different loadouts without buying duplicate weapons.
+- Weapons are checked when each battle starts. If a robot has a **booked match**, re-arm it before the match runs or it **forfeits** (an automatic loss with no credits). A robot that's missing only its offhand or shield fights with its main weapon as a Single loadout for that battle. The Robot Detail page asks you to confirm before you unequip a robot with booked matches.
 
 ## How Loadout Bonuses Work
-Loadout bonuses are **percentage-based multipliers** applied to your robot's effective attributes (base + weapon bonuses). The formula works like this:
 
-> **Effective Attribute = (Base Attribute + Weapon Bonuses) × (1 + Loadout Bonus %)**
+Loadout bonuses are **percentage-based multipliers** applied once, after everything else that adds to an attribute. The formula works like this:
+
+> **Effective Attribute = (Base Attribute + Both Weapons' Bonuses + Tuning) × (1 + Loadout Bonus %)**
 
 This means loadout bonuses become more powerful as your attributes grow. A +20% Shield Capacity bonus on a robot with 10 Shield Capacity adds 2 effective points. On a robot with 40 Shield Capacity, it adds 8. This is why loadout choice remains strategically important at every stage of the game.
+
+At Balanced stance, the effective attributes shown on your robot's stats screen are the values your robot fights with, in every battle mode: league, tag team, 2v2 and 3v3, tournaments, King of the Hill, Grand Melee and the Practice Arena. The loadout modifier also feeds into your maximum HP and shields — for example, the Weapon+Shield bonus raises Shield Capacity and therefore your shield pool.
+
+```callout-info
+Some loadout effects are not attribute bonuses and apply on top of them during combat: Two-Handed's 1.10× damage multiplier and 2.5× critical multiplier, Dual-Wield's 0.90× damage multiplier, and Weapon+Shield's extra counter-attack chance. These stack with the attribute bonuses above.
+```
 
 ## Weapon Range Bands
 
@@ -216,7 +223,7 @@ Your loadout choice and weapon range should align. A Dual-Wield build with two m
 
 ## What's Next?
 
-- [Dual-Wield Mechanics](/guide/weapons/dual-wield-mechanics) — Per-hand bonuses and offhand attack rules for dual-wielding robots
+- [Dual-Wield Mechanics](/guide/weapons/dual-wield-mechanics) — Shared attributes, per-hand weapons and offhand attack rules for dual-wielding robots
 - [Movement & Positioning](/guide/combat/movement-and-positioning) — Range bands, weapon ranges, and spatial combat mechanics
 - [Stances](/guide/combat/stances) — How Offensive, Defensive, and Balanced stances interact with your loadout and weapons
 

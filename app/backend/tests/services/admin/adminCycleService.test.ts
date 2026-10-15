@@ -109,6 +109,7 @@ jest.mock('../../../src/services/tournament/tournamentService', () => ({
 
 jest.mock('../../../src/services/tournament/tournamentBattleOrchestrator', () => ({
   processTournamentBattle: jest.fn().mockResolvedValue(undefined),
+  executeSoloTournamentRound: jest.fn().mockResolvedValue({ matchesExecuted: 0, byesResolved: 0, matchesResumed: 0, matchesCancelled: 0, winners: [], errors: [] }),
 }));
 
 jest.mock('../../../src/services/moderation/orphanCleanupJob', () => ({

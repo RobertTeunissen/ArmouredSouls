@@ -17,7 +17,7 @@ import {
   autoCreateNextTournament,
   getEligibleRobotsForTournament,
 } from '../services/tournament/tournamentService';
-import { processTournamentBattle } from '../services/tournament/tournamentBattleOrchestrator';
+import { executeSoloTournamentRound } from '../services/tournament/tournamentBattleOrchestrator';
 import { resolveParticipantsBatch } from '../services/tournament/tournamentParticipantResolver';
 import type { ParticipantType } from '../services/tournament/tournamentParticipantResolver';
 import { AppError, TournamentError, TournamentErrorCode } from '../errors';
@@ -308,15 +308,6 @@ router.post('/:id/execute-round', authenticateToken, requireAdmin, validateReque
       throw new TournamentError(TournamentErrorCode.TOURNAMENT_ALREADY_COMPLETED, 'Tournament already completed', 400);
     }
 
-    // Get current round matches that need execution
-    const currentRoundMatches = await prisma.scheduledTournamentMatch.findMany({
-      where: {
-        tournamentId,
-        round: tournament.currentRound,
-        status: { in: ['pending', 'scheduled'] },
-        isByeMatch: false, // Bye matches auto-complete on creation
-      },
-    });
 
     const summary = {
       tournamentId,
@@ -324,25 +315,22 @@ router.post('/:id/execute-round', authenticateToken, requireAdmin, validateReque
       matchesExecuted: 0,
       matchesFailed: 0,
       byeMatches: 0,
+      forfeits: 0,
       winners: [] as number[],
       errors: [] as string[],
       tournamentComplete: false,
       championRobotId: undefined as number | undefined,
     };
 
-    // Execute each match
-    for (const match of currentRoundMatches) {
-      try {
-        const result = await processTournamentBattle(match);
-        summary.matchesExecuted++;
-        summary.winners.push(result.winnerId);
-      } catch (error) {
-        summary.matchesFailed++;
-        const errorMsg = error instanceof Error ? error.message : String(error);
-        summary.errors.push(`Match ${match.id}: ${errorMsg}`);
-        logger.error(`[Admin] Tournament match ${match.id} failed:`, error);
-      }
-    }
+    // Execute the round through the shared executor (byes included; a failing
+    // match goes to the failure policy instead of staying queued).
+    const roundResult = await executeSoloTournamentRound(tournamentId);
+    summary.matchesExecuted = roundResult.matchesExecuted + roundResult.matchesResumed;
+    summary.matchesFailed = roundResult.matchesCancelled;
+    summary.byeMatches = roundResult.byesResolved;
+    summary.forfeits = roundResult.forfeits;
+    summary.winners.push(...roundResult.winners);
+    summary.errors.push(...roundResult.errors);
 
     // Advance to next round if all matches complete
     await advanceWinnersToNextRound(tournamentId);

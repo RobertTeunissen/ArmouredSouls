@@ -5,7 +5,25 @@
  * edge cases, and applyKothStatsUpdate for stat tracking correctness.
  */
 
-import { calculateKothRewards } from '../src/services/koth/kothBattleOrchestrator';
+import { calculateKothRewards, executeScheduledKothBattles } from '../src/services/koth/kothBattleOrchestrator';
+import prisma from '../src/lib/prisma';
+import { resolvePlacementBye } from '../src/services/scheduling/thinInstanceByes';
+
+// The executor test below drives the bye branch only, so the database and the
+// bye writer are mocked; the reward and stat tests are pure.
+jest.mock('../src/lib/prisma', () => ({
+  __esModule: true,
+  default: {
+    scheduledMatch: { count: jest.fn(), findFirst: jest.fn(), updateMany: jest.fn() },
+  },
+}));
+jest.mock('../src/services/scheduling/thinInstanceByes', () => ({
+  resolvePlacementBye: jest.fn().mockResolvedValue(undefined),
+}));
+jest.mock('../src/config/logger', () => ({
+  __esModule: true,
+  default: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
+}));
 
 // ─── Pure helper replicating updateKothRobotStats logic ─────────────
 
@@ -200,5 +218,41 @@ describe('KotH stat tracking (applyKothStatsUpdate)', () => {
     stats = applyKothStatsUpdate(stats, 1, 100, 60, 2, true);
     expect(stats.kothBestWinStreak).toBe(3);
     expect(stats.kothCurrentWinStreak).toBe(2);
+  });
+});
+
+// ─── KotH bye tier (R6) ─────────────────────────────────────────────
+
+describe('KotH thin-instance bye tier', () => {
+  it('pays the bye at the scheduled match tier, not the bronze default', async () => {
+    const db = prisma as unknown as {
+      scheduledMatch: { count: jest.Mock; findFirst: jest.Mock };
+    };
+    db.scheduledMatch.count.mockResolvedValue(1);
+    db.scheduledMatch.findFirst
+      .mockResolvedValueOnce({
+        id: 77,
+        matchType: 'koth',
+        status: 'scheduled',
+        scheduledFor: new Date(),
+        battleId: null,
+        isByeMatch: true,
+        leagueType: 'gold',
+        leagueInstanceId: 'gold_1',
+        scoreThreshold: null,
+        timeLimit: null,
+        zoneRadius: null,
+        createdAt: new Date(),
+        participants: [
+          { id: 1, scheduledMatchId: 77, participantType: 'robot', participantId: 501, slot: 1 },
+          { id: 2, scheduledMatchId: 77, participantType: 'robot', participantId: 502, slot: 2 },
+        ],
+      })
+      .mockResolvedValue(null);
+
+    const summary = await executeScheduledKothBattles();
+
+    expect(summary.byeMatches).toBe(1);
+    expect(resolvePlacementBye).toHaveBeenCalledWith(77, 'koth', [501, 502], 'gold');
   });
 });

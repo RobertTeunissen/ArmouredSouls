@@ -13,6 +13,7 @@
  */
 
 import type { Position } from '../../arena/vector2d';
+import { BattleError, BattleErrorCode } from '../../../errors/battleErrors';
 
 /** Minimal state interface — only needs position and isAlive */
 export interface SpatialEntity {
@@ -119,8 +120,9 @@ export class SpatialGrid {
 
 /**
  * Compute the maximum weapon range across all robots in a battle.
- * Used to determine the spatial grid cell size.
- * Falls back to 15 (long range band max) if no weapons are equipped.
+ * Used to determine the spatial grid cell size. An unknown range band counts as
+ * long (15). No weapon at all is impossible in combat and throws
+ * `ROBOT_NOT_BATTLE_READY`.
  */
 export function computeMaxWeaponRange(robots: Array<{ mainWeapon?: { weapon?: { rangeBand?: string } | null } | null; offhandWeapon?: { weapon?: { rangeBand?: string } | null } | null }>): number {
   const RANGE_MAP: Record<string, number> = {
@@ -138,6 +140,13 @@ export function computeMaxWeaponRange(robots: Array<{ mainWeapon?: { weapon?: { 
     if (offRange) maxRange = Math.max(maxRange, RANGE_MAP[offRange] ?? 15);
   }
 
-  // Default to long range if no weapons found (shouldn't happen in practice)
-  return maxRange > 0 ? maxRange : 15;
+  if (maxRange === 0) {
+    throw new BattleError(
+      BattleErrorCode.ROBOT_NOT_BATTLE_READY,
+      'No robot in the battle has a weapon',
+      500,
+      { robotCount: robots.length },
+    );
+  }
+  return maxRange;
 }

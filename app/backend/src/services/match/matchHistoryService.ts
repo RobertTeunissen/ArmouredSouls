@@ -1,6 +1,7 @@
 import prisma from '../../lib/prisma';
 import { Prisma, BattleParticipant, StandingsMode, type StableType } from '../../../generated/prisma';
 import { getConfig } from '../../config/env';
+import type { KothPlacement } from '../../types';
 import { getNextCronOccurrence } from '../../utils/scheduleUtils';
 import {
   getAwardedByeReward,
@@ -691,8 +692,8 @@ export async function getMatchHistory(params: HistoryParams) {
   ]);
 
   const battleIds = battles.map(battle => battle.id);
-  const [unifiedByeRows, tournamentByeRows] = battleIds.length === 0
-    ? [[], []]
+  const [unifiedByeRows, tournamentByeRows, tournamentForfeitRows] = battleIds.length === 0
+    ? [[], [], []]
     : await Promise.all([
         prisma.scheduledMatch.findMany({
           where: { battleId: { in: battleIds }, isByeMatch: true },
@@ -702,14 +703,29 @@ export async function getMatchHistory(params: HistoryParams) {
           where: { battleId: { in: battleIds }, isByeMatch: true },
           select: { battleId: true, isByeMatch: true },
         }),
+        // A team-tournament forfeit whose forfeiting team was deleted has no
+        // `forfeited` participant row; the bracket row is the proper column.
+        prisma.scheduledTournamentMatch.findMany({
+          where: { battleId: { in: battleIds }, status: 'forfeit' },
+          select: { battleId: true },
+        }),
       ]);
   const byeMarkers = new Map<number, boolean>();
   for (const row of [...unifiedByeRows, ...tournamentByeRows]) {
     if (row.battleId !== null) byeMarkers.set(row.battleId, row.isByeMatch === true);
   }
 
+  const forfeitTournamentBattleIds = new Set(
+    tournamentForfeitRows.map(row => row.battleId).filter((id): id is number => id !== null),
+  );
+
   const formattedBattles = await Promise.all(
-    battles.map(battle => formatBattleHistoryEntry(battle, targetRobotIds, byeMarkers.get(battle.id) === true)),
+    battles.map(battle => formatBattleHistoryEntry(
+      battle,
+      targetRobotIds,
+      byeMarkers.get(battle.id) === true,
+      forfeitTournamentBattleIds.has(battle.id),
+    )),
   );
 
   return {
@@ -723,10 +739,33 @@ export async function getMatchHistory(params: HistoryParams) {
   };
 }
 
+/**
+ * The only forfeit classifier (design §2). Reads participants and the
+ * tournament bracket status — never the best-effort summary or `battle_log`.
+ *
+ * A two-sided battle with any forfeiter was never fought (forfeits always write
+ * their own battle). A placement battle (KotH, Grand Melee) is forfeit-only when
+ * everyone in it forfeited; a fought placement battle with some forfeiters is a
+ * normal battle whose forfeiters are tagged in `forfeitedRobotIds`.
+ */
+export function classifyForfeit(
+  battleType: string,
+  participants: ReadonlyArray<{ robotId: number; forfeited: boolean }>,
+  isForfeitTournamentBattle: boolean,
+): { isForfeit: boolean; forfeitedRobotIds: number[] } {
+  const forfeitedRobotIds = participants.filter(p => p.forfeited).map(p => p.robotId);
+  const isPlacement = battleType === 'koth' || battleType === 'grand_melee';
+  const isForfeit = isForfeitTournamentBattle || (
+    forfeitedRobotIds.length > 0 && (!isPlacement || forfeitedRobotIds.length === participants.length)
+  );
+  return { isForfeit, forfeitedRobotIds };
+}
+
 export async function formatBattleHistoryEntry(
   battle: BattleWithFullRelations,
   targetRobotIds: number[],
   isByeMatch = false,
+  isForfeitTournamentBattle = false,
 ) {
   // Derive legacy robot1/robot2 from participants by team.
   // These are kept for backward compatibility — new frontend code uses the participants array.
@@ -758,11 +797,19 @@ export async function formatBattleHistoryEntry(
     ? await getAwardedByeReward(battle.id, targetRobotIds)
     : null;
 
+  const { isForfeit, forfeitedRobotIds } = classifyForfeit(
+    battle.battleType,
+    battle.participants,
+    isForfeitTournamentBattle,
+  );
+
   const baseData = {
     id: battle.id,
     robot1Id,
     robot2Id,
     isByeMatch,
+    isForfeit,
+    forfeitedRobotIds,
     winnerId: battle.winnerId,
     winningSide: battle.winningSide,
     createdAt: battle.createdAt,
@@ -845,7 +892,7 @@ async function formatKothHistoryEntry(battle: BattleWithFullRelations, baseData:
   let userZoneScore: number | null = null;
   const summary = (battle as unknown as { summary?: { kothPlacements: unknown } | null }).summary;
   if (summary?.kothPlacements && userParticipant) {
-    const placements = summary.kothPlacements as Array<{ robotId: number; zoneScore: number }>;
+    const placements = summary.kothPlacements as unknown as KothPlacement[];
     const entry = placements.find(p => p.robotId === userParticipant.robotId);
     if (entry) userZoneScore = entry.zoneScore;
   }
@@ -1057,8 +1104,18 @@ export async function getBattleLog(battleId: number) {
         : battleData.battleLog,
   };
 
-  // Include pre-computed summary if available (Spec #39)
-  const summary = await prisma.battleSummary.findUnique({ where: { battleId: battleData.id } });
+  // Pre-computed summary (Spec #39) and the bracket forfeit marker, which the
+  // forfeit classifier reads instead of the summary or battle_log.
+  const [summary, tournamentForfeit] = await Promise.all([
+    prisma.battleSummary.findUnique({ where: { battleId: battleData.id } }),
+    prisma.scheduledTournamentMatch.findFirst({
+      where: { battleId: battleData.id, status: 'forfeit' },
+      select: { id: true },
+    }),
+  ]);
+  const forfeit = classifyForfeit(battleData.battleType, battleParticipants, tournamentForfeit !== null);
+  baseResponse.isForfeit = forfeit.isForfeit;
+  baseResponse.forfeitedRobotIds = forfeit.forfeitedRobotIds;
   if (summary) {
     baseResponse.summary = {
       perRobot: summary.perRobot,

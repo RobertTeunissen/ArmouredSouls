@@ -535,6 +535,115 @@ export interface CompletedMatch {
   status: string;
 }
 
+/** Match statuses that end a bracket match (design §7). */
+const TERMINAL_MATCH_STATUSES: readonly string[] = ['completed', 'forfeit', 'cancelled'];
+
+/** A round-1 row reduced to what seeding needs: no robot objects, so team ids fit too. */
+export interface Round1Slot {
+  matchNumber: number;
+  participant1Id: number | null;
+  participant2Id: number | null;
+}
+
+/** One next-round match's participants as planned by `planNextRoundSlots`. */
+export interface PlannedSlot {
+  participant1Id: number | null;
+  participant2Id: number | null;
+}
+
+/**
+ * Inverse of `generateStandardSeedOrder`: 0-based bracket slot → 1-based seed.
+ */
+function buildSlotToSeed(bracketSize: number): Map<number, number> {
+  // seedOrder[seedIndex] = bracketPosition (1-based)
+  const seedOrder = generateStandardSeedOrder(bracketSize);
+  const slotToSeed = new Map<number, number>();
+  for (let seedIdx = 0; seedIdx < seedOrder.length; seedIdx++) {
+    slotToSeed.set(seedOrder[seedIdx] - 1, seedIdx + 1);
+  }
+  return slotToSeed;
+}
+
+/**
+ * Seed of a participant from the round-1 rows (any order; sorted by matchNumber
+ * here). Round-1 match i (0-based) holds bracket slots 2i and 2i+1. A one-sided
+ * row is a bye whose participant may have been normalised from either slot, so
+ * it takes the better of the two slot seeds, exactly as `computeSeedings` does.
+ *
+ * @returns the 1-based seed, or null when the participant is not in round 1
+ */
+export function seedForParticipant(
+  round1: Round1Slot[],
+  bracketSize: number,
+  participantId: number,
+): number | null {
+  const slotToSeed = buildSlotToSeed(bracketSize);
+  const ordered = [...round1].sort((a, b) => a.matchNumber - b.matchNumber);
+  for (let i = 0; i < ordered.length; i++) {
+    const { participant1Id, participant2Id } = ordered[i];
+    const slot0 = 2 * i;
+    const slot1 = 2 * i + 1;
+    const isBye = (participant1Id === null) !== (participant2Id === null);
+    if (isBye && (participant1Id ?? participant2Id) === participantId) {
+      return Math.min(slotToSeed.get(slot0) ?? bracketSize, slotToSeed.get(slot1) ?? bracketSize);
+    }
+    if (participant1Id === participantId) return slotToSeed.get(slot0) ?? null;
+    if (participant2Id === participantId) return slotToSeed.get(slot1) ?? null;
+  }
+  return null;
+}
+
+/**
+ * The higher (better, lower-numbered) seed of two participants of a tournament.
+ * Used for double forfeits and errored unfought matches (rule 5, R1). When only
+ * one seed resolves that participant wins; when neither resolves, p1 is
+ * returned (the same final rule as the team tournament's draw resolution).
+ */
+export async function resolveHigherSeed(tournamentId: number, p1: number, p2: number): Promise<number> {
+  const tournament = await prisma.tournament.findUnique({ where: { id: tournamentId } });
+  if (!tournament) {
+    throw new TournamentError(
+      TournamentErrorCode.TOURNAMENT_NOT_FOUND,
+      `Tournament ${tournamentId} not found`,
+      404,
+      { tournamentId }
+    );
+  }
+  const round1 = await prisma.scheduledTournamentMatch.findMany({
+    where: { tournamentId, round: 1 },
+    orderBy: { matchNumber: 'asc' },
+    select: { matchNumber: true, participant1Id: true, participant2Id: true },
+  });
+  const bracketSize = Math.pow(2, tournament.maxRounds);
+  const seed1 = seedForParticipant(round1, bracketSize, p1);
+  const seed2 = seedForParticipant(round1, bracketSize, p2);
+  if (seed1 === null && seed2 === null) return p1;
+  if (seed1 === null) return p2;
+  if (seed2 === null) return p1;
+  return seed2 < seed1 ? p2 : p1;
+}
+
+/**
+ * Positional next-round planning: the winner of match 2i+1 takes slot 1 and the
+ * winner of match 2i+2 takes slot 2 of next-round match i+1. A match without a
+ * winner leaves its slot empty, so a gap never shifts a later pairing.
+ */
+export function planNextRoundSlots(
+  currentRound: Array<{ matchNumber: number; winnerId: number | null }>,
+  nextRoundCount: number,
+): PlannedSlot[] {
+  const winnerByMatch = new Map<number, number | null>();
+  for (const match of currentRound) winnerByMatch.set(match.matchNumber, match.winnerId);
+  const plan: PlannedSlot[] = [];
+  for (let i = 0; i < nextRoundCount; i++) {
+    plan.push({
+      participant1Id: winnerByMatch.get(2 * i + 1) ?? null,
+      participant2Id: winnerByMatch.get(2 * i + 2) ?? null,
+    });
+  }
+  return plan;
+}
+
 /**
  * Compute seedings array from round-1 matches and bracket size.
  * 
@@ -555,25 +664,21 @@ export function computeSeedings(
   bracketSize: number,
   completedMatches: CompletedMatch[]
 ): SeedEntry[] {
-  // seedOrder[seedIndex] = bracketPosition (1-based)
-  // We need the inverse: bracketPosition → seedNumber (1-based)
-  const seedOrder = generateStandardSeedOrder(bracketSize);
-  const slotToSeed = new Map<number, number>();
-  for (let seedIdx = 0; seedIdx < seedOrder.length; seedIdx++) {
-    const bracketPos = seedOrder[seedIdx] - 1; // convert to 0-based slot
-    slotToSeed.set(bracketPos, seedIdx + 1);   // seed is 1-based
-  }
+  const slotToSeed = buildSlotToSeed(bracketSize);
 
-  // Build set of eliminated robot IDs (losers in completed matches)
+  // Build set of eliminated participant IDs. A terminal row with a winner
+  // eliminates the non-winner; a cancelled row without a winner (only a
+  // placeholder after R1) eliminates any participant it still holds. Queued
+  // rows are ignored, so this function owns the terminal-status rule.
   const eliminatedIds = new Set<number>();
   for (const match of completedMatches) {
-    if (match.status === 'completed' && match.winnerId !== null) {
-      if (match.participant1Id !== null && match.participant1Id !== match.winnerId) {
-        eliminatedIds.add(match.participant1Id);
-      }
-      if (match.participant2Id !== null && match.participant2Id !== match.winnerId) {
-        eliminatedIds.add(match.participant2Id);
-      }
+    if (!TERMINAL_MATCH_STATUSES.includes(match.status)) continue;
+    for (const participantId of [match.participant1Id, match.participant2Id]) {
+      if (participantId === null) continue;
+      const lost = match.winnerId === null
+        ? match.status === 'cancelled'
+        : participantId !== match.winnerId;
+      if (lost) eliminatedIds.add(participantId);
     }
   }
 
@@ -863,17 +968,19 @@ export async function advanceWinnersToNextRound(tournamentId: number): Promise<v
     );
   }
 
-  // Get completed matches from current round
+  // Get terminal matches from current round. A cancelled row with a winner
+  // (R1: an errored unfought match advances the higher seed) advances that
+  // winner exactly like a completed or forfeit row.
   const currentRoundMatches = await prisma.scheduledTournamentMatch.findMany({
     where: {
       tournamentId,
       round: tournament.currentRound,
-      status: { in: ['completed', 'forfeit'] },
+      status: { in: [...TERMINAL_MATCH_STATUSES] },
     },
     orderBy: { matchNumber: 'asc' },
   });
 
-  // Check if all matches in current round are completed
+  // Check if all matches in current round are terminal
   const allMatches = await prisma.scheduledTournamentMatch.findMany({
     where: {
       tournamentId,
@@ -881,29 +988,30 @@ export async function advanceWinnersToNextRound(tournamentId: number): Promise<v
     },
   });
 
-  const allCompleted = allMatches.every(match => match.status === 'completed' || match.status === 'forfeit');
+  const allCompleted = allMatches.every(match => TERMINAL_MATCH_STATUSES.includes(match.status));
   if (!allCompleted) {
     logger.info(`[Tournament] Round ${tournament.currentRound} not yet complete. Waiting for all matches.`);
     return;
   }
 
-  // Extract winners
   const winners = currentRoundMatches
     .filter(match => match.winnerId !== null)
     .map(match => match.winnerId as number);
 
-  if (winners.length === 0) {
-    throw new TournamentError(
-      TournamentErrorCode.ROUND_NOT_READY,
-      `No winners found in round ${tournament.currentRound}`,
-      400,
-      { tournamentId, round: tournament.currentRound }
-    );
+  // Final round: crown the single winner, or finish without a champion.
+  if (tournament.currentRound >= tournament.maxRounds) {
+    if (winners.length > 0) {
+      await completeTournament(tournamentId, winners[0]);
+    } else {
+      await completeTournamentWithoutChampion(tournamentId);
+    }
+    return;
   }
 
-  // If only one winner, tournament is complete
-  if (winners.length === 1) {
-    await completeTournament(tournamentId, winners[0]);
+  // A non-final round without any winner can only come from empty placeholder
+  // rows; nobody is left to advance.
+  if (winners.length === 0) {
+    await completeTournamentWithoutChampion(tournamentId);
     return;
   }
 
@@ -920,10 +1028,11 @@ export async function advanceWinnersToNextRound(tournamentId: number): Promise<v
   // Populate next round matches with winners. A one-sided row is an upcoming
   // Bye_Event; it is resolved only when this round is processed. A fully empty
   // row is bracket housekeeping and can be terminal immediately.
-  // Winners are paired: match 1 & 2 → next match 1, match 3 & 4 → next match 2, etc.
+  // Pairing is positional: match 1 & 2 → next match 1, match 3 & 4 → next
+  // match 2, etc. A match without a winner leaves its slot empty.
+  const plan = planNextRoundSlots(currentRoundMatches, nextRoundMatches.length);
   for (let i = 0; i < nextRoundMatches.length; i++) {
-    const participant1Id = winners[i * 2] ?? null;
-    const participant2Id = winners[i * 2 + 1] ?? null;
+    const { participant1Id, participant2Id } = plan[i];
     const hasParticipant1 = participant1Id !== null;
     const hasParticipant2 = participant2Id !== null;
     const isByeMatch = hasParticipant1 !== hasParticipant2;
@@ -963,6 +1072,23 @@ export async function advanceWinnersToNextRound(tournamentId: number): Promise<v
   });
 
   logger.info(`[Tournament] Advanced to round ${nextRound} with ${winners.length} winners`);
+}
+
+/**
+ * Finish a tournament whose bracket produced no champion (degenerate case:
+ * only empty placeholder rows remained). No titles are awarded; the callers'
+ * auto-creation of the next tournament runs as usual.
+ */
+async function completeTournamentWithoutChampion(tournamentId: number): Promise<void> {
+  await prisma.tournament.update({
+    where: { id: tournamentId },
+    data: {
+      status: 'completed',
+      winnerId: null,
+      completedAt: new Date(),
+    },
+  });
+  logger.warn(`[Tournament] Tournament ${tournamentId} completed without a champion (no winners left in the bracket)`);
 }
 
 /**

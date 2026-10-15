@@ -13,7 +13,7 @@
 import { Robot, ScheduledTournamentMatch, Battle, Prisma } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
-import { simulateBattle, CombatResult } from '../battle/combatSimulator';
+import { simulateBattle, CombatResult, type RobotWithWeapons } from '../battle/combatSimulator';
 import { CombatMessageGenerator } from '../battle/combatMessageGenerator';
 import { computeBattleSummary } from '../battle/battleSummaryComputer';
 import { calculateELOChange } from '../../utils/battleMath';
@@ -35,13 +35,21 @@ import { TournamentError, TournamentErrorCode } from '../../errors/tournamentErr
 import { prepareRobotForCombat } from '../../utils/robotCalculations';
 import { getTuningBonusesBatch } from '../tuning-pool';
 import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
+import { recoverTournamentMatch } from '../battle/matchFailurePolicy';
+import { applyLoadoutFallbacks, evaluateCombatEntry, evaluateMatchEntry, type MatchEntryOutcome } from '../battle/combatReadiness';
+import { resolveForfeitEvent } from '../battle/forfeitResolutionService';
+import { BYE_BATTLE_DURATION_SECONDS } from '../battle/byeResolutionService';
+import { completeByeMatch, getCurrentRoundMatches, resolveHigherSeed } from './tournamentService';
 
 // Economic constants
 const _REPAIR_COST_PER_HP = 50; // Cost to repair 1 HP
 
 export interface TournamentBattleResult {
   battleId: number;
+  /** The participant advancing in the bracket (the higher seed on a double forfeit). */
   winnerId: number;
+  /** True when the match was resolved as a battle-time forfeit (nothing simulated). */
+  isForfeit: boolean;
   robot1FinalHP: number;
   robot2FinalHP: number;
   robot1Damage: number;
@@ -112,6 +120,25 @@ export async function processTournamentBattle(
       404,
       { matchId: tournamentMatch.id, participant1Id: tournamentMatch.participant1Id, participant2Id: tournamentMatch.participant2Id }
     );
+  }
+
+  // Battle-time readiness (rule 1): checked on the loaded weapon relations,
+  // after the resume short-circuit so a linked fought battle never forfeits.
+  // No main weapon forfeits (rule 5: eliminated); an incomplete loadout fights
+  // as single (rule 6).
+  const entry = evaluateMatchEntry([robot1], [robot2]);
+  if (entry.kind !== 'fight') {
+    return resolveSoloTournamentForfeit(tournamentMatch, robot1, robot2, entry);
+  }
+  // In memory only, and before prepareRobotForCombat reads loadoutType.
+  for (const robotId of applyLoadoutFallbacks([robot1, robot2], entry.decisions)) {
+    const decision = entry.decisions.find(d => d.robotId === robotId);
+    logger.warn('[Battle] Loadout fallback', {
+      matchId: tournamentMatch.id,
+      robotId,
+      storedLoadout: decision?.loadoutFallback?.storedLoadout,
+      battleLoadout: 'single',
+    });
   }
 
   // Robots enter battles fully repaired
@@ -379,7 +406,131 @@ export async function processTournamentBattle(
     prestigeAwarded: stats1.prestigeAwarded + stats2.prestigeAwarded,
     fameAwarded: stats1.fameAwarded + stats2.fameAwarded,
     isByeMatch: false,
+    isForfeit: false,
     achievementUnlocks,
+  };
+}
+
+/**
+ * Resolve a solo tournament battle-time forfeit through the Forfeit_Resolution_Writer.
+ *
+ * Nothing is simulated and no standings are written (fought tournament battles
+ * write none either). A single forfeit: the ready robot wins the battle and
+ * advances with the bye-level round reward; the forfeiter takes a normal ELO
+ * loss with 0 credits and is eliminated. A double forfeit: the battle row is a
+ * draw with no credits, and only the bracket row names the higher seed (A3).
+ * The claim finalises the bracket row atomically (`status: 'forfeit'`).
+ */
+async function resolveSoloTournamentForfeit(
+  tournamentMatch: ScheduledTournamentMatch,
+  robot1: Robot,
+  robot2: Robot,
+  outcome: Exclude<MatchEntryOutcome, { kind: 'fight' }>,
+): Promise<TournamentBattleResult> {
+  const tournament = await prisma.tournament.findUnique({ where: { id: tournamentMatch.tournamentId } });
+  if (!tournament) {
+    throw new TournamentError(
+      TournamentErrorCode.TOURNAMENT_NOT_FOUND,
+      `Tournament ${tournamentMatch.tournamentId} not found`,
+      404,
+      { tournamentId: tournamentMatch.tournamentId }
+    );
+  }
+
+  const isDraw = outcome.kind === 'double_forfeit';
+  const side1Forfeits = isDraw || outcome.forfeitingSides[0] === 1;
+  const side2Forfeits = isDraw || outcome.forfeitingSides[0] === 2;
+
+  // ELO: the mode's normal formula against the real opponent (A2/A3).
+  let robot1Change: number;
+  let robot2Change: number;
+  if (isDraw) {
+    const changes = calculateELOChange(robot1.elo, robot2.elo, true);
+    robot1Change = changes.winnerChange;
+    robot2Change = changes.loserChange;
+  } else {
+    const [ready, forfeiter] = side2Forfeits ? [robot1, robot2] : [robot2, robot1];
+    const changes = calculateELOChange(ready.elo, forfeiter.elo, false);
+    robot1Change = ready.id === robot1.id ? changes.winnerChange : changes.loserChange;
+    robot2Change = ready.id === robot2.id ? changes.winnerChange : changes.loserChange;
+  }
+  const winner = isDraw ? null : side2Forfeits ? robot1 : robot2;
+  // The participant advancing in the bracket: the ready robot, or the higher seed.
+  const tournamentWinnerId = winner
+    ? winner.id
+    : await resolveHigherSeed(tournament.id, robot1.id, robot2.id);
+  const forfeiterNames = [side1Forfeits ? robot1.name : null, side2Forfeits ? robot2.name : null]
+    .filter((n): n is string => n !== null)
+    .join(' and ');
+
+  const toParticipant = (robot: Robot) => ({
+    id: robot.id,
+    name: robot.name,
+    userId: robot.userId,
+    currentHP: robot.currentHP,
+    maxHP: robot.maxHP,
+    elo: robot.elo,
+  });
+
+  const resolution = await resolveForfeitEvent({
+    mode: 'tournament_1v1',
+    context: {
+      mode: 'tournament_1v1',
+      totalParticipants: tournament.totalParticipants,
+      currentRound: tournament.currentRound,
+      maxRounds: tournament.maxRounds,
+    },
+    claim: { source: 'tournament_match', tournamentMatchId: tournamentMatch.id },
+    sides: [
+      { side: 1, forfeited: side1Forfeits, stableUserId: robot1.userId, standingEntity: null, robots: [toParticipant(robot1)] },
+      { side: 2, forfeited: side2Forfeits, stableUserId: robot2.userId, standingEntity: null, robots: [toParticipant(robot2)] },
+    ],
+    newEloByRobotId: { [robot1.id]: robot1.elo + robot1Change, [robot2.id]: robot2.elo + robot2Change },
+    eloChangeBySide: { 1: robot1Change, 2: robot2Change },
+    lp: { win: 0, loss: 0, draw: 0 },
+    standingMode: null,
+    battle: {
+      battleType: 'tournament_1v1',
+      leagueType: 'tournament',
+      tournamentId: tournament.id,
+      tournamentRound: tournament.currentRound,
+      winnerId: winner?.id ?? null,
+      winningSide: null,
+      message: `${forfeiterNames} forfeited: no main weapon equipped`,
+    },
+    tournamentWinnerId,
+    cycleNumber: await getCurrentCycleNumber(),
+  });
+
+  logger.info(
+    `[Battle] Tournament forfeit: Round ${tournament.currentRound} | match ${tournamentMatch.id} | ` +
+    `${robot1.name} vs ${robot2.name} | ` +
+    `${isDraw ? `double forfeit, higher seed ${tournamentWinnerId} advances` : `${winner?.name} wins by forfeit`} | ` +
+    `₡${resolution.creditsPaid}${resolution.alreadyResolved ? ' | already resolved' : ''}`,
+  );
+
+  if (resolution.battleId === null) {
+    throw new TournamentError(
+      TournamentErrorCode.BATTLE_RECORD_FAILED,
+      `Forfeit resolution produced no battle for tournament match ${tournamentMatch.id}`,
+      500,
+      { matchId: tournamentMatch.id },
+    );
+  }
+
+  return {
+    battleId: resolution.battleId,
+    winnerId: tournamentWinnerId,
+    isForfeit: true,
+    isByeMatch: false,
+    robot1FinalHP: robot1.currentHP,
+    robot2FinalHP: robot2.currentHP,
+    robot1Damage: 0,
+    robot2Damage: 0,
+    durationSeconds: BYE_BATTLE_DURATION_SECONDS,
+    prestigeAwarded: 0,
+    fameAwarded: 0,
+    achievementUnlocks: [],
   };
 }
 
@@ -671,9 +822,11 @@ async function resumeTournamentBattleFinalization(
   tournamentMatch: ScheduledTournamentMatch,
 ): Promise<TournamentBattleResult> {
   const battle = await prisma.battle.findUnique({ where: { id: tournamentMatch.battleId! } });
+  // Weapons are loaded so the battle loadout can be re-derived below.
+  const withWeapons = { mainWeapon: { include: { weapon: true } }, offhandWeapon: { include: { weapon: true } } };
   const [robot1, robot2] = await Promise.all([
-    prisma.robot.findUnique({ where: { id: tournamentMatch.participant1Id! } }),
-    prisma.robot.findUnique({ where: { id: tournamentMatch.participant2Id! } }),
+    prisma.robot.findUnique({ where: { id: tournamentMatch.participant1Id! }, include: withWeapons }),
+    prisma.robot.findUnique({ where: { id: tournamentMatch.participant2Id! }, include: withWeapons }),
   ]);
   if (!battle || !robot1 || !robot2 || battle.winnerId === null) {
     throw new TournamentError(
@@ -730,6 +883,11 @@ async function resumeTournamentBattleFinalization(
     didRobotLosePreviousBattle(robot1.id, battle.id),
     didRobotLosePreviousBattle(robot2.id, battle.id),
   ]);
+  // Rule 6: the single-weapon fallback is in memory only, so re-derive it from
+  // the reloaded loadout (same rule as battle time). A robot that fought as
+  // single earns no loadout-specific achievement credit on a resume.
+  const battleLoadout = (robot: RobotWithWeapons): string =>
+    (evaluateCombatEntry(robot).loadoutFallback ? 'single' : robot.loadoutType) || 'single';
   const [unlocks1, unlocks2] = await Promise.all([
     checkAndAwardAchievements(robot1.userId, robot1.id, {
       won: robot1IsWinner,
@@ -744,7 +902,7 @@ async function resumeTournamentBattleFinalization(
       previousBattleLost: robot1PrevLost,
       damageDealt: robot1Participant.damageDealt,
       opponentDamageDealt: robot2Participant.damageDealt,
-      loadoutType: robot1.loadoutType || 'single',
+      loadoutType: battleLoadout(robot1),
       stance: robot1.stance || 'balanced',
       yieldThreshold: robot1.yieldThreshold,
       hasTuning: false,
@@ -765,7 +923,7 @@ async function resumeTournamentBattleFinalization(
       previousBattleLost: robot2PrevLost,
       damageDealt: robot2Participant.damageDealt,
       opponentDamageDealt: robot1Participant.damageDealt,
-      loadoutType: robot2.loadoutType || 'single',
+      loadoutType: battleLoadout(robot2),
       stance: robot2.stance || 'balanced',
       yieldThreshold: robot2.yieldThreshold,
       hasTuning: false,
@@ -791,6 +949,7 @@ async function resumeTournamentBattleFinalization(
     prestigeAwarded: robot1Participant.prestigeAwarded + robot2Participant.prestigeAwarded,
     fameAwarded: robot1Participant.fameAwarded + robot2Participant.fameAwarded,
     isByeMatch: false,
+    isForfeit: false,
     achievementUnlocks: [...unlocks1, ...unlocks2],
   };
 }
@@ -831,4 +990,88 @@ async function logTournamentParticipantAudit(
   } catch (error) {
     logger.error(`[TournamentBattleOrchestrator] Audit log failed for robot ${robot.id} in battle #${battle.id}: ${error instanceof Error ? error.message : String(error)}`);
   }
+}
+
+/** Outcome of one solo tournament round run by `executeSoloTournamentRound`. */
+export interface SoloRoundExecutionResult {
+  /** Fought matches (including crash-recovery resumes of a linked battle). */
+  matchesExecuted: number;
+  byesResolved: number;
+  /** Matches resolved as battle-time forfeits (single or double; nothing simulated). */
+  forfeits: number;
+  /** Matches whose linked fought battle was finalised by the in-run resume after an error. */
+  matchesResumed: number;
+  /** Matches handed to the failure policy (cancelled, R1 higher seed, or finalised after error). */
+  matchesCancelled: number;
+  /** Participants advancing from fought and forfeited matches, in processing order. */
+  winners: number[];
+  errors: string[];
+}
+
+/**
+ * Run every queued match of a solo tournament's current round (design §5.4).
+ *
+ * The one round executor for the cron job, the admin bulk cycle and the admin
+ * route. A failing match never fails the round (rule 7): its error goes to
+ * `recoverTournamentMatch`, which resumes a linked fought battle once and
+ * otherwise applies the shared failure policy. Callers then run
+ * `advanceWinnersToNextRound` as before.
+ */
+export async function executeSoloTournamentRound(tournamentId: number): Promise<SoloRoundExecutionResult> {
+  const result: SoloRoundExecutionResult = {
+    matchesExecuted: 0,
+    byesResolved: 0,
+    forfeits: 0,
+    matchesResumed: 0,
+    matchesCancelled: 0,
+    winners: [],
+    errors: [],
+  };
+
+  const matches = await getCurrentRoundMatches(tournamentId);
+  for (const match of matches) {
+    try {
+      if (match.isByeMatch) {
+        const id = match.participant1Id ?? match.participant2Id;
+        // completeByeMatch catches its own errors and returns false; turn that
+        // into a throw so the policy sees it and the row never stays pending.
+        if (id === null || !(await completeByeMatch(match, id))) {
+          throw new TournamentError(
+            TournamentErrorCode.INVALID_MATCH_STATE,
+            `Bye ${match.id} did not produce a Bye_Record`,
+            400,
+            { matchId: match.id }
+          );
+        }
+        result.byesResolved++;
+        continue;
+      }
+      const battle = await processTournamentBattle(match);
+      if (battle.isForfeit) {
+        result.forfeits++;
+      } else {
+        result.matchesExecuted++;
+      }
+      result.winners.push(battle.winnerId);
+    } catch (error) {
+      const recovery = await recoverTournamentMatch({
+        mode: 'tournament_1v1',
+        matchId: match.id,
+        error,
+        resume: (row) => processTournamentBattle(row),
+      });
+      if (recovery.outcome === 'resumed') {
+        result.matchesResumed++;
+      } else {
+        result.matchesCancelled++;
+        result.errors.push(`Match ${match.id}: ${recovery.errorSummary}`);
+      }
+    }
+  }
+
+  logger.info(
+    `[Tournament] Round executed for tournament ${tournamentId}: ${result.matchesExecuted} fought, ` +
+    `${result.byesResolved} byes, ${result.forfeits} forfeits, ${result.matchesResumed} resumed, ${result.matchesCancelled} failed`
+  );
+  return result;
 }

@@ -319,14 +319,14 @@ describe('Tag Team Multi-Match Cycle Integration Test', () => {
     // Execute tag team battles
     const battleResult = await executeScheduledTagTeamBattles();
 
-    // Verify the match was skipped due to unready robot OR no matches were created
+    // Verify the match was fought or forfeited, OR no matches were created
     // (matchmaking might not create a match if one team is unready)
-    const totalProcessed = battleResult.totalBattles + battleResult.skippedDueToUnreadyRobots;
+    const totalProcessed = battleResult.totalBattles + battleResult.forfeits;
     expect(totalProcessed).toBeGreaterThanOrEqual(0);
 
-    if (battleResult.skippedDueToUnreadyRobots > 0) {
+    if (battleResult.forfeits > 0) {
       console.log(
-        `[Test] ✓ Skipped ${battleResult.skippedDueToUnreadyRobots} matches due to unready robots`
+        `[Test] ✓ ${battleResult.forfeits} matches forfeited at battle time`
       );
     } else {
       console.log('[Test] ✓ No matches were created or executed (team was unready during matchmaking)');

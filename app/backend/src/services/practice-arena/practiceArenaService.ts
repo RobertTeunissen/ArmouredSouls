@@ -19,6 +19,7 @@ import { selectWeapon, selectShield, type WeaponRecord } from '../../utils/weapo
 import { TIER_CONFIGS } from '../../utils/tierConfig';
 import { prepareRobotForCombat } from '../../utils/robotCalculations';
 import { getTuningBonuses } from '../tuning-pool';
+import { applyLoadoutFallbacks, evaluateCombatEntry } from '../battle/combatReadiness';
 import { verifyRobotOwnership } from '../../middleware/ownership';
 import { Prisma, Weapon } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
@@ -526,6 +527,11 @@ export async function buildOwnedRobot(
   if (overrides?.yieldThreshold !== undefined) {
     cloned.yieldThreshold = overrides.yieldThreshold;
   }
+
+  // Show what a real battle would do (rule 6): an incomplete loadout with a
+  // main weapon fights as single. In memory only, before preparation reads
+  // loadoutType for the loadout bonuses.
+  applyLoadoutFallbacks([cloned], [evaluateCombatEntry(cloned)]);
 
   // Load tuning bonuses — use override if provided, otherwise load saved allocation
   const tuningBonuses = overrides?.tuningBonuses && Object.keys(overrides.tuningBonuses).length > 0

@@ -2,8 +2,8 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: v1.12
-**Date**: September 1, 2026
+**Version**: v1.13
+**Date**: October 15, 2026
 **Status**: ✅ Implemented & Verified 
 
 **Revision History**:
@@ -20,7 +20,8 @@ v1.8 (Feb 5, 2026): Bug fixes and enhancements - Fixed Prisma relation, correcte
 v1.9 (Feb 5, 2026): Major improvements - Added draw handling with HP tiebreaker, match/bye distinction, ELO and stable name display, pagination for large tournaments, tournament session logs, battle type filter in admin. **All 9 user-reported issues resolved.**  
 v1.10 (Feb 5, 2026): Critical bug fix - Removed non-existent `stableName` field from User queries that was breaking admin panel and tournament hub. Uses `username` as stable identifier.
 v1.11 (Feb 10, 2026): Consolidated Version
-v1.12 (Sep 1, 2026): Spec #50 — generated tournament byes remain expected Upcoming Matches until current-round processing; resolved byes appear once in Recent Battles; shared all-mode Bye_Card terminology and durable markers documented.
+v1.12 (Sep 1, 2026): Spec #50 — generated tournament byes remain expected Upcoming Matches until current-round processing; resolved byes appear once in Recent Battles; shared all-mode Bye_Card terminology and durable markers documented.\
+v1.13 (Oct 15, 2026): #536 — battle-time forfeits (solo and team), double forfeit advances the higher seed, and the match failure policy including product decision R1 (an errored unfought match is cancelled and the higher seed advances with no rewards). See User Story 2.6.
 
 ---
 
@@ -206,6 +207,20 @@ The continuous tournament model ensures:
   - User's championshipTitles increments for winner
  
 --> How are we going to display this? 
+
+#### User Story 2.6: Forfeits and Failed Matches (#536)
+- **As a system**, I check every match again when its round runs, and I never let one bad match stop the bracket
+- **Acceptance Criteria:**
+  - Each round is checked on the loadouts the robots have when it runs, not when the bracket was made
+  - **Forfeit:** a robot without a main weapon forfeits; in 2v2/3v3 a team forfeits when any member is unarmed or the team is no longer eligible (short roster, member no longer subscribed). Both use one entry decision (`decideTeamTournamentEntry`) and one writer (`resolveForfeitEvent`)
+  - A forfeit is not simulated. The ready side advances and is paid the round's bye-level reward; the forfeiter is eliminated with 0 credits and takes a normal loss in ELO. The bracket row becomes `status: 'forfeit'`
+  - **Double forfeit:** the battle row is a draw (no credits, draw ELO) and the higher seed (`resolveHigherSeed`) advances in `tournament_matches.winnerId`
+  - **Incomplete loadout with a main weapon:** fights as single for that match only
+  - **Failed match (product decision R1):** an unexpected error with no fought battle linked does not eliminate both sides. The row becomes `status: 'cancelled'` with `winnerId` = the higher seed, who advances. Nobody is paid and no battle, ELO or stat change is written, except in one narrow window: an error after the battle row and the robots' ELO/stat updates but before `battleId` is linked leaves an unpaid, unlinked fought battle (see `PRD_BATTLE_DATA_ARCHITECTURE.md`, match failure policy). An errored final crowns the higher seed through the normal completion path (title and achievement, no match credits)
+  - A match whose fought battle is already linked gets one in-run resume; if that fails, the row is finalised with that battle's winner. A failed bye advances its sole participant without reward
+  - `advanceWinnersToNextRound` treats `completed`, `forfeit` and `cancelled` rows alike and never throws; `computeSeedings` eliminates the non-winner of any of them
+  - The round executor (`executeSoloTournamentRound`, `executeTeamTournamentRound`) never throws for one match; the cycle always advances the bracket
+  - The bracket shows FORFEIT and CANCELLED badges (`docs/prd_pages/PRD_BATTLE_HISTORY_PAGE.md`)
 
 #### User Story 2.5: Continuous Tournaments
 - **As a system**, I start a new tournament when one completes

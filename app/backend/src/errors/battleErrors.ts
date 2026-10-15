@@ -17,6 +17,8 @@ export const BattleErrorCode = {
   ROBOT_NOT_ELIGIBLE: 'ROBOT_NOT_ELIGIBLE',
   BATTLE_ALREADY_COMPLETED: 'BATTLE_ALREADY_COMPLETED',
   BATTLE_SIMULATION_FAILED: 'BATTLE_SIMULATION_FAILED',
+  /** A robot without a main weapon reached the simulator (battle-time readiness backstop). */
+  ROBOT_NOT_BATTLE_READY: 'ROBOT_NOT_BATTLE_READY',
 } as const;
 
 export type BattleErrorCodeType = typeof BattleErrorCode[keyof typeof BattleErrorCode];

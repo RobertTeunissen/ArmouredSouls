@@ -2,13 +2,14 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: v2.0  
-**Date**: April 20, 2026  
+**Version**: v2.1\
+**Date**: October 15, 2026\
 **Status**: Implemented ✅ (Spec #26 — Battle Report Overhaul + post-spec unification)
 
 ---
 
 ## Version History
+- v2.1 - Forfeit notice and "Forfeit" participant tag (#536, October 15, 2026)
 - v2.0 - Major update reflecting full unification work (April 20, 2026)
   - All components now use unified `participants[]` with canonical ordering
   - Removed TagTeamInfo, KothParticipants, BattleLevelStats components
@@ -126,6 +127,10 @@ Displays the battle outcome with robot images, result heading, and battle contex
 - 1v1: "vs" separator between the two robots
 - Battle context line (clickable → relevant standings/tournament page)
 - Duration
+
+**Forfeits (#536):** `GET /api/matches/battles/:id/log` returns `isForfeit` and `forfeitedRobotIds`, derived from `battle_participants.forfeited` (or a `forfeit` tournament row), not from the battle log.
+- When `isForfeit` is true, the page shows a notice above the report with `role="status"`: "No battle was fought: {names} forfeited (no main weapon equipped)". Names come from the participants.
+- Every participant whose id is in `forfeitedRobotIds` gets a "Forfeit" tag on its card in all layouts. In KotH and Grand Melee this marks the unarmed robots placed last, while the rest of the field fought normally.
 
 ### 2. BattleStatisticsSummary
 **File**: `battle-detail/BattleStatisticsSummary.tsx`

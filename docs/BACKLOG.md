@@ -38,6 +38,7 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 | 22 | Matchup-Dependent Weapon Effectiveness | 58 | 0 🗳️ | 3 | 1 | 2 | 5 | **1.2** |
 | 23 | Dashboard Mobile Optimisation | 60 | 0 🗳️ | 3 | 2 | 2 | 3 | **2.3** |
 | 24 | Stable Franchises & Backstories | 61 | 0 🗳️ | 1 | 1 | 1 | 2 | **1.5** |
+| 25 | Practice Arena Synthetic Weapon Fallback | 62 | 0 🗳️ | 1 | 1 | 2 | 1 | **4.0** |
 
 ---
 
@@ -240,3 +241,15 @@ Spec #55 gives every Automaton stable a franchise label (e.g. "Transformers — 
 - Automaton stables show their admin-written franchise and backstory from spec #55 without further work.
 
 **Dependencies**: Spec #55.
+
+### #62 — Practice Arena Synthetic Weapon Fallback
+**Source**: PR #536 (battle-time readiness and Fists removal), Oct 2026
+**Priority**: Low — practice only, no rewards or persistent state
+
+`buildSyntheticWeaponInventory` in `app/backend/src/services/practice-arena/practiceArenaService.ts` builds sparring-partner and what-if weapons. When the requested catalog weapon is missing from the loaded weapon list, it invents a stand-in with 10 base damage, 3 s cooldown and no bonuses, the same kind of made-up weapon that #536 removed from scheduled combat. A practice battle can then show results for a weapon that does not exist.
+
+**Suggested scope**:
+- Treat a missing catalog weapon as a validation error (400 with a clear message) instead of inventing one, or load the record directly from the catalog.
+- Add a unit test for the cache-miss path.
+
+**Dependencies**: none.

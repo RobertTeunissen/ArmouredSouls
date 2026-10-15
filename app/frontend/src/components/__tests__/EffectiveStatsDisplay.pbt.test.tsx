@@ -3,6 +3,7 @@ import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as fc from 'fast-check';
 import EffectiveStatsDisplay from '../EffectiveStatsDisplay';
+import { calculateCombatEffectiveStat, getLoadoutBonus } from '../../utils/robotStats';
 
 // Cleanup after each test
 afterEach(() => {
@@ -364,6 +365,41 @@ describe('Property 22: Significant Modifier Highlighting (Property-Based Test)',
       { numRuns: 100 }
     );
   });
+});
+
+/**
+ * #517: at balanced stance the displayed effective value equals the canonical
+ * combat value the backend writes during combat preparation.
+ */
+describe('Canonical combat parity (#517)', () => {
+  const weapon = (bonuses: Record<string, number>) => ({
+    weapon: { baseDamage: 10, cooldown: 3, ...bonuses },
+    refinements: [],
+  });
+
+  const renderedEffective = (label: string): string | null => {
+    const labelEl = screen.getByText(label, { selector: 'div' });
+    const row = labelEl.closest('[class*="cursor-pointer"]');
+    return row?.querySelector('.font-bold')?.textContent ?? null;
+  };
+
+  it.each(['single', 'weapon_shield', 'two_handed', 'dual_wield'])(
+    '%s: Attack Speed and Shield Capacity match calculateCombatEffectiveStat',
+    (loadoutType) => {
+      const main = weapon({ attackSpeedBonus: 3, shieldCapacityBonus: -1 });
+      const offhand = weapon({ attackSpeedBonus: -2, shieldCapacityBonus: 5 });
+      const robot = createRobot({ attackSpeed: 17, shieldCapacity: 13 }, loadoutType, 'balanced', main, offhand);
+
+      render(<EffectiveStatsDisplay robot={robot} />);
+
+      expect(renderedEffective('Attack Speed')).toBe(
+        calculateCombatEffectiveStat(17, 3 - 2, getLoadoutBonus(loadoutType, 'attackSpeed')).toFixed(2),
+      );
+      expect(renderedEffective('Shield Capacity')).toBe(
+        calculateCombatEffectiveStat(13, -1 + 5, getLoadoutBonus(loadoutType, 'shieldCapacity')).toFixed(2),
+      );
+    },
+  );
 });
 
 /**

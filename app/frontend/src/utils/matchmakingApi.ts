@@ -205,6 +205,11 @@ export interface BattleHistory {
   isByeMatch?: boolean;
   byeRewardCredits?: number | null;
   byeRewardStatus?: ByeRewardStatus;
+  // Forfeits: true when no battle was fought because a side had no main weapon.
+  // A fought KotH / Grand Melee battle has isForfeit false but still lists its
+  // forfeiters (placed last) in forfeitedRobotIds.
+  isForfeit?: boolean;
+  forfeitedRobotIds?: number[];
   // Economic fields (from BattleParticipant for the requesting user's robot)
   prestigeAwarded?: number;
   fameAwarded?: number;
@@ -487,6 +492,10 @@ export interface BattleLogResponse {
   };
   /** Unified participants array — single source of truth for all battle types */
   participants?: BattleLogParticipant[];
+  /** No battle was fought: a side forfeited for having no main weapon. */
+  isForfeit?: boolean;
+  /** Robots that forfeited (also set for forfeiters placed last in a fought KotH / Grand Melee). */
+  forfeitedRobotIds?: number[];
   robot1?: {
     id: number;
     name: string;

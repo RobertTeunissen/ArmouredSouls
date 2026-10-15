@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useId } from 'react';
 
 interface ConfirmationModalProps {
   title: string;
@@ -21,19 +21,37 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   onConfirm,
   onCancel,
 }) => {
+  const titleId = useId();
+
+  // Escape cancels, except while the action is in progress (the buttons are
+  // disabled then too).
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !isLoading) onCancel();
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [onCancel, isLoading]);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Overlay */}
       <div 
         className="absolute inset-0 bg-black bg-opacity-75"
         onClick={onCancel}
+        aria-hidden="true"
       />
       
       {/* Modal */}
-      <div className="relative bg-surface rounded-lg shadow-2xl max-w-md w-full mx-4 border border-white/10 animate-scale-in">
+      <div
+        className="relative bg-surface rounded-lg shadow-2xl max-w-md w-full mx-4 border border-white/10 animate-scale-in"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+      >
         {/* Header */}
         <div className="px-6 py-4 border-b border-white/10">
-          <h3 className="text-xl font-semibold text-white">{title}</h3>
+          <h3 id={titleId} className="text-xl font-semibold text-white">{title}</h3>
         </div>
         
         {/* Body */}
@@ -47,9 +65,11 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
         
         {/* Footer */}
         <div className="px-6 py-4 border-t border-white/10 flex justify-end gap-3">
+          {/* Focus starts on cancel: the safe default for a destructive confirm. */}
           <button
             onClick={onCancel}
             disabled={isLoading}
+            autoFocus
             className="px-4 py-2 rounded-lg bg-surface-elevated text-secondary hover:bg-gray-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {cancelLabel}

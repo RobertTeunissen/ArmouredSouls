@@ -20,7 +20,6 @@ export {
   calculateBaseDamage,
   applyDamage,
   getWeaponInfo,
-  BASE_WEAPON_COOLDOWN,
   ARMOR_EFFECTIVENESS,
   PENETRATION_BONUS,
 } from './combatSimulator';

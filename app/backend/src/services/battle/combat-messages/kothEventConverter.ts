@@ -37,7 +37,7 @@ export function convertKothSimulatorEvents(
         message: generateAttack({
           attackerName: event.attacker || '',
           defenderName: event.defender || '',
-          weaponName: event.weapon || 'Fists',
+          weaponName: event.weapon || 'weapon',
           damage: 0, hit: false, critical: false, malfunction: true,
         }),
       });
@@ -47,7 +47,7 @@ export function convertKothSimulatorEvents(
         message: generateAttack({
           attackerName: event.attacker || '',
           defenderName: event.defender || '',
-          weaponName: event.weapon || 'Fists',
+          weaponName: event.weapon || 'weapon',
           damage: 0, hit: false, critical: false,
         }),
       });
@@ -59,7 +59,7 @@ export function convertKothSimulatorEvents(
         message: generateAttack({
           attackerName: event.attacker || '',
           defenderName: event.defender || '',
-          weaponName: event.weapon || 'Fists',
+          weaponName: event.weapon || 'weapon',
           damage: event.damage || 0,
           hit: true,
           critical: event.type === 'critical',
@@ -72,14 +72,14 @@ export function convertKothSimulatorEvents(
         narrativeEvents.push({
           ...event,
           message: generateCounterMiss(
-            event.attacker || '', event.defender || '', event.weapon || 'Fists',
+            event.attacker || '', event.defender || '', event.weapon || 'weapon',
           ),
         });
       } else {
         narrativeEvents.push({
           ...event,
           message: generateCounter(
-            event.attacker || '', event.defender || '', event.weapon || 'Fists',
+            event.attacker || '', event.defender || '', event.weapon || 'weapon',
             event.damage || 0, 100,
           ),
         });

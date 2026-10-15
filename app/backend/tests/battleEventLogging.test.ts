@@ -49,11 +49,19 @@ describe('Battle Event Logging Integration', () => {
     });
     testUserIds.push(testUser2.id);
 
+    // Armed robots: a robot without a main weapon forfeits at battle time
+    // instead of being simulated, and this suite asserts fought battles.
+    const weapon = await prisma.weapon.findFirst({ orderBy: { id: 'asc' } });
+    if (!weapon) throw new Error('No weapons seeded');
+    const weapon1 = await prisma.weaponInventory.create({ data: { userId: testUser1.id, weaponId: weapon.id, pricePaid: 0 } });
+    const weapon2 = await prisma.weaponInventory.create({ data: { userId: testUser2.id, weaponId: weapon.id, pricePaid: 0 } });
+
     // Create test robots
     const testRobot1 = await prisma.robot.create({
       data: {
         name: `TestBot1_${timestamp}`,
         userId: testUser1.id,
+        mainWeaponId: weapon1.id,
         elo: 1000,
         maxHP: 100,
         currentHP: 100,
@@ -70,6 +78,7 @@ describe('Battle Event Logging Integration', () => {
       data: {
         name: `TestBot2_${timestamp}`,
         userId: testUser2.id,
+        mainWeaponId: weapon2.id,
         elo: 1000,
         maxHP: 100,
         currentHP: 100,

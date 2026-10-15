@@ -79,6 +79,8 @@ const HEAVY_TESTS = [
   'tests/integration/bronzeLeagueRebalancing.test.ts',
   'tests/integration/byeInvariant.test.ts',
   'tests/integration/byeScopeAndShape.test.ts',
+  // T24: one cycle with an unarmed robot in all nine modes.
+  'tests/integration/forfeitInvariant.test.ts',
   // Unified standings creation rule: 60 robots, whole-mode KotH rebalancing.
   'tests/integration/kothNeverPlayedPromotion.test.ts',
   'tests/integration/seasonPurgeAndReset.test.ts',
@@ -134,6 +136,16 @@ const DB_DEPENDENT = [
   'tests/integration/achievementUnlockSerialization.test.ts',
   // Unified standings creation rule (create on first matchable subscription)
   'tests/integration/standingsCreationRule.test.ts',
+  // PR #536 — battle-time readiness, forfeits and the match-failure policy
+  'tests/integration/tournamentSeedingsRoute.test.ts',
+  'tests/integration/matchFailurePolicy.test.ts',
+  'tests/integration/tournamentFailure.test.ts',
+  'tests/integration/forfeitResolution.test.ts',
+  'tests/integration/schedulingAfterForfeit.test.ts',
+  'tests/integration/forfeitHistory.test.ts',
+  'tests/integration/tournamentForfeit.test.ts',
+  'tests/integration/placementForfeit.test.ts',
+  'tests/integration/robotCacheInvalidation.test.ts',
   // Hall of Records "Most Battles" and its accolade rank on the all-modes count (SQL)
   'tests/integration/mostBattlesAllModes.test.ts',
   // Spec #55 — Domain_Service_Extraction (task group 2)

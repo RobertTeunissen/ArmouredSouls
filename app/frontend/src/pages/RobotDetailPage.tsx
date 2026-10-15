@@ -1,5 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useSubscriptionStore } from '../stores/subscriptionStore';
+import type { StableOverview } from '../stores/subscriptionStore';
 import { fetchRobotLeagueHistory, fetchRobotKothStanding, KothStandingData } from '../utils/robotApi';
 import { api } from '../utils/api';
 import TabNavigation from '../components/TabNavigation';
@@ -33,6 +35,11 @@ function isOwnerOnlyTab(tab: string): boolean {
   return OWNER_ONLY_TABS.has(tab);
 }
 
+// Stable fallbacks for the subscription selectors: a fresh `[]` inside a
+// selector is a new reference every render.
+const EMPTY_SLOTS: readonly string[] = Object.freeze([]);
+const EMPTY_EVENTS: Readonly<StableOverview['registeredEvents']> = Object.freeze([]);
+
 function RobotDetailPage() {
   const {
     robot,
@@ -65,6 +72,20 @@ function RobotDetailPage() {
     isOnboarding,
     navigate,
   } = useRobotDetail();
+
+  // Booked events for the unequip confirmation (rule 10), owner view only.
+  const robotId = robot?.id;
+  const heldSlots = useSubscriptionStore(
+    (s) => s.overview?.robots.find((r) => r.robotId === robotId)?.heldSlots ?? EMPTY_SLOTS,
+  );
+  const registeredEvents = useSubscriptionStore((s) => s.overview?.registeredEvents ?? EMPTY_EVENTS);
+  const heldEvents = useMemo(
+    () => heldSlots.map((slot) => registeredEvents.find((e) => e.type === slot)?.label ?? slot),
+    [heldSlots, registeredEvents],
+  );
+  useEffect(() => {
+    if (isOwner) void useSubscriptionStore.getState().fetchOverview();
+  }, [isOwner]);
 
   if (loading) {
     return (
@@ -311,6 +332,7 @@ function RobotDetailPage() {
               onRobotUpdate={handleRobotUpdate}
               onEquipWeapon={handleEquipWeapon}
               onUnequipWeapon={handleUnequipWeapon}
+              heldEvents={heldEvents}
             />
           )}
 

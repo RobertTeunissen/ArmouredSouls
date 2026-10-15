@@ -29,24 +29,6 @@ import {
 import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
 import standingsService from '../standings/standingsService';
 
-/**
- * Check if a team is ready for battle
- * Requirement 8.1, 8.2, 8.3: Both robots must have HP > yield threshold, all weapons equipped
- * Requirement 11.3: Dynamic eligibility checking after earlier matches
- */
-export async function checkTeamReadinessForBattle(team: {
-  members: Array<{ robot: Robot }>;
-} | null): Promise<boolean> {
-  if (!team || team.members.length < 2) return false;
-
-  const activeRobot = team.members[0].robot;
-  const reserveRobot = team.members[1].robot;
-
-  if (!activeRobot.mainWeaponId) return false;
-  if (!reserveRobot.mainWeaponId) return false;
-
-  return true;
-}
 /** Minimal shape of a scheduled tag-team match passed from the orchestrator. */
 interface TagTeamMatchWithTeams {
   id: number;
@@ -83,6 +65,9 @@ export async function updateTagTeamBattleResults(
 
   // Use pre-loaded teams from the scheduled match query (no re-fetch needed)
   const team1 = mapTeam(match.team1);
+  // The loadout each robot fought with: an incomplete one fought as single (rule 6).
+  const fallbackIds = new Set(result.loadoutFallbackRobotIds ?? []);
+  const battleLoadout = (robot: Robot): string => (fallbackIds.has(robot.id) ? 'single' : robot.loadoutType);
   const team2 = mapTeam(match.team2);
 
   // The bye branch that used to sit here is gone (Spec #49). It paid
@@ -197,7 +182,7 @@ export async function updateTagTeamBattleResults(
     fameIncrement: team1ActiveFame,
     battleType: 'tag_team',
     stance: team1.activeRobot.stance,
-    loadoutType: team1.activeRobot.loadoutType,
+    loadoutType: battleLoadout(team1.activeRobot),
   });
 
   await updateRobotCombatStats({
@@ -213,7 +198,7 @@ export async function updateTagTeamBattleResults(
     fameIncrement: team1ReserveFame,
     battleType: 'tag_team',
     stance: team1.reserveRobot.stance,
-    loadoutType: team1.reserveRobot.loadoutType,
+    loadoutType: battleLoadout(team1.reserveRobot),
   });
 
   await updateRobotCombatStats({
@@ -229,7 +214,7 @@ export async function updateTagTeamBattleResults(
     fameIncrement: team2ActiveFame,
     battleType: 'tag_team',
     stance: team2.activeRobot.stance,
-    loadoutType: team2.activeRobot.loadoutType,
+    loadoutType: battleLoadout(team2.activeRobot),
   });
 
   await updateRobotCombatStats({
@@ -245,7 +230,7 @@ export async function updateTagTeamBattleResults(
     fameIncrement: team2ReserveFame,
     battleType: 'tag_team',
     stance: team2.reserveRobot.stance,
-    loadoutType: team2.reserveRobot.loadoutType,
+    loadoutType: battleLoadout(team2.reserveRobot),
   });
 
   // Update teams standings via standingsService

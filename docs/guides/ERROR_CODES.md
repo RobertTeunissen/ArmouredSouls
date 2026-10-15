@@ -81,6 +81,7 @@ Example with details:
 | `ROBOT_NOT_ELIGIBLE` | 400/404 | Robot is not eligible for battle |
 | `BATTLE_ALREADY_COMPLETED` | 400 | Battle has already finished |
 | `BATTLE_SIMULATION_FAILED` | 400 | Battle simulation encountered an error |
+| `ROBOT_NOT_BATTLE_READY` | 500 | Internal: a robot without a main weapon reached the combat simulator. The battle-time readiness check forfeits such robots first, so this only fires if that check was bypassed; the match is cancelled by the per-match failure policy. `details.robotIds` lists the weaponless robots. Never returned to players |
 
 ### Economy Errors
 
@@ -146,7 +147,7 @@ Example with details:
 |------|-------------|-------------|
 | `KOTH_NOT_FOUND` | 404 | KotH match does not exist |
 | `KOTH_ALREADY_COMPLETED` | 400 | KotH match has already finished |
-| `INSUFFICIENT_KOTH_PARTICIPANTS` | 400 | Not enough participants for KotH |
+| `INSUFFICIENT_KOTH_PARTICIPANTS` | 400 | Not enough participants for KotH. No longer thrown since #536: a field that drops below the minimum at battle time is resolved by `resolveBelowMinimumField` (byes for the ready robots). The code is kept for compatibility |
 | `INVALID_KOTH_STATE` | 400 | KotH match is in an invalid state |
 
 ### Onboarding Errors

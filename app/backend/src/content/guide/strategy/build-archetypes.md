@@ -2,7 +2,7 @@
 title: "Build Archetypes"
 description: "Five proven robot build strategies — Tank, Glass Cannon, Speed Demon, Counter Striker, and Sniper — with recommended attributes, weapons, loadouts, and stances."
 order: 1
-lastUpdated: "2026-03-12"
+lastUpdated: "2026-10-15"
 relatedArticles:
   - strategy/yield-strategy
   - getting-started/starting-budget
@@ -108,7 +108,7 @@ Speed Demons rely on evasion and attack speed to dodge incoming attacks while la
 - Requires investment in multiple attribute categories
 
 ```callout-tip
-Speed Demons benefit enormously from the Dual-Wield loadout's per-hand bonuses. Make sure both weapons complement your attribute spread — fast weapons with low cooldowns maximize your attack frequency advantage.
+Speed Demons benefit enormously from the Dual-Wield loadout's +30% Attack Speed, and both weapons' attribute bonuses add up into one shared set of attributes. Make sure both weapons complement your attribute spread — fast weapons with low cooldowns maximize your attack frequency advantage.
 ```
 
 ### 4. Counter Striker

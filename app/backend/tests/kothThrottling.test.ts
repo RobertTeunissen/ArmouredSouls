@@ -210,6 +210,15 @@ const {
 const { calculateStreamingRevenueBatch } = jest.requireMock('../src/services/economy/streamingRevenueService') as {
   calculateStreamingRevenueBatch: jest.Mock;
 };
+const { prepareRobotForCombat } = jest.requireMock('../src/utils/robotCalculations') as {
+  prepareRobotForCombat: jest.Mock;
+};
+const { getTuningBonusesBatch } = jest.requireMock('../src/services/tuning-pool') as {
+  getTuningBonusesBatch: jest.Mock;
+};
+const { simulateBattleMulti } = jest.requireMock('../src/services/battle/combatSimulator') as {
+  simulateBattleMulti: jest.Mock;
+};
 process.env.NODE_ENV = previousNodeEnv;
 
 // ─── Test helpers ────────────────────────────────────────────────────
@@ -321,6 +330,23 @@ describe('KotH Orchestrator Throttling', () => {
     expect(battleCreateTime - startTime).toBeLessThan(500);
   });
 
+  // #517: each participant is prepared exactly once, with its own tuning, before simulation.
+  it('should prepare each participant exactly once with its tuning before simulating', async () => {
+    setupMatchQueue([makeMatch(1, [1, 2, 3, 4, 5])]);
+    getTuningBonusesBatch.mockResolvedValueOnce(new Map([[4, { armorPlating: 2 }]]));
+
+    const promise = executeScheduledKothBattles();
+    await jest.runAllTimersAsync();
+    await promise;
+
+    const preparedIds = prepareRobotForCombat.mock.calls.map(([robot]) => (robot as { id: number }).id).sort();
+    expect(preparedIds).toEqual([1, 2, 3, 4, 5]);
+    expect(prepareRobotForCombat).toHaveBeenCalledWith(expect.objectContaining({ id: 4 }), { armorPlating: 2 });
+    expect(prepareRobotForCombat).toHaveBeenCalledWith(expect.objectContaining({ id: 1 }), {});
+    expect(Math.max(...prepareRobotForCombat.mock.invocationCallOrder))
+      .toBeLessThan(simulateBattleMulti.mock.invocationCallOrder[0]);
+  });
+
   it('should use batched createMany for BattleParticipant records', async () => {
     setupMatchQueue([makeMatch(1, [1, 2, 3, 4, 5])]);
     mockPrisma.battle.create.mockResolvedValue({ id: 100 });
@@ -357,21 +383,18 @@ describe('KotH Orchestrator Throttling', () => {
     expect(mockPrisma.$transaction).toHaveBeenCalled();
   });
 
-  it('should mark failed matches as error during run and reset to scheduled after', async () => {
+  it('should cancel a failed match through the failure policy and never reset it to scheduled', async () => {
     const matches = [makeMatch(1, [1, 2, 3, 4, 5]), makeMatch(2, [1, 2, 3, 4, 5])];
     const queue = [...matches];
     mockPrisma.scheduledMatch.count.mockResolvedValue(2);
     mockPrisma.scheduledMatch.findFirst.mockImplementation(() => {
       return Promise.resolve(queue.shift() ?? null);
     });
+    mockPrisma.scheduledMatch.updateMany.mockResolvedValue({ count: 1 });
 
-    // First match: robot query returns too few robots (triggers error)
-    // Second match: normal
-    let callCount = 0;
-    mockPrisma.robot.findMany.mockImplementation(() => {
-      callCount++;
-      if (callCount === 1) return Promise.resolve([makeRobot(1, 1)]);
-      return Promise.resolve([1, 2, 3, 4, 5].map(id => makeRobot(id, id)));
+    // First match: the engine throws. Second match: normal.
+    simulateBattleMulti.mockImplementationOnce(() => {
+      throw new Error('engine exploded');
     });
     mockPrisma.battle.create.mockResolvedValue({ id: 100 });
 
@@ -381,17 +404,56 @@ describe('KotH Orchestrator Throttling', () => {
 
     expect(summary.successfulMatches).toBe(1);
     expect(summary.failedMatches).toBe(1);
-    expect(summary.errors[0]).toContain('expected at least 5 robots');
-    // Failed match should be temporarily marked as 'error', then reset to 'scheduled'
-    expect(mockPrisma.scheduledMatch.update).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { id: 1 }, data: { status: 'error' } }),
+    expect(summary.errors[0]).toContain('engine exploded');
+
+    // Rule 7: the failed match is cancelled (conditional write), never marked
+    // 'error' and never reset to 'scheduled' for a retry.
+    expect(mockPrisma.scheduledMatch.updateMany).toHaveBeenCalledWith({
+      where: { id: 1, status: { in: ['scheduled', 'error'] } },
+      data: { status: 'cancelled', cancelReason: expect.stringContaining('engine exploded') },
+    });
+    expect(mockPrisma.scheduledMatch.update).not.toHaveBeenCalledWith(
+      expect.objectContaining({ data: { status: 'error' } }),
     );
-    expect(mockPrisma.scheduledMatch.updateMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: { matchType: 'koth', status: 'error' },
-        data: { status: 'scheduled' },
-      }),
+    expect(mockPrisma.scheduledMatch.updateMany).not.toHaveBeenCalledWith(
+      expect.objectContaining({ data: { status: 'scheduled' } }),
     );
+  });
+
+  it('should never re-fetch a match whose cancel write failed in the same run', async () => {
+    // A queue that honours the where clause: a failed match stays 'scheduled'.
+    const rows = [makeMatch(1, [1, 2, 3, 4, 5]), makeMatch(2, [1, 2, 3, 4, 5])];
+    mockPrisma.scheduledMatch.count.mockResolvedValue(2);
+    mockPrisma.scheduledMatch.findFirst.mockImplementation(
+      (args: { where: { id?: { notIn?: number[] } } }) => {
+        const excluded = args.where.id?.notIn ?? [];
+        return Promise.resolve(rows.find(r => r.status === 'scheduled' && !excluded.includes(r.id)) ?? null);
+      },
+    );
+    const policy = jest.requireActual('../src/services/battle/matchFailurePolicy') as
+      typeof import('../src/services/battle/matchFailurePolicy');
+    const failureSpy = jest
+      .spyOn(policy, 'handleMatchFailure')
+      .mockResolvedValue({ cancelled: false, errorSummary: 'KOTH_ERROR: boom' });
+
+    simulateBattleMulti.mockImplementationOnce(() => {
+      throw new Error('boom');
+    });
+    mockPrisma.battle.create.mockResolvedValue({ id: 100 });
+    rows[1].status = 'scheduled';
+
+    const promise = executeScheduledKothBattles();
+    await jest.runAllTimersAsync();
+    const summary = await promise;
+
+    expect(failureSpy).toHaveBeenCalledTimes(1);
+    expect(failureSpy).toHaveBeenCalledWith(expect.objectContaining({ ref: { source: 'scheduled_match', id: 1 } }));
+    expect(summary.failedMatches).toBe(1);
+    expect(summary.successfulMatches).toBe(1);
+    expect(mockPrisma.scheduledMatch.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({ where: expect.objectContaining({ id: { notIn: [1] } }) }),
+    );
+    failureSpy.mockRestore();
   });
 
   it('should fetch matches one at a time, not all at once', async () => {

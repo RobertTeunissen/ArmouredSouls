@@ -16,6 +16,9 @@ import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { RobotWithWeapons } from '../battle/combatSimulator';
 import { resolveByeEvent } from '../battle/byeResolutionService';
+import { resolveForfeitEvent } from '../battle/forfeitResolutionService';
+import { applyLoadoutFallbacks, evaluateMatchEntry, type MatchEntryOutcome } from '../battle/combatReadiness';
+import { BYE_MODE_SPECS } from '../../utils/byeRewards';
 import { simulateTeamBattle } from './teamBattleEngine';
 import { computeBattleSummary } from '../battle/battleSummaryComputer';
 import { countKillsByRobot } from '../../shared/utils/battleStatistics';
@@ -39,6 +42,7 @@ import {
   updateRobotCombatStats,
 } from '../battle/battlePostCombat';
 import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
+import { handleMatchFailure } from '../battle/matchFailurePolicy';
 import { runFinancialWriteTransaction } from '../cycle/financialWriteTransaction';
 import { prepareRobotForCombat } from '../../utils/robotCalculations';
 import { getTuningBonusesBatch } from '../tuning-pool';
@@ -48,13 +52,15 @@ import standingsService from '../standings/standingsService';
 
 export interface SingleMatchResult {
   matchId: number;
-  status: 'completed' | 'cancelled';
+  status: 'completed' | 'forfeit' | 'cancelled';
   battleId?: number;
   error?: string;
 }
 
 export interface TeamBattleExecutionResult {
   matchesCompleted: number;
+  /** Matches resolved as a battle-time forfeit (single or double); nothing was simulated. */
+  matchesForfeited: number;
   matchesCancelled: number;
   results: SingleMatchResult[];
 }
@@ -175,20 +181,23 @@ export async function executeScheduledTeamBattles(
       );
       results.push(result);
     } catch (error) {
-      // R10.5: Mark match as cancelled, log, continue remaining
-      await markMatchCancelled(match.id, error);
+      // R10.5 / rule 7: cancel the match via the shared policy, continue remaining
+      const { errorSummary } = await handleMatchFailure({
+        mode: battleType,
+        ref: { source: 'scheduled_match', id: match.id },
+        error,
+        participants: [match.team1Id, match.team2Id].filter((id): id is number => id !== null),
+      });
       results.push({
         matchId: match.id,
         status: 'cancelled',
-        error: error instanceof Error ? error.message : String(error),
+        error: errorSummary,
       });
-      logger.error(
-        `[TeamBattle] Match ${match.id} failed: ${error instanceof Error ? error.message : String(error)}`,
-      );
     }
   }
 
   const matchesCompleted = results.filter(r => r.status === 'completed').length;
+  const matchesForfeited = results.filter(r => r.status === 'forfeit').length;
   const matchesCancelled = results.filter(r => r.status === 'cancelled').length;
   const durationMs = Date.now() - startTime;
 
@@ -196,11 +205,11 @@ export async function executeScheduledTeamBattles(
   logger.info(
     `[TeamBattle] Execution complete | ` +
     `cycle=${cycleNumber} team_size=${teamSize} ` +
-    `completed=${matchesCompleted} cancelled=${matchesCancelled} ` +
+    `completed=${matchesCompleted} forfeited=${matchesForfeited} cancelled=${matchesCancelled} ` +
     `total=${scheduledMatches.length} duration_ms=${durationMs}`,
   );
 
-  return { matchesCompleted, matchesCancelled, results };
+  return { matchesCompleted, matchesForfeited, matchesCancelled, results };
 }
 
 // ─── Bye Resolution ──────────────────────────────────────────────────────────
@@ -275,6 +284,101 @@ async function resolveTeamLeagueBye(
   };
 }
 
+// ─── Forfeit Resolution ──────────────────────────────────────────────────────
+
+/**
+ * Resolve a team league battle-time forfeit through the Forfeit_Resolution_Writer.
+ *
+ * Nothing is simulated. The ready team wins with the bye-level reward and the
+ * bye LP; the forfeiting team takes a normal loss (LP, standings, team ELO) with
+ * 0 credits. Both teams unready is a draw with no credits.
+ */
+async function resolveTeamLeagueForfeit(
+  match: ScheduledMatchWithTeams,
+  teamSize: 2 | 3,
+  battleType: string,
+  cycleNumber: number,
+  team1Robots: RobotWithWeapons[],
+  team2Robots: RobotWithWeapons[],
+  outcome: Exclude<MatchEntryOutcome, { kind: 'fight' }>,
+): Promise<SingleMatchResult> {
+  const team2 = match.team2!;
+  const mode = teamSize === 2 ? 'league_2v2' : 'league_3v3';
+  const isDraw = outcome.kind === 'double_forfeit';
+  const side1Forfeits = isDraw || outcome.forfeitingSides[0] === 1;
+  const side2Forfeits = isDraw || outcome.forfeitingSides[0] === 2;
+
+  const team1SumELO = team1Robots.reduce((sum, r) => sum + r.elo, 0);
+  const team2SumELO = team2Robots.reduce((sum, r) => sum + r.elo, 0);
+  const eloChanges = calculateTeamBattleELOChanges(team1SumELO, team2SumELO, !isDraw && side2Forfeits, isDraw);
+  const newEloByRobotId: Record<number, number> = {};
+  for (const r of team1Robots) newEloByRobotId[r.id] = r.elo + eloChanges.team1Change;
+  for (const r of team2Robots) newEloByRobotId[r.id] = r.elo + eloChanges.team2Change;
+
+  const readySide: 1 | 2 | null = isDraw ? null : side2Forfeits ? 1 : 2;
+  const winnerTeamId = readySide === 1 ? match.team1Id : readySide === 2 ? match.team2Id : null;
+  const toParticipant = (r: RobotWithWeapons) => ({
+    id: r.id,
+    name: r.name,
+    userId: r.userId,
+    currentHP: r.currentHP,
+    maxHP: r.maxHP,
+    elo: r.elo,
+  });
+  const forfeiterNames = [
+    side1Forfeits ? match.team1.teamName : null,
+    side2Forfeits ? team2.teamName : null,
+  ].filter((n): n is string => n !== null).join(' and ');
+
+  const resolution = await resolveForfeitEvent({
+    mode,
+    context: { mode, tier: match.teamBattleLeague },
+    claim: { source: 'scheduled_match', scheduledMatchId: match.id },
+    sides: [
+      {
+        side: 1,
+        forfeited: side1Forfeits,
+        stableUserId: match.team1.stableId,
+        standingEntity: { entityType: 'team', entityId: match.team1Id },
+        robots: team1Robots.map(toParticipant),
+      },
+      {
+        side: 2,
+        forfeited: side2Forfeits,
+        stableUserId: team2.stableId,
+        standingEntity: { entityType: 'team', entityId: team2.id },
+        robots: team2Robots.map(toParticipant),
+      },
+    ],
+    newEloByRobotId,
+    eloChangeBySide: { 1: eloChanges.team1Change, 2: eloChanges.team2Change },
+    lp: {
+      win: BYE_MODE_SPECS[mode].lpDelta,
+      loss: calculateTeamBattleLPDelta(false, false),
+      draw: calculateTeamBattleLPDelta(false, true),
+    },
+    standingMode: mode,
+    battle: {
+      battleType,
+      leagueType: match.teamBattleLeague,
+      leagueInstanceId: match.teamBattleLeagueId,
+      winnerId: winnerTeamId,
+      winningSide: readySide,
+      message: `${forfeiterNames || 'Team'} forfeited: a robot had no main weapon equipped`,
+    },
+    cycleNumber,
+  });
+
+  logger.info(
+    `[TeamBattle] Match ${match.id} forfeit | cycle=${cycleNumber} team_size=${teamSize} ` +
+    `team1=${match.team1Id} team2=${match.team2Id} ` +
+    `outcome=${isDraw ? 'double_forfeit' : readySide === 1 ? 'team2_forfeit' : 'team1_forfeit'} ` +
+    `credits=${resolution.creditsPaid}${resolution.alreadyResolved ? ' already_resolved' : ''}`,
+  );
+
+  return { matchId: match.id, status: 'forfeit', battleId: resolution.battleId ?? undefined };
+}
+
 // ─── Single Match Execution ──────────────────────────────────────────────────
 
 /**
@@ -299,11 +403,10 @@ async function executeSingleTeamBattle(
   //
   // This path used to run the entire fought-battle body for a bye: it built
   // `teamSize` Bye_Placeholders, simulated a real battle against them, then
-  // overrode the outcome. The placeholders carry no weapon, so `getWeaponInfo`
-  // fell back to Fists at 10 base damage and the `!weaponLike` branch in the
-  // attack loop skipped the range check entirely — two or three of them punched
-  // the real team for the full duration, and the damage was persisted. A
-  // walkover was billing players for repairs on a battle nobody fought.
+  // overrode the outcome. The placeholders carried no weapon, and the
+  // simulator's weaponless fallback punched the real team for the full
+  // duration, and the damage was persisted. A walkover was billing players for
+  // repairs on a battle nobody fought.
   if (match.team2Id === null) {
     return resolveTeamLeagueBye(match, teamSize, battleType, cycleNumber);
   }
@@ -311,6 +414,23 @@ async function executeSingleTeamBattle(
   // Load robots with weapons for both teams
   const team1Robots = await loadTeamRobotsWithWeapons(match.team1.members.map(m => m.robotId));
   const team2Robots = await loadTeamRobotsWithWeapons(match.team2!.members.map(m => m.robotId));
+
+  // Battle-time readiness (rule 1): any member without a main weapon forfeits
+  // the whole team (rule 2); an incomplete loadout fights as single (rule 6).
+  const entry = evaluateMatchEntry(team1Robots, team2Robots);
+  if (entry.kind !== 'fight') {
+    return resolveTeamLeagueForfeit(match, teamSize, battleType, cycleNumber, team1Robots, team2Robots, entry);
+  }
+  // In memory only, and before prepareRobotForCombat reads loadoutType.
+  for (const robotId of applyLoadoutFallbacks([...team1Robots, ...team2Robots], entry.decisions)) {
+    const decision = entry.decisions.find(d => d.robotId === robotId);
+    logger.warn('[Battle] Loadout fallback', {
+      matchId: match.id,
+      robotId,
+      storedLoadout: decision?.loadoutFallback?.storedLoadout,
+      battleLoadout: 'single',
+    });
+  }
 
   // Prepare all robots for combat (apply tuning bonuses)
   const allRealRobotIds = [
@@ -879,18 +999,4 @@ function buildBattleLog(result: TeamBattleResult, teamSize: 2 | 3): TeamBattleLo
     startingPositions: result.startingPositions,
     endingPositions: result.endingPositions,
   };
-}
-
-/**
- * Mark a scheduled match as cancelled with a reason (R10.5).
- */
-async function markMatchCancelled(matchId: number, error: unknown): Promise<void> {
-  const reason = error instanceof Error ? error.message : String(error);
-  await prisma.scheduledMatch.update({
-    where: { id: matchId },
-    data: {
-      status: 'cancelled',
-      cancelReason: reason.slice(0, 500), // Truncate to fit DB column
-    },
-  });
 }

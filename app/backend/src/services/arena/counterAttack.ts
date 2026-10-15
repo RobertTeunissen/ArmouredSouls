@@ -20,13 +20,14 @@ import {
   WeaponLike,
 } from './rangeBands';
 import { calculateHydraulicBonus } from './hydraulicBonus';
+import { BattleError, BattleErrorCode } from '../../errors/battleErrors';
 
 /** Result of counter-attack resolution */
 export interface CounterResult {
   /** Whether the counter-attack can proceed */
   canCounter: boolean;
-  /** The weapon used for the counter (null if blocked) */
-  weapon: WeaponLike | null;
+  /** The weapon used (or, when blocked, the one that could not reach) */
+  weapon: WeaponLike;
   /** Hand used: 'main' or 'offhand' */
   hand: 'main' | 'offhand';
   /** Damage multiplier from range penalty */
@@ -49,7 +50,7 @@ function canReachAtRange(weaponRange: RangeBand, distance: number): boolean {
 /**
  * Resolve whether a counter-attack can occur and with what weapon.
  *
- * Logic:
+ * Logic (the defender is always armed; no main weapon throws `ROBOT_NOT_BATTLE_READY`):
  * 1. Try main weapon first
  * 2. If main weapon is melee and out of range, try offhand fallback
  *    (only for dual-wield mixed loadouts)
@@ -67,14 +68,7 @@ export function resolveCounter(
   const hydraulicSystems = Number(defender.robot.hydraulicSystems ?? 0);
 
   if (!mainWeapon) {
-    return {
-      canCounter: false,
-      weapon: null,
-      hand: 'main',
-      rangePenaltyMultiplier: 1,
-      hydraulicMultiplier: 1,
-      reason: 'counter_out_of_range',
-    };
+    throw new BattleError(BattleErrorCode.ROBOT_NOT_BATTLE_READY, 'Defender has no main weapon', 500, { robotId: defender.robot.id });
   }
 
   const mainRange = getWeaponOptimalRange(mainWeapon);

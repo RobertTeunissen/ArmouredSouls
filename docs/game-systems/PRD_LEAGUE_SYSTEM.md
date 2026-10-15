@@ -1,14 +1,15 @@
 # Product Requirements Document: League System
 
-**Last Updated**: October 14, 2026
+**Last Updated**: October 15, 2026
 **Status**: ✅ Implemented  
 **Owner**: Robert Teunissen  
 **Epic**: League Progression System  
-**Version**: 2.4
+**Version**: 2.5
 
 ---
 
 ## Version History
+- v2.5 (October 15, 2026) — Battle-time forfeits and the match failure policy (#536). See [Forfeits](#forfeits).
 - v2.4 (October 14, 2026) — Unified standings creation: a robot or team enters a mode's Bronze league the first time it becomes matchable by subscription, never at robot or team creation. See [Entering a League](#entering-a-league).
 - v2.3 (September 12, 2026) — Unified `league_1v1`, `league_2v2`, `league_3v3`, and `tag_team` behind one policy and planner. Zones now use complete instance population and fixed positions before LP/residency filters; standings previews and history reporting use the same mode-aware results.
 - v2.2 (September 1, 2026) — Spec #50 shared Bye_Card display, durable bye markers, expected/awarded reward display, and all-mode Match/Battle treatment.
@@ -143,6 +144,21 @@ League byes use the same player-facing Bye_Card as tournament, tag-team, and Pla
 A queued league bye appears in Upcoming Matches with the real robot, team, or FFA participant, `isByeMatch: true`, and an expected Bye_Reward_Display. It is not a zero-credit result and it does not expose the sentinel as an opponent. After the battle slot resolves the walkover, the record appears in Recent Battles with the awarded participant credits. History reads the durable `scheduled_matches_v2.is_bye_match` marker rather than relying on the retained battle log.
 
 The shared card shows BYE, the mode, the real subject, scheduled/resolution time, neutral no-opponent copy, and expected or awarded credits. It never claims that a league bye was fought, simulated, drawn, or damaging. These display rules do not change league matchmaking, reward arithmetic, or the existing Upcoming Matches and Recent Battles headings.
+
+### Forfeits
+
+A robot is checked again when its battle starts, on the loadout it has at that moment (#536). The rule is the same in `league_1v1`, `league_2v2`, `league_3v3` and `tag_team`:
+
+| Situation at battle start | Result |
+|---|---|
+| A robot has no main weapon | Its side forfeits (in 2v2/3v3 and Tag Team, any unarmed member forfeits the whole team, active or reserve). Nothing is simulated: no damage, no repair cost |
+| The other side is ready | It wins: bye-level credits (the bye amount above), +3 LP and a normal ELO gain. The forfeiter takes a normal loss: −1 LP, the ELO loss and a loss in its record, with 0 credits |
+| Both sides have an unarmed robot | A draw: +1 LP each, a draw ELO update, no credits |
+| A robot has a main weapon but an incomplete loadout | It fights as Single for that battle; the stored loadout is unchanged |
+
+A forfeiting or incomplete robot or team is not matched again until its loadout is fixed: matchmaking runs after battle execution and uses the scheduling readiness check. A forfeit appears in Recent Battles as a forfeit (see `docs/prd_pages/PRD_BATTLE_HISTORY_PAGE.md`).
+
+If a league match fails with an unexpected error, it is cancelled with no rewards and the rest of the run continues. It is not retried or left scheduled.
 
 ---
 

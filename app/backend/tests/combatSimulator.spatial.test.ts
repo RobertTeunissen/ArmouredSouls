@@ -2,7 +2,14 @@
  * Unit tests for the refactored simulateBattle with 2D spatial mechanics.
  * Validates: Requirements 14.1, 14.2, 14.3, 14.6, 14.7, 14.8, 14.9
  */
-import { simulateBattle, RobotWithWeapons, CombatResult, CombatEvent } from '../src/services/battle/combatSimulator';
+import { simulateBattle, simulateBattleMulti, RobotWithWeapons, CombatResult, CombatEvent, Position } from '../src/services/battle/combatSimulator';
+import type { GameModeConfig, MovementIntent, RobotCombatState } from '../src/services/arena/types';
+import { prepareRobotForCombat } from '../src/utils/robotCalculations';
+import { ROBOT_ATTRIBUTES } from '../src/shared/utils/robotAttributes';
+import { buildKothGameModeConfig, buildKothInitialState } from '../src/services/arena/koth/kothGameMode';
+import { simulateTeamBattle } from '../src/services/team-battle/teamBattleEngine';
+import { simulateTagTeamBattle } from '../src/services/tag-team/tagTeamSimulation';
+import type { TagTeamWithRobots } from '../src/services/tag-team/tagTeamTypes';
 import { Prisma } from '../generated/prisma';
 
 // ─── Mock Factories ─────────────────────────────────────────────────
@@ -62,7 +69,8 @@ function createMockRobot(overrides?: Partial<RobotWithWeapons>): RobotWithWeapon
     yieldThreshold: 10,
     loadoutType: 'single',
     stance: 'balanced',
-    mainWeaponId: null,
+    // Armed by default: the simulator rejects robots without a main weapon.
+    mainWeaponId: 2,
     offhandWeaponId: null,
     imageUrl: null,
     offensiveWins: 0,
@@ -71,7 +79,7 @@ function createMockRobot(overrides?: Partial<RobotWithWeapons>): RobotWithWeapon
     dualWieldWins: 0,
     createdAt: new Date('2025-01-01'),
     updatedAt: new Date('2025-01-01'),
-    mainWeapon: null,
+    mainWeapon: createRangedWeaponInventory(2),
     offhandWeapon: null,
     ...overrides,
   } as unknown as RobotWithWeapons;
@@ -179,6 +187,121 @@ function createRangedWeaponInventory(weaponId: number = 2) {
 
 function getEventsByType(events: CombatEvent[], type: string): CombatEvent[] {
   return events.filter(e => e.type === type);
+}
+
+// ─── Simulator entry points (shared by #517 and #518 suites) ────────
+
+type EntryPoint = {
+  name: string;
+  count: number;
+  run: (robots: RobotWithWeapons[]) => Promise<unknown>;
+};
+
+const entryPoints: EntryPoint[] = [
+  { name: 'simulateBattle (league 1v1 / practice)', count: 2, run: async (r) => simulateBattle(r[0], r[1]) },
+  { name: 'simulateBattle tournament (solo tournament)', count: 2, run: async (r) => simulateBattle(r[0], r[1], true) },
+  {
+    name: 'simulateBattleMulti (Grand Melee shape)',
+    count: 6,
+    run: async (r) => simulateBattleMulti(r, { allowDraws: false, arenaRadius: 16 + (r.length - 2) * 3, maxDuration: 20 }),
+  },
+  {
+    name: 'simulateBattleMulti (KotH game mode)',
+    count: 5,
+    run: async (r) => {
+      const kothConfig = { scoreThreshold: 15, timeLimit: 60, zoneRadius: 5, participantCount: r.length, matchId: 1 };
+      return simulateBattleMulti(r, {
+        allowDraws: false,
+        maxDuration: 60,
+        gameModeConfig: buildKothGameModeConfig(kothConfig),
+        gameModeState: buildKothInitialState(kothConfig, r.map((robot) => robot.id)),
+      });
+    },
+  },
+  { name: 'simulateTeamBattle 2v2', count: 4, run: async (r) => simulateTeamBattle(r.slice(0, 2), r.slice(2), 2) },
+  { name: 'simulateTeamBattle 3v3', count: 6, run: async (r) => simulateTeamBattle(r.slice(0, 3), r.slice(3), 3) },
+  {
+    name: 'simulateTagTeamBattle',
+    count: 4,
+    run: async (r) => {
+      const team = (id: number, active: RobotWithWeapons, reserve: RobotWithWeapons): TagTeamWithRobots => ({
+        id, stableId: id, teamName: `Team-${id}`, teamSize: 2,
+        activeRobotId: active.id, reserveRobotId: reserve.id,
+        activeRobot: active, reserveRobot: reserve,
+        createdAt: new Date('2025-01-01'), updatedAt: new Date('2025-01-01'),
+      });
+      return simulateTagTeamBattle(team(1, r[0], r[1]), team(2, r[2], r[3]));
+    },
+  },
+];
+
+// ─── #518 helpers ───────────────────────────────────────────────────
+
+const RESOLVED_ATTACK_TYPES = ['attack', 'critical', 'miss', 'malfunction'];
+
+/** Deterministic PRNG so seeded battles replay identically. */
+function mulberry32(seed: number): () => number {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** Run `fn` with Math.random replaced by a seeded PRNG; restored afterwards. */
+function withSeededRandom<T>(seed: number, fn: () => T): T {
+  const spy = jest.spyOn(Math, 'random').mockImplementation(mulberry32(seed));
+  try {
+    return fn();
+  } finally {
+    spy.mockRestore();
+  }
+}
+
+/** Game mode hook that pins every robot (by teamIndex) to a fixed position. */
+function pinned(pins: Position[]): GameModeConfig {
+  return {
+    movementModifier: {
+      modify: (intent: MovementIntent, s: RobotCombatState): MovementIntent => ({ ...intent, targetPosition: pins[s.teamIndex] }),
+    },
+  };
+}
+
+/** Energy-type weapon with melee reach (Shock Maul shape). */
+function createShockMaulInventory(weaponId: number = 4) {
+  const inventory = createMeleeWeaponInventory(weaponId);
+  return { ...inventory, weapon: { ...inventory.weapon, name: 'Shock Maul', weaponType: 'energy', damageType: 'energy' } };
+}
+
+/** Resolved attack attempts (attack/critical/miss/malfunction), optionally by attacker and hand. */
+function resolvedAttacks(events: CombatEvent[], name?: string, hand?: 'main' | 'offhand'): CombatEvent[] {
+  return events.filter(e =>
+    RESOLVED_ATTACK_TYPES.includes(e.type)
+    && e.attacker !== undefined
+    && (name === undefined || e.attacker === name)
+    && (hand === undefined || e.hand === hand),
+  );
+}
+
+/** Robot that never yields and survives a full 120 s battle. */
+function durableRobot(overrides: Partial<RobotWithWeapons>): RobotWithWeapons {
+  return createMockRobot({
+    currentHP: 100000,
+    maxHP: 100000,
+    yieldThreshold: 0,
+    ...overrides,
+  });
+}
+
+/** Point `distance` units from `from` toward `toward`. */
+function towards(from: Position, toward: Position, distance: number): Position {
+  const dx = toward.x - from.x;
+  const dy = toward.y - from.y;
+  const len = Math.sqrt(dx * dx + dy * dy);
+  return { x: from.x + (dx / len) * distance, y: from.y + (dy / len) * distance };
 }
 
 // ─── Tests ──────────────────────────────────────────────────────────
@@ -406,7 +529,7 @@ describe('simulateBattle — spatial refactor', () => {
         mainWeapon: createMeleeWeaponInventory(1),
         mainWeaponId: 1,
         servoMotors: new Prisma.Decimal(5), // Very slow
-        combatAlgorithms: new Prisma.Decimal(1), // Low AI — won't force attack early
+        combatAlgorithms: new Prisma.Decimal(1), // Low AI — weakest pathing
       });
       const rangedRobot = createMockRobot({
         id: 2,
@@ -621,6 +744,358 @@ describe('simulateBattle — spatial refactor', () => {
       expect(robot2.currentHP).toBe(r2HP);
       expect(robot1.name).toBe(r1Name);
       expect(robot2.name).toBe(r2Name);
+    });
+  });
+
+  // #517: cooldowns are derived from the prepared (loadout-adjusted) attack speed.
+  describe('prepared Dual Wield robot uses canonical attack speed (#517)', () => {
+    it('derives main and offhand cooldowns from the loadout-adjusted attack speed', () => {
+      const dualWield = createMockRobot({
+        id: 1,
+        name: 'Dualist',
+        loadoutType: 'dual_wield',
+        mainWeapon: createRangedWeaponInventory(1),
+        offhandWeapon: createRangedWeaponInventory(2),
+        mainWeaponId: 1,
+        offhandWeaponId: 2,
+      });
+      const opponent = createMockRobot({
+        id: 2,
+        name: 'Opponent',
+        mainWeapon: createRangedWeaponInventory(3),
+        mainWeaponId: 3,
+      });
+      prepareRobotForCombat(dualWield);
+      prepareRobotForCombat(opponent);
+
+      // Fixture attackSpeed 20, Laser Pistol attackSpeedBonus 0 → (20 + 0 + 0) × 1.30 = 26
+      const canonicalAttackSpeed = 26;
+      expect(Number(dualWield.attackSpeed)).toBe(canonicalAttackSpeed);
+
+      const result = simulateBattleMulti([dualWield, opponent], { allowDraws: true, maxDuration: 5 });
+      const state = result.finalStates![0];
+      expect(state.attackCooldown).toBeCloseTo(3 / (1 + canonicalAttackSpeed / 50), 5);
+      expect(state.offhandCooldown).toBeCloseTo((3 * 1.4) / (1 + canonicalAttackSpeed / 50), 5);
+    });
+  });
+
+  // #517: every simulator entry point consumes prepared robots as-is — it never
+  // re-derives, mutates or compounds the prepared attributes.
+  describe('simulator entry points consume prepared robots without compounding (#517)', () => {
+    const LOADOUT_CYCLE = ['dual_wield', 'weapon_shield', 'two_handed', 'single'] as const;
+
+    function preparedRobots(count: number): RobotWithWeapons[] {
+      return Array.from({ length: count }, (_, i) => {
+        const loadoutType = LOADOUT_CYCLE[i % LOADOUT_CYCLE.length];
+        const robot = createMockRobot({
+          id: i + 1,
+          name: `Entry-${i + 1}`,
+          loadoutType,
+          mainWeapon: createRangedWeaponInventory(100 + i * 2),
+          offhandWeapon: loadoutType === 'dual_wield' ? createRangedWeaponInventory(101 + i * 2) : null,
+          mainWeaponId: 100 + i * 2,
+        });
+        prepareRobotForCombat(robot);
+        return robot;
+      });
+    }
+
+    function attributeSnapshot(robots: RobotWithWeapons[]): Array<Record<string, number>> {
+      return robots.map((robot) => Object.fromEntries(
+        ROBOT_ATTRIBUTES.map((attr) => [attr, Number(robot[attr as keyof RobotWithWeapons])]),
+      ));
+    }
+
+    /** Main-hand cooldown the simulator must derive from the prepared attack speed. */
+    function expectedMainCooldown(robot: RobotWithWeapons): number {
+      return (robot.mainWeapon?.weapon?.cooldown ?? 3) / (1 + Number(robot.attackSpeed) / 50);
+    }
+
+    it.each(entryPoints)('$name', async ({ count, run }) => {
+      const robots = preparedRobots(count);
+      const before = attributeSnapshot(robots);
+      const maxBefore = robots.map((r) => ({ maxHP: r.maxHP, maxShield: r.maxShield }));
+
+      const result = await run(robots);
+
+      expect(result).toBeDefined();
+      expect(attributeSnapshot(robots)).toEqual(before);
+      expect(robots.map((r) => ({ maxHP: r.maxHP, maxShield: r.maxShield }))).toEqual(maxBefore);
+
+      const finalStates = (result as { finalStates?: Array<{ attackCooldown: number }> }).finalStates;
+      if (finalStates) {
+        finalStates.forEach((state, i) => {
+          expect(state.attackCooldown).toBeCloseTo(expectedMainCooldown(robots[i]), 5);
+        });
+      }
+    });
+  });
+
+  // #518: physical reach is an invariant of every resolved attack. Patience never
+  // lets a melee-band weapon (incl. energy melee) hit beyond 2 units, in either hand.
+  describe('melee reach is enforced regardless of patience (#518)', () => {
+    /** Each robot sits 1e-6 / 2 beyond x = ±1, so the pair is 2 + 1e-6 apart. */
+    const JUST_OUT = 5e-7;
+    const PINS_BEYOND_REACH: Position[] = [{ x: -1 - JUST_OUT, y: 0 }, { x: 1 + JUST_OUT, y: 0 }];
+    const PINS_AT_REACH: Position[] = [{ x: -1, y: 0 }, { x: 1, y: 0 }];
+    const PINS_AT_TEN: Position[] = [{ x: -5, y: 0 }, { x: 5, y: 0 }];
+
+    function pinnedDuel(robots: RobotWithWeapons[], pins: Position[]) {
+      return simulateBattleMulti(robots, { allowDraws: true, gameModeConfig: { maxDuration: 120, ...pinned(pins) } });
+    }
+
+    const counterEvents = (events: CombatEvent[]): CombatEvent[] =>
+      events.filter(e => e.type === 'counter' || e.type === 'counter_out_of_range');
+
+    const hits = (events: CombatEvent[]): CombatEvent[] =>
+      events.filter(e => e.type === 'attack' || e.type === 'critical');
+
+    const MELEE_WEAPONS = [
+      { label: 'melee (Energy Blade)', make: createMeleeWeaponInventory },
+      { label: 'energy melee (Shock Maul)', make: createShockMaulInventory },
+    ];
+    const S1_CASES = MELEE_WEAPONS.flatMap(w => [1, 50].map(ca => ({ ...w, ca })));
+
+    it.each(S1_CASES)('$label at 2 + 1e-6 never resolves an attack over 120 s (CA $ca)', ({ make, ca }) => {
+      const robots = [
+        durableRobot({ id: 1, name: 'Left', mainWeapon: make(1), mainWeaponId: 1, combatAlgorithms: new Prisma.Decimal(ca) }),
+        durableRobot({ id: 2, name: 'Right', mainWeapon: make(2), mainWeaponId: 2, combatAlgorithms: new Prisma.Decimal(ca) }),
+      ];
+      const spy = jest.spyOn(Math, 'random');
+      let randomCalls: number;
+      let result: ReturnType<typeof pinnedDuel>;
+      try {
+        result = pinnedDuel(robots, PINS_BEYOND_REACH);
+        randomCalls = spy.mock.calls.length;
+      } finally {
+        spy.mockRestore();
+      }
+
+      expect(resolvedAttacks(result.events)).toHaveLength(0);
+      expect(counterEvents(result.events)).toHaveLength(0);
+      expect(result.finalStates!.map(s => s.totalDamageDealt)).toEqual([0, 0]);
+      expect(getEventsByType(result.events, 'out_of_range').length).toBeGreaterThanOrEqual(1);
+      // Patience ran far past any limit (15 s max) without granting an attack.
+      expect(result.finalStates!.every(s => s.patienceTimer > 100)).toBe(true);
+      // Blocked attempts consume no randomness.
+      expect(randomCalls).toBe(0);
+    });
+
+    it('melee at exactly 2 units stays legal', () => {
+      const robots = [
+        durableRobot({ id: 1, name: 'Left', mainWeapon: createMeleeWeaponInventory(1), mainWeaponId: 1 }),
+        durableRobot({ id: 2, name: 'Right', mainWeapon: createMeleeWeaponInventory(2), mainWeaponId: 2 }),
+      ];
+      const result = withSeededRandom(518, () => pinnedDuel(robots, PINS_AT_REACH));
+      const attacks = resolvedAttacks(result.events);
+
+      expect(attacks.length).toBeGreaterThan(20);
+      expect(attacks.every(e => e.distance !== undefined && e.distance <= 2)).toBe(true);
+      expect(result.finalStates![0].totalDamageDealt + result.finalStates![1].totalDamageDealt).toBeGreaterThan(0);
+    });
+
+    it('dual-wield melee + melee at 2 + 1e-6 resolves no attack in either hand', () => {
+      const dualMelee = (id: number, name: string) => durableRobot({
+        id, name, loadoutType: 'dual_wield',
+        mainWeapon: createMeleeWeaponInventory(id * 10), mainWeaponId: id * 10,
+        offhandWeapon: createMeleeWeaponInventory(id * 10 + 1), offhandWeaponId: id * 10 + 1,
+      });
+      const result = withSeededRandom(518, () => pinnedDuel([dualMelee(1, 'Left'), dualMelee(2, 'Right')], PINS_BEYOND_REACH));
+
+      expect(resolvedAttacks(result.events, undefined, 'main')).toHaveLength(0);
+      expect(resolvedAttacks(result.events, undefined, 'offhand')).toHaveLength(0);
+      expect(counterEvents(result.events)).toHaveLength(0);
+    });
+
+    /** Mixed-hand dual wielder 10 units from a ranged opponent. */
+    function mixedHandsAtTen(main: 'ranged' | 'melee', seed: number) {
+      const ranged = createRangedWeaponInventory(11);
+      const melee = createMeleeWeaponInventory(12);
+      const mixed = durableRobot({
+        id: 1, name: 'Mixed', loadoutType: 'dual_wield',
+        mainWeapon: main === 'ranged' ? ranged : melee, mainWeaponId: 11,
+        offhandWeapon: main === 'ranged' ? melee : ranged, offhandWeaponId: 12,
+      });
+      const opponent = durableRobot({ id: 2, name: 'Opponent', mainWeapon: createRangedWeaponInventory(13), mainWeaponId: 13 });
+      return withSeededRandom(seed, () => pinnedDuel([mixed, opponent], PINS_AT_TEN));
+    }
+
+    it('ranged main + melee offhand at 10 units: only the main hand fires, with the range penalty', () => {
+      const result = mixedHandsAtTen('ranged', 518);
+      const mainHits = hits(resolvedAttacks(result.events, 'Mixed', 'main'));
+
+      expect(resolvedAttacks(result.events, 'Mixed', 'main').length).toBeGreaterThan(0);
+      expect(mainHits.length).toBeGreaterThan(0);
+      expect(mainHits.every(e => e.rangePenalty === 0.75)).toBe(true);
+      expect(resolvedAttacks(result.events, 'Mixed', 'offhand')).toHaveLength(0);
+    });
+
+    it('melee main + ranged offhand at 10 units: only the offhand fires, with the range penalty', () => {
+      const result = mixedHandsAtTen('melee', 518);
+      const offhandHits = hits(resolvedAttacks(result.events, 'Mixed', 'offhand'));
+
+      expect(resolvedAttacks(result.events, 'Mixed', 'main')).toHaveLength(0);
+      expect(offhandHits.length).toBeGreaterThan(0);
+      expect(offhandHits.every(e => e.rangePenalty === 0.75)).toBe(true);
+    });
+
+    it('ranged attacks beyond reach fire with the penalty, and a melee defender cannot counter them', () => {
+      const gunner = durableRobot({ id: 1, name: 'Gunner', mainWeapon: createRangedWeaponInventory(1), mainWeaponId: 1 });
+      const brawler = durableRobot({
+        id: 2, name: 'Brawler', mainWeapon: createMeleeWeaponInventory(2), mainWeaponId: 2,
+        counterProtocols: new Prisma.Decimal(30),
+      });
+      const result = withSeededRandom(518, () => pinnedDuel([gunner, brawler], PINS_AT_TEN));
+      const gunnerHits = hits(resolvedAttacks(result.events, 'Gunner'));
+
+      expect(gunnerHits.length).toBeGreaterThan(0);
+      expect(gunnerHits.every(e => e.rangePenalty === 0.75)).toBe(true);
+      expect(result.events.filter(e => e.type === 'counter' && e.attacker === 'Brawler')).toHaveLength(0);
+      expect(result.events.filter(e => e.type === 'counter_out_of_range' && e.attacker === 'Brawler').length)
+        .toBeGreaterThan(0);
+    });
+
+    describe('opportunistic targeting in multi-robot battles', () => {
+      // simulateBattleMulti places n = 3 robots on a radius-18 ring (arena radius 20).
+      const ringSpawn = (i: number): Position => ({
+        x: Math.round(18 * Math.cos((i * 2 * Math.PI) / 3) * 1000) / 1000,
+        y: Math.round(18 * Math.sin((i * 2 * Math.PI) / 3) * 1000) / 1000,
+      });
+
+      /**
+       * A stays on its spawn; Near and Far approach A along straight lines from their
+       * own spawns and stop `nearDistance` / 10 units away. A's primary target is Far.
+       */
+      function threeWay(attacker: RobotWithWeapons, nearDistance: number) {
+        const a = ringSpawn(0);
+        const pins = [a, towards(a, ringSpawn(1), nearDistance), towards(a, ringSpawn(2), 10)];
+        const near = durableRobot({ id: 2, name: 'Near', mainWeapon: createRangedWeaponInventory(21), mainWeaponId: 21 });
+        const far = durableRobot({ id: 3, name: 'Far', mainWeapon: createRangedWeaponInventory(22), mainWeaponId: 22 });
+        const forceFar: GameModeConfig['targetPriority'] = {
+          selectTargets: (robot: RobotCombatState) => (robot.teamIndex === 0 ? [2] : []),
+        };
+        return withSeededRandom(518, () => simulateBattleMulti([attacker, near, far], {
+          allowDraws: true,
+          gameModeConfig: { maxDuration: 120, ...pinned(pins), targetPriority: forceFar },
+        }));
+      }
+
+      const meleeA = () => durableRobot({ id: 1, name: 'A', mainWeapon: createMeleeWeaponInventory(20), mainWeaponId: 20 });
+
+      it('a melee hand switches to the nearest opponent within its own reach', () => {
+        const attacks = resolvedAttacks(threeWay(meleeA(), 1.5).events, 'A');
+
+        expect(attacks.length).toBeGreaterThan(0);
+        expect(attacks.every(e => e.defender === 'Near' && e.distance !== undefined && e.distance <= 2)).toBe(true);
+      });
+
+      it('with no opponent in reach, melee never attacks — not even the primary target after patience', () => {
+        const result = threeWay(meleeA(), 2 + 1e-6);
+
+        expect(resolvedAttacks(result.events, 'A')).toHaveLength(0);
+        expect(result.finalStates![0].totalDamageDealt).toBe(0);
+      });
+
+      it('each hand validates its own target: ranged main hits Far, melee offhand hits only Near', () => {
+        const mixed = durableRobot({
+          id: 1, name: 'A', loadoutType: 'dual_wield',
+          mainWeapon: createRangedWeaponInventory(20), mainWeaponId: 20,
+          offhandWeapon: createMeleeWeaponInventory(23), offhandWeaponId: 23,
+        });
+        const events = threeWay(mixed, 1.5).events;
+        const main = resolvedAttacks(events, 'A', 'main');
+        const offhand = resolvedAttacks(events, 'A', 'offhand');
+
+        expect(main.length).toBeGreaterThan(0);
+        expect(main.every(e => e.defender === 'Far')).toBe(true);
+        expect(offhand.length).toBeGreaterThan(0);
+        expect(offhand.every(e => e.defender === 'Near' && e.distance !== undefined && e.distance <= 2)).toBe(true);
+      });
+    });
+
+    /** Slow melee robot against a fast ranged kiter, free movement. */
+    function slowMeleeVsKiter(seed: number) {
+      const slowMelee = createMockRobot({
+        id: 1, name: 'SlowMelee', mainWeapon: createMeleeWeaponInventory(1), mainWeaponId: 1,
+        servoMotors: new Prisma.Decimal(5), combatAlgorithms: new Prisma.Decimal(1),
+      });
+      const fastRanged = createMockRobot({
+        id: 2, name: 'FastRanged', mainWeapon: createRangedWeaponInventory(2), mainWeaponId: 2,
+        servoMotors: new Prisma.Decimal(40),
+      });
+      return withSeededRandom(seed, () => simulateBattle(slowMelee, fastRanged));
+    }
+
+    it.each(Array.from({ length: 10 }, (_, i) => i + 1))(
+      'free movement, seed %i: a slow melee robot never hits a kiting ranged robot beyond reach',
+      (seed) => {
+        const attacks = resolvedAttacks(slowMeleeVsKiter(seed).events, 'SlowMelee');
+        expect(attacks.every(e => e.distance !== undefined && e.distance <= 2)).toBe(true);
+      },
+    );
+
+    describe('every simulator entry point enforces reach', () => {
+      /** Cycles melee, energy melee, ranged and mixed (ranged main + melee offhand) dual wield. */
+      function reachRobots(count: number): RobotWithWeapons[] {
+        return Array.from({ length: count }, (_, i) => {
+          const kind = i % 4;
+          const weaponId = 200 + i * 2;
+          const robot = createMockRobot({
+            id: i + 1,
+            name: `Reach-${i + 1}`,
+            loadoutType: kind === 3 ? 'dual_wield' : 'single',
+            mainWeapon: kind === 0 ? createMeleeWeaponInventory(weaponId)
+              : kind === 1 ? createShockMaulInventory(weaponId)
+                : createRangedWeaponInventory(weaponId),
+            mainWeaponId: weaponId,
+            offhandWeapon: kind === 3 ? createMeleeWeaponInventory(weaponId + 1) : null,
+            offhandWeaponId: kind === 3 ? weaponId + 1 : null,
+          });
+          prepareRobotForCombat(robot);
+          return robot;
+        });
+      }
+
+      /** Raw combat events, whatever the entry point calls them. */
+      function rawEvents(result: unknown): CombatEvent[] {
+        const r = result as { events?: CombatEvent[]; detailedCombatEvents?: unknown[]; battleLog?: unknown[] };
+        if (r.detailedCombatEvents) return r.detailedCombatEvents as CombatEvent[];
+        if (r.events) return r.events;
+        return (r.battleLog ?? []) as CombatEvent[];
+      }
+
+      it.each(entryPoints)('$name', async ({ count, run }) => {
+        const robots = reachRobots(count);
+        const bands = new Map(robots.map(r => [r.name, {
+          main: r.mainWeapon?.weapon?.rangeBand,
+          offhand: r.offhandWeapon?.weapon?.rangeBand,
+        }]));
+
+        const spy = jest.spyOn(Math, 'random').mockImplementation(mulberry32(518));
+        let result: unknown;
+        try {
+          result = await run(robots);
+        } finally {
+          spy.mockRestore();
+        }
+
+        const attacks = resolvedAttacks(rawEvents(result));
+        expect(attacks.length).toBeGreaterThan(0);
+        for (const event of attacks) {
+          const weaponBands = bands.get(event.attacker!);
+          expect(weaponBands).toBeDefined();
+          const band = event.hand === 'offhand' ? weaponBands!.offhand : weaponBands!.main;
+          if (band === 'melee') {
+            expect(typeof event.distance).toBe('number');
+            expect(event.distance!).toBeLessThanOrEqual(2);
+          }
+        }
+      });
+    });
+
+    it('seeded replays are deterministic', () => {
+      expect(mixedHandsAtTen('ranged', 7).events).toEqual(mixedHandsAtTen('ranged', 7).events);
+      expect(slowMeleeVsKiter(1).events).toEqual(slowMeleeVsKiter(1).events);
     });
   });
 

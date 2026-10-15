@@ -8,7 +8,11 @@ const eventLogger = new EventLogger();
 describe('DataIntegrityService', () => {
   let testCycleNumbers: number[] = [];
   let testUserIds: number[] = [];
-  let cycleCounter = 10000; // Start from a safe base number
+  // Far above any cycle another suite can reach. cycleCsvStreamingRevenue sets
+  // totalCycles to totalCycles + 10000, so live battles in parallel suites can
+  // write audit and ledger rows at cycles just above 10000, which made this
+  // suite's 10000+ cycles fail intermittently with foreign financial issues.
+  let cycleCounter = 900_000;
   let originalFeatureFlags: unknown = {};
 
   beforeAll(async () => {

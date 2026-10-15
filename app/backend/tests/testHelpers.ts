@@ -120,6 +120,8 @@ export async function createTestBattle(opts: {
   robot2Yielded?: boolean;
   robot1Destroyed?: boolean;
   robot2Destroyed?: boolean;
+  robot1Forfeited?: boolean;
+  robot2Forfeited?: boolean;
 }) {
   // The `robot1*` / `robot2*` names survive in `opts` because they read well at a
   // call site, but they are inputs to the participant rows only. `Battle` itself
@@ -151,6 +153,7 @@ export async function createTestBattle(opts: {
             streamingRevenue: opts.robot1StreamingRevenue ?? 0,
             yielded: opts.robot1Yielded ?? false,
             destroyed: opts.robot1Destroyed ?? false,
+            forfeited: opts.robot1Forfeited ?? false,
           },
           {
             robotId: opts.robot2Id,
@@ -165,6 +168,7 @@ export async function createTestBattle(opts: {
             streamingRevenue: opts.robot2StreamingRevenue ?? 0,
             yielded: opts.robot2Yielded ?? false,
             destroyed: opts.robot2Destroyed ?? false,
+            forfeited: opts.robot2Forfeited ?? false,
           },
         ],
       },

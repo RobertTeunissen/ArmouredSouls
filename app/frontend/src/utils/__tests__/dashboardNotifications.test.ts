@@ -7,6 +7,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import fc from 'fast-check';
 import {
   getNextPrestigeThreshold,
   getUnlockedFacilityLevel,
@@ -25,11 +26,21 @@ import {
   type NotificationRobot,
   type NotificationTeam,
 } from '../dashboardNotifications';
+import { getOwnerBattleReadiness } from '../robot-battle-readiness';
 
 // ─── Fixtures ────────────────────────────────────────────────────────────────
 
 function robot(overrides: Partial<NotificationRobot> = {}): NotificationRobot {
-  return { id: 1, name: 'Bot', currentHP: 100, maxHP: 100, mainWeaponId: 1, ...overrides };
+  return {
+    id: 1,
+    name: 'Bot',
+    currentHP: 100,
+    maxHP: 100,
+    mainWeaponId: 1,
+    loadoutType: 'single',
+    offhandWeaponId: null,
+    ...overrides,
+  };
 }
 
 const finishedTutorial = {
@@ -38,7 +49,10 @@ const finishedTutorial = {
   onboardingSkipped: false,
 };
 
-function overviewFor(entries: { robotId: number; subs?: string[]; held?: string[]; cap?: number }[]) {
+function overviewFor(
+  entries: { robotId: number; subs?: string[]; held?: string[]; cap?: number }[],
+  registeredEvents?: { type: string; label: string }[],
+) {
   return {
     robots: entries.map(e => ({
       robotId: e.robotId,
@@ -46,8 +60,16 @@ function overviewFor(entries: { robotId: number; subs?: string[]; held?: string[
       heldSlots: e.held ?? [],
       cap: e.cap ?? 3,
     })),
+    registeredEvents,
   };
 }
+
+const REGISTERED_EVENTS = [
+  { type: 'league_1v1', label: '1v1 League' },
+  { type: 'koth', label: 'King of the Hill' },
+];
+
+const READINESS_KEYS = ['readiness-forfeit-risk', 'readiness-no-weapon', 'readiness-incomplete-loadout'];
 
 function readiness(input: Partial<Parameters<typeof buildRobotReadinessNotifications>[0]>) {
   return buildRobotReadinessNotifications({
@@ -263,6 +285,151 @@ describe('buildRobotReadinessNotifications', () => {
       'readiness-tuning',
       'readiness-damaged',
     ]);
+  });
+
+  // ── Rule 9: forfeit risk and incomplete loadouts (design §9.1, T19) ──
+
+  it('should warn that an unarmed robot with booked matches will forfeit them, naming the events', () => {
+    const result = readiness({
+      robots: [robot({ id: 7, name: 'Unarmed', mainWeaponId: null })],
+      subscriptionOverview: overviewFor(
+        [{ robotId: 7, subs: ['league_1v1'], held: ['league_1v1', 'koth'] }],
+        REGISTERED_EVENTS,
+      ),
+    });
+    expect(result).toHaveLength(1);
+    expect(result[0]).toEqual({
+      key: 'readiness-forfeit-risk',
+      variant: 'danger',
+      icon: '🔧',
+      message: 'Unarmed will forfeit its booked matches unless re-armed',
+      detail: 'No main weapon equipped. Booked: 1v1 League, King of the Hill',
+      action: { label: 'Equip Weapon', to: '/robots/7' },
+    });
+  });
+
+  it('should fall back to the raw event type when a booked event has no registered label', () => {
+    const result = readiness({
+      robots: [robot({ id: 7, name: 'Unarmed', mainWeaponId: null })],
+      subscriptionOverview: overviewFor([{ robotId: 7, held: ['tournament_1v1'] }], REGISTERED_EVENTS),
+    });
+    expect(result[0].detail).toBe('No main weapon equipped. Booked: tournament_1v1');
+  });
+
+  it('should count only booked robots in the forfeit-risk suffix and leave the rest on the no-weapon rung', () => {
+    const result = readiness({
+      robots: [
+        robot({ id: 1, name: 'BookedA', mainWeaponId: null }),
+        robot({ id: 2, name: 'BookedB', mainWeaponId: null }),
+        robot({ id: 3, name: 'Idle', mainWeaponId: null }),
+      ],
+      subscriptionOverview: overviewFor(
+        [
+          { robotId: 1, held: ['league_1v1'] },
+          { robotId: 2, held: ['koth'] },
+          { robotId: 3, subs: ['league_1v1'] },
+        ],
+        REGISTERED_EVENTS,
+      ),
+    });
+    expect(result.map(n => n.key)).toEqual(['readiness-forfeit-risk', 'readiness-no-weapon']);
+    expect(result[0].message).toBe('BookedA will forfeit its booked matches unless re-armed (+1 more)');
+    expect(result[1]).toMatchObject({
+      message: 'Idle has no weapon equipped',
+      detail: 'Cannot be scheduled for any match without a weapon',
+      action: { label: 'Equip Weapon', to: '/robots/3' },
+    });
+  });
+
+  it('should keep the existing no-weapon alert when the subscription overview is unavailable', () => {
+    const result = readiness({ robots: [robot({ id: 7, name: 'Unarmed', mainWeaponId: null })] });
+    expect(result.map(n => n.key)).toEqual(['readiness-no-weapon']);
+  });
+
+  it('should flag an armed robot whose loadout is incomplete as not battle ready', () => {
+    const result = readiness({
+      robots: [robot({ id: 4, name: 'Shieldless', loadoutType: 'weapon_shield', offhandWeaponId: null })],
+    });
+    expect(result).toHaveLength(1);
+    expect(result[0]).toEqual({
+      key: 'readiness-incomplete-loadout',
+      variant: 'warning',
+      icon: '⚠️',
+      message: 'Shieldless is not battle ready',
+      detail: "No shield equipped. It won't be scheduled, and booked matches are fought with a single weapon",
+      action: { label: 'Fix Loadout', to: '/robots/4' },
+    });
+  });
+
+  it('should use the dual-wield reason and count the remaining incomplete robots', () => {
+    const result = readiness({
+      robots: [
+        robot({ id: 1, name: 'OneBlade', loadoutType: 'dual_wield', offhandWeaponId: null }),
+        robot({ id: 2, name: 'NoShield', loadoutType: 'weapon_shield', offhandWeaponId: null }),
+      ],
+    });
+    expect(result[0].message).toBe('OneBlade is not battle ready (+1 more)');
+    expect(result[0].detail).toBe(
+      "No offhand weapon equipped. It won't be scheduled, and booked matches are fought with a single weapon",
+    );
+  });
+
+  it('should not flag a complete loadout', () => {
+    const result = readiness({
+      robots: [
+        robot({ id: 1, loadoutType: 'weapon_shield', offhandWeaponId: 9 }),
+        robot({ id: 2, loadoutType: 'two_handed' }),
+      ],
+    });
+    expect(result).toHaveLength(0);
+  });
+
+  it('should show one alert per readiness rung, in the order forfeit risk, no weapon, incomplete loadout', () => {
+    const result = readiness({
+      robots: [
+        robot({ id: 1, name: 'Incomplete', loadoutType: 'dual_wield', offhandWeaponId: null }),
+        robot({ id: 2, name: 'Idle', mainWeaponId: null }),
+        robot({ id: 3, name: 'Booked', mainWeaponId: null }),
+        robot({ id: 4, name: 'Incomplete2', loadoutType: 'weapon_shield', offhandWeaponId: null }),
+      ],
+      subscriptionOverview: overviewFor(
+        [
+          { robotId: 1, subs: ['league_1v1'], cap: 1 },
+          { robotId: 2, subs: ['league_1v1'], cap: 1 },
+          { robotId: 3, held: ['league_1v1'], cap: 1 },
+          { robotId: 4, subs: ['league_1v1'], cap: 1 },
+        ],
+        REGISTERED_EVENTS,
+      ),
+    });
+    expect(result.map(n => n.key)).toEqual([
+      'readiness-forfeit-risk',
+      'readiness-no-weapon',
+      'readiness-incomplete-loadout',
+    ]);
+  });
+
+  it('should flag a robot on a readiness rung exactly when the robot page reports it not ready', () => {
+    const loadoutArb = fc.constantFrom('single', 'dual_wield', 'weapon_shield', 'two_handed');
+    const weaponIdArb = fc.option(fc.integer({ min: 1, max: 1000 }), { nil: null });
+    fc.assert(
+      fc.property(loadoutArb, weaponIdArb, weaponIdArb, fc.boolean(), (loadoutType, mainWeaponId, offhandWeaponId, booked) => {
+        const subject = robot({ id: 5, name: 'Subject', loadoutType, mainWeaponId, offhandWeaponId });
+        const result = readiness({
+          robots: [subject],
+          subscriptionOverview: overviewFor(
+            [{ robotId: 5, subs: ['league_1v1'], held: booked ? ['koth'] : [], cap: 2 }],
+            REGISTERED_EVENTS,
+          ),
+        });
+        const pageReadiness = getOwnerBattleReadiness(subject);
+        const flagged = result.filter(n => READINESS_KEYS.includes(n.key));
+        expect(flagged.length).toBe(pageReadiness?.isReady === false ? 1 : 0);
+        if (flagged[0]?.key === 'readiness-incomplete-loadout') {
+          expect(flagged[0].detail?.startsWith(`${pageReadiness?.warnings[0]}.`)).toBe(true);
+        }
+      }),
+    );
   });
 
   it('should produce unique keys so the list can be rendered without index keys', () => {

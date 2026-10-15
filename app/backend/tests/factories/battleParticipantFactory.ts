@@ -27,6 +27,7 @@ export interface BattleParticipant {
   finalHP: number;
   yielded: boolean;
   destroyed: boolean;
+  forfeited: boolean;
   tagOutTimeMs: bigint | null;
   createdAt: Date;
 }
@@ -69,6 +70,7 @@ export function createParticipant(
     finalHP: 50,
     yielded: false,
     destroyed: false,
+    forfeited: false,
     tagOutTimeMs: role === 'active' || role === 'reserve' ? BigInt(45000) : null,
     createdAt: new Date(),
   };

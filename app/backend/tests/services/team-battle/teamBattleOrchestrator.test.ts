@@ -20,6 +20,7 @@ const mockPrisma = {
   scheduledMatch: {
     findMany: jest.fn(),
     update: jest.fn(),
+    updateMany: jest.fn().mockResolvedValue({ count: 1 }),
   },
   robot: {
     findMany: jest.fn(),
@@ -92,6 +93,11 @@ jest.mock('../../../src/services/battle/byeResolutionService', () => ({
   BYE_BATTLE_DURATION_SECONDS: 15,
 }));
 
+const mockResolveForfeitEvent = jest.fn();
+jest.mock('../../../src/services/battle/forfeitResolutionService', () => ({
+  __esModule: true,
+  resolveForfeitEvent: (...args: unknown[]) => mockResolveForfeitEvent(...args),
+}));
 jest.mock('../../../src/services/team-battle/teamBattleRewardService', () => ({
   __esModule: true,
   calculateTeamBattleReward: (...args: unknown[]) => mockCalculateTeamBattleReward(...args),
@@ -195,18 +201,23 @@ import {
   rebalanceTeamBattleLeagues,
 } from '../../../src/services/team-battle/teamBattleAdapter';
 import { TeamBattleResult } from '../../../src/types/teamBattleLogTypes';
+import { prepareRobotForCombat } from '../../../src/utils/robotCalculations';
+import { getTuningBonusesBatch } from '../../../src/services/tuning-pool';
+import logger from '../../../src/config/logger';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function makeRobotWithWeapons(id: number, elo: number = 1000) {
+  // Armed by default: a robot without a main weapon forfeits its team at battle time.
   return {
     id,
     userId: 100,
     name: `Robot ${id}`,
     elo,
-    mainWeapon: null,
+    loadoutType: 'single',
+    mainWeapon: { id: id * 1000, weapon: { id: 1, name: 'Test Blade', handsRequired: 'one' } },
     offhandWeapon: null,
-    mainWeaponId: null,
+    mainWeaponId: id * 1000,
     offhandWeaponId: null,
     currentHP: 100,
     maxHP: 100,
@@ -332,6 +343,12 @@ function setupDefaultMocks(teamSize: 2 | 3 = 2) {
     creditsPaid: 3000,
     alreadyResolved: false,
   });
+  mockResolveForfeitEvent.mockResolvedValue({
+    battleId: 77,
+    creditsPaid: 3000,
+    outcome: 'forfeit_win',
+    alreadyResolved: false,
+  });
   mockLogBattleAuditEvent.mockResolvedValue(undefined);
   mockAwardCreditsToUser.mockResolvedValue(undefined);
   mockAwardCreditsWithLedger.mockResolvedValue(undefined);
@@ -440,6 +457,32 @@ describe('teamBattleOrchestrator', () => {
 
       // Verify audit logs emitted per robot (2 robots per team × 2 teams = 4)
       expect(mockLogBattleAuditEvent).toHaveBeenCalledTimes(4);
+    });
+
+    // #517: each team member is prepared exactly once, with its own tuning, before simulation.
+    it('should prepare every robot exactly once with its tuning before simulating', async () => {
+      const match = makeScheduledMatch(1, 2);
+      mockUnifiedScheduledMatches([match]);
+      (getTuningBonusesBatch as jest.Mock).mockResolvedValueOnce(new Map([[21, { shieldCapacity: 3 }]]));
+      mockTransaction.mockImplementation(async (cb: (...args: unknown[]) => unknown) => cb({
+        $executeRaw: jest.fn().mockResolvedValue(0),
+        cycleMetadata: { findUnique: jest.fn().mockResolvedValue({ totalCycles: 41, featureFlags: {} }) },
+        season: { findFirst: jest.fn().mockResolvedValue(null) },
+        battle: { create: jest.fn().mockResolvedValue({ id: 99 }), update: jest.fn() },
+        battleParticipant: { createMany: jest.fn(), updateMany: jest.fn() },
+        robot: { update: jest.fn() },
+        scheduledMatch: { update: jest.fn() },
+      }));
+
+      await executeScheduledTeamBattles(2);
+
+      const prepareMock = prepareRobotForCombat as jest.Mock;
+      const preparedIds = prepareMock.mock.calls.map(([robot]) => (robot as { id: number }).id).sort();
+      expect(preparedIds).toEqual([10, 11, 20, 21]);
+      expect(prepareMock).toHaveBeenCalledWith(expect.objectContaining({ id: 21 }), { shieldCapacity: 3 });
+      expect(prepareMock).toHaveBeenCalledWith(expect.objectContaining({ id: 10 }), {});
+      expect(Math.max(...prepareMock.mock.invocationCallOrder))
+        .toBeLessThan(mockSimulateTeamBattle.mock.invocationCallOrder[0]);
     });
 
     it('should set battleType to league_2v2 for 2v2 matches', async () => {
@@ -633,13 +676,14 @@ describe('teamBattleOrchestrator', () => {
       expect(result.results[0].error).toContain('Simulation failed');
       expect(result.results[1].status).toBe('completed');
 
-      // Verify the failed match was marked as cancelled in DB
-      expect(mockPrisma.scheduledMatch.update).toHaveBeenCalledWith({
-        where: { id: 1 },
-        data: expect.objectContaining({
+      // Verify the failed match was cancelled through the shared failure
+      // policy's conditional write (only a still-queued row is cancelled)
+      expect(mockPrisma.scheduledMatch.updateMany).toHaveBeenCalledWith({
+        where: { id: 1, status: { in: ['scheduled', 'error'] } },
+        data: {
           status: 'cancelled',
           cancelReason: expect.stringContaining('Simulation failed'),
-        }),
+        },
       });
     });
 
@@ -875,7 +919,7 @@ describe('teamBattleOrchestrator', () => {
     // Spec #49 R12.1: a bye is never simulated. This assertion was inverted —
     // it previously required `toHaveBeenCalledTimes(1)` with the comment
     // "Simulation should still be called". That simulation ran against
-    // weaponless Bye_Placeholders which, via the Fists fallback and the
+    // weaponless Bye_Placeholders which, via a weaponless fallback and the
     // `!weaponLike` range bypass, dealt real damage that was then persisted to
     // the real team. A walkover was billing players for repairs.
     it('should never simulate combat for a bye match', async () => {
@@ -896,6 +940,72 @@ describe('teamBattleOrchestrator', () => {
       expect(mockResolveByeEvent).toHaveBeenCalledTimes(1);
       const call = mockResolveByeEvent.mock.calls[0][0] as { mode: string };
       expect(call.mode).toBe('league_2v2');
+    });
+  });
+
+  describe('battle-time readiness (rules 1, 2, 6)', () => {
+    function robotsWith(overrides: Record<number, Record<string, unknown>>) {
+      mockPrisma.robot.findMany.mockImplementation(({ where }: any) => {
+        const ids: number[] = where.id.in;
+        return Promise.resolve(ids.map(id => ({ ...makeRobotWithWeapons(id), ...(overrides[id] ?? {}) })));
+      });
+    }
+
+    it('should forfeit the whole team when any member has no main weapon', async () => {
+      mockUnifiedScheduledMatches([makeScheduledMatch(1, 2)]);
+      robotsWith({ 11: { mainWeapon: null, mainWeaponId: null } });
+
+      const result = await executeScheduledTeamBattles(2);
+
+      expect(mockSimulateTeamBattle).not.toHaveBeenCalled();
+      expect(mockTransaction).not.toHaveBeenCalled();
+      expect(result.matchesForfeited).toBe(1);
+      expect(result.matchesCompleted).toBe(0);
+      expect(result.results[0]).toMatchObject({ matchId: 1, status: 'forfeit', battleId: 77 });
+      expect(mockResolveForfeitEvent).toHaveBeenCalledTimes(1);
+      const input = mockResolveForfeitEvent.mock.calls[0][0];
+      expect(input).toMatchObject({
+        mode: 'league_2v2',
+        context: { mode: 'league_2v2', tier: 'bronze' },
+        claim: { source: 'scheduled_match', scheduledMatchId: 1 },
+        standingMode: 'league_2v2',
+        battle: { battleType: 'league_2v2', winnerId: 2, winningSide: 2 },
+      });
+      expect(input.sides[0]).toMatchObject({ side: 1, forfeited: true, standingEntity: { entityType: 'team', entityId: 1 } });
+      expect(input.sides[1]).toMatchObject({ side: 2, forfeited: false, standingEntity: { entityType: 'team', entityId: 2 } });
+      expect(input.sides[0].robots.map((r: { id: number }) => r.id)).toEqual([10, 11]);
+    });
+
+    it('should resolve a double forfeit as a draw', async () => {
+      mockUnifiedScheduledMatches([makeScheduledMatch(1, 2)]);
+      robotsWith({ 10: { mainWeapon: null }, 21: { mainWeapon: null } });
+      mockResolveForfeitEvent.mockResolvedValue({ battleId: 78, creditsPaid: 0, outcome: 'double_forfeit', alreadyResolved: false });
+
+      await executeScheduledTeamBattles(2);
+
+      const input = mockResolveForfeitEvent.mock.calls[0][0];
+      expect(input.sides.map((s: { forfeited: boolean }) => s.forfeited)).toEqual([true, true]);
+      expect(input.battle).toMatchObject({ winnerId: null, winningSide: null });
+      expect(mockCalculateTeamBattleELOChanges).toHaveBeenCalledWith(2000, 2000, false, true);
+    });
+
+    it('should fight an incomplete loadout as single and log one warning', async () => {
+      mockUnifiedScheduledMatches([makeScheduledMatch(1, 2)]);
+      robotsWith({ 10: { loadoutType: 'dual_wield' } });
+      mockTransaction.mockImplementation(async (cb: (...args: unknown[]) => unknown) => cb({
+        battle: { create: jest.fn().mockResolvedValue({ id: 99 }), update: jest.fn() },
+        battleParticipant: { createMany: jest.fn(), updateMany: jest.fn() },
+        scheduledMatch: { update: jest.fn() },
+      }));
+
+      await executeScheduledTeamBattles(2);
+
+      expect(mockResolveForfeitEvent).not.toHaveBeenCalled();
+      const team1 = mockSimulateTeamBattle.mock.calls[0][0] as Array<{ id: number; loadoutType: string }>;
+      expect(team1.find(r => r.id === 10)!.loadoutType).toBe('single');
+      const warns = (logger.warn as jest.Mock).mock.calls.filter(c => c[0] === '[Battle] Loadout fallback');
+      expect(warns).toHaveLength(1);
+      expect(warns[0][1]).toMatchObject({ matchId: 1, robotId: 10, storedLoadout: 'dual_wield', battleLoadout: 'single' });
     });
   });
 });

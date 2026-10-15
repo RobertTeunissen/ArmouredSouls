@@ -46,6 +46,8 @@ export interface KothPlacement {
   zoneTime: number;
   kills: number;
   destroyed: boolean;
+  /** True when the robot forfeited at battle time (no main weapon) and took a bottom placement. */
+  forfeited?: boolean;
 }
 
 /** KotH metadata stored in `battleLog.kothData`. */

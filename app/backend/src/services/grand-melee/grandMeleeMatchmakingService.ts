@@ -40,7 +40,7 @@ export interface GrandMeleeMatchGroup {
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const MIN_GROUP_SIZE = 8;
+export const MIN_GROUP_SIZE = 8;
 const IDEAL_GROUP_SIZE = 20;
 const LOG_PREFIX = '[Grand Melee Matchmaking]';
 

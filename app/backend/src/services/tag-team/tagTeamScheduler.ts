@@ -8,10 +8,15 @@ import { getTuningBonusesBatch } from '../tuning-pool';
 import { TagTeamWithRobots, TagTeamBattleResult } from './tagTeamTypes';
 import { simulateTagTeamBattle } from './tagTeamSimulation';
 import { createTagTeamBattleRecord } from './tagTeamBattleRecord';
-import { updateTagTeamBattleResults, checkTeamReadinessForBattle } from './tagTeamResultUpdater';
-import { calculateTagTeamELOChanges } from './tagTeamRewards';
+import { updateTagTeamBattleResults } from './tagTeamResultUpdater';
+import { calculateTagTeamELOChanges, calculateTagTeamLeaguePoints } from './tagTeamRewards';
 import { resolveByeEvent, BYE_BATTLE_DURATION_SECONDS } from '../battle/byeResolutionService';
+import { resolveForfeitEvent } from '../battle/forfeitResolutionService';
+import { applyLoadoutFallbacks, evaluateMatchEntry, type MatchEntryOutcome } from '../battle/combatReadiness';
+import { BYE_MODE_SPECS } from '../../utils/byeRewards';
 import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
+import { handleMatchFailure } from '../battle/matchFailurePolicy';
+import { BattleError, BattleErrorCode } from '../../errors/battleErrors';
 
 // ─── Scheduled Match Shape (mapped from unified table) ───────────────────────
 
@@ -158,6 +163,133 @@ async function resolveTagTeamBye(
   };
 }
 
+/**
+ * Resolve a tag team battle-time forfeit through the Forfeit_Resolution_Writer.
+ *
+ * Either robot (active or reserve) without a main weapon forfeits its team.
+ * Nothing is simulated: the ready team wins with the bye-level reward and the
+ * bye LP, the forfeiting team takes a normal loss with 0 credits, and both
+ * teams unready is a draw with no credits.
+ */
+async function resolveTagTeamForfeit(
+  match: ScheduledTagTeamMatchData,
+  team1: TagTeamWithRobots,
+  team2: TagTeamWithRobots,
+  outcome: Exclude<MatchEntryOutcome, { kind: 'fight' }>,
+): Promise<TagTeamBattleResult> {
+  const isDraw = outcome.kind === 'double_forfeit';
+  const side1Forfeits = isDraw || outcome.forfeitingSides[0] === 1;
+  const side2Forfeits = isDraw || outcome.forfeitingSides[0] === 2;
+
+  const team1Robots = [team1.activeRobot, team1.reserveRobot];
+  const team2Robots = [team2.activeRobot, team2.reserveRobot];
+  const combined1 = team1.activeRobot.elo + team1.reserveRobot.elo;
+  const combined2 = team2.activeRobot.elo + team2.reserveRobot.elo;
+  const eloChanges = calculateTagTeamELOChanges(combined1, combined2, !isDraw && side2Forfeits, isDraw);
+  const newEloByRobotId: Record<number, number> = {};
+  for (const r of team1Robots) newEloByRobotId[r.id] = r.elo + eloChanges.team1Change;
+  for (const r of team2Robots) newEloByRobotId[r.id] = r.elo + eloChanges.team2Change;
+
+  const readySide: 1 | 2 | null = isDraw ? null : side2Forfeits ? 1 : 2;
+  const winnerTeamId = readySide === 1 ? team1.id : readySide === 2 ? team2.id : null;
+  const roles = ['active', 'reserve'];
+  const toParticipants = (robots: RobotWithWeapons[]) => robots.map((r, slot) => ({
+    id: r.id,
+    name: r.name,
+    userId: r.userId,
+    currentHP: r.currentHP,
+    maxHP: r.maxHP,
+    elo: r.elo,
+    role: roles[slot],
+  }));
+  const forfeiterNames = [side1Forfeits ? team1.teamName : null, side2Forfeits ? team2.teamName : null]
+    .filter((n): n is string => n !== null)
+    .join(' and ');
+
+  const resolution = await resolveForfeitEvent({
+    mode: 'tag_team',
+    context: { mode: 'tag_team', tier: match.teamBattleLeague },
+    claim: { source: 'scheduled_match', scheduledMatchId: match.id },
+    sides: [
+      {
+        side: 1,
+        forfeited: side1Forfeits,
+        stableUserId: team1.stableId,
+        standingEntity: { entityType: 'team', entityId: team1.id },
+        robots: toParticipants(team1Robots),
+      },
+      {
+        side: 2,
+        forfeited: side2Forfeits,
+        stableUserId: team2.stableId,
+        standingEntity: { entityType: 'team', entityId: team2.id },
+        robots: toParticipants(team2Robots),
+      },
+    ],
+    newEloByRobotId,
+    eloChangeBySide: { 1: eloChanges.team1Change, 2: eloChanges.team2Change },
+    lp: {
+      win: BYE_MODE_SPECS.tag_team.lpDelta,
+      loss: calculateTagTeamLeaguePoints(false, false),
+      draw: calculateTagTeamLeaguePoints(false, true),
+    },
+    standingMode: 'tag_team',
+    battle: {
+      battleType: 'tag_team',
+      leagueType: match.teamBattleLeague,
+      leagueInstanceId: match.teamBattleLeagueId,
+      winnerId: winnerTeamId,
+      winningSide: readySide,
+      message: `${forfeiterNames || 'Team'} forfeited: a robot had no main weapon equipped`,
+    },
+    cycleNumber: await getCurrentCycleNumber(),
+  });
+
+  logger.info(
+    `[TagTeamBattle] Forfeit: match ${match.id} | ${team1.teamName} vs ${team2.teamName} | ` +
+    `${isDraw ? 'double forfeit (draw)' : `Team ${winnerTeamId} wins by forfeit`} | ₡${resolution.creditsPaid}` +
+    `${resolution.alreadyResolved ? ' | already resolved' : ''}`,
+  );
+
+  if (resolution.battleId === null) {
+    throw new BattleError(
+      BattleErrorCode.INVALID_BATTLE_STATE,
+      `Forfeit resolution produced no battle for tag team match ${match.id}`,
+      500,
+      { matchId: match.id },
+    );
+  }
+
+  return {
+    battleId: resolution.battleId,
+    winnerId: winnerTeamId,
+    isDraw,
+    isForfeit: true,
+    durationSeconds: BYE_BATTLE_DURATION_SECONDS,
+    // Nothing was simulated, so every combat figure is zero and HP is untouched.
+    team1ActiveFinalHP: team1.activeRobot.currentHP,
+    team1ReserveFinalHP: team1.reserveRobot.currentHP,
+    team2ActiveFinalHP: team2.activeRobot.currentHP,
+    team2ReserveFinalHP: team2.reserveRobot.currentHP,
+    team1ReserveUsed: false,
+    team2ReserveUsed: false,
+    team1ActiveDamageDealt: 0,
+    team1ReserveDamageDealt: 0,
+    team2ActiveDamageDealt: 0,
+    team2ReserveDamageDealt: 0,
+    team1ActiveSurvivalTime: 0,
+    team1ReserveSurvivalTime: 0,
+    team2ActiveSurvivalTime: 0,
+    team2ReserveSurvivalTime: 0,
+    battleLog: [],
+    phases: [],
+    team1Name: team1.teamName,
+    team2Name: team2.teamName,
+    team1ReserveName: team1.reserveRobot.name,
+    team2ReserveName: team2.reserveRobot.name,
+  };
+}
+
 export async function executeTagTeamBattle(match: ScheduledTagTeamMatchData): Promise<TagTeamBattleResult> {
   // R1.8: Reject payloads with team battle league types
   if (match.matchMode !== 'tag_team') {
@@ -287,6 +419,28 @@ export async function executeTagTeamBattle(match: ScheduledTagTeamMatchData): Pr
     );
   }
 
+  // Battle-time readiness (rule 1): either robot without a main weapon forfeits
+  // its team (rule 2); an incomplete loadout fights as single (rule 6).
+  const entry = evaluateMatchEntry(
+    [team1.activeRobot, team1.reserveRobot],
+    [team2.activeRobot, team2.reserveRobot],
+  );
+  if (entry.kind !== 'fight') {
+    return resolveTagTeamForfeit(match, team1, team2, entry);
+  }
+  // In memory only, and before prepareRobotForCombat reads loadoutType.
+  const allLoadedRobots = [team1.activeRobot, team1.reserveRobot, team2.activeRobot, team2.reserveRobot];
+  const loadoutFallbackRobotIds = applyLoadoutFallbacks(allLoadedRobots, entry.decisions);
+  for (const robotId of loadoutFallbackRobotIds) {
+    const decision = entry.decisions.find(d => d.robotId === robotId);
+    logger.warn('[Battle] Loadout fallback', {
+      matchId: match.id,
+      robotId,
+      storedLoadout: decision?.loadoutFallback?.storedLoadout,
+      battleLoadout: 'single',
+    });
+  }
+
   // Start battle with active robots at full HP
   // Fetch tuning bonuses in a single batch query and prepare all robots for combat
   const allRobotIds = [team1.activeRobot.id, team1.reserveRobot.id, team2.activeRobot.id, team2.reserveRobot.id];
@@ -298,6 +452,9 @@ export async function executeTagTeamBattle(match: ScheduledTagTeamMatchData): Pr
 
   // Simulate the tag team battle
   const result = await simulateTagTeamBattle(team1 as TagTeamWithRobots, team2 as TagTeamWithRobots);
+  // The result updater reloads the robots with their stored loadout, so it
+  // needs to know which ones fought as single (no dual-wield win for them).
+  result.loadoutFallbackRobotIds = loadoutFallbackRobotIds;
 
   // The bye draw-override that used to sit here is gone (Spec #49 R12.7). It
   // existed only to correct a simulation that should not have run for a bye;
@@ -317,13 +474,24 @@ export async function executeTagTeamBattle(match: ScheduledTagTeamMatchData): Pr
   const battle = await createTagTeamBattleRecord(match, team1 as TagTeamWithRobots, team2 as TagTeamWithRobots, result);
   result.battleId = battle.id;
 
-  // Update match status in unified table
-  await prisma.scheduledMatch.update({
-    where: { id: match.id },
-    data: {
-      status: 'completed',
-    },
+  // Claim the match before any reward is paid (payment happens later in
+  // updateTagTeamBattleResults). Once the match is terminal, a crash or throw
+  // during payment can never re-simulate and pay a second time.
+  const { count } = await prisma.scheduledMatch.updateMany({
+    where: { id: match.id, status: 'scheduled' },
+    data: { status: 'completed', battleId: battle.id },
   });
+  if (count !== 1) {
+    // Another run already resolved this match. Drop our duplicate row
+    // (participants and summary cascade) before any reward is paid.
+    await prisma.battle.delete({ where: { id: battle.id } }).catch(() => {});
+    throw new BattleError(
+      BattleErrorCode.BATTLE_ALREADY_COMPLETED,
+      `Tag team match ${match.id} already resolved`,
+      409,
+      { matchId: match.id },
+    );
+  }
 
   logger.info(
     `[TagTeamBattle] Completed: ${team1.teamName} vs ${team2.teamName} ` +
@@ -336,10 +504,10 @@ export async function executeTagTeamBattle(match: ScheduledTagTeamMatchData): Pr
 /**
  * Execute all scheduled tag team battles
  * Requirements 11.1, 11.2, 11.3, 11.4: Multi-match scheduling and execution
- * 
- * This function processes all scheduled tag team matches, checking robot readiness
- * before each match to handle cumulative damage from earlier matches (including 1v1).
- * 
+ *
+ * Readiness is checked inside `executeTagTeamBattle` on the robots loaded for
+ * the battle: a team with an unarmed robot forfeits (counted in `forfeits`).
+ *
  * @param _scheduledFor - Optional date filter for matches to execute
  * @returns Summary of executed battles
  */
@@ -348,7 +516,8 @@ export async function executeScheduledTagTeamBattles(_scheduledFor?: Date): Prom
   wins: number;
   draws: number;
   losses: number;
-  skippedDueToUnreadyRobots: number;
+  /** Matches resolved as a battle-time forfeit (single or double); not counted in totalBattles. */
+  forfeits: number;
 }> {
   // Query scheduled tag team matches from unified table (Spec #40)
   const unifiedMatches = await prisma.scheduledMatch.findMany({
@@ -401,40 +570,22 @@ export async function executeScheduledTagTeamBattles(_scheduledFor?: Date): Prom
   let wins = 0;
   let draws = 0;
   let losses = 0;
-  let skippedDueToUnreadyRobots = 0;
+  let forfeits = 0;
 
   for (const match of scheduledMatches) {
-    // A tag-team bye has no second team participant. Keep this outside `try`
-    // because the catch must preserve a claimed bye rather than cancelling it.
+    // A tag-team bye has no second team participant.
     const isByeMatch = match.team2Id === null;
 
     try {
-      // Skip readiness check for bye-team matches (bye-teams are always ready)
-      if (!isByeMatch) {
-        // Requirement 11.3: Dynamic eligibility checking
-        // Check if both teams are ready (may have taken damage in earlier matches)
-        const team1Ready = await checkTeamReadinessForBattle(match.team1);
-        const team2Ready = match.team2 ? await checkTeamReadinessForBattle(match.team2) : true; // Bye matches are always ready
+      // Execute the battle (readiness is checked on the loaded robots inside)
+      const result = await executeTagTeamBattle(match);
 
-        if (!team1Ready || !team2Ready) {
-          logger.info(
-            `[TagTeamBattles] Skipping match ${match.id}: ` +
-            `Team ${match.team1Id} ready: ${team1Ready}, Team ${match.team2Id} ready: ${team2Ready}`
-          );
-          
-          // Mark match as cancelled in unified scheduling table
-          await prisma.scheduledMatch.update({
-            where: { id: match.id },
-            data: { status: 'cancelled', cancelReason: 'Team robots not battle-ready' },
-          });
-          
-          skippedDueToUnreadyRobots++;
-          continue;
-        }
+      // A forfeit is fully persisted and paid by resolveForfeitEvent, like a bye.
+      if (result.isForfeit) {
+        forfeits++;
+        continue;
       }
 
-      // Execute the battle
-      const result = await executeTagTeamBattle(match);
       totalBattles++;
 
       if (result.isDraw) {
@@ -453,19 +604,15 @@ export async function executeScheduledTagTeamBattles(_scheduledFor?: Date): Prom
       }
 
     } catch (error) {
-      logger.error(`[TagTeamBattles] Error executing match ${match.id}:`, error);
-
-      if (isByeMatch) {
-        // resolveByeEvent claims before payment. Preserve that completed claim
-        // on a required-pair failure so reconciliation can find the linked
-        // battle without participants and an operator can safely remediate it.
-        // Cancelling it would hide an unpaid reward and prevent recovery.
-        continue;
-      }
-
-      await prisma.scheduledMatch.update({
-        where: { id: match.id },
-        data: { status: 'cancelled', cancelReason: error instanceof Error ? error.message : String(error) },
+      // Rule 7, byes included: cancel a still-scheduled match, so a bye that
+      // threw before its claim never stays scheduled. A match already claimed
+      // `completed` (a bye or fight whose payment failed after the claim) is a
+      // logged no-op, so reconciliation still finds the linked battle.
+      await handleMatchFailure({
+        mode: 'tag_team',
+        ref: { source: 'scheduled_match', id: match.id },
+        error,
+        participants: [match.team1Id, match.team2Id].filter((id): id is number => id !== null),
       });
     }
   }
@@ -473,7 +620,7 @@ export async function executeScheduledTagTeamBattles(_scheduledFor?: Date): Prom
   logger.info(
     `[TagTeamBattles] Execution complete: ${totalBattles} battles, ` +
     `${wins} wins, ${draws} draws, ${losses} losses, ` +
-    `${skippedDueToUnreadyRobots} skipped due to unready robots`
+    `${forfeits} forfeits`
   );
 
   return {
@@ -481,6 +628,6 @@ export async function executeScheduledTagTeamBattles(_scheduledFor?: Date): Prom
     wins,
     draws,
     losses,
-    skippedDueToUnreadyRobots,
+    forfeits,
   };
 }

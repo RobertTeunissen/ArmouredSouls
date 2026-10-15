@@ -251,6 +251,15 @@ function buildMockDbRobot(overrides: Record<string, unknown> = {}) {
   };
 }
 
+/**
+ * A complete dual_wield loadout: a second zero-bonus Practice Sword in the
+ * offhand. Without it the robot would fight as `single` (rule 6).
+ */
+function withOffhand(): Record<string, unknown> {
+  const main = buildMockDbRobot().mainWeapon;
+  return { offhandWeaponId: 101, offhandWeapon: { ...main, id: 101 } };
+}
+
 /** Build a mock CombatResult */
 function buildMockCombatResult() {
   return {
@@ -411,6 +420,31 @@ describe('Practice Arena Service', () => {
       expect(robot.offhandWeapon).toBeDefined();
       // Dual wield offhand should NOT be a shield
       expect(robot.offhandWeapon!.weapon.weaponType).not.toBe('shield');
+
+      // #517: sparring partners are combat-prepared with the loadout modifier.
+      // AverageBot attributes are 5 and this catalog carries no attribute bonuses.
+      expect(Number(robot.attackSpeed)).toBe(6.5); // 5 × 1.30
+      expect(Number(robot.weaponControl)).toBe(5.75); // 5 × 1.15
+      expect(Number(robot.penetration)).toBe(4); // 5 × 0.80
+      expect(Number(robot.combatPower)).toBe(4.5); // 5 × 0.90
+    });
+
+    it('should apply the Weapon + Shield modifier to sparring partner shields (#517)', async () => {
+      const config: SparringPartnerConfig = {
+        botTier: 'ExpertBot',
+        loadoutType: 'weapon_shield',
+        rangeBand: 'melee',
+        stance: 'balanced',
+        yieldThreshold: 20,
+      };
+
+      const robot = await buildSparringPartner(config, weapons);
+
+      // ExpertBot attributes are 10: shield capacity 10 × 1.20 = 12 → maxShield 48
+      expect(Number(robot.shieldCapacity)).toBe(12);
+      expect(robot.maxShield).toBe(48);
+      expect(robot.currentShield).toBe(48);
+      expect(Number(robot.attackSpeed)).toBe(8.5); // 10 × 0.85
     });
 
     it('should not assign an offhand weapon for single loadout', async () => {
@@ -520,7 +554,7 @@ describe('Practice Arena Service', () => {
     });
 
     it('should apply loadout, stance, and yieldThreshold overrides', async () => {
-      const dbRobot = buildMockDbRobot();
+      const dbRobot = buildMockDbRobot(withOffhand());
       mockVerifyRobotOwnership.mockResolvedValue(undefined);
       mockPrisma.robot.findUnique.mockResolvedValue(dbRobot);
 
@@ -533,6 +567,26 @@ describe('Practice Arena Service', () => {
       expect(result.loadoutType).toBe('dual_wield');
       expect(result.stance).toBe('offensive');
       expect(result.yieldThreshold).toBe(40);
+    });
+
+    // #517: the owned-robot path runs the real combat preparation, so the
+    // loadout modifier must be applied on top of weapons and saved tuning.
+    it('should apply the loadout modifier after tuning when preparing an owned robot', async () => {
+      const dbRobot = buildMockDbRobot(withOffhand());
+      mockVerifyRobotOwnership.mockResolvedValue(undefined);
+      mockPrisma.robot.findUnique.mockResolvedValue(dbRobot);
+      mockGetTuningBonuses.mockResolvedValueOnce({ attackSpeed: 1, shieldCapacity: 1 });
+
+      const result = await buildOwnedRobot(1, 42, { loadoutType: 'dual_wield' });
+
+      // attackSpeed: (5 + 0 weapon + 1 tuning) × 1.30 = 7.8
+      expect(Number(result.attackSpeed)).toBe(7.8);
+      // combatPower: 5 × 0.90 = 4.5; penetration: 5 × 0.80 = 4
+      expect(Number(result.combatPower)).toBe(4.5);
+      expect(Number(result.penetration)).toBe(4);
+      // shieldCapacity has no Dual Wield modifier: (5 + 1) × 4 = 24
+      expect(result.maxShield).toBe(24);
+      expect(result.currentHP).toBe(result.maxHP);
     });
 
     it('should swap main weapon when mainWeaponId override is provided', async () => {
@@ -643,6 +697,52 @@ describe('Practice Arena Service', () => {
 
       // Verify metrics were recorded
       expect(mockRecordBattle).toHaveBeenCalledWith(1);
+    });
+  });
+
+  // =========================================================================
+  // T27: the practice arena mirrors the battle-time readiness rules
+  // =========================================================================
+  describe('battle-time readiness (T27)', () => {
+    it('should simulate a dual_wield robot without an offhand as single and persist nothing', async () => {
+      const dbRobot = buildMockDbRobot({ loadoutType: 'dual_wield' });
+      mockVerifyRobotOwnership.mockResolvedValue(undefined);
+      mockPrisma.robot.findUnique.mockResolvedValue(dbRobot);
+      mockPrisma.weapon.findMany.mockResolvedValue(buildWeaponCatalog());
+      mockSimulateBattle.mockReturnValue(buildMockCombatResult());
+      mockConvertSimulatorEvents.mockReturnValue([]);
+
+      await executePracticeBattle(1, {
+        robot1: { type: 'owned', robotId: 42 },
+        robot2: {
+          type: 'sparring',
+          config: { botTier: 'WimpBot', loadoutType: 'single', rangeBand: 'melee', stance: 'balanced', yieldThreshold: 20 },
+        },
+      });
+
+      expect(mockSimulateBattle).toHaveBeenCalledTimes(1);
+      expect(mockSimulateBattle).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 42, loadoutType: 'single', offhandWeapon: null }),
+        expect.anything(),
+      );
+      // The stored robot is never touched: the fallback is in memory only.
+      expect(dbRobot.loadoutType).toBe('dual_wield');
+      expect(mockPrisma.robot.update).not.toHaveBeenCalled();
+      expect(mockPrisma.robot.updateMany).not.toHaveBeenCalled();
+      expect(mockPrisma.battle.create).not.toHaveBeenCalled();
+      expect(mockPrisma.battleParticipant.create).not.toHaveBeenCalled();
+    });
+
+    it('should still refuse a robot without a main weapon with the 400', async () => {
+      mockVerifyRobotOwnership.mockResolvedValue(undefined);
+      mockPrisma.robot.findUnique.mockResolvedValue(
+        buildMockDbRobot({ loadoutType: 'dual_wield', mainWeapon: null, mainWeaponId: null }),
+      );
+
+      await expect(buildOwnedRobot(1, 42)).rejects.toMatchObject({
+        statusCode: 400,
+        message: 'Robot requires a main weapon to participate',
+      });
     });
   });
 

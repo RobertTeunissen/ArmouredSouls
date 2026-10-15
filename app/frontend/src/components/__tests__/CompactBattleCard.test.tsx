@@ -341,3 +341,72 @@ describe('CompactBattleCard responsive and accessible layout', () => {
     unmount();
   });
 });
+
+// T22 — forfeits in battle history (design §9.3). The label keys on
+// `forfeitedRobotIds`, so it covers two-sided forfeits and a forfeiter's last
+// place in a fought KotH / Grand Melee battle alike.
+describe('CompactBattleCard forfeit labels', () => {
+  it('should tell the forfeiter it forfeited for having no main weapon', () => {
+    const battle = makeLeagueBattle({ winnerId: 20, isForfeit: true, forfeitedRobotIds: [10] });
+    renderWithRouter(
+      <CompactBattleCard
+        battle={battle}
+        myRobot={battle.robot1}
+        opponent={battle.robot2}
+        {...defaultProps}
+        outcome="loss"
+        reward={0}
+      />,
+    );
+    expect(screen.getAllByText('Forfeit — no main weapon').length).toBeGreaterThan(0);
+    expect(screen.queryByText(/won by forfeit/)).toBeNull();
+  });
+
+  it('should tell the winner the opponent forfeited', () => {
+    const battle = makeLeagueBattle({ isForfeit: true, forfeitedRobotIds: [20] });
+    renderWithRouter(
+      <CompactBattleCard
+        battle={battle}
+        myRobot={battle.robot1}
+        opponent={battle.robot2}
+        {...defaultProps}
+      />,
+    );
+    expect(screen.getAllByText('SteelFang — won by forfeit').length).toBeGreaterThan(0);
+    expect(screen.queryByText('Forfeit — no main weapon')).toBeNull();
+  });
+
+  it('should label a forfeiter placed last in a fought KotH battle', () => {
+    const battle = makeLeagueBattle({
+      battleType: 'koth',
+      winnerId: 30,
+      kothPlacement: 6,
+      kothParticipantCount: 6,
+      isForfeit: false,
+      forfeitedRobotIds: [10],
+    });
+    renderWithRouter(
+      <CompactBattleCard
+        battle={battle}
+        myRobot={battle.robot1}
+        opponent={null}
+        {...defaultProps}
+        outcome="loss"
+      />,
+    );
+    expect(screen.getAllByText('Forfeit — no main weapon').length).toBeGreaterThan(0);
+  });
+
+  it('should show no forfeit label on a fought battle', () => {
+    const battle = makeLeagueBattle({ isForfeit: false, forfeitedRobotIds: [] });
+    renderWithRouter(
+      <CompactBattleCard
+        battle={battle}
+        myRobot={battle.robot1}
+        opponent={battle.robot2}
+        {...defaultProps}
+      />,
+    );
+    expect(screen.queryByText(/forfeit/i)).toBeNull();
+  });
+});

@@ -1,7 +1,6 @@
 // Analytics domain barrel file — re-exports the public API
 
 export {
-  checkBattleReadiness,
   checkSchedulingReadiness,
   runMatchmaking,
   runMatchmakingForTier,

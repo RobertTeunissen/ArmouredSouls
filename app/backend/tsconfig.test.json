@@ -19,6 +19,6 @@
     "incremental": false
   },
   // The Automaton catalogue scripts run from source with tsx, so they are checked here.
-  "include": ["src/**/*", "tests/**/*", "scripts/automatonCatalogueSync.ts", "scripts/automatonCatalogueUnpack.ts"],
+  "include": ["src/**/*", "tests/**/*", "scripts/automatonCatalogueSync.ts", "scripts/automatonCatalogueUnpack.ts", "scripts/loadoutParityBaseline.ts", "scripts/combatBaselineValidation.ts"],
   "exclude": ["node_modules", "dist"]
 }

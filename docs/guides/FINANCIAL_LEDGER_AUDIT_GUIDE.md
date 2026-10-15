@@ -197,6 +197,18 @@ A `Bye_Event` is detected before the absent side is loaded or fabricated and bef
 
 A byed robot can still require `Automatic_Repair` before the scheduled event if it has pre-existing damage. That repair is resolved by the normal event schedule scope and creates its own per-robot `repair_cost` pair and `robot_repair` domain record. It is not part of, or attributed to, the bye reward. This distinction prevents a bye reward from being mistaken for a repair charge while ensuring a scheduled robot is not exempted from normal pre-battle repair.
 
+### Forfeit_Event
+
+A `Forfeit_Event` happens when a robot (1v1) or any robot of a team (2v2/3v3, tag team, team tournaments) has no main weapon when the battle starts. The battle-time check (`services/battle/combatReadiness.ts`) runs before any simulation, and `resolveForfeitEvent` (`services/battle/forfeitResolutionService.ts`) is the one writer for the seven two-sided modes. It claims the queued match first (`walkoverClaim.ts`, shared with byes), then pays.
+
+- **Identity:** `buildForfeitBattleIncomeEventId(sourceMatchId, stableId, mode)` = `forfeit:{matchId}:{stableId}:{mode}:battle_income`. The match id is the `scheduled_matches_v2` id, or the `tournament_matches` id for tournaments; the mode component keeps the two id spaces apart.
+- **Amount:** the ready side gets the bye-level reward (`resolveByeReward`, the same mode-scaled participation floor as a `Bye_Event`) as one `battle_income` pair per receiving stable through `Credit_Mutation_Service`. The forfeiter earns 0 credits. A double forfeit pays nobody.
+- **Classification:** the breakdown carries `outcome: 'forfeit_win'`, `isBye: true` and `winComponent: 0`, so a forfeit win is walkover income, not a fought match.
+- **Not written:** no streaming revenue, prestige, fame, repair spend or simulated combat result. Nothing was fought, so nothing is damaged.
+- **Domain records:** one battle row, one `battle_participants` row per robot (`forfeited = true` on the forfeiting side), a zero-event `BattleSummary`, standings and robot stats (win/loss, or draw for a double forfeit) and one `battle_complete` audit row per robot.
+
+KotH and Grand Melee have no walkover: an unarmed robot takes last place with 0 credits and the rest fight. If the remaining field is below the minimum, `resolveBelowMinimumField` (`services/scheduling/thinInstanceByes.ts`) gives each ready robot a normal `Bye_Event` at its tier.
+
 ## 6. Repair accounting
 
 The arithmetic authority remains the shared module `app/shared/utils/repairCost.ts`:
@@ -291,6 +303,75 @@ Reconciliation is read-only. It validates identified paired evidence and reports
 ### Failure response
 
 If a required paired write fails, the enclosing transaction fails: verify that `User.currency` rolled back, inspect the identity or sequence error, and retry only with the same immutable source facts. Never create a compensating ledger row, add a second balance adjustment, or alter historical evidence.
+
+### Match failure policy
+
+An unexpected error in one match never stops the round or the cycle. Every orchestrator sends it to `handleMatchFailure` (`services/battle/matchFailurePolicy.ts`): the queued match is made terminal with no rewards, a structured `error` log is written (`battle_match_cancelled`, `battle_match_finalized_after_error`, `battle_match_cancel_failed`), and the run moves on. Nothing re-throws, retries in a loop or stays `scheduled`. Tournaments go through `recoverTournamentMatch`, which first gives a linked fought battle one idempotent resume (`battle_match_resumed_after_error`).
+
+The financial guarantee is **never paid twice**:
+
+- **Exactly once** where an idempotent resume exists: walkovers (byes and forfeits, claimed before payment) and tournament matches with a linked fought battle.
+- **At most once** elsewhere (league 1v1, team league, tag team, KotH, Grand Melee) when the error comes after payment started. A missed component leaves one of the signatures below. Streaming and achievement rewards have no signature; they may be missing after a logged `battle_match_*_after_error` or `battle_match_cancelled` event.
+
+Knockout tournaments: an errored match with no fought battle linked is `cancelled` with the higher seed as `winnerId`. That seed advances, nobody is paid, and no battle, ELO, standings or stat change is written.
+
+One narrow window breaks the "nothing written" part. A tournament match writes its battle row and the robots' ELO/stat updates before it links `battleId` to the bracket row, so a resume never repeats those non-repeatable updates. An error between those writes and the link (a failing second stat update or the link write itself) reaches the policy with `battleId` still null. The higher seed then advances as `cancelled`, while a fought, unlinked battle with its ELO/stat changes exists and may have been won by the other side. Nothing is paid for it, because income is paid only after the link, so "never paid twice" still holds. Find it as a battle with `tournament_id` and `tournament_round` set that no `tournament_matches.battle_id` references:
+
+```sql
+SELECT b.id AS battle_id, b.tournament_id, b.tournament_round, b.winner_id
+FROM battles b
+WHERE b.tournament_id IS NOT NULL
+  AND NOT EXISTS (SELECT 1 FROM tournament_matches t WHERE t.battle_id = b.id);
+```
+
+Two read-only signatures find the gaps.
+
+1. **Unpaid walkover** (forfeit or bye claimed, payment failed). The queued match is terminal with `battle_id` set, and that battle has no `battle_participants` rows, because participants are written after payment. The expected ledger row is `buildForfeitBattleIncomeEventId(matchId, stableId, mode)` (or `buildByeBattleIncomeEventId`).
+
+   ```sql
+   SELECT 'scheduled_matches_v2' AS source, m.id AS match_id, m.battle_id
+   FROM scheduled_matches_v2 m
+   WHERE m.status = 'completed' AND m.battle_id IS NOT NULL
+     AND NOT EXISTS (SELECT 1 FROM battle_participants bp WHERE bp.battle_id = m.battle_id)
+   UNION ALL
+   SELECT 'tournament_matches', t.id, t.battle_id
+   FROM tournament_matches t
+   WHERE t.status IN ('completed', 'forfeit') AND t.battle_id IS NOT NULL
+     AND NOT EXISTS (SELECT 1 FROM battle_participants bp WHERE bp.battle_id = t.battle_id);
+   ```
+
+   Not every hit owes money. A KotH or Grand Melee below-minimum match that crashed between its claim and the forfeiter participant rows also appears here: its battle has `battle_type` equal to the mode, `league_type` `koth` (KotH) or the tier (Grand Melee) and `winner_id` null. Forfeiters earn nothing and the ready robots' byes are separate rows, so nothing is owed for that battle.
+
+2. **Fought battle with missing income** (any mode, error after the battle row was written). For some stable, the sum of its robots' `battle_participants.credits` is above 0 and that stable has no `battle_income` ledger row whose breakdown `metadata->>'battleId'` is the battle. The breakdown battle id is the field the Finance Center deployment query reads, and every battle-income writer sets it, so the predicate covers fought battles (`battle:` identities), byes (`bye:`) and forfeit wins (`forfeit:`) alike. Matching on the `battle:` identity prefix instead would report every paid walkover as unpaid. Stables with 0 credits are left out because `awardCreditsWithLedger` writes nothing for an amount of 0 or less. The check is battle-centric, so it also finds battles whose queued match was cancelled. The test helper `tests/helpers/foughtBattleSignature.ts` runs the same query.
+
+   ```sql
+   SELECT bp.battle_id, r.user_id AS stable_id, SUM(bp.credits) AS credits
+   FROM battle_participants bp
+   JOIN robots r ON r.id = bp.robot_id
+   GROUP BY bp.battle_id, r.user_id
+   HAVING SUM(bp.credits) > 0
+      AND NOT EXISTS (
+        SELECT 1 FROM financial_ledger fl
+        WHERE fl.transaction_type = 'battle_income'
+          AND fl.user_id = r.user_id
+          AND fl.metadata->>'battleId' = bp.battle_id::text
+      );
+   ```
+
+   Team tournaments are the exception: their `battle_participants.credits` stay 0 until payment, so an unpaid team-tournament battle (the resume failed too) is invisible to this query. Find it as a terminal `tournament_matches` row with `battle_id` set whose battle has no `battle_income` ledger row:
+
+   ```sql
+   SELECT t.id AS match_id, t.battle_id
+   FROM tournament_matches t
+   JOIN battles b ON b.id = t.battle_id
+   WHERE t.status = 'completed'
+     AND b.battle_type IN ('tournament_2v2', 'tournament_3v3')
+     AND NOT EXISTS (
+       SELECT 1 FROM financial_ledger fl
+       WHERE fl.transaction_type = 'battle_income'
+         AND fl.metadata->>'battleId' = t.battle_id::text
+     );
+   ```
 
 ## 12. Finance Center report-consumer contract (Spec #54)
 

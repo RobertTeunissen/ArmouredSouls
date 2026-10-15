@@ -1,13 +1,16 @@
 /**
  * Robot stat calculations for the backend (combat simulation, HP/shield derivation).
  *
- * Constants (LOADOUT_BONUSES, STANCE_MODIFIERS, BASE_HP, HP_MULTIPLIER) are imported
- * from the shared module — single source of truth for both frontend and backend.
+ * Constants (LOADOUT_BONUSES, STANCE_MODIFIERS, BASE_HP, HP_MULTIPLIER) and the
+ * canonical effective-attribute formula (`calculateCombatEffectiveStats`) live in the
+ * shared module — single source of truth for both frontend and backend (#517).
  *
- * The backend's `calculateEffectiveStats` uses `roundToTwo` (2 decimal precision)
- * instead of `Math.floor` because the combat simulator applies additional stance
- * multipliers on top and needs fractional precision to avoid compound rounding errors.
- * The frontend uses `Math.floor` via the shared module for integer display values.
+ * Canonical formula, 2-decimal combat precision:
+ *   effective = round2((base + mainWeaponBonus + offhandWeaponBonus + tuning) × (1 + loadoutBonus))
+ *
+ * `calculateEffectiveStats` and `prepareRobotForCombat` both use it, so the values the
+ * simulator reads equal the values the stat screens show (the frontend's integer display
+ * is `Math.floor` of the same combat value).
  */
 
 import { Robot, WeaponInventory, Weapon, Prisma } from '../../generated/prisma';
@@ -35,19 +38,15 @@ export {
 } from '../shared/utils/robotStats';
 
 import {
-  LOADOUT_BONUSES,
   STANCE_MODIFIERS,
   BASE_HP,
   HP_MULTIPLIER,
   SHIELD_MULTIPLIER,
+  calculateCombatEffectiveStats,
+  roundToCombatPrecision,
+  type RobotStatsInput,
+  type WeaponInventoryLike,
 } from '../shared/utils/robotStats';
-
-/**
- * Round to 2 decimal places — used by backend for combat precision.
- */
-function roundToTwo(value: number): number {
-  return Math.round(value * 100) / 100;
-}
 
 type RobotWithWeapons = Robot & {
   mainWeapon?: (WeaponInventory & { weapon: Weapon }) | null;
@@ -55,55 +54,87 @@ type RobotWithWeapons = Robot & {
 };
 
 /**
+ * Non-enumerable marker set on a robot object once `prepareRobotForCombat` has written
+ * effective values onto it. Invisible to JSON, object spread, Prisma and Jest equality.
+ */
+const COMBAT_PREPARED = Symbol('combatPrepared');
+
+/**
+ * Non-enumerable marker set on a weapon-inventory row once its refinements have been
+ * folded into its `weapon` object. Set on the inventory row (not the weapon object) so
+ * a catalog weapon object shared between rows is never mistaken for folded.
+ */
+const REFINEMENTS_FOLDED = Symbol('refinementsFolded');
+
+function markNonEnumerable(target: object, marker: symbol): void {
+  Object.defineProperty(target, marker, { value: true, enumerable: false, configurable: true });
+}
+
+/**
+ * Whether `prepareRobotForCombat` has already run on this robot object.
+ */
+export function isPreparedForCombat(robot: object): boolean {
+  return (robot as Record<symbol, unknown>)[COMBAT_PREPARED] === true;
+}
+
+/**
+ * Convert a Prisma robot (Decimal attributes) to the shared calculation input shape.
+ * Weapons are passed through; their bonus fields are already plain numbers.
+ */
+function toStatsInput(robot: RobotWithWeapons): RobotStatsInput {
+  const input: Record<string, unknown> = {
+    loadoutType: robot.loadoutType,
+    mainWeapon: (robot.mainWeapon ?? null) as WeaponInventoryLike | null,
+    offhandWeapon: (robot.offhandWeapon ?? null) as WeaponInventoryLike | null,
+  };
+  for (const attr of ROBOT_ATTRIBUTES) {
+    input[attr] = toNumber(robot[attr as keyof Robot] as number | Prisma.Decimal);
+  }
+  return input as unknown as RobotStatsInput;
+}
+
+/**
  * Calculate effective stats for a robot including base attributes,
- * weapon bonuses, optional tuning bonuses, and loadout modifiers.
+ * weapon bonuses (main + offhand), optional tuning bonuses, and loadout modifiers.
  *
- * Formula: roundToTwo((base + weaponBonus + tuningBonus) × loadoutMultiplier)
+ * Delegates to the shared canonical `calculateCombatEffectiveStats`:
+ *   round2((base + weaponBonus + tuningBonus) × (1 + loadoutBonus))
  *
- * Uses `roundToTwo` (not `Math.floor`) because the combat simulator applies
- * additional stance multipliers on top and needs fractional precision.
+ * Reads the weapon objects as they are: on a raw robot that is the catalog bonus;
+ * after `prepareRobotForCombat` it includes folded refinements.
  *
  * @param robot - Robot with optional weapon includes
  * @param tuningBonuses - Optional sparse map of attribute → tuning bonus value
  */
 export function calculateEffectiveStats(robot: RobotWithWeapons, tuningBonuses?: TuningAttributeMap): Record<string, number> {
-  const loadoutType = robot.loadoutType as keyof typeof LOADOUT_BONUSES;
-  const loadoutBonuses = LOADOUT_BONUSES[loadoutType] || {};
-
-  const effectiveStats: Record<string, number> = {};
-
-  for (const attr of ROBOT_ATTRIBUTES) {
-    // Convert Prisma Decimal to JavaScript number
-    const baseValue = toNumber(robot[attr as keyof Robot] as number | Prisma.Decimal);
-    const weaponBonus = getWeaponBonus(robot, attr);
-    const tuningBonus = tuningBonuses?.[attr as keyof TuningAttributeMap] ?? 0;
-    const loadoutMultiplier = (loadoutBonuses[attr as keyof typeof loadoutBonuses] || 0) + 1;
-
-    // Formula: (base + weaponBonus + tuningBonus) × loadoutMultiplier
-    // Round to 2 decimal places for precision
-    effectiveStats[attr] = roundToTwo((baseValue + weaponBonus + tuningBonus) * loadoutMultiplier);
-  }
-
-  return effectiveStats;
+  return calculateCombatEffectiveStats(toStatsInput(robot), tuningBonuses);
 }
 
 /**
  * Prepare a robot for combat by computing all 23 effective attribute values
- * and writing them directly onto the robot object. This replaces scattered
- * `getEffectiveAttribute()` calls and raw `Number()` reads in the combat simulator.
+ * and writing them directly onto the robot object. The combat simulator reads
+ * them with `Number(robot.attackSpeed)` etc. and never re-derives them.
  *
- * For each attribute:
- * 1. Read the base value: `Number(robot[attr])` (handles Prisma Decimal)
- * 2. Add weapon bonuses from BOTH main and offhand weapons
- * 3. Add tuning bonus (if provided)
- * 4. Write the effective value back onto the robot
+ * Steps:
+ * 1. Fold weapon refinements (Spec #34) into each equipped weapon's stats.
+ * 2. Compute every attribute with the canonical shared formula (#517), from the
+ *    raw base values: round2((base + both weapons' bonuses + tuning) × (1 + loadout)).
+ *    The loadout multiplier is applied exactly once. Stance modifiers are NOT applied
+ *    here — stance effects are formula-level in the simulator.
+ * 3. Write the effective values onto the robot, then derive
+ *    `maxHP = BASE_HP + hullIntegrity × HP_MULTIPLIER` and
+ *    `maxShield = shieldCapacity × SHIELD_MULTIPLIER` from them.
+ * 4. Set `currentHP = maxHP` and `currentShield = maxShield` — every battle mode
+ *    enters combat at full health. Tag-team carry-over between phases is handled
+ *    by the tag-team simulation after preparation.
  *
- * Then recalculates maxHP, maxShield, currentHP, and currentShield using
- * the now-effective attribute values.
+ * Input contract: a raw robot freshly loaded from the database or freshly
+ * constructed (e.g. a sparring partner). Never pass a spread copy of a prepared
+ * robot: the copy loses the marker and its effective values would be treated as base.
  *
- * After this function runs, the robot's attribute fields contain effective values
- * (base + all weapon bonuses + tuning). The combat simulator can then read them
- * directly with `Number(robot.combatPower)` and get the correct effective value.
+ * Idempotent: calling it again on the same robot object is a no-op — attributes are
+ * not compounded, refinements are not re-folded, `currentHP`/`currentShield` are left
+ * untouched, and the `tuningBonuses` argument is ignored.
  *
  * @param robot - Robot with optional weapon includes (mutated in place)
  * @param tuningBonuses - Optional sparse map of attribute → tuning bonus value
@@ -112,6 +143,8 @@ export function prepareRobotForCombat(
   robot: RobotWithWeapons,
   tuningBonuses?: TuningAttributeMap,
 ): void {
+  if (isPreparedForCombat(robot)) return;
+
   // Spec #34: Fold weapon refinements into the weapon's effective stats here.
   foldWeaponRefinements(robot.mainWeapon ?? null);
   foldWeaponRefinements(robot.offhandWeapon ?? null);
@@ -119,49 +152,28 @@ export function prepareRobotForCombat(
   // Store tuning bonuses on the robot for downstream access
   (robot as RobotWithWeapons & { tuningBonuses?: TuningAttributeMap }).tuningBonuses = tuningBonuses ?? {};
 
-  // Compute and write effective values for all 23 attributes
-  for (const attr of ROBOT_ATTRIBUTES) {
-    const baseValue = Number(robot[attr as keyof Robot]);
-    const weaponBonus = getWeaponBonus(robot, attr);
-    const tuningBonus = tuningBonuses?.[attr] ?? 0;
-    const effectiveValue = baseValue + weaponBonus + tuningBonus;
+  // Compute ALL effective values from the raw base values before writing any of them.
+  const effective = calculateEffectiveStats(robot, tuningBonuses);
 
-    // Write effective value back — combat simulator reads with Number()
-    (robot as Record<string, unknown>)[attr] = effectiveValue;
+  // Write effective values back — combat simulator reads with Number()
+  for (const attr of ROBOT_ATTRIBUTES) {
+    (robot as Record<string, unknown>)[attr] = effective[attr];
   }
 
-  // Recalculate maxHP and maxShield using the now-effective attribute values
-  robot.maxHP = BASE_HP + Number(robot.hullIntegrity) * HP_MULTIPLIER;
-  robot.maxShield = Number(robot.shieldCapacity) * SHIELD_MULTIPLIER;
+  robot.maxHP = BASE_HP + effective.hullIntegrity * HP_MULTIPLIER;
+  robot.maxShield = effective.shieldCapacity * SHIELD_MULTIPLIER;
 
-  // Set current HP and shield to max (robots enter combat at full health)
+  // Robots enter combat at full health
   robot.currentHP = robot.maxHP;
   robot.currentShield = robot.maxShield;
-}
 
-/**
- * Get total weapon bonus for a specific attribute from equipped weapons.
- */
-function getWeaponBonus(robot: RobotWithWeapons, attribute: string): number {
-  let bonus = 0;
-
-  const bonusField = `${attribute}Bonus` as keyof Weapon;
-
-  if (robot.mainWeapon?.weapon) {
-    bonus += (robot.mainWeapon.weapon[bonusField] as number) || 0;
-  }
-
-  if (robot.offhandWeapon?.weapon) {
-    bonus += (robot.offhandWeapon.weapon[bonusField] as number) || 0;
-  }
-
-  return bonus;
+  markNonEnumerable(robot, COMBAT_PREPARED);
 }
 
 /**
  * Spec #34 — Fold a weapon-inventory row's refinements into the weapon record's
  * effective stats. Mutates the inventory's `weapon` object in place so downstream
- * readers see the post-refinement values.
+ * readers see the post-refinement values. Folds at most once per inventory row.
  */
 function foldWeaponRefinements(
   inventory:
@@ -172,6 +184,8 @@ function foldWeaponRefinements(
     | null,
 ): void {
   if (!inventory?.weapon) return;
+  if ((inventory as unknown as Record<symbol, unknown>)[REFINEMENTS_FOLDED] === true) return;
+  markNonEnumerable(inventory, REFINEMENTS_FOLDED);
 
   const refinements: RefinementRow[] = (inventory.refinements ?? []).map((r) => ({
     tier: r.tier as RefinementTier,
@@ -238,7 +252,7 @@ export function calculateEffectiveStatsWithStance(robot: RobotWithWeapons, tunin
 
     if (effectiveStatsWithStance[attr] !== undefined && typeof modifier === 'number') {
       const multiplier = 1 + modifier;
-      effectiveStatsWithStance[attr] = roundToTwo(effectiveStatsWithStance[attr] * multiplier);
+      effectiveStatsWithStance[attr] = roundToCombatPrecision(effectiveStatsWithStance[attr] * multiplier);
     }
   }
 
@@ -269,5 +283,5 @@ export function calculateAttributeSum(robot: Robot): number {
   for (const attr of ROBOT_ATTRIBUTES) {
     sum += toNumber(robot[attr as keyof Robot] as number | Prisma.Decimal);
   }
-  return roundToTwo(sum);
+  return roundToCombatPrecision(sum);
 }

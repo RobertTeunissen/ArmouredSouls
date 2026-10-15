@@ -101,6 +101,7 @@ docs/
 ├── analysis/               # Design explorations and technical audits
 │   ├── BATTLE_EXECUTION_AUDIT.md        Cross-type battle reference
 │   ├── FREE_FOR_ALL_BATTLE_ROYALE_MODE.md  Grand Melee scaling analysis
+│   ├── NEXT_SEASON_BALANCE_VALIDATION.md  Season 2 balance validation (#516)
 │   ├── PRESTIGE_FAME_DESIGN_EXPLORATION.md  Fame cosmetics roadmap
 │   ├── ROBOT_DETAIL_PAGE_SPLIT_ANALYSIS.md  Profile/Workshop split design
 │   └── WEAPON_BALANCE_ANALYSIS.md       Weapon stat analysis

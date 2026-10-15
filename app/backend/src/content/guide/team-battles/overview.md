@@ -2,7 +2,7 @@
 title: "Team Battles Overview"
 description: "How 2v2 and 3v3 League Team Battles work — team registration, simultaneous combat, coordination effects, matchmaking, rewards, and daily schedule."
 order: 1
-lastUpdated: "2026-10-14"
+lastUpdated: "2026-10-15"
 relatedArticles:
   - facilities/booking-office
   - leagues/matchmaking
@@ -184,6 +184,8 @@ For a team to be matched, **all** of the following must be true:
 - ✅ Team is not already scheduled for a battle
 
 If any condition fails, the team is skipped for that cycle's matchmaking.
+
+Weapons are checked again when the battle starts. If **any** member has no main weapon, the whole team **forfeits**: an automatic loss with no credits and no damage, while the other team wins with the same reward as a bye. If both teams have an unarmed member, the battle is a draw with no credits. A member that's missing only its offhand or shield fights with its main weapon as a Single loadout for that battle.
 
 ## Subscription Requirements
 

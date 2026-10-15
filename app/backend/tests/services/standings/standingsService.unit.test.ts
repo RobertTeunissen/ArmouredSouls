@@ -51,6 +51,7 @@ jest.mock('../../../src/services/standings/standingPlacement', () => ({
   ensureStanding: (...args: unknown[]) => mockEnsureStanding(...args),
 }));
 
+import * as fc from 'fast-check';
 import standingsService, { getOrCreateStanding, KOTH_POINT_SCALE } from '../../../src/services/standings/standingsService';
 // Spec #49: the Grand Melee placement scale is declared once, in the rewards
 // module, and imported by the Standings_Service. The former
@@ -384,6 +385,38 @@ describe('awardKothPoints', () => {
   it('should have correct point scale values', () => {
     expect(KOTH_POINT_SCALE).toEqual([10, 6, 4, 2, 1, 0]);
   });
+
+  // Rule 4: a forfeiter is placed last and earns nothing, but the match counts.
+  it('should award 0 points to a forfeiter at any placement, never a win, and still count the match', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.integer({ min: 1, max: 6 }),
+        fc.integer({ min: 0, max: 200 }),
+        fc.integer({ min: 0, max: 50 }),
+        async (placement, leaguePoints, totalMatches) => {
+          const current = makeStanding({ mode: 'koth', leaguePoints, totalMatches, totalZoneScore: 10, totalZoneTime: 5, bestPlacement: 3, wins: 2, currentWinStreak: 1 });
+          givenStanding(current);
+          mockStandingUpdate.mockClear();
+          mockStandingUpdate.mockResolvedValue(current);
+
+          await standingsService.awardKothPoints({
+            robotId: 1, placement, totalParticipants: 6, zoneScore: 0, zoneTime: 0, forfeited: true,
+          });
+
+          const { data } = mockStandingUpdate.mock.calls[0][0] as { data: Record<string, number> };
+          expect(data.leaguePoints).toBe(leaguePoints);
+          expect(data.totalMatches).toBe(totalMatches + 1);
+          expect(data.totalZoneScore).toBe(10);
+          expect(data.totalZoneTime).toBe(5);
+          // A forfeit never counts as a win or a best finish, even in placement 1.
+          expect(data.wins).toBeUndefined();
+          expect(data.currentWinStreak).toBeUndefined();
+          expect(data.bestPlacement).toBeUndefined();
+        },
+      ),
+      { numRuns: 50 },
+    );
+  });
 });
 
 describe('awardGrandMeleePoints', () => {
@@ -440,6 +473,36 @@ describe('awardGrandMeleePoints', () => {
 
   it('should have correct F1 point scale', () => {
     expect(GRAND_MELEE_LP_SCALE).toEqual([25, 18, 15, 12, 10, 8, 6, 4, 2, 1]);
+  });
+
+  // Rule 4: a forfeiter is placed last and earns nothing, but the match counts
+  // and, as for any non-first finish, the win streak resets.
+  it('should award 0 LP to a forfeiter at any placement, never a win, reset the win streak and count the match', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.integer({ min: 1, max: 20 }),
+        fc.integer({ min: 0, max: 500 }),
+        fc.integer({ min: 0, max: 50 }),
+        async (placement, leaguePoints, totalMatches) => {
+          const current = makeStanding({ mode: 'grand_melee', leaguePoints, totalMatches, totalZoneScore: 10, totalZoneTime: 5, bestPlacement: 3, wins: 2, currentWinStreak: 2 });
+          givenStanding(current);
+          mockStandingUpdate.mockClear();
+          mockStandingUpdate.mockResolvedValue(current);
+
+          await standingsService.awardGrandMeleePoints({
+            robotId: 1, placement, totalParticipants: 20, damageDealt: 0, survivalTime: 0, forfeited: true,
+          });
+
+          const { data } = mockStandingUpdate.mock.calls[0][0] as { data: Record<string, number> };
+          expect(data.leaguePoints).toBe(leaguePoints);
+          expect(data.totalMatches).toBe(totalMatches + 1);
+          expect(data.wins).toBeUndefined();
+          expect(data.currentWinStreak).toBe(0);
+          expect(data.bestPlacement).toBeUndefined();
+        },
+      ),
+      { numRuns: 50 },
+    );
   });
 
   // Spec #49: the LP a player is shown and the LP a player is given came from

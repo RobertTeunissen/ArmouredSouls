@@ -13,8 +13,8 @@
  * because subscription slot accounting asks the same "is there a queued match?"
  * question from the other direction and the two must not drift apart.
  *
- * Leaving a robot damaged is safe: `checkBattleReadiness` is weapon-only and
- * explicitly does not check HP, so a damaged robot is still matched normally and
+ * Leaving a robot damaged is safe: `checkSchedulingReadiness` (and the
+ * battle-time `evaluateCombatEntry`) is weapon-only and explicitly does not check HP, so a damaged robot is still matched normally and
  * gets repaired by the cron that runs its match. It cannot strand itself.
  *
  * @module services/economy/repairScope

@@ -17,6 +17,8 @@ import prisma from '../../src/lib/prisma';
 import { runTagTeamMatchmaking } from '../../src/services/tag-team/tagTeamMatchmakingService';
 import { executeScheduledTagTeamBattles } from '../../src/services/tag-team/tagTeamBattleOrchestrator';
 import { createTagTeamFixture, clearTagTeamCompetition } from '../helpers/tagTeam';
+import * as robotCalculations from '../../src/utils/robotCalculations';
+import { calculateCombatEffectiveStat } from '../../src/shared/utils/robotStats';
 
 describe('Tag Team Complete Cycle Integration Test', () => {
   let testUserIds: number[] = [];
@@ -104,7 +106,7 @@ describe('Tag Team Complete Cycle Integration Test', () => {
    * battles, so `testRobotIds` was always empty by then and the query matched nothing. The
    * test hit its `if (!battle) return` early exit on every run and asserted nothing at all.
    */
-  async function createTagTeamCohort(stableCount: number) {
+  async function createTagTeamCohort(stableCount: number, loadoutType: string = 'single') {
     const users: any[] = [];
     const robots: any[] = [];
     const teams: any[] = [];
@@ -125,6 +127,12 @@ describe('Tag Team Complete Cycle Integration Test', () => {
         const weaponInv = await prisma.weaponInventory.create({
           data: { userId: user.id, weaponId: weapon.id, pricePaid: 0 },
         });
+        // Dual Wield is only battle-ready with a second one-handed weapon equipped.
+        const offhandInv = loadoutType === 'dual_wield'
+          ? await prisma.weaponInventory.create({
+              data: { userId: user.id, weaponId: weapon.id, pricePaid: 0 },
+            })
+          : null;
         const robot = await prisma.robot.create({
           data: {
             userId: user.id,
@@ -135,8 +143,9 @@ describe('Tag Team Complete Cycle Integration Test', () => {
             currentShield: 20,
             maxShield: 20,
             yieldThreshold: 20,
-            loadoutType: 'single',
+            loadoutType,
             mainWeaponId: weaponInv.id,
+            offhandWeaponId: offhandInv?.id ?? null,
           },
         });
         robots.push(robot);
@@ -383,5 +392,30 @@ describe('Tag Team Complete Cycle Integration Test', () => {
     }
 
     console.log('[Test] ✓ Battle log verification complete');
+  });
+
+  // #517: every tag-team robot is prepared exactly once (before phase 1) with the
+  // canonical loadout modifier; later phases never re-prepare it.
+  it('should prepare each tag-team robot once with its loadout modifier', async () => {
+    const prepareSpy = jest.spyOn(robotCalculations, 'prepareRobotForCombat');
+    try {
+      const { robots } = await createTagTeamCohort(2, 'dual_wield');
+      expect(await runTagTeamMatchmaking()).toBeGreaterThan(0);
+      const executed = await executeScheduledTagTeamBattles();
+      expect(executed.totalBattles).toBeGreaterThan(0);
+
+      const ownCalls = prepareSpy.mock.calls.filter(([robot]) => testRobotIds.includes(robot.id));
+      expect(ownCalls.map(([robot]) => robot.id).sort()).toEqual(robots.map((r: { id: number }) => r.id).sort());
+
+      for (const [prepared] of ownCalls) {
+        const stored = robots.find((r: { id: number }) => r.id === prepared.id);
+        // Dual Wield attack speed: (base + main + offhand bonus) × 1.30, no tuning allocated
+        expect(Number(prepared.attackSpeed)).toBe(
+          calculateCombatEffectiveStat(Number(stored.attackSpeed), 2 * Number(weapon.attackSpeedBonus), 0.30),
+        );
+      }
+    } finally {
+      prepareSpy.mockRestore();
+    }
   });
 });

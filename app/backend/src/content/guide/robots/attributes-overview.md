@@ -2,7 +2,7 @@
 title: "Robot Attributes Overview"
 description: "A complete guide to all 23 robot attributes organized across five categories — Combat Systems, Defensive Systems, Chassis & Mobility, AI Processing, and Team Coordination."
 order: 1
-lastUpdated: "2026-03-17"
+lastUpdated: "2026-10-15"
 relatedArticles:
   - robots/attribute-combat-influence
   - robots/hull-and-shields
@@ -84,7 +84,7 @@ AI Processing attributes control your robot's autonomous decision-making during 
 
 | Attribute | What It Does |
 |-----------|-------------|
-| **Combat Algorithms** | Improves battle strategy and decision quality. Grants a hit chance bonus when the algorithm score exceeds 0.5, and controls the patience timer that determines how long your robot waits for optimal range before forcing an attack. |
+| **Combat Algorithms** | Improves battle strategy and decision quality. Grants a hit chance bonus when the algorithm score exceeds 0.5 and tightens movement pathing (less path deviation), so your robot reaches its preferred range more directly. |
 | **Threat Analysis** | Enhances facing/turning speed with a predictive turn bias. At high levels (25+), your robot anticipates opponents moving behind it and turns faster to prevent backstabs. Also reduces backstab and flanking damage taken. |
 | **Adaptive AI** | Allows your robot to learn during battle. Each time your robot misses or takes damage, it accumulates hit and damage bonuses. Higher Adaptive AI means faster adaptation. Bonuses are halved when HP is above 70% to prevent snowballing. |
 | **Logic Cores** | Improves performance under pressure. Sets the HP threshold below which your robot enters "pressure mode," gaining accuracy and damage bonuses. Higher Logic Cores raises this threshold, activating the bonus earlier. |
@@ -94,7 +94,7 @@ Adaptive AI is especially powerful in longer fights. Against tanky opponents, yo
 ```
 
 ```callout-info
-Combat Algorithms controls the patience timer — how long your robot will wait for the opponent to enter optimal weapon range before forcing an attack anyway. Higher values mean your robot is smarter about when to engage, but won't wait forever.
+Combat Algorithms never lets a weapon attack beyond its reach. Its value is in accuracy (above a score of 0.5) and in cleaner movement: higher levels take more direct paths toward the preferred range, which matters most for melee builds that need to close to 2 units.
 ```
 
 ## 🟣 Team Coordination (3 Attributes)

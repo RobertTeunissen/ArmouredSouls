@@ -1,6 +1,7 @@
 import {
   BATTLE_MODES,
   COVERAGE_MANIFEST,
+  TWO_SIDED_BATTLE_MODES,
   checkDirectWriterCoverage,
   validateCoverageManifest,
 } from './factories/coverageManifest';
@@ -73,6 +74,55 @@ describe('Spec 53 Coverage_Manifest baseline', () => {
       'completeByeMatch',
       'resolvePlacementBye',
     ]);
+  });
+
+  it('covers the seven two-sided modes with the five forfeit adapters on the shared writer', () => {
+    const forfeitEntry = COVERAGE_MANIFEST.entries.find(
+      (entry) => entry.id === 'forfeit-resolution-implementation',
+    );
+    expect(forfeitEntry).toMatchObject({
+      area: 'forfeit',
+      status: 'forfeit-implementation',
+      currentSource: {
+        file: 'app/backend/src/services/battle/forfeitResolutionService.ts',
+        symbol: 'resolveForfeitEvent',
+      },
+      finalService: 'Forfeit_Resolution_Module',
+      expectedTaxonomy: ['battle_income'],
+      targetTestTiers: ['unit', 'integration', 'heavy'],
+    });
+    expect(forfeitEntry?.pairedOrDomainRecords).toEqual([
+      'FinancialLedger',
+      'financial_transaction AuditLog',
+      'Forfeit Battle row',
+      'BattleParticipant (forfeited flag)',
+      'zero-event BattleSummary',
+      'Standing',
+    ]);
+
+    expect(COVERAGE_MANIFEST.forfeitCallerBoundaries.map((caller) => caller.currentSource.symbol)).toEqual([
+      'resolveLeagueForfeit',
+      'resolveTeamLeagueForfeit',
+      'resolveTagTeamForfeit',
+      'resolveSoloTournamentForfeit',
+      'resolveTeamTournamentForfeit',
+    ]);
+    const forfeitModes = COVERAGE_MANIFEST.forfeitCallerBoundaries.flatMap((caller) => caller.modes);
+    expect([...forfeitModes].sort()).toEqual([...TWO_SIDED_BATTLE_MODES].sort());
+    expect(new Set(forfeitModes).size).toBe(7);
+    expect(forfeitModes).not.toContain('koth');
+    expect(forfeitModes).not.toContain('grand_melee');
+
+    const missingMode = {
+      ...COVERAGE_MANIFEST,
+      forfeitCallerBoundaries: COVERAGE_MANIFEST.forfeitCallerBoundaries.slice(1),
+    };
+    expect(validateCoverageManifest(missingMode)).toContain('missing forfeit caller coverage for league_1v1');
+
+    const placementBye = COVERAGE_MANIFEST.byeCallerBoundaries.find(
+      (caller) => caller.id === 'bye-caller-placement-thin-instance',
+    );
+    expect(placementBye?.notes).toContain('resolveBelowMinimumField');
   });
 
   it('fails when a new direct User.currency mutation is not in the frozen baseline', () => {

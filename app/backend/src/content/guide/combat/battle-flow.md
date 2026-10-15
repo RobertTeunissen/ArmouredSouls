@@ -2,7 +2,7 @@
 title: "Battle Flow"
 description: "How battles play out in the 2D arena — from movement and positioning to attack resolution, range bands, backstabs, and the complete order of operations for every strike."
 order: 1
-lastUpdated: "2026-03-17"
+lastUpdated: "2026-10-15"
 relatedArticles:
   - combat/movement-and-positioning
   - combat/malfunctions
@@ -117,7 +117,7 @@ flowchart TD
 
 Before attacking, the simulator checks whether the weapon can reach the opponent. Melee weapons are blocked beyond 2 grid units. Ranged weapons can fire at any distance but suffer range penalties outside their optimal band.
 
-If the weapon can't reach, the robot continues moving toward its preferred range. The **patience timer** (controlled by Combat Algorithms) determines how long the robot waits before forcing an attack even at suboptimal range.
+If the weapon can't reach, nothing is rolled: no damage, no counter-attack, and the weapon stays ready. The robot keeps moving toward its preferred range and attacks as soon as the opponent is in reach. No amount of waiting lets a melee weapon hit from beyond 2 units.
 
 ## Step 2: Malfunction Check
 

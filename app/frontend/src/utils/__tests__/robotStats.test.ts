@@ -5,6 +5,10 @@ import {
   getStanceModifier,
   calculateEffectiveStat,
   calculateEffectiveStats,
+  calculateCombatEffectiveStat,
+  calculateCombatEffectiveStats,
+  roundToCombatPrecision,
+  COMBAT_STAT_DECIMALS,
   calculateMaxHP,
   calculateMaxShield,
   getAttributeDisplay,
@@ -86,6 +90,16 @@ describe('calculateAttributeBonus', () => {
   it('should return 0 when attribute is not present on weapon', () => {
     const main = makeWeaponInventory({ combatPowerBonus: 5 });
     expect(calculateAttributeBonus('shieldCapacity', main, null)).toBe(0);
+  });
+
+  it('should treat an inventory row loaded without its weapon relation as contributing 0', () => {
+    // Test cast: simulates a Prisma inventory row fetched without `include: { weapon: true }`.
+    const unloaded = {} as unknown as Parameters<typeof calculateAttributeBonus>[1];
+    const offhand = makeWeaponInventory({ combatPowerBonus: 4 });
+    expect(calculateAttributeBonus('combatPower', unloaded, null)).toBe(0);
+    expect(calculateAttributeBonus('combatPower', unloaded, offhand)).toBe(4);
+    expect(calculateAttributeBonus('combatPower', offhand, unloaded)).toBe(4);
+    expect(calculateEffectiveStats(makeRobot({ mainWeapon: unloaded, offhandWeapon: unloaded })).combatPower).toBe(10);
   });
 });
 
@@ -172,6 +186,57 @@ describe('calculateEffectiveStat', () => {
   it('should combine weapon bonus and loadout multiplier', () => {
     // (20 + 5) * 1.30 = 32.5 → floor to 32
     expect(calculateEffectiveStat(20, 5, 0.30)).toBe(32);
+  });
+});
+
+// ─── #517: canonical combat-precision calculation ───────────────────────────
+
+describe('calculateCombatEffectiveStat', () => {
+  it('keeps two-decimal combat precision', () => {
+    // Dual Wield attack speed: (10 + 3 + 3) × 1.30 = 20.8
+    expect(calculateCombatEffectiveStat(10, 3 + 3, 0.30)).toBe(20.8);
+    expect(COMBAT_STAT_DECIMALS).toBe(2);
+    expect(roundToCombatPrecision(1.23456)).toBe(1.23);
+  });
+
+  it('applies negative weapon bonuses before the loadout multiplier', () => {
+    // Dual Wield penetration: (10 − 3 − 1 + 1.5) × 0.80 = 6
+    expect(calculateCombatEffectiveStat(10, -3 + -1, -0.20, 1.5)).toBe(6);
+  });
+
+  it('display value is the floor of the combat value', () => {
+    const combat = calculateCombatEffectiveStat(10, 6, 0.30);
+    expect(calculateEffectiveStat(10, 6, 0.30)).toBe(Math.floor(combat));
+  });
+
+  it('display agrees with combat at a rounding boundary', () => {
+    // Weapon + Shield, shield capacity 3.33: raw 3.33 × 1.20 = 3.996 → combat 4.00 → display 4
+    // (flooring the raw product directly would have shown 3 while combat used 4.00).
+    expect(calculateCombatEffectiveStat(3.33, 0, 0.20)).toBe(4);
+    expect(calculateEffectiveStat(3.33, 0, 0.20)).toBe(4);
+  });
+
+  it.each(
+    Object.entries(LOADOUT_BONUSES).flatMap(([loadout, bonuses]) =>
+      Object.entries(bonuses).map(([attr, bonus]) => ({ loadout, attr, bonus })),
+    ),
+  )('applies $loadout $attr modifier ($bonus) exactly once', ({ loadout, attr, bonus }) => {
+    const robot = makeRobot({
+      loadoutType: loadout,
+      mainWeapon: makeWeaponInventory({ [`${attr}Bonus`]: 4 }),
+      offhandWeapon: makeWeaponInventory({ [`${attr}Bonus`]: -1 }),
+    });
+    const tuning: TuningAttributeMap = { [attr]: 2 };
+    const combat = calculateCombatEffectiveStats(robot, tuning);
+    const display = calculateEffectiveStats(robot, tuning);
+    const expected = Math.round((10 + 4 - 1 + 2) * (1 + bonus) * 100) / 100;
+    expect(combat[attr]).toBe(expected);
+    expect(display[attr]).toBe(Math.floor(expected));
+  });
+
+  it('applies no multiplier for an unknown loadout', () => {
+    const robot = makeRobot({ loadoutType: 'unknown', attackSpeed: 12.346 });
+    expect(calculateCombatEffectiveStats(robot).attackSpeed).toBe(12.35);
   });
 });
 

@@ -3,12 +3,13 @@
  */
 
 import { BattleError, BattleErrorCode } from '../../../errors/battleErrors';
+import { assertAllRobotsArmed } from '../combatReadiness';
 import { euclideanDistance } from '../../arena/vector2d';
 import { createArena } from '../../arena/arenaLayout';
 import { classifyRangeBand, canAttack } from '../../arena/rangeBands';
 import { calculateTurnSpeed, updateFacing } from '../../arena/positionTracker';
 import { calculateEffectiveSpeed, updateServoStrain } from '../../arena/servoStrain';
-import { calculateMovementIntent, applyMovement, getPatienceLimit, enforceTeamSeparation, RANGE_BAND_MIDPOINTS } from '../../arena/movementAI';
+import { calculateMovementIntent, applyMovement, enforceTeamSeparation, RANGE_BAND_MIDPOINTS } from '../../arena/movementAI';
 import { getSupportShieldBoost } from '../../arena/teamCoordination';
 import { selectTarget } from '../../arena/threatScoring';
 import { SpatialGrid, computeMaxWeaponRange } from './spatialGrid';
@@ -21,6 +22,7 @@ import {
   SpatialCombatResult,
   RangeBand,
   ArenaConfig,
+  GameModeState,
   Position,
   WeaponLike,
   MAX_BATTLE_DURATION,
@@ -33,6 +35,33 @@ import { buildPositionSnapshot, buildHPShieldSnapshot, performAttack } from './a
 import { initializeCombatState, calcCooldown, buildSpatialContext, handleTimeLimitReached, compileBattleResult } from './simulationState';
 
 /**
+ * Nearest living opponent the given weapon can physically reach, measured to that
+ * opponent's own position (#518). Teammates (team modes) and the attacker itself are
+ * skipped. Returns null when no opponent is in reach.
+ */
+function findNearestOpponentInReach(
+  attacker: SpatialRobotCombatState,
+  weapon: WeaponLike,
+  states: SpatialRobotCombatState[],
+  gameModeState: GameModeState | undefined,
+): { target: SpatialRobotCombatState; distance: number } | null {
+  const teamOfMap = gameModeState?.customData?.teamOf as Record<number, number> | undefined;
+  let nearest: { target: SpatialRobotCombatState; distance: number } | null = null;
+  for (const s of states) {
+    if (s === attacker || !s.isAlive) continue;
+    // Skip teammates in team modes
+    if (teamOfMap && teamOfMap[s.teamIndex] === teamOfMap[attacker.teamIndex]) continue;
+    // Fallback for non-team modes: skip same teamIndex (self only)
+    if (!teamOfMap && s.teamIndex === attacker.teamIndex) continue;
+    const d = euclideanDistance(attacker.position, s.position);
+    if (canAttack(weapon, d) && (nearest === null || d < nearest.distance)) {
+      nearest = { target: s, distance: d };
+    }
+  }
+  return nearest;
+}
+
+/**
  * Unified N-robot battle simulator with full spatial mechanics.
  *
  * Handles any number of robots (1v1, FFA, KotH, battle royale, etc.)
@@ -40,6 +69,14 @@ import { initializeCombatState, calcCooldown, buildSpatialContext, handleTimeLim
  *
  * Game mode-specific behavior (zone scoring, custom targeting, win conditions)
  * is injected via the optional GameModeConfig/GameModeState in BattleConfig.
+ *
+ * Robots must have passed through `prepareRobotForCombat()`; the simulator reads
+ * their attributes as effective values and never re-derives weapon/tuning/loadout
+ * bonuses. It does not mutate the robots' attribute fields.
+ *
+ * Every robot must hold a main weapon. The battle-time readiness gate forfeits
+ * unarmed robots before they get here, so an unarmed robot is a bug signal: it
+ * throws `BattleError(ROBOT_NOT_BATTLE_READY)`, handled by the match failure policy.
  *
  * @param robots Array of robots to fight (N >= 2)
  * @param config Battle configuration (draw rules, duration, game mode hooks)
@@ -58,6 +95,7 @@ export function simulateBattleMulti(
       { robotCount: n }
     );
   }
+  assertAllRobotsArmed(robots);
 
   const maxDuration = config.gameModeConfig?.maxDuration ?? config.maxDuration ?? MAX_BATTLE_DURATION;
   const gameModeConfig = config.gameModeConfig;
@@ -90,8 +128,13 @@ export function simulateBattleMulti(
     const facingTarget = n === 2
       ? (arena.spawnPositions[1 - i] ?? arena.center)
       : arena.center;
-    const mainCd = calcCooldown(robot, robot.mainWeapon?.weapon?.cooldown, 'main');
-    const offCd = calcCooldown(robot, robot.offhandWeapon?.weapon?.cooldown, 'offhand');
+    // Main weapon presence is asserted above.
+    const mainCd = calcCooldown(robot, robot.mainWeapon!.weapon!.cooldown, 'main');
+    // Without an offhand the offhand attack never fires (it is gated on the weapon).
+    const offhandWeapon = robot.offhandWeapon?.weapon;
+    const offCd = offhandWeapon
+      ? calcCooldown(robot, offhandWeapon.cooldown, 'offhand')
+      : Number.POSITIVE_INFINITY;
     return initializeCombatState(robot, spawn, facingTarget, i, mainCd, offCd);
   });
 
@@ -428,43 +471,28 @@ export function simulateBattleMulti(
       // Main weapon attack
       if (currentTime - state.lastAttackTime >= state.attackCooldown
           && state.currentHP > 0 && state.isAlive) {
-        const weapon = state.robot.mainWeapon?.weapon;
-        const weaponLike: WeaponLike | null = weapon
-          ? { name: weapon.name, rangeBand: weapon.rangeBand as RangeBand }
-          : null;
-        const patienceLimit = getPatienceLimit(state.combatAlgorithmScore);
-        const forceAttack = state.patienceTimer >= patienceLimit;
+        // Main weapon presence is asserted at battle start.
+        const weapon = state.robot.mainWeapon!.weapon!;
+        const weaponLike: WeaponLike = { name: weapon.name, rangeBand: weapon.rangeBand as RangeBand };
 
-        // Target-of-opportunity: if melee weapon can't reach primary target,
-        // find the nearest in-range opponent to attack instead (FFA/KotH only)
-        if (weaponLike && !canAttack(weaponLike, dist) && !forceAttack && n > 2) {
-          let nearestDist = Infinity;
-          let nearestState: SpatialRobotCombatState | undefined;
-          const teamOfMap = gameModeState?.customData?.teamOf as Record<number, number> | undefined;
-          for (const s of states) {
-            if (s === state || !s.isAlive) continue;
-            // Skip teammates in team modes
-            if (teamOfMap && teamOfMap[s.teamIndex] === teamOfMap[state.teamIndex]) continue;
-            // Fallback for non-team modes: skip same teamIndex (self only)
-            if (!teamOfMap && s.teamIndex === state.teamIndex) continue;
-            const d = euclideanDistance(state.position, s.position);
-            if (canAttack(weaponLike, d) && d < nearestDist) {
-              nearestDist = d;
-              nearestState = s;
-            }
-          }
-          if (nearestState) {
-            target = nearestState;
-            dist = nearestDist;
+        // Target-of-opportunity: if the weapon can't reach the primary target,
+        // attack the nearest opponent within its own reach instead (n > 2 only).
+        // Patience never bypasses reach (#518).
+        if (!canAttack(weaponLike, dist) && n > 2) {
+          const opportunity = findNearestOpponentInReach(state, weaponLike, states, gameModeState);
+          if (opportunity) {
+            target = opportunity.target;
+            dist = opportunity.distance;
           }
         }
 
-        if (!weaponLike || canAttack(weaponLike, dist) || forceAttack) {
-          const ctx = buildSpatialContext(state, target, 'main', currentTime, arena, states, gameModeState, getPositionSnapshot());
-          performAttack(
-            state, target, state.robot.name, target.robot.name,
-            currentTime, 'main', events, ctx,
-          );
+        const attacked = canAttack(weaponLike, dist) && performAttack(
+          state, target, state.robot.name, target.robot.name,
+          currentTime, 'main', events,
+          buildSpatialContext(state, target, 'main', currentTime, arena, states, gameModeState, getPositionSnapshot()),
+        );
+
+        if (attacked) {
           state.lastAttackTime = currentTime;
           state.patienceTimer = 0;
           didAttack = true;
@@ -503,39 +531,27 @@ export function simulateBattleMulti(
           name: offWeapon.name,
           rangeBand: offWeapon.rangeBand as RangeBand,
         };
-        const patienceLimit = getPatienceLimit(state.combatAlgorithmScore);
 
-        // Target-of-opportunity for offhand melee weapon in FFA/KotH
+        // Target-of-opportunity for the offhand weapon (n > 2 only): starts from the
+        // main hand's target and re-validates with the offhand's own weapon and distance.
         let offTarget = target;
         let offDist = dist;
-        if (!canAttack(offWeaponLike, offDist) && !(state.patienceTimer >= patienceLimit) && n > 2) {
-          let nearestDist = Infinity;
-          let nearestState: SpatialRobotCombatState | undefined;
-          const teamOfMap = gameModeState?.customData?.teamOf as Record<number, number> | undefined;
-          for (const s of states) {
-            if (s === state || !s.isAlive) continue;
-            // Skip teammates in team modes
-            if (teamOfMap && teamOfMap[s.teamIndex] === teamOfMap[state.teamIndex]) continue;
-            // Fallback for non-team modes: skip same teamIndex (self only)
-            if (!teamOfMap && s.teamIndex === state.teamIndex) continue;
-            const d = euclideanDistance(state.position, s.position);
-            if (canAttack(offWeaponLike, d) && d < nearestDist) {
-              nearestDist = d;
-              nearestState = s;
-            }
-          }
-          if (nearestState) {
-            offTarget = nearestState;
-            offDist = nearestDist;
+        if (!canAttack(offWeaponLike, offDist) && n > 2) {
+          const opportunity = findNearestOpponentInReach(state, offWeaponLike, states, gameModeState);
+          if (opportunity) {
+            offTarget = opportunity.target;
+            offDist = opportunity.distance;
           }
         }
 
-        if (canAttack(offWeaponLike, offDist) || state.patienceTimer >= patienceLimit) {
-          const ctx = buildSpatialContext(state, offTarget, 'offhand', currentTime, arena, states, gameModeState, getPositionSnapshot());
-          performAttack(
-            state, offTarget, state.robot.name, offTarget.robot.name,
-            currentTime, 'offhand', events, ctx,
-          );
+        // A blocked offhand stays silent and keeps its cooldown ready (#518).
+        const offAttacked = canAttack(offWeaponLike, offDist) && performAttack(
+          state, offTarget, state.robot.name, offTarget.robot.name,
+          currentTime, 'offhand', events,
+          buildSpatialContext(state, offTarget, 'offhand', currentTime, arena, states, gameModeState, getPositionSnapshot()),
+        );
+
+        if (offAttacked) {
           state.lastOffhandAttackTime = currentTime;
           state.patienceTimer = 0;
           didAttack = true;
@@ -547,7 +563,8 @@ export function simulateBattleMulti(
       if (didAttack) attackedThisTick.add(state.teamIndex);
     }
 
-    // Update patience timers for robots that didn't attack
+    // Update patience timers for robots that didn't attack. Patience never grants an
+    // attack (#518); movement AI still reads it to seed path deviation.
     for (const state of aliveStates) {
       if (!attackedThisTick.has(state.teamIndex)) {
         state.patienceTimer += SIMULATION_TICK;
@@ -768,6 +785,7 @@ export function simulateBattleMulti(
  * Delegates to simulateBattleMulti() with 2 robots.
  * Preserves the exact same signature and return shape used by
  * league, tournament, and tag team orchestrators.
+ * Robots must have passed through `prepareRobotForCombat()`.
  *
  * @param robot1 First robot
  * @param robot2 Second robot

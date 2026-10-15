@@ -2,8 +2,8 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: v2.1  
-**Date**: February 9, 2026  
+**Version**: v2.2\
+**Date**: October 15, 2026\
 **Status**: Phase 1 & 2 Complete ✅ | Economic Indicators ✅
 
 ---
@@ -24,6 +24,7 @@
   - ✅ Total credits display (base reward + streaming revenue)
   - ✅ New API fields: `prestigeAwarded`, `fameAwarded`, `streamingRevenue`
   - ✅ Responsive layout for economic indicators (desktop and mobile)
+- v2.2 - Forfeit labels on CompactBattleCard and tournament bracket badges (#536, October 15, 2026)
 
 ---
 
@@ -167,6 +168,24 @@ The Battle History Page (`/battle-history`) provides match history, performance 
   - `battle.prestigeAwarded` → `prestige`
   - `battle.fameAwarded` → `fame`
   - `battle.streamingRevenue` → `streamingRevenue`
+
+### ✅ Forfeit Labels (#536)
+
+A forfeit is a battle that was not fought because a robot had no main weapon when it started. `GET /api/matches/history` returns two fields per battle, derived from permanent data (`battle_participants.forfeited`, or a `forfeit` tournament row), never from the battle log:
+
+- `isForfeit: boolean`
+- `forfeitedRobotIds: number[]`
+
+`CompactBattleCard` shows them in every layout (1v1, team, tag team, tournament, KotH/Grand Melee):
+
+| Viewer's robot | Label |
+|---|---|
+| Forfeited (id in `forfeitedRobotIds`) | A red "Forfeit — no main weapon" tag next to the robot. The result is the normal loss (or draw for a double forfeit) |
+| Won a forfeit battle | The opponent slot reads "{opponent} — won by forfeit" (team names in team modes) |
+
+Credits on the card are the actual award: the bye-level reward for the winner, 0 for the forfeiter.
+
+Tournament brackets (`components/tournament/MatchCard.tsx`) treat `forfeit` and `cancelled` rows as decided, with winner and loser styling. The eliminated side gets a red FORFEIT badge, or a neutral CANCELLED badge when the match was cancelled by a system error and the higher seed advanced (on the second row when nobody advanced). `bracketUtils` stops a participant's future path after a lost `completed`, `forfeit` or `cancelled` match, and after a `cancelled` match with no winner.
 
 ---
 

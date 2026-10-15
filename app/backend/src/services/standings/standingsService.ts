@@ -211,6 +211,11 @@ export interface AwardKothPointsParams {
   totalParticipants: number; // 5 or 6 typically
   zoneScore: number;
   zoneTime: number;
+  /**
+   * The robot had no main weapon and was placed last without fighting (rule 4):
+   * 0 points, never a win or a best placement, but the match still counts.
+   */
+  forfeited?: boolean;
 }
 
 /** Point scale for KotH placements (1st through 6th). */
@@ -229,9 +234,10 @@ export const KOTH_POINT_SCALE = [10, 6, 4, 2, 1, 0];
  */
 async function awardKothPoints(params: AwardKothPointsParams): Promise<Standing> {
   const { robotId, placement, zoneScore, zoneTime } = params;
+  const forfeited = params.forfeited === true;
 
-  // Determine points from F1-style scale (0 if placement exceeds scale length)
-  const points = placement <= KOTH_POINT_SCALE.length ? KOTH_POINT_SCALE[placement - 1] : 0;
+  // Determine points from F1-style scale (0 if placement exceeds scale length; 0 for a forfeit)
+  const points = forfeited || placement > KOTH_POINT_SCALE.length ? 0 : KOTH_POINT_SCALE[placement - 1];
 
   // Get or create the KotH standing for this robot
   const current = await getOrCreateStanding('robot', robotId, 'koth');
@@ -250,18 +256,19 @@ async function awardKothPoints(params: AwardKothPointsParams): Promise<Standing>
     totalMatches: newTotalMatches,
     totalZoneScore: newTotalZoneScore,
     totalZoneTime: newTotalZoneTime,
-    bestPlacement: newBestPlacement,
   };
+  // A forfeiter never fought: its placement is not a finish it achieved.
+  if (!forfeited) updateData.bestPlacement = newBestPlacement;
 
-  // 1st place counts as a "win" — update wins and streak
-  if (placement === 1) {
+  // 1st place counts as a "win" — update wins and streak (a forfeit never does)
+  if (placement === 1 && !forfeited) {
     const newWinStreak = current.currentWinStreak + 1;
     updateData.wins = current.wins + 1;
     updateData.currentWinStreak = newWinStreak;
     updateData.bestWinStreak = Math.max(current.bestWinStreak, newWinStreak);
     updateData.currentLoseStreak = 0;
   }
-  // Non-1st placements don't affect streaks
+  // Non-1st placements (and forfeits) don't affect streaks
 
   const updated = await prisma.standing.update({
     where: {
@@ -367,6 +374,8 @@ export interface AwardGrandMeleePointsParams {
   totalParticipants: number;
   damageDealt: number;
   survivalTime: number;
+  /** Placed last without fighting (rule 4): see `AwardKothPointsParams.forfeited`. */
+  forfeited?: boolean;
 }
 
 // The Grand Melee placement point scale is declared once, in
@@ -387,9 +396,10 @@ export interface AwardGrandMeleePointsParams {
  */
 async function awardGrandMeleePoints(params: AwardGrandMeleePointsParams): Promise<Standing> {
   const { robotId, placement, damageDealt, survivalTime } = params;
+  const forfeited = params.forfeited === true;
 
-  // Determine points from F1-style scale (0 if placement exceeds scale length)
-  const points = placement <= GRAND_MELEE_LP_SCALE.length ? GRAND_MELEE_LP_SCALE[placement - 1] : 0;
+  // Determine points from F1-style scale (0 if placement exceeds scale length; 0 for a forfeit)
+  const points = forfeited || placement > GRAND_MELEE_LP_SCALE.length ? 0 : GRAND_MELEE_LP_SCALE[placement - 1];
 
   // Get or create the Grand Melee standing for this robot
   const current = await getOrCreateStanding('robot', robotId, 'grand_melee');
@@ -408,18 +418,19 @@ async function awardGrandMeleePoints(params: AwardGrandMeleePointsParams): Promi
     totalMatches: newTotalMatches,
     totalZoneScore: newTotalZoneScore,
     totalZoneTime: newTotalZoneTime,
-    bestPlacement: newBestPlacement,
   };
+  // A forfeiter never fought: its placement is not a finish it achieved.
+  if (!forfeited) updateData.bestPlacement = newBestPlacement;
 
-  // 1st place counts as a "win" — update wins and streak
-  if (placement === 1) {
+  // 1st place counts as a "win" — update wins and streak (a forfeit never does)
+  if (placement === 1 && !forfeited) {
     const newWinStreak = current.currentWinStreak + 1;
     updateData.wins = current.wins + 1;
     updateData.currentWinStreak = newWinStreak;
     updateData.bestWinStreak = Math.max(current.bestWinStreak, newWinStreak);
     updateData.currentLoseStreak = 0;
   }
-  // Non-1st placements reset win streak but do NOT increment losses (same as KotH)
+  // Non-1st placements (and forfeits) reset win streak but do NOT increment losses (same as KotH)
   else {
     updateData.currentWinStreak = 0;
   }

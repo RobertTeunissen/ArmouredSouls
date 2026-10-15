@@ -4,6 +4,8 @@ import WeaponSlot from './WeaponSlot';
 import StanceSelector from './StanceSelector';
 import YieldThresholdSlider from './YieldThresholdSlider';
 import WeaponSelectionModal from './WeaponSelectionModal';
+import ConfirmationModal from './ConfirmationModal';
+import { buildUnequipForfeitWarning, buildUnequipSingleFallbackWarning } from '../utils/unequipWarning';
 import { RangeBand } from '../utils/weaponRange';
 import type { RobotWithAttributes } from '../types/robot';
 
@@ -49,11 +51,18 @@ interface BattleConfigTabProps {
   onRobotUpdate: (updatedRobot: Partial<Robot>) => void;
   onEquipWeapon: (slot: 'main' | 'offhand', weaponInventoryId: number) => Promise<void>;
   onUnequipWeapon: (slot: 'main' | 'offhand') => Promise<void>;
+  /**
+   * Display labels of the events this robot has matches booked in. When
+   * non-empty, unequipping asks for confirmation first. Owner view only.
+   */
+  heldEvents?: string[];
 }
 
-function BattleConfigTab({ robot, weapons, repairBayLevel = 0, activeRobotCount = 1, onRobotUpdate, onEquipWeapon, onUnequipWeapon }: BattleConfigTabProps) {
+function BattleConfigTab({ robot, weapons, repairBayLevel = 0, activeRobotCount = 1, onRobotUpdate, onEquipWeapon, onUnequipWeapon, heldEvents = [] }: BattleConfigTabProps) {
   const [showWeaponModal, setShowWeaponModal] = useState(false);
   const [weaponSlotToEquip, setWeaponSlotToEquip] = useState<'main' | 'offhand'>('main');
+  // Slot awaiting confirmation because the robot has booked matches.
+  const [pendingUnequip, setPendingUnequip] = useState<'main' | 'offhand' | null>(null);
 
   // Calculate HP percentage for color coding
   const hpPercent = (robot.currentHP / robot.maxHP) * 100;
@@ -102,6 +111,10 @@ function BattleConfigTab({ robot, weapons, repairBayLevel = 0, activeRobotCount 
   };
 
   const handleUnequipWeapon = async (slot: 'main' | 'offhand') => {
+    if (heldEvents.length > 0) {
+      setPendingUnequip(slot);
+      return;
+    }
     await onUnequipWeapon(slot);
   };
 
@@ -246,6 +259,26 @@ function BattleConfigTab({ robot, weapons, repairBayLevel = 0, activeRobotCount 
           onThresholdChange={handleThresholdChange}
         />
       </div>
+
+      {/* Unequip confirmation: booked matches are forfeited (main) or fought
+          with a single weapon (offhand). A warning, not a block. */}
+      {pendingUnequip && (
+        <ConfirmationModal
+          title={pendingUnequip === 'main' ? 'Unequip main weapon?' : 'Unequip offhand weapon?'}
+          message={pendingUnequip === 'main'
+            ? buildUnequipForfeitWarning(robot.name, heldEvents)
+            : buildUnequipSingleFallbackWarning(robot.name, heldEvents)}
+          confirmLabel="Unequip anyway"
+          cancelLabel={pendingUnequip === 'main' ? 'Keep weapon' : 'Keep offhand'}
+          isDestructive={pendingUnequip === 'main'}
+          onConfirm={() => {
+            const slot = pendingUnequip;
+            setPendingUnequip(null);
+            void onUnequipWeapon(slot);
+          }}
+          onCancel={() => setPendingUnequip(null)}
+        />
+      )}
 
       {/* Weapon Selection Modal */}
       {showWeaponModal && (

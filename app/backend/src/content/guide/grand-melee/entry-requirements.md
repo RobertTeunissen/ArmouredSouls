@@ -2,7 +2,7 @@
 title: "Entry Requirements"
 description: "What your robot needs to participate in Grand Melee — subscriptions, weapon readiness, and minimum player thresholds."
 order: 2
-lastUpdated: "2026-10-14"
+lastUpdated: "2026-10-15"
 relatedArticles:
   - grand-melee/basics
   - grand-melee/scoring-and-placement
@@ -17,7 +17,12 @@ You can manage subscriptions from the Robot Detail page or the Booking Office ov
 
 ## Weapon Readiness
 
-Your robot must have **at least one weapon equipped** to be eligible. Robots without a weapon cannot enter combat and will be excluded from matchmaking.
+Your robot must have the weapons its loadout needs: a main weapon, plus an offhand for Dual-Wield or a shield for Weapon+Shield. Robots that aren't battle ready are excluded from matchmaking.
+
+Weapons are checked again when the match starts:
+
+- **No main weapon:** your robot takes **last place** with no rewards, and the rest of the field still fights. If too few robots remain to run the match, the remaining robots receive byes instead.
+- **Main weapon but no offhand or shield:** your robot fights with its main weapon only, as a Single loadout, for that match. Your saved loadout doesn't change.
 
 ## Minimum Robot Threshold
 
@@ -31,4 +36,4 @@ Your robot enters Grand Melee's **Bronze tier** the first time you subscribe it.
 
 ## No Other Prerequisites
 
-There are no level requirements, no minimum ELO, and no prestige gates. Any robot with a weapon and a subscription can enter Grand Melee from day one.
+There are no level requirements, no minimum ELO, and no prestige gates. Any battle-ready robot with a subscription can enter Grand Melee from day one.

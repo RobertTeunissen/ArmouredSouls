@@ -12,9 +12,16 @@ interface MatchCardProps {
   resolvedParticipants?: Record<number, ResolvedParticipant>;
 }
 
+/**
+ * Statuses that settle a match. `forfeit` (a side had no main weapon) and
+ * `cancelled` (an errored match; the higher seed advances) are shown like a
+ * completed match, with a badge saying why.
+ */
+const DECIDED_MATCH_STATUSES: ReadonlySet<string> = new Set(['completed', 'forfeit', 'cancelled']);
+
 function getMatchState(match: TournamentMatchWithRobots): 'completed' | 'bye' | 'pending' | 'placeholder' {
   if (match.isByeMatch) return 'bye';
-  if (match.status === 'completed' && match.winnerId !== null) return 'completed';
+  if (DECIDED_MATCH_STATUSES.has(match.status) && match.winnerId !== null) return 'completed';
   if (match.participant1Id !== null && match.participant2Id !== null) return 'pending';
   return 'placeholder';
 }
@@ -109,10 +116,21 @@ const MatchCard: React.FC<MatchCardProps> = ({
   const p2Seed = match.participant2Id !== null ? seedMap.get(match.participant2Id) : undefined;
 
   const isByeMatch = matchState === 'bye';
-  const isP1Win = isByeMatch ? true : match.status === 'completed' && match.winnerId === match.participant1Id;
-  const isP2Win = !isByeMatch && match.status === 'completed' && match.winnerId === match.participant2Id;
-  const isP1Loss = !isByeMatch && match.status === 'completed' && !isP1Win && match.participant1Id !== null;
-  const isP2Loss = !isByeMatch && match.status === 'completed' && !isP2Win && match.participant2Id !== null;
+  const isDecided = DECIDED_MATCH_STATUSES.has(match.status);
+  const isP1Win = isByeMatch ? true : isDecided && match.winnerId === match.participant1Id;
+  const isP2Win = !isByeMatch && isDecided && match.winnerId === match.participant2Id;
+  const isP1Loss = !isByeMatch && isDecided && !isP1Win && match.participant1Id !== null;
+  const isP2Loss = !isByeMatch && isDecided && !isP2Win && match.participant2Id !== null;
+  // FORFEIT / CANCELLED badge, on the eliminated participant's row.
+  const statusBadge = isByeMatch ? null
+    : match.status === 'forfeit' ? { label: 'FORFEIT', className: 'bg-error/20 text-error' }
+    : match.status === 'cancelled' ? { label: 'CANCELLED', className: 'bg-surface-elevated text-secondary' }
+    : null;
+  const badgeOnP1 = statusBadge !== null && isP1Loss && !isP2Loss;
+  const badgeOnP2 = statusBadge !== null && !badgeOnP1;
+  const renderStatusBadge = (): React.ReactElement | null => statusBadge && (
+    <span className={`text-[9px] font-bold px-1 rounded shrink-0 ${statusBadge.className}`}>{statusBadge.label}</span>
+  );
 
   const resolvedP1 = match.participant1Id && resolvedParticipants ? resolvedParticipants[match.participant1Id] : undefined;
   const resolvedP2 = match.participant2Id && resolvedParticipants ? resolvedParticipants[match.participant2Id] : undefined;
@@ -136,6 +154,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
           resolvedParticipant={resolvedP1}
           isTeamTournament={isTeamTournament}
         />
+        {badgeOnP1 && renderStatusBadge()}
         {isP1User && <span className="text-[9px] text-primary font-medium shrink-0">YOU</span>}
       </div>
       <div className="border-t border-white/10/50 my-0.5" />
@@ -153,6 +172,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
               resolvedParticipant={resolvedP2}
               isTeamTournament={isTeamTournament}
             />
+            {badgeOnP2 && renderStatusBadge()}
             {isP2User && <span className="text-[9px] text-primary font-medium shrink-0">YOU</span>}
           </>
         )}
