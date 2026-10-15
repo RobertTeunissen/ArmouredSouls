@@ -138,11 +138,12 @@ function makeMockRobot(overrides: Partial<RobotWithWeapons> = {}): RobotWithWeap
     yieldThreshold: 10,
     loadoutType: 'single',
     stance: 'balanced',
-    mainWeaponId: null, offhandWeaponId: null,
+    mainWeaponId: 1, offhandWeaponId: null,
     imageUrl: null,
     createdAt: new Date('2025-01-01'),
     updatedAt: new Date('2025-01-01'),
-    mainWeapon: null,
+    // Armed by default: the simulator rejects robots without a main weapon.
+    mainWeapon: makeWeaponInventory(1) as unknown as RobotWithWeapons['mainWeapon'],
     offhandWeapon: null,
     ...overrides,
   } as unknown as RobotWithWeapons;

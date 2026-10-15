@@ -177,7 +177,6 @@ export interface CombatResult {
   };
 }
 
-export const BASE_WEAPON_COOLDOWN = 4; // seconds
 export const MAX_BATTLE_DURATION = 120; // seconds
 export const SIMULATION_TICK = 0.1; // 100ms per tick
 

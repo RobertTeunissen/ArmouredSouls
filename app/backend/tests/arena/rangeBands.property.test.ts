@@ -13,10 +13,12 @@ import {
   isWithinWeaponReach,
   initializeCombatState,
   buildSpatialContext,
+  simulateBattleMulti,
   CombatEvent,
   RobotWithWeapons,
   SpatialRobotCombatState,
 } from '../../src/services/battle/combatSimulator';
+import { BattleError, BattleErrorCode } from '../../src/errors/battleErrors';
 
 /**
  * Property-based tests for rangeBands module.
@@ -163,7 +165,7 @@ function weaponFixture(shape: WeaponShape, id: number): RobotWithWeapons['mainWe
   } as unknown as RobotWithWeapons['mainWeapon'];
 }
 
-/** Minimal numeric robot fixture (attributes are prepared/effective values). */
+/** Minimal numeric robot fixture (attributes are prepared/effective values); armed by default. */
 function robotFixture(
   name: string,
   overrides: Record<string, unknown> = {},
@@ -180,7 +182,7 @@ function robotFixture(
     syncProtocols: 0, supportSystems: 0, formationTactics: 0,
     currentHP: 1000, maxHP: 1000, currentShield: 100, maxShield: 100,
     yieldThreshold: 0, loadoutType: 'single', stance: 'balanced',
-    mainWeapon: null, offhandWeapon: null,
+    mainWeapon: weaponFixture('ranged', 9), offhandWeapon: null,
     ...overrides,
   } as unknown as RobotWithWeapons;
 }
@@ -302,13 +304,17 @@ describe('Physical reach invariant (#518)', () => {
       );
     });
 
-    it('an empty hand (Fists) keeps its any-distance behaviour', () => {
-      fc.assert(
-        fc.property(arbDistance(), (d) => {
-          expect(reachAt(robotFixture('Unarmed'), d, 'main')).toBe(true);
-        }),
-        { numRuns: 200 }
-      );
+    it('a robot without a main weapon never reaches the simulator (ROBOT_NOT_BATTLE_READY)', () => {
+      const unarmed = robotFixture('Unarmed', { id: 101, mainWeapon: null });
+      let thrown: unknown;
+      try {
+        simulateBattleMulti([robotFixture('Armed', { id: 100 }), unarmed]);
+      } catch (error) {
+        thrown = error;
+      }
+      expect(thrown).toBeInstanceOf(BattleError);
+      expect((thrown as BattleError).code).toBe(BattleErrorCode.ROBOT_NOT_BATTLE_READY);
+      expect((thrown as BattleError).details).toEqual({ robotIds: [101] });
     });
   });
 

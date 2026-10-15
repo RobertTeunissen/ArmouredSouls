@@ -3,6 +3,7 @@
  */
 
 import { BattleError, BattleErrorCode } from '../../../errors/battleErrors';
+import { assertAllRobotsArmed } from '../combatReadiness';
 import { euclideanDistance } from '../../arena/vector2d';
 import { createArena } from '../../arena/arenaLayout';
 import { classifyRangeBand, canAttack } from '../../arena/rangeBands';
@@ -73,6 +74,10 @@ function findNearestOpponentInReach(
  * their attributes as effective values and never re-derives weapon/tuning/loadout
  * bonuses. It does not mutate the robots' attribute fields.
  *
+ * Every robot must hold a main weapon. The battle-time readiness gate forfeits
+ * unarmed robots before they get here, so an unarmed robot is a bug signal: it
+ * throws `BattleError(ROBOT_NOT_BATTLE_READY)`, handled by the match failure policy.
+ *
  * @param robots Array of robots to fight (N >= 2)
  * @param config Battle configuration (draw rules, duration, game mode hooks)
  * @returns SpatialCombatResult with full arena metadata
@@ -90,6 +95,7 @@ export function simulateBattleMulti(
       { robotCount: n }
     );
   }
+  assertAllRobotsArmed(robots);
 
   const maxDuration = config.gameModeConfig?.maxDuration ?? config.maxDuration ?? MAX_BATTLE_DURATION;
   const gameModeConfig = config.gameModeConfig;
@@ -122,8 +128,13 @@ export function simulateBattleMulti(
     const facingTarget = n === 2
       ? (arena.spawnPositions[1 - i] ?? arena.center)
       : arena.center;
-    const mainCd = calcCooldown(robot, robot.mainWeapon?.weapon?.cooldown, 'main');
-    const offCd = calcCooldown(robot, robot.offhandWeapon?.weapon?.cooldown, 'offhand');
+    // Main weapon presence is asserted above.
+    const mainCd = calcCooldown(robot, robot.mainWeapon!.weapon!.cooldown, 'main');
+    // Without an offhand the offhand attack never fires (it is gated on the weapon).
+    const offhandWeapon = robot.offhandWeapon?.weapon;
+    const offCd = offhandWeapon
+      ? calcCooldown(robot, offhandWeapon.cooldown, 'offhand')
+      : Number.POSITIVE_INFINITY;
     return initializeCombatState(robot, spawn, facingTarget, i, mainCd, offCd);
   });
 
@@ -460,15 +471,14 @@ export function simulateBattleMulti(
       // Main weapon attack
       if (currentTime - state.lastAttackTime >= state.attackCooldown
           && state.currentHP > 0 && state.isAlive) {
-        const weapon = state.robot.mainWeapon?.weapon;
-        const weaponLike: WeaponLike | null = weapon
-          ? { name: weapon.name, rangeBand: weapon.rangeBand as RangeBand }
-          : null;
+        // Main weapon presence is asserted at battle start.
+        const weapon = state.robot.mainWeapon!.weapon!;
+        const weaponLike: WeaponLike = { name: weapon.name, rangeBand: weapon.rangeBand as RangeBand };
 
         // Target-of-opportunity: if the weapon can't reach the primary target,
         // attack the nearest opponent within its own reach instead (n > 2 only).
         // Patience never bypasses reach (#518).
-        if (weaponLike && !canAttack(weaponLike, dist) && n > 2) {
+        if (!canAttack(weaponLike, dist) && n > 2) {
           const opportunity = findNearestOpponentInReach(state, weaponLike, states, gameModeState);
           if (opportunity) {
             target = opportunity.target;
@@ -476,7 +486,7 @@ export function simulateBattleMulti(
           }
         }
 
-        const attacked = (!weaponLike || canAttack(weaponLike, dist)) && performAttack(
+        const attacked = canAttack(weaponLike, dist) && performAttack(
           state, target, state.robot.name, target.robot.name,
           currentTime, 'main', events,
           buildSpatialContext(state, target, 'main', currentTime, arena, states, gameModeState, getPositionSnapshot()),
@@ -488,7 +498,7 @@ export function simulateBattleMulti(
           didAttack = true;
           // Reset out-of-range suppression — robot successfully attempted an attack
           outOfRangeSuppressed.delete(state.teamIndex);
-        } else if (weaponLike) {
+        } else {
           // Out-of-range: show one message per streak, suppress until robot attacks
           if (!outOfRangeSuppressed.has(state.teamIndex)) {
             outOfRangeSuppressed.add(state.teamIndex);

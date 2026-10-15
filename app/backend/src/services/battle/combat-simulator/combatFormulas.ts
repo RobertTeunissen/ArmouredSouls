@@ -4,6 +4,7 @@
 
 import { Weapon } from '../../../../generated/prisma';
 import { formatWeaponDisplayName } from '../../../shared/utils/weaponRefinement';
+import { BattleError, BattleErrorCode } from '../../../errors/battleErrors';
 import {
   RobotWithWeapons,
   FormulaBreakdown,
@@ -415,27 +416,46 @@ export function shouldYield(state: SpatialRobotCombatState): boolean {
  * attached during `prepareRobotForCombat`. The display name is built via
  * `formatWeaponDisplayName(weapon.name, refinementCount)` so battle log events
  * naturally render rank prefixes (e.g. `Mastercrafted Volt Sabre`).
+ *
+ * There is no weaponless default: see `requireHandWeapon` for the errors.
  */
 export function getWeaponInfo(robot: RobotWithWeapons, hand: 'main' | 'offhand'): { name: string; baseDamage: number; customName: string | null } {
-  const weaponInventory = hand === 'main' ? robot.mainWeapon : robot.offhandWeapon;
-  if (weaponInventory?.weapon) {
-    const weaponRecord = weaponInventory.weapon as Weapon & {
-      __refinementCount?: number;
-      __customName?: string | null;
-    };
-    const refinementCount = weaponRecord.__refinementCount ?? 0;
-    const customName = weaponRecord.__customName ?? null;
-    return {
-      name: formatWeaponDisplayName(weaponInventory.weapon.name, refinementCount),
-      baseDamage: weaponInventory.weapon.baseDamage,
-      customName,
-    };
-  }
-  return {
-    name: 'Fists',
-    baseDamage: 10,
-    customName: null,
+  const weaponRecord = requireHandWeapon(robot, hand) as Weapon & {
+    __refinementCount?: number;
+    __customName?: string | null;
   };
+  const refinementCount = weaponRecord.__refinementCount ?? 0;
+  const customName = weaponRecord.__customName ?? null;
+  return {
+    name: formatWeaponDisplayName(weaponRecord.name, refinementCount),
+    baseDamage: weaponRecord.baseDamage,
+    customName,
+  };
+}
+
+/**
+ * The weapon held in `hand`. Every robot in combat is armed (the battle-time
+ * readiness gate forfeits unarmed robots first), so a missing weapon is a bug:
+ * no main weapon throws `ROBOT_NOT_BATTLE_READY`; an offhand lookup on a robot
+ * without an offhand throws `INVALID_BATTLE_STATE`.
+ */
+export function requireHandWeapon(robot: RobotWithWeapons, hand: 'main' | 'offhand'): Weapon {
+  const weapon = hand === 'main' ? robot.mainWeapon?.weapon : robot.offhandWeapon?.weapon;
+  if (weapon) return weapon;
+  if (hand === 'main') {
+    throw new BattleError(
+      BattleErrorCode.ROBOT_NOT_BATTLE_READY,
+      `Robot ${robot.id} has no main weapon in combat`,
+      500,
+      { robotId: robot.id },
+    );
+  }
+  throw new BattleError(
+    BattleErrorCode.INVALID_BATTLE_STATE,
+    `Robot ${robot.id} has no offhand weapon for an offhand action`,
+    500,
+    { robotId: robot.id },
+  );
 }
 
 /**
@@ -451,5 +471,6 @@ export function getWeaponStatsSummary(robot: RobotWithWeapons): string {
     const w = robot.offhandWeapon.weapon;
     parts.push(`Offhand: ${w.name} (${w.baseDamage} dmg, ${w.cooldown}s CD)`);
   }
-  return parts.length > 0 ? parts.join(', ') : 'Unarmed';
+  // Never empty: every robot in combat holds a main weapon.
+  return parts.join(', ');
 }

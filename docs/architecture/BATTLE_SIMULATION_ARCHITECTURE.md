@@ -400,7 +400,6 @@ therefore stay deterministic. Unarmed robots (Fists, no `rangeBand`) are unchang
 |---|---|---|
 | `SIMULATION_TICK` | 0.1s | Time resolution per tick |
 | `MAX_BATTLE_DURATION` | 120s | Maximum battle length before timeout |
-| `BASE_WEAPON_COOLDOWN` | 4s | Default attack interval |
 | `ARMOR_EFFECTIVENESS` | 1.5 | % damage reduction per armor point |
 | `PENETRATION_BONUS` | 2.0 | % damage increase per penetration above armor |
 

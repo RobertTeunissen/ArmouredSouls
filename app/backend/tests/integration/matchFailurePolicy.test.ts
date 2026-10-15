@@ -15,6 +15,11 @@
  *   exists leaves the match terminal, pays nothing on rerun, and the §11
  *   fought-battle signature finds the battle and stable (R3, at-most-once).
  *
+ * T26 — the simulator backstop: with the battle-time readiness gate bypassed
+ * (spied to let an unarmed robot through) in league 1v1, a solo tournament and
+ * KotH, the simulator throws `ROBOT_NOT_BATTLE_READY`, the policy cancels the
+ * match (R1 for the tournament) and the next match in the run completes.
+ *
  * Each case cancels any queued rows of its mode left by other suites first, so
  * the executor processes only this file's matches.
  */
@@ -26,6 +31,7 @@ import * as tagTeamSimulation from '../../src/services/tag-team/tagTeamSimulatio
 import * as tagTeamResultUpdater from '../../src/services/tag-team/tagTeamResultUpdater';
 import * as tagTeamBattleRecord from '../../src/services/tag-team/tagTeamBattleRecord';
 import * as battlePostCombat from '../../src/services/battle/battlePostCombat';
+import * as combatReadiness from '../../src/services/battle/combatReadiness';
 import { executeScheduledBattles } from '../../src/services/league/leagueBattleOrchestrator';
 import { executeScheduledTeamBattles } from '../../src/services/team-battle/teamBattleOrchestrator';
 import { executeScheduledTagTeamBattles } from '../../src/services/tag-team/tagTeamScheduler';
@@ -86,6 +92,10 @@ async function armedRobot(userId: number, elo = 1200): Promise<number> {
   return robot.id;
 }
 
+/** Remove a robot's main weapon (after scheduling: the robot is unarmed at battle time). */
+async function disarm(robotId: number): Promise<void> {
+  await prisma.robot.update({ where: { id: robotId }, data: { mainWeaponId: null } });
+}
 /** `count` robots, each in its own stable (so per-stable income is distinguishable). */
 async function soloRobots(count: number, eloBase = 1500): Promise<number[]> {
   const ids: number[] = [];
@@ -194,6 +204,21 @@ function failSimulateTeamBattleFor(failing: Set<number>): jest.SpyInstance {
   });
 }
 
+// ── Readiness gate bypass (T26): let unarmed robots reach the simulator ──
+function bypassMatchEntryGateFor(bypassed: Set<number>): jest.SpyInstance {
+  const original = combatReadiness.evaluateMatchEntry;
+  return jest.spyOn(combatReadiness, 'evaluateMatchEntry').mockImplementation((side1, side2) => {
+    if ([...side1, ...side2].some((r) => bypassed.has(r.id))) return { kind: 'fight', decisions: [] };
+    return original(side1, side2);
+  });
+}
+function bypassPlacementGateFor(bypassed: Set<number>): jest.SpyInstance {
+  const original = combatReadiness.partitionPlacementField;
+  return jest.spyOn(combatReadiness, 'partitionPlacementField').mockImplementation((robots) => {
+    if (robots.some((r) => bypassed.has(r.id))) return { ready: robots, forfeited: [], decisions: [] };
+    return original(robots);
+  });
+}
 // ── Assertions ───────────────────────────────────────────────────────
 
 async function battleCount(robots: number[]): Promise<number> {
@@ -209,10 +234,15 @@ async function stablesOf(robots: number[]): Promise<number[]> {
   return [...new Set(rows.map((r) => r.userId))];
 }
 
-async function expectUnifiedOutcome(failedId: number, okId: number, failedRobots: number[]): Promise<void> {
+async function expectUnifiedOutcome(
+  failedId: number,
+  okId: number,
+  failedRobots: number[],
+  reason: string = INJECTED,
+): Promise<void> {
   const failed = await prisma.scheduledMatch.findUniqueOrThrow({ where: { id: failedId } });
   expect(failed.status).toBe('cancelled');
-  expect(failed.cancelReason).toContain(INJECTED);
+  expect(failed.cancelReason).toContain(reason);
   const ok = await prisma.scheduledMatch.findUniqueOrThrow({ where: { id: okId } });
   expect(ok.status).toBe('completed');
   expect(await battleCount(failedRobots)).toBe(0);
@@ -387,6 +417,53 @@ describe('T17: a failing match is terminal, the run continues, the rerun does no
   });
 });
 
+// ── T26: the simulator backstop when the readiness gate is bypassed ──
+describe('T26: an unarmed robot that slips past the gate is a cancelled match, not a fought one', () => {
+  const NOT_READY = 'ROBOT_NOT_BATTLE_READY';
+  it('league 1v1', async () => {
+    await isolate('league_1v1');
+    const [a, b, c, d] = await soloRobots(4);
+    await enterRobotStandings([a, b, c, d], 'league_1v1');
+    const m1 = await scheduleUnified('league_1v1', 'robot', [a, b], 1);
+    const m2 = await scheduleUnified('league_1v1', 'robot', [c, d], 2);
+    await disarm(b);
+    bypassMatchEntryGateFor(new Set([b]));
+    const summary = await executeScheduledBattles();
+    expect(summary.failedBattles).toBe(1);
+    expect(summary.errors.join(' ')).toContain(NOT_READY);
+    await expectUnifiedOutcome(m1, m2, [a, b], NOT_READY);
+    await expectRerunIsInert(() => executeScheduledBattles(), [a, b, c, d]);
+  });
+  it('solo tournament (R1: the higher seed advances)', async () => {
+    const seeds = await soloRobots(4);
+    const { tournamentId, m1, m2 } = await createSoloTournament(seeds);
+    await disarm(seeds[3]);
+    bypassMatchEntryGateFor(new Set([seeds[3]]));
+    const result = await executeSoloTournamentRound(tournamentId);
+    expect(result.matchesCancelled).toBe(1);
+    expect(result.matchesExecuted).toBe(1);
+    const failed = await prisma.scheduledTournamentMatch.findUniqueOrThrow({ where: { id: m1 } });
+    expect(failed).toMatchObject({ status: 'cancelled', winnerId: seeds[0], battleId: null });
+    expect((await prisma.scheduledTournamentMatch.findUniqueOrThrow({ where: { id: m2 } })).status).toBe('completed');
+    expect(await battleCount([seeds[0], seeds[3]])).toBe(0);
+    await expectRerunIsInert(() => executeSoloTournamentRound(tournamentId), seeds);
+  });
+  it('King of the Hill', async () => {
+    await isolate('koth');
+    const field1 = await soloRobots(5);
+    const field2 = await soloRobots(5);
+    await enterRobotStandings([...field1, ...field2], 'koth');
+    const m1 = await scheduleUnified('koth', 'robot', field1, 1);
+    const m2 = await scheduleUnified('koth', 'robot', field2, 2);
+    await disarm(field1[2]);
+    bypassPlacementGateFor(new Set([field1[2]]));
+    const summary = await executeScheduledKothBattles();
+    expect(summary.failedMatches).toBe(1);
+    expect(summary.successfulMatches).toBe(1);
+    await expectUnifiedOutcome(m1, m2, field1, NOT_READY);
+    await expectRerunIsInert(() => executeScheduledKothBattles(), [...field1, ...field2]);
+  });
+});
 // ── Payment failures after the battle exists (R3) ───────────────────
 
 describe('T17: failures after the battle row exists are at-most-once', () => {

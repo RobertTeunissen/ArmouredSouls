@@ -28,6 +28,7 @@ import {
   RangeBand,
 } from './types';
 import { getWeaponOptimalRange, WeaponLike } from './rangeBands';
+import { BattleError, BattleErrorCode } from '../../errors/battleErrors';
 import { clampToArena } from './arenaLayout';
 
 /** Extended weapon shape with DPS fields needed for range preference */
@@ -77,14 +78,13 @@ export function getPreferredRange(state: RobotCombatState): RangeBand {
   const offhandWeapon = state.robot.offhandWeapon?.weapon as WeaponWithDPS | undefined;
   const loadout = state.robot.loadoutType;
 
-  // Single weapon, weapon+shield, or two-handed: use main weapon range
-  if (loadout === 'single' || loadout === 'weapon_shield' || loadout === 'two_handed') {
-    if (mainWeapon) return getWeaponOptimalRange(mainWeapon);
-    return 'short';
+  // Every robot in combat is armed (battle-time readiness gate).
+  if (!mainWeapon) {
+    throw new BattleError(BattleErrorCode.ROBOT_NOT_BATTLE_READY, 'Robot has no main weapon in combat', 500, { robotId: state.robot.id });
   }
 
-  // Dual wield
-  if (loadout === 'dual_wield' && mainWeapon && offhandWeapon) {
+  // Dual wield with both weapons
+  if (loadout === 'dual_wield' && offhandWeapon) {
     const mainRange = getWeaponOptimalRange(mainWeapon);
     const offhandRange = getWeaponOptimalRange(offhandWeapon);
 
@@ -103,7 +103,8 @@ export function getPreferredRange(state: RobotCombatState): RangeBand {
     return mainWeight >= 0.5 ? mainRange : offhandRange;
   }
 
-  return 'short'; // Fallback
+  // Single, weapon+shield, two-handed (and any other loadout): main weapon range
+  return getWeaponOptimalRange(mainWeapon);
 }
 
 /**

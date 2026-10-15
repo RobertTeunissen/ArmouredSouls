@@ -10,6 +10,7 @@ import { simulateBattleMulti } from '../../../src/services/battle/combatSimulato
 import * as fc from 'fast-check';
 import { Prisma } from '../../../generated/prisma';
 import type { RobotWithWeapons } from '../../../src/services/battle/combat-simulator/combatTypes';
+import { BattleErrorCode } from '../../../src/errors/battleErrors';
 
 // ─── Mock Factories ─────────────────────────────────────────────────
 
@@ -41,7 +42,7 @@ function createMockRobot(id: number, name: string, overrides: Partial<any> = {})
     battleReadiness: 100,
     lifetimeRepairCreditsPaid: 0,
     yieldThreshold: 10,
-    mainWeaponId: null,
+    mainWeaponId: 1,
     offhandWeaponId: null,
     imageUrl: null,
     offensiveWins: 0,
@@ -317,13 +318,15 @@ describe('computeMaxWeaponRange', () => {
     expect(computeMaxWeaponRange(robots)).toBe(12); // mid = 12
   });
 
-  it('should return 15 fallback when no weapons equipped', () => {
+  it('throws ROBOT_NOT_BATTLE_READY when no weapons are equipped', () => {
     const robots = [
       { mainWeapon: null, offhandWeapon: null },
       { mainWeapon: null, offhandWeapon: null },
     ];
 
-    expect(computeMaxWeaponRange(robots)).toBe(15);
+    expect(() => computeMaxWeaponRange(robots)).toThrow(
+      expect.objectContaining({ code: BattleErrorCode.ROBOT_NOT_BATTLE_READY }),
+    );
   });
 
   it('should consider offhand weapon range', () => {

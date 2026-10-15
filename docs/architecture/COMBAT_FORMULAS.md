@@ -301,7 +301,7 @@ Attack cooldown determines how frequently a robot can attack. It's calculated us
 ### Formula
 ```
 Effective Attack Speed = round2((Robot Attack Speed + Main Bonus + Offhand Bonus + Tuning) × (1 + Loadout Modifier))
-Base Cooldown = Weapon Cooldown (or BASE_WEAPON_COOLDOWN default)
+Base Cooldown = Weapon Cooldown (every robot in combat holds a main weapon; no default)
 Cooldown Penalty = Base Cooldown × 1.4 (only for offhand attacks)
 Final Cooldown = Cooldown (with penalty if offhand) / (1 + Effective Attack Speed / 50)
 ```

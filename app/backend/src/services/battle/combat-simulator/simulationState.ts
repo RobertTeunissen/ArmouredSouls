@@ -21,9 +21,8 @@ import {
   GameModeState,
   Position,
   WeaponLike,
-  BASE_WEAPON_COOLDOWN,
 } from './combatTypes';
-import { roundTime } from './combatFormulas';
+import { roundTime, requireHandWeapon } from './combatFormulas';
 import { buildPositionSnapshot } from './attackResolution';
 
 
@@ -101,9 +100,8 @@ export function initializeCombatState(
 
 
 // ─── Helper: calculate weapon cooldown ───────────────────────────────
-export function calcCooldown(robot: RobotWithWeapons, weaponCooldown: number | undefined, hand: 'main' | 'offhand'): number {
-  const baseCooldown = weaponCooldown || BASE_WEAPON_COOLDOWN;
-  const cooldownWithPenalty = hand === 'offhand' ? baseCooldown * 1.4 : baseCooldown;
+export function calcCooldown(robot: RobotWithWeapons, weaponCooldown: number, hand: 'main' | 'offhand'): number {
+  const cooldownWithPenalty = hand === 'offhand' ? weaponCooldown * 1.4 : weaponCooldown;
   // Prepared attack speed: base + both weapons + tuning, × loadout modifier (#517).
   const effectiveAttackSpeed = Number(robot.attackSpeed);
   return cooldownWithPenalty / (1 + effectiveAttackSpeed / 50);
@@ -141,9 +139,9 @@ export function buildSpatialContext(
   const dist = euclideanDistance(attacker.position, defender.position);
   const rangeBand = classifyRangeBand(dist);
 
-  const weapon = hand === 'main' ? attacker.robot.mainWeapon?.weapon : attacker.robot.offhandWeapon?.weapon;
-  const weaponLike: WeaponLike | null = weapon ? { name: weapon.name, rangeBand: weapon.rangeBand as RangeBand } : null;
-  const optimalRange = weaponLike ? getWeaponOptimalRange(weaponLike) : 'short';
+  const weapon = requireHandWeapon(attacker.robot, hand);
+  const weaponLike: WeaponLike = { name: weapon.name, rangeBand: weapon.rangeBand as RangeBand };
+  const optimalRange = getWeaponOptimalRange(weaponLike);
   const rangePenaltyMult = getRangePenalty(optimalRange, rangeBand);
   const hydraulicMult = calculateHydraulicBonus(attacker.numHydraulicSystems, rangeBand);
 

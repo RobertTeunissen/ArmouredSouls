@@ -17,6 +17,7 @@ import {
   roundTime,
   random,
   getWeaponInfo,
+  requireHandWeapon,
   calculateMalfunctionChance,
   calculateHitChance,
   calculateCritChance,
@@ -62,18 +63,15 @@ export function buildHPShieldSnapshot(
  * A weapon whose `rangeBand` is `melee` (melee, energy melee such as Shock Maul,
  * shields) only reaches a defender at distance ≤ 2; every other band reaches any
  * distance (range penalties apply separately). The distance is measured between the
- * real positions, never taken from a caller-supplied context. An empty hand (Fists)
- * has no range band and keeps its any-distance behaviour.
+ * real positions, never taken from a caller-supplied context. A missing weapon in
+ * the hand throws (see `requireHandWeapon`).
  */
 export function isWithinWeaponReach(
   attackerState: SpatialRobotCombatState,
   defenderState: SpatialRobotCombatState,
   hand: 'main' | 'offhand',
 ): boolean {
-  const weapon = hand === 'main'
-    ? attackerState.robot.mainWeapon?.weapon
-    : attackerState.robot.offhandWeapon?.weapon;
-  if (!weapon) return true;
+  const weapon = requireHandWeapon(attackerState.robot, hand);
   const weaponLike: WeaponLike = { name: weapon.name, rangeBand: weapon.rangeBand as RangeBand };
   return canAttack(weaponLike, euclideanDistance(attackerState.position, defenderState.position));
 }
@@ -342,8 +340,8 @@ export function performAttack(
       type: 'counter_out_of_range',
       attacker: defenderName,
       defender: attackerName,
-      weapon: counterResult.weapon?.name ?? 'Fists',
-      message: `🔄🚫 ${defenderName} tries to counter but ${counterResult.weapon?.name ?? 'weapon'} can't reach at ${spatialContext.distance.toFixed(1)} units!`,
+      weapon: counterResult.weapon.name,
+      message: `🔄🚫 ${defenderName} tries to counter but ${counterResult.weapon.name} can't reach at ${spatialContext.distance.toFixed(1)} units!`,
       ...spatialContext.positionSnapshot,
       distance: spatialContext.distance,
       rangeBand: spatialContext.rangeBand,
@@ -352,9 +350,7 @@ export function performAttack(
   }
 
   // Counter can proceed — perform counter attack
-  const counterWeaponInfo = counterResult.weapon
-    ? { name: counterResult.weapon.name, baseDamage: (counterResult.weapon as WeaponLike & { baseDamage: number }).baseDamage || 10 }
-    : getWeaponInfo(defenderState.robot, 'main');
+  const counterWeaponInfo = getWeaponInfo(defenderState.robot, counterResult.hand);
 
   const { damage: counterBaseDamage, breakdown: counterDamageBreakdown } = calculateBaseDamage(defenderState.robot, counterWeaponInfo.baseDamage, counterResult.hand);
   // Apply 70% counter multiplier, range penalty, and hydraulic bonus
