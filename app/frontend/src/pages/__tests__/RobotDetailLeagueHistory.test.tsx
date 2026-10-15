@@ -49,6 +49,16 @@ vi.mock('../../stores', () => ({
 }));
 
 // Mock Recharts
+// The page reads booked events from the Booking Office overview for the
+// unequip confirmation; the apiClient mock above does not serve that shape.
+vi.mock('../../stores/subscriptionStore', () => {
+  const state = { overview: null, fetchOverview: vi.fn().mockResolvedValue(undefined) };
+  const useSubscriptionStore = Object.assign(
+    (selector: (s: typeof state) => unknown) => selector(state),
+    { getState: () => state },
+  );
+  return { useSubscriptionStore };
+});
 vi.mock('recharts', () => ({
   ResponsiveContainer: ({ children }: { children: React.ReactNode }) => <div data-testid="responsive-container">{children}</div>,
   LineChart: ({ children }: { children: React.ReactNode }) => <div data-testid="line-chart">{children}</div>,
