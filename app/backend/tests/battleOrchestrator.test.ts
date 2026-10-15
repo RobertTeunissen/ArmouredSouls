@@ -374,6 +374,28 @@ describe('Battle Orchestrator', () => {
         const weaponInv2 = await prisma.weaponInventory.create({
           data: { userId: opponentUser.id, weaponId: practiceSword.id, pricePaid: 0 },
         });
+        // Complete loadouts: an incomplete one fights as single at battle time (rule 6),
+        // which would drop the loadout modifier this case asserts.
+        const offhandInv1 = await prisma.weaponInventory.create({
+          data: { userId: testUser.id, weaponId: practiceSword.id, pricePaid: 0 },
+        });
+        const plainShield = await prisma.weapon.create({
+          data: {
+            name: `Test Shield ${Date.now()}`,
+            weaponType: 'shield',
+            baseDamage: 0,
+            cooldown: 0,
+            cost: 0,
+            handsRequired: 'shield',
+            damageType: 'none',
+            loadoutType: 'weapon_shield',
+            rangeBand: 'melee',
+          },
+        });
+        testWeaponIds.push(plainShield.id);
+        const shieldInv2 = await prisma.weaponInventory.create({
+          data: { userId: opponentUser.id, weaponId: plainShield.id, pricePaid: 0 },
+        });
         const robot1 = await prisma.robot.create({
           data: {
             userId: testUser.id,
@@ -386,6 +408,7 @@ describe('Battle Orchestrator', () => {
             loadoutType: 'dual_wield',
             attackSpeed: 10,
             mainWeaponId: weaponInv1.id,
+            offhandWeaponId: offhandInv1.id,
           },
         });
         const robot2 = await prisma.robot.create({
@@ -400,6 +423,7 @@ describe('Battle Orchestrator', () => {
             loadoutType: 'weapon_shield',
             shieldCapacity: 10,
             mainWeaponId: weaponInv2.id,
+            offhandWeaponId: shieldInv2.id,
           },
         });
 
