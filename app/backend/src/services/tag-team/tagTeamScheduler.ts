@@ -430,7 +430,8 @@ export async function executeTagTeamBattle(match: ScheduledTagTeamMatchData): Pr
   }
   // In memory only, and before prepareRobotForCombat reads loadoutType.
   const allLoadedRobots = [team1.activeRobot, team1.reserveRobot, team2.activeRobot, team2.reserveRobot];
-  for (const robotId of applyLoadoutFallbacks(allLoadedRobots, entry.decisions)) {
+  const loadoutFallbackRobotIds = applyLoadoutFallbacks(allLoadedRobots, entry.decisions);
+  for (const robotId of loadoutFallbackRobotIds) {
     const decision = entry.decisions.find(d => d.robotId === robotId);
     logger.warn('[Battle] Loadout fallback', {
       matchId: match.id,
@@ -451,6 +452,9 @@ export async function executeTagTeamBattle(match: ScheduledTagTeamMatchData): Pr
 
   // Simulate the tag team battle
   const result = await simulateTagTeamBattle(team1 as TagTeamWithRobots, team2 as TagTeamWithRobots);
+  // The result updater reloads the robots with their stored loadout, so it
+  // needs to know which ones fought as single (no dual-wield win for them).
+  result.loadoutFallbackRobotIds = loadoutFallbackRobotIds;
 
   // The bye draw-override that used to sit here is gone (Spec #49 R12.7). It
   // existed only to correct a simulation that should not have run for a bye;

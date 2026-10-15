@@ -65,6 +65,9 @@ export async function updateTagTeamBattleResults(
 
   // Use pre-loaded teams from the scheduled match query (no re-fetch needed)
   const team1 = mapTeam(match.team1);
+  // The loadout each robot fought with: an incomplete one fought as single (rule 6).
+  const fallbackIds = new Set(result.loadoutFallbackRobotIds ?? []);
+  const battleLoadout = (robot: Robot): string => (fallbackIds.has(robot.id) ? 'single' : robot.loadoutType);
   const team2 = mapTeam(match.team2);
 
   // The bye branch that used to sit here is gone (Spec #49). It paid
@@ -179,7 +182,7 @@ export async function updateTagTeamBattleResults(
     fameIncrement: team1ActiveFame,
     battleType: 'tag_team',
     stance: team1.activeRobot.stance,
-    loadoutType: team1.activeRobot.loadoutType,
+    loadoutType: battleLoadout(team1.activeRobot),
   });
 
   await updateRobotCombatStats({
@@ -195,7 +198,7 @@ export async function updateTagTeamBattleResults(
     fameIncrement: team1ReserveFame,
     battleType: 'tag_team',
     stance: team1.reserveRobot.stance,
-    loadoutType: team1.reserveRobot.loadoutType,
+    loadoutType: battleLoadout(team1.reserveRobot),
   });
 
   await updateRobotCombatStats({
@@ -211,7 +214,7 @@ export async function updateTagTeamBattleResults(
     fameIncrement: team2ActiveFame,
     battleType: 'tag_team',
     stance: team2.activeRobot.stance,
-    loadoutType: team2.activeRobot.loadoutType,
+    loadoutType: battleLoadout(team2.activeRobot),
   });
 
   await updateRobotCombatStats({
@@ -227,7 +230,7 @@ export async function updateTagTeamBattleResults(
     fameIncrement: team2ReserveFame,
     battleType: 'tag_team',
     stance: team2.reserveRobot.stance,
-    loadoutType: team2.reserveRobot.loadoutType,
+    loadoutType: battleLoadout(team2.reserveRobot),
   });
 
   // Update teams standings via standingsService

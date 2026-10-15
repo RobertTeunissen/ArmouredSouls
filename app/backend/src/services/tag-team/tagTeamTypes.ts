@@ -25,6 +25,8 @@ export interface TagTeamBattleResult {
   isDraw: boolean;
   /** True when a team forfeited at battle time (no main weapon); nothing was simulated. */
   isForfeit?: boolean;
+  /** Robots that fought as `single` because their loadout was incomplete (rule 6); their stored loadout is unchanged. */
+  loadoutFallbackRobotIds?: number[];
   durationSeconds: number;
   team1TagOutTime?: number;
   team2TagOutTime?: number;

@@ -35,6 +35,7 @@ import { battlesForRobots } from '../cleanupHelper';
 import { useFinancialCaptureTestEnvironment } from '../financialCaptureTestHelper';
 import { enterRobotStanding, enterTeamStanding } from '../helpers/standings';
 import { createTagTeamFixture } from '../helpers/tagTeam';
+import * as tagTeamSimulation from '../../src/services/tag-team/tagTeamSimulation';
 
 useFinancialCaptureTestEnvironment();
 
@@ -505,5 +506,33 @@ describe.each(MODE_CASES.map((c) => [c.mode, c] as const))('%s battle-time forfe
     expect(after.loadoutType).toBe('dual_wield');
     expect(after.dualWieldWins).toBe(before.dualWieldWins);
     expect(after.totalBattles).toBe(before.totalBattles + 1);
+  });
+});
+
+// The mode table's T8-R6 cannot pick the winner, so it only catches this when the
+// fallback team happens to win. Here it always wins: a robot that fought as single
+// must not be credited a dual-wield win (rule 6).
+describe('tag_team T8-R6: the fallback robot earns no dual-wield win when its team wins', () => {
+  it('records the battle loadout, not the stored one', async () => {
+    await isolate('tag_team');
+    const side1 = await tagTeamCase.createSide(['dual_wield', 'single']);
+    const side2 = await tagTeamCase.createSide();
+    await scheduleUnified('tag_team', 'team', [side1.participantId, side2.participantId]);
+    const incomplete = side1.robots[0];
+    await unequipOffhandWeapon(side1.stableId, incomplete);
+    const [before] = await robotSnapshot([incomplete]);
+    const original = tagTeamSimulation.simulateTagTeamBattle;
+    jest.spyOn(tagTeamSimulation, 'simulateTagTeamBattle').mockImplementation(async (t1, t2) => {
+      const result = await original(t1, t2);
+      // Side 1's active robot (the fallback one) is reported as the winner.
+      return { ...result, winnerId: t1.activeRobotId, isDraw: false };
+    });
+
+    await executeScheduledTagTeamBattles();
+
+    const [after] = await robotSnapshot([incomplete]);
+    expect(after.wins).toBe(before.wins + 1);
+    expect(after.loadoutType).toBe('dual_wield');
+    expect(after.dualWieldWins).toBe(before.dualWieldWins);
   });
 });
