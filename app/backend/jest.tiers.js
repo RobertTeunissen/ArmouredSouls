@@ -143,6 +143,7 @@ const DB_DEPENDENT = [
   'tests/integration/forfeitHistory.test.ts',
   'tests/integration/tournamentForfeit.test.ts',
   'tests/integration/placementForfeit.test.ts',
+  'tests/integration/robotCacheInvalidation.test.ts',
   // Hall of Records "Most Battles" and its accolade rank on the all-modes count (SQL)
   'tests/integration/mostBattlesAllModes.test.ts',
   // Spec #55 — Domain_Service_Extraction (task group 2)

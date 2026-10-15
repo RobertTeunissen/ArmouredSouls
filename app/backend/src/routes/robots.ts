@@ -293,6 +293,7 @@ router.put('/:id/equip-offhand-weapon', authenticateToken, validateRequest({ par
   } catch { /* achievement failures don't block */ }
 
   res.json({ robot: finalRobot, message: 'Offhand weapon equipped successfully', achievementUnlocks });
+  invalidateUserRobotsCache(userId);
 });
 
 // Unequip main weapon
@@ -306,6 +307,7 @@ router.delete('/:id/unequip-main-weapon', authenticateToken, validateRequest({ p
 
   const finalRobot = await unequipMainWeapon(userId, robotId);
   res.json({ robot: finalRobot, message: 'Main weapon unequipped successfully' });
+  invalidateUserRobotsCache(userId);
 });
 
 // Unequip offhand weapon
@@ -319,6 +321,7 @@ router.delete('/:id/unequip-offhand-weapon', authenticateToken, validateRequest(
 
   const finalRobot = await unequipOffhandWeapon(userId, robotId);
   res.json({ robot: finalRobot, message: 'Offhand weapon unequipped successfully' });
+  invalidateUserRobotsCache(userId);
 });
 
 // Change loadout type
@@ -342,6 +345,7 @@ router.put('/:id/loadout-type', authenticateToken, validateRequest({ params: rob
 
   const finalRobot = await changeLoadoutType(userId, robotId, loadoutType);
   res.json({ robot: finalRobot, message: `Loadout type changed to ${loadoutType}` });
+  invalidateUserRobotsCache(userId);
 });
 
 // Update robot stance
