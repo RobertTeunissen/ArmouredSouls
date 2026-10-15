@@ -29,24 +29,6 @@ import {
 import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
 import standingsService from '../standings/standingsService';
 
-/**
- * Check if a team is ready for battle
- * Requirement 8.1, 8.2, 8.3: Both robots must have HP > yield threshold, all weapons equipped
- * Requirement 11.3: Dynamic eligibility checking after earlier matches
- */
-export async function checkTeamReadinessForBattle(team: {
-  members: Array<{ robot: Robot }>;
-} | null): Promise<boolean> {
-  if (!team || team.members.length < 2) return false;
-
-  const activeRobot = team.members[0].robot;
-  const reserveRobot = team.members[1].robot;
-
-  if (!activeRobot.mainWeaponId) return false;
-  if (!reserveRobot.mainWeaponId) return false;
-
-  return true;
-}
 /** Minimal shape of a scheduled tag-team match passed from the orchestrator. */
 interface TagTeamMatchWithTeams {
   id: number;

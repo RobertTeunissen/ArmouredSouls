@@ -23,6 +23,8 @@ export interface TagTeamBattleResult {
   battleId: number;
   winnerId: number | null;
   isDraw: boolean;
+  /** True when a team forfeited at battle time (no main weapon); nothing was simulated. */
+  isForfeit?: boolean;
   durationSeconds: number;
   team1TagOutTime?: number;
   team2TagOutTime?: number;

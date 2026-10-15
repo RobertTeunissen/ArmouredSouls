@@ -278,7 +278,7 @@ describe('Tag Team Auto-Repair Integration Test', () => {
     await repairRobotsForEvent('tag_team');
     const battleResult = await executeScheduledTagTeamBattles();
     expect(battleResult.totalBattles).toBe(1);
-    expect(battleResult.skippedDueToUnreadyRobots).toBe(0);
+    expect(battleResult.forfeits).toBe(0);
 
     console.log('[Test] Step 6: Verifying repairs and currency deduction...');
     
@@ -425,7 +425,7 @@ describe('Tag Team Auto-Repair Integration Test', () => {
     await repairRobotsForEvent('tag_team');
     const battleResult = await executeScheduledTagTeamBattles();
     expect(battleResult.totalBattles).toBe(1);
-    expect(battleResult.skippedDueToUnreadyRobots).toBe(0);
+    expect(battleResult.forfeits).toBe(0);
 
     console.log('[Test] Step 4: Verifying user went into negative currency...');
     

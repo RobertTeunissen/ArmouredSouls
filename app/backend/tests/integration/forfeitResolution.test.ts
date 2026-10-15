@@ -25,6 +25,8 @@ import type { MatchType, StandingsMode } from '../../generated/prisma';
 import { executeScheduledBattles, processBattle } from '../../src/services/league/leagueBattleOrchestrator';
 import { executeScheduledTeamBattles } from '../../src/services/team-battle/teamBattleOrchestrator';
 import { calculateTeamBattleELOChanges } from '../../src/services/team-battle/teamBattleRewardService';
+import { executeScheduledTagTeamBattles } from '../../src/services/tag-team/tagTeamScheduler';
+import { calculateTagTeamELOChanges } from '../../src/services/tag-team/tagTeamRewards';
 import { unequipMainWeapon, unequipOffhandWeapon } from '../../src/services/robot/robotWeaponService';
 import { buildForfeitBattleIncomeEventId } from '../../src/services/financial/financialEventIdentity';
 import { resolveByeReward, type TierScaledByeMode } from '../../src/utils/byeRewards';
@@ -32,6 +34,7 @@ import { calculateELOChange } from '../../src/utils/battleMath';
 import { battlesForRobots } from '../cleanupHelper';
 import { useFinancialCaptureTestEnvironment } from '../financialCaptureTestHelper';
 import { enterRobotStanding, enterTeamStanding } from '../helpers/standings';
+import { createTagTeamFixture } from '../helpers/tagTeam';
 
 useFinancialCaptureTestEnvironment();
 
@@ -146,6 +149,8 @@ interface ModeCase {
   usesWinningSide: boolean;
   /** Robot index on a side to make unready in T8 (tag team: the reserve). */
   unreadyIndex: number;
+  /** Participant roles by slot, for modes that record them (tag team). */
+  roles?: string[];
 }
 
 const leagueCase: ModeCase = {
@@ -239,7 +244,32 @@ function teamLeagueCase(teamSize: 2 | 3): ModeCase {
   };
 }
 
-const MODE_CASES: ModeCase[] = [leagueCase, teamLeagueCase(2), teamLeagueCase(3)];
+/** T11: a tag team's RESERVE without a main weapon forfeits its team (it used to cancel the match). */
+const tagTeamCase: ModeCase = {
+  mode: 'tag_team',
+  matchType: 'tag_team',
+  participantType: 'team',
+  standingMode: 'tag_team',
+  standingEntityType: 'team',
+  async createSide(loadouts = []) {
+    const stableId = await createStable();
+    const active = await armedRobot(stableId, loadouts[0] ?? 'single');
+    const reserve = await armedRobot(stableId, loadouts[1] ?? 'single');
+    const team = await createTagTeamFixture(stableId, active, reserve, { leaguePoints: START_LP });
+    teamIds.push(team.id);
+    return { participantId: team.id, stableId, robots: [active, reserve] };
+  },
+  run: () => executeScheduledTagTeamBattles(),
+  forfeitsReported: (result) => (result as { forfeits: number }).forfeits,
+  resolveOnce: () => executeScheduledTagTeamBattles(),
+  expectedElo: (side1, side2, forfeitingSides) => teamElo(side1, side2, forfeitingSides, calculateTagTeamELOChanges),
+  battleWinnerId: (ready) => ready.participantId,
+  usesWinningSide: true,
+  unreadyIndex: 1,
+  roles: ['active', 'reserve'],
+};
+
+const MODE_CASES: ModeCase[] = [leagueCase, teamLeagueCase(2), teamLeagueCase(3), tagTeamCase];
 
 // ── Assertion helpers ────────────────────────────────────────────────
 
@@ -339,6 +369,10 @@ describe.each(MODE_CASES.map((c) => [c.mode, c] as const))('%s battle-time forfe
       expect(p.streamingRevenue).toBe(0);
       expect(p.prestigeAwarded).toBe(0);
       expect(p.fameAwarded).toBe(0);
+      if (c.roles) {
+        const side = side1.robots.includes(p.robotId) ? side1 : side2;
+        expect(p.role).toBe(c.roles[side.robots.indexOf(p.robotId)]);
+      }
     }
 
     // Exactly one ledger + audit pair, for the ready stable, with the forfeit identity.
