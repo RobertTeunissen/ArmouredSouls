@@ -49,13 +49,17 @@ import { getTuningBonusesBatch } from '../../../src/services/tuning-pool';
 
 const STOP_AFTER_CREATE = new Error('stop after battle.create');
 
+// Armed: a robot without a main weapon forfeits at battle time (rule 1) and
+// never reaches the simulator this suite inspects.
+const armed = (id: number) => ({ mainWeapon: { id, weapon: { id } }, offhandWeapon: null });
+
 const team1Robots = [
-  { id: 101, name: 'A', userId: 1, elo: 1500, maxHP: 1000, currentHP: 1000, stance: 'balanced', loadoutType: 'single' },
-  { id: 102, name: 'B', userId: 1, elo: 1500, maxHP: 1000, currentHP: 1000, stance: 'balanced', loadoutType: 'single' },
+  { id: 101, name: 'A', userId: 1, elo: 1500, maxHP: 1000, currentHP: 1000, stance: 'balanced', loadoutType: 'single', ...armed(101) },
+  { id: 102, name: 'B', userId: 1, elo: 1500, maxHP: 1000, currentHP: 1000, stance: 'balanced', loadoutType: 'single', ...armed(102) },
 ];
 const team2Robots = [
-  { id: 201, name: 'C', userId: 2, elo: 1500, maxHP: 1000, currentHP: 1000, stance: 'balanced', loadoutType: 'single' },
-  { id: 202, name: 'D', userId: 2, elo: 1500, maxHP: 1000, currentHP: 1000, stance: 'balanced', loadoutType: 'single' },
+  { id: 201, name: 'C', userId: 2, elo: 1500, maxHP: 1000, currentHP: 1000, stance: 'balanced', loadoutType: 'single', ...armed(201) },
+  { id: 202, name: 'D', userId: 2, elo: 1500, maxHP: 1000, currentHP: 1000, stance: 'balanced', loadoutType: 'single', ...armed(202) },
 ];
 
 const match = {

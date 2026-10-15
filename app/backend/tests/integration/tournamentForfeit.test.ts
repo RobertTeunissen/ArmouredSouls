@@ -16,6 +16,10 @@
  * - T10: rerun / concurrent resolution → one battle, one ledger row.
  * - T8-R6: an incomplete loadout (dual_wield without offhand) fights as single,
  *   the stored loadout is unchanged, one `[Battle] Loadout fallback` warn.
+ * - T9b (team modes): roster/subscription forfeits use the same writer, decided
+ *   per side together with weapon readiness (`decideTeamTournamentEntry`);
+ *   linked fought battles resume before the entry gate; the
+ *   `processTeamTournamentBattle` backstop forfeits instead of simulating.
  */
 import prisma from '../../src/lib/prisma';
 import logger from '../../src/config/logger';
@@ -25,12 +29,21 @@ import {
   executeSoloTournamentRound,
   processTournamentBattle,
 } from '../../src/services/tournament/tournamentBattleOrchestrator';
+import {
+  executeTeamTournamentRound,
+  processTeamTournamentBattle,
+} from '../../src/services/tournament/teamTournamentBattleOrchestrator';
+import * as teamBattleEngine from '../../src/services/team-battle/teamBattleEngine';
+import * as battlePostCombat from '../../src/services/battle/battlePostCombat';
+import { calculateTeamBattleELOChanges } from '../../src/services/team-battle/teamBattleRewardService';
+import { getMatchHistory } from '../../src/services/match/matchHistoryService';
 import { unequipMainWeapon, unequipOffhandWeapon } from '../../src/services/robot/robotWeaponService';
 import { buildForfeitBattleIncomeEventId } from '../../src/services/financial/financialEventIdentity';
 import { resolveByeReward, type TournamentByeMode } from '../../src/utils/byeRewards';
 import { calculateELOChange } from '../../src/utils/battleMath';
 import { battlesForRobots } from '../cleanupHelper';
 import { useFinancialCaptureTestEnvironment } from '../financialCaptureTestHelper';
+import { subscribeTeamMembers } from '../helpers/subscriptions';
 
 useFinancialCaptureTestEnvironment();
 
@@ -133,7 +146,61 @@ const soloCase: ModeCase = {
   usesWinningSide: false,
 };
 
-const MODE_CASES: ModeCase[] = [soloCase];
+/** Every member moves by its team's change (the fought convention). */
+function teamElo(
+  side1: Array<{ id: number; elo: number }>,
+  side2: Array<{ id: number; elo: number }>,
+  forfeitingSides: Array<1 | 2>,
+): Record<number, number> {
+  const sum = (rs: Array<{ elo: number }>) => rs.reduce((acc, r) => acc + r.elo, 0);
+  const isDraw = forfeitingSides.length === 2;
+  const changes = calculateTeamBattleELOChanges(sum(side1), sum(side2), !isDraw && forfeitingSides[0] === 2, isDraw);
+  return Object.fromEntries([
+    ...side1.map((r) => [r.id, r.elo + changes.team1Change]),
+    ...side2.map((r) => [r.id, r.elo + changes.team2Change]),
+  ]);
+}
+
+interface TeamModeCase extends ModeCase {
+  teamSize: 2 | 3;
+}
+
+function teamCase(teamSize: 2 | 3): TeamModeCase {
+  const mode = teamSize === 2 ? 'tournament_2v2' : 'tournament_3v3';
+  const participantType = teamSize === 2 ? 'team_2v2' : 'team_3v3';
+  return {
+    mode,
+    teamSize,
+    // Any member: the second one, so the rule is not "slot 0 only".
+    unreadyIndex: 1,
+    participantType,
+    async createEntrant(elo, loadouts = []) {
+      const stableId = await createStable();
+      const robots: number[] = [];
+      for (let i = 0; i < teamSize; i++) robots.push(await armedRobot(stableId, elo, loadouts[i] ?? 'single'));
+      const team = await prisma.teamBattle.create({
+        data: {
+          stableId, teamSize, teamName: `${RUN}_t${next()}`.slice(0, 32),
+          members: { create: robots.map((robotId, slotIndex) => ({ robotId, slotIndex })) },
+        },
+      });
+      teamIds.push(team.id);
+      await subscribeTeamMembers([team.id], mode);
+      return { id: team.id, robots, stableId };
+    },
+    createTournament: (total, maxRounds) => createTournamentRow(participantType, total, maxRounds),
+    run: (tournamentId) => executeTeamTournamentRound(tournamentId, teamSize),
+    forfeitsReported: (result) => (result as { matchesForfeited: number }).matchesForfeited,
+    // processTeamTournamentBattle directly: its own readiness backstop resolves the forfeit.
+    resolveOnce: async (row) =>
+      processTeamTournamentBattle(row, await prisma.tournament.findUniqueOrThrow({ where: { id: row.tournamentId } })),
+    expectedElo: teamElo,
+    usesWinningSide: true,
+  };
+}
+
+const TEAM_CASES: TeamModeCase[] = [teamCase(2), teamCase(3)];
+const MODE_CASES: ModeCase[] = [soloCase, ...TEAM_CASES];
 
 /**
  * A bracket. `pairs` lists round-1 matches by seed (1-based); later rounds get
@@ -435,5 +502,193 @@ describe.each(MODE_CASES.map((c) => [c.mode, c] as const))('%s battle-time forfe
     expect(after.dualWieldWins).toBe(before.dualWieldWins);
     expect(after.totalBattles).toBe(before.totalBattles + 1);
     expect((await prisma.scheduledTournamentMatch.findUniqueOrThrow({ where: { id: round1[0] } })).status).toBe('completed');
+  });
+});
+
+// ── T9b: team tournament roster forfeits share the writer (A5, §5.5) ──
+
+/** Fight a team match up to its battle link, then stop: the first income award throws. */
+async function linkFoughtBattle(matchId: number): Promise<number> {
+  const row = await prisma.scheduledTournamentMatch.findUniqueOrThrow({ where: { id: matchId } });
+  const tournament = await prisma.tournament.findUniqueOrThrow({ where: { id: row.tournamentId } });
+  jest.spyOn(battlePostCombat, 'awardCreditsWithLedger').mockRejectedValueOnce(new Error('injected crash after link'));
+  await expect(processTeamTournamentBattle(row, tournament)).rejects.toThrow('injected crash after link');
+  jest.restoreAllMocks();
+  const linked = await prisma.scheduledTournamentMatch.findUniqueOrThrow({ where: { id: matchId } });
+  expect(linked.status).toBe('scheduled');
+  expect(linked.battleId).not.toBeNull();
+  return linked.battleId!;
+}
+
+describe.each(TEAM_CASES.map((c) => [c.mode, c] as const))('%s roster forfeits (T9b)', (_mode, c) => {
+  const sumElo = (rows: Array<{ elo: number }>) => rows.reduce((s, r) => s + r.elo, 0);
+
+  it('(a) a deleted forfeiting team: only the ready side is written and paid; history shows a forfeit', async () => {
+    const e = await entrantsFor(c, 4);
+    const { tournamentId, round1 } = await createBracket(c, e, [[1, 4], [3, 2]], 2);
+    const [ready, gone] = [e[0], e[3]];
+    await prisma.teamBattle.delete({ where: { id: gone.id } });
+    const before = await robotSnapshot([...ready.robots, ...gone.robots]);
+
+    const result = await c.run(tournamentId);
+    expect(c.forfeitsReported(result)).toBe(1);
+
+    const row = await prisma.scheduledTournamentMatch.findUniqueOrThrow({ where: { id: round1[0] } });
+    expect(row).toMatchObject({ status: 'forfeit', winnerId: ready.id });
+    const battle = await prisma.battle.findUniqueOrThrow({ where: { id: row.battleId! }, include: { participants: true } });
+    expect(battle).toMatchObject({ winnerId: ready.id, winningSide: 1 });
+    expect(battle.participants.map((p) => p.robotId).sort()).toEqual([...ready.robots].sort());
+    expect(battle.participants.every((p) => !p.forfeited)).toBe(true);
+
+    const reward = resolveByeReward({ mode: c.mode, totalParticipants: 4, currentRound: 1, maxRounds: 2 });
+    const ledger = await prisma.financialLedger.findMany({ where: { userId: { in: [ready.stableId, gone.stableId] } } });
+    expect(ledger).toHaveLength(1);
+    expect(ledger[0]).toMatchObject({
+      userId: ready.stableId,
+      amount: reward.credits,
+      financialEventId: buildForfeitBattleIncomeEventId(round1[0], ready.stableId, c.mode),
+    });
+
+    // Equal strength: a missing forfeiter roster counts as the ready team's sum.
+    const b = new Map(before.map((r) => [r.id, r]));
+    const readySum = sumElo(ready.robots.map((id) => b.get(id)!));
+    const change = calculateTeamBattleELOChanges(readySum, readySum, true, false).team1Change;
+    for (const r of await robotSnapshot([...ready.robots, ...gone.robots])) {
+      expect(r.elo).toBe(b.get(r.id)!.elo + (ready.robots.includes(r.id) ? change : 0));
+      if (gone.robots.includes(r.id)) expect(r.totalBattles).toBe(b.get(r.id)!.totalBattles);
+    }
+
+    // No opponent row: the tournament_matches.status='forfeit' lookup classifies it.
+    const history = await getMatchHistory({ page: 1, perPage: 50, userId: ready.stableId });
+    const entry = history.data.find((h) => (h as { id: number }).id === battle.id) as unknown as { isForfeit: boolean } | undefined;
+    expect(entry?.isForfeit).toBe(true);
+  });
+
+  it('(b) a short forfeiting team: its loaded members take the loss', async () => {
+    const e = await entrantsFor(c, 4);
+    const { tournamentId, round1 } = await createBracket(c, e, [[1, 4], [3, 2]], 2);
+    const [ready, short] = [e[0], e[3]];
+    const removed = short.robots[1];
+    await prisma.teamBattleMember.deleteMany({ where: { teamId: short.id, robotId: removed } });
+    const loaded = short.robots.filter((id) => id !== removed);
+    const before = await robotSnapshot([...ready.robots, ...short.robots]);
+
+    await c.run(tournamentId);
+
+    const row = await prisma.scheduledTournamentMatch.findUniqueOrThrow({ where: { id: round1[0] } });
+    expect(row).toMatchObject({ status: 'forfeit', winnerId: ready.id });
+    const battle = await prisma.battle.findUniqueOrThrow({ where: { id: row.battleId! }, include: { participants: true } });
+    expect(battle.participants.map((p) => p.robotId).sort()).toEqual([...ready.robots, ...loaded].sort());
+    for (const p of battle.participants) expect(p.forfeited).toBe(loaded.includes(p.robotId));
+
+    const b = new Map(before.map((r) => [r.id, r]));
+    const readySum = sumElo(ready.robots.map((id) => b.get(id)!));
+    const changes = calculateTeamBattleELOChanges(readySum, readySum, true, false);
+    for (const r of await robotSnapshot([...ready.robots, ...short.robots])) {
+      const prev = b.get(r.id)!;
+      if (ready.robots.includes(r.id)) expect(r.elo).toBe(prev.elo + changes.team1Change);
+      if (loaded.includes(r.id)) {
+        expect(r.elo).toBe(prev.elo + changes.team2Change);
+        expect(r.losses).toBe(prev.losses + 1);
+      }
+      if (r.id === removed) expect(r).toEqual(prev);
+    }
+  });
+
+  it('(c) both teams deleted: housekeeping, no battle', async () => {
+    const e = await entrantsFor(c, 4);
+    const { tournamentId, round1 } = await createBracket(c, e, [[1, 4], [3, 2]], 2);
+    await prisma.teamBattle.deleteMany({ where: { id: { in: [e[0].id, e[3].id] } } });
+
+    await c.run(tournamentId);
+
+    const row = await prisma.scheduledTournamentMatch.findUniqueOrThrow({ where: { id: round1[0] } });
+    expect(row).toMatchObject({ status: 'completed', winnerId: null, battleId: null });
+    expect(await battlesFor([...e[0].robots, ...e[3].robots])).toHaveLength(0);
+    expect(await prisma.financialLedger.count({ where: { userId: { in: [e[0].stableId, e[3].stableId] } } })).toBe(0);
+  });
+
+  it('(d) a linked fought battle whose team then loses its subscription resumes, never forfeits', async () => {
+    const e = await entrantsFor(c, 2);
+    const { tournamentId, round1 } = await createBracket(c, e, [[1, 2]], 1);
+    const battleId = await linkFoughtBattle(round1[0]);
+    await prisma.subscription.deleteMany({ where: { robotId: { in: e[1].robots } } });
+
+    const result = await c.run(tournamentId);
+
+    expect(result).toMatchObject({ matchesResumed: 1, matchesForfeited: 0, matchesCancelled: 0 });
+    const battle = await prisma.battle.findUniqueOrThrow({ where: { id: battleId } });
+    const row = await prisma.scheduledTournamentMatch.findUniqueOrThrow({ where: { id: round1[0] } });
+    expect(row).toMatchObject({ status: 'completed', battleId, winnerId: battle.winnerId });
+    expect(await battlesFor([...e[0].robots, ...e[1].robots])).toHaveLength(1);
+    expect(await prisma.financialLedger.count({ where: { transactionType: 'battle_income', financialEventId: { startsWith: `battle:${battleId}:` } } }))
+      .toBe(c.teamSize * 2);
+
+    await advanceWinnersToNextRound(tournamentId);
+    expect(await prisma.tournament.findUniqueOrThrow({ where: { id: tournamentId } }))
+      .toMatchObject({ status: 'completed', winnerId: battle.winnerId });
+  });
+
+  it('(d2) a linked fought battle whose team then loses a member is finalised with the linked winner', async () => {
+    const e = await entrantsFor(c, 2);
+    const { tournamentId, round1 } = await createBracket(c, e, [[1, 2]], 1);
+    const battleId = await linkFoughtBattle(round1[0]);
+    await prisma.teamBattleMember.deleteMany({ where: { teamId: e[1].id, robotId: e[1].robots[1] } });
+
+    const result = await c.run(tournamentId);
+
+    expect(result).toMatchObject({ matchesResumed: 0, matchesForfeited: 0, matchesCancelled: 1 });
+    const battle = await prisma.battle.findUniqueOrThrow({ where: { id: battleId } });
+    const row = await prisma.scheduledTournamentMatch.findUniqueOrThrow({ where: { id: round1[0] } });
+    expect(row).toMatchObject({ status: 'completed', battleId, winnerId: battle.winnerId });
+    expect(await battlesFor([...e[0].robots, ...e[1].robots])).toHaveLength(1);
+
+    await advanceWinnersToNextRound(tournamentId);
+    expect(await prisma.tournament.findUniqueOrThrow({ where: { id: tournamentId } }))
+      .toMatchObject({ status: 'completed', winnerId: battle.winnerId });
+  });
+
+  it('(e) subscription-ineligible B and unarmed-member A: double forfeit, higher seed advances, no ledger', async () => {
+    const e = await entrantsFor(c, 4);
+    const { tournamentId, round1 } = await createBracket(c, e, [[1, 4], [3, 2]], 2);
+    // Match 2: B = seed 3 (participant 1), A = seed 2 (participant 2, the higher seed).
+    const [teamB, teamA] = [e[2], e[1]];
+    await prisma.subscription.deleteMany({ where: { robotId: { in: teamB.robots } } });
+    await disarm(c, teamA);
+
+    const result = await c.run(tournamentId);
+    expect(c.forfeitsReported(result)).toBe(1);
+
+    const row = await prisma.scheduledTournamentMatch.findUniqueOrThrow({ where: { id: round1[1] } });
+    expect(row).toMatchObject({ status: 'forfeit', winnerId: teamA.id });
+    const battle = await prisma.battle.findUniqueOrThrow({ where: { id: row.battleId! }, include: { participants: true } });
+    expect(battle).toMatchObject({ winnerId: null, winningSide: null });
+    expect(battle.participants.map((p) => p.robotId).sort()).toEqual([...teamB.robots, ...teamA.robots].sort());
+    expect(battle.participants.every((p) => p.forfeited && p.credits === 0)).toBe(true);
+    expect(await prisma.financialLedger.count({ where: { userId: { in: [teamA.stableId, teamB.stableId] } } })).toBe(0);
+
+    await advanceWinnersToNextRound(tournamentId);
+    const final = await prisma.scheduledTournamentMatch.findFirstOrThrow({ where: { tournamentId, round: 2 } });
+    expect(final.participant2Id).toBe(teamA.id);
+  });
+
+  it('backstop: unequipped after the entry decision, processTeamTournamentBattle forfeits without simulating', async () => {
+    const e = await entrantsFor(c, 2);
+    const { round1 } = await createBracket(c, e, [[1, 2]], 1);
+    const row = await prisma.scheduledTournamentMatch.findUniqueOrThrow({ where: { id: round1[0] } });
+    const tournament = await prisma.tournament.findUniqueOrThrow({ where: { id: row.tournamentId } });
+    await disarm(c, e[1]);
+    const simulate = jest.spyOn(teamBattleEngine, 'simulateTeamBattle');
+
+    const result = await processTeamTournamentBattle(row, tournament);
+
+    expect(simulate).not.toHaveBeenCalled();
+    expect(result).toMatchObject({ isForfeit: true, winnerId: e[0].id, isByeMatch: false });
+    const after = await prisma.scheduledTournamentMatch.findUniqueOrThrow({ where: { id: round1[0] } });
+    expect(after).toMatchObject({ status: 'forfeit', winnerId: e[0].id, battleId: result.battleId });
+    const battle = await prisma.battle.findUniqueOrThrow({ where: { id: result.battleId }, include: { participants: true } });
+    for (const p of battle.participants) expect(p.forfeited).toBe(e[1].robots.includes(p.robotId));
+    expect(await prisma.financialLedger.count({ where: { userId: e[0].stableId } })).toBe(1);
+    expect(await prisma.financialLedger.count({ where: { userId: e[1].stableId } })).toBe(0);
   });
 });
