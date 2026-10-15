@@ -40,7 +40,7 @@ export interface KothMatchGroup {
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const MIN_GROUP_SIZE = 5;
+export const MIN_GROUP_SIZE = 5;
 const IDEAL_GROUP_SIZE = 6;
 const LOG_PREFIX = '[KotH Matchmaking]';
 

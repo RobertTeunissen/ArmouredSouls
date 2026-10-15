@@ -3,10 +3,12 @@
 import prisma from '../../lib/prisma';
 import { Prisma } from '../../../generated/prisma';
 import logger from '../../config/logger';
-import { resolvePlacementBye } from '../scheduling/thinInstanceByes';
+import { resolveBelowMinimumField, resolvePlacementBye } from '../scheduling/thinInstanceByes';
 import { handleMatchFailure } from '../battle/matchFailurePolicy';
 import { computeBattleSummary } from '../battle/battleSummaryComputer';
-import { KothError, KothErrorCode } from '../../errors/kothErrors';
+import { applyLoadoutFallbacks, partitionPlacementField } from '../battle/combatReadiness';
+import type { KothPlacement } from '../../types';
+import { MIN_GROUP_SIZE } from './kothMatchmakingService';
 
 /** Yield the event loop so Express can serve requests between heavy DB work */
 const throttle = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
@@ -76,6 +78,12 @@ interface PreparedParticipant {
   rewards: { credits: number; prestige: number; fame: number; zoneDominanceBonus: boolean };
 }
 
+/** A robot without a main weapon, placed last without fighting (rule 4). */
+interface ForfeitedPlacement {
+  robot: RobotWithWeapons;
+  placement: number;
+}
+
 /** Summary of a KotH battle execution run */
 export interface KothBattleExecutionSummary {
   totalMatches: number;
@@ -83,14 +91,21 @@ export interface KothBattleExecutionSummary {
   /**
    * Bye_Events resolved this run (Spec #49).
    *
-   * A sibling of `successfulMatches`, not a subset: the three counters
-   * partition `totalMatches`, so `successfulMatches` keeps meaning
-   * "combat was simulated" — which is what an operator reads when
-   * diagnosing a cycle. `matchResults.length` therefore equals
-   * `successfulMatches + byeMatches`.
+   * A sibling of `successfulMatches`, not a subset: the four counters
+   * (successful, bye, below-minimum, failed) partition `totalMatches`, so
+   * `successfulMatches` keeps meaning "combat was simulated" — which is what
+   * an operator reads when diagnosing a cycle. `matchResults.length`
+   * therefore equals `successfulMatches + byeMatches + belowMinimumMatches`.
    */
   byeMatches: number;
+  /**
+   * Matches whose ready field fell below the minimum at battle time: the
+   * forfeiters got a forfeit-only battle and the ready robots byes.
+   */
+  belowMinimumMatches: number;
   failedMatches: number;
+  /** Robots placed last without fighting because they had no main weapon. */
+  forfeitedRobots: number;
   totalRobotsInvolved: number;
   matchResults: Array<{
     matchId: number;
@@ -159,9 +174,14 @@ export function calculateKothRewards(
 
 /**
  * Batch update KotH robot stats: persist HP damage and delegate standings to unified service.
+ *
+ * Forfeiters get no stat update (nothing changed for them) but a 0-point
+ * standings entry; every robot is recorded with `totalParticipants: N`.
  */
 async function batchUpdateKothRobotStats(
   participants: PreparedParticipant[],
+  forfeited: ForfeitedPlacement[],
+  totalParticipants: number,
 ): Promise<void> {
   // 1. Update robot combat stats via unified function (skipBattleCounters for KotH)
   for (const p of participants) {
@@ -188,11 +208,29 @@ async function batchUpdateKothRobotStats(
     await standingsService.awardKothPoints({
       robotId: p.robot.id,
       placement: p.placement,
-      totalParticipants: participants.length,
+      totalParticipants,
       zoneScore: p.zoneScore,
       zoneTime: p.zoneTime,
     });
   }
+  for (const f of forfeited) {
+    await standingsService.awardKothPoints({
+      robotId: f.robot.id,
+      placement: f.placement,
+      totalParticipants,
+      zoneScore: 0,
+      zoneTime: 0,
+      forfeited: true,
+    });
+  }
+}
+
+/** What one processed KotH match produced, for the executor's counters. */
+interface KothMatchOutcome {
+  outcome: 'fought' | 'below_minimum';
+  winnerId: number | null;
+  placements: Array<{ robotId: number; placement: number; zoneScore: number }>;
+  forfeitedCount: number;
 }
 
 /**
@@ -216,36 +254,59 @@ async function processKothBattle(
     timeLimit: number | null;
     zoneRadius: number | null;
     leagueType: string | null;
+    leagueInstanceId: string | null;
+    scheduledFor: Date;
     participants: Array<{ robotId: number }>;
   }
-): Promise<{ winnerId: number | null; placements: Array<{ robotId: number; placement: number; zoneScore: number }> }> {
+): Promise<KothMatchOutcome> {
   const robotIds = match.participants.map(p => p.robotId);
 
-  // 1. Load all participant robots with weapons
+  // 1. Load all participant robots with weapons (the full scheduled list; load only)
   // Spec #34: include refinements so prepareRobotForCombat can fold them
   // into the weapon's effective stats before the simulator reads them.
-  const robots = await prisma.robot.findMany({
+  const loaded = await prisma.robot.findMany({
     where: { id: { in: robotIds } },
     include: {
       mainWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
       offhandWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
     },
   });
+  const loadedIds = new Set(loaded.map(r => r.id));
+  const missing = robotIds.filter(id => !loadedIds.has(id));
+  if (missing.length > 0) {
+    logger.warn(`[KotH] Match #${match.id}: robot(s) ${missing.join(', ')} no longer exist, dropped from the field`);
+  }
 
-  if (robots.length < 5) {
-    throw new KothError(
-      KothErrorCode.INSUFFICIENT_KOTH_PARTICIPANTS,
-      `KotH match ${match.id}: expected at least 5 robots, found ${robots.length}`,
-      400,
-      { matchId: match.id, expected: 5, found: robots.length }
-    );
+  // 1a. Battle-time readiness (rule 4): robots without a main weapon are placed
+  // last and never fight. The partition comes BEFORE tuning and preparation, so
+  // a forfeiter keeps its real currentHP (prepareRobotForCombat sets full HP).
+  const { ready, forfeited: unready, decisions } = partitionPlacementField(loaded);
+  const readyIds = ready.map(r => r.id);
+  const totalParticipants = ready.length + unready.length;
+  const forfeited: ForfeitedPlacement[] = [...unready]
+    .sort((a, b) => a.id - b.id)
+    .map((robot, i) => ({ robot, placement: ready.length + 1 + i }));
+
+  if (ready.length < MIN_GROUP_SIZE) {
+    await resolveBelowMinimumField(match, 'koth', ready, unready);
+    return { outcome: 'below_minimum', winnerId: null, placements: [], forfeitedCount: unready.length };
   }
 
   // 1b. Ensure in-memory HP/shield is at max for simulation
   // Robots enter KotH battles at full HP (simulation uses maxHP, damage persisted after battle)
-  // Fetch tuning bonuses in a single batch query and prepare all robots for combat
-  const tuningBonusesMap = await getTuningBonusesBatch(robotIds);
-  for (const robot of robots) {
+  // Fetch tuning bonuses in a single batch query and prepare the ready robots for combat
+  const tuningBonusesMap = await getTuningBonusesBatch(readyIds);
+  // In memory only, and before prepareRobotForCombat reads loadoutType (rule 6).
+  for (const robotId of applyLoadoutFallbacks(ready, decisions)) {
+    const decision = decisions.find(d => d.robotId === robotId);
+    logger.warn('[Battle] Loadout fallback', {
+      matchId: match.id,
+      robotId,
+      storedLoadout: decision?.loadoutFallback?.storedLoadout,
+      battleLoadout: 'single',
+    });
+  }
+  for (const robot of ready) {
     prepareRobotForCombat(robot, tuningBonusesMap.get(robot.id) ?? {});
   }
 
@@ -260,12 +321,13 @@ async function processKothBattle(
     scoreThreshold,
     timeLimit,
     zoneRadius,
-    participantCount: robots.length,
+    participantCount: ready.length,
     matchId: match.id,
   };
 
   const gameModeConfig = buildKothGameModeConfig(kothConfig);
-  const gameModeState = buildKothInitialState(kothConfig, robotIds);
+  // Forfeiters have no combat state and no score entry.
+  const gameModeState = buildKothInitialState(kothConfig, readyIds);
 
   const scoreState = gameModeState.customData!.scoreState as KothScoreState;
   const zoneState = gameModeState.customData!.zoneState as KothZoneState;
@@ -283,17 +345,27 @@ async function processKothBattle(
     arenaRadius,
   };
 
-  const simResult = simulateBattleMulti(robots as RobotWithWeapons[], battleConfig);
+  const simResult = simulateBattleMulti(ready as RobotWithWeapons[], battleConfig);
 
   // 5. Build enriched placements from KotH score state + final combat states
+  // (placements 1..ready.length; forfeiters follow at ready.length+1..N)
   const enrichedPlacements = buildEnrichedPlacements(scoreState, simResult.finalStates ?? []);
+  const forfeitedLogPlacements = forfeited.map(f => ({
+    robotId: f.robot.id,
+    robotName: f.robot.name,
+    placement: f.placement,
+    zoneScore: 0,
+    zoneTime: 0,
+    kills: 0,
+    destroyed: false,
+  }));
 
   const winnerId = simResult.winnerId ?? (enrichedPlacements.length > 0 ? enrichedPlacements[0].robotId : null);
   const winReason = simResult.kothMetadata?.winReason ?? 'time_limit';
 
   // 6. Determine 1st and 2nd place for Battle record backward compat
   const first = enrichedPlacements[0];
-  const winnerRobot = robots.find(r => r.id === first.robotId)!;
+  const winnerRobot = ready.find(r => r.id === first.robotId)!;
 
   // Pass position records directly (keyed by robot name) to buildKothBattleLog
   const startPosRecord = simResult.startingPositions ?? {};
@@ -307,21 +379,24 @@ async function processKothBattle(
       leagueType: 'koth',
       battleLog: CombatMessageGenerator.buildKothBattleLog({
         events: simResult.events,
-        participantCount: robots.length,
+        participantCount: totalParticipants,
         arenaRadius,
         startingPositions: startPosRecord,
         endingPositions: endPosRecord,
         scoreThreshold,
         zoneRadius,
-        placements: enrichedPlacements.map(p => ({
-          robotId: p.robotId,
-          robotName: p.robotName,
-          placement: p.placement,
-          zoneScore: p.zoneScore,
-          zoneTime: p.zoneTime,
-          kills: p.kills,
-          destroyed: p.destroyed,
-        })),
+        placements: [
+          ...enrichedPlacements.map(p => ({
+            robotId: p.robotId,
+            robotName: p.robotName,
+            placement: p.placement,
+            zoneScore: p.zoneScore,
+            zoneTime: p.zoneTime,
+            kills: p.kills,
+            destroyed: p.destroyed,
+          })),
+          ...forfeitedLogPlacements,
+        ],
       }) as unknown as Prisma.InputJsonValue,
       durationSeconds: simResult.durationSeconds,
       winnerReward: 0,
@@ -330,12 +405,13 @@ async function processKothBattle(
     },
   });
 
-  // 8. Look up each robot's KotH tier from standings for tier-scaled rewards
+  // 8. Look up each ready robot's KotH tier from standings for tier-scaled rewards
+  // (forfeiters earn nothing)
   const robotStandings = await prisma.standing.findMany({
     where: {
       mode: 'koth',
       entityType: 'robot',
-      entityId: { in: robotIds },
+      entityId: { in: readyIds },
     },
     select: { entityId: true, tier: true },
   });
@@ -343,7 +419,7 @@ async function processKothBattle(
 
   // 9. Prepare all participant data for batched operations
   const preparedParticipants: PreparedParticipant[] = enrichedPlacements.map(p => {
-    const robot = robots.find(r => r.id === p.robotId)!;
+    const robot = ready.find(r => r.id === p.robotId)!;
     const isWinner = robot.id === winnerId;
     const hpPercent = robot.maxHP > 0 ? (p.finalHP / robot.maxHP) * 100 : 0;
     const robotTier = tierByRobot.get(robot.id) ?? 'bronze';
@@ -368,39 +444,64 @@ async function processKothBattle(
   });
 
   // 9. BATCHED: Create all BattleParticipant records in one operation
+  // (forfeiters: last places, nothing paid, HP untouched — they were never prepared)
   await prisma.battleParticipant.createMany({
-    data: preparedParticipants.map(p => ({
-      battleId: battle.id,
-      robotId: p.robot.id,
-      team: 1,
-      placement: p.placement,
-      role: null,
-      credits: p.rewards.credits,
-      streamingRevenue: 0, // Updated below
-      eloBefore: p.robot.elo,
-      eloAfter: p.robot.elo,
-      prestigeAwarded: p.rewards.prestige,
-      fameAwarded: p.rewards.fame,
-      damageDealt: p.damageDealt,
-      finalHP: p.finalHP,
-      yielded: false,
-      destroyed: p.destroyed,
-    })),
+    data: [
+      ...preparedParticipants.map(p => ({
+        battleId: battle.id,
+        robotId: p.robot.id,
+        team: 1,
+        placement: p.placement,
+        role: null,
+        credits: p.rewards.credits,
+        streamingRevenue: 0, // Updated below
+        eloBefore: p.robot.elo,
+        eloAfter: p.robot.elo,
+        prestigeAwarded: p.rewards.prestige,
+        fameAwarded: p.rewards.fame,
+        damageDealt: p.damageDealt,
+        finalHP: p.finalHP,
+        yielded: false,
+        destroyed: p.destroyed,
+      })),
+      ...forfeited.map(f => ({
+        battleId: battle.id,
+        robotId: f.robot.id,
+        team: 1,
+        placement: f.placement,
+        role: null,
+        credits: 0,
+        streamingRevenue: 0,
+        eloBefore: f.robot.elo,
+        eloAfter: f.robot.elo,
+        prestigeAwarded: 0,
+        fameAwarded: 0,
+        damageDealt: 0,
+        finalHP: f.robot.currentHP,
+        yielded: false,
+        destroyed: false,
+        forfeited: true,
+      })),
+    ],
   });
 
-  // Write pre-computed battle summary (Spec #39)
+  // Write pre-computed battle summary (Spec #39). The hit-grade and id maps are
+  // event-driven, so they cover the ready robots only.
   const robotMaxHP: Record<string, number> = {};
   const robotNameToId: Record<string, number> = {};
   const robotNameToTeam: Record<string, number> = {};
-  for (const robot of robots) {
+  for (const robot of ready) {
     robotMaxHP[robot.name] = robot.maxHP;
     robotNameToId[robot.name] = robot.id;
     robotNameToTeam[robot.name] = 1; // KotH has no teams — all on side 1
   }
-  const kothPlacementsForSummary = enrichedPlacements.map(p => ({
-    robotId: p.robotId, robotName: p.robotName, placement: p.placement,
-    zoneScore: p.zoneScore, zoneTime: p.zoneTime, kills: p.kills, destroyed: p.destroyed,
-  }));
+  const kothPlacementsForSummary: KothPlacement[] = [
+    ...enrichedPlacements.map(p => ({
+      robotId: p.robotId, robotName: p.robotName, placement: p.placement,
+      zoneScore: p.zoneScore, zoneTime: p.zoneTime, kills: p.kills, destroyed: p.destroyed,
+    })),
+    ...forfeitedLogPlacements.map(p => ({ ...p, forfeited: true })),
+  ];
   const summaryData = computeBattleSummary({
     events: (simResult.events || []) as unknown as import('../../shared/utils/battleStatistics').BattleLogEvent[],
     duration: simResult.durationSeconds,
@@ -409,7 +510,7 @@ async function processKothBattle(
     robotNameToId,
     robotNameToTeam,
     kothPlacements: kothPlacementsForSummary,
-    kothData: { participantCount: robots.length, scoreThreshold },
+    kothData: { participantCount: totalParticipants, scoreThreshold },
     startingPositions: startPosRecord as Record<string, { x: number; y: number }>,
     endingPositions: endPosRecord as Record<string, { x: number; y: number }>,
     arenaRadius,
@@ -526,8 +627,8 @@ async function processKothBattle(
     }
   }, { timeout: 30_000 });
 
-  // 13. BATCHED: Update KotH robot stats
-  await batchUpdateKothRobotStats(preparedParticipants);
+  // 13. BATCHED: Update KotH robot stats (+ forfeiters' 0-point standings)
+  await batchUpdateKothRobotStats(preparedParticipants, forfeited, totalParticipants);
 
   // 13b. Check and award achievements for all participants (deferred — non-critical path)
   // Achievement checks are not required for battle results and can run asynchronously
@@ -611,6 +712,31 @@ async function processKothBattle(
           },
         );
       }
+      // Forfeiters: their last-place loss is on the record too.
+      for (const f of forfeited) {
+        await logBattleAuditEvent(
+          {
+            robotId: f.robot.id,
+            userId: f.robot.userId,
+            isWinner: false,
+            isDraw: false,
+            damageDealt: 0,
+            finalHP: f.robot.currentHP,
+            yielded: false,
+            destroyed: false,
+            credits: 0,
+            prestige: 0,
+            fame: 0,
+            eloBefore: f.robot.elo,
+            eloAfter: f.robot.elo,
+          },
+          { id: battle.id, battleType: 'koth', leagueType: 'koth', durationSeconds: simResult.durationSeconds, eloChange: 0 },
+          null,
+          0,
+          false,
+          { kothPlacement: f.placement, forfeit: true },
+        );
+      }
     } catch (err) {
       logger.error('[KotH] Audit logging failed (non-critical):', err);
     }
@@ -622,11 +748,16 @@ async function processKothBattle(
     data: { status: 'completed', battleId: battle.id },
   });
 
-  logger.info(`[KotH] Match #${match.id} complete: Winner=${winnerRobot.name}, ${robots.length} participants, Battle #${battle.id}, Duration=${simResult.durationSeconds}s, Reason=${winReason}`);
+  logger.info(`[KotH] Match #${match.id} complete: Winner=${winnerRobot.name}, ${ready.length} fought, ${forfeited.length} forfeited, Battle #${battle.id}, Duration=${simResult.durationSeconds}s, Reason=${winReason}`);
 
   return {
+    outcome: 'fought',
     winnerId,
-    placements: enrichedPlacements.map(p => ({ robotId: p.robotId, placement: p.placement, zoneScore: p.zoneScore })),
+    placements: [
+      ...enrichedPlacements.map(p => ({ robotId: p.robotId, placement: p.placement, zoneScore: p.zoneScore })),
+      ...forfeited.map(f => ({ robotId: f.robot.id, placement: f.placement, zoneScore: 0 })),
+    ],
+    forfeitedCount: forfeited.length,
   };
 }
 
@@ -657,7 +788,9 @@ export async function executeScheduledKothBattles(_scheduledFor?: Date): Promise
     totalMatches: totalCount,
     successfulMatches: 0,
     byeMatches: 0,
+    belowMinimumMatches: 0,
     failedMatches: 0,
+    forfeitedRobots: 0,
     totalRobotsInvolved: 0,
     matchResults: [],
     errors: [],
@@ -689,6 +822,8 @@ export async function executeScheduledKothBattles(_scheduledFor?: Date): Promise
       isByeMatch: unifiedMatch.isByeMatch,
       // The match tier: KotH byes are paid at it (R6), mapped at both sites.
       leagueType: unifiedMatch.leagueType,
+      // The below-minimum byes are created in this instance (§5.8).
+      leagueInstanceId: unifiedMatch.leagueInstanceId,
       scoreThreshold: unifiedMatch.scoreThreshold,
       timeLimit: unifiedMatch.timeLimit,
       zoneRadius: unifiedMatch.zoneRadius,
@@ -729,6 +864,7 @@ export async function executeScheduledKothBattles(_scheduledFor?: Date): Promise
         // for every match after the first twenty.
         isByeMatch: unifiedMatch.isByeMatch,
         leagueType: unifiedMatch.leagueType,
+        leagueInstanceId: unifiedMatch.leagueInstanceId,
         scoreThreshold: unifiedMatch.scoreThreshold,
         timeLimit: unifiedMatch.timeLimit,
         zoneRadius: unifiedMatch.zoneRadius,
@@ -777,10 +913,12 @@ export async function executeScheduledKothBattles(_scheduledFor?: Date): Promise
       }
 
       const result = await processKothBattle(match);
-      summary.successfulMatches++;
+      if (result.outcome === 'below_minimum') summary.belowMinimumMatches++;
+      else summary.successfulMatches++;
+      summary.forfeitedRobots += result.forfeitedCount;
       summary.totalRobotsInvolved += participantCount;
       // Only store lightweight placement data, not the full result
-      summary.matchResults.push({ matchId, ...result });
+      summary.matchResults.push({ matchId, winnerId: result.winnerId, placements: result.placements });
     } catch (error) {
       // Rule 7: cancel the match (no retry, no reward), log, carry on.
       summary.failedMatches++;
@@ -797,6 +935,6 @@ export async function executeScheduledKothBattles(_scheduledFor?: Date): Promise
     processed++;
   }
 
-  logger.info(`[KotH Orchestrator] Execution complete: ${summary.successfulMatches} successful, ${summary.byeMatches} byes, ${summary.failedMatches} failed (mem: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB)`);
+  logger.info(`[KotH Orchestrator] Execution complete: ${summary.successfulMatches} successful, ${summary.byeMatches} byes, ${summary.belowMinimumMatches} below minimum, ${summary.forfeitedRobots} robots forfeited, ${summary.failedMatches} failed (mem: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB)`);
   return summary;
 }

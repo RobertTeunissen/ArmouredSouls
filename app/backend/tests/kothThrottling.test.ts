@@ -392,13 +392,9 @@ describe('KotH Orchestrator Throttling', () => {
     });
     mockPrisma.scheduledMatch.updateMany.mockResolvedValue({ count: 1 });
 
-    // First match: robot query returns too few robots (triggers error)
-    // Second match: normal
-    let callCount = 0;
-    mockPrisma.robot.findMany.mockImplementation(() => {
-      callCount++;
-      if (callCount === 1) return Promise.resolve([makeRobot(1, 1)]);
-      return Promise.resolve([1, 2, 3, 4, 5].map(id => makeRobot(id, id)));
+    // First match: the engine throws. Second match: normal.
+    simulateBattleMulti.mockImplementationOnce(() => {
+      throw new Error('engine exploded');
     });
     mockPrisma.battle.create.mockResolvedValue({ id: 100 });
 
@@ -408,13 +404,13 @@ describe('KotH Orchestrator Throttling', () => {
 
     expect(summary.successfulMatches).toBe(1);
     expect(summary.failedMatches).toBe(1);
-    expect(summary.errors[0]).toContain('expected at least 5 robots');
+    expect(summary.errors[0]).toContain('engine exploded');
 
     // Rule 7: the failed match is cancelled (conditional write), never marked
     // 'error' and never reset to 'scheduled' for a retry.
     expect(mockPrisma.scheduledMatch.updateMany).toHaveBeenCalledWith({
       where: { id: 1, status: { in: ['scheduled', 'error'] } },
-      data: { status: 'cancelled', cancelReason: expect.stringContaining('expected at least 5 robots') },
+      data: { status: 'cancelled', cancelReason: expect.stringContaining('engine exploded') },
     });
     expect(mockPrisma.scheduledMatch.update).not.toHaveBeenCalledWith(
       expect.objectContaining({ data: { status: 'error' } }),
@@ -440,11 +436,8 @@ describe('KotH Orchestrator Throttling', () => {
       .spyOn(policy, 'handleMatchFailure')
       .mockResolvedValue({ cancelled: false, errorSummary: 'KOTH_ERROR: boom' });
 
-    let callCount = 0;
-    mockPrisma.robot.findMany.mockImplementation(() => {
-      callCount++;
-      if (callCount === 1) return Promise.resolve([makeRobot(1, 1)]);
-      return Promise.resolve([1, 2, 3, 4, 5].map(id => makeRobot(id, id)));
+    simulateBattleMulti.mockImplementationOnce(() => {
+      throw new Error('boom');
     });
     mockPrisma.battle.create.mockResolvedValue({ id: 100 });
     rows[1].status = 'scheduled';
