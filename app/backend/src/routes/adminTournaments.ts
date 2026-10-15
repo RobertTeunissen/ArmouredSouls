@@ -315,6 +315,7 @@ router.post('/:id/execute-round', authenticateToken, requireAdmin, validateReque
       matchesExecuted: 0,
       matchesFailed: 0,
       byeMatches: 0,
+      forfeits: 0,
       winners: [] as number[],
       errors: [] as string[],
       tournamentComplete: false,
@@ -327,6 +328,7 @@ router.post('/:id/execute-round', authenticateToken, requireAdmin, validateReque
     summary.matchesExecuted = roundResult.matchesExecuted + roundResult.matchesResumed;
     summary.matchesFailed = roundResult.matchesCancelled;
     summary.byeMatches = roundResult.byesResolved;
+    summary.forfeits = roundResult.forfeits;
     summary.winners.push(...roundResult.winners);
     summary.errors.push(...roundResult.errors);
 
