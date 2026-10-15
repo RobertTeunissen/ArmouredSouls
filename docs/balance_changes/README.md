@@ -14,6 +14,7 @@ The authoritative weapon catalog and pricing formula lives in [PRD_WEAPON_ECONOM
 - `STARTING_ECONOMY_REBALANCE.md` — Starting credits ₡2M→₡3M, attribute costs +50%, facility costs -50%
 - `TRAINING_FACILITY_REBALANCE.md` — Training facility economics and academy caps
 - `COMBAT_TRAINING_ACADEMY_COST_REDUCTION.md` — Academy upgrade cost reduction
+- `KOTH_BYE_TIER_FIX.md` — Season 2: KotH byes paid at the robot's tier instead of the Bronze floor (#536, R6); no coefficient changed
 
 ### Combat Mechanics
 - `COUNTER_ATTACK_SYSTEM_REWORK.md` — Counter-attack trigger and damage rework
