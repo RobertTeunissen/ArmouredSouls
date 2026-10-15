@@ -335,6 +335,25 @@ describe.each<Kind>(['solo', 'team'])('T15 %s tournament', (kind) => {
   });
 });
 
+describe('T15 solo tournament resume after the single-weapon fallback', () => {
+  it('passes the battle loadout (single), not the stored one, to achievements', async () => {
+    const e = await entrantsFor('solo', 2);
+    // Stored dual_wield with no offhand: the robot fights as single (rule 6).
+    await prisma.robot.update({ where: { id: e[0].id }, data: { loadoutType: 'dual_wield' } });
+    const { tournamentId } = await createBracket('solo', e, [[1, 2]], 1);
+    jest.spyOn(battlePostCombat, 'awardCreditsWithLedger').mockRejectedValueOnce(new Error(PAYMENT));
+    const achievements = jest.spyOn(battlePostCombat, 'checkAndAwardAchievements');
+
+    const result = await executeSoloTournamentRound(tournamentId);
+
+    expect(result.matchesResumed).toBe(1);
+    const call = achievements.mock.calls.find(([, robotId]) => robotId === e[0].id);
+    expect(call?.[2].loadoutType).toBe('single');
+    const stored = await prisma.robot.findUniqueOrThrow({ where: { id: e[0].id } });
+    expect(stored.loadoutType).toBe('dual_wield');
+  });
+});
+
 describe('T15 solo tournament bye returning false', () => {
   it('turns a false bye result into the policy and advances the sole participant', async () => {
     const e = await entrantsFor('solo', 3);

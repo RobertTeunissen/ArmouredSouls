@@ -13,7 +13,7 @@
 import { Robot, ScheduledTournamentMatch, Battle, Prisma } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
-import { simulateBattle, CombatResult } from '../battle/combatSimulator';
+import { simulateBattle, CombatResult, type RobotWithWeapons } from '../battle/combatSimulator';
 import { CombatMessageGenerator } from '../battle/combatMessageGenerator';
 import { computeBattleSummary } from '../battle/battleSummaryComputer';
 import { calculateELOChange } from '../../utils/battleMath';
@@ -36,7 +36,7 @@ import { prepareRobotForCombat } from '../../utils/robotCalculations';
 import { getTuningBonusesBatch } from '../tuning-pool';
 import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
 import { recoverTournamentMatch } from '../battle/matchFailurePolicy';
-import { applyLoadoutFallbacks, evaluateMatchEntry, type MatchEntryOutcome } from '../battle/combatReadiness';
+import { applyLoadoutFallbacks, evaluateCombatEntry, evaluateMatchEntry, type MatchEntryOutcome } from '../battle/combatReadiness';
 import { resolveForfeitEvent } from '../battle/forfeitResolutionService';
 import { BYE_BATTLE_DURATION_SECONDS } from '../battle/byeResolutionService';
 import { completeByeMatch, getCurrentRoundMatches, resolveHigherSeed } from './tournamentService';
@@ -822,9 +822,11 @@ async function resumeTournamentBattleFinalization(
   tournamentMatch: ScheduledTournamentMatch,
 ): Promise<TournamentBattleResult> {
   const battle = await prisma.battle.findUnique({ where: { id: tournamentMatch.battleId! } });
+  // Weapons are loaded so the battle loadout can be re-derived below.
+  const withWeapons = { mainWeapon: { include: { weapon: true } }, offhandWeapon: { include: { weapon: true } } };
   const [robot1, robot2] = await Promise.all([
-    prisma.robot.findUnique({ where: { id: tournamentMatch.participant1Id! } }),
-    prisma.robot.findUnique({ where: { id: tournamentMatch.participant2Id! } }),
+    prisma.robot.findUnique({ where: { id: tournamentMatch.participant1Id! }, include: withWeapons }),
+    prisma.robot.findUnique({ where: { id: tournamentMatch.participant2Id! }, include: withWeapons }),
   ]);
   if (!battle || !robot1 || !robot2 || battle.winnerId === null) {
     throw new TournamentError(
@@ -881,6 +883,11 @@ async function resumeTournamentBattleFinalization(
     didRobotLosePreviousBattle(robot1.id, battle.id),
     didRobotLosePreviousBattle(robot2.id, battle.id),
   ]);
+  // Rule 6: the single-weapon fallback is in memory only, so re-derive it from
+  // the reloaded loadout (same rule as battle time). A robot that fought as
+  // single earns no loadout-specific achievement credit on a resume.
+  const battleLoadout = (robot: RobotWithWeapons): string =>
+    (evaluateCombatEntry(robot).loadoutFallback ? 'single' : robot.loadoutType) || 'single';
   const [unlocks1, unlocks2] = await Promise.all([
     checkAndAwardAchievements(robot1.userId, robot1.id, {
       won: robot1IsWinner,
@@ -895,7 +902,7 @@ async function resumeTournamentBattleFinalization(
       previousBattleLost: robot1PrevLost,
       damageDealt: robot1Participant.damageDealt,
       opponentDamageDealt: robot2Participant.damageDealt,
-      loadoutType: robot1.loadoutType || 'single',
+      loadoutType: battleLoadout(robot1),
       stance: robot1.stance || 'balanced',
       yieldThreshold: robot1.yieldThreshold,
       hasTuning: false,
@@ -916,7 +923,7 @@ async function resumeTournamentBattleFinalization(
       previousBattleLost: robot2PrevLost,
       damageDealt: robot2Participant.damageDealt,
       opponentDamageDealt: robot1Participant.damageDealt,
-      loadoutType: robot2.loadoutType || 'single',
+      loadoutType: battleLoadout(robot2),
       stance: robot2.stance || 'balanced',
       yieldThreshold: robot2.yieldThreshold,
       hasTuning: false,
