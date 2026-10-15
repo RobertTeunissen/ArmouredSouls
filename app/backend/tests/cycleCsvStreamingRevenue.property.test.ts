@@ -132,17 +132,22 @@ describe('Property 15: Cycle CSV Contains Streaming Revenue Column', () => {
       where: {
         cycleNumber: {
           gte: testCycleNumber,
+          // Only the cycles this suite writes (totalCycles and the active one).
+          lte: testCycleNumber + 1,
         },
       },
     });
     // The battles also write Financial_Pair ledger rows at the test cycle.
     // Leaving them behind strands unpaired ledger rows at totalCycles + 10000,
-    // which dataIntegrityService.test.ts (cycles 10000+) then reports as
-    // financial integrity errors on a reused local database.
+    // which dataIntegrityService.test.ts reports as financial integrity
+    // errors on a reused local database. Bounded so it never deletes another
+    // suite's high-numbered test cycles.
     await prisma.financialLedger.deleteMany({
       where: {
         cycleNumber: {
           gte: testCycleNumber,
+          // Only the cycles this suite writes (totalCycles and the active one).
+          lte: testCycleNumber + 1,
         },
       },
     });
