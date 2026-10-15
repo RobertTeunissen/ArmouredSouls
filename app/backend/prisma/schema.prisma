@@ -533,6 +533,8 @@ model BattleParticipant {
   finalHP     Int     @map("final_hp")
   yielded     Boolean @default(false)
   destroyed   Boolean @default(false)
+  // True when this robot (or its team) forfeited at battle time (no main weapon); never simulated
+  forfeited   Boolean @default(false)
 
   // Tag-team tag-out timestamp (milliseconds)
   tagOutTimeMs BigInt? @map("tag_out_time_ms")

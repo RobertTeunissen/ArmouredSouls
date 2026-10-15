@@ -2,7 +2,7 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Last Updated**: October 14, 2026 (`standings` lifecycle note)
+**Last Updated**: October 15, 2026 (`battle_participants.forfeited`)
 **Status**: Current Implementation  
 **Version**: v2.0
 
@@ -523,6 +523,7 @@ model BattleParticipant {
   finalHP     Int     @map("final_hp")
   yielded     Boolean @default(false)
   destroyed   Boolean @default(false)
+  forfeited   Boolean @default(false)   // forfeited at battle time (no main weapon); never simulated
   
   createdAt DateTime @default(now()) @map("created_at")
   
@@ -542,6 +543,8 @@ model BattleParticipant {
 - Tournament (1v1): 2 participants
 - Tag Team (2v2): 4 participants (role = "active" or "reserve")
 - KotH (FFA): 5-6 participants (placement = 1-6)
+
+**`forfeited`** (migration `20261015120000_battle_participant_forfeited`, additive, default `false`): `true` when the robot, or the team it belongs to, forfeited because a robot had no main weapon when the battle ran. Forfeited rows are never simulated: `damageDealt = 0`, `finalHP = currentHP`, `destroyed = false`, `credits = 0`. A two-sided battle with any forfeited participant was never fought. A KotH/Grand Melee battle is forfeit-only when every participant forfeited; in a fought placement battle the forfeiters take the bottom placements. Battle history classifies forfeits from this column (plus `scheduled_tournament_matches.status = 'forfeit'`), never from `battle_log`.
 
 ---
 
