@@ -79,6 +79,8 @@ const HEAVY_TESTS = [
   'tests/integration/bronzeLeagueRebalancing.test.ts',
   'tests/integration/byeInvariant.test.ts',
   'tests/integration/byeScopeAndShape.test.ts',
+  // T24: one cycle with an unarmed robot in all nine modes.
+  'tests/integration/forfeitInvariant.test.ts',
   // Unified standings creation rule: 60 robots, whole-mode KotH rebalancing.
   'tests/integration/kothNeverPlayedPromotion.test.ts',
   'tests/integration/seasonPurgeAndReset.test.ts',
