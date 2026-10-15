@@ -573,8 +573,7 @@ export async function executeScheduledTagTeamBattles(_scheduledFor?: Date): Prom
   let forfeits = 0;
 
   for (const match of scheduledMatches) {
-    // A tag-team bye has no second team participant. Keep this outside `try`
-    // because the catch must preserve a claimed bye rather than cancelling it.
+    // A tag-team bye has no second team participant.
     const isByeMatch = match.team2Id === null;
 
     try {
@@ -605,19 +604,10 @@ export async function executeScheduledTagTeamBattles(_scheduledFor?: Date): Prom
       }
 
     } catch (error) {
-      if (isByeMatch) {
-        // resolveByeEvent claims before payment. Preserve that completed claim
-        // on a required-pair failure so reconciliation can find the linked
-        // battle without participants and an operator can safely remediate it.
-        // Cancelling it would hide an unpaid reward and prevent recovery.
-        // (The policy's conditional cancel would leave it alone too; this
-        // guard documents the intent.)
-        logger.error(`[TagTeamBattles] Error executing bye match ${match.id}:`, error);
-        continue;
-      }
-
-      // Rule 7: cancel a still-scheduled match; a match already claimed
-      // `completed` (payment failed after the claim) is a logged no-op.
+      // Rule 7, byes included: cancel a still-scheduled match, so a bye that
+      // threw before its claim never stays scheduled. A match already claimed
+      // `completed` (a bye or fight whose payment failed after the claim) is a
+      // logged no-op, so reconciliation still finds the linked battle.
       await handleMatchFailure({
         mode: 'tag_team',
         ref: { source: 'scheduled_match', id: match.id },

@@ -32,6 +32,7 @@ import * as tagTeamResultUpdater from '../../src/services/tag-team/tagTeamResult
 import * as tagTeamBattleRecord from '../../src/services/tag-team/tagTeamBattleRecord';
 import * as battlePostCombat from '../../src/services/battle/battlePostCombat';
 import * as combatReadiness from '../../src/services/battle/combatReadiness';
+import * as byeResolutionService from '../../src/services/battle/byeResolutionService';
 import { executeScheduledBattles } from '../../src/services/league/leagueBattleOrchestrator';
 import { executeScheduledTeamBattles } from '../../src/services/team-battle/teamBattleOrchestrator';
 import { executeScheduledTagTeamBattles } from '../../src/services/tag-team/tagTeamScheduler';
@@ -345,6 +346,27 @@ describe('T17: a failing match is terminal, the run continues, the rerun does no
     await expect(executeScheduledTagTeamBattles()).resolves.toBeDefined();
 
     await expectUnifiedOutcome(m1, m2, [...teams[0].robots, ...teams[1].robots]);
+    await expectRerunIsInert(() => executeScheduledTagTeamBattles(), teams.flatMap((t) => t.robots));
+  });
+
+  it('tag team bye: a throw before the claim cancels the bye instead of leaving it scheduled', async () => {
+    await isolate('tag_team');
+    const teams: Array<{ teamId: number; robots: number[] }> = [];
+    for (let i = 0; i < 3; i++) {
+      const stableId = await createStable();
+      const active = await armedRobot(stableId);
+      const reserve = await armedRobot(stableId);
+      const team = await createTagTeamFixture(stableId, active, reserve);
+      teamIds.push(team.id);
+      teams.push({ teamId: team.id, robots: [active, reserve] });
+    }
+    const bye = await scheduleUnified('tag_team', 'team', [teams[0].teamId], 1);
+    const m2 = await scheduleUnified('tag_team', 'team', [teams[1].teamId, teams[2].teamId], 2);
+    jest.spyOn(byeResolutionService, 'resolveByeEvent').mockRejectedValueOnce(new Error(INJECTED));
+
+    await expect(executeScheduledTagTeamBattles()).resolves.toBeDefined();
+
+    await expectUnifiedOutcome(bye, m2, teams[0].robots);
     await expectRerunIsInert(() => executeScheduledTagTeamBattles(), teams.flatMap((t) => t.robots));
   });
 
