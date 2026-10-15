@@ -172,13 +172,9 @@ export function calculateAttributeBonus(
   let bonus = 0;
   const bonusKey = `${attributeKey}Bonus` as keyof WeaponBonuses;
 
-  if (mainWeapon?.weapon[bonusKey] !== undefined) {
-    bonus += mainWeapon.weapon[bonusKey] as number;
-  }
-
-  if (offhandWeapon?.weapon[bonusKey] !== undefined) {
-    bonus += offhandWeapon.weapon[bonusKey] as number;
-  }
+  // An inventory row loaded without its `weapon` relation contributes 0.
+  bonus += mainWeapon?.weapon?.[bonusKey] ?? 0;
+  bonus += offhandWeapon?.weapon?.[bonusKey] ?? 0;
 
   return bonus;
 }

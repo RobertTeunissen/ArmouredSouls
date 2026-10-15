@@ -91,6 +91,16 @@ describe('calculateAttributeBonus', () => {
     const main = makeWeaponInventory({ combatPowerBonus: 5 });
     expect(calculateAttributeBonus('shieldCapacity', main, null)).toBe(0);
   });
+
+  it('should treat an inventory row loaded without its weapon relation as contributing 0', () => {
+    // Test cast: simulates a Prisma inventory row fetched without `include: { weapon: true }`.
+    const unloaded = {} as unknown as Parameters<typeof calculateAttributeBonus>[1];
+    const offhand = makeWeaponInventory({ combatPowerBonus: 4 });
+    expect(calculateAttributeBonus('combatPower', unloaded, null)).toBe(0);
+    expect(calculateAttributeBonus('combatPower', unloaded, offhand)).toBe(4);
+    expect(calculateAttributeBonus('combatPower', offhand, unloaded)).toBe(4);
+    expect(calculateEffectiveStats(makeRobot({ mainWeapon: unloaded, offhandWeapon: unloaded })).combatPower).toBe(10);
+  });
 });
 
 describe('getLoadoutBonus', () => {
