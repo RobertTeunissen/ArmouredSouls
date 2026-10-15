@@ -12,6 +12,8 @@ import { updateTagTeamBattleResults, checkTeamReadinessForBattle } from './tagTe
 import { calculateTagTeamELOChanges } from './tagTeamRewards';
 import { resolveByeEvent, BYE_BATTLE_DURATION_SECONDS } from '../battle/byeResolutionService';
 import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
+import { handleMatchFailure } from '../battle/matchFailurePolicy';
+import { BattleError, BattleErrorCode } from '../../errors/battleErrors';
 
 // ─── Scheduled Match Shape (mapped from unified table) ───────────────────────
 
@@ -317,13 +319,24 @@ export async function executeTagTeamBattle(match: ScheduledTagTeamMatchData): Pr
   const battle = await createTagTeamBattleRecord(match, team1 as TagTeamWithRobots, team2 as TagTeamWithRobots, result);
   result.battleId = battle.id;
 
-  // Update match status in unified table
-  await prisma.scheduledMatch.update({
-    where: { id: match.id },
-    data: {
-      status: 'completed',
-    },
+  // Claim the match before any reward is paid (payment happens later in
+  // updateTagTeamBattleResults). Once the match is terminal, a crash or throw
+  // during payment can never re-simulate and pay a second time.
+  const { count } = await prisma.scheduledMatch.updateMany({
+    where: { id: match.id, status: 'scheduled' },
+    data: { status: 'completed', battleId: battle.id },
   });
+  if (count !== 1) {
+    // Another run already resolved this match. Drop our duplicate row
+    // (participants and summary cascade) before any reward is paid.
+    await prisma.battle.delete({ where: { id: battle.id } }).catch(() => {});
+    throw new BattleError(
+      BattleErrorCode.BATTLE_ALREADY_COMPLETED,
+      `Tag team match ${match.id} already resolved`,
+      409,
+      { matchId: match.id },
+    );
+  }
 
   logger.info(
     `[TagTeamBattle] Completed: ${team1.teamName} vs ${team2.teamName} ` +
@@ -453,19 +466,24 @@ export async function executeScheduledTagTeamBattles(_scheduledFor?: Date): Prom
       }
 
     } catch (error) {
-      logger.error(`[TagTeamBattles] Error executing match ${match.id}:`, error);
-
       if (isByeMatch) {
         // resolveByeEvent claims before payment. Preserve that completed claim
         // on a required-pair failure so reconciliation can find the linked
         // battle without participants and an operator can safely remediate it.
         // Cancelling it would hide an unpaid reward and prevent recovery.
+        // (The policy's conditional cancel would leave it alone too; this
+        // guard documents the intent.)
+        logger.error(`[TagTeamBattles] Error executing bye match ${match.id}:`, error);
         continue;
       }
 
-      await prisma.scheduledMatch.update({
-        where: { id: match.id },
-        data: { status: 'cancelled', cancelReason: error instanceof Error ? error.message : String(error) },
+      // Rule 7: cancel a still-scheduled match; a match already claimed
+      // `completed` (payment failed after the claim) is a logged no-op.
+      await handleMatchFailure({
+        mode: 'tag_team',
+        ref: { source: 'scheduled_match', id: match.id },
+        error,
+        participants: [match.team1Id, match.team2Id].filter((id): id is number => id !== null),
       });
     }
   }
