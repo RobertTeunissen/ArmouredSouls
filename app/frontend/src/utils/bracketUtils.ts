@@ -88,6 +88,9 @@ export function formatSeedDisplay(seed: number, robotName: string): string {
   return robotName;
 }
 
+/** Match statuses that settle who advances. */
+const DECIDED_MATCH_STATUSES: ReadonlySet<string> = new Set(['completed', 'forfeit', 'cancelled']);
+
 /**
  * Computes the set of future match IDs the user's participant would play
  * if it keeps winning from its current position.
@@ -135,12 +138,18 @@ export function getUserFuturePath(
       ? userMatch.participant1Id
       : userMatch.participant2Id;
 
-    // If the match is completed and the user's participant lost, skip
+    // If the match is decided and the user's participant lost, skip. A
+    // `forfeit` or `cancelled` row (errored match: the higher seed advances)
+    // eliminates the loser just like a completed one.
     if (
-      userMatch.status === 'completed' &&
+      DECIDED_MATCH_STATUSES.has(userMatch.status) &&
       userMatch.winnerId !== null &&
       userMatch.winnerId !== userParticipantId
     ) {
+      continue;
+    }
+    // A cancelled match that advanced nobody ends both paths.
+    if (userMatch.status === 'cancelled' && userMatch.winnerId === null) {
       continue;
     }
 

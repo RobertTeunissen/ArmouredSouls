@@ -41,6 +41,14 @@ const CompactBattleCard: FC<CompactBattleCardProps> = ({
   const opponentName = opponent?.name ?? 'No opponent';
   const opponentDisplay = isBye ? 'No opponent — walkover' : opponentName;
   const matchupSeparator = isBye ? '•' : 'vs';
+  // Forfeits (keyed on forfeitedRobotIds, so a forfeiter placed last in a
+  // fought KotH / Grand Melee battle is labelled too).
+  const myRobotForfeited = battle.forfeitedRobotIds?.includes(myRobotId) === true;
+  const wonByForfeit = !myRobotForfeited && battle.isForfeit === true && outcome === 'win';
+  const forfeitSuffix = wonByForfeit ? ' — won by forfeit' : '';
+  const forfeitTag = myRobotForfeited ? (
+    <span className="text-error ml-1.5">Forfeit — no main weapon</span>
+  ) : null;
   const isTournament = battle.battleType === 'tournament_1v1';
   const isTeamTournament = battle.battleType === 'tournament_2v2' || battle.battleType === 'tournament_3v3';
   const isTagTeam = battle.battleType === 'tag_team';
@@ -214,6 +222,7 @@ const CompactBattleCard: FC<CompactBattleCardProps> = ({
             <div className="font-medium text-xs truncate">
               <span className="text-[#58a6ff]">{myRobot.name}</span>
               <span className="text-[#8b949e] mx-1.5">• {battle.kothParticipantCount ?? '?'} robots</span>
+              {forfeitTag}
             </div>
           </div>
         ) : isTagTeam ? (
@@ -231,7 +240,8 @@ const CompactBattleCard: FC<CompactBattleCardProps> = ({
               <div className="font-medium text-xs truncate">
                 <span className="text-[#58a6ff]">{myTeamRobots}</span>
                 <span className="text-[#57606a] mx-1.5">{matchupSeparator}</span>
-                <span className="text-[#e6edf3]">{opponentTeamRobots}</span>
+                <span className="text-[#e6edf3]">{opponentTeamRobots}{forfeitSuffix}</span>
+                {forfeitTag}
               </div>
             </div>
           </>
@@ -249,7 +259,8 @@ const CompactBattleCard: FC<CompactBattleCardProps> = ({
             <div className="font-medium text-xs truncate">
               <span className="text-[#58a6ff]">{(battle as unknown as { team1TeamName?: string }).team1TeamName || myRobot.name}</span>
               <span className="text-[#57606a] mx-1.5">{matchupSeparator}</span>
-              <span className="text-[#e6edf3]">{(battle as unknown as { team2TeamName?: string }).team2TeamName || opponentDisplay}</span>
+              <span className="text-[#e6edf3]">{(battle as unknown as { team2TeamName?: string }).team2TeamName || opponentDisplay}{forfeitSuffix}</span>
+              {forfeitTag}
             </div>
           </div>
         ) : isTeamTournament ? (
@@ -266,7 +277,8 @@ const CompactBattleCard: FC<CompactBattleCardProps> = ({
             <div className="font-medium text-xs truncate">
               <span className="text-[#58a6ff]">{(battle as unknown as { team1TeamName?: string }).team1TeamName || myRobot.name}</span>
               <span className="text-[#57606a] mx-1.5">{matchupSeparator}</span>
-              <span className="text-[#e6edf3]">{(battle as unknown as { team2TeamName?: string }).team2TeamName || opponentDisplay}</span>
+              <span className="text-[#e6edf3]">{(battle as unknown as { team2TeamName?: string }).team2TeamName || opponentDisplay}{forfeitSuffix}</span>
+              {forfeitTag}
             </div>
           </div>
         ) : (
@@ -283,7 +295,8 @@ const CompactBattleCard: FC<CompactBattleCardProps> = ({
             <div className="font-medium text-xs truncate">
               <span className="text-[#58a6ff]">{myRobot.name}</span>
               <span className="text-[#57606a] mx-1.5">{matchupSeparator}</span>
-              <span className="text-[#e6edf3]">{opponentDisplay}</span>
+              <span className="text-[#e6edf3]">{opponentDisplay}{forfeitSuffix}</span>
+              {forfeitTag}
             </div>
           </div>
         )}
@@ -394,32 +407,37 @@ const CompactBattleCard: FC<CompactBattleCardProps> = ({
             <div className="text-sm font-medium">
               <span className="text-[#58a6ff]">{myRobot.name}</span>
               <span className="text-[#8b949e] mx-1.5">• {battle.kothParticipantCount ?? '?'} robots</span>
+              {forfeitTag}
             </div>
           ) : isTagTeam ? (
             <>
               <div className="text-sm font-medium mb-1">
                 <span className="text-[#58a6ff]">{myTeamRobots}</span>
                 <span className="text-[#57606a] mx-1.5">{matchupSeparator}</span>
-                <span className="text-[#e6edf3]">{opponentTeamRobots}</span>
+                <span className="text-[#e6edf3]">{opponentTeamRobots}{forfeitSuffix}</span>
+                {forfeitTag}
               </div>
             </>
           ) : isTeamBattle ? (
             <div className="text-sm font-medium">
               <span className="text-[#58a6ff]">{(battle as unknown as { team1TeamName?: string }).team1TeamName || myRobot.name}</span>
               <span className="text-[#57606a] mx-1.5">{matchupSeparator}</span>
-              <span className="text-[#e6edf3]">{(battle as unknown as { team2TeamName?: string }).team2TeamName || opponentDisplay}</span>
+              <span className="text-[#e6edf3]">{(battle as unknown as { team2TeamName?: string }).team2TeamName || opponentDisplay}{forfeitSuffix}</span>
+              {forfeitTag}
             </div>
           ) : isTeamTournament ? (
             <div className="text-sm font-medium">
               <span className="text-[#58a6ff]">{(battle as unknown as { team1TeamName?: string }).team1TeamName || myRobot.name}</span>
               <span className="text-[#57606a] mx-1.5">{matchupSeparator}</span>
-              <span className="text-[#e6edf3]">{(battle as unknown as { team2TeamName?: string }).team2TeamName || opponentDisplay}</span>
+              <span className="text-[#e6edf3]">{(battle as unknown as { team2TeamName?: string }).team2TeamName || opponentDisplay}{forfeitSuffix}</span>
+              {forfeitTag}
             </div>
           ) : (
             <div className="text-sm font-medium">
               <span className="text-[#58a6ff]">{myRobot.name}</span>
               <span className="text-[#57606a] mx-1.5">{matchupSeparator}</span>
-              <span className="text-[#e6edf3]">{opponentDisplay}</span>
+              <span className="text-[#e6edf3]">{opponentDisplay}{forfeitSuffix}</span>
+              {forfeitTag}
             </div>
           )}
         </div>

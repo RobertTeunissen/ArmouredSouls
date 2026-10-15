@@ -280,11 +280,21 @@ function BattleDetailContent({ battleLog: rawBattleLog, userId }: { battleLog: B
   }, [battleLog]);
 
   const participants = battleLog.participants ?? [];
+  // Forfeit: no battle was fought. Names come from the participants, never
+  // from the best-effort summary or the battle log.
+  const forfeitedNames = battleLog.isForfeit
+    ? participants.filter(p => battleLog.forfeitedRobotIds?.includes(p.robotId)).map(p => p.robotName)
+    : [];
 
   // Shared content sections
   const overviewContent = (
     <>
       <BattleResultBanner battleLog={battleLog} userId={userId} isMobile={isMobile} />
+      {battleLog.isForfeit && (
+        <div role="status" className="bg-primary/10 border border-primary/40 rounded-lg p-3 mb-3 text-sm text-secondary">
+          No battle was fought: {forfeitedNames.length > 0 ? forfeitedNames.join(', ') : 'a participant'} forfeited (no main weapon equipped)
+        </div>
+      )}
       {isMobile && participants.length > 1 && (
         <RobotSelector
           participants={participants}

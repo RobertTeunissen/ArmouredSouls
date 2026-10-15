@@ -120,7 +120,7 @@ function ActiveTournamentCard() {
 
         const participants: ParticipantStatus[] = [];
         const currentRoundMatches = tournament.matches.filter(m => m.round === tournament.currentRound);
-        const allCompletedMatches = tournament.matches.filter(m => m.status === 'completed' || m.status === 'forfeit');
+        const allCompletedMatches = tournament.matches.filter(m => m.status === 'completed' || m.status === 'forfeit' || m.status === 'cancelled');
 
         // Find which of my robots/teams are in this tournament
         // Check ALL rounds (round 1 always has every participant listed)

@@ -132,10 +132,12 @@ function BattleContextLine({ battleLog }: { battleLog: BattleLogResponse }) {
 
 // ── Participant Card (unified — used for all battle types) ───────────
 
-function ParticipantCard({ p, isLoser, showPlacement }: {
+function ParticipantCard({ p, isLoser, showPlacement, isForfeited = false }: {
   p: BattleLogParticipant;
   isLoser: boolean;
   showPlacement: boolean;
+  /** Forfeited for having no main weapon (from `forfeitedRobotIds`). */
+  isForfeited?: boolean;
 }) {
   return (
     <div className={`flex min-w-0 max-w-full flex-col items-center ${isLoser ? 'opacity-50' : ''}`}>
@@ -166,6 +168,9 @@ function ParticipantCard({ p, isLoser, showPlacement }: {
         <span className={`text-xs font-bold ${getPlacementColor(p.placement)}`}>
           {formatPlacement(p.placement)}
         </span>
+      )}
+      {isForfeited && (
+        <span className="text-xs font-bold text-error">Forfeit</span>
       )}
     </div>
   );
@@ -213,6 +218,8 @@ export function BattleResultBanner({ battleLog, userId, isMobile }: BattleResult
   const endMethod = getEndMethod(participants, winnerId, winningTeam, battleLog.battleType);
 
   const isKoth = battleLog.battleType === 'koth';
+  // From the participants (via the history classifier), never from the summary.
+  const forfeitedIds = new Set(battleLog.forfeitedRobotIds ?? []);
 
   // Participants are already in canonical order (winner first) from the page.
 
@@ -232,6 +239,7 @@ export function BattleResultBanner({ battleLog, userId, isMobile }: BattleResult
           winnerId={winnerId}
           winningTeam={winningTeam}
           isKoth={false}
+          forfeitedIds={forfeitedIds}
         />
       ) : isMobile && isKoth ? (
         /* Mobile KotH: 2-column grid */
@@ -242,6 +250,7 @@ export function BattleResultBanner({ battleLog, userId, isMobile }: BattleResult
               p={p}
               isLoser={false}
               showPlacement={true}
+              isForfeited={forfeitedIds.has(p.robotId)}
             />
           ))}
         </div>
@@ -263,6 +272,7 @@ export function BattleResultBanner({ battleLog, userId, isMobile }: BattleResult
                   p={p}
                   isLoser={userIsParticipant && (winnerId !== null || winningTeam !== null) && !isWinner(p) && !isKoth}
                   showPlacement={isKoth}
+                  isForfeited={forfeitedIds.has(p.robotId)}
                 />
               </div>
             );
@@ -286,6 +296,7 @@ function MobileVsLayout({
   userIsParticipant,
   winnerId,
   winningTeam,
+  forfeitedIds,
 }: {
   participants: BattleLogParticipant[];
   battleType?: string;
@@ -294,6 +305,7 @@ function MobileVsLayout({
   winnerId: number | null;
   winningTeam: number | null;
   isKoth: boolean;
+  forfeitedIds: ReadonlySet<number>;
 }) {
   // Group by team for tag team and team battles, or treat each robot as its own group for 1v1
   const groups: BattleLogParticipant[][] = [];
@@ -322,6 +334,7 @@ function MobileVsLayout({
                 p={p}
                 isLoser={userIsParticipant && (winnerId !== null || winningTeam !== null) && !isWinner(p)}
                 showPlacement={false}
+                isForfeited={forfeitedIds.has(p.robotId)}
               />
             ))}
           </div>
