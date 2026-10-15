@@ -23,13 +23,15 @@ import prisma from '../../src/lib/prisma';
 import logger from '../../src/config/logger';
 import type { MatchType, StandingsMode } from '../../generated/prisma';
 import { executeScheduledBattles, processBattle } from '../../src/services/league/leagueBattleOrchestrator';
+import { executeScheduledTeamBattles } from '../../src/services/team-battle/teamBattleOrchestrator';
+import { calculateTeamBattleELOChanges } from '../../src/services/team-battle/teamBattleRewardService';
 import { unequipMainWeapon, unequipOffhandWeapon } from '../../src/services/robot/robotWeaponService';
 import { buildForfeitBattleIncomeEventId } from '../../src/services/financial/financialEventIdentity';
 import { resolveByeReward, type TierScaledByeMode } from '../../src/utils/byeRewards';
 import { calculateELOChange } from '../../src/utils/battleMath';
 import { battlesForRobots } from '../cleanupHelper';
 import { useFinancialCaptureTestEnvironment } from '../financialCaptureTestHelper';
-import { enterRobotStanding } from '../helpers/standings';
+import { enterRobotStanding, enterTeamStanding } from '../helpers/standings';
 
 useFinancialCaptureTestEnvironment();
 
@@ -186,7 +188,58 @@ const leagueCase: ModeCase = {
   unreadyIndex: 0,
 };
 
-const MODE_CASES: ModeCase[] = [leagueCase];
+/** Every member moves by its team's change (the fought convention). */
+function teamElo(
+  side1: Array<{ id: number; elo: number }>,
+  side2: Array<{ id: number; elo: number }>,
+  forfeitingSides: Array<1 | 2>,
+  formula: (sum1: number, sum2: number, team1Won: boolean, isDraw: boolean) => { team1Change: number; team2Change: number },
+): Record<number, number> {
+  const sum = (rs: Array<{ elo: number }>) => rs.reduce((acc, r) => acc + r.elo, 0);
+  const isDraw = forfeitingSides.length === 2;
+  const changes = formula(sum(side1), sum(side2), !isDraw && forfeitingSides[0] === 2, isDraw);
+  return Object.fromEntries([
+    ...side1.map((r) => [r.id, r.elo + changes.team1Change]),
+    ...side2.map((r) => [r.id, r.elo + changes.team2Change]),
+  ]);
+}
+
+function teamLeagueCase(teamSize: 2 | 3): ModeCase {
+  const mode = teamSize === 2 ? 'league_2v2' : 'league_3v3';
+  return {
+    mode,
+    matchType: mode,
+    participantType: 'team',
+    standingMode: mode,
+    standingEntityType: 'team',
+    async createSide(loadouts = []) {
+      const stableId = await createStable();
+      const robots: number[] = [];
+      for (let i = 0; i < teamSize; i++) robots.push(await armedRobot(stableId, loadouts[i] ?? 'single'));
+      const team = await prisma.teamBattle.create({
+        data: {
+          stableId,
+          teamSize,
+          teamName: `${RUN}_t${next()}`.slice(0, 32),
+          members: { create: robots.map((robotId, slotIndex) => ({ robotId, slotIndex })) },
+        },
+      });
+      teamIds.push(team.id);
+      await enterTeamStanding(team.id, mode, { leaguePoints: START_LP });
+      return { participantId: team.id, stableId, robots };
+    },
+    run: () => executeScheduledTeamBattles(teamSize),
+    forfeitsReported: (result) => (result as { matchesForfeited: number }).matchesForfeited,
+    resolveOnce: () => executeScheduledTeamBattles(teamSize),
+    expectedElo: (side1, side2, forfeitingSides) => teamElo(side1, side2, forfeitingSides, calculateTeamBattleELOChanges),
+    battleWinnerId: (ready) => ready.participantId,
+    usesWinningSide: true,
+    // Any member: the second one, so the rule is not "slot 0 only".
+    unreadyIndex: 1,
+  };
+}
+
+const MODE_CASES: ModeCase[] = [leagueCase, teamLeagueCase(2), teamLeagueCase(3)];
 
 // ── Assertion helpers ────────────────────────────────────────────────
 
