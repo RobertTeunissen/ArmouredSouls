@@ -3,6 +3,7 @@ import {
   buildBattleIncomeEventId,
   buildByeBattleIncomeEventId,
   buildEconomicOperationEventId,
+  buildForfeitBattleIncomeEventId,
   buildRepairEventId,
   buildSettlementEventId,
   buildStreamingEventId,
@@ -18,6 +19,9 @@ describe('Financial_Event identity builders', () => {
     );
     expect(buildStreamingEventId(10, 20, 'league_1v1')).toBe('streaming:10:20:league_1v1:streaming_revenue');
     expect(buildByeBattleIncomeEventId(99, 2, 'koth')).toBe('bye:99:2:koth:battle_income');
+    expect(buildForfeitBattleIncomeEventId(99, 2, 'league_1v1')).toBe('forfeit:99:2:league_1v1:battle_income');
+    expect(buildForfeitBattleIncomeEventId(99, 2, 'league_1v1')).not.toBe(buildByeBattleIncomeEventId(99, 2, 'league_1v1'));
+    expect(buildForfeitBattleIncomeEventId(99, 2, 'league_1v1')).not.toBe(buildForfeitBattleIncomeEventId(99, 2, 'tournament_1v1'));
   });
 
   it('should make source-specific identities for achievements, repairs, settlement, and operations', () => {
@@ -29,6 +33,7 @@ describe('Financial_Event identity builders', () => {
 
   it('should reject ambiguous or oversized identities', () => {
     expect(() => buildBattleIncomeEventId('10:retry', 2, 'league_1v1')).toThrow();
+    expect(() => buildForfeitBattleIncomeEventId('10:retry', 2, 'league_1v1')).toThrow();
     expect(() => buildEconomicOperationEventId('x'.repeat(190), 1, 2)).toThrow();
   });
 });
