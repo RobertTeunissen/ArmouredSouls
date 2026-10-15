@@ -563,3 +563,33 @@ describe('T17: failures after the battle row exists are at-most-once', () => {
     await expectRerunIsInert(() => executeScheduledKothBattles(), field);
   });
 });
+
+// ── §11 signature 2 must not flag paid walkovers ─────────────────────
+
+describe('§11 fought-battle signature: paid byes and forfeit wins are not reported as unpaid', () => {
+  it('a paid tag-team bye and a paid league 1v1 forfeit return no rows', async () => {
+    await isolate('tag_team');
+    await isolate('league_1v1');
+    const stableId = await createStable();
+    const active = await armedRobot(stableId);
+    const reserve = await armedRobot(stableId);
+    const team = await createTagTeamFixture(stableId, active, reserve);
+    teamIds.push(team.id);
+    const bye = await scheduleUnified('tag_team', 'team', [team.id], 1);
+    const [a, b] = await soloRobots(2);
+    await enterRobotStandings([a, b], 'league_1v1');
+    const forfeit = await scheduleUnified('league_1v1', 'robot', [a, b], 1);
+    await disarm(b);
+
+    await executeScheduledTagTeamBattles();
+    await executeScheduledBattles();
+
+    const rows = await prisma.scheduledMatch.findMany({ where: { id: { in: [bye, forfeit] } } });
+    expect(rows.map((r) => r.status)).toEqual(['completed', 'completed']);
+    const battleIds = rows.map((r) => r.battleId!);
+    // Both walkovers paid someone, so the query has something to (wrongly) match.
+    const paid = await prisma.battleParticipant.findMany({ where: { battleId: { in: battleIds }, credits: { gt: 0 } } });
+    expect(new Set(paid.map((p) => p.battleId))).toEqual(new Set(battleIds));
+    expect(await findFoughtBattlesMissingIncome(battleIds)).toEqual([]);
+  });
+});

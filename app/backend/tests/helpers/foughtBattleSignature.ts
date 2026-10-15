@@ -3,23 +3,23 @@
  *
  * Any mode can leave this behind when an exception hits after the battle row was
  * written: for some stable, the sum of its robots' `battle_participants.credits`
- * is > 0 but there is no `battle_income` ledger row whose `financial_event_id`
- * starts with `battle:{battleId}:{stableId}:` (that prefix also covers the
- * optional `robot:{id}` component of `buildBattleIncomeEventId`). Stables with 0
- * credits are excluded because `awardCreditsWithLedger` writes nothing for an
- * amount <= 0. The check is battle-centric, so it also finds battles whose
- * queued match was cancelled.
+ * is > 0 but that stable has no `battle_income` ledger row whose breakdown
+ * `metadata.battleId` is the battle. Matching on the breakdown battle id (the
+ * field the Finance Center deployment query reads) covers every income identity:
+ * fought battles (`battle:`), byes (`bye:`) and forfeit wins (`forfeit:`), with
+ * or without the optional `robot:{id}` component. Stables with 0 credits are
+ * excluded because `awardCreditsWithLedger` writes nothing for an amount <= 0.
+ * The check is battle-centric, so it also finds battles whose queued match was
+ * cancelled.
  *
  * The same query is the operator check documented in the financial ledger guide.
  */
 import prisma from '../../src/lib/prisma';
-
 export interface MissingIncomeRow {
   battleId: number;
   stableId: number;
   credits: number;
 }
-
 /** Fought battles (restricted to `battleIds`) that owe a stable its battle income. */
 export async function findFoughtBattlesMissingIncome(battleIds: readonly number[]): Promise<MissingIncomeRow[]> {
   if (battleIds.length === 0) return [];
@@ -33,7 +33,8 @@ export async function findFoughtBattlesMissingIncome(battleIds: readonly number[
        AND NOT EXISTS (
          SELECT 1 FROM financial_ledger fl
          WHERE fl.transaction_type = 'battle_income'
-           AND fl.financial_event_id LIKE 'battle:' || bp.battle_id || ':' || r.user_id || ':%'
+           AND fl.user_id = r.user_id
+           AND fl.metadata->>'battleId' = bp.battle_id::text
        )
     ORDER BY bp.battle_id, r.user_id
   `;

@@ -315,6 +315,15 @@ The financial guarantee is **never paid twice**:
 
 Knockout tournaments: an errored match with no fought battle linked is `cancelled` with the higher seed as `winnerId`. That seed advances, nobody is paid, and no battle, ELO, standings or stat change is written.
 
+One narrow window breaks the "nothing written" part. A tournament match writes its battle row and the robots' ELO/stat updates before it links `battleId` to the bracket row, so a resume never repeats those non-repeatable updates. An error between those writes and the link (a failing second stat update or the link write itself) reaches the policy with `battleId` still null. The higher seed then advances as `cancelled`, while a fought, unlinked battle with its ELO/stat changes exists and may have been won by the other side. Nothing is paid for it, because income is paid only after the link, so "never paid twice" still holds. Find it as a battle with `tournament_id` and `tournament_round` set that no `tournament_matches.battle_id` references:
+
+```sql
+SELECT b.id AS battle_id, b.tournament_id, b.tournament_round, b.winner_id
+FROM battles b
+WHERE b.tournament_id IS NOT NULL
+  AND NOT EXISTS (SELECT 1 FROM tournament_matches t WHERE t.battle_id = b.id);
+```
+
 Two read-only signatures find the gaps.
 
 1. **Unpaid walkover** (forfeit or bye claimed, payment failed). The queued match is terminal with `battle_id` set, and that battle has no `battle_participants` rows, because participants are written after payment. The expected ledger row is `buildForfeitBattleIncomeEventId(matchId, stableId, mode)` (or `buildByeBattleIncomeEventId`).
@@ -331,7 +340,9 @@ Two read-only signatures find the gaps.
      AND NOT EXISTS (SELECT 1 FROM battle_participants bp WHERE bp.battle_id = t.battle_id);
    ```
 
-2. **Fought battle with missing income** (any mode, error after the battle row was written). For some stable, the sum of its robots' `battle_participants.credits` is above 0 and there is no `battle_income` ledger row whose `financial_event_id` starts with `battle:{battleId}:{stableId}:` (this prefix also covers the optional `robot:{id}` component of `buildBattleIncomeEventId`). Stables with 0 credits are left out because `awardCreditsWithLedger` writes nothing for an amount of 0 or less. The check is battle-centric, so it also finds battles whose queued match was cancelled. The test helper `tests/helpers/foughtBattleSignature.ts` runs the same query.
+   Not every hit owes money. A KotH or Grand Melee below-minimum match that crashed between its claim and the forfeiter participant rows also appears here: its battle has `battle_type` equal to the mode, `league_type` `koth` (KotH) or the tier (Grand Melee) and `winner_id` null. Forfeiters earn nothing and the ready robots' byes are separate rows, so nothing is owed for that battle.
+
+2. **Fought battle with missing income** (any mode, error after the battle row was written). For some stable, the sum of its robots' `battle_participants.credits` is above 0 and that stable has no `battle_income` ledger row whose breakdown `metadata->>'battleId'` is the battle. The breakdown battle id is the field the Finance Center deployment query reads, and every battle-income writer sets it, so the predicate covers fought battles (`battle:` identities), byes (`bye:`) and forfeit wins (`forfeit:`) alike. Matching on the `battle:` identity prefix instead would report every paid walkover as unpaid. Stables with 0 credits are left out because `awardCreditsWithLedger` writes nothing for an amount of 0 or less. The check is battle-centric, so it also finds battles whose queued match was cancelled. The test helper `tests/helpers/foughtBattleSignature.ts` runs the same query.
 
    ```sql
    SELECT bp.battle_id, r.user_id AS stable_id, SUM(bp.credits) AS credits
@@ -342,7 +353,8 @@ Two read-only signatures find the gaps.
       AND NOT EXISTS (
         SELECT 1 FROM financial_ledger fl
         WHERE fl.transaction_type = 'battle_income'
-          AND fl.financial_event_id LIKE 'battle:' || bp.battle_id || ':' || r.user_id || ':%'
+          AND fl.user_id = r.user_id
+          AND fl.metadata->>'battleId' = bp.battle_id::text
       );
    ```
 
@@ -357,7 +369,7 @@ Two read-only signatures find the gaps.
      AND NOT EXISTS (
        SELECT 1 FROM financial_ledger fl
        WHERE fl.transaction_type = 'battle_income'
-         AND fl.financial_event_id LIKE 'battle:' || t.battle_id || ':%'
+         AND fl.metadata->>'battleId' = t.battle_id::text
      );
    ```
 
