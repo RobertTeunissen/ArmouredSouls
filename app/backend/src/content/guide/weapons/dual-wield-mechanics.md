@@ -24,9 +24,9 @@ Both weapons' attribute bonuses are **added together** with your robot's base at
 
 > **Effective Attribute = (Base Attribute + Main Weapon Bonus + Offhand Weapon Bonus + Tuning) × (1 + Dual-Wield Modifier)**
 
-For example, with 10 base Attack Speed and two Machine Guns that each add +3 Attack Speed:
+For example, with 10 base Attack Speed and two Machine Guns that each add +5 Attack Speed:
 
-> (10 + 3 + 3) × 1.30 = **20.8 Attack Speed** — used by both the main hand and the offhand.
+> (10 + 5 + 5) × 1.30 = **26 Attack Speed** — used by both the main hand and the offhand.
 
 What stays **per-hand**:
 

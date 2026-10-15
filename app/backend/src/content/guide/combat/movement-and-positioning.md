@@ -137,6 +137,8 @@ This rewards defensive builds that fight with their back to the wall rather than
 
 The **patience timer** tracks how long your robot has gone without attacking. Its limit gets **shorter** as Combat Algorithms rises: about 15 seconds at the lowest level, down to 10 seconds at level 50.
 
+The patience limit currently has **no direct battle effect**. Combat Algorithms' movement benefit comes from tighter pathing: the higher it is, the less your robot drifts off its ideal path toward its preferred range.
+
 Reaching the limit never lets a weapon hit beyond its reach, and it does not trigger an attack on its own:
 
 - **Melee weapons** (including energy melee weapons like the Shock Maul and Thermal Lance, and shields) always need the opponent within **2 units**. Out of reach, they don't fire: no roll, no damage, no counter-attack. The robot keeps moving and attacks as soon as it is in reach.
