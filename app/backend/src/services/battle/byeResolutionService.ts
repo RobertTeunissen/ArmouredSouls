@@ -38,6 +38,7 @@ import {
 } from './battlePostCombat';
 import { buildByeBattleIncomeEventId } from '../financial/financialEventIdentity';
 import standingsService from '../standings/standingsService';
+import { claimQueuedMatch, readClaimedBattleId, WalkoverClaim } from './walkoverClaim';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -59,10 +60,10 @@ export const BYE_BATTLE_DURATION_SECONDS = 15;
  * `status`; for the three Tournament_Modes it is
  * `scheduled_tournament_matches.battleId`, because bracket advancement has
  * already spent the status token by the time the reward is due.
+ *
+ * Alias of the shared `WalkoverClaim` (byes and forfeits use one claim).
  */
-export type ByeAwardClaim =
-  | { source: 'scheduled_match'; scheduledMatchId: number }
-  | { source: 'tournament_match'; tournamentMatchId: number };
+export type ByeAwardClaim = WalkoverClaim;
 
 /** A real participating robot. Never a Bye_Placeholder. */
 export interface ByeParticipant {
@@ -122,59 +123,11 @@ export interface ByeResolutionResult {
 }
 
 // ─── The claim ───────────────────────────────────────────────────────────────
-
-/**
- * Win the right to pay this Bye_Event, atomically.
- *
- * A single conditional UPDATE. The order is claim-then-pay, always: if the
- * process dies in the window the reward is lost, not duplicated. That is the
- * correct direction — the opposite order turns every crash and retry into a
- * double payment, and both Placement_Mode orchestrators reset `error` rows back
- * to `scheduled` at the end of a run, so a partially-completed pay-then-claim
- * bye would be re-paid on the next cycle.
- *
- * A lost reward is also detectable and repairable: a completed queued row with a
- * `battles` row that has no `battle_participants` rows is an unambiguous
- * signature an operator can query for.
- */
-async function claimByeAward(claim: ByeAwardClaim, battleId: number): Promise<boolean> {
-  if (claim.source === 'scheduled_match') {
-    const { count } = await prisma.scheduledMatch.updateMany({
-      where: { id: claim.scheduledMatchId, status: 'scheduled' },
-      data: { status: 'completed', battleId },
-    });
-    return count === 1;
-  }
-
-  const { count } = await prisma.scheduledTournamentMatch.updateMany({
-    where: { id: claim.tournamentMatchId, battleId: null },
-    data: { battleId },
-  });
-  return count === 1;
-}
-
-/**
- * Read the battle id held by whoever won the Bye_Award_Claim.
- *
- * Only called when `claimByeAward` lost. The row has to be re-read: a caller's
- * own copy of the queued match was loaded while the row was still unclaimed, so
- * its `battleId` is null in exactly the case where the value is wanted.
- */
-async function readClaimedBattleId(claim: ByeAwardClaim): Promise<number | null> {
-  if (claim.source === 'scheduled_match') {
-    const row = await prisma.scheduledMatch.findUnique({
-      where: { id: claim.scheduledMatchId },
-      select: { battleId: true },
-    });
-    return row?.battleId ?? null;
-  }
-
-  const row = await prisma.scheduledTournamentMatch.findUnique({
-    where: { id: claim.tournamentMatchId },
-    select: { battleId: true },
-  });
-  return row?.battleId ?? null;
-}
+//
+// The claim lives in `walkoverClaim.ts`, shared with battle-time forfeits. The
+// order is claim-then-pay, always: if the process dies in the window the reward
+// is lost, not duplicated. That is the correct direction — the opposite order
+// turns every crash and retry into a double payment.
 
 // ─── The writer ──────────────────────────────────────────────────────────────
 
@@ -222,7 +175,7 @@ export async function resolveByeEvent(
   });
 
   // ── 2. Claim before paying ──
-  const claimed = await claimByeAward(input.claim, battle.id);
+  const claimed = await claimQueuedMatch(input.claim, battle.id);
   if (!claimed) {
     await prisma.battle.delete({ where: { id: battle.id } }).catch(() => {});
     const winningBattleId = await readClaimedBattleId(input.claim);
