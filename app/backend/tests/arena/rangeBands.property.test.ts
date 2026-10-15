@@ -410,6 +410,22 @@ describe('Physical reach invariant (#518)', () => {
       );
     });
 
+    it('measures real positions, so a forged context distance cannot let a melee counter reach', () => {
+      fc.assert(
+        fc.property(arbBeyondReach(30), arbWithinReach(), (d, forged) => {
+          const outcome = attemptAttack(
+            attackerWith('ranged', 'main'),
+            robotFixture('Defender', { mainWeapon: weaponFixture('melee', 3) }),
+            d, 'main', { ...ZERO_RANDOM, contextDistance: forged },
+          );
+          expect(outcome.events.filter(e => e.type === 'counter')).toHaveLength(0);
+          expect(outcome.events.filter(e => e.type === 'counter_out_of_range')).toHaveLength(1);
+          expect(outcome.attackerState.totalDamageTaken).toBe(0);
+        }),
+        { numRuns: 200 }
+      );
+    });
+
     it('a melee attempt blocked by reach cannot be countered', () => {
       fc.assert(
         fc.property(arbBeyondReach(30), (d) => {
