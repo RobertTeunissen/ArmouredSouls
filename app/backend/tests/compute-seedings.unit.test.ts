@@ -106,6 +106,45 @@ describe('computeSeedings — known 8-robot tournament', () => {
     expect(alpha).toBeDefined();
     expect(alpha!.eliminated).toBe(false);
   });
+
+  it('should eliminate the forfeiter of a forfeit match', () => {
+    const completedMatches: CompletedMatch[] = [
+      { participant1Id: 1, participant2Id: 8, winnerId: 1, status: 'forfeit' },
+    ];
+    const seedings = computeSeedings(round1Matches, bracketSize, completedMatches);
+    expect(seedings.find((s) => s.robotId === 8)!.eliminated).toBe(true);
+    expect(seedings.find((s) => s.robotId === 1)!.eliminated).toBe(false);
+  });
+
+  it('should eliminate only the lower seed of a cancelled match that advanced the higher seed', () => {
+    const completedMatches: CompletedMatch[] = [
+      { participant1Id: 4, participant2Id: 5, winnerId: 4, status: 'cancelled' },
+    ];
+    const seedings = computeSeedings(round1Matches, bracketSize, completedMatches);
+    expect(seedings.find((s) => s.robotId === 5)!.eliminated).toBe(true);
+    expect(seedings.find((s) => s.robotId === 4)!.eliminated).toBe(false);
+  });
+
+  it('should eliminate every participant of a cancelled match without a winner', () => {
+    const completedMatches: CompletedMatch[] = [
+      { participant1Id: 2, participant2Id: 7, winnerId: null, status: 'cancelled' },
+    ];
+    const seedings = computeSeedings(round1Matches, bracketSize, completedMatches);
+    expect(seedings.find((s) => s.robotId === 2)!.eliminated).toBe(true);
+    expect(seedings.find((s) => s.robotId === 7)!.eliminated).toBe(true);
+  });
+
+  it('should ignore pending and scheduled matches even when a winner is set', () => {
+    const completedMatches: CompletedMatch[] = [
+      { participant1Id: 1, participant2Id: 8, winnerId: 1, status: 'pending' },
+      { participant1Id: 2, participant2Id: 7, winnerId: 2, status: 'scheduled' },
+      { participant1Id: 3, participant2Id: 6, winnerId: null, status: 'pending' },
+    ];
+    const seedings = computeSeedings(round1Matches, bracketSize, completedMatches);
+    for (const entry of seedings) {
+      expect(entry.eliminated).toBe(false);
+    }
+  });
 });
 
 describe('computeSeedings — 5 robots in 8-slot bracket (bye matches)', () => {

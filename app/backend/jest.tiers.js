@@ -134,6 +134,8 @@ const DB_DEPENDENT = [
   'tests/integration/achievementUnlockSerialization.test.ts',
   // Unified standings creation rule (create on first matchable subscription)
   'tests/integration/standingsCreationRule.test.ts',
+  // PR #536 — battle-time readiness, forfeits and the match-failure policy
+  'tests/integration/tournamentSeedingsRoute.test.ts',
   // Hall of Records "Most Battles" and its accolade rank on the all-modes count (SQL)
   'tests/integration/mostBattlesAllModes.test.ts',
   // Spec #55 — Domain_Service_Extraction (task group 2)

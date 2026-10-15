@@ -212,8 +212,9 @@ router.get('/:id', authenticateToken, validateRequest({ params: tournamentIdPara
     }));
 
     const bracketSize = Math.pow(2, tournament.maxRounds);
+    // Pass every match: computeSeedings owns the terminal-status rule
+    // (completed, forfeit and cancelled eliminate; queued rows are ignored).
     const completedMatches = tournament.matches
-      .filter((m) => m.status === 'completed')
       .map(m => ({ winnerId: m.winnerId, participant1Id: m.participant1Id, participant2Id: m.participant2Id, status: m.status }));
 
     seedings = computeSeedings(round1Matches, bracketSize, completedMatches);
