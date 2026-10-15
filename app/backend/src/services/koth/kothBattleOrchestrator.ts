@@ -4,6 +4,7 @@ import prisma from '../../lib/prisma';
 import { Prisma } from '../../../generated/prisma';
 import logger from '../../config/logger';
 import { resolvePlacementBye } from '../scheduling/thinInstanceByes';
+import { handleMatchFailure } from '../battle/matchFailurePolicy';
 import { computeBattleSummary } from '../battle/battleSummaryComputer';
 import { KothError, KothErrorCode } from '../../errors/kothErrors';
 
@@ -662,12 +663,16 @@ export async function executeScheduledKothBattles(_scheduledFor?: Date): Promise
   };
 
   let processed = 0;
+  // In-run exclusion set: a match whose cancel write fails (handleMatchFailure
+  // returns cancelled: false) stays 'scheduled' and must not be re-fetched in
+  // this run.
+  const attempted: number[] = [];
 
   // Process one match at a time: fetch → execute → release memory → repeat
   while (processed < totalCount) {
     // Fetch the next single scheduled match from unified table
     let unifiedMatch = await prisma.scheduledMatch.findFirst({
-      where: { matchType: 'koth', status: 'scheduled' },
+      where: { matchType: 'koth', status: 'scheduled', id: { notIn: [...attempted] } },
       include: { participants: true },
       orderBy: { createdAt: 'asc' },
     });
@@ -706,7 +711,7 @@ export async function executeScheduledKothBattles(_scheduledFor?: Date): Promise
       
       // Re-fetch
       unifiedMatch = await prisma.scheduledMatch.findFirst({
-        where: { matchType: 'koth', status: 'scheduled' },
+        where: { matchType: 'koth', status: 'scheduled', id: { notIn: [...attempted] } },
         include: { participants: true },
         orderBy: { createdAt: 'asc' },
       });
@@ -745,6 +750,7 @@ export async function executeScheduledKothBattles(_scheduledFor?: Date): Promise
     }
 
     const matchId = match.id;
+    attempted.push(matchId);
     const participantCount = match.participants.length;
 
     try {
@@ -765,29 +771,19 @@ export async function executeScheduledKothBattles(_scheduledFor?: Date): Promise
       // Only store lightweight placement data, not the full result
       summary.matchResults.push({ matchId, ...result });
     } catch (error) {
+      // Rule 7: cancel the match (no retry, no reward), log, carry on.
       summary.failedMatches++;
-      const errorMsg = error instanceof Error ? error.message : String(error);
-      summary.errors.push(`KotH Match ${matchId}: ${errorMsg}`);
-      logger.error(`[KotH Orchestrator] Failed to process match ${matchId}:`, error);
-
-      // Mark as error so the while loop doesn't re-fetch it in this run
-      await prisma.scheduledMatch.update({
-        where: { id: matchId },
-        data: { status: 'error' },
-      }).catch(() => {});
+      const { errorSummary } = await handleMatchFailure({
+        mode: 'koth',
+        ref: { source: 'scheduled_match', id: matchId },
+        error,
+        participants: match.participants.map(p => p.robotId),
+      });
+      summary.errors.push(`KotH Match ${matchId}: ${errorSummary}`);
     }
 
     // End of match processing
     processed++;
-  }
-
-  // Reset any matches marked 'error' during this run back to 'scheduled' for retry next cycle
-  if (summary.failedMatches > 0) {
-    await prisma.scheduledMatch.updateMany({
-      where: { matchType: 'koth', status: 'error' },
-      data: { status: 'scheduled' },
-    });
-    logger.info(`[KotH Orchestrator] Reset ${summary.failedMatches} failed matches back to 'scheduled' for retry`);
   }
 
   logger.info(`[KotH Orchestrator] Execution complete: ${summary.successfulMatches} successful, ${summary.byeMatches} byes, ${summary.failedMatches} failed (mem: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB)`);

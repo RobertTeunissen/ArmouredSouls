@@ -39,6 +39,7 @@ import {
   updateRobotCombatStats,
 } from '../battle/battlePostCombat';
 import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
+import { handleMatchFailure } from '../battle/matchFailurePolicy';
 import { runFinancialWriteTransaction } from '../cycle/financialWriteTransaction';
 import { prepareRobotForCombat } from '../../utils/robotCalculations';
 import { getTuningBonusesBatch } from '../tuning-pool';
@@ -175,16 +176,18 @@ export async function executeScheduledTeamBattles(
       );
       results.push(result);
     } catch (error) {
-      // R10.5: Mark match as cancelled, log, continue remaining
-      await markMatchCancelled(match.id, error);
+      // R10.5 / rule 7: cancel the match via the shared policy, continue remaining
+      const { errorSummary } = await handleMatchFailure({
+        mode: battleType,
+        ref: { source: 'scheduled_match', id: match.id },
+        error,
+        participants: [match.team1Id, match.team2Id].filter((id): id is number => id !== null),
+      });
       results.push({
         matchId: match.id,
         status: 'cancelled',
-        error: error instanceof Error ? error.message : String(error),
+        error: errorSummary,
       });
-      logger.error(
-        `[TeamBattle] Match ${match.id} failed: ${error instanceof Error ? error.message : String(error)}`,
-      );
     }
   }
 
@@ -879,18 +882,4 @@ function buildBattleLog(result: TeamBattleResult, teamSize: 2 | 3): TeamBattleLo
     startingPositions: result.startingPositions,
     endingPositions: result.endingPositions,
   };
-}
-
-/**
- * Mark a scheduled match as cancelled with a reason (R10.5).
- */
-async function markMatchCancelled(matchId: number, error: unknown): Promise<void> {
-  const reason = error instanceof Error ? error.message : String(error);
-  await prisma.scheduledMatch.update({
-    where: { id: matchId },
-    data: {
-      status: 'cancelled',
-      cancelReason: reason.slice(0, 500), // Truncate to fit DB column
-    },
-  });
 }

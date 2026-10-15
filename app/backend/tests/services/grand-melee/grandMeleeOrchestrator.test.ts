@@ -126,6 +126,7 @@ import {
 import { calculateStreamingRevenueBatch } from '../../../src/services/economy/streamingRevenueService';
 import standingsService from '../../../src/services/standings/standingsService';
 import schedulingService from '../../../src/services/scheduling/schedulingService';
+import * as matchFailurePolicy from '../../../src/services/battle/matchFailurePolicy';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -299,6 +300,59 @@ describe('executeScheduledGrandMeleeBattles', () => {
     expect(summary.successfulMatches).toBe(0);
     expect(summary.errors).toHaveLength(1);
     expect(summary.errors[0]).toContain('expected at least 8 robots');
+  });
+
+  it('should cancel a failed match through the failure policy and never reset it to scheduled', async () => {
+    const match = makeScheduledMatch(1, 5);
+    mockPrisma.scheduledMatch.count.mockResolvedValueOnce(1);
+    mockPrisma.scheduledMatch.findFirst.mockResolvedValueOnce(match);
+    mockPrisma.robot.findMany.mockResolvedValueOnce(Array.from({ length: 5 }, (_, i) => makeRobot(i + 1)));
+    mockPrisma.scheduledMatch.updateMany.mockResolvedValueOnce({ count: 1 });
+
+    const summary = await executeScheduledGrandMeleeBattles();
+
+    expect(summary.failedMatches).toBe(1);
+    expect(mockPrisma.scheduledMatch.updateMany).toHaveBeenCalledWith({
+      where: { id: 1, status: { in: ['scheduled', 'error'] } },
+      data: { status: 'cancelled', cancelReason: expect.stringContaining('expected at least 8 robots') },
+    });
+    expect(mockPrisma.scheduledMatch.update).not.toHaveBeenCalledWith(
+      expect.objectContaining({ data: { status: 'error' } }),
+    );
+    expect(mockPrisma.scheduledMatch.updateMany).not.toHaveBeenCalledWith(
+      expect.objectContaining({ data: { status: 'scheduled' } }),
+    );
+  });
+
+  it('should never re-fetch a match whose cancel write failed in the same run', async () => {
+    const rows = [makeScheduledMatch(1, 5), makeScheduledMatch(2, 10)];
+    mockPrisma.scheduledMatch.count.mockResolvedValueOnce(2);
+    mockPrisma.scheduledMatch.findFirst.mockImplementation(
+      (args: { where: { id?: { notIn?: number[] } } }) => {
+        const excluded = args.where.id?.notIn ?? [];
+        return Promise.resolve(rows.find(r => r.status === 'scheduled' && !excluded.includes(r.id)) ?? null);
+      },
+    );
+    const failureSpy = jest
+      .spyOn(matchFailurePolicy, 'handleMatchFailure')
+      .mockResolvedValue({ cancelled: false, errorSummary: 'GRAND_MELEE_ERROR: boom' });
+    mockPrisma.robot.findMany
+      .mockResolvedValueOnce(Array.from({ length: 5 }, (_, i) => makeRobot(i + 1)))
+      .mockResolvedValueOnce(Array.from({ length: 10 }, (_, i) => makeRobot(i + 1)));
+    (simulateBattleMulti as jest.Mock).mockReturnValueOnce(makeSimResult(10));
+
+    const summary = await executeScheduledGrandMeleeBattles();
+
+    expect(failureSpy).toHaveBeenCalledTimes(1);
+    expect(failureSpy).toHaveBeenCalledWith(expect.objectContaining({ ref: { source: 'scheduled_match', id: 1 } }));
+    expect(summary.failedMatches).toBe(1);
+    expect(summary.successfulMatches).toBe(1);
+    expect(mockPrisma.scheduledMatch.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({ where: expect.objectContaining({ id: { notIn: [1] } }) }),
+    );
+    failureSpy.mockRestore();
+    mockPrisma.scheduledMatch.findFirst.mockReset();
+    mockPrisma.scheduledMatch.findFirst.mockResolvedValue(null);
   });
 
   it('should use correct arena radius formula: 16 + (N-2) * 3', async () => {

@@ -20,6 +20,7 @@ const mockPrisma = {
   scheduledMatch: {
     findMany: jest.fn(),
     update: jest.fn(),
+    updateMany: jest.fn().mockResolvedValue({ count: 1 }),
   },
   robot: {
     findMany: jest.fn(),
@@ -661,13 +662,14 @@ describe('teamBattleOrchestrator', () => {
       expect(result.results[0].error).toContain('Simulation failed');
       expect(result.results[1].status).toBe('completed');
 
-      // Verify the failed match was marked as cancelled in DB
-      expect(mockPrisma.scheduledMatch.update).toHaveBeenCalledWith({
-        where: { id: 1 },
-        data: expect.objectContaining({
+      // Verify the failed match was cancelled through the shared failure
+      // policy's conditional write (only a still-queued row is cancelled)
+      expect(mockPrisma.scheduledMatch.updateMany).toHaveBeenCalledWith({
+        where: { id: 1, status: { in: ['scheduled', 'error'] } },
+        data: {
           status: 'cancelled',
           cancelReason: expect.stringContaining('Simulation failed'),
-        }),
+        },
       });
     });
 

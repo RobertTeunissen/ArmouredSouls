@@ -26,6 +26,7 @@ import {
 } from '../battle/battlePostCombat';
 import { BattleError, BattleErrorCode } from '../../errors/battleErrors';
 import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
+import { handleMatchFailure } from '../battle/matchFailurePolicy';
 import { prepareRobotForCombat } from '../../utils/robotCalculations';
 import { getTuningBonusesBatch } from '../tuning-pool';
 import standingsService from '../standings/standingsService';
@@ -930,10 +931,15 @@ export async function executeScheduledBattles(_scheduledFor?: Date): Promise<Bat
         }
       }
     } catch (error) {
+      // Rule 7: cancel the match (no retry, no reward), log, carry on.
       summary.failedBattles++;
-      const errorMsg = error instanceof Error ? error.message : String(error);
-      summary.errors.push(`Match ${match.id}: ${errorMsg}`);
-      logger.error(`[BattleOrchestrator] Failed to process match ${match.id}:`, error);
+      const { errorSummary } = await handleMatchFailure({
+        mode: 'league_1v1',
+        ref: { source: 'scheduled_match', id: match.id },
+        error,
+        participants: [match.robot1Id, match.robot2Id],
+      });
+      summary.errors.push(`Match ${match.id}: ${errorSummary}`);
     }
   }
   

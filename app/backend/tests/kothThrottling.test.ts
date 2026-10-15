@@ -383,13 +383,14 @@ describe('KotH Orchestrator Throttling', () => {
     expect(mockPrisma.$transaction).toHaveBeenCalled();
   });
 
-  it('should mark failed matches as error during run and reset to scheduled after', async () => {
+  it('should cancel a failed match through the failure policy and never reset it to scheduled', async () => {
     const matches = [makeMatch(1, [1, 2, 3, 4, 5]), makeMatch(2, [1, 2, 3, 4, 5])];
     const queue = [...matches];
     mockPrisma.scheduledMatch.count.mockResolvedValue(2);
     mockPrisma.scheduledMatch.findFirst.mockImplementation(() => {
       return Promise.resolve(queue.shift() ?? null);
     });
+    mockPrisma.scheduledMatch.updateMany.mockResolvedValue({ count: 1 });
 
     // First match: robot query returns too few robots (triggers error)
     // Second match: normal
@@ -408,16 +409,58 @@ describe('KotH Orchestrator Throttling', () => {
     expect(summary.successfulMatches).toBe(1);
     expect(summary.failedMatches).toBe(1);
     expect(summary.errors[0]).toContain('expected at least 5 robots');
-    // Failed match should be temporarily marked as 'error', then reset to 'scheduled'
-    expect(mockPrisma.scheduledMatch.update).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { id: 1 }, data: { status: 'error' } }),
+
+    // Rule 7: the failed match is cancelled (conditional write), never marked
+    // 'error' and never reset to 'scheduled' for a retry.
+    expect(mockPrisma.scheduledMatch.updateMany).toHaveBeenCalledWith({
+      where: { id: 1, status: { in: ['scheduled', 'error'] } },
+      data: { status: 'cancelled', cancelReason: expect.stringContaining('expected at least 5 robots') },
+    });
+    expect(mockPrisma.scheduledMatch.update).not.toHaveBeenCalledWith(
+      expect.objectContaining({ data: { status: 'error' } }),
     );
-    expect(mockPrisma.scheduledMatch.updateMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: { matchType: 'koth', status: 'error' },
-        data: { status: 'scheduled' },
-      }),
+    expect(mockPrisma.scheduledMatch.updateMany).not.toHaveBeenCalledWith(
+      expect.objectContaining({ data: { status: 'scheduled' } }),
     );
+  });
+
+  it('should never re-fetch a match whose cancel write failed in the same run', async () => {
+    // A queue that honours the where clause: a failed match stays 'scheduled'.
+    const rows = [makeMatch(1, [1, 2, 3, 4, 5]), makeMatch(2, [1, 2, 3, 4, 5])];
+    mockPrisma.scheduledMatch.count.mockResolvedValue(2);
+    mockPrisma.scheduledMatch.findFirst.mockImplementation(
+      (args: { where: { id?: { notIn?: number[] } } }) => {
+        const excluded = args.where.id?.notIn ?? [];
+        return Promise.resolve(rows.find(r => r.status === 'scheduled' && !excluded.includes(r.id)) ?? null);
+      },
+    );
+    const policy = jest.requireActual('../src/services/battle/matchFailurePolicy') as
+      typeof import('../src/services/battle/matchFailurePolicy');
+    const failureSpy = jest
+      .spyOn(policy, 'handleMatchFailure')
+      .mockResolvedValue({ cancelled: false, errorSummary: 'KOTH_ERROR: boom' });
+
+    let callCount = 0;
+    mockPrisma.robot.findMany.mockImplementation(() => {
+      callCount++;
+      if (callCount === 1) return Promise.resolve([makeRobot(1, 1)]);
+      return Promise.resolve([1, 2, 3, 4, 5].map(id => makeRobot(id, id)));
+    });
+    mockPrisma.battle.create.mockResolvedValue({ id: 100 });
+    rows[1].status = 'scheduled';
+
+    const promise = executeScheduledKothBattles();
+    await jest.runAllTimersAsync();
+    const summary = await promise;
+
+    expect(failureSpy).toHaveBeenCalledTimes(1);
+    expect(failureSpy).toHaveBeenCalledWith(expect.objectContaining({ ref: { source: 'scheduled_match', id: 1 } }));
+    expect(summary.failedMatches).toBe(1);
+    expect(summary.successfulMatches).toBe(1);
+    expect(mockPrisma.scheduledMatch.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({ where: expect.objectContaining({ id: { notIn: [1] } }) }),
+    );
+    failureSpy.mockRestore();
   });
 
   it('should fetch matches one at a time, not all at once', async () => {

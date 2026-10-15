@@ -4,6 +4,7 @@ import prisma from '../../lib/prisma';
 import { Prisma } from '../../../generated/prisma';
 import logger from '../../config/logger';
 import { resolvePlacementBye } from '../scheduling/thinInstanceByes';
+import { handleMatchFailure } from '../battle/matchFailurePolicy';
 import { computeBattleSummary } from '../battle/battleSummaryComputer';
 import { countKillsByRobot } from '../../shared/utils/battleStatistics';
 import { simulateBattleMulti, RobotWithWeapons, BattleConfig, SpatialCombatResult, SpatialRobotCombatState, SpatialCombatEvent } from '../battle/combatSimulator';
@@ -670,12 +671,16 @@ export async function executeScheduledGrandMeleeBattles(): Promise<GrandMeleeBat
   };
 
   let processed = 0;
+  // In-run exclusion set: a match whose cancel write fails (handleMatchFailure
+  // returns cancelled: false) stays 'scheduled' and must not be re-fetched in
+  // this run.
+  const attempted: number[] = [];
 
   // Process one match at a time: fetch → execute → release memory → repeat
   while (processed < totalCount) {
     // Fetch the next single scheduled match
     let unifiedMatch = await prisma.scheduledMatch.findFirst({
-      where: { matchType: 'grand_melee', status: 'scheduled' },
+      where: { matchType: 'grand_melee', status: 'scheduled', id: { notIn: [...attempted] } },
       include: { participants: true },
       orderBy: { createdAt: 'asc' },
     });
@@ -700,7 +705,7 @@ export async function executeScheduledGrandMeleeBattles(): Promise<GrandMeleeBat
 
       // Re-fetch after pause
       unifiedMatch = await prisma.scheduledMatch.findFirst({
-        where: { matchType: 'grand_melee', status: 'scheduled' },
+        where: { matchType: 'grand_melee', status: 'scheduled', id: { notIn: [...attempted] } },
         include: { participants: true },
         orderBy: { createdAt: 'asc' },
       });
@@ -720,6 +725,7 @@ export async function executeScheduledGrandMeleeBattles(): Promise<GrandMeleeBat
     }
 
     const matchId = unifiedMatch.id;
+    attempted.push(matchId);
     const participantCount = unifiedMatch.participants.length;
 
     try {
@@ -746,30 +752,18 @@ export async function executeScheduledGrandMeleeBattles(): Promise<GrandMeleeBat
       summary.totalRobotsInvolved += participantCount;
       summary.matchResults.push({ matchId, ...result });
     } catch (error) {
+      // Rule 7: cancel the match (no retry, no reward), log, carry on.
       summary.failedMatches++;
-      const errorMsg = error instanceof Error ? error.message : String(error);
-      summary.errors.push(`Grand Melee Match ${matchId}: ${errorMsg}`);
-      logger.error(`[Grand Melee Orchestrator] Failed to process match ${matchId}:`, error);
-
-      // Mark as error so the while loop doesn't re-fetch it in this run
-      await prisma.scheduledMatch.update({
-        where: { id: matchId },
-        data: { status: 'error' },
-      }).catch(() => {});
+      const { errorSummary } = await handleMatchFailure({
+        mode: 'grand_melee',
+        ref: { source: 'scheduled_match', id: matchId },
+        error,
+        participants: unifiedMatch.participants.map(p => p.participantId),
+      });
+      summary.errors.push(`Grand Melee Match ${matchId}: ${errorSummary}`);
     }
 
     processed++;
-  }
-
-  // Reset any matches marked 'error' during this run back to 'scheduled' for retry next cycle
-  if (summary.failedMatches > 0) {
-    await prisma.scheduledMatch.updateMany({
-      where: { matchType: 'grand_melee', status: 'error' },
-      data: { status: 'scheduled' },
-    });
-    logger.info(
-      `[Grand Melee Orchestrator] Reset ${summary.failedMatches} failed matches back to 'scheduled' for retry`,
-    );
   }
 
   logger.info(
