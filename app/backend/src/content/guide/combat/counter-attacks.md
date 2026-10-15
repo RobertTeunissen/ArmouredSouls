@@ -2,7 +2,7 @@
 title: "Counter-Attacks & Shield Regeneration"
 description: "How Counter Protocols give your robot free retaliatory strikes and how Energy Shields regenerate during battle based on Power Core."
 order: 6
-lastUpdated: "2026-03-12"
+lastUpdated: "2026-10-15"
 relatedArticles:
   - combat/battle-flow
   - combat/stances
@@ -32,8 +32,18 @@ Key rules:
 - Weapon **malfunctions** do **not** trigger counter-attacks (the weapon failed, there was no real attack to react to)
 - Counter-attacks have their own **hit check** — they can miss, just like a normal attack
 - Counter-attacks deal **reduced damage** compared to a normal attack (roughly 70% of base damage)
-- Counter-attacks use your robot's **main hand weapon** for damage calculation
+- Counter-attacks use your robot's **main hand weapon** for damage calculation, unless a dual-wield robot's main melee weapon can't reach and its offhand weapon can (see Reach below)
 - Counter-attacks themselves **cannot be countered** (no infinite counter chains)
+
+### Reach
+
+Counter-attacks follow the same reach rules as normal attacks:
+
+- **Melee counters** (including energy melee weapons and shields) need the attacker within **2 units**
+- **Ranged counters** work at any distance, with the normal range penalty outside the weapon's optimal band
+- **Dual-wield fallback** — if your main hand is a melee weapon that can't reach, a dual-wield robot counters with its offhand weapon instead when that weapon can reach
+- A counter that can't reach shows as "can't reach" in the battle log and deals no damage
+- An attack that is blocked by reach never happens, so it can't be countered either
 
 ```callout-info
 Counter-attacks are essentially free bonus attacks. They don't replace your robot's normal attacks — they happen in addition to them. A robot with high Counter Protocols effectively gets extra attacks every time it's targeted, even if the incoming attack misses. However, counters have their own hit check and can miss too.

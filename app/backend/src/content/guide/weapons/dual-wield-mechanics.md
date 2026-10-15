@@ -111,6 +111,14 @@ Dual-Wield applies a **0.90× loadout damage multiplier** to all attacks (both h
 
 This is the core trade-off: you hit more often but each hit is weaker. Over a full battle, the total damage output can exceed other loadouts — but only if your offhand attacks are actually landing.
 
+### Reach per Hand
+
+Each hand checks its own reach. A melee weapon (including energy melee weapons like the Shock Maul) only fires when its target is within 2 units; a ranged weapon fires at any distance with the normal range penalty. A hand that can't reach doesn't fire and stays ready, so it attacks as soon as a target is in reach.
+
+**Example:** a Laser Pistol main hand and an Energy Blade offhand, 10 units from the opponent. Only the Laser Pistol fires, at 0.75× damage because 10 units is one band outside its short optimal range. The Energy Blade waits until the gap closes to 2 units.
+
+In battles with more than two robots, each hand that can't reach its current target switches to the nearest opponent within that hand's own reach, if there is one. Your Laser Pistol can keep firing at a distant target while the Energy Blade hits an opponent standing next to you.
+
 ## The Dual-Wield Trade-Off
 
 Here's the honest math of Dual-Wield:

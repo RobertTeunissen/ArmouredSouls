@@ -2,7 +2,7 @@
 title: "Attribute Combat Influence"
 description: "A visual guide showing how robot attributes influence combat outcomes — from damage dealing to defense, evasion, movement, positioning, and AI decision-making."
 order: 2
-lastUpdated: "2026-03-17"
+lastUpdated: "2026-10-15"
 relatedArticles:
   - robots/attributes-overview
   - combat/battle-flow
@@ -159,7 +159,7 @@ Hydraulic Systems is a strong attribute for melee builds. At level 50 in melee r
 
 All four AI Processing attributes actively influence combat:
 
-- **Combat Algorithms** improves hit chance (bonus when algorithm score > 0.5) and controls the patience timer — how long your robot waits for optimal range before forcing an attack
+- **Combat Algorithms** improves hit chance (bonus when algorithm score > 0.5) and movement quality — higher levels take more direct paths toward the preferred range. It never lets a weapon attack beyond its reach
 - **Threat Analysis** enhances facing/turning speed with predictive bias. At high levels (25+), your robot anticipates opponents moving behind it and turns faster. Also reduces backstab and flanking damage taken. In multi-robot battles (KotH), Threat Analysis scales the effectiveness of zone-aware target priority weights.
 - **Target Stickiness**: Robots commit to their chosen target for 1.5 seconds before reconsidering. This prevents wasted time switching between similarly-threatening opponents and ensures attacks are completed. The lock breaks immediately if the target is destroyed or yields.
 - **Adaptive AI** accumulates hit and damage bonuses throughout the battle as your robot misses or takes damage. Higher values mean faster adaptation. Bonuses are halved when HP > 70% to prevent snowballing.

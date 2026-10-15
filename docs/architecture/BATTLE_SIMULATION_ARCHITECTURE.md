@@ -2,7 +2,7 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: v2.2  
+**Version**: v2.3  
 **Last Updated**: October 15, 2026  
 **Status**: ✅ Implemented  
 **Owner**: Robert Teunissen  
@@ -13,7 +13,8 @@
 v1.0 (Mar 18, 2026): Initial architecture doc — 4 orchestrators, combat simulator, narrative pipeline  
 v2.0 (Apr 2, 2026): Added Practice Arena (5th consumer), KotH integration, HP/Shield tracking, tag team phase transitions, shared post-combat layer, updated file paths for service consolidation  
 v2.1 (Apr 10, 2026): Added proper versioning, fixed stale CYCLE_PROCESS.md reference  
-v2.2 (Oct 15, 2026): #517 — Combat Preparation Contract (raw vs prepared input per API, canonical loadout-adjusted attributes, idempotency, HP handling per entry point)
+v2.2 (Oct 15, 2026): #517 — Combat Preparation Contract (raw vs prepared input per API, canonical loadout-adjusted attributes, idempotency, HP handling per entry point)  
+v2.3 (Oct 15, 2026): #518 — Weapon reach invariant (per-hand reach check before attack resolution, `performAttack()` guard, blocked-attempt contract; patience no longer forces attacks)
 
 ---
 
@@ -366,6 +367,8 @@ The primary entry point is `simulateBattleMulti(robots[], config)` which support
   │    1. Regenerate shields (all robots)             │
   │    2. Check attack cooldowns                      │
   │    3. Perform attacks (main + offhand if dual)    │
+  │       0. Reach check per hand (melee band ≤ 2)    │
+  │          blocked → no roll, no event, no cooldown │
   │       a. Malfunction check (weapon control)       │
   │       b. Hit chance (accuracy vs evasion)         │
   │       c. Critical strike check                    │
@@ -379,6 +382,17 @@ The primary entry point is `simulateBattleMulti(robots[], config)` which support
   │       - Game mode win condition (e.g. KotH score)  │
   └──────────────────────────────────────────────────┘
 ```
+
+**Weapon reach (#518).** Physical reach is an invariant of every resolved attack, independent of patience. A
+weapon whose `rangeBand` is `melee` (melee, energy melee such as Shock Maul, shields) needs distance ≤ 2 to
+its actual target; other bands reach any distance and only take the range penalty. It is enforced twice: the
+per-hand gates in `simulationLoop.ts` (`canAttack`, including the n > 2 target-of-opportunity search, which
+validates each candidate against its own distance) and a guard at the top of `performAttack()`
+(`isWithinWeaponReach`, real positions), which returns `false` for a blocked attempt. A blocked attempt draws
+no random numbers, emits no attack or counter event, deals no damage, and leaves the hand's cooldown and the
+patience timer untouched; only the main hand emits one `out_of_range` message per streak. Seeded replays
+therefore stay deterministic. Unarmed robots (Fists, no `rangeBand`) are unchanged. Counter reach
+(`counterAttack.ts`) is unchanged.
 
 ### Key Constants
 

@@ -150,7 +150,10 @@ function getPreferredRangeWithDynamic(
 /**
  * Calculate the patience timer limit in seconds.
  * Formula: 15 - combatAlgorithmScore × 5
- * Range: 10s (score=1.0) to 15s (score=0.0)
+ * Range: 10s (score=1.0) to 15s (score=0.0) — a higher score shortens the wait.
+ *
+ * Not used to gate attacks since #518: patience never lets a weapon attack beyond
+ * its physical reach. Kept for tests and for a future movement/targeting role (#520).
  *
  * Req 5.7
  */

@@ -4,6 +4,8 @@
 
 import { updateAdaptation } from '../../arena/adaptationTracker';
 import { resolveCounter } from '../../arena/counterAttack';
+import { canAttack } from '../../arena/rangeBands';
+import { euclideanDistance } from '../../arena/vector2d';
 import {
   CombatEvent,
   SpatialRobotCombatState,
@@ -55,7 +57,35 @@ export function buildHPShieldSnapshot(
 }
 
 /**
- * Perform a single attack from attacker to defender with spatial modifiers
+ * Physical reach check for an actual attack (#518).
+ *
+ * A weapon whose `rangeBand` is `melee` (melee, energy melee such as Shock Maul,
+ * shields) only reaches a defender at distance ≤ 2; every other band reaches any
+ * distance (range penalties apply separately). The distance is measured between the
+ * real positions, never taken from a caller-supplied context. An empty hand (Fists)
+ * has no range band and keeps its any-distance behaviour.
+ */
+export function isWithinWeaponReach(
+  attackerState: SpatialRobotCombatState,
+  defenderState: SpatialRobotCombatState,
+  hand: 'main' | 'offhand',
+): boolean {
+  const weapon = hand === 'main'
+    ? attackerState.robot.mainWeapon?.weapon
+    : attackerState.robot.offhandWeapon?.weapon;
+  if (!weapon) return true;
+  const weaponLike: WeaponLike = { name: weapon.name, rangeBand: weapon.rangeBand as RangeBand };
+  return canAttack(weaponLike, euclideanDistance(attackerState.position, defenderState.position));
+}
+
+/**
+ * Perform a single attack from attacker to defender with spatial modifiers.
+ *
+ * Reach invariant (#518): if the hand's weapon cannot physically reach the defender
+ * (see `isWithinWeaponReach`), the attempt is blocked and nothing happens — no random
+ * roll, no event, no damage, no counter and no state change — and the function
+ * returns `false`. Callers must not consume the hand's cooldown or reset patience on
+ * `false`. Returns `true` when the attack was resolved (hit, miss or malfunction).
  */
 export function performAttack(
   attackerState: SpatialRobotCombatState,
@@ -84,7 +114,9 @@ export function performAttack(
     passiveAccuracyPenalty?: number;
     passiveDamageReduction?: number;
   }
-): void {
+): boolean {
+  if (!isWithinWeaponReach(attackerState, defenderState, hand)) return false;
+
   const weaponInfo = getWeaponInfo(attackerState.robot, hand);
   const handLabel = hand === 'offhand' ? ' [OFFHAND]' : '';
 
@@ -126,7 +158,7 @@ export function performAttack(
     attackerState.adaptationHitBonus = malfAdaptState.adaptationHitBonus;
     attackerState.adaptationDamageBonus = malfAdaptState.adaptationDamageBonus;
     attackerState.missCount++;
-    return;
+    return true;
   }
 
   // Hit calculation with spatial bonuses
@@ -288,14 +320,14 @@ export function performAttack(
   // Counter-attack check (range-aware, Req 19)
   // Off-hand attacks do not trigger counter-attacks — dual-wield robots should not
   // be penalized with double counter exposure compared to single-weapon builds.
-  if (hand === 'offhand') return;
-  if (defenderState.currentHP <= 0) return;
+  if (hand === 'offhand') return true;
+  if (defenderState.currentHP <= 0) return true;
 
   const { counterChance, breakdown: counterBreakdown } = calculateCounterChance(defenderState.robot);
   const counterRoll = random(0, 100);
   const counterTriggered = counterRoll < counterChance;
 
-  if (!counterTriggered) return;
+  if (!counterTriggered) return true;
 
   // Resolve counter with range checking
   const counterResult = resolveCounter(defenderState, attackerState, spatialContext.distance);
@@ -313,7 +345,7 @@ export function performAttack(
       distance: spatialContext.distance,
       rangeBand: spatialContext.rangeBand,
     });
-    return;
+    return true;
   }
 
   // Counter can proceed — perform counter attack
@@ -395,4 +427,5 @@ export function performAttack(
       rangeBand: spatialContext.rangeBand,
     });
   }
+  return true;
 }

@@ -999,8 +999,21 @@ Range penalty multipliers:
   one band away:          0.75   // -25% penalty
   two or more bands away: 0.5    // -50% penalty
 
-Special: Melee weapons cannot attack beyond 2 units (emits out_of_range event).
+Reach invariant (#518): a weapon whose rangeBand is 'melee' (melee weapons, energy melee
+such as Shock Maul / Thermal Lance, shields) only resolves an attack when the distance to the
+actual target is <= 2. Every other band reaches any distance (range penalty above applies).
+Unarmed (Fists, no rangeBand) is unrestricted.
 ```
+
+Physical reach is checked per hand, independent of patience, in two places: the `simulationLoop.ts` hand
+gates (`canAttack`) and a defensive guard at the top of `performAttack()` (`isWithinWeaponReach`, measured
+from the real positions, not from the spatial context). A blocked attempt:
+
+- draws no random numbers and emits no `attack` / `critical` / `miss` / `malfunction` / `counter` /
+  `counter_out_of_range` event; it deals no damage and changes no adaptation or miss counters;
+- does not consume the hand's cooldown (`lastAttackTime` / `lastOffhandAttackTime` unchanged) and does not
+  reset patience, so the hand attacks on the first tick it is in reach;
+- emits only the main-hand `out_of_range` message, once per streak; a blocked offhand is silent.
 
 ### Hydraulic_Bonus
 
@@ -1058,14 +1071,17 @@ effectiveBonus = max(0, 0.20 - gyroReduction - threatAnalysisReduction)
 
 ### Patience_Timer
 
-Forces engagement after prolonged inactivity:
+Time since the robot's last resolved attack:
 
 ```
-patienceLimit = 15 - (combatAlgorithms / 50) × 5
-// Range: 10s (combatAlgorithms=50) to 15s (combatAlgorithms=0)
-
-When patienceTimer >= patienceLimit: robot is forced to attack at current range.
+patienceTimer: reset to 0 on a resolved attack (either hand); +0.1s on every tick without one.
+patienceLimit = getPatienceLimit(score) = 15 - min(combatAlgorithms / 50, 1) × 5
+// Range: 15s (score 0) down to 10s (combatAlgorithms >= 50) — higher CA shortens the limit.
 ```
+
+Since #518 the limit does not gate attacks: patience never grants an attack and never lets a weapon
+hit beyond its reach. The timer still seeds movement path deviation (`deterministicDeviation()`); any
+movement or targeting role for the limit belongs to #520.
 
 ### Adaptation_Bonus
 
@@ -1145,9 +1161,12 @@ turnSpeed = 180 + gyroStabilizers × 6   // degrees per second
 Spatial constraints on counter-attacks:
 
 ```
-Melee counters: blocked beyond 2 units distance.
-Dual-wield fallback: if main weapon out of range, offhand attacks at 50% damage.
+Melee counters: blocked beyond 2 units distance (counter_out_of_range event, no damage).
+Ranged counters: any distance, with the range penalty of the counter weapon.
+Dual-wield fallback: if the main weapon is melee and out of range, a dual-wield defender
+  counters with its offhand weapon when that weapon can reach.
 Hydraulic bonus applies to melee counters within range.
+An attack blocked by reach (#518) is never resolved, so it cannot be countered.
 ```
 
 ## King of the Hill Zone Scoring Formulas
@@ -1259,7 +1278,7 @@ Each tick, every robot with `hp > 0`:
 2. Executes its attack via the standard combat resolution pipeline (hit → crit → damage → shield/armor)
 3. Team Coordination Effects are applied (see below)
 
-**Target-of-opportunity fallback**: When a robot's primary target is out of range, the engine falls back to the nearest valid target. This fallback respects team membership via `gameModeState.customData.teamOf` — robots will never select a teammate as a fallback target.
+**Target-of-opportunity fallback**: When a hand's weapon can't reach the robot's primary target (n > 2), that hand attacks the nearest opponent within its own reach, measured to that opponent; independent of patience (#518). If none is in reach, the hand does not attack. This fallback respects team membership via `gameModeState.customData.teamOf` — robots will never select a teammate as a fallback target.
 
 **Victory condition**: One side has 0 robots with `hp > 0`.  
 **Draw condition**: 300 seconds of simulated combat elapsed without victory.
@@ -1410,6 +1429,9 @@ Each member robot receives the same ELO delta applied to their individual elo fi
 
 ## Version History
 
+- **2026-10-15:** #518 — physical reach is an invariant of every resolved attack (melee rangeBand <= 2 units,
+  both hands, loop gate + `performAttack()` guard); patience no longer forces attacks; blocked-attempt contract;
+  per-hand target-of-opportunity independent of patience; counter-range section corrected
 - **2026-10-15:** #517 — combat preparation applies the loadout attribute modifier exactly once via the shared
   canonical formula; summed (not per-hand) weapon bonuses for Dual Wield; added Combat Preparation subsection;
   corrected cooldown and malfunction formulas/examples and the battle-start display description

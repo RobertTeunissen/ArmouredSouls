@@ -2,7 +2,7 @@
 title: "Movement & Positioning"
 description: "How the 2D combat arena works — movement speed, range bands, weapon optimal ranges, backstab and flanking mechanics, and the attributes that control spatial combat."
 order: 2
-lastUpdated: "2026-03-17"
+lastUpdated: "2026-10-15"
 relatedArticles:
   - combat/battle-flow
   - robots/attributes-overview
@@ -65,6 +65,8 @@ Every weapon has an **optimal range band**. Fighting outside that band reduces d
 ### Melee Weapon Restriction
 
 Melee weapons (and shields for counter-attacks) **cannot attack beyond 2 grid units**. If the opponent is at short range or farther, melee weapons simply can't fire. The robot must close the distance first.
+
+This rule holds for the whole battle, no matter how long your robot has been waiting. It applies to every weapon with melee range, including energy melee weapons such as the Shock Maul and Thermal Lance, and to each hand of a dual-wield loadout separately.
 
 This makes Servo Motors critical for melee builds — without the speed to close the gap, your melee weapons are useless.
 
@@ -133,11 +135,14 @@ This rewards defensive builds that fight with their back to the wall rather than
 
 ## Patience Timer
 
-The **patience timer** (controlled by Combat Algorithms) determines how long your robot waits for the opponent to enter optimal weapon range before forcing an attack at suboptimal range.
+The **patience timer** tracks how long your robot has gone without attacking. Its limit gets **shorter** as Combat Algorithms rises: about 15 seconds at the lowest level, down to 10 seconds at level 50.
 
-- Higher Combat Algorithms = longer patience = smarter range management
-- When the timer expires, the robot attacks regardless of range, accepting the range penalty
-- This prevents stalemates where two robots with incompatible ranges never engage
+Reaching the limit never lets a weapon hit beyond its reach, and it does not trigger an attack on its own:
+
+- **Melee weapons** (including energy melee weapons like the Shock Maul and Thermal Lance, and shields) always need the opponent within **2 units**. Out of reach, they don't fire: no roll, no damage, no counter-attack. The robot keeps moving and attacks as soon as it is in reach.
+- **Ranged weapons** fire at any distance, with the normal range penalty when outside their optimal band.
+
+If your melee build can't close the gap against a faster opponent, invest in **Servo Motors** or give it a ranged weapon in the other hand.
 
 ## Putting It Together: Range Control Strategy
 
@@ -145,7 +150,7 @@ The **patience timer** (controlled by Combat Algorithms) determines how long you
 |-----------|------|---------------|
 | **Melee brawler** | Close to 0–2 units, stay there | Servo Motors, Hydraulic Systems, Gyro Stabilizers |
 | **Short-range fighter** | Maintain 3–6 units | Servo Motors (moderate), Targeting Systems |
-| **Mid-range skirmisher** | Hold at 7–12 units | Servo Motors, Combat Algorithms (patience) |
+| **Mid-range skirmisher** | Hold at 7–12 units | Servo Motors, Combat Algorithms (pathing) |
 | **Long-range sniper** | Keep distance at 13+ units | Servo Motors (to kite), Combat Algorithms |
 
 ```callout-tip
