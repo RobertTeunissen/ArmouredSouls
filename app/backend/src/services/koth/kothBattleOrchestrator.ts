@@ -215,6 +215,7 @@ async function processKothBattle(
     scoreThreshold: number | null;
     timeLimit: number | null;
     zoneRadius: number | null;
+    leagueType: string | null;
     participants: Array<{ robotId: number }>;
   }
 ): Promise<{ winnerId: number | null; placements: Array<{ robotId: number; placement: number; zoneScore: number }> }> {
@@ -686,6 +687,8 @@ export async function executeScheduledKothBattles(_scheduledFor?: Date): Promise
       status: unifiedMatch.status,
       battleId: unifiedMatch.battleId,
       isByeMatch: unifiedMatch.isByeMatch,
+      // The match tier: KotH byes are paid at it (R6), mapped at both sites.
+      leagueType: unifiedMatch.leagueType,
       scoreThreshold: unifiedMatch.scoreThreshold,
       timeLimit: unifiedMatch.timeLimit,
       zoneRadius: unifiedMatch.zoneRadius,
@@ -725,6 +728,7 @@ export async function executeScheduledKothBattles(_scheduledFor?: Date): Promise
         // and re-maps, so omitting it here would silently drop bye detection
         // for every match after the first twenty.
         isByeMatch: unifiedMatch.isByeMatch,
+        leagueType: unifiedMatch.leagueType,
         scoreThreshold: unifiedMatch.scoreThreshold,
         timeLimit: unifiedMatch.timeLimit,
         zoneRadius: unifiedMatch.zoneRadius,
@@ -757,7 +761,14 @@ export async function executeScheduledKothBattles(_scheduledFor?: Date): Promise
       // A Thin_Instance bye resolves without combat (Spec #49). One entry point,
       // identity only — no per-orchestrator adapter.
       if (match.isByeMatch === true) {
-        await resolvePlacementBye(match.id, 'koth', match.participants.map(p => p.robotId));
+        // Pay at the match tier, as Grand Melee does. Without it the bye
+        // writer defaults to bronze and every silver+ KotH bye was underpaid.
+        await resolvePlacementBye(
+          match.id,
+          'koth',
+          match.participants.map(p => p.robotId),
+          match.leagueType ?? undefined,
+        );
         summary.byeMatches++;
         summary.totalRobotsInvolved += participantCount;
         summary.matchResults.push({ matchId, winnerId: null, placements: [] });
