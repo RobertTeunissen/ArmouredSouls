@@ -30,6 +30,7 @@ import {
 import { getWeaponOptimalRange, WeaponLike } from './rangeBands';
 import { BattleError, BattleErrorCode } from '../../errors/battleErrors';
 import { clampToArena } from './arenaLayout';
+import { SIMULATION_TICK } from '../battle/combat-simulator/combatTypes';
 
 /** Extended weapon shape with DPS fields needed for range preference */
 interface WeaponWithDPS extends WeaponLike {
@@ -311,11 +312,27 @@ export function calculateMovementIntent(
   const meleeFinalApproachFactor = isMelee && currentDistToTarget <= 4
     ? Math.max(0, (currentDistToTarget - 2) / 2)
     : 1;
-  let targetPos = calculateOptimalRangePosition(
-    state.position,
-    target.position,
-    preferredRange,
-  );
+  const targetPrefersMelee = getPreferredRange(target) === 'melee';
+  // Pursuit (#520 movement fix): a melee-role robot outside reach of a target
+  // that does not itself prefer melee heads for the target's projected
+  // end-of-tick position (position + velocity × tick) instead of a standoff
+  // point 1 unit short of where the target is now. The standoff point lies
+  // within one step whenever the gap is small, so the pursuer used to stop
+  // short every tick and a kiter faster than 1 unit per tick stayed out of
+  // reach. Aiming at the projected position closes at full effective speed;
+  // the gap then shrinks by exactly the speed difference. Within reach the
+  // standoff applies again. Melee mirrors keep the standoff (#467).
+  const isPursuing = isMeleeOutOfRange && !targetPrefersMelee;
+  let targetPos = isPursuing
+    ? {
+        x: target.position.x + target.velocity.x * SIMULATION_TICK,
+        y: target.position.y + target.velocity.y * SIMULATION_TICK,
+      }
+    : calculateOptimalRangePosition(
+        state.position,
+        target.position,
+        preferredRange,
+      );
 
   let strategy: MovementIntent['strategy'];
 
@@ -368,7 +385,6 @@ export function calculateMovementIntent(
   // at ~8 units for the whole battle and draw on the time limit without ever
   // entering the final approach. Against a ranged target prediction stays on,
   // because there it helps cut off a retreating opponent.
-  const targetPrefersMelee = getPreferredRange(target) === 'melee';
   const predictionWeight = isMelee && (currentDistToTarget <= 4 || targetPrefersMelee)
     ? 0
     : (ca - 1) / 49;

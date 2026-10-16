@@ -20,6 +20,7 @@ import {
 import { getEngagementRole, isMeleeCommitActive, updateDisengage, isDisengageActive } from '../../arena/engagementCycle';
 import { getSupportShieldBoost } from '../../arena/teamCoordination';
 import { selectTarget } from '../../arena/threatScoring';
+import type { MovementIntent } from '../../arena/types';
 import { SpatialGrid, computeMaxWeaponRange } from './spatialGrid';
 import {
   RobotWithWeapons,
@@ -90,6 +91,17 @@ function findNearestOpponentInReach(
  * @param config Battle configuration (draw rules, duration, game mode hooks)
  * @returns SpatialCombatResult with full arena metadata
  */
+
+/** One robot's movement decisions for the current tick (simultaneous movement, #520). */
+interface MovementPlan {
+  state: SpatialRobotCombatState;
+  opponents: SpatialRobotCombatState[];
+  target: SpatialRobotCombatState | null;
+  servoState?: ServoStrainState;
+  intent?: MovementIntent;
+  threatPosition?: Position;
+}
+
 export function simulateBattleMulti(
   robots: RobotWithWeapons[],
   config: BattleConfig = { allowDraws: true },
@@ -256,7 +268,17 @@ export function simulateBattleMulti(
       spatialGrid.update(states);
     }
 
-    // ── PHASE 1: MOVEMENT ──
+    // ── PHASE 1: MOVEMENT (simultaneous, #520 movement fix) ──
+    // Every robot decides from the same tick-start snapshot: targets, speeds and
+    // intents are computed for all robots before any robot moves, and each pass
+    // only publishes its writes once every robot has read the tick-start values.
+    // Robot order therefore never affects movement.
+    const teamOfMap = gameModeState?.customData?.teamOf as Record<number, number> | undefined;
+    const movers: MovementPlan[] = [];
+    const coasting: SpatialRobotCombatState[] = [];
+
+    // Pass 1a: variable tick and target selection (reads tick-start targets)
+    const targetDecisions: Array<{ plan: MovementPlan; currentTarget: number | null; targetLockTimer: number }> = [];
     for (const state of aliveStates) {
       // Variable tick rate: skip full AI evaluation for distant robots (Spec #44: R1.3, R1.7)
       // Robot keeps moving at constant velocity — only AI decisions are deferred
@@ -268,17 +290,7 @@ export function simulateBattleMulti(
           if (d < nearestDist) nearestDist = d;
         }
         if (nearestDist > VARIABLE_TICK_DISTANCE && currentTime - lastAITick[state.teamIndex] < VARIABLE_TICK_INTERVAL) {
-          // Not due for AI re-evaluation — apply movement only at constant velocity
-          // Move in current direction using existing velocity (R1.7: no teleporting)
-          state.position.x += state.velocity.x * SIMULATION_TICK;
-          state.position.y += state.velocity.y * SIMULATION_TICK;
-          // Clamp to arena bounds
-          const distFromCenter = euclideanDistance(state.position, arena.center);
-          if (distFromCenter > arena.radius) {
-            const scale = arena.radius / distFromCenter;
-            state.position.x = arena.center.x + (state.position.x - arena.center.x) * scale;
-            state.position.y = arena.center.y + (state.position.y - arena.center.y) * scale;
-          }
+          coasting.push(state);
           continue;
         }
         lastAITick[state.teamIndex] = currentTime;
@@ -286,7 +298,6 @@ export function simulateBattleMulti(
 
       // Filter opponents: exclude teammates in team modes so movement AI
       // targets enemies, not allies (prevents clumping on teammates)
-      const teamOfMap = gameModeState?.customData?.teamOf as Record<number, number> | undefined;
       const opponents = states.filter(s => {
         if (s === state || !s.isAlive) return false;
         if (teamOfMap && teamOfMap[s.teamIndex] === teamOfMap[state.teamIndex]) return false;
@@ -298,13 +309,16 @@ export function simulateBattleMulti(
       // (e.g. KotH last-standing phase needs the robot to move toward the zone)
       if (opponents.length === 0 && !gameModeConfig?.movementModifier) continue;
 
+      const plan: MovementPlan = { state, opponents, target: null };
+      let currentTarget: number | null = null;
+      let targetLockTimer = state.targetLockTimer;
+
       // Select target via game mode strategy or default threat scoring.
       // Target stickiness: keep current target for at least 1.5s unless it's dead
       // or a new target has significantly higher priority (50%+ more weight).
-      let target: SpatialRobotCombatState | null = null;
       if (opponents.length > 0) {
         // Decay target lock timer
-        state.targetLockTimer = Math.max(0, state.targetLockTimer - SIMULATION_TICK);
+        targetLockTimer = Math.max(0, state.targetLockTimer - SIMULATION_TICK);
 
         // Check if current target is still alive
         const currentTargetAlive = state.currentTarget !== null &&
@@ -328,23 +342,32 @@ export function simulateBattleMulti(
           newTargetIdx = threat?.robotIndex ?? opponents[0].teamIndex;
         }
 
+        currentTarget = state.currentTarget;
         // Apply target stickiness: only switch if lock expired or current target dead
         if (!currentTargetAlive || state.currentTarget === null) {
           // Must switch — current target is gone
-          state.currentTarget = newTargetIdx;
-          state.targetLockTimer = 1.5; // Lock onto new target for 1.5s
-        } else if (state.targetLockTimer <= 0 && newTargetIdx !== state.currentTarget) {
+          currentTarget = newTargetIdx;
+          targetLockTimer = 1.5; // Lock onto new target for 1.5s
+        } else if (targetLockTimer <= 0 && newTargetIdx !== state.currentTarget) {
           // Lock expired and a different target is preferred — switch
-          state.currentTarget = newTargetIdx;
-          state.targetLockTimer = 1.5;
+          currentTarget = newTargetIdx;
+          targetLockTimer = 1.5;
         }
         // else: keep current target (lock still active or same target selected)
 
-        target = stateByTeamIndex.get(state.currentTarget!) ?? opponents[0];
-      } else {
-        state.currentTarget = null;
+        plan.target = stateByTeamIndex.get(currentTarget!) ?? opponents[0];
       }
+      targetDecisions.push({ plan, currentTarget, targetLockTimer });
+    }
+    for (const { plan, currentTarget, targetLockTimer } of targetDecisions) {
+      plan.state.currentTarget = currentTarget;
+      plan.state.targetLockTimer = targetLockTimer;
+      movers.push(plan);
+    }
 
+    // Pass 1b: engagement cycle and effective speed (each robot writes only its own state)
+    for (const plan of movers) {
+      const { state, target } = plan;
       // Engagement cycle (#520): roles from both robots' engagement ranges
       const range = getEngagementRange(state, target);
       const role = getEngagementRole(range);
@@ -386,8 +409,12 @@ export function simulateBattleMulti(
       const { effectiveSpeed, isClosingBonus } = calculateEffectiveSpeed(servoState, opponentRole);
       state.effectiveMovementSpeed = effectiveSpeed;
       state.isUsingClosingBonus = isClosingBonus;
+      plan.servoState = servoState;
+    }
 
-      // Movement intent (with optional game mode modifier)
+    // Pass 1c: movement intents (reads tick-start positions, velocities and intents)
+    for (const plan of movers) {
+      const { state, opponents, target } = plan;
       let intent = calculateMovementIntent(
         state, opponents, arena, gameModeConfig?.movementModifier, gameModeState,
       );
@@ -402,11 +429,18 @@ export function simulateBattleMulti(
         }
       }
 
+      plan.intent = intent;
+      plan.threatPosition = target ? { x: target.position.x, y: target.position.y } : undefined;
+    }
+
+    // Pass 2: apply every move, then servo strain
+    for (const plan of movers) {
+      const { state, intent, servoState } = plan;
+      if (!intent || !servoState) continue;
       state.movementIntent = intent;
 
-      // Apply movement
       const oldPos = { x: state.position.x, y: state.position.y };
-      const newPos = applyMovement(state, intent, arena, SIMULATION_TICK, target?.position);
+      const newPos = applyMovement(state, intent, arena, SIMULATION_TICK, plan.threatPosition);
       state.position = newPos;
       state.velocity = {
         x: (newPos.x - oldPos.x) / SIMULATION_TICK,
@@ -415,7 +449,7 @@ export function simulateBattleMulti(
 
       // Servo strain update
       const actualMove = euclideanDistance(oldPos, newPos);
-      const maxMove = effectiveSpeed * SIMULATION_TICK;
+      const maxMove = state.effectiveMovementSpeed * SIMULATION_TICK;
       servoState.currentSpeedRatio = maxMove > 0 ? actualMove / maxMove : 0;
       servoState.isUsingClosingBonus = state.isUsingClosingBonus;
       servoState.servoStrain = state.servoStrain;
@@ -424,6 +458,24 @@ export function simulateBattleMulti(
       state.servoStrain = servoState.servoStrain;
       state.sustainedMovementTime = servoState.sustainedMovementTime;
     }
+    for (const state of coasting) {
+      // Not due for AI re-evaluation — move at constant velocity (R1.7: no teleporting)
+      state.position = {
+        x: state.position.x + state.velocity.x * SIMULATION_TICK,
+        y: state.position.y + state.velocity.y * SIMULATION_TICK,
+      };
+      // Clamp to arena bounds
+      const distFromCenter = euclideanDistance(state.position, arena.center);
+      if (distFromCenter > arena.radius) {
+        const scale = arena.radius / distFromCenter;
+        state.position = {
+          x: arena.center.x + (state.position.x - arena.center.x) * scale,
+          y: arena.center.y + (state.position.y - arena.center.y) * scale,
+        };
+      }
+    }
+    // No robot-robot collision handling exists; arena containment is done inside
+    // applyMovement and the coasting clamp above.
 
     // ── PHASE 2: FACING ──
     for (const state of aliveStates) {
