@@ -12,6 +12,7 @@ import { simulateTeamBattle } from '../src/services/team-battle/teamBattleEngine
 import { simulateTagTeamBattle } from '../src/services/tag-team/tagTeamSimulation';
 import type { TagTeamWithRobots } from '../src/services/tag-team/tagTeamTypes';
 import { Prisma } from '../generated/prisma';
+import * as arenaLayout from '../src/services/arena/arenaLayout';
 
 // ─── Mock Factories ─────────────────────────────────────────────────
 
@@ -1195,7 +1196,7 @@ describe('simulateBattle — spatial refactor', () => {
 
     it('a melee robot kited beyond its patience window commits and reaches melee reach', () => {
       // Pursuit 12 × 1.10 = 13.2 loses to kiting 13 × 1.10 = 14.3; the commit burst 12 × 1.30 = 15.6 wins.
-      // The kiter moves first in tick order, so each brawler sample is taken after the kiter's step.
+      // The brawler is robot 1: movement is simultaneous, so robot order does not matter.
       const kiter = durableRobot({
         id: 1, name: 'Kiter', mainWeapon: createRangedWeaponInventory(1), mainWeaponId: 1,
         servoMotors: new Prisma.Decimal(30),
@@ -1204,7 +1205,7 @@ describe('simulateBattle — spatial refactor', () => {
         id: 2, name: 'Brawler', mainWeapon: createMeleeWeaponInventory(2), mainWeaponId: 2,
         servoMotors: new Prisma.Decimal(25), combatAlgorithms: new Prisma.Decimal(25),
       });
-      const { result, samples } = duel([kiter, brawler], 520, undefined, 120);
+      const { result, samples } = duel([brawler, kiter], 520, undefined, 120);
       const brawlerSamples = samples.filter(s => s.name === 'Brawler' && Number.isFinite(s.distance));
       const firstCommit = brawlerSamples.findIndex(s => s.burst === 'melee_commit');
       const patienceLimit = 15 - (25 / 50) * 5; // 12.5 s
@@ -1225,6 +1226,83 @@ describe('simulateBattle — spatial refactor', () => {
       const beforeReach = brawlerSamples.filter(s => s.tick >= commit.tick && s.tick <= reachTick);
       expect(beforeReach.length).toBeGreaterThan(0);
       expect(beforeReach.every(s => s.burst === 'melee_commit')).toBe(true);
+    });
+
+    describe('simultaneous movement (#520 movement fix)', () => {
+      interface PositionSample { name: string; x: number; y: number }
+
+      /**
+       * Every robot's tick-start position, in decision order. Math.random is pinned
+       * to 0.999 so every attack misses: combat never feeds back into movement, and
+       * the run only depends on the movement phase.
+       */
+      function trajectories(robots: RobotWithWeapons[], reverseSpawns: boolean): Map<string, Array<{ x: number; y: number }>> {
+        const samples: PositionSample[] = [];
+        const config: GameModeConfig = {
+          maxDuration: 40,
+          movementModifier: {
+            modify: (intent: MovementIntent, st: RobotCombatState): MovementIntent => {
+              samples.push({ name: st.robot.name, x: st.position.x, y: st.position.y });
+              return intent;
+            },
+          },
+        };
+        const realCreateArena = arenaLayout.createArena;
+        const arenaSpy = jest.spyOn(arenaLayout, 'createArena').mockImplementation((sizes, radius) => {
+          const arena = realCreateArena(sizes, radius);
+          return reverseSpawns ? { ...arena, spawnPositions: [...arena.spawnPositions].reverse() } : arena;
+        });
+        const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0.999);
+        try {
+          simulateBattleMulti(robots, { allowDraws: true, gameModeConfig: config });
+        } finally {
+          randomSpy.mockRestore();
+          arenaSpy.mockRestore();
+        }
+        const byRobot = new Map<string, Array<{ x: number; y: number }>>();
+        for (const { name, x, y } of samples) {
+          byRobot.set(name, [...(byRobot.get(name) ?? []), { x, y }]);
+        }
+        return byRobot;
+      }
+
+      const brawler = () => durableRobot({
+        id: 1, name: 'Brawler', mainWeapon: createMeleeWeaponInventory(1), mainWeaponId: 1,
+        servoMotors: new Prisma.Decimal(25), combatAlgorithms: new Prisma.Decimal(25),
+      });
+      const kiter = () => durableRobot({
+        id: 2, name: 'Kiter', mainWeapon: createRangedWeaponInventory(2), mainWeaponId: 2,
+        servoMotors: new Prisma.Decimal(30),
+      });
+
+      it('swapping robot 1 and robot 2 gives identical movement for each robot', () => {
+        // Same spawn per robot in both runs; only the order in the robot list differs.
+        const forward = trajectories([brawler(), kiter()], false);
+        const swapped = trajectories([kiter(), brawler()], true);
+
+        expect(forward.get('Brawler')!.length).toBeGreaterThan(300);
+        expect(swapped.get('Brawler')).toEqual(forward.get('Brawler'));
+        expect(swapped.get('Kiter')).toEqual(forward.get('Kiter'));
+      });
+
+      it('swapping robot 1 and robot 2 on their own spawns gives mirrored movement', () => {
+        // Default spawns: robot 1 on the left, robot 2 on the right. Distances between
+        // the two robots are the same per tick whichever robot is listed first.
+        const gaps = (t: Map<string, Array<{ x: number; y: number }>>): number[] =>
+          t.get('Brawler')!.map((b, i) => Math.hypot(b.x - t.get('Kiter')![i].x, b.y - t.get('Kiter')![i].y));
+        const forward = trajectories([brawler(), kiter()], false);
+        const swapped = trajectories([kiter(), brawler()], false);
+        const forwardBrawler = forward.get('Brawler')!;
+        const swappedBrawler = swapped.get('Brawler')!;
+
+        // Tick-start spawn positions mirror across the y-axis
+        expect(swappedBrawler[0]).toEqual({ x: -forwardBrawler[0].x, y: forwardBrawler[0].y });
+        expect(gaps(swapped).length).toBe(gaps(forward).length);
+        // Path deviation hashes the absolute position, so mirrored paths are not
+        // bit-identical; the gap between the robots stays close tick by tick.
+        const maxGapDiff = Math.max(...gaps(forward).map((g, i) => Math.abs(g - gaps(swapped)[i])));
+        expect(maxGapDiff).toBeLessThan(1);
+      });
     });
 
     describe('patience resets on a landed hit, not on a miss', () => {
