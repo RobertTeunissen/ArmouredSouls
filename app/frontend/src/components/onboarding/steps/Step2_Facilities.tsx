@@ -20,7 +20,7 @@ interface InvestmentOption {
   cost: number; benefit: string; icon: string;
 }
 
-const WEAPONS: InvestmentOption = { id: 'weapons', facilityType: 'weapons_workshop', title: 'Invest in Weapons', description: 'Get a discount on all weapon purchases. Buy this before shopping for weapons.', cost: 75_000, benefit: '10% discount on weapon purchases', icon: '⚔️' };
+const WEAPONS: InvestmentOption = { id: 'weapons', facilityType: 'weapons_workshop', title: 'Invest in Weapons', description: 'Get a discount on all weapon purchases. Buy this before shopping for weapons.', cost: 75_000, benefit: '5% discount on weapon purchases', icon: '⚔️' };
 const ATTRIBUTES: InvestmentOption = { id: 'attributes', facilityType: 'training_facility', title: 'Invest in Attributes', description: 'Get a discount on all attribute upgrades. Makes your robots stronger for less.', cost: 150_000, benefit: '10% discount on attribute upgrades', icon: '💪' };
 const MERCH: InvestmentOption = { id: 'income', facilityType: 'merchandising_hub', title: 'I Want Passive Income', description: 'Earn credits every day from merchandising. Scales with your prestige.', cost: 150_000, benefit: '₡5,000/day base income', icon: '💰' };
 const STREAM: InvestmentOption = { id: 'income', facilityType: 'streaming_studio', title: 'Boost My Battle Earnings', description: 'Double the streaming revenue you earn from every battle.', cost: 100_000, benefit: '2× streaming revenue per battle', icon: '📺' };

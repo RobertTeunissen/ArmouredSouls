@@ -80,4 +80,19 @@ export {
   type LoadoutReadinessResult,
 } from './loadout-readiness';
 
+export {
+  WEAPON_BASE_COST,
+  STARTER_WEAPON_COST,
+  BASELINE_DPS,
+  DPS_COST_MULTIPLIER,
+  ATTRIBUTE_COST_MULTIPLIER,
+  HAND_MULTIPLIERS,
+  sumWeaponBonuses,
+  calculateWeaponDpsCost,
+  calculateWeaponAttributeCost,
+  isStarterWeapon,
+  calculateWeaponPrice,
+  type WeaponHands,
+  type WeaponPricingInput,
+} from './weaponPricing';
 export { PRESTIGE_GATES, PRESTIGE_GATES_10, getUnlockedFacilityLevel, getNextPrestigeThreshold } from './prestigeGates';

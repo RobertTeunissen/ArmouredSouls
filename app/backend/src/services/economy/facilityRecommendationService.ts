@@ -5,6 +5,7 @@ import { unifiedFacilityROIService, UnifiedFacilityROI } from './unifiedFacility
 import { AuthError, AuthErrorCode } from '../../errors/authErrors';
 import type { User } from '../../../generated/prisma';
 import type { StableMetric } from '../../types/snapshotTypes';
+import { calculateWeaponWorkshopDiscount } from '../../shared/utils/discounts';
 // Spec #46 R10: streaming projections derive from the award-path formula.
 import {
   computeStreamingRevenue,
@@ -314,7 +315,7 @@ export class FacilityRecommendationService {
       }
     } else if (facilityType === 'weapons_workshop') {
       // Weapons workshop reduces weapon purchase costs
-      const discountPercent = nextLevel * 5; // 5% per level
+      const discountPercent = calculateWeaponWorkshopDiscount(nextLevel);
       const projectedSavingsPerCycle = activityMetrics.avgWeaponCostPerCycle * (discountPercent / 100);
       
       if (projectedSavingsPerCycle > 0) {

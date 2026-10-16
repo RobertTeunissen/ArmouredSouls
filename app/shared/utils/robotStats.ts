@@ -110,8 +110,8 @@ export const SHIELD_MULTIPLIER = 4;
  */
 export const LOADOUT_BONUSES: Record<string, Record<string, number>> = {
   weapon_shield: {
-    shieldCapacity: 0.20,      // +20%
-    armorPlating: 0.15,        // +15%
+    shieldCapacity: 0.15,      // +15% (Season 2: reduced from 0.20)
+    armorPlating: 0.10,        // +10% (Season 2: reduced from 0.15)
     counterProtocols: 0.10,    // +10%
     attackSpeed: -0.15,        // -15%
   },
@@ -127,8 +127,8 @@ export const LOADOUT_BONUSES: Record<string, Record<string, number>> = {
     combatPower: -0.10,        // -10%
   },
   single: {
-    gyroStabilizers: 0.10,     // +10%
-    servoMotors: 0.05,         // +5%
+    gyroStabilizers: 0.15,     // +15% (Season 2: raised from 0.10 — mobility identity)
+    servoMotors: 0.10,         // +10% (Season 2: raised from 0.05)
   },
 };
 
