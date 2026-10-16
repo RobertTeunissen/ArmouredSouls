@@ -65,6 +65,7 @@ export const STAT_ATTRIBUTE_MAP: Record<string, StatAttributeMapping> = {
       { attribute: 'weaponControl', label: 'Weapon Control', category: 'combat', effect: 'increases' },
       { attribute: 'hydraulicSystems', label: 'Hydraulic Systems', category: 'chassis', effect: 'increases' },
       { attribute: 'adaptiveAI', label: 'Adaptive AI', category: 'ai', effect: 'increases' },
+      { attribute: 'logicCores', label: 'Logic Cores', category: 'ai', effect: 'increases' },
     ],
     defenderAttributes: [
       { attribute: 'armorPlating', label: 'Armor Plating', category: 'defense', effect: 'decreases' },
