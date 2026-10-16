@@ -64,7 +64,8 @@ describe('pricing (R5.3): identical to the charging services', () => {
   });
 
   it.each([
-    [400_000, 0, 400_000], [400_000, 3, 280_000], [57_333, 7, 17_199], [400_000, 10, 0],
+    // Season 2: 5% per Workshop level, 50% at L10.
+    [400_000, 0, 400_000], [400_000, 3, 340_000], [57_333, 7, 37_266], [400_000, 10, 200_000],
   ])('discounts a ₡%i weapon at Workshop L%i to ₡%i', (cost, level, expected) => {
     expect(discountedWeaponPrice(cost, level)).toBe(expected);
   });

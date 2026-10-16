@@ -45,13 +45,14 @@ describeApprovedStrategy({
     facilityLevels: { weapons_workshop: 1, booking_office: 3, roster_expansion: 1 },
     spendPerGoal: {
       1: 75_000, // Weapons Workshop L1
-      2: 551_300, // Robot chain ×1: robot + Laser Pistol after 10%
+      // Season 2: Laser Pistol ₡63,000 at 5% Workshop L1 discount (was ₡57,000 at 10%).
+      2: 559_850, // Robot chain ×1: robot + Laser Pistol after 5%
       3: 75_000, // Booking Office L1
       4: 1_056_000, // Attributes → 6 on Optimus Prime (₡690,000), then on Bumblebee when goal 4 re-opens (₡366,000)
-      5: 752_600, // Robot chain ×1: Roster Expansion L1 + robot + Laser Pistol ×2 after 10%
+      5: 769_700, // Robot chain ×1: Roster Expansion L1 + robot + Laser Pistol ×2 after 5%
       6: 375_000, // Booking Office → L3
     },
-    totalSpent: 2_884_900,
+    totalSpent: 2_910_550,
     savingOnGoal: 7,
   },
 });

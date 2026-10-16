@@ -43,11 +43,12 @@ describeApprovedStrategy({
     // Step 1: Roster Expansion L1 + L2; step 2: Booking Office L1.
     facilityLevels: { roster_expansion: 2, booking_office: 1 },
     spendPerGoal: {
-      1: 2_265_000, // Robot chain ×3: Roster Expansion L1 + L2, 3 robots, starters
+      // Season 2 repricing of the starter-stage weapons (was 2,265,000 / 660,000 / 3,000,000).
+      1: 2_316_000, // Robot chain ×3: Roster Expansion L1 + L2, 3 robots, starters
       2: 75_000, // Booking Office L1
-      3: 660_000, // Attributes towards level 5, with everything that is left
+      3: 607_500, // Attributes towards level 5, with everything that is left
     },
-    totalSpent: 3_000_000,
+    totalSpent: 2_998_500,
     savingOnGoal: 3,
   },
 });

@@ -41,14 +41,15 @@ describeApprovedStrategy({
     facilityLevels: { weapons_workshop: 1, roster_expansion: 1, booking_office: 3, training_facility: 1 },
     spendPerGoal: {
       1: 75_000, // Weapons Workshop L1
-      2: 1_420_000, // Robot chain ×2: Roster Expansion L1, 2 robots, starters after discount
+      // Season 2 repricing: Shock Maul ₡211,000 + Burst Rifle ₡150,000 at 5% off (was 1,420,000).
+      2: 1_492_950, // Robot chain ×2: Roster Expansion L1, 2 robots, starters after discount
       3: 75_000, // Booking Office L1
       4: 808_500, // Attributes → 6 on both robots (₡442,500 + ₡366,000)
       5: 375_000, // Booking Office → L3
       6: 150_000, // Training Facility L1
-      7: 96_500, // Attributes towards 10 with everything that is left
+      7: 19_320, // Attributes towards 10 with everything that is left (was 96,500)
     },
-    totalSpent: 3_000_000,
+    totalSpent: 2_995_770,
     savingOnGoal: 7,
   },
 });

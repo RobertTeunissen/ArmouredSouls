@@ -1,5 +1,6 @@
 import * as fc from 'fast-check';
 import { WEAPON_DEFINITIONS } from '../prisma/seed';
+import { calculateWeaponPrice, type WeaponPricingInput } from '../src/shared/utils/weaponPricing';
 
 /**
  * Property-based tests for weapon seed data completeness and pricing.
@@ -59,35 +60,9 @@ function getBonus(weapon: WeaponDef, field: string): number {
   return (weapon as Record<string, unknown>)[field] as number ?? 0;
 }
 
-function getHandMultiplier(handsRequired: string): number {
-  if (handsRequired === 'one') return 1.0;
-  if (handsRequired === 'two') return 1.6;
-  if (handsRequired === 'shield') return 0.9;
-  return 1.0;
-}
-
+/** Season 2: the shared signed-sum formula is the single source of truth. */
 function calculateExpectedCost(weapon: WeaponDef): number {
-  const baseCost = 50000;
-
-  // Attribute cost: sum of 500 * bonus^2 for each bonus field
-  let attributeCost = 0;
-  for (const field of BONUS_FIELDS) {
-    const bonus = getBonus(weapon, field);
-    attributeCost += 500 * bonus * bonus;
-  }
-
-  // DPS cost: shields have 0 DPS cost (baseDamage=0, cooldown=0)
-  let dpsCost = 0;
-  if (weapon.baseDamage > 0 && weapon.cooldown > 0) {
-    const dpsRatio = (weapon.baseDamage / weapon.cooldown) / 2.0;
-    dpsCost = 50000 * (dpsRatio - 1.0) * 6.0;
-  }
-
-  const handMultiplier = getHandMultiplier(weapon.handsRequired);
-  const rawCost = (baseCost + attributeCost + dpsCost) * handMultiplier;
-
-  // Round to nearest 1,000
-  return Math.round(rawCost / 1000) * 1000;
+  return calculateWeaponPrice(weapon as unknown as WeaponPricingInput);
 }
 
 function getTierFromCost(cost: number): string {
@@ -104,16 +79,14 @@ describe('Weapon Properties — Seed Data Completeness & Pricing', () => {
     /**
      * **Validates: Requirements 4.1, 4.2, 4.3, 10.1**
      * For every non-starter weapon, the pricing formula applied to its stats
-     * must produce a cost within 5,000 of the stored cost.
+     * must produce exactly the stored cost (Season 2: shared calculateWeaponPrice).
      */
-    test('should produce cost within 5,000 of stored cost for non-starter weapons', () => {
+    test('should produce the stored cost for non-starter weapons', () => {
       fc.assert(
         fc.property(
           weaponArb.filter((w) => w.cost !== 50000),
           (weapon) => {
-            const expected = calculateExpectedCost(weapon);
-            const diff = Math.abs(weapon.cost - expected);
-            expect(diff).toBeLessThanOrEqual(5000);
+            expect(weapon.cost).toBe(calculateExpectedCost(weapon));
           }
         ),
         { numRuns: 200 }
@@ -221,13 +194,22 @@ describe('Weapon Properties — Seed Data Completeness & Pricing', () => {
   describe('P15: Grid Coverage', () => {
     /**
      * **Validates: Requirements 1.1, 1.3, 3.1**
-     * Every slot in the 36-slot grid must contain at least one weapon.
+     * Every slot in the 36-slot grid must contain at least one weapon, except
+     * the three Season 2 gaps documented in PRD_WEAPON_ECONOMY.md (v1.8).
      * Grid = 4 ranges × 2 hand types × 4 tiers = 32 + 4 shield tiers = 36 slots.
+     *
+     * Season 2 repricing (product-owner decision) moved Laser Rifle / Pulse
+     * Accelerator to Premium, Disruptor Cannon and Sniper Rifle to Luxury. No
+     * set of tier bands (25K steps) fills all 36 slots with the decided prices,
+     * so the bands stay and exactly these gaps are allowed — no others.
      */
-    test('should have at least one weapon in every grid slot', () => {
+    const SEASON2_GRID_GAPS = ['short-two-mid', 'mid-one-premium', 'long-two-premium'];
+
+    test('should have at least one weapon in every grid slot except the documented Season 2 gaps', () => {
       const ranges = ['melee', 'short', 'mid', 'long'] as const;
       const handTypes = ['one', 'two'] as const;
       const tiers = ['budget', 'mid', 'premium', 'luxury'] as const;
+      const emptySlots: string[] = [];
 
       // Check all 32 non-shield slots
       for (const range of ranges) {
@@ -239,10 +221,13 @@ describe('Weapon Properties — Seed Data Completeness & Pricing', () => {
                 w.handsRequired === hand &&
                 getTierFromCost(w.cost) === tier
             );
-            expect(matching.length).toBeGreaterThanOrEqual(1);
+            if (matching.length === 0) emptySlots.push(`${range}-${hand}-${tier}`);
           }
         }
       }
+
+      // The gap list is exact: a new gap fails, and so does a filled gap (update the list and the PRD).
+      expect(emptySlots).toEqual(SEASON2_GRID_GAPS);
 
       // Check 4 shield tier slots
       for (const tier of tiers) {

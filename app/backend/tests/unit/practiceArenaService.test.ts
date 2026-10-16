@@ -440,10 +440,10 @@ describe('Practice Arena Service', () => {
 
       const robot = await buildSparringPartner(config, weapons);
 
-      // ExpertBot attributes are 10: shield capacity 10 × 1.20 = 12 → maxShield 48
-      expect(Number(robot.shieldCapacity)).toBe(12);
-      expect(robot.maxShield).toBe(48);
-      expect(robot.currentShield).toBe(48);
+      // ExpertBot attributes are 10: shield capacity 10 × 1.15 = 11.5 → maxShield 46
+      expect(Number(robot.shieldCapacity)).toBe(11.5);
+      expect(robot.maxShield).toBe(46);
+      expect(robot.currentShield).toBe(46);
       expect(Number(robot.attackSpeed)).toBe(8.5); // 10 × 0.85
     });
 

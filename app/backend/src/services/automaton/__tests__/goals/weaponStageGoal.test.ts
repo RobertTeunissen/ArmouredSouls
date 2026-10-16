@@ -28,11 +28,12 @@ describe('weapons Goal (R3.11, R5.5, design §8.6)', () => {
         robotSlot: 2,
         toStage: 1,
         steps: [
-          { kind: 'weapon_purchase', weaponName: 'Volt Sabre', hand: 'main', cost: 280_000 },
+          // ₡400,000 at Workshop L3 = 15% off (Season 2: 5% per level).
+          { kind: 'weapon_purchase', weaponName: 'Volt Sabre', hand: 'main', cost: 340_000 },
           { kind: 'equip', hand: 'main', weaponName: 'Volt Sabre', source: { kind: 'purchase' } },
         ],
       },
-      cost: 280_000,
+      cost: 340_000,
     });
   });
 
@@ -151,11 +152,12 @@ describe('weapons Goal (R3.11, R5.5, design §8.6)', () => {
       action: {
         steps: [
           { kind: 'weapon_sale', inventoryId: 2, proceeds: 100_000 },
-          { kind: 'weapon_purchase', weaponName: 'Volt Sabre', cost: 200_000 },
+          // ₡400,000 at Workshop L5 = 25% off (Season 2: 5% per level).
+          { kind: 'weapon_purchase', weaponName: 'Volt Sabre', cost: 300_000 },
           { kind: 'equip' },
         ],
       },
-      cost: 200_000,
+      cost: 300_000,
     });
   });
 
