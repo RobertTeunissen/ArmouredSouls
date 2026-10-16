@@ -9,6 +9,7 @@ import { computeBattleSummary } from '../battle/battleSummaryComputer';
 import { applyLoadoutFallbacks, partitionPlacementField } from '../battle/combatReadiness';
 import type { KothPlacement } from '../../types';
 import { MIN_GROUP_SIZE } from './kothMatchmakingService';
+import { BattleError, BattleErrorCode } from '../../errors/battleErrors';
 
 /** Yield the event loop so Express can serve requests between heavy DB work */
 const throttle = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
@@ -310,10 +311,14 @@ async function processKothBattle(
     prepareRobotForCombat(robot, tuningBonusesMap.get(robot.id) ?? {});
   }
 
-  // 2. Resolve config values (zone rotation removed — Spec #41)
+  // 2. Resolve config values. The zone radius is written at scheduling time
+  // (Season 2 backfill covers older rows), so a missing radius is a data error.
+  if (match.zoneRadius === null) {
+    throw new BattleError(BattleErrorCode.INVALID_BATTLE_STATE, 'KotH match has no zone radius', 500, { matchId: match.id });
+  }
   const scoreThreshold = match.scoreThreshold ?? KOTH_MATCH_DEFAULTS.scoreThreshold;
   const timeLimit = match.timeLimit ?? KOTH_MATCH_DEFAULTS.timeLimit;
-  const zoneRadius = match.zoneRadius ?? KOTH_MATCH_DEFAULTS.zoneRadius;
+  const zoneRadius = match.zoneRadius;
   const arenaRadius = KOTH_MATCH_DEFAULTS.arenaRadius;
 
   // 3. Build KotH game mode config, state, and tick hook
@@ -332,7 +337,7 @@ async function processKothBattle(
   const scoreState = gameModeState.customData!.scoreState as KothScoreState;
   const zoneState = gameModeState.customData!.zoneState as KothZoneState;
 
-  // Wire the tick hook — KotH-specific per-tick logic (zone scoring, penalties, rotation)
+  // Wire the tick hook — KotH-specific per-tick logic (zone scoring, penalties)
   const tickHook = buildKothTickHook(kothConfig, scoreState, zoneState, gameModeState);
   (gameModeState.customData as Record<string, unknown>).tickHook = tickHook;
 

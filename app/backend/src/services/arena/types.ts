@@ -185,7 +185,7 @@ export interface CombatEvent {
     | 'counter_out_of_range' | 'backstab' | 'flanking'
     // KotH event types
     | 'zone_defined' | 'zone_enter' | 'zone_exit' | 'score_tick'
-    | 'kill_bonus' | 'zone_moving' | 'zone_active' | 'robot_eliminated'
+    | 'kill_bonus' | 'robot_eliminated'
     | 'passive_warning' | 'passive_penalty' | 'last_standing' | 'match_end';
   attacker?: string;
   defender?: string;
@@ -247,7 +247,6 @@ export interface CombatEvent {
     zoneState?: string;
     center?: { x: number; y: number };
     radius?: number;
-    newCenter?: { x: number; y: number };
     countdown?: number;
     survivorId?: number;
     winnerId?: number | null;
@@ -258,7 +257,6 @@ export interface CombatEvent {
     timeOutside?: number;
     duration?: number;
     occupants?: number[];
-    rotationCount?: number;
     destroyerRobotId?: number;
     winReason?: string;
   };
@@ -299,7 +297,6 @@ export interface CombatResult {
     eliminationStatuses?: Record<number, 'destroyed' | 'yielded' | 'survived'>;
     matchDuration?: number;
     winReason?: string;
-    zoneVariant?: 'fixed' | 'rotating';
   };
 
   // === Final combat states for N-robot modes (optional) ===

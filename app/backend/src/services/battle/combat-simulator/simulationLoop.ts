@@ -680,7 +680,7 @@ export function simulateBattleMulti(
       state.isUnderPressure = (state.currentHP / state.maxHP) * 100 < state.pressureThreshold;
     }
 
-    // ── Game mode per-tick hooks (zone scoring, passive penalties, zone rotation) ──
+    // ── Game mode per-tick hooks (zone scoring, passive penalties) ──
     // Runs BEFORE win condition check so scores are current when evaluated.
     if (gameModeState?.customData && !battleEnded) {
       const tickHook = gameModeState.customData.tickHook as

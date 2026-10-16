@@ -332,7 +332,6 @@ export class KothTargetPriorityStrategy implements TargetPriorityStrategy {
         center: controlZone.center,
         radius: controlZone.radius,
         isActive: true,
-        rotationCount: 0,
       };
     }
 
@@ -570,7 +569,6 @@ export class KothMovementIntentModifier implements MovementIntentModifier {
         center: controlZone.center,
         radius: controlZone.radius,
         isActive: true,
-        rotationCount: 0,
       };
     }
 

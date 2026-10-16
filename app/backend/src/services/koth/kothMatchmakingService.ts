@@ -23,6 +23,7 @@ import {
   getRecentOpponentsBatch,
   defaultScheduledFor,
 } from '../matchmaking/teamMatchmakingUtils';
+import { KOTH_MATCH_DEFAULTS } from '../arena/koth/kothConfig';
 
 // ─── Interfaces ──────────────────────────────────────────────────────────────
 
@@ -399,6 +400,7 @@ export async function runKothMatchmaking(scheduledFor?: Date): Promise<number> {
               scheduledFor: matchTime,
               leagueType: tier,
               leagueInstanceId: instanceId,
+              zoneRadius: KOTH_MATCH_DEFAULTS.zoneRadius,
               participants: group.robots.map((robot, index) => ({
                 participantType: 'robot' as const,
                 participantId: robot.id,

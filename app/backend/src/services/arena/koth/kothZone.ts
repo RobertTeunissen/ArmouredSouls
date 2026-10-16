@@ -1,5 +1,5 @@
 /**
- * King of the Hill — Zone management, spawn positioning, and rotation mechanics.
+ * King of the Hill — Zone management and spawn positioning.
  *
  * Requirements: 1.1, 1.3, 1.5, 2.1, 2.2, 2.3, 2.4, 2.5
  */
@@ -15,29 +15,13 @@ import type {
 } from './kothConfig';
 import { KOTH_MATCH_DEFAULTS } from './kothConfig';
 
-// ─── Seeded PRNG ────────────────────────────────────────────────────
-
-/**
- * Mulberry32 — a simple seeded 32-bit PRNG.
- * Returns a function that produces deterministic floats in [0, 1).
- */
-function mulberry32(seed: number): () => number {
-  let s = seed | 0;
-  return () => {
-    s = (s + 0x6D2B79F5) | 0;
-    let t = Math.imul(s ^ (s >>> 15), 1 | s);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
 // ─── Zone Management ────────────────────────────────────────────────
 
 /**
  * Create the control zone ArenaZone for a KotH match.
  *
  * Returns an ArenaZone with effect 'control_point', centered at {x:0, y:0},
- * with the configured radius (default 5, constrained to [3, 8]).
+ * with the configured radius (default 7, constrained to [3, 8]).
  *
  * Requirements: 1.1, 1.5
  */
@@ -180,50 +164,3 @@ export function trackZoneTransitions(
 
   return events;
 }
-
-// ─── Rotating Zone Mechanics ────────────────────────────────────────
-
-/**
- * Generate the next zone position for the rotating zone variant.
- *
- * Uses a deterministic seeded PRNG (mulberry32) so that the same
- * matchId + rotationCount always produces the same position.
- *
- * Constraints:
- *   - New position must be ≥6 units from arena boundary
- *     (distance from center ≤ arenaRadius - 6 - zoneRadius)
- *   - New position must be ≥8 units from the previous position
- *   - Falls back to arena center {x:0, y:0} after 100 failed attempts
- */
-export function generateNextZonePosition(
-  matchId: number,
-  rotationCount: number,
-  currentCenter: Position,
-  arenaRadius: number,
-  zoneRadius: number,
-): Position {
-  const seed = matchId * 1000 + rotationCount;
-  const rng = mulberry32(seed);
-  const maxDist = arenaRadius - 6 - zoneRadius;
-
-  for (let attempt = 0; attempt < 100; attempt++) {
-    const angle = rng() * 2 * Math.PI;
-    const dist = rng() * maxDist;
-    const candidate: Position = {
-      x: Math.cos(angle) * dist,
-      y: Math.sin(angle) * dist,
-    };
-
-    const distFromCenter = euclideanDistance(candidate, { x: 0, y: 0 });
-    if (distFromCenter > maxDist) continue;
-
-    const distFromPrevious = euclideanDistance(candidate, currentCenter);
-    if (distFromPrevious < 8) continue;
-
-    return candidate;
-  }
-
-  return { x: 0, y: 0 };
-}
-
-// processZoneRotation removed — zone rotation abolished (Spec #41)

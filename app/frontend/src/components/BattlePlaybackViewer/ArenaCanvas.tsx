@@ -156,8 +156,6 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
         ? robs.findIndex(r => r.name === zone.controllingRobotName)
         : undefined;
 
-      // Convert previous center to pixel coordinates for zone transition animation
-      const prevCenterPx = zone.previousCenter ? toPixel(zone.previousCenter) : undefined;
 
       renderKothZone(
         ctx,
@@ -166,8 +164,6 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
         zone.state,
         controllerIndex !== undefined && controllerIndex >= 0 ? controllerIndex : undefined,
         time,
-        prevCenterPx,
-        zone.transitionProgress,
       );
     }
 

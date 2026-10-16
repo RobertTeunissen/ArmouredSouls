@@ -19,7 +19,7 @@ export function sampleEventsForStorage(
     'attack', 'miss', 'critical', 'counter', 'shield_break', 'yield', 'destroyed',
     'malfunction', 'backstab', 'flanking', 'zone_enter', 'zone_exit', 'kill_bonus',
     'robot_eliminated', 'passive_warning', 'passive_penalty', 'last_standing', 'match_end',
-    'zone_defined', 'zone_moving', 'zone_active',
+    'zone_defined',
   ]);
 
   // Track last emitted time for sampled event types
