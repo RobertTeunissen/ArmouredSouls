@@ -2,7 +2,7 @@
 title: "Your Starting Budget"
 description: "How to spend your initial ₡3,000,000 wisely and set your stable up for long-term success."
 order: 3
-lastUpdated: "2026-03-16"
+lastUpdated: "2026-10-16"
 relatedArticles:
   - getting-started/roster-strategy
   - economy/credits-and-income
@@ -22,11 +22,11 @@ Here's a quick breakdown of the major expenses you'll face:
 | Item | Cost | Notes |
 |------|------|-------|
 | Robot frame | ₡500,000 | Bare chassis with all 23 attributes at level 1 |
-| Weapons | ₡50,000–₡544,000 | Practice Sword (₡50K) to Ion Beam (₡544K). Starter weapons at ₡50K for each range band. |
+| Weapons | ₡50,000–₡903,000 | Practice Sword (₡50K) to Ion Beam (₡903K). Starter weapons at ₡50K for each range band. |
 | Attribute upgrade (per level) | (level + 1) × ₡1,500 | Level 1→2 costs ₡3,000. Level 9→10 costs ₡15,000. Discounted by Training Facility. |
 | Repair Bay (Level 1) | ₡50,000 | Reduces repair costs. Scales with number of robots. |
 | Training Facility (Level 1) | ₡150,000 | 10% discount on all attribute upgrades. |
-| Weapons Workshop (Level 1) | ₡75,000 | 10% discount on weapon purchases. |
+| Weapons Workshop (Level 1) | ₡75,000 | 5% discount on weapon purchases, unlocks resale. |
 | Roster Expansion (Level 1) | ₡150,000 | Required to own a 2nd robot. Level 2 (₡300,000) for a 3rd. |
 | Training Academies (Level 1) | ₡100,000 each | Raises attribute caps from 10 to 15. Four types available. |
 
@@ -95,7 +95,7 @@ The reserve of ₡50,000 is intentionally small. Your robots will start earning 
 The onboarding recommends buying facilities in this order:
 
 1. **Roster Expansion** (mandatory for 2 or 3 robot strategies) — You can't create additional robots without it. Level 1 costs ₡150,000, Level 2 costs ₡300,000.
-2. **Weapons Workshop** (₡75,000) — Buy before purchasing weapons to get 10% off every weapon.
+2. **Weapons Workshop** (₡75,000) — Buy before purchasing weapons to get 5% off every weapon.
 3. **Training Facility** (₡150,000) — Buy before upgrading attributes to get 10% off every upgrade.
 4. **Repair Bay** (₡50,000) — Reduces repair costs after battles. More valuable the more robots you run.
 

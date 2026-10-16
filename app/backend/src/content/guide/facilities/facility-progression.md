@@ -2,7 +2,7 @@
 title: "Facility Progression & ROI"
 description: "Level-by-level costs, prestige requirements, and return on investment analysis for every facility in Armoured Souls."
 order: 2
-lastUpdated: "2026-08-02"
+lastUpdated: "2026-10-16"
 relatedArticles:
   - facilities/facility-overview
   - facilities/investment-strategy
@@ -65,18 +65,18 @@ Training Facility Level 1 is profitable from day one if you're upgrading regular
 
 | Level | Cost | Discount / Resale Rate | Operating Cost/Day |
 |-------|------|----------------------|-------------------|
-| 1 | ₡75,000 | 10% | ₡100 |
-| 2 | ₡150,000 | 20% | ₡200 |
-| 3 | ₡225,000 | 30% | ₡300 |
-| 4 | ₡300,000 | 40% | ₡400 |
-| 5 | ₡375,000 | 50% | ₡500 |
-| 6 | ₡450,000 | 60% | ₡600 |
-| 7 | ₡525,000 | 70% | ₡700 |
-| 8 | ₡600,000 | 80% | ₡800 |
-| 9 | ₡675,000 | 90% | ₡900 |
-| 10 | ₡750,000 | 100% (free weapons, full resale) | ₡1,000 |
+| 1 | ₡75,000 | 5% / 10% | ₡100 |
+| 2 | ₡150,000 | 10% / 20% | ₡200 |
+| 3 | ₡225,000 | 15% / 30% | ₡300 |
+| 4 | ₡300,000 | 20% / 40% | ₡400 |
+| 5 | ₡375,000 | 25% / 50% | ₡500 |
+| 6 | ₡450,000 | 30% / 60% | ₡600 |
+| 7 | ₡525,000 | 35% / 70% | ₡700 |
+| 8 | ₡600,000 | 40% / 80% | ₡800 |
+| 9 | ₡675,000 | 45% / 90% | ₡900 |
+| 10 | ₡750,000 | 50% / 100% (full resale) | ₡1,000 |
 
-**ROI Analysis**: The Workshop saves on every weapon purchase and increases resale value. At Level 1, you save 10% on every weapon — a significant discount on premium weapons costing ₡400K+.
+**ROI Analysis**: The Workshop saves on every weapon purchase and increases resale value. At Level 1, you save 5% on every weapon; the discount grows to 50% at Level 10, which matters most on premium weapons costing ₡400K+.
 
 ### Repair Bay Progression
 

@@ -2,7 +2,7 @@
 title: "Facility Investment Strategy"
 description: "Recommended facility purchase and upgrade order for early, mid, and late game — maximize your return on investment at every stage."
 order: 5
-lastUpdated: "2026-05-15"
+lastUpdated: "2026-10-16"
 relatedArticles:
   - facilities/facility-overview
   - facilities/facility-progression
@@ -115,7 +115,7 @@ Income is no longer a constraint. Focus on maximizing power and unlocking endgam
 
 ### Priority 9: Weapons Workshop (Level 5+)
 
-- **Why**: Weapon modifications and custom designs unlock at higher levels. The 50%+ discount also saves significant Credits when equipping a large roster.
+- **Why**: Weapon modifications and custom designs unlock at higher levels. The 25% discount at Level 5 (up to 50% at Level 10) saves significant Credits on high-end weapons, and the 50%+ resale rate makes trading up cheap.
 
 ### Priority 10: Booking Office
 

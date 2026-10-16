@@ -2,7 +2,7 @@
 title: "All 13 Facility Types"
 description: "A complete overview of every facility in Armoured Souls — what each one does, what it costs, and why it matters for your stable."
 order: 1
-lastUpdated: "2026-04-16"
+lastUpdated: "2026-10-16"
 relatedArticles:
   - facilities/facility-progression
   - facilities/training-academies
@@ -30,7 +30,7 @@ These facilities reduce your operating costs or generate passive income. They te
 | Facility | Purpose | Level 1 Cost | Operating Cost | Key Benefit |
 |----------|---------|-------------|----------------|-------------|
 | Training Facility | Attribute upgrade discounts | ₡150,000 | level × ₡250/day | Up to 90% — scales with level *and* shrinks as your roster grows |
-| Weapons Workshop | Weapon purchase discounts and resale rate | ₡75,000 | level × ₡100/day | 10%–100% discount on purchases · 10%–100% resale rate when selling |
+| Weapons Workshop | Weapon purchase discounts and resale rate | ₡75,000 | level × ₡100/day | 5%–50% discount on purchases · 10%–100% resale rate when selling |
 | Repair Bay | Repair cost discounts | ₡50,000 | level × ₡100/day | Scales with level and robot count (up to 90% discount) |
 | Merchandising Hub | Passive merchandising income | ₡150,000 | level × ₡200/day | ₡5,000–₡50,000/day base income, scales with Prestige |
 | Streaming Studio | Streaming revenue multiplier | ₡100,000 | level × ₡100/day | 2×–11× streaming revenue per battle |
@@ -57,13 +57,13 @@ Given that maxing all 23 attributes on a single robot costs over ₡29 million a
 
 ### Weapons Workshop
 
-The Workshop has a dual purpose: it reduces the purchase price of weapons AND determines how much credit you recover when selling weapons back. Both rates use the same formula — Level × 10% — so every Workshop level rewards you 10% on both ends of every weapon transaction.
+The Workshop has a dual purpose: it reduces the purchase price of weapons AND determines how much credit you recover when selling weapons back.
 
-**Purchase discount**: Level × 10%. At Level 1 you get 10% off; at Level 10 weapons are free.
+**Purchase discount**: Level × 5%. At Level 1 you get 5% off; at Level 10 you get 50% off.
 
 **Resale rate** (Spec #33): Level × 10%, capped at 100%. At Level 0 resale is unavailable (₡0 returned), so building Workshop Level 1 unlocks the resale system. At Level 10 you recover 100% of what you paid.
 
-Resale value is computed against what you actually paid (after Workshop discount), not the catalog price. This means a weapon you bought at full price at L0 yields more on resale at L10 than a weapon you bought free at L10. Equipped weapons cannot be sold — unequip from your robot first.
+Resale value is computed against what you actually paid (after Workshop discount), not the catalog price. This means a weapon you bought at full price at L0 yields more on resale at L10 than a weapon you bought at half price at L10. At L10 you buy at half price and can sell back for the full amount you paid, which makes trading up cheap. Equipped weapons cannot be sold — unequip from your robot first.
 
 Higher levels also unlock weapon modifications (Level 3) and custom weapon design (Level 6).
 

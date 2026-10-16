@@ -1,8 +1,8 @@
 ---
 title: "Buying & Selling Weapons"
-description: "How weapon purchases and resales work, the Workshop's dual role on both ends of every transaction, and the pricePaid mechanic that prevents free-weapon arbitrage."
+description: "How weapon purchases and resales work, the Workshop's dual role on both ends of every transaction, and the pricePaid mechanic that prevents resale arbitrage."
 order: 3
-lastUpdated: "2026-05-22"
+lastUpdated: "2026-10-16"
 relatedArticles:
   - weapons/loadout-types
   - facilities/facility-overview
@@ -13,7 +13,7 @@ relatedArticles:
 
 The [Weapon Shop](/weapons) sells 47 weapons spanning four loadout types and four range bands. Every robot needs at least one equipped weapon to be battle-ready, and most builds use 1–4 weapons total across the stable. As of May 2026, you can also **sell** weapons back from your inventory if you change your mind about a build.
 
-The Weapons Workshop facility is the cheapest meaningful facility in the game (₡75,000 for Level 1), and it has a unique dual purpose: it reduces purchase prices AND determines your resale rate, both at the same 10%-per-level slope.
+The Weapons Workshop facility is the cheapest meaningful facility in the game (₡75,000 for Level 1), and it has a unique dual purpose: it reduces purchase prices by 5% per level AND determines your resale rate at 10% per level.
 
 ## Buying Weapons
 
@@ -21,27 +21,27 @@ Click any weapon card on the **Catalog** tab of the Weapon Shop to view details 
 
 ### Workshop Purchase Discount
 
-The Weapons Workshop reduces purchase prices by 10% per level. Build it as one of your first facility upgrades to start saving.
+The Weapons Workshop reduces purchase prices by 5% per level, up to 50% at Level 10. Weapons are never free.
 
 | Workshop Level | Cost to Build | Purchase Discount | Example: ₡100,000 weapon |
 |---------------|---------------|--------------------|--------------------------|
 | 0 | — | 0% (no discount) | ₡100,000 |
-| 1 | ₡75,000 | 10% | ₡90,000 |
-| 5 | ~₡1,275,000 cumulative | 50% | ₡50,000 |
-| 10 | ~₡4,125,000 cumulative | 100% (free) | ₡0 |
+| 1 | ₡75,000 | 5% | ₡95,000 |
+| 5 | ~₡1,275,000 cumulative | 25% | ₡75,000 |
+| 10 | ~₡4,125,000 cumulative | 50% | ₡50,000 |
 
 ```callout-tip
-Workshop Level 1 pays for itself after about 7–8 weapon purchases at ₡100K each. If you're planning to build multiple robots (each needing 1–2 weapons), Workshop is one of the highest-ROI facility investments in the early game.
+The discount matters most on expensive weapons: at Level 10 a ₡688,000 Vibro Mace costs ₡344,000. Level 1 also unlocks resale, so it's worth building before you start trading weapons.
 ```
 
 ### What You Pay Is Recorded
 
 When you buy a weapon, the system records the **actual credits you paid** (after Workshop discount) on the inventory row. This becomes the `pricePaid` value that determines your resale price later. So:
 
-- A weapon bought at L0 (full price) yields more on resale than a weapon bought at L1 (10% off).
-- A weapon bought free at L10 yields ₡0 on resale, regardless of how high your Workshop level is when you sell.
+- A weapon bought at L0 (full price) yields more on resale than a weapon bought at L1 (5% off).
+- A weapon bought at L10 (half price) can be sold back for at most what you paid, never for the catalog price.
 
-This is intentional — it prevents an exploit where players at high Workshop levels could buy free weapons and sell them back for catalog price, generating infinite credits.
+This is intentional — it prevents an exploit where players at high Workshop levels could buy cheap and sell back at catalog price, generating credits from nothing.
 
 ## Selling Weapons
 
@@ -58,7 +58,7 @@ A summary bar at the top shows your total inventory count, sellable count, and t
 
 ### Workshop Resale Rate
 
-Resale rate matches the purchase discount — 10% per Workshop level — so investing in Workshop pays off on both ends of every transaction.
+Resale rate is 10% per Workshop level — twice the purchase discount — so at Level 10 you buy at half price and can sell back for the full amount you paid. That makes trading up to a better weapon cheap.
 
 | Workshop Level | Resale Rate | Example: Sold a ₡100,000 weapon |
 |---------------|-------------|----------------------------------|
@@ -82,7 +82,7 @@ salePrice = pricePaid × (workshopLevel × 10%)
 Two examples:
 
 - You bought a ₡425,000 weapon at Workshop L0 (full price), then upgraded Workshop to L10. You sell. The math: ₡425,000 × 100% = **₡425,000 returned** (full recovery).
-- You bought the same weapon at Workshop L10 (free), so `pricePaid = ₡0`. You sell at L10. The math: ₡0 × 100% = **₡0 returned**. No exploit possible.
+- You bought the same weapon at Workshop L10 (50% off), so `pricePaid = ₡212,500`. You sell at L10. The math: ₡212,500 × 100% = **₡212,500 returned** — exactly what you paid, never more. No exploit possible.
 
 ### Equipped Weapons Cannot Be Sold
 

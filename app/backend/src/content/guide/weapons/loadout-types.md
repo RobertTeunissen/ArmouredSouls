@@ -2,7 +2,7 @@
 title: "Loadout Types"
 description: "The four loadout configurations in Armoured Souls — Single, Weapon+Shield, Two-Handed, and Dual-Wield — with their bonuses, penalties, range considerations, and strategic trade-offs."
 order: 2
-lastUpdated: "2026-10-15"
+lastUpdated: "2026-10-16"
 relatedArticles:
   - weapons/dual-wield-mechanics
   - combat/battle-flow
@@ -29,8 +29,8 @@ The Single loadout is the most straightforward configuration — one weapon, no 
 
 | Bonus | Effect |
 |-------|--------|
-| **Gyro Stabilizers** | +10% — Improves your robot's balance and reaction time, reducing incoming hit chance |
-| **Servo Motors** | +5% — Enhances mobility and positioning |
+| **Gyro Stabilizers** | +15% — Improves your robot's balance and reaction time, reducing incoming hit chance |
+| **Servo Motors** | +10% — Fewer weapons to carry means a lighter, faster robot |
 
 **Penalties:** None.
 
@@ -56,8 +56,8 @@ The Weapon+Shield loadout is the defensive powerhouse. It provides the strongest
 
 | Bonus | Effect |
 |-------|--------|
-| **Shield Capacity** | +20% — Significantly larger energy shield pool to absorb incoming damage |
-| **Armor Plating** | +15% — More damage reduction on every hit that reaches your hull |
+| **Shield Capacity** | +15% — Larger energy shield pool to absorb incoming damage |
+| **Armor Plating** | +10% — More damage reduction on every hit that reaches your hull |
 | **Counter Protocols** | +10% — Higher chance to counter-attack when targeted |
 
 | Penalty | Effect |
@@ -145,8 +145,8 @@ This table shows all bonuses and penalties side by side so you can compare at a 
 
 | Loadout | Bonuses | Penalties | Weapon Slots |
 |---------|---------|-----------|-------------|
-| **Single** | +10% Gyro Stabilizers, +5% Servo Motors | None | 1 one-handed |
-| **Weapon+Shield** | +20% Shield Capacity, +15% Armor Plating, +10% Counter Protocols | -15% Attack Speed | 1 one-handed + 1 shield |
+| **Single** | +15% Gyro Stabilizers, +10% Servo Motors | None | 1 one-handed |
+| **Weapon+Shield** | +15% Shield Capacity, +10% Armor Plating, +10% Counter Protocols | -15% Attack Speed | 1 one-handed + 1 shield |
 | **Two-Handed** | +10% Combat Power, +20% Critical Systems, 1.10× damage, 2.5× crit multiplier | -10% Evasion Thrusters | 1 two-handed |
 | **Dual-Wield** | +30% Attack Speed, +15% Weapon Control | -20% Penetration, -10% Combat Power | 2 one-handed |
 
@@ -179,7 +179,7 @@ Loadout bonuses are **percentage-based multipliers** applied once, after everyth
 
 > **Effective Attribute = (Base Attribute + Both Weapons' Bonuses + Tuning) × (1 + Loadout Bonus %)**
 
-This means loadout bonuses become more powerful as your attributes grow. A +20% Shield Capacity bonus on a robot with 10 Shield Capacity adds 2 effective points. On a robot with 40 Shield Capacity, it adds 8. This is why loadout choice remains strategically important at every stage of the game.
+This means loadout bonuses become more powerful as your attributes grow. A +15% Shield Capacity bonus on a robot with 10 Shield Capacity adds 1.5 effective points. On a robot with 40 Shield Capacity, it adds 6. This is why loadout choice remains strategically important at every stage of the game.
 
 At Balanced stance, the effective attributes shown on your robot's stats screen are the values your robot fights with, in every battle mode: league, tag team, 2v2 and 3v3, tournaments, King of the Hill, Grand Melee and the Practice Arena. The loadout modifier also feeds into your maximum HP and shields — for example, the Weapon+Shield bonus raises Shield Capacity and therefore your shield pool.
 

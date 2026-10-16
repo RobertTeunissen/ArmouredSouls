@@ -2,8 +2,8 @@
 
 **Project**: Armoured Souls
 **Document Type**: Comprehensive Reference
-**Version**: v3.3
-**Date**: October 15, 2026
+**Version**: v3.4
+**Date**: October 16, 2026
 **Status**: ✅ Implemented
 
 **⭐ PRIMARY WEAPON REFERENCE**: [SEED_DATA_SPECIFICATION.md](../architecture/SEED_DATA_SPECIFICATION.md)
@@ -12,6 +12,7 @@
 **This Document**: Complete consolidated guide integrating all weapon and loadout system documentation. Includes full user stories, functional requirements, technical design, UI/UX specifications, testing requirements, and implementation details.
 
 **Revision History:**
+- v3.4 (Oct 16, 2026): Season 2 (#521) — Weapon+Shield passive +15% Shield Capacity / +10% Armor Plating (was +20% / +15%), Single passive +15% Gyro / +10% Servo (was +10% / +5%); Season 2 price tiers
 - v3.3 (Oct 15, 2026): #536 — battle readiness at battle time: no main weapon is a forfeit, an incomplete loadout fights as Single for that battle, unequip confirmation for booked robots; the weaponless "Fists" default is removed
 - v3.2 (Oct 15, 2026): #517 — canonical effective-attribute formula shared by display and combat preparation; loadout modifier applied exactly once in every battle mode; corrected stat-calculation snippet and utility list
 - v3.1 (Feb 10, 2026): Weapon roster expansion — updated counts, categories, DPS rankings, price tiers, and loadout coverage for 47-weapon catalog; added rangeBand as weapon attribute
@@ -317,10 +318,10 @@ display_stat   = floor(effective_stat)
 
 **Loadout Bonuses (from ROBOT_ATTRIBUTES.md):**
 
-- **weapon_shield**: +20% Shield Capacity, +15% Armor Plating, +10% Counter Protocols, -15% Attack Speed
+- **weapon_shield**: +15% Shield Capacity, +10% Armor Plating, +10% Counter Protocols, -15% Attack Speed
 - **two_handed**: +10% Combat Power (v1.2: reduced from +25%), +20% Critical Systems, -10% Evasion Thrusters, 1.10× damage multiplier (v1.2: reduced from 1.25×)
 - **dual_wield**: +30% Attack Speed, +15% Weapon Control, -20% Penetration, -10% Combat Power
-- **single**: +10% Gyro Stabilizers, +5% Servo Motors
+- **single**: +15% Gyro Stabilizers, +10% Servo Motors
 
 **Implementation Notes:**
 - Weapon attribute bonuses (both weapons, including folded refinements) and tuning are flat additions
@@ -468,7 +469,7 @@ Loadouts use **percentage-based bonuses** rather than flat bonuses for critical 
 
 #### 1. Weapon + Shield
 - **Equipment**: One weapon + Shield weapon (offhand)
-- **Bonuses**: +20% Shield Capacity, +15% Armor Plating, +10% Counter Protocols
+- **Bonuses**: +15% Shield Capacity, +10% Armor Plating, +10% Counter Protocols
 - **Penalties**: -15% Attack Speed (shield weight)
 - **Best For**: Tank builds, defensive strategies
 
@@ -486,7 +487,7 @@ Loadouts use **percentage-based bonuses** rather than flat bonuses for critical 
 
 #### 4. Single Weapon (No Shield)
 - **Equipment**: One weapon, other hand free
-- **Bonuses**: +10% Gyro Stabilizers, +5% Servo Motors
+- **Bonuses**: +15% Gyro Stabilizers, +10% Servo Motors
 - **Penalties**: None
 - **Best For**: Balanced builds, flexible strategies
 
@@ -556,24 +557,25 @@ The game features **47 weapons** across 4 categories. For complete specification
 
 ### Price Tiers
 
-**Budget Tier (<₡100K)** - 14 weapons:
+Season 2 prices (signed-sum formula, see [PRD_WEAPON_ECONOMY.md](PRD_WEAPON_ECONOMY.md) v1.8). Three grid slots are empty under these prices: 2H Short Mid, 1H Mid Premium, 2H Long Premium.
+
+**Budget Tier (<₡100K)** - 11 weapons:
 - Practice Sword, Practice Blaster, Training Rifle, Training Beam
-- Laser Pistol, Machine Pistol, Combat Knife
-- Light Shield, Combat Shield, Reactive Shield
+- Laser Pistol, Combat Knife, Light Shield
 - War Club, Scatter Cannon, Bolt Carbine, Beam Pistol
 
 **Mid Tier (₡100-250K)** - 11 weapons:
-- Machine Gun, Burst Rifle, Energy Blade, Plasma Blade, Laser Rifle
-- Shock Maul, Flux Repeater, Photon Marksman
-- Barrier Shield, Mortar System, Siege Cannon
+- Machine Pistol, Machine Gun, Burst Rifle, Energy Blade
+- Shock Maul, Flux Repeater, Photon Marksman, Mortar System, Siege Cannon
+- Combat Shield, Reactive Shield
 
-**Premium Tier (₡250-400K)** - 11 weapons:
-- Plasma Rifle, Assault Rifle, Power Sword, Shotgun, Grenade Launcher, Sniper Rifle
-- Thermal Lance, Pulse Accelerator, Disruptor Cannon, Gauss Pistol, Fortress Shield
+**Premium Tier (₡250-400K)** - 10 weapons:
+- Plasma Blade, Plasma Rifle, Laser Rifle, Shotgun, Grenade Launcher
+- Thermal Lance, Pulse Accelerator, Gauss Pistol, Barrier Shield, Fortress Shield
 
-**Luxury Tier (₡400K+)** - 11 weapons:
-- Battle Axe, Plasma Cannon, Heavy Hammer, Railgun, Ion Beam
-- Vibro Mace, Volt Sabre, Arc Projector, Nova Caster, Particle Lance, Aegis Bulwark
+**Luxury Tier (₡400K+)** - 15 weapons:
+- Assault Rifle, Power Sword, Sniper Rifle, Battle Axe, Plasma Cannon, Heavy Hammer, Railgun, Ion Beam
+- Vibro Mace, Volt Sabre, Arc Projector, Disruptor Cannon, Nova Caster, Particle Lance, Aegis Bulwark
 
 ### Loadout Coverage
 
@@ -769,7 +771,7 @@ The **Weapons Workshop** facility (see [STABLE_SYSTEM.md](STABLE_SYSTEM.md#3-wea
 - Each option shows:
   - Name (e.g., "Weapon + Shield")
   - Icon/illustration
-  - Key bonuses in green (e.g., "+20% Shield Capacity")
+  - Key bonuses in green (e.g., "+15% Shield Capacity")
   - Key penalties in red (e.g., "-15% Attack Speed")
 - Selected loadout highlighted with border
 - Disabled options grayed out if incompatible with current weapons
@@ -840,9 +842,9 @@ Combat Power
 Shield Capacity
   Base:     15
   Weapons:  +4  (Laser Rifle)
-  Loadout:  +20% (Weapon+Shield)
+  Loadout:  +15% (Weapon+Shield)
   ─────────────
-  Effective: 22
+  Effective: 21
 ```
 
 ---
@@ -1288,10 +1290,10 @@ maxShield = effective_shield_capacity × 4
 ```
 
 **Loadout Bonuses:**
-- weapon_shield: +20% Shield Capacity, +15% Armor Plating, +10% Counter Protocols, -15% Attack Speed
+- weapon_shield: +15% Shield Capacity, +10% Armor Plating, +10% Counter Protocols, -15% Attack Speed
 - two_handed: +10% Combat Power, +20% Critical Systems, -10% Evasion Thrusters, 1.10× damage multiplier
 - dual_wield: +30% Attack Speed, +15% Weapon Control, -20% Penetration, -10% Combat Power
-- single: +10% Gyro Stabilizers, +5% Servo Motors
+- single: +15% Gyro Stabilizers, +10% Servo Motors
 
 ### Database Schema
 
@@ -1471,8 +1473,8 @@ The Weapons & Loadout System provides a comprehensive, balanced, and strategic e
 
 | Loadout Type | Main Slot | Offhand Slot | Bonuses | Penalties |
 |--------------|-----------|--------------|---------|-----------|
-| Single | 1H weapon | Empty | +10% Gyro, +5% Servo | None |
-| Weapon+Shield | 1H weapon | Shield | +20% Shield Cap, +15% Armor, +10% Counter | -15% Attack Speed |
+| Single | 1H weapon | Empty | +15% Gyro, +10% Servo | None |
+| Weapon+Shield | 1H weapon | Shield | +15% Shield Cap, +10% Armor, +10% Counter | -15% Attack Speed |
 | Two-Handed | 2H weapon | Empty | +10% Combat Power, +20% Crit, 1.10× damage, 2.5× crit multiplier | -10% Evasion |
 | Dual-Wield | 1H weapon | 1H weapon | +30% Attack Speed, +15% Weapon Control | -20% Penetration, -10% Combat Power |
 
@@ -1500,8 +1502,8 @@ Effective Combat Power: 12
 
 Base Gyro Stabilizers: 15
 Laser Rifle Bonus: 0
-Single Loadout Bonus: +10%
-Effective Gyro: 15 * 1.10 = 16.5 → 16 (rounded down)
+Single Loadout Bonus: +15%
+Effective Gyro: 15 * 1.15 = 17.25 (combat) → 17 displayed
 ```
 
 **Example 2: Robot with Combat Shield + Power Sword, Weapon+Shield Loadout**
@@ -1509,10 +1511,10 @@ Effective Gyro: 15 * 1.10 = 16.5 → 16 (rounded down)
 Base Shield Capacity: 20
 Combat Shield Bonus: +5
 Power Sword Bonus: 0
-Weapon+Shield Loadout: +20%
-Effective Shield Capacity: (20 + 5) * 1.20 = 30
+Weapon+Shield Loadout: +15%
+Effective Shield Capacity: (20 + 5) * 1.15 = 28.75 (combat) → 28 displayed
 
-Max Shield HP: 30 * 4 = 120
+Max Shield HP: 28.75 * 4 = 115
 ```
 
 **Example 3: Robot with Dual Machine Guns, Dual-Wield Loadout**

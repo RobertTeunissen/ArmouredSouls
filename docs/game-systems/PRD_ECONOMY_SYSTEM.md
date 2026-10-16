@@ -979,7 +979,7 @@ All weapons use an exponential pricing formula based on attribute bonuses and DP
 - Storage includes both equipped and unequipped weapons
 
 **Facility Discount: Weapons Workshop**
-- Provides 5% to 50% discount based on level
+- Provides 5% to 50% discount based on level (live since Season 2 via shared `calculateWeaponWorkshopDiscount`; resale stays 10% per level)
 - Formula:
   ```
   discount = weapons_workshop_level × 5  // 0% to 50%

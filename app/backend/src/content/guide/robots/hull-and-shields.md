@@ -2,7 +2,7 @@
 title: "Hull Integrity & Energy Shields"
 description: "Understand the two HP pools that keep your robot alive — Hull Integrity for permanent structural health and Energy Shields for regenerating protection."
 order: 3
-lastUpdated: "2026-10-15"
+lastUpdated: "2026-10-16"
 relatedArticles:
   - robots/attributes-overview
   - robots/attribute-combat-influence
@@ -63,7 +63,7 @@ The table shows base values with no weapon bonuses and no loadout modifier:
 | 25 | 100 | Meaningful buffer that buys time for regeneration |
 | 50 (maximum) | 200 | Substantial shield pool that can absorb significant punishment |
 
-**Worked example:** a robot with 15 Shield Capacity and a weapon that adds +5 Shield Capacity has 20 effective Shield Capacity, so 20 × 4 = **80 shield points**. The same robot in the Weapon + Shield loadout gets +20% Shield Capacity: 20 × 1.20 = 24, so 24 × 4 = **96 shield points**.
+**Worked example:** a robot with 15 Shield Capacity and a weapon that adds +5 Shield Capacity has 20 effective Shield Capacity, so 20 × 4 = **80 shield points**. The same robot in the Weapon + Shield loadout gets +15% Shield Capacity: 20 × 1.15 = 23, so 23 × 4 = **92 shield points**.
 
 ### How Shields Differ from Hull HP
 
@@ -106,7 +106,7 @@ This layered defense means that investing across multiple defensive attributes (
 
 ### Shield-Focused Builds
 
-Pairing high Energy Shield Capacity with the **Weapon + Shield** loadout is a natural fit. The Weapon + Shield loadout provides a +20% bonus to Shield Capacity, amplifying your investment. Combined with a Defensive stance (+20% shield regeneration), this creates a robot that's extremely hard to wear down.
+Pairing high Energy Shield Capacity with the **Weapon + Shield** loadout is a natural fit. The Weapon + Shield loadout provides a +15% bonus to Shield Capacity, amplifying your investment. Combined with a Defensive stance (+20% shield regeneration), this creates a robot that's extremely hard to wear down.
 
 ### Hull-Focused Builds
 

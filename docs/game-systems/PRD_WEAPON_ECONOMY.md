@@ -1,7 +1,7 @@
 # Product Requirements Document: Weapon Economy and Starter Weapons Overhaul
 
-**Version**: 1.7  
-**Last Updated**: July 26, 2026  
+**Version**: 1.8  
+**Last Updated**: October 16, 2026  
 **Status**: Implemented with Balance Adjustments  
 **Owner**: Robert Teunissen  
 **Epic**: Weapon System Economy Redesign
@@ -15,6 +15,117 @@
 - **v1.5** (May 22, 2026): Weapon resale system — sell weapons back at Workshop-level-dependent rate (0%/L0 → 100%/L10), `pricePaid` anchor prevents free-weapon arbitrage, equipped weapons protected by shared row lock
 - **v1.6** (May 23, 2026): Weapon Refinement system — permanent per-instance upgrades across four tiers (Hone / Augment / Sharpen / Forge), 5-slot cap, Workshop-gated tier unlocks, refinement spend folds into `pricePaid` so resale partially recovers it
 - **v1.7** (Jul 26, 2026): Sharpen and Forge converted from flat to proportional — Sharpen −10% cooldown per instance, Forge +8% base damage per instance, both stacked additively against the catalog value (Spec #46)
+- **v1.8** (Oct 16, 2026): Season 2 repricing — signed-sum attribute cost `500 × (Σ bonus)²` (bug fix: penalties no longer raise the price), hand multipliers 1.0 / 1.5 / 1.3, formula moved to `app/shared/utils/weaponPricing.ts`, #521 Fortress Shield / Aegis Bulwark bonus cut, Weapons Workshop discount 10% → 5% per level (resale unchanged), three documented price-grid gaps
+
+---
+
+## Version 1.8 Updates (Season 2, October 2026)
+
+### Problem Statement
+
+- The attribute part `Σ(500 × bonus²)` squared every bonus separately, so a penalty (e.g. −4 Evasion Thrusters on Fortress Shield) made a weapon *more* expensive.
+- Shields were discounted (×0.9) although Armor Plating and Shield Capacity are a repair-free HP buffer; with a high-level Workshop an Aegis Bulwark cost under ₡100K while the same 55 attribute points cost millions.
+- At Weapons Workshop L10 every weapon was free (100% discount).
+- The formula lived only in this document and in test files, and the v1.0 text further down no longer matched the live catalogue.
+
+### Formula (authoritative: `app/shared/utils/weaponPricing.ts`)
+
+```
+dpsRatio       = (baseDamage / cooldown) / 2.0
+dpsCost        = 50,000 × (dpsRatio − 1) × 6.0          (shields: 0)
+attributeCost  = 500 × (Σ bonus)²                        (signed sum over all 23 bonuses)
+price          = round_to_1,000((50,000 + dpsCost + attributeCost) × handMultiplier)
+handMultiplier = 1.0 one-handed · 1.5 two-handed · 1.3 shield
+```
+
+Starter rule: a weapon with no bonuses and the baseline DPS (6 damage / 3 s) that is not a shield costs a flat ₡50,000, one- or two-handed.
+
+`WEAPON_DEFINITIONS` in `app/backend/prisma/seed.ts` keeps literal `cost` values; `tests/weaponPricing.test.ts` asserts every literal equals `calculateWeaponPrice(def)` (47/47).
+
+### Verification of the live formula
+
+Before any catalogue value changed, `tests/weaponPricing.test.ts` reproduced the pre-Season-2 catalogue with the shared DPS part, the old attribute part `Σ(500 × b²)` and the old hand multipliers (1.0 / 1.6 / 0.9): **47/47 prices matched** with the starter rule (45/47 without it: the two two-handed starters are a flat ₡50,000, not ₡80,000). The pre-change catalogue is frozen in that test as a permanent record. No per-weapon fallback constant was needed. The v1.0 text (`× 2.0`, baseline 3.33 DPS) reproduces only 6/47 and is kept below for history only.
+
+### #521 shield values
+
+| Shield | Armor | Shield Cap. | Counters | Power Core | Evasion | Servo |
+|---|---|---|---|---|---|---|
+| Fortress Shield | 15 → 11 | 14 → 10 | 10 → 8 | – | −4 | −3 |
+| Aegis Bulwark | 15 → 11 | 15 → 11 | 14 → 10 | 11 → 8 | −5 | −4 |
+
+Refinements are stored as deltas (`weapon_refinement.tier/magnitude/targetAttribute`) and `applyRefinementsToWeapon` seeds from the catalogue row, so existing refinements fold onto the new base. `upsertWeapon` updates catalogue rows by name, owned items reference the row, and `WeaponInventory.pricePaid` is untouched, so resale stays anchored to what each player paid.
+
+### Weapons Workshop discount
+
+Purchase discount is now **5% per level** (L10 = 50%) via the shared `calculateWeaponWorkshopDiscount`. Resale stays **10% per level** of `pricePaid` (L10 = 100%): at L10 a player buys at half price and can sell back at the full price paid, which supports trading up.
+
+### Season 2 catalogue
+
+Total catalogue ₡10,999,000 → ₡14,014,000 (+27.4%). Some prices fall (two-handed 1.6 → 1.5 and signed sums): Shotgun, Mortar System, Siege Cannon, War Club, Scatter Cannon. No weapon has a negative bonus sum.
+
+| Weapon | Hands | Range | DPS | Σ bonus | Old price | New price | Tier |
+|---|---|---|---|---|---|---|---|
+| Ion Beam | 2H | long | 3.25 | 27 | ₡544,000 | ₡903,000 | Luxury |
+| Aegis Bulwark | Shield | – | – | 31 | ₡409,000 | ₡690,000 | Luxury |
+| Vibro Mace | 1H | melee | 4.00 | 26 | ₡425,000 | ₡688,000 | Luxury |
+| Arc Projector | 2H | short | 3.25 | 19 | ₡488,000 | ₡627,000 | Luxury |
+| Railgun | 2H | long | 3.08 | 20 | ₡527,000 | ₡619,000 | Luxury |
+| Volt Sabre | 1H | short | 4.00 | 20 | ₡425,000 | ₡550,000 | Luxury |
+| Nova Caster | 1H | mid | 4.00 | 20 | ₡425,000 | ₡550,000 | Luxury |
+| Particle Lance | 1H | long | 4.00 | 20 | ₡425,000 | ₡550,000 | Luxury |
+| Heavy Hammer | 2H | melee | 3.20 | 16 | ₡478,000 | ₡537,000 | Luxury |
+| Power Sword | 1H | melee | 3.50 | 19 | ₡325,000 | ₡456,000 | Luxury |
+| Sniper Rifle | 2H | long | 2.83 | 16 | ₡387,000 | ₡455,000 | Luxury |
+| Plasma Cannon | 2H | mid | 3.00 | 14 | ₡408,000 | ₡447,000 | Luxury |
+| Battle Axe | 2H | melee | 3.13 | 11 | ₡402,000 | ₡419,000 | Luxury |
+| Assault Rifle | 1H | short | 3.33 | 18 | ₡293,000 | ₡412,000 | Luxury |
+| Disruptor Cannon | 1H | mid | 3.33 | 18 | ₡293,000 | ₡412,000 | Luxury |
+| Fortress Shield | Shield | – | – | 22 | ₡291,000 | ₡380,000 | Premium |
+| Laser Rifle | 2H | short | 2.50 | 14 | ₡243,000 | ₡335,000 | Premium |
+| Gauss Pistol | 1H | long | 3.33 | 13 | ₡291,000 | ₡335,000 | Premium |
+| Grenade Launcher | 2H | mid | 2.60 | 12 | ₡293,000 | ₡318,000 | Premium |
+| Thermal Lance | 2H | melee | 2.63 | 11 | ₡279,000 | ₡306,000 | Premium |
+| Pulse Accelerator | 2H | short | 2.63 | 10 | ₡273,000 | ₡291,000 | Premium |
+| Plasma Rifle | 1H | short | 3.17 | 11 | ₡258,000 | ₡286,000 | Premium |
+| Plasma Blade | 1H | melee | 2.83 | 14 | ₡202,000 | ₡273,000 | Premium |
+| Shotgun | 2H | mid | 2.75 | 5 | ₡283,000 | ₡263,000 | Premium |
+| Barrier Shield | Shield | – | – | 17 | ₡111,000 | ₡253,000 | Premium |
+| Energy Blade | 1H | melee | 2.67 | 12 | ₡175,000 | ₡222,000 | Mid |
+| Reactive Shield | Shield | – | – | 15 | ₡92,000 | ₡211,000 | Mid |
+| Shock Maul | 2H | melee | 2.33 | 9 | ₡183,000 | ₡211,000 | Mid |
+| Flux Repeater | 1H | mid | 2.50 | 11 | ₡147,000 | ₡186,000 | Mid |
+| Photon Marksman | 1H | long | 2.50 | 11 | ₡147,000 | ₡186,000 | Mid |
+| Combat Shield | Shield | – | – | 12 | ₡78,000 | ₡159,000 | Mid |
+| Burst Rifle | 1H | short | 2.33 | 10 | ₡117,000 | ₡150,000 | Mid |
+| Mortar System | 2H | mid | 2.25 | 5 | ₡163,000 | ₡150,000 | Mid |
+| Siege Cannon | 2H | long | 2.25 | 5 | ₡163,000 | ₡150,000 | Mid |
+| Machine Gun | 1H | short | 2.25 | 10 | ₡107,000 | ₡138,000 | Mid |
+| Machine Pistol | 1H | short | 2.25 | 5 | ₡94,000 | ₡100,000 | Mid |
+| Combat Knife | 1H | melee | 2.25 | 4 | ₡93,000 | ₡96,000 | Budget |
+| Bolt Carbine | 1H | mid | 2.25 | 4 | ₡93,000 | ₡96,000 | Budget |
+| Beam Pistol | 1H | long | 2.25 | 4 | ₡93,000 | ₡96,000 | Budget |
+| War Club | 2H | melee | 2.00 | 3 | ₡84,000 | ₡82,000 | Budget |
+| Scatter Cannon | 2H | short | 2.00 | 3 | ₡84,000 | ₡82,000 | Budget |
+| Light Shield | Shield | – | – | 5 | ₡51,000 | ₡81,000 | Budget |
+| Laser Pistol | 1H | short | 2.00 | 5 | ₡57,000 | ₡63,000 | Budget |
+| Practice Sword | 1H | melee | 2.00 | 0 | ₡50,000 | ₡50,000 | Budget |
+| Practice Blaster | 1H | short | 2.00 | 0 | ₡50,000 | ₡50,000 | Budget |
+| Training Rifle | 2H | mid | 2.00 | 0 | ₡50,000 | ₡50,000 | Budget |
+| Training Beam | 2H | long | 2.00 | 0 | ₡50,000 | ₡50,000 | Budget |
+
+Tier distribution: Budget 11, Mid 11, Premium 10, Luxury 15.
+
+### Price grid: three documented gaps
+
+The tier bands stay Budget < ₡100K, Mid ₡100K–250K, Premium ₡250K–400K, Luxury ₡400K+. A search over every band set in ₡25K steps (₡50K–₡1M) found **no** set that fills all 36 grid slots with the decided prices (closest: 100K / 300K / 475K, still one gap), so the bands were not rescaled. Under Season 2 prices three slots are empty:
+
+| Slot | Why |
+|---|---|
+| 2H Short, Mid | Laser Rifle (₡335K) and Pulse Accelerator (₡291K) moved to Premium |
+| 1H Mid, Premium | Disruptor Cannon (₡412K) moved to Luxury |
+| 2H Long, Premium | Sniper Rifle (₡455K) moved to Luxury |
+
+`tests/weaponProperties.test.ts` P15 requires every other slot to be filled and the gap list to be exactly these three, so a new gap (or a filled one) fails the test until this table is updated.
 
 ---
 
@@ -246,6 +357,8 @@ Resale rate scales linearly at 10% per Workshop level — the same slope as the 
 | 7 | 70% (5,000 prestige gate) | 70% |
 | 10 | 100% (10,000 prestige gate) | 100% |
 
+> **v1.8 (Season 2):** the purchase discount column above is historical. The discount is now 5% per level (L1 5%, L3 15%, L5 25%, L7 35%, L10 50%); the resale rate is unchanged at 10% per level.
+
 The 0% rate at L0 means resale is gated behind purchasing Workshop L1 (₡75K, the cheapest facility tier in the game). This makes L1 a meaningful unlock instead of a marginal upgrade.
 
 ### Anti-Exploit: pricePaid Anchor
@@ -255,6 +368,7 @@ A new `WeaponInventory.pricePaid` Int column stores the **actual credits the pla
 - A Workshop L10 player can buy any weapon for ₡0 (100% discount).
 - If resale rate were applied to catalog price, they could sell a ₡425K weapon back for ₡425K and repeat infinitely.
 - With the `pricePaid` anchor: a weapon bought for ₡0 yields ₡0 on resale regardless of rate. Buy-then-sell is at best break-even (at L10), never net-positive.
+- v1.8: L10 now buys at 50% off, so a weapon bought for ₡X at L10 resells for at most ₡X. The anchor still guarantees buy-then-sell is never net-positive.
 
 Existing weapons (purchased before this spec) get their `pricePaid` backfilled with the current catalog price as a best-effort approximation. Starter weapons granted by the user-generation script have `pricePaid = 0`, so they yield ₡0 on resale — selling them only frees up storage.
 
@@ -467,7 +581,7 @@ The DPS Cost multiplier was increased from 2.0 to 2.67 to partially offset the l
 - **[WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md)**: Current weapon catalog and loadout system
 - **[ROBOT_ATTRIBUTES.md](ROBOT_ATTRIBUTES.md)**: 23 attributes that weapons modify
 - **[DATABASE_SCHEMA.md](DATABASE_SCHEMA.md)**: Weapon model structure
-- **[STABLE_SYSTEM.md](STABLE_SYSTEM.md)**: Weapons Workshop discount system (10% per level)
+- **[STABLE_SYSTEM.md](STABLE_SYSTEM.md)**: Weapons Workshop discount system (5% per level since v1.8; was 10%)
 
 ### Why This Matters
 
@@ -538,43 +652,34 @@ The DPS Cost multiplier was increased from 2.0 to 2.67 to partially offset the l
 
 ### Complete Pricing Formula
 
-**Base Cost**: ₡50,000 (Practice Sword baseline - zero bonuses, baseline DPS)
+> **Current formula (v1.8, Season 2).** This section was corrected in v1.8: the v1.0 text (`× 2.0`, baseline 3.33 DPS, `Σ(500 × bonus²)`, hands 1.6 / 0.9) reproduced only 6 of 47 live prices. The live DPS part has been the v1.4 one since May 2026. The examples and comparisons further down are the v1.0 design walkthrough and use the old numbers.
 
-**Component 1: Attribute Bonus Cost** (exponential scaling):
+**Base Cost**: ₡50,000
+
+**Component 1: Attribute Bonus Cost** (signed sum, squared):
 ```
-Attribute Cost = Σ(500 × bonus²) for all attribute bonuses
+Attribute Cost = 500 × (Σ bonus)²      — negatives included in the sum
 ```
 
-**Component 2: DPS Premium** (scales with combat effectiveness):
+**Component 2: DPS Premium** (v1.4 live values):
 ```
-Baseline DPS = 10 damage / 3 seconds = 3.33 DPS (Practice Sword)
-Weapon DPS = baseDamage / cooldown
-DPS Ratio = Weapon DPS / Baseline DPS
-DPS Cost = Base Cost × (DPS Ratio - 1.0) × 2.0
-
-Example:
-- Practice Sword: 10/3 = 3.33 DPS → Ratio 1.0 → No DPS premium
-- Machine Gun: 10/2 = 5.00 DPS → Ratio 1.5 → Premium: 50k × 0.5 × 2.0 = ₡50,000
-- Railgun: 55/6 = 9.17 DPS → Ratio 2.75 → Premium: 50k × 1.75 × 2.0 = ₡175,000
+Baseline DPS = 6 damage / 3 seconds = 2.0 DPS (starter weapons)
+DPS Ratio    = (baseDamage / cooldown) / 2.0
+DPS Cost     = ₡50,000 × (DPS Ratio − 1.0) × 6.0    — shields: 0
 ```
 
 **Component 3: Hand Requirements** (multiply final cost):
 ```
 One-handed: 1.0× (baseline)
-Two-handed: 1.6× (occupies both slots, competes with dual-wield)
-Shield: 0.9× (defensive, no damage output)
+Two-handed: 1.5× (occupies both slots, competes with dual-wield)
+Shield:     1.3× (repair-free HP buffer: premium, not a discount)
 ```
 
-**Total Weapon Cost Formula**:
+**Total Weapon Cost Formula** (`calculateWeaponPrice` in `app/shared/utils/weaponPricing.ts`):
 ```
-Total Cost = (Base Cost + Attribute Cost + DPS Cost) × Hand Multiplier
+Total Cost = round_to_1,000((Base Cost + Attribute Cost + DPS Cost) × Hand Multiplier)
 
-Where:
-- Base Cost = ₡50,000
-- Attribute Cost = Σ(500 × bonus²)
-- DPS Cost = ₡50,000 × (DPS Ratio - 1.0) × 2.0
-- DPS Ratio = (baseDamage / cooldown) / 3.33
-- Hand Multiplier = 1.0 (one-handed), 1.6 (two-handed), or 0.9 (shield)
+Starter rule: no bonuses + baseline DPS + not a shield → flat ₡50,000 (one- or two-handed)
 ```
 
 ### Formula Examples
@@ -660,10 +765,12 @@ The +2 bonus costs twice as much because concentrated bonuses are more valuable.
 
 **Hand Requirements** (multiply final cost):
 - One-handed: 1.0× (baseline)
-- Two-handed: 1.6× (occupies both slots, competes with dual-wield)
-- Shield: 0.9× (defensive, no damage output)
+- Two-handed: 1.5× (v1.8; was 1.6×) — occupies both slots, competes with dual-wield
+- Shield: 1.3× (v1.8; was 0.9×) — Armor Plating + Shield Capacity are a repair-free HP buffer
 
 #### Two-Handed Pricing Rationale
+
+> v1.8: the multiplier is now 1.5× to reinforce the two-handed strategy. The rationale below still holds (between one and two one-handed weapons); its numbers use the original 1.6×.
 
 **Why 1.6× multiplier for two-handed weapons?**
 
@@ -696,11 +803,11 @@ Two-handed weapons must compete with dual-wielding, where a player can equip TWO
 
 **Damage Type Modifiers**: None (damage types will be implemented in future combat mechanics)
 
-**Shield Weapons**: Shields have no DPS component (defensive only), so their cost is Base + Attributes × 0.9
+**Shield Weapons**: Shields have no DPS component (defensive only), so their cost is (Base + Attributes) × 1.3 (v1.8; was × 0.9)
 
 ### Price Ranges
 
-Based on the complete formula with DPS factored in, weapons now fall into these tiers:
+Based on the complete formula with DPS factored in, weapons fall into these tiers (bands unchanged in v1.8; see "Price grid: three documented gaps" in the v1.8 section):
 
 - **Budget Tier** (< ₡100,000): Low DPS, minimal bonuses
 - **Mid Tier** (₡100,000 - ₡249,999): Moderate DPS, balanced bonuses
@@ -788,7 +895,7 @@ Across all 47 weapons:
 - **Melee Weapons**: 5 weapons (11%) — Practice Sword, Combat Knife, Battle Axe, Heavy Hammer, Vibro Mace
 - **Shield Weapons**: 6 weapons (13%) — Light Shield, Combat Shield, Reactive Shield, Barrier Shield, Fortress Shield, Aegis Bulwark
 
-**Total**: 47 weapons covering all 36 grid slots (4 ranges × 2 hand types × 4 tiers + 4 shield tiers)
+**Total**: 47 weapons covering 33 of the 36 grid slots (4 ranges × 2 hand types × 4 tiers + 4 shield tiers) under Season 2 prices; the three gaps (2H Short Mid, 1H Mid Premium, 2H Long Premium) are documented in the v1.8 section. Before v1.8 all 36 were filled.
 
 ---
 
@@ -1354,7 +1461,7 @@ To complete the full 47-weapon roster, we added:
 
 **Tier distribution**: Budget 14, Mid 11, Premium 11, Luxury 11
 
-**Key Insight with DPS Pricing**: Two-handed weapons with high DPS cost significantly more (₡400K+), properly reflecting their combat effectiveness. The expanded roster ensures every Range × Hand Type × Price Tier combination has at least one weapon, giving players meaningful choices at every budget level.
+**Key Insight with DPS Pricing**: Two-handed weapons with high DPS cost significantly more (₡400K+), properly reflecting their combat effectiveness. The expanded roster ensured every Range × Hand Type × Price Tier combination had at least one weapon. (The distribution above is the v1.3 one; for Season 2 prices and the three grid gaps see the v1.8 section.)
 
 ---
 
@@ -1551,7 +1658,7 @@ function calculateWeaponCost(weapon: Weapon): number {
 ### Phase 3: Expanded Catalog (Completed)
 
 1. Expanded weapon roster from 26 to 47 weapons
-2. All 36 grid slots filled with at least one weapon
+2. All 36 grid slots filled with at least one weapon (v1.8: 33 of 36 under Season 2 prices, three documented gaps)
 3. Balance validated via property-based tests
 
 ### Phase 4: Pricing Formula UI (Future)

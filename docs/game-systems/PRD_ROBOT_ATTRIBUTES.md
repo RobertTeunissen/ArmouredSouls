@@ -277,7 +277,7 @@ Robots are bipedal humanoids with two arms. The loadout system determines how we
 For quick reference, the four loadout types provide the following bonuses/penalties:
 
 **1. Weapon + Shield** (`weapon_shield`)
-- **Bonuses**: +20% Shield Capacity, +15% Armor Plating, +10% Counter Protocols
+- **Bonuses**: +15% Shield Capacity, +10% Armor Plating, +10% Counter Protocols (Season 2: was +20% / +15% / +10%)
 - **Penalties**: -15% Attack Speed
 - **Best For**: Defensive tank builds
 
@@ -293,9 +293,9 @@ For quick reference, the four loadout types provide the following bonuses/penalt
 - **Best For**: Rapid-attack DPS builds
 
 **4. Single** (`single`)
-- **Bonuses**: +10% Gyro Stabilizers, +5% Servo Motors
+- **Bonuses**: +15% Gyro Stabilizers, +10% Servo Motors (Season 2: was +10% / +5%; mobility identity — fewer weapons, lighter, faster)
 - **Penalties**: None
-- **Best For**: Balanced, flexible builds
+- **Best For**: Balanced, mobile builds
 
 **Note**: Percentage-based bonuses scale proportionally with robot power level, ensuring meaningful choices at all stages of progression.
 
