@@ -720,6 +720,8 @@ model ScheduledTagTeamMatch {
 
 ## KotH System Models
 
+> **Zone radius (Season 2, #522):** KotH matches now live in the unified `scheduled_matches_v2` table. `zone_radius` stays nullable in the schema but is always set (7) for new KotH matches by `kothMatchmakingService`; the data-only migration `20261016121000_backfill_koth_zone_radius` set 7 on KotH rows still `scheduled` with a null radius. The legacy `rotating_zone` column shown below no longer exists; zone rotation was removed in Spec #41.
+
 ### ScheduledKothMatch Model
 
 ```prisma

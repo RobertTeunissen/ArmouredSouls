@@ -2,7 +2,7 @@
 title: "Scoring & Win Conditions"
 description: "Score threshold, time limit, kill bonus, tiebreakers, and the last-standing phase."
 order: 2
-lastUpdated: "2026-03-18"
+lastUpdated: "2026-10-16"
 relatedArticles:
   - king-of-the-hill/zone-control-basics
   - king-of-the-hill/rewards
@@ -21,8 +21,8 @@ Destroying an opponent awards **5 bonus points** to the attacker. Yielding does 
 
 A match ends when any of these conditions is met:
 
-1. **Score Threshold** — A robot reaches 30 points (fixed zone) or 45 points (rotating zone). The match ends immediately.
-2. **Time Limit** — 150 seconds (fixed) or 210 seconds (rotating) elapse. The robot with the highest Zone Score wins.
+1. **Score Threshold** — A robot reaches 30 points. The match ends immediately.
+2. **Time Limit** — 150 seconds elapse. The robot with the highest Zone Score wins.
 3. **Last Standing** — All but one robot are eliminated. A 10-second countdown begins, then the highest scorer wins.
 
 ## Tiebreakers

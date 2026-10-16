@@ -222,7 +222,7 @@ All core combat mechanics apply in KotH: the full attack resolution chain (malfu
 ### What's different in KotH
 - **Target selection**: Zone contesters are prioritized 3× over standard threats. Robots approaching the zone get 2× priority. Threat Analysis scales zone awareness.
 - **Movement AI**: Robots are biased toward the control zone. High Combat Algorithms robots may wait outside for opponents to weaken each other before entering.
-- **Win condition**: First to reach a score threshold (30 points fixed zone, 45 rotating) or highest score at time limit. Last-standing gets a 10-second scoring window.
+- **Win condition**: First to reach the score threshold (30 points) or highest score at the 150-second time limit. Last-standing gets a 10-second scoring window.
 - **Zone scoring**: 1 point per second of uncontested zone occupation, +5 kill bonus.
 - **Anti-passive penalties**: Robots that stay outside the zone too long suffer accuracy and damage reduction penalties.
 - **No ELO changes**: KotH is a standalone mode with placement-based rewards.

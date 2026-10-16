@@ -817,7 +817,7 @@ The battle system is driven by `cycle/cycleScheduler.ts`, which registers 5 inde
   │  │     └─ simulateBattleMulti(robots, kothConfig)          │     │
   │  │     └─ Zone scoring, placement-based rewards, no ELO   │      │
   │  │  3. KotH matchmaking (next Mon/Wed/Fri)                │      │
-  │  │  (Mon/Fri = Fixed Zone, Wed = Rotating Zone)           │      │
+  │  │  (fixed center zone, radius 7)                         │      │
   │  └────────────────────────────────────────────────────────┘      │
   │                                                                  │
   │  20:00    LEAGUE CYCLE                                           │
@@ -902,13 +902,13 @@ KotH plugs into the existing battle simulation architecture via the `GameModeCon
 | `TargetPriorityStrategy` | `KothTargetPriorityStrategy` | Zone contesters 3×, approachers 2×, threat-analysis-scaled weights |
 | `MovementIntentModifier` | `KothMovementIntentModifier` | Zone-biased movement, wait-and-enter tactic |
 | `WinConditionEvaluator` | `KothWinConditionEvaluator` | Score threshold, last standing (10s), time limit, tiebreakers |
-| `ArenaZone` | `createControlZone()` | Center {0,0}, configurable radius [3,8], rotating zone support |
+| `ArenaZone` | `createControlZone()` | Center {0,0}, default radius 7, allowed range [3,8] |
 
 ### New Files
 
 | File | Purpose |
 |---|---|
-| `src/services/arena/kothEngine.ts` | Pure functions + strategy classes: zone scoring, anti-passive mechanics, spawn positions, rotating zone generation, `buildKothGameModeConfig()` |
+| `src/services/arena/kothEngine.ts` | Pure functions + strategy classes: zone scoring, anti-passive mechanics, spawn positions, `buildKothGameModeConfig()` |
 | `src/services/koth/kothMatchmakingService.ts` | ELO-balanced snake-draft group matchmaking, one-per-stable filtering, zone variant by day of week |
 
 ### Extended Files
