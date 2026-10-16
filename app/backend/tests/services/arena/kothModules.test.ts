@@ -12,7 +12,6 @@ import {
   calculateSpawnPositions,
   evaluateZoneOccupation,
   trackZoneTransitions,
-  generateNextZonePosition,
 } from '../../../src/services/arena/koth/kothZone';
 
 import {
@@ -220,36 +219,6 @@ describe('kothZone', () => {
       const types = events.map(e => e.type);
       expect(types).toContain('zone_enter');
       expect(types).toContain('zone_exit');
-    });
-  });
-
-  describe('generateNextZonePosition', () => {
-    it('should be deterministic (same inputs → same output)', () => {
-      const pos1 = generateNextZonePosition(42, 1, { x: 0, y: 0 }, 20, 5);
-      const pos2 = generateNextZonePosition(42, 1, { x: 0, y: 0 }, 20, 5);
-      expect(pos1).toEqual(pos2);
-    });
-
-    it('should produce different positions for different rotation counts', () => {
-      const pos1 = generateNextZonePosition(42, 1, { x: 0, y: 0 }, 20, 5);
-      const pos2 = generateNextZonePosition(42, 2, { x: 0, y: 0 }, 20, 5);
-      expect(pos1).not.toEqual(pos2);
-    });
-
-    it('should stay within arena bounds', () => {
-      fc.assert(
-        fc.property(
-          fc.integer({ min: 1, max: 1000 }),
-          fc.integer({ min: 0, max: 50 }),
-          (matchId, rotation) => {
-            const pos = generateNextZonePosition(matchId, rotation, { x: 0, y: 0 }, 20, 5);
-            const dist = Math.sqrt(pos.x ** 2 + pos.y ** 2);
-            // maxDist = 20 - 6 - 5 = 9; position should be within this
-            expect(dist).toBeLessThanOrEqual(9.01);
-          },
-        ),
-        { numRuns: 100 },
-      );
     });
   });
 });

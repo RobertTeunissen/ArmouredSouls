@@ -78,7 +78,6 @@ function makeZoneState(
     center: { x: cx, y: cy },
     radius,
     isActive: true,
-    rotationCount: 0,
   };
 }
 
@@ -99,14 +98,14 @@ describe('createControlZone', () => {
     expect(zone.center).toEqual({ x: 0, y: 0 });
   });
 
-  it('should use default radius 5 when not specified', () => {
+  it('should use default radius 7 when not specified', () => {
     const zone = createControlZone(baseConfig());
-    expect(zone.radius).toBe(5);
+    expect(zone.radius).toBe(7);
   });
 
   it('should accept a custom radius within [3, 8]', () => {
-    const zone = createControlZone(baseConfig({ zoneRadius: 7 }));
-    expect(zone.radius).toBe(7);
+    const zone = createControlZone(baseConfig({ zoneRadius: 6 }));
+    expect(zone.radius).toBe(6);
   });
 
   it('should clamp radius below 3 to 3', () => {
@@ -1123,7 +1122,7 @@ function makeKothGameState(zoneState?: KothZoneState, scoreState?: KothScoreStat
   return {
     mode: 'zone_control',
     customData: {
-      zoneState: zoneState ?? { center: { x: 0, y: 0 }, radius: 5, isActive: true, rotationCount: 0 },
+      zoneState: zoneState ?? { center: { x: 0, y: 0 }, radius: 5, isActive: true },
       scoreState: scoreState ?? createKothScoreState([]),
     },
   };
@@ -1404,7 +1403,7 @@ function makeMovementGameState(
   return {
     mode: 'zone_control',
     customData: {
-      zoneState: zoneState ?? { center: { x: 0, y: 0 }, radius: 5, isActive: true, rotationCount: 0 },
+      zoneState: zoneState ?? { center: { x: 0, y: 0 }, radius: 5, isActive: true },
       scoreState: scoreState ?? createKothScoreState([]),
       robots,
     },
@@ -1778,49 +1777,6 @@ describe('Elimination edge cases', () => {
   });
 });
 
-// ─── Rotating Zone Imports ──────────────────────────────────────────
-
-import {
-  generateNextZonePosition,
-} from '../src/services/arena/kothEngine';
-import { euclideanDistance } from '../src/services/arena/vector2d';
-
-// ─── Rotating Zone Mechanics ────────────────────────────────────────
-
-describe('generateNextZonePosition', () => {
-  const arenaRadius = KOTH_MATCH_DEFAULTS.arenaRadius; // 24
-  const zoneRadius = KOTH_MATCH_DEFAULTS.zoneRadius;   // 5
-
-  it('should produce position within arena boundary constraints', () => {
-    const pos = generateNextZonePosition(42, 1, { x: 0, y: 0 }, arenaRadius, zoneRadius);
-    const distFromCenter = euclideanDistance(pos, { x: 0, y: 0 });
-    const maxAllowed = arenaRadius - 6 - zoneRadius; // 24 - 6 - 5 = 13
-    expect(distFromCenter).toBeLessThanOrEqual(maxAllowed + 0.001);
-  });
-
-  it('should produce position ≥8 units from previous position', () => {
-    const currentCenter = { x: 5, y: 5 };
-    const pos = generateNextZonePosition(42, 1, currentCenter, arenaRadius, zoneRadius);
-    const distFromPrev = euclideanDistance(pos, currentCenter);
-    expect(distFromPrev).toBeGreaterThanOrEqual(8 - 0.001);
-  });
-
-  it('should be deterministic for same inputs', () => {
-    const pos1 = generateNextZonePosition(99, 3, { x: 2, y: 2 }, arenaRadius, zoneRadius);
-    const pos2 = generateNextZonePosition(99, 3, { x: 2, y: 2 }, arenaRadius, zoneRadius);
-    expect(pos1.x).toBe(pos2.x);
-    expect(pos1.y).toBe(pos2.y);
-  });
-
-  it('should fall back to center after impossible constraints', () => {
-    // Very small arena where constraints can't be met
-    const pos = generateNextZonePosition(1, 1, { x: 0, y: 0 }, 10, 8);
-    expect(pos).toEqual({ x: 0, y: 0 });
-  });
-});
-
-
-
 // ─── Anti-Passive Penalty System Imports ─────────────────────────────
 
 import {
@@ -1975,9 +1931,7 @@ describe('buildKothGameModeConfig', () => {
   });
 
   it('should fall back to the default time limit when none is given', () => {
-    // Covers the default path, as opposed to the explicit timeLimit above. This
-    // case was previously phrased as "when rotatingZone is false"; zone rotation
-    // was abolished by Spec #41, so there is only one zone behaviour left.
+    // Covers the default path, as opposed to the explicit timeLimit above.
     const config: KothMatchConfig = { participantCount: 6, matchId: 1 };
     const result = buildKothGameModeConfig(config);
 

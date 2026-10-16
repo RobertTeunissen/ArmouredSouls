@@ -150,6 +150,8 @@ const DB_DEPENDENT = [
   'tests/integration/mostBattlesAllModes.test.ts',
   // Season 2 — one-off Refinement Lab grant migration
   'tests/integration/refinementLabGrantMigration.test.ts',
+  // Season 2 — one-off KotH zone radius backfill migration (#522)
+  'tests/integration/kothZoneRadiusBackfillMigration.test.ts',
   // Spec #55 — Domain_Service_Extraction (task group 2)
   'src/services/economy/__tests__/facilityUpgradeService.test.ts',
   'src/services/economy/__tests__/weaponPurchaseService.test.ts',
