@@ -54,6 +54,10 @@ Melee-versus-ranged fights move back and forth between ranges:
 
 Both bursts multiply the robot's own speed, so Servo Motors still matters during a burst.
 
+A chasing melee robot heads for where its target will be at the end of the moment, at full speed, until it is within reach. The gap therefore shrinks by exactly the difference in speed. At normal chase speeds every Servo Motors point of difference is worth 0.22 units per second. A committing melee robot is only outrun by a kiter with roughly **1.18 × its Servo Motors + 6.4** or more, and a breaking-away ranged robot only gets caught by a melee robot with roughly 1.18 × the ranged robot's Servo Motors + 6.4 or more.
+
+All robots move at the same time: each one decides from the same picture of the arena, then everyone moves. Which robot is listed first in a match never changes how the robots move.
+
 ## Range Bands
 
 Distance between robots is classified into four range bands:

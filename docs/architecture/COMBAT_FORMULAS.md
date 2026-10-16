@@ -985,6 +985,23 @@ Movement modes (Season 2, #520), first match wins; role = engagement role (see E
   engagementRangeMidpoint = RANGE_BAND_MIDPOINTS[engagement range] (melee 1, short 4.5, mid 9.5, long 16)
   The stance modifier always applies — a defensive robot moves at 0.80 also while pursuing.
   There is no speed-compensation term: the faster robot (Servo Motors) wins the speed race.
+
+Pursuit target (#520 movement fix, movementAI.ts):
+  If role melee AND distance > 2 AND the target's preferred range is not melee:
+    intent target = target.position + target.velocity × tick (0.1 s)   // projected end-of-tick position
+    → the robot moves at its full effective speed; it does not stop at the 1-unit standoff point
+  Else (within reach, or a melee mirror): standoff point RANGE_BAND_MIDPOINTS[range] from the target (unchanged)
+  Deviation, the 1.5 s Combat Algorithms prediction (off within 4 units and in melee mirrors, #467),
+  avoidance/flank bias and stance bias then apply as before.
+  Gap change per second = kiterSpeed − meleeSpeed:
+    1.10× vs 1.10× (pursuit vs kiting, balanced): 0.22 per Servo Motors point of difference
+    melee commit 1.30× vs kiting 1.10×: kiter escapes only if kiterServo ≥ 1.18 × meleeServo + 6.4
+    pursuit 1.10× vs ranged disengage 1.30×: kiter is caught only if meleeServo ≥ 1.18 × kiterServo + 6.4
+  Before the fix the pursuer aimed 1 unit short of the target's current position, so a kiter stepping more
+  than 1 unit per tick (> 10 u/s) ended every tick at a gap of 1 + its step > 2 and could not be reached.
+
+Movement order: the movement phase is simultaneous. All robots decide (target, speed, intent) from the
+same tick-start snapshot, then all moves are applied; robot order has no effect.
 ```
 
 Before Season 2 the pursuit bonus was `1.30 + 0.02 × max(0, opponentSpeed − ownSpeed)` with a 0.95 defensive
@@ -1541,6 +1558,9 @@ Each member robot receives the same ELO delta applied to their individual elo fi
 
 ## Version History
 
+- **Season 2 (#520 movement fix):** simultaneous two-pass movement phase (robot order no longer matters); a melee
+  pursuer outside reach of a non-melee target aims at the target's projected end-of-tick position at full speed
+  instead of stopping 1 unit short of its current position
 - **Season 2 (#520):** engagement cycle — pursuit and kiting both 1.10× (speed-compensation terms removed),
   defensive stance always 0.80 (0.95 closing exception removed), roles from the engagement range of both robots
   (Shock Maul now pursues; an offhand sword no longer matters), melee commit (1.30×, strain-free, after the
