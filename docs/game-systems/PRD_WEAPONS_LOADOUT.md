@@ -87,7 +87,7 @@ The Weapon & Loadout System enables players to purchase weapons, manage inventor
 - ✅ Backend API: POST /api/weapon-inventory/purchase (purchase weapon)
 - ✅ Backend API: GET /api/weapon-inventory (get user's weapon inventory)
 - ✅ Frontend: WeaponShopPage (displays and allows purchasing weapons)
-- ✅ Weapon Workshop discount system (10% per level, up to 100%)
+- ✅ Weapon Workshop discount system (5% per level, up to 50% since Season 2)
 - ✅ Weapon equipping/unequipping functionality (backend + frontend)
 - ✅ Loadout type selection and validation
 - ✅ Weapon slot management (main weapon vs offhand weapon)
@@ -672,24 +672,24 @@ See [PRD_WEAPON_ECONOMY.md](PRD_WEAPON_ECONOMY.md) for complete formula details 
 
 The **Weapons Workshop** facility provides purchase discounts:
 
-**Discount Formula**: Discount % = Weapons Workshop Level × 5
+**Discount Formula**: Discount % = Weapons Workshop Level × 5 (Season 2; shared `calculateWeaponWorkshopDiscount`). Resale stays 10% of `pricePaid` per level. Refinement tiers are gated by the Refinement Lab, not the Workshop.
 
-| Level | Discount | Special Unlock |
-|-------|----------|----------------|
-| 0 | 0% | - |
-| 1-2 | 5-10% | - |
-| 3 | 15% | Weapon modifications |
-| 4-5 | 20-25% | - |
-| 6 | 30% | Custom weapon design |
-| 7-9 | 35-45% | - |
-| 10 | 50% | Legendary weapon crafting |
+| Level | Discount | Resale rate |
+|-------|----------|-------------|
+| 0 | 0% | 0% |
+| 1-2 | 5-10% | 10-20% |
+| 3 | 15% | 30% |
+| 4-5 | 20-25% | 40-50% |
+| 6 | 30% | 60% |
+| 7-9 | 35-45% | 70-90% |
+| 10 | 50% | 100% |
 
-**Operating Cost**: ₡1,000/day at Level 1, +₡500/day per level
+**Operating Cost**: ₡100/day per level
 
 **Example Cost Calculation:**
-- Plasma Cannon base cost: ₡408,000
-- With Workshop Level 5 (50% discount): ₡204,000
-- With Workshop Level 10 (100% discount): ₡0 (free)
+- Plasma Cannon catalogue price: ₡447,000
+- With Workshop Level 5 (25% discount): ₡335,250
+- With Workshop Level 10 (50% discount): ₡223,500
 
 ### Investment Strategy (₡3M Starting Budget)
 
