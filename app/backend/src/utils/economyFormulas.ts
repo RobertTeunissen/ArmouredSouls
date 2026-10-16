@@ -15,6 +15,7 @@ const FACILITY_OPERATING_COSTS: Record<string, (level: number) => number> = {
   repair_bay: (level) => 1000 + (level - 1) * 500,
   training_facility: (level) => 250 * level,
   weapons_workshop: (level) => 100 * level,
+  refinement_lab: (level) => 100 * level,
   roster_expansion: () => 0, // Calculated separately based on actual roster size
   storage_facility: (level) => 500 + (level - 1) * 250,
   booking_office: (level) => 150 * level,
@@ -241,6 +242,7 @@ export function getFacilityName(type: string): string {
     repair_bay: 'Repair Bay',
     training_facility: 'Training Facility',
     weapons_workshop: 'Weapons Workshop',
+    refinement_lab: 'Refinement Lab',
     roster_expansion: 'Roster Expansion',
     storage_facility: 'Storage Facility',
     booking_office: 'Booking Office',

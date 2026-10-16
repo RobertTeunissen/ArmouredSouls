@@ -23,7 +23,10 @@ import type { UnlockedAchievement, WeaponInventoryItem } from './types';
 
 interface InventoryTabProps {
   inventory: WeaponInventoryItem[];
+  /** Weapons Workshop level: drives the resale rate. */
   workshopLevel: number;
+  /** Refinement Lab level: gates the refinement tiers. */
+  refinementLabLevel: number;
   userCurrency: number;
   onSellComplete: (result: { salePrice: number; weaponName: string }) => void;
   onRefineComplete: (result: {
@@ -53,6 +56,7 @@ function partitionInventory(items: WeaponInventoryItem[]): PartitionResult {
 export function InventoryTab({
   inventory,
   workshopLevel,
+  refinementLabLevel,
   userCurrency,
   onSellComplete,
   onRefineComplete,
@@ -92,7 +96,7 @@ export function InventoryTab({
         key={item.id}
         item={item}
         resaleRate={resaleRate}
-        workshopLevel={workshopLevel}
+        refinementLabLevel={refinementLabLevel}
         variant={variant}
         onClickSell={variant === 'available' ? () => setPendingSale(item) : () => { /* disabled */ }}
         onClickRefine={() => setPendingRefine(item)}
@@ -156,6 +160,7 @@ export function InventoryTab({
       {pendingRefine && (
         <RefinementModal
           inventoryItem={pendingRefine}
+          refinementLabLevel={refinementLabLevel}
           workshopLevel={workshopLevel}
           userCurrency={userCurrency}
           onCancel={() => setPendingRefine(null)}

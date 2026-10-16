@@ -15,6 +15,7 @@ const FACILITY_DISPLAY_NAMES: Record<string, string> = {
   repair_bay: 'Repair Bay',
   training_facility: 'Training Facility',
   weapons_workshop: 'Weapons Workshop',
+  refinement_lab: 'Refinement Lab',
   roster_expansion: 'Roster Expansion',
   storage_facility: 'Storage Facility',
   booking_office: 'Booking Office',

@@ -62,7 +62,7 @@ function buysText(type: GoalType, facilityType: FacilityType | undefined, isMax:
     case 'weapons':
       return 'Each robot\'s weapons up to the target stage, plus room in storage';
     case 'refine':
-      return 'Refinement plan steps of every robot up to the target, plus the Weapons Workshop level each step needs';
+      return 'Refinement plan steps of every robot up to the target, plus the Refinement Lab level each step needs';
     case 'facility': {
       const label = facilityType ? facilityLabel(facilityType) : 'Facility';
       return facilityType === 'booking_office'

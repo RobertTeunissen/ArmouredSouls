@@ -6,15 +6,15 @@
 export const FACILITY_CATEGORIES = [
   {
     id: 'economy',
-    name: 'Economy & Discounts',
+    name: 'Economy',
     icon: '💰',
-    facilityTypes: ['repair_bay', 'training_facility', 'weapons_workshop', 'merchandising_hub', 'streaming_studio'],
+    facilityTypes: ['repair_bay', 'training_facility', 'merchandising_hub', 'streaming_studio'],
   },
   {
     id: 'capacity',
-    name: 'Capacity & Storage',
+    name: 'Hangar & Armory',
     icon: '📦',
-    facilityTypes: ['roster_expansion', 'storage_facility'],
+    facilityTypes: ['roster_expansion', 'storage_facility', 'weapons_workshop', 'refinement_lab'],
   },
   {
     id: 'training',

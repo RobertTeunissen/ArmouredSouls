@@ -169,7 +169,7 @@ async function executeRefinement(
       magnitude: result.magnitude,
       targetAttribute: targetAttribute ?? null,
       costPaid: result.cost,
-      workshopLevel: result.workshopLevel,
+      refinementLabLevel: result.refinementLabLevel,
     },
   });
 }

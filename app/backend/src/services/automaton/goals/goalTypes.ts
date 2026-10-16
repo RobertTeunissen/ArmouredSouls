@@ -11,7 +11,7 @@
  * inventory items and the purchases; stage steps add `unequip` and
  * `loadout_change` so a loadout change never meets an incompatible equipped
  * weapon (`changeLoadoutType` refuses that); `weapon_refinement` names the
- * inventory item and carries the Weapons Workshop levels of its Goal_Chain.
+ * inventory item and carries the Refinement Lab levels of its Goal_Chain.
  */
 import type { StrategyParametersV1 } from '../../../types/automaton';
 import type { RefinementStep } from '../../../types/automaton';
@@ -90,7 +90,7 @@ export type PlannedAction =
     robotSlot: number;
     inventoryId: number;
     step: RefinementStep;
-    /** Weapons Workshop levels the step's tier needs, bought first (Goal_Chain, R5.4). */
+    /** Refinement Lab levels the step's tier needs, bought first (Goal_Chain, R5.4). */
     chain: FacilityLevelStep[];
     /** Refinement price alone (the outcome's cost adds the chain). */
     refinementCost: number;

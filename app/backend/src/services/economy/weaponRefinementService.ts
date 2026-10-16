@@ -12,7 +12,7 @@
  * incrementing `weapon_inventory.price_paid` by the same amount so resale at
  * any future Workshop level recovers a fraction of the spend.
  *
- * Tier gating (Workshop level): hone L1, augment L3, sharpen L5, forge L8.
+ * Tier gating (Refinement Lab level): hone L1, augment L3, sharpen L5, forge L8.
  *
  * Two-tier locking (matches the resale handler's order): `lockUserForSpending`
  * first, then `SELECT ... FOR UPDATE` on `weapon_inventory`.
@@ -24,7 +24,7 @@
  *    `getRefinementMagnitudeRange(tier)` → WEAPON_REFINEMENT_MAGNITUDE_OUT_OF_RANGE;
  *    hone/augment without a `ROBOT_ATTRIBUTES` target, or sharpen/forge with a
  *    target → WEAPON_REFINEMENT_INVALID_TARGET_ATTRIBUTE
- *  - Tier locked vs Workshop level → WEAPON_REFINEMENT_TIER_LOCKED
+ *  - Tier locked vs Refinement Lab level → WEAPON_REFINEMENT_TIER_LOCKED
  *  - Slot cap (≥ 5) / per-tier cap (Sharpen, Forge ≥ 2) → SLOT_/TIER_CAP_EXCEEDED
  *  - Shield + Sharpen/Forge → SHIELD_CANNOT_TAKE_DPS_TIER
  *  - (hone/augment) target attribute on/off the weapon → ATTRIBUTE_NOT_/ALREADY_ON_WEAPON
@@ -44,7 +44,7 @@ import {
   validateAttributeStackCap,
   validateAttributeOnWeapon,
   validateShieldCompatibility,
-  REQUIRED_WORKSHOP_LEVELS,
+  REQUIRED_REFINEMENT_LAB_LEVELS,
   type RefinementTier,
 } from '../../shared/utils/weaponRefinement';
 import { isRobotAttribute, type RobotAttribute } from '../../shared/utils/robotAttributes';
@@ -62,11 +62,11 @@ import { buildPurchaseBreakdown } from '../financial/financialBreakdowns';
 import type { PurchaseServiceOptions } from './purchaseOptions';
 
 /**
- * Workshop level required per refinement tier (shared with the frontend).
+ * Refinement Lab level required per refinement tier (shared with the frontend).
  * Re-exported so the Automaton planner (Spec #55, R5.4) prices the same gate
  * the service enforces.
  */
-export { REQUIRED_WORKSHOP_LEVELS };
+export { REQUIRED_REFINEMENT_LAB_LEVELS };
 
 export interface RefinementRequest {
   tier: RefinementTier;
@@ -98,7 +98,7 @@ export type WeaponRefinementResult =
     message: string;
     weapon: Weapon;
     refinement: WeaponRefinement;
-    workshopLevel: number;
+    refinementLabLevel: number;
     /** Magnitude as stored (1 for sharpen/forge). */
     magnitude: number;
     targetAttribute: string | null;
@@ -115,7 +115,7 @@ function getCatalogBonus(weapon: Weapon, attribute: string): number {
 }
 
 function isRefinementTier(value: unknown): value is RefinementTier {
-  return typeof value === 'string' && Object.prototype.hasOwnProperty.call(REQUIRED_WORKSHOP_LEVELS, value);
+  return typeof value === 'string' && Object.prototype.hasOwnProperty.call(REQUIRED_REFINEMENT_LAB_LEVELS, value);
 }
 
 /**
@@ -244,24 +244,24 @@ export async function refineWeapon(
     }
 
     // 5. Fetch dependencies inside the transaction.
-    const [weapon, refinements, workshop] = await Promise.all([
+    const [weapon, refinements, refinementLab] = await Promise.all([
       tx.weapon.findUniqueOrThrow({ where: { id: weaponInv.weaponId } }),
       tx.weaponRefinement.findMany({ where: { weaponInventoryId: inventoryId } }),
       tx.facility.findUnique({
-        where: { userId_facilityType: { userId, facilityType: 'weapons_workshop' } },
+        where: { userId_facilityType: { userId, facilityType: 'refinement_lab' } },
         select: { level: true },
       }),
     ]);
-    const workshopLevel = workshop?.level ?? 0;
+    const refinementLabLevel = refinementLab?.level ?? 0;
 
-    // 6. Tier gating (Workshop-only, no separate prestige gates).
-    const requiredWorkshopLevel = REQUIRED_WORKSHOP_LEVELS[tier];
-    if (workshopLevel < requiredWorkshopLevel) {
+    // 6. Tier gating (Refinement Lab only, no separate prestige gates).
+    const requiredRefinementLabLevel = REQUIRED_REFINEMENT_LAB_LEVELS[tier];
+    if (refinementLabLevel < requiredRefinementLabLevel) {
       throw new EconomyError(
         EconomyErrorCode.WEAPON_REFINEMENT_TIER_LOCKED,
-        `Weapons Workshop level ${requiredWorkshopLevel} required to ${tier}.`,
+        `Refinement Lab level ${requiredRefinementLabLevel} required to ${tier}.`,
         403,
-        { requiredWorkshopLevel, currentWorkshopLevel: workshopLevel },
+        { requiredRefinementLabLevel, currentRefinementLabLevel: refinementLabLevel },
       );
     }
 
@@ -411,7 +411,7 @@ export async function refineWeapon(
         inputs: [
           { name: 'tier', value: tier, unit: 'refinement_tier', source: 'request' },
           { name: 'magnitude', value: magnitudeForStorage, unit: 'points', source: 'request' },
-          { name: 'workshopLevel', value: workshopLevel, unit: 'levels', source: 'facility' },
+          { name: 'refinementLabLevel', value: refinementLabLevel, unit: 'levels', source: 'facility' },
           { name: 'slotIndex', value: slotIndex, unit: 'slot', source: 'weapon_inventory' },
         ],
       }),
@@ -425,7 +425,7 @@ export async function refineWeapon(
       weaponInventory: updatedInventory,
       newRefinement,
       cost,
-      workshopLevel,
+      refinementLabLevel,
       previousBalance: lockedUser.currency,
     };
   });
@@ -461,7 +461,7 @@ export async function refineWeapon(
       magnitude: magnitudeForStorage,
       targetAttribute: targetAttribute ?? null,
       costPaid: result.cost,
-      workshopLevel: result.workshopLevel,
+      refinementLabLevel: result.refinementLabLevel,
     });
 
     const attrInfo = targetAttribute ? ` (${targetAttribute} +${magnitudeForStorage})` : '';
@@ -469,7 +469,7 @@ export async function refineWeapon(
       `[Refine] User ${userId} | Weapon: ${result.weapon.name} (inv ${result.weaponInventory.id}) | ` +
       `Tier: ${tier}${attrInfo} | ` +
       `Cost: ₡${result.cost.toLocaleString()} | ` +
-      `Workshop L${result.workshopLevel} | ` +
+      `Refinement Lab L${result.refinementLabLevel} | ` +
       `Slot: ${result.newRefinement.slotIndex}/5 | ` +
       `Balance: ₡${result.previousBalance.toLocaleString()} → ₡${result.currency.toLocaleString()}`,
     );
@@ -486,7 +486,7 @@ export async function refineWeapon(
     message: `Refined ${result.weapon.name}: ${tier}${messageAttr}`,
     weapon: result.weapon,
     refinement: result.newRefinement,
-    workshopLevel: result.workshopLevel,
+    refinementLabLevel: result.refinementLabLevel,
     magnitude: magnitudeForStorage,
     targetAttribute: targetAttribute ?? null,
   };

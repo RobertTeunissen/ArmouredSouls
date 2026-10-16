@@ -11,6 +11,7 @@ interface FacilityIconProps {
 const EMOJI_FALLBACKS: Record<string, string> = {
   training_facility: '🏋️',
   weapons_workshop: '🔧',
+  refinement_lab: '⚗️',
   repair_bay: '🔩',
   merchandising_hub: '💰',
   streaming_studio: '📺',

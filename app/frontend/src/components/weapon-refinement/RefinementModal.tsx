@@ -35,7 +35,7 @@ import {
   validateAttributeStackCap,
   validateRefinementSlotAvailable,
   validateShieldCompatibility,
-  REQUIRED_WORKSHOP_LEVELS,
+  REQUIRED_REFINEMENT_LAB_LEVELS,
   type RefinementRow,
   type RefinementTier,
 } from '../../../../shared/utils/weaponRefinement';
@@ -54,9 +54,6 @@ import {
 } from './refinementCopy';
 
 // ── Constants ────────────────────────────────────────────────────────
-
-/** Workshop level required per tier — the shared gate the backend enforces. */
-const TIER_WORKSHOP_REQUIREMENT: Readonly<Record<RefinementTier, number>> = REQUIRED_WORKSHOP_LEVELS;
 
 /** Brief one-line description for each tier, shown on the tier card. */
 const TIER_DESCRIPTION: Record<RefinementTier, string> = {
@@ -77,6 +74,9 @@ const TIER_COLOR_CLASSES: Record<RefinementTier, { bg: string; border: string; t
 
 interface RefinementModalProps {
   inventoryItem: WeaponInventoryItem;
+  /** Refinement Lab level: gates the tiers (the same shared gate the backend enforces). */
+  refinementLabLevel: number;
+  /** Weapons Workshop level: only drives the resale-recovery note. */
   workshopLevel: number;
   userCurrency: number;
   onCancel: () => void;
@@ -123,7 +123,7 @@ interface TierCardProps {
 function TierCard({ tier, selected, disabled, disabledReason, onSelect }: TierCardProps) {
   const visual = TIER_VISUALS[tier];
   const colors = TIER_COLOR_CLASSES[tier];
-  const required = TIER_WORKSHOP_REQUIREMENT[tier];
+  const required = REQUIRED_REFINEMENT_LAB_LEVELS[tier];
 
   return (
     <button
@@ -158,6 +158,7 @@ function TierCard({ tier, selected, disabled, disabledReason, onSelect }: TierCa
 
 export function RefinementModal({
   inventoryItem,
+  refinementLabLevel,
   workshopLevel,
   userCurrency,
   onCancel,
@@ -175,14 +176,14 @@ export function RefinementModal({
 
   const tierLockReason = useCallback((tier: RefinementTier): string | null => {
     if (slotsFull) return '5 / 5 slots filled.';
-    if (workshopLevel < TIER_WORKSHOP_REQUIREMENT[tier]) {
-      return `Requires Weapons Workshop L${TIER_WORKSHOP_REQUIREMENT[tier]} (you are L${workshopLevel}).`;
+    if (refinementLabLevel < REQUIRED_REFINEMENT_LAB_LEVELS[tier]) {
+      return `Requires Refinement Lab L${REQUIRED_REFINEMENT_LAB_LEVELS[tier]} (you are L${refinementLabLevel}).`;
     }
     if (tier === 'sharpen' && sharpenCount >= 2) return 'Sharpen already at the per-weapon cap of 2.';
     if (tier === 'forge' && forgeCount >= 2) return 'Forge already at the per-weapon cap of 2.';
     if (isShield && (tier === 'sharpen' || tier === 'forge')) return 'Shields cannot be Sharpened or Forged.';
     return null;
-  }, [slotsFull, workshopLevel, sharpenCount, forgeCount, isShield]);
+  }, [slotsFull, refinementLabLevel, sharpenCount, forgeCount, isShield]);
 
   // ── Selection state ────────────────────────────────────────────────
 
@@ -325,12 +326,12 @@ export function RefinementModal({
       let message = 'Refinement failed. Please try again.';
       if (err instanceof ApiError) {
         message = err.message || message;
-        const details = err.details as { attribute?: string; currentTotal?: number; requestedAddition?: number; requiredWorkshopLevel?: number; currentWorkshopLevel?: number } | undefined;
+        const details = err.details as { attribute?: string; currentTotal?: number; requestedAddition?: number; requiredRefinementLabLevel?: number; currentRefinementLabLevel?: number } | undefined;
         if (err.code === 'WEAPON_REFINEMENT_ATTRIBUTE_STACK_CAP_EXCEEDED' && details?.attribute) {
           const attr = formatAttributeName(details.attribute);
           message = `${attr} is already at +${details.currentTotal ?? '?'}. +${details.requestedAddition ?? '?'} would push past the +10 cap.`;
-        } else if (err.code === 'WEAPON_REFINEMENT_TIER_LOCKED' && details?.requiredWorkshopLevel !== undefined) {
-          message = `Requires Weapons Workshop L${details.requiredWorkshopLevel} (you are L${details.currentWorkshopLevel ?? '?'}).`;
+        } else if (err.code === 'WEAPON_REFINEMENT_TIER_LOCKED' && details?.requiredRefinementLabLevel !== undefined) {
+          message = `Requires Refinement Lab L${details.requiredRefinementLabLevel} (you are L${details.currentRefinementLabLevel ?? '?'}).`;
         }
       }
       setError(message);
@@ -368,7 +369,7 @@ export function RefinementModal({
             </p>
           )}
           <div className="mt-3">
-            <SlotBar refinements={inventoryItem.refinements} workshopLevel={workshopLevel} />
+            <SlotBar refinements={inventoryItem.refinements} refinementLabLevel={refinementLabLevel} />
           </div>
         </div>
 

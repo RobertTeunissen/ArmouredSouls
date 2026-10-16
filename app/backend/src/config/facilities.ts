@@ -1,4 +1,4 @@
-// Facility configuration for Phase 1 prototype - All 16 facilities
+// Facility configuration - all 14 facilities
 export interface FacilityConfig {
   type: string;
   name: string;
@@ -99,6 +99,29 @@ export const FACILITY_TYPES: FacilityConfig[] = [
     ],
     implemented: true,
     prestigeRequirements: PRESTIGE_GATES_10, // L4: 1000, L5: 3000, L6: 5000, L7: 10000, L8: 15000, L9: 25000, L10: 50000
+  },
+  {
+    // Season 2: takes over the refinement tier gates from the Weapons Workshop
+    // (REQUIRED_REFINEMENT_LAB_LEVELS in app/shared/utils/weaponRefinement.ts).
+    type: 'refinement_lab',
+    name: 'Refinement Lab',
+    description: 'Unlocks weapon refinement tiers (Hone, Augment, Sharpen, Forge)',
+    maxLevel: 10,
+    costs: [75000, 150000, 225000, 300000, 375000, 450000, 525000, 600000, 675000, 750000],
+    benefits: [
+      'Unlocks Hone · next: Augment at L3',
+      'Hone available · next: Augment at L3',
+      'Unlocks Augment · Hone and Augment available · next: Sharpen at L5',
+      'Hone and Augment available · next: Sharpen at L5',
+      'Unlocks Sharpen · Hone, Augment and Sharpen available · next: Forge at L8',
+      'Hone, Augment and Sharpen available · next: Forge at L8',
+      'Hone, Augment and Sharpen available · next: Forge at L8',
+      'Unlocks Forge (all tiers available)',
+      'All tiers available',
+      'All tiers available (maximum)',
+    ],
+    implemented: true,
+    prestigeRequirements: PRESTIGE_GATES_10,
   },
 
   {

@@ -30,7 +30,8 @@ import type { WeaponInventoryItem } from './types';
 interface InventoryRowProps {
   item: WeaponInventoryItem;
   resaleRate: number;
-  workshopLevel: number;
+  /** Refinement Lab level, shown as the slot bar's lock state. */
+  refinementLabLevel: number;
   variant: 'available' | 'equipped';
   onClickSell: () => void;
   onClickRefine: () => void;
@@ -55,7 +56,7 @@ function getEquippedInfo(item: WeaponInventoryItem): EquippedInfo {
 export function InventoryRow({
   item,
   resaleRate,
-  workshopLevel,
+  refinementLabLevel,
   variant,
   onClickSell,
   onClickRefine,
@@ -120,7 +121,7 @@ export function InventoryRow({
 
         {/* Refinement slot bar (Spec #34) */}
         <div className="mt-2">
-          <SlotBar refinements={item.refinements} workshopLevel={workshopLevel} compact />
+          <SlotBar refinements={item.refinements} refinementLabLevel={refinementLabLevel} compact />
         </div>
 
         {/* Equipped-on details */}

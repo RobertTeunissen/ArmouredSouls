@@ -54,14 +54,14 @@ interface WeaponSlotProps {
   onUnequip: () => void;
   disabled?: boolean;
   /**
-   * Optional: the player's current Weapons Workshop level. Threaded through to
+   * Optional: the player's current Refinement Lab level. Threaded through to
    * the SlotBar so locked-tier tooltips render correctly. Defaults to 0 (every
    * empty slot rendered as "available unless used") when not provided.
    */
-  workshopLevel?: number;
+  refinementLabLevel?: number;
 }
 
-function WeaponSlot({ label, weapon, onEquip, onUnequip, disabled, workshopLevel = 0 }: WeaponSlotProps) {
+function WeaponSlot({ label, weapon, onEquip, onUnequip, disabled, refinementLabLevel = 0 }: WeaponSlotProps) {
   const [imageError, setImageError] = useState(false);
 
   const getTypeColor = (type: string) => {
@@ -156,7 +156,7 @@ function WeaponSlot({ label, weapon, onEquip, onUnequip, disabled, workshopLevel
           {weapon.refinements && (
             <div className="mb-2 flex items-center gap-2">
               <span className="text-xs text-secondary uppercase tracking-wide">Refinements:</span>
-              <SlotBar refinements={refinements} workshopLevel={workshopLevel} compact />
+              <SlotBar refinements={refinements} refinementLabLevel={refinementLabLevel} compact />
             </div>
           )}
 

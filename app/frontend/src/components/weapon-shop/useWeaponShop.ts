@@ -28,6 +28,7 @@ export function useWeaponShop() {
   const [ownedWeapons, setOwnedWeapons] = useState<Map<number, number>>(new Map());
   const [equippedWeaponsCount, setEquippedWeaponsCount] = useState(0);
   const [weaponWorkshopLevel, setWeaponWorkshopLevel] = useState(0);
+  const [refinementLabLevel, setRefinementLabLevel] = useState(0);
   const [storageStatus, setStorageStatus] = useState<StorageStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -116,11 +117,14 @@ export function useWeaponShop() {
         setOwnedWeapons(ownedMap);
         setEquippedWeaponsCount(equippedCount);
 
-        // Fetch facilities to get Weapon Workshop level
+        // Fetch facilities: the Weapons Workshop drives discount and resale,
+        // the Refinement Lab gates the refinement tiers.
         const facData = await api.get<{ facilities?: WeaponFacility[] } | WeaponFacility[]>('/api/facilities');
         const facilities = Array.isArray(facData) ? facData : (facData.facilities ?? []);
         const weaponWorkshop = facilities.find((f: WeaponFacility) => f.type === 'weapons_workshop');
         setWeaponWorkshopLevel(weaponWorkshop?.currentLevel || 0);
+        const refinementLab = facilities.find((f: WeaponFacility) => f.type === 'refinement_lab');
+        setRefinementLabLevel(refinementLab?.currentLevel || 0);
 
         // Fetch storage status
         const storage = await api.get<StorageStatus>('/api/weapon-inventory/storage-status');
@@ -527,6 +531,7 @@ export function useWeaponShop() {
     ownedBreakdownByWeaponId,
     equippedWeaponsCount,
     weaponWorkshopLevel,
+    refinementLabLevel,
     storageStatus,
     loading,
     error,

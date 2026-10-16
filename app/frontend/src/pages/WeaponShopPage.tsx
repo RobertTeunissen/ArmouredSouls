@@ -38,6 +38,7 @@ function WeaponShopPage() {
     ownedBreakdownByWeaponId,
     equippedWeaponsCount,
     weaponWorkshopLevel,
+    refinementLabLevel,
     storageStatus,
     loading,
     error,
@@ -194,6 +195,7 @@ function WeaponShopPage() {
             <InventoryTab
               inventory={inventory}
               workshopLevel={weaponWorkshopLevel}
+              refinementLabLevel={refinementLabLevel}
               userCurrency={user?.currency ?? 0}
               onSellComplete={async (result) => {
                 setSaleSuccessMessage(`Sold ${result.weaponName} for ₡${result.salePrice.toLocaleString()}`);

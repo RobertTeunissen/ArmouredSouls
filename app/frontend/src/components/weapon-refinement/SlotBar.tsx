@@ -4,7 +4,7 @@
  * Renders a row of five slot boxes that map to the `slotIndex` 1..5 of every
  * `WeaponRefinement` row. Filled slots show a tier glyph + tier color; empty
  * slots show either a lock icon (when the player can't even Hone yet — i.e.
- * Workshop level < 1) or a faded empty box. Filled slots are clickable and
+ * Refinement Lab level < 1) or a faded empty box. Filled slots are clickable and
  * fire `onSlotClick(slotIndex)` if a handler is provided.
  *
  * Used everywhere a weapon is displayed: My Inventory tab, equipped slot on
@@ -20,14 +20,15 @@
  */
 
 import type { WeaponRefinementItem } from '../weapon-shop/types';
-import type { RefinementTier } from '../../../../shared/utils/weaponRefinement';
+import { REQUIRED_REFINEMENT_LAB_LEVELS, type RefinementTier } from '../../../../shared/utils/weaponRefinement';
 import { TIER_VISUALS } from './tierVisuals';
 import { formatAttributeName } from './attributeFormat';
 import { SHARPEN_EFFECT_LABEL, FORGE_EFFECT_LABEL } from './refinementCopy';
 
 interface SlotBarProps {
   refinements: WeaponRefinementItem[];
-  workshopLevel: number;
+  /** The player's Refinement Lab level; it gates which tiers are available. */
+  refinementLabLevel: number;
   /** Compact size for tight surfaces (robot detail equipped slot). */
   compact?: boolean;
   /** Fired when the player clicks a filled slot (e.g. to open the history popover). */
@@ -35,14 +36,6 @@ interface SlotBarProps {
 }
 
 // ── Constants ────────────────────────────────────────────────────────
-
-/** Workshop level required to use each tier. Mirrors design.md key decision #3. */
-const TIER_WORKSHOP_REQUIREMENT: Record<RefinementTier, number> = {
-  hone: 1,
-  augment: 3,
-  sharpen: 5,
-  forge: 8,
-};
 
 /**
  * Map the design-system color name from `TIER_VISUALS[tier].color` to the
@@ -76,14 +69,14 @@ function describeRefinement(r: WeaponRefinementItem): string {
   }
 }
 
-/** Build the hover-tooltip text for a workshop-locked empty slot. */
-function describeNextLockedTier(workshopLevel: number): string {
+/** Build the hover-tooltip text for a lab-locked empty slot. */
+function describeNextLockedTier(refinementLabLevel: number): string {
   // Find the lowest tier the player has not yet unlocked.
   const tiers: RefinementTier[] = ['hone', 'augment', 'sharpen', 'forge'];
   for (const tier of tiers) {
-    if (workshopLevel < TIER_WORKSHOP_REQUIREMENT[tier]) {
-      const required = TIER_WORKSHOP_REQUIREMENT[tier];
-      return `${TIER_VISUALS[tier].label} unlocks at Weapons Workshop L${required} (current L${workshopLevel}).`;
+    const required = REQUIRED_REFINEMENT_LAB_LEVELS[tier];
+    if (refinementLabLevel < required) {
+      return `${TIER_VISUALS[tier].label} unlocks at Refinement Lab L${required} (current L${refinementLabLevel}).`;
     }
   }
   return 'Empty refinement slot.';
@@ -217,7 +210,7 @@ function SlotBox({ size, className, title, ariaLabel, clickable, onClick, childr
 
 // ── Component ────────────────────────────────────────────────────────
 
-export function SlotBar({ refinements, workshopLevel, compact = false, onSlotClick }: SlotBarProps) {
+export function SlotBar({ refinements, refinementLabLevel, compact = false, onSlotClick }: SlotBarProps) {
   const slotSize = compact ? 18 : 26;
   const glyphSize = compact ? 12 : 16;
 
@@ -225,11 +218,11 @@ export function SlotBar({ refinements, workshopLevel, compact = false, onSlotCli
   const bySlot = new Map<number, WeaponRefinementItem>();
   for (const r of refinements) bySlot.set(r.slotIndex, r);
 
-  // The only "empty slot is workshop-locked" case is when the player can't
-  // even Hone (workshopLevel < 1). Once Hone is available, every empty slot
+  // The only "empty slot is lab-locked" case is when the player can't
+  // even Hone (refinementLabLevel < 1). Once Hone is available, every empty slot
   // is fillable — Augment/Sharpen/Forge unlocks just expand the choice set.
-  const emptyLocked = workshopLevel < TIER_WORKSHOP_REQUIREMENT.hone;
-  const lockTooltip = describeNextLockedTier(workshopLevel);
+  const emptyLocked = refinementLabLevel < REQUIRED_REFINEMENT_LAB_LEVELS.hone;
+  const lockTooltip = describeNextLockedTier(refinementLabLevel);
 
   return (
     <div

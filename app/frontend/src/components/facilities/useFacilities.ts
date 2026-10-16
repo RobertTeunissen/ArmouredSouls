@@ -181,6 +181,7 @@ export function useFacilities() {
       repair_bay: 'Repair Bay',
       training_facility: 'Training Facility',
       weapons_workshop: 'Weapons Workshop',
+      refinement_lab: 'Refinement Lab',
     };
     return names[type] || type;
   };

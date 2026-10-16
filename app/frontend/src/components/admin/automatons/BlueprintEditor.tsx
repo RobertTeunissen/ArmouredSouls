@@ -21,7 +21,7 @@ import type {
   Stance,
   WeaponStage,
 } from '../../../utils/automatonAdminApi';
-import { REQUIRED_WORKSHOP_LEVELS } from '@shared/utils/weaponRefinement';
+import { REQUIRED_REFINEMENT_LAB_LEVELS } from '@shared/utils/weaponRefinement';
 import { ROBOT_ATTRIBUTES } from '@shared/utils/robotAttributes';
 import { canEquipToSlot } from '@shared/utils/weaponSlots';
 import { formatAttributeName } from '../../weapon-refinement/attributeFormat';
@@ -329,7 +329,7 @@ export function BlueprintEditor({ item, weapons, buildFocusOptions, expanded, er
                         <span>{stepTargetText(step)}</span>
                       )}
                       <span>{formatCredits(stepCosts[index])}</span>
-                      <span className="text-secondary">needs Workshop L{REQUIRED_WORKSHOP_LEVELS[step.tier]}</span>
+                      <span className="text-secondary">needs Refinement Lab L{REQUIRED_REFINEMENT_LAB_LEVELS[step.tier]}</span>
                       <span className="ml-auto flex shrink-0 gap-1">
                         <IconButton label={`Move up: ${label}`} disabled={index === 0} onClick={() => moveStep(index, -1)}>▲</IconButton>
                         <IconButton label={`Move down: ${label}`} disabled={index === f.refinementPlan.length - 1} onClick={() => moveStep(index, 1)}>▼</IconButton>

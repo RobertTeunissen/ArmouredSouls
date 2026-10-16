@@ -7,17 +7,17 @@ import type { CategoryInfo } from './types';
 export const FACILITY_CATEGORIES: CategoryInfo[] = [
   {
     id: 'economy',
-    name: 'Economy & Discounts',
+    name: 'Economy',
     icon: '💰',
     description: 'Reduce operational costs and unlock passive income',
-    facilityTypes: ['training_facility', 'weapons_workshop', 'repair_bay', 'merchandising_hub', 'streaming_studio']
+    facilityTypes: ['training_facility', 'repair_bay', 'merchandising_hub', 'streaming_studio']
   },
   {
     id: 'capacity',
-    name: 'Capacity & Storage',
+    name: 'Hangar & Armory',
     icon: '📦',
-    description: 'Expand stable capacity for robots and weapons',
-    facilityTypes: ['roster_expansion', 'storage_facility']
+    description: 'Robot slots, weapon storage, weapon purchasing and weapon refinement',
+    facilityTypes: ['roster_expansion', 'storage_facility', 'weapons_workshop', 'refinement_lab']
   },
   {
     id: 'training',

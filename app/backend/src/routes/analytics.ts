@@ -79,7 +79,7 @@ async function requireUserExists(userId: number): Promise<void> {
 const VALID_PROGRESSION_METRICS = ['elo', 'fame', 'damageDealt', 'damageReceived', 'wins', 'losses', 'creditsEarned'];
 const VALID_METRIC_NAMES = ['elo', 'fame', 'damageDealt', 'damageReceived', 'wins', 'losses', 'draws', 'kills', 'creditsEarned'];
 const VALID_FACILITY_TYPES = [
-  'repair_bay', 'training_facility', 'weapons_workshop', 'streaming_studio',
+  'repair_bay', 'training_facility', 'weapons_workshop', 'refinement_lab', 'streaming_studio',
   'roster_expansion', 'storage_facility',
   'booking_office', 'combat_training_academy',
   'defense_training_academy', 'mobility_training_academy', 'ai_training_academy',

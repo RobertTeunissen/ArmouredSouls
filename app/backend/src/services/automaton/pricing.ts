@@ -7,7 +7,7 @@
  * stays the authority and re-validates every charge.
  */
 import { getFacilityUpgradeRequirement } from '../economy/facilityUpgradeService';
-import { REQUIRED_WORKSHOP_LEVELS, refinementMagnitudeForStorage } from '../economy/weaponRefinementService';
+import { REQUIRED_REFINEMENT_LAB_LEVELS, refinementMagnitudeForStorage } from '../economy/weaponRefinementService';
 import { ROBOT_CREATION_COST } from '../robot/robotCreationService';
 import {
   applyDiscount,
@@ -97,7 +97,7 @@ export function refinementStepCost(tier: RefinementTier, magnitude: number, exis
   return calculateRefinementCost(tier, refinementMagnitudeForStorage(tier, magnitude), existingInstancesOfTier);
 }
 
-/** Weapons Workshop level a refinement tier needs (Hone L1, Augment L3, Sharpen L5, Forge L8). */
-export function workshopLevelForTier(tier: RefinementTier): number {
-  return REQUIRED_WORKSHOP_LEVELS[tier];
+/** Refinement Lab level a refinement tier needs (Hone L1, Augment L3, Sharpen L5, Forge L8). */
+export function refinementLabLevelForTier(tier: RefinementTier): number {
+  return REQUIRED_REFINEMENT_LAB_LEVELS[tier];
 }

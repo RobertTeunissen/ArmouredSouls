@@ -37,6 +37,7 @@ export const AUTOMATON_FACILITY_TYPES = [
   'repair_bay',
   'training_facility',
   'weapons_workshop',
+  'refinement_lab',
   'roster_expansion',
   'storage_facility',
   'booking_office',
