@@ -2,8 +2,8 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: v2.4\
-**Last Updated**: October 15, 2026  
+**Version**: v2.5\
+**Last Updated**: October 16, 2026  
 **Status**: ✅ Implemented  
 **Owner**: Robert Teunissen  
 **Epic**: Battle System — Simulation & Orchestration
@@ -15,7 +15,8 @@ v2.0 (Apr 2, 2026): Added Practice Arena (5th consumer), KotH integration, HP/Sh
 v2.1 (Apr 10, 2026): Added proper versioning, fixed stale CYCLE_PROCESS.md reference  
 v2.2 (Oct 15, 2026): #517 — Combat Preparation Contract (raw vs prepared input per API, canonical loadout-adjusted attributes, idempotency, HP handling per entry point)  
 v2.3 (Oct 15, 2026): #518 — Weapon reach invariant (per-hand reach check before attack resolution, `performAttack()` guard, blocked-attempt contract; patience no longer forces attacks)\
-v2.4 (Oct 15, 2026): #536 — Battle-time entry gate (forfeit, last place, single-weapon fallback) and the simulator's `ROBOT_NOT_BATTLE_READY` invariant
+v2.4 (Oct 15, 2026): #536 — Battle-time entry gate (forfeit, last place, single-weapon fallback) and the simulator's `ROBOT_NOT_BATTLE_READY` invariant\
+v2.5 (Oct 16, 2026): Season 2 #520 — engagement cycle in the movement phase (roles from engagement range, melee commit, ranged disengage, wall slide), `AttackOutcome` return of `performAttack()`, patience resets only on a landed hit
 
 ---
 
@@ -396,11 +397,22 @@ weapon whose `rangeBand` is `melee` (melee, energy melee such as Shock Maul, shi
 its actual target; other bands reach any distance and only take the range penalty. It is enforced twice: the
 per-hand gates in `simulationLoop.ts` (`canAttack`, including the n > 2 target-of-opportunity search, which
 validates each candidate against its own distance) and a guard at the top of `performAttack()`
-(`isWithinWeaponReach`, real positions), which returns `false` for a blocked attempt. A blocked attempt draws
-no random numbers, emits no attack or counter event, deals no damage, and leaves the hand's cooldown and the
-patience timer untouched; only the main hand emits one `out_of_range` message per streak. Seeded replays
-therefore stay deterministic. Counter reach
-(`counterAttack.ts`) is unchanged.
+(`isWithinWeaponReach`, real positions), which returns `'blocked'` for a blocked attempt (`performAttack()`
+returns `AttackOutcome` = `'blocked' | 'missed' | 'hit'`). A blocked attempt draws no random numbers, emits no
+attack or counter event, deals no damage, and leaves the hand's cooldown and the patience timer untouched; only
+the main hand emits one `out_of_range` message per streak. Seeded replays therefore stay deterministic. Counter
+reach (`counterAttack.ts`) is unchanged.
+
+**Movement phase and engagement cycle (#520).** Before attacks, each robot's movement step derives both robots'
+engagement roles from `getEngagementRange()` (melee band → melee role, else ranged), updates the ranged disengage
+state (`updateDisengage`), picks the active speed burst (`ranged_disengage`, else `melee_commit` once a melee robot
+has gone a patience window without a landed hit and is beyond reach, else none) and calls
+`calculateEffectiveSpeed(servoState, opponentRole)`: burst 1.30×, pursuit 1.10×, mutual-melee final approach 1.15×,
+kiting 1.10× (all strain-free) or strain-reduced normal speed; the stance modifier always applies. `applyMovement()`
+then slides robots along the arena wall instead of stopping at it. In the attack phase a hand consumes its cooldown
+on any non-blocked outcome, patience resets only on `'hit'`, and a melee-band hit (attack or counter) records
+`lastMeleeHitTakenAt` on the robot that took it. Formulas: `COMBAT_FORMULAS.md` (Movement_Speed, Engagement_Cycle,
+Wall_Slide, Patience_Timer).
 
 ### Key Constants
 

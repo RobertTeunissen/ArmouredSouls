@@ -21,6 +21,7 @@ Positioning is not just about distance — the **angle** of attack matters too. 
 The combat arena is a circular space. Robots spawn at opposite positions and move toward their preferred engagement range based on their weapon loadout and AI decisions.
 
 - Robots cannot move outside the arena boundary
+- A robot that backs into the wall **slides along it** at its normal speed instead of getting stuck, so retreating to the edge no longer pins a robot in place
 - The arena edge matters for **Formation Tactics** — robots within 3 grid units of the boundary receive a wall-bracing damage reduction bonus
 
 ## Movement Speed
@@ -33,13 +34,25 @@ Movement speed is primarily determined by **Servo Motors**:
 
 Movement speed is also modified by:
 
-- **Stance** — Offensive and Defensive stances modify movement speed
+- **Stance** — Offensive and Defensive stances modify movement speed, always (a defensive robot is also slower while chasing)
 - **Servo strain** — Sustained movement at high speed causes strain, temporarily reducing effective speed. Robots need brief pauses to recover.
-- **Closing bonus** — Melee robots moving toward a ranged opponent get a speed boost to help close the gap
+- **Pursuit and kiting** — A melee robot chasing a ranged opponent moves **10% faster**, and a ranged robot backing away from a melee opponent inside its preferred range also moves **10% faster**. Neither causes servo strain. There is no catch-up bonus for the slower robot: whoever has more Servo Motors wins the speed race.
+- **Speed bursts** — A melee robot that can't land a hit for too long **commits** and a ranged robot that gets hit in melee **breaks away**; both move **30% faster** for a while (see **Chasing and Escaping** below)
+
+Whether a robot counts as melee or ranged depends on the range it actually wants to fight at, not on its weapon type. An energy melee weapon such as the Shock Maul chases like any melee weapon, and a long-range rifle with a sword in the other hand still fights as a ranged robot.
 
 ```callout-tip
-Servo Motors is the key attribute for controlling engagement distance. A fast robot with a sniper can kite a slow melee robot, staying at long range where the sniper deals 1.1× damage while the melee robot can't attack at all. Conversely, a fast melee robot can close the gap and force close-range combat where Hydraulic Systems dominates.
+Servo Motors is the key attribute for controlling engagement distance. A fast ranged robot can keep a slower melee robot at bay for a while, but not forever: the melee robot eventually commits and closes in. A fast melee robot closes the gap on its own and forces close-range combat where Hydraulic Systems dominates.
 ```
+
+## Chasing and Escaping
+
+Melee-versus-ranged fights move back and forth between ranges:
+
+- **Melee commit** — If a melee robot hasn't landed a hit within its **patience window** (about 15 seconds, down to 10 seconds with high Combat Algorithms) while chasing a ranged robot, it commits: it moves **30% faster**, without servo strain, until it is within reach.
+- **Ranged disengage** — The first time a ranged robot is hit by a melee weapon in an engagement, it gets an escape burst: **30% faster**, without servo strain, for **2 seconds + 0.04 seconds per Evasion Thrusters point** (3 seconds at 25, 4 seconds at 50). After the burst it needs one patience window before it can break away again, so the melee robot always gets at least one exchange.
+
+Both bursts multiply the robot's own speed, so Servo Motors still matters during a burst.
 
 ## Range Bands
 
@@ -148,9 +161,9 @@ This rewards defensive builds that fight with their back to the wall rather than
 
 ## Patience Timer
 
-The **patience timer** tracks how long your robot has gone without attacking. Its limit gets **shorter** as Combat Algorithms rises: about 15 seconds at the lowest level, down to 10 seconds at level 50.
+The **patience timer** tracks how long your robot has gone without **landing a hit**. Misses don't reset it. Its limit gets **shorter** as Combat Algorithms rises: about 15 seconds at the lowest level, down to 10 seconds at level 50.
 
-The patience limit currently has **no direct battle effect**. Combat Algorithms' movement benefit comes from tighter pathing: the higher it is, the less your robot drifts off its ideal path toward its preferred range.
+The patience limit drives the chase: a melee robot that reaches it commits to a faster pursuit, and a ranged robot waits one patience window between escape bursts (see **Chasing and Escaping** above). Combat Algorithms also tightens pathing: the higher it is, the less your robot drifts off its ideal path toward its preferred range.
 
 Reaching the limit never lets a weapon hit beyond its reach, and it does not trigger an attack on its own:
 

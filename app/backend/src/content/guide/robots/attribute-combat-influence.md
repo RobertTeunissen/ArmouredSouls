@@ -137,7 +137,7 @@ Defensive Systems determine how much punishment your robot can absorb:
 
 - **Armor Plating** provides percentage-based damage reduction on every hit that reaches your hull
 - **Energy Shield Capacity** creates a separate HP buffer that absorbs damage before your hull takes any — and shields regenerate during battle
-- **Evasion Thrusters** gives a chance to dodge attacks entirely, taking zero damage
+- **Evasion Thrusters** gives a chance to dodge attacks entirely, taking zero damage. For ranged robots it also lengthens the escape burst after the first melee hit (2 seconds + 0.04 seconds per point)
 - **Damage Dampeners** reduces all incoming damage by a flat percentage and also softens critical hit spikes
 - **Counter Protocols** turns defense into offense — when your robot is attacked (hit or miss), it has a chance to immediately strike back
 
@@ -146,7 +146,7 @@ Defensive Systems determine how much punishment your robot can absorb:
 All five Chassis & Mobility attributes are active in combat:
 
 - **Hull Integrity** directly determines your maximum HP
-- **Servo Motors** controls movement speed in the 2D arena — faster robots can close distance to reach melee range or kite to maintain long-range advantage
+- **Servo Motors** controls movement speed in the 2D arena — faster robots can close distance to reach melee range or kite to maintain long-range advantage. Chasing and kiting get the same +10% with no catch-up bonus, so Servo Motors decides the speed race
 - **Gyro Stabilizers** has a triple role: reduces the opponent's hit chance, increases turn speed (harder to backstab), and reduces backstab/flanking damage bonuses
 - **Hydraulic Systems** provides a proximity-scaled damage bonus — significant at melee range (up to +75% at level 50), moderate at short range (up to +50%), and no effect at mid/long range
 - **Power Core** drives energy shield regeneration during battle
@@ -159,7 +159,7 @@ Hydraulic Systems is a strong attribute for melee builds. At level 50 in melee r
 
 All four AI Processing attributes actively influence combat:
 
-- **Combat Algorithms** improves hit chance (bonus when algorithm score > 0.5) and movement quality — higher levels take more direct paths toward the preferred range. It never lets a weapon attack beyond its reach
+- **Combat Algorithms** improves hit chance (bonus when algorithm score > 0.5) and movement quality — higher levels take more direct paths toward the preferred range. It also shortens the patience window, so a melee robot that can't land a hit commits to a faster chase sooner and a ranged robot can break away again sooner. It never lets a weapon attack beyond its reach
 - **Threat Analysis** enhances facing/turning speed with predictive bias. At high levels (25+), your robot anticipates opponents moving behind it and turns faster. Also reduces backstab and flanking damage taken. In multi-robot battles (KotH), Threat Analysis scales the effectiveness of zone-aware target priority weights.
 - **Target Stickiness**: Robots commit to their chosen target for 1.5 seconds before reconsidering. This prevents wasted time switching between similarly-threatening opponents and ensures attacks are completed. The lock breaks immediately if the target is destroyed or yields.
 - **Adaptive AI** accumulates hit and damage bonuses throughout the battle as your robot misses or takes damage. Higher values mean faster adaptation. Bonuses are halved when HP > 70% to prevent snowballing.
