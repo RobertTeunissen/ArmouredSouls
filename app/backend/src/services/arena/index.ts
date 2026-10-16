@@ -75,3 +75,6 @@ export { checkSyncVolley, getSupportShieldBoost, getFormationDefenseBonus } from
 
 // Hydraulic bonus
 export { calculateHydraulicBonus } from './hydraulicBonus';
+
+// Logic Cores bonus
+export { calculateLogicCoresBonus } from './logicCoresBonus';

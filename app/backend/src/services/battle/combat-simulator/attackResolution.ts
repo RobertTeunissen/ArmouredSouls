@@ -98,6 +98,7 @@ export function performAttack(
     rangeBand: RangeBand;
     rangePenaltyMult: number;
     hydraulicMult: number;
+    logicCoresMult: number;
     backstabBonus: number;
     adaptationHit: number;
     adaptationDmg: number;
@@ -179,6 +180,7 @@ export function performAttack(
       {
         rangePenalty: spatialContext.rangePenaltyMult,
         hydraulicBonus: spatialContext.hydraulicMult,
+        logicCoresBonus: spatialContext.logicCoresMult,
         backstabBonus: spatialContext.backstabBonus,
         adaptationDamageBonus: spatialContext.adaptationDmg,
         pressureDamageMod: spatialContext.pressureDamage,
@@ -353,8 +355,8 @@ export function performAttack(
   const counterWeaponInfo = getWeaponInfo(defenderState.robot, counterResult.hand);
 
   const { damage: counterBaseDamage, breakdown: counterDamageBreakdown } = calculateBaseDamage(defenderState.robot, counterWeaponInfo.baseDamage, counterResult.hand);
-  // Apply 70% counter multiplier, range penalty, and hydraulic bonus
-  const counterDamage = counterBaseDamage * 0.7 * counterResult.rangePenaltyMultiplier * counterResult.hydraulicMultiplier;
+  // Apply 70% counter multiplier, range penalty, hydraulic bonus and Logic Cores bonus
+  const counterDamage = counterBaseDamage * 0.7 * counterResult.rangePenaltyMultiplier * counterResult.hydraulicMultiplier * counterResult.logicCoresMultiplier;
 
   const { hitChance: counterHitChance, breakdown: counterHitBreakdown } = calculateHitChance(defenderState.robot, attackerState.robot, counterResult.hand);
   const counterHitRoll = random(0, 100);
@@ -387,13 +389,14 @@ export function performAttack(
       counter: true,
       message: `🔄 ${defenderName} counters for ${(counterHP + counterShield).toFixed(0)} damage with ${counterWeaponInfo.name}!`,
       formulaBreakdown: {
-        calculation: `Counter trigger: ${counterBreakdown.calculation} (rolled ${counterRoll.toFixed(1)}, result: COUNTER)\nCounter hit: ${counterHitBreakdown.calculation} (rolled ${counterHitRoll.toFixed(1)}, result: HIT)\nCounter damage: ${counterDamageBreakdown.calculation} × 0.70 × ${counterResult.rangePenaltyMultiplier.toFixed(2)} range × ${counterResult.hydraulicMultiplier.toFixed(2)} hydraulic = ${counterDamage.toFixed(1)}\n${counterApplyBreakdown.calculation}`,
+        calculation: `Counter trigger: ${counterBreakdown.calculation} (rolled ${counterRoll.toFixed(1)}, result: COUNTER)\nCounter hit: ${counterHitBreakdown.calculation} (rolled ${counterHitRoll.toFixed(1)}, result: HIT)\nCounter damage: ${counterDamageBreakdown.calculation} × 0.70 × ${counterResult.rangePenaltyMultiplier.toFixed(2)} range × ${counterResult.hydraulicMultiplier.toFixed(2)} hydraulic × ${counterResult.logicCoresMultiplier.toFixed(2)} logic = ${counterDamage.toFixed(1)}\n${counterApplyBreakdown.calculation}`,
         components: {
           counterChance, counterRoll, counterHitChance, counterHitRoll,
           counterHitChanceBase: counterHitBreakdown.components.hitChanceBase ?? counterHitChance,
           counterBase: counterDamage,
           counterRangePenalty: counterResult.rangePenaltyMultiplier,
           counterHydraulic: counterResult.hydraulicMultiplier,
+          counterLogicCores: counterResult.logicCoresMultiplier,
           ...counterApplyBreakdown.components,
         },
         result: counterHP + counterShield,

@@ -5,6 +5,7 @@
 import { euclideanDistance, angleBetween } from '../../arena/vector2d';
 import { classifyRangeBand, getRangePenalty, getWeaponOptimalRange } from '../../arena/rangeBands';
 import { calculateHydraulicBonus } from '../../arena/hydraulicBonus';
+import { calculateLogicCoresBonus } from '../../arena/logicCoresBonus';
 import { checkBackstab } from '../../arena/positionTracker';
 import { getEffectiveAdaptation } from '../../arena/adaptationTracker';
 import { calculatePressureEffects } from '../../arena/pressureSystem';
@@ -122,6 +123,7 @@ export function buildSpatialContext(
   rangeBand: RangeBand;
   rangePenaltyMult: number;
   hydraulicMult: number;
+  logicCoresMult: number;
   backstabBonus: number;
   adaptationHit: number;
   adaptationDmg: number;
@@ -144,6 +146,7 @@ export function buildSpatialContext(
   const optimalRange = getWeaponOptimalRange(weaponLike);
   const rangePenaltyMult = getRangePenalty(optimalRange, rangeBand);
   const hydraulicMult = calculateHydraulicBonus(attacker.numHydraulicSystems, rangeBand);
+  const logicCoresMult = calculateLogicCoresBonus(attacker.numLogicCores, rangeBand);
 
   const backstabResult = checkBackstab(
     { position: attacker.position, facingDirection: attacker.facingDirection, gyroStabilizers: attacker.numGyroStabilizers, threatAnalysis: attacker.numThreatAnalysis },
@@ -184,6 +187,7 @@ export function buildSpatialContext(
     rangeBand,
     rangePenaltyMult,
     hydraulicMult,
+    logicCoresMult,
     backstabBonus: backstabResult.bonus,
     adaptationHit: adaptation.hitBonus,
     adaptationDmg: adaptation.damageBonus,
