@@ -1163,7 +1163,7 @@ const FacilityIcon: React.FC<FacilityIconProps> = ({ facilityType, alt, classNam
 
 ## Appendix A: Complete Facility List with Details
 
-### Economy & Discounts (Category 1)
+### Economy (Category 1)
 
 #### Training Facility (✅ Implemented)
 - **Type**: `training_facility`
@@ -1173,14 +1173,6 @@ const FacilityIcon: React.FC<FacilityIconProps> = ({ facilityType, alt, classNam
 - **Strategic Value**: Essential for a concentrated roster; **worthless at 10 robot slots**, where the rate is 0% per level. Sits on the same concentration axis as the Merchandising Hub and pulls against Roster Expansion
 - **Display**: The page shows the player's *actual* discount computed against their own Roster_Capacity, not the best-case figure from the static benefit strings
 - **Implementation Status**: Fully implemented, discount applies to robot attribute upgrade costs
-
-#### Weapons Workshop (✅ Implemented)
-- **Type**: `weapons_workshop`
-- **Max Level**: 10
-- **Cost Range**: ₡250K - ₡4M (total: ₡15.05M)
-- **Benefits**: 10% - 100% discount on weapon purchases
-- **Strategic Value**: Essential - Critical for economy-focused players, saves credits on weapon acquisitions
-- **Implementation Status**: Fully implemented, discount applies at weapon shop
 
 #### Repair Bay (✅ Implemented)
 - **Type**: `repair_bay`
@@ -1208,7 +1200,7 @@ const FacilityIcon: React.FC<FacilityIconProps> = ({ facilityType, alt, classNam
 - **Strategic Value**: Important - Provides passive income to supplement battle earnings
 - **Implementation Status**: Fully implemented, provides daily passive income from merchandising
 
-### Capacity & Storage (Category 2)
+### Hangar & Armory (Category 2)
 
 #### Roster Expansion (✅ Implemented)
 - **Type**: `roster_expansion`
@@ -1225,6 +1217,22 @@ const FacilityIcon: React.FC<FacilityIconProps> = ({ facilityType, alt, classNam
 - **Benefits**: 10 - 55 weapon storage capacity (5 base + facility levels)
 - **Strategic Value**: Important - Enables weapon collection and loadout flexibility
 - **Implementation Status**: Fully implemented, increases weapon inventory capacity
+
+#### Weapons Workshop (✅ Implemented)
+- **Type**: `weapons_workshop`
+- **Max Level**: 10
+- **Cost Range**: ₡75K - ₡750K (total: ₡4.125M)
+- **Benefits**: 5% - 50% discount on weapon purchases (5% per level) · 10% - 100% resale rate on the price paid
+- **Strategic Value**: Essential - Saves credits on weapon acquisitions and supports trading up through resale
+- **Implementation Status**: Fully implemented, discount applies at weapon shop, resale rate applies when selling. No longer gates refinement (Season 2)
+
+#### Refinement Lab (✅ Implemented — Season 2)
+- **Type**: `refinement_lab`
+- **Max Level**: 10
+- **Cost Range**: ₡75K - ₡750K (total: ₡4.125M)
+- **Benefits**: Unlocks the weapon refinement tiers: Hone L1, Augment L3, Sharpen L5, Forge L8 (L9–L10 unlock nothing further)
+- **Strategic Value**: Required for weapon refinement
+- **Implementation Status**: Fully implemented, gates refinement tiers. Existing stables received it once at their Weapons Workshop level (migration `20261016120000_grant_refinement_lab`)
 
 ### Training Academies (Category 3)
 

@@ -135,7 +135,7 @@ Configurable 0–50% HP threshold where the robot surrenders instead of fighting
 
 Players manage a stable of 1–10 robots (expandable via Roster Expansion facility). Each robot competes independently in leagues and earns its own fame.
 
-### 13 Facilities
+### 14 Facilities
 
 Stable-wide upgrades with 10 levels each (except Roster Expansion: 9 levels):
 
@@ -143,7 +143,8 @@ Stable-wide upgrades with 10 levels each (except Roster Expansion: 9 levels):
 |---|---|
 | Repair Bay | Reduces repair costs |
 | Training Facility | Reduces attribute upgrade costs |
-| Weapons Workshop | Weapon purchase discounts |
+| Weapons Workshop | Weapon purchase discounts and resale rate |
+| Refinement Lab | Unlocks weapon refinement tiers (Season 2) |
 | Roster Expansion | Robot slots (1 → 10) |
 | Storage Facility | Weapon storage capacity |
 | Booking Office | Event subscription access |

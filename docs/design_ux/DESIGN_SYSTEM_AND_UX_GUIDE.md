@@ -1691,7 +1691,7 @@ weapon-practice-sword-full.webp
 
 ### Facility Asset Specifications
 
-**13 Facilities** (based on STABLE_SYSTEM.md):
+**14 Facilities** (based on STABLE_SYSTEM.md):
 1. **Repair Bay** - Repair cost discounts
 2. **Training Facility** - Attribute upgrade discounts
 3. **Weapons Workshop** - Weapon purchase discounts
@@ -1705,6 +1705,7 @@ weapon-practice-sword-full.webp
 11. **Merchandising Hub** - Passive income (scales with prestige)
 12. **Streaming Studio** - Streaming revenue multiplier
 13. **Tuning Bay** - Bonus attribute tuning points
+14. **Refinement Lab** - Weapon refinement tier gates (Season 2)
 
 **Technical Specs**:
 - Format: WEBP
