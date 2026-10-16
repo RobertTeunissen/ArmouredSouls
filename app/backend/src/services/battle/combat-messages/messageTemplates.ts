@@ -447,19 +447,6 @@ export const kothPassivePenaltyAccuracyMessages = [
   '📉🎯 Severe penalty: {robotName} loses 15% accuracy for prolonged zone avoidance!',
 ];
 
-// ── KotH Zone Moving/Active Messages (Rotating Variant) ───────────────
-export const kothZoneMovingMessages = [
-  '🔄 The control zone is moving in {countdown} seconds!',
-  '🔄 Warning: Zone relocation imminent — {countdown} seconds!',
-  '🔄 The zone is about to shift — prepare to reposition in {countdown}s!',
-];
-
-export const kothZoneActiveMessages = [
-  '🔄✨ The control zone has moved to a new position!',
-  '🔄✨ Zone relocated — the fight shifts to a new area!',
-  '🔄✨ New zone active — robots must adapt to the new position!',
-];
-
 // ── KotH Last Standing Messages ───────────────────────────────────────
 export const kothLastStandingMessages = [
   '🏆 {robotName} is the last robot standing — 10 seconds to score!',

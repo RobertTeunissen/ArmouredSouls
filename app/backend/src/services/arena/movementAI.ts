@@ -30,7 +30,6 @@ import {
 import { getWeaponOptimalRange, WeaponLike } from './rangeBands';
 import { BattleError, BattleErrorCode } from '../../errors/battleErrors';
 import { clampToArena } from './arenaLayout';
-import { SIMULATION_TICK } from '../battle/combat-simulator/combatTypes';
 
 /** Extended weapon shape with DPS fields needed for range preference */
 interface WeaponWithDPS extends WeaponLike {
@@ -267,12 +266,16 @@ function deterministicDeviation(
  * - 0.3–0.6: direct_path (±15° deviation)
  * - > 0.6: calculated_path (no deviation, prediction + threat awareness)
  *
+ * `deltaTime` is the tick length in seconds; pursuit uses it to project the
+ * target's end-of-tick position.
+ *
  * Req 5.1–5.6, 10.1–10.10
  */
 export function calculateMovementIntent(
   state: RobotCombatState,
   opponents: RobotCombatState[],
   arena: ArenaConfig,
+  deltaTime: number,
   movementModifier?: MovementIntentModifier,
   gameState?: GameModeState,
 ): MovementIntent {
@@ -325,8 +328,8 @@ export function calculateMovementIntent(
   const isPursuing = isMeleeOutOfRange && !targetPrefersMelee;
   let targetPos = isPursuing
     ? {
-        x: target.position.x + target.velocity.x * SIMULATION_TICK,
-        y: target.position.y + target.velocity.y * SIMULATION_TICK,
+        x: target.position.x + target.velocity.x * deltaTime,
+        y: target.position.y + target.velocity.y * deltaTime,
       }
     : calculateOptimalRangePosition(
         state.position,

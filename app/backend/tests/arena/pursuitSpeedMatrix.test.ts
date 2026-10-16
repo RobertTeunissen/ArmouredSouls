@@ -95,7 +95,7 @@ function chase(meleeServo: number, kiterServo: number, meleeMode: MeleeMode, kit
     kiterSpeed = speedOf(kiterServo, 'ranged', kiterMode === 'disengage', gap);
     melee.effectiveMovementSpeed = meleeSpeed;
     kiter.effectiveMovementSpeed = kiterSpeed;
-    const intent = calculateMovementIntent(melee, [kiter], ARENA);
+    const intent = calculateMovementIntent(melee, [kiter], ARENA, SIMULATION_TICK);
     const meleeNext = applyMovement(melee, intent, ARENA, SIMULATION_TICK, kiter.position);
     const kiterNext = { x: kiter.position.x + kiterSpeed * SIMULATION_TICK, y: 0 };
 

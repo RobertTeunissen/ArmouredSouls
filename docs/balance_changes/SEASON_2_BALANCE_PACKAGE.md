@@ -179,7 +179,8 @@ implementations in the comparison modal and the ROI/recommendation services now 
 - **Backfill migration** `20261016121000_backfill_koth_zone_radius` (one-off, idempotent): sets radius 7 on KotH
   matches that are still `scheduled` and have no radius.
 - **Rotating-zone removal**: all leftovers of the variant abolished in Spec #41 (`generateNextZonePosition`, zone
-  transition fields and defaults, `zone_moving`/`zone_active` events, playback transition rendering, the "fixed and
+  transition fields and defaults, `zone_moving`/`zone_active` events and their combat message templates and
+  generators, playback transition rendering, the "fixed and
   rotating zone variants" guide text) were verified unreachable and removed. No gameplay change: every match already
   used the fixed centre zone.
 

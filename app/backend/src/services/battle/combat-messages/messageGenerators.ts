@@ -284,14 +284,6 @@ export function generateKothPassivePenalty(robotName: string, damageReduction: n
   return interpolate(selectRandom(T.kothPassivePenaltyDamageMessages), { robotName, penalty });
 }
 
-export function generateKothZoneMoving(countdown: number): string {
-  return interpolate(selectRandom(T.kothZoneMovingMessages), { countdown });
-}
-
-export function generateKothZoneActive(): string {
-  return selectRandom(T.kothZoneActiveMessages);
-}
-
 export function generateKothLastStanding(robotName: string): string {
   return interpolate(selectRandom(T.kothLastStandingMessages), { robotName });
 }

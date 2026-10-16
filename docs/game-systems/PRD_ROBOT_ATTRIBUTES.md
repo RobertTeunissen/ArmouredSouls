@@ -807,7 +807,7 @@ In King of the Hill (KotH) free-for-all zone-control matches, several attributes
 
 ### Servo Motors — Zone Approach Speed
 
-Higher servo motors = faster zone approach, critical for zone control. Robots with low servo motors struggle to contest the zone after respawning at the arena edge or repositioning after a zone rotation (Wednesday rotating variant). In KotH, the difference between reaching the zone first and arriving second can determine uncontested scoring windows.
+Higher servo motors = faster zone approach, critical for zone control. Robots with low servo motors struggle to reach the fixed centre zone (radius 7) from their spawn at the arena edge, and to return to it after leaving it. In KotH, the difference between reaching the zone first and arriving second can determine uncontested scoring windows.
 
 ### Threat Analysis — Zone-Aware Targeting Weights
 

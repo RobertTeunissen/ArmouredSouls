@@ -46,8 +46,6 @@ import {
   generateKothEliminated as _generateKothEliminated,
   generateKothPassiveWarning as _generateKothPassiveWarning,
   generateKothPassivePenalty as _generateKothPassivePenalty,
-  generateKothZoneMoving as _generateKothZoneMoving,
-  generateKothZoneActive as _generateKothZoneActive,
   generateKothLastStanding as _generateKothLastStanding,
   generateKothMatchEnd as _generateKothMatchEnd,
 
@@ -269,14 +267,6 @@ export class CombatMessageGenerator {
 
   static generateKothPassivePenalty(robotName: string, damageReduction: number, accuracyPenalty: number): string {
     return _generateKothPassivePenalty(robotName, damageReduction, accuracyPenalty);
-  }
-
-  static generateKothZoneMoving(countdown: number): string {
-    return _generateKothZoneMoving(countdown);
-  }
-
-  static generateKothZoneActive(): string {
-    return _generateKothZoneActive();
   }
 
   static generateKothLastStanding(robotName: string): string {

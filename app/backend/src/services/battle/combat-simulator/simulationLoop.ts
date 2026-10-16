@@ -416,7 +416,7 @@ export function simulateBattleMulti(
     for (const plan of movers) {
       const { state, opponents, target } = plan;
       let intent = calculateMovementIntent(
-        state, opponents, arena, gameModeConfig?.movementModifier, gameModeState,
+        state, opponents, arena, SIMULATION_TICK, gameModeConfig?.movementModifier, gameModeState,
       );
 
       // Enforce team separation: push apart from teammates to prevent clumping

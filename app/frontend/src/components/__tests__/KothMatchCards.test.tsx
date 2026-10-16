@@ -54,7 +54,6 @@ function makeKothBattle(overrides: Partial<BattleHistory> = {}): BattleHistory {
     kothPlacement: 1,
     kothParticipantCount: 6,
     kothZoneScore: 32.5,
-    kothRotatingZone: false,
     ...overrides,
   } as BattleHistory;
 }

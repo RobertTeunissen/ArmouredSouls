@@ -8,6 +8,7 @@ import {
 import { euclideanDistance, Position } from '../../src/services/arena/vector2d';
 import { ArenaConfig, MovementIntent, RobotCombatState, RangeBand } from '../../src/services/arena/types';
 import { BattleErrorCode } from '../../src/errors/battleErrors';
+import { SIMULATION_TICK } from '../../src/services/battle/combat-simulator/combatTypes';
 
 /**
  * Property-based tests for movementAI module.
@@ -426,6 +427,7 @@ describe('movementAI property tests', () => {
         meleeState,
         [movingMeleeOpponent],
         makeArena(16),
+        SIMULATION_TICK,
       );
 
       expect(intent.preferredRange).toBe('melee');
@@ -463,6 +465,7 @@ describe('movementAI property tests', () => {
         meleeState,
         [inRangeMeleeOpponent],
         makeArena(16),
+        SIMULATION_TICK,
       );
 
       expect(euclideanDistance(intent.targetPosition, inRangeMeleeOpponent.position))
@@ -517,7 +520,7 @@ describe('movementAI property tests', () => {
               velocity: { x: speed * direction, y: 0 }, // purely tangential
             });
 
-            const intent = calculateMovementIntent(robot, [opponent], makeArena(16));
+            const intent = calculateMovementIntent(robot, [opponent], makeArena(16), SIMULATION_TICK);
 
             expect(intent.preferredRange).toBe('melee');
             expect(headingErrorDeg(robot.position, intent.targetPosition, opponent.position)).toBeLessThan(5);
@@ -540,7 +543,7 @@ describe('movementAI property tests', () => {
         velocity: { x: 12, y: 0 },
       });
 
-      const intent = calculateMovementIntent(robot, [rangedOpponent], makeArena(16));
+      const intent = calculateMovementIntent(robot, [rangedOpponent], makeArena(16), SIMULATION_TICK);
 
       expect(intent.preferredRange).toBe('melee');
       expect(headingErrorDeg(robot.position, intent.targetPosition, rangedOpponent.position)).toBeGreaterThan(20);

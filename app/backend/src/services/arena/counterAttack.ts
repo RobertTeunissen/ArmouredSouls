@@ -70,7 +70,7 @@ export function resolveCounter(
   const mainWeapon = defender.robot.mainWeapon?.weapon as WeaponLike | undefined;
   const offhandWeapon = defender.robot.offhandWeapon?.weapon as WeaponLike | undefined;
   const hydraulicSystems = Number(defender.robot.hydraulicSystems ?? 0);
-  const logicCores = Number(defender.robot.logicCores);
+  const logicCores = Number(defender.robot.logicCores ?? 1);
 
   if (!mainWeapon) {
     throw new BattleError(BattleErrorCode.ROBOT_NOT_BATTLE_READY, 'Defender has no main weapon', 500, { robotId: defender.robot.id });
