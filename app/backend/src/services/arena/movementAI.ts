@@ -97,7 +97,7 @@ export function getPreferredRange(state: RobotCombatState): RangeBand {
     const mainWeight = totalDPS > 0 ? mainDPS / totalDPS : 0.5;
 
     // Dynamic adjustment for high combat algorithm score (Req 10.5)
-    // is applied in calculateMovementIntent via getPreferredRangeWithDynamic
+    // is applied in calculateMovementIntent via getEngagementRange
     // where opponent state is available.
 
     return mainWeight >= 0.5 ? mainRange : offhandRange;
@@ -108,10 +108,11 @@ export function getPreferredRange(state: RobotCombatState): RangeBand {
 }
 
 /**
- * Compute DPS-weighted preferred range with dynamic adjustment based on
- * opponent shield state. Used internally by calculateMovementIntent.
+ * Engagement range: the DPS-weighted preferred range with dynamic adjustment
+ * based on opponent shield state. Drives movement intent and, since #520, the
+ * robot's engagement role (`getEngagementRole`) and kiting midpoint.
  */
-function getPreferredRangeWithDynamic(
+export function getEngagementRange(
   state: RobotCombatState,
   opponent: RobotCombatState | null,
 ): RangeBand {
@@ -154,7 +155,9 @@ function getPreferredRangeWithDynamic(
  * Range: 10s (score=1.0) to 15s (score=0.0) — a higher score shortens the wait.
  *
  * Not used to gate attacks since #518: patience never lets a weapon attack beyond
- * its physical reach. Kept for tests and for a future movement/targeting role (#520).
+ * its physical reach. Since #520 it drives the engagement cycle: a melee robot that
+ * has not landed a hit within this window commits (melee commit burst), and it is
+ * the cooldown after a ranged robot's disengage burst. Patience resets on a landed hit.
  *
  * Req 5.7
  */
@@ -301,7 +304,7 @@ export function calculateMovementIntent(
     return intent;
   }
 
-  const preferredRange = getPreferredRangeWithDynamic(state, target);
+  const preferredRange = getEngagementRange(state, target);
   const currentDistToTarget = euclideanDistance(state.position, target.position);
   const isMelee = preferredRange === 'melee';
   const isMeleeOutOfRange = isMelee && currentDistToTarget > 2;
@@ -428,14 +431,13 @@ export function calculateMovementIntent(
   // Stance bias (Req 10.6, 10.7)
   const stance = state.robot.stance ?? 'balanced';
   if (stance === 'defensive') {
-    // Bias toward maintaining current distance — but NOT when a melee robot
-    // is outside its weapon range. A defensive melee robot still needs to
-    // close to melee range (≤2 units) to attack at all.
+    // Bias toward maintaining current distance — but NOT when a melee-role robot
+    // (engagement range melee, #520) is outside its weapon range. A defensive
+    // melee robot still needs to close to melee range (≤2 units) to attack at all.
     const currentDist = euclideanDistance(state.position, target.position);
     const targetDist = euclideanDistance(targetPos, target.position);
-    const hasMeleeWeapon = state.robot.mainWeapon?.weapon?.weaponType === 'melee';
     const outsideMeleeRange = currentDist > 2;
-    if (targetDist < currentDist && !(hasMeleeWeapon && outsideMeleeRange)) {
+    if (targetDist < currentDist && !(isMelee && outsideMeleeRange)) {
       // Reduce closing tendency (only when already in weapon range or ranged)
       targetPos = lerp(targetPos, state.position, 0.3);
     }
@@ -461,11 +463,25 @@ export function calculateMovementIntent(
 
 // ─── Movement Application ───────────────────────────────────────────
 
+/** Below this length a tangent is treated as zero (purely radial step) */
+const TANGENT_EPSILON = 1e-9;
+
+/** Relative tolerance for treating a position as on (not outside) the arena wall */
+const WALL_EPSILON = 1e-9;
+
 /**
- * Apply movement intent to a robot's position, clamping to arena boundary.
+ * Apply movement intent to a robot's position, keeping it inside the arena.
  *
  * Moves the robot toward the intent's target position by up to
  * (effectiveSpeed × deltaTime) units. Returns the new position.
+ *
+ * Wall-aware retreat (#520): when the step would leave the arena, the robot
+ * moves along the step up to the wall and spends the rest of
+ * `effectiveSpeed × deltaTime` sliding along the wall's tangent instead of
+ * getting stuck. For a purely radial step the slide direction is the one that
+ * ends farther from `threatPosition` (tie or no threat → counter-clockwise).
+ * The result is always inside the arena, its displacement never exceeds
+ * `effectiveSpeed × deltaTime`, and it is deterministic.
  *
  * Req 5.2, 1.7
  */
@@ -474,28 +490,85 @@ export function applyMovement(
   intent: MovementIntent,
   arena: ArenaConfig,
   deltaTime: number,
+  threatPosition?: Position,
 ): Position {
   const maxMove = state.effectiveMovementSpeed * deltaTime;
-  const dx = intent.targetPosition.x - state.position.x;
-  const dy = intent.targetPosition.y - state.position.y;
+  const pos = state.position;
+  const dx = intent.targetPosition.x - pos.x;
+  const dy = intent.targetPosition.y - pos.y;
   const dist = Math.sqrt(dx * dx + dy * dy);
 
-  let newPos: Position;
+  let candidate: Position;
+  let step: Vector2D;
 
   if (dist <= maxMove || dist === 0) {
     // Can reach target this tick
-    newPos = { x: intent.targetPosition.x, y: intent.targetPosition.y };
+    candidate = { x: intent.targetPosition.x, y: intent.targetPosition.y };
+    step = { x: dx, y: dy };
   } else {
     // Move toward target by maxMove
     const ratio = maxMove / dist;
-    newPos = {
-      x: state.position.x + dx * ratio,
-      y: state.position.y + dy * ratio,
-    };
+    step = { x: dx * ratio, y: dy * ratio };
+    candidate = { x: pos.x + step.x, y: pos.y + step.y };
   }
 
-  // Clamp to arena boundary (Req 1.7)
-  return clampToArena(newPos, arena);
+  if (euclideanDistance(candidate, arena.center) <= arena.radius) {
+    return candidate;
+  }
+
+  // Robot at the centre, or already outside (no in-arena start): plain clamp (Req 1.7).
+  // A robot clamped onto the wall can sit a rounding error outside it; it counts as on the wall.
+  const relX = pos.x - arena.center.x;
+  const relY = pos.y - arena.center.y;
+  const relSq = relX * relX + relY * relY;
+  const radiusSq = arena.radius * arena.radius;
+  if (relSq === 0 || relSq > radiusSq * (1 + WALL_EPSILON)) {
+    return clampToArena(candidate, arena);
+  }
+
+  // Boundary intersection along the step: |rel + t·step| = R, t ∈ [0, 1]
+  const a = step.x * step.x + step.y * step.y;
+  const b = 2 * (relX * step.x + relY * step.y);
+  const c = relSq - radiusSq; // ≤ 0: the robot is inside or on the wall
+  const t = Math.min(1, Math.max(0, (-b + Math.sqrt(Math.max(0, b * b - 4 * a * c))) / (2 * a)));
+  const boundaryPoint: Position = { x: pos.x + step.x * t, y: pos.y + step.y * t };
+  const travelled = Math.sqrt(a) * t;
+  const remaining = Math.max(0, maxMove - travelled);
+
+  // Tangent = step minus its radial component at the boundary point
+  const bpX = boundaryPoint.x - arena.center.x;
+  const bpY = boundaryPoint.y - arena.center.y;
+  const bpLen = Math.sqrt(bpX * bpX + bpY * bpY);
+  const nX = bpX / bpLen;
+  const nY = bpY / bpLen;
+  const radial = step.x * nX + step.y * nY;
+  let tanX = step.x - radial * nX;
+  let tanY = step.y - radial * nY;
+  const tanLen = Math.sqrt(tanX * tanX + tanY * tanY);
+
+  if (tanLen <= TANGENT_EPSILON) {
+    // Purely radial step: slide the way that ends farther from the threat
+    const ccw: Vector2D = { x: -nY, y: nX };
+    const cw: Vector2D = { x: nY, y: -nX };
+    let dir = ccw;
+    if (threatPosition) {
+      const ccwEnd = { x: boundaryPoint.x + ccw.x * remaining, y: boundaryPoint.y + ccw.y * remaining };
+      const cwEnd = { x: boundaryPoint.x + cw.x * remaining, y: boundaryPoint.y + cw.y * remaining };
+      if (euclideanDistance(cwEnd, threatPosition) > euclideanDistance(ccwEnd, threatPosition)) {
+        dir = cw;
+      }
+    }
+    tanX = dir.x;
+    tanY = dir.y;
+  } else {
+    tanX /= tanLen;
+    tanY /= tanLen;
+  }
+
+  return clampToArena(
+    { x: boundaryPoint.x + tanX * remaining, y: boundaryPoint.y + tanY * remaining },
+    arena,
+  );
 }
 
 // ─── Team Separation ────────────────────────────────────────────────

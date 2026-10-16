@@ -47,6 +47,7 @@ export {
   calculateMovementIntent,
   applyMovement,
   getPreferredRange,
+  getEngagementRange,
   getPatienceLimit,
   enforceTeamSeparation,
   RANGE_BAND_MIDPOINTS,
@@ -62,6 +63,19 @@ export type { PressureState, PressureEffects } from './pressureSystem';
 
 // Servo strain
 export { calculateBaseSpeed, calculateEffectiveSpeed, updateServoStrain } from './servoStrain';
+
+// Engagement cycle (#520)
+export {
+  getEngagementRole,
+  getDisengageDuration,
+  isMeleeCommitActive,
+  updateDisengage,
+  isDisengageActive,
+  BURST_SPEED_MULTIPLIER,
+  DISENGAGE_BASE_SECONDS,
+  DISENGAGE_SECONDS_PER_EVASION,
+} from './engagementCycle';
+export type { EngagementRole, SpeedBurst, DisengageState } from './engagementCycle';
 
 // Threat scoring
 export { selectTarget } from './threatScoring';

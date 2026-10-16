@@ -85,6 +85,11 @@ export function initializeCombatState(
     targetLockTimer: 0,
     patienceTimer: 0,
     combatAlgorithmScore: Math.min(combatAlgorithms / 50, 1.0),
+    // Engagement cycle (#520)
+    lastMeleeHitTakenAt: null,
+    disengageBurstUntil: 0,
+    disengageReadyAt: 0,
+    speedBurst: 'none',
     // Adaptation
     adaptationHitBonus: 0,
     adaptationDamageBonus: 0,

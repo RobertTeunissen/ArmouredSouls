@@ -11,6 +11,7 @@
 
 import { Position, Vector2D } from './vector2d';
 import type { RobotWithWeapons, FormulaBreakdown } from '../battle/combatSimulator';
+import type { SpeedBurst } from './engagementCycle';
 
 // ─── Range Band Classification (Req 3.1) ────────────────────────────
 
@@ -144,6 +145,16 @@ export interface RobotCombatState {
   targetLockTimer: number;
   patienceTimer: number;
   combatAlgorithmScore: number;
+
+  // === Engagement cycle (#520) ===
+  /** Time of the most recent hit taken from a melee-band weapon (attack or counter), or null if none yet. */
+  lastMeleeHitTakenAt: number | null;
+  /** Time until which the ranged disengage burst is active (seconds; 0 = never started). */
+  disengageBurstUntil: number;
+  /** Earliest time a new melee hit can trigger the next disengage burst (burst end + one patience window). */
+  disengageReadyAt: number;
+  /** Speed burst applied this tick: melee commit, ranged disengage, or none. */
+  speedBurst: SpeedBurst;
 
   // === Adaptation (Req 7.1–7.5) ===
   adaptationHitBonus: number;

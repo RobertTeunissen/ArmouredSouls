@@ -77,13 +77,26 @@ export function isWithinWeaponReach(
 }
 
 /**
+ * Outcome of a single attack attempt (#520):
+ * - `blocked`: the reach guard stopped the attempt (nothing happened);
+ * - `missed`: the attack was resolved but did not hit (miss or malfunction);
+ * - `hit`: the attack hit (including critical hits).
+ */
+export type AttackOutcome = 'blocked' | 'missed' | 'hit';
+
+/**
  * Perform a single attack from attacker to defender with spatial modifiers.
  *
  * Reach invariant (#518): if the hand's weapon cannot physically reach the defender
  * (see `isWithinWeaponReach`), the attempt is blocked and nothing happens — no random
  * roll, no event, no damage, no counter and no state change — and the function
- * returns `false`. Callers must not consume the hand's cooldown or reset patience on
- * `false`. Returns `true` when the attack was resolved (hit, miss or malfunction).
+ * returns `'blocked'`. Callers must not consume the hand's cooldown on `'blocked'`.
+ * Otherwise the attack is resolved and the function returns `'missed'` (miss or
+ * malfunction) or `'hit'`; only `'hit'` resets the attacker's patience (#520).
+ *
+ * A hit from a melee-band weapon records `lastMeleeHitTakenAt` on the robot that
+ * took it (the defender for the attack, the attacker for a landed counter), which
+ * drives the ranged disengage burst (#520).
  */
 export function performAttack(
   attackerState: SpatialRobotCombatState,
@@ -113,8 +126,8 @@ export function performAttack(
     passiveAccuracyPenalty?: number;
     passiveDamageReduction?: number;
   }
-): boolean {
-  if (!isWithinWeaponReach(attackerState, defenderState, hand)) return false;
+): AttackOutcome {
+  if (!isWithinWeaponReach(attackerState, defenderState, hand)) return 'blocked';
 
   const weaponInfo = getWeaponInfo(attackerState.robot, hand);
   const handLabel = hand === 'offhand' ? ' [OFFHAND]' : '';
@@ -157,7 +170,7 @@ export function performAttack(
     attackerState.adaptationHitBonus = malfAdaptState.adaptationHitBonus;
     attackerState.adaptationDamageBonus = malfAdaptState.adaptationDamageBonus;
     attackerState.missCount++;
-    return true;
+    return 'missed';
   }
 
   // Hit calculation with spatial bonuses
@@ -167,6 +180,7 @@ export function performAttack(
   );
   const hitRoll = random(0, 100);
   const hit = hitRoll < hitChance;
+  const outcome: AttackOutcome = hit ? 'hit' : 'missed';
 
   const { critChance, breakdown: critBreakdown } = calculateCritChance(attackerState.robot, hand);
   const critRoll = random(0, 100);
@@ -204,6 +218,11 @@ export function performAttack(
     // happened to swing last rather than whoever landed the fatal blow.
     if (hpDamage > 0) {
       defenderState.lastDamagedBy = attackerName;
+    }
+
+    // Engagement cycle (#520): a melee-band hit can trigger the defender's disengage
+    if (requireHandWeapon(attackerState.robot, hand).rangeBand === 'melee') {
+      defenderState.lastMeleeHitTakenAt = currentTime;
     }
 
     const totalDamage = hpDamage + shieldDamage;
@@ -320,14 +339,14 @@ export function performAttack(
   // Counter-attack check (range-aware, Req 19)
   // Off-hand attacks do not trigger counter-attacks — dual-wield robots should not
   // be penalized with double counter exposure compared to single-weapon builds.
-  if (hand === 'offhand') return true;
-  if (defenderState.currentHP <= 0) return true;
+  if (hand === 'offhand') return outcome;
+  if (defenderState.currentHP <= 0) return outcome;
 
   const { counterChance, breakdown: counterBreakdown } = calculateCounterChance(defenderState.robot);
   const counterRoll = random(0, 100);
   const counterTriggered = counterRoll < counterChance;
 
-  if (!counterTriggered) return true;
+  if (!counterTriggered) return outcome;
 
   // Resolve counter with range checking. Like the reach guard above, the counter's
   // reach is measured between the real positions, never the caller-supplied context
@@ -348,7 +367,7 @@ export function performAttack(
       distance: spatialContext.distance,
       rangeBand: spatialContext.rangeBand,
     });
-    return true;
+    return outcome;
   }
 
   // Counter can proceed — perform counter attack
@@ -373,6 +392,11 @@ export function performAttack(
     // Counters can land the killing blow, so they attribute the same way.
     if (counterHP > 0) {
       attackerState.lastDamagedBy = defenderName;
+    }
+
+    // Engagement cycle (#520): a melee-band counter hit can trigger the attacker's disengage
+    if (counterResult.weapon.rangeBand === 'melee') {
+      attackerState.lastMeleeHitTakenAt = currentTime;
     }
 
     events.push({
@@ -429,5 +453,5 @@ export function performAttack(
       rangeBand: spatialContext.rangeBand,
     });
   }
-  return true;
+  return outcome;
 }

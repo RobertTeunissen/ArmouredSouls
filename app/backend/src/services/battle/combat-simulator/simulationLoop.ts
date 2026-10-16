@@ -8,8 +8,16 @@ import { euclideanDistance } from '../../arena/vector2d';
 import { createArena } from '../../arena/arenaLayout';
 import { classifyRangeBand, canAttack } from '../../arena/rangeBands';
 import { calculateTurnSpeed, updateFacing } from '../../arena/positionTracker';
-import { calculateEffectiveSpeed, updateServoStrain } from '../../arena/servoStrain';
-import { calculateMovementIntent, applyMovement, enforceTeamSeparation, RANGE_BAND_MIDPOINTS } from '../../arena/movementAI';
+import { calculateEffectiveSpeed, updateServoStrain, ServoStrainState } from '../../arena/servoStrain';
+import {
+  calculateMovementIntent,
+  applyMovement,
+  enforceTeamSeparation,
+  getEngagementRange,
+  getPatienceLimit,
+  RANGE_BAND_MIDPOINTS,
+} from '../../arena/movementAI';
+import { getEngagementRole, isMeleeCommitActive, updateDisengage, isDisengageActive } from '../../arena/engagementCycle';
 import { getSupportShieldBoost } from '../../arena/teamCoordination';
 import { selectTarget } from '../../arena/threatScoring';
 import { SpatialGrid, computeMaxWeaponRange } from './spatialGrid';
@@ -31,7 +39,7 @@ import {
   MOVEMENT_EVENT_MIN_INTERVAL,
 } from './combatTypes';
 import { roundTime, getWeaponStatsSummary, regenerateShields, shouldYield } from './combatFormulas';
-import { buildPositionSnapshot, buildHPShieldSnapshot, performAttack } from './attackResolution';
+import { buildPositionSnapshot, buildHPShieldSnapshot, performAttack, AttackOutcome } from './attackResolution';
 import { initializeCombatState, calcCooldown, buildSpatialContext, handleTimeLimitReached, compileBattleResult } from './simulationState';
 
 /**
@@ -337,36 +345,45 @@ export function simulateBattleMulti(
         state.currentTarget = null;
       }
 
-      // Effective speed with servo strain
-      const opponentMainWeapon = target?.robot.mainWeapon?.weapon;
-      const hasRangedOpponent = opponentMainWeapon
-        ? opponentMainWeapon.weaponType !== 'melee' && opponentMainWeapon.weaponType !== 'shield'
-        : false;
-      const hasMeleeOpponent = opponentMainWeapon
-        ? opponentMainWeapon.weaponType === 'melee'
-        : false;
-      const hasMeleeWeapon = state.robot.mainWeapon?.weapon?.weaponType === 'melee';
-      const hasRangedWeapon = state.robot.mainWeapon?.weapon
-        ? state.robot.mainWeapon.weapon.weaponType !== 'melee' && state.robot.mainWeapon.weapon.weaponType !== 'shield'
-        : false;
-      const weaponRangeBand = state.robot.mainWeapon?.weapon?.rangeBand ?? 'short';
-      const weaponOptimalRangeMidpoint = RANGE_BAND_MIDPOINTS[weaponRangeBand as RangeBand] ?? 4.5;
+      // Engagement cycle (#520): roles from both robots' engagement ranges
+      const range = getEngagementRange(state, target);
+      const role = getEngagementRole(range);
+      const opponentRole = target ? getEngagementRole(getEngagementRange(target, state)) : null;
+      const engagementRangeMidpoint = RANGE_BAND_MIDPOINTS[range];
       const distToTarget = target ? euclideanDistance(state.position, target.position) : 0;
-      const servoState = {
+      const patienceLimit = getPatienceLimit(state.combatAlgorithmScore);
+      updateDisengage(state, {
+        role,
+        currentTime,
+        evasionThrusters: Number(state.robot.evasionThrusters),
+        cooldownSeconds: patienceLimit,
+      });
+      state.speedBurst = isDisengageActive(state, currentTime)
+        ? 'ranged_disengage'
+        : isMeleeCommitActive({
+            role,
+            opponentRole,
+            patienceTimer: state.patienceTimer,
+            patienceLimit,
+            distance: distToTarget,
+          })
+          ? 'melee_commit'
+          : 'none';
+
+      // Effective speed with servo strain
+      const servoState: ServoStrainState = {
         servoMotors: state.numServoMotors,
         servoStrain: state.servoStrain,
         sustainedMovementTime: state.sustainedMovementTime,
         isUsingClosingBonus: state.isUsingClosingBonus,
         stance: (state.robot.stance ?? 'balanced') as 'defensive' | 'offensive' | 'balanced',
-        hasMeleeWeapon,
-        hasRangedWeapon,
-        weaponOptimalRangeMidpoint,
+        role,
+        engagementRangeMidpoint,
+        speedBurst: state.speedBurst,
         distanceToTarget: distToTarget,
         currentSpeedRatio: 0,
       };
-      const { effectiveSpeed, isClosingBonus } = calculateEffectiveSpeed(
-        servoState, target?.effectiveMovementSpeed ?? 0, hasRangedOpponent, hasMeleeOpponent,
-      );
+      const { effectiveSpeed, isClosingBonus } = calculateEffectiveSpeed(servoState, opponentRole);
       state.effectiveMovementSpeed = effectiveSpeed;
       state.isUsingClosingBonus = isClosingBonus;
 
@@ -389,7 +406,7 @@ export function simulateBattleMulti(
 
       // Apply movement
       const oldPos = { x: state.position.x, y: state.position.y };
-      const newPos = applyMovement(state, intent, arena, SIMULATION_TICK);
+      const newPos = applyMovement(state, intent, arena, SIMULATION_TICK, target?.position);
       state.position = newPos;
       state.velocity = {
         x: (newPos.x - oldPos.x) / SIMULATION_TICK,
@@ -458,7 +475,7 @@ export function simulateBattleMulti(
     }
 
     // ── PHASE 3: ATTACKS (range-gated, per robot) ──
-    const attackedThisTick: Set<number> = new Set();
+    const landedHitThisTick: Set<number> = new Set();
 
     for (const state of aliveStates) {
       if (state.currentTarget === null) continue;
@@ -466,7 +483,7 @@ export function simulateBattleMulti(
       if (!target || !target.isAlive) continue;
 
       let dist = euclideanDistance(state.position, target.position);
-      let didAttack = false;
+      let didLandHit = false;
 
       // Main weapon attack
       if (currentTime - state.lastAttackTime >= state.attackCooldown
@@ -486,16 +503,21 @@ export function simulateBattleMulti(
           }
         }
 
-        const attacked = canAttack(weaponLike, dist) && performAttack(
-          state, target, state.robot.name, target.robot.name,
-          currentTime, 'main', events,
-          buildSpatialContext(state, target, 'main', currentTime, arena, states, gameModeState, getPositionSnapshot()),
-        );
+        const outcome: AttackOutcome = canAttack(weaponLike, dist)
+          ? performAttack(
+              state, target, state.robot.name, target.robot.name,
+              currentTime, 'main', events,
+              buildSpatialContext(state, target, 'main', currentTime, arena, states, gameModeState, getPositionSnapshot()),
+            )
+          : 'blocked';
 
-        if (attacked) {
+        if (outcome !== 'blocked') {
           state.lastAttackTime = currentTime;
-          state.patienceTimer = 0;
-          didAttack = true;
+          // Patience resets only on a landed hit (#520)
+          if (outcome === 'hit') {
+            state.patienceTimer = 0;
+            didLandHit = true;
+          }
           // Reset out-of-range suppression — robot successfully attempted an attack
           outOfRangeSuppressed.delete(state.teamIndex);
         } else {
@@ -545,28 +567,34 @@ export function simulateBattleMulti(
         }
 
         // A blocked offhand stays silent and keeps its cooldown ready (#518).
-        const offAttacked = canAttack(offWeaponLike, offDist) && performAttack(
-          state, offTarget, state.robot.name, offTarget.robot.name,
-          currentTime, 'offhand', events,
-          buildSpatialContext(state, offTarget, 'offhand', currentTime, arena, states, gameModeState, getPositionSnapshot()),
-        );
+        const offOutcome: AttackOutcome = canAttack(offWeaponLike, offDist)
+          ? performAttack(
+              state, offTarget, state.robot.name, offTarget.robot.name,
+              currentTime, 'offhand', events,
+              buildSpatialContext(state, offTarget, 'offhand', currentTime, arena, states, gameModeState, getPositionSnapshot()),
+            )
+          : 'blocked';
 
-        if (offAttacked) {
+        if (offOutcome !== 'blocked') {
           state.lastOffhandAttackTime = currentTime;
-          state.patienceTimer = 0;
-          didAttack = true;
+          // Patience resets only on a landed hit (#520)
+          if (offOutcome === 'hit') {
+            state.patienceTimer = 0;
+            didLandHit = true;
+          }
           // Reset out-of-range suppression — robot successfully attempted an attack
           outOfRangeSuppressed.delete(state.teamIndex);
         }
       }
 
-      if (didAttack) attackedThisTick.add(state.teamIndex);
+      if (didLandHit) landedHitThisTick.add(state.teamIndex);
     }
 
-    // Update patience timers for robots that didn't attack. Patience never grants an
-    // attack (#518); movement AI still reads it to seed path deviation.
+    // Update patience timers for robots that landed no hit this tick. Patience never
+    // grants an attack (#518); since #520 it triggers the melee commit burst once it
+    // reaches getPatienceLimit(), and movement AI still reads it to seed path deviation.
     for (const state of aliveStates) {
-      if (!attackedThisTick.has(state.teamIndex)) {
+      if (!landedHitThisTick.has(state.teamIndex)) {
         state.patienceTimer += SIMULATION_TICK;
       }
     }
