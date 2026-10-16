@@ -66,6 +66,7 @@ describe('loadStableFacts (Spec #55 task 5.1)', () => {
         { userId, facilityType: 'roster_expansion', level: 2 },
         { userId, facilityType: 'storage_facility', level: 1 },
         { userId, facilityType: 'weapons_workshop', level: 3 },
+        { userId, facilityType: 'refinement_lab', level: 2 },
         { userId, facilityType: 'booking_office', level: 1 },
       ],
     });
@@ -133,10 +134,11 @@ describe('loadStableFacts (Spec #55 task 5.1)', () => {
     expect(facts.facilities.roster_expansion).toBe(2);
     expect(facts.facilities.storage_facility).toBe(1);
     expect(facts.facilities.weapons_workshop).toBe(3);
+    expect(facts.facilities.refinement_lab).toBe(2);
     expect(facts.facilities.booking_office).toBe(1);
     expect(facts.facilities.repair_bay).toBe(0);
     expect(facts.facilities.tuning_bay).toBe(0);
-    expect(Object.keys(facts.facilities)).toHaveLength(13);
+    expect(Object.keys(facts.facilities)).toHaveLength(14);
   });
 
   it('loads robots in Blueprint_Slot order with attributes, settings, hands, stage, subscriptions and tuning', async () => {

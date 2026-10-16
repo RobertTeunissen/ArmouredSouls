@@ -148,6 +148,8 @@ const DB_DEPENDENT = [
   'tests/integration/robotCacheInvalidation.test.ts',
   // Hall of Records "Most Battles" and its accolade rank on the all-modes count (SQL)
   'tests/integration/mostBattlesAllModes.test.ts',
+  // Season 2 — one-off Refinement Lab grant migration
+  'tests/integration/refinementLabGrantMigration.test.ts',
   // Spec #55 — Domain_Service_Extraction (task group 2)
   'src/services/economy/__tests__/facilityUpgradeService.test.ts',
   'src/services/economy/__tests__/weaponPurchaseService.test.ts',

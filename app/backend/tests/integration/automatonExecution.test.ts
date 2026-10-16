@@ -6,7 +6,7 @@
  * real Goals on loaded facts: the first robot (Robot_Chain + fit-out), the
  * second robot (Roster Expansion level, 2v2 team, Event_Allocation), a
  * facility level, an attribute batch, a weapon stage with a
- * Storage_Overflow_Rule sale and a refinement with its Weapons Workshop
+ * Storage_Overflow_Rule sale and a refinement with its Refinement Lab
  * chain. For every action:
  * - each charged step produced exactly one Financial_Pair (ledger row +
  *   `financial_transaction` audit row) carrying the Automaton audit context;
@@ -291,7 +291,7 @@ describe('Automaton action executor (Spec #55 task 5.5)', () => {
     );
   });
 
-  it('refines a final-stage weapon after buying the Weapons Workshop levels its tier needs', async () => {
+  it('refines a final-stage weapon after buying the Refinement Lab levels its tier needs', async () => {
     const goal = createRefinementGoal('swarm.v1.6.refine');
     const { facts, action } = await planWith(goal, 1);
     expect(action).toMatchObject({ kind: 'weapon_refinement', robotSlot: 1, step: { tier: 'sharpen', hand: 'main' } });

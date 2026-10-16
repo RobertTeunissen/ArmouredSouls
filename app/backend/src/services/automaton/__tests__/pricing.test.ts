@@ -6,7 +6,7 @@ import {
   refinementStepCost,
   robotPurchaseCost,
   weaponResaleValue,
-  workshopLevelForTier,
+  refinementLabLevelForTier,
 } from '../pricing';
 import { AUTOMATON_FACILITY_TYPES } from '../stableFacts';
 import { FACILITY_TYPES, getFacilityUpgradeCost } from '../../../config/facilities';
@@ -106,10 +106,10 @@ describe('pricing (R5.3): identical to the charging services', () => {
     expect(refinementStepCost('augment', 2, 1)).toBe(80_000);
   });
 
-  it('names the Workshop level each tier needs', () => {
-    expect(workshopLevelForTier('hone')).toBe(1);
-    expect(workshopLevelForTier('augment')).toBe(3);
-    expect(workshopLevelForTier('sharpen')).toBe(5);
-    expect(workshopLevelForTier('forge')).toBe(8);
+  it('names the Refinement Lab level each tier needs', () => {
+    expect(refinementLabLevelForTier('hone')).toBe(1);
+    expect(refinementLabLevelForTier('augment')).toBe(3);
+    expect(refinementLabLevelForTier('sharpen')).toBe(5);
+    expect(refinementLabLevelForTier('forge')).toBe(8);
   });
 });

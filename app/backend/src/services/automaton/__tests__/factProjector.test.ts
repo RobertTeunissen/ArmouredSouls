@@ -178,11 +178,11 @@ describe('factProjector (R11.4 support, design §8.3)', () => {
   describe('weapon_refinement', () => {
     const goal = createRefinementGoal('test.v1.06.refine');
 
-    it('buys the Workshop chain, adds the refinement row and raises pricePaid', () => {
+    it('buys the Refinement Lab chain, adds the refinement row and raises pricePaid', () => {
       const facts = stable({
         robots: [armedRobot(1, 1, 1)],
         inventory: [item(1, 'Volt Sabre', { pricePaid: 400_000 })],
-        facilities: facilities({ weapons_workshop: 4 }),
+        facilities: facilities({ refinement_lab: 4 }),
         prestige: 10_000,
         balance: 5_000_000,
       });
@@ -190,7 +190,7 @@ describe('factProjector (R11.4 support, design §8.3)', () => {
       if (outcome.kind !== 'actionable' || outcome.action.kind !== 'weapon_refinement') throw new Error('expected refinement');
       const { action, cost } = outcome;
       const next = projectAction(facts, action, projection);
-      expect(next.facilities.weapons_workshop).toBe(5);
+      expect(next.facilities.refinement_lab).toBe(5);
       expect(next.inventory[0].refinements).toEqual(refinements('sharpen'));
       expect(next.inventory[0].pricePaid).toBe(400_000 + action.refinementCost);
       expect(next.balance).toBe(5_000_000 - cost);
@@ -255,7 +255,7 @@ describe('factProjector (R11.4 support, design §8.3)', () => {
       })).toBe(1);
       expect(chargedStepCount({
         kind: 'weapon_refinement', robotSlot: 1, inventoryId: 1, step: { tier: 'hone', hand: 'main', magnitude: 1, targetAttribute: 'combatPower' },
-        chain: [{ kind: 'facility_upgrade', facilityType: 'weapons_workshop', toLevel: 1, cost: 1 }], refinementCost: 1,
+        chain: [{ kind: 'facility_upgrade', facilityType: 'refinement_lab', toLevel: 1, cost: 1 }], refinementCost: 1,
       })).toBe(2);
     });
   });

@@ -8,7 +8,7 @@
 import { getSubscriptionCap } from '../../../config/subscriptions';
 import { calculateStorageCapacity } from '../../../utils/storageCalculations';
 import { loadCatalogueDirectory, type CatalogueBlueprint, type LoadedCatalogueEntry } from '../automatonCatalogueService';
-import { quoteFacilityLevel, workshopLevelForTier } from '../pricing';
+import { quoteFacilityLevel, refinementLabLevelForTier } from '../pricing';
 import { teamsForSlots } from '../teamRule';
 import { allocateEvents } from '../upkeep/subscriptionUpkeep';
 import { SUBSCRIBABLE_EVENT_TYPES } from '../../subscription/eventRegistry';
@@ -150,10 +150,10 @@ function coverageMatrix(scope: string, loaded: LoadedCatalogueEntry[]): void {
       })).toBe(true);
     });
 
-    it('has a plan step blocked by the Weapons Workshop level (Prestige_Gate at 0 prestige)', () => {
+    it('has a plan step blocked by the Refinement Lab level (Prestige_Gate at 0 prestige)', () => {
       const gated = (tier: CatalogueBlueprint['refinementPlan'][number]['tier']): boolean => {
-        for (let level = 0; level < workshopLevelForTier(tier); level++) {
-          if (quoteFacilityLevel('weapons_workshop', level, 0).kind === 'prestige_gate') return true;
+        for (let level = 0; level < refinementLabLevelForTier(tier); level++) {
+          if (quoteFacilityLevel('refinement_lab', level, 0).kind === 'prestige_gate') return true;
         }
         return false;
       };

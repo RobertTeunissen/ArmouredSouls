@@ -65,7 +65,8 @@ describe('RefinementModal', () => {
     render(
       <RefinementModal
         inventoryItem={baseItem}
-        workshopLevel={8}
+        refinementLabLevel={8}
+        workshopLevel={0}
         userCurrency={5_000_000}
         onCancel={vi.fn()}
         onConfirmed={vi.fn()}
@@ -78,17 +79,19 @@ describe('RefinementModal', () => {
     expect(screen.getByTestId('tier-card-forge')).toBeInTheDocument();
   });
 
-  it('locks tiers above the player Workshop level', () => {
+  it('locks tiers above the player Refinement Lab level', () => {
     render(
       <RefinementModal
         inventoryItem={baseItem}
-        workshopLevel={2}
+        refinementLabLevel={2}
+        workshopLevel={10}
         userCurrency={5_000_000}
         onCancel={vi.fn()}
         onConfirmed={vi.fn()}
       />,
     );
-    // Hone (L1) and ... wait, Augment requires L3, Sharpen L5, Forge L8 — at L2 only hone is unlocked
+    // Augment requires Lab L3, Sharpen L5, Forge L8 — at Lab L2 only Hone is unlocked,
+    // whatever the Workshop level.
     expect(screen.getByTestId('tier-card-hone')).not.toBeDisabled();
     expect(screen.getByTestId('tier-card-augment')).toBeDisabled();
     expect(screen.getByTestId('tier-card-sharpen')).toBeDisabled();
@@ -99,7 +102,8 @@ describe('RefinementModal', () => {
     render(
       <RefinementModal
         inventoryItem={shieldItem}
-        workshopLevel={10}
+        refinementLabLevel={10}
+        workshopLevel={0}
         userCurrency={5_000_000}
         onCancel={vi.fn()}
         onConfirmed={vi.fn()}
@@ -116,7 +120,8 @@ describe('RefinementModal', () => {
     render(
       <RefinementModal
         inventoryItem={baseItem}
-        workshopLevel={8}
+        refinementLabLevel={8}
+        workshopLevel={0}
         userCurrency={5_000_000}
         onCancel={vi.fn()}
         onConfirmed={vi.fn()}
@@ -137,7 +142,8 @@ describe('RefinementModal', () => {
     render(
       <RefinementModal
         inventoryItem={baseItem}
-        workshopLevel={8}
+        refinementLabLevel={8}
+        workshopLevel={0}
         userCurrency={5_000_000}
         onCancel={vi.fn()}
         onConfirmed={vi.fn()}
@@ -154,7 +160,8 @@ describe('RefinementModal', () => {
     render(
       <RefinementModal
         inventoryItem={baseItem}
-        workshopLevel={8}
+        refinementLabLevel={8}
+        workshopLevel={0}
         userCurrency={5_000_000}
         onCancel={vi.fn()}
         onConfirmed={vi.fn()}
@@ -190,7 +197,8 @@ describe('RefinementModal', () => {
     render(
       <RefinementModal
         inventoryItem={baseItem}
-        workshopLevel={8}
+        refinementLabLevel={8}
+        workshopLevel={0}
         userCurrency={5_000_000}
         onCancel={onCancel}
         onConfirmed={onConfirmed}
@@ -222,7 +230,8 @@ describe('RefinementModal', () => {
     render(
       <RefinementModal
         inventoryItem={baseItem}
-        workshopLevel={8}
+        refinementLabLevel={8}
+        workshopLevel={0}
         userCurrency={5_000_000}
         onCancel={vi.fn()}
         onConfirmed={vi.fn()}
@@ -239,11 +248,42 @@ describe('RefinementModal', () => {
     expect(banner).toHaveTextContent(/\+3 would push past the \+10 cap/);
   });
 
+  it('renders the Refinement Lab tier-locked server error', async () => {
+    const user = userEvent.setup();
+    vi.mocked(apiClient.post).mockRejectedValue({
+      response: {
+        data: {
+          error: 'Refinement Lab level 8 required to forge.',
+          code: 'WEAPON_REFINEMENT_TIER_LOCKED',
+          details: { requiredRefinementLabLevel: 8, currentRefinementLabLevel: 7 },
+        },
+      },
+    });
+
+    render(
+      <RefinementModal
+        inventoryItem={baseItem}
+        refinementLabLevel={8}
+        workshopLevel={0}
+        userCurrency={5_000_000}
+        onCancel={vi.fn()}
+        onConfirmed={vi.fn()}
+      />,
+    );
+
+    await user.click(screen.getByTestId('tier-card-forge'));
+    await user.click(screen.getByTestId('confirm-refinement-button'));
+
+    const banner = await screen.findByTestId('error-banner');
+    expect(banner).toHaveTextContent('Requires Refinement Lab L8 (you are L7).');
+  });
+
   it('renders the resale-recovery note', async () => {
     const user = userEvent.setup();
     render(
       <RefinementModal
         inventoryItem={baseItem}
+        refinementLabLevel={1}
         workshopLevel={5}
         userCurrency={5_000_000}
         onCancel={vi.fn()}
