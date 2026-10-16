@@ -2,7 +2,7 @@
 title: "Movement & Positioning"
 description: "How the 2D combat arena works — movement speed, range bands, weapon optimal ranges, backstab and flanking mechanics, and the attributes that control spatial combat."
 order: 2
-lastUpdated: "2026-10-15"
+lastUpdated: "2026-10-16"
 relatedArticles:
   - combat/battle-flow
   - robots/attributes-overview
@@ -93,12 +93,25 @@ Two-handed melee weapons like Battle Axe and Heavy Hammer are classified as two-
 
 | Range Band | Bonus per Point | At Level 50 |
 |-----------|----------------|-------------|
-| Melee (0–2) | +2% per point | +100% (2.0× multiplier) |
-| Short (3–6) | +1.5% per point | +75% (1.75× multiplier) |
+| Melee (0–2) | +1.5% per point | +75% (1.75× multiplier) |
+| Short (3–6) | +1% per point | +50% (1.5× multiplier) |
 | Mid (7–12) | No bonus | 1.0× |
 | Long (13+) | No bonus | 1.0× |
 
-This makes Hydraulic Systems a high-impact damage attribute for melee builds. At level 50 in melee range, it doubles your damage output — stacking multiplicatively with Combat Power, Weapon Control, and the optimal range bonus.
+This makes Hydraulic Systems a high-impact damage attribute for melee builds. At level 50 in melee range, it adds +75% damage — stacking multiplicatively with Combat Power, Weapon Control, and the optimal range bonus. It also applies to counter-attacks made at melee range.
+
+## Logic Cores Bonus
+
+**Logic Cores** provides the ranged counterpart: a distance-scaled damage multiplier that rewards fighting from afar:
+
+| Range Band | Bonus per Point | At Level 50 |
+|-----------|----------------|-------------|
+| Melee (0–2) | No bonus | 1.0× |
+| Short (3–6) | No bonus | 1.0× |
+| Mid (7–12) | +1% per point | +50% (1.5× multiplier) |
+| Long (13+) | +1.5% per point | +75% (1.75× multiplier) |
+
+The bonus depends on the current distance to your target, not on your weapon, and stacks multiplicatively with the hydraulic bonus and the optimal range bonus. It also applies to counter-attacks made at long range. Logic Cores keeps its role in the pressure system as well.
 
 ## Backstab Mechanics
 
@@ -152,8 +165,8 @@ If your melee build can't close the gap against a faster opponent, invest in **S
 |-----------|------|---------------|
 | **Melee brawler** | Close to 0–2 units, stay there | Servo Motors, Hydraulic Systems, Gyro Stabilizers |
 | **Short-range fighter** | Maintain 3–6 units | Servo Motors (moderate), Targeting Systems |
-| **Mid-range skirmisher** | Hold at 7–12 units | Servo Motors, Combat Algorithms (pathing) |
-| **Long-range sniper** | Keep distance at 13+ units | Servo Motors (to kite), Combat Algorithms |
+| **Mid-range skirmisher** | Hold at 7–12 units | Servo Motors, Logic Cores, Combat Algorithms (pathing) |
+| **Long-range sniper** | Keep distance at 13+ units | Servo Motors (to kite), Logic Cores, Combat Algorithms |
 
 ```callout-tip
 The battle playback viewer shows robot positions and movement in real-time. Watch your replays to see whether your robot is reaching its optimal range — if not, invest in Servo Motors or reconsider your weapon choice.

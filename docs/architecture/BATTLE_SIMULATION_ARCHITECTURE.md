@@ -377,6 +377,10 @@ The primary entry point is `simulateBattleMulti(robots[], config)` which support
   │       b. Hit chance (accuracy vs evasion)         │
   │       c. Critical strike check                    │
   │       d. Damage calculation (armor/penetration)   │
+  │          spatial multipliers: range penalty,      │
+  │          hydraulic (melee/short), Logic Cores     │
+  │          (mid/long), backstab, adapt, pressure,   │
+  │          sync volley                              │
   │       e. Shield → HP damage distribution          │
   │       f. Counter-attack check (post-attack)       │
   │    4. Check end conditions:                       │

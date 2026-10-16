@@ -2,7 +2,7 @@
 title: "Training Academies"
 description: "How the four Training Academies control attribute caps and unlock higher levels of robot power — from the initial cap of 10 all the way to the maximum of 50."
 order: 5
-lastUpdated: "2026-03-17"
+lastUpdated: "2026-10-16"
 relatedArticles:
   - robots/attributes-overview
   - robots/upgrade-costs
@@ -130,7 +130,7 @@ The answer depends on your build archetype:
 | **Glass Cannon** | Combat | Mobility | Max damage output, with hull HP as backup |
 | **Speed Demon** | Mobility | Combat | Attack speed, evasion, and movement first |
 | **Counter Striker** | Defense | Combat | Counter Protocols and Armor Plating are key |
-| **Sniper** | Combat | AI | Targeting, Critical Systems, and Combat Algorithms for smart range management |
+| **Sniper** | Combat | AI | Targeting, Critical Systems, Combat Algorithms for smart range management, and Logic Cores for long-range damage |
 | **Tactical AI** | AI | Combat or Defense | Adaptive AI and Logic Cores drive mid-battle performance gains |
 | **Team Player** | AI | Defense or Combat | Team Coordination + AI Processing in one academy |
 | **Melee Brawler** | Mobility | Combat | Servo Motors to close distance, Hydraulic Systems for melee damage |

@@ -2,7 +2,7 @@
 title: "Robot Attributes Overview"
 description: "A complete guide to all 23 robot attributes organized across five categories — Combat Systems, Defensive Systems, Chassis & Mobility, AI Processing, and Team Coordination."
 order: 1
-lastUpdated: "2026-10-15"
+lastUpdated: "2026-10-16"
 relatedArticles:
   - robots/attribute-combat-influence
   - robots/hull-and-shields
@@ -67,7 +67,7 @@ Chassis & Mobility attributes define your robot's physical structure, movement c
 | **Hull Integrity** | Determines your robot's maximum HP. More hull integrity means more hits you can take before going down. See [Hull & Shields](/guide/robots/hull-and-shields) for details. |
 | **Servo Motors** | Determines movement speed in the 2D arena. Higher values let your robot close distance faster or reposition to maintain optimal weapon range. Base speed: 7.0 + servoMotors × 0.2 units/second. |
 | **Gyro Stabilizers** | Enhances balance, turn speed, and dodging ability. Reduces the opponent's hit chance and reduces backstab/flanking damage bonuses against you. |
-| **Hydraulic Systems** | Increases melee and close-range damage. At melee range (0–2 units): up to +100% bonus damage at level 50. At short range (3–6 units): up to +75% bonus. No effect at mid/long range. |
+| **Hydraulic Systems** | Increases melee and close-range damage. At melee range (0–2 units): up to +75% bonus damage at level 50. At short range (3–6 units): up to +50% bonus. No effect at mid/long range. Logic Cores is the ranged counterpart. |
 | **Power Core** | Governs energy generation, which drives energy shield regeneration during battle. |
 
 ```callout-tip
@@ -87,7 +87,7 @@ AI Processing attributes control your robot's autonomous decision-making during 
 | **Combat Algorithms** | Improves battle strategy and decision quality. Grants a hit chance bonus when the algorithm score exceeds 0.5 and tightens movement pathing (less path deviation), so your robot reaches its preferred range more directly. |
 | **Threat Analysis** | Enhances facing/turning speed with a predictive turn bias. At high levels (25+), your robot anticipates opponents moving behind it and turns faster to prevent backstabs. Also reduces backstab and flanking damage taken. |
 | **Adaptive AI** | Allows your robot to learn during battle. Each time your robot misses or takes damage, it accumulates hit and damage bonuses. Higher Adaptive AI means faster adaptation. Bonuses are halved when HP is above 70% to prevent snowballing. |
-| **Logic Cores** | Improves performance under pressure. Sets the HP threshold below which your robot enters "pressure mode," gaining accuracy and damage bonuses. Higher Logic Cores raises this threshold, activating the bonus earlier. |
+| **Logic Cores** | Increases ranged damage and improves performance under pressure. At long range (13+ units): up to +75% bonus damage at level 50. At mid range (7–12 units): up to +50% bonus. No damage bonus at short/melee range. Also sets the HP threshold below which your robot enters "pressure mode," gaining accuracy and damage bonuses; higher Logic Cores raises this threshold, activating the bonus earlier. |
 
 ```callout-tip
 Adaptive AI is especially powerful in longer fights. Against tanky opponents, your robot gradually becomes more accurate and hits harder as the battle progresses. Pair it with defensive attributes to survive long enough for the adaptation to kick in.

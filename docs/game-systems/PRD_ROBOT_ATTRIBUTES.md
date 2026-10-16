@@ -139,10 +139,11 @@ All robots start with each attribute at level 1. Players spend Credits to upgrad
     - Higher gyro = harder to exploit positionally
 15. **Hydraulic Systems** - Physical force for melee impact and carry capacity
     - **2D Arena Role**: Proximity-based damage bonus in the arena
-    - Melee range damage bonus: `1 + hydraulicSystems × 0.02` (up to 2.0×)
-    - Short range damage bonus: `1 + hydraulicSystems × 0.015` (up to 1.75×)
+    - Melee range damage bonus: `1 + hydraulicSystems × 0.015` (1.75× at 50, uncapped; Season 2 #519, was 0.02)
+    - Short range damage bonus: `1 + hydraulicSystems × 0.01` (1.5× at 50, uncapped; Season 2 #519, was 0.015)
     - No bonus at mid/long range
     - Also applies to melee counter-attacks
+    - Ranged mirror: Logic Cores (long/mid range damage bonus)
 16. **Power Core** - Energy generation for energy shield regeneration
 
 ### 🟡 AI Processing (4)
@@ -168,7 +169,10 @@ All robots start with each attribute at level 1. Players spend Credits to upgrad
     - Damage bonus accumulation: +0.01 per hit taken (capped at adaptiveAI × 0.25)
     - 50% effectiveness when HP > 70% (winning robots benefit less)
 20. **Logic Cores** - Performance under pressure and critical decisions
-    - **2D Arena Role**: Composure system under low-HP pressure
+    - **2D Arena Role**: Ranged damage bonus and composure system under low-HP pressure
+    - Long range damage bonus: `1 + logicCores × 0.015` (1.75× at 50, uncapped; Season 2 #519)
+    - Mid range damage bonus: `1 + logicCores × 0.01` (1.5× at 50, uncapped)
+    - No damage bonus at short/melee range; also applies to long-band counter-attacks
     - Pressure threshold: `15 + logicCores × 0.6` (% HP)
     - Negates accuracy/damage penalties under pressure
     - At logicCores = 30: fully negates all pressure penalties
@@ -368,7 +372,7 @@ hit_chance += learning_bonus
 damage_reduction += learning_bonus / 2
 ```
 
-**Logic Cores** - Performance under pressure (see formula in Combat Formulas section)
+**Logic Cores** - Ranged damage bonus (long `1 + LC × 0.015`, mid `1 + LC × 0.01`, Season 2 #519) and performance under pressure (see formula in Combat Formulas section)
 
 ---
 
@@ -394,6 +398,8 @@ damage_reduction += learning_bonus / 2
   - Increased repair cost multiplier applies
 
 **Logic Cores Integration:**
+
+Besides the composure role below, Logic Cores also adds the ranged damage bonus (long/mid range, see the Logic Cores attribute entry); the pressure mechanics are unchanged.
 
 Logic Cores improves decision-making under low HP conditions and provides **positive benefits at high levels**:
 

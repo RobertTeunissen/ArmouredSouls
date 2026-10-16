@@ -2,7 +2,7 @@
 title: "Battle Flow"
 description: "How battles play out in the 2D arena — from movement and positioning to attack resolution, range bands, backstabs, and the complete order of operations for every strike."
 order: 1
-lastUpdated: "2026-10-15"
+lastUpdated: "2026-10-16"
 relatedArticles:
   - combat/movement-and-positioning
   - combat/malfunctions
@@ -80,7 +80,8 @@ flowchart TD
     D1 --> RNG["📐 Range Penalty Applied"]
     D2 --> RNG
     RNG --> HYD["🔧 Hydraulic Bonus\n(melee/short only)"]
-    HYD --> BS["🗡️ Backstab/Flanking Bonus"]
+    HYD --> LCB["🧮 Logic Cores Bonus\n(mid/long only)"]
+    LCB --> BS["🗡️ Backstab/Flanking Bonus"]
     BS --> ADP["🧠 Adaptation & Pressure Bonuses"]
     ADP --> E1["🛡️ Shield Absorption"]
     E1 -->|Shield absorbs all| H
@@ -161,7 +162,8 @@ Raw damage is calculated from multiple factors:
 - **Weapon Control** — Secondary damage multiplier
 - **Tuning bonuses** — Bonus attribute points from the [Tuning Bay](/guide/facilities/tuning-bay) system, added to base attributes alongside weapon bonuses before multipliers apply. Formula: `(base + weaponBonus + tuningBonus) × loadoutMultiplier`
 - **Range penalty** — 1.1× at optimal range, 0.75× one band away, 0.5× two+ bands away
-- **Hydraulic Systems bonus** — Up to +100% at melee range, +75% at short range
+- **Hydraulic Systems bonus** — Up to +75% at melee range, +50% at short range
+- **Logic Cores bonus** — Up to +75% at long range, +50% at mid range
 - **Backstab/flanking bonus** — Up to +10% (backstab) or +20% (flanking) for positional advantage
 - **Adaptation bonus** — Accumulated damage bonus from Adaptive AI
 - **Pressure bonus** — Damage bonus from Logic Cores when HP is low
@@ -193,7 +195,7 @@ When reviewing a battle and wondering why your robot lost, trace the flow:
 - Getting backstabbed? → Boost **Gyro Stabilizers** and **Threat Analysis**
 - Lots of malfunctions? → Invest in **Weapon Control**
 - Missing too often? → Boost **Targeting Systems** or **Combat Algorithms**
-- Damage is low despite hitting? → Check your **range band** — you might be fighting at the wrong distance. Also check **Combat Power** and **Hydraulic Systems** for melee builds.
+- Damage is low despite hitting? → Check your **range band** — you might be fighting at the wrong distance. Also check **Combat Power**, plus **Hydraulic Systems** for melee builds or **Logic Cores** for ranged builds.
 - Taking too much hull damage? → Upgrade **Armor Plating**, **Shield Capacity**, or **Damage Dampeners**
 - Losing long fights? → Invest in **Adaptive AI** and **Logic Cores**
 

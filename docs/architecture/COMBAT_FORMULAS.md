@@ -537,6 +537,13 @@ Stance Multiplier = 1.15 (offensive) OR 0.90 (defensive) OR 1.0 (balanced)
 Base Damage = Weapon Base Damage × Combat Power × Loadout × Weapon Control × Stance
 ```
 
+In the 2D arena the spatial multipliers follow, in this order (see `calculateBaseDamage`):
+```
+× Range Penalty × Hydraulic Bonus × Logic Cores Bonus × (1 + Backstab) × (1 + Adapt%) × (1 + Pressure%) × (1 + Sync)
+```
+Hydraulic Bonus applies at melee/short range and Logic Cores Bonus at mid/long range
+(see [Hydraulic_Bonus](#hydraulic_bonus) and [Logic Cores Ranged Damage](#logic-cores-ranged-damage)).
+
 **Note on baseDamage Compression (v1.4, May 2026)**:
 Weapon `baseDamage` values were compressed in the May 2026 DPS rebalance to reduce DPS dominance over attributes. The damage formula itself is unchanged — only the input values (baseDamage) are lower. Top-tier 1H weapons now range 8–16 damage (was 18 for all). See [WEAPON_DPS_REBALANCE.md](../analysis/WEAPON_DPS_REBALANCE.md) for full details.
 
@@ -553,6 +560,11 @@ Weapon `baseDamage` values were compressed in the May 2026 DPS rebalance to redu
 ### Display Format
 ```
 Damage: 12 base × 1.10 combat_power × 0.90 loadout × 1.05 weapon_control × 1.00 stance = 12.5
+```
+
+With spatial context (arena battles), e.g. a long-range hit with 40 Logic Cores:
+```
+Damage: 12 base × 1.10 combat_power × 0.90 loadout × 1.05 weapon_control × 1.00 stance × 1.00 range × 1.00 hydraulic × 1.60 logic = 20.0
 ```
 
 ## Damage Application
@@ -1036,13 +1048,14 @@ Proximity-based damage bonus from hydraulic systems:
 
 ```
 Melee range (0–2 units):
-  bonus = 1 + hydraulicSystems × 0.02
-  // Range: 1.02 (hydro=1) to 2.0 (hydro=50)
-  // Reduced from 0.03 coefficient (was up to 2.5×) in March 2026 rebalance
+  bonus = 1 + hydraulicSystems × 0.015
+  // Range: 1.015 (hydro=1) to 1.75 (hydro=50), uncapped
+  // Season 2 (#519): reduced from 0.02 (was up to 2.0×); March 2026 reduced 0.03 → 0.02
 
 Short range (3–6 units):
-  bonus = 1 + hydraulicSystems × 0.015
-  // Range: 1.015 (hydro=1) to 1.75 (hydro=50)
+  bonus = 1 + hydraulicSystems × 0.01
+  // Range: 1.01 (hydro=1) to 1.5 (hydro=50), uncapped
+  // Season 2 (#519): reduced from 0.015 (was up to 1.75×)
 
 Mid/Long range (7+ units):
   bonus = 1.0   // No bonus
@@ -1118,6 +1131,27 @@ Effectiveness reduction:
   If HP > 70%: bonuses apply at 50% effectiveness
 ```
 
+### Logic Cores Ranged Damage
+
+Distance-based damage bonus from Logic Cores, the ranged mirror of [Hydraulic_Bonus](#hydraulic_bonus)
+(Season 2, #519). Uses the current distance band (`RANGE_BAND_BOUNDARIES`), damage only, uncapped and linear:
+
+```
+Long range (13+ units):
+  bonus = 1 + logicCores × 0.015
+  // Range: 1.015 (LC=1) to 1.75 (LC=50)
+
+Mid range (7–12 units):
+  bonus = 1 + logicCores × 0.01
+  // Range: 1.01 (LC=1) to 1.5 (LC=50)
+
+Short/Melee range (0–6 units):
+  bonus = 1.0   // No bonus
+```
+
+It stacks multiplicatively right after the hydraulic bonus in `calculateBaseDamage` and is shown as
+`× X.XX logic` in the damage breakdown. Logic Cores keeps its pressure/composure role (next section).
+
 ### Pressure Effects (Logic Cores)
 
 Performance under low-HP pressure, governed by logic cores:
@@ -1180,7 +1214,9 @@ Melee counters: blocked beyond 2 units distance (counter_out_of_range event, no 
 Ranged counters: any distance, with the range penalty of the counter weapon.
 Dual-wield fallback: if the main weapon is melee and out of range, a dual-wield defender
   counters with its offhand weapon when that weapon can reach.
-Hydraulic bonus applies to melee counters within range.
+Hydraulic bonus applies to melee-band counters within range.
+Logic Cores ranged bonus applies to long-band counters only (#519); mid-band counters get neither bonus.
+Counter damage breakdown: `... × 0.70 × R range × H hydraulic × L logic = damage`.
 An attack blocked by reach (#518) is never resolved, so it cannot be countered.
 ```
 
@@ -1444,6 +1480,8 @@ Each member robot receives the same ELO delta applied to their individual elo fi
 
 ## Version History
 
+- **Season 2 (#519):** Hydraulic Systems one step less steep (melee 0.02 → 0.015, short 0.015 → 0.01; 1.75× / 1.5× at 50,
+  uncapped); new Logic Cores ranged damage bonus (long 1 + 0.015 × LC, mid 1 + 0.01 × LC; long-band counters only)
 - **2026-10-15:** #536 — combat entry invariant: weaponless robots never enter combat (forfeit or last place), an
   incomplete loadout fights as `single` for that battle, and the simulator throws `ROBOT_NOT_BATTLE_READY` instead of
   using a weaponless default

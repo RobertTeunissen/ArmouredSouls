@@ -2,7 +2,7 @@
 title: "Attribute Combat Influence"
 description: "A visual guide showing how robot attributes influence combat outcomes — from damage dealing to defense, evasion, movement, positioning, and AI decision-making."
 order: 2
-lastUpdated: "2026-10-15"
+lastUpdated: "2026-10-16"
 relatedArticles:
   - robots/attributes-overview
   - combat/battle-flow
@@ -148,11 +148,11 @@ All five Chassis & Mobility attributes are active in combat:
 - **Hull Integrity** directly determines your maximum HP
 - **Servo Motors** controls movement speed in the 2D arena — faster robots can close distance to reach melee range or kite to maintain long-range advantage
 - **Gyro Stabilizers** has a triple role: reduces the opponent's hit chance, increases turn speed (harder to backstab), and reduces backstab/flanking damage bonuses
-- **Hydraulic Systems** provides a proximity-scaled damage bonus — significant at melee range (up to +100% at level 50), moderate at short range (up to +75%), and no effect at mid/long range
+- **Hydraulic Systems** provides a proximity-scaled damage bonus — significant at melee range (up to +75% at level 50), moderate at short range (up to +50%), and no effect at mid/long range
 - **Power Core** drives energy shield regeneration during battle
 
 ```callout-tip
-Hydraulic Systems is a strong attribute for melee builds. At level 50 in melee range, it doubles your damage output. Pair it with Servo Motors to close the gap quickly and Gyro Stabilizers to stay facing your opponent.
+Hydraulic Systems is a strong attribute for melee builds. At level 50 in melee range, it adds +75% to your damage output. Pair it with Servo Motors to close the gap quickly and Gyro Stabilizers to stay facing your opponent.
 ```
 
 ### 🟡 AI Processing → Smart Decision-Making and Adaptation
@@ -163,7 +163,7 @@ All four AI Processing attributes actively influence combat:
 - **Threat Analysis** enhances facing/turning speed with predictive bias. At high levels (25+), your robot anticipates opponents moving behind it and turns faster. Also reduces backstab and flanking damage taken. In multi-robot battles (KotH), Threat Analysis scales the effectiveness of zone-aware target priority weights.
 - **Target Stickiness**: Robots commit to their chosen target for 1.5 seconds before reconsidering. This prevents wasted time switching between similarly-threatening opponents and ensures attacks are completed. The lock breaks immediately if the target is destroyed or yields.
 - **Adaptive AI** accumulates hit and damage bonuses throughout the battle as your robot misses or takes damage. Higher values mean faster adaptation. Bonuses are halved when HP > 70% to prevent snowballing.
-- **Logic Cores** sets the pressure threshold — the HP percentage below which your robot gains accuracy and damage bonuses. Higher Logic Cores activates this bonus earlier (threshold: 15% + logicCores × 0.6%).
+- **Logic Cores** has two roles: a distance-scaled ranged damage bonus — significant at long range (up to +75% at level 50), moderate at mid range (up to +50%), and no effect at short/melee range — and the pressure threshold, the HP percentage below which your robot gains accuracy and damage bonuses. Higher Logic Cores activates this bonus earlier (threshold: 15% + logicCores × 0.6%).
 
 ```callout-info
 AI Processing attributes reward longer battles. Combat Algorithms helps your robot make smarter engagement decisions, Adaptive AI gets stronger over time, and Logic Cores kicks in when things get desperate. These attributes are the difference between a robot that fights smart and one that just swings.
@@ -193,9 +193,10 @@ Some attributes interact in ways that aren't immediately obvious:
 | **Power Core vs Shield Capacity** | Shield Capacity sets the maximum shield pool, while Power Core determines how fast it regenerates — both matter for shield-based defense |
 | **Gyro Stabilizers (triple role)** | Contributes to evasion, turn speed, and backstab/flanking damage reduction — a versatile defensive investment |
 | **Servo Motors + Hydraulic Systems** | Servo Motors closes the gap; Hydraulic Systems amplifies damage once you're in melee range. The melee combo. |
+| **Servo Motors + Logic Cores** | Servo Motors keeps your distance; Logic Cores amplifies damage at mid and long range. The ranged combo. |
 | **Threat Analysis vs Backstab** | High Threat Analysis makes your robot harder to backstab by improving turn speed and directly reducing the backstab bonus |
 | **Adaptive AI (time-based)** | Gets stronger as the battle goes on — more valuable in longer fights against tanky opponents |
-| **Logic Cores (clutch factor)** | Activates when HP drops low, giving accuracy and damage bonuses. Higher values trigger the bonus earlier. |
+| **Logic Cores (ranged + clutch)** | Boosts damage at mid/long range, and activates when HP drops low, giving accuracy and damage bonuses. Higher values trigger the pressure bonus earlier. |
 | **Formation Tactics (positional)** | Only active near the arena edge — rewards robots that fight with their back to the wall |
 
 ## What's Next?
