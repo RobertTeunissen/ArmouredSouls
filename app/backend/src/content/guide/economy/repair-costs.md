@@ -2,7 +2,7 @@
 title: "Operating Costs & Repairs"
 description: "All the ways Credits flow out of your stable — facility daily costs, repair expenses, and how damage severity and robot attributes influence what you pay."
 order: 3
-lastUpdated: "2026-07-30"
+lastUpdated: "2026-10-16"
 relatedArticles:
   - economy/credits-and-income
   - economy/daily-financial-cycle
@@ -28,6 +28,7 @@ For the complete facility-by-facility breakdown of operating costs at every leve
 | Repair Bay | ₡100/day | ₡1,000/day | Implemented |
 | Training Facility | ₡250/day | N/A (max L9) | Implemented |
 | Weapons Workshop | ₡100/day | ₡1,000/day | Implemented |
+| Refinement Lab | ₡100/day | ₡1,000/day | Implemented |
 | Merchandising Hub | ₡200/day | ₡2,000/day | Implemented |
 | Streaming Studio | ₡100/day | ₡1,000/day | Implemented |
 | Storage Facility | ₡500/day | ₡2,750/day | Implemented |

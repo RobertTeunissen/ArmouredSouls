@@ -1,6 +1,6 @@
 # Product Requirements Document: Economy System
 
-**Last Updated**: February 3, 2026  
+**Last Updated**: October 16, 2026 (Season 2: Refinement Lab facility)  
 **Status**: ✅ IMPLEMENTED (Backend + Frontend + Daily Financial System)  
 **Owner**: Robert Teunissen  
 **Epic**: Economy System Implementation
@@ -632,7 +632,7 @@ This PRD defines the complete economy system for Armoured Souls, covering all co
 - ✅ Repair cost formulas with Repair Bay multi-robot discount
 - ✅ Database schema for all economic tracking (../architecture/DATABASE_SCHEMA.md)
 - ✅ **Economic calculation utilities** (`app/backend/src/utils/economyCalculations.ts`)
-  - Facility operating costs (all 13 facilities)
+  - Facility operating costs (all 14 facilities)
   - Revenue calculations (battle rewards, merchandising, streaming)
   - Repair costs with facility discounts
   - Financial health indicators
@@ -833,7 +833,8 @@ total_max_cost = 23 × 1,274,000 = ₡29,302,000
 |----------|-------------------|
 | 1. Repair Bay | ₡100 |
 | 2. Training Facility | ₡250/level |
-| 3. Weapons Workshop | ₡1,000 |
+| 3. Weapons Workshop | ₡100/level |
+| 3a. Refinement Lab (Season 2) | ₡100/level |
 | 4. Roster Expansion | ₡500/slot |
 | 5. Storage Facility | ₡500 |
 | 6. Booking Office | ₡150/level |
@@ -994,6 +995,8 @@ All weapons use an exponential pricing formula based on attribute bonuses and DP
 --> This is not up to date. Refer to PRD_WEAPON_ECONOMY_OVERHAUL.md for up to date information. This PRD has been implemented.
 
 ### 4. Weapon Crafting (Unlockable)
+
+> **Superseded.** Per-weapon upgrades shipped as Weapon Refinement (`PRD_WEAPON_ECONOMY.md` v1.6), not as crafting. Since Season 2 the refinement tiers are gated by the **Refinement Lab** (hone L1, augment L3, sharpen L5, forge L8), not the Weapons Workshop; the Workshop only drives the purchase discount and resale rate. The crafting design below is historical and unimplemented.
 
 **Requirements**:
 - Weapons Workshop Level 3+ (unlocks weapon modifications)

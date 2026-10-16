@@ -46,7 +46,7 @@ An Upgrade_Strategy is a numbered Build_Order of Goals. Each strategy version is
 Rules every strategy follows (decisions 1, 2, 14, 19, 29, 30):
 
 - The planner walks the Build_Order and takes the first Goal that is not Satisfied or Blocked. If its next step is affordable it is bought; if not, the stable is Saving and buys nothing lower in the list. There is no reserve, no buffer and no saving timeout.
-- A Goal buys its own prerequisites (Goal_Chain): robots buy Roster Expansion and Storage Facility levels, attributes buy academy levels, refinements buy the Weapons Workshop level their tier needs. A prerequisite behind an unmet Prestige_Gate makes the Goal Blocked, which costs nothing, and the planner moves on.
+- A Goal buys its own prerequisites (Goal_Chain): robots buy Roster Expansion and Storage Facility levels, attributes buy academy levels, refinements buy the Refinement Lab level their tier needs (Season 2; before that the Weapons Workshop). A prerequisite behind an unmet Prestige_Gate makes the Goal Blocked, which costs nothing, and the planner moves on.
 - Every Build_Order contains every required Goal type with a default above 0 and ends with "Attributes → Max".
 - Booking Office is bought early and never above the useful level: L1 with one robot, L4 when a 2v2 team exists, L6 when a 3v3 team exists.
 
@@ -62,6 +62,7 @@ Each Robot_Blueprint has one of six Build_Focus presets (Bruiser, Deadeye, Warde
 - Weapon_Reuse: before buying, the Automaton equips a matching unequipped weapon from storage. A new robot starts at the highest stage storage can fill.
 - Storage_Overflow_Rule (fixed): replaced weapons stay in storage; when storage is full, an unequipped weapon no blueprint still needs is sold first, then the cheapest; a Storage Facility level is bought only when nothing unequipped is left.
 - Every blueprint has a Refinement_Plan (decision 35): at least one step on every non-shield weapon of the final stage, at most 5 per weapon. Starter plans are ordered by value: Sharpen, Sharpen, Forge, Forge first; a Hone or Augment only where it is cheaper than the same points on the robot. The Refine Goal_Target is the number of plan steps per robot (0–10).
+- The Refine Goal's Goal_Chain buys the Refinement Lab levels a step's tier needs (hone L1, augment L3, sharpen L5, forge L8); a Lab level behind an unmet Prestige_Gate blocks the step. The pinned v1 strategy files are unchanged: no strategy has a Refinement Lab facility Goal, the refine chain buys it. The Lab is not a required facility Goal type.
 
 ### Teams and events
 

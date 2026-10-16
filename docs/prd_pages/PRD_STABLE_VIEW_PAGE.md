@@ -2,8 +2,8 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: v1.0  
-**Date**: April 2, 2026  
+**Version**: v1.1  
+**Date**: October 16, 2026 (v1.1: Season 2 facility categories, Refinement Lab)  
 **Status**: Implemented ✅
 
 ---
@@ -77,10 +77,10 @@ The Stable View Page (`/stables/:userId`) is the first social/scouting feature i
 │   │   └── Click navigates to /robots/:robotId
 │   └── Sorted by ELO descending
 ├── Facilities Section ✅
-│   ├── Economy & Discounts group
-│   ├── Capacity & Storage group
+│   ├── Economy group
+│   ├── Hangar & Armory group
 │   ├── Training Academies group
-│   └── Advanced Features group
+│   └── Tactical & Advanced group
 │       └── Each facility: name + "Level X/Y" progress
 └── Error/Empty States ✅
     ├── Loading indicator while fetching
@@ -137,10 +137,10 @@ Facilities are grouped into 4 categories, each showing facility name and "Level 
 
 | Category | Facility Types |
 |---|---|
-| Economy & Discounts | repair_bay, training_facility, weapons_workshop, merchandising_hub, streaming_studio |
-| Capacity & Storage | roster_expansion, storage_facility |
+| Economy | repair_bay, training_facility, merchandising_hub, streaming_studio |
+| Hangar & Armory | roster_expansion, storage_facility, weapons_workshop, refinement_lab |
 | Training Academies | combat_training_academy, defense_training_academy, mobility_training_academy, ai_training_academy |
-| Advanced Features | booking_office, tuning_bay |
+| Tactical & Advanced | tuning_bay, booking_office |
 
 The facilities section is read-only — no upgrade costs, operating costs, or upgrade buttons are shown.
 

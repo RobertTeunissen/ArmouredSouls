@@ -122,5 +122,5 @@ Four economy achievements reward selling activity:
 ## What's Next?
 
 - [Loadout Types](/guide/weapons/loadout-types) — Compare the four loadout configurations to plan which weapons you actually need
-- [Facility Overview](/guide/facilities/facility-overview) — Workshop sits among 16 facilities; understand the full ROI picture
+- [Facility Overview](/guide/facilities/facility-overview) — Workshop sits among 14 facilities; understand the full ROI picture
 - [Starting Budget](/guide/getting-started/starting-budget) — How to spend your starting ₡3,000,000 across robots, weapons, and facilities

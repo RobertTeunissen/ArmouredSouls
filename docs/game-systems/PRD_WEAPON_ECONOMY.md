@@ -1,6 +1,6 @@
 # Product Requirements Document: Weapon Economy and Starter Weapons Overhaul
 
-**Version**: 1.8  
+**Version**: 1.9  
 **Last Updated**: October 16, 2026  
 **Status**: Implemented with Balance Adjustments  
 **Owner**: Robert Teunissen  
@@ -16,6 +16,7 @@
 - **v1.6** (May 23, 2026): Weapon Refinement system — permanent per-instance upgrades across four tiers (Hone / Augment / Sharpen / Forge), 5-slot cap, Workshop-gated tier unlocks, refinement spend folds into `pricePaid` so resale partially recovers it
 - **v1.7** (Jul 26, 2026): Sharpen and Forge converted from flat to proportional — Sharpen −10% cooldown per instance, Forge +8% base damage per instance, both stacked additively against the catalog value (Spec #46)
 - **v1.8** (Oct 16, 2026): Season 2 repricing — signed-sum attribute cost `500 × (Σ bonus)²` (bug fix: penalties no longer raise the price), hand multipliers 1.0 / 1.5 / 1.3, formula moved to `app/shared/utils/weaponPricing.ts`, #521 Fortress Shield / Aegis Bulwark bonus cut, Weapons Workshop discount 10% → 5% per level (resale unchanged), three documented price-grid gaps
+- **v1.9** (Oct 16, 2026): Season 2 Refinement Lab — new facility `refinement_lab` takes over the refinement tier gates from the Weapons Workshop (hone L1, augment L3, sharpen L5, forge L8); the Workshop keeps the purchase discount and resale rate; one-off grant migration gives every stable a Lab at its Workshop level
 
 ---
 
@@ -129,6 +130,31 @@ The tier bands stay Budget < ₡100K, Mid ₡100K–250K, Premium ₡250K–400K
 
 ---
 
+## Version 1.9 Updates (Season 2, October 2026) — Refinement Lab
+
+### Problem Statement
+
+The Weapons Workshop carried three jobs: purchase discount, resale rate and the refinement tier gates. That made it mandatory for every stable that refines, and it left the facility categories lopsided.
+
+### The change
+
+- New facility **Refinement Lab** (`refinement_lab`, `config/facilities.ts`, directly after the Workshop). 10 levels at the Workshop costs (₡75K → ₡750K), `PRESTIGE_GATES_10`, operating cost `100 × level` per day.
+- The refinement tier gate reads only the Lab: `REQUIRED_REFINEMENT_LAB_LEVELS` in `app/shared/utils/weaponRefinement.ts` (hone 1, augment 3, sharpen 5, forge 8, unchanged values). `weaponRefinementService` reads `facilityType 'refinement_lab'`; a tier above the Lab level fails with `WEAPON_REFINEMENT_TIER_LOCKED` (403), message `Refinement Lab level N required to <tier>.`, details `{ requiredRefinementLabLevel, currentRefinementLabLevel }`.
+- The Workshop keeps the purchase discount (5% per level) and the resale rate (10% per level). Resale of refinement spend still uses the **Workshop** level, because refinement folds into `pricePaid`.
+- Lab levels 9 and 10 unlock nothing new; they exist so the Lab mirrors the Workshop's 10-level curve.
+
+### Existing stables: one-off grant
+
+Migration `20261016120000_grant_refinement_lab` inserts a Lab row at the current Workshop level for every stable whose Workshop is above L0, so no unlocked tier is lost. It is idempotent (`ON CONFLICT (user_id, facility_type) DO NOTHING`), changes no schema and writes no ledger rows (a grant is not a purchase). No compatibility or fallback code reads the Workshop for refinement; the migration is the whole transition. `tests/integration/refinementLabGrantMigration.test.ts` runs the shipped SQL twice.
+
+Side effects of the grant:
+
+- Granted Labs at L3+ count toward the facility-count achievements E10 (3 facilities at L3+) and E11 (5 facilities at L3+).
+- Workshop L9/L10 owners receive Lab L9/L10, which unlock nothing beyond L8.
+- Granted stables pay the Lab operating cost (₡100 per level per day) from the next settlement.
+
+---
+
 ## Executive Summary
 
 This PRD defines the requirements for the weapon economy system in Armoured Souls Phase 1 prototype. **Version 1.1 updates the weapon damage values following the February 2026 combat rebalancing** that simplified damage application formulas and adjusted battle duration targets.
@@ -222,9 +248,9 @@ A 3.7× spread for the same ₡1.2M. Forge carried the same bias — a flat `+2.
 | **Sharpen** | −0.25s base cooldown | −10% base cooldown | ×0.80 |
 | **Forge** | +1.0 base damage | +8% base damage | ×1.16 |
 
-Costs, slot caps, per-tier caps, Workshop gates, and the `pricePaid` resale fold are all unchanged.
+Costs, slot caps, per-tier caps, Workshop gates (Refinement Lab gates since v1.9), and the `pricePaid` resale fold are all unchanged.
 
-Forge is deliberately the smaller percentage. `applyDamage()` applies every mitigation step as a multiplier, so proportional damage and proportional attack rate are equivalent in expected DPS — identical percentages would make the two tiers interchangeable. Forge accepts the lower ceiling in exchange for being the deeper unlock (Workshop L8 vs L5) and the better option against shield-regen builds, since bigger hits strip a regenerating shield in fewer swings.
+Forge is deliberately the smaller percentage. `applyDamage()` applies every mitigation step as a multiplier, so proportional damage and proportional attack rate are equivalent in expected DPS — identical percentages would make the two tiers interchangeable. Forge accepts the lower ceiling in exchange for being the deeper unlock (L8 vs L5; Refinement Lab levels since v1.9) and the better option against shield-regen builds, since bigger hits strip a regenerating shield in fewer swings.
 
 ### Additive stacking
 
@@ -266,14 +292,14 @@ Fast one-handed builds lose a small amount of Sharpen value; slow two-handed bui
 
 The DPS Rebalance (v1.4) and Weapon Resale (v1.5) addressed the cost side of weapon experimentation, but they didn't give players a reason to keep using a weapon long-term. Once a player buys their preferred weapons and maxes facilities, credits accumulate with no meaningful sink (Game Loop #6, Loop 2 stagnation), and every owned weapon feels identical to every other copy of the same catalog row.
 
-Weapon Refinement adds a per-instance progression layer: players can permanently improve individual `WeaponInventory` rows across four tiers, gated by Workshop level. This serves two purposes:
+Weapon Refinement adds a per-instance progression layer: players can permanently improve individual `WeaponInventory` rows across four tiers, gated by Workshop level (Refinement Lab level since v1.9). This serves two purposes:
 
 1. **Identity** — every refined weapon becomes distinct from the catalog and from other players' copies of the same weapon. Two `Volt Sabre`s in different stables will be configured differently, and the player who refined one will recognise it as theirs.
 2. **Late-game credit sink** — a maxed-out weapon absorbs ~₡4M of refinement spend, giving veterans a reason to keep earning credits beyond facility caps.
 
 ### The four tiers
 
-| Tier | Effect | Per-slot magnitude | Workshop unlock |
+| Tier | Effect | Per-slot magnitude | Unlock level (Refinement Lab since v1.9) |
 |---|---|---|---|
 | **Hone** | Boost an attribute the weapon already grants | Player picks +1 to +5 | L1 |
 | **Augment** | Add a brand-new attribute bonus | Player picks +1 to +5 | L3 |

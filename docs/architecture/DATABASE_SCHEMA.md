@@ -393,21 +393,24 @@ model Facility {
 }
 ```
 
-**13 Facility Types** (from STABLE_SYSTEM.md):
+**14 Facility Types** (from STABLE_SYSTEM.md):
 
 1. **repair_bay** - Reduces repair costs
 2. **training_facility** - Reduces attribute upgrade costs
-3. **weapons_workshop** - Weapon purchase discounts
-4. **roster_expansion** - Robot roster slots (Level 0-9, maxLevel=9)
-5. **storage_facility** - Weapon storage capacity
-6. **booking_office** - Event subscription access
-7. **combat_training_academy** - Combat Systems attribute caps
-8. **defense_training_academy** - Defensive Systems attribute caps
-9. **mobility_training_academy** - Chassis & Mobility attribute caps
-10. **ai_training_academy** - AI Processing + Team Coordination attribute caps
-11. **merchandising_hub** - Merchandising revenue (scales with prestige)
-12. **streaming_studio** - Streaming revenue multiplier
-13. **tuning_bay** - Bonus attribute points for tactical tuning
+3. **weapons_workshop** - Weapon purchase discounts and resale rate
+4. **refinement_lab** - Weapon refinement tier gates (hone L1, augment L3, sharpen L5, forge L8; Season 2)
+5. **roster_expansion** - Robot roster slots (Level 0-9, maxLevel=9)
+6. **storage_facility** - Weapon storage capacity
+7. **booking_office** - Event subscription access
+8. **combat_training_academy** - Combat Systems attribute caps
+9. **defense_training_academy** - Defensive Systems attribute caps
+10. **mobility_training_academy** - Chassis & Mobility attribute caps
+11. **ai_training_academy** - AI Processing + Team Coordination attribute caps
+12. **merchandising_hub** - Merchandising revenue (scales with prestige)
+13. **streaming_studio** - Streaming revenue multiplier
+14. **tuning_bay** - Bonus attribute points for tactical tuning
+
+**Refinement Lab grant** (migration `20261016120000_grant_refinement_lab`, data only, no schema change): a one-off, idempotent `INSERT ... SELECT ... ON CONFLICT (user_id, facility_type) DO NOTHING` that gives every user with `weapons_workshop` level > 0 a `refinement_lab` row at the same level (`max_level` 10), so no unlocked refinement tier is lost when the gate moves to the Lab. Existing Lab rows are untouched; no ledger rows are written.
 
 ---
 

@@ -96,7 +96,7 @@ Example with details:
 | `WEAPON_EQUIPPED` | 409 | Weapon is currently equipped on a robot — unequip before selling |
 | `INVALID_TRANSACTION` | 400 | Transaction is invalid |
 | `STORAGE_CAPACITY_FULL` | 400 | Weapon storage capacity is full |
-| `WEAPON_REFINEMENT_TIER_LOCKED` | 403 | Weapons Workshop level is below the required level for the requested refinement tier |
+| `WEAPON_REFINEMENT_TIER_LOCKED` | 403 | Refinement Lab level is below the required level for the requested refinement tier; `details: { requiredRefinementLabLevel, currentRefinementLabLevel }` (Season 2; before that the Weapons Workshop gated refinement) |
 | `WEAPON_REFINEMENT_SLOT_CAP_EXCEEDED` | 409 | Weapon already has 5 refinements (the per-weapon hard cap) |
 | `WEAPON_REFINEMENT_TIER_CAP_EXCEEDED` | 409 | Sharpen or Forge already has 2 instances on this weapon (per-tier cap) |
 | `WEAPON_REFINEMENT_ATTRIBUTE_STACK_CAP_EXCEEDED` | 409 | Adding the requested magnitude would push the attribute total above +10 |
