@@ -5,11 +5,18 @@ import {
   updateServoStrain,
   ServoStrainState,
 } from '../../src/services/arena/servoStrain';
+import type { EngagementRole, SpeedBurst } from '../../src/services/arena/engagementCycle';
 
 /**
- * Property-based tests for servoStrain module.
+ * Property-based tests for servoStrain module (#520 engagement-cycle rules).
  * Uses fast-check to verify universal properties across random inputs.
  */
+
+const STANCE_FACTOR: Record<'defensive' | 'offensive' | 'balanced', number> = {
+  defensive: 0.80,
+  offensive: 1.10,
+  balanced: 1.00,
+};
 
 /** Helper factory for ServoStrainState */
 function makeState(overrides: Partial<ServoStrainState> = {}): ServoStrainState {
@@ -19,9 +26,9 @@ function makeState(overrides: Partial<ServoStrainState> = {}): ServoStrainState 
     sustainedMovementTime: 0,
     isUsingClosingBonus: false,
     stance: 'balanced',
-    hasMeleeWeapon: false,
-    hasRangedWeapon: false,
-    weaponOptimalRangeMidpoint: 4.5,
+    role: 'ranged',
+    engagementRangeMidpoint: 4.5,
+    speedBurst: 'none',
     distanceToTarget: 10,
     currentSpeedRatio: 0,
     ...overrides,
@@ -51,6 +58,18 @@ const arbServoStrain = (): fc.Arbitrary<number> =>
 /** Arbitrary for sustained movement time (0–20s) */
 const arbSustainedTime = (): fc.Arbitrary<number> =>
   fc.double({ min: 0, max: 20, noNaN: true, noDefaultInfinity: true });
+
+/** Arbitrary for an engagement role */
+const arbRole = (): fc.Arbitrary<EngagementRole> =>
+  fc.constantFrom('melee' as const, 'ranged' as const);
+
+/** Arbitrary for an active burst */
+const arbActiveBurst = (): fc.Arbitrary<SpeedBurst> =>
+  fc.constantFrom('melee_commit' as const, 'ranged_disengage' as const);
+
+/** Arbitrary for distance beyond melee reach */
+const arbBeyondReach = (): fc.Arbitrary<number> =>
+  fc.double({ min: 2.0001, max: 40, noNaN: true, noDefaultInfinity: true });
 
 describe('servoStrain property tests', () => {
   /**
@@ -136,102 +155,104 @@ describe('servoStrain property tests', () => {
   });
 
   /**
-   * Property 12: Melee closing bonus always produces speed ≥ base speed (never reduces speed)
-   * **Validates: Requirements 2.5, 2.7**
+   * Property 12 (#520): melee pursuit of a ranged opponent is exactly base × stance × 1.10,
+   * strain-exempt, for every stance (defensive keeps 0.80 while pursuing).
    */
-  describe('Property 12: Melee closing bonus never reduces speed', () => {
-    it('should produce effectiveSpeed >= normal (non-bonus) speed when closing bonus is active', () => {
+  describe('Property 12: pursuit is base × stance × 1.10', () => {
+    it('should pursue at exactly base × stance × 1.10 regardless of strain', () => {
       fc.assert(
         fc.property(
           arbServoMotors(),
-          fc.double({ min: 0, max: 30, noNaN: true, noDefaultInfinity: true }),
           arbStance(),
           arbServoStrain(),
-          (servoMotors, opponentSpeed, stance, strain) => {
+          arbBeyondReach(),
+          (servoMotors, stance, strain, distance) => {
             const state = makeState({
-              servoMotors,
-              hasMeleeWeapon: true,
-              distanceToTarget: 10, // > 2 to trigger closing bonus
-              stance,
-              servoStrain: strain,
+              servoMotors, stance, servoStrain: strain, role: 'melee', distanceToTarget: distance,
             });
-
-            const { effectiveSpeed, isClosingBonus } = calculateEffectiveSpeed(
-              state,
-              opponentSpeed,
-              true, // hasRangedOpponent
-            );
-
-            if (isClosingBonus) {
-              // Calculate what the speed would be without the closing bonus
-              // (normal path with strain reduction applied)
-              const nonBonusState = makeState({
-                servoMotors,
-                hasMeleeWeapon: false, // disable closing bonus path
-                stance,
-                servoStrain: strain,
-              });
-              const { effectiveSpeed: normalSpeed } = calculateEffectiveSpeed(
-                nonBonusState,
-                opponentSpeed,
-                false,
-              );
-
-              // Closing bonus should always produce speed >= the normal
-              // strain-reduced speed, since it's exempt from strain (Req 2.7)
-              expect(effectiveSpeed).toBeGreaterThanOrEqual(normalSpeed);
-            }
+            const { effectiveSpeed, isClosingBonus } = calculateEffectiveSpeed(state, 'ranged');
+            expect(isClosingBonus).toBe(true);
+            expect(effectiveSpeed).toBeCloseTo(calculateBaseSpeed(servoMotors) * STANCE_FACTOR[stance] * 1.10, 10);
           }
         ),
         { numRuns: 500 }
       );
     });
+
+    it('should use the full 0.80 defensive factor while pursuing', () => {
+      fc.assert(
+        fc.property(arbServoMotors(), arbBeyondReach(), (servoMotors, distance) => {
+          const state = makeState({ servoMotors, stance: 'defensive', role: 'melee', distanceToTarget: distance });
+          const { effectiveSpeed } = calculateEffectiveSpeed(state, 'ranged');
+          expect(effectiveSpeed).toBeCloseTo(calculateBaseSpeed(servoMotors) * 0.80 * 1.10, 10);
+        }),
+        { numRuns: 200 }
+      );
+    });
   });
 
-  describe('Property 13: Ranged kiting bonus never reduces speed', () => {
-    it('should produce effectiveSpeed >= normal (non-bonus) speed when kiting bonus is active', () => {
+  /**
+   * Property 13 (#520): ranged kiting inside the engagement midpoint against a melee
+   * opponent is exactly base × stance × 1.10, strain-exempt.
+   */
+  describe('Property 13: kiting is base × stance × 1.10', () => {
+    it('should kite at exactly base × stance × 1.10 regardless of strain', () => {
       fc.assert(
         fc.property(
           arbServoMotors(),
-          fc.double({ min: 0, max: 30, noNaN: true, noDefaultInfinity: true }),
           arbStance(),
           arbServoStrain(),
-          (servoMotors, opponentSpeed, stance, strain) => {
+          fc.constantFrom(4.5, 9.5, 16),
+          fc.double({ min: 0, max: 0.999, noNaN: true, noDefaultInfinity: true }),
+          (servoMotors, stance, strain, midpoint, fraction) => {
             const state = makeState({
-              servoMotors,
-              hasRangedWeapon: true,
-              weaponOptimalRangeMidpoint: 9.5, // mid range
-              distanceToTarget: 3, // < optimal range to trigger kiting bonus
-              stance,
-              servoStrain: strain,
+              servoMotors, stance, servoStrain: strain, role: 'ranged',
+              engagementRangeMidpoint: midpoint, distanceToTarget: midpoint * fraction,
             });
+            const { effectiveSpeed, isClosingBonus } = calculateEffectiveSpeed(state, 'melee');
+            expect(isClosingBonus).toBe(true);
+            expect(effectiveSpeed).toBeCloseTo(calculateBaseSpeed(servoMotors) * STANCE_FACTOR[stance] * 1.10, 10);
+          }
+        ),
+        { numRuns: 500 }
+      );
+    });
 
-            const { effectiveSpeed, isClosingBonus } = calculateEffectiveSpeed(
-              state,
-              opponentSpeed,
-              false, // hasRangedOpponent
-              true,  // hasMeleeOpponent
-            );
+    it('should give pursuit and kiting the same multiplier at equal Servo Motors', () => {
+      fc.assert(
+        fc.property(arbServoMotors(), arbStance(), (servoMotors, stance) => {
+          const pursuer = makeState({ servoMotors, stance, role: 'melee', distanceToTarget: 3 });
+          const kiter = makeState({ servoMotors, stance, role: 'ranged', engagementRangeMidpoint: 16, distanceToTarget: 3 });
+          expect(calculateEffectiveSpeed(pursuer, 'ranged').effectiveSpeed)
+            .toBeCloseTo(calculateEffectiveSpeed(kiter, 'melee').effectiveSpeed, 10);
+        }),
+        { numRuns: 200 }
+      );
+    });
+  });
 
-            if (isClosingBonus) {
-              // Calculate what the speed would be without the kiting bonus
-              const nonBonusState = makeState({
-                servoMotors,
-                hasRangedWeapon: false, // disable kiting bonus path
-                stance,
-                servoStrain: strain,
-              });
-              const { effectiveSpeed: normalSpeed } = calculateEffectiveSpeed(
-                nonBonusState,
-                opponentSpeed,
-                false,
-                false,
-              );
-
-              // Kiting bonus should always produce speed >= the normal
-              // strain-reduced speed, since it's exempt from strain
-              expect(effectiveSpeed).toBeGreaterThanOrEqual(normalSpeed);
-            }
+  /**
+   * Property 14 (#520): a speed burst (melee commit / ranged disengage) is exactly
+   * base × stance × 1.30 and strain-exempt, regardless of role or distance.
+   */
+  describe('Property 14: burst is base × stance × 1.30', () => {
+    it('should move at base × stance × 1.30 whenever a burst is active', () => {
+      fc.assert(
+        fc.property(
+          arbServoMotors(),
+          arbStance(),
+          arbServoStrain(),
+          arbRole(),
+          fc.option(arbRole(), { nil: null }),
+          arbActiveBurst(),
+          fc.double({ min: 0, max: 40, noNaN: true, noDefaultInfinity: true }),
+          (servoMotors, stance, strain, role, opponentRole, burst, distance) => {
+            const state = makeState({
+              servoMotors, stance, servoStrain: strain, role, speedBurst: burst, distanceToTarget: distance,
+            });
+            const { effectiveSpeed, isClosingBonus } = calculateEffectiveSpeed(state, opponentRole);
+            expect(isClosingBonus).toBe(true);
+            expect(effectiveSpeed).toBeCloseTo(calculateBaseSpeed(servoMotors) * STANCE_FACTOR[stance] * 1.30, 10);
           }
         ),
         { numRuns: 500 }
@@ -239,54 +260,25 @@ describe('servoStrain property tests', () => {
     });
   });
 
-  describe('Property 14: Kiting bonus is weaker than closing bonus', () => {
-    it('should produce lower speed bonus for kiting than closing at same conditions', () => {
+  /**
+   * Property 15: normal movement (no mode applies) is strain-reduced.
+   */
+  describe('Property 15: normal movement is strain-reduced', () => {
+    it('should move at base × stance × (1 − strain/100) when no mode applies', () => {
       fc.assert(
         fc.property(
           arbServoMotors(),
-          fc.double({ min: 5, max: 30, noNaN: true, noDefaultInfinity: true }),
           arbStance(),
-          (servoMotors, opponentSpeed, stance) => {
-            // Melee closing state
-            const meleeState = makeState({
-              servoMotors,
-              hasMeleeWeapon: true,
-              distanceToTarget: 10, // > 2 to trigger closing bonus
-              stance,
-              servoStrain: 0,
-            });
-
-            // Ranged kiting state
-            const rangedState = makeState({
-              servoMotors,
-              hasRangedWeapon: true,
-              weaponOptimalRangeMidpoint: 16, // long range
-              distanceToTarget: 3, // < optimal range to trigger kiting bonus
-              stance,
-              servoStrain: 0,
-            });
-
-            const { effectiveSpeed: meleeSpeed, isClosingBonus: meleeBonus } = calculateEffectiveSpeed(
-              meleeState,
-              opponentSpeed,
-              true, // hasRangedOpponent
-              false,
+          arbServoStrain(),
+          arbBeyondReach(),
+          (servoMotors, stance, strain, distance) => {
+            // Ranged vs ranged: no pursuit, no final approach, no kiting
+            const state = makeState({ servoMotors, stance, servoStrain: strain, role: 'ranged', distanceToTarget: distance });
+            const { effectiveSpeed, isClosingBonus } = calculateEffectiveSpeed(state, 'ranged');
+            expect(isClosingBonus).toBe(false);
+            expect(effectiveSpeed).toBeCloseTo(
+              calculateBaseSpeed(servoMotors) * STANCE_FACTOR[stance] * (1 - strain / 100), 10,
             );
-
-            const { effectiveSpeed: rangedSpeed, isClosingBonus: rangedBonus } = calculateEffectiveSpeed(
-              rangedState,
-              opponentSpeed,
-              false, // hasRangedOpponent
-              true,  // hasMeleeOpponent
-            );
-
-            // Both should have their bonuses active
-            expect(meleeBonus).toBe(true);
-            expect(rangedBonus).toBe(true);
-
-            // Melee closing bonus (15% + 1%/diff) should be stronger than
-            // kiting bonus (10% + 0.8%/diff)
-            expect(meleeSpeed).toBeGreaterThan(rangedSpeed);
           }
         ),
         { numRuns: 500 }
@@ -294,58 +286,39 @@ describe('servoStrain property tests', () => {
     });
   });
 
-  describe('Property 15: Melee closing takes priority over kiting', () => {
-    it('should use melee closing bonus when both could apply', () => {
+  /**
+   * Property 16: the mutual-melee final approach (2 < d ≤ 4) keeps its 1.15 multiplier.
+   */
+  describe('Property 16: mutual-melee final approach is base × stance × 1.15', () => {
+    it('should apply 1.15 only between 2 and 4 units in a melee mirror', () => {
       fc.assert(
         fc.property(
           arbServoMotors(),
-          fc.double({ min: 5, max: 30, noNaN: true, noDefaultInfinity: true }),
           arbStance(),
-          (servoMotors, opponentSpeed, stance) => {
-            // Robot with both melee and ranged weapons (dual wield edge case)
-            const dualState = makeState({
-              servoMotors,
-              hasMeleeWeapon: true,
-              hasRangedWeapon: true,
-              weaponOptimalRangeMidpoint: 9.5,
-              distanceToTarget: 5, // > 2 (melee closing) and < 9.5 (kiting)
-              stance,
-              servoStrain: 0,
-            });
-
-            // Pure melee state for comparison
-            const meleeOnlyState = makeState({
-              servoMotors,
-              hasMeleeWeapon: true,
-              hasRangedWeapon: false,
-              distanceToTarget: 5,
-              stance,
-              servoStrain: 0,
-            });
-
-            const { effectiveSpeed: dualSpeed, isClosingBonus: dualBonus } = calculateEffectiveSpeed(
-              dualState,
-              opponentSpeed,
-              true, // hasRangedOpponent (triggers melee closing)
-              true, // hasMeleeOpponent (would trigger kiting)
-            );
-
-            const { effectiveSpeed: meleeSpeed, isClosingBonus: meleeBonus } = calculateEffectiveSpeed(
-              meleeOnlyState,
-              opponentSpeed,
-              true,
-              false,
-            );
-
-            // Both should have bonus active
-            expect(dualBonus).toBe(true);
-            expect(meleeBonus).toBe(true);
-
-            // Dual state should use melee closing (checked first), so speeds should match
-            expect(dualSpeed).toBeCloseTo(meleeSpeed, 10);
+          arbServoStrain(),
+          fc.double({ min: 2.0001, max: 4, noNaN: true, noDefaultInfinity: true }),
+          (servoMotors, stance, strain, distance) => {
+            const state = makeState({ servoMotors, stance, servoStrain: strain, role: 'melee', distanceToTarget: distance });
+            const { effectiveSpeed, isClosingBonus } = calculateEffectiveSpeed(state, 'melee');
+            expect(isClosingBonus).toBe(true);
+            expect(effectiveSpeed).toBeCloseTo(calculateBaseSpeed(servoMotors) * STANCE_FACTOR[stance] * 1.15, 10);
           }
         ),
-        { numRuns: 500 }
+        { numRuns: 300 }
+      );
+    });
+
+    it('should not apply a melee-mirror bonus beyond 4 units', () => {
+      fc.assert(
+        fc.property(
+          arbServoMotors(),
+          fc.double({ min: 4.0001, max: 40, noNaN: true, noDefaultInfinity: true }),
+          (servoMotors, distance) => {
+            const state = makeState({ servoMotors, role: 'melee', distanceToTarget: distance });
+            expect(calculateEffectiveSpeed(state, 'melee').isClosingBonus).toBe(false);
+          }
+        ),
+        { numRuns: 200 }
       );
     });
   });

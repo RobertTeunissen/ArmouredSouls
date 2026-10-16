@@ -4,6 +4,7 @@
  */
 import { simulateBattle, simulateBattleMulti, RobotWithWeapons, CombatResult, CombatEvent, Position } from '../src/services/battle/combatSimulator';
 import type { GameModeConfig, MovementIntent, RobotCombatState } from '../src/services/arena/types';
+import type { SpeedBurst } from '../src/services/arena/engagementCycle';
 import { prepareRobotForCombat } from '../src/utils/robotCalculations';
 import { ROBOT_ATTRIBUTES } from '../src/shared/utils/robotAttributes';
 import { buildKothGameModeConfig, buildKothInitialState } from '../src/services/arena/koth/kothGameMode';
@@ -1096,6 +1097,182 @@ describe('simulateBattle — spatial refactor', () => {
     it('seeded replays are deterministic', () => {
       expect(mixedHandsAtTen('ranged', 7).events).toEqual(mixedHandsAtTen('ranged', 7).events);
       expect(slowMeleeVsKiter(1).events).toEqual(slowMeleeVsKiter(1).events);
+    });
+  });
+
+  describe('engagement cycle (#520)', () => {
+    /** Movement-phase sample of one robot, taken right after its speed was set. */
+    interface MoveSample {
+      name: string;
+      tick: number;
+      speed: number;
+      burst: SpeedBurst;
+      exempt: boolean;
+      patience: number;
+      distance: number;
+    }
+
+    /**
+     * Pass-through movement modifier that samples each robot's speed state (optionally
+     * pinning robots). In a 1v1 the distance is to the only opponent.
+     */
+    function recorder(pins?: Position[]): { samples: MoveSample[]; config: GameModeConfig } {
+      const samples: MoveSample[] = [];
+      const seen = new Map<number, RobotCombatState>();
+      const ticks = new Map<number, number>();
+      const config: GameModeConfig = {
+        movementModifier: {
+          modify: (intent: MovementIntent, s: RobotCombatState): MovementIntent => {
+            seen.set(s.teamIndex, s);
+            const tick = (ticks.get(s.teamIndex) ?? 0) + 1;
+            ticks.set(s.teamIndex, tick);
+            const other = [...seen.values()].find(o => o !== s);
+            samples.push({
+              name: s.robot.name,
+              tick,
+              speed: s.effectiveMovementSpeed,
+              burst: s.speedBurst,
+              exempt: s.isUsingClosingBonus,
+              patience: s.patienceTimer,
+              distance: other
+                ? Math.hypot(s.position.x - other.position.x, s.position.y - other.position.y)
+                : Number.NaN,
+            });
+            return pins ? { ...intent, targetPosition: pins[s.teamIndex] } : intent;
+          },
+        },
+      };
+      return { samples, config };
+    }
+
+    function duel(robots: RobotWithWeapons[], seed: number, pins?: Position[], maxDuration: number = 120) {
+      const rec = recorder(pins);
+      const result = withSeededRandom(seed, () => simulateBattleMulti(robots, {
+        allowDraws: true,
+        gameModeConfig: { maxDuration, ...rec.config },
+      }));
+      return { result, samples: rec.samples };
+    }
+
+    /** One-handed long-range weapon with a higher DPS than the Energy Blade offhand. */
+    function createLongRangeInventory(weaponId: number) {
+      const inventory = createRangedWeaponInventory(weaponId);
+      return { ...inventory, weapon: { ...inventory.weapon, name: 'Long Rifle', baseDamage: 60, cooldown: 2, rangeBand: 'long' } };
+    }
+
+    // createMockRobot defaults: servoMotors 20 → base speed 11.0, balanced stance.
+    const BASE_SPEED = 7.0 + 20 * 0.2;
+
+    it('a long-range main + offhand sword robot is not a pursuer', () => {
+      const hybrid = durableRobot({
+        id: 1, name: 'Hybrid', loadoutType: 'dual_wield',
+        mainWeapon: createLongRangeInventory(1), mainWeaponId: 1,
+        offhandWeapon: createMeleeWeaponInventory(2), offhandWeaponId: 2,
+      });
+      const gunner = durableRobot({ id: 2, name: 'Gunner', mainWeapon: createRangedWeaponInventory(3), mainWeaponId: 3 });
+      const { samples } = duel([hybrid, gunner], 520, undefined, 30);
+      const hybridSamples = samples.filter(s => s.name === 'Hybrid' && Number.isFinite(s.distance));
+
+      expect(hybridSamples.length).toBeGreaterThan(100);
+      expect(hybridSamples.some(s => s.distance > 2)).toBe(true);
+      // Ranged role vs ranged role: no pursuit, no burst, never above base speed.
+      expect(hybridSamples.every(s => !s.exempt && s.burst === 'none')).toBe(true);
+      expect(hybridSamples.every(s => s.speed <= BASE_SPEED + 1e-9)).toBe(true);
+    });
+
+    it('a Shock Maul (energy, melee band) robot gets the pursuit multiplier', () => {
+      const maul = durableRobot({ id: 1, name: 'Maul', mainWeapon: createShockMaulInventory(1), mainWeaponId: 1 });
+      const gunner = durableRobot({ id: 2, name: 'Gunner', mainWeapon: createRangedWeaponInventory(2), mainWeaponId: 2 });
+      const { samples } = duel([maul, gunner], 520, undefined, 10);
+      const pursuing = samples.filter(s => s.name === 'Maul' && s.distance > 2 && s.burst === 'none');
+
+      expect(pursuing.length).toBeGreaterThan(10);
+      for (const s of pursuing) {
+        expect(s.exempt).toBe(true);
+        expect(s.speed).toBeCloseTo(BASE_SPEED * 1.10, 10);
+      }
+    });
+
+    it('a melee robot kited beyond its patience window commits and reaches melee reach', () => {
+      // Pursuit 12 × 1.10 = 13.2 loses to kiting 13 × 1.10 = 14.3; the commit burst 12 × 1.30 = 15.6 wins.
+      // The kiter moves first in tick order, so each brawler sample is taken after the kiter's step.
+      const kiter = durableRobot({
+        id: 1, name: 'Kiter', mainWeapon: createRangedWeaponInventory(1), mainWeaponId: 1,
+        servoMotors: new Prisma.Decimal(30),
+      });
+      const brawler = durableRobot({
+        id: 2, name: 'Brawler', mainWeapon: createMeleeWeaponInventory(2), mainWeaponId: 2,
+        servoMotors: new Prisma.Decimal(25), combatAlgorithms: new Prisma.Decimal(25),
+      });
+      const { result, samples } = duel([kiter, brawler], 520, undefined, 120);
+      const brawlerSamples = samples.filter(s => s.name === 'Brawler' && Number.isFinite(s.distance));
+      const firstCommit = brawlerSamples.findIndex(s => s.burst === 'melee_commit');
+      const patienceLimit = 15 - (25 / 50) * 5; // 12.5 s
+
+      expect(firstCommit).toBeGreaterThanOrEqual(0);
+      const commit = brawlerSamples[firstCommit];
+      expect(commit.patience).toBeGreaterThanOrEqual(patienceLimit);
+      expect(commit.distance).toBeGreaterThan(2);
+      expect(commit.exempt).toBe(true);
+      expect(commit.speed).toBeCloseTo(12 * 1.30, 10);
+
+      // The commit lasts until the brawler is within reach and resolves an attack (distance ≤ 2)
+      const commitTime = commit.tick * 0.1;
+      const reach = resolvedAttacks(result.events, 'Brawler').find(e => e.timestamp >= commitTime - 1e-6);
+      expect(reach).toBeDefined();
+      expect(reach!.distance!).toBeLessThanOrEqual(2);
+      const reachTick = Math.round(reach!.timestamp * 10);
+      const beforeReach = brawlerSamples.filter(s => s.tick >= commit.tick && s.tick <= reachTick);
+      expect(beforeReach.length).toBeGreaterThan(0);
+      expect(beforeReach.every(s => s.burst === 'melee_commit')).toBe(true);
+    });
+
+    describe('patience resets on a landed hit, not on a miss', () => {
+      const PINS_AT_TEN: Position[] = [{ x: -5, y: 0 }, { x: 5, y: 0 }];
+      const pair = () => [
+        durableRobot({ id: 1, name: 'Shooter', mainWeapon: createRangedWeaponInventory(1), mainWeaponId: 1 }),
+        durableRobot({ id: 2, name: 'Target', mainWeapon: createRangedWeaponInventory(2), mainWeaponId: 2 }),
+      ];
+
+      const hits = (events: CombatEvent[]): CombatEvent[] =>
+        events.filter(e => e.type === 'attack' || e.type === 'critical');
+
+      function constantRandomDuel(value: number) {
+        const rec = recorder(PINS_AT_TEN);
+        const spy = jest.spyOn(Math, 'random').mockReturnValue(value);
+        try {
+          const result = simulateBattleMulti(pair(), { allowDraws: true, gameModeConfig: { maxDuration: 60, ...rec.config } });
+          return { result, samples: rec.samples.filter(s => s.name === 'Shooter') };
+        } finally {
+          spy.mockRestore();
+        }
+      }
+
+      it('misses never reset patience', () => {
+        // Rolls of 99.9: every attack resolves as a miss (hit chance ≤ 95), no malfunction, no counter.
+        const { result, samples } = constantRandomDuel(0.999);
+        const attempts = resolvedAttacks(result.events, 'Shooter');
+
+        expect(attempts.length).toBeGreaterThan(10);
+        expect(attempts.every(e => e.type === 'miss')).toBe(true);
+        for (let i = 1; i < samples.length; i++) {
+          expect(samples[i].patience).toBeGreaterThan(samples[i - 1].patience);
+        }
+        expect(result.finalStates![0].patienceTimer).toBeGreaterThan(55);
+      });
+
+      it('every landed hit resets patience to 0', () => {
+        // Rolls of 50: reliable weapon, every attack hits, no crit, no counter.
+        const { result, samples } = constantRandomDuel(0.5);
+        const hitTicks = new Set(hits(resolvedAttacks(result.events, 'Shooter')).map(e => e.timestamp));
+        const drops = samples.filter((s, i) => i > 0 && s.patience < samples[i - 1].patience);
+
+        expect(hitTicks.size).toBeGreaterThan(10);
+        expect(drops.every(s => s.patience === 0)).toBe(true);
+        // Every hit except possibly one on the final tick is followed by a reset sample
+        expect(drops.length).toBeGreaterThanOrEqual(hitTicks.size - 1);
+        expect(drops.length).toBeLessThanOrEqual(hitTicks.size);
+      });
     });
   });
 
