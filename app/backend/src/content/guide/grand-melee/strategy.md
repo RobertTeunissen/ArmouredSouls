@@ -35,7 +35,7 @@ Grand Melee rewards different builds than 1v1 combat. With 19 opponents on the f
 - **Weapon**: Melee
 - **Strategy**: Close distance quickly, burst down a target, move to the next. High servo speed mitigates the melee disadvantage of needing to close range. Hydraulic bonuses (up to +75% at melee range) reward aggressive positioning.
 - **Strengths**: Hits hard once it is in reach
-- **Weakness**: The hardest archetype in a free-for-all: vulnerable to crossfire during the approach, and every robot near it can hurt it well, so it draws a lot of fire
+- **Weakness**: The hardest archetype in a free-for-all: it has to cross open ground to reach anyone, and while it approaches it takes crossfire from every ranged robot that has it in range
 
 ## Attribute Value Shifts vs 1v1
 

@@ -389,7 +389,6 @@ One line per change, for the Season 2 changelog entry (authored in the admin por
 - Ranged robots now keep their distance from closer-range ranged robots
 - Robots kiting near the arena wall now circle away instead of getting stuck
 - Hydraulic Systems nerfed: up to +75% melee and +25% short-range damage at level 50 (was +100% / +75%)
-- Short-range Hydraulic Systems bonus reduced: up to +25% at level 50 (was +50%)
 - Logic Cores buffed: now adds up to +75% long-range and +50% mid-range damage at level 50, also on long-range counter-attacks
 
 ### Loadouts & weapons
