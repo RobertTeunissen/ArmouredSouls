@@ -61,6 +61,7 @@ function makeRobot(
     disengageReadyAt: 0,
     disengageScheduledAt: null,
     speedBurst: 'none',
+    movementMode: 'normal',
     adaptationHitBonus: 0,
     adaptationDamageBonus: 0,
     hitsTaken: 0,

@@ -148,11 +148,11 @@ All five Chassis & Mobility attributes are active in combat:
 - **Hull Integrity** directly determines your maximum HP
 - **Servo Motors** controls movement speed in the 2D arena — faster robots can close distance to reach melee range or kite to maintain long-range advantage. Chasing gets +15% and kiting +10% with no catch-up bonus, so at equal Servo Motors a chaser slowly closes in and a kiter needs clearly more Servo Motors to stay away
 - **Gyro Stabilizers** has a triple role: reduces the opponent's hit chance, increases turn speed (harder to backstab), and reduces backstab/flanking damage bonuses
-- **Hydraulic Systems** provides a proximity-scaled damage bonus — significant at melee range (up to +75% at level 50), moderate at short range (up to +50%), and no effect at mid/long range
+- **Hydraulic Systems** provides a proximity-scaled damage bonus — significant at melee range (up to +75% at level 50), smaller at short range (up to +25%), and no effect at mid/long range
 - **Power Core** drives energy shield regeneration during battle
 
 ```callout-tip
-Hydraulic Systems is a strong attribute for melee builds. At level 50 in melee range, it adds +75% to your damage output. Pair it with Servo Motors to close the gap quickly and Gyro Stabilizers to stay facing your opponent.
+Hydraulic Systems is a strong attribute for melee builds. At level 50 in melee range, it adds +75% to your damage output (at short range only +25%). Pair it with Servo Motors to close the gap quickly and Gyro Stabilizers to stay facing your opponent.
 ```
 
 ### 🟡 AI Processing → Smart Decision-Making and Adaptation

@@ -91,6 +91,7 @@ export function initializeCombatState(
     disengageReadyAt: 0,
     disengageScheduledAt: null,
     speedBurst: 'none',
+    movementMode: 'normal',
     // Adaptation
     adaptationHitBonus: 0,
     adaptationDamageBonus: 0,

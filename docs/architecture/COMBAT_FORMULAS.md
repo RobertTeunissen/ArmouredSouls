@@ -979,10 +979,20 @@ Movement modes (Season 2, #520), first match wins; role = engagement role (see E
        effectiveSpeed = baseSpeed × stanceModifier × 1.15            // strain-exempt
   4. Kiting: role ranged AND distance < engagementRangeMidpoint AND opponent role melee
        effectiveSpeed = baseSpeed × stanceModifier × 1.10            // strain-exempt
-  5. Otherwise:
+  5. Ranged kiting (Season 2 round 3): role ranged AND opponent role ranged
+       AND opponentEngagementMidpoint < engagementRangeMidpoint AND distance < engagementRangeMidpoint
+       effectiveSpeed = baseSpeed × stanceModifier × 1.10            // strain-exempt
+  6. Ranged pursuit (Season 2 round 3): role ranged AND opponent role ranged
+       AND opponentEngagementMidpoint > engagementRangeMidpoint AND distance > engagementRangeMidpoint
+       effectiveSpeed = baseSpeed × stanceModifier × 1.05            // strain-exempt
+  7. Otherwise (incl. equal midpoints or no opponent):
        effectiveSpeed = baseSpeed × stanceModifier × strainReduction
 
   engagementRangeMidpoint = RANGE_BAND_MIDPOINTS[engagement range] (melee 1, short 4.5, mid 9.5, long 16)
+  opponentEngagementMidpoint = RANGE_BAND_MIDPOINTS[opponent's engagement range vs this robot]
+  The chosen mode is returned as `mode` and stored on RobotCombatState.movementMode
+  ('melee_commit' | 'ranged_disengage' | 'pursuit' | 'final_approach' | 'kiting' | 'ranged_kiting' |
+  'ranged_pursuit' | 'normal'); the wall-aware kiting path reads it (see Wall_Slide).
   The stance modifier always applies — a defensive robot moves at 0.80 also while pursuing.
   There is no speed-compensation term; at equal Servo Motors pursuit (1.15×) is faster than kiting (1.10×).
 
@@ -1004,6 +1014,13 @@ Pursuit target (#520 movement fix, movementAI.ts):
       equal Servo S: the gap opens 1.05 + 0.03·S u/s (1.80 at 25)
   Before the fix the pursuer aimed 1 unit short of the target's current position, so a kiter stepping more
   than 1 unit per tick (> 10 u/s) ended every tick at a gap of 1 + its step > 2 and could not be reached.
+
+Ranged vs ranged (Season 2 round 3; K = kiter Servo, the robot preferring the longer range; P = pursuer Servo):
+  ranged kiting 1.10× vs ranged pursuit 1.05×: gap change = 0.35 + 0.22·K − 0.21·P u/s
+    equal Servo S: the kiter gains 0.35 + 0.01·S u/s (0.60 at 25)
+    the pursuer holds the kiter only if P > ((1.10/1.05)(K + 35) − 35) ≈ 1.0476·K + 1.67
+    (K 10 → 12.14, 20 → 22.62, 30 → 33.10)
+  The pursuer stops gaining once inside its own midpoint, the kiter stops kiting at its own midpoint.
 
 Movement order: the movement phase is simultaneous. All robots decide (target, speed, intent) from the
 same tick-start snapshot, then all moves are applied; robot order has no effect.
@@ -1033,7 +1050,8 @@ Each tick (0.1s):
       servoStrain -= 5.0 × 0.1   // -5%/s = -0.5%/tick
       servoStrain = max(servoStrain, 0)
 
-  Strain-exempt movement modes (burst, pursuit, final approach, kiting) do not accumulate strain.
+  Strain-exempt movement modes (burst, pursuit, final approach, kiting, ranged kiting, ranged pursuit)
+  do not accumulate strain.
 ```
 
 ### Engagement_Cycle
@@ -1084,14 +1102,40 @@ else:
   boundaryPoint = intersection of the step with the wall (or pos if already on it)
   remaining     = maxMove − |boundaryPoint − pos|
   tangent       = step − (step · n) n           // n = outward unit normal at boundaryPoint
-  purely radial step (|tangent| ≈ 0): slide the perpendicular direction that ends farther from the
-                                      current target (tie or no target → counter-clockwise)
+  purely radial step (|tangent| ≈ 0): slide along the tick-start velocity's tangential component
+                                      (#538, Season 2 round 3); without one, the perpendicular direction
+                                      that ends farther from the current target (tie or no target →
+                                      counter-clockwise)
   newPos = clampToArena(boundaryPoint + unit(tangent) × remaining)
 ```
 
 The result is always inside the arena, never more than `effectiveSpeed × dt` from the old position, and
 deterministic. A robot at the arena centre keeps the plain clamp; the variable-tick constant-velocity
 branch for distant robots (10+ robot battles) keeps its plain clamp.
+
+**Wall-aware kiting path** (Season 2 round 3, #538; `arena/wallAwareKiting.ts`, called at the end of
+`calculateMovementIntent()` after the stance bias and before the game-mode movement modifier). A robot whose
+`movementMode` is `kiting`, `ranged_kiting` or `ranged_disengage` and whose desired step end
+(intent target clipped to `effectiveSpeed × dt`) lies beyond `arena.radius − 2` from the centre replaces its
+intent target with:
+
+```
+chaser    = nearest opponent's position + its velocity × dt        // tick-start values
+away      = unit(pos − chaser)   (zero: counter-clockwise wall tangent at pos, or +x at the centre)
+candidates: h = rotate(away, s × k × 15°), k = 0..12, s = ±1
+            end(h) = clampToArena(pos + h × stepLength)            // stepLength = effectiveSpeed × dt
+score(h)  = |end(h) − chaser|
+best      = highest score (ties: smaller k, then s = +1)
+continue  = among candidates with score ≥ best.score − 0.25 × stepLength, the best one whose
+            heading continues the tick-start velocity (h · unit(velocity) > 0)
+target    = end(continue ?? best)
+```
+
+The projection onto the disc is non-expansive, so the step never exceeds `stepLength` and always ends inside
+the arena. The path reads only the robot's own state and the chaser's tick-start position and velocity, so it is
+deterministic and order-independent, and mirror-symmetric apart from exact ties. In practice the kiter circles
+along the wall away from its chaser at full speed and keeps its direction unless the chaser cuts ahead; the
+continuity rule removes the back-and-forth wall dither of #538.
 
 ### Range_Penalty
 
@@ -1135,9 +1179,9 @@ Melee range (0–2 units):
   // Season 2 (#519): reduced from 0.02 (was up to 2.0×); March 2026 reduced 0.03 → 0.02
 
 Short range (3–6 units):
-  bonus = 1 + hydraulicSystems × 0.01
-  // Range: 1.01 (hydro=1) to 1.5 (hydro=50), uncapped
-  // Season 2 (#519): reduced from 0.015 (was up to 1.75×)
+  bonus = 1 + hydraulicSystems × 0.005
+  // Range: 1.005 (hydro=1) to 1.25 (hydro=50), uncapped
+  // Season 2 round 3: reduced from 0.01; Season 2 (#519): 0.015 → 0.01 (live before Season 2: up to 1.75×)
 
 Mid/Long range (7+ units):
   bonus = 1.0   // No bonus
@@ -1219,8 +1263,9 @@ Effectiveness reduction:
 
 ### Logic Cores Ranged Damage
 
-Distance-based damage bonus from Logic Cores, the ranged mirror of [Hydraulic_Bonus](#hydraulic_bonus)
-(Season 2, #519). Uses the current distance band (`RANGE_BAND_BOUNDARIES`), damage only, uncapped and linear:
+Distance-based damage bonus from Logic Cores, the ranged counterpart of [Hydraulic_Bonus](#hydraulic_bonus)
+(Season 2, #519; the mid coefficient stays 0.01 although the hydraulic short coefficient is 0.005 since round 3).
+Uses the current distance band (`RANGE_BAND_BOUNDARIES`), damage only, uncapped and linear:
 
 ```
 Long range (13+ units):
@@ -1263,12 +1308,23 @@ Composure bonus (logicCores > 30):
 Target priority scoring for AI target selection:
 
 ```
-score = combatPowerThreat × hpFactor × weaponThreat × proximityDecay
+score = combatPowerThreat × hpFactor × ownRangeMultiplier × proximityDecay
         × targetingMe × (0.5 + threatAnalysis / 100)
 
-proximityDecay = 1 / (1 + normalizedDistance × 5)
+combatPowerThreat  = 2 × max(opponent.totalDamageDealt, opponent.maxHP × 0.5)
+hpFactor           = opponent.currentHP / opponent.maxHP
+ownRangeMultiplier = getRangePenalty(own main weapon band, band(distance))   // 1.1 / 0.75 / 0.5; 1 without a main weapon
+proximityDecay     = 1 / (1 + normalizedDistance × 5)
 normalizedDistance = distance / (arenaRadius × 2)
+targetingMe        = 1.3 if the opponent targets this robot, else 1.0
 ```
+
+Season 2 round 3 ("shoot who I can hurt"): the opponent-band `weaponThreat` (1.5 when the *opponent's* weapon
+band matched the distance, else 0.8) is replaced by the evaluator's own range multiplier, so the opponent's weapon
+no longer affects its threat; and combat power was `totalDamageDealt > 0 ? totalDamageDealt : maxHP × 0.5`,
+which dropped a robot's threat right after its first hit. In practice only Grand Melee reaches `selectTarget` with
+several candidates: 1v1 (league, tournament, tag-team bouts) has one candidate, and KotH and team battles use their own
+target priority strategies. 1v1 and KotH were verified byte-identical (event logs of 200 seeded battles each).
 
 ### Target_Stickiness
 
@@ -1566,6 +1622,12 @@ Each member robot receives the same ELO delta applied to their individual elo fi
 
 ## Version History
 
+- **Season 2 round 3:** ranged kiting 1.10× (vs a ranged opponent with a closer engagement midpoint, inside the
+  own midpoint) and ranged pursuit 1.05× (vs a farther-preferring ranged opponent, beyond the own midpoint), both
+  strain-free; `movementMode` on the combat state; wall-aware kiting path (`wallAwareKiting.ts`) and the
+  velocity-continuity rule for a purely radial wall slide (#538); Hydraulic Systems short band 0.01 → 0.005
+  (1.25× at 50); threat score uses the evaluator's own range multiplier instead of the opponent-band
+  `weaponThreat`, and `combatPower = max(totalDamageDealt, maxHP × 0.5)`
 - **Season 2 round 2 (#520):** ranged disengage starts 2.5 s after the first melee hit (guaranteed exchange);
   pursuit 1.10 → 1.15 (kiting 1.10); thresholds re-derived
 - **Season 2 (#520 movement fix):** simultaneous two-pass movement phase (robot order no longer matters); a melee

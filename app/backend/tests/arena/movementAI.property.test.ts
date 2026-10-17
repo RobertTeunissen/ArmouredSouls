@@ -120,6 +120,7 @@ function makeState(overrides: Partial<RobotCombatState> = {}): RobotCombatState 
     disengageReadyAt: 0,
     disengageScheduledAt: null,
     speedBurst: 'none',
+    movementMode: 'normal',
     adaptationHitBonus: 0,
     adaptationDamageBonus: 0,
     hitsTaken: 0,
@@ -249,7 +250,37 @@ describe('movementAI property tests', () => {
       );
     });
 
-    it('slides away from the threat on a purely radial retreat (no threat → counter-clockwise)', () => {
+    it('keeps sliding the way it was moving on a purely radial retreat, whatever the threat (#538)', () => {
+      fc.assert(
+        fc.property(
+          arbWallRadius(), arbAngle(), arbWallSpeed(), arbTick(),
+          fc.double({ min: 0.1, max: 1.2, noNaN: true, noDefaultInfinity: true }),
+          fc.double({ min: 0.2, max: 0.9, noNaN: true, noDefaultInfinity: true }),
+          fc.constantFrom(1, -1),
+          fc.option(fc.constantFrom(1, -1), { nil: undefined }),
+          (radius, angle, speed, dt, offset, threatFraction, travel, threatSide) => {
+            const arena = makeArena(radius);
+            const position = onWall(radius, angle);
+            const intent = makeIntent({ targetPosition: onWall(radius + 5, angle) });
+            // Tick-start velocity along the wall tangent (travel +1: counter-clockwise) plus a radial part
+            const velocity = {
+              x: -Math.sin(angle) * speed * travel + Math.cos(angle) * speed * 0.5,
+              y: Math.cos(angle) * speed * travel + Math.sin(angle) * speed * 0.5,
+            };
+            const state = makeState({ position, effectiveMovementSpeed: speed, velocity });
+            const threat = threatSide === undefined ? undefined : onWall(radius * threatFraction, angle + threatSide * offset);
+            const newPos = applyMovement(state, intent, arena, dt, threat);
+
+            expect(Math.sign(cross(position, newPos))).toBe(travel);
+            expect(euclideanDistance(newPos, position)).toBeLessThanOrEqual(speed * dt + 1e-9);
+            expect(euclideanDistance(newPos, arena.center)).toBeLessThanOrEqual(radius + 1e-9);
+          },
+        ),
+        { numRuns: 500 },
+      );
+    });
+
+    it('without a tangential velocity, slides away from the threat on a purely radial retreat (no threat → counter-clockwise)', () => {
       fc.assert(
         fc.property(
           arbWallRadius(), arbAngle(), arbWallSpeed(), arbTick(),

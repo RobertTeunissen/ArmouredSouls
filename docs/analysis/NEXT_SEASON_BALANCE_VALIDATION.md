@@ -931,3 +931,260 @@ wait
 
 Remove the arms afterwards with `git worktree remove --force "$W/s2r2-arm-<name>"` (`--force` because of the
 symlinks).
+
+## Season 2 balance package: round 3
+
+**Status**: measured for information only. No value was tuned in response to these results; every change is a
+product-owner decision (see [SEASON_2_BALANCE_PACKAGE.md](../balance_changes/SEASON_2_BALANCE_PACKAGE.md#round-3-adjustments)).
+The fallback rule applied at invest late (see [Round 3 findings](#findings-for-the-product-owner-round-3)): nothing
+was changed because of it, and the arena size is an open product decision.
+**Measured on**: branch `feature/season2-round3` (on top of `2d8d89ed`, round 2), October 17, 2026.
+**What changed**:
+
+| Change | Commit | Values |
+|---|---|---|
+| B. Grand Melee targeting + threat fix | `2b8159f8` | threat × the evaluator's own range multiplier (1.1 / 0.75 / 0.5) instead of the opponent-band weapon threat (1.5 / 0.8); `combatPower = max(damage dealt, maxHP × 0.5)` |
+| A. Ranged vs ranged positioning | `035506ed` | ranged kiting 1.10× (opponent prefers a closer midpoint, inside own midpoint), ranged pursuit 1.05× (opponent prefers a farther midpoint, beyond own midpoint), both strain-free |
+| A-late. Wall-aware kiting path (#538) | `2188c935`, `ea62df1d` | kiting modes within 2 units of the wall take the step that ends farthest from the chaser (15° fan, continuity within 0.25 × step); purely radial wall slides keep the tick-start tangential velocity |
+| C. Short-range Hydraulic Systems | `813530de` | 0.01 → 0.005 per point (1.25× at 50); melee stays 0.015 |
+| Harness metrics | `1e68278e` | own-band time and wall time per side (1v1 suites) |
+
+### Round 3 summary
+
+- **Invest early and mid: short range comes down to (or near) the band.** Short against the other classes: round 2
+  84.1% / 80.7% → round 3 64.7% / 57.7%; short vs mid 80.9% / 71.1% → 44.3% / 33.4%. Mid rises to 59.6% / 63.6%,
+  long to 18.1% / 28.2%, melee stays at 57.6% / 50.5%.
+- **Invest late: A-late does not work (fallback rule).** Short vs mid stays at 71.3% (round 2 72.0%, Δ −0.8 ±1.3),
+  short vs long 83.9% (88.6%), short 74.5% against the other classes (80.5%). Almost all of the late drop comes from C:
+  A + A-late alone give short 81.2%. The cause is geometry in the radius-16 1v1 arena, not a wall stall (below).
+- **The wall path works against melee chasers.** At invest late a short-range kiter vs melee spends 33.0% of its AI
+  ticks at the wall instead of 96.8%, and melee rises from 47.8% to 55.6% against the other classes.
+- **Grand Melee moves towards long range** (B): normalized rank, invest mid, melee / short / mid / long 0.592 / 0.386
+  / 0.451 / 0.571 → 0.612 / 0.459 / 0.487 / 0.442; long podium 11.6% → 24.2%, short 27.5% → 19.8%.
+- **KotH**: mid and long stay the best classes (invest mid 0.389 / 0.368), melee improves 0.661 → 0.618.
+- **B leaves 1v1 and KotH byte-identical**, and robot order stays neutral (slot-0 score 49.8–50.8%).
+- **Loadouts don't move** (±0.8 pp; both sides share a range class): Single 24.8–34.8%, Dual Wield late 72.9%.
+
+### Round 3 arms
+
+| Arm | Code | How it was produced |
+|---|---|---|
+| `round2` (baseline) | `2d8d89ed` | `git worktree add --detach .worktrees/s2r3-arm-round2 2d8d89ed` (`origin/feature/season2-combat-tuning`) |
+| `main` | `0d7e5b51` | `git worktree add --detach .worktrees/s2r3-arm-main 0d7e5b51` |
+| `bonly` | `2d8d89ed` + `2b8159f8` (src) | `git cherry-pick --no-commit 2b8159f8`, tests/docs restored to `HEAD`; diff: `threatScoring.ts`, `types.ts` |
+| `aonly` | `2d8d89ed` + `035506ed`, `2188c935`, `ea62df1d` (src) | cherry-picked without commit, tests/docs restored; diff: 7 `src` files (speed model, state, loop, movement AI, new `wallAwareKiting.ts`) |
+| `round3` | `1e68278e` | the branch checkout (all code commits) |
+
+`round2` comes first, so every Δ is paired against round 2 and weapons are sampled from the round 2 catalogue (same
+prices as round 1 and round 2, so the round 2 numbers reproduce exactly). `bonly` isolates B; `aonly` isolates A +
+A-late; `round3` minus `aonly` is roughly B + C (B does not act in 1v1, so in 1v1 it is C).
+
+### Round 3 dataset and method
+
+Same builds, suites, seed (516), side alternation and paired 95% CIs (±1.96·sd/√n) as rounds 1 and 2: 2,000 trials per
+1v1 cell and per KotH field set (radius 7), 1,000 Grand Melee battles. All 17 shards ran in parallel with five arms and
+exited without errors (wall time 257–961 s; outputs in `logs/s2-round3/`, gitignored).
+
+- **New metrics.** *Own band*: share of battle time a side spends in its own range class's band to its target,
+  reconstructed from its `range_transition` events (start band = band of the nearest opponent at spawn, as for melee
+  reach). *Wall*: share of a side's AI ticks that start within 0.5 of the arena wall, counted by a pass-through
+  movement modifier. The sampler is outcome-neutral: with arms `round2` and `main`, range invest mid at 200 trials,
+  all 125 pre-existing metric rows were identical before and after the harness change. The round 2 column reproduces
+  the round 2 report (invest mid melee / short / mid / long 50.4 / 80.7 / 49.9 / 19.0%, short vs mid 71.1%, melee vs
+  short 18.3%; GM invest mid ranks 0.592 / 0.386 / 0.451 / 0.571).
+- **Investigation figures.** The investigation measured short vs mid (invest mid, round 2) as short in band 78.6% and
+  mid at the wall 95.5% from per-tick distances; the harness gives 81.5% and 94.5% (`range_transition` reconstruction
+  and AI-tick sampling instead of end-of-tick samples). The method differs; the picture is the same.
+- **B byte-identity.** In every `range`, `loadout`, `mobility` and `koth` shard the `bonly` column equals `round2`
+  (Δ +0.0 ±0.0 on every metric). A scratch check compared `JSON.stringify(result.events)` of 200 seeded 1v1 battles
+  (invest mid builds, random range classes and loadouts) and 200 KotH fields (invest mid, radius 7) between `round2`
+  and `bonly`: 200/200 and 200/200 identical (the same check against `round3` differs in 156/200 and 200/200).
+- Limits as before: local simulation, synthetic equal-investment builds, uniform-build timeouts indicative only.
+
+### Round 3 results by range class
+
+Score against the other three classes (n = 6,000 per row); Δ vs round 2 in pp (95% CI).
+
+| Class | Builds | main | round2 | aonly | round3 | Δ aonly | Δ round3 |
+|---|---|---|---|---|---|---|---|
+| melee | invest early | 83.6% | 62.1% | 55.9% | 57.6% | −6.2 ±1.0 | −4.5 ±1.1 |
+| short | invest early | 75.0% | 84.1% | 67.6% | 64.7% | −16.5 ±1.1 | −19.3 ±1.2 |
+| mid | invest early | 33.9% | 43.6% | 58.8% | 59.6% | +15.2 ±1.0 | +16.0 ±1.1 |
+| long | invest early | 7.4% | 10.3% | 17.6% | 18.1% | +7.4 ±0.7 | +7.8 ±0.7 |
+| melee | invest mid | 67.3% | 50.4% | 47.8% | 50.5% | −2.7 ±0.9 | +0.1 ±1.0 |
+| short | invest mid | 78.7% | 80.7% | 63.1% | 57.7% | −17.6 ±1.1 | −23.1 ±1.2 |
+| mid | invest mid | 37.4% | 49.9% | 62.0% | 63.6% | +12.1 ±1.0 | +13.8 ±1.0 |
+| long | invest mid | 16.6% | 19.0% | 27.1% | 28.2% | +8.2 ±0.8 | +9.3 ±0.8 |
+| melee | invest late | 58.3% | 47.8% | 50.9% | 55.6% | +3.2 ±0.7 | +7.9 ±0.8 |
+| short | invest late | 77.6% | 80.5% | 81.2% | 74.5% | +0.7 ±0.6 | −6.0 ±0.7 |
+| mid | invest late | 41.8% | 49.7% | 47.0% | 47.9% | −2.7 ±0.6 | −1.8 ±0.6 |
+| long | invest late | 22.3% | 22.1% | 20.9% | 22.0% | −1.2 ±0.4 | −0.1 ±0.5 |
+| melee | uniform L10 | 78.5% | 55.5% | 54.5% | 55.7% | −1.0 ±0.7 | +0.3 ±0.7 |
+| short | uniform L10 | 60.4% | 68.7% | 67.3% | 66.1% | −1.4 ±0.5 | −2.6 ±0.6 |
+| mid | uniform L10 | 40.8% | 49.7% | 50.9% | 50.4% | +1.2 ±0.5 | +0.7 ±0.5 |
+| long | uniform L10 | 20.3% | 26.2% | 27.4% | 27.8% | +1.2 ±0.4 | +1.6 ±0.4 |
+| melee | uniform L25 | 62.5% | 49.7% | 49.7% | 51.9% | +0.1 ±0.5 | +2.2 ±0.5 |
+| short | uniform L25 | 58.6% | 63.7% | 63.9% | 60.0% | +0.3 ±0.4 | −3.7 ±0.5 |
+| mid | uniform L25 | 45.0% | 51.4% | 50.2% | 50.1% | −1.2 ±0.5 | −1.3 ±0.6 |
+| long | uniform L25 | 33.8% | 35.3% | 36.1% | 38.0% | +0.8 ±0.4 | +2.8 ±0.5 |
+
+`bonly` equals `round2` in every row. Expected from the investigation (invest mid, A + C): melee 53 / short 59 / mid 62
+/ long 27; measured 50.5 / 57.7 / 63.6 / 28.2.
+
+### Round 3 key cells
+
+Score of A, round2 → aonly → round3 (Δ round3, 95% CI), n = 2,000 per cell:
+
+| Cell | invest early | invest mid | invest late |
+|---|---|---|---|
+| short vs mid | 80.9% → 47.0% → 44.3% (−36.6 ±2.1) | 71.1% → 38.7% → 33.4% (−37.7 ±2.1) | 72.0% → 76.7% → 71.3% (−0.8 ±1.3) |
+| short vs long | 96.6% → 80.0% → 78.7% (−17.9 ±1.7) | 89.3% → 68.3% → 64.8% (−24.5 ±1.9) | 88.6% → 88.4% → 83.9% (−4.8 ±0.8) |
+| melee vs short | 25.3% → 24.3% → 28.8% (+3.5 ±2.0) | 18.3% → 17.6% → 25.3% (+7.0 ±1.8) | 19.2% → 21.5% → 31.6% (+12.3 ±1.6) |
+| melee vs mid | 73.2% → 61.3% → 61.8% (−11.4 ±2.0) | 54.5% → 50.5% → 51.0% (−3.5 ±1.7) | 53.6% → 56.9% → 59.8% (+6.2 ±1.4) |
+| melee vs long | 87.8% → 82.2% → 82.3% (−5.5 ±1.3) | 78.5% → 75.0% → 75.2% (−3.3 ±1.5) | 70.5% → 74.4% → 75.5% (+5.0 ±1.0) |
+| mid vs long | 84.9% → 84.8% → 84.8% (−0.1 ±0.1) | 75.3% → 75.2% → 75.2% (−0.0 ±0.0) | 74.7% → 74.7% → 74.7% (−0.1 ±0.1) |
+
+Own band and wall time, round2 → round3:
+
+| Cell | Builds | short in its band | other side in its band | other side at the wall |
+|---|---|---|---|---|
+| short vs mid | invest early | 85.0% → 51.9% | – | 93.2% → 95.2% |
+| short vs mid | invest mid | 81.5% → 46.6% | 16.9% → 52.0% | 94.5% → 96.4% |
+| short vs mid | invest late | 88.2% → 93.4% | 10.6% → 5.7% | 90.1% → 97.9% |
+| short vs long | invest mid | 80.7% → 47.7% | 3.2% → 2.5% | 96.0% → 98.0% |
+| short vs long | invest late | 95.3% → 94.1% | 1.9% → 1.7% | 97.3% → 98.4% |
+| melee vs short (short = kiter) | invest mid | – | 85.2% → 82.3% | 90.6% → 66.9% |
+| melee vs short (short = kiter) | invest late | – | 88.2% → 86.5% | 96.8% → 33.0% |
+
+Wall time per class against the other classes (invest early / mid / late), round2 → round3: melee 60.4 / 59.1 / 72.4% →
+79.6 / 44.6 / 10.0%; short 42.1 / 39.9 / 36.2% → 38.6 / 28.8 / 11.0%; mid 54.1 / 55.8 / 60.5% → 63.9 / 55.4 / 44.2%;
+long 87.0 / 88.3 / 94.5% → 96.9 / 88.3 / 77.0%. Long's own-band time stays at 1.9–3.9% at every budget, and mid vs
+long does not move: a long robot in the radius-16 arena can't reach its 16-unit midpoint against a mid robot that
+holds 9.5 units.
+
+### Round 3 engagement metrics, timeouts and robot order
+
+`range` suite, all cells (n = 20,000), round2 → round3 (Δ):
+
+| Metric | invest early | invest mid | invest late | uniform L10 | uniform L25 |
+|---|---|---|---|---|---|
+| timeout rate | 2.2% → 3.0% (+0.8 ±0.2) | 4.8% → 5.8% (+1.0 ±0.2) | 13.6% → 15.3% (+1.7 ±0.3) | 20.5% → 22.7% (+2.2 ±0.3) | 48.2% → 56.0% (+7.8 ±0.4) |
+| time within melee reach | 17.5% → 16.3% | 13.7% → 13.7% | 12.3% → 13.1% | 17.9% → 17.4% | 13.8% → 13.9% |
+| melee-reach entries / battle | 38.73 → 37.87 | 25.96 → 26.19 | 20.46 → 25.75 | – | – |
+| slot-0 score | 50.3% → 50.8% (+0.4 ±0.5) | 49.9% → 50.0% (+0.1 ±0.5) | 50.0% → 49.8% (−0.2 ±0.3) | 50.0% → 50.1% | 50.1% → 50.2% |
+| mean duration (s) | 47.8 → 50.2 | 52.2 → 55.0 | 62.7 → 65.6 | – | – |
+
+The largest timeout increases are ranged-vs-ranged and melee-vs-short cells at invest late (short vs long 16.9% →
+24.0%, short vs mid 13.8% → 19.9%, melee vs short 11.9% → 16.3%). No-contact battles and melee attacks beyond reach stay
+at 0.00. `loadout` suite: timeouts 0.1–6.3% invest, 7.3% / 37.0% uniform (round 2 0.1–4.8%, 6.6% / 32.3%).
+
+**Mobility** (uniform L25, melee Servo 25 vs a Servo 49 kiter): score of melee vs short / mid / long kiter 42.9% /
+46.7% / 50.0% → 43.1% / 46.9% / 50.0%; timeouts 85.9% / 93.4% / 100.0% → 86.3% / 93.8% / 100.0%. Unchanged, as the
+thresholds predict.
+
+**Loadouts** (score against the other loadouts, round 3; Δ vs round 2 within ±0.8 pp everywhere): invest early / mid /
+late Single 29.0 / 24.8 / 32.0%, Weapon+Shield 68.1 / 66.5 / 36.7%, Two-Handed 43.5 / 41.2 / 58.4%, Dual Wield 59.4 /
+67.6 / 72.9%; uniform L10 / L25 Single 29.4 / 34.8%, Dual Wield 66.5 / 63.2%.
+
+### Round 3 Grand Melee (16 robots, n = 1,000 battles)
+
+Normalized rank (0 = 1st, 1 = 16th; lower is better), round2 / bonly / aonly / round3 (Δ round3, 95% CI ±0.009–0.010):
+
+| Class | invest mid | uniform L10 | uniform L25 |
+|---|---|---|---|
+| melee | 0.592 / 0.614 / 0.573 / 0.612 (+0.019) | 0.518 / 0.531 / 0.509 / 0.540 (+0.023) | 0.583 / 0.597 / 0.569 / 0.597 (+0.013) |
+| short | 0.386 / 0.473 / 0.386 / 0.459 (+0.073) | 0.475 / 0.515 / 0.474 / 0.506 (+0.031) | 0.432 / 0.467 / 0.444 / 0.471 (+0.039) |
+| mid | 0.451 / 0.474 / 0.471 / 0.487 (+0.036) | 0.489 / 0.516 / 0.496 / 0.509 (+0.020) | 0.467 / 0.482 / 0.460 / 0.475 (+0.008) |
+| long | 0.571 / 0.439 / 0.569 / 0.442 (−0.129) | 0.518 / 0.439 / 0.521 / 0.445 (−0.073) | 0.518 / 0.454 / 0.527 / 0.457 (−0.061) |
+
+Podium rate, invest mid, round2 → round3: melee 13.3% → 13.0%, short 27.5% → 19.8%, mid 22.7% → 18.1%, long 11.6% →
+24.2%. Long robots deal 253 → 296 damage per robot, melee 198 → 177, short 211 → 194. Melee time within reach rises
+30.9% → 42.2% (from B: `bonly` 43.7%; the cause was not measured). Timeouts (invest mid) 8.9% → 3.1%, survivors at
+end 1.10 → 1.02. Loadout ranks move by at most 0.019 (Weapon+Shield 0.302 → 0.321, still best).
+Expected for B from the investigation (without the max() fix): 0.611 / 0.460 / 0.474 / 0.455, long podium 23.3%;
+`bonly` measured 0.614 / 0.473 / 0.474 / 0.439, long podium 25.3%.
+
+### Round 3 King of the Hill (6 robots, radius 7, n = 2,000 fields)
+
+Normalized rank (0 = 1st, 1 = 6th), round2 → round3 (Δ, 95% CI ±0.010–0.013); `bonly` equals `round2`:
+
+| Class | invest early | invest mid | invest late |
+|---|---|---|---|
+| melee | 0.656 → 0.607 (−0.049) | 0.661 → 0.618 (−0.043) | 0.558 → 0.564 (+0.006) |
+| short | 0.572 → 0.547 (−0.025) | 0.550 → 0.546 (−0.005) | 0.558 → 0.537 (−0.021) |
+| mid | 0.376 → 0.401 (+0.025) | 0.374 → 0.389 (+0.016) | 0.396 → 0.399 (+0.003) |
+| long | 0.335 → 0.372 (+0.037) | 0.337 → 0.368 (+0.031) | 0.394 → 0.409 (+0.015) |
+
+Win rate, invest mid, round2 → round3 (parity 16.7%): melee 5.2% → 9.2%, short 10.6% → 10.0%, mid 26.4% → 25.4%, long
+27.8% → 25.6%. Win reasons, invest mid: score threshold 42.4% → 39.1%, time limit 4.2% → 2.4%, last standing 53.3% →
+58.6%; invest late time limit 20.5% → 16.4%. Loadout ranks move by at most 0.020.
+
+### Round 3 against the #516 targets
+
+- **45–55% 1v1 band (range classes)**: not met. Round 3 invest early / mid / late: melee 57.6 / 50.5 / 55.6%, short
+  64.7 / 57.7 / 74.5%, mid 59.6 / 63.6 / 47.9%, long 18.1 / 28.2 / 22.0%. Best-to-worst spread 46.6 / 35.4 / 52.5 pp
+  (round 2 73.8 / 61.7 / 58.4).
+- **Single 42–45%**: not met and unchanged (24.8–34.8%).
+- **No material no-contact/timeout regression**: no-contact 0.00%; 1v1 timeouts rise 0.8–2.2 pp in invest and L10
+  builds, 7.8 pp at uniform L25 (indicative only).
+- **Product-owner goal "KotH and Grand Melee gravitate to mid/long"**: KotH yes (mid and long rank best at every
+  budget); Grand Melee towards long (best class at every build), with mid in third place.
+
+### Findings for the product owner (round 3)
+
+Information only; no value was changed because of these numbers.
+
+1. **Fallback rule at invest late: A-late does not bring short down.** Short vs mid 71.3% (Δ −0.8 ±1.3 vs round 2),
+   short vs long 83.9%, short 74.5% against the other classes, almost all of the drop from C (A + A-late alone: short
+   81.2%, short vs mid 76.7%). At late budgets (Servo ~46) the mid/long kiter now circles the rim instead of stalling
+   (no dither), but the short robot only needs to hold 4.5–6 units, so it rides a smaller inner circle and keeps pace
+   even at 1.05× vs 1.10×; the mid robot is at the wall 97.9% of its AI ticks. This is geometry of the radius-16 1v1
+   arena, not a wall stall. Against melee chasers the same wall path works (kiter wall time 96.8% → 33.0% at invest
+   late), and at invest mid A works (short 80.7% → 57.7%, short vs mid 71.1% → 33.4%).
+2. **Open product decision: 1v1 arena size.** The investigation measured that a radius-24 1v1 arena lets the same rule
+   work at late budgets (short vs mid 73.1% → 27.8%, n = 1,000, round 2 code). Not changed here.
+3. **Mid now overshoots at invest early and mid** (59.6% / 63.6%), mainly from A (+15.2 / +12.1 pp): mid now keeps
+   its distance from short, and mid vs long is unchanged at 74.7–84.8%. Long stays low in 1v1 (18.1–28.2%).
+4. **Grand Melee swings to long**: long goes from worst to best class (0.571 → 0.442), short from best to second
+   (0.386 → 0.459), mid is third (0.487). Melee stays last (0.612).
+5. **Timeouts rise slightly**, most in ranged-vs-ranged cells at invest late (short vs long 16.9% → 24.0%).
+6. **#538 test bound**: the mirrored-spawn test is back at `max < 1`. Its robots now run at Combat Algorithms 50,
+   because the position-hashed path deviation is not mirror-symmetric and alone separates the mid-arena approach of
+   the two mirrored runs by more than 1 unit at Combat Algorithms 25/20 (with the deviation switched off the runs are
+   identical). At Combat Algorithms 50 round 2 still shows the dither (max 2.00); round 3 gives 0.70 (melee pair) and
+   0.26 (new short vs long pair).
+
+### Round 3 reproduce
+
+From the repository root (`$R`) with the branch checkout at `$B` and dependencies installed:
+
+```sh
+W="$R/.worktrees"
+for a in round2 bonly aonly; do git -C "$B" worktree add --detach "$W/s2r3-arm-$a" 2d8d89ed; done
+git -C "$B" worktree add --detach "$W/s2r3-arm-main" 0d7e5b51
+git -C "$W/s2r3-arm-bonly" cherry-pick --no-commit 2b8159f8
+git -C "$W/s2r3-arm-aonly" cherry-pick --no-commit 035506ed 2188c935 ea62df1d
+for a in bonly aonly; do git -C "$W/s2r3-arm-$a" checkout HEAD -- app/backend/tests docs; done
+for a in round2 main bonly aonly; do
+  ln -sfn "$B/app/backend/node_modules" "$W/s2r3-arm-$a/app/backend/node_modules"
+  ln -sfn "$B/app/backend/generated" "$W/s2r3-arm-$a/app/backend/generated"
+done
+
+cd "$B/app/backend"   # no DATABASE_URL needed; the harness never connects
+A="$W/s2r3-arm"
+ARMS="round2=$A-round2/app/backend,main=$A-main/app/backend,bonly=$A-bonly/app/backend,aonly=$A-aonly/app/backend,round3=$PWD"
+O=../../logs/s2-round3; mkdir -p "$O"
+H() { n=$1; shift; pnpm exec tsx scripts/combatBaselineValidation.ts --arms "$ARMS" "$@" --out "$O/$n.md" > "$O/$n.log" 2>&1 & }
+for s in range loadout; do
+  for b in early mid late; do H $s-invest-$b --suite $s --builds invest --budget $b --trials 2000; done
+  for L in 10 25; do H $s-L$L --suite $s --level $L --trials 2000; done
+done
+H mobility-L25 --suite mobility --level 25 --trials 2000
+H gm-invest-mid --suite grand-melee --builds invest --budget mid --trials 1000
+for L in 10 25; do H gm-L$L --suite grand-melee --level $L --trials 1000; done
+for b in early mid late; do H koth-invest-$b --suite koth --builds invest --budget $b --koth-radii 7 --trials 2000; done
+wait
+```
+
+Remove the arms afterwards with `git worktree remove --force "$W/s2r3-arm-<name>"` (`--force` because of the
+symlinks and the uncommitted cherry-picks).

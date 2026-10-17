@@ -79,6 +79,7 @@ function makeState(overrides: Partial<RobotCombatState> = {}): RobotCombatState 
     disengageReadyAt: 0,
     disengageScheduledAt: null,
     speedBurst: 'none',
+    movementMode: 'normal',
     adaptationHitBonus: 0,
     adaptationDamageBonus: 0,
     hitsTaken: 0,
@@ -128,21 +129,21 @@ describe('hydraulicBonus property tests', () => {
   });
 
   /**
-   * Property 27b: Hydraulic bonus is linear and uncapped (Season 2, #519):
-   * 1.75× at melee and 1.5× at short for 50 Hydraulic Systems.
-   * **Validates: Balance change - melee 0.02 → 0.015, short 0.015 → 0.01**
+   * Property 27b: Hydraulic bonus is linear and uncapped (Season 2, #519 and round 3):
+   * 1.75× at melee and 1.25× at short for 50 Hydraulic Systems.
+   * **Validates: Balance change - melee 0.02 → 0.015, short 0.015 → 0.01 → 0.005 (round 3)**
    */
   describe('Property 27b: Linear, uncapped Season 2 coefficients', () => {
-    it('should return 1.75 at melee and 1.5 at short for 50 hydraulicSystems', () => {
+    it('should return 1.75 at melee and 1.25 at short for 50 hydraulicSystems', () => {
       expect(calculateHydraulicBonus(50, 'melee')).toBeCloseTo(1.75, 10);
-      expect(calculateHydraulicBonus(50, 'short')).toBeCloseTo(1.5, 10);
+      expect(calculateHydraulicBonus(50, 'short')).toBeCloseTo(1.25, 10);
     });
 
-    it('should be linear: melee 1 + 0.015 × H, short 1 + 0.01 × H', () => {
+    it('should be linear: melee 1 + 0.015 × H, short 1 + 0.005 × H', () => {
       fc.assert(
         fc.property(arbHydro(), (hydro) => {
           expect(calculateHydraulicBonus(hydro, 'melee')).toBeCloseTo(1 + hydro * 0.015, 10);
-          expect(calculateHydraulicBonus(hydro, 'short')).toBeCloseTo(1 + hydro * 0.01, 10);
+          expect(calculateHydraulicBonus(hydro, 'short')).toBeCloseTo(1 + hydro * 0.005, 10);
         }),
         { numRuns: 500 },
       );
@@ -153,7 +154,8 @@ describe('hydraulicBonus property tests', () => {
         fc.property(fc.integer({ min: 51, max: 500 }), (hydro) => {
           expect(calculateHydraulicBonus(hydro, 'melee')).toBeGreaterThan(1.75);
           expect(calculateHydraulicBonus(hydro, 'melee')).toBeCloseTo(1 + hydro * 0.015, 10);
-          expect(calculateHydraulicBonus(hydro, 'short')).toBeGreaterThan(1.5);
+          expect(calculateHydraulicBonus(hydro, 'short')).toBeGreaterThan(1.25);
+          expect(calculateHydraulicBonus(hydro, 'short')).toBeCloseTo(1 + hydro * 0.005, 10);
         }),
         { numRuns: 200 },
       );

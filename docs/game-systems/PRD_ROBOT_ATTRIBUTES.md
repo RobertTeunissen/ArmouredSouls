@@ -2,7 +2,7 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: v1.7
+**Version**: v1.8
 **Date**: October 17, 2026  
 **Status**: ✅ Implemented & Verified 
 
@@ -35,6 +35,8 @@
   - Servo Motors decides the pursuit/kiting speed race (both 1.10×); Evasion Thrusters sets the ranged disengage duration; Combat Algorithms' patience window drives melee commit and the disengage cooldown; patience resets on a landed hit
 - v1.7 - Season 2 round 2 (October 17, 2026, #520)
   - pursuit 1.15× vs kiting 1.10×; the disengage burst starts 2.5 s after the first melee hit
+- v1.8 - Season 2 round 3 (October 17, 2026)
+  - Hydraulic Systems short band 0.01 → 0.005 (1.25× at 50); Servo Motors also decides ranged-vs-ranged distance (ranged kiting 1.10×, ranged pursuit 1.05×)
 
 ---
 
@@ -137,6 +139,7 @@ All robots start with each attribute at level 1. Players spend Credits to upgrad
     - Higher servo motors = faster arena traversal
     - Subject to servo strain at sustained high speeds (>80% for >3s)
     - Season 2 (#520): melee pursuit moves at 1.15× and ranged kiting at 1.10×, with no speed-compensation term, so at equal Servo Motors the chaser slowly closes in and a kiter needs roughly 1.05 × the chaser's Servo Motors + 1.6 to keep away; melee commit and ranged disengage bursts move at 1.30× of the robot's own speed
+    - Season 2 round 3: between two ranged robots with different preferred ranges, the longer-range robot kites at 1.10× inside its own preferred distance and the closer-range robot follows at 1.05× beyond its own (both strain-free); the follower holds the kiter only above roughly 1.05 × the kiter's Servo Motors + 1.7. Near the wall a kiting robot circles away from its chaser instead of retreating into the wall
     - See [../architecture/COMBAT_FORMULAS.md](../architecture/COMBAT_FORMULAS.md) for Movement_Speed, Engagement_Cycle and Servo_Strain formulas
 14. **Gyro Stabilizers** - Balance, dodging ability, and reaction time
     - **2D Arena Role**: Determines turn speed: `180 + gyroStabilizers × 6` degrees/s (range 186–480°/s)
@@ -146,7 +149,7 @@ All robots start with each attribute at level 1. Players spend Credits to upgrad
 15. **Hydraulic Systems** - Physical force for melee impact and carry capacity
     - **2D Arena Role**: Proximity-based damage bonus in the arena
     - Melee range damage bonus: `1 + hydraulicSystems × 0.015` (1.75× at 50, uncapped; Season 2 #519, was 0.02)
-    - Short range damage bonus: `1 + hydraulicSystems × 0.01` (1.5× at 50, uncapped; Season 2 #519, was 0.015)
+    - Short range damage bonus: `1 + hydraulicSystems × 0.005` (1.25× at 50, uncapped; Season 2 round 3, was 0.01 in #519 and 0.015 before Season 2)
     - No bonus at mid/long range
     - Also applies to melee counter-attacks
     - Ranged mirror: Logic Cores (long/mid range damage bonus)

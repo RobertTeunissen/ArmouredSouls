@@ -406,10 +406,13 @@ export function simulateBattleMulti(
         speedBurst: state.speedBurst,
         distanceToTarget: distToTarget,
         currentSpeedRatio: 0,
+        // Season 2 round 3: ranged vs ranged kiting / pursuit compares both midpoints
+        opponentEngagementMidpoint: target ? RANGE_BAND_MIDPOINTS[getEngagementRange(target, state)] : null,
       };
-      const { effectiveSpeed, isClosingBonus } = calculateEffectiveSpeed(servoState, opponentRole);
+      const { effectiveSpeed, isClosingBonus, mode } = calculateEffectiveSpeed(servoState, opponentRole);
       state.effectiveMovementSpeed = effectiveSpeed;
       state.isUsingClosingBonus = isClosingBonus;
+      state.movementMode = mode;
       plan.servoState = servoState;
     }
 

@@ -67,7 +67,7 @@ Chassis & Mobility attributes define your robot's physical structure, movement c
 | **Hull Integrity** | Determines your robot's maximum HP. More hull integrity means more hits you can take before going down. See [Hull & Shields](/guide/robots/hull-and-shields) for details. |
 | **Servo Motors** | Determines movement speed in the 2D arena. Higher values let your robot close distance faster or reposition to maintain optimal weapon range. Base speed: 7.0 + servoMotors × 0.2 units/second. Chasing gets +15% and kiting +10%, so at equal Servo Motors a chaser slowly closes in and a kiter needs clearly more Servo Motors to stay away. |
 | **Gyro Stabilizers** | Enhances balance, turn speed, and dodging ability. Reduces the opponent's hit chance and reduces backstab/flanking damage bonuses against you. |
-| **Hydraulic Systems** | Increases melee and close-range damage. At melee range (0–2 units): up to +75% bonus damage at level 50. At short range (3–6 units): up to +50% bonus. No effect at mid/long range. Logic Cores is the ranged counterpart. |
+| **Hydraulic Systems** | Increases melee and close-range damage. At melee range (0–2 units): up to +75% bonus damage at level 50. At short range (3–6 units): up to +25% bonus. No effect at mid/long range. Logic Cores is the ranged counterpart. |
 | **Power Core** | Governs energy generation, which drives energy shield regeneration during battle. |
 
 ```callout-tip

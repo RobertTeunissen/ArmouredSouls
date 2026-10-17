@@ -65,8 +65,12 @@
  *                  baseline column is the first arm at the first radius.
  * Sides alternate every trial in the 1v1 suites (A moves in slot 0 on even trials). 1v1 uses
  * league rules (draws allowed). 1v1 metrics include "melee-reach entries" (side A's
- * `range_transition` events into the melee band per battle) and "slot-0 score" (score of the
- * robot in the first simulator slot; 50% when robot order has no effect).
+ * `range_transition` events into the melee band per battle), "slot-0 score" (score of the
+ * robot in the first simulator slot; 50% when robot order has no effect), "own band" (share of
+ * battle time a side spends in its own range class's band to its target, reconstructed from its
+ * `range_transition` events with the same spawn-distance start rule as melee reach) and "wall"
+ * (share of a side's AI ticks that start within 0.5 of the arena wall, sampled by a pass-through
+ * movement modifier that returns the intent unchanged and is the only game-mode hook passed).
  */
 import { execFileSync } from 'child_process';
 import fs from 'fs';
@@ -347,34 +351,76 @@ function attributeTotal(arm: Arm, spec: BuildSpec, plan: BuildPlan): number {
 
 const dist = (a: { x: number; y: number }, b: { x: number; y: number }): number => Math.hypot(a.x - b.x, a.y - b.y);
 
+/** Range band of a distance (rangeBands.classifyRangeBand: melee ≤ 2, short ≤ 6, mid ≤ 12, long beyond). */
+function bandOf(distance: number): RangeClass {
+  if (distance <= MELEE_REACH) return 'melee';
+  if (distance <= 6) return 'short';
+  if (distance <= 12) return 'mid';
+  return 'long';
+}
+
 /**
- * Seconds `name` spent within melee reach (≤ 2) of its current target, reconstructed from the
- * simulator's per-tick `range_transition` events, and the number of transitions into the melee
- * band. The band before the first transition is the distance to the nearest opponent at spawn
- * (always beyond reach in these arenas).
+ * Seconds `name` spent in each range band to its current target, reconstructed from the
+ * simulator's per-tick `range_transition` events, and the number of transitions into each band.
+ * The band before the first transition is the band of the distance to the nearest opponent at
+ * spawn (always beyond melee reach in these arenas).
  */
-function meleeReach(result: SpatialCombatResult, name: string, endTime: number): { seconds: number; entries: number } {
+function bandTime(result: SpatialCombatResult, name: string, endTime: number): Record<RangeClass, { seconds: number; entries: number }> {
   const start = result.startingPositions ?? {};
   const own = start[name];
   let nearest = Infinity;
   for (const [other, pos] of Object.entries(start)) if (other !== name && own) nearest = Math.min(nearest, dist(own, pos));
-  let inMelee = nearest <= MELEE_REACH;
+  const out = Object.fromEntries(RANGES.map((r) => [r, { seconds: 0, entries: 0 }])) as Record<RangeClass, { seconds: number; entries: number }>;
+  let band = bandOf(nearest);
   let since = 0;
-  let total = 0;
-  let entries = 0;
   for (const e of result.events) {
     if (e.timestamp > endTime) break;
-    if (e.type !== 'range_transition' || e.attacker !== name) continue;
-    const now = e.rangeBand === 'melee';
-    if (inMelee && !now) total += e.timestamp - since;
-    if (!inMelee && now) {
-      since = e.timestamp;
-      entries++;
-    }
-    inMelee = now;
+    if (e.type !== 'range_transition' || e.attacker !== name || !e.rangeBand) continue;
+    const now = e.rangeBand as RangeClass;
+    if (now === band) continue;
+    out[band].seconds += e.timestamp - since;
+    out[now].entries++;
+    since = e.timestamp;
+    band = now;
   }
-  if (inMelee) total += endTime - since;
-  return { seconds: total, entries };
+  out[band].seconds += endTime - since;
+  return out;
+}
+
+/**
+ * Seconds `name` spent within melee reach (≤ 2) of its current target and the number of
+ * transitions into the melee band (see bandTime).
+ */
+function meleeReach(result: SpatialCombatResult, name: string, endTime: number): { seconds: number; entries: number } {
+  return bandTime(result, name, endTime).melee;
+}
+
+/** Distance from the wall (grid units) within which a robot counts as "at the wall" (wallA / wallB). */
+const WALL_CONTACT = 0.5;
+
+/**
+ * Outcome-neutral sampler for the 1v1 suites: a pass-through movement modifier, called once per
+ * robot per AI tick, that counts the ticks each robot starts within WALL_CONTACT of the arena
+ * wall. It returns the intent unchanged; passing it as the only game-mode hook keeps every other
+ * battle setting (duration, zones, targeting, win condition) at its 1v1 default.
+ */
+function wallSampler(): { config: BattleConfig; share: (name: string) => number } {
+  const ticks = new Map<string, number>();
+  const atWall = new Map<string, number>();
+  const config: BattleConfig = {
+    allowDraws: true,
+    gameModeConfig: {
+      movementModifier: {
+        modify: (intent, robot, arena) => {
+          const name = robot.robot.name;
+          ticks.set(name, (ticks.get(name) ?? 0) + 1);
+          if (dist(robot.position, arena.center) > arena.radius - WALL_CONTACT) atWall.set(name, (atWall.get(name) ?? 0) + 1);
+          return intent;
+        },
+      },
+    },
+  };
+  return { config, share: (name) => ((ticks.get(name) ?? 0) > 0 ? (atWall.get(name) ?? 0) / ticks.get(name)! : 0) };
 }
 
 /** Resolved main/offhand attacks with a melee-band weapon at distance > 2 (#518 invariant), and their damage. */
@@ -456,6 +502,10 @@ interface DuelMetrics {
   noContact: number;
   meleeShare: number;
   meleeEntries: number;
+  ownBandA: number;
+  ownBandB: number;
+  wallA: number;
+  wallB: number;
   dmgA: number;
   dmgB: number;
   oorMelee: number;
@@ -469,8 +519,8 @@ function runDuel(arm: Arm, a: BuildSpec, b: BuildSpec, plan: BuildPlan, aFirst: 
   const ra = buildRobot(arm, 1, 'A', a, plan);
   const rb = buildRobot(arm, 2, 'B', b, plan);
   const order = aFirst ? [ra, rb] : [rb, ra];
-  const config: BattleConfig = { allowDraws: true };
-  const result = withSeed(seed, () => arm.simulateBattleMulti(order, config));
+  const sampler = wallSampler();
+  const result = withSeed(seed, () => arm.simulateBattleMulti(order, sampler.config));
   const states = result.finalStates ?? [];
   const dmg = (name: string): number => states.find((s) => s.robot.name === name)?.totalDamageDealt ?? 0;
   const dmgA = dmg('A');
@@ -478,7 +528,9 @@ function runDuel(arm: Arm, a: BuildSpec, b: BuildSpec, plan: BuildPlan, aFirst: 
   const draw = result.winnerId === null ? 1 : 0;
   const duration = result.durationSeconds;
   const oor = outOfReachMeleeAttacks(result.events, order);
-  const reach = meleeReach(result, 'A', duration);
+  const bandsA = bandTime(result, 'A', duration);
+  const bandsB = bandTime(result, 'B', duration);
+  const reach = bandsA.melee;
   const scoreA = result.winnerId === ra.id ? 1 : draw ? 0.5 : 0;
   return {
     scoreA,
@@ -488,6 +540,10 @@ function runDuel(arm: Arm, a: BuildSpec, b: BuildSpec, plan: BuildPlan, aFirst: 
     noContact: dmgA + dmgB === 0 ? 1 : 0,
     meleeShare: duration > 0 ? reach.seconds / duration : 0,
     meleeEntries: reach.entries,
+    ownBandA: duration > 0 ? bandsA[a.range].seconds / duration : 0,
+    ownBandB: duration > 0 ? bandsB[b.range].seconds / duration : 0,
+    wallA: sampler.share('A'),
+    wallB: sampler.share('B'),
     dmgA,
     dmgB,
     oorMelee: oor.count,
@@ -499,8 +555,8 @@ function runDuel(arm: Arm, a: BuildSpec, b: BuildSpec, plan: BuildPlan, aFirst: 
 }
 
 const DUEL_METRICS: Array<keyof DuelMetrics> = [
-  'scoreA', 'slot0Score', 'draw', 'timeout', 'noContact', 'meleeShare', 'meleeEntries', 'dmgA', 'dmgB', 'oorMelee',
-  'oorMeleeDamage', 'duration', 'loadoutCostA', 'attrTotalA',
+  'scoreA', 'slot0Score', 'draw', 'timeout', 'noContact', 'meleeShare', 'meleeEntries', 'ownBandA', 'ownBandB', 'wallA',
+  'wallB', 'dmgA', 'dmgB', 'oorMelee', 'oorMeleeDamage', 'duration', 'loadoutCostA', 'attrTotalA',
 ];
 
 interface DuelResults {
@@ -553,6 +609,10 @@ function runDuelSuite(arms: Arm[], suite: DuelSuite, plan: BuildPlan, trials: nu
       if (suite !== 'mobility' && classA !== classB) {
         stat(res.marginal, classA, 'score', arms.length).add(perArm.map((r) => r.scoreA));
         stat(res.marginal, classB, 'score', arms.length).add(perArm.map((r) => 1 - r.scoreA));
+        stat(res.marginal, classA, 'ownBand', arms.length).add(perArm.map((r) => r.ownBandA));
+        stat(res.marginal, classB, 'ownBand', arms.length).add(perArm.map((r) => r.ownBandB));
+        stat(res.marginal, classA, 'wall', arms.length).add(perArm.map((r) => r.wallA));
+        stat(res.marginal, classB, 'wall', arms.length).add(perArm.map((r) => r.wallB));
       }
     }
   }
@@ -812,6 +872,12 @@ const FORMATS: Record<string, MetricFormat> = {
   noContact: { label: 'no-contact rate (0 damage dealt by anyone)', scale: 100, digits: 2, unit: '%' },
   meleeShare: { label: 'time within melee reach (≤ 2 units) of target', scale: 100, digits: 1, unit: '%' },
   meleeEntries: { label: 'melee-reach entries per battle (range_transition into the melee band)', scale: 1, digits: 2, unit: '' },
+  ownBandA: { label: "time A spends in its own range class's band to its target", scale: 100, digits: 1, unit: '%' },
+  ownBandB: { label: "time B spends in its own range class's band to its target", scale: 100, digits: 1, unit: '%' },
+  wallA: { label: 'share of AI ticks A starts within 0.5 of the arena wall', scale: 100, digits: 1, unit: '%' },
+  wallB: { label: 'share of AI ticks B starts within 0.5 of the arena wall', scale: 100, digits: 1, unit: '%' },
+  ownBand: { label: "time in its own range class's band vs other classes", scale: 100, digits: 1, unit: '%' },
+  wall: { label: 'share of AI ticks within 0.5 of the arena wall vs other classes', scale: 100, digits: 1, unit: '%' },
   dmgA: { label: 'damage dealt by A', scale: 1, digits: 1, unit: '' },
   dmgB: { label: 'damage dealt by B', scale: 1, digits: 1, unit: '' },
   oorMelee: { label: 'melee attacks resolved beyond reach / battle', scale: 1, digits: 2, unit: '' },
@@ -885,11 +951,13 @@ function renderHeader(arms: Arm[], suite: Suite, plan: BuildPlan, trials: number
 
 function renderDuel(labels: string[], res: DuelResults): string[] {
   const lines: string[] = [];
-  if (res.marginal.size > 0) lines.push(...metricTable(labels, res.marginal, 'score', 'class'));
-  for (const m of ['timeout', 'noContact', 'meleeShare', 'meleeEntries', 'slot0Score', 'oorMelee', 'oorMeleeDamage', 'duration', 'draw', 'loadoutCostA', 'attrTotalA']) {
+  if (res.marginal.size > 0) {
+    for (const m of ['score', 'ownBand', 'wall']) lines.push(...metricTable(labels, res.marginal, m, 'class'));
+  }
+  for (const m of ['timeout', 'noContact', 'meleeShare', 'meleeEntries', 'ownBandA', 'ownBandB', 'wallA', 'wallB', 'slot0Score', 'oorMelee', 'oorMeleeDamage', 'duration', 'draw', 'loadoutCostA', 'attrTotalA']) {
     lines.push(...metricTable(labels, res.overall, m, 'scope'));
   }
-  for (const m of ['scoreA', 'slot0Score', 'timeout', 'meleeShare', 'meleeEntries', 'noContact', 'dmgA', 'dmgB', 'oorMelee', 'oorMeleeDamage', 'duration']) {
+  for (const m of ['scoreA', 'slot0Score', 'timeout', 'meleeShare', 'meleeEntries', 'ownBandA', 'ownBandB', 'wallA', 'wallB', 'noContact', 'dmgA', 'dmgB', 'oorMelee', 'oorMeleeDamage', 'duration']) {
     lines.push(...metricTable(labels, res.cells, m, 'A vs B'));
   }
   return lines;
