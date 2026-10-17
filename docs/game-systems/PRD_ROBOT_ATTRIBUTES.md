@@ -2,8 +2,8 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: v1.6
-**Date**: October 16, 2026  
+**Version**: v1.7
+**Date**: October 17, 2026  
 **Status**: ✅ Implemented & Verified 
 
 ---
@@ -33,6 +33,8 @@
   - Effective Stat Calculation now matches the shared canonical formula; loadout modifier applied once; stance and facility bonuses are not attribute multipliers
 - v1.6 - Season 2 engagement cycle (October 16, 2026, #520)
   - Servo Motors decides the pursuit/kiting speed race (both 1.10×); Evasion Thrusters sets the ranged disengage duration; Combat Algorithms' patience window drives melee commit and the disengage cooldown; patience resets on a landed hit
+- v1.7 - Season 2 round 2 (October 17, 2026, #520)
+  - pursuit 1.15× vs kiting 1.10×; the disengage burst starts 2.5 s after the first melee hit
 
 ---
 
@@ -108,7 +110,7 @@ All robots start with each attribute at level 1. Players spend Credits to upgrad
 7. **Armor Plating** - Physical damage reduction from all sources (percentage-based, 1.5% per point)
 8. **Energy Shield Capacity** - Maximum energy shield HP pool (separate from robot HP)
 9. **Evasion Thrusters** - Chance to dodge incoming attacks
-    - **2D Arena Role (Season 2, #520)**: sets the ranged disengage burst duration: `2 + 0.04 × evasionThrusters` seconds (3.0 s at 25, 4.0 s at 50, uncapped) after the first melee hit a ranged robot takes in an engagement
+    - **2D Arena Role (Season 2, #520)**: sets the ranged disengage burst duration: `2 + 0.04 × evasionThrusters` seconds (3.0 s at 25, 4.0 s at 50, uncapped) for a burst that starts 2.5 s after the first melee hit a ranged robot takes in an engagement
 10. **Damage Dampeners** - Reduces ALL incoming damage + extra crit damage reduction (rebalanced Feb 2026)
 11. **Counter Protocols** - Chance to strike back when attacked (hit or miss)
 
@@ -134,7 +136,7 @@ All robots start with each attribute at level 1. Players spend Credits to upgrad
     - **2D Arena Role**: Determines base movement speed in the arena: `7.0 + servoMotors × 0.2` (range 7.2–17.0 units/s)
     - Higher servo motors = faster arena traversal
     - Subject to servo strain at sustained high speeds (>80% for >3s)
-    - Season 2 (#520): melee pursuit and ranged kiting both move at 1.10× with no speed-compensation term, so the robot with more Servo Motors wins the speed race; melee commit and ranged disengage bursts move at 1.30× of the robot's own speed
+    - Season 2 (#520): melee pursuit moves at 1.15× and ranged kiting at 1.10×, with no speed-compensation term, so at equal Servo Motors the chaser slowly closes in and a kiter needs roughly 1.05 × the chaser's Servo Motors + 1.6 to keep away; melee commit and ranged disengage bursts move at 1.30× of the robot's own speed
     - See [../architecture/COMBAT_FORMULAS.md](../architecture/COMBAT_FORMULAS.md) for Movement_Speed, Engagement_Cycle and Servo_Strain formulas
 14. **Gyro Stabilizers** - Balance, dodging ability, and reaction time
     - **2D Arena Role**: Determines turn speed: `180 + gyroStabilizers × 6` degrees/s (range 186–480°/s)

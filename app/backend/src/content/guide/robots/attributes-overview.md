@@ -2,7 +2,7 @@
 title: "Robot Attributes Overview"
 description: "A complete guide to all 23 robot attributes organized across five categories — Combat Systems, Defensive Systems, Chassis & Mobility, AI Processing, and Team Coordination."
 order: 1
-lastUpdated: "2026-10-16"
+lastUpdated: "2026-10-17"
 relatedArticles:
   - robots/attribute-combat-influence
   - robots/hull-and-shields
@@ -50,7 +50,7 @@ Defensive Systems determine how well your robot absorbs, avoids, and responds to
 |-----------|-------------|
 | **Armor Plating** | Reduces physical damage from all sources. Each point provides percentage-based damage reduction. |
 | **Energy Shield Capacity** | Determines the size of your energy shield pool — a separate HP buffer that absorbs damage before your hull takes hits. |
-| **Evasion Thrusters** | Gives your robot a chance to dodge incoming attacks entirely. For ranged robots it also lengthens the escape burst after the first melee hit: 2 seconds + 0.04 seconds per point (3 seconds at 25, 4 seconds at 50). |
+| **Evasion Thrusters** | Gives your robot a chance to dodge incoming attacks entirely. For ranged robots it also lengthens the escape burst that starts 2.5 seconds after the first melee hit: 2 seconds + 0.04 seconds per point (3 seconds at 25, 4 seconds at 50). |
 | **Damage Dampeners** | Provides flat damage reduction on every hit and reduces the extra damage from critical strikes. |
 | **Counter Protocols** | Gives your robot a chance to strike back immediately when attacked (hit or miss). |
 
@@ -65,7 +65,7 @@ Chassis & Mobility attributes define your robot's physical structure, movement c
 | Attribute | What It Does |
 |-----------|-------------|
 | **Hull Integrity** | Determines your robot's maximum HP. More hull integrity means more hits you can take before going down. See [Hull & Shields](/guide/robots/hull-and-shields) for details. |
-| **Servo Motors** | Determines movement speed in the 2D arena. Higher values let your robot close distance faster or reposition to maintain optimal weapon range. Base speed: 7.0 + servoMotors × 0.2 units/second. Chasing and kiting both get the same +10%, so the robot with more Servo Motors wins the speed race. |
+| **Servo Motors** | Determines movement speed in the 2D arena. Higher values let your robot close distance faster or reposition to maintain optimal weapon range. Base speed: 7.0 + servoMotors × 0.2 units/second. Chasing gets +15% and kiting +10%, so at equal Servo Motors a chaser slowly closes in and a kiter needs clearly more Servo Motors to stay away. |
 | **Gyro Stabilizers** | Enhances balance, turn speed, and dodging ability. Reduces the opponent's hit chance and reduces backstab/flanking damage bonuses against you. |
 | **Hydraulic Systems** | Increases melee and close-range damage. At melee range (0–2 units): up to +75% bonus damage at level 50. At short range (3–6 units): up to +50% bonus. No effect at mid/long range. Logic Cores is the ranged counterpart. |
 | **Power Core** | Governs energy generation, which drives energy shield regeneration during battle. |

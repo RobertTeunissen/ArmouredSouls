@@ -2,7 +2,7 @@
 title: "Movement & Positioning"
 description: "How the 2D combat arena works — movement speed, range bands, weapon optimal ranges, backstab and flanking mechanics, and the attributes that control spatial combat."
 order: 2
-lastUpdated: "2026-10-16"
+lastUpdated: "2026-10-17"
 relatedArticles:
   - combat/battle-flow
   - robots/attributes-overview
@@ -36,8 +36,8 @@ Movement speed is also modified by:
 
 - **Stance** — Offensive and Defensive stances modify movement speed, always (a defensive robot is also slower while chasing)
 - **Servo strain** — Sustained movement at high speed causes strain, temporarily reducing effective speed. Robots need brief pauses to recover.
-- **Pursuit and kiting** — A melee robot chasing a ranged opponent moves **10% faster**, and a ranged robot backing away from a melee opponent inside its preferred range also moves **10% faster**. Neither causes servo strain. There is no catch-up bonus for the slower robot: whoever has more Servo Motors wins the speed race.
-- **Speed bursts** — A melee robot that can't land a hit for too long **commits** and a ranged robot that gets hit in melee **breaks away**; both move **30% faster** for a while (see **Chasing and Escaping** below)
+- **Pursuit and kiting** — A melee robot chasing a ranged opponent moves **15% faster**, and a ranged robot backing away from a melee opponent inside its preferred range moves **10% faster**. Neither causes servo strain and there is no catch-up bonus. With equal Servo Motors the chaser slowly closes in; a kiter needs clearly more Servo Motors to stay away.
+- **Speed bursts** — A melee robot that can't land a hit for too long **commits** and a ranged robot that gets hit in melee **breaks away** shortly afterwards; both move **30% faster** for a while (see **Chasing and Escaping** below)
 
 Whether a robot counts as melee or ranged depends on the range it actually wants to fight at, not on its weapon type. An energy melee weapon such as the Shock Maul chases like any melee weapon, and a long-range rifle with a sword in the other hand still fights as a ranged robot.
 
@@ -50,11 +50,11 @@ Servo Motors is the key attribute for controlling engagement distance. A fast ra
 Melee-versus-ranged fights move back and forth between ranges:
 
 - **Melee commit** — If a melee robot hasn't landed a hit within its **patience window** (about 15 seconds, down to 10 seconds with high Combat Algorithms) while chasing a ranged robot, it commits: it moves **30% faster**, without servo strain, until it is within reach.
-- **Ranged disengage** — The first time a ranged robot is hit by a melee weapon in an engagement, it gets an escape burst: **30% faster**, without servo strain, for **2 seconds + 0.04 seconds per Evasion Thrusters point** (3 seconds at 25, 4 seconds at 50). After the burst it needs one patience window before it can break away again, so the melee robot always gets at least one exchange.
+- **Ranged disengage** — **2.5 seconds after** a ranged robot is first hit by a melee weapon in an engagement, it gets an escape burst: **30% faster**, without servo strain, for **2 seconds + 0.04 seconds per Evasion Thrusters point** (3 seconds at 25, 4 seconds at 50). Those 2.5 seconds guarantee the melee robot a real exchange. After the burst it needs one patience window before it can break away again.
 
 Both bursts multiply the robot's own speed, so Servo Motors still matters during a burst.
 
-A chasing melee robot heads for where its target will be at the end of the moment, at full speed, until it is within reach. The gap therefore shrinks by exactly the difference in speed. At normal chase speeds every Servo Motors point of difference is worth 0.22 units per second. A committing melee robot is only outrun by a kiter with roughly **1.18 × its Servo Motors + 6.4** or more, and a breaking-away ranged robot only gets caught by a melee robot with roughly 1.18 × the ranged robot's Servo Motors + 6.4 or more.
+A chasing melee robot heads for where its target will be at the end of the moment, at full speed, until it is within reach. The gap therefore shrinks by exactly the difference in speed. With equal Servo Motors a chaser closes about 0.6 units per second (at level 25). A kiter needs roughly **1.05 × the chaser's Servo Motors + 1.6** to keep its distance. A committing melee robot is only outrun by a kiter with roughly **1.18 × its Servo Motors + 6.4** or more. A breaking-away ranged robot only gets caught by a melee robot with roughly **1.13 × the ranged robot's Servo Motors + 4.6** or more.
 
 All robots move at the same time: each one decides from the same picture of the arena, then everyone moves. Which robot is listed first in a match never changes how the robots move.
 

@@ -2,8 +2,8 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: v2.5\
-**Last Updated**: October 16, 2026  
+**Version**: v2.7\
+**Last Updated**: October 17, 2026  
 **Status**: ✅ Implemented  
 **Owner**: Robert Teunissen  
 **Epic**: Battle System — Simulation & Orchestration
@@ -17,7 +17,8 @@ v2.2 (Oct 15, 2026): #517 — Combat Preparation Contract (raw vs prepared input
 v2.3 (Oct 15, 2026): #518 — Weapon reach invariant (per-hand reach check before attack resolution, `performAttack()` guard, blocked-attempt contract; patience no longer forces attacks)\
 v2.4 (Oct 15, 2026): #536 — Battle-time entry gate (forfeit, last place, single-weapon fallback) and the simulator's `ROBOT_NOT_BATTLE_READY` invariant\
 v2.5 (Oct 16, 2026): Season 2 #520 — engagement cycle in the movement phase (roles from engagement range, melee commit, ranged disengage, wall slide), `AttackOutcome` return of `performAttack()`, patience resets only on a landed hit\
-v2.6 (Oct 16, 2026): #520 movement fix — simultaneous (snapshot-based) movement phase; melee pursuit aims at the target's projected end-of-tick position
+v2.6 (Oct 16, 2026): #520 movement fix — simultaneous (snapshot-based) movement phase; melee pursuit aims at the target's projected end-of-tick position\
+v2.7 (Oct 17, 2026): Season 2 round 2 — disengage burst scheduled 2.5 s after the first melee hit (`disengageScheduledAt`), pursuit 1.15×
 
 ---
 
@@ -415,9 +416,9 @@ each deciding from positions already updated by earlier robots, so robot 1 vs ro
 
 **Movement phase and engagement cycle (#520).** Before attacks, each robot's movement step derives both robots'
 engagement roles from `getEngagementRange()` (melee band → melee role, else ranged), updates the ranged disengage
-state (`updateDisengage`), picks the active speed burst (`ranged_disengage`, else `melee_commit` once a melee robot
+state (`updateDisengage`: schedules the burst 2.5 s after the first melee hit and starts it when due), picks the active speed burst (`ranged_disengage`, else `melee_commit` once a melee robot
 has gone a patience window without a landed hit and is beyond reach, else none) and calls
-`calculateEffectiveSpeed(servoState, opponentRole)`: burst 1.30×, pursuit 1.10×, mutual-melee final approach 1.15×,
+`calculateEffectiveSpeed(servoState, opponentRole)`: burst 1.30×, pursuit 1.15×, mutual-melee final approach 1.15×,
 kiting 1.10× (all strain-free) or strain-reduced normal speed; the stance modifier always applies. `applyMovement()`
 then slides robots along the arena wall instead of stopping at it. In the attack phase a hand consumes its cooldown
 on any non-blocked outcome, patience resets only on `'hit'`, and a melee-band hit (attack or counter) records

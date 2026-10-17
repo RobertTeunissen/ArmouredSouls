@@ -12,6 +12,7 @@
 | Movement fix: simultaneous movement, full-speed pursuit (#520 addendum) | `71267b49` |
 | Refinement Lab, grant migration, facility categories | `803b0a39` |
 | KotH zone radius 7, backfill migration, rotating-zone removal (#522) | `63150611` |
+| Round 2: guaranteed exchange and pursuit edge (#520) | `ed34b158` |
 
 Every value below was decided by the product owner. The measurement in
 [NEXT_SEASON_BALANCE_VALIDATION.md](../analysis/NEXT_SEASON_BALANCE_VALIDATION.md#season-2-balance-package-519522) is
@@ -35,12 +36,12 @@ melee-band counters, Logic Cores only to long-band counters. Logic Cores keeps i
 
 | Value | Old | New |
 |---|---|---|
-| Pursuit speed (melee role closing on a ranged-role opponent) | 1.30 + 0.02 × speed gap | 1.10 |
+| Pursuit speed (melee role closing on a ranged-role opponent) | 1.30 + 0.02 × speed gap | 1.15 (round 2; 1.10 in round 1) |
 | Kiting speed (ranged role inside its range midpoint vs a melee-role opponent) | 1.10 + 0.008 × speed gap | 1.10 |
 | Defensive stance while pursuing | 0.95 | 0.80 (normal defensive factor) |
 | Role source | main weapon `weaponType === 'melee'` | engagement range: melee role iff the robot's engagement band is melee |
 | Melee commit | none | 1.30× speed, strain-free, after the patience window (15 s − 5 × min(CA/50, 1): 15 s → 10 s) without a landed hit, until within reach (≤ 2) |
-| Ranged disengage | none | first melee-band hit taken per engagement: 1.30× speed, strain-free, for 2 s + 0.04 s × Evasion Thrusters (uncapped); then a cooldown of one patience window |
+| Ranged disengage | none | starts 2.5 s after the first melee-band hit taken per engagement (round 2; on the hit in round 1); then 1.30× speed, strain-free, for 2 s + 0.04 s × Evasion Thrusters (uncapped); then a cooldown of one patience window |
 | Patience reset | any resolved attack (hit, miss, malfunction) | a landed hit only |
 | Arena wall | robot clamped to the wall | slides tangentially along the wall, total step ≤ speed × tick |
 | Mutual-melee final approach (2–4 units) | 1.15 | 1.15 (unchanged) |
@@ -49,9 +50,34 @@ melee-band counters, Logic Cores only to long-band counters. Logic Cores keeps i
 Movement fix (product-owner addendum): the movement phase is simultaneous (every robot decides from the same
 tick-start snapshot, then all moves are applied), and a melee-role robot outside reach of a target that does not
 prefer melee moves at full speed towards the target's projected end-of-tick position instead of stopping at the
-1-unit standoff point. Expected thresholds at balanced stance: at range the gap changes by 0.22 u/s per Servo Motors
-point of difference; a committing melee robot is outrun only if kiter Servo ≥ 1.18 × melee Servo + 6.4; a disengaging
-kiter is denied only if melee Servo ≥ 1.18 × kiter Servo + 6.4.
+1-unit standoff point. Thresholds at balanced stance after round 2 (K = kiter Servo, M = melee Servo): at range the
+gap changes by 0.22·K − 0.23·M − 0.35 u/s, so at equal Servo the chaser closes 0.35 + 0.01 × Servo u/s (0.60 at 25)
+and a kiter keeps away only if K > 1.0455·M + 1.59; a committing melee robot is outrun only if K ≥ 1.18·M + 6.4
+(unchanged); a disengaging kiter is denied only if M ≥ 1.1304·K + 4.57.
+
+## Round 2 adjustments (#520)
+
+Decided by the product owner after measuring round 1 of this PR. Source commit `ed34b158`.
+
+| Value | Round 1 | Round 2 |
+|---|---|---|
+| Ranged disengage start | on the first melee-band hit taken in an engagement | 2.5 s after that hit (`DISENGAGE_DELAY_SECONDS`); further melee hits during the delay don't move it |
+| Pursuit multiplier | 1.10 | 1.15 |
+| Kiting multiplier | 1.10 | 1.10 (unchanged) |
+| Disengage duration, 1.30× burst, cooldown (one patience window) | – | unchanged |
+
+Cause (from the round 1 measurement): melee contact was too short. Reach entries went from ~3 to ~17 per battle while
+time within reach fell from ~25% to 8–12%. Melee's first hit reset its patience (so the commit dropped) and triggered
+the ranged disengage at the same moment.
+
+Confirmed round 1 additions, kept as implemented: missed attacks don't reset patience (only landed hits do), and Logic
+Cores applies to counter-attacks. As implemented it applies to **long-band counters only** (the mirror of the
+melee-band-only Hydraulic Systems counter rule); the decision text reads "long/mid-range counter-attacks". A mid-band
+counter bonus would need an explicit product-owner decision.
+
+Deferred to the next measurement round (report only): short-range dominance, Single, Dual Wield (late).
+
+Measured: see below.
 
 ## #521 Shields and loadouts
 
@@ -223,27 +249,47 @@ starts.
 
 One line per change, for the Season 2 changelog entry (authored in the admin portal):
 
+### Bug fixes
+
+- Fixed a bug where loadout bonuses (Single, Weapon+Shield, Two-Handed, Dual Wield) showed on the robot page but weren't applied in battle; they now apply
+- Fixed a bug that let melee weapons hit from beyond melee reach
 - Fixed a bug that made weapon penalties raise a weapon's price: negative bonuses now lower it
 - Fixed a bug where a fast ranged robot could keep a melee robot out of reach forever, and where turn order within a battle could decide who got to attack
 - Fixed: missed attacks no longer reset a robot's patience timer; only landed hits do
 - Fixed: energy melee weapons (Shock Maul, Thermal Lance) now chase ranged robots like other melee weapons
-- Hydraulic Systems nerfed: up to +75% melee and +50% short-range damage at level 50 (was +100% / +75%)
-- Logic Cores buffed: now adds up to +75% long-range and +50% mid-range damage at level 50, also on long-range counter-attacks
-- Chasing and kiting are now equal: both move 10% faster, with no catch-up bonus (chasing was +30% plus a catch-up bonus); Servo Motors decide who is faster
+- Fixed: one failed match no longer stalls a whole round; that match is cancelled and the rest carry on
+- Tag team: a team that isn't battle-ready now forfeits (the opponent wins) instead of the match being cancelled
+
+### Combat
+
+- Chasing is now faster than kiting: a melee robot chasing moves 15% faster, a ranged robot backing away 10% faster (chasing was +30% plus a catch-up bonus); with equal Servo Motors the chaser slowly closes in
 - Defensive stance now slows a robot to 80% speed while chasing too (was 95%)
 - New: a melee robot that hasn't landed a hit within its patience window (15 s, down to 10 s with Combat Algorithms) charges 30% faster until it reaches its target
-- New: a ranged robot hit in melee breaks away 30% faster for 2 s + 0.04 s per Evasion Thrusters point, then needs one patience window to recharge
+- New: 2.5 s after a ranged robot is first hit in melee, it breaks away 30% faster for 2 s + 0.04 s per Evasion Thrusters point, then needs one patience window to recharge, so melee always gets a real exchange
 - Robots backing into the arena wall now slide along it instead of getting stuck
+- Hydraulic Systems nerfed: up to +75% melee and +50% short-range damage at level 50 (was +100% / +75%)
+- Logic Cores buffed: now adds up to +75% long-range and +50% mid-range damage at level 50, also on long-range counter-attacks
+
+### Loadouts & weapons
+
+- A robot without a main weapon now forfeits its match instead of fighting unarmed (last place in King of the Hill and Grand Melee); an incomplete Dual Wield or Weapon+Shield loadout fights as Single for that battle
 - Weapon+Shield nerfed: Shield Capacity +15% (was +20%) and Armor Plating +10% (was +15%)
 - Single loadout buffed: Gyro Stabilizers +15% (was +10%) and Servo Motors +10% (was +5%)
 - Fortress Shield nerfed: Armor Plating +11, Shield Capacity +10, Counter Protocols +8 (was +15 / +14 / +10)
 - Aegis Bulwark nerfed: Armor Plating +11, Shield Capacity +11, Counter Protocols +10, Power Core +8 (was +15 / +15 / +14 / +11)
 - Weapon prices recalculated: the catalogue costs 27% more in total, high-end weapons and shields the most, a few two-handed weapons less; practice weapons stay ₡50,000
 - Shields now cost a premium (×1.3, was a ×0.9 discount); two-handed weapons ×1.5 (was ×1.6)
-- Weapons Workshop discount: now 5% per level (max 50%, was 10% per level up to free); resale unchanged
+
+### Facilities
+
 - New facility: Refinement Lab, which unlocks the refinement tiers (Hone L1, Augment L3, Sharpen L5, Forge L8) and costs ₡100 per level per day to run
 - You received a Refinement Lab at your current Weapons Workshop level, so you keep every refinement tier you had unlocked
 - Weapons Workshop no longer unlocks refinement; it keeps its purchase discount and resale rate
+- Weapons Workshop discount: now 5% per level (max 50%, was 10% per level up to free); resale unchanged
 - Facility categories reorganised: Economy, Hangar & Armory (now with Weapons Workshop and Refinement Lab), Training Academies, Tactical & Advanced
-- King of the Hill: control zone radius 5 → 7 (arena, 30-point target, 150 s limit and kill bonus unchanged)
-- King of the Hill: the guide no longer mentions rotating zones; every match uses the fixed centre zone, as before
+
+### King of the Hill
+
+- Control zone radius 5 → 7 (arena, 30-point target, 150 s limit and kill bonus unchanged)
+- Byes now pay the match's tier reward (Silver ₡3,000 up to Champion ₡45,000) instead of always the Bronze reward
+- The guide no longer mentions rotating zones; every match uses the fixed centre zone, as before

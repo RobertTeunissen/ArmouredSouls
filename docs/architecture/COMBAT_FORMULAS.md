@@ -1,6 +1,6 @@
 # Combat Formulas and Battle Mechanics
 
-**Last Updated**: October 16, 2026  
+**Last Updated**: October 17, 2026  
 **Status**: Authoritative Reference - Defines formulas, implementation, and display formats
 
 This document is the **authoritative source** for all combat formulas, weapon bonus applications, and battle mechanics in Armoured Souls. It defines:
@@ -974,7 +974,7 @@ Movement modes (Season 2, #520), first match wins; role = engagement role (see E
   1. Speed burst (melee commit or ranged disengage):
        effectiveSpeed = baseSpeed × stanceModifier × 1.30            // strain-exempt
   2. Pursuit: role melee AND distance > 2 AND opponent role ranged
-       effectiveSpeed = baseSpeed × stanceModifier × 1.10            // strain-exempt
+       effectiveSpeed = baseSpeed × stanceModifier × 1.15            // strain-exempt (Season 2 round 2; 1.10 in round 1)
   3. Mutual-melee final approach: role melee AND opponent role melee AND 2 < distance <= 4
        effectiveSpeed = baseSpeed × stanceModifier × 1.15            // strain-exempt
   4. Kiting: role ranged AND distance < engagementRangeMidpoint AND opponent role melee
@@ -984,7 +984,7 @@ Movement modes (Season 2, #520), first match wins; role = engagement role (see E
 
   engagementRangeMidpoint = RANGE_BAND_MIDPOINTS[engagement range] (melee 1, short 4.5, mid 9.5, long 16)
   The stance modifier always applies — a defensive robot moves at 0.80 also while pursuing.
-  There is no speed-compensation term: the faster robot (Servo Motors) wins the speed race.
+  There is no speed-compensation term; at equal Servo Motors pursuit (1.15×) is faster than kiting (1.10×).
 
 Pursuit target (#520 movement fix, movementAI.ts):
   If role melee AND distance > 2 AND the target's preferred range is not melee:
@@ -993,10 +993,15 @@ Pursuit target (#520 movement fix, movementAI.ts):
   Else (within reach, or a melee mirror): standoff point RANGE_BAND_MIDPOINTS[range] from the target (unchanged)
   Deviation, the 1.5 s Combat Algorithms prediction (off within 4 units and in melee mirrors, #467),
   avoidance/flank bias and stance bias then apply as before.
-  Gap change per second = kiterSpeed − meleeSpeed:
-    1.10× vs 1.10× (pursuit vs kiting, balanced): 0.22 per Servo Motors point of difference
-    melee commit 1.30× vs kiting 1.10×: kiter escapes only if kiterServo ≥ 1.18 × meleeServo + 6.4
-    pursuit 1.10× vs ranged disengage 1.30×: kiter is caught only if meleeServo ≥ 1.18 × kiterServo + 6.4
+  Gap change per second = kiterSpeed − meleeSpeed (balanced stance; K = kiter Servo, M = melee Servo):
+    pursuit 1.15× vs kiting 1.10×: 0.22·K − 0.23·M − 0.35
+      equal Servo S: the chaser closes 0.35 + 0.01·S u/s (0.45 at 10, 0.60 at 25, 0.85 at 50)
+      the kiter keeps away only if K > (23/22)(M + 35) − 35 ≈ 1.0455·M + 1.59
+      (M 10 → 12.05, 20 → 22.50, 25 → 27.73, 30 → 32.95; M ≥ 47 cannot be outrun with K ≤ 50)
+    melee commit 1.30× vs kiting 1.10×: kiter escapes only if K ≥ (13/11)(M + 35) − 35 ≈ 1.1818·M + 6.36
+    pursuit 1.15× vs ranged disengage 1.30×: 0.26·K − 0.23·M + 1.05; the kiter is caught only if
+      M ≥ (26/23)(K + 35) − 35 ≈ 1.1304·K + 4.57 (K 25 → 32.83; K ≥ 41 always escapes);
+      equal Servo S: the gap opens 1.05 + 0.03·S u/s (1.80 at 25)
   Before the fix the pursuer aimed 1 unit short of the target's current position, so a kiter stepping more
   than 1 unit per tick (> 10 u/s) ended every tick at a gap of 1 + its step > 2 and could not be reached.
 
@@ -1053,11 +1058,14 @@ Melee commit:
 
 Ranged disengage:
   Trigger: a ranged-role robot takes a hit from a melee-band weapon (attack or counter)
-           while its disengage is ready (hit time >= disengageReadyAt) and no burst is running
+           while its disengage is ready (hit time >= disengageReadyAt) and no burst is running or scheduled
+  Delay:    burst starts DISENGAGE_DELAY_SECONDS = 2.5 s after that first hit
+            (disengageScheduledAt = hit time + 2.5); later melee hits during the delay don't move it.
+            The role is checked when the burst is scheduled; a scheduled burst always starts when due.
   Burst:    baseSpeed × stanceModifier × 1.30, strain-exempt, for
             duration = 2 + 0.04 × evasionThrusters seconds   // 3.0 s at 25, 4.0 s at 50, uncapped
   Cooldown: disengageReadyAt = burst end + getPatienceLimit(own combatAlgorithmScore)
-  Melee hits taken during the burst or the cooldown are ignored → at most one escape per engagement.
+  Melee hits taken during the delay, the burst or the cooldown are ignored → at most one escape per engagement.
 ```
 
 Prediction (#351/#467) and the mutual-melee final approach are unchanged.
@@ -1558,6 +1566,8 @@ Each member robot receives the same ELO delta applied to their individual elo fi
 
 ## Version History
 
+- **Season 2 round 2 (#520):** ranged disengage starts 2.5 s after the first melee hit (guaranteed exchange);
+  pursuit 1.10 → 1.15 (kiting 1.10); thresholds re-derived
 - **Season 2 (#520 movement fix):** simultaneous two-pass movement phase (robot order no longer matters); a melee
   pursuer outside reach of a non-melee target aims at the target's projected end-of-tick position at full speed
   instead of stopping 1 unit short of its current position

@@ -2,7 +2,7 @@
 title: "Attribute Combat Influence"
 description: "A visual guide showing how robot attributes influence combat outcomes — from damage dealing to defense, evasion, movement, positioning, and AI decision-making."
 order: 2
-lastUpdated: "2026-10-16"
+lastUpdated: "2026-10-17"
 relatedArticles:
   - robots/attributes-overview
   - combat/battle-flow
@@ -137,7 +137,7 @@ Defensive Systems determine how much punishment your robot can absorb:
 
 - **Armor Plating** provides percentage-based damage reduction on every hit that reaches your hull
 - **Energy Shield Capacity** creates a separate HP buffer that absorbs damage before your hull takes any — and shields regenerate during battle
-- **Evasion Thrusters** gives a chance to dodge attacks entirely, taking zero damage. For ranged robots it also lengthens the escape burst after the first melee hit (2 seconds + 0.04 seconds per point)
+- **Evasion Thrusters** gives a chance to dodge attacks entirely, taking zero damage. For ranged robots it also lengthens the escape burst that starts 2.5 seconds after the first melee hit (2 seconds + 0.04 seconds per point)
 - **Damage Dampeners** reduces all incoming damage by a flat percentage and also softens critical hit spikes
 - **Counter Protocols** turns defense into offense — when your robot is attacked (hit or miss), it has a chance to immediately strike back
 
@@ -146,7 +146,7 @@ Defensive Systems determine how much punishment your robot can absorb:
 All five Chassis & Mobility attributes are active in combat:
 
 - **Hull Integrity** directly determines your maximum HP
-- **Servo Motors** controls movement speed in the 2D arena — faster robots can close distance to reach melee range or kite to maintain long-range advantage. Chasing and kiting get the same +10% with no catch-up bonus, so Servo Motors decides the speed race
+- **Servo Motors** controls movement speed in the 2D arena — faster robots can close distance to reach melee range or kite to maintain long-range advantage. Chasing gets +15% and kiting +10% with no catch-up bonus, so at equal Servo Motors a chaser slowly closes in and a kiter needs clearly more Servo Motors to stay away
 - **Gyro Stabilizers** has a triple role: reduces the opponent's hit chance, increases turn speed (harder to backstab), and reduces backstab/flanking damage bonuses
 - **Hydraulic Systems** provides a proximity-scaled damage bonus — significant at melee range (up to +75% at level 50), moderate at short range (up to +50%), and no effect at mid/long range
 - **Power Core** drives energy shield regeneration during battle
