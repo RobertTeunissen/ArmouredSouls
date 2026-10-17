@@ -24,7 +24,7 @@
  * mirror-symmetric.
  */
 
-import { Position, Vector2D, euclideanDistance, normalizeVector, rotateVector } from './vector2d';
+import { Position, Vector2D, euclideanDistance, rotateVector } from './vector2d';
 import type { ArenaConfig } from './types';
 import { clampToArena } from './arenaLayout';
 
@@ -65,6 +65,15 @@ interface Candidate {
   continues: boolean;
 }
 
+/**
+ * Unit vector (zero vector for zero length). Uses Math.hypot, which stays exact for tiny
+ * (subnormal) components where squaring would lose precision and break the step-length bound.
+ */
+function unit(v: Vector2D): Vector2D {
+  const length = Math.hypot(v.x, v.y);
+  return length === 0 ? { x: 0, y: 0 } : { x: v.x / length, y: v.y / length };
+}
+
 /** True when `a` ranks before `b`: higher score, then smaller rotation, then counter-clockwise. */
 function ranksBefore(a: Candidate, b: Candidate): boolean {
   if (a.score !== b.score) return a.score > b.score;
@@ -87,12 +96,12 @@ export function planWallAwareKitingStep(input: WallAwareKitingInput): Position {
 
   // Straight away from the chaser; if the chaser sits on top of the kiter, the
   // counter-clockwise wall tangent (or +x at the centre)
-  let away = normalizeVector({ x: position.x - chaser.x, y: position.y - chaser.y });
+  let away = unit({ x: position.x - chaser.x, y: position.y - chaser.y });
   if (away.x === 0 && away.y === 0) {
-    const radial = normalizeVector({ x: position.x - arena.center.x, y: position.y - arena.center.y });
+    const radial = unit({ x: position.x - arena.center.x, y: position.y - arena.center.y });
     away = radial.x === 0 && radial.y === 0 ? { x: 1, y: 0 } : { x: -radial.y, y: radial.x };
   }
-  const heading = normalizeVector(velocity);
+  const heading = unit(velocity);
 
   const candidates: Candidate[] = [];
   for (let k = 0; k <= HEADING_STEPS; k++) {
