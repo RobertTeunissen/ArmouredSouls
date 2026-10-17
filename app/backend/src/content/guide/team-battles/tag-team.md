@@ -2,7 +2,7 @@
 title: "Tag Team Battles"
 description: "How Tag Team combat works — phased 1v1 battles with tag-in mechanics, Active/Reserve roles, rewards, LP, and how it differs from simultaneous 2v2 League."
 order: 2
-lastUpdated: "2026-10-15"
+lastUpdated: "2026-10-17"
 relatedArticles:
   - team-battles/overview
   - facilities/booking-office
@@ -58,7 +58,7 @@ Tag Team uses the same LP-primary matchmaking as other leagues:
 - LP difference is the primary scoring factor
 - Recent opponents are penalised to force variety
 - Same-stable teams cannot be matched against each other
-- Byes are issued when an odd number of teams are eligible. A bye is an automatic win paying the participation reward per robot (2× the solo figure), with no prestige, no fame, and no damage taken — nothing is simulated
+- Byes are issued when an odd number of teams are eligible. A bye is an automatic win paying a team pool of the participation reward × 2 × 0.75 (1.5× the solo figure), with no prestige, no fame, and no damage taken — nothing is simulated
 - Weapons are checked again when the battle starts. If either robot (Active **or** Reserve) has no main weapon, the team **forfeits**: an automatic loss with no credits, and the other team wins with the same reward as a bye. If both teams have an unarmed robot, the battle is a draw with no credits
 
 Tag Team has its own **separate LP and league tier** (`tagTeamLp`, `tagTeamLeague`) — independent from 2v2 League standings.
@@ -73,16 +73,20 @@ Tag team runs daily. Matches scheduled today execute tomorrow at 11:00 UTC.
 
 ## Rewards
 
-Tag Team pays **2× standard league rewards** per robot (same multiplier as 2v2 League):
+Each tag team earns one **team credit pool**: the solo reward × 2 robots × 0.75, so **1.5×** a standard league reward. A win pays 1.5× (win + participation); a loss or draw pays 1.5× the participation reward. The pool is paid to the stable and split evenly between the two robots (an odd credit goes to the active robot).
 
-| Tier | Winner (per robot) | Loser/Draw (per robot) |
+| Tier | Winner pool (per robot) | Loser/Draw pool (per robot) |
 |------|-------------------|----------------------|
-| Bronze | ₡18,000 | ₡3,600 |
-| Silver | ₡36,000 | ₡7,200 |
-| Gold | ₡72,000 | ₡14,400 |
-| Platinum | ₡144,000 | ₡28,800 |
-| Diamond | ₡276,000 | ₡55,200 |
-| Champion | ₡540,000 | ₡108,000 |
+| Bronze | ₡13,500 (₡6,750) | ₡2,250 (₡1,125) |
+| Silver | ₡27,000 (₡13,500) | ₡4,500 (₡2,250) |
+| Gold | ₡54,000 (₡27,000) | ₡9,000 (₡4,500) |
+| Platinum | ₡108,000 (₡54,000) | ₡18,000 (₡9,000) |
+| Diamond | ₡207,000 (₡103,500) | ₡34,500 (₡17,250) |
+| Champion | ₡405,000 (₡202,500) | ₡67,500 (₡33,750) |
+
+```callout-info
+Season 2 reduced team credit pools by 25%: tag team pools were 2× a solo reward. Prestige (1.6×), fame, LP, ELO and streaming are unchanged.
+```
 
 ### LP Changes
 

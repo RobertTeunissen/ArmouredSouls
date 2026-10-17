@@ -29,27 +29,31 @@ These facilities reduce your operating costs or generate passive income. They te
 
 | Facility | Purpose | Level 1 Cost | Operating Cost | Key Benefit |
 |----------|---------|-------------|----------------|-------------|
-| Training Facility | Attribute upgrade discounts | ₡150,000 | level × ₡250/day | Up to 90% — scales with level *and* shrinks as your roster grows |
+| Training Facility | Attribute upgrade discounts | ₡150,000 | level × ₡250/day | Up to 67.5% — scales with level *and* shrinks as your roster grows |
 | Repair Bay | Repair cost discounts | ₡50,000 | ₡1,000/day + ₡500 per extra level | 6% per level, up to 60% |
 | Merchandising Hub | Passive merchandising income | ₡150,000 | level × ₡200/day | ₡25,000–₡250,000/day base income, scales with Prestige per robot slot |
 | Streaming Studio | Streaming revenue multiplier | ₡100,000 | level × ₡100/day | 1.5×–6× streaming revenue per battle |
 
 ### Training Facility
 
-The Training Facility provides a percentage discount on all attribute upgrade costs — but how much each level is worth depends on how many robot slots you have. Every slot takes one percentage point off the per-level rate.
+The Training Facility provides a percentage discount on all attribute upgrade costs — but how much each level is worth depends on how many robot slots you have bought. Every slot takes 0.75 percentage points off the per-level rate.
 
-**Discount formula**: Level × (10 − robot slots)%, capped at 90%
+**Discount formula**: Level × (10 − robot slots) × 0.75%
 
-A single-robot stable earns 9% per level and reaches the 90% cap at Level 10. A stable with 4 slots earns 6% per level, so Level 5 gives 30%. A stable with all 10 slots earns nothing from this facility at any level.
+A single-robot stable earns 6.75% per level and reaches the 67.5% maximum at Level 10. A stable with 4 slots earns 4.5% per level, so Level 5 gives 22.5%. A stable with all 10 slots earns nothing from this facility at any level. The count uses the slots you have bought with Roster Expansion, not the robots you currently own.
 
 | Facility Level | 1 slot | 2 slots | 4 slots | 7 slots | 10 slots |
 |---|---|---|---|---|---|
-| 5 | 45% | 40% | 30% | 15% | 0% |
-| 8 | 72% | 64% | 48% | 24% | 0% |
-| 10 | **90%** | 80% | 60% | 30% | 0% |
+| 5 | 33.75% | 30% | 22.5% | 11.25% | 0% |
+| 8 | 54% | 48% | 36% | 18% | 0% |
+| 10 | **67.5%** | 60% | 45% | 22.5% | 0% |
+
+```callout-info
+Season 2 reduced the Training Facility discount by a quarter: Level 10 with one slot gives 67.5% (it was 90%). Late attribute upgrades had become too cheap.
+```
 
 ```callout-warning
-Expanding your roster permanently reduces this discount. Roster Expansion and the Training Facility pull against each other — a wide stable has more attributes to fund *and* pays more per upgrade. Decide which strategy you're playing before sinking credits into either.
+Buying a Roster Expansion level permanently reduces this discount, by 0.75 points per Training Facility level (6.75 points at Level 9). Roster Expansion and the Training Facility pull against each other — a wide stable has more attributes to fund *and* pays more per upgrade. Decide which strategy you're playing before sinking credits into either.
 ```
 
 Given that maxing all 23 attributes on a single robot costs over ₡29 million at full price, a deep discount on a concentrated roster saves enormous amounts over time.

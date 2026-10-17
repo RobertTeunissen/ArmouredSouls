@@ -2,7 +2,7 @@
 title: "Training Academies"
 description: "How the four Training Academies control attribute caps and unlock higher levels of robot power — from the initial cap of 10 all the way to the maximum of 50."
 order: 5
-lastUpdated: "2026-10-16"
+lastUpdated: "2026-10-17"
 relatedArticles:
   - robots/attributes-overview
   - robots/upgrade-costs
@@ -109,7 +109,7 @@ The [Training Facility](/guide/robots/upgrade-costs) and Training Academies work
 
 | Facility | What It Does |
 |----------|-------------|
-| **Training Facility** | Reduces the *cost* of attribute upgrades (up to 90% discount) |
+| **Training Facility** | Reduces the *cost* of attribute upgrades (up to 67.5% discount) |
 | **Training Academies** | Raises the *cap* on attribute levels (from 10 up to 50) |
 
 You need both to build a powerful robot efficiently:

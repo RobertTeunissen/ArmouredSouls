@@ -792,37 +792,31 @@ total_max_cost = 23 × 1,274,000 = ₡29,302,000
 ```
 
 **Facility Discount: Training Facility**
-- Provides 10% to 90% discount based on level (see section 2 below)
-- Discount applies to base upgrade cost before calculation
-- Formula with discount:
+- Discount = `clamp(level, 0, 10) × max(0, 10 − Roster_Capacity) × 0.75` percent (Spec #46 R11, Season 2 #526): 6.75% per level with one robot slot, up to 67.5% at Level 10; 0% at 10 or more slots. See [STABLE_SYSTEM.md](STABLE_SYSTEM.md#facility-upgrades).
+- `Roster_Capacity` is the purchased capacity (`roster_expansion` level + 1), never the robots currently owned.
+- Formula with discount (shared `calculateTrainingFacilityDiscount` and `applyTrainingDiscount` in `app/shared/utils/`):
   ```
-  discount = training_facility_level × 10  // 10% to 90% (capped at Level 9)
-  upgrade_cost = (current_level + 1) × 1,500 × (1 - discount/100)  // Updated Feb 8, 2026
+  discount     = clamp(level, 0, 10) × max(0, 10 − Roster_Capacity) × 0.75   // multiple of 0.25, exact
+  upgrade_cost = floor((current_level + 1) × 1,500 × (100 − discount) / 100) // per level, then summed
   ```
-
+- Season 2 (#526) scaled the Spec #46 curve by 0.75 (L6/C1 54% → 40.5%, L10/C1 90% → 67.5%, L10/C4 60% → 45%); the former 90% clamp could no longer bind and was removed.
 **Training Facility ROI Analysis**:
-
 *Upgrading from level 1→10 (hitting first cap) for all 23 attributes:*
 - Cost per attribute (1→10): (2+3+4+5+6+7+8+9+10+11) × ₡1,500 = ₡81,000
 - Total for all 23 attributes: 23 × ₡81,000 = **₡1,863,000**
-
-*With Training Facility Level 1 (10% discount):*
+*With Training Facility Level 1 (6.75% discount, one robot slot):*
 - Training Facility cost: ₡150,000 (see [STABLE_SYSTEM.md](STABLE_SYSTEM.md))
 - Operating cost: ₡250/day (₡1,750/week)
-- Cost per attribute (1→10) with discount: ₡81,000 × 0.90 = ₡72,900
-- Total for all 23 attributes: 23 × ₡72,900 = ₡1,676,700
-- **Savings**: ₡1,863,000 - ₡1,676,700 = ₡186,300
-- **Net cost with facility**: ₡150,000 + ₡1,676,700 = ₡1,826,700
+- Cost per attribute (1→10) with discount: ₡75,529 (each level floored separately)
+- Total for all 23 attributes: 23 × ₡75,529 = ₡1,737,167
+- **Savings**: ₡1,863,000 − ₡1,737,167 = ₡125,833
+- **Net cost with facility**: ₡150,000 + ₡1,737,167 = ₡1,887,167
 - **vs without facility**: ₡1,863,000
-- **Net benefit**: ₡36,300 savings ✓
-
-**Daily Break-Even**: Need ₡2,500/day in upgrade spending to cover ₡250/day operating costs
-- At 10% discount: ₡2,500 × 0.10 = ₡250/day savings
-- Achievable in Bronze league with regular upgrades (1-2 upgrades/day)
-
-**Conclusion**: Training Facility Level 1 is NOW cost-effective for early game! With 10% discount and low operating costs (₡250/day), it pays for itself even with modest upgrade spending.
-**Recommendation**: Purchase Training Facility Level 1 early (cycles 5-15) if you plan to upgrade regularly. Essential for 2+ robot strategies and progression past level 10.
-
+- **Net**: ₡24,167 short of paying back on this one build alone; it pays back with further upgrades or a higher level
+**Daily Break-Even**: About ₡3,704/day in upgrade spending covers the ₡250/day operating cost
+- At 6.75% discount: ₡3,704 × 0.0675 ≈ ₡250/day savings
+**Conclusion**: Training Facility Level 1 is cost-effective for a small roster that upgrades regularly. Each Roster Expansion level lowers the rate by 0.75 points per facility level, so it is worth far less to a wide stable.
+**Recommendation**: Purchase Training Facility Level 1 early (cycles 5-15) if you plan to upgrade regularly with a small roster.
 ### 2. Facility Purchases & Upgrades
 
 **14 Facility Types**, most with **10 upgrade levels** (Level 0 = not purchased, Levels 1-10 = upgraded). Some levels require prestige thresholds (Roster Expansion is the only facility with 9 levels. 
@@ -1307,6 +1301,8 @@ participation_reward = league_base × 0.2  // PARTICIPATION_REWARD_FRACTION
 - **Amount**: 20% of the league base win reward (both winner and loser). Declared once as `PARTICIPATION_REWARD_FRACTION` in `app/backend/src/utils/economyFormulas.ts`
 - **Purpose**: Offset repair costs, especially for losers who take more damage
 - **Balance**: Ensures losing players still earn some credits to cover basic repairs
+
+**Team credit pools** (Season 2, #527): team modes pay one credit pool per team, multiplied by `TEAM_CREDIT_POOL_FACTOR` (0.75, `app/backend/src/utils/economyFormulas.ts`) exactly once before the split and rounded once. Tag team and 2v2 pools are 1.5× a solo reward (were 2×), 3v3 pools 2.25× (were 3×); team tournaments use round reward × teamSize × 0.75; an already-eligible team bye or forfeit win pays participation × teamSize × 0.75. The 2v2/3v3 loser pool stays 20% of the (reduced) winner pool. Shares are split with `distributeTeamCredits` (remainder one credit at a time to the first robots) and sum exactly to the recorded pool. Solo rewards and byes, streaming, fame, prestige, ELO/LP and standings are unchanged.
 
 **League-Specific Participation Rewards** (20% of `getLeagueWinReward(tier)`):
 - Bronze league: ₡1,500 (20% of ₡7,500 base)
@@ -2184,7 +2180,7 @@ All facility ROI calculations use `unifiedFacilityROIService` for prospective fa
 robot_cost = 500000;
 
 // Attribute upgrade (Updated Feb 8, 2026)
-upgrade_cost = (current_level + 1) * 1500 * (1 - training_facility_discount);
+upgrade_cost = floor((current_level + 1) * 1500 * (100 - training_facility_discount_percent) / 100); // per level, #526
 
 // Weapon purchase
 weapon_cost = base_price * (1 - weapons_workshop_discount);

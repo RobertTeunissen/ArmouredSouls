@@ -40,22 +40,22 @@ When you cross a prestige threshold, **every** facility at that level becomes av
 
 ### Training Facility Progression
 
-The Training Facility is one of the best early investments. Each level adds up to 10% to your attribute upgrade discount (actual rate depends on roster size).
+The Training Facility is one of the best early investments for a small roster. Each level adds up to 6.75% to your attribute upgrade discount: 0.75 × (10 − robot slots) points per level, so the actual rate depends on how many slots you have bought.
 
 | Level | Cost | Discount (1 robot) | Operating Cost/Day | Cumulative Investment |
 |-------|------|-------------------|-------------------|----------------------|
-| 1 | ₡150,000 | 9% | ₡250 | ₡150,000 |
-| 2 | ₡300,000 | 18% | ₡500 | ₡450,000 |
-| 3 | ₡450,000 | 27% | ₡750 | ₡900,000 |
-| 4 | ₡600,000 | 36% | ₡1,000 | ₡1,500,000 |
-| 5 | ₡750,000 | 45% | ₡1,250 | ₡2,250,000 |
-| 6 | ₡900,000 | 54% | ₡1,500 | ₡3,150,000 |
-| 7 | ₡1,050,000 | 63% | ₡1,750 | ₡4,200,000 |
-| 8 | ₡1,200,000 | 72% | ₡2,000 | ₡5,400,000 |
-| 9 | ₡1,350,000 | 81% | ₡2,250 | ₡6,750,000 |
-| 10 | ₡1,500,000 | 90% (max) | ₡2,500 | ₡9,250,000 |
+| 1 | ₡150,000 | 6.75% | ₡250 | ₡150,000 |
+| 2 | ₡300,000 | 13.5% | ₡500 | ₡450,000 |
+| 3 | ₡450,000 | 20.25% | ₡750 | ₡900,000 |
+| 4 | ₡600,000 | 27% | ₡1,000 | ₡1,500,000 |
+| 5 | ₡750,000 | 33.75% | ₡1,250 | ₡2,250,000 |
+| 6 | ₡900,000 | 40.5% | ₡1,500 | ₡3,150,000 |
+| 7 | ₡1,050,000 | 47.25% | ₡1,750 | ₡4,200,000 |
+| 8 | ₡1,200,000 | 54% | ₡2,000 | ₡5,400,000 |
+| 9 | ₡1,350,000 | 60.75% | ₡2,250 | ₡6,750,000 |
+| 10 | ₡1,500,000 | 67.5% (max) | ₡2,500 | ₡8,250,000 |
 
-**ROI Analysis**: Upgrading all 23 attributes from level 1→10 on one robot costs ₡1,863,000 at full price. With Training Facility Level 1 (9% discount with 1 robot), you save ₡167,670 — meaning the facility pays for itself after upgrading roughly one robot's core attributes. With multiple robots, the payback is even faster.
+**ROI Analysis**: Upgrading all 23 attributes from level 1→10 on one robot costs ₡1,863,000 at full price. With Training Facility Level 1 (6.75% with 1 robot slot), you pay ₡1,737,167 and save ₡125,833, close to the facility's ₡150,000 price. Each Roster Expansion level lowers the rate, so a wide stable earns less per level even though it has more attributes to upgrade. Season 2 reduced every rate by a quarter (Level 10 with one slot was 90%).
 
 ```callout-tip
 Training Facility Level 1 is profitable from day one if you're upgrading regularly. It's one of the first facilities you should buy.

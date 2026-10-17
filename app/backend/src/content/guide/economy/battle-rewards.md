@@ -2,7 +2,7 @@
 title: "Battle Reward Scaling"
 description: "How battle winnings scale by league tier from Bronze through Champion, and how Prestige bonus multipliers increase your earnings."
 order: 2
-lastUpdated: "2026-08-27"
+lastUpdated: "2026-10-17"
 relatedArticles:
   - economy/credits-and-income
   - leagues/league-tiers
@@ -51,7 +51,7 @@ You always earn something from every battle. A Bronze-tier loss still pays ₡1,
 
 Sometimes the schedule has nothing for your robot to fight — an odd number of entrants in your instance, a tier too thin to run a Grand Melee field, or a tournament bracket that needs someone to skip a round. That's a **bye**, and it still pays.
 
-A bye pays the **participation reward** for your tier — the same figure a loss pays — multiplied by the number of robots on your side. So a 1v1 bye pays one participation reward, a 2v2 or Tag Team bye pays two, and a 3v3 bye pays three. A tournament bye pays whatever a loss pays for that round.
+A bye pays the **participation reward** for your tier — the same figure a loss pays — multiplied by the number of robots on your side, and for team modes by the 0.75 team credit-pool factor. So a 1v1 bye pays one participation reward, a 2v2 or Tag Team bye pays 1.5, and a 3v3 bye pays 2.25 (Season 2; they were two and three). A tournament bye pays whatever a loss pays for that round.
 
 What a bye does **not** pay is prestige, fame or streaming revenue. Those are earned by fighting.
 

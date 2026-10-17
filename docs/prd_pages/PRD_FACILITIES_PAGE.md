@@ -109,7 +109,7 @@ The Facilities Page (`/facilities`) is a critical economic and progression inter
 **Facility Types & Implementation Status:**
 
 **Implemented (all 14 facilities, including):**
-1. ✅ **Training Facility** - Discount on attribute upgrades, up to 90%. Rate is `(10 − Roster_Capacity)%` per level, so it shrinks as the roster grows (Spec #46 R11)
+1. ✅ **Training Facility** - Discount on attribute upgrades, up to 67.5%. Rate is `0.75 × (10 − Roster_Capacity)%` per level, so it shrinks as the roster grows (Spec #46 R11, Season 2 #526)
 2. ✅ **Weapons Workshop** - Discount on weapon purchases (5%-50%) and resale rate (10%-100%)
 3. ✅ **Repair Bay** - Discount on repair costs (6%-60%, 6% per level for any roster size)
 4. ✅ **Roster Expansion** - Increase robot slots (1→10 robots)
@@ -1171,8 +1171,8 @@ const FacilityIcon: React.FC<FacilityIconProps> = ({ facilityType, alt, classNam
 #### Training Facility (✅ Implemented)
 - **Type**: `training_facility`
 - **Max Level**: 10
-- **Cost Range**: ₡300K - ₡4.5M (total: ₡17.5M)
-- **Benefits**: Up to 90% discount on attribute upgrades. Formula: `clamp(level × max(0, 10 − Roster_Capacity), 0, 90)` where Roster_Capacity is `roster_expansion` level + 1 (Spec #46 R11)
+- **Cost Range**: ₡150K - ₡1.5M (total: ₡8.25M)
+- **Benefits**: Up to 67.5% discount on attribute upgrades. Formula: `clamp(level, 0, 10) × max(0, 10 − Roster_Capacity) × 0.75` where Roster_Capacity is `roster_expansion` level + 1 (Spec #46 R11; Season 2 #526 scaled the curve by 0.75 and removed the dead 90% clamp). The facility card's benefit text quotes the exact fractional rate (e.g. 6.75% per level at 1 slot)
 - **Strategic Value**: Essential for a concentrated roster; **worthless at 10 robot slots**, where the rate is 0% per level. Sits on the same concentration axis as the Merchandising Hub and pulls against Roster Expansion
 - **Display**: The page shows the player's *actual* discount computed against their own Roster_Capacity, not the best-case figure from the static benefit strings
 - **Implementation Status**: Fully implemented, discount applies to robot attribute upgrade costs

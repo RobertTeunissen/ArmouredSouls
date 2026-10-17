@@ -40,7 +40,7 @@ Keep enough Credits available for operating costs and repairs. A large purchase 
 
 ### Battle and bye income
 
-Every scheduled mode can award Credits. Wins pay more than losses, and rewards grow with tier and team size where applicable. A bye pays only that mode’s participation floor. It does not count as a fought match and does not generate streaming revenue, Fame, or Prestige.
+Every scheduled mode can award Credits. Wins pay more than losses, and rewards grow with tier and team size where applicable. A team match pays one team credit pool to the stable, split across its robots: 1.5× a solo reward for Tag Team and 2v2, 2.25× for 3v3 (Season 2; it was 2× and 3×). A bye pays only that mode’s participation floor. It does not count as a fought match and does not generate streaming revenue, Fame, or Prestige.
 
 Prestige increases base battle Credits with a smooth multiplier, capped at 1.50×. The Finance Center reports the amount that was actually awarded at the time; it does not recalculate an old battle using your current Prestige.
 

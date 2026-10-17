@@ -268,11 +268,12 @@ builds the combined arm times out in 12.7% of Grand Melees (mid budget), and the
 checked all ended by elimination. Re-assess melee/shield dominance in placements with ACC results after Season 2
 starts.
 
-## Economy (#524, #525)
+## Economy (#524, #525, #526, #527)
 
 Streaming formula v2 (battles and Fame additive, Streaming Studio +50% per level, no caps), Merchandising Hub
-₡25,000 per level, and a flat 6% per level Repair Bay discount for every roster size. Details, old values, deploy notes
-and the 1/3/10-robot comparison are in [SEASON_2_ECONOMY_REBALANCE.md](SEASON_2_ECONOMY_REBALANCE.md).
+₡25,000 per level, a flat 6% per level Repair Bay discount for every roster size, the Training Facility discount
+× 0.75 (67.5% max), and team credit pools × 0.75 (tag team/2v2 1.5×, 3v3 2.25× a solo reward). Details, old values,
+deploy notes and the 1/3/10-robot comparison are in [SEASON_2_ECONOMY_REBALANCE.md](SEASON_2_ECONOMY_REBALANCE.md).
 
 ## Rejected or omitted levers
 
@@ -354,6 +355,8 @@ One line per change, for the Season 2 changelog entry (authored in the admin por
 - Merchandising Hub buffed: ₡25,000 per level per day (was ₡10,000); Prestige still counts per robot slot
 - Repair Bay: 6% discount per level for every stable (60% at Level 10); extra robots no longer raise it (was up to 90%)
 - Guide fix: Repair Bay upkeep is ₡1,000/day at Level 1 plus ₡500 per extra level (unchanged; the guide said ₡100 per level)
+- Training Facility discount reduced by a quarter: up to 67.5% (was 90%); 6.75% per level with one robot slot (was 9%)
+- Team modes pay 25% less credits: tag team/2v2 pools 1.5× a solo reward (was 2×), 3v3 2.25× (was 3×); team tournaments and team byes likewise. Solo rewards, streaming, fame, prestige and LP are unchanged
 
 ### King of the Hill
 

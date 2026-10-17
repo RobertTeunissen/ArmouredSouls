@@ -30,8 +30,8 @@ Your priority is stretching your starting budget and building a foundation for g
 ### Priority 1: Training Facility (Level 1–3)
 
 - **Cost**: ₡150,000 (Level 1)
-- **Why first**: 10% discount on all attribute upgrades. You'll be upgrading constantly in the early game, so this pays for itself almost immediately.
-- **Target**: Level 3 (₡900,000 total, 30% discount) by cycle 30
+- **Why first**: 6.75% discount on all attribute upgrades with one robot slot (0.75 × (10 − slots) points per level). You'll be upgrading constantly in the early game, so this pays for itself.
+- **Target**: Level 3 (₡900,000 total, 20.25% discount with one slot) by cycle 30
 
 ### Priority 2: Repair Bay (Level 1–2)
 

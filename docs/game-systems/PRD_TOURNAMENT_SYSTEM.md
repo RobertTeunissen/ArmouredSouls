@@ -304,6 +304,7 @@ The continuous tournament model ensures:
   - Applies logarithmic scaling for tournament size (handles 100k+ participants)
   - **Winner receives full calculated reward**
   - **Loser receives participation reward** (30% of winner's credits)
+  - **Team tournaments (2v2, 3v3)**: each side's owner pool is the round amount × teamSize × 0.75 (Team_Credit_Pool_Factor, Season 2 #527), rounded once by `calculateTeamTournamentCreditPools` and split per robot with `distributeTeamCredits`; nothing multiplies by teamSize again (the pre-Spec #49 N² payment). A 2v2 pool is 1.5× and a 3v3 pool 2.25× the 1v1 round amount (were 2× and 3×)
   - **Bye matches**: Bracket generation creates a current-round Upcoming Match for the real robot/team with an expected credit display; it does not advance, award credits, or create Recent Battles history at generation time
     - When the current round is processed, the existing no-simulation bye path creates the Bye_Record and resolved Battle exactly once
     - Credits are awarded at processing: the same amount a loss pays for that round (Spec #49)

@@ -324,7 +324,7 @@ Shared matchmaking utilities consumed by all league matchmakers and tag team.
 | `teamBattleMatchmakingService` | 2v2/3v3 matchmaking orchestration per league instance. Subscription-gated eligibility. Creates `ScheduledTeamBattleMatch` rows with `matchMode` discriminator (`'league_2v2'`, `'league_3v3'`, `'tag_team'`, `'tournament_2v2'`, `'tournament_3v3'`). |
 | `teamBattleOrchestrator` | Battle execution — fetch scheduled matches, invoke engine, persist results, distribute rewards. |
 | `teamBattleEngine` | N-vs-N simulation wrapper around `combatSimulator`. All 2N robots active simultaneously. |
-| `teamBattleRewardService` | Reward calculation and distribution (N× multiplier of 1v1 rewards per robot). |
+| `teamBattleRewardService` | Reward calculation and distribution: one team credit pool per side (N × 1v1 reward × 0.75 Team_Credit_Pool_Factor, #527), split with `distributeTeamCredits`. |
 | `teamBattleAdapter` | `LeagueAdapter<TeamBattle>` for `leagueEngine.ts` — exports `teamBattle2v2Adapter`, `teamBattle3v3Adapter`, and `tagTeamLeagueAdapter`. The tag team adapter remaps LP/league fields to `tagTeamLp`/`tagTeamLeague`/`tagTeamLeagueId` with `entityType = 'tag_team'`. Promotion/demotion with same config as 1v1. |
 | `teamCoordinationEffects` | Ally-targeted formulas for `syncProtocols` (focus fire bonus), `supportSystems` (ally shield regen), `formationTactics` (formation damage reduction). |
 

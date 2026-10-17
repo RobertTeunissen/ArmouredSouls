@@ -2,7 +2,7 @@
 title: "Team Tournaments (2v2 & 3v3)"
 description: "How team tournaments work in Armoured Souls — 2v2 and 3v3 single-elimination brackets with daily round cadence, team eligibility, and championship rewards."
 order: 5
-lastUpdated: "2026-10-15"
+lastUpdated: "2026-10-17"
 relatedArticles:
   - tournaments/tournament-format
   - tournaments/eligibility
@@ -94,13 +94,13 @@ A minimum of 4 eligible teams is required to start a tournament. If fewer than 4
 
 ## Rewards
 
-Team tournament rewards follow the same structure as 1v1 tournaments, multiplied by team size:
+Team tournament rewards follow the same structure as 1v1 tournaments, scaled to a team credit pool:
 
 ### Credits
 
-Each robot on the winning team earns: `₡20,000 × sizeMultiplier × roundProgressMultiplier × teamSize`
+The winning team's pool is: `₡20,000 × sizeMultiplier × roundProgressMultiplier × teamSize × 0.75`, rounded once.
 
-In a 2v2 tournament, each robot earns 2× the base formula. In 3v3, each robot earns 3×. Losing teams earn 30% of the winner's reward per robot.
+So a 2v2 winner pool is 1.5× the 1v1 round reward and a 3v3 winner pool 2.25× (Season 2; they were 2× and 3×). The losing team's pool is the round's loss reward (30% of the win reward) × teamSize × 0.75. Each pool is paid to the stable and split evenly across the robots, with any odd credit going to the first robots, so the shares add up to the pool exactly. The team size is applied once: the pool is never multiplied again per robot.
 
 ### Prestige (Per Round Won)
 
