@@ -151,8 +151,10 @@ export interface RobotCombatState {
   lastMeleeHitTakenAt: number | null;
   /** Time until which the ranged disengage burst is active (seconds; 0 = never started). */
   disengageBurstUntil: number;
-  /** Earliest time a new melee hit can trigger the next disengage burst (burst end + one patience window). */
+  /** Earliest time a new melee hit can schedule the next disengage burst (burst end + one patience window). */
   disengageReadyAt: number;
+  /** Start time of the pending ranged disengage burst (first melee hit + 2.5 s), or null. */
+  disengageScheduledAt: number | null;
   /** Speed burst applied this tick: melee commit, ranged disengage, or none. */
   speedBurst: SpeedBurst;
 

@@ -5,6 +5,8 @@
 import { simulateBattle, simulateBattleMulti, RobotWithWeapons, CombatResult, CombatEvent, Position } from '../src/services/battle/combatSimulator';
 import type { GameModeConfig, MovementIntent, RobotCombatState } from '../src/services/arena/types';
 import type { SpeedBurst } from '../src/services/arena/engagementCycle';
+import { DISENGAGE_DELAY_SECONDS, getDisengageDuration } from '../src/services/arena/engagementCycle';
+import { getPatienceLimit } from '../src/services/arena/movementAI';
 import { prepareRobotForCombat } from '../src/utils/robotCalculations';
 import { ROBOT_ATTRIBUTES } from '../src/shared/utils/robotAttributes';
 import { buildKothGameModeConfig, buildKothInitialState } from '../src/services/arena/koth/kothGameMode';
@@ -1111,6 +1113,7 @@ describe('simulateBattle — spatial refactor', () => {
       exempt: boolean;
       patience: number;
       distance: number;
+      lastMeleeHit: number | null;
     }
 
     /**
@@ -1135,6 +1138,7 @@ describe('simulateBattle — spatial refactor', () => {
               burst: s.speedBurst,
               exempt: s.isUsingClosingBonus,
               patience: s.patienceTimer,
+              lastMeleeHit: s.lastMeleeHitTakenAt,
               distance: other
                 ? Math.hypot(s.position.x - other.position.x, s.position.y - other.position.y)
                 : Number.NaN,
@@ -1190,12 +1194,12 @@ describe('simulateBattle — spatial refactor', () => {
       expect(pursuing.length).toBeGreaterThan(10);
       for (const s of pursuing) {
         expect(s.exempt).toBe(true);
-        expect(s.speed).toBeCloseTo(BASE_SPEED * 1.10, 10);
+        expect(s.speed).toBeCloseTo(BASE_SPEED * 1.15, 10);
       }
     });
 
     it('a melee robot kited beyond its patience window commits and reaches melee reach', () => {
-      // Pursuit 12 × 1.10 = 13.2 loses to kiting 13 × 1.10 = 14.3; the commit burst 12 × 1.30 = 15.6 wins.
+      // Pursuit 12 × 1.15 = 13.8 loses to kiting 13 × 1.10 = 14.3; the commit burst 12 × 1.30 = 15.6 wins.
       // The brawler is robot 1: movement is simultaneous, so robot order does not matter.
       const kiter = durableRobot({
         id: 1, name: 'Kiter', mainWeapon: createRangedWeaponInventory(1), mainWeaponId: 1,
@@ -1226,6 +1230,43 @@ describe('simulateBattle — spatial refactor', () => {
       const beforeReach = brawlerSamples.filter(s => s.tick >= commit.tick && s.tick <= reachTick);
       expect(beforeReach.length).toBeGreaterThan(0);
       expect(beforeReach.every(s => s.burst === 'melee_commit')).toBe(true);
+    });
+
+    it("a ranged robot's disengage starts 2.5 s after the first melee hit it takes", () => {
+      const kiter = durableRobot({
+        id: 1, name: 'Kiter', mainWeapon: createRangedWeaponInventory(1), mainWeaponId: 1,
+        servoMotors: new Prisma.Decimal(30),
+      });
+      const brawler = durableRobot({
+        id: 2, name: 'Brawler', mainWeapon: createMeleeWeaponInventory(2), mainWeaponId: 2,
+        servoMotors: new Prisma.Decimal(25), combatAlgorithms: new Prisma.Decimal(25),
+      });
+      const { samples } = duel([brawler, kiter], 520, undefined, 120);
+      const kiterSamples = samples.filter(s => s.name === 'Kiter' && Number.isFinite(s.distance));
+      const firstHit = kiterSamples.find(s => s.lastMeleeHit !== null)?.lastMeleeHit ?? null;
+
+      expect(firstHit).not.toBeNull();
+      const dueAt = firstHit! + DISENGAGE_DELAY_SECONDS;
+      // No burst during the guaranteed exchange
+      expect(kiterSamples.filter(s => s.tick * 0.1 < dueAt - 1e-6).every(s => s.burst !== 'ranged_disengage')).toBe(true);
+
+      const burstStart = kiterSamples.findIndex(s => s.burst === 'ranged_disengage');
+      expect(burstStart).toBeGreaterThanOrEqual(0);
+      expect(kiterSamples[burstStart].tick * 0.1).toBeCloseTo(dueAt, 5);
+
+      // The first burst lasts 2 + 0.04 × Evasion Thrusters (default 10 → 2.4 s), within one tick
+      let burstEnd = burstStart;
+      while (burstEnd < kiterSamples.length && kiterSamples[burstEnd].burst === 'ranged_disengage') burstEnd++;
+      const burstSeconds = (burstEnd - burstStart) * 0.1;
+      expect(Math.abs(burstSeconds - getDisengageDuration(10))).toBeLessThanOrEqual(0.1 + 1e-6);
+
+      // A next burst needs the cooldown (one patience window, CA 20 → 13 s) plus a new 2.5 s delay
+      const nextBurst = kiterSamples.findIndex((s, i) => i > burstEnd && s.burst === 'ranged_disengage');
+      if (nextBurst >= 0) {
+        const firstEndTime = kiterSamples[burstEnd - 1].tick * 0.1 + 0.1;
+        expect(kiterSamples[nextBurst].tick * 0.1)
+          .toBeGreaterThanOrEqual(firstEndTime + getPatienceLimit(20 / 50) + DISENGAGE_DELAY_SECONDS - 1e-6);
+      }
     });
 
     describe('simultaneous movement (#520 movement fix)', () => {
@@ -1300,8 +1341,16 @@ describe('simulateBattle — spatial refactor', () => {
         expect(gaps(swapped).length).toBe(gaps(forward).length);
         // Path deviation hashes the absolute position, so mirrored paths are not
         // bit-identical; the gap between the robots stays close tick by tick.
-        const maxGapDiff = Math.max(...gaps(forward).map((g, i) => Math.abs(g - gaps(swapped)[i])));
-        expect(maxGapDiff).toBeLessThan(1);
+        // Exact robot-order independence is covered by the previous test.
+        // Pursuit 1.15 (Season 2 round 2) brings the brawler within ~3 units of the
+        // kiter as it reaches the wall; in one of the two runs the kiter slides back
+        // and forth along the wall for ~4 ticks, so the gap differs by up to ~2.0 units
+        // for 2 of 400 ticks (pursuit 1.10: max 0.34). The mean difference stays ~0.3.
+        const gapDiffs = gaps(forward).map((g, i) => Math.abs(g - gaps(swapped)[i]));
+        const meanGapDiff = gapDiffs.reduce((sum, d) => sum + d, 0) / gapDiffs.length;
+        expect(meanGapDiff).toBeLessThan(0.5);
+        expect(gapDiffs.filter(d => d >= 1).length).toBeLessThanOrEqual(2);
+        expect(Math.max(...gapDiffs)).toBeLessThan(2.5);
       });
     });
 

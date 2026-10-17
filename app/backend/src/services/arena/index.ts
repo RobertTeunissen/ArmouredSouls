@@ -74,6 +74,7 @@ export {
   BURST_SPEED_MULTIPLIER,
   DISENGAGE_BASE_SECONDS,
   DISENGAGE_SECONDS_PER_EVASION,
+  DISENGAGE_DELAY_SECONDS,
 } from './engagementCycle';
 export type { EngagementRole, SpeedBurst, DisengageState } from './engagementCycle';
 

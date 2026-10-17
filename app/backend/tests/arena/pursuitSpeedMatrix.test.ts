@@ -10,6 +10,11 @@
  * melee reach (≤ 2, caught) or the kiter's engagement midpoint (≥ 4.5, the
  * kiter is back at its preferred distance and escapes).
  *
+ * Rates (balanced stance, base speed 7 + 0.2 × Servo): pursuit 1.15×,
+ * kiting 1.10×, melee commit and ranged disengage 1.30× (Season 2 round 2).
+ * At equal Servo the chaser closes 0.35 + 0.01 × Servo u/s at range; a kiter
+ * keeps away only above ≈ 1.0455 × melee Servo + 1.59.
+ *
  * Before the fix the melee robot aimed 1 unit short of the kiter's current
  * position and stopped there, so any kiter faster than 10 u/s (1 unit per
  * 0.1 s tick) ended every tick at a gap of 1 + its step > 2 and was never caught.
@@ -48,7 +53,7 @@ function makeState(name: string, servo: number, weapon: Record<string, unknown>,
     isUsingClosingBonus: false,
     movementIntent: { targetPosition: { x, y: 0 }, strategy: 'calculated_path', preferredRange: 'melee', stanceSpeedModifier: 0 },
     currentTarget: null, patienceTimer: 0, combatAlgorithmScore: 1, lastMeleeHitTakenAt: null,
-    disengageBurstUntil: 0, disengageReadyAt: 0, speedBurst: 'none',
+    disengageBurstUntil: 0, disengageReadyAt: 0, disengageScheduledAt: null, speedBurst: 'none',
     adaptationHitBonus: 0, adaptationDamageBonus: 0, hitsTaken: 0, missCount: 0,
     pressureThreshold: 30, isUnderPressure: false, teamIndex: 0, isAlive: true, targetLockTimer: 0,
   };
@@ -117,9 +122,23 @@ function chase(meleeServo: number, kiterServo: number, meleeMode: MeleeMode, kit
   return { outcome: 'open', ticks: maxTicks, meleeSpeed, kiterSpeed, maxGapError, finalGap: gap };
 }
 
-/** Kiter Servo at which a 1.30× melee robot and a 1.10× kiter are exactly equally fast. */
-function equalSpeedServo(fasterModeServo: number): number {
-  return ((1.30 / 1.10) * (7 + 0.2 * fasterModeServo) - 7) / 0.2;
+const PURSUIT = 1.15;
+const KITING = 1.10;
+const BURST = 1.30;
+
+/** Kiter Servo at which a 1.15× pursuing melee robot and a 1.10× kiter are exactly equally fast. */
+function pursuitOutrunServo(meleeServo: number): number {
+  return ((PURSUIT / KITING) * (7 + 0.2 * meleeServo) - 7) / 0.2;
+}
+
+/** Kiter Servo at which a 1.30× committing melee robot and a 1.10× kiter are exactly equally fast. */
+function commitOutrunServo(meleeServo: number): number {
+  return ((BURST / KITING) * (7 + 0.2 * meleeServo) - 7) / 0.2;
+}
+
+/** Melee Servo at which a 1.15× pursuing melee robot and a 1.30× disengaging kiter are exactly equally fast. */
+function disengageDenyServo(kiterServo: number): number {
+  return ((BURST / PURSUIT) * (7 + 0.2 * kiterServo) - 7) / 0.2;
 }
 
 /** Tick tolerance: deviation (≤ 1.5° for melee at CA 50) costs at most ~0.001 units per tick. */
@@ -129,13 +148,13 @@ describe('pursuit speed matrix (#520 movement fix)', () => {
   it('melee Servo 50 catches a Servo 12 kiter that steps more than 1 unit per tick', () => {
     const result = chase(50, 12, 'pursuit', 'kiting');
     expect(result.kiterSpeed * SIMULATION_TICK).toBeGreaterThan(1);
-    expect(result.meleeSpeed).toBeCloseTo((7 + 0.2 * 50) * 1.10, 10);
+    expect(result.meleeSpeed).toBeCloseTo((7 + 0.2 * 50) * PURSUIT, 10);
     expect(result.outcome).toBe('caught');
     expect(result.maxGapError).toBeLessThan(GAP_TOLERANCE);
   });
 
   describe('melee Servo 25 vs a faster kiter', () => {
-    it('a Servo 40 kiter escapes at range (1.10× vs 1.10×)', () => {
+    it('a Servo 40 kiter escapes at range (1.15× vs 1.10×; 40 > 1.05 × 25 + 1.6)', () => {
       const result = chase(25, 40, 'pursuit', 'kiting');
       expect(result.outcome).toBe('escaped');
       expect(result.maxGapError).toBeLessThan(GAP_TOLERANCE);
@@ -146,7 +165,7 @@ describe('pursuit speed matrix (#520 movement fix)', () => {
     });
 
     it('the commit catches a Servo 35 kiter but not a Servo 36 kiter (threshold ~35.9)', () => {
-      expect(equalSpeedServo(25)).toBeCloseTo(35.9, 1);
+      expect(commitOutrunServo(25)).toBeCloseTo(35.9, 1);
       const caught = chase(25, 35, 'commit', 'kiting');
       const escaped = chase(25, 36, 'commit', 'kiting');
       expect(caught.outcome).toBe('caught');
@@ -157,10 +176,14 @@ describe('pursuit speed matrix (#520 movement fix)', () => {
   });
 
   describe('equal Servo 25', () => {
-    it('keeps the gap constant at range', () => {
-      const result = chase(25, 25, 'pursuit', 'kiting', 200);
-      expect(result.outcome).toBe('open');
-      expect(Math.abs(result.finalGap - START_GAP)).toBeLessThan(200 * GAP_TOLERANCE);
+    it('pursuit closes the gap at 0.60 u/s at range', () => {
+      const result = chase(25, 25, 'pursuit', 'kiting');
+      expect(result.outcome).toBe('caught');
+      expect(result.kiterSpeed - result.meleeSpeed).toBeCloseTo(-0.60, 10);
+      // 1 unit (gap 3 → 2) at 0.06 units per tick
+      expect(result.ticks).toBeGreaterThanOrEqual(16);
+      expect(result.ticks).toBeLessThanOrEqual(18);
+      expect(result.maxGapError).toBeLessThan(GAP_TOLERANCE);
     });
 
     it('the melee commit catches', () => {
@@ -184,25 +207,40 @@ describe('pursuit speed matrix (#520 movement fix)', () => {
     });
   });
 
-  it('at range the gap changes by 0.22 u/s per Servo point of difference', () => {
-    for (const [meleeServo, kiterServo] of [[20, 25], [30, 22], [10, 11]]) {
+  it('at range the gap changes by 0.22 × kiter Servo − 0.23 × melee Servo − 0.35 u/s', () => {
+    const cases: Array<[number, number, number]> = [[20, 25, 0.55], [30, 22, -2.41], [10, 11, -0.23]];
+    for (const [meleeServo, kiterServo, rate] of cases) {
       const result = chase(meleeServo, kiterServo, 'pursuit', 'kiting', 1);
-      expect(result.kiterSpeed - result.meleeSpeed).toBeCloseTo(0.22 * (kiterServo - meleeServo), 10);
-      expect(Math.abs(result.finalGap - START_GAP - 0.022 * (kiterServo - meleeServo))).toBeLessThan(GAP_TOLERANCE);
+      expect(result.kiterSpeed - result.meleeSpeed).toBeCloseTo(0.22 * kiterServo - 0.23 * meleeServo - 0.35, 10);
+      expect(result.kiterSpeed - result.meleeSpeed).toBeCloseTo(rate, 10);
+      expect(Math.abs(result.finalGap - START_GAP - SIMULATION_TICK * rate)).toBeLessThan(GAP_TOLERANCE);
     }
   });
 
-  describe('thresholds: kiter Servo ≥ 1.18 × melee Servo + 6.4 outruns the commit, and vice versa', () => {
+  describe('pursuit vs kiting threshold ≈ 1.0455 × melee Servo + 1.59', () => {
     for (const servo of [10, 20, 30]) {
-      const threshold = equalSpeedServo(servo);
-      it(`commit vs kiter around ${threshold.toFixed(2)} (melee ${servo})`, () => {
-        expect(threshold).toBeCloseTo(1.18 * servo + 6.4, 0);
-        expect(chase(servo, threshold - 0.5, 'commit', 'kiting').outcome).toBe('caught');
-        expect(chase(servo, threshold + 0.5, 'commit', 'kiting').outcome).toBe('escaped');
+      const threshold = pursuitOutrunServo(servo);
+      it(`pursuit vs kiter around ${threshold.toFixed(2)} (melee ${servo})`, () => {
+        expect(threshold).toBeCloseTo(1.0455 * servo + 1.59, 1);
+        expect(chase(servo, threshold - 0.5, 'pursuit', 'kiting').outcome).toBe('caught');
+        expect(chase(servo, threshold + 0.5, 'pursuit', 'kiting').outcome).toBe('escaped');
       });
-      it(`disengage vs melee around ${threshold.toFixed(2)} (kiter ${servo})`, () => {
-        expect(chase(threshold + 0.5, servo, 'pursuit', 'disengage').outcome).toBe('caught');
-        expect(chase(threshold - 0.5, servo, 'pursuit', 'disengage').outcome).toBe('escaped');
+    }
+  });
+
+  describe('thresholds: commit: kiter Servo ≥ 1.18 × melee Servo + 6.4 outruns it; disengage: melee Servo ≥ 1.13 × kiter Servo + 4.57 denies it', () => {
+    for (const servo of [10, 20, 30]) {
+      const commitThreshold = commitOutrunServo(servo);
+      it(`commit vs kiter around ${commitThreshold.toFixed(2)} (melee ${servo})`, () => {
+        expect(commitThreshold).toBeCloseTo(1.18 * servo + 6.4, 0);
+        expect(chase(servo, commitThreshold - 0.5, 'commit', 'kiting').outcome).toBe('caught');
+        expect(chase(servo, commitThreshold + 0.5, 'commit', 'kiting').outcome).toBe('escaped');
+      });
+      const denyThreshold = disengageDenyServo(servo);
+      it(`disengage vs melee around ${denyThreshold.toFixed(2)} (kiter ${servo})`, () => {
+        expect(denyThreshold).toBeCloseTo(1.1304 * servo + 4.57, 1);
+        expect(chase(denyThreshold + 0.5, servo, 'pursuit', 'disengage').outcome).toBe('caught');
+        expect(chase(denyThreshold - 0.5, servo, 'pursuit', 'disengage').outcome).toBe('escaped');
       });
     }
   });

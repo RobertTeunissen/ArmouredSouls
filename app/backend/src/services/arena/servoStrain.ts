@@ -3,7 +3,7 @@
  *
  * Calculates base and effective movement speed from servoMotors and applies
  * the stance modifier plus one of the engagement-cycle movement modes (#520):
- * speed burst (melee commit / ranged disengage, 1.30×), melee pursuit (1.10×),
+ * speed burst (melee commit / ranged disengage, 1.30×), melee pursuit (1.15×),
  * mutual-melee final approach (1.15×), ranged kiting (1.10×), or normal
  * movement reduced by servo strain. Every mode except normal movement is
  * exempt from strain. There is no speed-compensation term: Servo Motors
@@ -68,7 +68,7 @@ const STRAIN_DECAY_THRESHOLD = 0.50;
 const STRAIN_DECAY_RATE = 5.0;
 
 /** Melee pursuit multiplier (melee role closing on a ranged-role opponent) */
-const PURSUIT_MULTIPLIER = 1.10;
+const PURSUIT_MULTIPLIER = 1.15;
 
 /** Ranged kiting multiplier (ranged role inside its engagement midpoint vs a melee-role opponent) */
 const KITING_MULTIPLIER = 1.10;
@@ -97,7 +97,7 @@ export function calculateBaseSpeed(servoMotors: number): number {
  * the first matching movement mode (#520):
  *
  * 1. Speed burst (`speedBurst !== 'none'`): base × stance × 1.30, strain-exempt.
- * 2. Pursuit (melee role, distance > 2, ranged-role opponent): base × stance × 1.10, strain-exempt.
+ * 2. Pursuit (melee role, distance > 2, ranged-role opponent): base × stance × 1.15, strain-exempt.
  * 3. Mutual final approach (melee vs melee, 2 < distance ≤ 4): base × stance × 1.15, strain-exempt.
  * 4. Kiting (ranged role, distance < engagement midpoint, melee-role opponent): base × stance × 1.10, strain-exempt.
  * 5. Otherwise: base × stance × (1 − strain/100).

@@ -7,10 +7,11 @@
  * - **Melee commit:** a melee-role robot that has not landed a hit within its
  *   patience window (`getPatienceLimit`) pursues a ranged-role opponent at
  *   `BURST_SPEED_MULTIPLIER`, strain-free, until it is within melee reach.
- * - **Ranged disengage:** a ranged-role robot that takes its first melee-band
- *   hit of an engagement gets an escape burst at `BURST_SPEED_MULTIPLIER`,
+ * - **Ranged disengage:** `DISENGAGE_DELAY_SECONDS` (2.5 s) after a ranged-role
+ *   robot takes its first melee-band hit of an engagement ("guaranteed
+ *   exchange"), it gets an escape burst at `BURST_SPEED_MULTIPLIER`,
  *   strain-free, for `2 + 0.04 × evasionThrusters` seconds, then a cooldown
- *   of one patience window before the next burst can trigger.
+ *   of one patience window before the next burst can be scheduled.
  *
  * All functions are pure with no module-level mutable state; `updateDisengage`
  * mutates only the state object passed in (acceptable within the simulation loop).
@@ -33,14 +34,22 @@ export const DISENGAGE_BASE_SECONDS = 2;
 /** Extra disengage burst seconds per Evasion Thrusters point (uncapped) */
 export const DISENGAGE_SECONDS_PER_EVASION = 0.04;
 
+/** Delay between the first melee-band hit of an engagement and the start of the ranged disengage burst (guaranteed exchange, Season 2 round 2) */
+export const DISENGAGE_DELAY_SECONDS = 2.5;
+
+/** Tolerance for accumulated floating-point error in the tick clock (`currentTime += 0.1`) */
+const TIME_EPSILON = 1e-9;
+
 /** Disengage bookkeeping carried on the robot's combat state */
 export interface DisengageState {
   /** Time of the most recent melee-band hit taken, or null if none yet */
   lastMeleeHitTakenAt: number | null;
   /** Time until which the disengage burst is active */
   disengageBurstUntil: number;
-  /** Earliest time a new melee hit can trigger a disengage burst */
+  /** Earliest time a new melee hit can schedule a disengage burst */
   disengageReadyAt: number;
+  /** Start time of the pending disengage burst (first qualifying melee hit + DISENGAGE_DELAY_SECONDS), or null when none is pending */
+  disengageScheduledAt: number | null;
 }
 
 /** Inputs for the melee commit check */
@@ -83,19 +92,33 @@ export function isMeleeCommitActive(input: MeleeCommitInput): boolean {
 }
 
 /**
- * Start a disengage burst when a ranged-role robot has taken a melee hit since
- * its disengage became ready and no burst is running. Hits during a burst or its
- * cooldown are ignored. Mutates `state`.
+ * Schedule and start the ranged disengage burst. Mutates `state`.
+ *
+ * The first melee hit a ranged-role robot takes since its disengage became
+ * ready (no burst running, nothing scheduled) schedules the burst for
+ * `hit time + DISENGAGE_DELAY_SECONDS`. Further melee hits during the delay,
+ * the burst or its cooldown don't reschedule it. The role is checked when the
+ * burst is scheduled: once scheduled, the burst starts when due even if the
+ * role has flipped or the robot is already out of reach. When it starts it
+ * lasts `getDisengageDuration` seconds, followed by `cooldownSeconds` before a
+ * new hit can schedule the next burst.
  */
 export function updateDisengage(state: DisengageState, input: DisengageUpdateInput): void {
+  // First melee hit since the disengage became ready: schedule the burst after the guaranteed exchange
   if (
-    input.role === 'ranged'
+    state.disengageScheduledAt === null
+    && input.role === 'ranged'
     && state.lastMeleeHitTakenAt !== null
     && state.lastMeleeHitTakenAt >= state.disengageReadyAt
     && input.currentTime >= state.disengageBurstUntil
   ) {
+    state.disengageScheduledAt = state.lastMeleeHitTakenAt + DISENGAGE_DELAY_SECONDS;
+  }
+  // Start the scheduled burst once the delay has passed
+  if (state.disengageScheduledAt !== null && input.currentTime + TIME_EPSILON >= state.disengageScheduledAt) {
     state.disengageBurstUntil = input.currentTime + getDisengageDuration(input.evasionThrusters);
     state.disengageReadyAt = state.disengageBurstUntil + input.cooldownSeconds;
+    state.disengageScheduledAt = null;
   }
 }
 

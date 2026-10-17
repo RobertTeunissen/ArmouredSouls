@@ -368,7 +368,8 @@ export function simulateBattleMulti(
     // Pass 1b: engagement cycle and effective speed (each robot writes only its own state)
     for (const plan of movers) {
       const { state, target } = plan;
-      // Engagement cycle (#520): roles from both robots' engagement ranges
+      // Engagement cycle (#520): roles from both robots' engagement ranges;
+      // the ranged disengage burst starts 2.5 s after the first melee hit
       const range = getEngagementRange(state, target);
       const role = getEngagementRole(range);
       const opponentRole = target ? getEngagementRole(getEngagementRange(target, state)) : null;

@@ -96,11 +96,11 @@ describe('calculateEffectiveSpeed', () => {
   });
 
   describe('melee pursuit (#520)', () => {
-    it('should pursue at base × 1.10 when melee role vs ranged role at distance > 2', () => {
+    it('should pursue at base × 1.15 when melee role vs ranged role at distance > 2', () => {
       const state = makeState({ role: 'melee', distanceToTarget: 10, servoMotors: 10 });
       const { effectiveSpeed, isClosingBonus } = calculateEffectiveSpeed(state, 'ranged');
       expect(isClosingBonus).toBe(true);
-      expect(effectiveSpeed).toBeCloseTo(calculateBaseSpeed(10) * 1.10, 10);
+      expect(effectiveSpeed).toBeCloseTo(calculateBaseSpeed(10) * 1.15, 10);
     });
 
     it('should NOT pursue when distance <= 2', () => {
@@ -124,14 +124,14 @@ describe('calculateEffectiveSpeed', () => {
     it('should NOT apply strain reduction while pursuing', () => {
       const state = makeState({ role: 'melee', distanceToTarget: 10, servoMotors: 10, servoStrain: 20 });
       const { effectiveSpeed } = calculateEffectiveSpeed(state, 'ranged');
-      expect(effectiveSpeed).toBeCloseTo(calculateBaseSpeed(10) * 1.10, 10);
+      expect(effectiveSpeed).toBeCloseTo(calculateBaseSpeed(10) * 1.15, 10);
     });
 
     it('should keep the full 0.80 defensive factor while pursuing', () => {
       const state = makeState({ role: 'melee', distanceToTarget: 10, servoMotors: 10, stance: 'defensive' });
       const { effectiveSpeed, isClosingBonus } = calculateEffectiveSpeed(state, 'ranged');
       expect(isClosingBonus).toBe(true);
-      expect(effectiveSpeed).toBeCloseTo(calculateBaseSpeed(10) * 0.80 * 1.10, 10);
+      expect(effectiveSpeed).toBeCloseTo(calculateBaseSpeed(10) * 0.80 * 1.15, 10);
     });
   });
 
@@ -172,11 +172,11 @@ describe('calculateEffectiveSpeed', () => {
       expect(effectiveSpeed).toBeCloseTo(calculateBaseSpeed(10) * 1.10, 10);
     });
 
-    it('should match the pursuit multiplier at equal Servo Motors', () => {
+    it('pursuit is 1.15× and kiting 1.10× at equal Servo Motors', () => {
       const pursuer = makeState({ role: 'melee', distanceToTarget: 10, servoMotors: 25 });
       const kiter = makeState({ role: 'ranged', engagementRangeMidpoint: 16, distanceToTarget: 3, servoMotors: 25 });
       const baseSpeed = calculateBaseSpeed(25);
-      expect(calculateEffectiveSpeed(pursuer, 'ranged').effectiveSpeed).toBeCloseTo(baseSpeed * 1.10, 10);
+      expect(calculateEffectiveSpeed(pursuer, 'ranged').effectiveSpeed).toBeCloseTo(baseSpeed * 1.15, 10);
       expect(calculateEffectiveSpeed(kiter, 'melee').effectiveSpeed).toBeCloseTo(baseSpeed * 1.10, 10);
     });
   });

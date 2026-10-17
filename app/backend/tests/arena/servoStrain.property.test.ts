@@ -155,11 +155,11 @@ describe('servoStrain property tests', () => {
   });
 
   /**
-   * Property 12 (#520): melee pursuit of a ranged opponent is exactly base × stance × 1.10,
+   * Property 12 (#520): melee pursuit of a ranged opponent is exactly base × stance × 1.15,
    * strain-exempt, for every stance (defensive keeps 0.80 while pursuing).
    */
-  describe('Property 12: pursuit is base × stance × 1.10', () => {
-    it('should pursue at exactly base × stance × 1.10 regardless of strain', () => {
+  describe('Property 12: pursuit is base × stance × 1.15', () => {
+    it('should pursue at exactly base × stance × 1.15 regardless of strain', () => {
       fc.assert(
         fc.property(
           arbServoMotors(),
@@ -172,7 +172,7 @@ describe('servoStrain property tests', () => {
             });
             const { effectiveSpeed, isClosingBonus } = calculateEffectiveSpeed(state, 'ranged');
             expect(isClosingBonus).toBe(true);
-            expect(effectiveSpeed).toBeCloseTo(calculateBaseSpeed(servoMotors) * STANCE_FACTOR[stance] * 1.10, 10);
+            expect(effectiveSpeed).toBeCloseTo(calculateBaseSpeed(servoMotors) * STANCE_FACTOR[stance] * 1.15, 10);
           }
         ),
         { numRuns: 500 }
@@ -184,7 +184,7 @@ describe('servoStrain property tests', () => {
         fc.property(arbServoMotors(), arbBeyondReach(), (servoMotors, distance) => {
           const state = makeState({ servoMotors, stance: 'defensive', role: 'melee', distanceToTarget: distance });
           const { effectiveSpeed } = calculateEffectiveSpeed(state, 'ranged');
-          expect(effectiveSpeed).toBeCloseTo(calculateBaseSpeed(servoMotors) * 0.80 * 1.10, 10);
+          expect(effectiveSpeed).toBeCloseTo(calculateBaseSpeed(servoMotors) * 0.80 * 1.15, 10);
         }),
         { numRuns: 200 }
       );
@@ -218,13 +218,13 @@ describe('servoStrain property tests', () => {
       );
     });
 
-    it('should give pursuit and kiting the same multiplier at equal Servo Motors', () => {
+    it('pursuit is 1.15/1.10 × the kiting speed at equal Servo Motors', () => {
       fc.assert(
         fc.property(arbServoMotors(), arbStance(), (servoMotors, stance) => {
           const pursuer = makeState({ servoMotors, stance, role: 'melee', distanceToTarget: 3 });
           const kiter = makeState({ servoMotors, stance, role: 'ranged', engagementRangeMidpoint: 16, distanceToTarget: 3 });
           expect(calculateEffectiveSpeed(pursuer, 'ranged').effectiveSpeed)
-            .toBeCloseTo(calculateEffectiveSpeed(kiter, 'melee').effectiveSpeed, 10);
+            .toBeCloseTo(calculateEffectiveSpeed(kiter, 'melee').effectiveSpeed * 1.15 / 1.10, 10);
         }),
         { numRuns: 200 }
       );

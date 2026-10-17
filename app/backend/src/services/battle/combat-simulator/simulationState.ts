@@ -89,6 +89,7 @@ export function initializeCombatState(
     lastMeleeHitTakenAt: null,
     disengageBurstUntil: 0,
     disengageReadyAt: 0,
+    disengageScheduledAt: null,
     speedBurst: 'none',
     // Adaptation
     adaptationHitBonus: 0,

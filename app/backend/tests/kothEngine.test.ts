@@ -58,6 +58,7 @@ function makeRobot(
     lastMeleeHitTakenAt: null,
     disengageBurstUntil: 0,
     disengageReadyAt: 0,
+    disengageScheduledAt: null,
     speedBurst: 'none',
     adaptationHitBonus: 0,
     adaptationDamageBonus: 0,
