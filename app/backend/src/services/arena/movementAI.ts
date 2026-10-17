@@ -4,7 +4,9 @@
  * Calculates movement intent per robot per tick based on combatAlgorithms,
  * threatAnalysis, weapon loadout, and combat stance. Handles preferred range
  * calculation, movement prediction, threat-aware positioning, patience timer,
- * movement application, and team separation enforcement.
+ * the wall-aware kiting path (Season 2 round 3, #538: a kiter near the wall
+ * circles away from its chaser, see wallAwareKiting.ts), movement application,
+ * and team separation enforcement.
  *
  * All functions are pure with no module-level mutable state.
  *
@@ -30,6 +32,8 @@ import {
 import { getWeaponOptimalRange, WeaponLike } from './rangeBands';
 import { BattleError, BattleErrorCode } from '../../errors/battleErrors';
 import { clampToArena } from './arenaLayout';
+import type { MovementMode } from './servoStrain';
+import { planWallAwareKitingStep, WALL_KITING_MARGIN } from './wallAwareKiting';
 
 /** Extended weapon shape with DPS fields needed for range preference */
 interface WeaponWithDPS extends WeaponLike {
@@ -60,6 +64,9 @@ const DEVIATION_MIN = 5;
 
 /** Prediction look-ahead time in seconds */
 const PREDICTION_LOOK_AHEAD = 1.5;
+
+/** Movement modes that take the wall-aware kiting path near the wall (Season 2 round 3) */
+const KITING_MODES: ReadonlySet<MovementMode> = new Set<MovementMode>(['kiting', 'ranged_kiting', 'ranged_disengage']);
 
 // ─── Preferred Range ────────────────────────────────────────────────
 
@@ -465,6 +472,30 @@ export function calculateMovementIntent(
     targetPos = lerp(targetPos, target.position, 0.15);
   }
 
+  // Wall-aware kiting path (Season 2 round 3, #538): a kiter whose step would
+  // end near the wall circles away from its chaser instead of stalling against
+  // the wall. Reads only this robot's state and the chaser's tick-start
+  // position and velocity (simultaneous movement, #520).
+  if (KITING_MODES.has(state.movementMode)) {
+    const stepLength = state.effectiveMovementSpeed * deltaTime;
+    const stepX = targetPos.x - state.position.x;
+    const stepY = targetPos.y - state.position.y;
+    const stepDist = Math.sqrt(stepX * stepX + stepY * stepY);
+    const ratio = stepDist > stepLength ? stepLength / stepDist : 1;
+    const stepEnd: Position = { x: state.position.x + stepX * ratio, y: state.position.y + stepY * ratio };
+    if (euclideanDistance(stepEnd, arena.center) > arena.radius - WALL_KITING_MARGIN) {
+      targetPos = planWallAwareKitingStep({
+        position: state.position,
+        velocity: state.velocity,
+        chaserPosition: target.position,
+        chaserVelocity: target.velocity,
+        stepLength,
+        arena,
+        deltaTime,
+      });
+    }
+  }
+
   let intent: MovementIntent = {
     targetPosition: targetPos,
     strategy,
@@ -497,8 +528,11 @@ const WALL_EPSILON = 1e-9;
  * Wall-aware retreat (#520): when the step would leave the arena, the robot
  * moves along the step up to the wall and spends the rest of
  * `effectiveSpeed × deltaTime` sliding along the wall's tangent instead of
- * getting stuck. For a purely radial step the slide direction is the one that
- * ends farther from `threatPosition` (tie or no threat → counter-clockwise).
+ * getting stuck. For a purely radial step the slide direction is the tangent
+ * that continues the robot's tick-start velocity (#538: no back-and-forth
+ * dither along the wall); without a tangential velocity component it is the
+ * one that ends farther from `threatPosition` (tie or no threat →
+ * counter-clockwise).
  * The result is always inside the arena, its displacement never exceeds
  * `effectiveSpeed × deltaTime`, and it is deterministic.
  *
@@ -566,11 +600,15 @@ export function applyMovement(
   const tanLen = Math.sqrt(tanX * tanX + tanY * tanY);
 
   if (tanLen <= TANGENT_EPSILON) {
-    // Purely radial step: slide the way that ends farther from the threat
+    // Purely radial step: keep sliding the way the robot was already moving
+    // (#538), else slide the way that ends farther from the threat
     const ccw: Vector2D = { x: -nY, y: nX };
     const cw: Vector2D = { x: nY, y: -nX };
     let dir = ccw;
-    if (threatPosition) {
+    const along = state.velocity.x * ccw.x + state.velocity.y * ccw.y;
+    if (Math.abs(along) > TANGENT_EPSILON) {
+      dir = along > 0 ? ccw : cw;
+    } else if (threatPosition) {
       const ccwEnd = { x: boundaryPoint.x + ccw.x * remaining, y: boundaryPoint.y + ccw.y * remaining };
       const cwEnd = { x: boundaryPoint.x + cw.x * remaining, y: boundaryPoint.y + cw.y * remaining };
       if (euclideanDistance(cwEnd, threatPosition) > euclideanDistance(ccwEnd, threatPosition)) {

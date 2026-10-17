@@ -12,6 +12,7 @@
 import { Position, Vector2D } from './vector2d';
 import type { RobotWithWeapons, FormulaBreakdown } from '../battle/combatSimulator';
 import type { SpeedBurst } from './engagementCycle';
+import type { MovementMode } from './servoStrain';
 
 // ─── Range Band Classification (Req 3.1) ────────────────────────────
 
@@ -69,7 +70,8 @@ export interface ThreatScore {
   factors: {
     combatPower: number;
     hpPercentage: number;
-    weaponThreat: number;
+    /** Evaluating robot's own main-weapon range multiplier at this distance (Season 2 round 3) */
+    ownRangeMultiplier: number;
     distance: number;
     proximityDecay: number;
     isTargetingMe: boolean;
@@ -157,6 +159,8 @@ export interface RobotCombatState {
   disengageScheduledAt: number | null;
   /** Speed burst applied this tick: melee commit, ranged disengage, or none. */
   speedBurst: SpeedBurst;
+  /** Movement mode chosen by the speed model this tick (Season 2 round 3; drives the wall-aware kiting path). */
+  movementMode: MovementMode;
 
   // === Adaptation (Req 7.1–7.5) ===
   adaptationHitBonus: number;

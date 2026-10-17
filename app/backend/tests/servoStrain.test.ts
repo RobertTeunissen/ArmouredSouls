@@ -19,6 +19,7 @@ function makeState(overrides: Partial<ServoStrainState> = {}): ServoStrainState 
     speedBurst: 'none',
     distanceToTarget: 10,
     currentSpeedRatio: 0,
+    opponentEngagementMidpoint: null,
     ...overrides,
   };
 }
@@ -178,6 +179,93 @@ describe('calculateEffectiveSpeed', () => {
       const baseSpeed = calculateBaseSpeed(25);
       expect(calculateEffectiveSpeed(pursuer, 'ranged').effectiveSpeed).toBeCloseTo(baseSpeed * 1.15, 10);
       expect(calculateEffectiveSpeed(kiter, 'melee').effectiveSpeed).toBeCloseTo(baseSpeed * 1.10, 10);
+    });
+  });
+
+  describe('ranged vs ranged (Season 2 round 3)', () => {
+    // Long kiter (midpoint 16) vs a short opponent (midpoint 4.5), and the reverse
+    const longKiter = (overrides: Partial<ServoStrainState> = {}): ServoStrainState =>
+      makeState({ role: 'ranged', engagementRangeMidpoint: 16, opponentEngagementMidpoint: 4.5, ...overrides });
+    const shortPursuer = (overrides: Partial<ServoStrainState> = {}): ServoStrainState =>
+      makeState({ role: 'ranged', engagementRangeMidpoint: 4.5, opponentEngagementMidpoint: 16, ...overrides });
+
+    it('a long robot kites a short robot at base × 1.10, strain-free, inside its own midpoint', () => {
+      const result = calculateEffectiveSpeed(longKiter({ distanceToTarget: 10, servoMotors: 10, servoStrain: 20 }), 'ranged');
+      expect(result.isClosingBonus).toBe(true);
+      expect(result.mode).toBe('ranged_kiting');
+      expect(result.effectiveSpeed).toBeCloseTo(calculateBaseSpeed(10) * 1.10, 10);
+    });
+
+    it('stops kiting at and beyond its own midpoint (normal speed with strain)', () => {
+      for (const distanceToTarget of [16, 20]) {
+        const result = calculateEffectiveSpeed(longKiter({ distanceToTarget, servoStrain: 20 }), 'ranged');
+        expect(result.isClosingBonus).toBe(false);
+        expect(result.mode).toBe('normal');
+        expect(result.effectiveSpeed).toBeCloseTo(calculateBaseSpeed(25) * 0.80, 10);
+      }
+    });
+
+    it('a short robot follows a long robot at base × 1.05, strain-free, beyond its own midpoint', () => {
+      const result = calculateEffectiveSpeed(shortPursuer({ distanceToTarget: 10, servoMotors: 10, servoStrain: 20 }), 'ranged');
+      expect(result.isClosingBonus).toBe(true);
+      expect(result.mode).toBe('ranged_pursuit');
+      expect(result.effectiveSpeed).toBeCloseTo(calculateBaseSpeed(10) * 1.05, 10);
+    });
+
+    it('stops the ranged pursuit at and inside its own midpoint', () => {
+      for (const distanceToTarget of [4.5, 3]) {
+        const result = calculateEffectiveSpeed(shortPursuer({ distanceToTarget }), 'ranged');
+        expect(result.isClosingBonus).toBe(false);
+        expect(result.mode).toBe('normal');
+      }
+    });
+
+    it('equal midpoints stay normal movement', () => {
+      for (const distanceToTarget of [3, 9.5, 20]) {
+        const result = calculateEffectiveSpeed(
+          makeState({ role: 'ranged', engagementRangeMidpoint: 9.5, opponentEngagementMidpoint: 9.5, distanceToTarget }), 'ranged',
+        );
+        expect(result.isClosingBonus).toBe(false);
+        expect(result.mode).toBe('normal');
+      }
+    });
+
+    it('no opponent midpoint stays normal movement', () => {
+      const result = calculateEffectiveSpeed(longKiter({ opponentEngagementMidpoint: null, distanceToTarget: 10 }), 'ranged');
+      expect(result.isClosingBonus).toBe(false);
+      expect(result.mode).toBe('normal');
+    });
+
+    it('the defensive 0.80 factor applies to both new modes', () => {
+      const kite = calculateEffectiveSpeed(longKiter({ distanceToTarget: 10, stance: 'defensive' }), 'ranged');
+      const follow = calculateEffectiveSpeed(shortPursuer({ distanceToTarget: 10, stance: 'defensive' }), 'ranged');
+      expect(kite.effectiveSpeed).toBeCloseTo(calculateBaseSpeed(25) * 0.80 * 1.10, 10);
+      expect(follow.effectiveSpeed).toBeCloseTo(calculateBaseSpeed(25) * 0.80 * 1.05, 10);
+    });
+
+    it('a speed burst still wins over the new modes', () => {
+      const result = calculateEffectiveSpeed(longKiter({ distanceToTarget: 10, speedBurst: 'ranged_disengage' }), 'ranged');
+      expect(result.mode).toBe('ranged_disengage');
+      expect(result.effectiveSpeed).toBeCloseTo(calculateBaseSpeed(25) * 1.30, 10);
+    });
+
+    it('melee-vs-ranged rules are unchanged by the opponent midpoint (1.15 / 1.10 / 1.30)', () => {
+      const pursuit = calculateEffectiveSpeed(
+        makeState({ role: 'melee', engagementRangeMidpoint: 1, opponentEngagementMidpoint: 16, distanceToTarget: 10 }), 'ranged',
+      );
+      expect(pursuit.mode).toBe('pursuit');
+      expect(pursuit.effectiveSpeed).toBeCloseTo(calculateBaseSpeed(25) * 1.15, 10);
+      const kite = calculateEffectiveSpeed(
+        makeState({ role: 'ranged', engagementRangeMidpoint: 16, opponentEngagementMidpoint: 1, distanceToTarget: 10 }), 'melee',
+      );
+      expect(kite.mode).toBe('kiting');
+      expect(kite.effectiveSpeed).toBeCloseTo(calculateBaseSpeed(25) * 1.10, 10);
+      const commit = calculateEffectiveSpeed(
+        makeState({ role: 'melee', engagementRangeMidpoint: 1, opponentEngagementMidpoint: 16, distanceToTarget: 10, speedBurst: 'melee_commit' }),
+        'ranged',
+      );
+      expect(commit.mode).toBe('melee_commit');
+      expect(commit.effectiveSpeed).toBeCloseTo(calculateBaseSpeed(25) * 1.30, 10);
     });
   });
 

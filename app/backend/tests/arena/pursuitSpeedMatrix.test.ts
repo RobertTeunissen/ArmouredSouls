@@ -53,7 +53,7 @@ function makeState(name: string, servo: number, weapon: Record<string, unknown>,
     isUsingClosingBonus: false,
     movementIntent: { targetPosition: { x, y: 0 }, strategy: 'calculated_path', preferredRange: 'melee', stanceSpeedModifier: 0 },
     currentTarget: null, patienceTimer: 0, combatAlgorithmScore: 1, lastMeleeHitTakenAt: null,
-    disengageBurstUntil: 0, disengageReadyAt: 0, disengageScheduledAt: null, speedBurst: 'none',
+    disengageBurstUntil: 0, disengageReadyAt: 0, disengageScheduledAt: null, speedBurst: 'none', movementMode: 'normal',
     adaptationHitBonus: 0, adaptationDamageBonus: 0, hitsTaken: 0, missCount: 0,
     pressureThreshold: 30, isUnderPressure: false, teamIndex: 0, isAlive: true, targetLockTimer: 0,
   };
@@ -71,6 +71,7 @@ function speedOf(servo: number, role: 'melee' | 'ranged', burst: boolean, distan
     speedBurst: burst ? (role === 'melee' ? 'melee_commit' : 'ranged_disengage') : 'none',
     distanceToTarget: distance,
     currentSpeedRatio: 0,
+    opponentEngagementMidpoint: null,
   };
   return calculateEffectiveSpeed(state, role === 'melee' ? 'ranged' : 'melee').effectiveSpeed;
 }
