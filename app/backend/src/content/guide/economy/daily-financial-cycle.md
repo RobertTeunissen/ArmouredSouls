@@ -2,7 +2,7 @@
 title: "Daily Financial Cycle"
 description: "A visual overview of how Credits flow through your stable each cycle — revenue streams in, operating costs out, and the net income that determines your financial health."
 order: 6
-lastUpdated: "2026-03-11"
+lastUpdated: "2026-10-17"
 relatedArticles:
   - economy/credits-and-income
   - economy/battle-rewards
@@ -70,7 +70,21 @@ Passive income driven by your stable's Prestige rank. Higher Prestige means more
 
 ### Streaming Revenue
 
-Per-robot income based on each robot's [Fame](/guide/economy/streaming-revenue), battle activity, and your Streaming Studio facility level. More battles and higher Fame mean more viewers and more revenue.
+Per-robot income paid with every fought battle, based on each robot's battle count, [Fame](/guide/economy/streaming-revenue), and your Streaming Studio level. More battles and higher Fame mean more viewers and more revenue.
+
+### Per Match vs Per Cycle
+
+Streaming and merchandising grow in different ways. Streaming is paid **per robot, per match**, so it grows with every robot you field and every battle they fight. Merchandising is paid **once per stable, per cycle**, and its Prestige bonus is divided across your robot slots, so it favours a small, strong roster.
+
+The same ₡1,500,000 buys either a Streaming Studio up to Level 5 (3.5× streaming) or a Merchandising Hub up to Level 4 (₡100,000/day base). Here is what each adds per cycle for a stable with 10,000 Prestige whose robots each fight 4 battles per cycle with 500 battles and 5,000 Fame behind them:
+
+| Roster | Studio Level 5 adds | Merchandising Hub Level 4 pays |
+|--------|--------------------|-------------------------------|
+| 1 robot (1 slot) | ₡17,500 | ₡200,000 |
+| 3 robots (3 slots) | ₡52,500 | ₡133,333 |
+| 10 robots (10 slots) | ₡175,000 | ₡110,000 |
+
+Operating costs are ₡500/day for the Studio and ₡800/day for the Hub. A focused stable gets far more from the Hub; only a large, busy roster gets more from the Studio.
 
 ## Operating Costs
 
@@ -82,7 +96,7 @@ Every facility charges a fixed daily operating fee. This is predictable and does
 
 ### Repair Costs
 
-Variable expenses based on how much damage your robots took in battle. Influenced by damage taken, robot attribute totals (higher attributes = higher base repair cost), and your [Repair Bay](/guide/facilities/repair-bay) facility level. Your [yield threshold](/guide/combat/yielding-and-repair-costs) setting also affects this — robots that surrender earlier take less damage and cost less to repair.
+Variable expenses based on how much damage your robots took in battle. Influenced by damage taken, robot attribute totals (higher attributes = higher base repair cost), and your [Repair Bay](/guide/facilities/facility-overview) level (6% off per level). Your [yield threshold](/guide/combat/yielding-and-repair-costs) setting also affects this — robots that surrender earlier take less damage and cost less to repair.
 
 ## Net Income
 
@@ -107,8 +121,8 @@ The daily cycle processes finances through independent scheduled jobs:
 1. **League battles resolve** — Robots fight their matched opponents
 2. **Tournament matches resolve** — If a tournament round is active
 3. **Battle winnings credited** — Income from all battles added to balance
-4. **Merchandising income credited** — Prestige-based passive income added
-5. **Streaming revenue credited** — Fame and activity-based income added
+4. **Streaming revenue credited** — Paid per robot with each fought battle, alongside the battle result
+5. **Merchandising income credited** — Prestige-based passive income added at settlement
 6. **Facility operating costs deducted** — Fixed daily fees for all facilities
 7. **Repair costs deducted** — Variable costs based on battle damage
 

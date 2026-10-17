@@ -268,6 +268,12 @@ builds the combined arm times out in 12.7% of Grand Melees (mid budget), and the
 checked all ended by elimination. Re-assess melee/shield dominance in placements with ACC results after Season 2
 starts.
 
+## Economy (#524, #525)
+
+Streaming formula v2 (battles and Fame additive, Streaming Studio +50% per level, no caps), Merchandising Hub
+₡25,000 per level, and a flat 6% per level Repair Bay discount for every roster size. Details, old values, deploy notes
+and the 1/3/10-robot comparison are in [SEASON_2_ECONOMY_REBALANCE.md](SEASON_2_ECONOMY_REBALANCE.md).
+
 ## Rejected or omitted levers
 
 - No coefficient was tuned after measurement; no tuning-config layer, feature flags or variants were added.
@@ -340,6 +346,14 @@ One line per change, for the Season 2 changelog entry (authored in the admin por
 - Weapons Workshop no longer unlocks refinement; it keeps its purchase discount and resale rate
 - Weapons Workshop discount: now 5% per level (max 50%, was 10% per level up to free); resale unchanged
 - Facility categories reorganised: Economy, Hangar & Armory (now with Weapons Workshop and Refinement Lab), Training Academies, Tactical & Advanced
+
+### Economy
+
+- Streaming Studio nerfed: +50% streaming per level (was +100%), so Level 10 is 6× (was 11×)
+- Streaming audience: battles and Fame now add up instead of multiplying; a 552-battle, 10,492-Fame robot with a Level 9 Studio earns ₡12,788 per battle (was ₡48,087)
+- Merchandising Hub buffed: ₡25,000 per level per day (was ₡10,000); Prestige still counts per robot slot
+- Repair Bay: 6% discount per level for every stable (60% at Level 10); extra robots no longer raise it (was up to 90%)
+- Guide fix: Repair Bay upkeep is ₡1,000/day at Level 1 plus ₡500 per extra level (unchanged; the guide said ₡100 per level)
 
 ### King of the Hill
 

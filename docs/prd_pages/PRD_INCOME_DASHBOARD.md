@@ -121,7 +121,7 @@ Overview always provides a theoretical full-damage scenario for every active rob
 - current Repair Bay discount context; and
 - a zero-active-roster state.
 
-It uses only shared functions in `app/shared/utils/repairCost.ts`, applies discounts once, and rounds per robot before summing. It is explicitly a scenario—not a charge, current-damage quote, recommendation, or signal that repairs are needed. It has no repair or facility action.
+It uses only shared functions in `app/shared/utils/repairCost.ts`, applies discounts once, and rounds per robot before summing. Since Season 2 (#525) the Repair Bay discount is `6 × min(level, 10)` percent and depends on the Repair Bay level only; the active robot count is still returned for the robot-count and empty-state display, not as a discount input. It is explicitly a scenario—not a charge, current-damage quote, recommendation, or signal that repairs are needed. It has no repair or facility action.
 
 ## 7. Overview
 
@@ -146,7 +146,7 @@ Revenue Growth is the absolute and percentage change in actual **earned Credits*
 
 ### 7.2 Prestige Earning Power and forecast
 
-Prestige Earning Power shows current prestige, evidenced period gain, next facility gate, battle Credit multiplier, and merchandising effect. The battle multiplier is `min(1.50, 1 + prestige / 50,000)` and multiplies base battle Credits. Merchandising uses prestige per roster capacity, where capacity is `roster_expansion` level + 1.
+Prestige Earning Power shows current prestige, evidenced period gain, next facility gate, battle Credit multiplier, and merchandising effect. The battle multiplier is `min(1.50, 1 + prestige / 50,000)` and multiplies base battle Credits. Merchandising uses prestige per roster capacity, where capacity is `roster_expansion` level + 1, on a base of ₡25,000 per Merchandising Hub level (Season 2, #524).
 
 Prestige Milestone Forecast uses only positive stored prestige awards from the latest up to seven completed active-season cycles. It displays sample size, awarded total, average pace, remaining prestige, and `ceil(remaining / average)` estimated completed cycles. Current-cycle awards are excluded. The panel is a historical estimate and never provides a date, guaranteed battle result, revenue promise, or purchase advice.
 

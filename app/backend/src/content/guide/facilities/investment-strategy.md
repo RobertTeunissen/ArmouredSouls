@@ -2,7 +2,7 @@
 title: "Facility Investment Strategy"
 description: "Recommended facility purchase and upgrade order for early, mid, and late game — maximize your return on investment at every stage."
 order: 5
-lastUpdated: "2026-10-16"
+lastUpdated: "2026-10-17"
 relatedArticles:
   - facilities/facility-overview
   - facilities/facility-progression
@@ -37,7 +37,8 @@ Your priority is stretching your starting budget and building a foundation for g
 
 - **Cost**: ₡50,000 (Level 1)
 - **Why second**: Repair costs are your biggest variable expense. Even a small discount saves meaningful Credits every cycle.
-- **Target**: Level 2 (₡300,000 total) by cycle 20
+- **Target**: Level 2 (₡150,000 total, 12% discount) by cycle 20
+- **Upkeep**: ₡1,000/day at Level 1, ₡1,500/day at Level 2
 
 ### Priority 3: One Training Academy (Level 1–2)
 
@@ -46,7 +47,7 @@ Your priority is stretching your starting budget and building a foundation for g
 - **Which one**: Match your primary robot's build. Combat Academy for damage dealers, Defense Academy for tanks.
 
 ```callout-tip
-In the early game, resist the urge to buy everything. Three facilities at low levels (Training Facility, Repair Bay, one Academy) cost about ₡350,000 in upgrades plus ~₡500/day in operating costs. That's manageable on Bronze/Silver income. Adding more facilities too early can drain your budget.
+In the early game, resist the urge to buy everything. Three facilities at low levels (Training Facility, Repair Bay, one Academy) cost about ₡300,000 in upgrades plus ~₡1,500/day in operating costs. That's manageable on Bronze/Silver income. Adding more facilities too early can drain your budget.
 ```
 
 ### Early Game Budget Allocation
@@ -68,12 +69,12 @@ Your income is now stable enough to support more facilities. Focus on income-gen
 ### Priority 4: Streaming Studio (Level 1–3)
 
 - **Cost**: ₡100,000 (Level 1)
-- **Why now**: Lowest operating cost of any facility (₡100/day). By mid game, your robots have enough Fame to make streaming revenue meaningful. The 2×–4× multiplier on streaming income is excellent ROI.
+- **Why now**: Low operating cost (₡100/day per level). By mid game, your robots have enough battles and Fame to make streaming revenue meaningful. Levels 1–3 multiply every robot's streaming income by 1.5×–2.5×; the more battles your roster fights, the better the return.
 
 ### Priority 5: Roster Expansion (Level 1–3)
 
 - **Cost**: ₡150,000 (Level 1)
-- **Why now**: More robots means more battles, more income streams, and better Repair Bay scaling. Going from 1 to 3–4 robots roughly triples your battle income.
+- **Why now**: More robots means more battles and more streaming revenue. Going from 1 to 3–4 robots roughly triples your battle income, but spreads your Prestige over more slots (less merchandising per slot) and adds repair costs.
 
 ### Priority 6: Second Training Academy (Level 1–3)
 
@@ -83,7 +84,7 @@ Your income is now stable enough to support more facilities. Focus on income-gen
 ### Priority 7: Merchandising Hub (Level 1–3)
 
 - **Cost**: ₡150,000 (Level 1)
-- **Why now**: By mid game, your Prestige should be at Established or Veteran rank. The Merchandising Hub amplifies your Prestige into consistent passive income. At 5,000 Prestige with Level 3, you earn ₡22,500/day against ₡600/day operating cost.
+- **Why now**: By mid game, your Prestige should be at Established or Veteran rank. The Merchandising Hub amplifies your Prestige into consistent passive income. At 5,000 Prestige on a 4-slot roster, Level 3 earns ₡84,375/day against ₡600/day operating cost.
 
 ```callout-info
 Mid game is when your facility portfolio starts generating real returns. The Streaming Studio and Merchandising Hub together can cover a significant portion of your daily operating costs, creating a financial safety net.
@@ -94,14 +95,14 @@ Mid game is when your facility portfolio starts generating real returns. The Str
 | Facility | Target Level | Total Investment | Daily Operating Cost |
 |----------|-------------|-----------------|---------------------|
 | Training Facility | Level 5 | ₡2,250,000 | ₡1,250 |
-| Repair Bay | Level 4 | ₡500,000 | ₡400 |
+| Repair Bay | Level 4 | ₡500,000 | ₡2,500 |
 | Primary Academy | Level 4–5 | ₡1,000,000–₡1,500,000 | ₡1,000–₡1,250 |
 | Secondary Academy | Level 2–3 | ₡300,000–₡600,000 | ₡500–₡750 |
 | Streaming Studio | Level 3 | ₡600,000 | ₡300 |
 | Roster Expansion | Level 3 | ₡900,000 | ₡1,500 |
 | Merchandising Hub | Level 3 | ₡900,000 | ₡600 |
 
-**Total daily operating cost**: ~₡7,650/day — comfortably covered by Gold/Platinum income with 4 robots.
+**Total daily operating cost**: ~₡7,650–₡8,150/day — comfortably covered by Gold/Platinum income with 4 robots.
 
 ## Late Game (Cycles 150+)
 

@@ -2,7 +2,7 @@
 title: "Credits, Income & the Finance Center"
 description: "Understand Credits, earned income, investments, costs, and how the Finance Center explains each financial cycle."
 order: 1
-lastUpdated: "2026-09-08"
+lastUpdated: "2026-10-17"
 relatedArticles:
   - economy/battle-rewards
   - economy/merchandising
@@ -48,15 +48,15 @@ See [Battle Rewards](/guide/economy/battle-rewards) for mode and tier details.
 
 ### Streaming revenue
 
-Streaming revenue is earned **per robot, per fought battle** when the robot is eligible. It depends on that robot’s battle activity and Fame plus its stable’s Streaming Studio level. It is credited with the battle, not during daily settlement.
+Streaming revenue is earned **per robot, per fought battle** when the robot is eligible, with or without a Streaming Studio. Each broadcast pays a ₡1,000 base, raised by that robot’s battle count and Fame (which add up) and multiplied by the stable’s Streaming Studio (+50% per level, up to 6×). It is credited with the battle, not during daily settlement.
 
-Streaming rewards breadth: more eligible robots fighting means more opportunities to stream. A bye never produces streaming revenue.
+Streaming rewards breadth: more eligible robots fighting means more opportunities to stream. In team matches each robot’s award is divided by its team size. A bye never produces streaming revenue.
 
 See [Streaming Revenue](/guide/economy/streaming-revenue) for the full calculation.
 
 ### Merchandising income
 
-Merchandising is stable-level passive income paid at settlement through the Merchandising Hub. It scales with **Prestige per roster capacity**, not raw Prestige alone:
+Merchandising is stable-level passive income paid at settlement through the Merchandising Hub, from a base of ₡25,000 per Hub level per cycle. It scales with **Prestige per roster capacity**, not raw Prestige alone:
 
 ```text
 prestige per roster capacity = stable Prestige ÷ (Roster Expansion level + 1)
@@ -133,7 +133,7 @@ Weapon sales and investment purchases do not enter Revenue Growth. A strong reve
 
 ## Full-Damage Repair Reference
 
-The full-damage repair reference is a theoretical scenario: what automatic and manual repair paths would cost if every active robot needed repair from full repairable damage. It shows the active robot count, Repair Bay discount context, and manual saving.
+The full-damage repair reference is a theoretical scenario: what automatic and manual repair paths would cost if every active robot needed repair from full repairable damage. It shows the active robot count, Repair Bay discount context (6% per Repair Bay level, the same for any roster size), and manual saving.
 
 It is **not a charge**, not your robots’ current damage, and not advice to repair or upgrade anything. Actual repair spend appears separately from repairs that were really charged.
 

@@ -2,8 +2,8 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: v1.6
-**Date**: October 16, 2026  
+**Version**: v1.7
+**Date**: October 17, 2026  
 **Author**: GitHub Copilot  
 **Status**: Phase 1 & 2 Complete - Implementation Active  
 **Owner**: Robert Teunissen  
@@ -49,6 +49,9 @@
 - v1.6 - Season 2: Refinement Lab and 4-4-4-2 categories (October 16, 2026)
   - New facility Refinement Lab (`refinement_lab`): takes over the refinement tier gates from the Weapons Workshop; 14 facilities in total
   - Categories renamed and regrouped: Economy (4), Hangar & Armory (4), Training Academies (4), Tactical & Advanced (2); category ids unchanged (`economy`, `capacity`, `training`, `advanced`)
+- v1.7 - Season 2 economy (October 17, 2026; #524, #525)
+  - Repair Bay: 6% discount per level for every stable (60% at Level 10); roster size no longer affects it; benefit text from `calculateRepairBayDiscountPercent(level)`
+  - Merchandising Hub: ₡25,000–₡250,000/day base income; Streaming Studio: 1.5×–6× streaming revenue per battle
 
 ---
 
@@ -108,7 +111,7 @@ The Facilities Page (`/facilities`) is a critical economic and progression inter
 **Implemented (all 14 facilities, including):**
 1. ✅ **Training Facility** - Discount on attribute upgrades, up to 90%. Rate is `(10 − Roster_Capacity)%` per level, so it shrinks as the roster grows (Spec #46 R11)
 2. ✅ **Weapons Workshop** - Discount on weapon purchases (5%-50%) and resale rate (10%-100%)
-3. ✅ **Repair Bay** - Discount on repair costs (10%-55%)
+3. ✅ **Repair Bay** - Discount on repair costs (6%-60%, 6% per level for any roster size)
 4. ✅ **Roster Expansion** - Increase robot slots (1→10 robots)
 5. ✅ **Storage Facility** - Increase weapon storage (5→55 weapons)
 6. ✅ **Combat Training Academy** - Combat Systems caps (10→50)
@@ -734,7 +737,7 @@ interface FacilityAPIResponse {
   facilities: FacilityResponse[];  // Array of facility objects
   userPrestige: number;             // User's current prestige
   userCurrency: number;             // User's current currency
-  robotCount: number;               // Number of robots (for repair bay discount calculation)
+  robotCount: number;               // Number of robots (Roster Expansion operating cost; not a Repair Bay input since Season 2)
 }
 
 interface FacilityResponse {
@@ -1177,26 +1180,17 @@ const FacilityIcon: React.FC<FacilityIconProps> = ({ facilityType, alt, classNam
 #### Repair Bay (✅ Implemented)
 - **Type**: `repair_bay`
 - **Max Level**: 10
-- **Cost Range**: ₡200K - ₡3M (total: ₡12.7M)
-- **Benefits**: Multi-robot discount on repair costs (formula: Level × (5 + Active Robots), capped at 90%)
-  - **Single Robot**: 5%-50% discount (Level 1-10)
-  - **Multiple Robots**: Discount increases with roster size
-  - **Examples**:
-    - Level 1 + 4 robots = 9% discount
-    - Level 5 + 7 robots = 60% discount
-    - Level 6 + 10 robots = 90% discount (cap reached)
-  - **⚠️ 90% Cap Warning**: Further investment provides no additional benefit once cap is reached
-    - With 10 robots: Stop at Level 6 (saves ₡4.5M on Levels 7-10)
-    - With 9 robots: Stop at Level 7 (saves ₡3M on Levels 8-10)
-    - With 8 robots: Stop at Level 8 (saves ₡1.5M on Levels 9-10)
-- **Strategic Value**: Important - Critical for managing battle damage repair costs, especially valuable with multiple robots
-- **Implementation Status**: Fully implemented with multi-robot discount formula, discount applies to robot repair costs after battles
+- **Cost Range**: ₡50K - ₡500K (total: ₡2.75M)
+- **Benefits**: 6% discount on repair costs per level, the same for every roster size (Season 2, #525): 6% at Level 1, 60% at Level 10. Formula `6 × min(level, 10)` via the shared `calculateRepairBayDiscountPercent(repairBayLevel)`; the current/next benefit text on the page comes from that helper
+- **Operating Cost**: ₡1,000/day at Level 1, +₡500 per extra level (₡5,500/day at Level 10)
+- **Strategic Value**: Important - Critical for managing battle damage repair costs; the Credits saved grow with repair volume, the rate does not
+- **Implementation Status**: Fully implemented, discount applies to automatic, manual and admin repairs and to every repair preview
 
 #### Merchandising Hub (✅ Implemented)
 - **Type**: `merchandising_hub`
 - **Max Level**: 10
 - **Cost Range**: ₡150K - ₡1.5M (total: ₡9.45M)
-- **Benefits**: Passive income from merchandising, scales with prestige. ₡5,000–₡50,000/day base income.
+- **Benefits**: Passive income from merchandising, scales with prestige per robot slot. ₡25,000–₡250,000/day base income (₡25,000 per level since Season 2, #524).
 - **Strategic Value**: Important - Provides passive income to supplement battle earnings
 - **Implementation Status**: Fully implemented, provides daily passive income from merchandising
 

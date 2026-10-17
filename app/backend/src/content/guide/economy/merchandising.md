@@ -2,7 +2,7 @@
 title: "Merchandising Income"
 description: "How your stable's Prestige drives passive merchandising income — the more renowned your stable, the more fans buy your merchandise."
 order: 4
-lastUpdated: "2026-03-11"
+lastUpdated: "2026-10-17"
 relatedArticles:
   - economy/credits-and-income
   - economy/streaming-revenue
@@ -23,20 +23,24 @@ Merchandising income is calculated once per cycle during the daily processing. I
 
 ### The Merchandising Hub
 
-The Merchandising Hub is the foundation of your merchandising income. Each level sets a higher base income rate, and your Prestige then multiplies that base. No Hub means no merchandise sales.
+The Merchandising Hub is the foundation of your merchandising income. Each level adds **₡25,000 per day** to the base rate (₡25,000 at Level 1, ₡250,000 at Level 10), and your Prestige then multiplies that base. No Hub means no merchandise sales.
 
-- **Level 1** — Unlocks merchandising income at a modest base rate
-- **Higher levels** — Each upgrade increases the base rate, which your Prestige then amplifies
+| Hub Level | Base income per day | Operating cost per day |
+|-----------|--------------------|-----------------------|
+| 1 | ₡25,000 | ₡200 |
+| 3 | ₡75,000 | ₡600 |
+| 5 | ₡125,000 | ₡1,000 |
+| 10 | ₡250,000 | ₡2,000 |
 
-The Hub has a daily operating cost, so it only makes financial sense once your Prestige is high enough to generate income that exceeds the facility's upkeep.
+The base rate alone covers the Hub's upkeep many times over, so even a low-Prestige stable earns from it.
 
 ```callout-info
-The Merchandising Hub is a mid-to-late game investment. Don't rush to build it — wait until your Prestige has grown enough for the income to justify the operating costs.
+Season 2 raised the base rate from ₡10,000 to ₡25,000 per level. Merchandising is paid once per stable per cycle, so it is the counterweight to streaming, which is paid per robot per battle.
 ```
 
 ### Prestige as a Multiplier
 
-Your stable's Prestige acts as a continuous multiplier on your merchandising base rate. Every point of Prestige you earn increases your merchandising income smoothly — there are no sudden jumps at rank boundaries. But to give you a sense of how it scales across the ranks:
+Your stable's Prestige acts as a continuous multiplier on your merchandising base rate. The multiplier uses your **Prestige per robot slot**: your Prestige divided by your roster capacity (1 slot, plus one per Roster Expansion level). A concentrated stable gets the full effect of its Prestige; the same Prestige spread over more slots counts for less. Every point of Prestige increases your merchandising income smoothly — there are no sudden jumps at rank boundaries. For a one-slot stable, it scales across the ranks like this:
 
 | Prestige Rank | Prestige Required | Merchandising Impact |
 |---------------|-------------------|---------------------|
@@ -61,15 +65,15 @@ Battle winnings fluctuate — your robots might lose several battles in a row, o
 
 ### Scaling with Prestige
 
-As your Prestige grows, merchandising becomes a genuinely significant income source. A high-Prestige stable with a maxed Merchandising Hub earns enough from merchandise alone to cover a substantial portion of daily operating costs — effectively making your facilities cheaper to run.
+As your Prestige grows, merchandising becomes a major income source. A Level 5 Hub with 10,000 Prestige on a one-slot roster earns ₡250,000 per day; the same Hub and Prestige on a 10-slot roster earns ₡137,500.
 
 ## Merchandising vs Other Income
 
 | Income Source | Depends On | Consistency | Scaling |
 |---------------|-----------|-------------|---------|
 | Battle Winnings | League tier, win/loss, Prestige | Variable per cycle | Scales with tier promotion |
-| Merchandising | Prestige, Merchandising Hub | Very consistent | Scales with Prestige |
-| Streaming | Fame, battles fought, Streaming Studio | Moderate consistency | Scales with Fame and activity |
+| Merchandising | Prestige per robot slot, Merchandising Hub | Very consistent | Scales with Prestige and Hub level |
+| Streaming | Battles, Fame, Streaming Studio | Moderate consistency | Scales with battle count, Fame and activity |
 
 Merchandising is the most predictable of the three income sources. It doesn't spike or dip based on battle results — it's a steady drip that rewards long-term reputation building.
 

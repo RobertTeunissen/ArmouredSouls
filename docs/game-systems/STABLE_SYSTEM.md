@@ -2,11 +2,13 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Design Document  
-**Version**: v1.5  
-**Last Updated**: October 16, 2026  
+**Version**: v1.6  
+**Last Updated**: October 17, 2026  
 **Status**: ✅ Implemented 
 
 ## Version History
+- **v1.6** (October 17, 2026): Season 2 economy (#524, #525) — streaming formula v2 (additive audience, Streaming Studio +50% per level, 6× at L10); Merchandising Hub ₡25,000 per level; Repair Bay discount 6% per level for every stable (60% at L10), roster size no longer an input.
+
 - **v1.5** (October 16, 2026): Season 2 — new Refinement Lab facility (14 facilities) takes over the refinement tier gates from the Weapons Workshop; Workshop discount 5% per level (resale 10% per level); facility categories Economy / Hangar & Armory / Training Academies / Tactical & Advanced (4-4-4-2).
 
 - **v1.4** (October 10, 2026): Added Stable_Type (`human`, `generated`, `automaton`) for Automaton stables (Spec #55).
@@ -104,30 +106,22 @@ Player-facing categories (4-4-4-2): **Economy** (Repair Bay, Training Facility, 
 
 **1. Repair Bay** (Operating Cost: ₡1,000 at L1, +₡500/level thereafter)
 - **Level 0**: No discount
-- **Level 1** (₡50,000): 6% discount on repair costs (1 robot)
-- **Level 2** (₡100,000): 12% discount on repair costs (1 robot)
-- **Level 3** (₡150,000): 18% discount on repair costs (1 robot)
-- **Level 4** (₡200,000, requires 1,000 prestige): 24% discount on repair costs (1 robot)
-- **Level 5** (₡250,000): 30% discount on repair costs (1 robot)
-- **Level 6** (₡300,000): 36% discount on repair costs (1 robot)
-- **Level 7** (₡350,000, requires 5,000 prestige): 42% discount on repair costs (1 robot)
-- **Level 8** (₡400,000): 48% discount on repair costs (1 robot)
-- **Level 9** (₡450,000, requires 10,000 prestige): 54% discount on repair costs (1 robot)
-- **Level 10** (₡500,000): 60% discount on repair costs (1 robot), automatic minor repairs
+- **Level 1** (₡50,000): 6% discount on repair costs
+- **Level 2** (₡100,000): 12% discount on repair costs
+- **Level 3** (₡150,000): 18% discount on repair costs
+- **Level 4** (₡200,000, requires 1,000 prestige): 24% discount on repair costs
+- **Level 5** (₡250,000): 30% discount on repair costs
+- **Level 6** (₡300,000): 36% discount on repair costs
+- **Level 7** (₡350,000, requires 5,000 prestige): 42% discount on repair costs
+- **Level 8** (₡400,000): 48% discount on repair costs
+- **Level 9** (₡450,000, requires 10,000 prestige): 54% discount on repair costs
+- **Level 10** (₡500,000): 60% discount on repair costs (maximum)
 
-**Discount Formula**: Discount % = Repair Bay Level × (5 + Active Robot Count), capped at 90%
+**Discount Formula** (Season 2, #525): Discount % = 6 × min(Repair Bay Level, 10), the same for every stable regardless of roster size. Implemented once as `calculateRepairBayDiscountPercent(repairBayLevel)` in `app/shared/utils/repairCost.ts`.
 
-**Multi-Robot Discount Examples**:
-- Level 1 + 4 robots: 1 × (5 + 4) = 9% discount
-- Level 3 + 2 robots: 3 × (5 + 2) = 21% discount
-- Level 5 + 7 robots: 5 × (5 + 7) = 60% discount
-- Level 6 + 10 robots: 6 × (5 + 10) = 90% discount (capped)
-- Level 10 + 10 robots: 10 × (5 + 10) = 150% → 90% discount (capped)
+Before Season 2 the discount was `min(90, Level × (5 + owned robots))`, which let a 10-robot stable reach 90% at Level 6. A 1-robot stable keeps exactly the old curve; larger rosters no longer get a higher rate.
 
-**⚠️ 90% Discount Cap**: Once you reach 90% discount, further Repair Bay or Roster Expansion investment provides no additional repair cost benefit. Plan your investments accordingly:
-- With 10 robots: Level 6 Repair Bay reaches the 90% cap
-- With 5 robots: Level 10 Repair Bay reaches the 75% discount (15 × 5 = 75%)
-- Maximum benefit requires both high Repair Bay level AND large robot roster
+**Operating Cost Formula**: ₡1,000 at Level 1 + ₡500 per extra level (₡3,000 at L5, ₡5,500 at L10).
 
 **2. Training Facility** (Operating Cost: ₡250/day per level)
 
@@ -292,77 +286,80 @@ Resale value is computed as `pricePaid × resaleRate(workshopLevel)`, where `pri
 
 **10. Merchandising Hub** (Operating Cost: ₡200/day per level)
 - **Level 0**: No merchandising income
-- **Level 1** (₡150,000): Unlock Merchandising (₡5,000/day base, scales with prestige)
-- **Level 2** (₡300,000): Improve Merchandising (₡10,000/day base)
-- **Level 3** (₡450,000): Improve Merchandising (₡15,000/day base)
-- **Level 4** (₡600,000, requires 3,000 prestige): Improve Merchandising (₡20,000/day base)
-- **Level 5** (₡750,000): Improve Merchandising (₡25,000/day base)
-- **Level 6** (₡900,000): Improve Merchandising (₡30,000/day base)
-- **Level 7** (₡1,050,000, requires 7,500 prestige): Improve Merchandising (₡35,000/day base)
-- **Level 8** (₡1,200,000): Improve Merchandising (₡40,000/day base)
-- **Level 9** (₡1,350,000, requires 15,000 prestige): Improve Merchandising (₡45,000/day base)
-- **Level 10** (₡1,500,000): Master Merchandising (₡50,000/day base)
+- **Level 1** (₡150,000): Unlock Merchandising (₡25,000/day base, scales with prestige per robot slot)
+- **Level 2** (₡300,000): Improve Merchandising (₡50,000/day base)
+- **Level 3** (₡450,000): Improve Merchandising (₡75,000/day base)
+- **Level 4** (₡600,000, requires 3,000 prestige): Improve Merchandising (₡100,000/day base)
+- **Level 5** (₡750,000): Improve Merchandising (₡125,000/day base)
+- **Level 6** (₡900,000): Improve Merchandising (₡150,000/day base)
+- **Level 7** (₡1,050,000, requires 7,500 prestige): Improve Merchandising (₡175,000/day base)
+- **Level 8** (₡1,200,000): Improve Merchandising (₡200,000/day base)
+- **Level 9** (₡1,350,000, requires 15,000 prestige): Improve Merchandising (₡225,000/day base)
+- **Level 10** (₡1,500,000): Master Merchandising (₡250,000/day base)
 
 **Operating Cost Formula**: Operating Cost = Level × ₡200/day
 
-**Merchandising Income Formula**: 
+**Merchandising Income Formula** (base ₡25,000 per level since Season 2, #524; was ₡10,000):
 ```
-merchandising_income = (level × ₡5,000) × (1 + prestige / 10,000)
+roster_capacity = roster_expansion_level + 1
+merchandising_income = round((level × ₡25,000) × (1 + (prestige / roster_capacity) / 10,000))
 ```
 
 **Break-Even Analysis**:
-- Level 1: ~31 cycles with 100 prestige (₡150K investment, ₡4,800/day net income)
+- Level 1: ~6 cycles with 100 prestige on 1 slot (₡150K investment, ₡25,050/day net income)
 - Passive income - works with any strategy
 - Scales linearly with level and prestige
 
 **Note**: Streaming revenue is awarded per battle. See Streaming Studio facility.
 
 **11. Streaming Studio** (Operating Cost: ₡100/day per level)
-- **Level 0**: No streaming revenue bonus (base 1.0× multiplier)
-- **Level 1** (₡100,000): Double streaming revenue per battle (2.0× multiplier, ₡100/day operating cost)
-- **Level 2** (₡200,000): Triple streaming revenue per battle (3.0× multiplier, ₡200/day operating cost)
-- **Level 3** (₡300,000): Quadruple streaming revenue per battle (4.0× multiplier, ₡300/day operating cost)
-- **Level 4** (₡400,000, requires 1,000 prestige): 5× streaming revenue per battle (₡400/day operating cost)
-- **Level 5** (₡500,000, requires 2,500 prestige): 6× streaming revenue per battle (₡500/day operating cost)
-- **Level 6** (₡600,000, requires 5,000 prestige): 7× streaming revenue per battle (₡600/day operating cost)
-- **Level 7** (₡700,000, requires 10,000 prestige): 8× streaming revenue per battle (₡700/day operating cost)
-- **Level 8** (₡800,000, requires 15,000 prestige): 9× streaming revenue per battle (₡800/day operating cost)
-- **Level 9** (₡900,000, requires 25,000 prestige): 10× streaming revenue per battle (₡900/day operating cost)
-- **Level 10** (₡1,000,000, requires 50,000 prestige): 11× streaming revenue per battle (₡1,000/day operating cost)
+- **Level 0**: No streaming revenue bonus (base 1.0× multiplier; base streaming is still paid)
+- **Level 1** (₡100,000): +50% streaming revenue per battle (1.5× multiplier, ₡100/day operating cost)
+- **Level 2** (₡200,000): 2× streaming revenue per battle (₡200/day operating cost)
+- **Level 3** (₡300,000): 2.5× streaming revenue per battle (₡300/day operating cost)
+- **Level 4** (₡400,000, requires 1,000 prestige): 3× streaming revenue per battle (₡400/day operating cost)
+- **Level 5** (₡500,000, requires 2,500 prestige): 3.5× streaming revenue per battle (₡500/day operating cost)
+- **Level 6** (₡600,000, requires 5,000 prestige): 4× streaming revenue per battle (₡600/day operating cost)
+- **Level 7** (₡700,000, requires 10,000 prestige): 4.5× streaming revenue per battle (₡700/day operating cost)
+- **Level 8** (₡800,000, requires 15,000 prestige): 5× streaming revenue per battle (₡800/day operating cost)
+- **Level 9** (₡900,000, requires 25,000 prestige): 5.5× streaming revenue per battle (₡900/day operating cost)
+- **Level 10** (₡1,000,000, requires 50,000 prestige): 6× streaming revenue per battle, maximum (₡1,000/day operating cost)
 
 **Operating Cost Formula**: Operating Cost = Level × ₡100/day
 
-**Streaming Revenue Formula**:
+**Streaming Revenue Formula** (Season 2, #524; formula version '2'):
 ```
-streaming_revenue = 1000 × battle_multiplier × fame_multiplier × studio_multiplier
+streaming_revenue = floor(floor(1000 × audience_multiplier × studio_multiplier) / team_size)
 
 Where:
-  battle_multiplier = 1 + (robot_total_battles / 1000)
-  fame_multiplier = 1 + (robot_fame / 5000)
-  studio_multiplier = 1 + (streaming_studio_level × 1.0)
+  audience_multiplier = 1 + (robot_total_battles / 2000) + (robot_fame / 10000)
+  studio_multiplier = 1 + (streaming_studio_level × 0.5)
+  team_size = 1 for solo modes, 2 for Tag Team and 2v2, 3 for 3v3
 ```
 
-**Break-Even Analysis**:
-- Level 1 with 3 robots (5 battles/day): ~17 cycles (₡100K investment)
-- Level 1 with 2 robots (3.6 battles/day): ~25 cycles (₡100K investment)
-- Level 1 with 1 robot (2.2 battles/day): ~42 cycles (₡100K investment)
-- Rewards active multi-robot play
-- Scales infinitely with battles and fame
+No term is capped. Before Season 2 the terms multiplied (`1000 × (1 + battles/1000) × (1 + fame/5000) × (1 + level)`). The single implementation is `computeStreamingRevenue()` in `app/backend/src/services/economy/streamingRevenueService.ts`; see [PRD_ECONOMY_SYSTEM.md](PRD_ECONOMY_SYSTEM.md#4-streaming-revenue-per-battle).
 
-**Examples**:
+**Break-Even Analysis** (Level 1, new robots, +₡500 per battle, ₡100/day operating cost):
+- 5 battles/day: ~42 cycles (₡100K investment)
+- 3.6 battles/day: ~59 cycles
+- 2.2 battles/day: ~100 cycles
+- Payback shortens as robots gain battles and Fame
+
+**Examples** (solo matches):
 - New robot (0 battles, 0 fame) with Level 0 Studio: ₡1,000 per battle
-- New robot (0 battles, 0 fame) with Level 1 Studio: ₡2,000 per battle (DOUBLE!)
-- Veteran robot (100 battles, 500 fame) with Level 1 Studio: ₡2,420 per battle
-- Veteran robot (1000 battles, 5000 fame) with Level 1 Studio: ₡4,840 per battle
-- Veteran robot (1000 battles, 5000 fame) with Level 10 Studio: ₡26,620 per battle (11×!)
+- New robot (0 battles, 0 fame) with Level 1 Studio: ₡1,500 per battle
+- Veteran robot (100 battles, 500 fame) with Level 1 Studio: ₡1,650 per battle
+- Veteran robot (1000 battles, 5000 fame) with Level 1 Studio: ₡3,000 per battle
+- Veteran robot (1000 battles, 5000 fame) with Level 10 Studio: ₡12,000 per battle
+- Veteran robot (552 battles, 10,492 fame) with Level 9 Studio: ₡12,788 per battle (v1 paid ₡48,087)
 
 **Key Features**:
-- Streaming revenue awarded after every battle (1v1, Tag Team, Tournament)
+- Streaming revenue awarded after every fought battle in every mode
 - Both winner and loser receive streaming revenue
 - No revenue for bye matches
 - Studio multiplier applies to all robots in the stable
-- For Tag Team matches, uses highest battles and highest fame from each team
-- Each level adds 100% to the multiplier (L1 = 2×, L2 = 3×, L3 = 4×, etc.)
+- In team matches each robot earns its own award (own battles and Fame), divided by its team size
+- Each level adds 50% to the multiplier (L1 = 1.5×, L2 = 2×, L10 = 6×)
 
 **12. Tuning Bay** (Operating Cost: ₡300/day per level)
 - **Level 0**: 10 free tuning points per robot (no facility required)
@@ -427,7 +424,7 @@ For the full system specification, see [TUNING_BAY_SYSTEM.md](TUNING_BAY_SYSTEM.
 
 **Income Multipliers**:
 - Higher prestige increases merchandising revenue (see Daily Income/Expense System below)
-- Formula: `merchandising_income = base_merchandising × (1 + prestige / 10000)`
+- Formula: `merchandising_income = base_merchandising × (1 + (prestige / roster_capacity) / 10000)`, base ₡25,000 per Merchandising Hub level
 
 ---
 
@@ -455,24 +452,23 @@ The game presents players with a **daily income/expense sheet** showing all reve
 
 **Merchandising** (from Merchandising Hub facility):
 ```
-merchandising_income = (level × ₡5,000) × (1 + prestige / 10000)
+merchandising_income = (level × ₡25,000) × (1 + (prestige / roster_capacity) / 10000)
 
-Example:
-- Merchandising Hub Level 4: ₡20,000/day base (4 × ₡5,000)
+Example (1 robot slot):
+- Merchandising Hub Level 4: ₡100,000/day base (4 × ₡25,000)
 - Prestige 15,000
-- Merchandising = ₡20,000 × (1 + 15000/10000) = ₡20,000 × 2.5 = ₡50,000/day
+- Merchandising = ₡100,000 × (1 + 15000/10000) = ₡100,000 × 2.5 = ₡250,000/day
 ```
 
-**Streaming Revenue** (from Streaming Studio facility):
+**Streaming Revenue** (from every fought battle; the Streaming Studio multiplies it):
 ```
-streaming_revenue = 1000 × battle_multiplier × fame_multiplier × studio_multiplier
+streaming_revenue = floor(floor(1000 × audience_multiplier × studio_multiplier) / team_size)
 
 Where:
-  battle_multiplier = 1 + (robot_total_battles / 1000)
-  fame_multiplier = 1 + (robot_fame / 5000)
-  studio_multiplier = 1 + (streaming_studio_level × 1.0)
+  audience_multiplier = 1 + (robot_total_battles / 2000) + (robot_fame / 10000)
+  studio_multiplier = 1 + (streaming_studio_level × 0.5)
 
-// Each level adds 100%: L1 = 2×, L2 = 3×, L3 = 4×, etc.
+// Each level adds 50%: L1 = 1.5×, L2 = 2×, L10 = 6×
 // Awarded per battle (not daily passive income)
 // Both winner and loser receive streaming revenue
 // No revenue for bye matches
@@ -480,12 +476,11 @@ Where:
 //   + 2v2/3v3 League (robots.total_battles) + KotH + Grand Melee (standings.total_matches)
 
 Example:
-- Robot with 500 battles, 2500 fame
-- Streaming Studio Level 5
-- battle_multiplier = 1 + (500/1000) = 1.5
-- fame_multiplier = 1 + (2500/5000) = 1.5
-- studio_multiplier = 1 + (5 × 1.0) = 6.0
-- Streaming = ₡1,000 × 1.5 × 1.5 × 6.0 = ₡13,500 per battle
+- Robot with 500 battles, 2500 fame, solo match
+- Streaming Studio Level 3
+- audience_multiplier = 1 + 500/2000 + 2500/10000 = 1.5
+- studio_multiplier = 1 + (3 × 0.5) = 2.5
+- Streaming = ₡1,000 × 1.5 × 2.5 = ₡3,750 per battle
 ```
 
 ### Operating Costs
@@ -601,8 +596,8 @@ CURRENT BALANCE:           ₡1,847,000
 ### Early Game (₡3M starting budget)
 1. Build 1 robot with basic weapon (₡500K + ₡150K = ₡650K)
 2. Upgrade key attributes (₡300K)
-3. Save for Repair Bay Level 1 (₡100K) - provides 9% discount with 4 robots
-4. Consider Streaming Studio Level 1 (₡100K) - doubles per-battle streaming revenue (2× multiplier)
+3. Save for Repair Bay Level 1 (₡50K) - 6% repair discount for any roster size
+4. Consider Streaming Studio Level 1 (₡100K) - +50% per-battle streaming revenue (1.5× multiplier)
 5. Focus on battles to earn Credits and prestige
 6. Remaining: ~₡750K for additional upgrades or second robot
 
@@ -610,59 +605,53 @@ CURRENT BALANCE:           ₡1,847,000
 - Build 2 robots (₡1M) with cheap weapons (₡200K total)
 - Leaves ₡800K for initial upgrades and facility
 - Riskier but allows testing different builds
-- **Multi-Robot Benefit**: With 2 robots, Repair Bay Level 1 provides 7% discount (1 × (5 + 2))
 
 **Streaming Studio Early Investment**:
 - **Low Cost**: Level 1 costs only ₡100K with ₡100/day operating cost
-- **Immediate ROI**: Doubles all streaming revenue from battles (2× multiplier)
+- **ROI**: +50% on all streaming revenue from battles (1.5× multiplier)
 - **Scales with Activity**: More valuable if you battle frequently
-- **Example**: 10 battles/day at ₡1,000 base = ₡1,000 extra per day (₡10K total vs ₡20K total)
+- **Example**: 10 battles/day at ₡1,000 base = ₡5,000 extra per day (₡15K total vs ₡10K total)
 - **Recommendation**: Invest early if you plan to battle frequently; otherwise prioritize Repair Bay
 
-**Repair Bay ROI with Multiple Robots**:
-- **Single Robot**: Level 1 provides 5% discount (1 × (5 + 0)) - long payback period
-- **Two Robots**: Level 1 provides 7% discount (1 × (5 + 2)) - faster payback
-- **Four Robots**: Level 1 provides 9% discount (1 × (5 + 4)) - significantly faster payback
-- **Recommendation**: Repair Bay investment becomes more valuable as you expand your roster
+**Repair Bay ROI**:
+- The rate is the same for every stable: 6% per level (Season 2, #525)
+- The saving in Credits grows with repair volume, so more robots or more battles shorten the payback; the percentage does not change
+- Level 1 costs ₡1,000/day to operate, so it pays off once it saves more than that each day
 
 ### Mid Game (₡5M+ total earned)
 1. Upgrade key facilities (Repair Bay, Training Facility to Level 3-4)
 2. Expand robot roster to 3-4 robots
 3. Unlock Merchandising Hub for passive income (merchandising)
-4. Upgrade Streaming Studio to Level 3-5 for 4×-6× streaming multiplier
+4. Upgrade Streaming Studio to Level 3-5 for a 2.5×-3.5× streaming multiplier
 5. Specialize robots for different strategies
 6. Invest in better weapons (₡300K-₡400K range)
 7. Participate in Silver/Gold tournaments
 
-**Multi-Robot Discount Strategy**:
-- With 3-4 robots, Repair Bay Level 3 provides 24-27% discount
-- Combined with Roster Expansion, repair costs become much more manageable
-- Each additional robot increases the discount from all Repair Bay levels
+**Repair Bay Strategy**:
+- Repair Bay Level 3 gives 18% for any roster size; roster size does not change the rate
+- Combined with manual repairs (50% off the discounted quote), repair costs become much more manageable
 
 **Streaming Studio Mid-Game Value**:
-- Level 3-5 provides 4×-6× multiplier on streaming revenue
+- Level 3-5 provides a 2.5×-3.5× multiplier on streaming revenue
 - With veteran robots (500+ battles, 2500+ fame), streaming revenue becomes significant
-- Example: Robot with 500 battles, 2500 fame, Level 5 Studio earns ₡13,500 per battle
+- Example: Robot with 500 battles, 2500 fame, Level 5 Studio earns ₡5,250 per battle
 - Multiple active robots multiply the benefit across all battles
 
 ### Late Game (₡20M+ total earned)
 1. Max out critical facilities (Repair Bay, all 4 Training Academies)
-2. Upgrade Streaming Studio to Level 10 for 11× streaming revenue multiplier
+2. Upgrade Streaming Studio to Level 10 for a 6× streaming revenue multiplier
 3. Build specialized arena teams
 4. Invest in prestige-locked content (high-tier tournaments)
 5. Compete in high-tier tournaments (Diamond/Champion)
 6. Build legendary custom weapons
 7. Optimize daily income streams (Merchandising Hub Level 10, Streaming Studio Level 10)
 
-**Optimal Multi-Robot Configuration**:
-- **10 robots + Repair Bay Level 6**: Reaches 90% discount cap (6 × (5 + 10) = 90%)
-- **10 robots + Repair Bay Level 10**: Still 90% discount (capped) - no additional benefit
-- **5 robots + Repair Bay Level 10**: 75% discount (10 × (5 + 5) = 75%)
-- **Strategic Insight**: Balance Repair Bay upgrades with Roster Expansion for maximum efficiency
+**Repair Bay at the top end**:
+- **Repair Bay Level 10**: 60% discount for any roster size; every level up to 10 adds 6 percentage points, so no level is wasted
 
 **Streaming Studio Late-Game Impact**:
-- Level 10 provides 11× multiplier on base streaming revenue
-- Veteran robots (5000+ battles, 25000+ fame) with Level 10 Studio can earn ₡66,000+ per battle
+- Level 10 provides a 6× multiplier on base streaming revenue
+- Veteran robots (5000+ battles, 25000+ fame) with Level 10 Studio earn ₡36,000 per battle (audience 1 + 2.5 + 2.5 = 6, × 6 Studio)
 - With high prestige (50,000 required for Level 10), streaming becomes a major income source
 - Multiple high-fame robots battling frequently generates substantial daily streaming income
 

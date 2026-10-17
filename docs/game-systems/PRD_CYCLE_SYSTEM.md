@@ -3,7 +3,7 @@
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
 **Version**: v2.0  
-**Last Updated**: October 10, 2026 (Automaton Turn_Step, Spec #55)  
+**Last Updated**: October 17, 2026 (Season 2 Repair Bay discount, #525)  
 **Status**: ✅ Implemented  
 **Owner**: Robert Teunissen  
 **Epic**: Game Systems — Time Management
@@ -457,7 +457,7 @@ multiplier  = 2.0 (destroyed) | 1.5 (HP < 10%) | 1.0 (normal)
 final_cost  = base_repair × damage_pct × multiplier × (1 - repair_bay_discount)
 ```
 
-Repair Bay discount: Level × (5 + Active Robot Count), capped at 90%.
+Repair Bay discount: 6 × min(Level, 10) percent, the same for every roster size (Season 2, #525; was Level × (5 + owned robots) up to 90%). The quote is rounded per robot; manual repairs charge floor(quote × 0.5).
 
 ## Spec #53 deployed capture and reconciliation boundary
 

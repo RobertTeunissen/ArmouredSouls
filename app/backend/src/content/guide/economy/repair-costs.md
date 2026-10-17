@@ -2,7 +2,7 @@
 title: "Operating Costs & Repairs"
 description: "All the ways Credits flow out of your stable — facility daily costs, repair expenses, and how damage severity and robot attributes influence what you pay."
 order: 3
-lastUpdated: "2026-10-16"
+lastUpdated: "2026-10-17"
 relatedArticles:
   - economy/credits-and-income
   - economy/daily-financial-cycle
@@ -25,7 +25,7 @@ For the complete facility-by-facility breakdown of operating costs at every leve
 
 | Facility | Level 1 Cost | Level 10 Cost | Status |
 |----------|-------------|---------------|--------|
-| Repair Bay | ₡100/day | ₡1,000/day | Implemented |
+| Repair Bay | ₡1,000/day | ₡5,500/day (+₡500 per level) | Implemented |
 | Training Facility | ₡250/day | N/A (max L9) | Implemented |
 | Weapons Workshop | ₡100/day | ₡1,000/day | Implemented |
 | Refinement Lab | ₡100/day | ₡1,000/day | Implemented |
@@ -100,11 +100,21 @@ A damaged robot is never stuck. Battle readiness only checks that the right weap
 
 ### The Repair Bay Facility
 
-The **Repair Bay** facility reduces repair costs for all your robots. At higher levels, it provides increasingly significant discounts. If you're running multiple robots, the Repair Bay also offers a multi-robot discount that makes it one of the most cost-effective early investments.
+The **Repair Bay** facility reduces repair costs for all your robots by **6% per level**, up to **60% at Level 10**. The discount is the same for every stable: a one-robot stable and a ten-robot stable with the same Repair Bay level get the same percentage off. More robots only mean more repairs for the discount to apply to.
 
-Combined with the manual repair discount, a well-upgraded Repair Bay can reduce your repair bills dramatically — making aggressive play much more affordable.
+| Repair Bay Level | Discount | Operating cost per day |
+|------------------|----------|-----------------------|
+| 1 | 6% | ₡1,000 |
+| 3 | 18% | ₡2,000 |
+| 5 | 30% | ₡3,000 |
+| 6 | 36% | ₡3,500 |
+| 10 | 60% | ₡5,500 |
 
-See the [Repair Bay Guide](/guide/facilities/repair-bay) for details on level progression and cost savings.
+The Repair Bay costs ₡1,000/day at Level 1 plus ₡500 for each extra level, so it pays off once it saves more than that per day.
+
+Combined with the manual repair discount, a well-upgraded Repair Bay can reduce your repair bills dramatically: at Level 10, a manual repair costs 20% of the undiscounted price.
+
+See [Facility Progression & ROI](/guide/facilities/facility-progression) for the full level table.
 
 ## Total Daily Expenses
 
