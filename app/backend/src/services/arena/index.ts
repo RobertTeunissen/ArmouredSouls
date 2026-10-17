@@ -63,6 +63,7 @@ export type { PressureState, PressureEffects } from './pressureSystem';
 
 // Servo strain
 export { calculateBaseSpeed, calculateEffectiveSpeed, updateServoStrain } from './servoStrain';
+export type { MovementMode } from './servoStrain';
 
 // Engagement cycle (#520)
 export {

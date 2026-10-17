@@ -5,6 +5,7 @@
 import { simulateBattle, simulateBattleMulti, RobotWithWeapons, CombatResult, CombatEvent, Position } from '../src/services/battle/combatSimulator';
 import type { GameModeConfig, MovementIntent, RobotCombatState } from '../src/services/arena/types';
 import type { SpeedBurst } from '../src/services/arena/engagementCycle';
+import type { MovementMode } from '../src/services/arena/servoStrain';
 import { DISENGAGE_DELAY_SECONDS, getDisengageDuration } from '../src/services/arena/engagementCycle';
 import { getPatienceLimit } from '../src/services/arena/movementAI';
 import { prepareRobotForCombat } from '../src/utils/robotCalculations';
@@ -1114,6 +1115,7 @@ describe('simulateBattle — spatial refactor', () => {
       patience: number;
       distance: number;
       lastMeleeHit: number | null;
+      mode: MovementMode;
     }
 
     /**
@@ -1139,6 +1141,7 @@ describe('simulateBattle — spatial refactor', () => {
               exempt: s.isUsingClosingBonus,
               patience: s.patienceTimer,
               lastMeleeHit: s.lastMeleeHitTakenAt,
+              mode: s.movementMode,
               distance: other
                 ? Math.hypot(s.position.x - other.position.x, s.position.y - other.position.y)
                 : Number.NaN,
@@ -1180,9 +1183,17 @@ describe('simulateBattle — spatial refactor', () => {
 
       expect(hybridSamples.length).toBeGreaterThan(100);
       expect(hybridSamples.some(s => s.distance > 2)).toBe(true);
-      // Ranged role vs ranged role: no pursuit, no burst, never above base speed.
-      expect(hybridSamples.every(s => !s.exempt && s.burst === 'none')).toBe(true);
-      expect(hybridSamples.every(s => s.speed <= BASE_SPEED + 1e-9)).toBe(true);
+      // Ranged role vs ranged role: no melee pursuit, no burst. Since Season 2 round 3
+      // the long-range Hybrid kites the closer-preferring short-range Gunner (1.10×).
+      expect(hybridSamples.every(s => s.burst === 'none')).toBe(true);
+      expect(hybridSamples.every(s => s.mode !== 'pursuit' && s.mode !== 'melee_commit')).toBe(true);
+      expect(hybridSamples.every(s => Math.abs(s.speed - BASE_SPEED * 1.15) > 1e-9)).toBe(true);
+      const exempt = hybridSamples.filter(s => s.exempt);
+      expect(exempt.length).toBeGreaterThan(0);
+      for (const s of exempt) {
+        expect(s.mode).toBe('ranged_kiting');
+        expect(s.speed).toBeCloseTo(BASE_SPEED * 1.10, 10);
+      }
     });
 
     it('a Shock Maul (energy, melee band) robot gets the pursuit multiplier', () => {

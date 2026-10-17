@@ -31,6 +31,7 @@ function makeState(overrides: Partial<ServoStrainState> = {}): ServoStrainState 
     speedBurst: 'none',
     distanceToTarget: 10,
     currentSpeedRatio: 0,
+    opponentEngagementMidpoint: null,
     ...overrides,
   };
 }
@@ -279,6 +280,49 @@ describe('servoStrain property tests', () => {
             expect(effectiveSpeed).toBeCloseTo(
               calculateBaseSpeed(servoMotors) * STANCE_FACTOR[stance] * (1 - strain / 100), 10,
             );
+          }
+        ),
+        { numRuns: 500 }
+      );
+    });
+  });
+
+  /**
+   * Property 15b (Season 2 round 3): ranged vs ranged kiting (1.10) and ranged
+   * pursuit (1.05) are exact and never accumulate strain.
+   */
+  describe('Property 15b: ranged kiting 1.10 / ranged pursuit 1.05, strain-free', () => {
+    const MIDPOINTS = [4.5, 9.5, 16];
+    const arbMidpointPair = (): fc.Arbitrary<[number, number]> =>
+      fc.tuple(fc.constantFrom(...MIDPOINTS), fc.constantFrom(...MIDPOINTS)).filter(([own, opp]) => own !== opp);
+
+    it('kites at exactly 1.10 inside its midpoint vs a closer-preferring robot and pursues at exactly 1.05 beyond it vs a farther-preferring one', () => {
+      fc.assert(
+        fc.property(
+          arbServoMotors(),
+          arbStance(),
+          arbServoStrain(),
+          arbSustainedTime(),
+          arbMidpointPair(),
+          fc.double({ min: 0, max: 1, noNaN: true, noDefaultInfinity: true }),
+          (servoMotors, stance, strain, sustained, [own, opp], fraction) => {
+            const kiting = opp < own;
+            // Kiter: distance strictly inside its midpoint; pursuer: strictly beyond it
+            const distanceToTarget = kiting ? own * 0.999 * fraction : own + 0.001 + 30 * fraction;
+            const state = makeState({
+              servoMotors, stance, servoStrain: strain, sustainedMovementTime: sustained,
+              role: 'ranged', engagementRangeMidpoint: own, opponentEngagementMidpoint: opp, distanceToTarget,
+            });
+            const { effectiveSpeed, isClosingBonus, mode } = calculateEffectiveSpeed(state, 'ranged');
+            expect(isClosingBonus).toBe(true);
+            expect(mode).toBe(kiting ? 'ranged_kiting' : 'ranged_pursuit');
+            expect(effectiveSpeed).toBe(calculateBaseSpeed(servoMotors) * STANCE_FACTOR[stance] * (kiting ? 1.10 : 1.05));
+
+            // Strain never accumulates in these modes, even at full speed past the grace period
+            state.isUsingClosingBonus = isClosingBonus;
+            state.currentSpeedRatio = 1;
+            updateServoStrain(state, 0.1);
+            expect(state.servoStrain).toBeLessThanOrEqual(strain);
           }
         ),
         { numRuns: 500 }
