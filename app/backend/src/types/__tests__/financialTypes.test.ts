@@ -177,6 +177,51 @@ describe('financial transaction taxonomy and breakdown contract', () => {
 });
 
 
+describe('streaming breakdown versions (#524)', () => {
+  const v1 = breakdown('streaming_revenue');
+  const v2 = {
+    ...base,
+    transactionType: 'streaming_revenue' as const,
+    formulaVersion: '2' as const,
+    finalAmount: 6394,
+    battleId: 10,
+    robotId: 20,
+    mode: 'tag_team',
+    eligible: true as const,
+    baseAmount: 1000,
+    battleContribution: 0.276,
+    fameContribution: 1.0492,
+    audienceMultiplier: 2.3252,
+    studioMultiplier: 5.5,
+    teamSize: 2,
+    revenueBeforeTeamShare: 12788,
+    totalRevenue: 6394,
+  };
+
+  it('keeps historical v1 rows valid', () => {
+    expect(v1.formulaVersion).toBe('1');
+    expect(validateFinancialBreakdown(v1, 'streaming_revenue')).toBe(true);
+  });
+
+  it('accepts a reconciling v2 row', () => {
+    expect(validateFinancialBreakdown(v2, 'streaming_revenue')).toBe(true);
+  });
+
+  it('rejects a v2 row without audienceMultiplier', () => {
+    const { audienceMultiplier: _omitted, ...missing } = v2;
+    expect(validateFinancialBreakdown(missing, 'streaming_revenue')).toBe(false);
+  });
+
+  it('rejects a v2 row whose total is not floor(revenueBeforeTeamShare / teamSize)', () => {
+    expect(validateFinancialBreakdown({ ...v2, totalRevenue: 6395, finalAmount: 6395 }, 'streaming_revenue')).toBe(false);
+    expect(validateFinancialBreakdown({ ...v2, finalAmount: 6393 }, 'streaming_revenue')).toBe(false);
+  });
+
+  it('rejects v1 fields under formulaVersion 2', () => {
+    expect(validateFinancialBreakdown({ ...v1, formulaVersion: '2' }, 'streaming_revenue')).toBe(false);
+  });
+});
+
 describe('placement battle-income provenance', () => {
   it('should require and validate KotH and Grand Melee per-robot placement components', () => {
     const koth = {

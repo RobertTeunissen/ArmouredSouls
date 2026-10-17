@@ -105,22 +105,22 @@ describe('Economy Calculations', () => {
   });
 
   describe('Merchandising Income (Spec #46 R2)', () => {
-    // Signature is (level, prestige, rosterCapacity). Base rate is ₡10,000/level
-    // and the multiplier divides prestige by Roster_Capacity.
+    // Signature is (level, prestige, rosterCapacity). Base rate is ₡25,000/level
+    // (Season 2, #524) and the multiplier divides prestige by Roster_Capacity.
     it('should return 0 when the Merchandising Hub is not purchased', () => {
       expect(calculateMerchandisingIncome(0, 10000, 1)).toBe(0);
     });
 
     it('should calculate base merchandising income at level 1', () => {
-      expect(calculateMerchandisingIncome(1, 0, 1)).toBe(10000); // doubled base rate
+      expect(calculateMerchandisingIncome(1, 0, 1)).toBe(25000); // Season 2 base rate
     });
 
     it('should scale merchandising with prestige per slot', () => {
-      // L1, capacity 1: 10000 × (1 + 10000/1/10000) = 10000 × 2 = 20000
-      expect(calculateMerchandisingIncome(1, 10000, 1)).toBe(20000);
+      // L1, capacity 1: 25000 × (1 + 10000/1/10000) = 25000 × 2 = 50000
+      expect(calculateMerchandisingIncome(1, 10000, 1)).toBe(50000);
 
-      // L5, capacity 1: 50000 × (1 + 15000/1/10000) = 50000 × 2.5 = 125000
-      expect(calculateMerchandisingIncome(5, 15000, 1)).toBe(125000);
+      // L5, capacity 1: 125000 × (1 + 15000/1/10000) = 125000 × 2.5 = 312500
+      expect(calculateMerchandisingIncome(5, 15000, 1)).toBe(312500);
     });
 
     it('should divide the same prestige across a larger roster', () => {
@@ -165,13 +165,13 @@ describe('Economy Calculations', () => {
   describe('Passive Income Calculations (Requirements 13.1-13.8)', () => {
     it('should only include merchandising income from the Merchandising Hub', () => {
       // L1, capacity 1, no prestige
-      expect(calculateMerchandisingIncome(1, 0, 1)).toBe(10000);
+      expect(calculateMerchandisingIncome(1, 0, 1)).toBe(25000);
 
-      // L5, capacity 1, prestige 10000 = 50000 × (1 + 1) = 100000
-      expect(calculateMerchandisingIncome(5, 10000, 1)).toBe(100000);
+      // L5, capacity 1, prestige 10000 = 125000 × (1 + 1) = 250000
+      expect(calculateMerchandisingIncome(5, 10000, 1)).toBe(250000);
 
-      // L10, capacity 1, prestige 20000 = 100000 × (1 + 2) = 300000
-      expect(calculateMerchandisingIncome(10, 20000, 1)).toBe(300000);
+      // L10, capacity 1, prestige 20000 = 250000 × (1 + 2) = 750000
+      expect(calculateMerchandisingIncome(10, 20000, 1)).toBe(750000);
     });
 
     it('should not include streaming revenue in merchandising calculation', () => {
@@ -184,13 +184,13 @@ describe('Economy Calculations', () => {
       const level = 5;
       const prestige = 15000;
       const rosterCapacity = 1;
-      const baseRate = getMerchandisingBaseRate(level); // 50000
+      const baseRate = getMerchandisingBaseRate(level); // 125000
       const expectedMerchandising = Math.round(
         baseRate * (1 + prestige / rosterCapacity / 10000),
-      ); // 50000 * 2.5 = 125000
+      ); // 125000 * 2.5 = 312500
 
       expect(calculateMerchandisingIncome(level, prestige, rosterCapacity)).toBe(expectedMerchandising);
-      expect(calculateMerchandisingIncome(level, prestige, rosterCapacity)).toBe(125000);
+      expect(calculateMerchandisingIncome(level, prestige, rosterCapacity)).toBe(312500);
     });
 
     it('should return 0 merchandising when Income Generator not purchased', () => {

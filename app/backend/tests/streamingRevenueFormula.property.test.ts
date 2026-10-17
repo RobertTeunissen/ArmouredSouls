@@ -6,17 +6,25 @@ import { enterRobotStanding } from './helpers/standings';
  * **Validates: Requirements 1.2, 2.1, 3.1, 4.7**
  * 
  * For any robot with battle count B, fame F, and stable with Streaming Studio 
- * level S, the calculated streaming revenue should equal:
- * 1000 × (1 + B/1000) × (1 + F/5000) × (1 + S×0.1)
+ * level S, the calculated streaming revenue should equal (v2, Season 2 #524):
+ * floor(1000 × (1 + B/2000 + F/10000) × (1 + 0.5 × S))
  */
 
 import fc from 'fast-check';
 import { Prisma } from '../generated/prisma';
 import { 
+  applyStreamingTeamShare,
   calculateStreamingRevenue, 
-  awardStreamingRevenue 
+  awardStreamingRevenue,
+  computeStreamingRevenue,
+  type StreamingRevenueCalculation,
 } from '../src/services/economy/streamingRevenueService';
 import prisma from '../src/lib/prisma';
+
+/** Exact hand reference: floor((20000 + 10B + 2F) × (2 + S) / 40). */
+function v2StreamingRevenue(battles: number, fame: number, studioLevel: number): number {
+  return Math.floor(((20000 + 10 * battles + 2 * fame) * (2 + studioLevel)) / 40);
+}
 
 // Helper function to create a minimal test robot
 async function createTestRobot(userId: number, battles: number, fame: number) {
@@ -148,17 +156,12 @@ describe('Property 1: Streaming Revenue Formula Correctness', () => {
           // Calculate streaming revenue using the service
           const result = await calculateStreamingRevenue(robot.id, testUserId, false);
 
-          // Calculate expected values manually
+          // Calculate expected values manually (v2, #524)
           const expectedBaseAmount = 1000;
-          const expectedBattleMultiplier = 1 + (battles / 1000);
-          const expectedFameMultiplier = 1 + (fame / 5000);
-          const expectedStudioMultiplier = 1 + (studioLevel * 1.0);
-          const expectedTotalRevenue = Math.floor(
-            expectedBaseAmount * 
-            expectedBattleMultiplier * 
-            expectedFameMultiplier * 
-            expectedStudioMultiplier
-          );
+          const expectedBattleContribution = battles / 2000;
+          const expectedFameContribution = fame / 10000;
+          const expectedStudioMultiplier = 1 + (studioLevel * 0.5);
+          const expectedTotalRevenue = v2StreamingRevenue(battles, fame, studioLevel);
 
           // Property: Result should not be null for non-bye matches
           expect(result).not.toBeNull();
@@ -166,11 +169,10 @@ describe('Property 1: Streaming Revenue Formula Correctness', () => {
           // Property: Base amount should always be 1000
           expect(result!.baseAmount).toBe(expectedBaseAmount);
 
-          // Property: Battle multiplier should match formula
-          expect(result!.battleMultiplier).toBeCloseTo(expectedBattleMultiplier, 10);
-
-          // Property: Fame multiplier should match formula
-          expect(result!.fameMultiplier).toBeCloseTo(expectedFameMultiplier, 10);
+          // Property: Battle and fame contributions should match formula
+          expect(result!.battleContribution).toBeCloseTo(expectedBattleContribution, 10);
+          expect(result!.fameContribution).toBeCloseTo(expectedFameContribution, 10);
+          expect(result!.audienceMultiplier).toBeCloseTo(1 + expectedBattleContribution + expectedFameContribution, 10);
 
           // Property: Studio multiplier should match formula
           expect(result!.studioMultiplier).toBeCloseTo(expectedStudioMultiplier, 10);
@@ -270,14 +272,13 @@ describe('Property 1: Streaming Revenue Formula Correctness', () => {
           // Calculate streaming revenue
           const result = await calculateStreamingRevenue(robot.id, testUserId, false);
 
-          // Property: Battle multiplier should be 1.0
-          expect(result!.battleMultiplier).toBe(1.0);
-
-          // Property: Fame multiplier should be 1.0
-          expect(result!.fameMultiplier).toBe(1.0);
+          // Property: Battle and fame contributions should be 0, audience 1.0
+          expect(result!.battleContribution).toBe(0);
+          expect(result!.fameContribution).toBe(0);
+          expect(result!.audienceMultiplier).toBe(1.0);
 
           // Property: Total revenue should be base amount times studio multiplier
-          const expectedRevenue = Math.floor(1000 * (1 + studioLevel * 1.0));
+          const expectedRevenue = 1000 + 500 * studioLevel;
           expect(result!.totalRevenue).toBe(expectedRevenue);
 
           // Clean up robot for next iteration
@@ -435,15 +436,8 @@ describe('Property 4: Battle Count Includes All Battle Types', () => {
           // Total battle count = every non-KotH mode (already summed on the Robot row) plus
           // KotH (read from standings).
           const expectedTotalBattles = nonKothBattles + kothMatches;
-          const expectedBattleMultiplier = 1 + (expectedTotalBattles / 1000);
-          const expectedFameMultiplier = 1 + (fame / 5000);
-          const expectedStudioMultiplier = 1 + (studioLevel * 1.0);
-          const expectedTotalRevenue = Math.floor(
-            1000 * 
-            expectedBattleMultiplier * 
-            expectedFameMultiplier * 
-            expectedStudioMultiplier
-          );
+          const expectedBattleContribution = expectedTotalBattles / 2000;
+          const expectedTotalRevenue = v2StreamingRevenue(expectedTotalBattles, fame, studioLevel);
 
           // Property: Result should not be null for non-bye matches
           expect(result).not.toBeNull();
@@ -452,8 +446,8 @@ describe('Property 4: Battle Count Includes All Battle Types', () => {
           // This is the key property being tested
           expect(result!.robotBattles).toBe(expectedTotalBattles);
 
-          // Property: Battle multiplier should be calculated using total battles
-          expect(result!.battleMultiplier).toBeCloseTo(expectedBattleMultiplier, 10);
+          // Property: Battle contribution should be calculated using total battles
+          expect(result!.battleContribution).toBeCloseTo(expectedBattleContribution, 10);
 
           // Property: Total revenue should reflect all battle types
           expect(result!.totalRevenue).toBe(expectedTotalRevenue);
@@ -672,20 +666,20 @@ describe('Property 6: Studio Multiplier Applies Stable-Wide', () => {
           expect(result2!.studioLevel).toBe(studioLevel);
 
           // Property: Studio multiplier should match the formula
-          const expectedStudioMultiplier = 1 + (studioLevel * 1.0);
+          const expectedStudioMultiplier = 1 + (studioLevel * 0.5);
           expect(result1!.studioMultiplier).toBeCloseTo(expectedStudioMultiplier, 10);
           expect(result2!.studioMultiplier).toBeCloseTo(expectedStudioMultiplier, 10);
 
           // Property: Even if robots have different battles and fame,
           // they should still use the same studio multiplier
-          // (battle and fame multipliers can differ, but studio must be the same)
+          // (battle and fame contributions can differ, but studio must be the same)
           if (battles1 !== battles2) {
-            // Battle multipliers should differ
-            expect(result1!.battleMultiplier).not.toBe(result2!.battleMultiplier);
+            // Battle contributions should differ
+            expect(result1!.battleContribution).not.toBe(result2!.battleContribution);
           }
           if (fame1 !== fame2) {
-            // Fame multipliers should differ
-            expect(result1!.fameMultiplier).not.toBe(result2!.fameMultiplier);
+            // Fame contributions should differ
+            expect(result1!.fameContribution).not.toBe(result2!.fameContribution);
           }
 
           // Clean up robots for next iteration
@@ -925,7 +919,7 @@ describe('Property 6: Studio Multiplier Applies Stable-Wide', () => {
           });
 
           // Property: Studio multiplier should match the formula
-          const expectedStudioMultiplier = 1 + (studioLevel * 1.0);
+          const expectedStudioMultiplier = 1 + (studioLevel * 0.5);
           results.forEach(result => {
             expect(result!.studioMultiplier).toBeCloseTo(expectedStudioMultiplier, 10);
           });
@@ -1138,9 +1132,9 @@ describe('Property 2: Streaming Revenue Awarded to All Battle Participants', () 
           // Property: With identical stats, both should receive identical revenue
           expect(result1!.totalRevenue).toBe(result2!.totalRevenue);
 
-          // Property: Both should have the same multipliers
-          expect(result1!.battleMultiplier).toBeCloseTo(result2!.battleMultiplier, 10);
-          expect(result1!.fameMultiplier).toBeCloseTo(result2!.fameMultiplier, 10);
+          // Property: Both should have the same contributions and multipliers
+          expect(result1!.battleContribution).toBeCloseTo(result2!.battleContribution, 10);
+          expect(result1!.fameContribution).toBeCloseTo(result2!.fameContribution, 10);
           expect(result1!.studioMultiplier).toBeCloseTo(result2!.studioMultiplier, 10);
 
           // Clean up robots for next iteration
@@ -1178,12 +1172,8 @@ describe('Property 2: Streaming Revenue Awarded to All Battle Participants', () 
 
           // Property: Revenue is based on robot stats, not battle outcome
           // Each robot's revenue is calculated independently
-          const expectedRevenue1 = Math.floor(
-            1000 * (1 + battles1 / 1000) * (1 + fame1 / 5000) * 1.0
-          );
-          const expectedRevenue2 = Math.floor(
-            1000 * (1 + battles2 / 1000) * (1 + fame2 / 5000) * 1.0
-          );
+          const expectedRevenue1 = v2StreamingRevenue(battles1, fame1, 0);
+          const expectedRevenue2 = v2StreamingRevenue(battles2, fame2, 0);
 
           expect(result1!.totalRevenue).toBe(expectedRevenue1);
           expect(result2!.totalRevenue).toBe(expectedRevenue2);
@@ -1232,13 +1222,15 @@ describe('Property 2: Streaming Revenue Awarded to All Battle Participants', () 
           expect(result1!.totalRevenue).toBe(1000);
           expect(result2!.totalRevenue).toBe(1000);
 
-          // Property: All multipliers are 1.0 for new robots
-          expect(result1!.battleMultiplier).toBe(1.0);
-          expect(result1!.fameMultiplier).toBe(1.0);
+          // Property: Contributions are 0 and multipliers 1.0 for new robots
+          expect(result1!.battleContribution).toBe(0);
+          expect(result1!.fameContribution).toBe(0);
+          expect(result1!.audienceMultiplier).toBe(1.0);
           expect(result1!.studioMultiplier).toBe(1.0);
           
-          expect(result2!.battleMultiplier).toBe(1.0);
-          expect(result2!.fameMultiplier).toBe(1.0);
+          expect(result2!.battleContribution).toBe(0);
+          expect(result2!.fameContribution).toBe(0);
+          expect(result2!.audienceMultiplier).toBe(1.0);
           expect(result2!.studioMultiplier).toBe(1.0);
 
           // Clean up robots for next iteration
@@ -1604,54 +1596,71 @@ describe('Property 3: No Streaming Revenue for Bye Matches', () => {
  *   - Future 5v5: teamSize=5 → fifth revenue each
  */
 describe('Property 10: Team-Size Divisor on Streaming Revenue', () => {
+  /** A solo calculation for (battles, fame, level), as the award path builds it. */
+  function soloCalculation(battles: number, fame: number, level: number): StreamingRevenueCalculation {
+    const breakdown = computeStreamingRevenue(battles, fame, level);
+    return {
+      ...breakdown,
+      robotId: 1,
+      robotName: 'TeamBot',
+      robotBattles: battles,
+      robotFame: fame,
+      studioLevel: level,
+      teamSize: 1,
+      revenueBeforeTeamShare: breakdown.totalRevenue,
+    };
+  }
+
   it('should return full revenue when teamSize is 1 (default)', () => {
-    // Pure math test: with teamSize=1, no division occurs
-    // Formula: 1000 × (1 + B/1000) × (1 + F/5000) × (1 + S×1.0)
-    // Fresh robot (0 battles, 0 fame, no studio): 1000 × 1.0 × 1.0 × 1.0 = 1000
-    const baseRevenue = 1000;
-    const divided = Math.floor(baseRevenue / 1);
-    expect(divided).toBe(1000); // No division for solo
+    // Fresh robot (0 battles, 0 fame, no studio): 1000
+    expect(applyStreamingTeamShare(soloCalculation(0, 0, 0), 1).totalRevenue).toBe(1000);
   });
 
   it('should halve revenue when teamSize is 2 (tag team)', () => {
-    // Pure math test: the teamSize divisor logic in awardStreamingRevenueForParticipant
-    // applies Math.floor(totalRevenue / teamSize)
-    const baseRevenue = 1000; // Fresh robot, no studio
-    const halved = Math.floor(baseRevenue / 2);
-    expect(halved).toBe(500);
+    expect(applyStreamingTeamShare(soloCalculation(0, 0, 0), 2).totalRevenue).toBe(500);
   });
 
-  it('should divide by 3 when teamSize is 3 (future 3v3)', () => {
-    const baseRevenue = 1000;
-    const divided = Math.floor(baseRevenue / 3);
-    expect(divided).toBe(333);
+  it('should divide by 3 when teamSize is 3 (3v3)', () => {
+    expect(applyStreamingTeamShare(soloCalculation(0, 0, 0), 3).totalRevenue).toBe(333);
   });
 
   it('should divide by 5 when teamSize is 5 (future 5v5)', () => {
-    const baseRevenue = 1000;
-    const divided = Math.floor(baseRevenue / 5);
-    expect(divided).toBe(200);
+    expect(applyStreamingTeamShare(soloCalculation(0, 0, 0), 5).totalRevenue).toBe(200);
   });
 
   it('should preserve economics for experienced robots with teamSize 2', () => {
-    // Robot with 500 battles, 2500 fame, studio level 2
-    // Formula: 1000 × (1 + 500/1000) × (1 + 2500/5000) × (1 + 2×1.0)
-    //        = 1000 × 1.5 × 1.5 × 3.0 = 6750
-    const fullRevenue = Math.floor(1000 * 1.5 * 1.5 * 3.0);
-    expect(fullRevenue).toBe(6750);
+    // Robot with 500 battles, 2500 fame, studio level 2 (v2, #524):
+    // (20000 + 5000 + 5000) × (2 + 2) / 40 = 3,000; with teamSize 2: 1,500
+    const solo = soloCalculation(500, 2500, 2);
+    expect(solo.totalRevenue).toBe(3000);
+    const shared = applyStreamingTeamShare(solo, 2);
+    expect(shared.totalRevenue).toBe(1500);
+    expect(shared.revenueBeforeTeamShare).toBe(3000);
+  });
 
-    // With teamSize=2: 6750 / 2 = 3375
-    const teamRevenue = Math.floor(fullRevenue / 2);
-    expect(teamRevenue).toBe(3375);
+  it('should divide exactly once, from the pre-share figure', () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 0, max: 10_000 }),
+        fc.integer({ min: 0, max: 50_000 }),
+        fc.integer({ min: 0, max: 10 }),
+        fc.integer({ min: 1, max: 5 }),
+        (battles, fame, level, teamSize) => {
+          const solo = soloCalculation(battles, fame, level);
+          const once = applyStreamingTeamShare(solo, teamSize);
+          expect(once.totalRevenue).toBe(Math.floor(v2StreamingRevenue(battles, fame, level) / teamSize));
+          expect(applyStreamingTeamShare(once, teamSize)).toEqual(once);
+        },
+      ),
+      { numRuns: 200 },
+    );
   });
 
   it('should ensure team total roughly equals solo total for equal robots', () => {
-    // Two identical robots on a team should earn roughly the same total as
-    // two solo robots, since each gets fullRevenue/teamSize and there are teamSize of them
-    const soloRevenue = 1000; // Fresh robot
-    const teamPerRobot = Math.floor(soloRevenue / 2);
-    const teamTotal = teamPerRobot * 2; // 500 * 2 = 1000
-    expect(teamTotal).toBe(soloRevenue);
+    // Two identical robots on a team earn each fullRevenue/teamSize
+    const solo = soloCalculation(0, 0, 0);
+    const teamPerRobot = applyStreamingTeamShare(solo, 2).totalRevenue;
+    expect(teamPerRobot * 2).toBe(solo.totalRevenue);
   });
 });
 

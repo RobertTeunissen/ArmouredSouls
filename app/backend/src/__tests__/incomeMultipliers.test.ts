@@ -73,18 +73,18 @@ describe('Income Multipliers', () => {
     });
 
     test('should calculate correctly for level 1 with no prestige', () => {
-      // Base rate doubled to ₡10,000/level
-      expect(calculateMerchandisingIncome(1, 0, 1)).toBe(10000);
+      // Season 2 (#524) base rate: ₡25,000/level
+      expect(calculateMerchandisingIncome(1, 0, 1)).toBe(25000);
     });
 
     test('should calculate correctly for level 4 with 15000 prestige and one slot', () => {
-      // 40000 * (1 + 15000/1/10000) = 40000 * 2.5 = 100000
-      expect(calculateMerchandisingIncome(4, 15000, 1)).toBe(100000);
+      // 100000 * (1 + 15000/1/10000) = 100000 * 2.5 = 250000
+      expect(calculateMerchandisingIncome(4, 15000, 1)).toBe(250000);
     });
 
     test('should scale linearly with prestige per slot', () => {
       const level = 4;
-      const baseRate = 40000; // getMerchandisingBaseRate(4)
+      const baseRate = 100000; // getMerchandisingBaseRate(4)
 
       expect(calculateMerchandisingIncome(level, 10000, 1)).toBe(Math.round(baseRate * 2.0));
       expect(calculateMerchandisingIncome(level, 20000, 1)).toBe(Math.round(baseRate * 3.0));
@@ -125,17 +125,18 @@ describe('Income Multipliers', () => {
   describe('Base Rate Functions', () => {
     test('getMerchandisingBaseRate should return correct rates', () => {
       expect(getMerchandisingBaseRate(0)).toBe(0);
-      expect(getMerchandisingBaseRate(1)).toBe(10000);
-      expect(getMerchandisingBaseRate(2)).toBe(20000);
-      expect(getMerchandisingBaseRate(4)).toBe(40000);
-      expect(getMerchandisingBaseRate(10)).toBe(100000);
+      expect(getMerchandisingBaseRate(1)).toBe(25000);
+      expect(getMerchandisingBaseRate(2)).toBe(50000);
+      expect(getMerchandisingBaseRate(4)).toBe(100000);
+      expect(getMerchandisingBaseRate(10)).toBe(250000);
+      expect(getMerchandisingBaseRate(11)).toBe(0);
     });
   });
 
   describe('Edge Cases and Boundary Conditions', () => {
     test('should handle zero prestige', () => {
       expect(getPrestigeMultiplier(0)).toBe(1.0);
-      expect(calculateMerchandisingIncome(4, 0, 1)).toBe(40000);
+      expect(calculateMerchandisingIncome(4, 0, 1)).toBe(100000);
     });
 
     test('should handle very high prestige', () => {

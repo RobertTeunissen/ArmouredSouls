@@ -16,6 +16,14 @@ import { Prisma } from '../generated/prisma';
 import { facilityRecommendationService } from '../src/services/economy/facilityRecommendationService';
 import prisma from '../src/lib/prisma';
 
+/**
+ * Hand reference for the v2 streaming formula (#524):
+ * floor(1000 × (1 + B/2000 + F/10000) × (1 + 0.5L)) = floor((20000 + 10B + 2F) × (2 + L) / 40).
+ */
+function v2StreamingRevenue(battles: number, fame: number, level: number): number {
+  return Math.floor(((20000 + 10 * battles + 2 * fame) * (2 + level)) / 40);
+}
+
 // Helper function to create a minimal test robot
 async function createTestRobot(
   userId: number, 
@@ -252,23 +260,11 @@ describe('Property 21: Facility Advisor Provides Streaming Studio ROI', () => {
             const expectedUpgradeCost = nextLevel * 100000;
             const expectedOperatingCostIncrease = nextLevel * 100 - currentLevel * 100;
 
-            // Calculate expected streaming revenue
-            const currentMultiplier = 1 + (currentLevel * 1.0);
-            const nextMultiplier = 1 + (nextLevel * 1.0);
-            const multiplierIncrease = nextMultiplier - currentMultiplier;
-
-            // Calculate average streaming revenue per battle
-            let totalRevenue = 0;
-            for (const robot of robots) {
-              const battleMultiplier = 1 + (battlesPerRobot / 1000);
-              const fameMultiplier = 1 + (famePerRobot / 5000);
-              const revenue = 1000 * battleMultiplier * fameMultiplier * currentMultiplier;
-              totalRevenue += revenue;
-            }
-            const avgRevenuePerBattle = robotCount > 0 ? totalRevenue / robotCount : 1000 * currentMultiplier;
-
-            // Calculate revenue increase per battle
-            const revenueIncreasePerBattle = avgRevenuePerBattle * (multiplierIncrease / currentMultiplier);
+            // Incremental v2 benefit per battle (#524): every robot has the same
+            // stats, so the roster average equals one robot's increment.
+            const revenueIncreasePerBattle =
+              v2StreamingRevenue(battlesPerRobot, famePerRobot, nextLevel)
+              - v2StreamingRevenue(battlesPerRobot, famePerRobot, currentLevel);
 
             // Calculate net benefit per cycle
             const projectedRevenueIncreasePerCycle = revenueIncreasePerBattle * battlesPerCycle;
@@ -291,6 +287,7 @@ describe('Property 21: Facility Advisor Provides Streaming Studio ROI', () => {
                 // Property 17.4: Reason should mention revenue increase per battle
                 expect(studioRec.reason).toContain('streaming revenue');
                 expect(studioRec.reason).toContain('per battle');
+                expect(studioRec.reason).toContain(`₡${revenueIncreasePerBattle} more per battle`);
 
                 // Property 17.5: Reason should mention operating cost
                 expect(studioRec.reason).toContain('operating cost');
@@ -441,22 +438,16 @@ describe('Property 21: Facility Advisor Provides Streaming Studio ROI', () => {
 
           if (studioRec) {
             const nextLevel = currentLevel + 1;
-            const currentMultiplier = 1 + (currentLevel * 1.0);
-            const nextMultiplier = 1 + (nextLevel * 1.0);
-            const multiplierIncrease = nextMultiplier - currentMultiplier;
 
-            // Calculate expected streaming revenue
-            const battleMultiplier = 1 + (battles / 1000);
-            const fameMultiplier = 1 + (fame / 5000);
-            const avgRevenuePerBattle = 1000 * battleMultiplier * fameMultiplier * currentMultiplier;
+            // Expected incremental revenue per battle over the current level (#524)
+            const expectedRevenueIncreasePerBattle =
+              v2StreamingRevenue(battles, fame, nextLevel) - v2StreamingRevenue(battles, fame, currentLevel);
+            // Studio-only percentage: (2 + next) / (2 + current) − 1
+            const expectedPercent = (((2 + nextLevel) / (2 + currentLevel) - 1) * 100).toFixed(0);
 
-            // Calculate expected revenue increase per battle
-            const expectedRevenueIncreasePerBattle = avgRevenuePerBattle * (multiplierIncrease / currentMultiplier);
-
-            // Calculate expected net benefit per cycle
-            const operatingCostIncrease = nextLevel * 100 - currentLevel * 100;
-            const projectedRevenueIncreasePerCycle = expectedRevenueIncreasePerBattle * battlesPerCycle;
-            const expectedNetBenefitPerCycle = projectedRevenueIncreasePerCycle - operatingCostIncrease;
+            // Property: the reason states the exact incremental benefit and percentage
+            expect(studioRec.reason).toContain(`₡${expectedRevenueIncreasePerBattle} more per battle`);
+            expect(studioRec.reason).toContain(`by ${expectedPercent}% per battle`);
 
             // Property: If net benefit is positive, payback should be positive
             if (studioRec.projectedPayoffCycles !== null) {

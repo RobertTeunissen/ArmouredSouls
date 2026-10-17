@@ -54,6 +54,9 @@ jest.mock('../../../lib/prisma', () => ({
     robot: {
       findMany: jest.fn(),
     },
+    financialLedger: {
+      findMany: jest.fn(),
+    },
   },
 }));
 
@@ -71,6 +74,10 @@ describe('UnifiedFacilityROIService - Property-Based Tests', () => {
     // Repair_Bay_Discount scales with it. Every property here generates a facility
     // type from the economic set, so any run that draws `repair_bay` reaches this.
     (mockedPrisma.robot.findMany as jest.Mock).mockResolvedValue([{ id: 1 }, { id: 2 }]);
+    // Streaming Studio returns come from recorded streaming_revenue ledger rows (#524).
+    (mockedPrisma.financialLedger.findMany as jest.Mock).mockResolvedValue([
+      { amount: 3000, metadata: { formulaVersion: '2', studioMultiplier: 1.5 }, cycleNumber: 1 },
+    ]);
   });
 
   describe('Property: totalInvestment always equals sum of config costs', () => {

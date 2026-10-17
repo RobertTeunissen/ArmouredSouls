@@ -56,7 +56,22 @@ jest.mock('../../../src/config/logger', () => ({
 }));
 
 jest.mock('../../../src/services/economy/streamingRevenueService', () => ({
-  calculateStreamingRevenue: jest.fn().mockResolvedValue({ totalRevenue: 100, viewerCount: 50, baseRevenue: 80, qualityBonus: 20 }),
+  calculateStreamingRevenue: jest.fn().mockResolvedValue({
+    baseAmount: 1000,
+    battleContribution: 0,
+    fameContribution: 0,
+    audienceMultiplier: 1,
+    studioMultiplier: 1,
+    totalRevenue: 1000,
+    robotId: 1,
+    robotName: 'TestBot',
+    robotBattles: 0,
+    robotFame: 0,
+    studioLevel: 0,
+    teamSize: 1,
+    revenueBeforeTeamShare: 1000,
+  }),
+  applyStreamingTeamShare: jest.requireActual('../../../src/services/economy/streamingRevenueService').applyStreamingTeamShare,
 }));
 
 jest.mock('../../../src/services/achievement/achievementService', () => ({

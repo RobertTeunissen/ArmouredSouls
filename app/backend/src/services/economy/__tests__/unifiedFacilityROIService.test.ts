@@ -32,6 +32,9 @@ jest.mock('../../../lib/prisma', () => ({
     robot: {
       findMany: jest.fn(),
     },
+    financialLedger: {
+      findMany: jest.fn(),
+    },
   },
 }));
 
@@ -98,18 +101,30 @@ describe('UnifiedFacilityROIService', () => {
       expect(result!.dataSource).toBe('snapshot');
     });
 
-    it('should calculate ROI for streaming_studio from snapshot data', async () => {
+    it('should calculate streaming_studio returns from the studio share of recorded awards', async () => {
       setupMocksForFacility('streaming_studio', 2, [
         { userId: 1, merchandisingIncome: 0, streamingIncome: 5000, totalRepairCosts: 0, attributeUpgrades: 0, weaponPurchases: 0, operatingCosts: 200 },
         { userId: 1, merchandisingIncome: 0, streamingIncome: 8000, totalRepairCosts: 0, attributeUpgrades: 0, weaponPurchases: 0, operatingCosts: 200 },
+      ]);
+      (mockedPrisma.financialLedger.findMany as jest.Mock).mockResolvedValue([
+        // v1 row at ×2 (old L1): 2,000 × (1 − 1/2) = 1,000
+        { amount: 2000, metadata: { formulaVersion: '1', studioMultiplier: 2 }, cycleNumber: 10 },
+        // v2 row at ×2 (L2): 4,000 × (1 − 1/2) = 2,000
+        { amount: 4000, metadata: { formulaVersion: '2', studioMultiplier: 2 }, cycleNumber: 11 },
       ]);
 
       const result = await service.calculateFacilityROI(1, 'streaming_studio');
 
       expect(result).not.toBeNull();
       expect(result!.facilityType).toBe('streaming_studio');
-      expect(result!.totalReturns).toBe(13000); // 5000 + 8000
+      // Snapshot streamingIncome (13,000) includes base streaming earned without
+      // any studio, so it is not the studio's return.
+      expect(result!.totalReturns).toBe(3000);
       expect(result!.dataSource).toBe('snapshot');
+      expect(mockedPrisma.financialLedger.findMany).toHaveBeenCalledWith({
+        where: { userId: 1, transactionType: 'streaming_revenue', cycleNumber: { gte: 10, lte: 50 } },
+        select: { amount: true, metadata: true, cycleNumber: true },
+      });
     });
 
     it('should calculate ROI for repair_bay from snapshot data', async () => {
@@ -218,6 +233,29 @@ describe('UnifiedFacilityROIService', () => {
       expect(result).not.toBeNull();
       expect(result!.dataSource).toBe('estimate');
       expect(result!.totalReturns).toBeGreaterThan(0);
+    });
+
+    it('should estimate streaming_studio returns as the studio increment only', async () => {
+      (mockedPrisma.facility.findUnique as jest.Mock).mockResolvedValue({
+        userId: 1,
+        facilityType: 'streaming_studio',
+        level: 4,
+        maxLevel: 10,
+      });
+      (mockedPrisma.cycleMetadata.findUnique as jest.Mock).mockResolvedValue({
+        id: 1,
+        totalCycles: 30,
+        lastCycleAt: new Date(),
+      });
+      (mockedPrisma.auditLog.findFirst as jest.Mock).mockResolvedValue({ cycleNumber: 21 });
+      (mockedPrisma.cycleSnapshot.findMany as jest.Mock).mockResolvedValue([]);
+
+      const result = await service.calculateFacilityROI(1, 'streaming_studio');
+
+      // 500 more per battle per level × 4 levels × 3 battles × 10 cycles (21..30)
+      expect(result!.dataSource).toBe('estimate');
+      expect(result!.cyclesSincePurchase).toBe(10);
+      expect(result!.totalReturns).toBe(500 * 4 * 3 * 10);
     });
   });
 
@@ -473,6 +511,13 @@ describe('UnifiedFacilityROIService', () => {
         },
       ]);
 
+      (mockedPrisma.financialLedger.findMany as jest.Mock).mockResolvedValue([
+        // Before the purchase cycle (5): outside the ownership window.
+        { amount: 9000, metadata: { formulaVersion: '1', studioMultiplier: 3 }, cycleNumber: 3 },
+        // Inside the window at L1 (×1.5): 1,500 × (1 − 1/1.5) = 500
+        { amount: 1500, metadata: { formulaVersion: '2', studioMultiplier: 1.5 }, cycleNumber: 6 },
+      ]);
+
       const result = await service.calculateAllEconomicROIs(1);
 
       expect(result.facilities).toHaveLength(2);
@@ -480,6 +525,11 @@ describe('UnifiedFacilityROIService', () => {
         ['merchandising_hub', 'streaming_studio'].sort()
       );
       expect(result.totals.totalInvestment).toBeGreaterThan(0);
+
+      const studio = result.facilities.find((f) => f.facilityType === 'streaming_studio');
+      expect(studio!.totalReturns).toBe(500);
+      // Recorded streaming rows are fetched once for all facilities.
+      expect(mockedPrisma.financialLedger.findMany).toHaveBeenCalledTimes(1);
     });
   });
 

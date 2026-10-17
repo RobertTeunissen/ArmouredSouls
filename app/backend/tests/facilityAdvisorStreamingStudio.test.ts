@@ -116,10 +116,12 @@ describe('Facility Advisor - Streaming Studio', () => {
       expect(streamingStudioRec.upgradeCost).toBe(100000);
       expect(streamingStudioRec.projectedROI).toBeGreaterThan(0);
       expect(streamingStudioRec.reason).toContain('streaming revenue');
-      // L0 → L1 doubles streaming revenue, so the increase is 100%. This
-      // asserted '10%' because the advisor used `1 + level × 0.1`, a tenth of
-      // the real Studio Multiplier of `1 + level` — corrected by Spec #46 R10.
-      expect(streamingStudioRec.reason).toContain('100%');
+      // Season 2 (#524): L0 → L1 takes the Studio Multiplier from 1× to 1.5×,
+      // so the increase is 50%. Per robot (1000 battles, 5000 fame) the award
+      // goes (20000 + 10000 + 10000) × 2 / 40 = 2,000 → × 3 / 40 = 3,000,
+      // i.e. ₡1,000 more per battle.
+      expect(streamingStudioRec.reason).toContain('50%');
+      expect(streamingStudioRec.reason).toContain('₡1000 more per battle');
       // projectedPayoffCycles may be null if no battle history
       if (streamingStudioRec.projectedPayoffCycles !== null) {
         expect(streamingStudioRec.projectedPayoffCycles).toBeGreaterThan(0);
@@ -247,6 +249,9 @@ describe('Facility Advisor - Streaming Studio', () => {
       expect(streamingStudioRec.upgradeCost).toBe(200000);
       expect(streamingStudioRec.projectedROI).toBeGreaterThan(0);
       expect(streamingStudioRec.reason).toContain('streaming revenue');
+      // Incremental over L1 (#524): (20000 + 20000 + 20000) × 3 / 40 = 4,500 → × 4 / 40 = 6,000
+      expect(streamingStudioRec.reason).toContain('33%');
+      expect(streamingStudioRec.reason).toContain('₡1500 more per battle');
       if (streamingStudioRec.projectedPayoffCycles !== null) {
         expect(streamingStudioRec.projectedPayoffCycles).toBeGreaterThan(0);
       }

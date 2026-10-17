@@ -101,32 +101,36 @@ describe('Property 1: Merchandising income is monotonic in roster size', () => {
   });
 });
 
-describe('Property 2: Merchandising income doubles at capacity 1', () => {
+describe('Property 2: Merchandising pays ₡25,000 per level at capacity 1 (Season 2, #524)', () => {
   /**
-   * **Validates: Requirements 2.5, 2.6, 2.20**
+   * **Validates: Requirements 2.5, 2.6, 2.20; #524**
    */
-  it('is exactly twice the pre-change value for a single-robot stable', () => {
+  it('is 25,000 × level × (1 + prestige / 10,000) for a single-robot stable', () => {
     fc.assert(
       fc.property(
         fc.integer({ min: 1, max: 10 }),
         fc.integer({ min: 0, max: 200_000 }),
         (level, prestige) => {
-          const legacy = legacyMerchandisingIncome(level, prestige);
           const current = calculateMerchandisingIncome(level, prestige, 1);
-          // Both round independently, so allow a 1-credit rounding difference
-          expect(Math.abs(current - legacy * 2)).toBeLessThanOrEqual(1);
+          expect(current).toBe(Math.round(25_000 * level * (1 + prestige / 10_000)));
         },
       ),
       { numRuns: 300 },
     );
   });
 
-  it('doubles the base rate table', () => {
-    expect(getMerchandisingBaseRate(1)).toBe(10_000);
-    expect(getMerchandisingBaseRate(5)).toBe(50_000);
-    expect(getMerchandisingBaseRate(10)).toBe(100_000);
+  it('uses the Season 2 base rate table (was ₡10,000 per level)', () => {
+    expect(getMerchandisingBaseRate(1)).toBe(25_000);
+    expect(getMerchandisingBaseRate(5)).toBe(125_000);
+    expect(getMerchandisingBaseRate(10)).toBe(250_000);
     expect(getMerchandisingBaseRate(0)).toBe(0);
     expect(getMerchandisingBaseRate(11)).toBe(0);
+  });
+
+  it('keeps the prestige-per-slot multiplier unchanged', () => {
+    // L1, prestige 10,000: 1 slot → 25,000 × 2 = 50,000; 2 slots → 25,000 × 1.5 = 37,500
+    expect(calculateMerchandisingIncome(1, 10_000, 1)).toBe(50_000);
+    expect(calculateMerchandisingIncome(1, 10_000, 2)).toBe(37_500);
   });
 
   it('returns zero at level 0 regardless of prestige or capacity', () => {
@@ -167,22 +171,24 @@ describe('Payback fits inside a 100-cycle season (Spec #46 R2.13, R2.19)', () =>
     },
   );
 
-  it('worst case is level 10 at roughly 84 cycles', () => {
+  it('worst case is level 10 at roughly 33 cycles', () => {
+    // 8,250,000 cumulative / (250,000 − 2,000) per day ≈ 33.3
     const netDaily =
       calculateMerchandisingIncome(10, 0, 1) - calculateFacilityOperatingCost('merchandising_hub', 10);
     const paybackCycles = cumulativeCost(10) / netDaily;
 
-    expect(paybackCycles).toBeGreaterThan(80);
-    expect(paybackCycles).toBeLessThan(90);
+    expect(paybackCycles).toBeGreaterThan(33);
+    expect(paybackCycles).toBeLessThan(34);
   });
 
-  it('best case is level 1 at roughly 15 cycles', () => {
+  it('best case is level 1 at roughly 6 cycles', () => {
+    // 150,000 / (25,000 − 200) per day ≈ 6.05
     const netDaily =
       calculateMerchandisingIncome(1, 0, 1) - calculateFacilityOperatingCost('merchandising_hub', 1);
     const paybackCycles = cumulativeCost(1) / netDaily;
 
-    expect(paybackCycles).toBeGreaterThan(14);
-    expect(paybackCycles).toBeLessThan(17);
+    expect(paybackCycles).toBeGreaterThan(6);
+    expect(paybackCycles).toBeLessThan(6.1);
   });
 
   it('would have exceeded 100 cycles under the pre-change base rate', () => {

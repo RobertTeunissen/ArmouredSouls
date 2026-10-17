@@ -2,10 +2,11 @@
  * #530 / #532 — every streaming caller uses the same all-modes battle count.
  *
  * Fixture: robot Wattage — robots.total_battles 211, KotH 68 matches, fame 1401,
- * Streaming Studio L5. The award path paid ₡9,824 for battle #466957, which only
- * a battle count of 279 (211 + 68) reproduces. With 6 Grand Melee matches the
- * count must be 285 everywhere: award (single + batch), Finance Center daily
- * breakdown and the facility recommendation estimate.
+ * Streaming Studio L5. Under the v1 formula the award path paid ₡9,824 for battle
+ * #466957, which only a battle count of 279 (211 + 68) reproduces; v2 (#524) pays
+ * ₡4,478 for the same inputs. With 6 Grand Melee matches the count must be 285
+ * everywhere (₡4,489): award (single + batch), Finance Center daily breakdown and
+ * the facility recommendation estimate.
  */
 const mockRobotFindUnique = jest.fn();
 const mockRobotFindMany = jest.fn();
@@ -79,13 +80,15 @@ beforeEach(() => {
 });
 
 describe('streaming battle count (#530)', () => {
-  it('reproduces the hand-verified Wattage payout (211 + 68 KotH = 279 → ₡9,824)', async () => {
+  it('counts KotH matches for the hand-verified Wattage robot (211 + 68 KotH = 279 → ₡4,478)', async () => {
     serve({ koth: 68, grandMelee: 0 });
 
     const result = await calculateStreamingRevenue(WATTAGE.id, USER_ID, false);
 
     expect(result?.robotBattles).toBe(279);
-    expect(result?.totalRevenue).toBe(9824);
+    // v2 (#524): (20000 + 10 × 279 + 2 × 1401) × (2 + 5) / 40 = 179,144 / 40 → 4,478.
+    // The v1 formula paid ₡9,824 for battle #466957, which only 279 battles reproduced.
+    expect(result?.totalRevenue).toBe(4478);
   });
 
   it('counts Grand Melee matches in both the single and batch award paths', async () => {
@@ -97,7 +100,8 @@ describe('streaming battle count (#530)', () => {
     expect(single?.robotBattles).toBe(285);
     expect(batch?.robotBattles).toBe(285);
     expect(batch?.totalRevenue).toBe(single?.totalRevenue);
-    expect(single?.totalRevenue).toBe(9870);
+    // (20000 + 2850 + 2802) × 7 / 40 = 179,564 / 40 → 4,489
+    expect(single?.totalRevenue).toBe(4489);
   });
 });
 
@@ -111,6 +115,9 @@ describe('every streaming caller agrees for the same robot (#532)', () => {
     const perRobot = report.multiplierBreakdown.streaming.perRobot[0];
     expect(perRobot.battles).toBe(285);
     expect(perRobot.revenuePerBattle).toBe(awarded?.totalRevenue);
+    expect(perRobot.revenuePerBattle).toBe(4489);
+    // 1 + 285 / 2000 + 1401 / 10000 = 1.2826
+    expect(perRobot.audienceMultiplier).toBeCloseTo(1.2826, 10);
     expect(report.multiplierBreakdown.streaming.totalBattles).toBe(285);
   });
 
@@ -124,5 +131,6 @@ describe('every streaming caller agrees for the same robot (#532)', () => {
     const estimate = await service.calculateAverageStreamingRevenue(USER_ID, STUDIO_LEVEL);
 
     expect(estimate).toBe(awarded?.totalRevenue);
+    expect(estimate).toBe(4489);
   });
 });
