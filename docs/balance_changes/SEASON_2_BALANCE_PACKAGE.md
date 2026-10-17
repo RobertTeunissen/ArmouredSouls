@@ -77,7 +77,60 @@ counter bonus would need an explicit product-owner decision.
 
 Deferred to the next measurement round (report only): short-range dominance, Single, Dual Wield (late).
 
-Measured: see below.
+### Round 2 measurement
+
+Information only; nothing was tuned. Full tables, CIs and method in the
+[validation report](../analysis/NEXT_SEASON_BALANCE_VALIDATION.md#season-2-balance-package-round-2). Arms: `main`
+`0d7e5b51`, `round1` `51e25ef4`, `round2` (code of `ed34b158`); paired seeds, 2,000 trials per 1v1 cell.
+
+1v1 score against the other range classes, invest early / mid / late (Δ round2 vs round1 in pp, 95% CI ±0.5–1.2):
+
+| Class | main | round1 | round2 | Δ round2 |
+|---|---|---|---|---|
+| melee | 83.6% / 67.3% / 58.3% | 36.2% / 27.5% / 31.5% | 62.1% / 50.4% / 47.8% | +25.9 / +22.9 / +16.3 |
+| short | 75.0% / 78.7% / 77.6% | 89.5% / 84.2% / 83.3% | 84.1% / 80.7% / 80.5% | −5.5 / −3.5 / −2.8 |
+| mid | 33.9% / 37.4% / 41.8% | 55.5% / 60.1% / 56.3% | 43.6% / 49.9% / 49.7% | −11.9 / −10.3 / −6.6 |
+| long | 7.4% / 16.6% / 22.3% | 18.8% / 28.2% / 28.9% | 10.3% / 19.0% / 22.1% | −8.5 / −9.2 / −6.9 |
+
+1v1 score against the other loadouts, invest early / mid / late. Both sides share a range class, so round 2 doesn't act
+here (Δ round2 +0.0 in every cell):
+
+| Loadout | main | round1 = round2 |
+|---|---|---|
+| single | 28.5% / 22.3% / 27.9% | 29.5% / 25.0% / 31.6% |
+| weapon_shield | 76.4% / 74.2% / 54.9% | 67.7% / 66.0% / 37.0% |
+| two_handed | 38.8% / 38.8% / 51.2% | 43.7% / 41.4% / 58.3% |
+| dual_wield | 56.2% / 64.7% / 66.1% | 59.2% / 67.6% / 73.0% |
+
+Melee-vs-ranged cells, invest mid, main → round1 → round2:
+
+| Cell | score of melee | time within reach | reach entries / battle | timeouts |
+|---|---|---|---|---|
+| melee vs short | 40.8% → 7.9% → 18.3% | 51.4% → 7.6% → 12.8% | 1.9 → 40.9 → 66.0 | 3.0% → 3.9% → 4.2% |
+| melee vs mid | 76.9% → 23.8% → 54.5% | 53.0% → 7.8% → 13.5% | 13.0 → 57.1 → 90.8 | 7.4% → 12.3% → 12.6% |
+| melee vs long | 84.4% → 50.8% → 78.5% | 52.7% → 8.6% → 14.4% | 14.8 → 70.0 → 101.8 | 10.7% → 28.8% → 19.6% |
+
+Contact time rises but reach entries rise too (the decision expected fewer entries). Slot-0 score (50% = robot order
+has no effect), `range` suite invest early / mid / late: main 47.0% / 43.0% / 40.5%, round1 50.2% / 49.9% / 50.2%,
+round2 50.3% / 49.9% / 50.0%.
+
+Multi-robot modes, round1 → round2 (normalized rank, 0 = best, lower is better):
+
+| Class | KotH r7 rank, invest mid | Grand Melee rank, invest mid |
+|---|---|---|
+| melee | 0.669 → 0.661 | 0.593 → 0.592 |
+| short | 0.552 → 0.550 | 0.375 → 0.386 |
+| mid | 0.369 → 0.374 | 0.457 → 0.451 |
+| long | 0.339 → 0.337 | 0.575 → 0.571 |
+
+KotH win reasons (invest mid): score threshold 43.1% → 42.4%, last standing 52.6% → 53.3%. Grand Melee timeouts
+(invest mid) 12.7% → 8.9%. Every KotH and Grand Melee class and loadout rank moves by at most 0.021.
+
+Deferred (report only):
+
+- **Short range**: still dominant at 84.1% / 80.7% / 80.5% (invest early / mid / late); short vs long 89.3%.
+- **Single**: unchanged at 25.0–31.6% (invest), target 42–45%.
+- **Dual Wield late**: unchanged at 73.0% (invest late).
 
 ## #521 Shields and loadouts
 

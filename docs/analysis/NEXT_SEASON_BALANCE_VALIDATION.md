@@ -651,3 +651,287 @@ wait
 
 Remove the arms afterwards with `git worktree remove --force "$W/s2pkg-arm-<name>"` (`--force` because of the
 symlinks and the uncommitted cherry-picks).
+
+## Season 2 balance package: round 2
+
+**Status**: measured for information only. No value was tuned in response to these results; both changes are
+product-owner decisions (see [SEASON_2_BALANCE_PACKAGE.md](../balance_changes/SEASON_2_BALANCE_PACKAGE.md#round-2-adjustments-520)).
+**Measured on**: branch `feature/season2-combat-tuning`, October 17, 2026.
+**What changed** (`ed34b158`): **A.** the ranged disengage burst starts 2.5 s after the first melee hit of an
+engagement instead of on it (duration, 1.30× and cooldown unchanged); **C.** pursuit 1.10 → 1.15 (kiting stays 1.10).
+
+### Round 2 summary
+
+- **Melee moves back into or above the band.** Against the other classes (invest early / mid / late): round 1
+  36.2% / 27.5% / 31.5% → round 2 62.1% / 50.4% / 47.8% (Δ +25.9 / +22.9 / +16.3 pp). Main was 83.6% / 67.3% / 58.3%.
+- **Mid range reaches the band** (43.6% / 49.9% / 49.7%), **short stays dominant** (84.1% / 80.7% / 80.5%), and
+  **long falls further** (10.3% / 19.0% / 22.1%; round 1 18.8% / 28.2% / 28.9%).
+- **Contact time rises, entries rise too.** Time within melee reach in melee-vs-ranged cells (invest mid) goes from
+  7.6–8.6% to 12.8–14.4% (main 51–53%). Melee-reach entries per battle *increase* (41–70 → 66–102), so the expected
+  "more contact, fewer entries" happened only for contact time.
+- **Loadouts don't move**: the `loadout` suite pairs equal range classes, so the engagement cycle doesn't act; every
+  loadout cell is identical to round 1 (Δ +0.0). Single stays 25.0–31.6%, Dual Wield late 73.0%.
+- **Robot order stays neutral** (slot-0 score 49.9–50.8% in every suite; melee-vs-ranged cells 49.1–52.0%).
+- **Grand Melee and KotH barely move**: every class/loadout rank within ±0.021 of round 1; KotH win-reason split
+  within ±1.8 pp.
+- **Timeouts fall** in melee-vs-ranged cells (e.g. melee vs long, invest mid: 28.8% → 19.6%; uniform L25 96.8% → 83.7%).
+
+### Round 2 arms
+
+| Arm | Code | How it was produced |
+|---|---|---|
+| `round1` (baseline) | `51e25ef4` | `git worktree add --detach .worktrees/s2r2-arm-round1 51e25ef4` (PR HEAD before round 2) |
+| `main` | `0d7e5b51` | `git worktree add --detach .worktrees/s2r2-arm-main 0d7e5b51` (merge-base, `origin/main`) |
+| `round2` | `5f0760de` | the branch checkout; same `src`, `app/shared` and `prisma/seed.ts` as `ed34b158` (the later commit is docs only) |
+
+`origin/main` had not moved (0 commits ahead), so no merge was needed. Dependencies are symlinked from the branch
+checkout as in round 1. The harness prints paired CIs against its first arm, so `round1` comes first: `Δ round2` is
+the paired effect of round 2, `Δ main` is minus the whole package, and the `main` and `round2` columns give the total.
+
+### Round 2 dataset and method
+
+Same builds, suites, seed (516), side alternation and paired-difference 95% CIs (±1.96·sd/√n) as round 1, with 2,000
+trials per 1v1 cell and per KotH column and 1,000 Grand Melee battles. KotH ran radius 7 only (the decided radius).
+
+| Suite | Builds | Wall time (s) |
+|---|---|---|
+| `range` | invest early / mid / late; uniform L10 / L25 | 210 / 233 / 305; 236 / 321 |
+| `loadout` | invest early / mid / late; uniform L10 / L25 | 158 / 177 / 265; 182 / 288 |
+| `mobility` | uniform L25 | 175 |
+| `grand-melee` | uniform L10 / L25, invest mid | 375 / 450 / 333 |
+| `koth` (r7) | invest early / mid / late | 121 / 137 / 183 |
+
+All 17 shards ran in parallel and exited without errors; outputs are in `logs/s2-round2/` (gitignored), each listing
+the three arm revisions.
+
+- **Weapon choice follows the first arm's catalogue prices** (round 1 used `main` first, round 2 uses `round1`). At
+  invest mid and late, and in every uniform build, every candidate fits either way and the numbers reproduce the round
+  1 report exactly (e.g. melee invest mid: main 67.3%, round 1 27.5%; KotH r7 invest mid short rank 0.552). At invest
+  early fewer weapons fit at Season 2 prices, so the `main` and `round1` columns differ slightly from the round 1
+  report (melee 83.6% vs 82.7% on main, 36.2% vs 37.2% on round 1).
+- Limits as in round 1: local simulation only, synthetic equal-investment builds, uniform-build timeouts indicative only.
+
+### Round 2 results by range class
+
+Score against the other three classes (n = 6,000 per row).
+
+| Class | Builds | main | round1 | round2 | Δ round2 (95% CI) |
+|---|---|---|---|---|---|
+| melee | invest early | 83.6% | 36.2% | 62.1% | +25.9 ±1.2 |
+| short | invest early | 75.0% | 89.5% | 84.1% | −5.5 ±0.7 |
+| mid | invest early | 33.9% | 55.5% | 43.6% | −11.9 ±0.9 |
+| long | invest early | 7.4% | 18.8% | 10.3% | −8.5 ±0.7 |
+| melee | invest mid | 67.3% | 27.5% | 50.4% | +22.9 ±1.1 |
+| short | invest mid | 78.7% | 84.2% | 80.7% | −3.5 ±0.6 |
+| mid | invest mid | 37.4% | 60.1% | 49.9% | −10.3 ±0.8 |
+| long | invest mid | 16.6% | 28.2% | 19.0% | −9.2 ±0.7 |
+| melee | invest late | 58.3% | 31.5% | 47.8% | +16.3 ±0.9 |
+| short | invest late | 77.6% | 83.3% | 80.5% | −2.8 ±0.5 |
+| mid | invest late | 41.8% | 56.3% | 49.7% | −6.6 ±0.6 |
+| long | invest late | 22.3% | 28.9% | 22.1% | −6.9 ±0.6 |
+| melee | uniform L10 | 78.5% | 41.2% | 55.5% | +14.2 ±0.9 |
+| short | uniform L10 | 60.4% | 73.9% | 68.7% | −5.2 ±0.6 |
+| mid | uniform L10 | 40.8% | 54.7% | 49.7% | −5.1 ±0.6 |
+| long | uniform L10 | 20.3% | 30.2% | 26.2% | −4.0 ±0.4 |
+| melee | uniform L25 | 62.5% | 43.9% | 49.7% | +5.8 ±0.6 |
+| short | uniform L25 | 58.6% | 65.5% | 63.7% | −1.9 ±0.4 |
+| mid | uniform L25 | 45.0% | 53.2% | 51.4% | −1.9 ±0.3 |
+| long | uniform L25 | 33.8% | 37.4% | 35.3% | −2.1 ±0.3 |
+
+Range matchup matrix, invest mid, score of A (n = 2,000 per cell):
+
+| A vs B | main | round1 | round2 | Δ round2 (95% CI) |
+|---|---|---|---|---|
+| melee vs short | 40.8% | 7.9% | 18.3% | +10.4 ±1.6 |
+| melee vs mid | 76.9% | 23.8% | 54.5% | +30.8 ±2.1 |
+| melee vs long | 84.4% | 50.8% | 78.5% | +27.7 ±2.0 |
+| short vs mid | 83.1% | 71.1% | 71.1% | +0.0 |
+| short vs long | 93.8% | 89.3% | 89.3% | +0.0 |
+| mid vs long | 72.1% | 75.3% | 75.3% | +0.0 |
+
+Ranged-vs-ranged and mirror cells are identical to round 1 (Δ +0.0 ±0.0): A and C only act between a melee-role and a
+ranged-role robot. Mirror cells stay at 49.0–50.7%.
+
+### Round 2 results by loadout
+
+Score against the other three loadouts (n = 6,000). Both sides share a range class, so neither change acts here and
+every cell is identical to round 1 (Δ round2 = +0.0 ±0.0).
+
+| Loadout | main (early / mid / late) | round1 = round2 (early / mid / late) | uniform L10 / L25 (round2) |
+|---|---|---|---|
+| single | 28.5% / 22.3% / 27.9% | 29.5% / 25.0% / 31.6% | 29.2% / 33.9% |
+| weapon_shield | 76.4% / 74.2% / 54.9% | 67.7% / 66.0% / 37.0% | 56.4% / 50.9% |
+| two_handed | 38.8% / 38.8% / 51.2% | 43.7% / 41.4% / 58.3% | 48.0% / 51.5% |
+| dual_wield | 56.2% / 64.7% / 66.1% | 59.2% / 67.6% / 73.0% | 66.4% / 63.7% |
+
+Single and Weapon+Shield cells (score of A, round2 = round1; main in brackets): single vs weapon_shield 22.1% / 21.1% /
+44.7% (16.9% / 13.6% / 31.6%); single vs two_handed 40.0% / 34.5% / 28.9%; single vs dual_wield 26.2% / 19.3% / 21.3%;
+weapon_shield vs two_handed 67.0% / 68.8% / 32.1%; weapon_shield vs dual_wield 58.1% / 50.4% / 23.7% (invest early /
+mid / late).
+
+### Round 2 melee-vs-ranged cells
+
+main → round1 → round2 (n = 2,000 per cell). Damage = mean damage dealt per battle by the melee robot (A) and the
+ranged robot (B).
+
+| Cell | Builds | score of melee | time within reach | reach entries | timeout rate | melee / ranged damage | slot-0 score |
+|---|---|---|---|---|---|---|---|
+| melee vs short | invest early | 60.3% → 8.9% → 25.3% | 57.5% → 13.7% → 23.4% | 23.7 → 61.3 → 104.0 | 0.5% → 0.9% → 1.2% | 130/115 → 76/144 → 104/138 | 28.1% → 48.9% → 50.3% |
+| melee vs mid | invest early | 92.7% → 37.5% → 73.2% | 62.6% → 17.0% → 27.8% | 33.5 → 91.6 → 140.8 | 1.4% → 7.1% → 6.9% | 150/79 → 108/135 → 135/116 | 43.6% → 52.7% → 52.0% |
+| melee vs long | invest early | 97.8% → 62.3% → 87.8% | 61.3% → 17.3% → 28.0% | 35.6 → 98.7 → 141.4 | 1.6% → 21.2% → 10.4% | 151/67 → 124/116 → 141/91 | 48.8% → 50.0% → 50.3% |
+| melee vs short | invest mid | 40.8% → 7.9% → 18.3% | 51.4% → 7.6% → 12.8% | 1.9 → 40.9 → 66.0 | 3.0% → 3.9% → 4.2% | 130/199 → 119/228 → 152/223 | 16.3% → 50.1% → 49.6% |
+| melee vs mid | invest mid | 76.9% → 23.8% → 54.5% | 53.0% → 7.8% → 13.5% | 13.0 → 57.1 → 90.8 | 7.4% → 12.3% → 12.6% | 214/147 → 147/225 → 190/203 | 29.4% → 49.3% → 50.5% |
+| melee vs long | invest mid | 84.4% → 50.8% → 78.5% | 52.7% → 8.6% → 14.4% | 14.8 → 70.0 → 101.8 | 10.7% → 28.8% → 19.6% | 228/131 → 179/197 → 210/164 | 36.7% → 49.5% → 49.1% |
+| melee vs short | invest late | 41.9% → 10.8% → 19.2% | 48.1% → 3.8% → 7.9% | 1.3 → 26.4 → 51.5 | 8.3% → 14.1% → 11.9% | 245/460 → 270/521 → 351/506 | 14.3% → 49.4% → 49.6% |
+| melee vs mid | invest late | 62.3% → 33.9% → 53.6% | 48.5% → 4.1% → 8.4% | 4.2 → 38.5 → 71.4 | 28.3% → 40.6% → 30.4% | 293/418 → 363/528 → 450/486 | 16.3% → 51.1% → 49.9% |
+| melee vs long | invest late | 70.8% → 49.8% → 70.5% | 48.8% → 4.4% → 8.6% | 4.9 → 44.8 → 78.3 | 41.6% → 63.6% → 42.7% | 313/387 → 423/483 → 482/425 | 23.8% → 49.9% → 49.4% |
+
+Uniform builds, round1 → round2: melee vs short / mid / long at L10 23.5% / 42.1% / 58.1% → 39.0% / 57.3% / 70.0%,
+timeouts 36.4% / 54.7% / 71.4% → 27.9% / 41.8% / 50.2%; at L25 35.5% / 44.8% / 51.3% → 41.1% / 50.4% / 57.6%,
+timeouts 66.6% / 85.4% / 96.8% → 56.5% / 74.5% / 83.7%. Time within reach roughly doubles (L10 10.8–16.2% →
+25.2–30.0%; L25 5.9–6.1% → 12.2–12.6%) and reach entries roughly double as well (L25 60.9–72.2 → 116.7–140.6).
+
+### Round 2 overall engagement metrics
+
+`range` suite, all cells (n = 20,000), main / round1 / round2 (Δ round2):
+
+| Metric | invest early | invest mid | invest late | uniform L10 | uniform L25 |
+|---|---|---|---|---|---|
+| timeout rate | 0.8% / 3.3% / 2.2% (−1.1 ±0.2) | 3.7% / 5.7% / 4.8% (−0.9 ±0.2) | 16.1% / 16.9% / 13.6% (−3.3 ±0.3) | 14.5% / 24.8% / 20.5% (−4.3 ±0.3) | 47.0% / 51.7% / 48.2% (−3.4 ±0.3) |
+| time within melee reach | 27.7% / 14.3% / 17.5% (+3.1 ±0.1) | 25.3% / 12.0% / 13.7% (+1.7 ±0.0) | 24.9% / 11.0% / 12.3% (+1.3 ±0.0) | 30.5% / 13.6% / 17.9% (+4.2 ±0.1) | 32.2% / 11.9% / 13.8% (+1.9 ±0.1) |
+| melee-reach entries / battle | 9.38 / 25.26 / 38.73 (+13.47 ±0.48) | 3.07 / 16.90 / 25.96 (+9.06 ±0.31) | 1.83 / 11.31 / 20.46 (+9.15 ±0.28) | 26.05 / 32.20 / 59.02 (+26.82 ±0.91) | 2.14 / 20.61 / 39.52 (+18.91 ±0.55) |
+| slot-0 score | 47.0% / 50.2% / 50.3% (+0.1 ±0.4) | 43.0% / 49.9% / 49.9% (+0.0 ±0.4) | 40.5% / 50.2% / 50.0% (−0.1 ±0.3) | 48.3% / 50.0% / 50.0% (−0.1 ±0.3) | 45.3% / 50.0% / 50.1% (+0.0 ±0.2) |
+| mean duration (s) | 44.9 / 49.9 / 47.8 | 50.4 / 53.9 / 52.2 | 63.8 / 65.1 / 62.7 | 60.0 / 68.2 / 65.0 | 86.6 / 90.9 / 89.2 |
+
+No-contact battles and melee attacks beyond reach stay at 0.00 in every arm and suite. `loadout` suite: timeouts and
+slot-0 score identical to round 1 (timeouts 0.1% / 0.6% / 4.8% invest, 6.6% / 32.3% uniform; slot-0 50.0–50.8%).
+
+**Mobility**, uniform L25 (melee Servo 25 vs a Servo 49 kiter), round1 → round2: score of melee vs short / mid / long
+kiter 43.1% / 46.3% / 50.0% → 42.9% / 46.7% / 50.0%; timeouts 86.2% / 92.7% / 100.0% → 85.9% / 93.4% / 100.0%; time
+within reach 0.5% / 0.1% / 0.0% → 0.3% / 0.0% / 0.0%; melee damage 26.6 / 5.7 / 0.1 → 16.5 / 4.0 / 0.0. Expected:
+pursuit 1.15 lets a Servo 25 chaser keep up only with a kiter below Servo ≈ 27.7, and the commit only below ≈ 35.9.
+
+### Round 2 Grand Melee (16 robots, n = 1,000 battles)
+
+| Metric | Builds | main | round1 | round2 | Δ round2 (95% CI) |
+|---|---|---|---|---|---|
+| timeout rate | invest mid / uniform L10 / L25 | 30.5% / 89.6% / 99.9% | 12.7% / 91.8% / 99.7% | 8.9% / 90.2% / 99.5% | −3.8 ±2.5 / −1.6 ±2.3 / −0.2 ±0.6 |
+| survivors at end | invest mid | 1.52 | 1.17 | 1.10 | −0.07 ±0.04 |
+
+Normalized rank (0 = 1st, 1 = 16th; lower is better), main / round1 / round2:
+
+| Group | invest mid | uniform L10 | uniform L25 |
+|---|---|---|---|
+| melee | 0.682 / 0.593 / 0.592 | 0.567 / 0.521 / 0.518 | 0.611 / 0.589 / 0.583 |
+| short | 0.465 / 0.375 / 0.386 | 0.489 / 0.468 / 0.475 | 0.507 / 0.432 / 0.432 |
+| mid | 0.406 / 0.457 / 0.451 | 0.472 / 0.489 / 0.489 | 0.434 / 0.458 / 0.467 |
+| long | 0.447 / 0.575 / 0.571 | 0.472 / 0.523 / 0.518 | 0.449 / 0.521 / 0.518 |
+| single | 0.510 / 0.495 / 0.491 | 0.511 / 0.481 / 0.499 | 0.487 / 0.483 / 0.468 |
+| weapon_shield | 0.288 / 0.307 / 0.302 | 0.360 / 0.379 / 0.378 | 0.381 / 0.387 / 0.393 |
+| two_handed | 0.555 / 0.546 / 0.547 | 0.513 / 0.520 / 0.506 | 0.527 / 0.514 / 0.519 |
+| dual_wield | 0.646 / 0.652 / 0.661 | 0.616 / 0.621 / 0.616 | 0.606 / 0.617 / 0.621 |
+
+Every Δ round2 rank is within ±0.019 (CIs ±0.008–0.011). Podium rate, invest mid, round1 → round2: melee 12.8% →
+13.3%, short 28.7% → 27.5%, mid 22.0% → 22.7%, long 11.5% → 11.6%, Weapon+Shield 39.9% → 40.9%, Dual Wield 5.4% →
+5.3%. Melee time within reach in Grand Melee rises 28.4% → 30.9% (invest mid). Zero-damage participants ≤ 0.3%.
+
+### Round 2 King of the Hill (6 robots, radius 7, n = 2,000 fields)
+
+| Metric | Builds | main r7 | round1 r7 | round2 r7 | Δ round2 (95% CI) |
+|---|---|---|---|---|---|
+| win by score threshold | invest early / mid / late | 56.1% / 54.4% / 19.1% | 45.7% / 43.1% / 21.2% | 43.9% / 42.4% / 20.9% | −1.8 ±2.2 / −0.7 ±2.1 / −0.3 ±1.6 |
+| win by time limit | invest early / mid / late | 5.5% / 9.3% / 36.7% | 2.5% / 4.3% / 21.9% | 2.8% / 4.2% / 20.5% | +0.3 / −0.1 / −1.5 (±0.9–1.7) |
+| win by last standing | invest early / mid / late | 38.5% / 36.4% / 44.1% | 51.8% / 52.6% / 56.9% | 53.3% / 53.3% / 58.6% | +1.6 / +0.8 / +1.7 (±1.9–2.2) |
+| mean duration (s) | invest early / mid / late | 94.8 / 99.3 / 124.7 | 87.8 / 89.3 / 114.0 | 89.0 / 89.4 / 113.0 | |
+
+Per range class, invest mid (normalized rank, 0 = 1st, 1 = 6th; win rate, parity 16.7%; zone time per robot),
+main r7 / round1 r7 / round2 r7:
+
+| Class | rank | win rate | zone time (s) |
+|---|---|---|---|
+| melee | 0.672 / 0.669 / 0.661 | 1.5% / 5.2% / 5.2% | 22.4 / 20.7 / 20.5 |
+| short | 0.397 / 0.552 / 0.550 | 30.3% / 10.1% / 10.6% | 37.6 / 27.4 / 27.2 |
+| mid | 0.392 / 0.369 / 0.374 | 27.6% / 27.0% / 26.4% | 38.2 / 29.9 / 29.7 |
+| long | 0.438 / 0.339 / 0.337 | 12.0% / 26.8% / 27.8% | 23.8 / 23.0 / 23.3 |
+
+Δ round2 class ranks are within ±0.016 at every budget (CIs ±0.010–0.011); loadout ranks within ±0.021. By loadout
+every round 2 rank stays within 0.366–0.560 (invest mid) and Weapon+Shield stays best (0.366–0.401 at every budget). At invest late melee zone time drops 31.2 →
+28.0 s (−3.2 ±0.8) and melee rank improves 0.574 → 0.558 (−0.016 ±0.011).
+
+### Round 2 against the #516 targets
+
+- **45–55% 1v1 band (range classes)**: not met. Round 2 invest early / mid / late: melee 62.1% / 50.4% / 47.8%
+  (in the band at mid and late, above it at early), mid 43.6% / 49.9% / 49.7% (in the band at mid and late), short
+  84.1% / 80.7% / 80.5%, long 10.3% / 19.0% / 22.1%. The best-to-worst spread is 73.8 / 61.7 / 58.4 pp (round 1 70.7 /
+  56.7 / 54.4, main 76.2 / 62.1 / 55.3).
+- **Single 42–45%**: not met and unchanged (25.0–31.6% invest, 29.2–33.9% uniform).
+- **No material no-contact/timeout regression**: no-contact stays 0.00%; 1v1 timeouts fall 0.9–4.3 pp versus round 1.
+
+### Deferred, report only
+
+- **Short range** remains dominant: 84.1% / 80.7% / 80.5% against other classes (invest early / mid / late), short vs
+  mid 71.1% and short vs long 89.3% (invest mid, unchanged by round 2). Melee vs short stays at 18.3–25.3% (invest).
+- **Single** stays at 25.0–31.6% (invest) against the 42–45% target; round 2 doesn't touch it.
+- **Dual Wield** stays at 73.0% at invest late (59.2% / 67.6% at early / mid).
+
+### Findings for the product owner (round 2)
+
+Information only; no value was changed because of these numbers.
+
+1. **Melee overshoots at invest early**: 62.1% against other classes, melee vs mid 73.2% and melee vs long 87.8%
+   (main 92.7% / 97.8%). At mid and late melee sits at 50.4% / 47.8%, but melee vs long is 78.5% / 70.5% while melee vs
+   short is 18.3% / 19.2%: the class average hides a wide spread by opponent.
+2. **Long range is now the weakest class by far**: 10.3% / 19.0% / 22.1% (invest early / mid / late), below round 1
+   (18.8% / 28.2% / 28.9%) and, at invest early, close to main (7.4%). In KotH long stays strong (rank 0.337, win rate
+   27.8% at invest mid) and in Grand Melee it stays weak (rank 0.571).
+3. **Reach entries went up, not down.** Melee-reach entries per melee-vs-ranged battle at invest mid rise from 40.9–70.0
+   to 66.0–101.8 (main 1.9–14.8), while time within reach rises only from 7.6–8.6% to 12.8–14.4% (main 51.4–53.0%). The
+   harness doesn't separate real disengage cycles from band flicker around 2 units, so the cause is not measured.
+4. **Equal-points kiters still can't be caught** (mobility, Servo 25 vs Servo 49): 85.9–100% timeouts and 0.0–0.3%
+   time within reach, as the thresholds predict.
+5. **Logic Cores counter wording vs code**: the decision text says Logic Cores applies to "long/mid-range
+   counter-attacks (distance-based)". The code (`arena/counterAttack.ts`, both the main-weapon and the offhand
+   fallback paths) applies it to **long-band counters only**, the mirror of the melee-band-only Hydraulic Systems
+   counter rule, and the package record documents it that way. It was kept unchanged ("keep the existing addition",
+   "change no other value"). A mid-band counter bonus would need an explicit decision.
+6. **Wall dither (test observation, not measured)**: with pursuit 1.15 the unit test that compares mirrored spawns
+   (`combatSimulator.spatial.test.ts`) shows a kiter fleeing straight into the arena wall that slides back and forth
+   between two wall points for ~4 ticks while the chaser closes ~2 units. The mirrored run doesn't do this, so the
+   gap differs by up to 2.0 units for 2 of 400 ticks (mean 0.30; pursuit 1.10: max 0.34). Exact robot-order
+   independence (same spawns, swapped order) is unaffected. The wall-slide behaviour itself is round 1 code and was
+   not changed.
+
+### Round 2 reproduce
+
+From the repository root (`$R`) with the branch checkout at `$B` and dependencies installed:
+
+```sh
+W="$R/.worktrees"
+git -C "$B" worktree add --detach "$W/s2r2-arm-main" 0d7e5b51
+git -C "$B" worktree add --detach "$W/s2r2-arm-round1" 51e25ef4
+for a in main round1; do
+  ln -sfn "$B/node_modules" "$W/s2r2-arm-$a/node_modules"
+  ln -sfn "$B/app/backend/node_modules" "$W/s2r2-arm-$a/app/backend/node_modules"
+  ln -sfn "$B/app/backend/generated" "$W/s2r2-arm-$a/app/backend/generated"
+done
+
+cd "$B/app/backend"   # no DATABASE_URL needed; the harness never connects
+A="$W/s2r2-arm"
+ARMS="round1=$A-round1/app/backend,main=$A-main/app/backend,round2=$PWD"
+O=../../logs/s2-round2; mkdir -p "$O"
+H() { n=$1; shift; pnpm exec tsx scripts/combatBaselineValidation.ts "$@" --out "$O/$n.md" > "$O/$n.log" 2>&1 & }
+for b in early mid late; do
+  for s in range loadout; do H $s-invest-$b --arms "$ARMS" --suite $s --builds invest --budget $b --trials 2000; done
+  H koth-invest-$b --arms "$ARMS" --suite koth --builds invest --budget $b --koth-radii 7 --trials 2000
+done
+for L in 10 25; do
+  for s in range loadout; do H $s-uniform-$L --arms "$ARMS" --suite $s --level $L --trials 2000; done
+  H grand-melee-uniform-$L --arms "$ARMS" --suite grand-melee --level $L --trials 1000
+done
+H mobility-uniform-25 --arms "$ARMS" --suite mobility --level 25 --trials 2000
+H grand-melee-invest-mid --arms "$ARMS" --suite grand-melee --builds invest --budget mid --trials 1000
+wait
+```
+
+Remove the arms afterwards with `git worktree remove --force "$W/s2r2-arm-<name>"` (`--force` because of the
+symlinks).
