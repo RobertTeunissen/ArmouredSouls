@@ -53,8 +53,8 @@ describe('robots Goal and Robot_Chain (R3.7, R5.2, R5.4, design §8.5)', () => {
       { kind: 'facility_upgrade', facilityType: 'roster_expansion', toLevel: 1, cost: 150_000 },
       { kind: 'facility_upgrade', facilityType: 'roster_expansion', toLevel: 2, cost: 300_000 },
     ]);
-    // 450,000 roster + 500,000 robot + 40,000 blade at 20% off.
-    expect(cost).toBe(990_000);
+    // 450,000 roster + 500,000 robot + 45,000 blade at 10% off (Workshop L2, Season 2).
+    expect(cost).toBe(995_000);
     expect(action.slotIndex).toBe(3);
   });
 
@@ -161,7 +161,8 @@ describe('robots Goal and Robot_Chain (R3.7, R5.2, R5.4, design §8.5)', () => {
       // The Railgun is on no Weapon_Path, so it goes first despite the highest resale value.
       expect(action.steps.map((s) => s.kind)).toEqual(['weapon_sale', 'robot_purchase', 'fitout']);
       expect(action.steps[0]).toEqual({ kind: 'weapon_sale', inventoryId: 2, proceeds: 50_000 });
-      expect(cost).toBe(500_000 + 45_000);
+      // Workshop L1: 5% off the ₡50,000 pistol (Season 2).
+      expect(cost).toBe(500_000 + 47_500);
     });
 
     it('sells the lowest resale value next, ties oldest first', () => {

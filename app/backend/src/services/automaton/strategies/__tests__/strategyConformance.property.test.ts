@@ -35,7 +35,7 @@ import {
 import { GROUP_ACADEMY, groupOfAttribute } from '../../buildFocus';
 import { chargedStepCount, projectAction } from '../../factProjector';
 import type { FacilityLevelStep, GoalOutcome, PlannedAction } from '../../goals/goalTypes';
-import { facilityMaxLevel, quoteFacilityLevel, refinementStepCost, workshopLevelForTier } from '../../pricing';
+import { facilityMaxLevel, quoteFacilityLevel, refinementLabLevelForTier, refinementStepCost } from '../../pricing';
 import {
   AUTOMATON_FACILITY_TYPES,
   matchedStageIndex,
@@ -327,8 +327,9 @@ function expectActionValid(before: StableFacts, after: StableFacts, action: Plan
       const handId = action.step.hand === 'main' ? robot?.mainInventoryId : robot?.offhandInventoryId;
       expect(handId).toBe(action.inventoryId);
       const item = before.inventory.find((i) => i.inventoryId === action.inventoryId) as InventoryFacts;
-      const workshop = action.chain.length > 0 ? action.chain[action.chain.length - 1].toLevel : before.facilities.weapons_workshop;
-      expect(workshop).toBeGreaterThanOrEqual(workshopLevelForTier(action.step.tier));
+      const refinementLab = action.chain.length > 0 ? action.chain[action.chain.length - 1].toLevel : before.facilities.refinement_lab;
+      expect(action.chain.every((step) => step.facilityType === 'refinement_lab')).toBe(true);
+      expect(refinementLab).toBeGreaterThanOrEqual(refinementLabLevelForTier(action.step.tier));
       expect(validateRefinementSlotAvailable(item.refinements, action.step.tier).ok).toBe(true);
       expect(validateShieldCompatibility(SEED_WEAPON_MAP.get(item.weaponName)?.weaponType ?? '', action.step.tier).ok).toBe(true);
       if (action.step.tier === 'hone' || action.step.tier === 'augment') {

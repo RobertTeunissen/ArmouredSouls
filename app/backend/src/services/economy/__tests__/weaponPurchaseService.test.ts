@@ -52,7 +52,7 @@ describe('purchaseWeapon', () => {
     if (result.replayed) throw new Error('unexpected replay');
     const expectedCost = applyDiscount(weapon.cost, calculateWeaponWorkshopDiscount(3));
     expect(result.finalCost).toBe(expectedCost);
-    expect(result.discountPercent).toBe(30);
+    expect(result.discountPercent).toBe(15); // Season 2: 5% per Workshop level
     expect(result.weaponInventory.pricePaid).toBe(expectedCost);
     expect(result.weaponInventory.weapon.id).toBe(weapon.id);
     expect(result.currency).toBe(1_000_000 - expectedCost);

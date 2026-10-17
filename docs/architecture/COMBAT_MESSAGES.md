@@ -451,18 +451,6 @@ Tag Team (5 variations):
 "🔻 Passive penalties active on {robotName}: {damageReduction}% damage, {accuracyPenalty}% accuracy"
 ```
 
-**Zone Moving** (emitted 5s before zone transition in rotating variant):
-```
-"🔄 WARNING: The control zone is about to move! New position in 5 seconds..."
-"🔄 Zone transition incoming — prepare to reposition!"
-```
-
-**Zone Active** (emitted when zone activates at new position):
-```
-"📍 The control zone has moved to a new position! Radius: {radius}"
-"📍 New zone active — all robots must reposition!"
-```
-
 **Last Standing** (emitted when only one robot remains):
 ```
 "👑 {robotName} is the last robot standing — 10 seconds to score!"
@@ -548,8 +536,6 @@ The `BattleDetailPage.tsx` component renders combat messages with color-coded bo
 | robot_eliminated | Orange (#F97316) | Orange tint |
 | passive_warning | Orange (#F97316) | Orange tint |
 | passive_penalty | Orange (#F97316) | Orange tint |
-| zone_moving | Orange (#F97316) | Orange tint |
-| zone_active | Orange (#F97316) | Orange tint |
 | last_standing | Orange (#F97316) | Orange tint |
 | battle_end | Orange (#F97316) | Orange tint |
 | zone_defined | Orange (#F97316) | Orange tint |

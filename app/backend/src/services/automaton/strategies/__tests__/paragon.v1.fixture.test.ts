@@ -43,14 +43,15 @@ describeApprovedStrategy({
     facilityLevels: { weapons_workshop: 1, booking_office: 1, training_facility: 3, combat_training_academy: 1 },
     spendPerGoal: {
       1: 75_000, // Weapons Workshop L1
-      2: 762_000, // Robot chain ×1: robot + premium starter weapon after discount
+      // Season 2 repricing: ₡335,000 starter weapon at 5% off (was 762,000 / 254,000 / 3,000,000).
+      2: 818_250, // Robot chain ×1: robot + premium starter weapon after discount
       3: 75_000, // Booking Office L1
       4: 150_000, // Training Facility L1
       5: 934_000, // Attributes → 10 less 9%
       6: 750_000, // Training Facility → L3
-      7: 254_000, // Attributes → 15: Combat Academy L1, with everything that is left
+      7: 185_410, // Attributes → 15: Combat Academy L1, with everything that is left
     },
-    totalSpent: 3_000_000,
+    totalSpent: 2_987_320,
     savingOnGoal: 7,
   },
 });

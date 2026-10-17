@@ -14,7 +14,7 @@ const off = (step: RefinementStep): RefinementStep => ({ ...step, hand: 'offhand
 /** One robot (slot 1) on its final Volt Sabre (item 1) with the given refinements. */
 function onFinal(rows: RefinementRow[], overrides: Partial<StableFacts> = {}): StableFacts {
   return stable({
-    facilities: facilities({ weapons_workshop: 8 }),
+    facilities: facilities({ refinement_lab: 8 }),
     prestige: 0,
     robots: [robot(1, { mainInventoryId: 1, stageIndex: 1 })],
     inventory: [item(1, 'Volt Sabre', { refinements: rows })],
@@ -38,7 +38,7 @@ describe('refine Goal (R3.11, R5.2, R5.4, design §8.6 item 7)', () => {
   });
 
   it('plans the first plan step at the refinement price', () => {
-    const facts = onFinal([], { facilities: facilities({ weapons_workshop: 5 }) });
+    const facts = onFinal([], { facilities: facilities({ refinement_lab: 5 }) });
     expect(planned(goal.evaluate(facts, context(facts, { target: 8 })))).toEqual({
       action: { kind: 'weapon_refinement', robotSlot: 1, inventoryId: 1, step: S, chain: [], refinementCost: 300_000 },
       cost: 300_000,
@@ -50,18 +50,18 @@ describe('refine Goal (R3.11, R5.2, R5.4, design §8.6 item 7)', () => {
     expect(planned(goal.evaluate(facts, context(facts, { target: 8 }))).cost).toBe(900_000);
   });
 
-  it('buys the Weapons Workshop levels the tier needs as its Goal_Chain', () => {
-    const facts = onFinal([], { facilities: facilities({ weapons_workshop: 3 }), prestige: 3_000 });
+  it('buys the Refinement Lab levels the tier needs as its Goal_Chain', () => {
+    const facts = onFinal([], { facilities: facilities({ refinement_lab: 3 }), prestige: 3_000 });
     const { action, cost } = planned(goal.evaluate(facts, context(facts, { target: 8 })));
     expect(action.chain).toEqual([
-      { kind: 'facility_upgrade', facilityType: 'weapons_workshop', toLevel: 4, cost: 300_000 },
-      { kind: 'facility_upgrade', facilityType: 'weapons_workshop', toLevel: 5, cost: 375_000 },
+      { kind: 'facility_upgrade', facilityType: 'refinement_lab', toLevel: 4, cost: 300_000 },
+      { kind: 'facility_upgrade', facilityType: 'refinement_lab', toLevel: 5, cost: 375_000 },
     ]);
     expect(cost).toBe(975_000);
   });
 
-  it('chains Workshop L6–L8 for the first Forge', () => {
-    const facts = onFinal(refinements('sharpen', 'sharpen'), { facilities: facilities({ weapons_workshop: 5 }), prestige: 20_000 });
+  it('chains Refinement Lab L6–L8 for the first Forge', () => {
+    const facts = onFinal(refinements('sharpen', 'sharpen'), { facilities: facilities({ refinement_lab: 5 }), prestige: 20_000 });
     const { action, cost } = planned(goal.evaluate(facts, context(facts, { target: 8 })));
     expect(action.step).toEqual(F);
     expect(action.chain.map((s) => s.toLevel)).toEqual([6, 7, 8]);
@@ -69,19 +69,19 @@ describe('refine Goal (R3.11, R5.2, R5.4, design §8.6 item 7)', () => {
   });
 
   it('saves for step plus chain and is Actionable at exactly balance = cost', () => {
-    const short = onFinal([], { facilities: facilities({ weapons_workshop: 5 }), balance: 299_999 });
+    const short = onFinal([], { facilities: facilities({ refinement_lab: 5 }), balance: 299_999 });
     expect(goal.evaluate(short, context(short, { target: 8 }))).toMatchObject({ kind: 'saving', cost: 300_000 });
-    const exact = onFinal([], { facilities: facilities({ weapons_workshop: 5 }), balance: 300_000 });
+    const exact = onFinal([], { facilities: facilities({ refinement_lab: 5 }), balance: 300_000 });
     expect(goal.evaluate(exact, context(exact, { target: 8 })).kind).toBe('actionable');
   });
 
-  it('is Blocked by a prestige-gated Workshop level in the chain', () => {
-    const facts = onFinal([], { facilities: facilities({ weapons_workshop: 3 }), prestige: 0 });
+  it('is Blocked by a prestige-gated Refinement Lab level in the chain', () => {
+    const facts = onFinal([], { facilities: facilities({ refinement_lab: 3 }), prestige: 0 });
     expect(goal.evaluate(facts, context(facts, { target: 8 }))).toEqual({
       kind: 'blocked',
       goalId: 'test.v1.23.refine',
       reason: 'prestige_gate',
-      detail: { facilityType: 'weapons_workshop', level: 4, prestigeRequired: 1000, prestigeHeld: 0, robotSlot: 1 },
+      detail: { facilityType: 'refinement_lab', level: 4, prestigeRequired: 1000, prestigeHeld: 0, robotSlot: 1 },
     });
   });
 
@@ -114,7 +114,7 @@ describe('refine Goal (R3.11, R5.2, R5.4, design §8.6 item 7)', () => {
         weaponPath: [{ main: 'Laser Pistol', offhand: 'Laser Pistol' }, { main: 'Volt Sabre', offhand: 'Plasma Cutter' }],
       });
       const facts = stable({
-        facilities: facilities({ weapons_workshop: 8 }),
+        facilities: facilities({ refinement_lab: 8 }),
         robots: [robot(1, { loadoutType: 'dual_wield', mainInventoryId: 1, offhandInventoryId: 2, stageIndex: 1 })],
         inventory: [item(1, 'Volt Sabre', { refinements: refinements('sharpen') }), item(2, 'Plasma Cutter')],
       });
@@ -136,18 +136,18 @@ describe('refine Goal (R3.11, R5.2, R5.4, design §8.6 item 7)', () => {
     });
 
     it('does not let slot 1’s gated Forge hold back slot 2’s ungated Sharpen', () => {
-      const facts = twoRobots({}, refinements('sharpen', 'sharpen'), { facilities: facilities({ weapons_workshop: 5 }), prestige: 3_000 });
+      const facts = twoRobots({}, refinements('sharpen', 'sharpen'), { facilities: facilities({ refinement_lab: 5 }), prestige: 3_000 });
       expect(planned(goal.evaluate(facts, context(facts, { target: 8 }))).action).toMatchObject({ robotSlot: 2, step: S });
     });
 
     it('skips a robot not yet on its final stage', () => {
-      const facts = twoRobots({ stageIndex: 0 }, [], { facilities: facilities({ weapons_workshop: 5 }) });
+      const facts = twoRobots({ stageIndex: 0 }, [], { facilities: facilities({ refinement_lab: 5 }) });
       expect(planned(goal.evaluate(facts, context(facts, { target: 8 }))).action.robotSlot).toBe(2);
     });
 
     it('is Blocked only when every remaining step is skipped, with the first skipped robot’s reason', () => {
       const facts = stable({
-        facilities: facilities({ weapons_workshop: 5 }),
+        facilities: facilities({ refinement_lab: 5 }),
         prestige: 3_000,
         robots: [robot(1, { mainInventoryId: 1, stageIndex: 0 }), robot(2, { mainInventoryId: 2, stageIndex: 1 })],
         inventory: [item(1, 'Practice Blade'), item(2, 'Volt Sabre', { refinements: refinements('sharpen', 'sharpen') })],
@@ -221,7 +221,7 @@ describe('refine Goal (R3.11, R5.2, R5.4, design §8.6 item 7)', () => {
       weaponPath: [{ main: 'Practice Blade', offhand: 'Aegis Bulwark' }, { main: 'Volt Sabre', offhand: 'Aegis Bulwark' }],
     });
     const shieldFacts = (): StableFacts => stable({
-      facilities: facilities({ weapons_workshop: 8 }),
+      facilities: facilities({ refinement_lab: 8 }),
       robots: [robot(1, { loadoutType: 'weapon_shield', mainInventoryId: 1, offhandInventoryId: 2, stageIndex: 1 })],
       inventory: [item(1, 'Volt Sabre', { refinements: refinements('sharpen', 'sharpen', 'forge', 'forge') }), item(2, 'Aegis Bulwark')],
     });

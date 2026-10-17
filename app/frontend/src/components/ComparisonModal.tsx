@@ -4,6 +4,7 @@ import meleeIcon from '../assets/icons/weapon-types/melee.svg';
 import ballisticIcon from '../assets/icons/weapon-types/ballistic.svg';
 import energyIcon from '../assets/icons/weapon-types/energy.svg';
 import shieldIcon from '../assets/icons/weapon-types/shield.svg';
+import { calculateWeaponWorkshopDiscount } from '../../../shared/utils/discounts';
 
 interface Weapon {
   id: number;
@@ -42,8 +43,9 @@ interface ComparisonModalProps {
   purchasingId: number | null;
 }
 
+/** Workshop discount as a fraction (shared formula returns a percentage). */
 function calculateDiscount(weaponWorkshopLevel: number): number {
-  return weaponWorkshopLevel * 0.05;
+  return calculateWeaponWorkshopDiscount(weaponWorkshopLevel) / 100;
 }
 
 function applyDiscount(cost: number, discount: number): number {

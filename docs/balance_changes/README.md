@@ -16,6 +16,9 @@ The authoritative weapon catalog and pricing formula lives in [PRD_WEAPON_ECONOM
 - `COMBAT_TRAINING_ACADEMY_COST_REDUCTION.md` — Academy upgrade cost reduction
 - `KOTH_BYE_TIER_FIX.md` — Season 2: KotH byes paid at the robot's tier instead of the Bronze floor (#536, R6); no coefficient changed
 
+### Season 2 package
+- `SEASON_2_BALANCE_PACKAGE.md` — Season 2: Hydraulic Systems / Logic Cores (#519), engagement cycle and movement fix (#520), shields, loadout passives, signed-sum weapon pricing and 5%/level Workshop discount (#521), Refinement Lab and 4-4-4-2 facility categories, KotH zone radius 7 (#522), no Grand Melee change (#523); includes the player announcement; round 2: disengage after 2.5 s, pursuit 1.15
+
 ### Combat Mechanics
 - `COUNTER_ATTACK_SYSTEM_REWORK.md` — Counter-attack trigger and damage rework
 - `RANGED_VS_MELEE_REBALANCE.md` — Melee vs ranged balance philosophy and adjustments

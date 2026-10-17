@@ -542,7 +542,7 @@ export class EventLogger {
       magnitude: number;
       targetAttribute: string | null;
       costPaid: number;
-      workshopLevel: number;
+      refinementLabLevel: number;
     },
   ): Promise<void> {
     await this.logEvent(

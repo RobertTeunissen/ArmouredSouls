@@ -8,7 +8,7 @@
  * equipped item. A step the shared validators reject on the current weapon
  * counts as done, so it can never become Actionable. Across robots the Goal
  * takes the next within-target step of the first robot (slot order) that is
- * on its final stage and whose Weapons Workshop level is not prestige-gated;
+ * on its final stage and whose Refinement Lab level is not prestige-gated;
  * it is Blocked only when every remaining within-target step is skipped.
  */
 import {
@@ -18,7 +18,7 @@ import {
   validateShieldCompatibility,
   type RefinementRow,
 } from '../../../shared/utils/weaponRefinement';
-import { refinementStepCost, workshopLevelForTier } from '../pricing';
+import { refinementLabLevelForTier, refinementStepCost } from '../pricing';
 import { inventoryItem, type Hand, type InventoryFacts, type RobotFacts, type StableFacts } from '../stableFacts';
 import type { RefinementStep } from '../../../types/automaton';
 import { facilityChain, weaponByName } from './goalSupport';
@@ -113,7 +113,7 @@ export function createRefinementGoal(id: string): Goal {
         const next = nextRefinementStep(facts, ctx, robot, blueprint.refinementPlan, withinTarget);
         if (next.kind === 'done') continue;
 
-        const chain = facilityChain(facts, 'weapons_workshop', workshopLevelForTier(next.step.tier));
+        const chain = facilityChain(facts, 'refinement_lab', refinementLabLevelForTier(next.step.tier));
         if (chain.kind === 'blocked') {
           firstSkip ??= { reason: chain.reason, detail: { ...chain.detail, robotSlot: robot.slotIndex } };
           continue;

@@ -6,6 +6,7 @@
 **Epic**: Weapon Shop & Inventory System  
 
 **Revision History:**
+- v2.2 (Oct 16, 2026, Season 2): Weapons Workshop discount 5% per level (L10 = 50%, no longer free); catalogue repriced with the shared signed-sum formula (PRD_WEAPON_ECONOMY.md v1.8). Price-range filter bands unchanged.
 - v2.1 (Weapon Roster Expansion): Updated weapon counts from 26 to 47, price tier boundaries aligned (Budget <100K, Mid 100-250K, Premium 250-400K, Luxury 400K+), added rangeBand attribute, updated catalog and image lists
 - v2.0 (Feb 9, 2026): **CONSOLIDATED VERSION** - Merged all 8 weapon shop documents into single authoritative source. Updated all status markers to reflect actual implementation. Reorganized for clarity.
 - v1.10 (Feb 4, 2026): Filters collapsed by default, storage capacity color coding
@@ -397,7 +398,7 @@ pnpm run test:e2e:debug    # Run in debug mode
 **Database & Backend** (✅ Complete):
 - 47 weapons with full specifications (baseDamage, cost, rangeBand, 15 attribute bonuses)
 - Backend APIs: `GET /api/weapons`, `POST /api/weapon-inventory/purchase`, `GET /api/weapon-inventory/storage-status`, `GET /api/weapon-inventory`
-- Weapon Workshop discount system: 10% per level, max 100% at level 10
+- Weapon Workshop discount system: 5% per level, max 50% at level 10 (Season 2; was 10% / 100%)
 - Storage capacity system: 5 base + (5 × Storage Facility Level), max 55 weapons
 - Weapon pricing formula: DPS-inclusive exponential pricing
 
@@ -2207,7 +2208,7 @@ const processedWeapons = useMemo(() => {
 - **Storage Capacity**: Maximum number of weapons a stable can own (5 base + 5 per Storage Facility level, max 55)
 - **Value Score**: Composite metric indicating weapon cost-effectiveness
 - **Weapon Type**: Damage category (Melee, Ballistic, Energy, Shield) - currently cosmetic
-- **Weapons Workshop**: Facility providing purchase discounts (10% per level, max 100% at level 10)
+- **Weapons Workshop**: Facility providing purchase discounts (5% per level, max 50% at level 10) and resale (10% per level)
 
 ### E. Known Issues & Bug Fixes
 

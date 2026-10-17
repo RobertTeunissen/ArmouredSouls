@@ -3,6 +3,7 @@ import { getFacilityConfig } from '../../config/facilities';
 import { StableMetric } from '../../types/snapshotTypes';
 import { readCycleRepairSpend } from './repairPayloadKeys';
 import { calculateRepairBayDiscountPercent } from '../../shared/utils/repairCost';
+import { calculateWeaponWorkshopDiscount } from '../../shared/utils/discounts';
 import { EconomyError, EconomyErrorCode } from '../../errors/economyErrors';
 // Spec #46 R10: streaming estimates derive from the award-path formula.
 import { computeStreamingRevenue } from './streamingRevenueService';
@@ -728,7 +729,7 @@ export class UnifiedFacilityROIService {
 
   /**
    * Estimate savings from Weapons Workshop based on weapon purchase spending.
-   * Discount: level * 5, capped at 50%.
+   * Discount: shared `calculateWeaponWorkshopDiscount` (5% per level, 50% at L10).
    */
   private calculateWeaponsWorkshopSavings(
     level: number,
@@ -739,7 +740,7 @@ export class UnifiedFacilityROIService {
       0
     );
 
-    const discountPercent = Math.min(50, level * 5);
+    const discountPercent = calculateWeaponWorkshopDiscount(level);
     if (discountPercent >= 100) return 0;
 
     // Savings = actualCost * discount / (100 - discount)
@@ -810,7 +811,7 @@ export class UnifiedFacilityROIService {
 
       case 'weapons_workshop': {
         // Estimate: average weapon spending × discount percentage × cycles
-        const discountPercent = Math.min(50, level * 5);
+        const discountPercent = calculateWeaponWorkshopDiscount(level);
         const avgWeaponPerCycle = 5000; // Conservative estimate
         return Math.round(avgWeaponPerCycle * (discountPercent / 100) * cyclesOwned);
       }

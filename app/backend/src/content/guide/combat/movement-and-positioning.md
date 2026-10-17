@@ -2,7 +2,7 @@
 title: "Movement & Positioning"
 description: "How the 2D combat arena works — movement speed, range bands, weapon optimal ranges, backstab and flanking mechanics, and the attributes that control spatial combat."
 order: 2
-lastUpdated: "2026-10-15"
+lastUpdated: "2026-10-17"
 relatedArticles:
   - combat/battle-flow
   - robots/attributes-overview
@@ -21,6 +21,7 @@ Positioning is not just about distance — the **angle** of attack matters too. 
 The combat arena is a circular space. Robots spawn at opposite positions and move toward their preferred engagement range based on their weapon loadout and AI decisions.
 
 - Robots cannot move outside the arena boundary
+- A robot that backs into the wall **slides along it** at its normal speed instead of getting stuck, so retreating to the edge no longer pins a robot in place
 - The arena edge matters for **Formation Tactics** — robots within 3 grid units of the boundary receive a wall-bracing damage reduction bonus
 
 ## Movement Speed
@@ -33,13 +34,29 @@ Movement speed is primarily determined by **Servo Motors**:
 
 Movement speed is also modified by:
 
-- **Stance** — Offensive and Defensive stances modify movement speed
+- **Stance** — Offensive and Defensive stances modify movement speed, always (a defensive robot is also slower while chasing)
 - **Servo strain** — Sustained movement at high speed causes strain, temporarily reducing effective speed. Robots need brief pauses to recover.
-- **Closing bonus** — Melee robots moving toward a ranged opponent get a speed boost to help close the gap
+- **Pursuit and kiting** — A melee robot chasing a ranged opponent moves **15% faster**, and a ranged robot backing away from a melee opponent inside its preferred range moves **10% faster**. Neither causes servo strain and there is no catch-up bonus. With equal Servo Motors the chaser slowly closes in; a kiter needs clearly more Servo Motors to stay away.
+- **Speed bursts** — A melee robot that can't land a hit for too long **commits** and a ranged robot that gets hit in melee **breaks away** shortly afterwards; both move **30% faster** for a while (see **Chasing and Escaping** below)
+
+Whether a robot counts as melee or ranged depends on the range it actually wants to fight at, not on its weapon type. An energy melee weapon such as the Shock Maul chases like any melee weapon, and a long-range rifle with a sword in the other hand still fights as a ranged robot.
 
 ```callout-tip
-Servo Motors is the key attribute for controlling engagement distance. A fast robot with a sniper can kite a slow melee robot, staying at long range where the sniper deals 1.1× damage while the melee robot can't attack at all. Conversely, a fast melee robot can close the gap and force close-range combat where Hydraulic Systems dominates.
+Servo Motors is the key attribute for controlling engagement distance. A fast ranged robot can keep a slower melee robot at bay for a while, but not forever: the melee robot eventually commits and closes in. A fast melee robot closes the gap on its own and forces close-range combat where Hydraulic Systems dominates.
 ```
+
+## Chasing and Escaping
+
+Melee-versus-ranged fights move back and forth between ranges:
+
+- **Melee commit** — If a melee robot hasn't landed a hit within its **patience window** (about 15 seconds, down to 10 seconds with high Combat Algorithms) while chasing a ranged robot, it commits: it moves **30% faster**, without servo strain, until it is within reach.
+- **Ranged disengage** — **2.5 seconds after** a ranged robot is first hit by a melee weapon in an engagement, it gets an escape burst: **30% faster**, without servo strain, for **2 seconds + 0.04 seconds per Evasion Thrusters point** (3 seconds at 25, 4 seconds at 50). Those 2.5 seconds guarantee the melee robot a real exchange. After the burst it needs one patience window before it can break away again.
+
+Both bursts multiply the robot's own speed, so Servo Motors still matters during a burst.
+
+A chasing melee robot heads for where its target will be at the end of the moment, at full speed, until it is within reach. The gap therefore shrinks by exactly the difference in speed. With equal Servo Motors a chaser closes about 0.6 units per second (at level 25). A kiter needs roughly **1.05 × the chaser's Servo Motors + 1.6** to keep its distance. A committing melee robot is only outrun by a kiter with roughly **1.18 × its Servo Motors + 6.4** or more. A breaking-away ranged robot only gets caught by a melee robot with roughly **1.13 × the ranged robot's Servo Motors + 4.6** or more.
+
+All robots move at the same time: each one decides from the same picture of the arena, then everyone moves. Which robot is listed first in a match never changes how the robots move.
 
 ## Range Bands
 
@@ -93,12 +110,25 @@ Two-handed melee weapons like Battle Axe and Heavy Hammer are classified as two-
 
 | Range Band | Bonus per Point | At Level 50 |
 |-----------|----------------|-------------|
-| Melee (0–2) | +2% per point | +100% (2.0× multiplier) |
-| Short (3–6) | +1.5% per point | +75% (1.75× multiplier) |
+| Melee (0–2) | +1.5% per point | +75% (1.75× multiplier) |
+| Short (3–6) | +1% per point | +50% (1.5× multiplier) |
 | Mid (7–12) | No bonus | 1.0× |
 | Long (13+) | No bonus | 1.0× |
 
-This makes Hydraulic Systems a high-impact damage attribute for melee builds. At level 50 in melee range, it doubles your damage output — stacking multiplicatively with Combat Power, Weapon Control, and the optimal range bonus.
+This makes Hydraulic Systems a high-impact damage attribute for melee builds. At level 50 in melee range, it adds +75% damage — stacking multiplicatively with Combat Power, Weapon Control, and the optimal range bonus. It also applies to counter-attacks made at melee range.
+
+## Logic Cores Bonus
+
+**Logic Cores** provides the ranged counterpart: a distance-scaled damage multiplier that rewards fighting from afar:
+
+| Range Band | Bonus per Point | At Level 50 |
+|-----------|----------------|-------------|
+| Melee (0–2) | No bonus | 1.0× |
+| Short (3–6) | No bonus | 1.0× |
+| Mid (7–12) | +1% per point | +50% (1.5× multiplier) |
+| Long (13+) | +1.5% per point | +75% (1.75× multiplier) |
+
+The bonus depends on the current distance to your target, not on your weapon, and stacks multiplicatively with the hydraulic bonus and the optimal range bonus. It also applies to counter-attacks made at long range. Logic Cores keeps its role in the pressure system as well.
 
 ## Backstab Mechanics
 
@@ -135,9 +165,9 @@ This rewards defensive builds that fight with their back to the wall rather than
 
 ## Patience Timer
 
-The **patience timer** tracks how long your robot has gone without attacking. Its limit gets **shorter** as Combat Algorithms rises: about 15 seconds at the lowest level, down to 10 seconds at level 50.
+The **patience timer** tracks how long your robot has gone without **landing a hit**. Misses don't reset it. Its limit gets **shorter** as Combat Algorithms rises: about 15 seconds at the lowest level, down to 10 seconds at level 50.
 
-The patience limit currently has **no direct battle effect**. Combat Algorithms' movement benefit comes from tighter pathing: the higher it is, the less your robot drifts off its ideal path toward its preferred range.
+The patience limit drives the chase: a melee robot that reaches it commits to a faster pursuit, and a ranged robot waits one patience window between escape bursts (see **Chasing and Escaping** above). Combat Algorithms also tightens pathing: the higher it is, the less your robot drifts off its ideal path toward its preferred range.
 
 Reaching the limit never lets a weapon hit beyond its reach, and it does not trigger an attack on its own:
 
@@ -152,8 +182,8 @@ If your melee build can't close the gap against a faster opponent, invest in **S
 |-----------|------|---------------|
 | **Melee brawler** | Close to 0–2 units, stay there | Servo Motors, Hydraulic Systems, Gyro Stabilizers |
 | **Short-range fighter** | Maintain 3–6 units | Servo Motors (moderate), Targeting Systems |
-| **Mid-range skirmisher** | Hold at 7–12 units | Servo Motors, Combat Algorithms (pathing) |
-| **Long-range sniper** | Keep distance at 13+ units | Servo Motors (to kite), Combat Algorithms |
+| **Mid-range skirmisher** | Hold at 7–12 units | Servo Motors, Logic Cores, Combat Algorithms (pathing) |
+| **Long-range sniper** | Keep distance at 13+ units | Servo Motors (to kite), Logic Cores, Combat Algorithms |
 
 ```callout-tip
 The battle playback viewer shows robot positions and movement in real-time. Watch your replays to see whether your robot is reaching its optimal range — if not, invest in Servo Motors or reconsider your weapon choice.

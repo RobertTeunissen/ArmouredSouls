@@ -80,7 +80,7 @@ function makeInventory(refinementCount = 0) {
   }];
 }
 
-function setupApiMocks(opts: { workshopLevel?: number; initialRefinements?: number; refineResponseRefinements?: number } = {}) {
+function setupApiMocks(opts: { refinementLabLevel?: number; initialRefinements?: number; refineResponseRefinements?: number } = {}) {
   let inventory = makeInventory(opts.initialRefinements ?? 0);
 
   vi.mocked(apiClient.get).mockImplementation((url: string) => {
@@ -97,8 +97,9 @@ function setupApiMocks(opts: { workshopLevel?: number; initialRefinements?: numb
     if (url === '/api/facilities') {
       return Promise.resolve({
         data: {
-          facilities: opts.workshopLevel
-            ? [{ id: 1, type: 'weapons_workshop', facilityType: 'weapons_workshop', level: opts.workshopLevel, currentLevel: opts.workshopLevel }]
+          // The Refinement Lab gates the tiers; the Workshop only drives discount and resale.
+          facilities: opts.refinementLabLevel
+            ? [{ id: 1, type: 'refinement_lab', facilityType: 'refinement_lab', level: opts.refinementLabLevel, currentLevel: opts.refinementLabLevel }]
             : [],
         },
       });
@@ -155,7 +156,7 @@ describe('WeaponShopPage — refine flow', () => {
   });
 
   it('renders SlotBar and Refine button on every owned weapon', async () => {
-    setupApiMocks({ workshopLevel: 8 });
+    setupApiMocks({ refinementLabLevel: 8 });
     renderOnInventoryTab();
 
     await waitFor(() => {
@@ -169,7 +170,7 @@ describe('WeaponShopPage — refine flow', () => {
   });
 
   it('clicking Refine opens the modal with the correct inventory item', async () => {
-    setupApiMocks({ workshopLevel: 8 });
+    setupApiMocks({ refinementLabLevel: 8 });
     renderOnInventoryTab();
 
     await waitFor(() => {
@@ -188,7 +189,7 @@ describe('WeaponShopPage — refine flow', () => {
   });
 
   it('successful refinement closes the modal and refreshes inventory', async () => {
-    setupApiMocks({ workshopLevel: 8, initialRefinements: 0, refineResponseRefinements: 1 });
+    setupApiMocks({ refinementLabLevel: 8, initialRefinements: 0, refineResponseRefinements: 1 });
     renderOnInventoryTab();
 
     await waitFor(() => {
@@ -228,7 +229,7 @@ describe('WeaponShopPage — refine flow', () => {
   });
 
   it('renders rank prefix on the row when the weapon already has refinements', async () => {
-    setupApiMocks({ workshopLevel: 8, initialRefinements: 3 });
+    setupApiMocks({ refinementLabLevel: 8, initialRefinements: 3 });
     renderOnInventoryTab();
 
     await waitFor(() => {

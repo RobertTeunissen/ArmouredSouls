@@ -2831,13 +2831,9 @@ Unlike league matchmaking, KotH has **no league tier restriction**. Bronze and C
    - Repeat until all robots assigned
 6. This minimizes total ELO variance between groups with O(n log n) complexity
 
-### Zone Variant by Day of Week
+### Zone Configuration (Season 2)
 
-- **Monday (day 1)**: `rotatingZone: false` (fixed center zone)
-- **Wednesday (day 3)**: `rotatingZone: true` (rotating zone)
-- **Friday (day 5)**: `rotatingZone: false` (fixed center zone)
-
-The variant is stored in the `ScheduledKothMatch.rotatingZone` field.
+Zone rotation was removed (Spec #41): every KotH match uses one fixed zone at the arena center. Since Season 2 (#522) matchmaking writes the zone radius on every KotH match it schedules (`scheduled_matches_v2.zone_radius = KOTH_MATCH_DEFAULTS.zoneRadius`, 7; allowed range 3-8). The orchestrator has no radius fallback: a KotH match without a radius fails with `INVALID_BATTLE_STATE`. The one-off migration `20261016121000_backfill_koth_zone_radius` sets radius 7 on KotH matches that were already scheduled at deploy. Score threshold (30) and time limit (150 s) still fall back to `KOTH_MATCH_DEFAULTS` when a match leaves them empty. Playback reads the radius recorded in `battleLog.kothData.zoneRadius`.
 
 ### Edge Cases
 

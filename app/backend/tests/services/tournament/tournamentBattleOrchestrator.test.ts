@@ -247,11 +247,11 @@ describe('processTournamentBattle combat preparation (#517)', () => {
     expect(isTournament).toBe(true);
     // Dual Wield: (10 + 2 + 2 + tuning 1) × 1.30 = 19.5
     expect(Number(r1.attackSpeed)).toBe(19.5);
-    // Weapon + Shield: (10 + 2) × 0.85 = 10.2; shield capacity 10 × 1.20 = 12 → maxShield 48
+    // Weapon + Shield: (10 + 2) × 0.85 = 10.2; shield capacity 10 × 1.15 = 11.5 → maxShield 46
     expect(Number(r2.attackSpeed)).toBe(10.2);
-    expect(Number(r2.shieldCapacity)).toBe(12);
-    expect(r2.maxShield).toBe(48);
-    expect(r2.currentShield).toBe(48);
+    expect(Number(r2.shieldCapacity)).toBe(11.5);
+    expect(r2.maxShield).toBe(46);
+    expect(r2.currentShield).toBe(46);
     // Full health on entry: 50 + 10 × 5
     expect(r1.currentHP).toBe(100);
   });

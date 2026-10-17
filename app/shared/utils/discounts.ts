@@ -5,14 +5,16 @@
 
 /**
  * Calculate discount percentage based on Weapon Workshop level
- * Formula: Discount % = Level × 10
+ * Formula: Discount % = Level × 5, level clamped to [0, 10]
  * Level 0: 0%
- * Level 1: 10%
- * Level 5: 50%
- * Level 10: 100%
+ * Level 1: 5%
+ * Level 5: 25%
+ * Level 10: 50%
+ *
+ * Season 2: reduced from 10% per level (L10 was 100%, i.e. free weapons).
  */
 export function calculateWeaponWorkshopDiscount(level: number): number {
-  return level * 10;
+  return Math.max(0, Math.min(10, level)) * 5;
 }
 
 /**
@@ -76,8 +78,9 @@ export function calculateTrainingFacilityDiscount(level: number, rosterCapacity:
  * Calculate weapon resale rate based on Weapon Workshop level.
  * Formula: level × 10, clamped to [0, 100].
  *
- * Mirrors the Workshop purchase discount slope (10% per level).
- * "Workshop level rewards you 10% on both ends of every transaction."
+ * Steeper than the Workshop purchase discount (5% per level), so at L10 a
+ * player buys at half price and sells back at the full price paid, which
+ * supports trading up.
  *
  * Level 0:  0% (resale gated behind Workshop L1 — selling at L0 yields ₡0)
  * Level 1:  10%
@@ -86,8 +89,8 @@ export function calculateTrainingFacilityDiscount(level: number, rosterCapacity:
  * Level 10: 100% (full credit recovery; exploit-safe via pricePaid anchor)
  *
  * Resale rate is applied to `WeaponInventory.pricePaid` (the credits the player
- * actually paid), NOT the catalog price, so a Workshop L10 player who buys
- * for free recovers ₡0 on resale.
+ * actually paid), NOT the catalog price, so a player can never recover more
+ * than they spent.
  */
 export function calculateWeaponResaleRate(level: number): number {
   const clampedLevel = Math.max(0, Math.min(10, level));

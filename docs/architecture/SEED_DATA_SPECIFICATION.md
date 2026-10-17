@@ -37,7 +37,7 @@ This document specifies the complete seed data loaded into the database during i
 
 ## Weapon Catalog (47 Weapons)
 
-All weapons use DPS-inclusive pricing formula. Prices reflect v1.4 rebalancing: ~25% weapon damage reduction (baseline DPS 2.67 → 2.0), pricing formula M=3.0 with baseline DPS=2.0.
+All weapons use the DPS-inclusive pricing formula. Prices are the Season 2 values from `calculateWeaponPrice` (`app/shared/utils/weaponPricing.ts`): `(50,000 + 50,000 × (DPS/2.0 − 1) × 6.0 + 500 × (Σ bonus)²) × hand` (one 1.0, two 1.5, shield 1.3, shields no DPS part), rounded to ₡1,000; starters a flat ₡50,000. See [PRD_WEAPON_ECONOMY.md](../game-systems/PRD_WEAPON_ECONOMY.md) v1.8.
 
 ### Starter/Practice Weapons (4)
 
@@ -75,49 +75,49 @@ All weapons use DPS-inclusive pricing formula. Prices reflect v1.4 rebalancing: 
 
 ### Budget Tier (₡62K-₡150K) - 7 Weapons
 
-**5. Machine Pistol** (₡94,000)
+**5. Machine Pistol** (₡100,000)
 - Type: Ballistic, One-handed
 - Base Damage: 5, Cooldown: 2s, DPS: 2.5
 - Loadout: Single, Weapon+Shield, Dual-Wield
 - Bonuses: Attack Speed +3, Weapon Control +2
 - Description: Rapid-fire sidearm with quick attacks
 
-**6. Laser Pistol** (₡57,000)
+**6. Laser Pistol** (₡63,000)
 - Type: Energy, One-handed
 - Base Damage: 6, Cooldown: 3s, DPS: 2.0
 - Loadout: Single, Weapon+Shield, Dual-Wield
 - Bonuses: Targeting Systems +3, Combat Power +2
 - Description: Precise energy sidearm with good accuracy
 
-**7. Combat Knife** (₡93,000)
+**7. Combat Knife** (₡96,000)
 - Type: Melee, One-handed
 - Base Damage: 5, Cooldown: 2s, DPS: 2.5
 - Loadout: Single, Weapon+Shield, Dual-Wield
 - Bonuses: Attack Speed +3, Gyro Stabilizers +1
 - Description: Fast melee weapon for close combat
 
-**8. Light Shield** (₡51,000)
+**8. Light Shield** (₡81,000)
 - Type: Shield
 - Base Damage: 0, Cooldown: N/A, DPS: N/A
 - Loadout: Weapon+Shield only
 - Bonuses: Armor Plating +3, Shield Capacity +2
 - Description: Basic defensive shield for protection
 
-**9. Combat Shield** (₡78,000)
+**9. Combat Shield** (₡159,000)
 - Type: Shield
 - Base Damage: 0, Cooldown: N/A, DPS: N/A
 - Loadout: Weapon+Shield only
 - Bonuses: Armor Plating +6, Counter Protocols +3, Evasion Thrusters -2, Shield Capacity +5
 - Description: Heavy-duty shield with counter capabilities
 
-**10. Reactive Shield** (₡92,000)
+**10. Reactive Shield** (₡211,000)
 - Type: Shield
 - Base Damage: 0, Cooldown: N/A, DPS: N/A
 - Loadout: Weapon+Shield only
 - Bonuses: Shield Capacity +7, Counter Protocols +6, Power Core +4, Evasion Thrusters -2
 - Description: Advanced shield with energy-reactive plating
 
-**11. Machine Gun** (₡107,000)
+**11. Machine Gun** (₡138,000)
 - Type: Ballistic, One-handed
 - Base Damage: 5, Cooldown: 2s, DPS: 2.5
 - Loadout: Single, Weapon+Shield, Dual-Wield
@@ -126,14 +126,14 @@ All weapons use DPS-inclusive pricing formula. Prices reflect v1.4 rebalancing: 
 
 ### Mid Tier (₡175K-₡250K) - 5 Weapons
 
-**12. Burst Rifle** (₡117,000)
+**12. Burst Rifle** (₡150,000)
 - Type: Ballistic, One-handed
 - Base Damage: 8, Cooldown: 3s, DPS: 2.7
 - Loadout: Single, Weapon+Shield, Dual-Wield
 - Bonuses: Attack Speed +4, Targeting Systems +3, Critical Systems +3
 - Description: 3-round burst fire weapon with controlled recoil
 
-**13. Assault Rifle** (₡293,000) *(Reclassified: 1H Short Mid → 1H Short Premium)*
+**13. Assault Rifle** (₡412,000) *(Reclassified: 1H Short Mid → 1H Short Premium)*
 - Type: Ballistic, One-handed
 - Range: Short
 - Base Damage: 14, Cooldown: 3s, DPS: 4.67
@@ -141,14 +141,14 @@ All weapons use DPS-inclusive pricing formula. Prices reflect v1.4 rebalancing: 
 - Bonuses: Combat Power +6, Targeting Systems +5, Weapon Control +4, Attack Speed +3
 - Description: Elite military-grade firearm with enhanced targeting
 
-**14. Energy Blade** (₡175,000)
+**14. Energy Blade** (₡222,000)
 - Type: Melee, One-handed
 - Base Damage: 10, Cooldown: 3s, DPS: 3.3
 - Loadout: Single, Weapon+Shield, Dual-Wield
 - Bonuses: Attack Speed +5, Combat Power +4, Weapon Control +3
 - Description: Energy-infused blade for swift strikes
 
-**15. Laser Rifle** (₡243,000) *(Reclassified: 1H Short Mid → 2H Short Mid)*
+**15. Laser Rifle** (₡335,000) *(Reclassified: 1H Short Mid → 2H Short Mid)*
 - Type: Energy, Two-handed
 - Range: Short
 - Base Damage: 9, Cooldown: 3s, DPS: 3.0
@@ -156,7 +156,7 @@ All weapons use DPS-inclusive pricing formula. Prices reflect v1.4 rebalancing: 
 - Bonuses: Targeting Systems +5, Weapon Control +4, Attack Speed +3, Combat Power +2
 - Description: Heavy precision energy rifle reconfigured for two-handed operation
 
-**16. Plasma Blade** (₡202,000)
+**16. Plasma Blade** (₡273,000)
 - Type: Melee, One-handed
 - Base Damage: 11, Cooldown: 3s, DPS: 3.7
 - Loadout: Single, Weapon+Shield, Dual-Wield
@@ -165,35 +165,35 @@ All weapons use DPS-inclusive pricing formula. Prices reflect v1.4 rebalancing: 
 
 ### Premium Tier (₡275K-₡400K) - 5 Weapons
 
-**17. Plasma Rifle** (₡258,000)
+**17. Plasma Rifle** (₡286,000)
 - Type: Energy, One-handed
 - Base Damage: 13, Cooldown: 3s, DPS: 4.3
 - Loadout: Single, Weapon+Shield, Dual-Wield
 - Bonuses: Combat Power +6, Targeting Systems +4, Weapon Control +3, Power Core -2
 - Description: Advanced energy weapon with high damage output
 
-**18. Power Sword** (₡325,000)
+**18. Power Sword** (₡456,000)
 - Type: Melee, One-handed
 - Base Damage: 15, Cooldown: 3s, DPS: 5.0
 - Loadout: Single, Weapon+Shield, Dual-Wield
 - Bonuses: Penetration +7, Critical Systems +5, Weapon Control +4, Combat Power +3
 - Description: High-tech melee weapon with superior handling
 
-**19. Shotgun** (₡283,000) - Two-handed
+**19. Shotgun** (₡263,000) - Two-handed
 - Type: Ballistic, Two-handed
 - Base Damage: 14, Cooldown: 4s, DPS: 3.5
 - Loadout: Two-Handed only
 - Bonuses: Combat Power +4, Critical Systems +3, Targeting Systems -2
 - Description: Close-range devastation with wide spread
 
-**20. Grenade Launcher** (₡293,000) - Two-handed
+**20. Grenade Launcher** (₡318,000) - Two-handed
 - Type: Ballistic, Two-handed
 - Base Damage: 16, Cooldown: 5s, DPS: 3.2
 - Loadout: Two-Handed only
 - Bonuses: Combat Power +6, Penetration +5, Critical Systems +4, Targeting Systems -3
 - Description: Explosive area damage with arc trajectory
 
-**21. Sniper Rifle** (₡387,000) - Two-handed
+**21. Sniper Rifle** (₡455,000) - Two-handed
 - Type: Ballistic, Two-handed
 - Base Damage: 22, Cooldown: 6s, DPS: 3.7
 - Loadout: Two-Handed only
@@ -202,35 +202,35 @@ All weapons use DPS-inclusive pricing formula. Prices reflect v1.4 rebalancing: 
 
 ### Elite Tier (₡375K+) - 5 Weapons
 
-**22. Battle Axe** (₡402,000) - Two-handed
+**22. Battle Axe** (₡419,000) - Two-handed
 - Type: Melee, Two-handed
 - Base Damage: 17, Cooldown: 4s, DPS: 4.3
 - Loadout: Two-Handed only
 - Bonuses: Penetration +6, Combat Power +4, Critical Systems +3, Attack Speed -2
 - Description: Brutal melee weapon with devastating power
 
-**23. Plasma Cannon** (₡408,000) - Two-handed
+**23. Plasma Cannon** (₡447,000) - Two-handed
 - Type: Energy, Two-handed
 - Base Damage: 20, Cooldown: 5s, DPS: 4.0
 - Loadout: Two-Handed only
 - Bonuses: Combat Power +7, Critical Systems +6, Penetration +4, Power Core -3
 - Description: Heavy plasma weapon with devastating firepower
 
-**24. Heavy Hammer** (₡478,000) - Two-handed
+**24. Heavy Hammer** (₡537,000) - Two-handed
 - Type: Melee, Two-handed
 - Base Damage: 22, Cooldown: 5s, DPS: 4.4
 - Loadout: Two-Handed only
 - Bonuses: Penetration +8, Combat Power +7, Critical Systems +4, Attack Speed -3
 - Description: Massive impact weapon for maximum damage
 
-**25. Railgun** (₡527,000) - Two-handed
+**25. Railgun** (₡619,000) - Two-handed
 - Type: Ballistic, Two-handed
 - Base Damage: 25, Cooldown: 6s, DPS: 4.2
 - Loadout: Two-Handed only
 - Bonuses: Penetration +12, Targeting Systems +7, Combat Power +5, Attack Speed -4
 - Description: Ultra-high velocity kinetic weapon with extreme penetration
 
-**26. Ion Beam** (₡544,000) - Two-handed (Highest DPS)
+**26. Ion Beam** (₡903,000) - Two-handed (Highest DPS)
 - Type: Energy, Two-handed
 - Range: Long
 - Base Damage: 18, Cooldown: 4s, DPS: 4.5
@@ -240,7 +240,7 @@ All weapons use DPS-inclusive pricing formula. Prices reflect v1.4 rebalancing: 
 
 ### New Weapons — Roster Expansion v1.5 (21 Weapons)
 
-**27. Vibro Mace** (₡425,000)
+**27. Vibro Mace** (₡688,000)
 - Type: Melee, One-handed
 - Range: Melee
 - Base Damage: 18, Cooldown: 3s, DPS: 6.0
@@ -248,7 +248,7 @@ All weapons use DPS-inclusive pricing formula. Prices reflect v1.4 rebalancing: 
 - Bonuses: Hydraulic Systems +8, Combat Power +6, Counter Protocols +5, Gyro Stabilizers +4, Attack Speed +3
 - Description: Vibration-enhanced mace that shatters armor plating on impact
 
-**28. War Club** (₡84,000) - Two-handed
+**28. War Club** (₡82,000) - Two-handed
 - Type: Melee, Two-handed
 - Range: Melee
 - Base Damage: 6, Cooldown: 3s, DPS: 2.0
@@ -256,7 +256,7 @@ All weapons use DPS-inclusive pricing formula. Prices reflect v1.4 rebalancing: 
 - Bonuses: Hydraulic Systems +2, Combat Power +1
 - Description: Crude but effective bludgeon for budget-conscious brawlers
 
-**29. Shock Maul** (₡183,000) - Two-handed
+**29. Shock Maul** (₡211,000) - Two-handed
 - Type: Energy, Two-handed
 - Range: Melee
 - Base Damage: 8, Cooldown: 3s, DPS: 2.67
@@ -264,7 +264,7 @@ All weapons use DPS-inclusive pricing formula. Prices reflect v1.4 rebalancing: 
 - Bonuses: Hydraulic Systems +4, Combat Power +3, Power Core +2
 - Description: Electrified maul that channels energy through hydraulic strikes
 
-**30. Thermal Lance** (₡279,000) - Two-handed
+**30. Thermal Lance** (₡306,000) - Two-handed
 - Type: Energy, Two-handed
 - Range: Melee
 - Base Damage: 13, Cooldown: 4s, DPS: 3.25
@@ -272,7 +272,7 @@ All weapons use DPS-inclusive pricing formula. Prices reflect v1.4 rebalancing: 
 - Bonuses: Hydraulic Systems +5, Combat Power +4, Critical Systems +4, Power Core -2
 - Description: Superheated polearm that melts through armor at close range
 
-**31. Volt Sabre** (₡425,000)
+**31. Volt Sabre** (₡550,000)
 - Type: Energy, One-handed
 - Range: Short
 - Base Damage: 18, Cooldown: 3s, DPS: 6.0
@@ -280,7 +280,7 @@ All weapons use DPS-inclusive pricing formula. Prices reflect v1.4 rebalancing: 
 - Bonuses: Combat Power +8, Targeting Systems +6, Weapon Control +5, Attack Speed +4, Power Core -3
 - Description: Arc-charged blade pistol delivering devastating short-range energy bursts
 
-**32. Scatter Cannon** (₡84,000) - Two-handed
+**32. Scatter Cannon** (₡82,000) - Two-handed
 - Type: Ballistic, Two-handed
 - Range: Short
 - Base Damage: 6, Cooldown: 3s, DPS: 2.0
@@ -288,7 +288,7 @@ All weapons use DPS-inclusive pricing formula. Prices reflect v1.4 rebalancing: 
 - Bonuses: Combat Power +2, Weapon Control +1
 - Description: Wide-bore scatter weapon effective at close quarters
 
-**33. Pulse Accelerator** (₡273,000) - Two-handed
+**33. Pulse Accelerator** (₡291,000) - Two-handed
 - Type: Energy, Two-handed
 - Range: Short
 - Base Damage: 13, Cooldown: 4s, DPS: 3.25
@@ -296,7 +296,7 @@ All weapons use DPS-inclusive pricing formula. Prices reflect v1.4 rebalancing: 
 - Bonuses: Combat Power +5, Targeting Systems +4, Weapon Control +3, Attack Speed -2
 - Description: Charged-particle accelerator delivering focused energy pulses at short range
 
-**34. Arc Projector** (₡488,000) - Two-handed
+**34. Arc Projector** (₡627,000) - Two-handed
 - Type: Energy, Two-handed
 - Range: Short
 - Base Damage: 18, Cooldown: 4s, DPS: 4.5
@@ -304,7 +304,7 @@ All weapons use DPS-inclusive pricing formula. Prices reflect v1.4 rebalancing: 
 - Bonuses: Combat Power +7, Targeting Systems +6, Critical Systems +5, Penetration +4, Attack Speed -3
 - Description: Devastating arc-lightning projector that chains energy across short distances
 
-**35. Bolt Carbine** (₡93,000)
+**35. Bolt Carbine** (₡96,000)
 - Type: Ballistic, One-handed
 - Range: Mid
 - Base Damage: 5, Cooldown: 2s, DPS: 2.5
@@ -312,7 +312,7 @@ All weapons use DPS-inclusive pricing formula. Prices reflect v1.4 rebalancing: 
 - Bonuses: Targeting Systems +3, Weapon Control +1
 - Description: Compact carbine optimized for mid-range engagements
 
-**36. Flux Repeater** (₡147,000)
+**36. Flux Repeater** (₡186,000)
 - Type: Energy, One-handed
 - Range: Mid
 - Base Damage: 9, Cooldown: 3s, DPS: 3.0
@@ -320,7 +320,7 @@ All weapons use DPS-inclusive pricing formula. Prices reflect v1.4 rebalancing: 
 - Bonuses: Targeting Systems +5, Combat Power +3, Weapon Control +3
 - Description: Rapid-cycling energy repeater with excellent mid-range accuracy
 
-**37. Disruptor Cannon** (₡293,000)
+**37. Disruptor Cannon** (₡412,000)
 - Type: Energy, One-handed
 - Range: Mid
 - Base Damage: 14, Cooldown: 3s, DPS: 4.67
@@ -328,7 +328,7 @@ All weapons use DPS-inclusive pricing formula. Prices reflect v1.4 rebalancing: 
 - Bonuses: Combat Power +6, Targeting Systems +5, Weapon Control +4, Penetration +3
 - Description: Heavy energy disruptor that destabilizes enemy systems at mid-range
 
-**38. Nova Caster** (₡425,000)
+**38. Nova Caster** (₡550,000)
 - Type: Energy, One-handed
 - Range: Mid
 - Base Damage: 18, Cooldown: 3s, DPS: 6.0
@@ -336,7 +336,7 @@ All weapons use DPS-inclusive pricing formula. Prices reflect v1.4 rebalancing: 
 - Bonuses: Combat Power +8, Targeting Systems +6, Penetration +5, Weapon Control +4, Power Core -3
 - Description: Miniaturized nova reactor unleashing devastating mid-range energy blasts
 
-**39. Mortar System** (₡163,000) - Two-handed
+**39. Mortar System** (₡150,000) - Two-handed
 - Type: Ballistic, Two-handed
 - Range: Mid
 - Base Damage: 10, Cooldown: 4s, DPS: 2.5
@@ -344,7 +344,7 @@ All weapons use DPS-inclusive pricing formula. Prices reflect v1.4 rebalancing: 
 - Bonuses: Combat Power +4, Penetration +3, Targeting Systems -2
 - Description: Indirect-fire ballistic system for area suppression at mid-range
 
-**40. Beam Pistol** (₡93,000)
+**40. Beam Pistol** (₡96,000)
 - Type: Energy, One-handed
 - Range: Long
 - Base Damage: 5, Cooldown: 2s, DPS: 2.5
@@ -352,7 +352,7 @@ All weapons use DPS-inclusive pricing formula. Prices reflect v1.4 rebalancing: 
 - Bonuses: Targeting Systems +3, Penetration +1
 - Description: Compact long-range energy sidearm with focused beam optics
 
-**41. Photon Marksman** (₡147,000)
+**41. Photon Marksman** (₡186,000)
 - Type: Energy, One-handed
 - Range: Long
 - Base Damage: 9, Cooldown: 3s, DPS: 3.0
@@ -360,7 +360,7 @@ All weapons use DPS-inclusive pricing formula. Prices reflect v1.4 rebalancing: 
 - Bonuses: Targeting Systems +5, Penetration +3, Combat Power +3
 - Description: Precision photon emitter for accurate long-range fire from a one-handed platform
 
-**42. Gauss Pistol** (₡291,000)
+**42. Gauss Pistol** (₡335,000)
 - Type: Ballistic, One-handed
 - Range: Long
 - Base Damage: 14, Cooldown: 3s, DPS: 4.67
@@ -368,7 +368,7 @@ All weapons use DPS-inclusive pricing formula. Prices reflect v1.4 rebalancing: 
 - Bonuses: Targeting Systems +6, Penetration +5, Combat Power +4, Attack Speed -2
 - Description: Magnetically accelerated sidearm delivering extreme long-range kinetic rounds
 
-**43. Particle Lance** (₡425,000)
+**43. Particle Lance** (₡550,000)
 - Type: Energy, One-handed
 - Range: Long
 - Base Damage: 18, Cooldown: 3s, DPS: 6.0
@@ -376,7 +376,7 @@ All weapons use DPS-inclusive pricing formula. Prices reflect v1.4 rebalancing: 
 - Bonuses: Targeting Systems +8, Penetration +6, Combat Power +5, Critical Systems +4, Attack Speed -3
 - Description: Focused particle beam weapon capable of precision strikes at extreme range
 
-**44. Siege Cannon** (₡163,000) - Two-handed
+**44. Siege Cannon** (₡150,000) - Two-handed
 - Type: Ballistic, Two-handed
 - Range: Long
 - Base Damage: 10, Cooldown: 4s, DPS: 2.5
@@ -384,7 +384,7 @@ All weapons use DPS-inclusive pricing formula. Prices reflect v1.4 rebalancing: 
 - Bonuses: Targeting Systems +4, Penetration +3, Combat Power -2
 - Description: Heavy long-range bombardment cannon for sustained siege operations
 
-**45. Barrier Shield** (₡111,000)
+**45. Barrier Shield** (₡253,000)
 - Type: Shield
 - Range: Melee
 - Base Damage: 0, Cooldown: N/A, DPS: N/A
@@ -392,20 +392,20 @@ All weapons use DPS-inclusive pricing formula. Prices reflect v1.4 rebalancing: 
 - Bonuses: Armor Plating +8, Shield Capacity +7, Counter Protocols +5, Evasion Thrusters -3
 - Description: Reinforced energy barrier providing solid mid-tier protection
 
-**46. Fortress Shield** (₡291,000)
+**46. Fortress Shield** (₡380,000)
 - Type: Shield
 - Range: Melee
 - Base Damage: 0, Cooldown: N/A, DPS: N/A
 - Loadout: Weapon+Shield only
-- Bonuses: Armor Plating +15, Shield Capacity +14, Counter Protocols +10, Evasion Thrusters -4, Servo Motors -3
+- Bonuses: Armor Plating +11, Shield Capacity +10, Counter Protocols +8, Evasion Thrusters -4, Servo Motors -3 (Season 2, #521: was +15 / +14 / +10)
 - Description: Heavy fortress-class shield with layered defensive systems
 
-**47. Aegis Bulwark** (₡409,000)
+**47. Aegis Bulwark** (₡690,000)
 - Type: Shield
 - Range: Melee
 - Base Damage: 0, Cooldown: N/A, DPS: N/A
 - Loadout: Weapon+Shield only
-- Bonuses: Armor Plating +15, Shield Capacity +15, Counter Protocols +14, Power Core +11, Evasion Thrusters -5, Servo Motors -4
+- Bonuses: Armor Plating +11, Shield Capacity +11, Counter Protocols +10, Power Core +8, Evasion Thrusters -5, Servo Motors -4 (Season 2, #521: was +15 / +15 / +14 / +11)
 - Description: Ultimate defensive platform with multi-layered reactive shielding
 
 ### Weapon Summary by Loadout Type

@@ -2,8 +2,7 @@
  * Unit tests for KotH daily execution (Spec 36).
  *
  * Asserts KotH runs regardless of weekday (no Mon/Wed/Fri check),
- * `getNextKothScheduledDate` no longer exists or is replaced by 24h offset,
- * and zone rotation uses cycle number modulo instead of day-of-week.
+ * and `getNextKothScheduledDate` no longer exists or is replaced by 24h offset.
  *
  * _Requirements: R2.3, R2.4_
  */
@@ -246,48 +245,11 @@ describe('KotH daily execution (R2.3, R2.4)', () => {
     scheduler.resetScheduler();
   });
 
-  test('zone rotation uses cycle number modulo (not day-of-week)', async () => {
-    // The kothMatchmakingService.runKothMatchmaking accepts cycleNumber parameter
-    // and uses cycleNumber % 3 === 0 for rotatingZone
-    
-
-    // Verify runKothMatchmaking accepts cycleNumber parameter
-    expect(kothService.runKothMatchmaking).toBeDefined();
-
-    // In the cycleScheduler's executeKothCycle, it reads cycleMetadata.totalCycles
-    // and passes it to runKothMatchmaking. The zone rotation is:
-    // rotatingZone = cycleNumber % 3 === 0
-    // This is cycle-based, not day-of-week based.
-
+  test('KotH scheduling is cycle-based, not day-of-week based', async () => {
     // Verify by checking the scheduler source doesn't reference day-of-week for KotH
     
     // getNextKothScheduledDate (which used kothDays weekday array) is gone
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect((scheduler as any).getNextKothScheduledDate).toBeUndefined();
-  });
-
-  test('zone rotation: cycle 0 → rotatingZone true (0 % 3 === 0)', () => {
-    // This tests the formula used in kothMatchmakingService
-    const cycleNumber = 0;
-    const rotatingZone = cycleNumber % 3 === 0;
-    expect(rotatingZone).toBe(true);
-  });
-
-  test('zone rotation: cycle 1 → rotatingZone false (1 % 3 !== 0)', () => {
-    const cycleNumber = 1;
-    const rotatingZone = cycleNumber % 3 === 0;
-    expect(rotatingZone).toBe(false);
-  });
-
-  test('zone rotation: cycle 3 → rotatingZone true (3 % 3 === 0)', () => {
-    const cycleNumber = 3;
-    const rotatingZone = cycleNumber % 3 === 0;
-    expect(rotatingZone).toBe(true);
-  });
-
-  test('zone rotation: cycle 7 → rotatingZone false (7 % 3 !== 0)', () => {
-    const cycleNumber = 7;
-    const rotatingZone = cycleNumber % 3 === 0;
-    expect(rotatingZone).toBe(false);
   });
 });

@@ -2,7 +2,7 @@
 title: "Facility Progression & ROI"
 description: "Level-by-level costs, prestige requirements, and return on investment analysis for every facility in Armoured Souls."
 order: 2
-lastUpdated: "2026-08-02"
+lastUpdated: "2026-10-16"
 relatedArticles:
   - facilities/facility-overview
   - facilities/investment-strategy
@@ -36,7 +36,7 @@ All facilities share the same prestige curve. Levels 1–3 are always free to pu
 
 When you cross a prestige threshold, **every** facility at that level becomes available. The dashboard will notify you when you unlock a new tier.
 
-## Economy & Discount Facilities
+## Economy Facilities
 
 ### Training Facility Progression
 
@@ -60,23 +60,6 @@ The Training Facility is one of the best early investments. Each level adds up t
 ```callout-tip
 Training Facility Level 1 is profitable from day one if you're upgrading regularly. It's one of the first facilities you should buy.
 ```
-
-### Weapons Workshop Progression
-
-| Level | Cost | Discount / Resale Rate | Operating Cost/Day |
-|-------|------|----------------------|-------------------|
-| 1 | ₡75,000 | 10% | ₡100 |
-| 2 | ₡150,000 | 20% | ₡200 |
-| 3 | ₡225,000 | 30% | ₡300 |
-| 4 | ₡300,000 | 40% | ₡400 |
-| 5 | ₡375,000 | 50% | ₡500 |
-| 6 | ₡450,000 | 60% | ₡600 |
-| 7 | ₡525,000 | 70% | ₡700 |
-| 8 | ₡600,000 | 80% | ₡800 |
-| 9 | ₡675,000 | 90% | ₡900 |
-| 10 | ₡750,000 | 100% (free weapons, full resale) | ₡1,000 |
-
-**ROI Analysis**: The Workshop saves on every weapon purchase and increases resale value. At Level 1, you save 10% on every weapon — a significant discount on premium weapons costing ₡400K+.
 
 ### Repair Bay Progression
 
@@ -137,7 +120,7 @@ Once you hit the 90% discount cap, further Repair Bay upgrades provide no additi
 The Streaming Studio's value scales with how many robots you have and how often they fight. If you're running a multi-robot strategy, this facility is an incredible investment even at Level 1.
 ```
 
-## Capacity Facilities
+## Hangar & Armory Facilities
 
 ### Roster Expansion Progression
 
@@ -172,6 +155,40 @@ The Streaming Studio's value scales with how many robots you have and how often 
 | 10 | ₡1,000,000 | 55 | ₡2,750 |
 
 Storage capacity counts all weapons you own — both equipped and unequipped. You won't need to upgrade this aggressively unless you're collecting weapons or running many robots with different loadout options.
+
+### Weapons Workshop Progression
+
+| Level | Cost | Discount / Resale Rate | Operating Cost/Day |
+|-------|------|----------------------|-------------------|
+| 1 | ₡75,000 | 5% / 10% | ₡100 |
+| 2 | ₡150,000 | 10% / 20% | ₡200 |
+| 3 | ₡225,000 | 15% / 30% | ₡300 |
+| 4 | ₡300,000 | 20% / 40% | ₡400 |
+| 5 | ₡375,000 | 25% / 50% | ₡500 |
+| 6 | ₡450,000 | 30% / 60% | ₡600 |
+| 7 | ₡525,000 | 35% / 70% | ₡700 |
+| 8 | ₡600,000 | 40% / 80% | ₡800 |
+| 9 | ₡675,000 | 45% / 90% | ₡900 |
+| 10 | ₡750,000 | 50% / 100% (full resale) | ₡1,000 |
+
+**ROI Analysis**: The Workshop saves on every weapon purchase and increases resale value. At Level 1, you save 5% on every weapon; the discount grows to 50% at Level 10, which matters most on premium weapons costing ₡400K+.
+
+### Refinement Lab Progression
+
+| Level | Cost | Refinement Tiers | Operating Cost/Day |
+|-------|------|------------------|-------------------|
+| 1 | ₡75,000 | Hone unlocked | ₡100 |
+| 2 | ₡150,000 | Hone | ₡200 |
+| 3 | ₡225,000 | Augment unlocked (Hone, Augment) | ₡300 |
+| 4 | ₡300,000 | Hone, Augment | ₡400 |
+| 5 | ₡375,000 | Sharpen unlocked (Hone, Augment, Sharpen) | ₡500 |
+| 6 | ₡450,000 | Hone, Augment, Sharpen | ₡600 |
+| 7 | ₡525,000 | Hone, Augment, Sharpen | ₡700 |
+| 8 | ₡600,000 | Forge unlocked (all tiers) | ₡800 |
+| 9 | ₡675,000 | All tiers | ₡900 |
+| 10 | ₡750,000 | All tiers | ₡1,000 |
+
+**ROI Analysis**: The Lab has no direct financial return; it decides which [refinement tiers](/guide/weapons/refinement) you can buy. Level 5 (Sharpen) and Level 8 (Forge) are the big DPS unlocks. Levels 9 and 10 add no new tier, so stop at Level 8 unless you want the facility maxed. Costs and prestige gates mirror the Weapons Workshop.
 
 ## Advanced Facilities
 

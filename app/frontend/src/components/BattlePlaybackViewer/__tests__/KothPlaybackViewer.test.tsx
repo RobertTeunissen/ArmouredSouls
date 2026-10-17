@@ -82,14 +82,4 @@ describe('KotH Playback Rendering', () => {
     // Should use green color (KOTH_COLORS[2] = #22C55E → rgb(34, 197, 94))
     expect(ctx.fillStyle).toMatch(/rgba\(34, 197, 94/);
   });
-
-  it('should render inactive zone during transition', () => {
-    const ctx = createMockCtx();
-    renderKothZone(ctx, { x: 250, y: 250 }, 80, 'inactive');
-
-    expect(ctx.fill).toHaveBeenCalled();
-    expect(ctx.setLineDash).toHaveBeenCalledWith([4, 4]);
-    // Should use gray color
-    expect(ctx.fillStyle).toMatch(/rgba\(107, 114, 128/);
-  });
 });

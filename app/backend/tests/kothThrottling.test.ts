@@ -130,14 +130,9 @@ jest.mock('../src/services/arena/kothEngine', () => ({
   ]),
   KOTH_MATCH_DEFAULTS: {
     scoreThreshold: 200,
-    rotatingZoneScoreThreshold: 300,
     timeLimit: 150,
-    rotatingZoneTimeLimit: 210,
     zoneRadius: 50,
     arenaRadius: 200,
-    zoneTransitionDuration: 5,
-    rotatingZoneInterval: 30,
-    zoneWarningTime: 5,
   },
 }));
 
@@ -219,6 +214,9 @@ const { getTuningBonusesBatch } = jest.requireMock('../src/services/tuning-pool'
 const { simulateBattleMulti } = jest.requireMock('../src/services/battle/combatSimulator') as {
   simulateBattleMulti: jest.Mock;
 };
+const { buildKothGameModeConfig } = jest.requireMock('../src/services/arena/kothEngine') as {
+  buildKothGameModeConfig: jest.Mock;
+};
 process.env.NODE_ENV = previousNodeEnv;
 
 // ─── Test helpers ────────────────────────────────────────────────────
@@ -253,7 +251,7 @@ function makeMatch(id: number, robotIds: number[]) {
     isByeMatch: false,
     scoreThreshold: null,
     timeLimit: null,
-    zoneRadius: null,
+    zoneRadius: 7 as number | null,
     createdAt: new Date(),
     participants: robotIds.map((participantId, i) => ({
       id: id * 100 + i,
@@ -418,6 +416,31 @@ describe('KotH Orchestrator Throttling', () => {
     expect(mockPrisma.scheduledMatch.updateMany).not.toHaveBeenCalledWith(
       expect.objectContaining({ data: { status: 'scheduled' } }),
     );
+  });
+
+  // #522: the radius is written at scheduling; the orchestrator has no fallback.
+  it('should simulate with the scheduled zone radius', async () => {
+    setupMatchQueue([makeMatch(1, [1, 2, 3, 4, 5])]);
+
+    const promise = executeScheduledKothBattles();
+    await jest.runAllTimersAsync();
+    await promise;
+
+    expect(buildKothGameModeConfig).toHaveBeenCalledWith(expect.objectContaining({ zoneRadius: 7 }));
+  });
+
+  it('should fail a KotH match without a zone radius before simulating', async () => {
+    setupMatchQueue([{ ...makeMatch(1, [1, 2, 3, 4, 5]), zoneRadius: null }]);
+    mockPrisma.scheduledMatch.updateMany.mockResolvedValue({ count: 1 });
+
+    const promise = executeScheduledKothBattles();
+    await jest.runAllTimersAsync();
+    const summary = await promise;
+
+    expect(summary.successfulMatches).toBe(0);
+    expect(summary.failedMatches).toBe(1);
+    expect(summary.errors[0]).toContain('KotH match has no zone radius');
+    expect(simulateBattleMulti).not.toHaveBeenCalled();
   });
 
   it('should never re-fetch a match whose cancel write failed in the same run', async () => {

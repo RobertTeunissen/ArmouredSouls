@@ -137,6 +137,8 @@ async function scheduleUnified(
       leagueType: 'bronze',
       leagueInstanceId: 'bronze_1',
       isByeMatch: false,
+      // KotH matchmaking always writes the zone radius (#522).
+      zoneRadius: matchType === 'koth' ? 7 : null,
       participants: {
         create: participantIds.map((participantId, i) => ({ participantType, participantId, slot: i + 1 })),
       },

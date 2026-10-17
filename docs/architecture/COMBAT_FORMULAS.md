@@ -1,6 +1,6 @@
 # Combat Formulas and Battle Mechanics
 
-**Last Updated**: October 15, 2026  
+**Last Updated**: October 17, 2026  
 **Status**: Authoritative Reference - Defines formulas, implementation, and display formats
 
 This document is the **authoritative source** for all combat formulas, weapon bonus applications, and battle mechanics in Armoured Souls. It defines:
@@ -537,6 +537,13 @@ Stance Multiplier = 1.15 (offensive) OR 0.90 (defensive) OR 1.0 (balanced)
 Base Damage = Weapon Base Damage × Combat Power × Loadout × Weapon Control × Stance
 ```
 
+In the 2D arena the spatial multipliers follow, in this order (see `calculateBaseDamage`):
+```
+× Range Penalty × Hydraulic Bonus × Logic Cores Bonus × (1 + Backstab) × (1 + Adapt%) × (1 + Pressure%) × (1 + Sync)
+```
+Hydraulic Bonus applies at melee/short range and Logic Cores Bonus at mid/long range
+(see [Hydraulic_Bonus](#hydraulic_bonus) and [Logic Cores Ranged Damage](#logic-cores-ranged-damage)).
+
 **Note on baseDamage Compression (v1.4, May 2026)**:
 Weapon `baseDamage` values were compressed in the May 2026 DPS rebalance to reduce DPS dominance over attributes. The damage formula itself is unchanged — only the input values (baseDamage) are lower. Top-tier 1H weapons now range 8–16 damage (was 18 for all). See [WEAPON_DPS_REBALANCE.md](../analysis/WEAPON_DPS_REBALANCE.md) for full details.
 
@@ -553,6 +560,11 @@ Weapon `baseDamage` values were compressed in the May 2026 DPS rebalance to redu
 ### Display Format
 ```
 Damage: 12 base × 1.10 combat_power × 0.90 loadout × 1.05 weapon_control × 1.00 stance = 12.5
+```
+
+With spatial context (arena battles), e.g. a long-range hit with 40 Logic Cores:
+```
+Damage: 12 base × 1.10 combat_power × 0.90 loadout × 1.05 weapon_control × 1.00 stance × 1.00 range × 1.00 hydraulic × 1.60 logic = 20.0
 ```
 
 ## Damage Application
@@ -958,23 +970,48 @@ Stance modifiers:
 Servo strain reduction:
   strainReduction = 1.0 - (servoStrain / 100)
 
-effectiveSpeed = baseSpeed × stanceModifier × strainReduction
+Movement modes (Season 2, #520), first match wins; role = engagement role (see Engagement_Cycle):
+  1. Speed burst (melee commit or ranged disengage):
+       effectiveSpeed = baseSpeed × stanceModifier × 1.30            // strain-exempt
+  2. Pursuit: role melee AND distance > 2 AND opponent role ranged
+       effectiveSpeed = baseSpeed × stanceModifier × 1.15            // strain-exempt (Season 2 round 2; 1.10 in round 1)
+  3. Mutual-melee final approach: role melee AND opponent role melee AND 2 < distance <= 4
+       effectiveSpeed = baseSpeed × stanceModifier × 1.15            // strain-exempt
+  4. Kiting: role ranged AND distance < engagementRangeMidpoint AND opponent role melee
+       effectiveSpeed = baseSpeed × stanceModifier × 1.10            // strain-exempt
+  5. Otherwise:
+       effectiveSpeed = baseSpeed × stanceModifier × strainReduction
 
-Melee closing bonus (exempt from strain):
-  Activates when: hasMeleeWeapon AND distance > 2 AND opponentHasRangedWeapon
-  speedGap = max(0, opponentSpeed - baseSpeed)
-  closingBonus = 1.15 + speedGap × 0.01   // +15% base + 1% per speed diff
-  effectiveSpeed = baseSpeed × stanceModifier × closingBonus
-  // Closing bonus does NOT accumulate servo strain
+  engagementRangeMidpoint = RANGE_BAND_MIDPOINTS[engagement range] (melee 1, short 4.5, mid 9.5, long 16)
+  The stance modifier always applies — a defensive robot moves at 0.80 also while pursuing.
+  There is no speed-compensation term; at equal Servo Motors pursuit (1.15×) is faster than kiting (1.10×).
 
-Ranged kiting bonus (exempt from strain):
-  Activates when: hasRangedWeapon AND distance < weaponOptimalRangeMidpoint AND opponentHasMeleeWeapon
-  speedGap = max(0, opponentSpeed - baseSpeed)
-  kitingBonus = 1.10 + speedGap × 0.008   // +10% base + 0.8% per speed diff
-  effectiveSpeed = baseSpeed × stanceModifier × kitingBonus
-  // Kiting bonus does NOT accumulate servo strain
-  // Weaker than closing bonus (10% vs 15%) because ranged can still deal damage while kiting
+Pursuit target (#520 movement fix, movementAI.ts):
+  If role melee AND distance > 2 AND the target's preferred range is not melee:
+    intent target = target.position + target.velocity × tick (0.1 s)   // projected end-of-tick position
+    → the robot moves at its full effective speed; it does not stop at the 1-unit standoff point
+  Else (within reach, or a melee mirror): standoff point RANGE_BAND_MIDPOINTS[range] from the target (unchanged)
+  Deviation, the 1.5 s Combat Algorithms prediction (off within 4 units and in melee mirrors, #467),
+  avoidance/flank bias and stance bias then apply as before.
+  Gap change per second = kiterSpeed − meleeSpeed (balanced stance; K = kiter Servo, M = melee Servo):
+    pursuit 1.15× vs kiting 1.10×: 0.22·K − 0.23·M − 0.35
+      equal Servo S: the chaser closes 0.35 + 0.01·S u/s (0.45 at 10, 0.60 at 25, 0.85 at 50)
+      the kiter keeps away only if K > (23/22)(M + 35) − 35 ≈ 1.0455·M + 1.59
+      (M 10 → 12.05, 20 → 22.50, 25 → 27.73, 30 → 32.95; M ≥ 47 cannot be outrun with K ≤ 50)
+    melee commit 1.30× vs kiting 1.10×: kiter escapes only if K ≥ (13/11)(M + 35) − 35 ≈ 1.1818·M + 6.36
+    pursuit 1.15× vs ranged disengage 1.30×: 0.26·K − 0.23·M + 1.05; the kiter is caught only if
+      M ≥ (26/23)(K + 35) − 35 ≈ 1.1304·K + 4.57 (K 25 → 32.83; K ≥ 41 always escapes);
+      equal Servo S: the gap opens 1.05 + 0.03·S u/s (1.80 at 25)
+  Before the fix the pursuer aimed 1 unit short of the target's current position, so a kiter stepping more
+  than 1 unit per tick (> 10 u/s) ended every tick at a gap of 1 + its step > 2 and could not be reached.
+
+Movement order: the movement phase is simultaneous. All robots decide (target, speed, intent) from the
+same tick-start snapshot, then all moves are applied; robot order has no effect.
 ```
+
+Before Season 2 the pursuit bonus was `1.30 + 0.02 × max(0, opponentSpeed − ownSpeed)` with a 0.95 defensive
+floor while closing, kiting was `1.10 + 0.008 × speedGap`, and both roles came from the main weapon's
+`weaponType` (so an energy melee weapon such as Shock Maul never pursued).
 
 ### Servo_Strain
 
@@ -996,8 +1033,65 @@ Each tick (0.1s):
       servoStrain -= 5.0 × 0.1   // -5%/s = -0.5%/tick
       servoStrain = max(servoStrain, 0)
 
-  Melee closing bonus movement is exempt from strain accumulation.
+  Strain-exempt movement modes (burst, pursuit, final approach, kiting) do not accumulate strain.
 ```
+
+### Engagement_Cycle
+
+Season 2 (#520). Roles and two speed bursts keep melee-versus-ranged fights moving between ranges
+(`arena/engagementCycle.ts`, applied in the `simulationLoop.ts` movement phase):
+
+```
+Engagement range = getEngagementRange(robot, opponent)
+  // movementAI.ts: main weapon band; Dual Wield mixed = DPS-weighted band with the
+  // Combat Algorithms shield adjustment (Req 10.4/10.5)
+Role = 'melee' if engagement range is 'melee', else 'ranged'
+  // Both robots' roles come from their own engagement range. An energy melee weapon (Shock Maul)
+  // counts as melee; an offhand sword does not make a long-range robot a pursuer.
+
+Melee commit:
+  Active when: role melee AND opponent role ranged
+               AND patienceTimer >= getPatienceLimit(combatAlgorithmScore)
+               AND distance > 2
+  Speed: baseSpeed × stanceModifier × 1.30, strain-exempt
+  Ends automatically within reach (distance <= 2); patience resets on a landed hit.
+
+Ranged disengage:
+  Trigger: a ranged-role robot takes a hit from a melee-band weapon (attack or counter)
+           while its disengage is ready (hit time >= disengageReadyAt) and no burst is running or scheduled
+  Delay:    burst starts DISENGAGE_DELAY_SECONDS = 2.5 s after that first hit
+            (disengageScheduledAt = hit time + 2.5); later melee hits during the delay don't move it.
+            The role is checked when the burst is scheduled; a scheduled burst always starts when due.
+  Burst:    baseSpeed × stanceModifier × 1.30, strain-exempt, for
+            duration = 2 + 0.04 × evasionThrusters seconds   // 3.0 s at 25, 4.0 s at 50, uncapped
+  Cooldown: disengageReadyAt = burst end + getPatienceLimit(own combatAlgorithmScore)
+  Melee hits taken during the delay, the burst or the cooldown are ignored → at most one escape per engagement.
+```
+
+Prediction (#351/#467) and the mutual-melee final approach are unchanged.
+
+### Wall_Slide
+
+Season 2 (#520), `applyMovement()` in `movementAI.ts`. When a step would leave the arena, the robot moves
+along the step to the wall and spends the rest of `effectiveSpeed × tick` along the wall's tangent
+(the step minus its radial component) instead of stopping at the clamp point:
+
+```
+maxMove   = effectiveSpeed × dt
+step      = toward intent target, length <= maxMove
+if pos + step is inside: move there
+else:
+  boundaryPoint = intersection of the step with the wall (or pos if already on it)
+  remaining     = maxMove − |boundaryPoint − pos|
+  tangent       = step − (step · n) n           // n = outward unit normal at boundaryPoint
+  purely radial step (|tangent| ≈ 0): slide the perpendicular direction that ends farther from the
+                                      current target (tie or no target → counter-clockwise)
+  newPos = clampToArena(boundaryPoint + unit(tangent) × remaining)
+```
+
+The result is always inside the arena, never more than `effectiveSpeed × dt` from the old position, and
+deterministic. A robot at the arena centre keeps the plain clamp; the variable-tick constant-velocity
+branch for distant robots (10+ robot battles) keeps its plain clamp.
 
 ### Range_Penalty
 
@@ -1036,13 +1130,14 @@ Proximity-based damage bonus from hydraulic systems:
 
 ```
 Melee range (0–2 units):
-  bonus = 1 + hydraulicSystems × 0.02
-  // Range: 1.02 (hydro=1) to 2.0 (hydro=50)
-  // Reduced from 0.03 coefficient (was up to 2.5×) in March 2026 rebalance
+  bonus = 1 + hydraulicSystems × 0.015
+  // Range: 1.015 (hydro=1) to 1.75 (hydro=50), uncapped
+  // Season 2 (#519): reduced from 0.02 (was up to 2.0×); March 2026 reduced 0.03 → 0.02
 
 Short range (3–6 units):
-  bonus = 1 + hydraulicSystems × 0.015
-  // Range: 1.015 (hydro=1) to 1.75 (hydro=50)
+  bonus = 1 + hydraulicSystems × 0.01
+  // Range: 1.01 (hydro=1) to 1.5 (hydro=50), uncapped
+  // Season 2 (#519): reduced from 0.015 (was up to 1.75×)
 
 Mid/Long range (7+ units):
   bonus = 1.0   // No bonus
@@ -1086,17 +1181,21 @@ effectiveBonus = max(0, 0.20 - gyroReduction - threatAnalysisReduction)
 
 ### Patience_Timer
 
-Time since the robot's last resolved attack:
+Time since the robot's last landed hit:
 
 ```
-patienceTimer: reset to 0 on a resolved attack (either hand); +0.1s on every tick without one.
+patienceTimer: reset to 0 when the robot's own attack hits (either hand, crits included);
+               +0.1s on every tick without a landed hit. Misses, malfunctions and blocked
+               attempts do not reset it (#520; before Season 2 any resolved attack reset it).
 patienceLimit = getPatienceLimit(score) = 15 - min(combatAlgorithms / 50, 1) × 5
 // Range: 15s (score 0) down to 10s (combatAlgorithms >= 50) — higher CA shortens the limit.
 ```
 
 Since #518 the limit does not gate attacks: patience never grants an attack and never lets a weapon
-hit beyond its reach. The timer still seeds movement path deviation (`deterministicDeviation()`); any
-movement or targeting role for the limit belongs to #520.
+hit beyond its reach. Since #520 the limit drives the engagement cycle: a melee robot whose patience
+reaches the limit commits (melee commit burst), and the limit is the ranged disengage cooldown (see
+[Engagement_Cycle](#engagement_cycle)). The timer also seeds movement path deviation
+(`deterministicDeviation()`).
 
 ### Adaptation_Bonus
 
@@ -1117,6 +1216,27 @@ Caps:
 Effectiveness reduction:
   If HP > 70%: bonuses apply at 50% effectiveness
 ```
+
+### Logic Cores Ranged Damage
+
+Distance-based damage bonus from Logic Cores, the ranged mirror of [Hydraulic_Bonus](#hydraulic_bonus)
+(Season 2, #519). Uses the current distance band (`RANGE_BAND_BOUNDARIES`), damage only, uncapped and linear:
+
+```
+Long range (13+ units):
+  bonus = 1 + logicCores × 0.015
+  // Range: 1.015 (LC=1) to 1.75 (LC=50)
+
+Mid range (7–12 units):
+  bonus = 1 + logicCores × 0.01
+  // Range: 1.01 (LC=1) to 1.5 (LC=50)
+
+Short/Melee range (0–6 units):
+  bonus = 1.0   // No bonus
+```
+
+It stacks multiplicatively right after the hydraulic bonus in `calculateBaseDamage` and is shown as
+`× X.XX logic` in the damage breakdown. Logic Cores keeps its pressure/composure role (next section).
 
 ### Pressure Effects (Logic Cores)
 
@@ -1180,7 +1300,9 @@ Melee counters: blocked beyond 2 units distance (counter_out_of_range event, no 
 Ranged counters: any distance, with the range penalty of the counter weapon.
 Dual-wield fallback: if the main weapon is melee and out of range, a dual-wield defender
   counters with its offhand weapon when that weapon can reach.
-Hydraulic bonus applies to melee counters within range.
+Hydraulic bonus applies to melee-band counters within range.
+Logic Cores ranged bonus applies to long-band counters only (#519); mid-band counters get neither bonus.
+Counter damage breakdown: `... × 0.70 × R range × H hydraulic × L logic = damage`.
 An attack blocked by reach (#518) is never resolved, so it cannot be countered.
 ```
 
@@ -1444,6 +1566,19 @@ Each member robot receives the same ELO delta applied to their individual elo fi
 
 ## Version History
 
+- **Season 2 round 2 (#520):** ranged disengage starts 2.5 s after the first melee hit (guaranteed exchange);
+  pursuit 1.10 → 1.15 (kiting 1.10); thresholds re-derived
+- **Season 2 (#520 movement fix):** simultaneous two-pass movement phase (robot order no longer matters); a melee
+  pursuer outside reach of a non-melee target aims at the target's projected end-of-tick position at full speed
+  instead of stopping 1 unit short of its current position
+- **Season 2 (#520):** engagement cycle — pursuit and kiting both 1.10× (speed-compensation terms removed),
+  defensive stance always 0.80 (0.95 closing exception removed), roles from the engagement range of both robots
+  (Shock Maul now pursues; an offhand sword no longer matters), melee commit (1.30×, strain-free, after the
+  patience window without a landed hit, until within reach), ranged disengage (1.30×, strain-free,
+  2 + 0.04 × Evasion Thrusters s on the first melee hit, cooldown one patience window), wall slide in
+  `applyMovement()`, patience resets only on a landed hit
+- **Season 2 (#519):** Hydraulic Systems one step less steep (melee 0.02 → 0.015, short 0.015 → 0.01; 1.75× / 1.5× at 50,
+  uncapped); new Logic Cores ranged damage bonus (long 1 + 0.015 × LC, mid 1 + 0.01 × LC; long-band counters only)
 - **2026-10-15:** #536 — combat entry invariant: weaponless robots never enter combat (forfeit or last place), an
   incomplete loadout fights as `single` for that battle, and the simulator throws `ROBOT_NOT_BATTLE_READY` instead of
   using a weaponless default

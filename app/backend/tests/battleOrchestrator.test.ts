@@ -432,10 +432,10 @@ describe('Battle Orchestrator', () => {
 
         expect(prepareSpy).toHaveBeenCalledTimes(2);
         const prepared = new Map(prepareSpy.mock.calls.map(([robot]) => [robot.id, robot]));
-        // Practice sword carries no bonuses: Dual Wield 10 × 1.30 = 13; Weapon+Shield 10 × 1.20 = 12
+        // Practice sword carries no bonuses: Dual Wield 10 × 1.30 = 13; Weapon+Shield 10 × 1.15 = 11.5 (Season 2)
         expect(Number(prepared.get(robot1.id)!.attackSpeed)).toBe(13);
-        expect(Number(prepared.get(robot2.id)!.shieldCapacity)).toBe(12);
-        expect(prepared.get(robot2.id)!.maxShield).toBe(48);
+        expect(Number(prepared.get(robot2.id)!.shieldCapacity)).toBe(11.5);
+        expect(prepared.get(robot2.id)!.maxShield).toBe(46);
 
         const stored1 = await prisma.robot.findUnique({ where: { id: robot1.id } });
         const stored2 = await prisma.robot.findUnique({ where: { id: robot2.id } });

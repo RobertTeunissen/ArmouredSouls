@@ -1,8 +1,8 @@
 ---
-title: "All 13 Facility Types"
+title: "All 14 Facility Types"
 description: "A complete overview of every facility in Armoured Souls — what each one does, what it costs, and why it matters for your stable."
 order: 1
-lastUpdated: "2026-04-16"
+lastUpdated: "2026-10-16"
 relatedArticles:
   - facilities/facility-progression
   - facilities/training-academies
@@ -13,24 +13,23 @@ relatedArticles:
 
 ## Overview
 
-Your stable can house up to **13 different facilities**, each providing a unique benefit — from slashing repair bills to unlocking higher attribute caps. Every facility has up to 10 upgrade levels (except Roster Expansion, which caps at 9), and each level increases both the benefit and the daily operating cost.
+Your stable can house up to **14 different facilities**, each providing a unique benefit — from slashing repair bills to unlocking higher attribute caps. Every facility has up to 10 upgrade levels (except Roster Expansion, which caps at 9), and each level increases both the benefit and the daily operating cost.
 
 Facilities are your long-term investments. Unlike one-time purchases like weapons or attribute upgrades, facilities generate ongoing value every single cycle — but they also charge ongoing operating costs. Choosing which facilities to invest in, and when, is one of the most important strategic decisions in the game.
 
 ![Facility overview grid](/images/guide/facilities/facility-overview-grid.png)
 
 ```callout-info
-Facilities are grouped into four categories: Economy & Discounts, Capacity & Storage, Training Academies, and Tactical & Advanced. This guide covers all 13 at a glance — see the individual articles for deep dives on level progression and ROI.
+Facilities are grouped into four categories: Economy (4), Hangar & Armory (4), Training Academies (4), and Tactical & Advanced (2). This guide covers all 14 at a glance — see the individual articles for deep dives on level progression and ROI.
 ```
 
-## Economy & Discount Facilities
+## Economy Facilities
 
 These facilities reduce your operating costs or generate passive income. They tend to have the best early-game ROI.
 
 | Facility | Purpose | Level 1 Cost | Operating Cost | Key Benefit |
 |----------|---------|-------------|----------------|-------------|
 | Training Facility | Attribute upgrade discounts | ₡150,000 | level × ₡250/day | Up to 90% — scales with level *and* shrinks as your roster grows |
-| Weapons Workshop | Weapon purchase discounts and resale rate | ₡75,000 | level × ₡100/day | 10%–100% discount on purchases · 10%–100% resale rate when selling |
 | Repair Bay | Repair cost discounts | ₡50,000 | level × ₡100/day | Scales with level and robot count (up to 90% discount) |
 | Merchandising Hub | Passive merchandising income | ₡150,000 | level × ₡200/day | ₡5,000–₡50,000/day base income, scales with Prestige |
 | Streaming Studio | Streaming revenue multiplier | ₡100,000 | level × ₡100/day | 2×–11× streaming revenue per battle |
@@ -54,24 +53,6 @@ Expanding your roster permanently reduces this discount. Roster Expansion and th
 ```
 
 Given that maxing all 23 attributes on a single robot costs over ₡29 million at full price, a deep discount on a concentrated roster saves enormous amounts over time.
-
-### Weapons Workshop
-
-The Workshop has a dual purpose: it reduces the purchase price of weapons AND determines how much credit you recover when selling weapons back. Both rates use the same formula — Level × 10% — so every Workshop level rewards you 10% on both ends of every weapon transaction.
-
-**Purchase discount**: Level × 10%. At Level 1 you get 10% off; at Level 10 weapons are free.
-
-**Resale rate** (Spec #33): Level × 10%, capped at 100%. At Level 0 resale is unavailable (₡0 returned), so building Workshop Level 1 unlocks the resale system. At Level 10 you recover 100% of what you paid.
-
-Resale value is computed against what you actually paid (after Workshop discount), not the catalog price. This means a weapon you bought at full price at L0 yields more on resale at L10 than a weapon you bought free at L10. Equipped weapons cannot be sold — unequip from your robot first.
-
-Higher levels also unlock weapon modifications (Level 3) and custom weapon design (Level 6).
-
-**Sell weapons** via the **My Inventory** tab on the [Weapon Shop](/weapons?tab=inventory) page.
-
-```callout-tip
-Workshop is the cheapest meaningful facility upgrade in the game (₡75K for L1) and the only one that pays off on every weapon transaction in both directions. If you're planning to experiment with multiple weapons, build at least Level 1 first to enable resale.
-```
 
 ### Repair Bay
 
@@ -97,14 +78,16 @@ Multiplies the streaming revenue your robots earn from every battle. Each level 
 
 **Multiplier formula**: 1 + (Level × 1.0)
 
-## Capacity & Storage Facilities
+## Hangar & Armory Facilities
 
-These facilities expand what your stable can hold. They're essential for growth.
+These facilities house your robots and weapons: robot slots, weapon storage, weapon purchasing and weapon refinement. They're essential for growth.
 
 | Facility | Purpose | Level 1 Cost | Operating Cost | Key Benefit |
 |----------|---------|-------------|----------------|-------------|
 | Roster Expansion | More robot slots | ₡150,000 | ₡500/day per slot beyond first | 1→10 robot slots (9 levels max) |
 | Storage Facility | More weapon storage | ₡75,000 | ₡500 + ₡250/level beyond first | 5→55 weapon slots |
+| Weapons Workshop | Weapon purchase discounts and resale rate | ₡75,000 | level × ₡100/day | 5%–50% discount on purchases · 10%–100% resale rate when selling |
+| Refinement Lab | Weapon refinement tiers | ₡75,000 | level × ₡100/day | Hone (L1), Augment (L3), Sharpen (L5), Forge (L8) |
 
 ### Roster Expansion
 
@@ -117,6 +100,39 @@ Every player starts with 1 robot slot. Each level of Roster Expansion adds one m
 Increases the total number of weapons your stable can own (both equipped and unequipped). You start with 5 weapon slots and gain 5 more per level, up to 55 at Level 10.
 
 **Capacity formula**: 5 + (Level × 5)
+
+### Weapons Workshop
+
+The Workshop has a dual purpose: it reduces the purchase price of weapons AND determines how much credit you recover when selling weapons back.
+
+**Purchase discount**: Level × 5%. At Level 1 you get 5% off; at Level 10 you get 50% off.
+
+**Resale rate** (Spec #33): Level × 10%, capped at 100%. At Level 0 resale is unavailable (₡0 returned), so building Workshop Level 1 unlocks the resale system. At Level 10 you recover 100% of what you paid.
+
+Resale value is computed against what you actually paid (after Workshop discount), not the catalog price. This means a weapon you bought at full price at L0 yields more on resale at L10 than a weapon you bought at half price at L10. At L10 you buy at half price and can sell back for the full amount you paid, which makes trading up cheap. Equipped weapons cannot be sold — unequip from your robot first.
+
+The Workshop does not gate refinement: since Season 2 that is the [Refinement Lab](#refinement-lab)'s job.
+
+**Sell weapons** via the **My Inventory** tab on the [Weapon Shop](/weapons?tab=inventory) page.
+
+```callout-tip
+Workshop is the cheapest meaningful facility upgrade in the game (₡75K for L1) and the only one that pays off on every weapon transaction in both directions. If you're planning to experiment with multiple weapons, build at least Level 1 first to enable resale.
+```
+
+### Refinement Lab
+
+Unlocks the four [weapon refinement](/guide/weapons/refinement) tiers. Level 1 unlocks Hone, Level 3 Augment, Level 5 Sharpen and Level 8 Forge (all tiers). Levels 9 and 10 add no new tier. The Lab costs and gates the same as the Weapons Workshop: ₡75,000 per level up to ₡750,000 at Level 10, with the universal prestige gates, and ₡100/day per level to operate.
+
+| Lab Level | Tiers available |
+|---|---|
+| 1–2 | Hone |
+| 3–4 | Hone, Augment |
+| 5–7 | Hone, Augment, Sharpen |
+| 8–10 | All four (Forge added at L8) |
+
+```callout-info
+Season 2: the Refinement Lab took over the refinement tier gates from the Weapons Workshop. Every stable received a Lab at its Weapons Workshop level when the Lab was introduced, so no unlocked tier was lost. Granted Labs charge their operating cost like any other facility.
+```
 
 ## Training Academies
 
@@ -164,6 +180,7 @@ Here's what you'll pay daily for each facility at various levels:
 |----------|---------|---------|----------|
 | Training Facility | ₡250 | ₡1,250 | ₡2,500 |
 | Weapons Workshop | ₡100 | ₡500 | ₡1,000 |
+| Refinement Lab | ₡100 | ₡500 | ₡1,000 |
 | Repair Bay | ₡100 | ₡500 | ₡1,000 |
 | Merchandising Hub | ₡200 | ₡1,000 | ₡2,000 |
 | Streaming Studio | ₡100 | ₡500 | ₡1,000 |

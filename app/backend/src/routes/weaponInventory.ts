@@ -347,9 +347,9 @@ router.delete(
  * and incrementing `weapon_inventory.price_paid` by the same amount so
  * resale at any future Workshop level recovers a fraction of the spend.
  *
- * Tier gating (Workshop level): hone L1, augment L3, sharpen L5, forge L8.
- * The Workshop's existing prestige requirements implicitly gate higher
- * tiers — no separate prestige check is needed here.
+ * Tier gating (Refinement Lab level): hone L1, augment L3, sharpen L5, forge L8.
+ * The Lab's prestige requirements implicitly gate higher tiers — no
+ * separate prestige check is needed here.
  *
  * ## Two-tier locking (matches Spec #33 lock acquisition order)
  *
@@ -363,7 +363,7 @@ router.delete(
  *
  * ## Validation chain (each step throws an `EconomyError` on failure)
  *
- *  - Tier locked vs Workshop level → WEAPON_REFINEMENT_TIER_LOCKED
+ *  - Tier locked vs Refinement Lab level → WEAPON_REFINEMENT_TIER_LOCKED
  *  - Slot cap (≥ 5) / per-tier cap (Sharpen, Forge ≥ 2) → SLOT_/TIER_CAP_EXCEEDED
  *  - Shield + Sharpen/Forge → SHIELD_CANNOT_TAKE_DPS_TIER
  *  - (hone/augment) target attribute on/off the weapon → ATTRIBUTE_NOT_/ALREADY_ON_WEAPON
@@ -409,7 +409,7 @@ router.post(
             magnitude: magnitudeForStorage,
             targetAttribute: targetAttribute ?? null,
             costPaid: completedRefinement.cost,
-            workshopLevel: completedRefinement.workshopLevel,
+            refinementLabLevel: completedRefinement.refinementLabLevel,
           },
         });
       } catch {

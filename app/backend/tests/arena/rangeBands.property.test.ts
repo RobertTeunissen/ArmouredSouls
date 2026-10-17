@@ -327,7 +327,7 @@ describe('Physical reach invariant (#518)', () => {
           arbBeyondReach(1e3),
           (shape, hand, d) => {
             const outcome = attemptAttack(attackerWith(shape, hand), robotFixture('Defender'), d, hand);
-            expect(outcome.result).toBe(false);
+            expect(outcome.result).toBe('blocked');
             expect(outcome.events).toHaveLength(0);
             expect(outcome.randomCalls).toBe(0);
             expect(outcome.attackerBefore).toBe('unchanged');
@@ -346,7 +346,7 @@ describe('Physical reach invariant (#518)', () => {
           fc.oneof(arbWithinReach(), fc.constant(2)),
           (shape, hand, d) => {
             const outcome = attemptAttack(attackerWith(shape, hand), robotFixture('Defender'), d, hand);
-            expect(outcome.result).toBe(true);
+            expect(['missed', 'hit']).toContain(outcome.result);
             const resolved = outcome.events.filter(e => RESOLVED_ATTACK_TYPES.includes(e.type) && e.hand === hand);
             expect(resolved).toHaveLength(1);
           },
@@ -362,7 +362,7 @@ describe('Physical reach invariant (#518)', () => {
           fc.double({ min: 0, max: 50, noNaN: true, noDefaultInfinity: true }),
           (hand, d) => {
             const outcome = attemptAttack(attackerWith('ranged', hand), robotFixture('Defender'), d, hand);
-            expect(outcome.result).toBe(true);
+            expect(['missed', 'hit']).toContain(outcome.result);
             const resolved = outcome.events.filter(e => RESOLVED_ATTACK_TYPES.includes(e.type) && e.hand === hand);
             expect(resolved).toHaveLength(1);
           },
@@ -373,7 +373,7 @@ describe('Physical reach invariant (#518)', () => {
 
     it('measures real positions, so a forged context distance cannot bypass reach', () => {
       const outcome = attemptAttack(attackerWith('melee', 'main'), robotFixture('Defender'), 5, 'main', { contextDistance: 1 });
-      expect(outcome.result).toBe(false);
+      expect(outcome.result).toBe('blocked');
       expect(outcome.events).toHaveLength(0);
       expect(outcome.randomCalls).toBe(0);
     });

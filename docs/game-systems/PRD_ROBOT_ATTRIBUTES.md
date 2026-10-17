@@ -2,8 +2,8 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: v1.5
-**Date**: October 15, 2026  
+**Version**: v1.7
+**Date**: October 17, 2026  
 **Status**: ✅ Implemented & Verified 
 
 ---
@@ -31,6 +31,10 @@
   - Sync Protocols, Support Systems, Formation Tactics now have 1v1 solo bonuses
 - v1.5 - Canonical effective stats (October 15, 2026, #517)
   - Effective Stat Calculation now matches the shared canonical formula; loadout modifier applied once; stance and facility bonuses are not attribute multipliers
+- v1.6 - Season 2 engagement cycle (October 16, 2026, #520)
+  - Servo Motors decides the pursuit/kiting speed race (both 1.10×); Evasion Thrusters sets the ranged disengage duration; Combat Algorithms' patience window drives melee commit and the disengage cooldown; patience resets on a landed hit
+- v1.7 - Season 2 round 2 (October 17, 2026, #520)
+  - pursuit 1.15× vs kiting 1.10×; the disengage burst starts 2.5 s after the first melee hit
 
 ---
 
@@ -106,6 +110,7 @@ All robots start with each attribute at level 1. Players spend Credits to upgrad
 7. **Armor Plating** - Physical damage reduction from all sources (percentage-based, 1.5% per point)
 8. **Energy Shield Capacity** - Maximum energy shield HP pool (separate from robot HP)
 9. **Evasion Thrusters** - Chance to dodge incoming attacks
+    - **2D Arena Role (Season 2, #520)**: sets the ranged disengage burst duration: `2 + 0.04 × evasionThrusters` seconds (3.0 s at 25, 4.0 s at 50, uncapped) for a burst that starts 2.5 s after the first melee hit a ranged robot takes in an engagement
 10. **Damage Dampeners** - Reduces ALL incoming damage + extra crit damage reduction (rebalanced Feb 2026)
 11. **Counter Protocols** - Chance to strike back when attacked (hit or miss)
 
@@ -131,7 +136,8 @@ All robots start with each attribute at level 1. Players spend Credits to upgrad
     - **2D Arena Role**: Determines base movement speed in the arena: `7.0 + servoMotors × 0.2` (range 7.2–17.0 units/s)
     - Higher servo motors = faster arena traversal
     - Subject to servo strain at sustained high speeds (>80% for >3s)
-    - See [../architecture/COMBAT_FORMULAS.md](../architecture/COMBAT_FORMULAS.md) for Movement_Speed and Servo_Strain formulas
+    - Season 2 (#520): melee pursuit moves at 1.15× and ranged kiting at 1.10×, with no speed-compensation term, so at equal Servo Motors the chaser slowly closes in and a kiter needs roughly 1.05 × the chaser's Servo Motors + 1.6 to keep away; melee commit and ranged disengage bursts move at 1.30× of the robot's own speed
+    - See [../architecture/COMBAT_FORMULAS.md](../architecture/COMBAT_FORMULAS.md) for Movement_Speed, Engagement_Cycle and Servo_Strain formulas
 14. **Gyro Stabilizers** - Balance, dodging ability, and reaction time
     - **2D Arena Role**: Determines turn speed: `180 + gyroStabilizers × 6` degrees/s (range 186–480°/s)
     - Reduces backstab bonus (0.25% reduction per point)
@@ -139,10 +145,11 @@ All robots start with each attribute at level 1. Players spend Credits to upgrad
     - Higher gyro = harder to exploit positionally
 15. **Hydraulic Systems** - Physical force for melee impact and carry capacity
     - **2D Arena Role**: Proximity-based damage bonus in the arena
-    - Melee range damage bonus: `1 + hydraulicSystems × 0.02` (up to 2.0×)
-    - Short range damage bonus: `1 + hydraulicSystems × 0.015` (up to 1.75×)
+    - Melee range damage bonus: `1 + hydraulicSystems × 0.015` (1.75× at 50, uncapped; Season 2 #519, was 0.02)
+    - Short range damage bonus: `1 + hydraulicSystems × 0.01` (1.5× at 50, uncapped; Season 2 #519, was 0.015)
     - No bonus at mid/long range
     - Also applies to melee counter-attacks
+    - Ranged mirror: Logic Cores (long/mid range damage bonus)
 16. **Power Core** - Energy generation for energy shield regeneration
 
 ### 🟡 AI Processing (4)
@@ -153,7 +160,7 @@ All robots start with each attribute at level 1. Players spend Credits to upgrad
     - **2D Arena Role**: Controls movement AI strategy quality
     - Score < 0.3 = random_bias, 0.3–0.6 = direct_path, > 0.6 = calculated_path
     - Movement prediction: leads a moving target with weight `(combatAlgorithms - 1) / 49` (0 at 1, full at 50). Melee robots skip it within 4 units of their target and, against another melee robot, at every distance, so two melee fighters close in directly instead of circling each other (#467). Against ranged targets prediction stays on, to cut off a retreating opponent.
-    - Patience timer: `15 - (score × 5)` seconds (10–15s range; higher score = shorter). Since #518 the limit no longer forces attacks: patience never lets a weapon attack beyond its reach
+    - Patience timer: `15 - (score × 5)` seconds (10–15s range; higher score = shorter). Since #518 the limit no longer forces attacks: patience never lets a weapon attack beyond its reach. Season 2 (#520): the timer resets only on a landed hit; a melee robot that goes one patience window without landing a hit commits (1.30× pursuit burst until within reach), and the window is the cooldown between a ranged robot's disengage bursts
     - Higher combat algorithms = smarter positioning and engagement timing
 18. **Threat Analysis** - Target priority and positioning
     - **2D Arena Role**: Spatial awareness and threat-aware positioning
@@ -168,7 +175,10 @@ All robots start with each attribute at level 1. Players spend Credits to upgrad
     - Damage bonus accumulation: +0.01 per hit taken (capped at adaptiveAI × 0.25)
     - 50% effectiveness when HP > 70% (winning robots benefit less)
 20. **Logic Cores** - Performance under pressure and critical decisions
-    - **2D Arena Role**: Composure system under low-HP pressure
+    - **2D Arena Role**: Ranged damage bonus and composure system under low-HP pressure
+    - Long range damage bonus: `1 + logicCores × 0.015` (1.75× at 50, uncapped; Season 2 #519)
+    - Mid range damage bonus: `1 + logicCores × 0.01` (1.5× at 50, uncapped)
+    - No damage bonus at short/melee range; also applies to long-band counter-attacks
     - Pressure threshold: `15 + logicCores × 0.6` (% HP)
     - Negates accuracy/damage penalties under pressure
     - At logicCores = 30: fully negates all pressure penalties
@@ -277,7 +287,7 @@ Robots are bipedal humanoids with two arms. The loadout system determines how we
 For quick reference, the four loadout types provide the following bonuses/penalties:
 
 **1. Weapon + Shield** (`weapon_shield`)
-- **Bonuses**: +20% Shield Capacity, +15% Armor Plating, +10% Counter Protocols
+- **Bonuses**: +15% Shield Capacity, +10% Armor Plating, +10% Counter Protocols (Season 2: was +20% / +15% / +10%)
 - **Penalties**: -15% Attack Speed
 - **Best For**: Defensive tank builds
 
@@ -293,9 +303,9 @@ For quick reference, the four loadout types provide the following bonuses/penalt
 - **Best For**: Rapid-attack DPS builds
 
 **4. Single** (`single`)
-- **Bonuses**: +10% Gyro Stabilizers, +5% Servo Motors
+- **Bonuses**: +15% Gyro Stabilizers, +10% Servo Motors (Season 2: was +10% / +5%; mobility identity — fewer weapons, lighter, faster)
 - **Penalties**: None
-- **Best For**: Balanced, flexible builds
+- **Best For**: Balanced, mobile builds
 
 **Note**: Percentage-based bonuses scale proportionally with robot power level, ensuring meaningful choices at all stages of progression.
 
@@ -368,7 +378,7 @@ hit_chance += learning_bonus
 damage_reduction += learning_bonus / 2
 ```
 
-**Logic Cores** - Performance under pressure (see formula in Combat Formulas section)
+**Logic Cores** - Ranged damage bonus (long `1 + LC × 0.015`, mid `1 + LC × 0.01`, Season 2 #519) and performance under pressure (see formula in Combat Formulas section)
 
 ---
 
@@ -394,6 +404,8 @@ damage_reduction += learning_bonus / 2
   - Increased repair cost multiplier applies
 
 **Logic Cores Integration:**
+
+Besides the composure role below, Logic Cores also adds the ranged damage bonus (long/mid range, see the Logic Cores attribute entry); the pressure mechanics are unchanged.
 
 Logic Cores improves decision-making under low HP conditions and provides **positive benefits at high levels**:
 
@@ -797,7 +809,7 @@ In King of the Hill (KotH) free-for-all zone-control matches, several attributes
 
 ### Servo Motors — Zone Approach Speed
 
-Higher servo motors = faster zone approach, critical for zone control. Robots with low servo motors struggle to contest the zone after respawning at the arena edge or repositioning after a zone rotation (Wednesday rotating variant). In KotH, the difference between reaching the zone first and arriving second can determine uncontested scoring windows.
+Higher servo motors = faster zone approach, critical for zone control. Robots with low servo motors struggle to reach the fixed centre zone (radius 7) from their spawn at the arena edge, and to return to it after leaving it. In KotH, the difference between reaching the zone first and arriving second can determine uncontested scoring windows.
 
 ### Threat Analysis — Zone-Aware Targeting Weights
 

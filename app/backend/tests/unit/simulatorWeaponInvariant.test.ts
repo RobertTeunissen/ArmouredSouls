@@ -206,3 +206,39 @@ describe('counters use the countering hand\'s real weapon', () => {
     expect(counterBaseDamageCalls).toEqual([[baseDamage, 'offhand']]);
   });
 });
+
+describe('Logic Cores ranged damage bonus in attacks and counters (#519)', () => {
+  it('a long-range primary hit and its long-band counter apply Logic Cores, not hydraulics', () => {
+    const attacker = robotFixture('Attacker', { logicCores: 40, hydraulicSystems: 30 });
+    const defender = robotFixture('Defender', { logicCores: 30, hydraulicSystems: 30 });
+    const { events } = attackWithCounter(attacker, defender, 15);
+
+    const hits = events.filter((e) => e.attacker === 'Attacker' && (e.type === 'attack' || e.type === 'critical'));
+    expect(hits).toHaveLength(1);
+    expect(hits[0].formulaBreakdown?.calculation).toContain('× 1.00 hydraulic × 1.60 logic');
+    expect(hits[0].formulaBreakdown?.components.logicCoresBonus).toBeCloseTo(1.6, 10);
+
+    const counters = events.filter((e) => e.type === 'counter');
+    expect(counters).toHaveLength(1);
+    expect(counters[0].formulaBreakdown?.calculation).toContain('× 1.00 hydraulic × 1.45 logic');
+    expect(counters[0].formulaBreakdown?.components.counterLogicCores).toBeCloseTo(1.45, 10);
+    expect(counters[0].formulaBreakdown?.components.counterHydraulic).toBe(1);
+  });
+
+  it('a melee-band counter applies hydraulics, not Logic Cores', () => {
+    const attacker = robotFixture('Attacker', { mainWeapon: weaponFixture('melee', 1), logicCores: 40 });
+    const defender = robotFixture('Defender', {
+      mainWeapon: weaponFixture('melee', 3), logicCores: 30, hydraulicSystems: 20,
+    });
+    const { events } = attackWithCounter(attacker, defender, 1);
+
+    const hits = events.filter((e) => e.attacker === 'Attacker' && (e.type === 'attack' || e.type === 'critical'));
+    expect(hits).toHaveLength(1);
+    expect(hits[0].formulaBreakdown?.components.logicCoresBonus).toBe(1);
+
+    const counters = events.filter((e) => e.type === 'counter');
+    expect(counters).toHaveLength(1);
+    expect(counters[0].formulaBreakdown?.components.counterHydraulic).toBeCloseTo(1.3, 10);
+    expect(counters[0].formulaBreakdown?.components.counterLogicCores).toBe(1);
+  });
+});

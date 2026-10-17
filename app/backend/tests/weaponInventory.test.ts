@@ -580,18 +580,18 @@ describe('Weapon Inventory Routes', () => {
   // ─────────────────────────────────────────────────────────────────────
 
   describe('POST /api/weapon-inventory/:id/refine', () => {
-    /** Create a fresh user with optional Workshop level + starting currency. */
-    async function createRefineUser(opts: { workshopLevel?: number; currency?: number } = {}) {
+    /** Create a fresh user with optional Refinement Lab level + starting currency. */
+    async function createRefineUser(opts: { refinementLabLevel?: number; currency?: number } = {}) {
       const user = await createTestUser();
       testUserIds.push(user.id);
       if (opts.currency !== undefined) {
         await prisma.user.update({ where: { id: user.id }, data: { currency: opts.currency } });
       }
-      if (opts.workshopLevel !== undefined && opts.workshopLevel > 0) {
+      if (opts.refinementLabLevel !== undefined && opts.refinementLabLevel > 0) {
         await prisma.facility.upsert({
-          where: { userId_facilityType: { userId: user.id, facilityType: 'weapons_workshop' } },
-          create: { userId: user.id, facilityType: 'weapons_workshop', level: opts.workshopLevel },
-          update: { level: opts.workshopLevel },
+          where: { userId_facilityType: { userId: user.id, facilityType: 'refinement_lab' } },
+          create: { userId: user.id, facilityType: 'refinement_lab', level: opts.refinementLabLevel },
+          update: { level: opts.refinementLabLevel },
         });
       }
       const token = jwt.sign(
@@ -616,8 +616,8 @@ describe('Weapon Inventory Routes', () => {
     });
 
     it('returns 403 when refining another user\'s weapon', async () => {
-      const owner = await createRefineUser({ workshopLevel: 1, currency: 1_000_000 });
-      const intruder = await createRefineUser({ workshopLevel: 1, currency: 1_000_000 });
+      const owner = await createRefineUser({ refinementLabLevel: 1, currency: 1_000_000 });
+      const intruder = await createRefineUser({ refinementLabLevel: 1, currency: 1_000_000 });
       const weapon = await prisma.weapon.findFirst({ where: { combatPowerBonus: { gt: 0 } } });
       const inv = await giveRefineWeapon(owner.user.id, weapon!.id);
 
@@ -631,7 +631,7 @@ describe('Weapon Inventory Routes', () => {
     });
 
     it('returns 404 for nonexistent inventory ID', async () => {
-      const ctx = await createRefineUser({ workshopLevel: 1, currency: 1_000_000 });
+      const ctx = await createRefineUser({ refinementLabLevel: 1, currency: 1_000_000 });
       const response = await request(server)
         .post('/api/weapon-inventory/999999999/refine')
         .set('Authorization', `Bearer ${ctx.token}`)
@@ -640,8 +640,8 @@ describe('Weapon Inventory Routes', () => {
       expect(response.status).toBe(403); // verifyWeaponOwnership returns 403 for missing rows
     });
 
-    it('returns 403 WEAPON_REFINEMENT_TIER_LOCKED when Workshop level too low for tier', async () => {
-      const ctx = await createRefineUser({ workshopLevel: 0, currency: 1_000_000 });
+    it('returns 403 WEAPON_REFINEMENT_TIER_LOCKED when Refinement Lab level too low for tier', async () => {
+      const ctx = await createRefineUser({ refinementLabLevel: 0, currency: 1_000_000 });
       const weapon = await prisma.weapon.findFirst({ where: { combatPowerBonus: { gt: 0 } } });
       const inv = await giveRefineWeapon(ctx.user.id, weapon!.id);
 
@@ -653,11 +653,11 @@ describe('Weapon Inventory Routes', () => {
 
       expect(response.status).toBe(403);
       expect(response.body.code).toBe('WEAPON_REFINEMENT_TIER_LOCKED');
-      expect(response.body.details).toEqual(expect.objectContaining({ requiredWorkshopLevel: 1, currentWorkshopLevel: 0 }));
+      expect(response.body.details).toEqual(expect.objectContaining({ requiredRefinementLabLevel: 1, currentRefinementLabLevel: 0 }));
     });
 
-    it('successfully refines at Workshop L1 (Hone)', async () => {
-      const ctx = await createRefineUser({ workshopLevel: 1, currency: 1_000_000 });
+    it('successfully refines at Refinement Lab L1 (Hone)', async () => {
+      const ctx = await createRefineUser({ refinementLabLevel: 1, currency: 1_000_000 });
       const weapon = await prisma.weapon.findFirst({ where: { combatPowerBonus: { gt: 0 } } });
       const inv = await giveRefineWeapon(ctx.user.id, weapon!.id, 100_000);
 
@@ -682,8 +682,8 @@ describe('Weapon Inventory Routes', () => {
       expect(updated?.pricePaid).toBe(110_000);
     });
 
-    it('successfully refines at Workshop L8 (Forge)', async () => {
-      const ctx = await createRefineUser({ workshopLevel: 8, currency: 1_000_000 });
+    it('successfully refines at Refinement Lab L8 (Forge)', async () => {
+      const ctx = await createRefineUser({ refinementLabLevel: 8, currency: 1_000_000 });
       const weapon = await prisma.weapon.findFirst({ where: { weaponType: { not: 'shield' } } });
       const inv = await giveRefineWeapon(ctx.user.id, weapon!.id, 100_000);
 
@@ -699,7 +699,7 @@ describe('Weapon Inventory Routes', () => {
     });
 
     it('rejects Sharpen on a shield (SHIELD_CANNOT_TAKE_DPS_TIER)', async () => {
-      const ctx = await createRefineUser({ workshopLevel: 5, currency: 1_000_000 });
+      const ctx = await createRefineUser({ refinementLabLevel: 5, currency: 1_000_000 });
       const shield = await prisma.weapon.findFirst({ where: { weaponType: 'shield' } });
       const inv = await giveRefineWeapon(ctx.user.id, shield!.id);
 
@@ -714,7 +714,7 @@ describe('Weapon Inventory Routes', () => {
     });
 
     it('rejects Hone on an attribute the weapon doesn\'t grant (ATTRIBUTE_NOT_ON_WEAPON)', async () => {
-      const ctx = await createRefineUser({ workshopLevel: 1, currency: 1_000_000 });
+      const ctx = await createRefineUser({ refinementLabLevel: 1, currency: 1_000_000 });
       // Find a weapon with a known zero attribute we can target
       const weapon = await prisma.weapon.findFirst({ where: { combatPowerBonus: 0, name: { not: { contains: 'Practice' } } } });
       const inv = await giveRefineWeapon(ctx.user.id, weapon!.id);
@@ -730,7 +730,7 @@ describe('Weapon Inventory Routes', () => {
     });
 
     it('rejects Augment on an attribute the weapon already grants (ATTRIBUTE_ALREADY_ON_WEAPON)', async () => {
-      const ctx = await createRefineUser({ workshopLevel: 3, currency: 1_000_000 });
+      const ctx = await createRefineUser({ refinementLabLevel: 3, currency: 1_000_000 });
       const weapon = await prisma.weapon.findFirst({ where: { combatPowerBonus: { gt: 0 } } });
       const inv = await giveRefineWeapon(ctx.user.id, weapon!.id);
 
@@ -745,7 +745,7 @@ describe('Weapon Inventory Routes', () => {
     });
 
     it('returns 402 INSUFFICIENT_CREDITS when balance too low', async () => {
-      const ctx = await createRefineUser({ workshopLevel: 1, currency: 5_000 });
+      const ctx = await createRefineUser({ refinementLabLevel: 1, currency: 5_000 });
       const weapon = await prisma.weapon.findFirst({ where: { combatPowerBonus: { gt: 0 } } });
       const inv = await giveRefineWeapon(ctx.user.id, weapon!.id);
 
@@ -760,7 +760,7 @@ describe('Weapon Inventory Routes', () => {
     });
 
     it('writes a weapon_refinement audit log entry on success', async () => {
-      const ctx = await createRefineUser({ workshopLevel: 1, currency: 1_000_000 });
+      const ctx = await createRefineUser({ refinementLabLevel: 1, currency: 1_000_000 });
       const weapon = await prisma.weapon.findFirst({ where: { combatPowerBonus: { gt: 0 } } });
       const inv = await giveRefineWeapon(ctx.user.id, weapon!.id);
 
@@ -782,7 +782,7 @@ describe('Weapon Inventory Routes', () => {
     });
 
     it('first refinement unlocks E22 "First Refinement"', async () => {
-      const ctx = await createRefineUser({ workshopLevel: 1, currency: 1_000_000 });
+      const ctx = await createRefineUser({ refinementLabLevel: 1, currency: 1_000_000 });
       const weapon = await prisma.weapon.findFirst({ where: { combatPowerBonus: { gt: 0 } } });
       const inv = await giveRefineWeapon(ctx.user.id, weapon!.id);
 
@@ -798,7 +798,7 @@ describe('Weapon Inventory Routes', () => {
     });
 
     it('5th refinement on a weapon unlocks E24 "Legendary Smith"', async () => {
-      const ctx = await createRefineUser({ workshopLevel: 8, currency: 10_000_000 });
+      const ctx = await createRefineUser({ refinementLabLevel: 8, currency: 10_000_000 });
       const weapon = await prisma.weapon.findFirst({ where: { combatPowerBonus: { gt: 0 }, weaponType: { not: 'shield' } } });
       const inv = await giveRefineWeapon(ctx.user.id, weapon!.id);
 

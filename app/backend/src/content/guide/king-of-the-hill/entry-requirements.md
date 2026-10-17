@@ -2,7 +2,7 @@
 title: "Entry Requirements"
 description: "Weapon readiness, stable separation, schedule, and eligibility rules."
 order: 6
-lastUpdated: "2026-10-15"
+lastUpdated: "2026-10-16"
 relatedArticles:
   - king-of-the-hill/match-formats
   - king-of-the-hill/rewards
@@ -29,8 +29,6 @@ If a user has more robots than there are groups, some conflicts may remain — b
 ## Schedule
 
 KotH events run **daily at 1:00 PM UTC**.
-
-Zone rotation is determined by cycle number (modulo-based), providing variety across fixed and rotating zone types.
 
 ## Matchmaking
 

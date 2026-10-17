@@ -1,6 +1,6 @@
 # Armoured Souls — Changelog
 
-**Last Updated**: September 21, 2026
+**Last Updated**: October 17, 2026
 
 Development history organized by phase and month. For planned work, see the [BACKLOG.md](BACKLOG.md).
 
@@ -159,7 +159,7 @@ At the August 1, 2026 snapshot, Phase 1 delivered a fully functional game with f
 ---
 
 
-## August–September 2026 — Current Implementation Updates
+## August–October 2026 — Current Implementation Updates
 
 These entries record repository implementation. Acceptance and production release status must be confirmed from deployment records and the live environment; implementation notes deliberately separate those facts.
 
@@ -172,5 +172,7 @@ These entries record repository implementation. Acceptance and production releas
 | Sep 5–6 | Spec #53 — Financial Ledger Coverage | Required paired capture for current-economy credit mutations and preserved immutable legacy history. See the [Financial Ledger Coverage record](implementation_notes/financial-ledger-coverage.md). |
 | Sep 10 | Spec #54 — Finance Center | Implemented the `/income` Finance Center route, reporting contract, historical reads, and compatibility redirects. See the [Finance Center Reporting Contract](implementation_notes/finance-center-reporting-contract.md). |
 | Sep 10–11 | Deployment reliability | Corrected Acceptance readiness checks, PM2 start/reload behavior, stale process recovery, and bounded backend cycle memory. |
+| Oct 16 | Season 2 balance package (#519–#523) | Hydraulic Systems retune and Logic Cores ranged damage; engagement cycle (equal 1.10 chase/kite, melee commit, ranged disengage, wall slide) with simultaneous movement; signed-sum shared weapon pricing, repriced catalogue, shield and loadout passive changes, 5%/level Workshop discount; new Refinement Lab with a one-off grant migration and 4-4-4-2 facility categories; KotH zone radius 7 stored at scheduling and rotating-zone leftovers removed; no Grand Melee change. See [SEASON_2_BALANCE_PACKAGE.md](balance_changes/SEASON_2_BALANCE_PACKAGE.md) (incl. the player announcement) and the [validation report](analysis/NEXT_SEASON_BALANCE_VALIDATION.md#season-2-balance-package-519522). |
+| Oct 17 | Season 2 balance package round 2 (#520) | Ranged disengage now starts 2.5 s after the first melee hit (guaranteed exchange); melee pursuit 1.10 → 1.15 (kiting stays 1.10); re-measured main / round 1 / round 2. See [SEASON_2_BALANCE_PACKAGE.md](balance_changes/SEASON_2_BALANCE_PACKAGE.md#round-2-adjustments-520) and the [validation report](analysis/NEXT_SEASON_BALANCE_VALIDATION.md#season-2-balance-package-round-2). |
 
 The historical Phase 1 summary above reflects the earlier August snapshot. Current stack versions and implementation inventories are maintained in [ARCHITECTURE.md](architecture/ARCHITECTURE.md), the [service directory](architecture/PRD_SERVICE_DIRECTORY.md), and the [documentation index](README.md).

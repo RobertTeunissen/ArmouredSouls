@@ -2,7 +2,7 @@
 title: "KotH Strategy"
 description: "Attribute builds, survivability tactics, and the wait-and-enter approach for zone control."
 order: 4
-lastUpdated: "2026-03-18"
+lastUpdated: "2026-10-16"
 relatedArticles:
   - king-of-the-hill/zone-control-basics
   - king-of-the-hill/anti-passive-mechanics
@@ -13,7 +13,7 @@ relatedArticles:
 ## Key Attributes for KotH
 
 ### Servo Motors
-High servo motors help you reach the zone first and reposition quickly. Essential for rotating zone matches where you need to race to the new zone position.
+High servo motors help you reach the zone first and reposition quickly. Being first into the center zone lets you score before rivals arrive to contest it.
 
 ### Threat Analysis
 Affects zone movement bias. At low values (1-10), robots only partially bias toward the zone. At high values (30+), robots strongly prioritize zone control. Also scales target priority weights.

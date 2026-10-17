@@ -74,6 +74,11 @@ function makeState(overrides: Partial<RobotCombatState> = {}): RobotCombatState 
     currentTarget: null,
     patienceTimer: 0,
     combatAlgorithmScore: 0.5,
+    lastMeleeHitTakenAt: null,
+    disengageBurstUntil: 0,
+    disengageReadyAt: 0,
+    disengageScheduledAt: null,
+    speedBurst: 'none',
     adaptationHitBonus: 0,
     adaptationDamageBonus: 0,
     hitsTaken: 0,
@@ -123,22 +128,34 @@ describe('hydraulicBonus property tests', () => {
   });
 
   /**
-   * Property 27b: Hydraulic bonus at melee range is capped at 2.0× (March 2026 rebalance).
-   * **Validates: Balance change - reduced from 2.5× to 2.0×**
+   * Property 27b: Hydraulic bonus is linear and uncapped (Season 2, #519):
+   * 1.75× at melee and 1.5× at short for 50 Hydraulic Systems.
+   * **Validates: Balance change - melee 0.02 → 0.015, short 0.015 → 0.01**
    */
-  describe('Property 27b: Melee bonus capped at 2.0×', () => {
-    it('should return exactly 2.0 for melee range at max hydraulicSystems (50)', () => {
-      const maxBonus = calculateHydraulicBonus(50, 'melee');
-      expect(maxBonus).toBeCloseTo(2.0, 10);
+  describe('Property 27b: Linear, uncapped Season 2 coefficients', () => {
+    it('should return 1.75 at melee and 1.5 at short for 50 hydraulicSystems', () => {
+      expect(calculateHydraulicBonus(50, 'melee')).toBeCloseTo(1.75, 10);
+      expect(calculateHydraulicBonus(50, 'short')).toBeCloseTo(1.5, 10);
     });
 
-    it('should never exceed 2.0 for any hydraulicSystems value', () => {
+    it('should be linear: melee 1 + 0.015 × H, short 1 + 0.01 × H', () => {
       fc.assert(
         fc.property(arbHydro(), (hydro) => {
-          const meleeBonus = calculateHydraulicBonus(hydro, 'melee');
-          expect(meleeBonus).toBeLessThanOrEqual(2.0);
+          expect(calculateHydraulicBonus(hydro, 'melee')).toBeCloseTo(1 + hydro * 0.015, 10);
+          expect(calculateHydraulicBonus(hydro, 'short')).toBeCloseTo(1 + hydro * 0.01, 10);
         }),
         { numRuns: 500 },
+      );
+    });
+
+    it('should not be capped beyond 50 hydraulicSystems', () => {
+      fc.assert(
+        fc.property(fc.integer({ min: 51, max: 500 }), (hydro) => {
+          expect(calculateHydraulicBonus(hydro, 'melee')).toBeGreaterThan(1.75);
+          expect(calculateHydraulicBonus(hydro, 'melee')).toBeCloseTo(1 + hydro * 0.015, 10);
+          expect(calculateHydraulicBonus(hydro, 'short')).toBeGreaterThan(1.5);
+        }),
+        { numRuns: 200 },
       );
     });
   });
@@ -244,6 +261,98 @@ describe('counterAttack property tests', () => {
       const result = resolveCounter(defender, attacker, 5);
       expect(result.canCounter).toBe(true);
       expect(result.hand).toBe('offhand');
+    });
+  });
+
+  /**
+   * Property 28b: Counter attribute bonuses follow the band (Season 2, #519).
+   * Hydraulics apply only to melee-band counters (Req 19.4); Logic Cores
+   * apply only to long-band counters.
+   */
+  describe('Property 28b: Counter hydraulic/Logic Cores bonuses by band', () => {
+    function makeDefender(rangeBand: RangeBand, logicCores: number, hydraulicSystems: number): RobotCombatState {
+      return makeState({
+        robot: {
+          loadoutType: 'single',
+          stance: 'balanced',
+          mainWeapon: {
+            weapon: makeWeapon({
+              weaponType: rangeBand === 'melee' ? 'melee' : 'ballistic',
+              name: rangeBand === 'melee' ? 'Combat Knife' : 'Railgun',
+              rangeBand,
+            }),
+          } as any,
+          offhandWeapon: null,
+          hydraulicSystems,
+          logicCores,
+        } as any,
+      });
+    }
+
+    it('should apply Logic Cores (not hydraulics) to a long-band counter', () => {
+      fc.assert(
+        fc.property(
+          fc.integer({ min: 1, max: 50 }),
+          arbHydro(),
+          fc.double({ min: 13, max: 40, noNaN: true, noDefaultInfinity: true }),
+          (lc, hydro, distance) => {
+            const defender = makeDefender('long', lc, hydro);
+            const attacker = makeState({ position: { x: distance, y: 0 } });
+            const result = resolveCounter(defender, attacker, distance);
+            expect(result.canCounter).toBe(true);
+            expect(result.logicCoresMultiplier).toBeCloseTo(1 + lc * 0.015, 10);
+            expect(result.hydraulicMultiplier).toBe(1);
+          },
+        ),
+        { numRuns: 300 },
+      );
+    });
+
+    it('should apply hydraulics (not Logic Cores) to a melee-band counter', () => {
+      fc.assert(
+        fc.property(
+          fc.integer({ min: 1, max: 50 }),
+          arbHydro(),
+          fc.double({ min: 0, max: 2, noNaN: true, noDefaultInfinity: true }),
+          (lc, hydro, distance) => {
+            const defender = makeDefender('melee', lc, hydro);
+            const attacker = makeState({ position: { x: distance, y: 0 } });
+            const result = resolveCounter(defender, attacker, distance);
+            expect(result.canCounter).toBe(true);
+            expect(result.hydraulicMultiplier).toBeCloseTo(1 + hydro * 0.015, 10);
+            expect(result.logicCoresMultiplier).toBe(1);
+          },
+        ),
+        { numRuns: 300 },
+      );
+    });
+
+    it('should apply neither bonus to short- or mid-band counters', () => {
+      fc.assert(
+        fc.property(
+          fc.integer({ min: 1, max: 50 }),
+          arbHydro(),
+          fc.double({ min: 3, max: 12, noNaN: true, noDefaultInfinity: true }),
+          (lc, hydro, distance) => {
+            const defender = makeDefender('mid', lc, hydro);
+            const attacker = makeState({ position: { x: distance, y: 0 } });
+            const result = resolveCounter(defender, attacker, distance);
+            expect(result.canCounter).toBe(true);
+            expect(result.hydraulicMultiplier).toBe(1);
+            expect(result.logicCoresMultiplier).toBe(1);
+          },
+        ),
+        { numRuns: 300 },
+      );
+    });
+
+    it('should report 1 for both multipliers when the counter is blocked', () => {
+      const defender = makeDefender('melee', 50, 50);
+      const attacker = makeState({ position: { x: 20, y: 0 } });
+      const result = resolveCounter(defender, attacker, 20);
+      expect(result.canCounter).toBe(false);
+      expect(result.hydraulicMultiplier).toBe(1);
+      expect(result.logicCoresMultiplier).toBe(1);
     });
   });
 });

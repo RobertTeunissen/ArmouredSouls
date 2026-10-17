@@ -19,7 +19,7 @@ const makeRef = (overrides: Partial<Refinement>): Refinement => ({
 
 describe('SlotBar', () => {
   it('renders 5 slots regardless of refinement count', () => {
-    render(<SlotBar refinements={[]} workshopLevel={1} />);
+    render(<SlotBar refinements={[]} refinementLabLevel={1} />);
     const bar = screen.getByTestId('slot-bar');
     // Exactly 5 children for the 5 slots
     expect(bar.children).toHaveLength(5);
@@ -29,20 +29,20 @@ describe('SlotBar', () => {
     render(<SlotBar refinements={[
       makeRef({ id: 1, slotIndex: 1, tier: 'hone' }),
       makeRef({ id: 2, slotIndex: 2, tier: 'forge', targetAttribute: null }),
-    ]} workshopLevel={5} />);
+    ]} refinementLabLevel={5} />);
     expect(screen.getByLabelText(/2 of 5 refinement slots filled/)).toBeInTheDocument();
   });
 
-  it('renders locked tooltip on empty slots when Workshop level < 1 (Hone gated)', () => {
-    render(<SlotBar refinements={[]} workshopLevel={0} />);
+  it('renders locked tooltip on empty slots when Refinement Lab level < 1 (Hone gated)', () => {
+    render(<SlotBar refinements={[]} refinementLabLevel={0} />);
     const bar = screen.getByTestId('slot-bar');
     // First empty slot should be a "locked" variant — we check via aria-label substring
     const lockedSlots = bar.querySelectorAll('[aria-label*="locked"]');
     expect(lockedSlots.length).toBe(5);
   });
 
-  it('renders empty (not locked) slots when Workshop ≥ L1', () => {
-    render(<SlotBar refinements={[]} workshopLevel={1} />);
+  it('renders empty (not locked) slots when Refinement Lab ≥ L1', () => {
+    render(<SlotBar refinements={[]} refinementLabLevel={1} />);
     const bar = screen.getByTestId('slot-bar');
     const lockedSlots = bar.querySelectorAll('[aria-label*="locked"]');
     expect(lockedSlots.length).toBe(0);
@@ -53,7 +53,7 @@ describe('SlotBar', () => {
     render(
       <SlotBar
         refinements={[makeRef({ id: 1, slotIndex: 2, tier: 'sharpen', magnitude: 1, targetAttribute: null })]}
-        workshopLevel={5}
+        refinementLabLevel={5}
         onSlotClick={onSlotClick}
       />,
     );
@@ -63,11 +63,11 @@ describe('SlotBar', () => {
   });
 
   it('renders compact variant with smaller boxes', () => {
-    const { rerender } = render(<SlotBar refinements={[]} workshopLevel={1} />);
+    const { rerender } = render(<SlotBar refinements={[]} refinementLabLevel={1} />);
     const normal = screen.getByTestId('slot-bar');
     const normalSize = normal.children[0].getAttribute('style') ?? '';
 
-    rerender(<SlotBar refinements={[]} workshopLevel={1} compact />);
+    rerender(<SlotBar refinements={[]} refinementLabLevel={1} compact />);
     const compact = screen.getByTestId('slot-bar');
     const compactSize = compact.children[0].getAttribute('style') ?? '';
 

@@ -20,6 +20,7 @@ import {
   WeaponLike,
 } from './rangeBands';
 import { calculateHydraulicBonus } from './hydraulicBonus';
+import { calculateLogicCoresBonus } from './logicCoresBonus';
 import { BattleError, BattleErrorCode } from '../../errors/battleErrors';
 
 /** Result of counter-attack resolution */
@@ -34,6 +35,8 @@ export interface CounterResult {
   rangePenaltyMultiplier: number;
   /** Damage multiplier from hydraulic bonus (melee counters) */
   hydraulicMultiplier: number;
+  /** Damage multiplier from Logic Cores bonus (long-band counters, #519) */
+  logicCoresMultiplier: number;
   /** Reason for blocking, if applicable */
   reason?: 'counter_out_of_range';
 }
@@ -54,7 +57,8 @@ function canReachAtRange(weaponRange: RangeBand, distance: number): boolean {
  * 1. Try main weapon first
  * 2. If main weapon is melee and out of range, try offhand fallback
  *    (only for dual-wield mixed loadouts)
- * 3. Apply range penalty and hydraulic bonus as appropriate
+ * 3. Apply range penalty, hydraulic bonus (melee band) and Logic Cores
+ *    bonus (long band) as appropriate
  *
  * Req 19.1–19.6
  */
@@ -66,6 +70,7 @@ export function resolveCounter(
   const mainWeapon = defender.robot.mainWeapon?.weapon as WeaponLike | undefined;
   const offhandWeapon = defender.robot.offhandWeapon?.weapon as WeaponLike | undefined;
   const hydraulicSystems = Number(defender.robot.hydraulicSystems ?? 0);
+  const logicCores = Number(defender.robot.logicCores ?? 1);
 
   if (!mainWeapon) {
     throw new BattleError(BattleErrorCode.ROBOT_NOT_BATTLE_READY, 'Defender has no main weapon', 500, { robotId: defender.robot.id });
@@ -87,12 +92,16 @@ export function resolveCounter(
         const hydroBonus = currentBand === 'melee'
           ? calculateHydraulicBonus(hydraulicSystems, currentBand)
           : 1;
+        const logicBonus = currentBand === 'long'
+          ? calculateLogicCoresBonus(logicCores, currentBand)
+          : 1;
         return {
           canCounter: true,
           weapon: offhandWeapon,
           hand: 'offhand',
           rangePenaltyMultiplier: penalty,
           hydraulicMultiplier: hydroBonus,
+          logicCoresMultiplier: logicBonus,
         };
       }
     }
@@ -104,6 +113,7 @@ export function resolveCounter(
       hand: 'main',
       rangePenaltyMultiplier: 1,
       hydraulicMultiplier: 1,
+      logicCoresMultiplier: 1,
       reason: 'counter_out_of_range',
     };
   }
@@ -116,11 +126,17 @@ export function resolveCounter(
     ? calculateHydraulicBonus(hydraulicSystems, currentBand)
     : 1;
 
+  // Logic Cores bonus on long-band counters (mirror of Req 19.4, #519)
+  const logicBonus = currentBand === 'long'
+    ? calculateLogicCoresBonus(logicCores, currentBand)
+    : 1;
+
   return {
     canCounter: true,
     weapon: mainWeapon,
     hand: 'main',
     rangePenaltyMultiplier: penalty,
     hydraulicMultiplier: hydroBonus,
+    logicCoresMultiplier: logicBonus,
   };
 }

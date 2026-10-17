@@ -2,7 +2,7 @@
  * Spec #55 task 2.4 (R8.6, R8.7) — weaponRefinementService, real database.
  *
  * Route regressions live in tests/weaponInventory.test.ts and the shared
- * validator suites. These cases call the service directly: Workshop tier gate,
+ * validator suites. These cases call the service directly: Refinement Lab tier gate,
  * shield rule, cost from `calculateRefinementCost`, stored magnitude for
  * Sharpen, the 402 affordability error, replay, the audit-context extension and
  * the R8.7 request-shape guard (zero writes on rejection).
@@ -17,11 +17,14 @@ let keyCounter = 0;
 const nextKey = (): string => `wrs-${suffix}-${++keyCounter}`;
 const userIds: number[] = [];
 
-async function createUser(currency: number, workshopLevel: number): Promise<number> {
+async function createUser(currency: number, refinementLabLevel: number, workshopLevel = 0): Promise<number> {
   const user = await prisma.user.create({
     data: { username: `wrs_${suffix}_${userIds.length}`, passwordHash: 'x', currency },
   });
   userIds.push(user.id);
+  if (refinementLabLevel > 0) {
+    await prisma.facility.create({ data: { userId: user.id, facilityType: 'refinement_lab', level: refinementLabLevel } });
+  }
   if (workshopLevel > 0) {
     await prisma.facility.create({ data: { userId: user.id, facilityType: 'weapons_workshop', level: workshopLevel } });
   }
@@ -97,13 +100,34 @@ describe('refineWeapon', () => {
     expect(second.refinement.slotIndex).toBe(2);
   });
 
-  it('refuses a tier the Workshop level has not unlocked (WEAPON_REFINEMENT_TIER_LOCKED, 403)', async () => {
+  it('refuses a tier the Refinement Lab level has not unlocked (WEAPON_REFINEMENT_TIER_LOCKED, 403)', async () => {
     const userId = await createUser(5_000_000, 4);
     const inventoryId = await giveWeapon(userId, 'Practice Sword');
     await expect(refineWeapon(userId, inventoryId, { tier: 'sharpen', magnitude: 1 }, nextKey())).rejects.toMatchObject({
       code: 'WEAPON_REFINEMENT_TIER_LOCKED',
       statusCode: 403,
+      message: 'Refinement Lab level 5 required to sharpen.',
+      details: { requiredRefinementLabLevel: 5, currentRefinementLabLevel: 4 },
     });
+  });
+
+  it('ignores the Weapons Workshop level for the tier gate', async () => {
+    const userId = await createUser(5_000_000, 0, 10);
+    const inventoryId = await giveWeapon(userId, 'Laser Pistol');
+    await expect(
+      refineWeapon(userId, inventoryId, { tier: 'hone', targetAttribute: 'combatPower', magnitude: 1 }, nextKey()),
+    ).rejects.toMatchObject({
+      code: 'WEAPON_REFINEMENT_TIER_LOCKED',
+      details: { requiredRefinementLabLevel: 1, currentRefinementLabLevel: 0 },
+    });
+  });
+
+  it('returns the Refinement Lab level it gated on', async () => {
+    const userId = await createUser(5_000_000, 5, 2);
+    const inventoryId = await giveWeapon(userId, 'Practice Sword');
+    const result = await refineWeapon(userId, inventoryId, { tier: 'sharpen', magnitude: 1 }, nextKey());
+    if (result.replayed) throw new Error('unexpected replay');
+    expect(result.refinementLabLevel).toBe(5);
   });
 
   it('refuses Sharpen on a shield', async () => {

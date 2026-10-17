@@ -9,6 +9,7 @@ const ALL_FACILITY_TYPES = [
   'repair_bay',
   'training_facility',
   'weapons_workshop',
+  'refinement_lab',
   'merchandising_hub',
   'streaming_studio',
   'roster_expansion',
@@ -22,8 +23,8 @@ const ALL_FACILITY_TYPES = [
 ] as const;
 
 const EXPECTED_CATEGORIES = [
-  'Economy & Discounts',
-  'Capacity & Storage',
+  'Economy',
+  'Hangar & Armory',
   'Training Academies',
   'Tactical & Advanced',
 ] as const;
@@ -53,7 +54,7 @@ describe('Property 7: Facility category grouping completeness', () => {
     );
   });
 
-  it('all 15 known facility types are covered by the category definitions', () => {
+  it('all 14 known facility types are covered by the category definitions', () => {
     // Collect every type listed across all categories
     const allCategorizedTypes = FACILITY_CATEGORIES.flatMap(
       (cat) => [...cat.facilityTypes],

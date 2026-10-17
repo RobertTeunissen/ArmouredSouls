@@ -15,7 +15,7 @@ Game design and mechanics — what the game does, rules, rewards, progression.
 | `PRD_ROBOT_ATTRIBUTES.md` | 23 robot attributes system |
 | `PRD_WEAPONS_LOADOUT.md` | 4 loadout types, weapon categories |
 | `PRD_WEAPON_ECONOMY.md` | 47-weapon catalog, pricing formula |
-| `STABLE_SYSTEM.md` | 13 facility types |
+| `STABLE_SYSTEM.md` | 14 facility types |
 | `PRD_ONBOARDING_SYSTEM.md` | 5-step new player tutorial |
 | `PRD_AUTO_USER_GENERATION.md` | AI user generation during settlement |
 | `PRD_AUTOMATON_STABLES.md` | Automaton stables: persistent computer-run stables (Spec #55) |

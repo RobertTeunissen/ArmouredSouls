@@ -32,7 +32,6 @@ export interface ScheduledMatch {
   isByeMatch: boolean | null;
   leagueType: string | null;
   leagueInstanceId: string | null;
-  rotatingZone: boolean | null;
   scoreThreshold: number | null;
   timeLimit: number | null;
   zoneRadius: number | null;
@@ -81,7 +80,6 @@ function getTypeSpecificDefaults(matchType: MatchType): Partial<ScheduledMatch> 
       round: null,
       matchNumber: null,
       isByeMatch: null,
-      rotatingZone: null,
       scoreThreshold: null,
       timeLimit: null,
       zoneRadius: null,
@@ -96,7 +94,6 @@ function getTypeSpecificDefaults(matchType: MatchType): Partial<ScheduledMatch> 
       isByeMatch: false,
       leagueType: null,
       leagueInstanceId: null,
-      rotatingZone: null,
       scoreThreshold: null,
       timeLimit: null,
       zoneRadius: null,
@@ -105,10 +102,9 @@ function getTypeSpecificDefaults(matchType: MatchType): Partial<ScheduledMatch> 
 
   // KotH
   return {
-    rotatingZone: true,
     scoreThreshold: 100,
     timeLimit: 120,
-    zoneRadius: 50,
+    zoneRadius: 7,
     leagueType: null,
     leagueInstanceId: null,
     tournamentId: null,

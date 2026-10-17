@@ -333,7 +333,7 @@ describe('Property 22: Significant Modifier Highlighting (Property-Based Test)',
           const highlightedRows = container.querySelectorAll('[class*="bg-yellow-900/20"]');
           
           // Property: For single loadout with balanced stance, no modifiers exceed 20%
-          // (single gives max +10% gyro, +5% servo)
+          // (single gives max +15% gyro, +10% servo)
           expect(highlightedRows.length).toBe(0);
           
           cleanup();

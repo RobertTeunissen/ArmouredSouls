@@ -105,8 +105,8 @@ describe('calculateAttributeBonus', () => {
 
 describe('getLoadoutBonus', () => {
   it('should return correct bonus for weapon_shield loadout', () => {
-    expect(getLoadoutBonus('weapon_shield', 'shieldCapacity')).toBe(0.20);
-    expect(getLoadoutBonus('weapon_shield', 'armorPlating')).toBe(0.15);
+    expect(getLoadoutBonus('weapon_shield', 'shieldCapacity')).toBe(0.15);
+    expect(getLoadoutBonus('weapon_shield', 'armorPlating')).toBe(0.10);
     expect(getLoadoutBonus('weapon_shield', 'counterProtocols')).toBe(0.10);
     expect(getLoadoutBonus('weapon_shield', 'attackSpeed')).toBe(-0.15);
   });
@@ -125,8 +125,8 @@ describe('getLoadoutBonus', () => {
   });
 
   it('should return correct bonus for single loadout', () => {
-    expect(getLoadoutBonus('single', 'gyroStabilizers')).toBe(0.10);
-    expect(getLoadoutBonus('single', 'servoMotors')).toBe(0.05);
+    expect(getLoadoutBonus('single', 'gyroStabilizers')).toBe(0.15);
+    expect(getLoadoutBonus('single', 'servoMotors')).toBe(0.10);
   });
 
   it('should return 0 for unknown loadout type', () => {
@@ -318,9 +318,9 @@ describe('calculateMaxShield', () => {
 
   it('should use effective shield capacity with weapon_shield loadout', () => {
     const robot = makeRobot({ loadoutType: 'weapon_shield', shieldCapacity: 20 });
-    // weapon_shield: shieldCapacity +20% → effective = floor(20 * 1.20) = 24
-    // Shield = 24 * 4 = 96
-    expect(calculateMaxShield(robot)).toBe(96);
+    // weapon_shield: shieldCapacity +15% (Season 2) → effective = floor(20 * 1.15) = 23
+    // Shield = 23 * 4 = 92
+    expect(calculateMaxShield(robot)).toBe(92);
   });
 });
 

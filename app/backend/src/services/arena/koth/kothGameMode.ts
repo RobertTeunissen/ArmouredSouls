@@ -33,7 +33,7 @@ import { KothWinConditionEvaluator, KothTargetPriorityStrategy, KothMovementInte
  *   - movementModifier: KothMovementIntentModifier
  *   - winCondition: KothWinConditionEvaluator (with config)
  *   - arenaZones: single control_point zone from createControlZone
- *   - maxDuration: config.timeLimit or default (150 fixed / 210 rotating)
+ *   - maxDuration: config.timeLimit or default (150 s)
  *
  * Requirements: 11.1, 11.2, 11.3, 11.6, 11.7
  */
@@ -83,8 +83,6 @@ export function buildKothInitialState(
         center: { x: 0, y: 0 },
         radius: zoneRadius,
         isActive: true,
-        rotationCount: 0,
-        rotationTimer: 0,
       },
       robots: [] as unknown[],
       eliminatedRobots: new Set<number>(),
@@ -99,7 +97,7 @@ export function buildKothInitialState(
  * Build the per-tick hook function for KotH matches.
  *
  * Called by simulateBattleMulti every tick. Wires together all KotH mechanics:
- * zone occupation, scoring, transitions, passive penalties, zone rotation,
+ * zone occupation, scoring, zone enter/exit tracking, passive penalties,
  * and destruction/yield tracking.
  *
  * The hook captures scoreState, zoneState, and gameModeState by reference so

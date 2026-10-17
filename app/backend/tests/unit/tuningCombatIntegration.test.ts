@@ -232,8 +232,8 @@ describe('Tuning Combat Integration', () => {
 
       const maxShield = calculateMaxShield(robot, tuning);
 
-      // (10 + 5) × 1.20 × 4 = 72
-      expect(maxShield).toBe(72);
+      // (10 + 5) × 1.15 × 4 = 69
+      expect(maxShield).toBe(69);
     });
   });
 

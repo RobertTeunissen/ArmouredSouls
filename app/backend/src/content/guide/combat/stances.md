@@ -2,7 +2,7 @@
 title: "Battle Stances"
 description: "Compare Offensive, Defensive, and Balanced stances — how each modifies your robot's combat attributes and when to use them."
 order: 4
-lastUpdated: "2026-03-12"
+lastUpdated: "2026-10-16"
 relatedArticles:
   - combat/battle-flow
   - combat/yielding-and-repair-costs
@@ -29,6 +29,7 @@ The table below shows the actual combat modifiers applied by each stance, verifi
 | **Hit Chance** | +5 flat bonus | — | — |
 | **Counter Protocols** | — | ×1.15 (+15%) | — |
 | **Shield Regeneration** | — | ×1.20 (+20%) | — |
+| **Movement Speed** | ×1.10 (+10%) | ×0.80 (-20%) | ×1.0 |
 
 ```callout-info
 Stance modifiers are multiplied into the damage formula alongside loadout modifiers. The full damage chain is: `weapon base × combat power × loadout modifier × weapon control × stance modifier`. This means stance and loadout bonuses stack multiplicatively — an Offensive stance (×1.15) with a Two-Handed loadout (×1.10) gives you ×1.265 combined, not ×1.25. See [Loadout Types](/guide/weapons/loadout-types) for the loadout modifiers.
@@ -67,6 +68,7 @@ Defensive stance prioritizes survival and attrition, trading raw damage for stay
 **What you lose:**
 - **-10% Combat Power** — Your attacks deal less damage.
 - **-10% Attack Speed** — Your robot attacks less frequently, increasing the cooldown between strikes.
+- **-20% Movement Speed** — Your robot moves slower at all times, including while a melee robot is closing in on a ranged opponent. A defensive melee build needs more Servo Motors to catch faster opponents.
 
 **Best for:**
 - Tank builds with high Armor Plating and Hull Integrity

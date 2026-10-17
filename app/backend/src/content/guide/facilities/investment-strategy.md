@@ -2,7 +2,7 @@
 title: "Facility Investment Strategy"
 description: "Recommended facility purchase and upgrade order for early, mid, and late game — maximize your return on investment at every stage."
 order: 5
-lastUpdated: "2026-05-15"
+lastUpdated: "2026-10-16"
 relatedArticles:
   - facilities/facility-overview
   - facilities/facility-progression
@@ -13,7 +13,7 @@ relatedArticles:
 
 ## Overview
 
-With 13 facilities to choose from and a limited budget, knowing what to buy and when is critical. This guide provides a recommended investment roadmap for each stage of the game, based on ROI analysis and strategic value.
+With 14 facilities to choose from and a limited budget, knowing what to buy and when is critical. This guide provides a recommended investment roadmap for each stage of the game, based on ROI analysis and strategic value.
 
 ![Investment priority roadmap](/images/guide/facilities/investment-priority-roadmap.png)
 
@@ -115,7 +115,7 @@ Income is no longer a constraint. Focus on maximizing power and unlocking endgam
 
 ### Priority 9: Weapons Workshop (Level 5+)
 
-- **Why**: Weapon modifications and custom designs unlock at higher levels. The 50%+ discount also saves significant Credits when equipping a large roster.
+- **Why**: The 25% discount at Level 5 (up to 50% at Level 10) saves significant Credits on high-end weapons, and the 50%+ resale rate makes trading up cheap. The Workshop no longer gates refinement: pair it with the **Refinement Lab** (Level 5 for Sharpen, Level 8 for Forge) when you start refining your final weapons. The Lab costs the same as the Workshop and earns nothing directly, so buy it only when you are ready to spend on refinements.
 
 ### Priority 10: Booking Office
 
@@ -148,7 +148,7 @@ Check your Financial Report regularly. If your total facility operating costs ar
 
 ## What's Next?
 
-- [Facility Overview](/guide/facilities/facility-overview) — All 13 facility types at a glance
+- [Facility Overview](/guide/facilities/facility-overview) — All 14 facility types at a glance
 - [Facility Progression & ROI](/guide/facilities/facility-progression) — Detailed cost tables for every facility
 - [Starting Budget](/guide/getting-started/starting-budget) — How to allocate your initial ₡3,000,000
 - [Credits & Income Sources](/guide/economy/credits-and-income) — Understanding your revenue streams

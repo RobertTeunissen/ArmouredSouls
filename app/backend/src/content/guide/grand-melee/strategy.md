@@ -2,7 +2,7 @@
 title: "Strategy Guide"
 description: "Build archetypes, attribute priorities, and positioning tips for Grand Melee."
 order: 5
-lastUpdated: "2026-06-18"
+lastUpdated: "2026-10-16"
 relatedArticles:
   - grand-melee/scoring-and-placement
   - grand-melee/rewards
@@ -15,7 +15,7 @@ Grand Melee rewards different builds than 1v1 combat. With 19 opponents on the f
 
 ### The Vulture
 
-- **Key attributes**: High servoMotors, high threatAnalysis
+- **Key attributes**: High servoMotors, high threatAnalysis, logicCores for long-range damage
 - **Weapon**: Long-range
 - **Strategy**: Stay at the edges, avoid early engagements, let others weaken each other, then pick off damaged targets. High servo speed enables escape when pressured; high threat analysis identifies the weakest target in the field.
 - **Strengths**: Consistent top-10 finishes, avoids early elimination
@@ -33,7 +33,7 @@ Grand Melee rewards different builds than 1v1 combat. With 19 opponents on the f
 
 - **Key attributes**: High servoMotors, high hydraulicSystems
 - **Weapon**: Melee
-- **Strategy**: Close distance quickly, burst down a target, move to the next. High servo speed mitigates the melee disadvantage of needing to close range. Hydraulic bonuses reward aggressive positioning.
+- **Strategy**: Close distance quickly, burst down a target, move to the next. High servo speed mitigates the melee disadvantage of needing to close range. Hydraulic bonuses (up to +75% at melee range) reward aggressive positioning.
 - **Strengths**: High kill rate, strong damage tiebreaker, dominant in late-game close quarters
 - **Weakness**: Vulnerable to crossfire during approach, multiple ranged robots can focus you down
 

@@ -14,11 +14,16 @@ import {
 } from '../../shared/utils/discounts';
 
 describe('calculateWeaponWorkshopDiscount', () => {
-  it('returns 10% per level', () => {
+  it('returns 5% per level (Season 2), 50% at L10', () => {
     expect(calculateWeaponWorkshopDiscount(0)).toBe(0);
-    expect(calculateWeaponWorkshopDiscount(1)).toBe(10);
-    expect(calculateWeaponWorkshopDiscount(5)).toBe(50);
-    expect(calculateWeaponWorkshopDiscount(10)).toBe(100);
+    expect(calculateWeaponWorkshopDiscount(1)).toBe(5);
+    expect(calculateWeaponWorkshopDiscount(5)).toBe(25);
+    expect(calculateWeaponWorkshopDiscount(10)).toBe(50);
+  });
+
+  it('clamps levels to [0, 10]', () => {
+    expect(calculateWeaponWorkshopDiscount(-1)).toBe(0);
+    expect(calculateWeaponWorkshopDiscount(11)).toBe(50);
   });
 });
 
@@ -77,11 +82,10 @@ describe('calculateWeaponResaleRate', () => {
     expect(calculateWeaponResaleRate(100)).toBe(100);
   });
 
-  it('mirrors the purchase discount slope (same 10%/level)', () => {
-    // Property: at any valid level, resale rate equals the purchase discount.
-    // This is the "Workshop level rewards you 10% on both ends" guarantee.
+  it('is twice the purchase discount (10%/level vs 5%/level, Season 2)', () => {
+    // At L10: buy at half price, sell back at the full price paid.
     for (let level = 0; level <= 10; level++) {
-      expect(calculateWeaponResaleRate(level)).toBe(calculateWeaponWorkshopDiscount(level));
+      expect(calculateWeaponResaleRate(level)).toBe(calculateWeaponWorkshopDiscount(level) * 2);
     }
   });
 });

@@ -1,8 +1,8 @@
 ---
 title: "Weapon Refinement"
-description: "Make a weapon yours. Permanent per-instance upgrades across four tiers, gated by Workshop level — the way you build a Mastercrafted Volt Sabre or a Legendary Practice Sword."
+description: "Make a weapon yours. Permanent per-instance upgrades across four tiers, gated by Refinement Lab level — the way you build a Mastercrafted Volt Sabre or a Legendary Practice Sword."
 order: 4
-lastUpdated: "2026-05-23"
+lastUpdated: "2026-10-16"
 relatedArticles:
   - weapons/buying-and-selling
   - weapons/loadout-types
@@ -13,13 +13,17 @@ relatedArticles:
 
 Refinement turns a generic weapon into **your weapon**. Every catalog weapon is the same out of the box, but once you start refining, two `Volt Sabre`s in different stables can end up shaped completely differently — different attribute boosts, different cooldowns, different damage. After enough refinement, your weapon earns a rank prefix (`Refined` → `Crafted` → `Mastercrafted` → `Legendary`) that announces its identity wherever it appears: in your inventory, on your robot, in battle reports.
 
-Refinement also gives the [Weapons Workshop](/guide/facilities/facility-overview) a third purpose. After v1.5 it already governed purchase discounts and resale rates; now Workshop level also gates which refinement tiers you can apply. Every level beyond L1 unlocks something useful: L3 lets you Augment, L5 lets you Sharpen, L8 lets you Forge.
+Refinement tiers are unlocked by the [Refinement Lab](/guide/facilities/facility-overview#refinement-lab) facility. L1 lets you Hone, L3 lets you Augment, L5 lets you Sharpen, L8 lets you Forge. The [Weapons Workshop](/guide/facilities/facility-overview) no longer gates refinement: it keeps the purchase discount and the resale rate, so the Workshop level still decides how much of your refinement spend comes back when you sell.
+
+```callout-info
+Season 2: refinement moved from the Weapons Workshop to the new Refinement Lab. Every stable received a Refinement Lab at its Weapons Workshop level when the Lab was introduced, so no tier you had unlocked was lost.
+```
 
 ## The Four Tiers
 
 Each refinement consumes one of five slots on the weapon. You have full control over what goes in each slot — within the limits the system enforces.
 
-| Tier | What it does | Magnitude | Workshop Level |
+| Tier | What it does | Magnitude | Refinement Lab Level |
 |---|---|---|---|
 | **Hone** | Boost an attribute the weapon already grants | You pick +1 to +5 | L1 |
 | **Augment** | Add a new attribute the weapon didn't grant | You pick +1 to +5 | L3 |

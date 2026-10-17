@@ -408,12 +408,20 @@ describe('Property-based tests', () => {
         };
       }
 
+      // Arena radius 12 keeps every position within x, y ∈ [-12, 12], so with the
+      // 25-unit cells (long range 15 + 10) all robots are always in the same or an
+      // adjacent cell and the grid filters out no candidate. In the default radius-28
+      // arena the grid already changes target selection at tick 1 (ranged weapons
+      // reach any distance since #518), so outcome neutrality only holds here.
+      const arenaRadius = 12;
+
       // Run with spatial partitioning ON
       const prng1 = mulberry32(seed);
       const originalRandom = Math.random;
       Math.random = prng1;
       const resultWith = simulateBattleMulti(robots, {
         allowDraws: true,
+        arenaRadius,
         spatialPartitioning: true,
       });
       Math.random = originalRandom;
@@ -423,6 +431,7 @@ describe('Property-based tests', () => {
       Math.random = prng2;
       const resultWithout = simulateBattleMulti(robots, {
         allowDraws: true,
+        arenaRadius,
         spatialPartitioning: false,
       });
       Math.random = originalRandom;

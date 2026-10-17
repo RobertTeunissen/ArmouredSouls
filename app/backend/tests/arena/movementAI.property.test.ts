@@ -8,6 +8,7 @@ import {
 import { euclideanDistance, Position } from '../../src/services/arena/vector2d';
 import { ArenaConfig, MovementIntent, RobotCombatState, RangeBand } from '../../src/services/arena/types';
 import { BattleErrorCode } from '../../src/errors/battleErrors';
+import { SIMULATION_TICK } from '../../src/services/battle/combat-simulator/combatTypes';
 
 /**
  * Property-based tests for movementAI module.
@@ -114,6 +115,11 @@ function makeState(overrides: Partial<RobotCombatState> = {}): RobotCombatState 
     currentTarget: null,
     patienceTimer: 0,
     combatAlgorithmScore: 0.5,
+    lastMeleeHitTakenAt: null,
+    disengageBurstUntil: 0,
+    disengageReadyAt: 0,
+    disengageScheduledAt: null,
+    speedBurst: 'none',
     adaptationHitBonus: 0,
     adaptationDamageBonus: 0,
     hitsTaken: 0,
@@ -158,6 +164,126 @@ describe('movementAI property tests', () => {
         ),
         { numRuns: 500 },
       );
+    });
+  });
+
+  /**
+   * Property 16b (#520): wall-aware retreat. A robot whose step would leave the
+   * arena slides along the wall: it stays inside, never moves farther than
+   * speed × dt, is deterministic, makes tangential progress on a purely radial
+   * retreat, and slides away from the threat.
+   */
+  describe('Property 16b: wall-aware retreat slides along the wall', () => {
+    const arbAngle = (): fc.Arbitrary<number> =>
+      fc.double({ min: -Math.PI, max: Math.PI, noNaN: true, noDefaultInfinity: true });
+    const arbWallRadius = (): fc.Arbitrary<number> =>
+      fc.double({ min: 5, max: 50, noNaN: true, noDefaultInfinity: true });
+    const arbFraction = (): fc.Arbitrary<number> =>
+      fc.double({ min: 0, max: 1, noNaN: true, noDefaultInfinity: true });
+    const arbWallSpeed = (): fc.Arbitrary<number> =>
+      fc.double({ min: 0.5, max: 20, noNaN: true, noDefaultInfinity: true });
+    const arbTick = (): fc.Arbitrary<number> =>
+      fc.double({ min: 0.05, max: 0.5, noNaN: true, noDefaultInfinity: true });
+
+    const onWall = (radius: number, angle: number): Position => ({
+      x: radius * Math.cos(angle),
+      y: radius * Math.sin(angle),
+    });
+    /** z-component of pos × next: > 0 counter-clockwise, < 0 clockwise */
+    const cross = (a: Position, b: Position): number => a.x * b.y - a.y * b.x;
+
+    it('stays inside the arena and never moves farther than speed × dt', () => {
+      fc.assert(
+        fc.property(
+          arbWallRadius(), arbAngle(), arbFraction(), arbPosition(), arbWallSpeed(), arbTick(),
+          fc.option(arbPosition(), { nil: undefined }),
+          (radius, angle, fraction, target, speed, dt, threat) => {
+            const arena = makeArena(radius);
+            const position = onWall(radius * fraction, angle);
+            const state = makeState({ position, effectiveMovementSpeed: speed });
+            const newPos = applyMovement(state, makeIntent({ targetPosition: target }), arena, dt, threat);
+
+            expect(euclideanDistance(newPos, arena.center)).toBeLessThanOrEqual(radius + 1e-9);
+            expect(euclideanDistance(newPos, position)).toBeLessThanOrEqual(speed * dt + 1e-9);
+          },
+        ),
+        { numRuns: 500 },
+      );
+    });
+
+    it('is deterministic', () => {
+      fc.assert(
+        fc.property(
+          arbWallRadius(), arbAngle(), arbFraction(), arbPosition(), arbWallSpeed(), arbTick(), arbPosition(),
+          (radius, angle, fraction, target, speed, dt, threat) => {
+            const arena = makeArena(radius);
+            const position = onWall(radius * fraction, angle);
+            const intent = makeIntent({ targetPosition: target });
+            const a = applyMovement(makeState({ position, effectiveMovementSpeed: speed }), intent, arena, dt, threat);
+            const b = applyMovement(makeState({ position, effectiveMovementSpeed: speed }), intent, arena, dt, threat);
+            expect(a).toEqual(b);
+          },
+        ),
+        { numRuns: 300 },
+      );
+    });
+
+    it('makes tangential progress on a purely radial retreat at the wall', () => {
+      fc.assert(
+        fc.property(
+          arbWallRadius(), arbAngle(), arbWallSpeed(), arbTick(),
+          fc.double({ min: 1, max: 20, noNaN: true, noDefaultInfinity: true }),
+          (radius, angle, speed, dt, overshoot) => {
+            const arena = makeArena(radius);
+            const position = onWall(radius, angle);
+            const target = onWall(radius + overshoot, angle); // straight out through the wall
+            const state = makeState({ position, effectiveMovementSpeed: speed });
+            const newPos = applyMovement(state, makeIntent({ targetPosition: target }), arena, dt);
+
+            expect(euclideanDistance(newPos, position)).toBeGreaterThan(0);
+            expect(Math.abs(cross(position, newPos))).toBeGreaterThan(0);
+            expect(euclideanDistance(newPos, arena.center)).toBeLessThanOrEqual(radius + 1e-9);
+          },
+        ),
+        { numRuns: 500 },
+      );
+    });
+
+    it('slides away from the threat on a purely radial retreat (no threat → counter-clockwise)', () => {
+      fc.assert(
+        fc.property(
+          arbWallRadius(), arbAngle(), arbWallSpeed(), arbTick(),
+          fc.double({ min: 0.1, max: 1.2, noNaN: true, noDefaultInfinity: true }),
+          fc.double({ min: 0.2, max: 0.9, noNaN: true, noDefaultInfinity: true }),
+          (radius, angle, speed, dt, offset, threatFraction) => {
+            const arena = makeArena(radius);
+            const position = onWall(radius, angle);
+            const target = onWall(radius + 5, angle);
+            const intent = makeIntent({ targetPosition: target });
+            const state = makeState({ position, effectiveMovementSpeed: speed });
+
+            // Threat on the counter-clockwise side → slide clockwise
+            const ccwThreat = onWall(radius * threatFraction, angle + offset);
+            expect(cross(position, applyMovement(state, intent, arena, dt, ccwThreat))).toBeLessThan(0);
+
+            // Threat on the clockwise side → slide counter-clockwise
+            const cwThreat = onWall(radius * threatFraction, angle - offset);
+            expect(cross(position, applyMovement(state, intent, arena, dt, cwThreat))).toBeGreaterThan(0);
+
+            // No threat → counter-clockwise
+            expect(cross(position, applyMovement(state, intent, arena, dt))).toBeGreaterThan(0);
+          },
+        ),
+        { numRuns: 500 },
+      );
+    });
+
+    it('keeps the plain clamp for a robot at the arena centre', () => {
+      const arena = makeArena(5);
+      const state = makeState({ position: { x: 0, y: 0 }, effectiveMovementSpeed: 100 });
+      const newPos = applyMovement(state, makeIntent({ targetPosition: { x: 20, y: 0 } }), arena, 0.1);
+      expect(newPos.x).toBeCloseTo(5, 10);
+      expect(newPos.y).toBeCloseTo(0, 10);
     });
   });
 
@@ -302,6 +428,7 @@ describe('movementAI property tests', () => {
         meleeState,
         [movingMeleeOpponent],
         makeArena(16),
+        SIMULATION_TICK,
       );
 
       expect(intent.preferredRange).toBe('melee');
@@ -339,6 +466,7 @@ describe('movementAI property tests', () => {
         meleeState,
         [inRangeMeleeOpponent],
         makeArena(16),
+        SIMULATION_TICK,
       );
 
       expect(euclideanDistance(intent.targetPosition, inRangeMeleeOpponent.position))
@@ -393,7 +521,7 @@ describe('movementAI property tests', () => {
               velocity: { x: speed * direction, y: 0 }, // purely tangential
             });
 
-            const intent = calculateMovementIntent(robot, [opponent], makeArena(16));
+            const intent = calculateMovementIntent(robot, [opponent], makeArena(16), SIMULATION_TICK);
 
             expect(intent.preferredRange).toBe('melee');
             expect(headingErrorDeg(robot.position, intent.targetPosition, opponent.position)).toBeLessThan(5);
@@ -416,7 +544,7 @@ describe('movementAI property tests', () => {
         velocity: { x: 12, y: 0 },
       });
 
-      const intent = calculateMovementIntent(robot, [rangedOpponent], makeArena(16));
+      const intent = calculateMovementIntent(robot, [rangedOpponent], makeArena(16), SIMULATION_TICK);
 
       expect(intent.preferredRange).toBe('melee');
       expect(headingErrorDeg(robot.position, intent.targetPosition, rangedOpponent.position)).toBeGreaterThan(20);

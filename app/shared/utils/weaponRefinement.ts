@@ -17,18 +17,19 @@ import { ROBOT_ATTRIBUTES, type RobotAttribute } from './robotAttributes';
 // ── Type definitions ────────────────────────────────────────────────
 
 /**
- * The four refinement tiers, gated by Weapons Workshop level:
- *  - hone    (Workshop L1): boost an attribute already on the weapon
- *  - augment (Workshop L3): add a brand-new attribute bonus
- *  - sharpen (Workshop L5): -10% base cooldown per instance, -20% at the
- *                           2-instance cap (Spec #46)
- *  - forge   (Workshop L8): +8% base damage per instance, +16% at the
- *                           2-instance cap (Spec #46)
+ * The four refinement tiers, gated by Refinement Lab level (Season 2; the
+ * Weapons Workshop keeps only the purchase discount and resale rate):
+ *  - hone    (Lab L1): boost an attribute already on the weapon
+ *  - augment (Lab L3): add a brand-new attribute bonus
+ *  - sharpen (Lab L5): -10% base cooldown per instance, -20% at the
+ *                      2-instance cap (Spec #46)
+ *  - forge   (Lab L8): +8% base damage per instance, +16% at the
+ *                      2-instance cap (Spec #46)
  */
 export type RefinementTier = 'hone' | 'augment' | 'sharpen' | 'forge';
 
-/** Weapons Workshop level each tier needs (the gates listed above). */
-export const REQUIRED_WORKSHOP_LEVELS: Readonly<Record<RefinementTier, number>> = {
+/** Refinement Lab level each tier needs (the gates listed above). */
+export const REQUIRED_REFINEMENT_LAB_LEVELS: Readonly<Record<RefinementTier, number>> = {
   hone: 1, augment: 3, sharpen: 5, forge: 8,
 };
 
@@ -281,7 +282,7 @@ export const SHARPEN_COOLDOWN_REDUCTION_PER_INSTANCE = 0.10;
  * step as a multiplier, so proportional damage and proportional attack rate are
  * equivalent in expected DPS — identical values would make the two tiers
  * interchangeable. Forge accepts the lower ceiling in exchange for being the
- * deeper unlock (Workshop L8 vs L5) and the better option against shield-regen
+ * deeper unlock (Refinement Lab L8 vs L5) and the better option against shield-regen
  * builds, since bigger hits strip a regenerating shield in fewer swings.
  */
 export const FORGE_DAMAGE_INCREASE_PER_INSTANCE = 0.08;

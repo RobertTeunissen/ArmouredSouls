@@ -29,8 +29,6 @@ const DEBUG_ONLY_FIELDS: (keyof CombatEvent)[] = [
 const EVENTS_NEEDING_POSITIONS = new Set([
   'movement',
   'zone_defined',
-  'zone_moving',
-  'zone_active',
   'zone_enter',
   'zone_exit',
 ]);

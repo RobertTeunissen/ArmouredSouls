@@ -1,5 +1,10 @@
 import * as fc from 'fast-check';
 import { WEAPON_DEFINITIONS } from '../prisma/seed';
+import {
+  HAND_MULTIPLIERS,
+  calculateWeaponPrice,
+  type WeaponPricingInput,
+} from '../src/shared/utils/weaponPricing';
 
 /**
  * Property-based tests for weapon stat validation.
@@ -114,44 +119,21 @@ describe('Weapon Properties — Stat Validation', () => {
   describe('P8: Hand Multiplier Consistency', () => {
     /**
      * **Validates: Requirements 4.1**
-     * For every weapon: one→1.0, two→1.6, shield→0.9.
+     * For every weapon: one→1.0, two→1.5, shield→1.3 (Season 2; was 1.6 / 0.9).
      */
     test('should use the correct hand multiplier for each handsRequired value', () => {
-      const EXPECTED_MULTIPLIERS: Record<string, number> = {
-        one: 1.0,
-        two: 1.6,
-        shield: 0.9,
-      };
+      expect(HAND_MULTIPLIERS).toEqual({ one: 1.0, two: 1.5, shield: 1.3 });
 
       // Exclude starters — their cost is a flat 50K, not formula-derived
       const nonStarterArb = weaponArb.filter((w) => w.cost !== 50000);
 
       fc.assert(
         fc.property(nonStarterArb, (weapon) => {
-          const expectedMultiplier = EXPECTED_MULTIPLIERS[weapon.handsRequired];
-          expect(expectedMultiplier).toBeDefined();
+          expect(HAND_MULTIPLIERS[weapon.handsRequired]).toBeDefined();
 
-          // Verify the multiplier is correct by checking that the weapon's cost
-          // is consistent with the expected multiplier applied to the pricing formula
-          const baseCost = 50000;
-          let attributeCost = 0;
-          for (const field of BONUS_FIELDS) {
-            const bonus = getBonus(weapon, field);
-            attributeCost += 500 * bonus * bonus;
-          }
-          let dpsCost = 0;
-          if (weapon.baseDamage > 0 && weapon.cooldown > 0) {
-            const dpsRatio = (weapon.baseDamage / weapon.cooldown) / 2.0;
-            dpsCost = 50000 * (dpsRatio - 1.0) * 6.0;
-          }
-
-          const costWithExpected = Math.round(
-            ((baseCost + attributeCost + dpsCost) * expectedMultiplier) / 1000
-          ) * 1000;
-
-          // Cost should match within tolerance (5K) when using the correct multiplier
-          const diff = Math.abs(weapon.cost - costWithExpected);
-          expect(diff).toBeLessThanOrEqual(5000);
+          // The stored cost is exactly the shared formula (signed-sum attribute
+          // part, DPS part, this weapon's hand multiplier).
+          expect(weapon.cost).toBe(calculateWeaponPrice(weapon as unknown as WeaponPricingInput));
         }),
         { numRuns: 200 }
       );

@@ -15,7 +15,7 @@ import type {
 export interface KothMatchConfig {
   scoreThreshold?: number;    // default 30, range [15, 90]
   timeLimit?: number;         // default 150s, range [60, 300]
-  zoneRadius?: number;        // default 5, range [3, 8]
+  zoneRadius?: number;        // default 7, range [3, 8]
   participantCount: number;   // 5 or 6
   matchId: number;            // for deterministic seed
 }
@@ -26,12 +26,7 @@ export interface KothMatchConfig {
 export interface KothZoneState {
   center: Position;
   radius: number;
-  isActive: boolean;           // false during transition period
-  transitionTarget?: Position; // next zone position (rotating variant)
-  transitionCountdown?: number;
-  rotationCount: number;
-  rotationTimer?: number;      // tracks time since last rotation
-  transitionTimer?: number;    // tracks time during the 3s inactive transition period
+  isActive: boolean;           // zone scores only while active
 }
 
 // ─── Zone Occupation Result ─────────────────────────────────────────
@@ -79,8 +74,6 @@ export type KothEventType =
   | 'zone_exit'
   | 'score_tick'
   | 'kill_bonus'
-  | 'zone_moving'
-  | 'zone_active'
   | 'robot_eliminated'
   | 'passive_warning'
   | 'passive_penalty'
@@ -115,11 +108,9 @@ export const KOTH_PASSIVE_PENALTIES = {
 export const KOTH_MATCH_DEFAULTS = {
   scoreThreshold: 30,
   timeLimit: 150,
-  zoneRadius: 5,
+  zoneRadius: 7,
   arenaRadius: 14,
   killBonus: 5,
-  zoneTransitionDuration: 3,
-  zoneWarningTime: 5,
   lastStandingDuration: 10,
 } as const;
 

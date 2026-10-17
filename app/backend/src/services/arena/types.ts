@@ -11,6 +11,7 @@
 
 import { Position, Vector2D } from './vector2d';
 import type { RobotWithWeapons, FormulaBreakdown } from '../battle/combatSimulator';
+import type { SpeedBurst } from './engagementCycle';
 
 // ─── Range Band Classification (Req 3.1) ────────────────────────────
 
@@ -145,6 +146,18 @@ export interface RobotCombatState {
   patienceTimer: number;
   combatAlgorithmScore: number;
 
+  // === Engagement cycle (#520) ===
+  /** Time of the most recent hit taken from a melee-band weapon (attack or counter), or null if none yet. */
+  lastMeleeHitTakenAt: number | null;
+  /** Time until which the ranged disengage burst is active (seconds; 0 = never started). */
+  disengageBurstUntil: number;
+  /** Earliest time a new melee hit can schedule the next disengage burst (burst end + one patience window). */
+  disengageReadyAt: number;
+  /** Start time of the pending ranged disengage burst (first melee hit + 2.5 s), or null. */
+  disengageScheduledAt: number | null;
+  /** Speed burst applied this tick: melee commit, ranged disengage, or none. */
+  speedBurst: SpeedBurst;
+
   // === Adaptation (Req 7.1–7.5) ===
   adaptationHitBonus: number;
   adaptationDamageBonus: number;
@@ -174,7 +187,7 @@ export interface CombatEvent {
     | 'counter_out_of_range' | 'backstab' | 'flanking'
     // KotH event types
     | 'zone_defined' | 'zone_enter' | 'zone_exit' | 'score_tick'
-    | 'kill_bonus' | 'zone_moving' | 'zone_active' | 'robot_eliminated'
+    | 'kill_bonus' | 'robot_eliminated'
     | 'passive_warning' | 'passive_penalty' | 'last_standing' | 'match_end';
   attacker?: string;
   defender?: string;
@@ -236,7 +249,6 @@ export interface CombatEvent {
     zoneState?: string;
     center?: { x: number; y: number };
     radius?: number;
-    newCenter?: { x: number; y: number };
     countdown?: number;
     survivorId?: number;
     winnerId?: number | null;
@@ -247,7 +259,6 @@ export interface CombatEvent {
     timeOutside?: number;
     duration?: number;
     occupants?: number[];
-    rotationCount?: number;
     destroyerRobotId?: number;
     winReason?: string;
   };
@@ -288,7 +299,6 @@ export interface CombatResult {
     eliminationStatuses?: Record<number, 'destroyed' | 'yielded' | 'survived'>;
     matchDuration?: number;
     winReason?: string;
-    zoneVariant?: 'fixed' | 'rotating';
   };
 
   // === Final combat states for N-robot modes (optional) ===

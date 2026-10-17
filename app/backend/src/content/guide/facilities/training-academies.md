@@ -2,7 +2,7 @@
 title: "Training Academy System"
 description: "How the four Training Academies control attribute caps for each category — Combat, Defense, Mobility, and AI — raising the ceiling from level 10 to the maximum of 50."
 order: 3
-lastUpdated: "2026-03-17"
+lastUpdated: "2026-10-16"
 relatedArticles:
   - facilities/facility-overview
   - facilities/facility-progression
@@ -92,14 +92,14 @@ Not every build needs all four academies equally. Focus your investment on the a
 | Glass Cannon | Combat | Mobility | Max damage, with hull HP as backup |
 | Speed Demon | Mobility | Combat | Evasion and attack speed first |
 | Counter Striker | Defense | Combat | Counter Protocols need high caps |
-| Sniper | Combat | AI | Targeting, Critical Systems, and Combat Algorithms |
+| Sniper | Combat | AI | Targeting, Critical Systems, Combat Algorithms, and Logic Cores |
 | Melee Brawler | Mobility | Combat | Servo Motors and Hydraulic Systems for close-range dominance |
 
 See the [Strategy Guides](/guide/strategy/build-archetypes) for full build recommendations.
 
 ## What's Next?
 
-- [Facility Overview](/guide/facilities/facility-overview) — All 13 facility types at a glance
+- [Facility Overview](/guide/facilities/facility-overview) — All 14 facility types at a glance
 - [Facility Progression & ROI](/guide/facilities/facility-progression) — Full cost tables for every facility
 - [Investment Strategy](/guide/facilities/investment-strategy) — When to buy which facilities
 - [Robot Attributes](/guide/robots/attributes-overview) — The 23 attributes academies unlock

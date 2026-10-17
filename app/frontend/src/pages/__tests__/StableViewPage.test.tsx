@@ -231,7 +231,7 @@ describe('StableViewPage', () => {
       expect(screen.getByText('Facilities')).toBeInTheDocument();
     });
     // Category headings
-    expect(screen.getByText('Economy & Discounts')).toBeInTheDocument();
+    expect(screen.getByText('Economy')).toBeInTheDocument();
     expect(screen.getByText('Training Academies')).toBeInTheDocument();
     // Facility names
     expect(screen.getByText('Repair Bay')).toBeInTheDocument();

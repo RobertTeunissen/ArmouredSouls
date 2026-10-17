@@ -2,8 +2,8 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: v1.5
-**Date**: October 14, 2026  
+**Version**: v1.6
+**Date**: October 16, 2026  
 **Author**: GitHub Copilot  
 **Status**: Phase 1 & 2 Complete - Implementation Active  
 **Owner**: Robert Teunissen  
@@ -46,6 +46,9 @@
   - Cross-referenced with PRD_PRESTIGE_AND_FAME.md and STABLE_SYSTEM.md
 - v1.5 - Booking Office: subscriptions place robots and teams in a league (October 14, 2026)
   - Added "Subscriptions and League Standings": the first matchable subscription places the robot or team in Bronze; unsubscribing keeps tier and LP
+- v1.6 - Season 2: Refinement Lab and 4-4-4-2 categories (October 16, 2026)
+  - New facility Refinement Lab (`refinement_lab`): takes over the refinement tier gates from the Weapons Workshop; 14 facilities in total
+  - Categories renamed and regrouped: Economy (4), Hangar & Armory (4), Training Academies (4), Tactical & Advanced (2); category ids unchanged (`economy`, `capacity`, `training`, `advanced`)
 
 ---
 
@@ -102,9 +105,9 @@ The Facilities Page (`/facilities`) is a critical economic and progression inter
 
 **Facility Types & Implementation Status:**
 
-**Implemented (11 facilities):**
+**Implemented (all 14 facilities, including):**
 1. ✅ **Training Facility** - Discount on attribute upgrades, up to 90%. Rate is `(10 − Roster_Capacity)%` per level, so it shrinks as the roster grows (Spec #46 R11)
-2. ✅ **Weapons Workshop** - Discount on weapon purchases (10%-100%)
+2. ✅ **Weapons Workshop** - Discount on weapon purchases (5%-50%) and resale rate (10%-100%)
 3. ✅ **Repair Bay** - Discount on repair costs (10%-55%)
 4. ✅ **Roster Expansion** - Increase robot slots (1→10 robots)
 5. ✅ **Storage Facility** - Increase weapon storage (5→55 weapons)
@@ -114,6 +117,7 @@ The Facilities Page (`/facilities`) is a critical economic and progression inter
 9. ✅ **AI Training Academy** - AI/Team Coordination caps (10→50)
 10. ✅ **Merchandising Hub** - Passive income streams (merchandising, scales with prestige)
 11. ✅ **Booking Office** - Event Subscription System — per-robot subscription model gating battle event participation (Spec #35)
+12. ✅ **Refinement Lab** - Weapon refinement tier gates: Hone L1, Augment L3, Sharpen L5, Forge L8 (Season 2)
 
 #### 🚧 **Current UI Limitations**
 
@@ -217,23 +221,27 @@ The Facilities Page (`/facilities`) is a critical economic and progression inter
 
 #### 1.1 Facility Categories
 
-**Category 1: Economy & Discounts** (4 facilities)
+Season 2 (v1.6) layout: 14 facilities in a 4-4-4-2 split. Source of truth: `app/frontend/src/components/facilities/constants.ts` (Facilities page) and `app/frontend/src/utils/facilityCategories.ts` (Stable View page).
+
+**Category 1: Economy** (4 facilities, id `economy`)
 - **Purpose**: Reduce operational costs and unlock passive income across the stable
 - **Strategic Value**: High ROI, should be prioritized early-game
 - **Facilities**:
   1. Training Facility (✅ Implemented) - Attribute upgrade discounts
-  2. Weapons Workshop (✅ Implemented) - Weapon purchase discounts
-  3. Repair Bay (✅ Implemented) - Repair cost discounts
-  4. Merchandising Hub (✅ Implemented) - Passive income from merchandising (scales with prestige)
+  2. Repair Bay (✅ Implemented) - Repair cost discounts
+  3. Merchandising Hub (✅ Implemented) - Passive income from merchandising (scales with prestige)
+  4. Streaming Studio (✅ Implemented) - Streaming revenue multiplier
 
-**Category 2: Capacity & Storage** (2 facilities)
-- **Purpose**: Expand stable capacity for robots and weapons
+**Category 2: Hangar & Armory** (4 facilities, id `capacity`)
+- **Purpose**: Robot slots, weapon storage, weapon purchasing and weapon refinement
 - **Strategic Value**: Essential for progression, hard caps on gameplay
 - **Facilities**:
   1. Roster Expansion (✅ Implemented) - Robot slots (1→10)
   2. Storage Facility (✅ Implemented) - Weapon storage (5→55)
+  3. Weapons Workshop (✅ Implemented) - Weapon purchase discount and resale rate
+  4. Refinement Lab (✅ Implemented) - Refinement tier gates (Hone L1, Augment L3, Sharpen L5, Forge L8)
 
-**Category 3: Training Academies** (4 facilities)
+**Category 3: Training Academies** (4 facilities, id `training`)
 - **Purpose**: Increase attribute caps for robot development
 - **Strategic Value**: Required for late-game progression, unlocks higher attribute levels
 - **Facilities**:
@@ -242,7 +250,7 @@ The Facilities Page (`/facilities`) is a critical economic and progression inter
   3. Mobility Training Academy (✅ Implemented) - Chassis & Mobility caps (10→50)
   4. AI Training Academy (✅ Implemented) - AI/Team Coordination caps (10→50)
 
-**Category 4: Advanced Features** (4 facilities)
+**Category 4: Tactical & Advanced** (2 facilities, id `advanced`)
 - **Purpose**: Unlock special features and advanced gameplay mechanics
 - **Strategic Value**: Late-game enhancements, not required for basic progression
 - **Facilities**:
@@ -253,18 +261,18 @@ The Facilities Page (`/facilities`) is a critical economic and progression inter
 
 **Visual Structure:**
 - Each category has a header with:
-  - Category name (e.g., "Economy & Discounts")
+  - Category name (e.g., "Economy")
   - Category icon (future: 64×64px SVG icon)
   - Brief description (1-2 sentences explaining category purpose)
   - Implementation count (e.g., "3 of 3 facilities implemented")
-- Categories displayed in order: Economy → Capacity → Training → Advanced
+- Categories displayed in order: Economy → Hangar & Armory → Training → Tactical & Advanced
 - Within each category, facilities ordered by strategic priority
 - Facilities within category use same 2-column grid layout as current design
 
 **Category Headers:**
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│ 💰 Economy & Discounts                          [4 of 4 ✓]  │
+│ 💰 Economy                                      [4 of 4 ✓]  │
 │ Reduce operational costs and unlock passive income          │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -276,15 +284,17 @@ The Facilities Page (`/facilities`) is a critical economic and progression inter
 
 #### 1.3 Facility Ordering Within Categories
 
-**Economy & Discounts** (by usage frequency):
+**Economy** (by usage frequency):
 1. Training Facility (most used in gameplay)
-2. Weapons Workshop (frequent purchases)
-3. Repair Bay (combat damage)
-4. Merchandising Hub (passive income)
+2. Repair Bay (combat damage)
+3. Merchandising Hub (passive income)
+4. Streaming Studio (battle income)
 
-**Capacity & Storage** (by progression importance):
+**Hangar & Armory** (by progression importance):
 1. Roster Expansion (hard blocker for multi-robot strategies)
 2. Storage Facility (enables weapon collection)
+3. Weapons Workshop (frequent purchases, resale)
+4. Refinement Lab (weapon refinement)
 
 **Training Academies** (alphabetical for consistency):
 1. AI Training Academy
@@ -352,10 +362,10 @@ No icon / image on the Visual Example?
 - Color-coded: Green for 100%, Yellow for partial, Gray for 0%
 
 **Examples:**
-- Economy & Discounts: `[4 of 4 ✓]` (Green - 100% implemented)
-- Capacity & Storage: `[2 of 2 ✓]` (Green - 100% implemented)
+- Economy: `[4 of 4 ✓]` (Green - 100% implemented)
+- Hangar & Armory: `[4 of 4 ✓]` (Green - 100% implemented)
 - Training Academies: `[4 of 4 ✓]` (Green - 100% implemented)
-- Advanced Features: `[1 of 4 ⚠]` (Yellow - 25% implemented) 
+- Tactical & Advanced: `[2 of 2 ✓]` (Green - 100% implemented)
 
 ### 3. Image Requirements
 
@@ -416,10 +426,10 @@ No icon / image on the Visual Example?
 
 **Category Icon List (4 total):**
 
-1. **Economy & Discounts** - Currency/dollar sign symbol (💰)
-2. **Capacity & Storage** - Warehouse/storage box symbol (📦)
+1. **Economy** - Currency/dollar sign symbol (💰)
+2. **Hangar & Armory** - Warehouse/storage box symbol (📦)
 3. **Training Academies** - Graduation cap or training symbol (🎓)
-4. **Advanced Features** - Star or lightning bolt symbol (⭐)
+4. **Tactical & Advanced** - Star or lightning bolt symbol (⭐)
 
 **Placeholder Strategy:**
 - Use Unicode emoji for quick implementation
@@ -880,7 +890,7 @@ const facilitiesByCategory = {
 // In facilities.ts config
 export const FACILITY_CATEGORIES = {
   economy: {
-    name: 'Economy & Discounts',
+    name: 'Economy',
     description: 'Reduce operational costs and maximize your budget',
     icon: 'currency',
   },
@@ -1153,7 +1163,7 @@ const FacilityIcon: React.FC<FacilityIconProps> = ({ facilityType, alt, classNam
 
 ## Appendix A: Complete Facility List with Details
 
-### Economy & Discounts (Category 1)
+### Economy (Category 1)
 
 #### Training Facility (✅ Implemented)
 - **Type**: `training_facility`
@@ -1163,14 +1173,6 @@ const FacilityIcon: React.FC<FacilityIconProps> = ({ facilityType, alt, classNam
 - **Strategic Value**: Essential for a concentrated roster; **worthless at 10 robot slots**, where the rate is 0% per level. Sits on the same concentration axis as the Merchandising Hub and pulls against Roster Expansion
 - **Display**: The page shows the player's *actual* discount computed against their own Roster_Capacity, not the best-case figure from the static benefit strings
 - **Implementation Status**: Fully implemented, discount applies to robot attribute upgrade costs
-
-#### Weapons Workshop (✅ Implemented)
-- **Type**: `weapons_workshop`
-- **Max Level**: 10
-- **Cost Range**: ₡250K - ₡4M (total: ₡15.05M)
-- **Benefits**: 10% - 100% discount on weapon purchases
-- **Strategic Value**: Essential - Critical for economy-focused players, saves credits on weapon acquisitions
-- **Implementation Status**: Fully implemented, discount applies at weapon shop
 
 #### Repair Bay (✅ Implemented)
 - **Type**: `repair_bay`
@@ -1198,7 +1200,7 @@ const FacilityIcon: React.FC<FacilityIconProps> = ({ facilityType, alt, classNam
 - **Strategic Value**: Important - Provides passive income to supplement battle earnings
 - **Implementation Status**: Fully implemented, provides daily passive income from merchandising
 
-### Capacity & Storage (Category 2)
+### Hangar & Armory (Category 2)
 
 #### Roster Expansion (✅ Implemented)
 - **Type**: `roster_expansion`
@@ -1215,6 +1217,22 @@ const FacilityIcon: React.FC<FacilityIconProps> = ({ facilityType, alt, classNam
 - **Benefits**: 10 - 55 weapon storage capacity (5 base + facility levels)
 - **Strategic Value**: Important - Enables weapon collection and loadout flexibility
 - **Implementation Status**: Fully implemented, increases weapon inventory capacity
+
+#### Weapons Workshop (✅ Implemented)
+- **Type**: `weapons_workshop`
+- **Max Level**: 10
+- **Cost Range**: ₡75K - ₡750K (total: ₡4.125M)
+- **Benefits**: 5% - 50% discount on weapon purchases (5% per level) · 10% - 100% resale rate on the price paid
+- **Strategic Value**: Essential - Saves credits on weapon acquisitions and supports trading up through resale
+- **Implementation Status**: Fully implemented, discount applies at weapon shop, resale rate applies when selling. No longer gates refinement (Season 2)
+
+#### Refinement Lab (✅ Implemented — Season 2)
+- **Type**: `refinement_lab`
+- **Max Level**: 10
+- **Cost Range**: ₡75K - ₡750K (total: ₡4.125M)
+- **Benefits**: Unlocks the weapon refinement tiers: Hone L1, Augment L3, Sharpen L5, Forge L8 (L9–L10 unlock nothing further)
+- **Strategic Value**: Required for weapon refinement
+- **Implementation Status**: Fully implemented, gates refinement tiers. Existing stables received it once at their Weapons Workshop level (migration `20261016120000_grant_refinement_lab`)
 
 ### Training Academies (Category 3)
 

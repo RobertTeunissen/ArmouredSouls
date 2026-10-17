@@ -2,11 +2,12 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Design Document  
-**Version**: v1.4  
-**Last Updated**: October 10, 2026  
+**Version**: v1.5  
+**Last Updated**: October 16, 2026  
 **Status**: ✅ Implemented 
 
 ## Version History
+- **v1.5** (October 16, 2026): Season 2 — new Refinement Lab facility (14 facilities) takes over the refinement tier gates from the Weapons Workshop; Workshop discount 5% per level (resale 10% per level); facility categories Economy / Hangar & Armory / Training Academies / Tactical & Advanced (4-4-4-2).
 
 - **v1.4** (October 10, 2026): Added Stable_Type (`human`, `generated`, `automaton`) for Automaton stables (Spec #55).
 - **v1.3** (July 26, 2026): Training Facility discount is now roster-dependent — `max(0, 10 - Roster_Capacity)` percentage points per level, clamped to 90%. maxLevel raised 9 → 10, since the old flat formula saturated at level 9 and made level 10 worthless (Spec #46 R11).
@@ -81,20 +82,23 @@ Every stable has a Stable_Type in `users.stable_type`:
 
 Players invest Credits in facility upgrades that provide stable-wide benefits. All facilities have **10 levels** (Level 0 = not purchased, Levels 1-10 = upgrades). Some facility levels require prestige thresholds to unlock.
 
-### Complete Facility List (13 Total)
+### Complete Facility List (14 Total)
 1. **Repair Bay** - Repair cost discounts
 2. **Training Facility** - Attribute upgrade discounts
-3. **Weapons Workshop** - Weapon purchase discounts, crafting
-4. **Roster Expansion** - Robot roster slots (1→10)
-5. **Storage Facility** - Weapon storage capacity
-6. **Booking Office** - Event subscription access
-7. **Combat Training Academy** - Combat Systems attribute caps
-8. **Defense Training Academy** - Defensive Systems attribute caps
-9. **Mobility Training Academy** - Chassis & Mobility attribute caps
-10. **AI Training Academy** - AI Processing + Team Coordination attribute caps
-11. **Merchandising Hub** - Merchandising revenue (scales with prestige)
-12. **Streaming Studio** - Increases streaming revenue per battle
-13. **Tuning Bay** - Bonus attribute points for tactical per-battle tuning
+3. **Weapons Workshop** - Weapon purchase discounts and resale rate
+4. **Refinement Lab** - Weapon refinement tier gates (Season 2)
+5. **Roster Expansion** - Robot roster slots (1→10)
+6. **Storage Facility** - Weapon storage capacity
+7. **Booking Office** - Event subscription access
+8. **Combat Training Academy** - Combat Systems attribute caps
+9. **Defense Training Academy** - Defensive Systems attribute caps
+10. **Mobility Training Academy** - Chassis & Mobility attribute caps
+11. **AI Training Academy** - AI Processing + Team Coordination attribute caps
+12. **Merchandising Hub** - Merchandising revenue (scales with prestige)
+13. **Streaming Studio** - Increases streaming revenue per battle
+14. **Tuning Bay** - Bonus attribute points for tactical per-battle tuning
+
+Player-facing categories (4-4-4-2): **Economy** (Repair Bay, Training Facility, Merchandising Hub, Streaming Studio), **Hangar & Armory** (Roster Expansion, Storage Facility, Weapons Workshop, Refinement Lab), **Training Academies** (the four academies), **Tactical & Advanced** (Tuning Bay, Booking Office).
 
 ### Facility Upgrades
 
@@ -172,24 +176,22 @@ A 10-slot roster earns nothing from this facility at any level. That is intentio
 
 **3. Weapons Workshop** (Operating Cost: ₡100/day per level)
 - **Level 0**: No discount, no resale
-- **Level 1** (₡75,000): 10% discount on weapon purchases, **10% resale rate on sold weapons**
-- **Level 2** (₡150,000): 20% discount on weapon purchases, **20% resale rate**
-- **Level 3** (₡225,000): 30% discount on weapon purchases, **30% resale rate**, unlock weapon modifications
-- **Level 4** (₡300,000, requires 1,500 prestige): 40% discount on weapon purchases, **40% resale rate**
-- **Level 5** (₡375,000): 50% discount on weapon purchases, **50% resale rate**
-- **Level 6** (₡450,000): 60% discount on weapon purchases, **60% resale rate**, unlock custom weapon design
-- **Level 7** (₡525,000, requires 5,000 prestige): 70% discount on weapon purchases, **70% resale rate**
-- **Level 8** (₡600,000): 80% discount on weapon purchases, **80% resale rate**
-- **Level 9** (₡675,000, requires 10,000 prestige): 90% discount on weapon purchases, **90% resale rate**
-- **Level 10** (₡750,000): 100% discount on weapon purchases (free weapons), **100% resale rate** (full credit recovery)
+- **Levels 1–10** (₡75,000 → ₡750,000, `PRESTIGE_GATES_10`): 5% discount per level on weapon purchases (50% at L10), **10% resale rate per level** (100% at L10, full credit recovery)
 
-**Dual Purpose** (since v1.5, May 22, 2026): Workshop level rewards the player on both ends of every weapon transaction at the same 10%/level slope.
-- **Discount Formula**: Discount % = Weapons Workshop Level × 10 (applies to purchases)
+**Dual Purpose**: Workshop level rewards the player on both ends of every weapon transaction.
+- **Discount Formula**: Discount % = Weapons Workshop Level × 5 (applies to purchases; Season 2, was × 10)
 - **Resale Rate Formula**: Resale Rate % = Weapons Workshop Level × 10 (applies to sales)
+
+The Workshop does not gate refinement since Season 2; see the Refinement Lab below.
 
 Resale value is computed as `pricePaid × resaleRate(workshopLevel)`, where `pricePaid` is the actual credits the player paid at purchase time (after Workshop discount). This anchors resale to historical reality and prevents a free-weapon arbitrage exploit at L10. Equipped weapons cannot be sold — players must unequip first. See [PRD_WEAPON_ECONOMY.md → Version 1.5](PRD_WEAPON_ECONOMY.md) for the full design.
 
 **For complete weapon details, see [WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md)**
+
+**3a. Refinement Lab** (Operating Cost: ₡100/day per level; Season 2)
+- **Levels 1–10** (₡75,000 → ₡750,000, `PRESTIGE_GATES_10`, mirroring the Workshop)
+- Gates the weapon refinement tiers: Hone L1, Augment L3, Sharpen L5, Forge L8 (`REQUIRED_REFINEMENT_LAB_LEVELS` in `app/shared/utils/weaponRefinement.ts`). Levels 9–10 add no tier.
+- Existing stables received a Lab at their Workshop level through the one-off migration `20261016120000_grant_refinement_lab`. See [PRD_WEAPON_ECONOMY.md → Version 1.9](PRD_WEAPON_ECONOMY.md).
 
 **4. Roster Expansion** (Operating Cost: ₡500/day per robot slot beyond first)
 - **Level 0**: 1 robot slot (free, no operating cost)

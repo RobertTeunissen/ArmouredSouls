@@ -2,7 +2,7 @@
 title: "Zone Control Basics"
 description: "How the Control Zone works — occupation, contested vs uncontested states, and zone scoring mechanics."
 order: 1
-lastUpdated: "2026-03-18"
+lastUpdated: "2026-10-16"
 relatedArticles:
   - king-of-the-hill/scoring-and-win-conditions
   - king-of-the-hill/match-formats
@@ -13,7 +13,7 @@ relatedArticles:
 
 King of the Hill battles take place in the standard 2D circular arena with one key addition: a **Control Zone** at the center. This circular zone is the focal point of every KotH match.
 
-The zone has a default radius of 5 units (configurable between 3-8) and starts at the arena center. Robots score points by occupying the zone — but only when they're the sole occupant.
+The zone has a default radius of 7 units (allowed range 3-8) and sits at the arena center for the whole match. Robots score points by occupying the zone — but only when they're the sole occupant.
 
 ## Zone Occupation
 

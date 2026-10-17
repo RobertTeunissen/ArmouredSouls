@@ -8,7 +8,6 @@ import * as fc from 'fast-check';
 import {
   evaluateZoneOccupation,
   calculateSpawnPositions,
-  generateNextZonePosition,
   buildKothGameModeConfig,
   buildKothInitialState,
   validateKothConfig,
@@ -16,7 +15,6 @@ import {
   KothZoneState,
   ZoneOccupationResult,
 } from '../src/services/arena/kothEngine';
-import { euclideanDistance } from '../src/services/arena/vector2d';
 import type { RobotCombatState } from '../src/services/arena/types';
 
 // ─── Helpers ────────────────────────────────────────────────────────
@@ -58,6 +56,11 @@ function makeRobot(
     currentTarget: null,
     patienceTimer: 0,
     combatAlgorithmScore: 0,
+    lastMeleeHitTakenAt: null,
+    disengageBurstUntil: 0,
+    disengageReadyAt: 0,
+    disengageScheduledAt: null,
+    speedBurst: 'none',
     adaptationHitBonus: 0,
     adaptationDamageBonus: 0,
     hitsTaken: 0,
@@ -77,7 +80,6 @@ function makeZoneState(
     center: { x: cx, y: cy },
     radius,
     isActive: true,
-    rotationCount: 0,
   };
 }
 
@@ -1609,7 +1611,7 @@ describe('Property 11: Zone movement bias scales with threatAnalysis', () => {
     return {
       mode: 'zone_control',
       customData: {
-        zoneState: { center: { x: 0, y: 0 }, radius: 5, isActive: true, rotationCount: 0 },
+        zoneState: { center: { x: 0, y: 0 }, radius: 5, isActive: true },
         scoreState: createKothScoreState([]),
         robots,
       },
@@ -1745,7 +1747,7 @@ describe('Property 12: Wait-and-enter tactic scales linearly with combatAlgorith
     return {
       mode: 'zone_control',
       customData: {
-        zoneState: { center: { x: 0, y: 0 }, radius: 5, isActive: true, rotationCount: 0 },
+        zoneState: { center: { x: 0, y: 0 }, radius: 5, isActive: true },
         scoreState: createKothScoreState([]),
         robots,
       },
@@ -1899,7 +1901,7 @@ describe('Property 13: Active combat preserves base movement AI', () => {
     return {
       mode: 'zone_control',
       customData: {
-        zoneState: { center: { x: 0, y: 0 }, radius: 5, isActive: true, rotationCount: 0 },
+        zoneState: { center: { x: 0, y: 0 }, radius: 5, isActive: true },
         scoreState: createKothScoreState([]),
         robots,
       },
@@ -2468,180 +2470,6 @@ describe('Property 2: Zone transitions emit correct events', () => {
 });
 
 
-// ─── Property 17: Rotating zone positions satisfy distance constraints ─
-
-/**
- * **Validates: Requirements 8.5**
- *
- * Property 17: For any generated zone position in the rotating variant,
- * the position must be at least 6 grid units from the arena boundary and
- * at least 8 grid units from the previous zone position. Both constraints
- * must hold for every transition in the match.
- */
-describe('Property 17: Rotating zone positions satisfy distance constraints', () => {
-  it('generated position is at least 6 units from arena boundary', () => {
-    fc.assert(
-      fc.property(
-        fc.integer({ min: 1, max: 100000 }),   // matchId
-        fc.integer({ min: 0, max: 50 }),        // rotationCount
-        fc.integer({ min: 20, max: 30 }),        // arenaRadius
-        fc.integer({ min: 3, max: 8 }),          // zoneRadius
-        (matchId, rotationCount, arenaRadius, zoneRadius) => {
-          const maxDist = arenaRadius - 6 - zoneRadius;
-          // Only test when constraints are satisfiable
-          fc.pre(maxDist > 0);
-
-          // Generate a currentCenter within the arena (within maxDist of center)
-          // Use deterministic position based on matchId to keep it simple
-          const currentCenter = { x: 0, y: 0 };
-
-          const result = generateNextZonePosition(
-            matchId,
-            rotationCount,
-            currentCenter,
-            arenaRadius,
-            zoneRadius,
-          );
-
-          const distFromCenter = euclideanDistance(result, { x: 0, y: 0 });
-
-          // The zone center must be within maxDist of arena center,
-          // which ensures the zone edge is >= 6 units from arena boundary
-          expect(distFromCenter).toBeLessThanOrEqual(maxDist + 1e-9);
-        },
-      ),
-      { numRuns: 100 },
-    );
-  });
-
-  it('generated position is at least 8 units from previous position', () => {
-    fc.assert(
-      fc.property(
-        fc.integer({ min: 1, max: 100000 }),   // matchId
-        fc.integer({ min: 0, max: 50 }),        // rotationCount
-        fc.double({ min: -10, max: 10, noNaN: true, noDefaultInfinity: true }), // currentCenter.x
-        fc.double({ min: -10, max: 10, noNaN: true, noDefaultInfinity: true }), // currentCenter.y
-        (matchId, rotationCount, cx, cy) => {
-          const arenaRadius = 24;
-          const zoneRadius = 5;
-          const currentCenter = { x: cx, y: cy };
-
-          const result = generateNextZonePosition(
-            matchId,
-            rotationCount,
-            currentCenter,
-            arenaRadius,
-            zoneRadius,
-          );
-
-          // Skip fallback cases where the function returned {0,0}
-          // because constraints couldn't be met
-          const isFallback = result.x === 0 && result.y === 0;
-          fc.pre(!isFallback);
-
-          const distFromPrevious = euclideanDistance(result, currentCenter);
-          expect(distFromPrevious).toBeGreaterThanOrEqual(8 - 1e-9);
-        },
-      ),
-      { numRuns: 100 },
-    );
-  });
-});
-
-
-// ─── Property 18: Zone position generation is deterministic ─────────
-
-/**
- * **Validates: Requirements 8.6**
- *
- * Property 18: For any match ID and rotation count, calling
- * `generateNextZonePosition` with the same inputs must produce the same
- * output position. Different matchIds should (with high probability)
- * produce different positions.
- */
-describe('Property 18: Zone position generation is deterministic', () => {
-  const matchIdArb = fc.integer({ min: 1, max: 100000 });
-  const rotationCountArb = fc.integer({ min: 0, max: 50 });
-  const centerArb = fc.record({
-    x: fc.double({ min: -10, max: 10, noNaN: true, noDefaultInfinity: true }),
-    y: fc.double({ min: -10, max: 10, noNaN: true, noDefaultInfinity: true }),
-  });
-
-  const ARENA_RADIUS = 24;
-  const ZONE_RADIUS = 5;
-
-  it('same inputs produce identical output', () => {
-    fc.assert(
-      fc.property(
-        matchIdArb,
-        rotationCountArb,
-        centerArb,
-        (matchId, rotationCount, currentCenter) => {
-          const result1 = generateNextZonePosition(
-            matchId,
-            rotationCount,
-            currentCenter,
-            ARENA_RADIUS,
-            ZONE_RADIUS,
-          );
-
-          const result2 = generateNextZonePosition(
-            matchId,
-            rotationCount,
-            currentCenter,
-            ARENA_RADIUS,
-            ZONE_RADIUS,
-          );
-
-          expect(result1.x).toBe(result2.x);
-          expect(result1.y).toBe(result2.y);
-        },
-      ),
-      { numRuns: 100 },
-    );
-  });
-
-  it('different matchIds produce different outputs (with high probability)', () => {
-    fc.assert(
-      fc.property(
-        matchIdArb,
-        matchIdArb,
-        rotationCountArb,
-        centerArb,
-        (matchId1, matchId2, rotationCount, currentCenter) => {
-          fc.pre(matchId1 !== matchId2);
-
-          const result1 = generateNextZonePosition(
-            matchId1,
-            rotationCount,
-            currentCenter,
-            ARENA_RADIUS,
-            ZONE_RADIUS,
-          );
-
-          const result2 = generateNextZonePosition(
-            matchId2,
-            rotationCount,
-            currentCenter,
-            ARENA_RADIUS,
-            ZONE_RADIUS,
-          );
-
-          // With different seeds, positions should differ
-          const differ = result1.x !== result2.x || result1.y !== result2.y;
-          expect(differ).toBe(true);
-        },
-      ),
-      { numRuns: 100 },
-    );
-  });
-});
-
-
-// ─── Property 19: Rotating zone adjusts default thresholds ──────────
-
-
-
 // ─── Property 20: Passive penalties scale correctly with time outside zone ─
 
 /**
@@ -3042,8 +2870,6 @@ describe('Property 22: buildKothGameModeConfig produces complete valid config', 
   });
 
   it('maxDuration honours an explicit time limit and otherwise falls back to the default', () => {
-    // Zone rotation was abolished by Spec #41, so the third case this test used
-    // to cover (rotatingZone true implying a 210s limit) no longer exists.
     fc.assert(
       fc.property(
         fc.constantFrom(5, 6),

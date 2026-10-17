@@ -404,115 +404,21 @@ export function renderKothZone(
   ctx: CanvasRenderingContext2D,
   center: { x: number; y: number },
   radiusPixels: number,
-  state: 'uncontested' | 'contested' | 'empty' | 'inactive',
+  state: 'uncontested' | 'contested' | 'empty',
   controllerColorIndex?: number,
   animationTime?: number,
-  previousCenter?: { x: number; y: number },
-  transitionProgress?: number,
 ): void {
   ctx.save();
-
-  // If we have a previous center and transition progress, render the animated transition
-  const isTransitioning = previousCenter !== undefined && transitionProgress !== undefined;
-
-  if (state === 'inactive' && isTransitioning) {
-    // Zone is moving: fade out at old position, fade in at new position
-    const fadeOut = Math.max(0, 1 - transitionProgress * 2); // fades out in first half
-    const fadeIn = Math.max(0, transitionProgress * 2 - 1);  // fades in in second half
-
-    // Fading-out zone at previous position
-    if (fadeOut > 0) {
-      ctx.globalAlpha = fadeOut;
-      ctx.beginPath();
-      ctx.arc(previousCenter.x, previousCenter.y, radiusPixels, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(245, 158, 11, 0.2)';
-      ctx.fill();
-      ctx.setLineDash([4, 4]);
-      ctx.strokeStyle = 'rgba(245, 158, 11, 0.4)';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.globalAlpha = 1;
-    }
-
-    // Fading-in zone at new position
-    if (fadeIn > 0) {
-      ctx.globalAlpha = fadeIn;
-      ctx.beginPath();
-      ctx.arc(center.x, center.y, radiusPixels, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(245, 158, 11, 0.2)';
-      ctx.fill();
-      ctx.setLineDash([4, 4]);
-      ctx.strokeStyle = 'rgba(245, 158, 11, 0.4)';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.globalAlpha = 1;
-    }
-
-    // Pulsing "moving" label at midpoint between old and new positions
-    const midX = previousCenter.x + (center.x - previousCenter.x) * transitionProgress;
-    const midY = previousCenter.y + (center.y - previousCenter.y) * transitionProgress;
-    const pulse = animationTime !== undefined ? 0.5 + 0.3 * Math.sin(animationTime * 6) : 0.7;
-    ctx.globalAlpha = pulse;
-    ctx.beginPath();
-    ctx.arc(midX, midY, 4, 0, Math.PI * 2);
-    ctx.fillStyle = '#F59E0B';
-    ctx.fill();
-    ctx.globalAlpha = 1;
-  } else if (state === 'inactive' && !isTransitioning) {
-    // Inactive without transition data — original faded zone rendering
-    ctx.beginPath();
-    ctx.arc(center.x, center.y, radiusPixels, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(107, 114, 128, 0.15)';
-    ctx.fill();
-    ctx.setLineDash([4, 4]);
-    ctx.strokeStyle = 'rgba(107, 114, 128, 0.3)';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-    ctx.setLineDash([]);
-  } else if (isTransitioning && transitionProgress < 1) {
-    // Zone just became active but transition is still completing — show both positions
-    const fadeOut = Math.max(0, 1 - transitionProgress);
-    const fadeIn = transitionProgress;
-
-    // Fading-out ghost at previous position
-    if (fadeOut > 0.05) {
-      ctx.globalAlpha = fadeOut * 0.5;
-      ctx.beginPath();
-      ctx.arc(previousCenter.x, previousCenter.y, radiusPixels, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(107, 114, 128, 0.2)';
-      ctx.fill();
-      ctx.setLineDash([4, 4]);
-      ctx.strokeStyle = 'rgba(107, 114, 128, 0.3)';
-      ctx.lineWidth = 1;
-      ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.globalAlpha = 1;
-    }
-
-    // Render the new zone at its active state with fade-in
-    ctx.globalAlpha = fadeIn;
-    renderKothZoneActive(ctx, center, radiusPixels, state, controllerColorIndex, animationTime);
-    ctx.globalAlpha = 1;
-  } else if (state === 'contested') {
-    renderKothZoneActive(ctx, center, radiusPixels, state, controllerColorIndex, animationTime);
-  } else if (state === 'uncontested' && controllerColorIndex !== undefined) {
-    renderKothZoneActive(ctx, center, radiusPixels, state, controllerColorIndex, animationTime);
-  } else {
-    // Empty — gold/amber base
-    renderKothZoneActive(ctx, center, radiusPixels, state, controllerColorIndex, animationTime);
-  }
-
+  renderKothZoneActive(ctx, center, radiusPixels, state, controllerColorIndex, animationTime);
   ctx.restore();
 }
 
-/** Render the active KotH zone (non-transitioning states) */
+/** Render the KotH zone fill and outline for its occupation state */
 function renderKothZoneActive(
   ctx: CanvasRenderingContext2D,
   center: { x: number; y: number },
   radiusPixels: number,
-  state: 'uncontested' | 'contested' | 'empty' | 'inactive',
+  state: 'uncontested' | 'contested' | 'empty',
   controllerColorIndex?: number,
   animationTime?: number,
 ): void {

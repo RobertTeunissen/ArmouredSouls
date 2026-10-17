@@ -101,7 +101,7 @@ function actionDetail(action: PlannedAction): Record<string, string | number> {
     case 'weapon_stage':
       return { slot: action.robotSlot, toStage: action.toStage };
     case 'weapon_refinement':
-      return { slot: action.robotSlot, tier: action.step.tier, hand: action.step.hand, workshopLevels: action.chain.length };
+      return { slot: action.robotSlot, tier: action.step.tier, hand: action.step.hand, refinementLabLevels: action.chain.length };
   }
 }
 

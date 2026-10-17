@@ -423,4 +423,4 @@ All schedule env vars are overridable via `.env` for rollback or per-environment
 | `src/types/` | Shared TypeScript interfaces for JSON payloads (snapshot types, battle log types) |
 | `src/config/` | Configuration (logger, environment, facilities) |
 | `src/lib/` | Singleton instances (Prisma client, credit guard); `dbPoolConfig` (`resolveDbPoolMax`, the `DB_POOL_MAX` parse shared by the pool and the Turn_Step concurrency clamp) |
-| `app/shared/utils/` | Game formulas shared between frontend and backend (upgrade costs, discounts, academy caps, loadout battle readiness) |
+| `app/shared/utils/` | Game formulas shared between frontend and backend (upgrade costs, discounts, academy caps, loadout battle readiness, weapon catalogue pricing in `weaponPricing.ts`) |

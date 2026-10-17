@@ -130,10 +130,10 @@ describe('Robot Calculations', () => {
       const robot = createMockRobot({ loadoutType: 'single' });
       const stats = calculateEffectiveStats(robot);
 
-      // With single loadout: gyroStabilizers +10%, servoMotors +5%
+      // With single loadout (Season 2): gyroStabilizers +15%, servoMotors +10%
       expect(stats.combatPower).toBe(10); // No bonus
-      expect(stats.gyroStabilizers).toBe(11); // 10 * 1.10 = 11
-      expect(stats.servoMotors).toBe(10.5); // 10 * 1.05 = 10.5, rounded to 2 decimals
+      expect(stats.gyroStabilizers).toBe(11.5); // 10 * 1.15 = 11.5
+      expect(stats.servoMotors).toBe(11); // 10 * 1.10 = 11
     });
 
     it('should apply weapon bonuses correctly', () => {
@@ -182,10 +182,10 @@ describe('Robot Calculations', () => {
 
       const stats = calculateEffectiveStats(robot);
 
-      // shieldCapacity: new Prisma.Decimal(10) * 1.20 = 12
-      expect(stats.shieldCapacity).toBe(12);
-      // armorPlating: new Prisma.Decimal(10) * 1.15 = 11.5, rounded to 2 decimals
-      expect(stats.armorPlating).toBe(11.5);
+      // shieldCapacity: new Prisma.Decimal(10) * 1.15 = 11.5 (Season 2: was +20%)
+      expect(stats.shieldCapacity).toBe(11.5);
+      // armorPlating: new Prisma.Decimal(10) * 1.10 = 11 (Season 2: was +15%)
+      expect(stats.armorPlating).toBe(11);
       // counterProtocols: new Prisma.Decimal(10) * 1.10 = 11
       expect(stats.counterProtocols).toBe(11);
       // attackSpeed: new Prisma.Decimal(10) * 0.85 = 8.5
@@ -377,7 +377,7 @@ describe('Robot Calculations', () => {
       });
 
       const robot = createMockRobot({ 
-        loadoutType: 'weapon_shield', // +20% shield capacity
+        loadoutType: 'weapon_shield', // +15% shield capacity
         shieldCapacity: new Prisma.Decimal(10),
         mainWeaponId: 1,
       });
@@ -397,17 +397,17 @@ describe('Robot Calculations', () => {
 
       const maxShield = calculateMaxShield(robotWithWeapon);
 
-      // (Shield capacity 10 + weapon 5) * 1.20 * 4 = 72
-      expect(maxShield).toBe(72);
+      // (Shield capacity 10 + weapon 5) * 1.15 * 4 = 69
+      expect(maxShield).toBe(69);
     });
   });
 
   describe('getLoadoutBonus', () => {
     it('should return correct bonus for existing attribute', () => {
-      expect(getLoadoutBonus('weapon_shield', 'shieldCapacity')).toBe(0.20);
+      expect(getLoadoutBonus('weapon_shield', 'shieldCapacity')).toBe(0.15);
       expect(getLoadoutBonus('two_handed', 'combatPower')).toBe(0.10); // v1.2: reduced from 0.25 for balance
       expect(getLoadoutBonus('dual_wield', 'attackSpeed')).toBe(0.30);
-      expect(getLoadoutBonus('single', 'gyroStabilizers')).toBe(0.10);
+      expect(getLoadoutBonus('single', 'gyroStabilizers')).toBe(0.15);
     });
 
     it('should return 0 for non-modified attributes', () => {
@@ -589,17 +589,17 @@ describe('Robot Calculations', () => {
       expect(Number(robot.attackSpeed)).toBe(20.8);
     });
 
-    it('prepared Weapon + Shield robot receives its +20% shield capacity in maxShield', () => {
+    it('prepared Weapon + Shield robot receives its +15% shield capacity in maxShield', () => {
       const robot: PreparableRobot = {
         ...createMockRobot({ loadoutType: 'weapon_shield' }),
         mainWeapon: inventoryRow(1, createMockWeapon({ id: 1, shieldCapacityBonus: 0 })),
         offhandWeapon: inventoryRow(2, createMockWeapon({ id: 2, shieldCapacityBonus: 5 })),
       };
       prepareRobotForCombat(robot);
-      // (10 + 5) × 1.20 = 18 → maxShield 18 × 4 = 72
-      expect(Number(robot.shieldCapacity)).toBe(18);
-      expect(robot.maxShield).toBe(72);
-      expect(robot.currentShield).toBe(72);
+      // (10 + 5) × 1.15 = 17.25 → maxShield 17.25 × 4 = 69
+      expect(Number(robot.shieldCapacity)).toBe(17.25);
+      expect(robot.maxShield).toBe(69);
+      expect(robot.currentShield).toBe(69);
     });
 
     it('preparing the same robot twice does not compound and does not restore HP', () => {

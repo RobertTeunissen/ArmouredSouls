@@ -6,7 +6,7 @@ import {
   refinementStepCost,
   robotPurchaseCost,
   weaponResaleValue,
-  workshopLevelForTier,
+  refinementLabLevelForTier,
 } from '../pricing';
 import { AUTOMATON_FACILITY_TYPES } from '../stableFacts';
 import { FACILITY_TYPES, getFacilityUpgradeCost } from '../../../config/facilities';
@@ -64,7 +64,8 @@ describe('pricing (R5.3): identical to the charging services', () => {
   });
 
   it.each([
-    [400_000, 0, 400_000], [400_000, 3, 280_000], [57_333, 7, 17_199], [400_000, 10, 0],
+    // Season 2: 5% per Workshop level, 50% at L10.
+    [400_000, 0, 400_000], [400_000, 3, 340_000], [57_333, 7, 37_266], [400_000, 10, 200_000],
   ])('discounts a ₡%i weapon at Workshop L%i to ₡%i', (cost, level, expected) => {
     expect(discountedWeaponPrice(cost, level)).toBe(expected);
   });
@@ -105,10 +106,10 @@ describe('pricing (R5.3): identical to the charging services', () => {
     expect(refinementStepCost('augment', 2, 1)).toBe(80_000);
   });
 
-  it('names the Workshop level each tier needs', () => {
-    expect(workshopLevelForTier('hone')).toBe(1);
-    expect(workshopLevelForTier('augment')).toBe(3);
-    expect(workshopLevelForTier('sharpen')).toBe(5);
-    expect(workshopLevelForTier('forge')).toBe(8);
+  it('names the Refinement Lab level each tier needs', () => {
+    expect(refinementLabLevelForTier('hone')).toBe(1);
+    expect(refinementLabLevelForTier('augment')).toBe(3);
+    expect(refinementLabLevelForTier('sharpen')).toBe(5);
+    expect(refinementLabLevelForTier('forge')).toBe(8);
   });
 });

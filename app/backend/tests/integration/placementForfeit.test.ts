@@ -124,6 +124,8 @@ async function scheduleField(
       leagueType: tier,
       leagueInstanceId: `${tier}_1`,
       isByeMatch,
+      // KotH matchmaking always writes the zone radius (#522).
+      zoneRadius: c.matchType === 'koth' ? 7 : null,
       participants: {
         create: robots.map((participantId, i) => ({ participantType: 'robot', participantId, slot: i + 1 })),
       },

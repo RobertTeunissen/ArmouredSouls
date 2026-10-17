@@ -109,13 +109,9 @@ export interface AttackIndicator {
 export interface KothZoneState {
   center: Position;
   radius: number;
-  state: 'uncontested' | 'contested' | 'empty' | 'inactive';
+  state: 'uncontested' | 'contested' | 'empty';
   controllingRobotName?: string;
   occupantNames: string[];
-  /** Previous zone center before a zone_moving → zone_active transition */
-  previousCenter?: Position;
-  /** Transition progress from 0 (just started moving) to 1 (fully arrived at new position) */
-  transitionProgress?: number;
 }
 
 /** KotH scoreboard entry */
