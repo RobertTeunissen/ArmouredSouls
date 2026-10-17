@@ -36,6 +36,7 @@ import {
   calculateTournamentParticipationReward,
   calculateTournamentFame,
 } from '../../utils/tournamentRewards';
+import { applyTeamCreditPoolFactor } from '../../utils/economyFormulas';
 import {
   awardStreamingRevenueForParticipant,
   awardCreditsWithLedger,
@@ -65,6 +66,31 @@ const TOURNAMENT_PRESTIGE_STEPPED = [0, 20, 30, 40, 50, 60]; // Index 0 unused
 
 /** Championship bonus prestige for winning the final round */
 const TOURNAMENT_CHAMPIONSHIP_BONUS = 150;
+
+/**
+ * Owner credit pools for one team tournament battle (#527).
+ *
+ * Each arm is the round's solo amount (`calculateTournamentWinReward` for the
+ * winner, `calculateTournamentParticipationReward` for the loser) × teamSize,
+ * then the Team_Credit_Pool_Factor (0.75) once, rounded once. The pools are
+ * owner totals: split them with `distributeTeamCredits`, never multiply them by
+ * teamSize again (the pre-Spec #49 N² payment).
+ */
+export function calculateTeamTournamentCreditPools(
+  totalParticipants: number,
+  currentRound: number,
+  maxRounds: number,
+  teamSize: 2 | 3,
+): { winnerPool: number; loserPool: number } {
+  return {
+    winnerPool: applyTeamCreditPoolFactor(
+      calculateTournamentWinReward(totalParticipants, currentRound, maxRounds) * teamSize,
+    ),
+    loserPool: applyTeamCreditPoolFactor(
+      calculateTournamentParticipationReward(totalParticipants, currentRound, maxRounds) * teamSize,
+    ),
+  };
+}
 
 /**
  * Calculate prestige for a team tournament match winner using the stepped curve.
@@ -1112,7 +1138,8 @@ async function resolveTeamTournamentForfeit(
 /**
  * Distribute rewards for a team tournament battle.
  *
- * Credits: calculateTournamentWinReward × teamSize per robot (winner), 30% for loser
+ * Credits: owner pools from `calculateTeamTournamentCreditPools` (round win /
+ *   participation reward × teamSize × 0.75, #527), split per robot
  * Prestige: Stepped curve (R1=20, R2=30, R3=40, R4=50, R5+=60) + 150 championship bonus (winner only)
  * Fame: calculateTournamentFame with team HP sums (winner only)
  * Streaming: awardStreamingRevenueForParticipant per robot with teamSize
@@ -1140,15 +1167,21 @@ async function distributeTeamTournamentRewards(
   const loserOwnerId = winningSide === 1 ? team2OwnerId : team1OwnerId;
 
   // ─── Credits ───────────────────────────────────────────────────────
-  // The teamSize factor is applied exactly ONCE, here, on each arm (Spec #49).
-  // These are owner totals; the per-robot split follows below.
+  // The teamSize factor and the Team_Credit_Pool_Factor are each applied
+  // exactly ONCE, in `calculateTeamTournamentCreditPools`, on each arm (Spec #49,
+  // #527). These are owner totals; the per-robot split follows below and does
+  // not multiply again.
   //
   // Before Spec #49 these were named `...CreditPerRobot`, already carried a
   // `× teamSize`, and were then multiplied by `teamSize` a second time at the
   // award call — so an owner was paid `base × teamSize²`, i.e. 9× instead of 3×
   // for a 3v3. Both arms were affected.
-  const winnerOwnerTotal = calculateTournamentWinReward(totalParticipants, currentRound, maxRounds) * teamSize;
-  const loserOwnerTotal = calculateTournamentParticipationReward(totalParticipants, currentRound, maxRounds) * teamSize;
+  const { winnerPool: winnerOwnerTotal, loserPool: loserOwnerTotal } = calculateTeamTournamentCreditPools(
+    totalParticipants,
+    currentRound,
+    maxRounds,
+    teamSize,
+  );
 
   // Per-robot shares, remainder distributed one credit at a time so the
   // participant rows and financial pairs sum exactly to the former owner total.

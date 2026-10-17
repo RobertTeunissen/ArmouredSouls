@@ -24,7 +24,7 @@
  */
 
 import { StandingsMode } from '../../generated/prisma';
-import { getParticipationReward } from './economyFormulas';
+import { applyTeamCreditPoolFactor, getParticipationReward } from './economyFormulas';
 import { calculateTournamentParticipationReward } from './tournamentRewards';
 
 // ─── Mode identifiers ────────────────────────────────────────────────────────
@@ -52,7 +52,10 @@ export type ByeEntitySource = 'robot' | 'team' | 'tournament_participant';
 export interface ByeModeSpec {
   /** Which Participation_Floor arm this mode reads. */
   floor: 'tier_scaled' | 'tournament_round_loss';
-  /** Robots on the real side. The only multiplier applied to the floor. */
+  /**
+   * Robots on the real side. The floor is multiplied by this and, for team
+   * modes (teamSize > 1), by the Team_Credit_Pool_Factor once (#527).
+   */
   teamSize: 1 | 2 | 3;
   /** LP delta a bye in this mode applies. Unchanged from pre-Spec #49 behaviour. */
   lpDelta: number;
@@ -190,7 +193,10 @@ export interface ByeReward {
   streamingRevenue: 0;
   /** LP delta to apply. 0 for Placement_Modes and Tournament_Modes. */
   lpDelta: number;
-  /** Robots on the real side. The × factor is already folded into `credits`. */
+  /**
+   * Robots on the real side. The × teamSize factor, and for team modes the
+   * Team_Credit_Pool_Factor (0.75, #527), are already folded into `credits`.
+   */
   teamSize: 1 | 2 | 3;
   /** Per-robot floor before the teamSize factor — for logs and assertions. */
   perRobotCredits: number;
@@ -203,6 +209,11 @@ export interface ByeReward {
  * `getParticipationReward` and the tournament arm calls
  * `calculateTournamentParticipationReward`, so a bye and a loss cannot drift
  * apart.
+ *
+ * A team bye (teamSize 2 or 3) pays a team credit pool, so the
+ * Team_Credit_Pool_Factor applies to it exactly once, the same way it applies
+ * to the mode's loss pool (#527): `round(floor × teamSize × 0.75)`. Solo byes
+ * are unchanged.
  */
 export function resolveByeReward(input: ByeRewardInput): ByeReward {
   const spec = BYE_MODE_SPECS[input.mode];
@@ -217,7 +228,9 @@ export function resolveByeReward(input: ByeRewardInput): ByeReward {
         );
 
   return {
-    credits: perRobotCredits * spec.teamSize,
+    credits: spec.teamSize > 1
+      ? applyTeamCreditPoolFactor(perRobotCredits * spec.teamSize)
+      : perRobotCredits,
     prestige: 0,
     fame: 0,
     streamingRevenue: 0,

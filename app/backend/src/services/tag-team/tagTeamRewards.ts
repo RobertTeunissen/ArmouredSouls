@@ -1,11 +1,16 @@
 import { Robot } from '../../../generated/prisma';
 import { getLeagueWinReward, getParticipationReward } from '../../utils/economyCalculations';
+import { applyTeamCreditPoolFactor } from '../../utils/economyFormulas';
 import { calculateELOChange } from '../../utils/battleMath';
 import { TAG_TEAM_REWARD_MULTIPLIER, TAG_TEAM_PRESTIGE_MULTIPLIER } from './tagTeamTypes';
 
 /**
- * Calculate rewards for a tag team battle
- * Requirement 4.1, 4.2, 4.3: 2x standard league rewards
+ * Calculate the credit pool for one tag team in a tag team battle.
+ *
+ * Requirement 4.1, 4.2, 4.3: the solo reward × TAG_TEAM_REWARD_MULTIPLIER (2,
+ * the team size), then the Team_Credit_Pool_Factor (0.75, #527) exactly once:
+ * 1.5× the solo reward. The result is the team's pool, split across its two
+ * robots with `distributeTeamCredits`.
  */
 export function calculateTagTeamRewards(
   league: string,
@@ -28,8 +33,8 @@ export function calculateTagTeamRewards(
     reward = participationReward;
   }
 
-  // Apply 2x multiplier for tag team matches
-  return Math.round(reward * TAG_TEAM_REWARD_MULTIPLIER);
+  // Team size × solo reward, then the team credit-pool factor, rounded once.
+  return applyTeamCreditPoolFactor(reward * TAG_TEAM_REWARD_MULTIPLIER);
 }
 
 /**

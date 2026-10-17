@@ -193,6 +193,33 @@ export function getParticipationReward(league: string): number {
   return Math.round(getLeagueWinReward(league) * PARTICIPATION_REWARD_FRACTION);
 }
 
+// ==================== TEAM CREDIT POOLS ====================
+
+/**
+ * Team_Credit_Pool_Factor (Season 2, #527): every team-mode credit pool is
+ * multiplied by this exactly once, before it is split across the team.
+ *
+ * Applies to the win/loss/draw participation pools of tag team (2× → 1.5× a
+ * solo reward), 2v2/3v3 leagues (2×/3× → 1.5×/2.25×) and team tournaments, and
+ * to the participation pool of an already-eligible team bye or forfeit win.
+ * It is a credit factor only: solo rewards and solo byes, streaming (already
+ * divided by team size), fame, prestige, ELO/LP and standings are unchanged.
+ * Distinct from the team size and from the tag-team prestige multiplier.
+ */
+export const TEAM_CREDIT_POOL_FACTOR = 0.75;
+
+/**
+ * Apply the Team_Credit_Pool_Factor to an unscaled team pool (the solo amount
+ * × team size, an integer), rounding once to whole credits.
+ *
+ * `pool × 0.75` is exact in floating point (a multiple of 0.25), so a half
+ * credit rounds up deterministically. The result is the recorded team pool;
+ * split it with `distributeTeamCredits` so the shares sum to it exactly.
+ */
+export function applyTeamCreditPoolFactor(unscaledPool: number): number {
+  return Math.round(unscaledPool * TEAM_CREDIT_POOL_FACTOR);
+}
+
 // ==================== MULTI-ROBOT EVENT REWARDS ====================
 
 /**

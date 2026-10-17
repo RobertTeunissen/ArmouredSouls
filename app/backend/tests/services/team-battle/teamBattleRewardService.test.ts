@@ -50,20 +50,62 @@ describe('teamBattleRewardService', () => {
   describe('calculateTeamBattleReward', () => {
     const tiers = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'] as const;
 
-    describe('2v2 winner rewards (N=2 multiplier)', () => {
-      it.each(tiers)('should return 2× (win + participation) for %s tier winner', (tier) => {
-        const expected = (getLeagueWinReward(tier) + getParticipationReward(tier)) * 2;
-        const result = calculateTeamBattleReward(tier, 2, true, false);
-        expect(result).toBe(expected);
+    // Season 2 (#527): the unscaled pool N × (win + participation) is multiplied
+    // by the Team_Credit_Pool_Factor 0.75 exactly once, before the split.
+    // Hand table (win + participation per tier): bronze 9,000, silver 18,000,
+    // gold 36,000, platinum 72,000, diamond 138,000, champion 270,000.
+    describe('2v2 winner pools (1.5× a solo win, was 2×)', () => {
+      it.each([
+        ['bronze', 13500],
+        ['silver', 27000],
+        ['gold', 54000],
+        ['platinum', 108000],
+        ['diamond', 207000],
+        ['champion', 405000],
+      ] as const)('%s 2v2 winner pool is %i', (tier, expected) => {
+        expect(calculateTeamBattleReward(tier, 2, true, false)).toBe(expected);
       });
     });
 
-    describe('3v3 winner rewards (N=3 multiplier)', () => {
-      it.each(tiers)('should return 3× (win + participation) for %s tier winner', (tier) => {
-        const expected = (getLeagueWinReward(tier) + getParticipationReward(tier)) * 3;
-        const result = calculateTeamBattleReward(tier, 3, true, false);
-        expect(result).toBe(expected);
+    describe('3v3 winner pools (2.25× a solo win, was 3×)', () => {
+      it.each([
+        ['bronze', 20250],
+        ['silver', 40500],
+        ['gold', 81000],
+        ['platinum', 162000],
+        ['diamond', 310500],
+        ['champion', 607500],
+      ] as const)('%s 3v3 winner pool is %i', (tier, expected) => {
+        expect(calculateTeamBattleReward(tier, 3, true, false)).toBe(expected);
       });
+    });
+
+    describe('loser/draw pools: 20% of the reduced winner pool', () => {
+      it.each([
+        ['bronze', 2700, 4050],
+        ['silver', 5400, 8100],
+        ['gold', 10800, 16200],
+        ['platinum', 21600, 32400],
+        ['diamond', 41400, 62100],
+        ['champion', 81000, 121500],
+      ] as const)('%s loser pool is %i (2v2) and %i (3v3)', (tier, twoVTwo, threeVThree) => {
+        expect(calculateTeamBattleReward(tier, 2, false, false)).toBe(twoVTwo);
+        expect(calculateTeamBattleReward(tier, 3, false, false)).toBe(threeVThree);
+        expect(calculateTeamBattleReward(tier, 2, false, true)).toBe(twoVTwo);
+        expect(calculateTeamBattleReward(tier, 3, true, true)).toBe(threeVThree);
+      });
+    });
+
+    it('applies the factor exactly once: pool = 0.75 × N × solo, never 0.75² or N²', () => {
+      for (const tier of tiers) {
+        const solo = getLeagueWinReward(tier) + getParticipationReward(tier);
+        for (const n of [2, 3] as const) {
+          const pool = calculateTeamBattleReward(tier, n, true, false);
+          expect(pool * 4).toBe(solo * n * 3);
+          expect(pool).not.toBe(solo * n);
+          expect(pool).not.toBe(solo * n * n);
+        }
+      }
     });
 
     describe('loser rewards (20% of winner)', () => {
@@ -94,21 +136,21 @@ describe('teamBattleRewardService', () => {
       });
     });
 
-    describe('specific tier values match design table', () => {
-      it('should match bronze 2v2 winner: 18,000', () => {
-        expect(calculateTeamBattleReward('bronze', 2, true, false)).toBe(18000);
+    describe('specific tier values match the Season 2 design table (#527)', () => {
+      it('should match bronze 2v2 winner: 13,500 (was 18,000)', () => {
+        expect(calculateTeamBattleReward('bronze', 2, true, false)).toBe(13500);
       });
 
-      it('should match bronze 3v3 winner: 27,000', () => {
-        expect(calculateTeamBattleReward('bronze', 3, true, false)).toBe(27000);
+      it('should match bronze 3v3 winner: 20,250 (was 27,000)', () => {
+        expect(calculateTeamBattleReward('bronze', 3, true, false)).toBe(20250);
       });
 
-      it('should match gold 2v2 winner: 72,000', () => {
-        expect(calculateTeamBattleReward('gold', 2, true, false)).toBe(72000);
+      it('should match gold 2v2 winner: 54,000 (was 72,000)', () => {
+        expect(calculateTeamBattleReward('gold', 2, true, false)).toBe(54000);
       });
 
-      it('should match champion 3v3 winner: 810,000', () => {
-        expect(calculateTeamBattleReward('champion', 3, true, false)).toBe(810000);
+      it('should match champion 3v3 winner: 607,500 (was 810,000)', () => {
+        expect(calculateTeamBattleReward('champion', 3, true, false)).toBe(607500);
       });
     });
 
@@ -444,8 +486,8 @@ describe('teamBattleRewardService', () => {
   //
   // Spec #49 deleted the test that asserted a bye pays the full winner reward.
   // The behaviour it covered is genuinely gone: a bye now pays
-  // `getParticipationReward(tier) x teamSize` — one sixth of the fought-win
-  // figure — which is asserted in tests/utils/byeRewards.property.test.ts and
+  // `getParticipationReward(tier) x teamSize` (× 0.75 for team modes since
+  // #527) — which is asserted in tests/utils/byeRewards.property.test.ts and
   // pinned as literals there. `calculateTeamBattleReward` itself is unchanged and
   // still correct for a fought battle; it is simply no longer on the bye path.
   //

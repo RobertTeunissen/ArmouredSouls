@@ -141,4 +141,81 @@ describe('processTeamTournamentBattle persisted-battle finalization', () => {
     });
     expect(result).toMatchObject({ battleId: 501, winnerId: 11 });
   });
+
+  // Season 2 (#527): owner pools are round solo amount × teamSize × 0.75, rounded
+  // once and split with deterministic remainders; nothing multiplies by teamSize
+  // again (the pre-Spec #49 N² payment).
+  describe('team credit pools (#527)', () => {
+    const match = {
+      id: 89,
+      tournamentId: 10,
+      participant1Id: 11,
+      participant2Id: 12,
+      battleId: 501,
+      status: 'scheduled',
+      isByeMatch: false,
+    } as unknown as ScheduledTournamentMatch;
+    // 10 participants → size multiplier 1; round 1 of 3 → 20,000 / 3 = 6,666.67
+    // → win reward 6,667; participation round(6,667 × 0.3) = 2,000.
+    const tournament = {
+      id: 10,
+      participantType: 'team_2v2',
+      totalParticipants: 10,
+      currentRound: 1,
+      maxRounds: 3,
+    } as unknown as Tournament;
+
+    const creditCalls = (): Array<{ robotId: unknown; amount: unknown; outcome: unknown }> =>
+      mockAwardCreditsWithLedger.mock.calls.map((call) => ({
+        robotId: call[5],
+        amount: call[1],
+        outcome: (call[7] as { outcome: string }).outcome,
+      }));
+
+    it('pays round(6,667 × 2 × 0.75) = 10,001 to the winner and 2,000 × 1.5 = 3,000 to the loser, split exactly', async () => {
+      await processTeamTournamentBattle(match, tournament);
+
+      // 10,000.5 rounds once to 10,001; the odd credit goes to the first robot.
+      expect(creditCalls()).toEqual([
+        { robotId: 101, amount: 5001, outcome: 'win' },
+        { robotId: 102, amount: 5000, outcome: 'win' },
+        { robotId: 201, amount: 1500, outcome: 'loss' },
+        { robotId: 202, amount: 1500, outcome: 'loss' },
+      ]);
+      expect(mockBattleUpdate).toHaveBeenCalledWith({
+        where: { id: 501 },
+        data: { winnerReward: 10001, loserReward: 3000 },
+      });
+      // Not the N² payment (6,667 × 2² = 26,668) and not the pre-#527 pool (13,334).
+      const winnerTotal = creditCalls().filter((c) => c.outcome === 'win').reduce((s, c) => s + (c.amount as number), 0);
+      expect(winnerTotal).toBe(10001);
+      expect(winnerTotal).not.toBe(26668);
+      expect(winnerTotal).not.toBe(13334);
+    });
+
+    it('a retry of the same persisted battle issues identical, idempotently keyed awards', async () => {
+      await processTeamTournamentBattle(match, tournament);
+      const first = mockAwardCreditsWithLedger.mock.calls.map((call) => [...call]);
+
+      jest.clearAllMocks();
+      mockTeamBattleFindUnique
+        .mockResolvedValueOnce({ id: 11, stableId: 11110, teamName: 'First', members: team1Robots.map(robot => ({ robotId: robot.id })) })
+        .mockResolvedValueOnce({ id: 12, stableId: 11110, teamName: 'Second', members: team2Robots.map(robot => ({ robotId: robot.id })) });
+      mockRobotFindMany.mockResolvedValueOnce(team1Robots).mockResolvedValueOnce(team2Robots);
+      mockBattleFindUnique.mockResolvedValue(persistedBattle);
+      mockScheduledMatchFindMany.mockResolvedValue([{ isByeMatch: false }]);
+      mockAwardStreamingRevenue.mockResolvedValue({ totalRevenue: 500 });
+      mockCheckAndAwardAchievements.mockResolvedValue([]);
+      mockDidRobotLosePreviousBattle.mockResolvedValue(false);
+
+      await processTeamTournamentBattle(match, tournament);
+      const second = mockAwardCreditsWithLedger.mock.calls.map((call) => [...call]);
+
+      // Same battle, same robot, same amount and metadata: the ledger writer's
+      // battle/robot event identity turns the retry into a no-op, never a second
+      // or rescaled payment.
+      expect(second).toEqual(first);
+      expect(second.map((call) => call[1])).toEqual([5001, 5000, 1500, 1500]);
+    });
+  });
 });

@@ -66,8 +66,10 @@ describe('Property 1: a bye pays credits and nothing else, in every mode', () =>
 });
 
 // Feature: bye-system-unification, Property 2: The Tier_Scaled_Mode floor is one number times team size
+// Season 2 (#527): a team bye is a team credit pool, so it also carries the
+// Team_Credit_Pool_Factor 0.75 exactly once; solo byes are unchanged.
 describe('Property 2: the tier-scaled floor is one number times team size', () => {
-  it('should pay getParticipationReward(tier) x teamSize for every tier-scaled mode', () => {
+  it('should pay getParticipationReward(tier) x teamSize (x 0.75 for teams) for every tier-scaled mode', () => {
     fc.assert(
       fc.property(
         fc.oneof(fc.constantFrom(...TIERS), fc.string()),
@@ -76,9 +78,14 @@ describe('Property 2: the tier-scaled floor is one number times team size', () =
           const reward = resolveByeReward({ mode, tier });
           const teamSize = BYE_MODE_SPECS[mode].teamSize;
 
-          expect(reward.credits).toBe(getParticipationReward(tier) * teamSize);
-          expect(reward.credits / teamSize).toBe(getParticipationReward(tier));
-          expect(reward.perRobotCredits).toBe(getParticipationReward(tier));
+          const floor = getParticipationReward(tier);
+          if (teamSize === 1) {
+            expect(reward.credits).toBe(floor);
+          } else {
+            // Participation floors are multiples of 100, so 0.75 × N × floor is whole.
+            expect(reward.credits * 4).toBe(floor * teamSize * 3);
+          }
+          expect(reward.perRobotCredits).toBe(floor);
         },
       ),
       { numRuns: 100 },
@@ -111,7 +118,7 @@ describe('Property 2: the tier-scaled floor is one number times team size', () =
 
 // Feature: bye-system-unification, Property 3: A tournament bye equals a tournament loss for the same round
 describe('Property 3: a tournament bye equals a tournament loss for the same round', () => {
-  it('should pay the round loss reward x teamSize for every tournament mode', () => {
+  it('should pay the round loss reward x teamSize (x 0.75 for teams, rounded once) for every tournament mode', () => {
     fc.assert(
       fc.property(
         fc.constantFrom(...TOURNAMENT_BYE_MODES),
@@ -133,8 +140,11 @@ describe('Property 3: a tournament bye equals a tournament loss for the same rou
           );
 
           // This is the same figure, through the same function and with the same
-          // team size factor, that the losing owner is paid for that round.
-          expect(reward.credits).toBe(lossReward * teamSize);
+          // team size and team credit-pool factors, that the losing owner is
+          // paid for that round (calculateTeamTournamentCreditPools.loserPool).
+          expect(reward.credits).toBe(
+            teamSize === 1 ? lossReward : Math.round((lossReward * teamSize * 3) / 4),
+          );
           expect(reward.perRobotCredits).toBe(lossReward);
         },
       ),
@@ -159,14 +169,16 @@ describe('the participation fraction', () => {
 describe('the signed-off balance decision, pinned as literals', () => {
   // These exist so a future balance change has to edit a test that names the
   // decision, rather than sliding through a formula the properties still accept.
-  // Figures are Expected Contribution 2 in requirements.md.
+  // Figures are Expected Contribution 2 in requirements.md, with the Season 2
+  // team credit-pool factor (#527): team byes 1,500 × N × 0.75 at bronze
+  // (was 3,000 / 4,500) and 45,000 × N × 0.75 at champion (was 90,000 / 135,000).
   it.each([
-    ['tag_team', 'bronze', 3000],
-    ['tag_team', 'champion', 90_000],
-    ['league_2v2', 'bronze', 3000],
-    ['league_2v2', 'champion', 90_000],
-    ['league_3v3', 'bronze', 4500],
-    ['league_3v3', 'champion', 135_000],
+    ['tag_team', 'bronze', 2250],
+    ['tag_team', 'champion', 67_500],
+    ['league_2v2', 'bronze', 2250],
+    ['league_2v2', 'champion', 67_500],
+    ['league_3v3', 'bronze', 3375],
+    ['league_3v3', 'champion', 101_250],
     ['league_1v1', 'bronze', 1500],
     ['league_1v1', 'champion', 45_000],
     ['koth', 'bronze', 1500],
