@@ -1,7 +1,7 @@
 # Season 2 Balance Package (#519–#523)
 
 **Effective season**: Season 2 (deployed during the Season 2 preparation window; on ACC as soon as it is deployed).
-**Issues**: [#519](https://github.com/RobertTeunissen/ArmouredSouls/issues/519), [#520](https://github.com/RobertTeunissen/ArmouredSouls/issues/520), [#521](https://github.com/RobertTeunissen/ArmouredSouls/issues/521), [#522](https://github.com/RobertTeunissen/ArmouredSouls/issues/522), [#523](https://github.com/RobertTeunissen/ArmouredSouls/issues/523); release gate [#516](https://github.com/RobertTeunissen/ArmouredSouls/issues/516).
+**Issues**: [#519](https://github.com/RobertTeunissen/ArmouredSouls/issues/519), [#520](https://github.com/RobertTeunissen/ArmouredSouls/issues/520), [#521](https://github.com/RobertTeunissen/ArmouredSouls/issues/521), [#522](https://github.com/RobertTeunissen/ArmouredSouls/issues/522), [#523](https://github.com/RobertTeunissen/ArmouredSouls/issues/523), [#538](https://github.com/RobertTeunissen/ArmouredSouls/issues/538) (round 3); release gate [#516](https://github.com/RobertTeunissen/ArmouredSouls/issues/516).
 **Source**: branch `feature/season2-combat-tuning`, base `0d7e5b51` (`origin/main`). Source commits per topic:
 
 | Topic | Source commit |
@@ -13,6 +13,10 @@
 | Refinement Lab, grant migration, facility categories | `803b0a39` |
 | KotH zone radius 7, backfill migration, rotating-zone removal (#522) | `63150611` |
 | Round 2: guaranteed exchange and pursuit edge (#520) | `ed34b158` |
+| Round 3 B: Grand Melee targeting, threat combat-power fix | `2b8159f8` |
+| Round 3 A: ranged kiting / ranged pursuit | `035506ed` |
+| Round 3 A-late: wall-aware kiting path (#538) | `2188c935`, `ea62df1d` |
+| Round 3 C: short-range Hydraulic Systems | `813530de` |
 
 Every value below was decided by the product owner. The measurement in
 [NEXT_SEASON_BALANCE_VALIDATION.md](../analysis/NEXT_SEASON_BALANCE_VALIDATION.md#season-2-balance-package-519522) is
@@ -23,7 +27,7 @@ for information only; no value was tuned after it.
 | Value | Old | New |
 |---|---|---|
 | Hydraulic Systems, melee band | 1 + 0.02 × H (2.0× at 50) | 1 + 0.015 × H (1.75× at 50) |
-| Hydraulic Systems, short band | 1 + 0.015 × H (1.75× at 50) | 1 + 0.01 × H (1.5× at 50) |
+| Hydraulic Systems, short band | 1 + 0.015 × H (1.75× at 50) | 1 + 0.01 × H (1.5× at 50); round 3: 1 + 0.005 × H (1.25× at 50) |
 | Logic Cores, long band damage | none | 1 + 0.015 × L (1.75× at 50) |
 | Logic Cores, mid band damage | none | 1 + 0.01 × L (1.5× at 50) |
 | Logic Cores, short/melee damage | none | none |
@@ -43,7 +47,7 @@ melee-band counters, Logic Cores only to long-band counters. Logic Cores keeps i
 | Melee commit | none | 1.30× speed, strain-free, after the patience window (15 s − 5 × min(CA/50, 1): 15 s → 10 s) without a landed hit, until within reach (≤ 2) |
 | Ranged disengage | none | starts 2.5 s after the first melee-band hit taken per engagement (round 2; on the hit in round 1); then 1.30× speed, strain-free, for 2 s + 0.04 s × Evasion Thrusters (uncapped); then a cooldown of one patience window |
 | Patience reset | any resolved attack (hit, miss, malfunction) | a landed hit only |
-| Arena wall | robot clamped to the wall | slides tangentially along the wall, total step ≤ speed × tick |
+| Arena wall | robot clamped to the wall | slides tangentially along the wall, total step ≤ speed × tick; round 3: kiters take the wall-aware kiting path (see Round 3 adjustments) |
 | Mutual-melee final approach (2–4 units) | 1.15 | 1.15 (unchanged) |
 | Prediction (#351/#467), strain model | – | unchanged |
 
@@ -129,6 +133,64 @@ Deferred (report only):
 - **Short range**: still dominant at 84.1% / 80.7% / 80.5% (invest early / mid / late); short vs long 89.3%.
 - **Single**: unchanged at 25.0–31.6% (invest), target 42–45%.
 - **Dual Wield late**: unchanged at 73.0% (invest late).
+
+## Round 3 adjustments
+
+Decided by the product owner after the short-range dominance investigation (round 2 measured short at 84.1% /
+80.7% / 80.5% against the other classes and Grand Melee focusing long robots). Product-owner goal: melee may win
+1v1 most of the time, as long as KotH and Grand Melee gravitate to mid/long.
+
+| Value | Round 2 | Round 3 |
+|---|---|---|
+| Threat score weapon factor (`threatScoring.ts`) | 1.5 if the *opponent's* weapon band matches the distance, else 0.8 | none; the score is multiplied by the evaluator's *own* range multiplier at that distance (1.1 / 0.75 / 0.5), "shoot who I can hurt" |
+| Threat combat power | `totalDamageDealt > 0 ? totalDamageDealt : maxHP × 0.5` | `max(totalDamageDealt, maxHP × 0.5)` (no drop after the first hit) |
+| Ranged vs ranged, the robot whose opponent prefers a closer midpoint | normal speed with strain | ranged kiting 1.10×, strain-free, while inside its own midpoint |
+| Ranged vs ranged, the closer-preferring robot | normal speed with strain | ranged pursuit 1.05×, strain-free, while beyond its own midpoint |
+| Kiter near the arena wall (kiting, ranged kiting, ranged disengage; step ending within 2 units of the wall) | retreats radially and slides; a purely radial slide could flip direction tick to tick (#538) | wall-aware kiting path: the step (15° fan around "straight away") that ends farthest from the chaser's projected position, keeping its direction of travel among near-best headings (within 0.25 × step); a purely radial wall slide keeps the tick-start tangential velocity |
+| Hydraulic Systems, short band | 1 + 0.01 × H (1.5× at 50) | 1 + 0.005 × H (1.25× at 50); melee stays 0.015 |
+
+Equal midpoints (and melee-vs-ranged pairs) keep their round 2 rules: pursuit 1.15, kiting vs melee 1.10, bursts 1.30,
+disengage delay/duration/cooldown unchanged. Thresholds at balanced stance (K = Servo of the robot preferring the
+longer range, P = the closer-preferring robot): the gap opens at 0.35 + 0.22·K − 0.21·P u/s (0.60 u/s at equal Servo
+25); the follower holds the kiter only if P > 1.0476·K + 1.67. The wall path is deterministic and order-independent
+(it reads only the robot's own state and the chaser's tick-start position and velocity) and never moves a robot
+farther than its step or outside the arena. Its fan angle, 2-unit margin and 0.25 continuity band are fixed
+implementation constants, not balance levers. Grand Melee is the only mode where the threat score sees several
+candidates; 1v1 and KotH are byte-identical under B.
+
+### Round 3 measurement
+
+Information only; nothing was tuned. Full tables in the
+[validation report](../analysis/NEXT_SEASON_BALANCE_VALIDATION.md#season-2-balance-package-round-3). Arms: `round2`
+`2d8d89ed`, `main` `0d7e5b51`, `bonly` (B only), `aonly` (A + A-late only), `round3`; paired seeds, 2,000 trials per
+1v1 cell and KotH column, 1,000 Grand Melees.
+
+1v1 score against the other range classes, invest early / mid / late (Δ round3 vs round2 in pp, 95% CI ±0.5–1.2):
+
+| Class | main | round2 | round3 | Δ round3 |
+|---|---|---|---|---|
+| melee | 83.6% / 67.3% / 58.3% | 62.1% / 50.4% / 47.8% | 57.6% / 50.5% / 55.6% | −4.5 / +0.1 / +7.9 |
+| short | 75.0% / 78.7% / 77.6% | 84.1% / 80.7% / 80.5% | 64.7% / 57.7% / 74.5% | −19.3 / −23.1 / −6.0 |
+| mid | 33.9% / 37.4% / 41.8% | 43.6% / 49.9% / 49.7% | 59.6% / 63.6% / 47.9% | +16.0 / +13.8 / −1.8 |
+| long | 7.4% / 16.6% / 22.3% | 10.3% / 19.0% / 22.1% | 18.1% / 28.2% / 22.0% | +7.8 / +9.3 / −0.1 |
+
+Key cells, invest early / mid / late, round2 → round3: short vs mid 80.9 / 71.1 / 72.0% → 44.3 / 33.4 / 71.3%; short vs
+long 96.6 / 89.3 / 88.6% → 78.7 / 64.8 / 83.9%; melee vs short 25.3 / 18.3 / 19.2% → 28.8 / 25.3 / 31.6%.
+
+- **Invest late (fallback rule applied):** A-late does not bring short down at late budgets: short vs mid 71.3%
+  (Δ −0.8 ±1.3), short 74.5% against the other classes, and almost all of that drop comes from C (A + A-late alone:
+  short 81.2%). At Servo ~46 the mid/long kiter now circles the rim instead of stalling, but the short robot only has to
+  hold 4.5–6 units, rides a smaller inner circle and keeps pace even at 1.05× vs 1.10× (the mid robot is at the wall
+  97.9% of its AI ticks). That is the geometry of the radius-16 1v1 arena. Against melee chasers the wall path works
+  (kiter wall time 96.8% → 33.0% at invest late), and at invest mid A works (short 80.7% → 57.7%). No value was changed
+  and the arena was not touched; **the 1v1 arena size is an open product decision**.
+- **Grand Melee** (normalized rank, invest mid, melee / short / mid / long): 0.592 / 0.386 / 0.451 / 0.571 → 0.612 /
+  0.459 / 0.487 / 0.442; long podium 11.6% → 24.2%. Long is the best class in every build (uniform L10 / L25 0.445 /
+  0.457), mid third.
+- **KotH r7** (rank, invest mid): melee 0.661 → 0.618, short 0.550 → 0.546, mid 0.374 → 0.389, long 0.337 → 0.368; mid
+  and long stay the best classes at every budget.
+- **Loadouts** move by at most 0.8 pp (Single 24.8–34.8%, Dual Wield late 72.9%); robot order stays neutral (slot-0
+  49.8–50.8%); 1v1 timeouts rise 0.8–2.2 pp (invest, L10).
 
 ## #521 Shields and loadouts
 
@@ -275,6 +337,10 @@ starts.
 - Shield price discount and Workshop "free at L10": replaced by the decided values above.
 - Reserve lever from #516 (lower Vibro Mace / Power Sword Hydraulic Systems bonus if still an outlier): not used; the
   harness does not measure per-weapon outliers.
+- Round 3 D, range penalty two+ bands 0.50 → 0.65: rejected (it mostly lowers melee).
+- Round 3, Logic Cores bonus gated to the weapon's own band: rejected (no Grand Melee benefit, hurts long in 1v1).
+- 1v1 arena size: not changed. The investigation measured that a radius-24 1v1 arena lets the ranged-kiting rule work at
+  late budgets; arena size is an open product decision, to be handled separately.
 
 ## Deploy notes
 
@@ -320,7 +386,10 @@ One line per change, for the Season 2 changelog entry (authored in the admin por
 - New: a melee robot that hasn't landed a hit within its patience window (15 s, down to 10 s with Combat Algorithms) charges 30% faster until it reaches its target
 - New: 2.5 s after a ranged robot is first hit in melee, it breaks away 30% faster for 2 s + 0.04 s per Evasion Thrusters point, then needs one patience window to recharge, so melee always gets a real exchange
 - Robots backing into the arena wall now slide along it instead of getting stuck
-- Hydraulic Systems nerfed: up to +75% melee and +50% short-range damage at level 50 (was +100% / +75%)
+- Ranged robots now keep their distance from closer-range ranged robots
+- Robots kiting near the arena wall now circle away instead of getting stuck
+- Hydraulic Systems nerfed: up to +75% melee and +25% short-range damage at level 50 (was +100% / +75%)
+- Short-range Hydraulic Systems bonus reduced: up to +25% at level 50 (was +50%)
 - Logic Cores buffed: now adds up to +75% long-range and +50% mid-range damage at level 50, also on long-range counter-attacks
 
 ### Loadouts & weapons
@@ -340,6 +409,10 @@ One line per change, for the Season 2 changelog entry (authored in the admin por
 - Weapons Workshop no longer unlocks refinement; it keeps its purchase discount and resale rate
 - Weapons Workshop discount: now 5% per level (max 50%, was 10% per level up to free); resale unchanged
 - Facility categories reorganised: Economy, Hangar & Armory (now with Weapons Workshop and Refinement Lab), Training Academies, Tactical & Advanced
+
+### Grand Melee
+
+- Grand Melee robots now target opponents they can actually hurt
 
 ### King of the Hill
 

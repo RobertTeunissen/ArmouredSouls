@@ -2,7 +2,7 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: v2.7\
+**Version**: v2.8\
 **Last Updated**: October 17, 2026  
 **Status**: ✅ Implemented  
 **Owner**: Robert Teunissen  
@@ -18,7 +18,8 @@ v2.3 (Oct 15, 2026): #518 — Weapon reach invariant (per-hand reach check befor
 v2.4 (Oct 15, 2026): #536 — Battle-time entry gate (forfeit, last place, single-weapon fallback) and the simulator's `ROBOT_NOT_BATTLE_READY` invariant\
 v2.5 (Oct 16, 2026): Season 2 #520 — engagement cycle in the movement phase (roles from engagement range, melee commit, ranged disengage, wall slide), `AttackOutcome` return of `performAttack()`, patience resets only on a landed hit\
 v2.6 (Oct 16, 2026): #520 movement fix — simultaneous (snapshot-based) movement phase; melee pursuit aims at the target's projected end-of-tick position\
-v2.7 (Oct 17, 2026): Season 2 round 2 — disengage burst scheduled 2.5 s after the first melee hit (`disengageScheduledAt`), pursuit 1.15×
+v2.7 (Oct 17, 2026): Season 2 round 2 — disengage burst scheduled 2.5 s after the first melee hit (`disengageScheduledAt`), pursuit 1.15×\
+v2.8 (Oct 17, 2026): Season 2 round 3 — opponent engagement midpoint in the speed model (ranged kiting 1.10× / ranged pursuit 1.05×), `movementMode` on the combat state, wall-aware kiting path in `calculateMovementIntent()` (#538), threat scoring by the evaluator's own range multiplier
 
 ---
 
@@ -419,11 +420,26 @@ engagement roles from `getEngagementRange()` (melee band → melee role, else ra
 state (`updateDisengage`: schedules the burst 2.5 s after the first melee hit and starts it when due), picks the active speed burst (`ranged_disengage`, else `melee_commit` once a melee robot
 has gone a patience window without a landed hit and is beyond reach, else none) and calls
 `calculateEffectiveSpeed(servoState, opponentRole)`: burst 1.30×, pursuit 1.15×, mutual-melee final approach 1.15×,
-kiting 1.10× (all strain-free) or strain-reduced normal speed; the stance modifier always applies. `applyMovement()`
-then slides robots along the arena wall instead of stopping at it. In the attack phase a hand consumes its cooldown
+kiting 1.10×, and since Season 2 round 3 ranged kiting 1.10× / ranged pursuit 1.05× between two ranged robots with
+different engagement midpoints (the target's midpoint is passed in as `opponentEngagementMidpoint`), all strain-free,
+or strain-reduced normal speed; the stance modifier always applies. The chosen mode is stored on the robot's own
+state (`movementMode`). In pass 1c `calculateMovementIntent()` reads it: a robot in `kiting`, `ranged_kiting` or
+`ranged_disengage` whose step would end within 2 units of the wall takes the wall-aware kiting path
+(`arena/wallAwareKiting.ts`: the step that ends farthest from the nearest opponent's projected position, keeping
+its direction of travel among near-best headings), using only its own state and the opponent's tick-start position
+and velocity, so movement stays order-independent. This runs before the game-mode movement modifier, so KotH zone
+logic keeps the last word. `applyMovement()` then slides robots along the arena wall instead of stopping at it; a
+purely radial slide keeps the robot's tick-start tangential velocity (#538). In the attack phase a hand consumes its cooldown
 on any non-blocked outcome, patience resets only on `'hit'`, and a melee-band hit (attack or counter) records
 `lastMeleeHitTakenAt` on the robot that took it. Formulas: `COMBAT_FORMULAS.md` (Movement_Speed, Engagement_Cycle,
 Wall_Slide, Patience_Timer).
+
+**Target selection (pass 1a).** Without a game-mode `targetPriority`, `selectTarget()` (`arena/threatScoring.ts`)
+scores each candidate (spatial-grid neighbours in battles with more than two robots) by combat power
+(`max(damage dealt, maxHP × 0.5)`), HP share, the evaluator's own main-weapon range multiplier at that distance
+(Season 2 round 3, replacing the opponent-band weapon threat), arena-normalized proximity, "targeting me" and
+Threat Analysis, with a 1.5 s target lock. Only Grand Melee reaches it with several candidates: 1v1 has one, and
+KotH and team battles bring their own target priority. Formula: `COMBAT_FORMULAS.md` (Threat_Score).
 
 ### Key Constants
 

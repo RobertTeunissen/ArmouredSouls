@@ -2,7 +2,7 @@
 title: "Battle Flow"
 description: "How battles play out in the 2D arena — from movement and positioning to attack resolution, range bands, backstabs, and the complete order of operations for every strike."
 order: 1
-lastUpdated: "2026-10-16"
+lastUpdated: "2026-10-17"
 relatedArticles:
   - combat/movement-and-positioning
   - combat/malfunctions
@@ -162,7 +162,7 @@ Raw damage is calculated from multiple factors:
 - **Weapon Control** — Secondary damage multiplier
 - **Tuning bonuses** — Bonus attribute points from the [Tuning Bay](/guide/facilities/tuning-bay) system, added to base attributes alongside weapon bonuses before multipliers apply. Formula: `(base + weaponBonus + tuningBonus) × loadoutMultiplier`
 - **Range penalty** — 1.1× at optimal range, 0.75× one band away, 0.5× two+ bands away
-- **Hydraulic Systems bonus** — Up to +75% at melee range, +50% at short range
+- **Hydraulic Systems bonus** — Up to +75% at melee range, +25% at short range
 - **Logic Cores bonus** — Up to +75% at long range, +50% at mid range
 - **Backstab/flanking bonus** — Up to +10% (backstab) or +20% (flanking) for positional advantage
 - **Adaptation bonus** — Accumulated damage bonus from Adaptive AI

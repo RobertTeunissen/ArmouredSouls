@@ -2,7 +2,7 @@
 title: "Strategy Guide"
 description: "Build archetypes, attribute priorities, and positioning tips for Grand Melee."
 order: 5
-lastUpdated: "2026-10-16"
+lastUpdated: "2026-10-17"
 relatedArticles:
   - grand-melee/scoring-and-placement
   - grand-melee/rewards
@@ -34,8 +34,8 @@ Grand Melee rewards different builds than 1v1 combat. With 19 opponents on the f
 - **Key attributes**: High servoMotors, high hydraulicSystems
 - **Weapon**: Melee
 - **Strategy**: Close distance quickly, burst down a target, move to the next. High servo speed mitigates the melee disadvantage of needing to close range. Hydraulic bonuses (up to +75% at melee range) reward aggressive positioning.
-- **Strengths**: High kill rate, strong damage tiebreaker, dominant in late-game close quarters
-- **Weakness**: Vulnerable to crossfire during approach, multiple ranged robots can focus you down
+- **Strengths**: Hits hard once it is in reach
+- **Weakness**: The hardest archetype in a free-for-all: vulnerable to crossfire during the approach, and every robot near it can hurt it well, so it draws a lot of fire
 
 ## Attribute Value Shifts vs 1v1
 
@@ -47,7 +47,15 @@ Some attributes matter significantly more (or less) in Grand Melee compared to 1
 | threatAnalysis | Medium | Very High | Target selection among 19 opponents is critical |
 | hullIntegrity | Medium | Very High | Surviving multiple fights requires raw HP |
 | armorPlating | Medium | High | Chip damage from many sources adds up |
-| hydraulicSystems | Medium | Situational | Melee is risky in open-field FFA but strong in late game |
+| hydraulicSystems | Medium | Situational | Melee is risky in an open-field free-for-all |
+
+## How Robots Pick Targets
+
+Each robot shoots the opponent that is the biggest threat **and** that its own weapon can hurt well from where it stands. A robot with a long-range weapon prefers opponents at long range; a melee robot prefers opponents close by. The opponent's own weapon doesn't matter: a long-range robot is not singled out just because the fight starts at long distance.
+
+Threat also counts how much damage an opponent has dealt so far, how healthy it is and how close it is. A robot that hits hard draws more fire as the battle goes on, and a robot that's already targeting you counts as a bigger threat.
+
+Range control therefore protects you twice: at your preferred distance you deal more damage, and robots that can't hurt you well from where they are tend to pick someone else.
 
 ## Positioning Tips
 

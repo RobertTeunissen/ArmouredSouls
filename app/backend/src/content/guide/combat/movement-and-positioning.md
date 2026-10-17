@@ -22,6 +22,7 @@ The combat arena is a circular space. Robots spawn at opposite positions and mov
 
 - Robots cannot move outside the arena boundary
 - A robot that backs into the wall **slides along it** at its normal speed instead of getting stuck, so retreating to the edge no longer pins a robot in place
+- A robot that is keeping its distance (kiting or breaking away) and nears the wall **circles along it, away from its chaser**, at full speed. It keeps circling the same way and only turns around when the chaser cuts ahead of it
 - The arena edge matters for **Formation Tactics** — robots within 3 grid units of the boundary receive a wall-bracing damage reduction bonus
 
 ## Movement Speed
@@ -37,6 +38,7 @@ Movement speed is also modified by:
 - **Stance** — Offensive and Defensive stances modify movement speed, always (a defensive robot is also slower while chasing)
 - **Servo strain** — Sustained movement at high speed causes strain, temporarily reducing effective speed. Robots need brief pauses to recover.
 - **Pursuit and kiting** — A melee robot chasing a ranged opponent moves **15% faster**, and a ranged robot backing away from a melee opponent inside its preferred range moves **10% faster**. Neither causes servo strain and there is no catch-up bonus. With equal Servo Motors the chaser slowly closes in; a kiter needs clearly more Servo Motors to stay away.
+- **Ranged against ranged** — When both robots fight at range but one prefers a closer range, the robot that prefers the longer range backs away **10% faster** while it is closer than its preferred range, and the closer-range robot follows **5% faster** while it is farther than its own preferred range. Neither causes servo strain. With equal Servo Motors the longer-range robot keeps its distance; the closer-range robot needs roughly **1.05 × the other robot's Servo Motors + 1.7** to hold it. Two robots that prefer the same range move normally.
 - **Speed bursts** — A melee robot that can't land a hit for too long **commits** and a ranged robot that gets hit in melee **breaks away** shortly afterwards; both move **30% faster** for a while (see **Chasing and Escaping** below)
 
 Whether a robot counts as melee or ranged depends on the range it actually wants to fight at, not on its weapon type. An energy melee weapon such as the Shock Maul chases like any melee weapon, and a long-range rifle with a sword in the other hand still fights as a ranged robot.
@@ -111,11 +113,11 @@ Two-handed melee weapons like Battle Axe and Heavy Hammer are classified as two-
 | Range Band | Bonus per Point | At Level 50 |
 |-----------|----------------|-------------|
 | Melee (0–2) | +1.5% per point | +75% (1.75× multiplier) |
-| Short (3–6) | +1% per point | +50% (1.5× multiplier) |
+| Short (3–6) | +0.5% per point | +25% (1.25× multiplier) |
 | Mid (7–12) | No bonus | 1.0× |
 | Long (13+) | No bonus | 1.0× |
 
-This makes Hydraulic Systems a high-impact damage attribute for melee builds. At level 50 in melee range, it adds +75% damage — stacking multiplicatively with Combat Power, Weapon Control, and the optimal range bonus. It also applies to counter-attacks made at melee range.
+This makes Hydraulic Systems a high-impact damage attribute for melee builds; for short-range builds it is a smaller bonus. At level 50 in melee range, it adds +75% damage — stacking multiplicatively with Combat Power, Weapon Control, and the optimal range bonus. It also applies to counter-attacks made at melee range.
 
 ## Logic Cores Bonus
 
