@@ -1261,12 +1261,12 @@ describe('simulateBattle — spatial refactor', () => {
       expect(Math.abs(burstSeconds - getDisengageDuration(10))).toBeLessThanOrEqual(0.1 + 1e-6);
 
       // A next burst needs the cooldown (one patience window, CA 20 → 13 s) plus a new 2.5 s delay
+      // (seed 520 produces a second burst within the 120 s window, so this check always runs)
       const nextBurst = kiterSamples.findIndex((s, i) => i > burstEnd && s.burst === 'ranged_disengage');
-      if (nextBurst >= 0) {
-        const firstEndTime = kiterSamples[burstEnd - 1].tick * 0.1 + 0.1;
-        expect(kiterSamples[nextBurst].tick * 0.1)
-          .toBeGreaterThanOrEqual(firstEndTime + getPatienceLimit(20 / 50) + DISENGAGE_DELAY_SECONDS - 1e-6);
-      }
+      expect(nextBurst).toBeGreaterThan(burstEnd);
+      const firstEndTime = kiterSamples[burstEnd - 1].tick * 0.1 + 0.1;
+      expect(kiterSamples[nextBurst].tick * 0.1)
+        .toBeGreaterThanOrEqual(firstEndTime + getPatienceLimit(20 / 50) + DISENGAGE_DELAY_SECONDS - 1e-6);
     });
 
     describe('simultaneous movement (#520 movement fix)', () => {
@@ -1346,6 +1346,7 @@ describe('simulateBattle — spatial refactor', () => {
         // kiter as it reaches the wall; in one of the two runs the kiter slides back
         // and forth along the wall for ~4 ticks, so the gap differs by up to ~2.0 units
         // for 2 of 400 ticks (pursuit 1.10: max 0.34). The mean difference stays ~0.3.
+        // Follow-up #538: fix the wall-slide dither and restore the max < 1 bound.
         const gapDiffs = gaps(forward).map((g, i) => Math.abs(g - gaps(swapped)[i]));
         const meanGapDiff = gapDiffs.reduce((sum, d) => sum + d, 0) / gapDiffs.length;
         expect(meanGapDiff).toBeLessThan(0.5);

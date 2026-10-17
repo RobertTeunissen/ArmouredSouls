@@ -312,6 +312,8 @@ One line per change, for the Season 2 changelog entry (authored in the admin por
 - Fixed: energy melee weapons (Shock Maul, Thermal Lance) now chase ranged robots like other melee weapons
 - Fixed: one failed match no longer stalls a whole round; that match is cancelled and the rest carry on
 - Tag team: a team that isn't battle-ready now forfeits (the opponent wins) instead of the match being cancelled
+- Team tournaments: a team that can't play its match now forfeits and the opponent advances with bye rewards; if neither team can play, the higher seed advances instead of nobody
+- New: the dashboard warns you when a robot with booked matches would forfeit or fight with an incomplete loadout, and unequipping a weapon from a robot with booked matches asks for confirmation first
 
 ### Combat
 
