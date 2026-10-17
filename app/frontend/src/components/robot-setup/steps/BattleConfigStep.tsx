@@ -56,7 +56,6 @@ function BattleConfigStep({ robotId, onComplete, onSkip }: StepProps) {
           currentThreshold={10}
           robotAttributes={{}}
           repairBayLevel={0}
-          activeRobotCount={1}
           onThresholdChange={handleThresholdChange}
         />
       </div>

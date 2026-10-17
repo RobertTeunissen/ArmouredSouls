@@ -105,7 +105,7 @@ describe('Manual Repair Discount - Property Tests', () => {
      *   baseRepairCost = sumOfAllAttributes * 100
      *   multiplier = 2.0 if hpPercent === 0, 1.5 if hpPercent < 10, else 1.0
      *   rawCost = baseRepairCost * (damagePercent / 100) * multiplier
-     *   repairBayDiscount = min(repairBayLevel * (5 + robotCount), 90) / 100
+     *   repairBayDiscount = 6 * min(repairBayLevel, 10) / 100 (#525)
      *   finalCost = Math.round(rawCost * (1 - repairBayDiscount))
      */
     test('calculateRepairCost() returns expected formula result with no 0.5 multiplier', () => {
@@ -114,9 +114,8 @@ describe('Manual Repair Discount - Property Tests', () => {
           fc.integer({ min: 1, max: 500 }),       // attributeSum
           fc.float({ min: 0, max: 100, noNaN: true, noDefaultInfinity: true }),          // damagePercent
           fc.float({ min: 0, max: 100, noNaN: true, noDefaultInfinity: true }),          // hpPercent
-          fc.integer({ min: 0, max: 10 }),         // repairBayLevel
-          fc.integer({ min: 1, max: 20 }),         // robotCount
-          (attributeSum, damagePercent, hpPercent, repairBayLevel, robotCount) => {
+          fc.integer({ min: 0, max: 15 }),         // repairBayLevel
+          (attributeSum, damagePercent, hpPercent, repairBayLevel) => {
             // Skip NaN-producing floats
             if (!Number.isFinite(damagePercent) || !Number.isFinite(hpPercent)) return;
 
@@ -125,8 +124,7 @@ describe('Manual Repair Discount - Property Tests', () => {
               damagePercent,
               hpPercent,
               repairBayLevel,
-              0,
-              robotCount
+              0
             );
 
             // Result must be non-negative
@@ -144,8 +142,7 @@ describe('Manual Repair Discount - Property Tests', () => {
 
             const rawCost = baseRepairCost * (damagePercent / 100) * multiplier;
 
-            const rawDiscount = repairBayLevel * (5 + robotCount);
-            const repairBayDiscount = Math.min(rawDiscount, 90) / 100;
+            const repairBayDiscount = (6 * Math.min(repairBayLevel, 10)) / 100;
             const expectedCost = Math.round(rawCost * (1 - repairBayDiscount));
 
             expect(result).toBe(expectedCost);

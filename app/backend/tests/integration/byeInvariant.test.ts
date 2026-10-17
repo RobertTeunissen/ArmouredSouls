@@ -289,7 +289,10 @@ describe('Bye_Invariant (Spec #49)', () => {
 
       const result = await resolveFor(mode, fx);
 
-      // Credits: the declared floor times the declared team size.
+      // Credits: the declared floor times the declared team size, and for team
+      // modes the Team_Credit_Pool_Factor 0.75 once, rounded once (#527).
+      // E.g. tag_team/league_2v2 at bronze 1,500 × 2 × 0.75 = 2,250; a 2v2
+      // tournament bye with a 1,653 floor: round(2,479.5) = 2,480.
       const expectedPerRobot =
         spec.floor === 'tier_scaled'
           ? getParticipationReward(TIER)
@@ -298,7 +301,10 @@ describe('Bye_Invariant (Spec #49)', () => {
               TOURNAMENT_CTX.currentRound,
               TOURNAMENT_CTX.maxRounds,
             );
-      expect(result.creditsPaid).toBe(expectedPerRobot * spec.teamSize);
+      const expectedCredits = spec.teamSize === 1
+        ? expectedPerRobot
+        : Math.round((expectedPerRobot * spec.teamSize * 3) / 4);
+      expect(result.creditsPaid).toBe(expectedCredits);
       expect(resolveByeReward(contextFor(mode)).credits).toBe(result.creditsPaid);
 
       // ELO: moves only where the table says it does.

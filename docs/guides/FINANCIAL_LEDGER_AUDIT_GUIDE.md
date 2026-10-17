@@ -100,8 +100,17 @@ The source-specific facts are:
 | Source | Required stored facts |
 |---|---|
 | `battle_income` | Mode, tier, outcome, placement, participation floor, win component, team size, stable aggregation, bye flag, modifiers, and final rounding |
-| `streaming_revenue` | Robot, mode, base amount, battle-count multiplier, fame multiplier, Streaming Studio multiplier, eligibility, and rounding |
+| `streaming_revenue` | Robot, mode, base amount, Streaming Studio multiplier, eligibility, rounding, and the version-specific facts below |
 | `repair_cost` | Robot, `repairType`, base quote inputs, damage/condition inputs, Repair Bay level, active-robot count, Repair Bay discount, manual discount where applicable, per-robot charge, and rounding order |
+
+Streaming breakdowns are versioned by `formulaVersion`:
+
+- **Version '1'** (historical, before Season 2): `battleMultiplier` (1 + battles/1000) and `fameMultiplier` (1 + fame/5000), multiplied with `studioMultiplier` (1 + level). Team matches divided the amount after the breakdown was built, so a v1 team row records no team size.
+- **Version '2'** (Season 2, #524): top-level `battleContribution` (battles/2000), `fameContribution` (fame/10000), `audienceMultiplier` (1 + both contributions), `studioMultiplier` (1 + 0.5 × level), `teamSize`, `revenueBeforeTeamShare` = floor(1000 × audience × studio) and `totalRevenue` = floor(`revenueBeforeTeamShare` / `teamSize`) = `finalAmount`. Inputs `robotBattles`, `robotFame`, `studioLevel`, `teamSize`; rounding order baseAmount → audienceMultiplier → studioMultiplier → floor → teamSize → floor. Every v2 row reconciles from its own facts.
+
+Both versions stay valid in the TypeScript validator (`validateFinancialBreakdown`) and the SQL report predicate. A retry of an existing streaming event returns the stored award and writes nothing new, whatever its version.
+
+Repair breakdowns use `formulaVersion` '2' from Season 2 (#525): the Repair Bay discount is `6 × min(level, 10)` percent. `activeRobotCount` is still recorded as a fact (the validators and the Finance Center empty state require it), but it is no longer a discount input. Version '1' repair rows were discounted by `min(90, level × (5 + activeRobotCount))` and stay as recorded; their `discountPercent` is the discount that was actually applied, which is what historical Repair Bay ROI reads.
 | Purchases/upgrades/sales/refinements | Item or facility, previous/new level or condition, base price, discounts, roster/ownership inputs, operation identity, and rounding |
 | `achievement_reward` | Achievement/unlock identity, base reward, applied modifiers, and final reward |
 | `passive_income` | Cycle, Merchandising Hub level, prestige, roster capacity, prestige-per-slot normalization, facility effect, and rounding |

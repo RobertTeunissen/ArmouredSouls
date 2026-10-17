@@ -47,11 +47,14 @@ describeApprovedStrategy({
       2: 818_250, // Robot chain ×1: robot + premium starter weapon after discount
       3: 75_000, // Booking Office L1
       4: 150_000, // Training Facility L1
-      5: 934_000, // Attributes → 10 less 9%
+      // Season 2 #526: Training Facility L1 at 1 slot is 6.75% (was 9%), so the same
+      // Deadeye attribute plan (~₡1,026,000 at base) costs more and leaves less for Goal 7
+      // (was 934,000 / 185,410 / 2,987,320).
+      5: 956_697, // Attributes → 10 less 6.75%
       6: 750_000, // Training Facility → L3
-      7: 185_410, // Attributes → 15: Combat Academy L1, with everything that is left
+      7: 165_790, // Attributes → 15: Combat Academy L1, with everything that is left
     },
-    totalSpent: 2_987_320,
+    totalSpent: 2_990_737,
     savingOnGoal: 7,
   },
 });

@@ -18,60 +18,80 @@ export function calculateWeaponWorkshopDiscount(level: number): number {
 }
 
 /**
- * Per-level Training Facility discount at Roster_Capacity 1, as a percentage.
- * The rate shrinks by `TRAINING_DISCOUNT_PER_SLOT` for each additional slot.
+ * Slot count the Training Facility rate counts down from: the unscaled rate per
+ * level is `TRAINING_DISCOUNT_BASE_PER_LEVEL − TRAINING_DISCOUNT_PER_SLOT × Roster_Capacity`.
  */
 export const TRAINING_DISCOUNT_BASE_PER_LEVEL = 10;
 
-/** Percentage points removed from the per-level rate for each robot slot. */
+/** Unscaled percentage points removed from the per-level rate for each robot slot. */
 export const TRAINING_DISCOUNT_PER_SLOT = 1;
 
-/** Hard ceiling on the Training Facility discount. */
-export const TRAINING_DISCOUNT_MAX = 90;
+/**
+ * Season 2 (#526): the whole Training Facility curve is scaled by this factor
+ * (L10 at Roster_Capacity 1 went from 90% to 67.5%).
+ */
+export const TRAINING_DISCOUNT_FACTOR = 0.75;
+
+/** Highest Training Facility level the discount counts. */
+export const TRAINING_FACILITY_MAX_LEVEL = 10;
 
 /**
- * Calculate the Training Facility discount on attribute upgrade costs.
+ * Calculate the Training Facility discount on attribute upgrade costs, in percent.
  *
  * ```
- * rate_per_level = max(0, 10 - Roster_Capacity)
- * discount%      = clamp(rate_per_level × level, 0, 90)
+ * discount% = clamp(level, 0, 10) × max(0, 10 − Roster_Capacity) × 0.75
  * ```
  *
- * Spec #46 R11: the discount was a flat `min(level × 10, 90)`, which saturated at
- * level 9 and made level 10 worthless — the facility's own max level bought
- * nothing. It also ignored roster size entirely, so a ten-robot stable got the
- * same per-level rate as a one-robot stable while having ten times as many
- * attributes to upgrade.
+ * Spec #46 R11 made the rate shrink 1 point per robot slot, so the facility
+ * rewards concentration in the same direction as the Merchandising Hub. Season 2
+ * (#526) scales that curve by 0.75, because late upgrades had become too cheap.
+ * Worked examples:
  *
- * The rate now shrinks 1 percentage point per robot slot, so the facility rewards
- * concentration in the same direction as the Merchandising Hub. Worked examples:
+ * | Level | Roster_Capacity | Before Season 2 | Season 2 |
+ * |-------|-----------------|-----------------|----------|
+ * | 1     | 1               | 9%              | 6.75%    |
+ * | 6     | 1               | 54%             | 40.5%    |
+ * | 5     | 4               | 30%             | 22.5%    |
+ * | 10    | 4               | 60%             | 45%      |
+ * | 10    | 1               | 90%             | 67.5%    |
+ * | 10    | 10 or more      | 0%              | 0%       |
  *
- * | Level | Roster_Capacity | Rate/level | Discount |
- * |-------|-----------------|-----------|----------|
- * | 5     | 4               | 6%        | 30%      |
- * | 8     | 2               | 8%        | 64%      |
- * | 10    | 1               | 9%        | 90%      |
- * | 10    | 10              | 0%        | 0%       |
- *
- * The 90% ceiling is unchanged but is now reachable only by a single-robot stable
- * at level 10, rather than by any stable at level 9.
+ * The result is a multiple of 0.25 and is exact in floating point (an integer
+ * of at most 100 times 0.75), so fractional rates such as 40.5% need no rounding.
+ * The maximum is 67.5% (L10, capacity 1); the former 90% ceiling could no longer
+ * bind and was removed rather than kept as a dead cap.
  *
  * Roster_Capacity is an explicit parameter rather than a lookup, keeping this
  * module free of database access — the frontend imports it directly. Use
- * `getRosterCapacity()` from `./rosterCapacity` to derive it from the
- * `roster_expansion` facility level.
+ * `getRosterCapacity()` from `./rosterCapacity` (purchased capacity, never the
+ * robots currently owned) to derive it from the `roster_expansion` level.
  *
  * See docs/game-systems/STABLE_SYSTEM.md for the authoritative specification.
  */
 export function calculateTrainingFacilityDiscount(level: number, rosterCapacity: number): number {
+  const clampedLevel = Math.min(Math.max(0, level), TRAINING_FACILITY_MAX_LEVEL);
   // Clamped rather than allowed to go negative: roster_expansion caps at level 10
-  // (capacity 11) today, which would land the rate at -1%. If that cap ever
-  // rises, a larger roster must mean "no discount", never a cost penalty.
-  const ratePerLevel = Math.max(
+  // (capacity 11), which would land the rate below zero. A larger roster must
+  // mean "no discount", never a cost penalty.
+  const slotsBelowCeiling = Math.max(
     0,
     TRAINING_DISCOUNT_BASE_PER_LEVEL - TRAINING_DISCOUNT_PER_SLOT * rosterCapacity,
   );
-  return Math.min(Math.max(0, level) * ratePerLevel, TRAINING_DISCOUNT_MAX);
+  return clampedLevel * slotsBelowCeiling * TRAINING_DISCOUNT_FACTOR;
+}
+
+/**
+ * Apply a Training Facility discount to one level's base cost, floored to whole
+ * credits: `floor(price × (100 − discount%) / 100)`.
+ *
+ * Unlike `applyDiscount` (`price × (1 − d/100)`, kept for the Weapons Workshop),
+ * this form is exact for the quarter-percent rates `calculateTrainingFacilityDiscount`
+ * returns: `100 − d` is exactly representable, the product is an exact multiple
+ * of 0.25, and the single division is correctly rounded, so the floor never
+ * drops a credit (e.g. 2,000 at 6.75% is exactly 1,865).
+ */
+export function applyTrainingDiscount(price: number, discountPercent: number): number {
+  return Math.floor((price * (100 - discountPercent)) / 100);
 }
 
 /**

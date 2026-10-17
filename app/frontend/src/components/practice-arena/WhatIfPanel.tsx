@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { getCapForLevel } from '../../../../shared/utils/academyCaps';
-import { calculateBaseCost } from '../../../../shared/utils/upgradeCosts';
+import { calculateBaseCost, calculateTrainingDiscountedUpgradeCost } from '../../../../shared/utils/upgradeCosts';
 import { calculateTrainingFacilityDiscount } from '../../../../shared/utils/discounts';
 import type { OwnedRobot, WhatIfOverrides, AcademyLevels } from './types';
 import { STANCE_OPTIONS } from './constants';
@@ -114,7 +114,6 @@ export function WhatIfPanel({
   const hasTuningOverrides = Object.keys(overrides.tuningBonuses || {}).length > 0;
 
   const trainingDiscountPercent = calculateTrainingFacilityDiscount(trainingLevel, rosterCapacity);
-  const trainingDiscount = trainingDiscountPercent / 100;
 
   // Academy costs: [100K, 200K, ..., 1M] for levels 1-10
   const ACADEMY_COSTS = [100000, 200000, 300000, 400000, 500000, 600000, 700000, 800000, 900000, 1000000];
@@ -134,8 +133,10 @@ export function WhatIfPanel({
     return cost;
   };
 
-  // Cost calculation with training facility discount (same as UpgradePlanner)
-  const calculateDiscountedCost = (currentLevel: number): number => Math.floor(calculateBaseCost(currentLevel) * (1 - trainingDiscount));
+  // Cost with the Training Facility discount: the shared per-level formula the
+  // purchase charges (same as UpgradePlanner).
+  const calculateDiscountedCost = (currentLevel: number): number =>
+    calculateTrainingDiscountedUpgradeCost(currentLevel, currentLevel + 1, trainingDiscountPercent);
 
   const getCategoryCost = (attrs: Array<{ key: string }>): { cost: number; baseCost: number } => {
     let cost = 0;

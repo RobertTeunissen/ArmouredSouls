@@ -3,7 +3,7 @@
 **Spec:** #54 — Finance Center
 **Document role:** Evidence inventory, implemented reporting contract, cutover record, and verification runbook
 **Status:** Application cutover implemented; release/deployment and blocking-verification evidence are recorded separately
-**Last reviewed:** September 2026
+**Last reviewed:** October 2026 (streaming breakdown v2 validator, #524)
 
 ## 1. Status and interpretation
 
@@ -314,7 +314,9 @@ The release gate consists of backend lint/build/test typecheck/tier verification
 
 `20260904120000_financial_event_identity` added nullable `financial_event_id` to `financial_ledger` and nullable `financial_event_id`/`source_event_id` to `audit_logs`, then added uniqueness and lookup indexes. Nullability is deliberate and forward-only: existing rows were not backfilled, paired, reclassified, or rewritten.
 
-Finance Center adds read models, not duplicate report tables. `20260910123000_finance_report_source_reference` adds PostgreSQL `pgcrypto` plus `finance_report_source_reference(...)`, a stateless HMAC/base64url formatter used to preserve opaque source-reference ordering in the database-bounded robot event page. `20260910130000_finance_report_breakdown_validation` adds the matching fail-closed PostgreSQL `finance_report_breakdown_is_valid(...)` predicate, so detail pagination excludes malformed nested financial evidence on the same stored-fact boundary as the canonical report reader. Neither migration stores a secret, identity projection or new financial state. The obsolete PRD proposals for `DailyFinancialSnapshot`, `SpendingTransaction`, and `RobotFinancialPerformance` are not part of Spec #54.
+Finance Center adds read models, not duplicate report tables. `20260910123000_finance_report_source_reference` adds PostgreSQL `pgcrypto` plus `finance_report_source_reference(...)`, a stateless HMAC/base64url formatter used to preserve opaque source-reference ordering in the database-bounded robot event page. `20260910130000_finance_report_breakdown_validation` adds the matching fail-closed PostgreSQL `finance_report_breakdown_is_valid(...)` predicate, so detail pagination excludes malformed nested financial evidence on the same stored-fact boundary as the canonical report reader. Neither migration stores a secret, identity projection or new financial state.
+
+`20261017120000_streaming_breakdown_v2_validation` (Season 2, #524) replaces `finance_report_breakdown_is_valid_legacy(...)` and the `finance_report_breakdown_is_valid(...)` wrapper with the same signatures and bodies; only the `streaming_revenue` branch changes. It accepts both streaming breakdown versions: `formulaVersion` '2' rows must carry numeric `battleContribution`, `fameContribution`, `audienceMultiplier`, `teamSize` and `revenueBeforeTeamShare`; every other version must carry numeric `battleMultiplier` and `fameMultiplier` as before. Both still require `battleId`, `robotId`, `mode`, `eligible`, `baseAmount`, `studioMultiplier` and `totalRevenue`. Without it every new v2 award would be counted as invalid evidence by the robot deployment query. No table or data changes; historical rows are untouched. The obsolete PRD proposals for `DailyFinancialSnapshot`, `SpendingTransaction`, and `RobotFinancialPerformance` are not part of Spec #54.
 
 ### 10.2 Application cutover implementation record
 

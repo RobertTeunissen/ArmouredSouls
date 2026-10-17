@@ -9,6 +9,7 @@ vi.mock('../../../../../shared/utils/academyCaps', () => ({
 
 vi.mock('../../../../../shared/utils/upgradeCosts', () => ({
   calculateBaseCost: vi.fn(() => 1500),
+  calculateTrainingDiscountedUpgradeCost: vi.fn(() => 1350),
 }));
 
 vi.mock('../../../../../shared/utils/discounts', () => ({

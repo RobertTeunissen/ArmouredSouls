@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import AttributeUpgradeRow from './AttributeUpgradeRow';
 import ConfirmationModal from './ConfirmationModal';
 import { getCapForLevel } from '../../../shared/utils/academyCaps';
-import { calculateBaseCost } from '../../../shared/utils/upgradeCosts';
+import { calculateBaseCost, calculateDiscountedUpgradeCost } from '../../../shared/utils/upgradeCosts';
 import { calculateTrainingFacilityDiscount } from '../../../shared/utils/discounts';
 import type { RobotAttributeKey, RobotWithAttributes } from '../types/robot';
 import { createLogger } from '../utils/logger';
@@ -112,15 +112,10 @@ function UpgradePlanner({
   const [isCommitting, setIsCommitting] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
-  // Calculate cost for a single level upgrade with training facility discount
-  const calculateUpgradeCost = (currentLevel: number): number => {
-    const baseCost = calculateBaseCost(currentLevel);
-    const trainingDiscountPercent = calculateTrainingFacilityDiscount(trainingLevel, rosterCapacity);
-    const trainingDiscount = trainingDiscountPercent / 100;
-    
-    // Apply training facility discount
-    return Math.floor(baseCost * (1 - trainingDiscount));
-  };
+  // Cost for a single level upgrade with the Training Facility discount: the
+  // shared formula the purchase charges, so the preview cannot drift from it.
+  const calculateUpgradeCost = (currentLevel: number): number =>
+    calculateDiscountedUpgradeCost(currentLevel, trainingLevel, rosterCapacity);
 
   // Calculate total cost for multiple levels
   const calculateTotalCostForAttribute = (currentLevel: number, plannedLevel: number): { cost: number; baseCost: number } => {

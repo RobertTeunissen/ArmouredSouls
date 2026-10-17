@@ -1,6 +1,6 @@
 # Product Requirements Document: Prestige and Fame System
 
-**Last Updated**: September 8, 2026
+**Last Updated**: October 17, 2026
 **Status**: ✅ Implemented core earning/benefits and Finance Center forecast; release and verification evidence tracked separately
 **Owner**: Robert Teunissen  
 **Epic**: Economy System — Reputation
@@ -8,6 +8,7 @@
 ---
 
 ## Version History
+- v2.2 (October 17, 2026) — Season 2 economy (#524): streaming formula v2 (additive battle and Fame audience, Streaming Studio +50% per level); Merchandising Hub base ₡25,000 per level (prestige-per-slot multiplier unchanged).
 - v2.1 (September 8, 2026) — Added Spec #54 Finance Center reporting boundaries, corrected merchandising to Prestige per roster capacity, and defined the completed-cycle milestone forecast. Clarified that Prestige resets at Season Rollover.
 - v2.0 (April 2, 2026) — Consolidated with `PRD_FAME_SYSTEM.md` (deleted). Full audit against codebase. Corrected prestige bonus tiers to match actual code (+10%/+20%/+30%/+40%/+50%, not +5%/+10%/+15%/+20%). Marked prestige gates as ✅ implemented (they are enforced in facility routes). Removed ~800 lines of aspirational content (milestone tables, API endpoints, UI mockups, implementation phases) that aren't built. Added KotH prestige/fame section. Updated file paths for service consolidation.
 - v1.0 (February 3, 2026) — Initial PRD
@@ -175,15 +176,14 @@ Zone dominance bonus (1.25×) applies to fame as well.
 Fame feeds into the streaming revenue formula (see [STABLE_SYSTEM.md](STABLE_SYSTEM.md) for the Streaming Studio facility):
 
 ```
-streaming_revenue = 1000 × battle_multiplier × fame_multiplier × studio_multiplier
+streaming_revenue = floor(floor(1000 × audience_multiplier × studio_multiplier) / team_size)
 
 Where:
-  battle_multiplier = 1 + (total_battles / 1000)
-  fame_multiplier = 1 + (robot_fame / 5000)
-  studio_multiplier = 1 + (streaming_studio_level × 1.0)
+  audience_multiplier = 1 + (total_battles / 2000) + (robot_fame / 10000)
+  studio_multiplier = 1 + (streaming_studio_level × 0.5)
 ```
 
-Higher fame directly increases per-battle streaming revenue for that robot.
+Season 2 (#524, formula version '2'): battles and Fame add up in one audience multiplier instead of multiplying, and each Studio level adds 50% (6× at Level 10). Every 10,000 Fame adds the base award once more; nothing is capped. Higher fame directly increases per-battle streaming revenue for that robot. The single implementation is `computeStreamingRevenue()` (see [PRD_ECONOMY_SYSTEM.md](PRD_ECONOMY_SYSTEM.md#4-streaming-revenue-per-battle)).
 
 ### Fame Tiers
 

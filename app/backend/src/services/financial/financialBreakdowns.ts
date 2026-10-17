@@ -96,7 +96,9 @@ export function buildRepairBreakdown(input: RepairBreakdownInput): RepairBreakdo
   return {
     schemaVersion: 1,
     formula: 'repair.quote',
-    formulaVersion: '1',
+    // '2' (#525): Repair Bay discount = 6 × min(level, 10). activeRobotCount is
+    // still recorded as a stable fact but is no longer a discount input.
+    formulaVersion: '2',
     inputs,
     modifiers: [
       { name: 'repairBayDiscount', value: input.repairBayDiscountPercent, unit: 'percent', source: 'shared_repair_module', applied: input.repairBayDiscountPercent > 0 },

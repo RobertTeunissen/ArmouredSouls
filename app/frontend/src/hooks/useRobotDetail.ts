@@ -18,7 +18,6 @@ import {
 } from '../utils/robotApi';
 import type { UpgradePlan } from '../utils/robotApi';
 import { ApiError } from '../utils/ApiError';
-import { useRobotStore } from '../stores';
 import { useAuth } from '../contexts/AuthContext';
 import type { TabId } from '../components/TabNavigation';
 import type { Facility } from '../components/facilities/types';
@@ -202,7 +201,6 @@ export function useRobotDetail() {
   // Spec #46 R11: the Training Facility discount rate shrinks 1pp per robot slot,
   // so the upgrade cost preview needs Roster_Capacity.
   const [rosterCapacity, setRosterCapacity] = useState(1);
-  const [activeRobotCount, setActiveRobotCount] = useState(1);
   const [academyLevels, setAcademyLevels] = useState({
     combat_training_academy: 0,
     defense_training_academy: 0,
@@ -345,18 +343,6 @@ export function useRobotDetail() {
           ai_training_academy: facilities.find((f: Facility) => f.type === 'ai_training_academy')?.currentLevel || 0,
         });
 
-        // Fetch active robot count for repair cost calculation
-        try {
-          const storeState = useRobotStore.getState();
-          if (storeState.robots.length === 0) {
-            await storeState.fetchRobots();
-          }
-          const robotsData = useRobotStore.getState().robots;
-          const activeCount = robotsData.filter((r) => r.name !== 'Bye Robot').length;
-          setActiveRobotCount(activeCount);
-        } catch (err) {
-          log.error('Failed to fetch robots count', { err });
-        }
       } else {
         log.error('Failed to fetch facilities', { err: facilitiesResult.reason });
       }
@@ -506,7 +492,6 @@ export function useRobotDetail() {
     trainingLevel,
     repairBayLevel,
     rosterCapacity,
-    activeRobotCount,
     academyLevels,
 
     // Battle data

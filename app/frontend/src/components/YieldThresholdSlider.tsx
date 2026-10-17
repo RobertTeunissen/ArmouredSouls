@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { updateYieldThreshold } from '../utils/robotApi';
 import {
   calculateRepairQuote,
+  calculateRepairBayDiscountPercent,
   sumAttributes,
   type RepairCostRobot,
 } from '../../../shared/utils/repairCost';
@@ -12,7 +13,6 @@ interface YieldThresholdSliderProps {
   currentThreshold: number;
   robotAttributes: Partial<RobotAttributes>;
   repairBayLevel?: number;
-  activeRobotCount?: number;
   onThresholdChange: (newThreshold: number) => void;
 }
 
@@ -21,7 +21,6 @@ function YieldThresholdSlider({
   currentThreshold,
   robotAttributes,
   repairBayLevel = 0,
-  activeRobotCount = 1,
   onThresholdChange,
 }: YieldThresholdSliderProps) {
   const [threshold, setThreshold] = useState(currentThreshold);
@@ -31,7 +30,7 @@ function YieldThresholdSlider({
 
   useEffect(() => {
     // Props tracking removed for production
-  }, [robotId, currentThreshold, repairBayLevel, activeRobotCount]);
+  }, [robotId, currentThreshold, repairBayLevel]);
 
   useEffect(() => {
     setThreshold(currentThreshold);
@@ -83,7 +82,7 @@ function YieldThresholdSlider({
         damagePercent,
         hpPercent,
       },
-      { repairBayLevel, activeRobotCount },
+      repairBayLevel,
     );
 
   const getRiskLevel = (threshold: number): { color: string; text: string } => {
@@ -153,7 +152,7 @@ function YieldThresholdSlider({
           <h4 className="font-semibold mb-2 text-sm uppercase tracking-wide text-secondary">Repair Cost Scenarios</h4>
           {repairBayLevel > 0 && (
             <p className="text-xs text-secondary mb-2">
-              Repair Bay Level {repairBayLevel}: {Math.min(repairBayLevel * (5 + activeRobotCount), 90)}% discount ({activeRobotCount} robot{activeRobotCount !== 1 ? 's' : ''})
+              Repair Bay Level {repairBayLevel}: {calculateRepairBayDiscountPercent(repairBayLevel)}% discount
             </p>
           )}
           <div className="space-y-2">

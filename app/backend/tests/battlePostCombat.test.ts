@@ -49,6 +49,7 @@ jest.mock('../src/services/financial/prestigeService', () => ({
 jest.mock('../src/services/economy/streamingRevenueService', () => ({
   calculateStreamingRevenue: (...args: unknown[]) => mockCalculateStreamingRevenue(...args),
   awardStreamingRevenue: (...args: unknown[]) => mockAwardStreamingRevenue(...args),
+  applyStreamingTeamShare: jest.requireActual('../src/services/economy/streamingRevenueService').applyStreamingTeamShare,
 }));
 
 const mockLogEvent = jest.fn().mockResolvedValue(undefined);
@@ -108,17 +109,21 @@ function makeParticipantOutcome(overrides: Partial<ParticipantOutcome> = {}): Pa
 }
 
 function makeStreamingCalc(overrides: Partial<StreamingRevenueCalculation> = {}): StreamingRevenueCalculation {
+  // (50 battles, 100 fame, L1): (20000 + 500 + 200) × 3 / 40 = 1,552.5 → 1,552
   return {
     baseAmount: 1000,
-    battleMultiplier: 1.05,
-    fameMultiplier: 1.02,
-    studioMultiplier: 2.0,
-    totalRevenue: 2142,
+    battleContribution: 0.025,
+    fameContribution: 0.01,
+    audienceMultiplier: 1.035,
+    studioMultiplier: 1.5,
+    totalRevenue: 1552,
     robotId: 1,
     robotName: 'TestBot',
     robotBattles: 50,
     robotFame: 100,
     studioLevel: 1,
+    teamSize: 1,
+    revenueBeforeTeamShare: 1552,
     ...overrides,
   };
 }
@@ -159,7 +164,45 @@ describe('awardStreamingRevenueForParticipant', () => {
     expect(mockAwardStreamingRevenue).toHaveBeenCalledWith(10, calc, 42, 100, 'unknown', undefined);
     expect(mockPrisma.battleParticipant.update).toHaveBeenCalledWith({
       where: { battleId_robotId: { battleId: 100, robotId: 1 } },
-      data: { streamingRevenue: 2142 },
+      data: { streamingRevenue: 1552 },
+    });
+  });
+
+  it('should apply the team share exactly once for team battles', async () => {
+    mockCalculateStreamingRevenue.mockResolvedValueOnce(makeStreamingCalc());
+    mockAwardStreamingRevenue.mockResolvedValueOnce(undefined);
+
+    const result = await awardStreamingRevenueForParticipant(1, 10, 100, false, 2, 'tag_team');
+
+    // floor(1,552 / 2) = 776
+    expect(result?.totalRevenue).toBe(776);
+    expect(result?.teamSize).toBe(2);
+    expect(result?.revenueBeforeTeamShare).toBe(1552);
+    expect(mockAwardStreamingRevenue).toHaveBeenCalledWith(
+      10,
+      expect.objectContaining({ totalRevenue: 776, teamSize: 2, revenueBeforeTeamShare: 1552 }),
+      42,
+      100,
+      'tag_team',
+      undefined,
+    );
+    expect(mockPrisma.battleParticipant.update).toHaveBeenCalledWith({
+      where: { battleId_robotId: { battleId: 100, robotId: 1 } },
+      data: { streamingRevenue: 776 },
+    });
+  });
+
+  it('should return the stored award and write nothing when the event already exists', async () => {
+    mockPrisma.financialLedger.findUnique.mockResolvedValueOnce({ amount: 9824 });
+    mockCalculateStreamingRevenue.mockResolvedValueOnce(makeStreamingCalc());
+
+    const result = await awardStreamingRevenueForParticipant(1, 10, 100, false, 2, 'tag_team');
+
+    expect(result?.totalRevenue).toBe(9824);
+    expect(mockAwardStreamingRevenue).not.toHaveBeenCalled();
+    expect(mockPrisma.battleParticipant.update).toHaveBeenCalledWith({
+      where: { battleId_robotId: { battleId: 100, robotId: 1 } },
+      data: { streamingRevenue: 9824 },
     });
   });
 

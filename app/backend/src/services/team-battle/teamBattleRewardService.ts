@@ -2,11 +2,13 @@
  * Team Battle Reward Service
  *
  * Calculates and distributes rewards for 2v2 and 3v3 Team Battle outcomes.
- * Follows the N× multiplier model: 2v2 winner gets 2× what a single robot
- * earns in 1v1; 3v3 winner gets 3×. Loser/draw gets 20% of winner reward.
+ * Follows the N× multiplier model scaled by the Team_Credit_Pool_Factor
+ * (0.75, #527): a 2v2 winner pool is 1.5× what a single robot earns in 1v1
+ * (was 2×), a 3v3 winner pool 2.25× (was 3×). Loser/draw gets 20% of the
+ * (reduced) winner pool.
  *
  * Reward components per robot:
- *   - Credits: N× (win+participation) for winner, 20% for loser/draw, split per R7.4
+ *   - Credits: 0.75 × N × (win+participation) for winner, 20% of that for loser/draw, split per R7.4
  *   - Fame: full FAME_BY_LEAGUE[tier] per robot (no splitting)
  *   - Prestige: full PRESTIGE_BY_LEAGUE[tier] for wins only
  *   - Streaming: awardStreamingRevenueForParticipant per robot with teamSize param
@@ -21,6 +23,7 @@
  */
 
 import { getLeagueWinReward, getParticipationReward } from '../../utils/economyCalculations';
+import { applyTeamCreditPoolFactor } from '../../utils/economyFormulas';
 import {
   calculateELOChange,
   FAME_BY_LEAGUE,
@@ -49,8 +52,9 @@ export const BYE_TEAM_ELO_PER_ROBOT = 1000;
 /**
  * Calculate the total team credit reward for a Team Battle.
  *
- * Formula: N × (1v1 win reward + participation reward) for winner.
- * Loser/draw gets 20% of the winner amount.
+ * Formula: round(0.75 × N × (1v1 win reward + participation reward)) for the
+ * winner: the Team_Credit_Pool_Factor (#527) applied exactly once, before the
+ * split. Loser/draw gets 20% of that reduced winner pool, rounded once.
  *
  * @param league - League tier (bronze, silver, gold, platinum, diamond, champion)
  * @param teamSize - Team size (2 or 3)
@@ -66,12 +70,12 @@ export function calculateTeamBattleReward(
 ): number {
   const baseWin = getLeagueWinReward(league);
   const participation = getParticipationReward(league);
-  const fullWinnerReward = (baseWin + participation) * teamSize;
+  const winnerPool = applyTeamCreditPoolFactor((baseWin + participation) * teamSize);
 
   if (isDraw || !isWinner) {
-    return Math.round(fullWinnerReward * LOSER_DRAW_FRACTION);
+    return Math.round(winnerPool * LOSER_DRAW_FRACTION);
   }
-  return fullWinnerReward;
+  return winnerPool;
 }
 
 // ─── Credit Distribution (R7.4) ─────────────────────────────────────────────

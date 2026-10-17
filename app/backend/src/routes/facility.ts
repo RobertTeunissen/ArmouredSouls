@@ -11,6 +11,8 @@ import { upgradeFacility } from '../services/economy/facilityUpgradeService';
 import { achievementService, type UnlockedAchievement } from '../services/achievement';
 // Spec #46 R11: Training Facility discount is roster-dependent.
 import { calculateTrainingFacilityDiscount } from '../shared/utils/discounts';
+// Season 2 #525: Repair Bay discount is 6% per level, independent of robot count.
+import { calculateRepairBayDiscountPercent } from '../shared/utils/repairCost';
 
 const router = express.Router();
 
@@ -38,7 +40,7 @@ router.get('/', authenticateToken, validateRequest({}), async (req: AuthRequest,
       where: { userId },
     });
 
-    // Get robot count for repair bay discount calculation
+    // Robot count for the Roster Expansion operating cost and the frontend display
     const robotCount = await prisma.robot.count({
       where: { userId },
     });
@@ -71,11 +73,11 @@ router.get('/', authenticateToken, validateRequest({}), async (req: AuthRequest,
       let nextBenefit = config.benefits[nextLevel - 1] || 'Maximum level reached';
       
       if (config.type === 'repair_bay' && currentLevel > 0) {
-        const currentDiscount = Math.min(90, currentLevel * (5 + robotCount));
+        const currentDiscount = calculateRepairBayDiscountPercent(currentLevel);
         currentBenefit = `${currentDiscount}% discount on repair costs`;
         
         if (nextLevel <= config.maxLevel) {
-          const nextDiscount = Math.min(90, nextLevel * (5 + robotCount));
+          const nextDiscount = calculateRepairBayDiscountPercent(nextLevel);
           nextBenefit = `${nextDiscount}% discount on repair costs`;
         }
       }
@@ -86,7 +88,9 @@ router.get('/', authenticateToken, validateRequest({}), async (req: AuthRequest,
       // Without this a 5-robot stable at L5 would read "up to 45%" while
       // actually receiving 25%.
       if (config.type === 'training_facility') {
-        const ratePerLevel = Math.max(0, 10 - rosterCapacity);
+        // The per-level rate is the shared discount at level 1 (#526: 0.75 ×
+        // (10 − capacity), e.g. 6.75% at 1 slot), never a local copy.
+        const ratePerLevel = calculateTrainingFacilityDiscount(1, rosterCapacity);
         const slotLabel = `${rosterCapacity} slot${rosterCapacity === 1 ? '' : 's'}`;
 
         if (currentLevel > 0) {

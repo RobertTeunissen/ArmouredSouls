@@ -12,6 +12,7 @@ import { useState, memo } from 'react';
 import { useOnboarding } from '../../../contexts/OnboardingContext';
 import { api } from '../../../utils/api';
 import { ApiError } from '../../../utils/ApiError';
+import { calculateTrainingFacilityDiscount } from '../../../../../shared/utils/discounts';
 
 type StrategyKey = '1_mighty' | '2_average' | '3_flimsy';
 
@@ -20,11 +21,18 @@ interface InvestmentOption {
   cost: number; benefit: string; icon: string;
 }
 
+/**
+ * Training Facility L1 discount for the stable this card is offered to: the
+ * Attributes option only appears for the one-robot strategy, whose purchased
+ * Roster_Capacity is 1. Derived from the shared helper (6.75% in Season 2).
+ */
+const ONE_ROBOT_TRAINING_L1_DISCOUNT = calculateTrainingFacilityDiscount(1, 1);
+
 const WEAPONS: InvestmentOption = { id: 'weapons', facilityType: 'weapons_workshop', title: 'Invest in Weapons', description: 'Get a discount on all weapon purchases. Buy this before shopping for weapons.', cost: 75_000, benefit: '5% discount on weapon purchases', icon: '⚔️' };
-const ATTRIBUTES: InvestmentOption = { id: 'attributes', facilityType: 'training_facility', title: 'Invest in Attributes', description: 'Get a discount on all attribute upgrades. Makes your robots stronger for less.', cost: 150_000, benefit: '10% discount on attribute upgrades', icon: '💪' };
-const MERCH: InvestmentOption = { id: 'income', facilityType: 'merchandising_hub', title: 'I Want Passive Income', description: 'Earn credits every day from merchandising. Scales with your prestige.', cost: 150_000, benefit: '₡5,000/day base income', icon: '💰' };
-const STREAM: InvestmentOption = { id: 'income', facilityType: 'streaming_studio', title: 'Boost My Battle Earnings', description: 'Double the streaming revenue you earn from every battle.', cost: 100_000, benefit: '2× streaming revenue per battle', icon: '📺' };
-const REPAIR: InvestmentOption = { id: 'repairs', facilityType: 'repair_bay', title: 'I Want Less Repair Costs', description: 'Reduce the credits you spend fixing your robots after lost battles.', cost: 50_000, benefit: 'Repair cost discount', icon: '🔧' };
+const ATTRIBUTES: InvestmentOption = { id: 'attributes', facilityType: 'training_facility', title: 'Invest in Attributes', description: 'Get a discount on all attribute upgrades. Makes your robots stronger for less.', cost: 150_000, benefit: `${ONE_ROBOT_TRAINING_L1_DISCOUNT}% discount on attribute upgrades`, icon: '💪' };
+const MERCH: InvestmentOption = { id: 'income', facilityType: 'merchandising_hub', title: 'I Want Passive Income', description: 'Earn credits every day from merchandising. Scales with your prestige.', cost: 150_000, benefit: '₡25,000/day base income', icon: '💰' };
+const STREAM: InvestmentOption = { id: 'income', facilityType: 'streaming_studio', title: 'Boost My Battle Earnings', description: 'Earn 50% more streaming revenue from every battle.', cost: 100_000, benefit: '1.5× streaming revenue per battle', icon: '📺' };
+const REPAIR: InvestmentOption = { id: 'repairs', facilityType: 'repair_bay', title: 'I Want Less Repair Costs', description: 'Reduce the credits you spend fixing your robots after lost battles.', cost: 50_000, benefit: '6% repair cost discount', icon: '🔧' };
 const BOOKING_OFFICE: InvestmentOption = { id: 'booking_office', facilityType: 'booking_office', title: 'Unlock More Battle Types', description: 'Each robot can enter a 4th battle event — like Tag Team. More events means more battles per day.', cost: 75_000, benefit: '+1 event subscription per robot', icon: '📋' };
 
 function getRecommendation(strategy: StrategyKey) {

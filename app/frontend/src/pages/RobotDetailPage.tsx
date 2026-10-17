@@ -51,7 +51,6 @@ function RobotDetailPage() {
     trainingLevel,
     rosterCapacity,
     repairBayLevel,
-    activeRobotCount,
     academyLevels,
     recentBattles,
     battleReadiness,
@@ -328,7 +327,6 @@ function RobotDetailPage() {
               robot={ownerRobot}
               weapons={weapons}
               repairBayLevel={repairBayLevel}
-              activeRobotCount={activeRobotCount}
               onRobotUpdate={handleRobotUpdate}
               onEquipWeapon={handleEquipWeapon}
               onUnequipWeapon={handleUnequipWeapon}

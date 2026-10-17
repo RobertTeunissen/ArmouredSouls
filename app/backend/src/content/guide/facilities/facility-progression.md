@@ -2,7 +2,7 @@
 title: "Facility Progression & ROI"
 description: "Level-by-level costs, prestige requirements, and return on investment analysis for every facility in Armoured Souls."
 order: 2
-lastUpdated: "2026-10-16"
+lastUpdated: "2026-10-17"
 relatedArticles:
   - facilities/facility-overview
   - facilities/investment-strategy
@@ -40,22 +40,22 @@ When you cross a prestige threshold, **every** facility at that level becomes av
 
 ### Training Facility Progression
 
-The Training Facility is one of the best early investments. Each level adds up to 10% to your attribute upgrade discount (actual rate depends on roster size).
+The Training Facility is one of the best early investments for a small roster. Each level adds up to 6.75% to your attribute upgrade discount: 0.75 × (10 − robot slots) points per level, so the actual rate depends on how many slots you have bought.
 
 | Level | Cost | Discount (1 robot) | Operating Cost/Day | Cumulative Investment |
 |-------|------|-------------------|-------------------|----------------------|
-| 1 | ₡150,000 | 9% | ₡250 | ₡150,000 |
-| 2 | ₡300,000 | 18% | ₡500 | ₡450,000 |
-| 3 | ₡450,000 | 27% | ₡750 | ₡900,000 |
-| 4 | ₡600,000 | 36% | ₡1,000 | ₡1,500,000 |
-| 5 | ₡750,000 | 45% | ₡1,250 | ₡2,250,000 |
-| 6 | ₡900,000 | 54% | ₡1,500 | ₡3,150,000 |
-| 7 | ₡1,050,000 | 63% | ₡1,750 | ₡4,200,000 |
-| 8 | ₡1,200,000 | 72% | ₡2,000 | ₡5,400,000 |
-| 9 | ₡1,350,000 | 81% | ₡2,250 | ₡6,750,000 |
-| 10 | ₡1,500,000 | 90% (max) | ₡2,500 | ₡9,250,000 |
+| 1 | ₡150,000 | 6.75% | ₡250 | ₡150,000 |
+| 2 | ₡300,000 | 13.5% | ₡500 | ₡450,000 |
+| 3 | ₡450,000 | 20.25% | ₡750 | ₡900,000 |
+| 4 | ₡600,000 | 27% | ₡1,000 | ₡1,500,000 |
+| 5 | ₡750,000 | 33.75% | ₡1,250 | ₡2,250,000 |
+| 6 | ₡900,000 | 40.5% | ₡1,500 | ₡3,150,000 |
+| 7 | ₡1,050,000 | 47.25% | ₡1,750 | ₡4,200,000 |
+| 8 | ₡1,200,000 | 54% | ₡2,000 | ₡5,400,000 |
+| 9 | ₡1,350,000 | 60.75% | ₡2,250 | ₡6,750,000 |
+| 10 | ₡1,500,000 | 67.5% (max) | ₡2,500 | ₡8,250,000 |
 
-**ROI Analysis**: Upgrading all 23 attributes from level 1→10 on one robot costs ₡1,863,000 at full price. With Training Facility Level 1 (9% discount with 1 robot), you save ₡167,670 — meaning the facility pays for itself after upgrading roughly one robot's core attributes. With multiple robots, the payback is even faster.
+**ROI Analysis**: Upgrading all 23 attributes from level 1→10 on one robot costs ₡1,863,000 at full price. With Training Facility Level 1 (6.75% with 1 robot slot), you pay ₡1,737,167 and save ₡125,833, close to the facility's ₡150,000 price. Each Roster Expansion level lowers the rate, so a wide stable earns less per level even though it has more attributes to upgrade. Season 2 reduced every rate by a quarter (Level 10 with one slot was 90%).
 
 ```callout-tip
 Training Facility Level 1 is profitable from day one if you're upgrading regularly. It's one of the first facilities you should buy.
@@ -63,61 +63,59 @@ Training Facility Level 1 is profitable from day one if you're upgrading regular
 
 ### Repair Bay Progression
 
-| Level | Cost | Base Discount (1 robot) | Operating Cost/Day |
-|-------|------|------------------------|-------------------|
-| 1 | ₡50,000 | 6% | ₡100 |
-| 2 | ₡100,000 | 12% | ₡200 |
-| 3 | ₡150,000 | 18% | ₡300 |
-| 4 | ₡200,000 | 24% | ₡400 |
-| 5 | ₡250,000 | 30% | ₡500 |
-| 6 | ₡300,000 | 36% | ₡600 |
-| 7 | ₡350,000 | 42% | ₡700 |
-| 8 | ₡400,000 | 48% | ₡800 |
-| 9 | ₡450,000 | 54% | ₡900 |
-| 10 | ₡500,000 | 60% | ₡1,000 |
+| Level | Cost | Discount | Operating Cost/Day |
+|-------|------|----------|-------------------|
+| 1 | ₡50,000 | 6% | ₡1,000 |
+| 2 | ₡100,000 | 12% | ₡1,500 |
+| 3 | ₡150,000 | 18% | ₡2,000 |
+| 4 | ₡200,000 | 24% | ₡2,500 |
+| 5 | ₡250,000 | 30% | ₡3,000 |
+| 6 | ₡300,000 | 36% | ₡3,500 |
+| 7 | ₡350,000 | 42% | ₡4,000 |
+| 8 | ₡400,000 | 48% | ₡4,500 |
+| 9 | ₡450,000 | 54% | ₡5,000 |
+| 10 | ₡500,000 | 60% | ₡5,500 |
 
-The actual discount scales with your robot count: **Level × (5 + Active Robots)**, capped at 90%.
+The discount is the same for every stable, whatever the roster size. Every level adds 6 percentage points, so every level up to 10 adds the same saving rate.
 
-```callout-warning
-Once you hit the 90% discount cap, further Repair Bay upgrades provide no additional repair savings. With 10 robots, Level 6 already reaches the cap.
-```
+**ROI Analysis**: The Repair Bay saves its discount on every repair you pay, so its value grows with how much your robots repair. Compare the daily saving with the operating cost: at Level 1, the stable needs to spend more than about ₡16,700 a day on repairs before the 6% discount covers the ₡1,000 upkeep.
 
 ### Merchandising Hub Progression
 
 | Level | Cost | Base Income/Day | Operating Cost/Day |
 |-------|------|----------------|-------------------|
-| 1 | ₡150,000 | ₡10,000 | ₡200 |
-| 2 | ₡300,000 | ₡20,000 | ₡400 |
-| 3 | ₡450,000 | ₡30,000 | ₡600 |
-| 4 | ₡600,000 | ₡40,000 | ₡800 |
-| 5 | ₡750,000 | ₡50,000 | ₡1,000 |
-| 6 | ₡900,000 | ₡60,000 | ₡1,200 |
-| 7 | ₡1,050,000 | ₡70,000 | ₡1,400 |
-| 8 | ₡1,200,000 | ₡80,000 | ₡1,600 |
-| 9 | ₡1,350,000 | ₡90,000 | ₡1,800 |
-| 10 | ₡1,500,000 | ₡100,000 | ₡2,000 |
+| 1 | ₡150,000 | ₡25,000 | ₡200 |
+| 2 | ₡300,000 | ₡50,000 | ₡400 |
+| 3 | ₡450,000 | ₡75,000 | ₡600 |
+| 4 | ₡600,000 | ₡100,000 | ₡800 |
+| 5 | ₡750,000 | ₡125,000 | ₡1,000 |
+| 6 | ₡900,000 | ₡150,000 | ₡1,200 |
+| 7 | ₡1,050,000 | ₡175,000 | ₡1,400 |
+| 8 | ₡1,200,000 | ₡200,000 | ₡1,600 |
+| 9 | ₡1,350,000 | ₡225,000 | ₡1,800 |
+| 10 | ₡1,500,000 | ₡250,000 | ₡2,000 |
 
-**Income formula**: Base Income × (1 + Prestige ÷ Roster_Capacity ÷ 10,000). A concentrated roster (fewer robot slots) earns a higher multiplier per level. With 10,000 Prestige and 1 robot slot, Level 5 earns ₡50,000 × 2.0 = ₡100,000/day.
+**Income formula**: Base Income × (1 + Prestige ÷ Roster_Capacity ÷ 10,000). A concentrated roster (fewer robot slots) earns a higher multiplier per level. With 10,000 Prestige and 1 robot slot, Level 5 earns ₡125,000 × 2.0 = ₡250,000/day.
 
 ### Streaming Studio Progression
 
 | Level | Cost | Revenue Multiplier | Operating Cost/Day |
 |-------|------|-------------------|-------------------|
-| 1 | ₡100,000 | 2× | ₡100 |
-| 2 | ₡200,000 | 3× | ₡200 |
-| 3 | ₡300,000 | 4× | ₡300 |
-| 4 | ₡400,000 | 5× | ₡400 |
-| 5 | ₡500,000 | 6× | ₡500 |
-| 6 | ₡600,000 | 7× | ₡600 |
-| 7 | ₡700,000 | 8× | ₡700 |
-| 8 | ₡800,000 | 9× | ₡800 |
-| 9 | ₡900,000 | 10× | ₡900 |
-| 10 | ₡1,000,000 | 11× | ₡1,000 |
+| 1 | ₡100,000 | 1.5× | ₡100 |
+| 2 | ₡200,000 | 2× | ₡200 |
+| 3 | ₡300,000 | 2.5× | ₡300 |
+| 4 | ₡400,000 | 3× | ₡400 |
+| 5 | ₡500,000 | 3.5× | ₡500 |
+| 6 | ₡600,000 | 4× | ₡600 |
+| 7 | ₡700,000 | 4.5× | ₡700 |
+| 8 | ₡800,000 | 5× | ₡800 |
+| 9 | ₡900,000 | 5.5× | ₡900 |
+| 10 | ₡1,000,000 | 6× | ₡1,000 |
 
-**ROI Analysis**: The Streaming Studio has the lowest operating cost of any facility and provides multiplicative returns on per-battle streaming revenue. With multiple robots fighting daily, this compounds quickly.
+**ROI Analysis**: Each level adds half of a robot's base streaming award to every battle it fights. A brand-new robot earns ₡1,000 per battle without a Studio and ₡1,500 with Level 1, so Level 1 pays back its ₡100,000 after about 200 robot-battles (sooner for robots with long battle histories and high Fame).
 
 ```callout-tip
-The Streaming Studio's value scales with how many robots you have and how often they fight. If you're running a multi-robot strategy, this facility is an incredible investment even at Level 1.
+The Streaming Studio's value scales with how many robots you have and how often they fight. Compare it with the Merchandising Hub at equal cost before you buy: a small, focused roster usually earns more from the Hub. See [Daily Financial Cycle](/guide/economy/daily-financial-cycle).
 ```
 
 ## Hangar & Armory Facilities

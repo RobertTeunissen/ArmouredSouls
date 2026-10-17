@@ -76,8 +76,9 @@ export async function repairAllRobots(userId: number): Promise<RepairAllResult> 
       });
       const repairBayLevel = repairBay?.level || 0;
       const allRobots = await tx.robot.findMany({ where: { userId } });
+      // Recorded repair fact only (the breakdown and validators require it); the
+      // Repair Bay discount no longer depends on roster size (#525).
       const activeRobotCount = allRobots.length;
-      const bayContext = { repairBayLevel, activeRobotCount };
 
       const quotedRobots = allRobots
         .filter((robot) => robot.currentHP < robot.maxHP)
@@ -88,12 +89,9 @@ export async function repairAllRobots(userId: number): Promise<RepairAllResult> 
           const hpPercent = (robot.currentHP / robot.maxHP) * 100;
           const quoteBeforeManualDiscount = calculateRepairQuote(
             { attributeTotal, damagePercent, hpPercent },
-            bayContext,
+            repairBayLevel,
           );
-          const baseQuote = calculateRepairQuote(
-            { attributeTotal, damagePercent, hpPercent },
-            { repairBayLevel: 0, activeRobotCount: 0 },
-          );
+          const baseQuote = calculateRepairQuote({ attributeTotal, damagePercent, hpPercent }, 0);
 
           return {
             robot,
@@ -117,7 +115,7 @@ export async function repairAllRobots(userId: number): Promise<RepairAllResult> 
         userId,
         quotedRobots.map(({ robot }) => robot),
       );
-      const repairBayDiscount = calculateRepairBayDiscountPercent(bayContext);
+      const repairBayDiscount = calculateRepairBayDiscountPercent(repairBayLevel);
       const chargedPerRobot = quotedRobots.map((entry) => ({
         robotId: entry.robot.id,
         charged: applyManualRepairDiscount(entry.quoteBeforeManualDiscount),

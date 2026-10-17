@@ -3,10 +3,18 @@ import { getFacilityConfig } from '../../config/facilities';
 import { StableMetric } from '../../types/snapshotTypes';
 import { readCycleRepairSpend } from './repairPayloadKeys';
 import { calculateRepairBayDiscountPercent } from '../../shared/utils/repairCost';
-import { calculateWeaponWorkshopDiscount } from '../../shared/utils/discounts';
+import {
+  calculateTrainingFacilityDiscount,
+  calculateWeaponWorkshopDiscount,
+} from '../../shared/utils/discounts';
 import { EconomyError, EconomyErrorCode } from '../../errors/economyErrors';
 // Spec #46 R10: streaming estimates derive from the award-path formula.
 import { computeStreamingRevenue } from './streamingRevenueService';
+import {
+  sumRepairBaySavingsFromRecords,
+  sumStudioAttributableStreaming,
+  type RecordedStreamingRow,
+} from './recorded-facility-returns';
 import {
   calculateFacilityOperatingCost,
   calculateMerchandisingIncome,
@@ -26,6 +34,15 @@ const ECONOMIC_FACILITY_TYPES = [
 ] as const;
 
 type EconomicFacilityType = (typeof ECONOMIC_FACILITY_TYPES)[number];
+
+/** A recorded streaming award with the cycle it was paid in. */
+type RecordedStreamingLedgerRow = RecordedStreamingRow & { cycleNumber: number };
+
+/** A recorded `robot_repair` audit payload with the cycle it was charged in. */
+interface RecordedRepairAuditRow {
+  payload: unknown;
+  cycleNumber: number;
+}
 
 export interface UnifiedFacilityROI {
   facilityType: string;
@@ -133,7 +150,9 @@ export class UnifiedFacilityROIService {
         facilityType as EconomicFacilityType,
         level,
         userMetrics,
-        userId
+        userId,
+        purchaseCycle,
+        currentCycle
       );
       dataSource = 'snapshot';
     } else {
@@ -229,12 +248,23 @@ export class UnifiedFacilityROIService {
       }
     }
 
-    // Fetch robot count once (needed for repair bay)
-    const robots = await prisma.robot.findMany({
-      where: { userId },
-      select: { id: true },
-    });
-    const robotCount = robots.length || 1;
+    // Fetch recorded streaming awards once (needed for the Streaming Studio);
+    // each facility filters them to its own ownership window.
+    const streamingRows = facilities.some((f) => f.facilityType === 'streaming_studio')
+      ? await this.fetchRecordedStreamingRows(userId, 1, currentCycle)
+      : [];
+
+    // Fetch recorded repairs once (needed for the Repair Bay); each facility
+    // filters them to its own ownership window.
+    const repairRows = facilities.some((f) => f.facilityType === 'repair_bay')
+      ? await this.fetchRecordedRepairRows(userId, 1, currentCycle)
+      : [];
+
+    // Purchased Roster_Capacity, needed for the Training Facility discount
+    // (Spec #46 R11, #526); fetched once, only when that facility is owned.
+    const rosterCapacity = facilities.some((f) => f.facilityType === 'training_facility')
+      ? await this.fetchRosterCapacity(userId)
+      : 1;
 
     const results: UnifiedFacilityROI[] = [];
 
@@ -245,7 +275,9 @@ export class UnifiedFacilityROIService {
         facility.level,
         currentCycle,
         userMetricsByCycle,
-        robotCount
+        streamingRows,
+        repairRows,
+        rosterCapacity
       );
       if (roi) {
         results.push(roi);
@@ -281,7 +313,9 @@ export class UnifiedFacilityROIService {
     level: number,
     currentCycle: number,
     userMetricsByCycle: Map<number, StableMetric>,
-    robotCount: number
+    streamingRows: ReadonlyArray<RecordedStreamingLedgerRow>,
+    repairRows: ReadonlyArray<RecordedRepairAuditRow>,
+    rosterCapacity: number
   ): Promise<UnifiedFacilityROI | null> {
     if (!this.isEconomicFacility(facilityType)) return null;
 
@@ -313,7 +347,9 @@ export class UnifiedFacilityROIService {
         facilityType as EconomicFacilityType,
         level,
         userMetrics,
-        robotCount
+        streamingRows.filter((row) => row.cycleNumber >= purchaseCycle && row.cycleNumber <= currentCycle),
+        repairRows.filter((row) => row.cycleNumber >= purchaseCycle && row.cycleNumber <= currentCycle),
+        rosterCapacity
       );
       dataSource = 'snapshot';
     } else {
@@ -357,46 +393,32 @@ export class UnifiedFacilityROIService {
   }
 
   /**
-   * Synchronous version of calculateReturnsFromSnapshots that uses pre-fetched robot count.
+   * Synchronous version of calculateReturnsFromSnapshots that uses pre-fetched
+   * streaming ledger rows and repair audit rows (already filtered to the
+   * ownership window).
    */
   private calculateReturnsFromSnapshotsSync(
     facilityType: EconomicFacilityType,
     level: number,
     userMetrics: StableMetric[],
-    robotCount: number
+    streamingRows: ReadonlyArray<RecordedStreamingLedgerRow>,
+    repairRows: ReadonlyArray<RecordedRepairAuditRow>,
+    rosterCapacity: number
   ): number {
     switch (facilityType) {
       case 'merchandising_hub':
         return userMetrics.reduce((sum, m) => sum + (m.merchandisingIncome || 0), 0);
       case 'streaming_studio':
-        return userMetrics.reduce((sum, m) => sum + (m.streamingIncome || 0), 0);
+        return sumStudioAttributableStreaming(streamingRows);
       case 'repair_bay':
-        return this.calculateRepairBaySavingsSync(level, userMetrics, robotCount);
+        return sumRepairBaySavingsFromRecords(repairRows.map((row) => row.payload));
       case 'training_facility':
-        return this.calculateTrainingFacilitySavings(level, userMetrics);
+        return this.calculateTrainingFacilitySavings(level, userMetrics, rosterCapacity);
       case 'weapons_workshop':
         return this.calculateWeaponsWorkshopSavings(level, userMetrics);
       default:
         return 0;
     }
-  }
-
-  /**
-   * Synchronous repair bay savings using pre-fetched robot count.
-   */
-  private calculateRepairBaySavingsSync(
-    level: number,
-    userMetrics: StableMetric[],
-    robotCount: number
-  ): number {
-    const totalRepairCosts = userMetrics.reduce(
-      (sum, m) => sum + readCycleRepairSpend(m as unknown as Record<string, unknown>),
-      0
-    );
-    const discountPercent = Math.min(90, level * (5 + robotCount));
-    if (discountPercent >= 100) return 0;
-    const savings = totalRepairCosts * (discountPercent / (100 - discountPercent));
-    return Math.round(savings);
   }
 
   /**
@@ -638,26 +660,79 @@ export class UnifiedFacilityROIService {
   }
 
   /**
+   * The user's recorded `streaming_revenue` ledger rows in `[fromCycle, toCycle]`.
+   */
+  private async fetchRecordedStreamingRows(
+    userId: number,
+    fromCycle: number,
+    toCycle: number
+  ): Promise<RecordedStreamingLedgerRow[]> {
+    return prisma.financialLedger.findMany({
+      where: {
+        userId,
+        transactionType: 'streaming_revenue',
+        cycleNumber: { gte: fromCycle, lte: toCycle },
+      },
+      select: { amount: true, metadata: true, cycleNumber: true },
+    });
+  }
+
+  /**
+   * The user's recorded `robot_repair` audit payloads in `[fromCycle, toCycle]`.
+   */
+  private async fetchRecordedRepairRows(
+    userId: number,
+    fromCycle: number,
+    toCycle: number
+  ): Promise<RecordedRepairAuditRow[]> {
+    return prisma.auditLog.findMany({
+      where: {
+        userId,
+        eventType: 'robot_repair',
+        cycleNumber: { gte: fromCycle, lte: toCycle },
+      },
+      select: { payload: true, cycleNumber: true },
+    });
+  }
+
+  /**
    * Calculate returns from snapshot data for a specific facility type.
+   *
+   * Streaming Studio returns are the studio-attributable share of each recorded
+   * `streaming_revenue` award in the ownership window
+   * (`amount × (1 − 1 / studioMultiplier)` with the row's stored multiplier,
+   * #524), not the whole streaming income: a robot earns base streaming
+   * without any studio. Cycles from before the financial ledger existed have
+   * no rows and therefore contribute nothing, so returns for a studio bought
+   * before the ledger cutover are understated rather than re-derived from the
+   * current formula.
    */
   private async calculateReturnsFromSnapshots(
     facilityType: EconomicFacilityType,
     level: number,
     userMetrics: StableMetric[],
-    userId: number
+    userId: number,
+    purchaseCycle: number,
+    currentCycle: number
   ): Promise<number> {
     switch (facilityType) {
       case 'merchandising_hub':
         return userMetrics.reduce((sum, m) => sum + (m.merchandisingIncome || 0), 0);
 
       case 'streaming_studio':
-        return userMetrics.reduce((sum, m) => sum + (m.streamingIncome || 0), 0);
+        return sumStudioAttributableStreaming(
+          await this.fetchRecordedStreamingRows(userId, purchaseCycle, currentCycle)
+        );
 
       case 'repair_bay':
-        return this.calculateRepairBaySavings(level, userMetrics, userId);
+        return this.calculateRepairBaySavings(userId, purchaseCycle, currentCycle);
 
       case 'training_facility':
-        return this.calculateTrainingFacilitySavings(level, userMetrics);
+        return this.calculateTrainingFacilitySavings(
+          level,
+          userMetrics,
+          await this.fetchRosterCapacity(userId)
+        );
 
       case 'weapons_workshop':
         return this.calculateWeaponsWorkshopSavings(level, userMetrics);
@@ -668,58 +743,54 @@ export class UnifiedFacilityROIService {
   }
 
   /**
-   * Estimate savings from Repair Bay based on total repair costs and discount percentage.
-   * Discount formula: Math.min(90, level * (5 + robotCount))
-   * Uses actual robot count for accurate calculation.
+   * Repair Bay savings from the stable's recorded `robot_repair` rows in the
+   * ownership window: per row `charged × d / (100 − d)` with the row's recorded
+   * Repair Bay discount d. Never re-derived from the current discount formula
+   * or level, so the #525 change (6% per level, independent of robot count)
+   * leaves past savings as they were recorded.
    */
   private async calculateRepairBaySavings(
-    level: number,
-    userMetrics: StableMetric[],
-    userId: number
+    userId: number,
+    purchaseCycle: number,
+    currentCycle: number
   ): Promise<number> {
-    const totalRepairCosts = userMetrics.reduce(
-      (sum, m) => sum + readCycleRepairSpend(m as unknown as Record<string, unknown>),
-      0
-    );
-
-    // Fetch actual robot count for accurate discount calculation
-    const robots = await prisma.robot.findMany({
-      where: { userId },
-      select: { id: true },
-    });
-    const robotCount = robots.length || 1;
-
-    // The discount represents what the user saved by having the repair bay.
-    // totalRepairCosts in the snapshot is the ACTUAL cost paid (after discount).
-    // Savings = actualCost * (discountPercent / (100 - discountPercent))
-    //
-    // The percentage comes from the Shared_Repair_Module. This line held a fourth
-    // inline copy of `min(90, level × (5 + robotCount))` that Spec #48 missed when
-    // it collapsed the other three.
-    const discountPercent = calculateRepairBayDiscountPercent({
-      repairBayLevel: level,
-      activeRobotCount: robotCount,
-    });
-    if (discountPercent >= 100) return 0;
-
-    const savings = totalRepairCosts * (discountPercent / (100 - discountPercent));
-    return Math.round(savings);
+    const rows = await this.fetchRecordedRepairRows(userId, purchaseCycle, currentCycle);
+    return sumRepairBaySavingsFromRecords(rows.map((row) => row.payload));
   }
 
   /**
-   * Estimate savings from Training Facility based on attribute upgrade spending.
-   * Discount: level * 10, capped at 90%.
+   * The stable's purchased Roster_Capacity (from its `roster_expansion` level,
+   * never the robots it currently owns).
+   */
+  private async fetchRosterCapacity(userId: number): Promise<number> {
+    const rosterExpansion = await prisma.facility.findUnique({
+      where: { userId_facilityType: { userId, facilityType: 'roster_expansion' } },
+      select: { level: true },
+    });
+    return getRosterCapacity(rosterExpansion?.level ?? 0);
+  }
+
+  /**
+   * Estimate savings from Training Facility based on attribute upgrade spending,
+   * with the shared roster-dependent discount (#526:
+   * `0.75 × level × (10 − Roster_Capacity)` percent).
+   *
+   * This is an **estimate**: attribute upgrade records do not store the
+   * discount they were charged at, so the current level and current purchased
+   * capacity are applied to the whole ownership window. It no longer ignores
+   * capacity, so a wide stable is not credited with the one-robot rate.
    */
   private calculateTrainingFacilitySavings(
     level: number,
-    userMetrics: StableMetric[]
+    userMetrics: StableMetric[],
+    rosterCapacity: number
   ): number {
     const totalUpgradeCosts = userMetrics.reduce(
       (sum, m) => sum + (m.attributeUpgrades || 0),
       0
     );
 
-    const discountPercent = Math.min(90, level * 10);
+    const discountPercent = calculateTrainingFacilityDiscount(level, rosterCapacity);
     if (discountPercent >= 100) return 0;
 
     // Savings = actualCost * discount / (100 - discount)
@@ -774,37 +845,42 @@ export class UnifiedFacilityROIService {
       }
 
       case 'streaming_studio': {
-        // Estimate: streaming per battle × average battles per cycle × cycles.
+        // Estimate: studio-attributable streaming per battle × average battles
+        // per cycle × cycles, derived from `computeStreamingRevenue()`.
         //
-        // Spec #46 R10: the local `1000 * (1 + level)` reproduced the base and the
-        // Studio Multiplier but silently dropped the battle and fame multipliers,
-        // so it under-reported a veteran robot's streaming by the product of
-        // those two. Derived from `computeStreamingRevenue()` now.
-        //
-        // This remains an **estimate**, deliberately: the function is called
-        // without a per-robot battle count or fame, so both are passed as zero.
-        // That makes it a floor — the true figure is at least this much — rather
-        // than a projection of what any specific robot earns.
-        const streamingPerBattleFloor = computeStreamingRevenue(0, 0, level).totalRevenue;
+        // Only the increment over a stable without a studio counts as a return
+        // (#524): base streaming is earned at L0 too. This remains an
+        // **estimate**, deliberately: the function is called without a
+        // per-robot battle count or fame, so both are passed as zero, which
+        // makes it a floor rather than a projection for any specific robot.
+        const studioIncrementPerBattle =
+          computeStreamingRevenue(0, 0, level).totalRevenue
+          - computeStreamingRevenue(0, 0, 0).totalRevenue;
         const avgBattlesPerCycle = 3; // Conservative estimate
-        return Math.round(streamingPerBattleFloor * avgBattlesPerCycle * cyclesOwned);
+        return Math.round(studioIncrementPerBattle * avgBattlesPerCycle * cyclesOwned);
       }
 
       case 'repair_bay': {
-        // Estimate: average repair spending × discount percentage × cycles
+        // Estimate: average repair spending × discount percentage × cycles.
+        // Robot count only sizes the repair volume; the discount is the shared
+        // 6% per level (#525).
         const robots = await prisma.robot.findMany({
           where: { userId },
           select: { id: true },
         });
         const robotCount = robots.length || 1;
-        const discountPercent = Math.min(90, level * (5 + robotCount));
+        const discountPercent = calculateRepairBayDiscountPercent(level);
         const avgRepairPerCycle = robotCount * 5000; // Conservative estimate
         return Math.round(avgRepairPerCycle * (discountPercent / 100) * cyclesOwned);
       }
 
       case 'training_facility': {
-        // Estimate: average upgrade spending × discount percentage × cycles
-        const discountPercent = Math.min(90, level * 10);
+        // Estimate: average upgrade spending × the shared roster-dependent
+        // discount (#526) × cycles.
+        const discountPercent = calculateTrainingFacilityDiscount(
+          level,
+          await this.fetchRosterCapacity(userId)
+        );
         const avgUpgradePerCycle = 10000; // Conservative estimate
         return Math.round(avgUpgradePerCycle * (discountPercent / 100) * cyclesOwned);
       }

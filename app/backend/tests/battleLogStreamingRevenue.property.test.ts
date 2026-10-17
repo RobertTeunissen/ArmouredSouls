@@ -21,6 +21,14 @@ import matchesRoutes from '../src/routes/matches';
 import jwt from 'jsonwebtoken';
 import { errorHandler } from '../src/middleware/errorHandler';
 
+/**
+ * Hand reference for the v2 streaming formula (#524):
+ * floor(1000 × (1 + B/2000 + F/10000) × (1 + 0.5L)) = floor((20000 + 10B + 2F) × (2 + L) / 40).
+ */
+function v2StreamingRevenue(battles: number, fame: number, level: number): number {
+  return Math.floor(((20000 + 10 * battles + 2 * fame) * (2 + level)) / 40);
+}
+
 // Create test app
 const app = express();
 app.use(cors());
@@ -211,14 +219,8 @@ describe('Property 13: Battle Log Contains Streaming Revenue Data', () => {
           const robot2 = await createTestRobot(testUser.id, `Robot2_${Date.now()}`, battles2, fame2);
 
           // Calculate expected streaming revenue using the formula
-          const baseAmount = 1000;
-          const studioMultiplier = 1 + (studioLevel * 1.0);
-          const totalRevenue1 = Math.floor(
-            baseAmount * (1 + battles1 / 1000) * (1 + fame1 / 5000) * studioMultiplier
-          );
-          const totalRevenue2 = Math.floor(
-            baseAmount * (1 + battles2 / 1000) * (1 + fame2 / 5000) * studioMultiplier
-          );
+          const totalRevenue1 = v2StreamingRevenue(battles1, fame1, studioLevel);
+          const totalRevenue2 = v2StreamingRevenue(battles2, fame2, studioLevel);
 
           const winnerId = winner === 'robot1' ? robot1.id : winner === 'robot2' ? robot2.id : null;
 
@@ -268,14 +270,8 @@ describe('Property 13: Battle Log Contains Streaming Revenue Data', () => {
           const robot1 = await createTestRobot(testUser.id, `Winner_${Date.now()}`, battles1, fame1);
           const robot2 = await createTestRobot(testUser.id, `Loser_${Date.now()}`, battles2, fame2);
 
-          const baseAmount = 1000;
-          const studioMultiplier = 1 + (studioLevel * 1.0);
-          const totalRevenue1 = Math.floor(
-            baseAmount * (1 + battles1 / 1000) * (1 + fame1 / 5000) * studioMultiplier
-          );
-          const totalRevenue2 = Math.floor(
-            baseAmount * (1 + battles2 / 1000) * (1 + fame2 / 5000) * studioMultiplier
-          );
+          const totalRevenue1 = v2StreamingRevenue(battles1, fame1, studioLevel);
+          const totalRevenue2 = v2StreamingRevenue(battles2, fame2, studioLevel);
 
           const winnerId = winner === 'robot1' ? robot1.id : robot2.id;
 
@@ -323,14 +319,8 @@ describe('Property 13: Battle Log Contains Streaming Revenue Data', () => {
           const robot1 = await createTestRobot(testUser.id, `Draw1_${Date.now()}`, battles1, fame1);
           const robot2 = await createTestRobot(testUser.id, `Draw2_${Date.now()}`, battles2, fame2);
 
-          const baseAmount = 1000;
-          const studioMultiplier = 1 + (studioLevel * 1.0);
-          const totalRevenue1 = Math.floor(
-            baseAmount * (1 + battles1 / 1000) * (1 + fame1 / 5000) * studioMultiplier
-          );
-          const totalRevenue2 = Math.floor(
-            baseAmount * (1 + battles2 / 1000) * (1 + fame2 / 5000) * studioMultiplier
-          );
+          const totalRevenue1 = v2StreamingRevenue(battles1, fame1, studioLevel);
+          const totalRevenue2 = v2StreamingRevenue(battles2, fame2, studioLevel);
 
           const battle = await createBattleWithStreamingRevenue(
             robot1.id, robot2.id, null, totalRevenue1, totalRevenue2,
@@ -371,9 +361,8 @@ describe('Property 13: Battle Log Contains Streaming Revenue Data', () => {
           const robot1 = await createTestRobot(testUser.id, `Zero1_${Date.now()}`, 0, 0);
           const robot2 = await createTestRobot(testUser.id, `Zero2_${Date.now()}`, 0, 0);
 
-          const baseAmount = 1000;
-          const studioMultiplier = 1 + (studioLevel * 1.0);
-          const expectedRevenue = Math.floor(baseAmount * studioMultiplier);
+          // 1000 × (1 + 0.5 × level) for a robot with no battles and no fame
+          const expectedRevenue = v2StreamingRevenue(0, 0, studioLevel);
 
           const battle = await createBattleWithStreamingRevenue(
             robot1.id, robot2.id, robot1.id, expectedRevenue, expectedRevenue,

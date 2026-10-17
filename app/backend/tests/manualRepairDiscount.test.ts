@@ -134,24 +134,24 @@ describe('Manual Repair Discount — Unit Tests', () => {
 
   // Validates: Requirements 2.1, 2.2, 2.3, 6.3
   describe('Regression: calculateRepairCost() unchanged for known inputs', () => {
-    it('should return 5000 for attributeSum=100, damagePercent=50, hpPercent=50, repairBayLevel=0, medicalBayLevel=0, robotCount=5', () => {
+    it('should return 5000 for attributeSum=100, damagePercent=50, hpPercent=50, repairBayLevel=0, medicalBayLevel=0', () => {
       // baseRepairCost = 100 * 100 = 10000
       // hpPercent=50 → multiplier = 1.0
       // rawCost = 10000 * 0.5 * 1.0 = 5000
-      // rawDiscount = 0 * (5 + 5) = 0, repairBayDiscount = 0
+      // repairBayDiscount = 6 × 0 = 0%
       // finalCost = Math.round(5000 * 1) = 5000
-      const result = calculateRepairCost(100, 50, 50, 0, 0, 5);
+      const result = calculateRepairCost(100, 50, 50, 0, 0);
       expect(result).toBe(5000);
     });
 
-    it('should return 10000 for attributeSum=200, damagePercent=100, hpPercent=0, repairBayLevel=5, robotCount=10', () => {
+    it('should return 28000 for attributeSum=200, damagePercent=100, hpPercent=0, repairBayLevel=5', () => {
       // baseRepairCost = 200 * 100 = 20000
       // hpPercent=0 → multiplier = 2.0
       // rawCost = 20000 * 1.0 * 2.0 = 40000
-      // rawDiscount = 5 * (5 + 10) = 75, repairBayDiscount = 0.75
-      // finalCost = Math.round(40000 * 0.25) = 10000
-      const result = calculateRepairCost(200, 100, 0, 5, 0, 10);
-      expect(result).toBe(10000);
+      // repairBayDiscount = 6 × 5 = 30% (#525, independent of robot count)
+      // finalCost = Math.round(40000 * 0.70) = 28000
+      const result = calculateRepairCost(200, 100, 0, 5, 0);
+      expect(result).toBe(28000);
     });
   });
 

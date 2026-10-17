@@ -116,7 +116,8 @@ describe('Settlement_Service', () => {
   it('should use the normalized merchandising formula and every operating-cost component', () => {
     const facts = calculateSettlementFacts(user, facilities, robots);
 
-    expect(facts.passiveIncome).toBe(15000);
+    // L1 Merchandising (#524): 25,000 × (1 + 10,000 prestige / 2 slots / 10,000) = 37,500
+    expect(facts.passiveIncome).toBe(37500);
     expect(facts.rosterCapacity).toBe(2);
     expect(facts.prestigePerSlot).toBe(5000);
     expect(facts.operatingCosts).toBe(900);
@@ -145,19 +146,19 @@ describe('Settlement_Service', () => {
     expect(result).toMatchObject({
       cycleNumber: 12,
       usersProcessed: 1,
-      totalPassiveIncome: 15000,
+      totalPassiveIncome: 37500,
       totalOperatingCosts: 900,
     });
     expect(mockApplyInTransaction).toHaveBeenCalledTimes(2);
-    expect(mockApplyInTransaction.mock.calls.map((call) => call[1].amount)).toEqual([15000, -900]);
+    expect(mockApplyInTransaction.mock.calls.map((call) => call[1].amount)).toEqual([37500, -900]);
     expect(mockApplyInTransaction.mock.calls.map((call) => call[1].financialEventId)).toEqual([
       'settlement:7:12:passive_income',
       'settlement:7:12:operating_costs',
     ]);
     expect(mockLogSettlementComponent).toHaveBeenCalledTimes(2);
     expect(result.components[0]).toMatchObject({
-      passiveIncome: { balanceBefore: 100000, balanceAfter: 115000, created: true },
-      operatingCosts: { balanceBefore: 115000, balanceAfter: 114100, created: true },
+      passiveIncome: { balanceBefore: 100000, balanceAfter: 137500, created: true },
+      operatingCosts: { balanceBefore: 137500, balanceAfter: 136600, created: true },
     });
   });
 
@@ -278,7 +279,7 @@ describe('Settlement_Service', () => {
 
     expect(result).toMatchObject({
       usersProcessed: 1,
-      totalPassiveIncome: 15000,
+      totalPassiveIncome: 37500,
       totalOperatingCosts: 900,
       bankruptUsers: 0,
       summaries: [],

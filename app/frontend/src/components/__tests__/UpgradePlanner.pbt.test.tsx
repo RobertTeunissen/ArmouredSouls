@@ -58,8 +58,9 @@ describe('UpgradePlanner - Cost Transparency Properties', () => {
           // Check if training discount is displayed when trainingLevel > 0
           // Note: Component only shows Training Facility Discount, not Workshop Discount
           if (trainingLevel > 0) {
-            // Spec #46 R11: 9pp per level at Roster_Capacity 1 (the helper default).
-            const trainingDiscountText = `${Math.min(trainingLevel * 9, 90)}%`;
+            // Spec #46 R11 / #526: 0.75 × 9 = 6.75 points per level at Roster_Capacity 1
+            // (hand table: L1 6.75%, L2 13.5%, … L10 67.5%), shown without rounding.
+            const trainingDiscountText = `${(trainingLevel * 27) / 4}%`;
             const trainingElements = container.querySelectorAll('*');
             let foundTrainingDiscount = false;
             trainingElements.forEach(el => {

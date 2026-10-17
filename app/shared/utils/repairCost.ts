@@ -21,7 +21,12 @@
  *                 × (1 − repairBayDiscount))
  *
  *   damageMultiplier  = 2.0 at exactly 0% HP, 1.5 below 10% HP, 1.0 otherwise
- *   repairBayDiscount = min(90, repairBayLevel × (5 + activeRobotCount)) / 100
+ *   repairBayDiscount = 6 × min(repairBayLevel, 10) / 100
+ *
+ * Season 2 (#525): the Repair Bay discount is 6% per level for every stable,
+ * whatever its size (60% at Level 10, the facility's maximum level). It used to
+ * be min(90, level × (5 + ownedRobots)), which amplified the discount for
+ * swarms. The roster size is no longer an input.
  *
  * The rounding split is deliberate and pins pre-consolidation behaviour:
  * `Math.round` on the quote, `Math.floor` on the manual discount (criterion 10).
@@ -40,8 +45,15 @@ const DESTRUCTION_MULTIPLIER = 2.0;
 /** Damage_Multiplier below 10% HP (heavily damaged). */
 const HEAVY_DAMAGE_MULTIPLIER = 1.5;
 
-/** Repair Bay discount ceiling, as a percentage. Requirement 15 criterion 5. */
-export const MAX_REPAIR_BAY_DISCOUNT_PERCENT = 90;
+/** Repair Bay discount per facility level, as a percentage (Season 2, #525). */
+export const REPAIR_BAY_DISCOUNT_PER_LEVEL_PERCENT = 6;
+
+/** Highest Repair Bay level; levels above it earn no further discount. */
+export const REPAIR_BAY_MAX_LEVEL = 10;
+
+/** Repair Bay discount at the maximum level, as a percentage (60). */
+export const MAX_REPAIR_BAY_DISCOUNT_PERCENT =
+  REPAIR_BAY_DISCOUNT_PER_LEVEL_PERCENT * REPAIR_BAY_MAX_LEVEL;
 
 /**
  * The reduction a player receives for repairing a robot before its next
@@ -61,12 +73,6 @@ export const MANUAL_REPAIR_DISCOUNT = 0.5;
 export interface RepairCostRobot {
   currentHP: number;
   maxHP: number;
-}
-
-/** The two inputs to the Repair Bay discount. */
-export interface RepairBayContext {
-  repairBayLevel: number;
-  activeRobotCount: number;
 }
 
 /**
@@ -122,22 +128,19 @@ export function sumAttributes(robot: RepairCostRobot): number {
 
 /**
  * The Repair Bay discount as a whole percentage:
- *   min(90, repairBayLevel × (5 + activeRobotCount))
+ *   6 × min(repairBayLevel, 10)
  *
- * Exported for display and for the value `repairAllRobots` returns as `discount`.
- * It neither produces a quote nor applies the manual discount, so Requirement 15
- * criterion 1's one-function-each rule is unaffected.
+ * Independent of roster size (Season 2, #525). Exported for display and for the
+ * value `repairAllRobots` returns as `discount`. It neither produces a quote nor
+ * applies the manual discount, so Requirement 15 criterion 1's one-function-each
+ * rule is unaffected.
  *
- * @throws RangeError if either input is negative or not finite
+ * @throws RangeError if the level is negative or not finite
  */
-export function calculateRepairBayDiscountPercent(context: RepairBayContext): number {
-  assertFiniteNonNegative('repairBayLevel', context.repairBayLevel);
-  assertFiniteNonNegative('activeRobotCount', context.activeRobotCount);
+export function calculateRepairBayDiscountPercent(repairBayLevel: number): number {
+  assertFiniteNonNegative('repairBayLevel', repairBayLevel);
 
-  return Math.min(
-    MAX_REPAIR_BAY_DISCOUNT_PERCENT,
-    context.repairBayLevel * (5 + context.activeRobotCount),
-  );
+  return REPAIR_BAY_DISCOUNT_PER_LEVEL_PERCENT * Math.min(repairBayLevel, REPAIR_BAY_MAX_LEVEL);
 }
 
 /**
@@ -154,7 +157,7 @@ export function calculateRepairBayDiscountPercent(context: RepairBayContext): nu
  */
 export function calculateRepairQuote(
   subject: RepairQuoteSubject,
-  context: RepairBayContext,
+  repairBayLevel: number,
 ): number {
   let attributeTotal: number;
   let damagePercent: number;
@@ -197,7 +200,7 @@ export function calculateRepairQuote(
   }
 
   const rawCost = baseRepairCost * (damagePercent / 100) * damageMultiplier;
-  const discountPercent = calculateRepairBayDiscountPercent(context);
+  const discountPercent = calculateRepairBayDiscountPercent(repairBayLevel);
   const finalCost = rawCost * (1 - discountPercent / 100);
 
   return Math.round(finalCost);

@@ -150,13 +150,13 @@ describe('Tag Team Auto-Repair Integration Test', () => {
       testUsers.push(user);
       testUserIds.push(user.id);
 
-      // Create Repair Bay facility for user 0 (10% discount)
+      // Create Repair Bay facility for user 0 (12% discount: 6% per level, #525)
       if (i === 0) {
         await prisma.facility.create({
           data: {
             userId: user.id,
             facilityType: 'repair_bay',
-            level: 2, // 10% discount
+            level: 2, // 12% discount
           },
         });
       }
@@ -310,7 +310,7 @@ describe('Tag Team Auto-Repair Integration Test', () => {
     // this test is about the repairs. `user1After` / `user2After` are read only for the log
     // line below, which is why the balances are reported rather than asserted.
 
-    console.log(`[Test] User 1 total cost: ₡${user1TotalCost} (with 10% Repair Bay discount)`);
+    console.log(`[Test] User 1 total cost: ₡${user1TotalCost} (with 12% Repair Bay discount)`);
     console.log(`[Test] User 2 total cost: ₡${user2TotalCost} (no discount)`);
     console.log(`[Test] Note: Costs include initial auto-repair + battle damage repair`);
 

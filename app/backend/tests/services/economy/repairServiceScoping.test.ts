@@ -143,10 +143,10 @@ describe('repairRobotsForEvent', () => {
 });
 
 describe('repair bay discount', () => {
-  // Explicit regression guard: scoping must not shrink the discount. The formula
-  // is repairBayLevel × (5 + activeRobotCount) capped at 90%, where the count is
-  // the owner's whole roster — not the handful of robots being repaired.
-  it('should size the discount from the full roster, not the scoped subset', async () => {
+  // Season 2 (#525): the discount is 6 × min(level, 10) percent and no longer
+  // depends on the roster. The owner's whole-roster count is still looked up (it
+  // is recorded on each repair as a stable fact), never the scoped subset.
+  it('should give 6% per level whatever the roster size, and count the full roster', async () => {
     mockResolveRobotIdsForEvent.mockResolvedValue([4]);
     mockRobotFindMany.mockResolvedValue([makeDamagedRobot(4, 1)]);
     mockRobotGroupBy.mockResolvedValue([{ userId: 1, _count: { id: 8 } }]);
@@ -156,8 +156,8 @@ describe('repair bay discount', () => {
 
     const summary = await repairRobotsForEvent('league_1v1');
 
-    // level 2 × (5 + 8 robots) = 26%
-    expect(summary.userSummaries[0].repairBayDiscount).toBe(26);
+    // level 2 × 6% = 12%, with 8 robots or any other count
+    expect(summary.userSummaries[0].repairBayDiscount).toBe(12);
 
     // Neither lookup may be narrowed to the scoped robot ids.
     expect(mockRobotGroupBy).toHaveBeenCalledWith(
@@ -170,7 +170,7 @@ describe('repair bay discount', () => {
     );
   });
 
-  it('should cap the discount at 90%', async () => {
+  it('should give the 60% maximum at Level 10, even for a 40-robot roster', async () => {
     mockResolveRobotIdsForEvent.mockResolvedValue([4]);
     mockRobotFindMany.mockResolvedValue([makeDamagedRobot(4, 1)]);
     mockRobotGroupBy.mockResolvedValue([{ userId: 1, _count: { id: 40 } }]);
@@ -180,7 +180,7 @@ describe('repair bay discount', () => {
 
     const summary = await repairRobotsForEvent('league_1v1');
 
-    expect(summary.userSummaries[0].repairBayDiscount).toBe(90);
+    expect(summary.userSummaries[0].repairBayDiscount).toBe(60);
   });
 
   it('should apply no discount without a repair bay', async () => {

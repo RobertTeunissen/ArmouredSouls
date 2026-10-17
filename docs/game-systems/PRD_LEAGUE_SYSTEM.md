@@ -133,7 +133,7 @@ When an instance has an odd number of robots, scheduling may use a synthetic "By
 
 **A bye is never simulated (Spec #49).** No combat runs, so the real robot takes **no damage at all** — the "reduced damage (8% HP loss)" this section previously described no longer occurs, and a bye can never produce a repair bill. A drawn bye is structurally impossible rather than corrected after the fact.
 
-**What a bye pays.** The participation reward for the tier (20% of the base win reward), multiplied by the number of robots on the real side — so ×1 for `league_1v1`, ×2 for `league_2v2` and Tag Team, ×3 for `league_3v3`. Plus the usual LP and ELO for a win. It pays **no prestige, no fame and no streaming revenue**. The reward declaration remains in `app/backend/src/utils/byeRewards.ts`; this display note does not create another formula.
+**What a bye pays.** The participation reward for the tier (20% of the base win reward), multiplied by the number of robots on the real side and, for team modes, by the 0.75 team credit-pool factor (Season 2, #527) — so ×1 for `league_1v1`, ×1.5 for `league_2v2` and Tag Team (was ×2), ×2.25 for `league_3v3` (was ×3). Plus the usual LP and ELO for a win. It pays **no prestige, no fame and no streaming revenue**. The reward declaration remains in `app/backend/src/utils/byeRewards.ts`; this display note does not create another formula.
 
 **Byes exist in all nine modes, not just the odd-robot case.** The same rule covers a `koth` or `grand_melee` tier instance that falls below its minimum field size, and a non-power-of-two tournament bracket. See `docs/architecture/PRD_BATTLE_DATA_ARCHITECTURE.md` § Bye Battle Records.
 

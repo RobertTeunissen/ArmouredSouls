@@ -136,6 +136,8 @@ const DB_DEPENDENT = [
   'tests/integration/achievementUnlockSerialization.test.ts',
   // Unified standings creation rule (create on first matchable subscription)
   'tests/integration/standingsCreationRule.test.ts',
+  // Season 2 #524 — streaming formula v2: SQL validator, team share, stored-award retry
+  'tests/integration/streamingRevenueV2.test.ts',
   // PR #536 — battle-time readiness, forfeits and the match-failure policy
   'tests/integration/tournamentSeedingsRoute.test.ts',
   'tests/integration/matchFailurePolicy.test.ts',

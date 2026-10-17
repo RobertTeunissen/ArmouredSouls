@@ -10,7 +10,6 @@ import {
   calculateTrainingDiscountedUpgradeCost,
   calculateUpgradeCostRange,
 } from '../../shared/utils/upgradeCosts';
-import { applyDiscount } from '../../shared/utils/discounts';
 
 describe('academyCaps', () => {
   describe('getCapForLevel', () => {
@@ -57,26 +56,27 @@ describe('upgradeCosts', () => {
   });
 
   describe('calculateDiscountedUpgradeCost', () => {
-    // Spec #46 R11: the third argument is Roster_Capacity. The discount rate is
-    // (10 - capacity) percentage points per facility level, so these cases pin a
-    // single-robot stable (capacity 1, the best rate at 9pp per level).
+    // Spec #46 R11 / Season 2 #526: the third argument is Roster_Capacity. The
+    // discount is 0.75 × (10 − capacity) points per facility level, so these
+    // cases pin a single-robot stable (capacity 1, the best rate: 6.75% per level).
+    // Each level is floor(base × (100 − d) / 100), exact for quarter-percent d.
     it('should return base cost when training level is 0', () => {
       expect(calculateDiscountedUpgradeCost(0, 0, 1)).toBe(1500);
       expect(calculateDiscountedUpgradeCost(9, 0, 1)).toBe(15000);
     });
 
-    it('should apply 9% per level for a single-robot stable', () => {
-      // 1500 - 9% = 1365
-      expect(calculateDiscountedUpgradeCost(0, 1, 1)).toBe(1365);
-      // 1500 - 45% = 825
-      expect(calculateDiscountedUpgradeCost(0, 5, 1)).toBe(825);
+    it('should apply 6.75% per level for a single-robot stable', () => {
+      // 1500 × 93.25% = 1398.75 → 1398
+      expect(calculateDiscountedUpgradeCost(0, 1, 1)).toBe(1398);
+      // 1500 × 66.25% (33.75% off) = 993.75 → 993
+      expect(calculateDiscountedUpgradeCost(0, 5, 1)).toBe(993);
     });
 
-    it('should reach the 90% cap at training level 10 with one robot', () => {
-      // 1500 - 90% = 150
-      expect(calculateDiscountedUpgradeCost(0, 10, 1)).toBe(150);
-      // Level 9 is no longer capped: 81% off → 285
-      expect(calculateDiscountedUpgradeCost(0, 9, 1)).toBe(285);
+    it('should reach the 67.5% maximum at training level 10 with one robot', () => {
+      // 1500 × 32.5% = 487.5 → 487
+      expect(calculateDiscountedUpgradeCost(0, 10, 1)).toBe(487);
+      // Level 9: 60.75% off → 1500 × 39.25% = 588.75 → 588
+      expect(calculateDiscountedUpgradeCost(0, 9, 1)).toBe(588);
     });
 
     it('should charge full price when the roster fills 10 slots', () => {
@@ -84,10 +84,10 @@ describe('upgradeCosts', () => {
     });
 
     it('should floor the result', () => {
-      // Level 1 base cost = 3000, 30% discount (L5, capacity 4) = 2100 (exact)
-      expect(calculateDiscountedUpgradeCost(1, 5, 4)).toBe(2100);
-      // 3000 - 9% = 2730
-      expect(calculateDiscountedUpgradeCost(1, 1, 1)).toBe(2730);
+      // Level 1 base cost = 3000, 22.5% discount (L5, capacity 4) = 2325 (exact)
+      expect(calculateDiscountedUpgradeCost(1, 5, 4)).toBe(2325);
+      // 3000 × 93.25% = 2797.5 → 2797
+      expect(calculateDiscountedUpgradeCost(1, 1, 1)).toBe(2797);
     });
   });
 
@@ -119,20 +119,23 @@ describe('upgradeCosts', () => {
       expect(calculateTrainingDiscountedUpgradeCost(4, 4, 30)).toBe(0);
     });
 
-    it('floors each level with applyDiscount before summing', () => {
-      // 7% off: level 0 → floor(1500 × 0.93) and level 1 → floor(3000 × 0.93)
-      const expected = applyDiscount(1500, 7) + applyDiscount(3000, 7);
-      expect(calculateTrainingDiscountedUpgradeCost(0, 2, 7)).toBe(expected);
+    it('floors each level before summing', () => {
+      // 6.75% off: level 0 → 1398.75 → 1398 and level 1 → 2797.5 → 2797
+      expect(calculateTrainingDiscountedUpgradeCost(0, 2, 6.75)).toBe(1398 + 2797);
     });
 
-    it('matches the per-level loop robotUpgradeService charged before the extraction', () => {
-      for (let discount = 0; discount <= 90; discount++) {
+    it('equals the exact integer floor for every quarter-percent rate (#526)', () => {
+      // floor(base × (400 − 4d) / 400). The pre-#526 charge used
+      // floor(base × (1 − d/100)), which dropped a credit to float drift on
+      // some exact results (e.g. 10,500 at 30% gave 7,349 instead of 7,350).
+      for (let quarterPoints = 0; quarterPoints <= 400; quarterPoints += 3) {
+        const discount = quarterPoints / 4;
         for (const [from, to] of [[0, 1], [1, 10], [9, 25], [24, 50]] as const) {
-          let legacy = 0;
+          let reference = 0n;
           for (let level = from; level < to; level++) {
-            legacy += Math.floor(calculateBaseCost(level) * (1 - discount / 100));
+            reference += (BigInt(calculateBaseCost(level)) * BigInt(400 - quarterPoints)) / 400n;
           }
-          expect(calculateTrainingDiscountedUpgradeCost(from, to, discount)).toBe(legacy);
+          expect(calculateTrainingDiscountedUpgradeCost(from, to, discount)).toBe(Number(reference));
         }
       }
     });

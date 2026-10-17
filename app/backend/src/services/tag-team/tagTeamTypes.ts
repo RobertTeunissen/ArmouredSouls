@@ -2,7 +2,7 @@ import { RobotWithWeapons } from '../battle/combatSimulator';
 
 // Battle constants
 export const BATTLE_TIME_LIMIT = 300; // 5 minutes in seconds
-export const TAG_TEAM_REWARD_MULTIPLIER = 2; // Tag team rewards are 2x standard
+export const TAG_TEAM_REWARD_MULTIPLIER = 2; // Team size: the unscaled pool is 2× a solo reward (× the 0.75 team credit-pool factor = 1.5×, #527)
 export const TAG_TEAM_PRESTIGE_MULTIPLIER = 1.6; // Tag team prestige is 1.6x standard
 
 // Types

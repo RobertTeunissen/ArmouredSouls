@@ -1582,22 +1582,23 @@ interface TeamBattleParticipantResult {
 
 ### Reward Formula
 
-Team Battle uses an N× multiplier of the 1v1 win + participation reward:
+Team Battle pays one team credit pool per side: the 1v1 win + participation reward × teamSize, scaled by the Team_Credit_Pool_Factor (0.75, Season 2 #527) exactly once and rounded once:
 
 ```
-Winner reward (per robot) = (1v1 win reward + 1v1 participation reward) × teamSize
-Loser/Draw reward (per robot) = Winner reward × 0.20
+Winner pool (to the stable) = round((1v1 win reward + 1v1 participation reward) × teamSize × 0.75)
+Loser/Draw pool             = round(Winner pool × 0.20)
+Per-robot share             = distributeTeamCredits(pool, robots)  // equal split, remainder to the first robots
 ```
 
-Each robot on the winning team earns the full multiplied amount. Fame and prestige are not split — each robot earns the full tier-appropriate amount.
+So a 2v2 winner pool is 1.5× a solo win and a 3v3 pool 2.25× (were 2× and 3×); the shares sum exactly to the pool. Fame and prestige are not split — each robot earns the full tier-appropriate amount. Tag team uses the same factor: `round(solo reward × 2 × 0.75)`. The factor is `TEAM_CREDIT_POOL_FACTOR` / `applyTeamCreditPoolFactor()` in `app/backend/src/utils/economyFormulas.ts`; it does not touch streaming (divided by team size separately), fame, prestige, ELO/LP or standings.
 
 **A bye is not a win, and uses a different formula (Spec #49).** When a team receives a walkover there is no fought battle, so the win reward does not apply:
 
 ```
-Bye reward (total to the stable) = 1v1 participation reward × teamSize
+Bye reward (total to the stable) = round(1v1 participation reward × teamSize × 0.75)   // team modes, #527
 ```
 
-That is the *participation* floor multiplied by team size, not `(win + participation)` — so a bye pays one sixth of what the fought-win formula above would pay at the same tier. A bye also awards zero prestige, zero fame and zero streaming revenue, simulates no combat, and therefore inflicts no damage and no repair cost. Do not conflate the two formulas: they differ by a factor of 6.
+That is the *participation* floor multiplied by team size (and the same 0.75 team credit-pool factor), not `(win + participation)` — so a bye pays one sixth of what the fought-win formula above would pay at the same tier. A bye also awards zero prestige, zero fame and zero streaming revenue, simulates no combat, and therefore inflicts no damage and no repair cost. Do not conflate the two formulas: they differ by a factor of 6.
 
 ### ELO Updates
 

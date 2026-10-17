@@ -2,7 +2,7 @@
 title: "Training Academy System"
 description: "How the four Training Academies control attribute caps for each category — Combat, Defense, Mobility, and AI — raising the ceiling from level 10 to the maximum of 50."
 order: 3
-lastUpdated: "2026-10-16"
+lastUpdated: "2026-10-17"
 relatedArticles:
   - facilities/facility-overview
   - facilities/facility-progression
@@ -73,7 +73,7 @@ These two facilities are often confused but serve completely different purposes:
 
 | Facility | Purpose | Effect |
 |----------|---------|--------|
-| **Training Facility** | Reduces attribute upgrade *costs* | Up to 90% discount on upgrade prices |
+| **Training Facility** | Reduces attribute upgrade *costs* | Up to 67.5% discount on upgrade prices (one robot slot, Level 10) |
 | **Training Academies** | Raises attribute level *caps* | From 10 up to 50 |
 
 You need both for efficient robot development. The Training Facility makes upgrades affordable; academies make higher levels possible.

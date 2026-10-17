@@ -2,7 +2,7 @@
 title: "All 14 Facility Types"
 description: "A complete overview of every facility in Armoured Souls — what each one does, what it costs, and why it matters for your stable."
 order: 1
-lastUpdated: "2026-10-16"
+lastUpdated: "2026-10-17"
 relatedArticles:
   - facilities/facility-progression
   - facilities/training-academies
@@ -29,54 +29,56 @@ These facilities reduce your operating costs or generate passive income. They te
 
 | Facility | Purpose | Level 1 Cost | Operating Cost | Key Benefit |
 |----------|---------|-------------|----------------|-------------|
-| Training Facility | Attribute upgrade discounts | ₡150,000 | level × ₡250/day | Up to 90% — scales with level *and* shrinks as your roster grows |
-| Repair Bay | Repair cost discounts | ₡50,000 | level × ₡100/day | Scales with level and robot count (up to 90% discount) |
-| Merchandising Hub | Passive merchandising income | ₡150,000 | level × ₡200/day | ₡5,000–₡50,000/day base income, scales with Prestige |
-| Streaming Studio | Streaming revenue multiplier | ₡100,000 | level × ₡100/day | 2×–11× streaming revenue per battle |
+| Training Facility | Attribute upgrade discounts | ₡150,000 | level × ₡250/day | Up to 67.5% — scales with level *and* shrinks as your roster grows |
+| Repair Bay | Repair cost discounts | ₡50,000 | ₡1,000/day + ₡500 per extra level | 6% per level, up to 60% |
+| Merchandising Hub | Passive merchandising income | ₡150,000 | level × ₡200/day | ₡25,000–₡250,000/day base income, scales with Prestige per robot slot |
+| Streaming Studio | Streaming revenue multiplier | ₡100,000 | level × ₡100/day | 1.5×–6× streaming revenue per battle |
 
 ### Training Facility
 
-The Training Facility provides a percentage discount on all attribute upgrade costs — but how much each level is worth depends on how many robot slots you have. Every slot takes one percentage point off the per-level rate.
+The Training Facility provides a percentage discount on all attribute upgrade costs — but how much each level is worth depends on how many robot slots you have bought. Every slot takes 0.75 percentage points off the per-level rate.
 
-**Discount formula**: Level × (10 − robot slots)%, capped at 90%
+**Discount formula**: Level × (10 − robot slots) × 0.75%
 
-A single-robot stable earns 9% per level and reaches the 90% cap at Level 10. A stable with 4 slots earns 6% per level, so Level 5 gives 30%. A stable with all 10 slots earns nothing from this facility at any level.
+A single-robot stable earns 6.75% per level and reaches the 67.5% maximum at Level 10. A stable with 4 slots earns 4.5% per level, so Level 5 gives 22.5%. A stable with all 10 slots earns nothing from this facility at any level. The count uses the slots you have bought with Roster Expansion, not the robots you currently own.
 
 | Facility Level | 1 slot | 2 slots | 4 slots | 7 slots | 10 slots |
 |---|---|---|---|---|---|
-| 5 | 45% | 40% | 30% | 15% | 0% |
-| 8 | 72% | 64% | 48% | 24% | 0% |
-| 10 | **90%** | 80% | 60% | 30% | 0% |
+| 5 | 33.75% | 30% | 22.5% | 11.25% | 0% |
+| 8 | 54% | 48% | 36% | 18% | 0% |
+| 10 | **67.5%** | 60% | 45% | 22.5% | 0% |
+
+```callout-info
+Season 2 reduced the Training Facility discount by a quarter: Level 10 with one slot gives 67.5% (it was 90%). Late attribute upgrades had become too cheap.
+```
 
 ```callout-warning
-Expanding your roster permanently reduces this discount. Roster Expansion and the Training Facility pull against each other — a wide stable has more attributes to fund *and* pays more per upgrade. Decide which strategy you're playing before sinking credits into either.
+Buying a Roster Expansion level permanently reduces this discount, by 0.75 points per Training Facility level (6.75 points at Level 9). Roster Expansion and the Training Facility pull against each other — a wide stable has more attributes to fund *and* pays more per upgrade. Decide which strategy you're playing before sinking credits into either.
 ```
 
 Given that maxing all 23 attributes on a single robot costs over ₡29 million at full price, a deep discount on a concentrated roster saves enormous amounts over time.
 
 ### Repair Bay
 
-The Repair Bay is unique because its discount scales with both its level and the number of active robots in your stable. More robots means a bigger discount per Repair Bay level.
+The Repair Bay takes **6% off every repair per level**, up to **60% at Level 10**. The discount is the same for every stable, whatever the roster size: Level 3 gives 18% with one robot and 18% with ten.
 
-**Discount formula**: Level × (5 + Active Robot Count), capped at 90%
-
-For example, with 4 robots and Repair Bay Level 3: 3 × (5 + 4) = 27% discount. With 10 robots and Level 6, you hit the 90% cap.
+It costs ₡1,000/day to run at Level 1, plus ₡500 per extra level (₡5,500/day at Level 10). The Credits it saves grow with how much you repair, so it pays off sooner for stables that take a lot of damage.
 
 ```callout-tip
-The Repair Bay becomes dramatically more cost-effective as you expand your roster. If you're running 3+ robots, prioritize Repair Bay upgrades — the multi-robot discount formula rewards roster expansion.
+Stack the Repair Bay with manual repairs: the 50% manual discount applies after the Repair Bay discount, so at Level 10 a manual repair costs 20% of the undiscounted price.
 ```
 
 ### Merchandising Hub
 
-Unlocks passive daily income from merchandising. The base income is ₡5,000 per level per day, but it scales with your stable's [Prestige](/guide/prestige-fame/prestige-system). At high Prestige levels, merchandising becomes a significant income stream that requires zero effort.
+Unlocks passive daily income from merchandising. The base income is ₡25,000 per level per day (₡250,000 at Level 10), and it scales with your stable's [Prestige](/guide/prestige-fame/prestige-system) per robot slot. A concentrated roster gets the most from its Prestige.
 
-**Income formula**: (Level × ₡5,000) × (1 + Prestige / 10,000)
+**Income formula**: (Level × ₡25,000) × (1 + Prestige per robot slot / 10,000)
 
 ### Streaming Studio
 
-Multiplies the streaming revenue your robots earn from every battle. Each level adds 100% to the multiplier — Level 1 doubles streaming revenue, Level 5 gives 6× revenue, and Level 10 gives 11× revenue. The operating cost is very low (₡100/day per level), making this one of the most efficient income-generating facilities.
+Multiplies the streaming revenue your robots earn from every battle. Each level adds 50% — Level 1 gives 1.5×, Level 2 gives 2×, and Level 10 gives 6×. Robots earn base streaming revenue without a Studio; the Studio multiplies it for every robot in your stable. The operating cost is ₡100/day per level.
 
-**Multiplier formula**: 1 + (Level × 1.0)
+**Multiplier formula**: 1 + (Level × 0.5)
 
 ## Hangar & Armory Facilities
 
@@ -91,7 +93,7 @@ These facilities house your robots and weapons: robot slots, weapon storage, wea
 
 ### Roster Expansion
 
-Every player starts with 1 robot slot. Each level of Roster Expansion adds one more slot, up to a maximum of 10 robots at Level 9. More robots means more battles, more income streams, and better Repair Bay discounts — but also more repair costs and operating expenses.
+Every player starts with 1 robot slot. Each level of Roster Expansion adds one more slot, up to a maximum of 10 robots at Level 9. More robots means more battles and more streaming revenue — but also more repair costs, more operating expenses, and less Prestige per slot for merchandising and the Training Facility discount.
 
 **Capacity formula**: 1 + Level (max 10 at Level 9)
 
@@ -181,7 +183,7 @@ Here's what you'll pay daily for each facility at various levels:
 | Training Facility | ₡250 | ₡1,250 | ₡2,500 |
 | Weapons Workshop | ₡100 | ₡500 | ₡1,000 |
 | Refinement Lab | ₡100 | ₡500 | ₡1,000 |
-| Repair Bay | ₡100 | ₡500 | ₡1,000 |
+| Repair Bay | ₡1,000 | ₡3,000 | ₡5,500 |
 | Merchandising Hub | ₡200 | ₡1,000 | ₡2,000 |
 | Streaming Studio | ₡100 | ₡500 | ₡1,000 |
 | Roster Expansion | ₡500 | ₡2,500 | ₡4,500 |

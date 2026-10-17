@@ -14,6 +14,9 @@
  * `app/frontend/src` and `app/shared`, and this is none of those.
  *
  * New tests should call `calculateRepairQuote` directly.
+ *
+ * Season 2 (#525): the old sixth `activeRobotCount` argument is gone, because
+ * the Repair Bay discount no longer depends on roster size.
  */
 
 import { calculateRepairQuote } from '../../src/shared/utils/repairCost';
@@ -24,10 +27,9 @@ export function calculateRepairCost(
   hpPercent: number,
   repairBayLevel: number = 0,
   _medicalBayLevel: number = 0,
-  activeRobotCount: number = 0,
 ): number {
   return calculateRepairQuote(
     { attributeTotal: sumOfAllAttributes, damagePercent, hpPercent },
-    { repairBayLevel, activeRobotCount },
+    repairBayLevel,
   );
 }

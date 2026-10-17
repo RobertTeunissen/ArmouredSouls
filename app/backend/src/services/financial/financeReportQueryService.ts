@@ -254,10 +254,7 @@ async function buildRepairReference(
       select: { level: true },
     }),
   ]);
-  const context = {
-    repairBayLevel: repairBay?.level ?? 0,
-    activeRobotCount: robots.length,
-  };
+  const repairBayLevel = repairBay?.level ?? 0;
   let automaticAmount = 0;
   let manualAmount = 0;
   for (const robot of robots) {
@@ -265,7 +262,7 @@ async function buildRepairReference(
       attributeTotal: sumAttributes(robot),
       damagePercent: 100,
       hpPercent: 0,
-    }, context);
+    }, repairBayLevel);
     automaticAmount += automatic;
     manualAmount += applyManualRepairDiscount(automatic);
   }
@@ -279,7 +276,7 @@ async function buildRepairReference(
     activeRobotCount: robots.length,
     automatic: { amount: automaticAmount, robotCount: robots.length },
     manual: { amount: manualAmount, robotCount: robots.length, saving: automaticAmount - manualAmount },
-    repairBayDiscountPercent: calculateRepairBayDiscountPercent(context),
+    repairBayDiscountPercent: calculateRepairBayDiscountPercent(repairBayLevel),
     scenario: 'full_repairable_damage',
   };
 }

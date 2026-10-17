@@ -2,7 +2,7 @@
 title: "Team Battles Overview"
 description: "How 2v2 and 3v3 League Team Battles work — team registration, simultaneous combat, coordination effects, matchmaking, rewards, and daily schedule."
 order: 1
-lastUpdated: "2026-10-15"
+lastUpdated: "2026-10-17"
 relatedArticles:
   - facilities/booking-office
   - leagues/matchmaking
@@ -128,7 +128,7 @@ Team Battle matchmaking uses the same LP-primary system as other leagues:
 - **ELO** is a secondary factor (no hard reject, just preference)
 - **Recent opponents** are penalised to force variety (won't face the same team repeatedly)
 - **Same-stable teams** are heavily penalised (effectively blocked unless no other option)
-- If an odd number of teams are eligible, the last team receives a **bye**: an automatic win paying the participation reward per robot (so 2× the solo figure for a 2v2, 3× for a 3v3), with no prestige, no fame, and no damage taken
+- If an odd number of teams are eligible, the last team receives a **bye**: an automatic win paying a team pool of the participation reward × team size × 0.75 (so 1.5× the solo figure for a 2v2, 2.25× for a 3v3), with no prestige, no fame, and no damage taken
 
 Team ELO is calculated as the sum of all member robots' individual ELOs. This means upgrading your robots' ELO through 1v1 battles also strengthens your team's matchmaking position.
 
@@ -153,16 +153,20 @@ Each team size has its own independent league with six tiers:
 
 ## Rewards
 
-Team Battles pay more per robot than 1v1 — the multiplier matches the team size:
+Each team earns one **team credit pool**, paid to the stable and split evenly across the robots (any odd credit goes to the first robots, so the shares always add up to the pool). The winner pool is the solo win plus participation reward × team size × 0.75: **1.5×** a solo win for a 2v2 and **2.25×** for a 3v3. Losers and draws get 20% of the winner pool.
 
-| Tier | 2v2 Winner (per robot) | 3v3 Winner (per robot) | Loser/Draw (per robot) |
+| Tier | 2v2 Winner pool (per robot) | 3v3 Winner pool (per robot) | 2v2 / 3v3 Loser/Draw pool |
 |------|------------------------|------------------------|------------------------|
-| Bronze | ₡18,000 | ₡27,000 | 20% of winner |
-| Silver | ₡36,000 | ₡54,000 | 20% of winner |
-| Gold | ₡72,000 | ₡108,000 | 20% of winner |
-| Platinum | ₡144,000 | ₡216,000 | 20% of winner |
-| Diamond | ₡276,000 | ₡414,000 | 20% of winner |
-| Champion | ₡540,000 | ₡810,000 | 20% of winner |
+| Bronze | ₡13,500 (₡6,750) | ₡20,250 (₡6,750) | ₡2,700 / ₡4,050 |
+| Silver | ₡27,000 (₡13,500) | ₡40,500 (₡13,500) | ₡5,400 / ₡8,100 |
+| Gold | ₡54,000 (₡27,000) | ₡81,000 (₡27,000) | ₡10,800 / ₡16,200 |
+| Platinum | ₡108,000 (₡54,000) | ₡162,000 (₡54,000) | ₡21,600 / ₡32,400 |
+| Diamond | ₡207,000 (₡103,500) | ₡310,500 (₡103,500) | ₡41,400 / ₡62,100 |
+| Champion | ₡405,000 (₡202,500) | ₡607,500 (₡202,500) | ₡81,000 / ₡121,500 |
+
+```callout-info
+Season 2 reduced team credit pools by 25%: a 2v2 pool was 2× a solo reward and a 3v3 pool 3×. Fame, prestige, LP, ELO and streaming are unchanged.
+```
 
 Additionally, each robot earns:
 - **Fame** — Full fame for the tier (no splitting)

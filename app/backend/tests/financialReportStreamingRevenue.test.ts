@@ -10,6 +10,9 @@
 import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
 import prisma from '../src/lib/prisma';
 import { generateFinancialReport } from '../src/utils/economyCalculations';
+import { getDailyFinancialReport } from '../src/services/economy/financialReportService';
+import { calculateStreamingRevenue } from '../src/services/economy/streamingRevenueService';
+import { enterRobotStanding } from './helpers/standings';
 
 describe('Financial Report - Streaming Revenue Integration', () => {
   let testUserIds: number[] = [];
@@ -31,11 +34,17 @@ describe('Financial Report - Streaming Revenue Integration', () => {
       });
     }
     if (testRobotIds.length > 0) {
+      await prisma.standing.deleteMany({
+        where: { entityType: 'robot', entityId: { in: testRobotIds } },
+      });
       await prisma.robot.deleteMany({
         where: { id: { in: testRobotIds } },
       });
     }
     if (testUserIds.length > 0) {
+      await prisma.facility.deleteMany({
+        where: { userId: { in: testUserIds } },
+      });
       await prisma.user.deleteMany({
         where: { id: { in: testUserIds } },
       });
@@ -157,6 +166,55 @@ describe('Financial Report - Streaming Revenue Integration', () => {
     expect(report.revenue.streaming).toBe(8700);
     expect(report.revenue.streamingBattleCount).toBe(6); // 6 participant records with streaming > 0
     expect(report.revenue.total).toBeGreaterThanOrEqual(report.revenue.streaming);
+  });
+
+  it('daily report per-robot streaming equals the award path for a robot with KotH and Grand Melee matches (#524)', async () => {
+    const user = await prisma.user.create({
+      data: {
+        username: `test_stream_v2_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+        passwordHash: 'hashedpassword',
+        currency: 100000,
+        prestige: 0,
+      },
+    });
+    testUserIds.push(user.id);
+    await prisma.facility.create({
+      data: { userId: user.id, facilityType: 'streaming_studio', level: 5, maxLevel: 10 },
+    });
+
+    const robot = await prisma.robot.create({
+      data: {
+        name: `Wattage_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+        userId: user.id,
+        elo: 1200,
+        maxHP: 100,
+        currentHP: 100,
+        maxShield: 50,
+        currentShield: 50,
+        totalBattles: 211,
+        fame: 1401,
+      },
+    });
+    testRobotIds.push(robot.id);
+    await enterRobotStanding(robot.id, 'koth', { totalMatches: 68 });
+    await enterRobotStanding(robot.id, 'grand_melee', { totalMatches: 6 });
+
+    const awarded = await calculateStreamingRevenue(robot.id, user.id, false);
+    const report = await getDailyFinancialReport(user.id);
+    const perRobot = report.multiplierBreakdown.streaming.perRobot.find((r) => r.robotId === robot.id);
+
+    // 211 + 68 KotH + 6 Grand Melee = 285 battles;
+    // (20000 + 2850 + 2802) × (2 + 5) / 40 = 179,564 / 40 → 4,489
+    expect(awarded?.robotBattles).toBe(285);
+    expect(awarded?.totalRevenue).toBe(4489);
+    expect(perRobot?.battles).toBe(285);
+    expect(perRobot?.revenuePerBattle).toBe(awarded?.totalRevenue);
+    expect(perRobot?.revenuePerBattle).toBe(4489);
+    expect(perRobot?.audienceMultiplier).toBeCloseTo(1.2826, 10);
+    // Additive formula text, not the v1 product of multipliers
+    expect(perRobot?.formula).toContain('× (1 + 0.14 battles + 0.14 fame) × 3.50 studio');
+    expect(report.multiplierBreakdown.streaming.formula).toContain('audience');
+    expect(report.multiplierBreakdown.streaming.note).toContain('Team matches split');
   });
 
   it('should show zero streaming revenue when no battles occurred', async () => {

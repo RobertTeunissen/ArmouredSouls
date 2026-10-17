@@ -32,10 +32,10 @@ describe('UpgradePlanner - Discount Application Properties', () => {
             workshopLevel,
           });
 
-          // Spec #46 R11: the rate is (10 - Roster_Capacity) percentage points per
-          // level. The helper renders at capacity 1, so that is 9pp per level.
-          const trainingDiscount = Math.min(trainingLevel * 0.09, 0.90);
-          const trainingDiscountText = `${(trainingDiscount * 100).toFixed(0)}%`;
+          // Spec #46 R11 / #526: the rate is 0.75 × (10 - Roster_Capacity) points per
+          // level. The helper renders at capacity 1, so that is 6.75 points per level
+          // (L1 6.75%, L6 40.5%, L10 67.5%), displayed exactly.
+          const trainingDiscountText = `${(trainingLevel * 27) / 4}%`;
 
           if (trainingLevel > 0) {
             const hasTrainingDiscount = Array.from(container.querySelectorAll('*')).some(

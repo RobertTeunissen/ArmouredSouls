@@ -2,7 +2,7 @@
 title: "Prestige Income Effects"
 description: "How Prestige affects your stable's income — battle winnings bonus multipliers and merchandising revenue scaling explained with impact descriptions."
 order: 5
-lastUpdated: "2026-03-11"
+lastUpdated: "2026-10-17"
 relatedArticles:
   - prestige-fame/prestige-system
   - prestige-fame/prestige-ranks
@@ -68,7 +68,7 @@ The relationship between Prestige and merchandising is continuous and progressiv
 The scaling is smooth — there are no sudden jumps. Every point of Prestige contributes a small incremental increase to your merchandising revenue.
 
 ```callout-info
-Merchandising scaling makes the [Merchandising Hub](/guide/facilities/facility-overview) facility increasingly valuable as your Prestige grows. A Level 5 Merchandising Hub at 10,000 Prestige generates far more income than the same facility at 1,000 Prestige.
+Merchandising scaling makes the [Merchandising Hub](/guide/facilities/facility-overview) facility increasingly valuable as your Prestige grows. A Level 5 Merchandising Hub (₡125,000/day base) on a one-slot roster earns ₡250,000/day at 10,000 Prestige and ₡137,500/day at 1,000 Prestige. The multiplier uses Prestige per robot slot, so a wider roster needs more Prestige for the same effect.
 ```
 
 ### Combined Income Effect

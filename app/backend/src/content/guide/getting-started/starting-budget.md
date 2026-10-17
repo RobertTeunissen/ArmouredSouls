@@ -2,7 +2,7 @@
 title: "Your Starting Budget"
 description: "How to spend your initial ₡3,000,000 wisely and set your stable up for long-term success."
 order: 3
-lastUpdated: "2026-10-16"
+lastUpdated: "2026-10-17"
 relatedArticles:
   - getting-started/roster-strategy
   - economy/credits-and-income
@@ -24,10 +24,10 @@ Here's a quick breakdown of the major expenses you'll face:
 | Robot frame | ₡500,000 | Bare chassis with all 23 attributes at level 1 |
 | Weapons | ₡50,000–₡903,000 | Practice Sword (₡50K) to Ion Beam (₡903K). Starter weapons at ₡50K for each range band. |
 | Attribute upgrade (per level) | (level + 1) × ₡1,500 | Level 1→2 costs ₡3,000. Level 9→10 costs ₡15,000. Discounted by Training Facility. |
-| Repair Bay (Level 1) | ₡50,000 | Reduces repair costs. Scales with number of robots. |
-| Training Facility (Level 1) | ₡150,000 | 10% discount on all attribute upgrades. |
+| Repair Bay (Level 1) | ₡50,000 | 6% off repair costs (₡1,000/day to run). |
+| Training Facility (Level 1) | ₡150,000 | 6.75% discount on all attribute upgrades with one robot slot (less with more slots). |
 | Weapons Workshop (Level 1) | ₡75,000 | 5% discount on weapon purchases, unlocks resale. |
-| Roster Expansion (Level 1) | ₡150,000 | Required to own a 2nd robot. Level 2 (₡300,000) for a 3rd. |
+| Roster Expansion (Level 1) | ₡150,000 | Required to own a 2nd robot. Level 2 (₡300,000) for a 3rd. Each level also lowers the Training Facility discount by 0.75 points per Training Facility level. |
 | Training Academies (Level 1) | ₡100,000 each | Raises attribute caps from 10 to 15. Four types available. |
 
 ```callout-info
@@ -96,13 +96,13 @@ The onboarding recommends buying facilities in this order:
 
 1. **Roster Expansion** (mandatory for 2 or 3 robot strategies) — You can't create additional robots without it. Level 1 costs ₡150,000, Level 2 costs ₡300,000.
 2. **Weapons Workshop** (₡75,000) — Buy before purchasing weapons to get 5% off every weapon.
-3. **Training Facility** (₡150,000) — Buy before upgrading attributes to get 10% off every upgrade.
-4. **Repair Bay** (₡50,000) — Reduces repair costs after battles. More valuable the more robots you run.
+3. **Training Facility** (₡150,000) — Buy before upgrading attributes to get 6.75% off every upgrade (with one robot slot).
+4. **Repair Bay** (₡50,000) — 6% off repair costs per level for any roster size. It costs ₡1,000/day to run, so it pays off once your stable repairs enough each day.
 
 Optional facilities to consider with remaining budget:
 - **Training Academies** (₡100,000 each) — Raise attribute caps beyond level 10. Pick the category that matches your build.
 - **Merchandising Hub** (₡150,000) — Passive income that scales with prestige. Better as a mid-game investment.
-- **Streaming Studio** (₡100,000) — Doubles streaming revenue per battle. More valuable with multiple robots.
+- **Streaming Studio** (₡100,000) — +50% streaming revenue per battle at Level 1. More valuable with multiple robots that fight often.
 
 ## Early Game Tips
 

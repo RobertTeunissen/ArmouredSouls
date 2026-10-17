@@ -244,11 +244,10 @@ describe('Repair Cost Calculations', () => {
       damagePercent: number,
       hpPercent: number,
       repairBayLevel = 0,
-      activeRobotCount = 0,
     ): number =>
       calculateRepairQuote(
         { attributeTotal: sumOfAllAttributes, damagePercent, hpPercent },
-        { repairBayLevel, activeRobotCount },
+        repairBayLevel,
       );
 
     it('should calculate 2x multiplier for total destruction', () => {
@@ -267,17 +266,18 @@ describe('Repair Cost Calculations', () => {
       expect(quote(60, 40)).toBe(13800); // 23,000 * 0.60 * 1.0
     });
 
+    // Season 2 (#525): the Repair Bay discount is 6% per level (60% at Level 10).
     it('should apply Repair Bay discount correctly', () => {
-      expect(quote(100, 0, 5)).toBe(34500); // 23,000 * 1.0 * 2.0 * 0.75 (25% discount)
+      expect(quote(100, 0, 5)).toBe(32200); // 23,000 * 1.0 * 2.0 * 0.70 (30% discount)
     });
 
-    it('should cap Repair Bay discount at 50%', () => {
-      expect(quote(100, 0, 10)).toBe(23000); // 23,000 * 1.0 * 2.0 * 0.5 (50% discount)
+    it('should apply the 60% Repair Bay maximum at Level 10', () => {
+      expect(quote(100, 0, 10)).toBe(18400); // 23,000 * 1.0 * 2.0 * 0.40 (60% discount)
     });
 
     it('should apply Repair Bay discount after damage multipliers', () => {
-      // 23,000 * 0.85 * 1.0 * 0.75 = 14,662.5 -> 14,663
-      expect(quote(85, 15, 5)).toBe(14663);
+      // 23,000 * 0.85 * 1.0 * 0.70 = 13,685
+      expect(quote(85, 15, 5)).toBe(13685);
     });
 
     it('should handle no Repair Bay (level 0)', () => {
@@ -285,8 +285,8 @@ describe('Repair Cost Calculations', () => {
     });
 
     it('should handle partial Repair Bay levels', () => {
-      expect(quote(100, 0, 3)).toBe(39100); // 23,000 * 1.0 * 2.0 * 0.85
-      expect(quote(100, 0, 7)).toBe(29900); // 23,000 * 1.0 * 2.0 * 0.65
+      expect(quote(100, 0, 3)).toBe(37720); // 23,000 * 1.0 * 2.0 * 0.82
+      expect(quote(100, 0, 7)).toBe(26680); // 23,000 * 1.0 * 2.0 * 0.58
     });
   });
 

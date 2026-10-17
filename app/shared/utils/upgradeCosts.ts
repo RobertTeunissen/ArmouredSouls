@@ -2,12 +2,13 @@
  * Attribute upgrade cost calculations
  *
  * Base cost formula: (Math.floor(currentLevel) + 1) × 1500 credits per level.
- * Training Facility discount is applied via calculateTrainingFacilityDiscount.
+ * Training Facility discount is applied via calculateTrainingFacilityDiscount,
+ * per level and floored (applyTrainingDiscount), then summed.
  *
  * See docs/game-systems/STABLE_SYSTEM.md for authoritative specification.
  */
 
-import { calculateTrainingFacilityDiscount, applyDiscount } from './discounts';
+import { calculateTrainingFacilityDiscount, applyTrainingDiscount } from './discounts';
 
 /** Base cost for upgrading from currentLevel to currentLevel+1 (before discounts). */
 export function calculateBaseCost(currentLevel: number): number {
@@ -26,20 +27,20 @@ export function calculateDiscountedUpgradeCost(
   trainingLevel: number,
   rosterCapacity: number,
 ): number {
-  const baseCost = calculateBaseCost(currentLevel);
   const discountPercent = calculateTrainingFacilityDiscount(trainingLevel, rosterCapacity);
-  return Math.floor(baseCost * (100 - discountPercent) / 100);
+  return applyTrainingDiscount(calculateBaseCost(currentLevel), discountPercent);
 }
 
 /**
  * Credits charged for raising one attribute from `fromLevel` to `toLevel` with a
  * Training Facility discount of `discountPercent` (from
  * `calculateTrainingFacilityDiscount`): each level's base cost is discounted with
- * `applyDiscount` (floored per level), then the levels are summed.
+ * `applyTrainingDiscount` (floored per level), then the levels are summed.
  *
  * This is the formula `robotUpgradeService` charges; the Automaton pricing module
- * (Spec #55) uses the same function so a planned upgrade costs exactly what the
- * purchase will charge. `fromLevel` is an integer level (callers floor it).
+ * (Spec #55) and the frontend previews use the same function so a planned
+ * upgrade costs exactly what the purchase will charge. `fromLevel` is an integer
+ * level (callers floor it).
  */
 export function calculateTrainingDiscountedUpgradeCost(
   fromLevel: number,
@@ -48,7 +49,7 @@ export function calculateTrainingDiscountedUpgradeCost(
 ): number {
   let total = 0;
   for (let level = fromLevel; level < toLevel; level++) {
-    total += applyDiscount(calculateBaseCost(level), discountPercent);
+    total += applyTrainingDiscount(calculateBaseCost(level), discountPercent);
   }
   return total;
 }
