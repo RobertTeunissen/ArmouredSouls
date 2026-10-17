@@ -55,24 +55,25 @@ export const FACILITY_TYPES: FacilityConfig[] = [
   {
     type: 'training_facility',
     name: 'Training Facility',
-    // Spec #46 R11: the discount rate per level is `10% − 1% per robot slot`, so a
+    // Spec #46 R11 / Season 2 #526: the discount rate per level is
+    // `0.75 × (10 − robot slots)` percent (7.5% − 0.75% per slot), so a
     // concentrated stable gets far more out of the facility than a wide one. The
     // benefit strings below quote the best case (Roster_Capacity 1); the actual
     // figure is shown live on the Facilities page against the player's own roster.
-    description: 'Reduces costs for upgrading robot attributes. Each level gives 10% off minus 1% per robot slot, so a smaller roster earns a bigger discount (max 90%)',
+    description: 'Reduces costs for upgrading robot attributes. Each level gives 7.5% off minus 0.75% per robot slot, so a smaller roster earns a bigger discount (max 67.5%)',
     maxLevel: 10,
     costs: [150000, 300000, 450000, 600000, 750000, 900000, 1050000, 1200000, 1350000, 1500000],
     benefits: [
-      'Up to 9% off attribute upgrades — 9% per level with 1 robot, less as your roster grows (₡250/day operating cost)',
-      'Up to 18% off attribute upgrades with 1 robot (₡500/day operating cost)',
-      'Up to 27% off attribute upgrades with 1 robot (₡750/day operating cost)',
-      'Up to 36% off attribute upgrades with 1 robot (₡1,000/day operating cost)',
-      'Up to 45% off attribute upgrades with 1 robot (₡1,250/day operating cost)',
-      'Up to 54% off attribute upgrades with 1 robot (₡1,500/day operating cost)',
-      'Up to 63% off attribute upgrades with 1 robot (₡1,750/day operating cost)',
-      'Up to 72% off attribute upgrades with 1 robot (₡2,000/day operating cost)',
-      'Up to 81% off attribute upgrades with 1 robot (₡2,250/day operating cost)',
-      'Up to 90% off attribute upgrades with 1 robot — the maximum (₡2,500/day operating cost)',
+      'Up to 6.75% off attribute upgrades — 6.75% per level with 1 robot, less as your roster grows (₡250/day operating cost)',
+      'Up to 13.5% off attribute upgrades with 1 robot (₡500/day operating cost)',
+      'Up to 20.25% off attribute upgrades with 1 robot (₡750/day operating cost)',
+      'Up to 27% off attribute upgrades with 1 robot (₡1,000/day operating cost)',
+      'Up to 33.75% off attribute upgrades with 1 robot (₡1,250/day operating cost)',
+      'Up to 40.5% off attribute upgrades with 1 robot (₡1,500/day operating cost)',
+      'Up to 47.25% off attribute upgrades with 1 robot (₡1,750/day operating cost)',
+      'Up to 54% off attribute upgrades with 1 robot (₡2,000/day operating cost)',
+      'Up to 60.75% off attribute upgrades with 1 robot (₡2,250/day operating cost)',
+      'Up to 67.5% off attribute upgrades with 1 robot — the maximum (₡2,500/day operating cost)',
     ],
     implemented: true,
     // L4: 1000, L7: 5000, L9: 10000. L10 is ungated — it was previously unreachable

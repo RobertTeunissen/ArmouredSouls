@@ -3,7 +3,10 @@ import { getFacilityConfig } from '../../config/facilities';
 import { StableMetric } from '../../types/snapshotTypes';
 import { readCycleRepairSpend } from './repairPayloadKeys';
 import { calculateRepairBayDiscountPercent } from '../../shared/utils/repairCost';
-import { calculateWeaponWorkshopDiscount } from '../../shared/utils/discounts';
+import {
+  calculateTrainingFacilityDiscount,
+  calculateWeaponWorkshopDiscount,
+} from '../../shared/utils/discounts';
 import { EconomyError, EconomyErrorCode } from '../../errors/economyErrors';
 // Spec #46 R10: streaming estimates derive from the award-path formula.
 import { computeStreamingRevenue } from './streamingRevenueService';
@@ -257,6 +260,12 @@ export class UnifiedFacilityROIService {
       ? await this.fetchRecordedRepairRows(userId, 1, currentCycle)
       : [];
 
+    // Purchased Roster_Capacity, needed for the Training Facility discount
+    // (Spec #46 R11, #526); fetched once, only when that facility is owned.
+    const rosterCapacity = facilities.some((f) => f.facilityType === 'training_facility')
+      ? await this.fetchRosterCapacity(userId)
+      : 1;
+
     const results: UnifiedFacilityROI[] = [];
 
     for (const facility of facilities) {
@@ -267,7 +276,8 @@ export class UnifiedFacilityROIService {
         currentCycle,
         userMetricsByCycle,
         streamingRows,
-        repairRows
+        repairRows,
+        rosterCapacity
       );
       if (roi) {
         results.push(roi);
@@ -304,7 +314,8 @@ export class UnifiedFacilityROIService {
     currentCycle: number,
     userMetricsByCycle: Map<number, StableMetric>,
     streamingRows: ReadonlyArray<RecordedStreamingLedgerRow>,
-    repairRows: ReadonlyArray<RecordedRepairAuditRow>
+    repairRows: ReadonlyArray<RecordedRepairAuditRow>,
+    rosterCapacity: number
   ): Promise<UnifiedFacilityROI | null> {
     if (!this.isEconomicFacility(facilityType)) return null;
 
@@ -337,7 +348,8 @@ export class UnifiedFacilityROIService {
         level,
         userMetrics,
         streamingRows.filter((row) => row.cycleNumber >= purchaseCycle && row.cycleNumber <= currentCycle),
-        repairRows.filter((row) => row.cycleNumber >= purchaseCycle && row.cycleNumber <= currentCycle)
+        repairRows.filter((row) => row.cycleNumber >= purchaseCycle && row.cycleNumber <= currentCycle),
+        rosterCapacity
       );
       dataSource = 'snapshot';
     } else {
@@ -390,7 +402,8 @@ export class UnifiedFacilityROIService {
     level: number,
     userMetrics: StableMetric[],
     streamingRows: ReadonlyArray<RecordedStreamingLedgerRow>,
-    repairRows: ReadonlyArray<RecordedRepairAuditRow>
+    repairRows: ReadonlyArray<RecordedRepairAuditRow>,
+    rosterCapacity: number
   ): number {
     switch (facilityType) {
       case 'merchandising_hub':
@@ -400,7 +413,7 @@ export class UnifiedFacilityROIService {
       case 'repair_bay':
         return sumRepairBaySavingsFromRecords(repairRows.map((row) => row.payload));
       case 'training_facility':
-        return this.calculateTrainingFacilitySavings(level, userMetrics);
+        return this.calculateTrainingFacilitySavings(level, userMetrics, rosterCapacity);
       case 'weapons_workshop':
         return this.calculateWeaponsWorkshopSavings(level, userMetrics);
       default:
@@ -715,7 +728,11 @@ export class UnifiedFacilityROIService {
         return this.calculateRepairBaySavings(userId, purchaseCycle, currentCycle);
 
       case 'training_facility':
-        return this.calculateTrainingFacilitySavings(level, userMetrics);
+        return this.calculateTrainingFacilitySavings(
+          level,
+          userMetrics,
+          await this.fetchRosterCapacity(userId)
+        );
 
       case 'weapons_workshop':
         return this.calculateWeaponsWorkshopSavings(level, userMetrics);
@@ -742,19 +759,38 @@ export class UnifiedFacilityROIService {
   }
 
   /**
-   * Estimate savings from Training Facility based on attribute upgrade spending.
-   * Discount: level * 10, capped at 90%.
+   * The stable's purchased Roster_Capacity (from its `roster_expansion` level,
+   * never the robots it currently owns).
+   */
+  private async fetchRosterCapacity(userId: number): Promise<number> {
+    const rosterExpansion = await prisma.facility.findUnique({
+      where: { userId_facilityType: { userId, facilityType: 'roster_expansion' } },
+      select: { level: true },
+    });
+    return getRosterCapacity(rosterExpansion?.level ?? 0);
+  }
+
+  /**
+   * Estimate savings from Training Facility based on attribute upgrade spending,
+   * with the shared roster-dependent discount (#526:
+   * `0.75 × level × (10 − Roster_Capacity)` percent).
+   *
+   * This is an **estimate**: attribute upgrade records do not store the
+   * discount they were charged at, so the current level and current purchased
+   * capacity are applied to the whole ownership window. It no longer ignores
+   * capacity, so a wide stable is not credited with the one-robot rate.
    */
   private calculateTrainingFacilitySavings(
     level: number,
-    userMetrics: StableMetric[]
+    userMetrics: StableMetric[],
+    rosterCapacity: number
   ): number {
     const totalUpgradeCosts = userMetrics.reduce(
       (sum, m) => sum + (m.attributeUpgrades || 0),
       0
     );
 
-    const discountPercent = Math.min(90, level * 10);
+    const discountPercent = calculateTrainingFacilityDiscount(level, rosterCapacity);
     if (discountPercent >= 100) return 0;
 
     // Savings = actualCost * discount / (100 - discount)
@@ -839,8 +875,12 @@ export class UnifiedFacilityROIService {
       }
 
       case 'training_facility': {
-        // Estimate: average upgrade spending × discount percentage × cycles
-        const discountPercent = Math.min(90, level * 10);
+        // Estimate: average upgrade spending × the shared roster-dependent
+        // discount (#526) × cycles.
+        const discountPercent = calculateTrainingFacilityDiscount(
+          level,
+          await this.fetchRosterCapacity(userId)
+        );
         const avgUpgradePerCycle = 10000; // Conservative estimate
         return Math.round(avgUpgradePerCycle * (discountPercent / 100) * cyclesOwned);
       }

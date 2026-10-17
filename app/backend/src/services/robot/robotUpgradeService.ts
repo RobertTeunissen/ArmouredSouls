@@ -295,7 +295,7 @@ export async function executeUpgradeTransaction(
 
   const trainingLevel = user.facilities.find(f => f.facilityType === 'training_facility')?.level || 0;
   const academyLevels = extractAcademyLevels(user.facilities);
-  // Spec #46 R11: the discount rate shrinks 1pp per robot slot.
+  // Spec #46 R11 / #526: the discount rate shrinks 0.75 points per purchased robot slot.
   const rosterCapacity = getRosterCapacity(
     user.facilities.find(f => f.facilityType === 'roster_expansion')?.level || 0,
   );

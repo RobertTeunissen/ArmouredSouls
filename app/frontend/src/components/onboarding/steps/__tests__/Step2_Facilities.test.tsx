@@ -53,4 +53,12 @@ describe('Step3_FacilityTiming', () => {
     render(<Step3 />);
     expect(screen.getByText('I Want Less Repair Costs')).toBeInTheDocument();
   });
+
+  it('quotes the real Training Facility L1 rate for a one-robot stable (#526)', async () => {
+    const Step3 = (await import('../Step2_Facilities')).default;
+    render(<Step3 />);
+    // 1 level × (10 − 1 slot) × 0.75 = 6.75%; the card used to hard-code 10%.
+    expect(screen.getByText('6.75% discount on attribute upgrades')).toBeInTheDocument();
+    expect(screen.queryByText('10% discount on attribute upgrades')).not.toBeInTheDocument();
+  });
 });

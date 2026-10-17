@@ -5,7 +5,8 @@ import { unifiedFacilityROIService, UnifiedFacilityROI } from './unifiedFacility
 import { AuthError, AuthErrorCode } from '../../errors/authErrors';
 import type { User } from '../../../generated/prisma';
 import type { StableMetric } from '../../types/snapshotTypes';
-import { calculateWeaponWorkshopDiscount } from '../../shared/utils/discounts';
+import { calculateTrainingFacilityDiscount, calculateWeaponWorkshopDiscount } from '../../shared/utils/discounts';
+import { getRosterCapacity } from '../../shared/utils/rosterCapacity';
 import { calculateRepairBayDiscountPercent } from '../../shared/utils/repairCost';
 // Spec #46 R10: streaming projections derive from the award-path formula.
 import { computeStreamingRevenue } from './streamingRevenueService';
@@ -68,6 +69,10 @@ export class FacilityRecommendationService {
       userFacilities.map((f) => [f.facilityType, f.level])
     );
 
+    // Purchased Roster_Capacity (never the robots currently owned): the
+    // Training Facility discount depends on it (Spec #46 R11, #526).
+    const rosterCapacity = getRosterCapacity(facilityMap.get('roster_expansion') || 0);
+
     // Calculate ROI for existing economic facilities using unified service
     const allEconomicROIs = await unifiedFacilityROIService.calculateAllEconomicROIs(userId);
     const existingROIs = allEconomicROIs.facilities;
@@ -105,7 +110,8 @@ export class FacilityRecommendationService {
         nextLevel,
         activityMetrics,
         existingROIs,
-        user
+        user,
+        rosterCapacity
       );
 
       // Add recommendation if it exists (evaluateFacility already filters appropriately)
@@ -231,7 +237,8 @@ export class FacilityRecommendationService {
     nextLevel: number,
     activityMetrics: ActivityMetrics,
     existingROIs: UnifiedFacilityROI[],
-    user: User
+    user: User,
+    rosterCapacity: number
   ): Promise<FacilityRecommendation | null> {
     const config = getFacilityConfig(facilityType);
     if (!config) {
@@ -299,8 +306,9 @@ export class FacilityRecommendationService {
         reason = `Applies a ${nextDiscount}% repair discount. No repair history yet, so the saving cannot be projected.`;
       }
     } else if (facilityType === 'training_facility') {
-      // Training facility reduces attribute upgrade costs
-      const discountPercent = nextLevel * 10; // 10% per level, capped at 90%
+      // Training facility reduces attribute upgrade costs by the shared
+      // roster-dependent discount (#526: 0.75 × level × (10 − capacity), max 67.5%).
+      const discountPercent = calculateTrainingFacilityDiscount(nextLevel, rosterCapacity);
       const projectedSavingsPerCycle = activityMetrics.avgUpgradeCostPerCycle * (discountPercent / 100);
       
       if (projectedSavingsPerCycle > 0) {

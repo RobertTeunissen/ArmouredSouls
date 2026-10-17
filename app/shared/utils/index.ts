@@ -1,4 +1,4 @@
-export { calculateWeaponWorkshopDiscount, calculateTrainingFacilityDiscount, applyDiscount, calculateWeaponResaleRate, applyResaleRate, TRAINING_DISCOUNT_BASE_PER_LEVEL, TRAINING_DISCOUNT_PER_SLOT, TRAINING_DISCOUNT_MAX } from './discounts';
+export { calculateWeaponWorkshopDiscount, calculateTrainingFacilityDiscount, applyDiscount, applyTrainingDiscount, calculateWeaponResaleRate, applyResaleRate, TRAINING_DISCOUNT_BASE_PER_LEVEL, TRAINING_DISCOUNT_PER_SLOT, TRAINING_DISCOUNT_FACTOR, TRAINING_FACILITY_MAX_LEVEL } from './discounts';
 export { getRosterCapacity } from './rosterCapacity';
 export { getCapForLevel, ACADEMY_CAP_MAP } from './academyCaps';
 export { calculateBaseCost, calculateDiscountedUpgradeCost, calculateTrainingDiscountedUpgradeCost, calculateUpgradeCostRange } from './upgradeCosts';

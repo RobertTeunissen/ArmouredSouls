@@ -88,7 +88,9 @@ router.get('/', authenticateToken, validateRequest({}), async (req: AuthRequest,
       // Without this a 5-robot stable at L5 would read "up to 45%" while
       // actually receiving 25%.
       if (config.type === 'training_facility') {
-        const ratePerLevel = Math.max(0, 10 - rosterCapacity);
+        // The per-level rate is the shared discount at level 1 (#526: 0.75 ×
+        // (10 − capacity), e.g. 6.75% at 1 slot), never a local copy.
+        const ratePerLevel = calculateTrainingFacilityDiscount(1, rosterCapacity);
         const slotLabel = `${rosterCapacity} slot${rosterCapacity === 1 ? '' : 's'}`;
 
         if (currentLevel > 0) {

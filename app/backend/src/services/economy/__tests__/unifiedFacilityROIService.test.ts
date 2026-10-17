@@ -166,6 +166,38 @@ describe('UnifiedFacilityROIService', () => {
       expect(result!.dataSource).toBe('snapshot');
     });
 
+    it('uses the purchased roster capacity for training_facility savings (#526)', async () => {
+      setupMocksForFacility('training_facility', 6, [
+        { userId: 1, merchandisingIncome: 0, streamingIncome: 0, totalRepairCosts: 0, attributeUpgrades: 59500, weaponPurchases: 0, operatingCosts: 1500 },
+      ]);
+      // Training Facility L6; roster_expansion L0 → capacity 1 → 6 × 9 × 0.75 = 40.5%.
+      (mockedPrisma.facility.findUnique as jest.Mock).mockImplementation(
+        ({ where }: { where: { userId_facilityType: { facilityType: string } } }) =>
+          Promise.resolve(
+            where.userId_facilityType.facilityType === 'roster_expansion'
+              ? { level: 0 }
+              : { userId: 1, facilityType: 'training_facility', level: 6, maxLevel: 10 },
+          ),
+      );
+
+      const oneSlot = await service.calculateFacilityROI(1, 'training_facility');
+      // 59,500 spent at 40.5% off → saved 59,500 × 40.5 / 59.5 = 40,500
+      expect(oneSlot!.totalReturns).toBe(40500);
+
+      // Same spend with roster_expansion L5 → capacity 6 → 6 × 4 × 0.75 = 18%.
+      (mockedPrisma.facility.findUnique as jest.Mock).mockImplementation(
+        ({ where }: { where: { userId_facilityType: { facilityType: string } } }) =>
+          Promise.resolve(
+            where.userId_facilityType.facilityType === 'roster_expansion'
+              ? { level: 5 }
+              : { userId: 1, facilityType: 'training_facility', level: 6, maxLevel: 10 },
+          ),
+      );
+      const sixSlots = await service.calculateFacilityROI(1, 'training_facility');
+      // 59,500 × 18 / 82 = 13,060.97… → 13,061 (the old formula credited 60%: 89,250)
+      expect(sixSlots!.totalReturns).toBe(13061);
+    });
+
     it('should calculate ROI for weapons_workshop from snapshot data', async () => {
       setupMocksForFacility('weapons_workshop', 4, [
         { userId: 1, merchandisingIncome: 0, streamingIncome: 0, totalRepairCosts: 0, attributeUpgrades: 0, weaponPurchases: 50000, operatingCosts: 400 },
@@ -272,6 +304,66 @@ describe('UnifiedFacilityROIService', () => {
       expect(result!.dataSource).toBe('estimate');
       expect(result!.cyclesSincePurchase).toBe(10);
       expect(result!.totalReturns).toBe(500 * 4 * 3 * 10);
+    });
+
+    it('should estimate training_facility returns at the stable\'s roster capacity (#526)', async () => {
+      // Training Facility L10, roster_expansion L3 → capacity 4 → 10 × 6 × 0.75 = 45%.
+      (mockedPrisma.facility.findUnique as jest.Mock).mockImplementation(
+        ({ where }: { where: { userId_facilityType: { facilityType: string } } }) =>
+          Promise.resolve(
+            where.userId_facilityType.facilityType === 'roster_expansion'
+              ? { level: 3 }
+              : { userId: 1, facilityType: 'training_facility', level: 10, maxLevel: 10 },
+          ),
+      );
+      (mockedPrisma.cycleMetadata.findUnique as jest.Mock).mockResolvedValue({
+        id: 1,
+        totalCycles: 30,
+        lastCycleAt: new Date(),
+      });
+      (mockedPrisma.auditLog.findFirst as jest.Mock).mockResolvedValue({ cycleNumber: 21 });
+      (mockedPrisma.cycleSnapshot.findMany as jest.Mock).mockResolvedValue([]);
+
+      const result = await service.calculateFacilityROI(1, 'training_facility');
+
+      // 10,000 upgrade spend per cycle × 45% × 10 cycles (the old capacity-blind
+      // estimate used 90%: 90,000)
+      expect(result!.dataSource).toBe('estimate');
+      expect(result!.totalReturns).toBe(45000);
+    });
+  });
+
+  describe('calculateAllEconomicROIs - training_facility', () => {
+    it('should apply the purchased roster capacity on the shared-data path (#526)', async () => {
+      (mockedPrisma.facility.findMany as jest.Mock).mockResolvedValue([
+        { userId: 1, facilityType: 'training_facility', level: 10, maxLevel: 10 },
+      ]);
+      (mockedPrisma.facility.findUnique as jest.Mock).mockImplementation(
+        ({ where }: { where: { userId_facilityType: { facilityType: string } } }) =>
+          Promise.resolve(
+            where.userId_facilityType.facilityType === 'roster_expansion'
+              ? { level: 3 }
+              : null,
+          ),
+      );
+      (mockedPrisma.cycleMetadata.findUnique as jest.Mock).mockResolvedValue({
+        id: 1,
+        totalCycles: 20,
+        lastCycleAt: new Date(),
+      });
+      (mockedPrisma.auditLog.findFirst as jest.Mock).mockResolvedValue({ cycleNumber: 5 });
+      (mockedPrisma.cycleSnapshot.findMany as jest.Mock).mockResolvedValue([
+        {
+          cycleNumber: 5,
+          stableMetrics: [{ userId: 1, merchandisingIncome: 0, streamingIncome: 0, attributeUpgrades: 55000, weaponPurchases: 0 }],
+        },
+      ]);
+
+      const result = await service.calculateAllEconomicROIs(1);
+
+      // Capacity 4 at L10 → 45%: 55,000 × 45 / 55 = 45,000 (capacity-blind 90%: 495,000)
+      expect(result.facilities).toHaveLength(1);
+      expect(result.facilities[0].totalReturns).toBe(45000);
     });
   });
 
