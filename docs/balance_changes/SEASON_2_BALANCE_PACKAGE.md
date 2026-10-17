@@ -71,9 +71,7 @@ time within reach fell from ~25% to 8–12%. Melee's first hit reset its patienc
 the ranged disengage at the same moment.
 
 Confirmed round 1 additions, kept as implemented: missed attacks don't reset patience (only landed hits do), and Logic
-Cores applies to counter-attacks. As implemented it applies to **long-band counters only** (the mirror of the
-melee-band-only Hydraulic Systems counter rule); the decision text reads "long/mid-range counter-attacks". A mid-band
-counter bonus would need an explicit product-owner decision.
+Cores applies to counter-attacks at long range (the mirror of the melee-band-only Hydraulic Systems counter rule).
 
 Deferred to the next measurement round (report only): short-range dominance, Single, Dual Wield (late).
 

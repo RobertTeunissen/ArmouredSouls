@@ -889,12 +889,7 @@ Information only; no value was changed because of these numbers.
    harness doesn't separate real disengage cycles from band flicker around 2 units, so the cause is not measured.
 4. **Equal-points kiters still can't be caught** (mobility, Servo 25 vs Servo 49): 85.9–100% timeouts and 0.0–0.3%
    time within reach, as the thresholds predict.
-5. **Logic Cores counter wording vs code**: the decision text says Logic Cores applies to "long/mid-range
-   counter-attacks (distance-based)". The code (`arena/counterAttack.ts`, both the main-weapon and the offhand
-   fallback paths) applies it to **long-band counters only**, the mirror of the melee-band-only Hydraulic Systems
-   counter rule, and the package record documents it that way. It was kept unchanged ("keep the existing addition",
-   "change no other value"). A mid-band counter bonus would need an explicit decision.
-6. **Wall dither (test observation, not measured)**: with pursuit 1.15 the unit test that compares mirrored spawns
+5. **Wall dither (test observation, not measured)**: with pursuit 1.15 the unit test that compares mirrored spawns
    (`combatSimulator.spatial.test.ts`) shows a kiter fleeing straight into the arena wall that slides back and forth
    between two wall points for ~4 ticks while the chaser closes ~2 units. The mirrored run doesn't do this, so the
    gap differs by up to 2.0 units for 2 of 400 ticks (mean 0.30; pursuit 1.10: max 0.34). Exact robot-order
