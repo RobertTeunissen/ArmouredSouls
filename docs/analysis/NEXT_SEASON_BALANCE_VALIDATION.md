@@ -664,7 +664,7 @@ engagement instead of on it (duration, 1.30× and cooldown unchanged); **C.** pu
 
 - **Melee moves back into or above the band.** Against the other classes (invest early / mid / late): round 1
   36.2% / 27.5% / 31.5% → round 2 62.1% / 50.4% / 47.8% (Δ +25.9 / +22.9 / +16.3 pp). Main was 83.6% / 67.3% / 58.3%.
-- **Mid range reaches the band** (43.6% / 49.9% / 49.7%), **short stays dominant** (84.1% / 80.7% / 80.5%), and
+- **Mid range reaches the band at mid and late** (43.6% / 49.9% / 49.7%), **short stays dominant** (84.1% / 80.7% / 80.5%), and
   **long falls further** (10.3% / 19.0% / 22.1%; round 1 18.8% / 28.2% / 28.9%).
 - **Contact time rises, entries rise too.** Time within melee reach in melee-vs-ranged cells (invest mid) goes from
   7.6–8.6% to 12.8–14.4% (main 51–53%). Melee-reach entries per battle *increase* (41–70 → 66–102), so the expected
@@ -674,7 +674,8 @@ engagement instead of on it (duration, 1.30× and cooldown unchanged); **C.** pu
 - **Robot order stays neutral** (slot-0 score 49.9–50.8% in every suite; melee-vs-ranged cells 49.1–52.0%).
 - **Grand Melee and KotH barely move**: every class/loadout rank within ±0.021 of round 1; KotH win-reason split
   within ±1.8 pp.
-- **Timeouts fall** in melee-vs-ranged cells (e.g. melee vs long, invest mid: 28.8% → 19.6%; uniform L25 96.8% → 83.7%).
+- **Timeouts fall** in most melee-vs-ranged cells (melee vs short rises at invest early and mid: 0.9% → 1.2%,
+  3.9% → 4.2%; e.g. melee vs long, invest mid: 28.8% → 19.6%; uniform L25 96.8% → 83.7%).
 
 ### Round 2 arms
 
