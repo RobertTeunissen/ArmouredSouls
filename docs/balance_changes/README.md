@@ -18,6 +18,7 @@ The authoritative weapon catalog and pricing formula lives in [PRD_WEAPON_ECONOM
 
 ### Season 2 package
 - `SEASON_2_BALANCE_PACKAGE.md` — Season 2: Hydraulic Systems / Logic Cores (#519), engagement cycle and movement fix (#520), shields, loadout passives, signed-sum weapon pricing and 5%/level Workshop discount (#521), Refinement Lab and 4-4-4-2 facility categories, KotH zone radius 7 (#522), no Grand Melee change (#523); includes the player announcement; round 2: disengage after 2.5 s, pursuit 1.15
+- `SEASON_2_PRODUCT_DECISIONS.md` — Season 2: the product-owner decision log behind the package and economy records, with reasoning and rejected options (no caps, Logic Cores mirror, engagement cycle, pricing formula, Refinement Lab, round 2/3, economy)
 - `SEASON_2_ECONOMY_REBALANCE.md` — Season 2: streaming formula v2 (additive battles and Fame, Streaming Studio +50% per level, 6× at L10) and Merchandising Hub ₡25,000 per level (#524); flat 6% per level Repair Bay discount for every roster size (#525); Training Facility discount × 0.75, 67.5% max (#526); team credit pools × 0.75 (#527); 1/3/10-robot comparison
 
 ### Combat Mechanics
