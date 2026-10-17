@@ -118,18 +118,41 @@ export interface BattleIncomeBreakdown extends FinancialBreakdownBase {
   placementRewardComponents?: readonly PlacementRewardComponent[];
 }
 
-export interface StreamingRevenueBreakdown extends FinancialBreakdownBase {
+interface StreamingRevenueBreakdownBase extends FinancialBreakdownBase {
   transactionType: 'streaming_revenue';
   battleId: number | string;
   robotId: number;
   mode: string;
   eligible: true;
   baseAmount: number;
-  battleMultiplier: number;
-  fameMultiplier: number;
   studioMultiplier: number;
   totalRevenue: number;
 }
+
+/**
+ * Historical (pre-Season 2) streaming facts: multiplicative battle and fame
+ * multipliers. Read-only; new awards never write this shape.
+ */
+export interface StreamingRevenueBreakdownV1 extends StreamingRevenueBreakdownBase {
+  battleMultiplier: number;
+  fameMultiplier: number;
+}
+
+/**
+ * Season 2 (#524) streaming facts: additive audience contributions and an
+ * explicit team share, so `totalRevenue = floor(revenueBeforeTeamShare / teamSize)`
+ * reconciles from the stored row alone.
+ */
+export interface StreamingRevenueBreakdownV2 extends StreamingRevenueBreakdownBase {
+  formulaVersion: '2';
+  battleContribution: number;
+  fameContribution: number;
+  audienceMultiplier: number;
+  teamSize: number;
+  revenueBeforeTeamShare: number;
+}
+
+export type StreamingRevenueBreakdown = StreamingRevenueBreakdownV1 | StreamingRevenueBreakdownV2;
 
 export interface RepairBreakdown extends FinancialBreakdownBase {
   transactionType: 'repair_cost';
@@ -343,7 +366,28 @@ function validateStreaming(value: Record<string, unknown>): void {
   assert(isInteger(value.robotId) && value.robotId > 0, 'robotId must be positive');
   assert(typeof value.mode === 'string' && value.mode.length > 0, 'streaming mode is required');
   assert(value.eligible === true, 'streaming eligibility must be true');
-  for (const field of ['baseAmount', 'battleMultiplier', 'fameMultiplier', 'studioMultiplier', 'totalRevenue']) {
+  for (const field of ['baseAmount', 'studioMultiplier', 'totalRevenue']) {
+    assert(isFiniteNumber(value[field]), `${field} is required`);
+  }
+
+  if (value.formulaVersion === '2') {
+    for (const field of ['battleContribution', 'fameContribution', 'audienceMultiplier']) {
+      assert(isFiniteNumber(value[field]), `${field} is required`);
+    }
+    assert(isInteger(value.teamSize) && value.teamSize >= 1, 'teamSize must be a positive integer');
+    assert(
+      isInteger(value.revenueBeforeTeamShare) && value.revenueBeforeTeamShare >= 0,
+      'revenueBeforeTeamShare must be a non-negative integer',
+    );
+    assert(
+      value.totalRevenue === Math.floor(value.revenueBeforeTeamShare / value.teamSize),
+      'totalRevenue must equal floor(revenueBeforeTeamShare / teamSize)',
+    );
+    assert(value.finalAmount === value.totalRevenue, 'finalAmount must equal totalRevenue');
+    return;
+  }
+
+  for (const field of ['battleMultiplier', 'fameMultiplier']) {
     assert(isFiniteNumber(value[field]), `${field} is required`);
   }
 }

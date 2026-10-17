@@ -7,10 +7,8 @@ import type { User } from '../../../generated/prisma';
 import type { StableMetric } from '../../types/snapshotTypes';
 import { calculateWeaponWorkshopDiscount } from '../../shared/utils/discounts';
 // Spec #46 R10: streaming projections derive from the award-path formula.
-import {
-  computeStreamingRevenue,
-  STREAMING_STUDIO_PER_LEVEL,
-} from './streamingRevenueService';
+import { computeStreamingRevenue } from './streamingRevenueService';
+import { calculateFacilityOperatingCost, getMerchandisingBaseRate } from '../../utils/economyFormulas';
 import { getAllModesBattleCounts } from '../robot/all-modes-battle-count';
 
 export interface FacilityRecommendation {
@@ -248,8 +246,8 @@ export class FacilityRecommendationService {
     let priority: 'high' | 'medium' | 'low' = 'low';
 
     if (facilityType === 'merchandising_hub') {
-      // Merchandising Hub provides passive income
-      const baseIncome = this.getIncomeGeneratorBaseIncome(nextLevel);
+      // Merchandising Hub provides passive income (the settlement base rate, #524)
+      const baseIncome = getMerchandisingBaseRate(nextLevel);
       const projectedIncomePerCycle = baseIncome * 1.5; // Estimate with scaling
       projectedPayoffCycles = Math.ceil(upgradeCost / projectedIncomePerCycle);
       projectedROI = (projectedIncomePerCycle * 30 - upgradeCost) / upgradeCost; // 30 cycle projection
@@ -348,42 +346,41 @@ export class FacilityRecommendationService {
     } else if (facilityType === 'streaming_studio') {
       // Streaming Studio increases streaming revenue per battle.
       //
-      // Spec #46 R10: these were `1 + level × 0.1`, which is a tenth of the
-      // actual Studio Multiplier of `1 + level`. The projection therefore
-      // reported a marginal gain far smaller than the upgrade delivers — going
-      // L0 → L1 doubles streaming revenue, but the old arithmetic showed +10%.
-      const currentMultiplier = 1 + (currentLevel * STREAMING_STUDIO_PER_LEVEL);
-      const nextMultiplier = 1 + (nextLevel * STREAMING_STUDIO_PER_LEVEL);
-      const multiplierIncrease = nextMultiplier - currentMultiplier;
-      
-      // Calculate average streaming revenue per battle based on user's robots
-      const avgStreamingRevenuePerBattle = await this.calculateAverageStreamingRevenue(
-        user.id,
-        currentLevel
-      );
-      
-      // Calculate projected revenue increase per battle
-      const revenueIncreasePerBattle = avgStreamingRevenuePerBattle * (multiplierIncrease / currentMultiplier);
-      
+      // Season 2 (#524): the benefit is the incremental award over the current
+      // level, both sides from `computeStreamingRevenue()` (per robot, on the
+      // all-modes battle count), so the projection is exactly what the next
+      // level adds and can never disagree with the award path.
+      const [avgRevenueAtCurrentLevel, avgRevenueAtNextLevel] = await Promise.all([
+        this.calculateAverageStreamingRevenue(user.id, currentLevel),
+        this.calculateAverageStreamingRevenue(user.id, nextLevel),
+      ]);
+      const revenueIncreasePerBattle = avgRevenueAtNextLevel - avgRevenueAtCurrentLevel;
+
+      // Studio-only percentage, independent of any robot's audience.
+      const percentIncrease = (
+        (computeStreamingRevenue(0, 0, nextLevel).totalRevenue / computeStreamingRevenue(0, 0, currentLevel).totalRevenue - 1) * 100
+      ).toFixed(0);
+
       // Calculate total revenue increase per cycle based on battle frequency
       const projectedRevenueIncreasePerCycle = revenueIncreasePerBattle * activityMetrics.avgBattlesPerCycle;
-      
+
       // Calculate operating cost increase (daily)
-      const operatingCostIncrease = nextLevel * 100 - currentLevel * 100;
-      
+      const operatingCostIncrease =
+        calculateFacilityOperatingCost('streaming_studio', nextLevel)
+        - calculateFacilityOperatingCost('streaming_studio', currentLevel);
+
       // Calculate net benefit per cycle (revenue increase - operating cost increase)
       const netBenefitPerCycle = projectedRevenueIncreasePerCycle - operatingCostIncrease;
-      
+
       if (activityMetrics.avgBattlesPerCycle === 0) {
         // No battle history, provide estimate
         projectedROI = 0.2;
-        reason = `Increases streaming revenue by ${((multiplierIncrease / currentMultiplier) * 100).toFixed(0)}% per battle (no battle history to estimate ROI)`;
+        reason = `Increases streaming revenue by ${percentIncrease}% per battle (estimate: no battle history to project ROI)`;
         priority = 'medium';
       } else if (netBenefitPerCycle > 0 && projectedRevenueIncreasePerCycle > 0) {
         projectedPayoffCycles = Math.ceil(upgradeCost / netBenefitPerCycle);
         projectedROI = (netBenefitPerCycle * 30 - upgradeCost) / upgradeCost;
-        
-        const percentIncrease = ((nextMultiplier / currentMultiplier - 1) * 100).toFixed(0);
+
         reason = `Increases streaming revenue by ${percentIncrease}% per battle (₡${revenueIncreasePerBattle.toFixed(0)} more per battle, ₡${operatingCostIncrease}/day operating cost)`;
         priority = projectedPayoffCycles <= 15 ? 'high' : projectedPayoffCycles <= 30 ? 'medium' : 'low';
       } else {
@@ -465,14 +462,6 @@ export class FacilityRecommendationService {
     }
 
     return totalRevenue / robots.length;
-  }
-
-  /**
-   * Get base income for income generator at a specific level
-   */
-  private getIncomeGeneratorBaseIncome(level: number): number {
-    const incomeByLevel = [5000, 8000, 11000, 12000, 15000, 18000, 20000, 25000, 30000, 35000];
-    return incomeByLevel[level - 1] || 0;
   }
 
   /**

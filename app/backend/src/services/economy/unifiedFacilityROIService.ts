@@ -7,6 +7,7 @@ import { calculateWeaponWorkshopDiscount } from '../../shared/utils/discounts';
 import { EconomyError, EconomyErrorCode } from '../../errors/economyErrors';
 // Spec #46 R10: streaming estimates derive from the award-path formula.
 import { computeStreamingRevenue } from './streamingRevenueService';
+import { sumStudioAttributableStreaming, type RecordedStreamingRow } from './recorded-facility-returns';
 import {
   calculateFacilityOperatingCost,
   calculateMerchandisingIncome,
@@ -26,6 +27,9 @@ const ECONOMIC_FACILITY_TYPES = [
 ] as const;
 
 type EconomicFacilityType = (typeof ECONOMIC_FACILITY_TYPES)[number];
+
+/** A recorded streaming award with the cycle it was paid in. */
+type RecordedStreamingLedgerRow = RecordedStreamingRow & { cycleNumber: number };
 
 export interface UnifiedFacilityROI {
   facilityType: string;
@@ -133,7 +137,9 @@ export class UnifiedFacilityROIService {
         facilityType as EconomicFacilityType,
         level,
         userMetrics,
-        userId
+        userId,
+        purchaseCycle,
+        currentCycle
       );
       dataSource = 'snapshot';
     } else {
@@ -236,6 +242,12 @@ export class UnifiedFacilityROIService {
     });
     const robotCount = robots.length || 1;
 
+    // Fetch recorded streaming awards once (needed for the Streaming Studio);
+    // each facility filters them to its own ownership window.
+    const streamingRows = facilities.some((f) => f.facilityType === 'streaming_studio')
+      ? await this.fetchRecordedStreamingRows(userId, 1, currentCycle)
+      : [];
+
     const results: UnifiedFacilityROI[] = [];
 
     for (const facility of facilities) {
@@ -245,7 +257,8 @@ export class UnifiedFacilityROIService {
         facility.level,
         currentCycle,
         userMetricsByCycle,
-        robotCount
+        robotCount,
+        streamingRows
       );
       if (roi) {
         results.push(roi);
@@ -281,7 +294,8 @@ export class UnifiedFacilityROIService {
     level: number,
     currentCycle: number,
     userMetricsByCycle: Map<number, StableMetric>,
-    robotCount: number
+    robotCount: number,
+    streamingRows: ReadonlyArray<RecordedStreamingLedgerRow>
   ): Promise<UnifiedFacilityROI | null> {
     if (!this.isEconomicFacility(facilityType)) return null;
 
@@ -313,7 +327,8 @@ export class UnifiedFacilityROIService {
         facilityType as EconomicFacilityType,
         level,
         userMetrics,
-        robotCount
+        robotCount,
+        streamingRows.filter((row) => row.cycleNumber >= purchaseCycle && row.cycleNumber <= currentCycle)
       );
       dataSource = 'snapshot';
     } else {
@@ -357,19 +372,22 @@ export class UnifiedFacilityROIService {
   }
 
   /**
-   * Synchronous version of calculateReturnsFromSnapshots that uses pre-fetched robot count.
+   * Synchronous version of calculateReturnsFromSnapshots that uses pre-fetched
+   * robot count and pre-fetched streaming ledger rows (already filtered to the
+   * ownership window).
    */
   private calculateReturnsFromSnapshotsSync(
     facilityType: EconomicFacilityType,
     level: number,
     userMetrics: StableMetric[],
-    robotCount: number
+    robotCount: number,
+    streamingRows: ReadonlyArray<RecordedStreamingLedgerRow>
   ): number {
     switch (facilityType) {
       case 'merchandising_hub':
         return userMetrics.reduce((sum, m) => sum + (m.merchandisingIncome || 0), 0);
       case 'streaming_studio':
-        return userMetrics.reduce((sum, m) => sum + (m.streamingIncome || 0), 0);
+        return sumStudioAttributableStreaming(streamingRows);
       case 'repair_bay':
         return this.calculateRepairBaySavingsSync(level, userMetrics, robotCount);
       case 'training_facility':
@@ -638,20 +656,51 @@ export class UnifiedFacilityROIService {
   }
 
   /**
+   * The user's recorded `streaming_revenue` ledger rows in `[fromCycle, toCycle]`.
+   */
+  private async fetchRecordedStreamingRows(
+    userId: number,
+    fromCycle: number,
+    toCycle: number
+  ): Promise<RecordedStreamingLedgerRow[]> {
+    return prisma.financialLedger.findMany({
+      where: {
+        userId,
+        transactionType: 'streaming_revenue',
+        cycleNumber: { gte: fromCycle, lte: toCycle },
+      },
+      select: { amount: true, metadata: true, cycleNumber: true },
+    });
+  }
+
+  /**
    * Calculate returns from snapshot data for a specific facility type.
+   *
+   * Streaming Studio returns are the studio-attributable share of each recorded
+   * `streaming_revenue` award in the ownership window
+   * (`amount × (1 − 1 / studioMultiplier)` with the row's stored multiplier,
+   * #524), not the whole streaming income: a robot earns base streaming
+   * without any studio. Cycles from before the financial ledger existed have
+   * no rows and therefore contribute nothing, so returns for a studio bought
+   * before the ledger cutover are understated rather than re-derived from the
+   * current formula.
    */
   private async calculateReturnsFromSnapshots(
     facilityType: EconomicFacilityType,
     level: number,
     userMetrics: StableMetric[],
-    userId: number
+    userId: number,
+    purchaseCycle: number,
+    currentCycle: number
   ): Promise<number> {
     switch (facilityType) {
       case 'merchandising_hub':
         return userMetrics.reduce((sum, m) => sum + (m.merchandisingIncome || 0), 0);
 
       case 'streaming_studio':
-        return userMetrics.reduce((sum, m) => sum + (m.streamingIncome || 0), 0);
+        return sumStudioAttributableStreaming(
+          await this.fetchRecordedStreamingRows(userId, purchaseCycle, currentCycle)
+        );
 
       case 'repair_bay':
         return this.calculateRepairBaySavings(level, userMetrics, userId);
@@ -774,20 +823,19 @@ export class UnifiedFacilityROIService {
       }
 
       case 'streaming_studio': {
-        // Estimate: streaming per battle × average battles per cycle × cycles.
+        // Estimate: studio-attributable streaming per battle × average battles
+        // per cycle × cycles, derived from `computeStreamingRevenue()`.
         //
-        // Spec #46 R10: the local `1000 * (1 + level)` reproduced the base and the
-        // Studio Multiplier but silently dropped the battle and fame multipliers,
-        // so it under-reported a veteran robot's streaming by the product of
-        // those two. Derived from `computeStreamingRevenue()` now.
-        //
-        // This remains an **estimate**, deliberately: the function is called
-        // without a per-robot battle count or fame, so both are passed as zero.
-        // That makes it a floor — the true figure is at least this much — rather
-        // than a projection of what any specific robot earns.
-        const streamingPerBattleFloor = computeStreamingRevenue(0, 0, level).totalRevenue;
+        // Only the increment over a stable without a studio counts as a return
+        // (#524): base streaming is earned at L0 too. This remains an
+        // **estimate**, deliberately: the function is called without a
+        // per-robot battle count or fame, so both are passed as zero, which
+        // makes it a floor rather than a projection for any specific robot.
+        const studioIncrementPerBattle =
+          computeStreamingRevenue(0, 0, level).totalRevenue
+          - computeStreamingRevenue(0, 0, 0).totalRevenue;
         const avgBattlesPerCycle = 3; // Conservative estimate
-        return Math.round(streamingPerBattleFloor * avgBattlesPerCycle * cyclesOwned);
+        return Math.round(studioIncrementPerBattle * avgBattlesPerCycle * cyclesOwned);
       }
 
       case 'repair_bay': {

@@ -20,7 +20,12 @@ import prisma from '../../lib/prisma';
 import type { Prisma } from '../../../generated/prisma';
 import { StandingsMode } from '../../../generated/prisma';
 import logger from '../../config/logger';
-import { calculateStreamingRevenue, awardStreamingRevenue, StreamingRevenueCalculation } from '../economy/streamingRevenueService';
+import {
+  calculateStreamingRevenue,
+  awardStreamingRevenue,
+  applyStreamingTeamShare,
+  StreamingRevenueCalculation,
+} from '../economy/streamingRevenueService';
 import { eventLogger, EventType } from '../common/eventLogger';
 import { getCurrentCycleNumber } from './baseOrchestrator';
 import { achievementService, type AchievementEvent, type UnlockedAchievement } from '../achievement';
@@ -96,25 +101,25 @@ export async function awardStreamingRevenueForParticipant(
   const calc = await calculateStreamingRevenue(robotId, userId, false);
   if (!calc) return null;
 
-  // The financial event is the durable source of a prior award. Do not
-  // recalculate mutable robot/facility facts into a conflicting retry.
+  let awarded: StreamingRevenueCalculation;
   if (existingRevenue) {
-    calc.totalRevenue = existingRevenue.amount;
+    // The financial event is the durable source of a prior award (v1 or v2).
+    // Return the stored amount; do not recalculate mutable robot/facility
+    // facts into a conflicting retry, and write nothing new.
+    awarded = { ...calc, totalRevenue: existingRevenue.amount };
   } else {
-    // Apply team-size divisor: each teammate gets an equal share.
-    if (teamSize > 1) {
-      calc.totalRevenue = Math.floor(calc.totalRevenue / teamSize);
-    }
+    // The team share is applied exactly once, here (#524).
+    awarded = applyStreamingTeamShare(calc, teamSize);
     const cycleNumber = await getCurrentCycleNumber();
-    await awardBattleStreamingRevenue(userId, calc, cycleNumber, battleId, mode);
+    await awardBattleStreamingRevenue(userId, awarded, cycleNumber, battleId, mode);
   }
 
   await prisma.battleParticipant.update({
     where: { battleId_robotId: { battleId, robotId } },
-    data: { streamingRevenue: calc.totalRevenue },
+    data: { streamingRevenue: awarded.totalRevenue },
   });
 
-  return calc;
+  return awarded;
 }
 
 /**

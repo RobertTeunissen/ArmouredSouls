@@ -127,11 +127,12 @@ export async function getDailyFinancialReport(userId: number) {
       robotName: robot.name,
       battles,
       fame: robot.fame,
-      battleMultiplier: breakdown.battleMultiplier,
-      fameMultiplier: breakdown.fameMultiplier,
-      /** What this robot earns for one battle, at the current studio level. */
+      battleContribution: breakdown.battleContribution,
+      fameContribution: breakdown.fameContribution,
+      audienceMultiplier: breakdown.audienceMultiplier,
+      /** What this robot earns for one solo battle, at the current studio level. */
       revenuePerBattle: breakdown.totalRevenue,
-      formula: `₡${breakdown.baseAmount.toLocaleString()} × ${breakdown.battleMultiplier.toFixed(2)} battles × ${breakdown.fameMultiplier.toFixed(2)} fame × ${breakdown.studioMultiplier.toFixed(2)} studio = ₡${breakdown.totalRevenue.toLocaleString()}`,
+      formula: `₡${breakdown.baseAmount.toLocaleString()} × (1 + ${breakdown.battleContribution.toFixed(2)} battles + ${breakdown.fameContribution.toFixed(2)} fame) × ${breakdown.studioMultiplier.toFixed(2)} studio = ₡${breakdown.totalRevenue.toLocaleString()}`,
     };
   });
 
@@ -143,13 +144,15 @@ export async function getDailyFinancialReport(userId: number) {
   // so the top-level formula reads as a per-robot award. `perRobot` above carries
   // the exact per-robot figures.
   const robotCount = perRobot.length;
-  const mean = (pick: (r: typeof perRobot[number]) => number): number =>
-    robotCount === 0 ? 1 : perRobot.reduce((sum, r) => sum + pick(r), 0) / robotCount;
-
   const referenceBreakdown = computeStreamingRevenue(0, 0, streamingStudioLevel);
+  // With no robots, the headline describes a fresh robot (no battles, no fame).
+  const mean = (pick: (r: typeof perRobot[number]) => number, empty: number): number =>
+    robotCount === 0 ? empty : perRobot.reduce((sum, r) => sum + pick(r), 0) / robotCount;
+
   const baseRate = referenceBreakdown.baseAmount;
-  const battleMultiplier = mean(r => r.battleMultiplier);
-  const fameMultiplier = mean(r => r.fameMultiplier);
+  const battleContribution = mean(r => r.battleContribution, referenceBreakdown.battleContribution);
+  const fameContribution = mean(r => r.fameContribution, referenceBreakdown.fameContribution);
+  const audienceMultiplier = mean(r => r.audienceMultiplier, referenceBreakdown.audienceMultiplier);
   const studioMultiplier = referenceBreakdown.studioMultiplier;
   const streamingTotal = report.revenue.streaming || 0;
 
@@ -172,8 +175,9 @@ export async function getDailyFinancialReport(userId: number) {
       },
       streaming: {
         baseRate,
-        battleMultiplier,
-        fameMultiplier,
+        audienceMultiplier,
+        battleContribution,
+        fameContribution,
         studioMultiplier,
         /** Roster aggregate, shown as context. Not an input to any multiplier. */
         totalBattles,
@@ -183,8 +187,8 @@ export async function getDailyFinancialReport(userId: number) {
         perRobot,
         /** Aggregate of the per-robot awards actually paid this cycle. */
         total: streamingTotal,
-        formula: `₡${baseRate.toLocaleString()} × ${battleMultiplier.toFixed(2)} battles × ${fameMultiplier.toFixed(2)} fame × ${studioMultiplier.toFixed(2)} studio (per robot, per battle)`,
-        note: 'Streaming is awarded per robot per battle. The multipliers shown are the roster average; per-robot figures are listed below. The total is the aggregate of the individual awards paid this cycle.',
+        formula: `₡${baseRate.toLocaleString()} × ${audienceMultiplier.toFixed(2)} audience × ${studioMultiplier.toFixed(2)} studio (per robot, per battle)`,
+        note: 'Streaming is awarded per robot per battle. The audience multiplier is 1 + battles ÷ 2,000 + fame ÷ 10,000; the figures shown are the roster average and per-robot figures are listed below. Team matches split a robot\'s award across the team. The total is the aggregate of the individual awards paid this cycle.',
       },
     },
   };
