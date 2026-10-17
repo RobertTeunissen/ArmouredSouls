@@ -47,7 +47,6 @@ interface BattleConfigTabProps {
   robot: Robot;
   weapons: WeaponInventory[];
   repairBayLevel?: number;
-  activeRobotCount?: number;
   onRobotUpdate: (updatedRobot: Partial<Robot>) => void;
   onEquipWeapon: (slot: 'main' | 'offhand', weaponInventoryId: number) => Promise<void>;
   onUnequipWeapon: (slot: 'main' | 'offhand') => Promise<void>;
@@ -58,7 +57,7 @@ interface BattleConfigTabProps {
   heldEvents?: string[];
 }
 
-function BattleConfigTab({ robot, weapons, repairBayLevel = 0, activeRobotCount = 1, onRobotUpdate, onEquipWeapon, onUnequipWeapon, heldEvents = [] }: BattleConfigTabProps) {
+function BattleConfigTab({ robot, weapons, repairBayLevel = 0, onRobotUpdate, onEquipWeapon, onUnequipWeapon, heldEvents = [] }: BattleConfigTabProps) {
   const [showWeaponModal, setShowWeaponModal] = useState(false);
   const [weaponSlotToEquip, setWeaponSlotToEquip] = useState<'main' | 'offhand'>('main');
   // Slot awaiting confirmation because the robot has booked matches.
@@ -255,7 +254,6 @@ function BattleConfigTab({ robot, weapons, repairBayLevel = 0, activeRobotCount 
           currentThreshold={robot.yieldThreshold}
           robotAttributes={robot}
           repairBayLevel={repairBayLevel}
-          activeRobotCount={activeRobotCount}
           onThresholdChange={handleThresholdChange}
         />
       </div>

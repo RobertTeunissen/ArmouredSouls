@@ -6,6 +6,7 @@ import { AuthError, AuthErrorCode } from '../../errors/authErrors';
 import type { User } from '../../../generated/prisma';
 import type { StableMetric } from '../../types/snapshotTypes';
 import { calculateWeaponWorkshopDiscount } from '../../shared/utils/discounts';
+import { calculateRepairBayDiscountPercent } from '../../shared/utils/repairCost';
 // Spec #46 R10: streaming projections derive from the award-path formula.
 import { computeStreamingRevenue } from './streamingRevenueService';
 import { calculateFacilityOperatingCost, getMerchandisingBaseRate } from '../../utils/economyFormulas';
@@ -255,10 +256,10 @@ export class FacilityRecommendationService {
       reason = `Generates ₡${projectedIncomePerCycle.toFixed(0)}/cycle passive income`;
       priority = projectedPayoffCycles <= 10 ? 'high' : projectedPayoffCycles <= 20 ? 'medium' : 'low';
     } else if (facilityType === 'repair_bay') {
-      // Repair bay reduces repair costs
-      // NEW FORMULA: discount = repairBayLevel × (5 + activeRobotCount), capped at 90%
-      const currentDiscount = this.getRepairBayDiscount(currentLevel, activityMetrics.robotCount);
-      const nextDiscount = this.getRepairBayDiscount(nextLevel, activityMetrics.robotCount);
+      // Repair bay reduces repair costs by 6% per level (#525), independent of
+      // robot count. Robot count only feeds the repair-volume estimate below.
+      const currentDiscount = calculateRepairBayDiscountPercent(currentLevel);
+      const nextDiscount = calculateRepairBayDiscountPercent(nextLevel);
       const additionalDiscount = nextDiscount - currentDiscount;
       
       // If no repair history, estimate based on robot attributes
@@ -282,14 +283,12 @@ export class FacilityRecommendationService {
         projectedSavingsPerCycle = estimatedRepairCostPerCycle * (nextDiscount / 100);
       }
       
-      const robotLabel = `${activityMetrics.robotCount} robot${activityMetrics.robotCount !== 1 ? 's' : ''}`;
-
       if (projectedSavingsPerCycle > 0) {
         projectedPayoffCycles = Math.ceil(upgradeCost / projectedSavingsPerCycle);
         projectedROI = (projectedSavingsPerCycle * 30 - upgradeCost) / upgradeCost;
         
         const dataSource = activityMetrics.avgRepairCostPerCycle === 0 ? ' (estimated)' : '';
-        reason = `Saves ₡${projectedSavingsPerCycle.toFixed(0)}/cycle on repairs${dataSource} (${currentLevel === 0 ? '' : currentDiscount + '% → '}${nextDiscount}% discount with ${activityMetrics.robotCount} robot${activityMetrics.robotCount !== 1 ? 's' : ''})`;
+        reason = `Saves ₡${projectedSavingsPerCycle.toFixed(0)}/cycle on repairs${dataSource} (${currentLevel === 0 ? '' : currentDiscount + '% → '}${nextDiscount}% discount)`;
         priority = projectedPayoffCycles <= 15 ? 'high' : projectedPayoffCycles <= 30 ? 'medium' : 'low';
       } else {
         // The repair bay is shown even with no projected saving — see the
@@ -297,7 +296,7 @@ export class FacilityRecommendationService {
         // player decides for themselves. It still has to explain itself: this
         // branch left `reason` as the empty string it was initialised to, so the
         // recommendation reached the UI as a card with no text at all.
-        reason = `Applies a ${nextDiscount}% repair discount with ${robotLabel}. No repair history yet, so the saving cannot be projected.`;
+        reason = `Applies a ${nextDiscount}% repair discount. No repair history yet, so the saving cannot be projected.`;
       }
     } else if (facilityType === 'training_facility') {
       // Training facility reduces attribute upgrade costs
@@ -462,14 +461,6 @@ export class FacilityRecommendationService {
     }
 
     return totalRevenue / robots.length;
-  }
-
-  /**
-   * Get repair bay discount percentage at a specific level
-   * Formula: repairBayLevel × (5 + activeRobotCount), capped at 90%
-   */
-  private getRepairBayDiscount(level: number, robotCount: number): number {
-    return Math.min(level * (5 + robotCount), 90);
   }
 
   /**

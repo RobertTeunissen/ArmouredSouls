@@ -25,6 +25,7 @@ jest.mock('../../../lib/prisma', () => ({
     },
     auditLog: {
       findFirst: jest.fn(),
+      findMany: jest.fn(),
     },
     user: {
       findUnique: jest.fn(),
@@ -80,10 +81,8 @@ describe('UnifiedFacilityROIService', () => {
         }))
       );
 
-      // The Repair_Bay savings estimate reads the stable's robot count, because the
-      // Repair_Bay_Discount scales with it. Without this the repair_bay case threw
-      // on `robots.length` before reaching an assertion.
-      (mockedPrisma.robot.findMany as jest.Mock).mockResolvedValue([{ id: 1 }, { id: 2 }]);
+      // No recorded repairs unless a test supplies them.
+      (mockedPrisma.auditLog.findMany as jest.Mock).mockResolvedValue([]);
     };
 
     it('should calculate ROI for merchandising_hub from snapshot data', async () => {
@@ -127,18 +126,31 @@ describe('UnifiedFacilityROIService', () => {
       });
     });
 
-    it('should calculate ROI for repair_bay from snapshot data', async () => {
+    it('should calculate repair_bay savings from each recorded repair\'s own discount', async () => {
+      // Current level 2 (12% today), but the rows were recorded at 36% and 48%
+      // under the old robot-count formula. Savings use the recorded figures.
       setupMocksForFacility('repair_bay', 2, [
         { userId: 1, merchandisingIncome: 0, streamingIncome: 0, totalRepairCosts: 10000, attributeUpgrades: 0, weaponPurchases: 0, operatingCosts: 500 },
+      ]);
+      (mockedPrisma.auditLog.findMany as jest.Mock).mockResolvedValue([
+        // 6,400 × 36 / 64 = 3,600
+        { payload: { creditsCharged: 6400, discountPercent: 36, repairType: 'automatic' }, cycleNumber: 10 },
+        // 5,200 × 48 / 52 = 4,800
+        { payload: { creditsCharged: 5200, discountPercent: 48, repairType: 'manual' }, cycleNumber: 11 },
       ]);
 
       const result = await service.calculateFacilityROI(1, 'repair_bay');
 
       expect(result).not.toBeNull();
       expect(result!.facilityType).toBe('repair_bay');
-      // Repair bay calculates savings based on discount formula
-      expect(result!.totalReturns).toBeGreaterThanOrEqual(0);
+      expect(result!.totalReturns).toBe(8400);
       expect(result!.dataSource).toBe('snapshot');
+      expect(mockedPrisma.auditLog.findMany).toHaveBeenCalledWith({
+        where: { userId: 1, eventType: 'robot_repair', cycleNumber: { gte: 10, lte: 50 } },
+        select: { payload: true, cycleNumber: true },
+      });
+      // Robot count is no longer an input to historical savings.
+      expect(mockedPrisma.robot.findMany).not.toHaveBeenCalled();
     });
 
     it('should calculate ROI for training_facility from snapshot data', async () => {
@@ -232,7 +244,11 @@ describe('UnifiedFacilityROIService', () => {
 
       expect(result).not.toBeNull();
       expect(result!.dataSource).toBe('estimate');
-      expect(result!.totalReturns).toBeGreaterThan(0);
+      // Purchase cycle falls back to 1, so 40 cycles owned. Volume estimate
+      // 2 robots × 5,000 = 10,000/cycle; Level 3 = 18% (6% per level, #525):
+      // 10,000 × 0.18 × 40 = 72,000.
+      expect(result!.cyclesSincePurchase).toBe(40);
+      expect(result!.totalReturns).toBe(72000);
     });
 
     it('should estimate streaming_studio returns as the studio increment only', async () => {
@@ -530,6 +546,46 @@ describe('UnifiedFacilityROIService', () => {
       expect(studio!.totalReturns).toBe(500);
       // Recorded streaming rows are fetched once for all facilities.
       expect(mockedPrisma.financialLedger.findMany).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('calculateAllEconomicROIs - repair_bay', () => {
+    it('should prefetch recorded repairs once and filter them to the ownership window', async () => {
+      (mockedPrisma.facility.findMany as jest.Mock).mockResolvedValue([
+        { userId: 1, facilityType: 'repair_bay', level: 1, maxLevel: 10 },
+      ]);
+      (mockedPrisma.cycleMetadata.findUnique as jest.Mock).mockResolvedValue({
+        id: 1,
+        totalCycles: 20,
+        lastCycleAt: new Date(),
+      });
+      (mockedPrisma.auditLog.findFirst as jest.Mock).mockResolvedValue({ cycleNumber: 5 });
+      (mockedPrisma.cycleSnapshot.findMany as jest.Mock).mockResolvedValue([
+        {
+          cycleNumber: 5,
+          stableMetrics: [{ userId: 1, merchandisingIncome: 0, streamingIncome: 0, cycleRepairCreditsPaid: 9000, attributeUpgrades: 0, weaponPurchases: 0 }],
+        },
+      ]);
+      (mockedPrisma.auditLog.findMany as jest.Mock).mockResolvedValue([
+        // Before the purchase cycle (5): outside the ownership window.
+        { payload: { creditsCharged: 9000, discountPercent: 50 }, cycleNumber: 3 },
+        // 6,400 × 36 / 64 = 3,600
+        { payload: { creditsCharged: 6400, discountPercent: 36 }, cycleNumber: 6 },
+        // 5,200 × 48 / 52 = 4,800
+        { payload: { creditsCharged: 5200, discountPercent: 48 }, cycleNumber: 7 },
+      ]);
+
+      const result = await service.calculateAllEconomicROIs(1);
+
+      expect(result.facilities).toHaveLength(1);
+      expect(result.facilities[0].facilityType).toBe('repair_bay');
+      expect(result.facilities[0].totalReturns).toBe(8400);
+      expect(mockedPrisma.auditLog.findMany).toHaveBeenCalledTimes(1);
+      expect(mockedPrisma.auditLog.findMany).toHaveBeenCalledWith({
+        where: { userId: 1, eventType: 'robot_repair', cycleNumber: { gte: 1, lte: 20 } },
+        select: { payload: true, cycleNumber: true },
+      });
+      expect(mockedPrisma.robot.findMany).not.toHaveBeenCalled();
     });
   });
 

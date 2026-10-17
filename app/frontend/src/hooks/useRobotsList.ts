@@ -196,8 +196,6 @@ export function useRobotsList() {
   };
 
   const calculateTotalRepairCost = (): { totalBaseCost: number; discountedCost: number; discount: number } => {
-    const activeRobotCount = robots.filter(r => r.name !== 'Bye Robot').length;
-    const bayContext = { repairBayLevel, activeRobotCount };
 
     // Spec #48 Requirement 15 criterion 11: discount PER ROBOT and then sum, which
     // is what the backend now charges. Discounting the batch total instead — what
@@ -207,12 +205,12 @@ export function useRobotsList() {
     let totalBaseCost = 0;
     let discountedCost = 0;
     for (const robot of robots) {
-      const quote = calculateRepairQuote({ robot }, bayContext);
+      const quote = calculateRepairQuote({ robot }, repairBayLevel);
       totalBaseCost += quote;
       discountedCost += applyManualRepairDiscount(quote);
     }
 
-    const discount = calculateRepairBayDiscountPercent(bayContext);
+    const discount = calculateRepairBayDiscountPercent(repairBayLevel);
 
     return { totalBaseCost, discountedCost, discount };
   };

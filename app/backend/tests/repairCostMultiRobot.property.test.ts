@@ -2,191 +2,152 @@ import * as fc from 'fast-check';
 import { calculateRepairCost } from './helpers/legacyRepairCost';
 import prisma from '../src/lib/prisma';
 
+/**
+ * Repair cost and robot count — property tests.
+ *
+ * Season 2 (#525): the Repair Bay discount is `6 × min(level, 10)` percent for
+ * every stable. It used to be `min(90, level × (5 + activeRobotCount))`, which
+ * this suite covered as a "multi-robot discount". The robot count is still
+ * counted (it is recorded on every repair as a stable fact), but it is no longer
+ * a discount input, so the properties below pin that it has no effect.
+ */
 
 // Test configuration
 const NUM_RUNS = 10;
+
+/** Independent restatement of the decided discount, for expectations. */
+function expectedDiscountPercent(repairBayLevel: number): number {
+  return 6 * Math.min(repairBayLevel, 10);
+}
+
+/** Independent restatement of the quote formula, for expectations. */
+function expectedQuote(
+  sumOfAllAttributes: number,
+  damagePercent: number,
+  hpPercent: number,
+  repairBayLevel: number,
+): number {
+  const baseRepairCost = sumOfAllAttributes * 100;
+  let multiplier = 1.0;
+  if (hpPercent === 0) {
+    multiplier = 2.0;
+  } else if (hpPercent < 10) {
+    multiplier = 1.5;
+  }
+  const rawCost = baseRepairCost * (damagePercent / 100) * multiplier;
+  return Math.round(rawCost * (1 - expectedDiscountPercent(repairBayLevel) / 100));
+}
+
+async function createUser(): Promise<{ id: number }> {
+  return prisma.user.create({
+    data: {
+      username: `rc_test_${Date.now()}_${Math.floor(Math.random() * 1000000)}`,
+      passwordHash: 'test_hash',
+      currency: 1000000,
+    },
+  });
+}
+
+async function cleanupUser(userId: number): Promise<void> {
+  await prisma.robot.deleteMany({ where: { userId } });
+  await prisma.user.deleteMany({ where: { id: userId } });
+}
+
+async function countStableRobots(userId: number): Promise<number> {
+  return prisma.robot.count({
+    where: {
+      userId,
+      NOT: { name: 'Bye Robot' },
+    },
+  });
+}
 
 // Disconnect Prisma after all tests
 afterAll(async () => {
   await prisma.$disconnect();
 });
 
-describe('Repair Cost Multi-Robot Discount - Property Tests', () => {
-  describe('Property 1: Multi-Robot Discount Formula with Cap', () => {
+describe('Repair Cost and Robot Count - Property Tests', () => {
+  describe('Property 1: Repair Bay discount is 6% per level, at most 60%', () => {
     /**
-     * **Validates: Requirements 1.1, 1.2, 1.3**
-     * For any repair bay level (0-10) and active robot count (0-10), the discount percentage
-     * should be calculated as `repairBayLevel × (5 + activeRobotCount)`, and the result
-     * should never exceed 90%.
+     * For any Repair Bay level, the discount is `6 × min(level, 10)` and never
+     * exceeds 60%.
      */
-    test('discount is calculated correctly and never exceeds 90%', () => {
+    test('discount is calculated correctly and never exceeds 60%', () => {
       fc.assert(
         fc.property(
-          fc.integer({ min: 0, max: 10 }), // repairBayLevel
-          fc.integer({ min: 0, max: 10 }), // activeRobotCount
+          fc.integer({ min: 0, max: 15 }), // repairBayLevel
           fc.integer({ min: 1, max: 23000 }), // sumOfAllAttributes
           fc.integer({ min: 0, max: 100 }), // damagePercent
           fc.integer({ min: 0, max: 100 }), // hpPercent
-          (repairBayLevel, activeRobotCount, sumOfAllAttributes, damagePercent, hpPercent) => {
-            // Calculate expected discount
-            const rawDiscount = repairBayLevel * (5 + activeRobotCount);
-            const expectedDiscount = Math.min(rawDiscount, 90);
-            
-            // Calculate repair cost
+          (repairBayLevel, sumOfAllAttributes, damagePercent, hpPercent) => {
+            const discount = expectedDiscountPercent(repairBayLevel);
+            expect(discount).toBeLessThanOrEqual(60);
+            expect(discount).toBe(repairBayLevel <= 10 ? repairBayLevel * 6 : 60);
+
             const repairCost = calculateRepairCost(
               sumOfAllAttributes,
               damagePercent,
               hpPercent,
               repairBayLevel,
               0,
-              activeRobotCount
             );
-            
-            // Calculate what the cost would be without discount
-            const baseRepairCost = sumOfAllAttributes * 100;
-            
-            // Determine multiplier based on HP percentage
-            let multiplier = 1.0;
-            if (hpPercent === 0) {
-              multiplier = 2.0;
-            } else if (hpPercent < 10) {
-              // Heavily damaged
-              multiplier = 1.5;
-            }
-            
-            const rawCost = baseRepairCost * (damagePercent / 100) * multiplier;
-            const expectedCost = Math.round(rawCost * (1 - expectedDiscount / 100));
-            
-            // Verify the discount was capped at 90%
-            expect(expectedDiscount).toBeLessThanOrEqual(90);
-            
-            // Verify the repair cost matches expected calculation
-            expect(repairCost).toBe(expectedCost);
-            
-            // Verify discount formula is correct
-            if (rawDiscount <= 90) {
-              expect(expectedDiscount).toBe(rawDiscount);
-            } else {
-              expect(expectedDiscount).toBe(90);
-            }
-          }
+            expect(repairCost).toBe(
+              expectedQuote(sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel),
+            );
+          },
         ),
-        { numRuns: NUM_RUNS }
+        { numRuns: NUM_RUNS },
       );
     });
 
-    test('discount formula produces correct percentage for all valid inputs', () => {
-      fc.assert(
-        fc.property(
-          fc.integer({ min: 0, max: 10 }), // repairBayLevel
-          fc.integer({ min: 0, max: 10 }), // activeRobotCount
-          (repairBayLevel, activeRobotCount) => {
-            const rawDiscount = repairBayLevel * (5 + activeRobotCount);
-            const cappedDiscount = Math.min(rawDiscount, 90);
-            
-            // Verify formula calculation
-            expect(rawDiscount).toBe(repairBayLevel * (5 + activeRobotCount));
-            
-            // Verify cap is applied correctly
-            expect(cappedDiscount).toBeLessThanOrEqual(90);
-            expect(cappedDiscount).toBeGreaterThanOrEqual(0);
-            
-            // Verify cap only applies when raw discount exceeds 90
-            if (rawDiscount > 90) {
-              expect(cappedDiscount).toBe(90);
-            } else {
-              expect(cappedDiscount).toBe(rawDiscount);
-            }
-          }
-        ),
-        { numRuns: NUM_RUNS }
-      );
-    });
-
-    test('repair cost decreases as discount increases', () => {
+    test('repair cost decreases as the Repair Bay level increases', () => {
       fc.assert(
         fc.property(
           fc.integer({ min: 1, max: 9 }), // repairBayLevel (1-9 to allow increment)
-          fc.integer({ min: 0, max: 10 }), // activeRobotCount
           fc.integer({ min: 1000, max: 23000 }), // sumOfAllAttributes
           fc.integer({ min: 1, max: 100 }), // damagePercent (at least 1% to ensure cost > 0)
           fc.integer({ min: 10, max: 100 }), // hpPercent (>= 10 to avoid 1.5x multiplier)
-          (repairBayLevel, activeRobotCount, sumOfAllAttributes, damagePercent, hpPercent) => {
-            // Calculate cost at current level
-            const cost1 = calculateRepairCost(
-              sumOfAllAttributes,
-              damagePercent,
-              hpPercent,
-              repairBayLevel,
-              0,
-              activeRobotCount
-            );
-            
-            // Calculate cost at next level (higher discount)
-            const cost2 = calculateRepairCost(
-              sumOfAllAttributes,
-              damagePercent,
-              hpPercent,
-              repairBayLevel + 1,
-              0,
-              activeRobotCount
-            );
-            
-            // Check if either discount is at the 90% cap
-            const discount1 = Math.min(repairBayLevel * (5 + activeRobotCount), 90);
-            const discount2 = Math.min((repairBayLevel + 1) * (5 + activeRobotCount), 90);
-            
-            // If both are at cap, costs should be equal
-            // Otherwise, higher level should have lower or equal cost
-            if (discount1 === 90 && discount2 === 90) {
-              expect(cost2).toBe(cost1);
-            } else {
-              expect(cost2).toBeLessThanOrEqual(cost1);
-            }
-          }
+          (repairBayLevel, sumOfAllAttributes, damagePercent, hpPercent) => {
+            const cost1 = calculateRepairCost(sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel, 0);
+            const cost2 = calculateRepairCost(sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel + 1, 0);
+
+            // Below Level 10 every level adds 6 points of discount, so the cost
+            // never rises with the level.
+            expect(cost2).toBeLessThanOrEqual(cost1);
+          },
         ),
-        { numRuns: NUM_RUNS }
+        { numRuns: NUM_RUNS },
       );
     });
 
-    test('90% cap is reached at expected combinations', () => {
+    test('the 60% maximum applies from Level 10 upwards', () => {
       fc.assert(
         fc.property(
-          fc.integer({ min: 0, max: 10 }), // repairBayLevel
-          fc.integer({ min: 0, max: 10 }), // activeRobotCount
-          (repairBayLevel, activeRobotCount) => {
-            const rawDiscount = repairBayLevel * (5 + activeRobotCount);
-            
-            // If raw discount >= 90, the cap should be applied
-            if (rawDiscount >= 90) {
-              const sumOfAllAttributes = 230; // Sum of all 23 attributes
-              const cost = calculateRepairCost(
-                sumOfAllAttributes,
-                100,   // damagePercent
-                0,     // hpPercent (destroyed, 2.0x multiplier)
-                repairBayLevel,
-                0,     // medicalBayLevel
-                activeRobotCount
-              );
-              
-              // At 90% discount, cost should be 10% of base
-              // Base: 230 * 100 = 23,000
-              // With damage: 23,000 * 1.0 (100% damage) = 23,000
-              // With multiplier: 23,000 * 2.0 (HP = 0) = 46,000
-              // With 90% discount: 46,000 * 0.10 = 4,600
-              expect(cost).toBe(4600);
-            }
-          }
+          fc.integer({ min: 10, max: 15 }), // repairBayLevel
+          (repairBayLevel) => {
+            const sumOfAllAttributes = 230; // Sum of all 23 attributes
+            const cost = calculateRepairCost(
+              sumOfAllAttributes,
+              100, // damagePercent
+              0, // hpPercent (destroyed, 2.0x multiplier)
+              repairBayLevel,
+              0, // medicalBayLevel
+            );
+
+            // Base: 230 × 100 = 23,000; 100% damage; ×2.0 destroyed = 46,000;
+            // 60% discount: 46,000 × 0.40 = 18,400
+            expect(cost).toBe(18400);
+          },
         ),
-        { numRuns: NUM_RUNS }
+        { numRuns: NUM_RUNS },
       );
     });
   });
 
   describe('Property 4: Attribute-Sum Formula Consistency', () => {
     /**
-     * **Validates: Requirements 8.3**
-     * For any robot, the base repair cost should be calculated as
+     * For any robot, the base repair cost is
      * `sumOfAllAttributes × 100 × (damagePercent / 100) × multiplier`,
      * where multiplier depends on HP percentage (2.0 for HP=0, 1.5 for HP<10%, 1.0 otherwise).
      */
@@ -197,43 +158,14 @@ describe('Repair Cost Multi-Robot Discount - Property Tests', () => {
           fc.integer({ min: 0, max: 100 }), // damagePercent
           fc.integer({ min: 0, max: 100 }), // hpPercent
           fc.integer({ min: 0, max: 10 }), // repairBayLevel
-          fc.integer({ min: 0, max: 10 }), // activeRobotCount
-          (sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel, activeRobotCount) => {
-            // Calculate repair cost using the function
-            const repairCost = calculateRepairCost(
-              sumOfAllAttributes,
-              damagePercent,
-              hpPercent,
-              repairBayLevel,
-              0,
-              activeRobotCount
+          (sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel) => {
+            const repairCost = calculateRepairCost(sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel, 0);
+            expect(repairCost).toBe(
+              expectedQuote(sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel),
             );
-            
-            // Calculate expected cost using the attribute-sum formula
-            const baseRepairCost = sumOfAllAttributes * 100;
-            
-            // Determine multiplier based on HP percentage
-            let multiplier = 1.0;
-            if (hpPercent === 0) {
-              multiplier = 2.0;
-            } else if (hpPercent < 10) {
-              // Heavily damaged
-              multiplier = 1.5;
-            }
-            
-            // Apply damage percentage
-            const rawCost = baseRepairCost * (damagePercent / 100) * multiplier;
-            
-            // Apply Repair Bay discount
-            const rawDiscount = repairBayLevel * (5 + activeRobotCount);
-            const repairBayDiscount = Math.min(rawDiscount, 90) / 100;
-            const expectedCost = Math.round(rawCost * (1 - repairBayDiscount));
-            
-            // Verify the repair cost matches the attribute-sum formula
-            expect(repairCost).toBe(expectedCost);
-          }
+          },
         ),
-        { numRuns: NUM_RUNS }
+        { numRuns: NUM_RUNS },
       );
     });
 
@@ -243,32 +175,15 @@ describe('Repair Cost Multi-Robot Discount - Property Tests', () => {
           fc.integer({ min: 1, max: 23000 }), // sumOfAllAttributes
           fc.integer({ min: 1, max: 100 }), // damagePercent (at least 1% to ensure cost > 0)
           fc.integer({ min: 0, max: 10 }), // repairBayLevel
-          fc.integer({ min: 0, max: 10 }), // activeRobotCount
-          (sumOfAllAttributes, damagePercent, repairBayLevel, activeRobotCount) => {
-            // Calculate cost for destroyed robot (HP = 0)
-            const repairCost = calculateRepairCost(
-              sumOfAllAttributes,
-              damagePercent,
-              0, // hpPercent = 0 (destroyed)
-              repairBayLevel,
-              0, // medicalBayLevel (legacy parameter, always 0)
-              activeRobotCount
-            );
-            
-            // Calculate expected cost with 2.0x multiplier
-            const baseRepairCost = sumOfAllAttributes * 100;
-            const rawCost = baseRepairCost * (damagePercent / 100) * 2.0;
-            
-            // Apply Repair Bay discount
-            const rawDiscount = repairBayLevel * (5 + activeRobotCount);
-            const repairBayDiscount = Math.min(rawDiscount, 90) / 100;
-            const expectedCost = Math.round(rawCost * (1 - repairBayDiscount));
-            
-            // Verify the repair cost uses 2.0x multiplier
+          (sumOfAllAttributes, damagePercent, repairBayLevel) => {
+            const repairCost = calculateRepairCost(sumOfAllAttributes, damagePercent, 0, repairBayLevel, 0);
+
+            const rawCost = sumOfAllAttributes * 100 * (damagePercent / 100) * 2.0;
+            const expectedCost = Math.round(rawCost * (1 - expectedDiscountPercent(repairBayLevel) / 100));
             expect(repairCost).toBe(expectedCost);
-          }
+          },
         ),
-        { numRuns: NUM_RUNS }
+        { numRuns: NUM_RUNS },
       );
     });
 
@@ -280,32 +195,21 @@ describe('Repair Cost Multi-Robot Discount - Property Tests', () => {
           fc.integer({ min: 1, max: 9 }), // hpPercent (1-9% for heavily damaged)
           fc.integer({ min: 0, max: 10 }), // repairBayLevel
           fc.integer({ min: 0, max: 10 }), // medicalBayLevel
-          fc.integer({ min: 0, max: 10 }), // activeRobotCount
-          (sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel, medicalBayLevel, activeRobotCount) => {
-            // Calculate cost for heavily damaged robot (HP < 10%)
+          (sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel, medicalBayLevel) => {
             const repairCost = calculateRepairCost(
               sumOfAllAttributes,
               damagePercent,
               hpPercent,
               repairBayLevel,
               medicalBayLevel,
-              activeRobotCount
             );
-            
-            // Calculate expected cost with 1.5x multiplier
-            const baseRepairCost = sumOfAllAttributes * 100;
-            const rawCost = baseRepairCost * (damagePercent / 100) * 1.5;
-            
-            // Apply Repair Bay discount
-            const rawDiscount = repairBayLevel * (5 + activeRobotCount);
-            const repairBayDiscount = Math.min(rawDiscount, 90) / 100;
-            const expectedCost = Math.round(rawCost * (1 - repairBayDiscount));
-            
-            // Verify the repair cost uses 1.5x multiplier
+
+            const rawCost = sumOfAllAttributes * 100 * (damagePercent / 100) * 1.5;
+            const expectedCost = Math.round(rawCost * (1 - expectedDiscountPercent(repairBayLevel) / 100));
             expect(repairCost).toBe(expectedCost);
-          }
+          },
         ),
-        { numRuns: NUM_RUNS }
+        { numRuns: NUM_RUNS },
       );
     });
 
@@ -317,32 +221,21 @@ describe('Repair Cost Multi-Robot Discount - Property Tests', () => {
           fc.integer({ min: 10, max: 100 }), // hpPercent (>= 10% for normal damage)
           fc.integer({ min: 0, max: 10 }), // repairBayLevel
           fc.integer({ min: 0, max: 10 }), // medicalBayLevel
-          fc.integer({ min: 0, max: 10 }), // activeRobotCount
-          (sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel, medicalBayLevel, activeRobotCount) => {
-            // Calculate cost for normally damaged robot (HP >= 10%)
+          (sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel, medicalBayLevel) => {
             const repairCost = calculateRepairCost(
               sumOfAllAttributes,
               damagePercent,
               hpPercent,
               repairBayLevel,
               medicalBayLevel,
-              activeRobotCount
             );
-            
-            // Calculate expected cost with 1.0x multiplier
-            const baseRepairCost = sumOfAllAttributes * 100;
-            const rawCost = baseRepairCost * (damagePercent / 100) * 1.0;
-            
-            // Apply Repair Bay discount
-            const rawDiscount = repairBayLevel * (5 + activeRobotCount);
-            const repairBayDiscount = Math.min(rawDiscount, 90) / 100;
-            const expectedCost = Math.round(rawCost * (1 - repairBayDiscount));
-            
-            // Verify the repair cost uses 1.0x multiplier
+
+            const rawCost = sumOfAllAttributes * 100 * (damagePercent / 100) * 1.0;
+            const expectedCost = Math.round(rawCost * (1 - expectedDiscountPercent(repairBayLevel) / 100));
             expect(repairCost).toBe(expectedCost);
-          }
+          },
         ),
-        { numRuns: NUM_RUNS }
+        { numRuns: NUM_RUNS },
       );
     });
 
@@ -353,35 +246,15 @@ describe('Repair Cost Multi-Robot Discount - Property Tests', () => {
           fc.integer({ min: 50, max: 100 }), // damagePercent
           fc.integer({ min: 10, max: 100 }), // hpPercent (>= 10 to avoid 1.5x multiplier)
           fc.integer({ min: 0, max: 10 }), // repairBayLevel
-          fc.integer({ min: 0, max: 10 }), // activeRobotCount
-          (sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel, activeRobotCount) => {
-            // Calculate cost with base attributes
-            const cost1 = calculateRepairCost(
-              sumOfAllAttributes,
-              damagePercent,
-              hpPercent,
-              repairBayLevel,
-              0, // medicalBayLevel
-              activeRobotCount
-            );
-            
-            // Calculate cost with doubled attributes
-            const cost2 = calculateRepairCost(
-              sumOfAllAttributes * 2,
-              damagePercent,
-              hpPercent,
-              repairBayLevel,
-              0, // medicalBayLevel
-              activeRobotCount
-            );
-            
-            // Cost should scale linearly (doubled attributes = doubled cost)
-            // Allow for rounding differences
-            const expectedCost2 = cost1 * 2;
-            expect(Math.abs(cost2 - expectedCost2)).toBeLessThanOrEqual(1);
-          }
+          (sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel) => {
+            const cost1 = calculateRepairCost(sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel, 0);
+            const cost2 = calculateRepairCost(sumOfAllAttributes * 2, damagePercent, hpPercent, repairBayLevel, 0);
+
+            // Doubled attributes = doubled cost, allowing for rounding.
+            expect(Math.abs(cost2 - cost1 * 2)).toBeLessThanOrEqual(1);
+          },
         ),
-        { numRuns: NUM_RUNS }
+        { numRuns: NUM_RUNS },
       );
     });
 
@@ -392,35 +265,15 @@ describe('Repair Cost Multi-Robot Discount - Property Tests', () => {
           fc.integer({ min: 25, max: 50 }), // damagePercent (25-50% to allow doubling)
           fc.integer({ min: 10, max: 100 }), // hpPercent (>= 10 to avoid 1.5x multiplier)
           fc.integer({ min: 0, max: 10 }), // repairBayLevel
-          fc.integer({ min: 0, max: 10 }), // activeRobotCount
-          (sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel, activeRobotCount) => {
-            // Calculate cost with base damage
-            const cost1 = calculateRepairCost(
-              sumOfAllAttributes,
-              damagePercent,
-              hpPercent,
-              repairBayLevel,
-              0, // medicalBayLevel
-              activeRobotCount
-            );
-            
-            // Calculate cost with doubled damage
-            const cost2 = calculateRepairCost(
-              sumOfAllAttributes,
-              damagePercent * 2,
-              hpPercent,
-              repairBayLevel,
-              0, // medicalBayLevel
-              activeRobotCount
-            );
-            
-            // Cost should scale linearly (doubled damage = doubled cost)
-            // Allow for rounding differences
-            const expectedCost2 = cost1 * 2;
-            expect(Math.abs(cost2 - expectedCost2)).toBeLessThanOrEqual(1);
-          }
+          (sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel) => {
+            const cost1 = calculateRepairCost(sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel, 0);
+            const cost2 = calculateRepairCost(sumOfAllAttributes, damagePercent * 2, hpPercent, repairBayLevel, 0);
+
+            // Doubled damage = doubled cost, allowing for rounding.
+            expect(Math.abs(cost2 - cost1 * 2)).toBeLessThanOrEqual(1);
+          },
         ),
-        { numRuns: NUM_RUNS }
+        { numRuns: NUM_RUNS },
       );
     });
 
@@ -431,23 +284,12 @@ describe('Repair Cost Multi-Robot Discount - Property Tests', () => {
           fc.integer({ min: 0, max: 100 }), // hpPercent
           fc.integer({ min: 0, max: 10 }), // repairBayLevel
           fc.integer({ min: 0, max: 10 }), // medicalBayLevel
-          fc.integer({ min: 0, max: 10 }), // activeRobotCount
-          (sumOfAllAttributes, hpPercent, repairBayLevel, medicalBayLevel, activeRobotCount) => {
-            // Calculate cost with zero damage
-            const repairCost = calculateRepairCost(
-              sumOfAllAttributes,
-              0, // damagePercent = 0 (no damage)
-              hpPercent,
-              repairBayLevel,
-              medicalBayLevel,
-              activeRobotCount
-            );
-            
-            // Zero damage should result in zero cost
+          (sumOfAllAttributes, hpPercent, repairBayLevel, medicalBayLevel) => {
+            const repairCost = calculateRepairCost(sumOfAllAttributes, 0, hpPercent, repairBayLevel, medicalBayLevel);
             expect(repairCost).toBe(0);
-          }
+          },
         ),
-        { numRuns: NUM_RUNS }
+        { numRuns: NUM_RUNS },
       );
     });
 
@@ -457,33 +299,20 @@ describe('Repair Cost Multi-Robot Discount - Property Tests', () => {
           fc.integer({ min: 1, max: 23000 }), // sumOfAllAttributes
           fc.integer({ min: 10, max: 100 }), // hpPercent (>= 10 to ensure 1.0x multiplier)
           (sumOfAllAttributes, hpPercent) => {
-            // Calculate cost with 100% damage, no discounts
-            const repairCost = calculateRepairCost(
-              sumOfAllAttributes,
-              100, // damagePercent = 100%
-              hpPercent,
-              0, // repairBayLevel = 0 (no discount)
-              0, // medicalBayLevel = 0
-              0  // activeRobotCount = 0
-            );
-            
-            // Expected cost: sumOfAllAttributes × 100 × 1.0 × 1.0
-            const expectedCost = sumOfAllAttributes * 100;
-            
-            // Verify the cost matches the base formula
-            expect(repairCost).toBe(expectedCost);
-          }
+            const repairCost = calculateRepairCost(sumOfAllAttributes, 100, hpPercent, 0, 0);
+            expect(repairCost).toBe(sumOfAllAttributes * 100);
+          },
         ),
-        { numRuns: NUM_RUNS }
+        { numRuns: NUM_RUNS },
       );
     });
   });
 
-  describe('Property 2: Robot Count Includes All Robots', () => {
+  describe('Property 2: Robot Count Includes All Robots (recorded stable fact)', () => {
     /**
-     * **Validates: Requirements 2.1, 2.2, 2.3**
-     * For any stable, the active robot count used in repair cost calculations should include
-     * all robots owned by that stable, regardless of their current HP status or battle-ready state.
+     * The owned-robot count is still recorded on every repair (`activeRobotCount`
+     * in the repair breakdown). It includes every robot the stable owns,
+     * regardless of HP status, and excludes the "Bye Robot" system robot.
      */
 
     test('robot count includes all robots regardless of HP status', () => {
@@ -491,49 +320,29 @@ describe('Repair Cost Multi-Robot Discount - Property Tests', () => {
         fc.asyncProperty(
           fc.array(fc.integer({ min: 0, max: 100 }), { minLength: 1, maxLength: 10 }), // robot HP percentages
           async (robotHPs) => {
-            // Create test user for this iteration
-            const user = await prisma.user.create({
-              data: {
-                username: `rc_test_${Date.now()}_${Math.floor(Math.random() * 1000000)}`,
-                passwordHash: 'test_hash',
-                currency: 1000000,
-              },
-            });
-            
-            // Create robots with various HP values
+            const user = await createUser();
+
             for (let i = 0; i < robotHPs.length; i++) {
               const maxHP = 100;
-              const currentHP = Math.floor((robotHPs[i] / 100) * maxHP);
-              
               await prisma.robot.create({
                 data: {
                   userId: user.id,
                   name: `Test Robot ${i}`,
-                  currentHP: currentHP,
-                  maxHP: maxHP,
+                  currentHP: Math.floor((robotHPs[i] / 100) * maxHP),
+                  maxHP,
                   currentShield: 0,
                   maxShield: 20,
                 },
               });
             }
-            
-            // Query robot count (excluding "Bye Robot")
-            const count = await prisma.robot.count({
-              where: {
-                userId: user.id,
-                NOT: { name: 'Bye Robot' },
-              },
-            });
-            
-            // Clean up
-            await prisma.robot.deleteMany({ where: { userId: user.id } });
-            await prisma.user.deleteMany({ where: { id: user.id } });
-            
-            // Verify all robots are counted
+
+            const count = await countStableRobots(user.id);
+            await cleanupUser(user.id);
+
             expect(count).toBe(robotHPs.length);
-          }
+          },
         ),
-        { numRuns: NUM_RUNS }
+        { numRuns: NUM_RUNS },
       );
     });
 
@@ -542,16 +351,8 @@ describe('Repair Cost Multi-Robot Discount - Property Tests', () => {
         fc.asyncProperty(
           fc.integer({ min: 1, max: 10 }), // number of regular robots
           async (numRobots) => {
-            // Create test user for this iteration
-            const user = await prisma.user.create({
-              data: {
-                username: `rc_test_${Date.now()}_${Math.floor(Math.random() * 1000000)}`,
-                passwordHash: 'test_hash',
-                currency: 1000000,
-              },
-            });
-            
-            // Create regular robots
+            const user = await createUser();
+
             for (let i = 0; i < numRobots; i++) {
               await prisma.robot.create({
                 data: {
@@ -564,8 +365,7 @@ describe('Repair Cost Multi-Robot Discount - Property Tests', () => {
                 },
               });
             }
-            
-            // Create a "Bye Robot"
+
             await prisma.robot.create({
               data: {
                 userId: user.id,
@@ -576,24 +376,14 @@ describe('Repair Cost Multi-Robot Discount - Property Tests', () => {
                 maxShield: 20,
               },
             });
-            
-            // Query robot count (should exclude "Bye Robot")
-            const count = await prisma.robot.count({
-              where: {
-                userId: user.id,
-                NOT: { name: 'Bye Robot' },
-              },
-            });
-            
-            // Clean up
-            await prisma.robot.deleteMany({ where: { userId: user.id } });
-            await prisma.user.deleteMany({ where: { id: user.id } });
-            
-            // Verify only regular robots are counted
+
+            const count = await countStableRobots(user.id);
+            await cleanupUser(user.id);
+
             expect(count).toBe(numRobots);
-          }
+          },
         ),
-        { numRuns: NUM_RUNS }
+        { numRuns: NUM_RUNS },
       );
     });
 
@@ -603,16 +393,8 @@ describe('Repair Cost Multi-Robot Discount - Property Tests', () => {
           fc.integer({ min: 1, max: 5 }), // number of healthy robots
           fc.integer({ min: 1, max: 5 }), // number of destroyed robots
           async (numHealthy, numDestroyed) => {
-            // Create test user for this iteration
-            const user = await prisma.user.create({
-              data: {
-                username: `rc_test_${Date.now()}_${Math.floor(Math.random() * 1000000)}`,
-                passwordHash: 'test_hash',
-                currency: 1000000,
-              },
-            });
-            
-            // Create healthy robots
+            const user = await createUser();
+
             for (let i = 0; i < numHealthy; i++) {
               await prisma.robot.create({
                 data: {
@@ -625,8 +407,7 @@ describe('Repair Cost Multi-Robot Discount - Property Tests', () => {
                 },
               });
             }
-            
-            // Create destroyed robots (HP = 0)
+
             for (let i = 0; i < numDestroyed; i++) {
               await prisma.robot.create({
                 data: {
@@ -639,24 +420,14 @@ describe('Repair Cost Multi-Robot Discount - Property Tests', () => {
                 },
               });
             }
-            
-            // Query robot count
-            const count = await prisma.robot.count({
-              where: {
-                userId: user.id,
-                NOT: { name: 'Bye Robot' },
-              },
-            });
-            
-            // Clean up
-            await prisma.robot.deleteMany({ where: { userId: user.id } });
-            await prisma.user.deleteMany({ where: { id: user.id } });
-            
-            // Verify all robots are counted (healthy + destroyed)
+
+            const count = await countStableRobots(user.id);
+            await cleanupUser(user.id);
+
             expect(count).toBe(numHealthy + numDestroyed);
-          }
+          },
         ),
-        { numRuns: NUM_RUNS }
+        { numRuns: NUM_RUNS },
       );
     });
 
@@ -666,16 +437,8 @@ describe('Repair Cost Multi-Robot Discount - Property Tests', () => {
           fc.integer({ min: 1, max: 5 }), // number of healthy robots
           fc.integer({ min: 1, max: 5 }), // number of damaged robots
           async (numHealthy, numDamaged) => {
-            // Create test user for this iteration
-            const user = await prisma.user.create({
-              data: {
-                username: `rc_test_${Date.now()}_${Math.floor(Math.random() * 1000000)}`,
-                passwordHash: 'test_hash',
-                currency: 1000000,
-              },
-            });
-            
-            // Create healthy robots
+            const user = await createUser();
+
             for (let i = 0; i < numHealthy; i++) {
               await prisma.robot.create({
                 data: {
@@ -688,8 +451,7 @@ describe('Repair Cost Multi-Robot Discount - Property Tests', () => {
                 },
               });
             }
-            
-            // Create damaged robots (50% HP)
+
             for (let i = 0; i < numDamaged; i++) {
               await prisma.robot.create({
                 data: {
@@ -702,46 +464,28 @@ describe('Repair Cost Multi-Robot Discount - Property Tests', () => {
                 },
               });
             }
-            
-            // Query robot count
-            const count = await prisma.robot.count({
-              where: {
-                userId: user.id,
-                NOT: { name: 'Bye Robot' },
-              },
-            });
-            
-            // Clean up
-            await prisma.robot.deleteMany({ where: { userId: user.id } });
-            await prisma.user.deleteMany({ where: { id: user.id } });
-            
-            // Verify all robots are counted (healthy + damaged)
+
+            const count = await countStableRobots(user.id);
+            await cleanupUser(user.id);
+
             expect(count).toBe(numHealthy + numDamaged);
-          }
+          },
         ),
-        { numRuns: NUM_RUNS }
+        { numRuns: NUM_RUNS },
       );
     });
 
-    test('robot count affects repair cost calculation correctly', () => {
+    test('robot count does not affect the repair cost (#525)', () => {
       fc.assert(
         fc.asyncProperty(
-          fc.integer({ min: 1, max: 10 }), // number of robots
+          fc.integer({ min: 0, max: 10 }), // number of robots (0 = empty stable)
           fc.integer({ min: 1, max: 10 }), // repairBayLevel
           fc.integer({ min: 1000, max: 23000 }), // sumOfAllAttributes
           fc.integer({ min: 50, max: 100 }), // damagePercent
           fc.integer({ min: 10, max: 100 }), // hpPercent
           async (numRobots, repairBayLevel, sumOfAllAttributes, damagePercent, hpPercent) => {
-            // Create test user for this iteration
-            const user = await prisma.user.create({
-              data: {
-                username: `rc_test_${Date.now()}_${Math.floor(Math.random() * 1000000)}`,
-                passwordHash: 'test_hash',
-                currency: 1000000,
-              },
-            });
-            
-            // Create robots
+            const user = await createUser();
+
             for (let i = 0; i < numRobots; i++) {
               await prisma.robot.create({
                 data: {
@@ -754,114 +498,30 @@ describe('Repair Cost Multi-Robot Discount - Property Tests', () => {
                 },
               });
             }
-            
-            // Query robot count
-            const activeRobotCount = await prisma.robot.count({
-              where: {
-                userId: user.id,
-                NOT: { name: 'Bye Robot' },
-              },
-            });
-            
-            // Verify count matches expected
-            expect(activeRobotCount).toBe(numRobots);
-            
-            // Calculate repair cost with the queried robot count
-            const repairCost = calculateRepairCost(
-              sumOfAllAttributes,
-              damagePercent,
-              hpPercent,
-              repairBayLevel,
-              0, // medicalBayLevel
-              activeRobotCount
-            );
-            
-            // Calculate expected cost
-            const baseRepairCost = sumOfAllAttributes * 100;
-            const multiplier = 1.0; // hpPercent >= 10
-            const rawCost = baseRepairCost * (damagePercent / 100) * multiplier;
-            const rawDiscount = repairBayLevel * (5 + activeRobotCount);
-            const repairBayDiscount = Math.min(rawDiscount, 90) / 100;
-            const expectedCost = Math.round(rawCost * (1 - repairBayDiscount));
-            
-            // Clean up
-            await prisma.robot.deleteMany({ where: { userId: user.id } });
-            await prisma.user.deleteMany({ where: { id: user.id } });
-            
-            // Verify repair cost uses the correct robot count
-            expect(repairCost).toBe(expectedCost);
-          }
-        ),
-        { numRuns: NUM_RUNS }
-      );
-    });
 
-    test('empty stable (0 robots) results in no multi-robot bonus', () => {
-      fc.assert(
-        fc.asyncProperty(
-          fc.integer({ min: 1, max: 10 }), // repairBayLevel
-          fc.integer({ min: 1000, max: 23000 }), // sumOfAllAttributes
-          fc.integer({ min: 50, max: 100 }), // damagePercent
-          fc.integer({ min: 10, max: 100 }), // hpPercent
-          async (repairBayLevel, sumOfAllAttributes, damagePercent, hpPercent) => {
-            // Create test user for this iteration
-            const user = await prisma.user.create({
-              data: {
-                username: `rc_test_${Date.now()}_${Math.floor(Math.random() * 1000000)}`,
-                passwordHash: 'test_hash',
-                currency: 1000000,
-              },
-            });
-            
-            // Don't create any robots (empty stable)
-            
-            // Query robot count
-            const activeRobotCount = await prisma.robot.count({
-              where: {
-                userId: user.id,
-                NOT: { name: 'Bye Robot' },
-              },
-            });
-            
-            // Verify count is 0
-            expect(activeRobotCount).toBe(0);
-            
-            // Calculate repair cost with 0 robots
-            const repairCost = calculateRepairCost(
-              sumOfAllAttributes,
-              damagePercent,
-              hpPercent,
-              repairBayLevel,
-              0, // medicalBayLevel
-              activeRobotCount
-            );
-            
-            // Calculate expected cost (no multi-robot bonus)
-            const baseRepairCost = sumOfAllAttributes * 100;
+            const activeRobotCount = await countStableRobots(user.id);
+            await cleanupUser(user.id);
+
+            expect(activeRobotCount).toBe(numRobots);
+
+            // The quote depends on the level only: the same for any stable size.
+            const repairCost = calculateRepairCost(sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel, 0);
             const multiplier = 1.0; // hpPercent >= 10
-            const rawCost = baseRepairCost * (damagePercent / 100) * multiplier;
-            const rawDiscount = repairBayLevel * 5; // No robot bonus
-            const repairBayDiscount = Math.min(rawDiscount, 90) / 100;
-            const expectedCost = Math.round(rawCost * (1 - repairBayDiscount));
-            
-            // Clean up
-            await prisma.user.deleteMany({ where: { id: user.id } });
-            
-            // Verify repair cost has no multi-robot bonus
+            const rawCost = sumOfAllAttributes * 100 * (damagePercent / 100) * multiplier;
+            const expectedCost = Math.round(rawCost * (1 - (6 * repairBayLevel) / 100));
             expect(repairCost).toBe(expectedCost);
-          }
+          },
         ),
-        { numRuns: NUM_RUNS }
+        { numRuns: NUM_RUNS },
       );
     });
   });
 
   describe('Property 5: Repair Cost Consistency Across Battle Types', () => {
     /**
-     * **Validates: Requirements 8.6, 8.7, 8.8, 8.9**
-     * For any robot with the same damage, HP, facility levels, and robot count, the repair cost
-     * calculated should be identical whether the damage occurred in a league battle, tag team battle,
-     * or tournament battle.
+     * For any robot with the same damage, HP and facility levels, the repair cost
+     * is identical whether the damage occurred in a league battle, tag team
+     * battle, tournament battle or before an automatic repair.
      */
     test('repair costs are identical for same damage across all battle types', () => {
       fc.assert(
@@ -871,78 +531,24 @@ describe('Repair Cost Multi-Robot Discount - Property Tests', () => {
           fc.integer({ min: 0, max: 100 }), // hpPercent
           fc.integer({ min: 0, max: 10 }), // repairBayLevel
           fc.integer({ min: 0, max: 10 }), // medicalBayLevel
-          fc.integer({ min: 0, max: 10 }), // activeRobotCount
-          (sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel, medicalBayLevel, activeRobotCount) => {
-            // Calculate repair cost as if from league battle
-            const leagueBattleCost = calculateRepairCost(
-              sumOfAllAttributes,
-              damagePercent,
-              hpPercent,
-              repairBayLevel,
-              medicalBayLevel,
-              activeRobotCount
-            );
-            
-            // Calculate repair cost as if from tag team battle
-            const tagTeamBattleCost = calculateRepairCost(
-              sumOfAllAttributes,
-              damagePercent,
-              hpPercent,
-              repairBayLevel,
-              medicalBayLevel,
-              activeRobotCount
-            );
-            
-            // Calculate repair cost as if from tournament battle
-            const tournamentBattleCost = calculateRepairCost(
-              sumOfAllAttributes,
-              damagePercent,
-              hpPercent,
-              repairBayLevel,
-              medicalBayLevel,
-              activeRobotCount
-            );
-            
-            // Calculate repair cost as if from auto-repair (cycle trigger)
-            const autoRepairCost = calculateRepairCost(
-              sumOfAllAttributes,
-              damagePercent,
-              hpPercent,
-              repairBayLevel,
-              medicalBayLevel,
-              activeRobotCount
-            );
-            
-            // All costs should be identical (validates canonical function usage)
+          (sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel, medicalBayLevel) => {
+            const leagueBattleCost = calculateRepairCost(sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel, medicalBayLevel);
+            const tagTeamBattleCost = calculateRepairCost(sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel, medicalBayLevel);
+            const tournamentBattleCost = calculateRepairCost(sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel, medicalBayLevel);
+            const autoRepairCost = calculateRepairCost(sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel, medicalBayLevel);
+
             expect(leagueBattleCost).toBe(tagTeamBattleCost);
             expect(leagueBattleCost).toBe(tournamentBattleCost);
             expect(leagueBattleCost).toBe(autoRepairCost);
-            
-            // Verify the cost is calculated correctly
-            const baseRepairCost = sumOfAllAttributes * 100;
-            
-            // Determine multiplier based on HP percentage
-            let multiplier = 1.0;
-            if (hpPercent === 0) {
-              multiplier = 2.0;
-            } else if (hpPercent < 10) {
-              // Heavily damaged
-              multiplier = 1.5;
-            }
-            
-            const rawCost = baseRepairCost * (damagePercent / 100) * multiplier;
-            const rawDiscount = repairBayLevel * (5 + activeRobotCount);
-            const repairBayDiscount = Math.min(rawDiscount, 90) / 100;
-            const expectedCost = Math.round(rawCost * (1 - repairBayDiscount));
-            
-            // Verify all costs match the expected calculation
+
+            const expectedCost = expectedQuote(sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel);
             expect(leagueBattleCost).toBe(expectedCost);
             expect(tagTeamBattleCost).toBe(expectedCost);
             expect(tournamentBattleCost).toBe(expectedCost);
             expect(autoRepairCost).toBe(expectedCost);
-          }
+          },
         ),
-        { numRuns: NUM_RUNS }
+        { numRuns: NUM_RUNS },
       );
     });
 
@@ -954,27 +560,22 @@ describe('Repair Cost Multi-Robot Discount - Property Tests', () => {
           fc.integer({ min: 0, max: 100 }), // hpPercent
           fc.integer({ min: 0, max: 10 }), // repairBayLevel
           fc.integer({ min: 0, max: 10 }), // medicalBayLevel
-          fc.integer({ min: 0, max: 10 }), // activeRobotCount
-          (sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel, medicalBayLevel, activeRobotCount) => {
-            // Simulate multiple battle types calculating repair cost
+          (sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel, medicalBayLevel) => {
             const costs = [
-              calculateRepairCost(sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel, medicalBayLevel, activeRobotCount),
-              calculateRepairCost(sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel, medicalBayLevel, activeRobotCount),
-              calculateRepairCost(sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel, medicalBayLevel, activeRobotCount),
-              calculateRepairCost(sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel, medicalBayLevel, activeRobotCount),
+              calculateRepairCost(sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel, medicalBayLevel),
+              calculateRepairCost(sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel, medicalBayLevel),
+              calculateRepairCost(sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel, medicalBayLevel),
+              calculateRepairCost(sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel, medicalBayLevel),
             ];
-            
-            // All costs should be identical
+
             const firstCost = costs[0];
-            costs.forEach(cost => {
+            costs.forEach((cost) => {
               expect(cost).toBe(firstCost);
             });
-            
-            // Verify cost is non-negative
             expect(firstCost).toBeGreaterThanOrEqual(0);
-          }
+          },
         ),
-        { numRuns: NUM_RUNS }
+        { numRuns: NUM_RUNS },
       );
     });
 
@@ -986,31 +587,21 @@ describe('Repair Cost Multi-Robot Discount - Property Tests', () => {
           fc.integer({ min: 0, max: 100 }), // hpPercent
           fc.integer({ min: 0, max: 10 }), // repairBayLevel
           fc.integer({ min: 0, max: 10 }), // medicalBayLevel
-          fc.integer({ min: 0, max: 10 }), // activeRobotCount
-          (sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel, medicalBayLevel, activeRobotCount) => {
-            // Call the function multiple times with same inputs
-            const results = [];
+          (sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel, medicalBayLevel) => {
+            const results: number[] = [];
             for (let i = 0; i < 10; i++) {
               results.push(
-                calculateRepairCost(
-                  sumOfAllAttributes,
-                  damagePercent,
-                  hpPercent,
-                  repairBayLevel,
-                  medicalBayLevel,
-                  activeRobotCount
-                )
+                calculateRepairCost(sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel, medicalBayLevel),
               );
             }
-            
-            // All results should be identical (deterministic)
+
             const firstResult = results[0];
-            results.forEach(result => {
+            results.forEach((result) => {
               expect(result).toBe(firstResult);
             });
-          }
+          },
         ),
-        { numRuns: NUM_RUNS }
+        { numRuns: NUM_RUNS },
       );
     });
 
@@ -1022,27 +613,13 @@ describe('Repair Cost Multi-Robot Discount - Property Tests', () => {
           fc.integer({ min: 0, max: 100 }), // hpPercent
           fc.integer({ min: 1, max: 10 }), // repairBayLevel
           fc.integer({ min: 0, max: 10 }), // medicalBayLevel
-          fc.integer({ min: 1, max: 10 }), // activeRobotCount
-          (sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel, medicalBayLevel, activeRobotCount) => {
-            // Calculate costs in different orders (simulating different battle types executing)
-            const cost1 = calculateRepairCost(
-              sumOfAllAttributes,
-              damagePercent,
-              hpPercent,
-              repairBayLevel,
-              medicalBayLevel,
-              activeRobotCount
-            );
-            
-            // Different damage scenario, interleaved between two identical calls so a caching
-            // bug would show up as cost1 !== cost3.
-            //
-            // The validity guard now wraps the CALL, not just the assertion. It used to sit
-            // below, after `calculateRepairCost` had already been invoked with
-            // `hpPercent - 10` — negative whenever `hpPercent < 10`, which
-            // `calculateRepairQuote` correctly rejects with a RangeError. The test was asking
-            // the shared module to price an impossible robot, and failed on whichever seed
-            // drew an hpPercent under 10.
+          (sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel, medicalBayLevel) => {
+            const cost1 = calculateRepairCost(sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel, medicalBayLevel);
+
+            // Different damage scenario, interleaved between two identical calls so a
+            // caching bug would show up as cost1 !== cost3. The validity guard wraps
+            // the call: `hpPercent - 10` is negative whenever `hpPercent < 10`, which
+            // `calculateRepairQuote` correctly rejects with a RangeError.
             const derivedInputsValid = damagePercent + 10 <= 100 && hpPercent - 10 >= 0;
             if (derivedInputsValid) {
               const cost2 = calculateRepairCost(
@@ -1051,73 +628,15 @@ describe('Repair Cost Multi-Robot Discount - Property Tests', () => {
                 hpPercent - 10,
                 repairBayLevel,
                 medicalBayLevel,
-                activeRobotCount
               );
               expect(cost2).toBeGreaterThanOrEqual(0);
             }
 
-            // Back to original scenario
-            const cost3 = calculateRepairCost(
-              sumOfAllAttributes,
-              damagePercent,
-              hpPercent,
-              repairBayLevel,
-              medicalBayLevel,
-              activeRobotCount
-            );
-
-            // First and third calls (same inputs) should produce identical results
+            const cost3 = calculateRepairCost(sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel, medicalBayLevel);
             expect(cost1).toBe(cost3);
-          }
+          },
         ),
-        { numRuns: NUM_RUNS }
-      );
-    });
-
-    test('repair costs scale consistently across battle types with robot count', () => {
-      fc.assert(
-        fc.property(
-          fc.integer({ min: 1000, max: 23000 }), // sumOfAllAttributes
-          fc.integer({ min: 50, max: 100 }), // damagePercent
-          fc.integer({ min: 10, max: 100 }), // hpPercent
-          fc.integer({ min: 1, max: 10 }), // repairBayLevel
-          fc.integer({ min: 1, max: 9 }), // activeRobotCount (1-9 to allow increment)
-          (sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel, activeRobotCount) => {
-            // Calculate costs with current robot count
-            const costWithNRobots = calculateRepairCost(
-              sumOfAllAttributes,
-              damagePercent,
-              hpPercent,
-              repairBayLevel,
-              0, // medicalBayLevel
-              activeRobotCount
-            );
-            
-            // Calculate costs with one more robot
-            const costWithNPlus1Robots = calculateRepairCost(
-              sumOfAllAttributes,
-              damagePercent,
-              hpPercent,
-              repairBayLevel,
-              0, // medicalBayLevel
-              activeRobotCount + 1
-            );
-            
-            // More robots should result in lower or equal cost (higher discount)
-            // Equal only if discount is already at 90% cap
-            const discountN = Math.min(repairBayLevel * (5 + activeRobotCount), 90);
-            const discountNPlus1 = Math.min(repairBayLevel * (5 + activeRobotCount + 1), 90);
-            
-            if (discountN === 90 && discountNPlus1 === 90) {
-              // Both at cap, costs should be equal
-              expect(costWithNPlus1Robots).toBe(costWithNRobots);
-            } else {
-              // Higher discount should result in lower cost
-              expect(costWithNPlus1Robots).toBeLessThanOrEqual(costWithNRobots);
-            }
-          }
-        ),
-        { numRuns: NUM_RUNS }
+        { numRuns: NUM_RUNS },
       );
     });
 
@@ -1127,50 +646,23 @@ describe('Repair Cost Multi-Robot Discount - Property Tests', () => {
           fc.integer({ min: 1, max: 23000 }), // sumOfAllAttributes
           fc.integer({ min: 0, max: 10 }), // repairBayLevel
           fc.integer({ min: 0, max: 10 }), // medicalBayLevel
-          fc.integer({ min: 0, max: 10 }), // activeRobotCount
-          (sumOfAllAttributes, repairBayLevel, medicalBayLevel, activeRobotCount) => {
+          (sumOfAllAttributes, repairBayLevel, medicalBayLevel) => {
             // Edge case 1: Zero damage
-            const zeroDamageCost = calculateRepairCost(
-              sumOfAllAttributes,
-              0, // damagePercent = 0
-              100, // hpPercent = 100 (full health)
-              repairBayLevel,
-              medicalBayLevel,
-              activeRobotCount
-            );
+            const zeroDamageCost = calculateRepairCost(sumOfAllAttributes, 0, 100, repairBayLevel, medicalBayLevel);
             expect(zeroDamageCost).toBe(0);
-            
+
             // Edge case 2: Full damage, destroyed
-            const fullDamageCost = calculateRepairCost(
-              sumOfAllAttributes,
-              100, // damagePercent = 100
-              0, // hpPercent = 0 (destroyed)
-              repairBayLevel,
-              medicalBayLevel,
-              activeRobotCount
-            );
+            const fullDamageCost = calculateRepairCost(sumOfAllAttributes, 100, 0, repairBayLevel, medicalBayLevel);
             expect(fullDamageCost).toBeGreaterThanOrEqual(0);
-            
-            // Edge case 3: Maximum discount (90% cap)
-            const maxDiscountCost = calculateRepairCost(
-              sumOfAllAttributes,
-              100, // damagePercent = 100
-              50, // hpPercent = 50
-              10, // repairBayLevel = 10
-              0, // medicalBayLevel
-              10 // activeRobotCount = 10 (10 × (5 + 10) = 150% -> capped at 90%)
-            );
-            
-            // At 90% discount, cost should be 10% of base
-            const baseRepairCost = sumOfAllAttributes * 100;
-            const rawCost = baseRepairCost * 1.0; // 100% damage, 1.0x multiplier
-            const expectedCost = Math.round(rawCost * 0.10);
-            expect(maxDiscountCost).toBe(expectedCost);
-          }
+
+            // Edge case 3: Maximum discount (Level 10 = 60%)
+            const maxDiscountCost = calculateRepairCost(sumOfAllAttributes, 100, 50, 10, 0);
+            const rawCost = sumOfAllAttributes * 100 * 1.0; // 100% damage, 1.0x multiplier
+            expect(maxDiscountCost).toBe(Math.round(rawCost * 0.40));
+          },
         ),
-        { numRuns: NUM_RUNS }
+        { numRuns: NUM_RUNS },
       );
     });
-
   });
 });

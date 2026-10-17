@@ -47,6 +47,7 @@ jest.mock('../../../lib/prisma', () => ({
     },
     auditLog: {
       findFirst: jest.fn(),
+      findMany: jest.fn(),
     },
     user: {
       findUnique: jest.fn(),
@@ -70,10 +71,14 @@ describe('UnifiedFacilityROIService - Property-Based Tests', () => {
   beforeEach(() => {
     service = new UnifiedFacilityROIService();
     jest.clearAllMocks();
-    // The Repair_Bay savings estimate reads the stable's robot count, because the
-    // Repair_Bay_Discount scales with it. Every property here generates a facility
-    // type from the economic set, so any run that draws `repair_bay` reaches this.
+    // The Repair_Bay estimate fallback sizes the repair volume from the stable's
+    // robot count. Every property here generates a facility type from the economic
+    // set, so any run that draws `repair_bay` reaches this.
     (mockedPrisma.robot.findMany as jest.Mock).mockResolvedValue([{ id: 1 }, { id: 2 }]);
+    // Repair Bay savings come from recorded robot_repair audit rows (#525).
+    (mockedPrisma.auditLog.findMany as jest.Mock).mockResolvedValue([
+      { payload: { creditsCharged: 6400, discountPercent: 36 }, cycleNumber: 1 },
+    ]);
     // Streaming Studio returns come from recorded streaming_revenue ledger rows (#524).
     (mockedPrisma.financialLedger.findMany as jest.Mock).mockResolvedValue([
       { amount: 3000, metadata: { formulaVersion: '2', studioMultiplier: 1.5 }, cycleNumber: 1 },

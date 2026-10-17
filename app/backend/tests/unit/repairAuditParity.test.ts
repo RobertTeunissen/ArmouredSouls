@@ -8,8 +8,9 @@
  *   perRobotFinalCost          = floor(perRobotCostAfterRepairBay × 0.5)
  *
  * `calculatedRepairCost` is a Repair_Quote that already carries the discount, so
- * both recorded figures came out low — 80% of the truth at a level-2 bay with 5
- * robots, and a tenth of it at the 90% cap. Credits deducted were always correct;
+ * both recorded figures came out low — 80% of the truth at a 20% discount, and a
+ * tenth of it at the old 90% cap. (Season 2 #525 made the discount 6% per level,
+ * so the cases below use 30% at Level 5 and the 60% Level 10 maximum.) Credits deducted were always correct;
  * only the audit record was wrong, and that record is what `/admin/repair-log`,
  * the per-cycle snapshot totals and the Income Dashboard all read.
  *
@@ -42,7 +43,6 @@ function legacyDoubleDiscounted(quote: number, discountPercent: number): {
 interface AuditCase {
   name: string;
   repairBayLevel: number;
-  activeRobotCount: number;
   damagePercent: number;
   hpPercent: number;
   /** Whether a non-zero Repair Bay discount applies, i.e. whether the bug bit. */
@@ -51,18 +51,18 @@ interface AuditCase {
 
 const AUDIT_CASES: AuditCase[] = [
   {
-    name: 'Repair Bay 2 with 5 active robots — 20% discount',
-    repairBayLevel: 2, activeRobotCount: 5, damagePercent: 100, hpPercent: 0,
+    name: 'Repair Bay 2 — 12% discount',
+    repairBayLevel: 2, damagePercent: 100, hpPercent: 0,
     discountApplies: true,
   },
   {
-    name: 'Repair Bay 10 with 20 active robots — 250% raw, capped at 90%',
-    repairBayLevel: 10, activeRobotCount: 20, damagePercent: 100, hpPercent: 0,
+    name: 'Repair Bay 10 — maximum 60% discount',
+    repairBayLevel: 10, damagePercent: 100, hpPercent: 0,
     discountApplies: true,
   },
   {
     name: 'Repair Bay 0 — no discount, so the old and new figures agree',
-    repairBayLevel: 0, activeRobotCount: 3, damagePercent: 85, hpPercent: 15,
+    repairBayLevel: 0, damagePercent: 85, hpPercent: 15,
     discountApplies: false,
   },
 ];
@@ -71,10 +71,7 @@ describe('Repair_Audit_Parity_Test — the manual audit figures apply the Repair
   it.each(AUDIT_CASES.map((c) => [c.name, c] as const))(
     'records the charged amount and the unmodified quote for %s',
     (_name, testCase) => {
-      const bayContext = {
-        repairBayLevel: testCase.repairBayLevel,
-        activeRobotCount: testCase.activeRobotCount,
-      };
+      const bayLevel = testCase.repairBayLevel;
 
       // The Repair_Quote — already carries the Repair Bay discount, once.
       const quote = calculateRepairQuote(
@@ -83,7 +80,7 @@ describe('Repair_Audit_Parity_Test — the manual audit figures apply the Repair
           damagePercent: testCase.damagePercent,
           hpPercent: testCase.hpPercent,
         },
-        bayContext,
+        bayLevel,
       );
 
       // Requirement 18 criterion 1: the charged figure is what the player paid.
@@ -96,7 +93,7 @@ describe('Repair_Audit_Parity_Test — the manual audit figures apply the Repair
       expect(expectedPreDiscount).toBe(quote);
       expect(expectedCharged).toBe(Math.floor(quote * 0.5));
 
-      const discountPercent = calculateRepairBayDiscountPercent(bayContext);
+      const discountPercent = calculateRepairBayDiscountPercent(bayLevel);
       const legacy = legacyDoubleDiscounted(quote, discountPercent);
 
       if (testCase.discountApplies) {
@@ -112,46 +109,44 @@ describe('Repair_Audit_Parity_Test — the manual audit figures apply the Repair
     },
   );
 
-  it('understates by exactly the discount factor at a level-2 bay with 5 robots', () => {
-    const bayContext = { repairBayLevel: 2, activeRobotCount: 5 };
+  it('understates by exactly the discount factor at a level-5 bay (30%)', () => {
+    const bayLevel = 5;
     const quote = calculateRepairQuote(
       { attributeTotal: ATTRIBUTE_TOTAL, damagePercent: 100, hpPercent: 0 },
-      bayContext,
+      bayLevel,
     );
 
-    expect(calculateRepairBayDiscountPercent(bayContext)).toBe(20);
+    expect(calculateRepairBayDiscountPercent(bayLevel)).toBe(30);
 
-    const legacy = legacyDoubleDiscounted(quote, 20);
-    // 80% of the truth, as the requirement states.
-    expect(legacy.preDiscount).toBe(Math.floor(quote * 0.8));
+    const legacy = legacyDoubleDiscounted(quote, 30);
+    // 70% of the truth.
+    expect(legacy.preDiscount).toBe(Math.floor(quote * 0.7));
   });
 
-  it('records a tenth of the charged amount at the 90% cap', () => {
-    const bayContext = { repairBayLevel: 10, activeRobotCount: 20 };
+  it('records 40% of the quote at the Level 10 maximum (60%)', () => {
+    const bayLevel = 10;
     const quote = calculateRepairQuote(
       { attributeTotal: ATTRIBUTE_TOTAL, damagePercent: 100, hpPercent: 0 },
-      bayContext,
+      bayLevel,
     );
 
-    expect(calculateRepairBayDiscountPercent(bayContext)).toBe(90);
+    expect(calculateRepairBayDiscountPercent(bayLevel)).toBe(60);
 
-    const legacy = legacyDoubleDiscounted(quote, 90);
-    // Within a credit of a tenth. Not asserted exactly because `1 - 90/100`
-    // evaluates to 0.09999999999999998, so the legacy expression floors one credit
-    // lower than `quote * 0.1` would — a detail of the bug, not of the fix.
-    expect(legacy.preDiscount).toBeGreaterThanOrEqual(Math.floor(quote * 0.1) - 1);
-    expect(legacy.preDiscount).toBeLessThanOrEqual(Math.floor(quote * 0.1));
-    // The headline claim: the old record was an order of magnitude light.
-    expect(legacy.preDiscount * 9).toBeLessThan(quote);
+    const legacy = legacyDoubleDiscounted(quote, 60);
+    // Within a credit of 40%: the legacy expression floors `quote × (1 − 60/100)`.
+    expect(legacy.preDiscount).toBeGreaterThanOrEqual(Math.floor(quote * 0.4) - 1);
+    expect(legacy.preDiscount).toBeLessThanOrEqual(Math.floor(quote * 0.4));
+    // The headline claim: the old record was less than half the truth.
+    expect(legacy.preDiscount * 2).toBeLessThan(quote);
   });
 
   it('sums per-robot charged figures to the credits deducted for a batch of three', () => {
     // Requirement 18 criterion 11 / Requirement 15 criterion 11.
-    const bayContext = { repairBayLevel: 1, activeRobotCount: 3 };
+    const bayLevel = 1;
     const quotes = [
-      calculateRepairQuote({ attributeTotal: ATTRIBUTE_TOTAL, damagePercent: 95, hpPercent: 5 }, bayContext),
-      calculateRepairQuote({ attributeTotal: ATTRIBUTE_TOTAL, damagePercent: 60, hpPercent: 40 }, bayContext),
-      calculateRepairQuote({ attributeTotal: ATTRIBUTE_TOTAL, damagePercent: 100, hpPercent: 0 }, bayContext),
+      calculateRepairQuote({ attributeTotal: ATTRIBUTE_TOTAL, damagePercent: 95, hpPercent: 5 }, bayLevel),
+      calculateRepairQuote({ attributeTotal: ATTRIBUTE_TOTAL, damagePercent: 60, hpPercent: 40 }, bayLevel),
+      calculateRepairQuote({ attributeTotal: ATTRIBUTE_TOTAL, damagePercent: 100, hpPercent: 0 }, bayLevel),
     ];
 
     const perRobotCharged = quotes.map((q) => applyManualRepairDiscount(q));
@@ -168,10 +163,10 @@ describe('Repair_Audit_Parity_Test — the manual audit figures apply the Repair
     // Requirement 18 criterion 10: that path logs `event.repairCost`, which is the
     // Repair_Quote with the discount applied once, and records no pre-discount
     // figure. There is nothing to correct there.
-    const bayContext = { repairBayLevel: 3, activeRobotCount: 4 };
+    const bayLevel = 3;
     const quote = calculateRepairQuote(
       { attributeTotal: ATTRIBUTE_TOTAL, damagePercent: 70, hpPercent: 30 },
-      bayContext,
+      bayLevel,
     );
 
     // The automatic path charges the quote itself — no manual discount.

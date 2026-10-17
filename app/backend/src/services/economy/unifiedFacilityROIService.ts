@@ -7,7 +7,11 @@ import { calculateWeaponWorkshopDiscount } from '../../shared/utils/discounts';
 import { EconomyError, EconomyErrorCode } from '../../errors/economyErrors';
 // Spec #46 R10: streaming estimates derive from the award-path formula.
 import { computeStreamingRevenue } from './streamingRevenueService';
-import { sumStudioAttributableStreaming, type RecordedStreamingRow } from './recorded-facility-returns';
+import {
+  sumRepairBaySavingsFromRecords,
+  sumStudioAttributableStreaming,
+  type RecordedStreamingRow,
+} from './recorded-facility-returns';
 import {
   calculateFacilityOperatingCost,
   calculateMerchandisingIncome,
@@ -30,6 +34,12 @@ type EconomicFacilityType = (typeof ECONOMIC_FACILITY_TYPES)[number];
 
 /** A recorded streaming award with the cycle it was paid in. */
 type RecordedStreamingLedgerRow = RecordedStreamingRow & { cycleNumber: number };
+
+/** A recorded `robot_repair` audit payload with the cycle it was charged in. */
+interface RecordedRepairAuditRow {
+  payload: unknown;
+  cycleNumber: number;
+}
 
 export interface UnifiedFacilityROI {
   facilityType: string;
@@ -235,17 +245,16 @@ export class UnifiedFacilityROIService {
       }
     }
 
-    // Fetch robot count once (needed for repair bay)
-    const robots = await prisma.robot.findMany({
-      where: { userId },
-      select: { id: true },
-    });
-    const robotCount = robots.length || 1;
-
     // Fetch recorded streaming awards once (needed for the Streaming Studio);
     // each facility filters them to its own ownership window.
     const streamingRows = facilities.some((f) => f.facilityType === 'streaming_studio')
       ? await this.fetchRecordedStreamingRows(userId, 1, currentCycle)
+      : [];
+
+    // Fetch recorded repairs once (needed for the Repair Bay); each facility
+    // filters them to its own ownership window.
+    const repairRows = facilities.some((f) => f.facilityType === 'repair_bay')
+      ? await this.fetchRecordedRepairRows(userId, 1, currentCycle)
       : [];
 
     const results: UnifiedFacilityROI[] = [];
@@ -257,8 +266,8 @@ export class UnifiedFacilityROIService {
         facility.level,
         currentCycle,
         userMetricsByCycle,
-        robotCount,
-        streamingRows
+        streamingRows,
+        repairRows
       );
       if (roi) {
         results.push(roi);
@@ -294,8 +303,8 @@ export class UnifiedFacilityROIService {
     level: number,
     currentCycle: number,
     userMetricsByCycle: Map<number, StableMetric>,
-    robotCount: number,
-    streamingRows: ReadonlyArray<RecordedStreamingLedgerRow>
+    streamingRows: ReadonlyArray<RecordedStreamingLedgerRow>,
+    repairRows: ReadonlyArray<RecordedRepairAuditRow>
   ): Promise<UnifiedFacilityROI | null> {
     if (!this.isEconomicFacility(facilityType)) return null;
 
@@ -327,8 +336,8 @@ export class UnifiedFacilityROIService {
         facilityType as EconomicFacilityType,
         level,
         userMetrics,
-        robotCount,
-        streamingRows.filter((row) => row.cycleNumber >= purchaseCycle && row.cycleNumber <= currentCycle)
+        streamingRows.filter((row) => row.cycleNumber >= purchaseCycle && row.cycleNumber <= currentCycle),
+        repairRows.filter((row) => row.cycleNumber >= purchaseCycle && row.cycleNumber <= currentCycle)
       );
       dataSource = 'snapshot';
     } else {
@@ -373,15 +382,15 @@ export class UnifiedFacilityROIService {
 
   /**
    * Synchronous version of calculateReturnsFromSnapshots that uses pre-fetched
-   * robot count and pre-fetched streaming ledger rows (already filtered to the
+   * streaming ledger rows and repair audit rows (already filtered to the
    * ownership window).
    */
   private calculateReturnsFromSnapshotsSync(
     facilityType: EconomicFacilityType,
     level: number,
     userMetrics: StableMetric[],
-    robotCount: number,
-    streamingRows: ReadonlyArray<RecordedStreamingLedgerRow>
+    streamingRows: ReadonlyArray<RecordedStreamingLedgerRow>,
+    repairRows: ReadonlyArray<RecordedRepairAuditRow>
   ): number {
     switch (facilityType) {
       case 'merchandising_hub':
@@ -389,7 +398,7 @@ export class UnifiedFacilityROIService {
       case 'streaming_studio':
         return sumStudioAttributableStreaming(streamingRows);
       case 'repair_bay':
-        return this.calculateRepairBaySavingsSync(level, userMetrics, robotCount);
+        return sumRepairBaySavingsFromRecords(repairRows.map((row) => row.payload));
       case 'training_facility':
         return this.calculateTrainingFacilitySavings(level, userMetrics);
       case 'weapons_workshop':
@@ -397,24 +406,6 @@ export class UnifiedFacilityROIService {
       default:
         return 0;
     }
-  }
-
-  /**
-   * Synchronous repair bay savings using pre-fetched robot count.
-   */
-  private calculateRepairBaySavingsSync(
-    level: number,
-    userMetrics: StableMetric[],
-    robotCount: number
-  ): number {
-    const totalRepairCosts = userMetrics.reduce(
-      (sum, m) => sum + readCycleRepairSpend(m as unknown as Record<string, unknown>),
-      0
-    );
-    const discountPercent = Math.min(90, level * (5 + robotCount));
-    if (discountPercent >= 100) return 0;
-    const savings = totalRepairCosts * (discountPercent / (100 - discountPercent));
-    return Math.round(savings);
   }
 
   /**
@@ -674,6 +665,24 @@ export class UnifiedFacilityROIService {
   }
 
   /**
+   * The user's recorded `robot_repair` audit payloads in `[fromCycle, toCycle]`.
+   */
+  private async fetchRecordedRepairRows(
+    userId: number,
+    fromCycle: number,
+    toCycle: number
+  ): Promise<RecordedRepairAuditRow[]> {
+    return prisma.auditLog.findMany({
+      where: {
+        userId,
+        eventType: 'robot_repair',
+        cycleNumber: { gte: fromCycle, lte: toCycle },
+      },
+      select: { payload: true, cycleNumber: true },
+    });
+  }
+
+  /**
    * Calculate returns from snapshot data for a specific facility type.
    *
    * Streaming Studio returns are the studio-attributable share of each recorded
@@ -703,7 +712,7 @@ export class UnifiedFacilityROIService {
         );
 
       case 'repair_bay':
-        return this.calculateRepairBaySavings(level, userMetrics, userId);
+        return this.calculateRepairBaySavings(userId, purchaseCycle, currentCycle);
 
       case 'training_facility':
         return this.calculateTrainingFacilitySavings(level, userMetrics);
@@ -717,42 +726,19 @@ export class UnifiedFacilityROIService {
   }
 
   /**
-   * Estimate savings from Repair Bay based on total repair costs and discount percentage.
-   * Discount formula: Math.min(90, level * (5 + robotCount))
-   * Uses actual robot count for accurate calculation.
+   * Repair Bay savings from the stable's recorded `robot_repair` rows in the
+   * ownership window: per row `charged × d / (100 − d)` with the row's recorded
+   * Repair Bay discount d. Never re-derived from the current discount formula
+   * or level, so the #525 change (6% per level, independent of robot count)
+   * leaves past savings as they were recorded.
    */
   private async calculateRepairBaySavings(
-    level: number,
-    userMetrics: StableMetric[],
-    userId: number
+    userId: number,
+    purchaseCycle: number,
+    currentCycle: number
   ): Promise<number> {
-    const totalRepairCosts = userMetrics.reduce(
-      (sum, m) => sum + readCycleRepairSpend(m as unknown as Record<string, unknown>),
-      0
-    );
-
-    // Fetch actual robot count for accurate discount calculation
-    const robots = await prisma.robot.findMany({
-      where: { userId },
-      select: { id: true },
-    });
-    const robotCount = robots.length || 1;
-
-    // The discount represents what the user saved by having the repair bay.
-    // totalRepairCosts in the snapshot is the ACTUAL cost paid (after discount).
-    // Savings = actualCost * (discountPercent / (100 - discountPercent))
-    //
-    // The percentage comes from the Shared_Repair_Module. This line held a fourth
-    // inline copy of `min(90, level × (5 + robotCount))` that Spec #48 missed when
-    // it collapsed the other three.
-    const discountPercent = calculateRepairBayDiscountPercent({
-      repairBayLevel: level,
-      activeRobotCount: robotCount,
-    });
-    if (discountPercent >= 100) return 0;
-
-    const savings = totalRepairCosts * (discountPercent / (100 - discountPercent));
-    return Math.round(savings);
+    const rows = await this.fetchRecordedRepairRows(userId, purchaseCycle, currentCycle);
+    return sumRepairBaySavingsFromRecords(rows.map((row) => row.payload));
   }
 
   /**
@@ -839,13 +825,15 @@ export class UnifiedFacilityROIService {
       }
 
       case 'repair_bay': {
-        // Estimate: average repair spending × discount percentage × cycles
+        // Estimate: average repair spending × discount percentage × cycles.
+        // Robot count only sizes the repair volume; the discount is the shared
+        // 6% per level (#525).
         const robots = await prisma.robot.findMany({
           where: { userId },
           select: { id: true },
         });
         const robotCount = robots.length || 1;
-        const discountPercent = Math.min(90, level * (5 + robotCount));
+        const discountPercent = calculateRepairBayDiscountPercent(level);
         const avgRepairPerCycle = robotCount * 5000; // Conservative estimate
         return Math.round(avgRepairPerCycle * (discountPercent / 100) * cyclesOwned);
       }

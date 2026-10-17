@@ -99,8 +99,10 @@ export async function repairAllRobotsAdmin(deductCosts: boolean): Promise<AdminR
     for (const userId of userIds) {
       const userRobots = [...(robotsByUser.get(userId) ?? [])].sort((a, b) => a.id - b.id);
       const repairBayLevel = facilityByUser.get(userId)?.level ?? 0;
+      // Recorded repair fact only (the breakdown and validators require it); the
+      // Repair Bay discount no longer depends on roster size (#525).
       const activeRobotCount = robotCountByUser.get(userId) ?? 0;
-      const repairBayDiscount = calculateRepairBayDiscountPercent({ repairBayLevel, activeRobotCount });
+      const repairBayDiscount = calculateRepairBayDiscountPercent(repairBayLevel);
       const operationId = buildRepairOperationId('admin', financialCycleNumber, userId, userRobots);
 
       for (const robot of userRobots) {
@@ -108,13 +110,10 @@ export async function repairAllRobotsAdmin(deductCosts: boolean): Promise<AdminR
         const damageRepaired = robot.maxHP - robot.currentHP;
         const damagePercent = (damageRepaired / robot.maxHP) * 100;
         const hpPercent = (robot.currentHP / robot.maxHP) * 100;
-        const baseQuote = calculateRepairQuote(
-          { attributeTotal, damagePercent, hpPercent },
-          { repairBayLevel: 0, activeRobotCount: 0 },
-        );
+        const baseQuote = calculateRepairQuote({ attributeTotal, damagePercent, hpPercent }, 0);
         const repairCost = calculateRepairQuote(
           { attributeTotal, damagePercent, hpPercent },
-          { repairBayLevel, activeRobotCount },
+          repairBayLevel,
         );
 
         let created = true;

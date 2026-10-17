@@ -113,8 +113,10 @@ async function repairUserRobots(
       }),
     ]);
     const repairBayLevel = facilities[0]?.level ?? 0;
+    // Recorded repair fact only (the breakdown and validators require it); the
+    // Repair Bay discount no longer depends on roster size (#525).
     const activeRobotCount = robotCounts[0]?._count.id ?? 0;
-    const repairBayDiscount = calculateRepairBayDiscountPercent({ repairBayLevel, activeRobotCount });
+    const repairBayDiscount = calculateRepairBayDiscountPercent(repairBayLevel);
     const userRobots = [...robots].sort((a, b) => a.id - b.id);
     const operationId = buildRepairOperationId('automatic', financialCycleNumber, userId, userRobots);
     const logEvents: RepairLogEvent[] = [];
@@ -126,13 +128,10 @@ async function repairUserRobots(
       const damageRepaired = robot.maxHP - robot.currentHP;
       const damagePercent = (damageRepaired / robot.maxHP) * 100;
       const hpPercent = (robot.currentHP / robot.maxHP) * 100;
-      const baseQuote = calculateRepairQuote(
-        { attributeTotal, damagePercent, hpPercent },
-        { repairBayLevel: 0, activeRobotCount: 0 },
-      );
+      const baseQuote = calculateRepairQuote({ attributeTotal, damagePercent, hpPercent }, 0);
       const repairCost = calculateRepairQuote(
         { attributeTotal, damagePercent, hpPercent },
-        { repairBayLevel, activeRobotCount },
+        repairBayLevel,
       );
       totalBaseCost += baseQuote;
       totalFinalCost += repairCost;

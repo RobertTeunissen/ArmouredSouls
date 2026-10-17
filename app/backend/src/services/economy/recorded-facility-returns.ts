@@ -6,6 +6,8 @@
  * facility level (FINANCIAL_LEDGER_AUDIT_GUIDE.md: reports use stored facts).
  */
 
+import { readRepairChargedCredits } from './repairPayloadKeys';
+
 /** A recorded `streaming_revenue` ledger row: the amount paid and its stored breakdown. */
 export interface RecordedStreamingRow {
   amount: number;
@@ -40,6 +42,48 @@ export function sumStudioAttributableStreaming(rows: ReadonlyArray<RecordedStrea
       continue;
     }
     total += row.amount * (1 - 1 / studioMultiplier);
+  }
+  return Math.round(total);
+}
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return null;
+  }
+  return value as Record<string, unknown>;
+}
+
+/**
+ * Credits the Repair Bay saved across recorded `robot_repair` audit payloads.
+ *
+ * Each row records what was charged (`creditsCharged`, legacy `cost`) and the
+ * Repair Bay discount that applied at the time (`discountPercent`, d). The
+ * charge is the post-discount figure, so the saving on that row is
+ * `charged × d / (100 − d)`. Using the row's own d means a change to the
+ * discount formula (#525) never rewrites past savings.
+ *
+ * Rows with a missing or non-finite charge or discount, or a discount outside
+ * [0, 100), are skipped. The sum is rounded once at the end.
+ */
+export function sumRepairBaySavingsFromRecords(payloads: ReadonlyArray<unknown>): number {
+  let total = 0;
+  for (const payload of payloads) {
+    const record = asRecord(payload);
+    if (record === null) {
+      continue;
+    }
+    const charged = readRepairChargedCredits(record);
+    const discountPercent = record.discountPercent;
+    if (
+      charged === null
+      || typeof discountPercent !== 'number'
+      || !Number.isFinite(discountPercent)
+      || discountPercent < 0
+      || discountPercent >= 100
+    ) {
+      continue;
+    }
+    total += (charged * discountPercent) / (100 - discountPercent);
   }
   return Math.round(total);
 }

@@ -10,8 +10,9 @@ export {
   sumAttributes,
   MANUAL_REPAIR_DISCOUNT,
   MAX_REPAIR_BAY_DISCOUNT_PERCENT,
+  REPAIR_BAY_DISCOUNT_PER_LEVEL_PERCENT,
+  REPAIR_BAY_MAX_LEVEL,
   type RepairCostRobot,
-  type RepairBayContext,
   type RepairQuoteSubject,
 } from './repairCost';
 export {

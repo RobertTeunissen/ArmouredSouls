@@ -31,8 +31,9 @@ const baseInput = {
   baseQuote: 1000,
   damageRepaired: 50,
   repairBayLevel: 2,
+  // Recorded stable fact only; the discount is 6 × level (#525).
   activeRobotCount: 4,
-  repairBayDiscountPercent: 18,
+  repairBayDiscountPercent: 12,
   manualRepairDiscountPercent: 50,
   quoteBeforeManualDiscount: 499,
   attributeTotal: 230,
@@ -77,10 +78,13 @@ describe('repair financial mutation helper', () => {
         amount: -249,
         financialEventId: 'repair:manual-12-7-fingerprint:22:manual:repair_cost',
         breakdown: expect.objectContaining({
+          formulaVersion: '2',
           finalAmount: -249,
           repairType: 'manual',
           perRobotCharge: 249,
-          repairBayDiscountPercent: 18,
+          repairBayLevel: 2,
+          activeRobotCount: 4,
+          repairBayDiscountPercent: 12,
           manualRepairDiscountPercent: 50,
           rounding: expect.objectContaining({ mode: 'floor' }),
         }),
@@ -92,6 +96,7 @@ describe('repair financial mutation helper', () => {
         repairType: 'manual',
         creditsCharged: 249,
         creditsBeforeManualDiscount: 499,
+        discountPercent: 12,
         sourceEventId: 'repair:manual-12-7-fingerprint:22:manual:repair_cost',
       }),
     );
