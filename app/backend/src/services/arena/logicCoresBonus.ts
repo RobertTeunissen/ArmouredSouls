@@ -1,7 +1,10 @@
 /**
  * Logic Cores Range-Scaled Damage Bonus
  *
- * Ranged mirror of the Hydraulic Systems bonus (Season 2, #519).
+ * Ranged counterpart of the Hydraulic Systems bonus (Season 2, #519).
+ * Long range uses the hydraulic melee coefficient (0.015); mid range keeps
+ * 0.01, which no longer equals the hydraulic short coefficient since Season 2
+ * round 3 lowered that to 0.005.
  * Calculates a damage multiplier based on the logicCores attribute and
  * the current range band. Long range gets the strongest bonus, mid range
  * gets a reduced bonus, short/melee get no bonus. The bonus is uncapped,
