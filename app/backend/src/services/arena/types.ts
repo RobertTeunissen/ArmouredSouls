@@ -69,7 +69,8 @@ export interface ThreatScore {
   factors: {
     combatPower: number;
     hpPercentage: number;
-    weaponThreat: number;
+    /** Evaluating robot's own main-weapon range multiplier at this distance (Season 2 round 3) */
+    ownRangeMultiplier: number;
     distance: number;
     proximityDecay: number;
     isTargetingMe: boolean;

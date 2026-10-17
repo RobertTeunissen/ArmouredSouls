@@ -3,7 +3,8 @@ import {
   calculateThreatScore,
   selectTarget,
 } from '../../src/services/arena/threatScoring';
-import { RobotCombatState, MovementIntent } from '../../src/services/arena/types';
+import { classifyRangeBand, getRangePenalty } from '../../src/services/arena/rangeBands';
+import { RobotCombatState, MovementIntent, RangeBand } from '../../src/services/arena/types';
 
 /**
  * Property-based tests for threatScoring module.
@@ -88,6 +89,17 @@ function makeState(overrides: Partial<RobotCombatState> = {}): RobotCombatState 
   };
 }
 
+const BANDS: RangeBand[] = ['melee', 'short', 'mid', 'long'];
+const arbBand = (): fc.Arbitrary<RangeBand> => fc.constantFrom(...BANDS);
+
+/** Same state with a main weapon of the given range band. */
+function withMainBand(state: RobotCombatState, rangeBand: RangeBand): RobotCombatState {
+  return {
+    ...state,
+    robot: { ...state.robot, mainWeapon: { weapon: makeWeapon({ rangeBand }) } } as any,
+  };
+}
+
 const arbDistance = (): fc.Arbitrary<number> =>
   fc.double({ min: 0, max: 100, noNaN: true, noDefaultInfinity: true });
 
@@ -168,6 +180,117 @@ describe('threatScoring property tests', () => {
       const robot = makeState({ position: { x: 0, y: 0 } });
       const result = selectTarget(robot, [], 16);
       expect(result).toBeNull();
+    });
+
+    it('returns the only opponent in a 1v1, whatever the weapons and distance (Season 2 round 3)', () => {
+      fc.assert(
+        fc.property(arbBand(), arbBand(), arbDistance(), arbArenaRadius(), (ownBand, oppBand, distance, radius) => {
+          const robot = withMainBand(makeState({ position: { x: 0, y: 0 } }), ownBand);
+          const opponent = withMainBand(makeState({ position: { x: distance, y: 0 }, teamIndex: 1 }), oppBand);
+          expect(selectTarget(robot, [opponent], radius)?.robotIndex).toBe(1);
+        }),
+        { numRuns: 200 },
+      );
+    });
+  });
+
+  /**
+   * Season 2 round 3 (B): "shoot who I can hurt". The score is multiplied by the
+   * evaluating robot's own range multiplier at the distance; the opponent's
+   * weapon band no longer matters.
+   */
+  describe('Own range multiplier (Season 2 round 3)', () => {
+    /** Score without the own range multiplier, from the published factors. */
+    function baseScore(robot: RobotCombatState, distance: number, radius: number, opponent: RobotCombatState): number {
+      const { factors } = calculateThreatScore(robot, opponent, distance, radius);
+      const ta = Number(robot.robot.threatAnalysis ?? 1);
+      return factors.combatPower * factors.hpPercentage * factors.proximityDecay
+        * (factors.isTargetingMe ? 1.3 : 1) * (0.5 + ta / 100);
+    }
+
+    it.each<[RangeBand, number, number]>([
+      ['long', 22, 1.1],
+      ['melee', 22, 0.5],
+      ['short', 4, 1.1],
+      ['mid', 22, 0.75],
+      ['long', 4, 0.5],
+    ])('a %s evaluator at %d units scales the score by %s×', (ownBand, distance, multiplier) => {
+      const robot = withMainBand(makeState(), ownBand);
+      const opponent = makeState({ position: { x: distance, y: 0 }, teamIndex: 1 });
+      const result = calculateThreatScore(robot, opponent, distance, 58);
+      expect(result.factors.ownRangeMultiplier).toBe(multiplier);
+      expect(result.score).toBeCloseTo(baseScore(robot, distance, 58, opponent) * multiplier, 10);
+    });
+
+    it('the multiplier is exactly getRangePenalty(own band, band(distance)) for any band and distance', () => {
+      fc.assert(
+        fc.property(arbBand(), arbDistance(), arbArenaRadius(), (ownBand, distance, radius) => {
+          const robot = withMainBand(makeState(), ownBand);
+          const opponent = makeState({ position: { x: distance, y: 0 }, teamIndex: 1 });
+          const result = calculateThreatScore(robot, opponent, distance, radius);
+          const expected = getRangePenalty(ownBand, classifyRangeBand(distance));
+          expect(result.factors.ownRangeMultiplier).toBe(expected);
+          expect(result.score).toBeCloseTo(baseScore(robot, distance, radius, opponent) * expected, 9);
+        }),
+        { numRuns: 500 },
+      );
+    });
+
+    it('has no opponent-band bias: opponents differing only in weapon band score equally', () => {
+      fc.assert(
+        fc.property(arbBand(), arbBand(), arbBand(), arbDistance(), arbArenaRadius(), (ownBand, bandA, bandB, distance, radius) => {
+          const robot = withMainBand(makeState(), ownBand);
+          const oppA = withMainBand(makeState({ position: { x: distance, y: 0 }, teamIndex: 1 }), bandA);
+          const oppB = withMainBand(makeState({ position: { x: distance, y: 0 }, teamIndex: 2 }), bandB);
+          expect(calculateThreatScore(robot, oppA, distance, radius).score)
+            .toBe(calculateThreatScore(robot, oppB, distance, radius).score);
+        }),
+        { numRuns: 500 },
+      );
+    });
+
+    it('a melee and a long opponent at long distance score equally (no 1.5 / 0.8 weapon threat)', () => {
+      const robot = withMainBand(makeState(), 'long');
+      const meleeOpp = withMainBand(makeState({ teamIndex: 1 }), 'melee');
+      const longOpp = withMainBand(makeState({ teamIndex: 2 }), 'long');
+      expect(calculateThreatScore(robot, meleeOpp, 22, 58).score)
+        .toBe(calculateThreatScore(robot, longOpp, 22, 58).score);
+    });
+  });
+
+  /**
+   * Season 2 round 3 threat fix: combatPower = max(totalDamageDealt, maxHP × 0.5),
+   * so an opponent's threat no longer drops after its first hit.
+   */
+  describe('Combat power keeps the damage dealt (Season 2 round 3)', () => {
+    it('is identical for damage dealt 0, 10 and maxHP × 0.5 − 1', () => {
+      const robot = makeState();
+      const scores = [0, 10, 49].map((dealt) =>
+        calculateThreatScore(robot, makeState({ teamIndex: 1, maxHP: 100, currentHP: 100, totalDamageDealt: dealt }), 10, 16));
+      for (const s of scores) {
+        expect(s.factors.combatPower).toBe(100 * 0.5 * 2);
+        expect(s.score).toBe(scores[0].score);
+      }
+    });
+
+    it('never drops after the first hit and grows with damage above maxHP × 0.5', () => {
+      fc.assert(
+        fc.property(
+          fc.integer({ min: 1, max: 5000 }),
+          fc.double({ min: 0, max: 10000, noNaN: true, noDefaultInfinity: true }),
+          fc.double({ min: 0, max: 10000, noNaN: true, noDefaultInfinity: true }),
+          (maxHP, d1, d2) => {
+            const [lo, hi] = d1 <= d2 ? [d1, d2] : [d2, d1];
+            const robot = makeState();
+            const at = (dealt: number): number =>
+              calculateThreatScore(robot, makeState({ teamIndex: 1, maxHP, currentHP: maxHP, totalDamageDealt: dealt }), 10, 16).score;
+            expect(at(hi)).toBeGreaterThanOrEqual(at(lo));
+            expect(at(lo)).toBeGreaterThanOrEqual(at(0));
+            if (lo > maxHP * 0.5 + 1) expect(at(lo)).toBeGreaterThan(at(maxHP * 0.5));
+          },
+        ),
+        { numRuns: 500 },
+      );
     });
   });
 });

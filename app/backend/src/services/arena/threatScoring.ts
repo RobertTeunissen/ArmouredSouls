@@ -2,9 +2,15 @@
  * Threat Scoring and Target Selection
  *
  * Calculates threat scores for opponents based on combat power, HP,
- * weapon type, arena-normalized proximity, and targeting status.
+ * the evaluating robot's own weapon effectiveness at that distance,
+ * arena-normalized proximity, and targeting status.
  * Used for target priority in multi-robot battles and positioning
  * decisions in all battle formats.
+ *
+ * Season 2 round 3: the opponent-band weapon threat (1.5× when the
+ * opponent's weapon suited the current distance, else 0.8×) is replaced by
+ * the evaluator's own range multiplier at that distance ("shoot who I can
+ * hurt"), and combat power no longer drops after an opponent's first hit.
  *
  * All functions are pure with no module-level mutable state.
  *
@@ -13,18 +19,22 @@
 
 import { euclideanDistance } from './vector2d';
 import { RobotCombatState, ThreatScore } from './types';
-import { getWeaponOptimalRange, classifyRangeBand, WeaponLike } from './rangeBands';
+import { getWeaponOptimalRange, classifyRangeBand, getRangePenalty, WeaponLike } from './rangeBands';
 
 /**
  * Calculate the threat score of an opponent relative to a robot.
  *
  * Factors:
- * - Combat power (opponent's total combat effectiveness)
+ * - Combat power: max(opponent's total damage dealt, opponent's maxHP × 0.5), × 2
  * - HP percentage (higher HP = higher threat)
- * - Weapon threat (optimal range match = 1.5×, mismatch = 0.8×)
+ * - Own range multiplier: the evaluating robot's main-weapon range penalty at
+ *   the current distance (`getRangePenalty(ownBand, band(distance))`: 1.1× in
+ *   its optimal band, 0.75× one band away, 0.5× two or more); 1 without a main weapon
  * - Arena-normalized proximity decay: 1/(1 + normalizedDist × 5)
  * - Targeting-me factor (1.3× if opponent is targeting this robot)
  * - Scaled by threatAnalysis: (0.5 + ta/100)
+ *
+ * The opponent's own weapon band does not affect the score.
  *
  * Req 6.1, 6.2, 6.4
  */
@@ -36,10 +46,9 @@ export function calculateThreatScore(
 ): ThreatScore {
   const ta = Number(robot.robot.threatAnalysis ?? 1);
 
-  // Base threat from combat power (use totalDamageDealt as proxy if no combatPower field)
-  const combatPower = opponent.totalDamageDealt > 0
-    ? opponent.totalDamageDealt
-    : (opponent.maxHP * 0.5);
+  // Base threat from combat power: damage dealt so far, never below half the
+  // opponent's max HP (so threat does not drop after its first hit)
+  const combatPower = Math.max(opponent.totalDamageDealt, opponent.maxHP * 0.5);
   const combatPowerThreat = combatPower * 2;
 
   // HP-based urgency
@@ -47,14 +56,11 @@ export function calculateThreatScore(
     ? opponent.currentHP / opponent.maxHP
     : 0;
 
-  // Weapon threat — does opponent's weapon match current range?
-  const mainWeapon = opponent.robot.mainWeapon?.weapon as WeaponLike | undefined;
-  let weaponThreat = 0.8;
-  if (mainWeapon) {
-    const weaponRange = getWeaponOptimalRange(mainWeapon);
-    const currentBand = classifyRangeBand(distance);
-    weaponThreat = weaponRange === currentBand ? 1.5 : 0.8;
-  }
+  // Own range multiplier — how well can my main weapon hurt this opponent from here?
+  const ownWeapon = robot.robot.mainWeapon?.weapon as WeaponLike | undefined;
+  const ownRangeMultiplier = ownWeapon
+    ? getRangePenalty(getWeaponOptimalRange(ownWeapon), classifyRangeBand(distance))
+    : 1;
 
   // Arena-normalized proximity decay
   const normalizedDistance = arenaRadius > 0
@@ -69,7 +75,7 @@ export function calculateThreatScore(
 
   // Composite score scaled by threat analysis
   const taScale = 0.5 + ta / 100;
-  const score = combatPowerThreat * hpPercentage * weaponThreat
+  const score = combatPowerThreat * hpPercentage * ownRangeMultiplier
     * proximityDecay * targetingMeFactor * taScale;
 
   return {
@@ -78,7 +84,7 @@ export function calculateThreatScore(
     factors: {
       combatPower: combatPowerThreat,
       hpPercentage,
-      weaponThreat,
+      ownRangeMultiplier,
       distance,
       proximityDecay,
       isTargetingMe,
