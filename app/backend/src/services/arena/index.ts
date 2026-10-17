@@ -61,6 +61,10 @@ export type { AdaptationState, AdaptationEvent } from './adaptationTracker';
 export { calculatePressureEffects, calculatePressureThreshold } from './pressureSystem';
 export type { PressureState, PressureEffects } from './pressureSystem';
 
+// Wall-aware kiting path (Season 2 round 3, #538)
+export { planWallAwareKitingStep, WALL_KITING_MARGIN } from './wallAwareKiting';
+export type { WallAwareKitingInput } from './wallAwareKiting';
+
 // Servo strain
 export { calculateBaseSpeed, calculateEffectiveSpeed, updateServoStrain } from './servoStrain';
 export type { MovementMode } from './servoStrain';

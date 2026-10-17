@@ -1318,51 +1318,69 @@ describe('simulateBattle — spatial refactor', () => {
         return byRobot;
       }
 
-      const brawler = () => durableRobot({
+      // Kiter Combat Algorithms defaults to 20. `ca` overrides both robots' Combat Algorithms.
+      const brawler = (ca?: number) => durableRobot({
         id: 1, name: 'Brawler', mainWeapon: createMeleeWeaponInventory(1), mainWeaponId: 1,
-        servoMotors: new Prisma.Decimal(25), combatAlgorithms: new Prisma.Decimal(25),
+        servoMotors: new Prisma.Decimal(25), combatAlgorithms: new Prisma.Decimal(ca ?? 25),
       });
-      const kiter = () => durableRobot({
+      const kiter = (ca?: number) => durableRobot({
         id: 2, name: 'Kiter', mainWeapon: createRangedWeaponInventory(2), mainWeaponId: 2,
-        servoMotors: new Prisma.Decimal(30),
+        servoMotors: new Prisma.Decimal(30), combatAlgorithms: new Prisma.Decimal(ca ?? 20),
       });
 
-      it('swapping robot 1 and robot 2 gives identical movement for each robot', () => {
+      // Season 2 round 3: a short-range robot vs a long-range robot (ranged kiting / ranged pursuit)
+      const shortGunner = (ca?: number) => durableRobot({
+        id: 1, name: 'Brawler', mainWeapon: createRangedWeaponInventory(1), mainWeaponId: 1,
+        servoMotors: new Prisma.Decimal(25), combatAlgorithms: new Prisma.Decimal(ca ?? 25),
+      });
+      const longKiter = (ca?: number) => durableRobot({
+        id: 2, name: 'Kiter', mainWeapon: createLongRangeInventory(2), mainWeaponId: 2,
+        servoMotors: new Prisma.Decimal(30), combatAlgorithms: new Prisma.Decimal(ca ?? 20),
+      });
+      // Both pairs name the closer-preferring robot 'Brawler' and the kiter 'Kiter'.
+      type Factory = (ca?: number) => RobotWithWeapons;
+      const PAIRS: Array<[string, Factory, Factory]> = [
+        ['melee brawler vs short-range kiter', brawler, kiter],
+        ['short-range robot vs long-range kiter (round 3 ranged kiting)', shortGunner, longKiter],
+      ];
+
+      it.each(PAIRS)('swapping robot 1 and robot 2 gives identical movement for each robot (%s)', (_label, closer, farther) => {
         // Same spawn per robot in both runs; only the order in the robot list differs.
-        const forward = trajectories([brawler(), kiter()], false);
-        const swapped = trajectories([kiter(), brawler()], true);
+        const forward = trajectories([closer(), farther()], false);
+        const swapped = trajectories([farther(), closer()], true);
 
         expect(forward.get('Brawler')!.length).toBeGreaterThan(300);
         expect(swapped.get('Brawler')).toEqual(forward.get('Brawler'));
         expect(swapped.get('Kiter')).toEqual(forward.get('Kiter'));
       });
 
-      it('swapping robot 1 and robot 2 on their own spawns gives mirrored movement', () => {
+      it.each(PAIRS)('swapping robot 1 and robot 2 on their own spawns gives mirrored movement (%s)', (_label, closer, farther) => {
         // Default spawns: robot 1 on the left, robot 2 on the right. Distances between
         // the two robots are the same per tick whichever robot is listed first.
+        // Path deviation hashes the absolute position, so it is not mirror-symmetric
+        // and mirrored paths are not bit-identical. Both robots therefore run at
+        // Combat Algorithms 50, the smallest deviation (5°), so the comparison measures
+        // the movement rules rather than the hash. (With the deviation switched off
+        // the mirrored runs are identical; at Combat Algorithms 25/20 the hash alone
+        // separates the mid-arena approach of the two runs by more than 1 unit.)
+        // Exact robot-order independence is covered by the previous test.
         const gaps = (t: Map<string, Array<{ x: number; y: number }>>): number[] =>
           t.get('Brawler')!.map((b, i) => Math.hypot(b.x - t.get('Kiter')![i].x, b.y - t.get('Kiter')![i].y));
-        const forward = trajectories([brawler(), kiter()], false);
-        const swapped = trajectories([kiter(), brawler()], false);
+        const forward = trajectories([closer(50), farther(50)], false);
+        const swapped = trajectories([farther(50), closer(50)], false);
         const forwardBrawler = forward.get('Brawler')!;
         const swappedBrawler = swapped.get('Brawler')!;
 
         // Tick-start spawn positions mirror across the y-axis
         expect(swappedBrawler[0]).toEqual({ x: -forwardBrawler[0].x, y: forwardBrawler[0].y });
         expect(gaps(swapped).length).toBe(gaps(forward).length);
-        // Path deviation hashes the absolute position, so mirrored paths are not
-        // bit-identical; the gap between the robots stays close tick by tick.
-        // Exact robot-order independence is covered by the previous test.
-        // Pursuit 1.15 (Season 2 round 2) brings the brawler within ~3 units of the
-        // kiter as it reaches the wall; in one of the two runs the kiter slides back
-        // and forth along the wall for ~4 ticks, so the gap differs by up to ~2.0 units
-        // for 2 of 400 ticks (pursuit 1.10: max 0.34). The mean difference stays ~0.3.
-        // Follow-up #538: fix the wall-slide dither and restore the max < 1 bound.
+        // Fixed in #538: the kiter used to slide back and forth along the wall for a
+        // few ticks in one of the two runs, so the gap differed by up to ~2.0 units
+        // (also at Combat Algorithms 50). Kiters near the wall now take the wall-aware
+        // kiting path, which keeps their direction of travel, so the mirrored runs
+        // stay within 1 unit on every tick.
         const gapDiffs = gaps(forward).map((g, i) => Math.abs(g - gaps(swapped)[i]));
-        const meanGapDiff = gapDiffs.reduce((sum, d) => sum + d, 0) / gapDiffs.length;
-        expect(meanGapDiff).toBeLessThan(0.5);
-        expect(gapDiffs.filter(d => d >= 1).length).toBeLessThanOrEqual(2);
-        expect(Math.max(...gapDiffs)).toBeLessThan(2.5);
+        expect(Math.max(...gapDiffs)).toBeLessThan(1);
       });
     });
 
