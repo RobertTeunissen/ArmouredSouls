@@ -402,12 +402,14 @@ describe('Tag Team Battle Orchestrator - Property Tests', () => {
   describe('Property 12: Tag Team Reward Multiplier', () => {
     /**
      * **Validates: Requirements 4.1, 4.2, 4.3**
-     * For any tag team match outcome (win, loss, or draw), the credits awarded
-     * should be exactly 2x the standard league match rewards for that tier and outcome type.
+     * For any tag team match outcome (win, loss, or draw), the team credit pool
+     * is exactly 1.5x the standard league match reward for that tier and outcome
+     * type: 2 robots x the Team_Credit_Pool_Factor 0.75 (Season 2, #527; was 2x).
+     * League rewards are multiples of 100, so the pool is a whole number.
      */
 
 
-    test('tag team rewards are exactly 2x standard league rewards', () => {
+    test('tag team rewards are exactly 1.5x standard league rewards', () => {
       fc.assert(
         fc.property(
           fc.constantFrom('bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'),
@@ -431,15 +433,15 @@ describe('Tag Team Battle Orchestrator - Property Tests', () => {
               standardReward = participationReward;
             }
 
-            // Tag team reward should be exactly 2x standard
-            expect(tagTeamReward).toBe(standardReward * 2);
+            // Tag team pool should be exactly 1.5x standard (2 × 0.75)
+            expect(tagTeamReward * 2).toBe(standardReward * 3);
           }
         ),
         { numRuns: NUM_RUNS }
       );
     });
 
-    test('tag team win rewards are 2x standard win rewards', () => {
+    test('tag team win rewards are 1.5x standard win rewards', () => {
       fc.assert(
         fc.property(
           fc.constantFrom('bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'),
@@ -447,14 +449,14 @@ describe('Tag Team Battle Orchestrator - Property Tests', () => {
             const tagTeamWinReward = calculateTagTeamRewards(league, true, false);
             const standardWinReward = getLeagueWinReward(league) + getParticipationReward(league);
 
-            expect(tagTeamWinReward).toBe(standardWinReward * 2);
+            expect(tagTeamWinReward * 2).toBe(standardWinReward * 3);
           }
         ),
         { numRuns: NUM_RUNS }
       );
     });
 
-    test('tag team loss rewards are 2x standard loss rewards', () => {
+    test('tag team loss rewards are 1.5x standard loss rewards', () => {
       fc.assert(
         fc.property(
           fc.constantFrom('bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'),
@@ -462,14 +464,14 @@ describe('Tag Team Battle Orchestrator - Property Tests', () => {
             const tagTeamLossReward = calculateTagTeamRewards(league, false, false);
             const standardLossReward = getParticipationReward(league);
 
-            expect(tagTeamLossReward).toBe(standardLossReward * 2);
+            expect(tagTeamLossReward * 2).toBe(standardLossReward * 3);
           }
         ),
         { numRuns: NUM_RUNS }
       );
     });
 
-    test('tag team draw rewards are 2x standard draw rewards', () => {
+    test('tag team draw rewards are 1.5x standard draw rewards', () => {
       fc.assert(
         fc.property(
           fc.constantFrom('bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'),
@@ -477,7 +479,7 @@ describe('Tag Team Battle Orchestrator - Property Tests', () => {
             const tagTeamDrawReward = calculateTagTeamRewards(league, false, true);
             const standardDrawReward = getParticipationReward(league);
 
-            expect(tagTeamDrawReward).toBe(standardDrawReward * 2);
+            expect(tagTeamDrawReward * 2).toBe(standardDrawReward * 3);
           }
         ),
         { numRuns: NUM_RUNS }
