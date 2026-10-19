@@ -11,10 +11,13 @@ import { EconomyError, EconomyErrorCode } from '../../errors/economyErrors';
 // Spec #46 R10: streaming estimates derive from the award-path formula.
 import { computeStreamingRevenue } from './streamingRevenueService';
 import {
-  sumRepairBaySavingsFromRecords,
-  sumStudioAttributableStreaming,
-  type RecordedStreamingRow,
+  sumRepairBaySavingsFromGroups,
+  sumStudioAttributableStreamingFromGroups,
 } from './recorded-facility-returns';
+import {
+  aggregateRepairChargedByDiscount,
+  aggregateStudioStreamingByMultiplier,
+} from './recorded-facility-returns-queries';
 import {
   calculateFacilityOperatingCost,
   calculateMerchandisingIncome,
@@ -34,15 +37,6 @@ const ECONOMIC_FACILITY_TYPES = [
 ] as const;
 
 type EconomicFacilityType = (typeof ECONOMIC_FACILITY_TYPES)[number];
-
-/** A recorded streaming award with the cycle it was paid in. */
-type RecordedStreamingLedgerRow = RecordedStreamingRow & { cycleNumber: number };
-
-/** A recorded `robot_repair` audit payload with the cycle it was charged in. */
-interface RecordedRepairAuditRow {
-  payload: unknown;
-  cycleNumber: number;
-}
 
 export interface UnifiedFacilityROI {
   facilityType: string;
@@ -248,17 +242,9 @@ export class UnifiedFacilityROIService {
       }
     }
 
-    // Fetch recorded streaming awards once (needed for the Streaming Studio);
-    // each facility filters them to its own ownership window.
-    const streamingRows = facilities.some((f) => f.facilityType === 'streaming_studio')
-      ? await this.fetchRecordedStreamingRows(userId, 1, currentCycle)
-      : [];
-
-    // Fetch recorded repairs once (needed for the Repair Bay); each facility
-    // filters them to its own ownership window.
-    const repairRows = facilities.some((f) => f.facilityType === 'repair_bay')
-      ? await this.fetchRecordedRepairRows(userId, 1, currentCycle)
-      : [];
+    // Recorded streaming awards and repairs are not prefetched: the Streaming
+    // Studio and Repair Bay each run one DB aggregate over their own ownership
+    // window (#542), so row volume does not grow with history.
 
     // Purchased Roster_Capacity, needed for the Training Facility discount
     // (Spec #46 R11, #526); fetched once, only when that facility is owned.
@@ -275,8 +261,6 @@ export class UnifiedFacilityROIService {
         facility.level,
         currentCycle,
         userMetricsByCycle,
-        streamingRows,
-        repairRows,
         rosterCapacity
       );
       if (roi) {
@@ -313,8 +297,6 @@ export class UnifiedFacilityROIService {
     level: number,
     currentCycle: number,
     userMetricsByCycle: Map<number, StableMetric>,
-    streamingRows: ReadonlyArray<RecordedStreamingLedgerRow>,
-    repairRows: ReadonlyArray<RecordedRepairAuditRow>,
     rosterCapacity: number
   ): Promise<UnifiedFacilityROI | null> {
     if (!this.isEconomicFacility(facilityType)) return null;
@@ -343,12 +325,13 @@ export class UnifiedFacilityROIService {
     let dataSource: 'snapshot' | 'estimate';
 
     if (userMetrics.length > 0) {
-      totalReturns = this.calculateReturnsFromSnapshotsSync(
+      totalReturns = await this.calculateReturnsFromSharedSnapshots(
         facilityType as EconomicFacilityType,
         level,
         userMetrics,
-        streamingRows.filter((row) => row.cycleNumber >= purchaseCycle && row.cycleNumber <= currentCycle),
-        repairRows.filter((row) => row.cycleNumber >= purchaseCycle && row.cycleNumber <= currentCycle),
+        userId,
+        purchaseCycle,
+        currentCycle,
         rosterCapacity
       );
       dataSource = 'snapshot';
@@ -393,25 +376,26 @@ export class UnifiedFacilityROIService {
   }
 
   /**
-   * Synchronous version of calculateReturnsFromSnapshots that uses pre-fetched
-   * streaming ledger rows and repair audit rows (already filtered to the
-   * ownership window).
+   * Variant of calculateReturnsFromSnapshots that uses the pre-fetched
+   * Roster_Capacity. Streaming Studio and Repair Bay returns come from DB
+   * aggregates over the ownership window `[purchaseCycle, currentCycle]`.
    */
-  private calculateReturnsFromSnapshotsSync(
+  private async calculateReturnsFromSharedSnapshots(
     facilityType: EconomicFacilityType,
     level: number,
     userMetrics: StableMetric[],
-    streamingRows: ReadonlyArray<RecordedStreamingLedgerRow>,
-    repairRows: ReadonlyArray<RecordedRepairAuditRow>,
+    userId: number,
+    purchaseCycle: number,
+    currentCycle: number,
     rosterCapacity: number
-  ): number {
+  ): Promise<number> {
     switch (facilityType) {
       case 'merchandising_hub':
         return userMetrics.reduce((sum, m) => sum + (m.merchandisingIncome || 0), 0);
       case 'streaming_studio':
-        return sumStudioAttributableStreaming(streamingRows);
+        return this.calculateStudioStreamingReturns(userId, purchaseCycle, currentCycle);
       case 'repair_bay':
-        return sumRepairBaySavingsFromRecords(repairRows.map((row) => row.payload));
+        return this.calculateRepairBaySavings(userId, purchaseCycle, currentCycle);
       case 'training_facility':
         return this.calculateTrainingFacilitySavings(level, userMetrics, rosterCapacity);
       case 'weapons_workshop':
@@ -660,39 +644,18 @@ export class UnifiedFacilityROIService {
   }
 
   /**
-   * The user's recorded `streaming_revenue` ledger rows in `[fromCycle, toCycle]`.
+   * Streaming Studio returns in `[fromCycle, toCycle]`: the studio-attributable
+   * share of the user's recorded `streaming_revenue` awards, summed in the
+   * database per stored `studioMultiplier` (#542) and rounded once.
    */
-  private async fetchRecordedStreamingRows(
+  private async calculateStudioStreamingReturns(
     userId: number,
     fromCycle: number,
     toCycle: number
-  ): Promise<RecordedStreamingLedgerRow[]> {
-    return prisma.financialLedger.findMany({
-      where: {
-        userId,
-        transactionType: 'streaming_revenue',
-        cycleNumber: { gte: fromCycle, lte: toCycle },
-      },
-      select: { amount: true, metadata: true, cycleNumber: true },
-    });
-  }
-
-  /**
-   * The user's recorded `robot_repair` audit payloads in `[fromCycle, toCycle]`.
-   */
-  private async fetchRecordedRepairRows(
-    userId: number,
-    fromCycle: number,
-    toCycle: number
-  ): Promise<RecordedRepairAuditRow[]> {
-    return prisma.auditLog.findMany({
-      where: {
-        userId,
-        eventType: 'robot_repair',
-        cycleNumber: { gte: fromCycle, lte: toCycle },
-      },
-      select: { payload: true, cycleNumber: true },
-    });
+  ): Promise<number> {
+    return sumStudioAttributableStreamingFromGroups(
+      await aggregateStudioStreamingByMultiplier(userId, fromCycle, toCycle)
+    );
   }
 
   /**
@@ -702,7 +665,8 @@ export class UnifiedFacilityROIService {
    * `streaming_revenue` award in the ownership window
    * (`amount × (1 − 1 / studioMultiplier)` with the row's stored multiplier,
    * #524), not the whole streaming income: a robot earns base streaming
-   * without any studio. Cycles from before the financial ledger existed have
+   * without any studio. The awards are summed in the database per stored
+   * multiplier (#542). Cycles from before the financial ledger existed have
    * no rows and therefore contribute nothing, so returns for a studio bought
    * before the ledger cutover are understated rather than re-derived from the
    * current formula.
@@ -720,9 +684,7 @@ export class UnifiedFacilityROIService {
         return userMetrics.reduce((sum, m) => sum + (m.merchandisingIncome || 0), 0);
 
       case 'streaming_studio':
-        return sumStudioAttributableStreaming(
-          await this.fetchRecordedStreamingRows(userId, purchaseCycle, currentCycle)
-        );
+        return this.calculateStudioStreamingReturns(userId, purchaseCycle, currentCycle);
 
       case 'repair_bay':
         return this.calculateRepairBaySavings(userId, purchaseCycle, currentCycle);
@@ -747,15 +709,18 @@ export class UnifiedFacilityROIService {
    * ownership window: per row `charged × d / (100 − d)` with the row's recorded
    * Repair Bay discount d. Never re-derived from the current discount formula
    * or level, so the #525 change (6% per level, independent of robot count)
-   * leaves past savings as they were recorded.
+   * leaves past savings as they were recorded. Charges are summed in the
+   * database per recorded discount (#542), so only one row per distinct d is
+   * read.
    */
   private async calculateRepairBaySavings(
     userId: number,
     purchaseCycle: number,
     currentCycle: number
   ): Promise<number> {
-    const rows = await this.fetchRecordedRepairRows(userId, purchaseCycle, currentCycle);
-    return sumRepairBaySavingsFromRecords(rows.map((row) => row.payload));
+    return sumRepairBaySavingsFromGroups(
+      await aggregateRepairChargedByDiscount(userId, purchaseCycle, currentCycle)
+    );
   }
 
   /**

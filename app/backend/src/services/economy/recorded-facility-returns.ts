@@ -4,6 +4,18 @@
  * Historical returns are derived from the facts stored on each financial event
  * at the time it happened, never from the current formula or the current
  * facility level (FINANCIAL_LEDGER_AUDIT_GUIDE.md: reports use stored facts).
+ *
+ * Two forms of each calculation live here:
+ *
+ * - The per-row helpers (`sumStudioAttributableStreaming`,
+ *   `sumRepairBaySavingsFromRecords`) are the reference contract: they define
+ *   which rows count and what each contributes.
+ * - The grouped helpers (`…FromGroups`) are what production uses (#542). The
+ *   database groups the stable's rows by the stored key (`studioMultiplier`,
+ *   `discountPercent`) and sums the amount per group, so the query returns at
+ *   most one row per distinct key regardless of history length. Each per-row
+ *   term is linear in the summed amount for a fixed key, and both forms round
+ *   once at the end, so the grouped total equals the per-row total.
  */
 
 import { readRepairChargedCredits } from './repairPayloadKeys';
@@ -14,12 +26,42 @@ export interface RecordedStreamingRow {
   metadata: unknown;
 }
 
+/**
+ * Recorded streaming awards that share one stored `studioMultiplier`, summed.
+ * `studioMultiplier` is the raw stored JSON value; it is validated here, not
+ * in SQL, with the same rule the per-row helper applies.
+ */
+export interface StudioStreamingGroup {
+  studioMultiplier: unknown;
+  amountSum: number;
+}
+
+/**
+ * Recorded repairs that share one stored `discountPercent`, with their charged
+ * credits (`creditsCharged`, else legacy `cost`) summed. `discountPercent` is
+ * the raw stored JSON value, validated here.
+ */
+export interface RepairChargedGroup {
+  discountPercent: unknown;
+  chargedSum: number;
+}
+
+/** A stored studio multiplier that counts: a finite number ≥ 1. */
+export function isRecordedStudioMultiplier(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 1;
+}
+
+/** A stored Repair Bay discount that counts: a finite number in [0, 100). */
+export function isRecordedRepairDiscountPercent(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0 && value < 100;
+}
+
 function readStudioMultiplier(metadata: unknown): number | null {
   if (typeof metadata !== 'object' || metadata === null || Array.isArray(metadata)) {
     return null;
   }
   const value = (metadata as Record<string, unknown>).studioMultiplier;
-  return typeof value === 'number' && Number.isFinite(value) && value >= 1 ? value : null;
+  return isRecordedStudioMultiplier(value) ? value : null;
 }
 
 /**
@@ -42,6 +84,24 @@ export function sumStudioAttributableStreaming(rows: ReadonlyArray<RecordedStrea
       continue;
     }
     total += row.amount * (1 - 1 / studioMultiplier);
+  }
+  return Math.round(total);
+}
+
+/**
+ * Grouped form of {@link sumStudioAttributableStreaming}: one term per stored
+ * multiplier, `amountSum × (1 − 1 / studioMultiplier)`. Groups whose multiplier
+ * would be skipped per row are skipped. Rounded once at the end.
+ */
+export function sumStudioAttributableStreamingFromGroups(
+  groups: ReadonlyArray<StudioStreamingGroup>,
+): number {
+  let total = 0;
+  for (const group of groups) {
+    if (!isRecordedStudioMultiplier(group.studioMultiplier) || !Number.isFinite(group.amountSum)) {
+      continue;
+    }
+    total += group.amountSum * (1 - 1 / group.studioMultiplier);
   }
   return Math.round(total);
 }
@@ -74,16 +134,28 @@ export function sumRepairBaySavingsFromRecords(payloads: ReadonlyArray<unknown>)
     }
     const charged = readRepairChargedCredits(record);
     const discountPercent = record.discountPercent;
-    if (
-      charged === null
-      || typeof discountPercent !== 'number'
-      || !Number.isFinite(discountPercent)
-      || discountPercent < 0
-      || discountPercent >= 100
-    ) {
+    if (charged === null || !isRecordedRepairDiscountPercent(discountPercent)) {
       continue;
     }
     total += (charged * discountPercent) / (100 - discountPercent);
+  }
+  return Math.round(total);
+}
+
+/**
+ * Grouped form of {@link sumRepairBaySavingsFromRecords}: one term per stored
+ * discount, `chargedSum × d / (100 − d)`. Groups whose discount would be
+ * skipped per row, or whose charged sum is not finite, are skipped. Rounded
+ * once at the end.
+ */
+export function sumRepairBaySavingsFromGroups(groups: ReadonlyArray<RepairChargedGroup>): number {
+  let total = 0;
+  for (const group of groups) {
+    const discountPercent = group.discountPercent;
+    if (!isRecordedRepairDiscountPercent(discountPercent) || !Number.isFinite(group.chargedSum)) {
+      continue;
+    }
+    total += (group.chargedSum * discountPercent) / (100 - discountPercent);
   }
   return Math.round(total);
 }

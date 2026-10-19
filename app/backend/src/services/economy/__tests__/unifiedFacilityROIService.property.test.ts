@@ -55,13 +55,17 @@ jest.mock('../../../lib/prisma', () => ({
     robot: {
       findMany: jest.fn(),
     },
-    financialLedger: {
-      findMany: jest.fn(),
-    },
   },
 }));
 
+// Recorded streaming/repair returns are DB aggregates (#542).
+jest.mock('../recorded-facility-returns-queries');
+
 import prisma from '../../../lib/prisma';
+import {
+  aggregateRepairChargedByDiscount,
+  aggregateStudioStreamingByMultiplier,
+} from '../recorded-facility-returns-queries';
 
 const mockedPrisma = prisma as jest.Mocked<typeof prisma>;
 
@@ -75,13 +79,15 @@ describe('UnifiedFacilityROIService - Property-Based Tests', () => {
     // robot count. Every property here generates a facility type from the economic
     // set, so any run that draws `repair_bay` reaches this.
     (mockedPrisma.robot.findMany as jest.Mock).mockResolvedValue([{ id: 1 }, { id: 2 }]);
-    // Repair Bay savings come from recorded robot_repair audit rows (#525).
-    (mockedPrisma.auditLog.findMany as jest.Mock).mockResolvedValue([
-      { payload: { creditsCharged: 6400, discountPercent: 36 }, cycleNumber: 1 },
+    // Repair Bay savings come from recorded robot_repair audit rows (#525),
+    // aggregated per recorded discount in the database (#542).
+    (aggregateRepairChargedByDiscount as jest.Mock).mockResolvedValue([
+      { discountPercent: 36, chargedSum: 6400 },
     ]);
-    // Streaming Studio returns come from recorded streaming_revenue ledger rows (#524).
-    (mockedPrisma.financialLedger.findMany as jest.Mock).mockResolvedValue([
-      { amount: 3000, metadata: { formulaVersion: '2', studioMultiplier: 1.5 }, cycleNumber: 1 },
+    // Streaming Studio returns come from recorded streaming_revenue ledger rows
+    // (#524), aggregated per stored multiplier in the database (#542).
+    (aggregateStudioStreamingByMultiplier as jest.Mock).mockResolvedValue([
+      { studioMultiplier: 1.5, amountSum: 3000 },
     ]);
   });
 
