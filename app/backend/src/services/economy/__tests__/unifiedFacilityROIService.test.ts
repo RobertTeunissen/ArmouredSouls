@@ -33,15 +33,26 @@ jest.mock('../../../lib/prisma', () => ({
     robot: {
       findMany: jest.fn(),
     },
-    financialLedger: {
-      findMany: jest.fn(),
-    },
   },
 }));
 
+// Recorded streaming/repair returns are DB aggregates (#542); their SQL is
+// covered against PostgreSQL in facilityRoiRecordedAggregates.integration.test.ts.
+jest.mock('../recorded-facility-returns-queries');
+
 import prisma from '../../../lib/prisma';
+import {
+  aggregateRepairChargedByDiscount,
+  aggregateStudioStreamingByMultiplier,
+} from '../recorded-facility-returns-queries';
 
 const mockedPrisma = prisma as jest.Mocked<typeof prisma>;
+const mockedStreamingAggregate = aggregateStudioStreamingByMultiplier as jest.MockedFunction<
+  typeof aggregateStudioStreamingByMultiplier
+>;
+const mockedRepairAggregate = aggregateRepairChargedByDiscount as jest.MockedFunction<
+  typeof aggregateRepairChargedByDiscount
+>;
 
 describe('UnifiedFacilityROIService', () => {
   let service: UnifiedFacilityROIService;
@@ -49,6 +60,9 @@ describe('UnifiedFacilityROIService', () => {
   beforeEach(() => {
     service = new UnifiedFacilityROIService();
     jest.clearAllMocks();
+    // No recorded streaming awards or repairs unless a test supplies them.
+    mockedStreamingAggregate.mockResolvedValue([]);
+    mockedRepairAggregate.mockResolvedValue([]);
   });
 
   describe('calculateFacilityROI - snapshot-based calculation', () => {
@@ -80,9 +94,6 @@ describe('UnifiedFacilityROIService', () => {
           stableMetrics: [m],
         }))
       );
-
-      // No recorded repairs unless a test supplies them.
-      (mockedPrisma.auditLog.findMany as jest.Mock).mockResolvedValue([]);
     };
 
     it('should calculate ROI for merchandising_hub from snapshot data', async () => {
@@ -105,11 +116,9 @@ describe('UnifiedFacilityROIService', () => {
         { userId: 1, merchandisingIncome: 0, streamingIncome: 5000, totalRepairCosts: 0, attributeUpgrades: 0, weaponPurchases: 0, operatingCosts: 200 },
         { userId: 1, merchandisingIncome: 0, streamingIncome: 8000, totalRepairCosts: 0, attributeUpgrades: 0, weaponPurchases: 0, operatingCosts: 200 },
       ]);
-      (mockedPrisma.financialLedger.findMany as jest.Mock).mockResolvedValue([
-        // v1 row at ×2 (old L1): 2,000 × (1 − 1/2) = 1,000
-        { amount: 2000, metadata: { formulaVersion: '1', studioMultiplier: 2 }, cycleNumber: 10 },
-        // v2 row at ×2 (L2): 4,000 × (1 − 1/2) = 2,000
-        { amount: 4000, metadata: { formulaVersion: '2', studioMultiplier: 2 }, cycleNumber: 11 },
+      mockedStreamingAggregate.mockResolvedValue([
+        // v1 row 2,000 + v2 row 4,000, both at ×2: 6,000 × (1 − 1/2) = 3,000
+        { studioMultiplier: 2, amountSum: 6000 },
       ]);
 
       const result = await service.calculateFacilityROI(1, 'streaming_studio');
@@ -120,10 +129,7 @@ describe('UnifiedFacilityROIService', () => {
       // any studio, so it is not the studio's return.
       expect(result!.totalReturns).toBe(3000);
       expect(result!.dataSource).toBe('snapshot');
-      expect(mockedPrisma.financialLedger.findMany).toHaveBeenCalledWith({
-        where: { userId: 1, transactionType: 'streaming_revenue', cycleNumber: { gte: 10, lte: 50 } },
-        select: { amount: true, metadata: true, cycleNumber: true },
-      });
+      expect(mockedStreamingAggregate).toHaveBeenCalledWith(1, 10, 50);
     });
 
     it('should calculate repair_bay savings from each recorded repair\'s own discount', async () => {
@@ -132,11 +138,11 @@ describe('UnifiedFacilityROIService', () => {
       setupMocksForFacility('repair_bay', 2, [
         { userId: 1, merchandisingIncome: 0, streamingIncome: 0, totalRepairCosts: 10000, attributeUpgrades: 0, weaponPurchases: 0, operatingCosts: 500 },
       ]);
-      (mockedPrisma.auditLog.findMany as jest.Mock).mockResolvedValue([
+      mockedRepairAggregate.mockResolvedValue([
         // 6,400 × 36 / 64 = 3,600
-        { payload: { creditsCharged: 6400, discountPercent: 36, repairType: 'automatic' }, cycleNumber: 10 },
+        { discountPercent: 36, chargedSum: 6400 },
         // 5,200 × 48 / 52 = 4,800
-        { payload: { creditsCharged: 5200, discountPercent: 48, repairType: 'manual' }, cycleNumber: 11 },
+        { discountPercent: 48, chargedSum: 5200 },
       ]);
 
       const result = await service.calculateFacilityROI(1, 'repair_bay');
@@ -145,10 +151,7 @@ describe('UnifiedFacilityROIService', () => {
       expect(result!.facilityType).toBe('repair_bay');
       expect(result!.totalReturns).toBe(8400);
       expect(result!.dataSource).toBe('snapshot');
-      expect(mockedPrisma.auditLog.findMany).toHaveBeenCalledWith({
-        where: { userId: 1, eventType: 'robot_repair', cycleNumber: { gte: 10, lte: 50 } },
-        select: { payload: true, cycleNumber: true },
-      });
+      expect(mockedRepairAggregate).toHaveBeenCalledWith(1, 10, 50);
       // Robot count is no longer an input to historical savings.
       expect(mockedPrisma.robot.findMany).not.toHaveBeenCalled();
     });
@@ -619,12 +622,10 @@ describe('UnifiedFacilityROIService', () => {
         },
       ]);
 
-      (mockedPrisma.financialLedger.findMany as jest.Mock).mockResolvedValue([
-        // Before the purchase cycle (5): outside the ownership window.
-        { amount: 9000, metadata: { formulaVersion: '1', studioMultiplier: 3 }, cycleNumber: 3 },
-        // Inside the window at L1 (×1.5): 1,500 × (1 − 1/1.5) = 500
-        { amount: 1500, metadata: { formulaVersion: '2', studioMultiplier: 1.5 }, cycleNumber: 6 },
-      ]);
+      // The aggregate is scoped to the ownership window [5, 20] in SQL, so the
+      // pre-purchase award is never returned. Inside the window at L1 (×1.5):
+      // 1,500 × (1 − 1/1.5) = 500
+      mockedStreamingAggregate.mockResolvedValue([{ studioMultiplier: 1.5, amountSum: 1500 }]);
 
       const result = await service.calculateAllEconomicROIs(1);
 
@@ -636,13 +637,15 @@ describe('UnifiedFacilityROIService', () => {
 
       const studio = result.facilities.find((f) => f.facilityType === 'streaming_studio');
       expect(studio!.totalReturns).toBe(500);
-      // Recorded streaming rows are fetched once for all facilities.
-      expect(mockedPrisma.financialLedger.findMany).toHaveBeenCalledTimes(1);
+      // One aggregate for the studio, over its own ownership window.
+      expect(mockedStreamingAggregate).toHaveBeenCalledTimes(1);
+      expect(mockedStreamingAggregate).toHaveBeenCalledWith(1, 5, 20);
+      expect(mockedRepairAggregate).not.toHaveBeenCalled();
     });
   });
 
   describe('calculateAllEconomicROIs - repair_bay', () => {
-    it('should prefetch recorded repairs once and filter them to the ownership window', async () => {
+    it('should aggregate recorded repairs once over the ownership window', async () => {
       (mockedPrisma.facility.findMany as jest.Mock).mockResolvedValue([
         { userId: 1, facilityType: 'repair_bay', level: 1, maxLevel: 10 },
       ]);
@@ -658,13 +661,13 @@ describe('UnifiedFacilityROIService', () => {
           stableMetrics: [{ userId: 1, merchandisingIncome: 0, streamingIncome: 0, cycleRepairCreditsPaid: 9000, attributeUpgrades: 0, weaponPurchases: 0 }],
         },
       ]);
-      (mockedPrisma.auditLog.findMany as jest.Mock).mockResolvedValue([
-        // Before the purchase cycle (5): outside the ownership window.
-        { payload: { creditsCharged: 9000, discountPercent: 50 }, cycleNumber: 3 },
+      // Scoped to the ownership window [5, 20] in SQL; the pre-purchase repair
+      // is never returned.
+      mockedRepairAggregate.mockResolvedValue([
         // 6,400 × 36 / 64 = 3,600
-        { payload: { creditsCharged: 6400, discountPercent: 36 }, cycleNumber: 6 },
+        { discountPercent: 36, chargedSum: 6400 },
         // 5,200 × 48 / 52 = 4,800
-        { payload: { creditsCharged: 5200, discountPercent: 48 }, cycleNumber: 7 },
+        { discountPercent: 48, chargedSum: 5200 },
       ]);
 
       const result = await service.calculateAllEconomicROIs(1);
@@ -672,11 +675,9 @@ describe('UnifiedFacilityROIService', () => {
       expect(result.facilities).toHaveLength(1);
       expect(result.facilities[0].facilityType).toBe('repair_bay');
       expect(result.facilities[0].totalReturns).toBe(8400);
-      expect(mockedPrisma.auditLog.findMany).toHaveBeenCalledTimes(1);
-      expect(mockedPrisma.auditLog.findMany).toHaveBeenCalledWith({
-        where: { userId: 1, eventType: 'robot_repair', cycleNumber: { gte: 1, lte: 20 } },
-        select: { payload: true, cycleNumber: true },
-      });
+      expect(mockedRepairAggregate).toHaveBeenCalledTimes(1);
+      expect(mockedRepairAggregate).toHaveBeenCalledWith(1, 5, 20);
+      expect(mockedStreamingAggregate).not.toHaveBeenCalled();
       expect(mockedPrisma.robot.findMany).not.toHaveBeenCalled();
     });
   });

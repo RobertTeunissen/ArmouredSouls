@@ -78,7 +78,8 @@ robot's share (`floor(pool / 2)`) and now uses the same split. The 2v2/3v3 loser
 against the pre-Spec #49 N² payment). Team byes and battle-time team forfeit wins pay the bye amount from
 `resolveByeReward`, which applies the factor for team sizes 2 and 3 only. The facility advisor projects the incremental benefit of the next Studio level; the
 facility ROI reads recorded facts (the Studio-attributable share of each stored streaming award, the recorded
-`discountPercent` of each repair) instead of applying today's formula to history.
+`discountPercent` of each repair) instead of applying today's formula to history. Those recorded facts are summed in the
+database per stored multiplier and discount (#542), which changes query volume only, not the returns.
 
 ## What did not change
 

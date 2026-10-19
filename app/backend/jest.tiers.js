@@ -154,6 +154,8 @@ const DB_DEPENDENT = [
   'tests/integration/refinementLabGrantMigration.test.ts',
   // Season 2 — one-off KotH zone radius backfill migration (#522)
   'tests/integration/kothZoneRadiusBackfillMigration.test.ts',
+  // #542 — Facility ROI recorded returns via DB aggregates: equivalence + bounded statements
+  'tests/services/economy/facilityRoiRecordedAggregates.integration.test.ts',
   // Spec #55 — Domain_Service_Extraction (task group 2)
   'src/services/economy/__tests__/facilityUpgradeService.test.ts',
   'src/services/economy/__tests__/weaponPurchaseService.test.ts',
