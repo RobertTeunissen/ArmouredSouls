@@ -299,6 +299,8 @@ router.post('/skip', authenticateToken, validateRequest({}), async (req: AuthReq
  *
  * Reset the user's account to starting state.
  * Deletes all robots, weapons, facilities, and resets credits to ₡3,000,000.
+ * Revokes achievements and prestige (each achievement can be earned again
+ * once); weapon sale/refinement achievement counters restart (issue #342).
  * Validates that no scheduled battles exist before allowing reset.
  *
  * **Request body:**

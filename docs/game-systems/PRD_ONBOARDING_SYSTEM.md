@@ -15,6 +15,7 @@ v1.1 (Mar 15, 2026): Strategy analysis, budget system, facility ROI calculations
 v1.2 (Mar 29, 2026): Streamlined to 5 display steps with automated purchases  
 v2.0 (Apr 9, 2026): Major rewrite — consolidated with ONBOARDING_IMPLEMENTATION_NOTES.md, replaced outdated 9-step flow with actual 5-step implementation, corrected component architecture, added proper versioning  
 v2.1 (Oct 19, 2026): Reset works for stables with battle history (#294) — reset scope states what battle data is removed and kept; the API and the reset dialog accept only `RESET`
+v2.2 (Oct 19, 2026): Reset revokes achievements and restarts sale/refinement achievement counters (#342); the reset dialog lists achievements and prestige
 
 ---
 
@@ -277,7 +278,7 @@ Warnings are non-blocking banners — players can still make purchases.
 
 ### Reset Scope
 
-**Reset**: Credits restored to ₡3,000,000, all robots/weapons/facilities/upgrades deleted, onboarding reset to Step 1, league standings and fame/prestige reset.  
+**Reset**: Credits restored to ₡3,000,000, all robots/weapons/facilities/upgrades deleted, onboarding reset to Step 1, league standings and fame/prestige reset, achievements revoked (re-earnable once), weapon sale/refinement achievement counters restart (#342). The reset dialog warns that achievements and prestige are removed.  
 **Preserved**: User account, creation date, reset history log.
 
 **Battle history** (#294): the stable's own `battle_participants` rows are deleted with its robots. Battles, battle summaries, opponents' participant rows (their result, ELO change and rewards), ledger/audit history and season archives are kept, so another player's record against a reset robot survives and shows that side as `Unknown`. Deletion uses the same helper as the Generated_Stable purge (`deleteRobotBattleReferences`).

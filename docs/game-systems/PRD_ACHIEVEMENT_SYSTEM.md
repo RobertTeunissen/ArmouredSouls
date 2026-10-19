@@ -1,6 +1,6 @@
 # Product Requirements Document: Achievement & Milestone System
 
-**Last Updated**: October 10, 2026 (Automaton stables, Spec #55)
+**Last Updated**: October 19, 2026 (Account reset and achievement counters, issue #342)
 **Status**: ✅ Implemented (Spec #27)
 **Owner**: Robert Teunissen
 **Epic**: Achievement System (Backlog #8) + Game Loop 4 Audit (Backlog #6)
@@ -866,6 +866,11 @@ For ACC specifically: with top prestige at ~860 and top fame at ~1,234, most pla
 Each season's unlocked count, the count available at the time, and the full list of unlocked achievement identifiers are recorded in `stable_season_archives`, so the collection becomes a per-season scorecard rather than a lifetime list.
 
 Achievement rewards (credits and prestige) are also season-scoped, since both reset at the boundary.
+## Account Reset (issue #342)
+**A reset is a fresh start for achievements.** `performAccountReset` deletes the stable's `user_achievements` rows and zeroes `prestige`, championship titles, `pinnedAchievements` and `totalPracticeBattles` in the same transaction that sets credits to the ₡3,000,000 opening balance. No reversal ledger rows are written; the pre-reset `achievement_reward` pairs and `prestige_change` audit rows stay as history.
+**Each achievement can be earned again once per reset.** The unique `(userId, achievementId)` key still allows only one unlock at a time, and a new unlock gets a new financial event id. Repeated resets cannot farm rewards: every reset wipes the credits and prestige earned since the last one. Reset stays available after onboarding, so the onboarding achievement (E1) and the robot-count achievement (E12) follow the same rule.
+**History-based counters restart at the latest reset.** Weapon sale achievements (E18–E20) and the refinement count achievement (E22) count `audit_logs` rows, which the reset keeps. They, and their progress bars, count only events after the user's latest `reset_logs.reset_at` (`services/achievement/achievementCounterWindow.ts`). Season rollover truncates `audit_logs`, so it needs no window. E23 (refinement credits spent) reads `weapon_refinements`, which the reset deletes with the inventory.
+**Weapons and shields cannot be farmed.** Milestone purchase achievements (E5–E7, S1–S3) stay earned after the item is sold. Resale pays `pricePaid × (workshop level × 10)%`, never more than was paid, so a buy/sell loop always loses credits, and each sale achievement unlocks once. Robots cannot be sold, so robot-count achievements have no sell path.
 
 ## Automaton Stables (Spec #55)
 

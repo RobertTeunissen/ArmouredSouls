@@ -260,7 +260,7 @@ Each deployed prestige record includes:
 
 Team, placement, KotH, Grand Melee, and tournament rewards aggregate at stable level before calling `Prestige_Service`. Participant payload fields are context/display data and are not summed later to reconstruct the canonical amount.
 
-An identical `sourceEventId` retry returns the original prestige result. Reusing it with different facts fails closed and does not alter `User.prestige`. `withAuditSequence` orders records for a current-season `Prestige_Growth_Series`; no credit ledger row is written for prestige. Bye outcomes, zero awards, account resets, and `Season_Rollover` do not create positive prestige records.
+An identical `sourceEventId` retry returns the original prestige result. Reusing it with different facts fails closed and does not alter `User.prestige`. `withAuditSequence` orders records for a current-season `Prestige_Growth_Series`; no credit ledger row is written for prestige. Bye outcomes, zero awards, account resets, and `Season_Rollover` do not create positive prestige records. An account reset also revokes achievements without reversal rows: credits are covered by the ₡3,000,000 opening-balance boundary, and the prior `achievement_reward` ledger/audit pairs and `prestige_change` rows stay as history (#342).
 
 ## 8. Settlement and zero-valued components
 

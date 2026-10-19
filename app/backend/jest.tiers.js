@@ -134,6 +134,8 @@ const DB_DEPENDENT = [
   'tests/integration/automatonAdminRoutes.test.ts',
   // Issue #294 — account reset with battle history keeps opponents' records
   'tests/integration/accountResetBattleHistory.test.ts',
+  // Issue #342 — achievements vs. account reset and weapon/shield resale
+  'tests/integration/accountResetAchievements.test.ts',
   // Achievement unlock serialization (pre-existing duplicate-insert fix)
   'tests/integration/achievementUnlockSerialization.test.ts',
   // Unified standings creation rule (create on first matchable subscription)
