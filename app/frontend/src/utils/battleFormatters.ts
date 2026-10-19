@@ -65,7 +65,13 @@ export function getBattlePerspective(
   let opponent: BattlePerspective['opponent'];
   if (myPart) {
     myRobot = myPart.robot;
-    opponent = battle.isByeMatch ? null : (opponentPart?.robot ?? battle.robot2);
+    // No other participant left (e.g. the opponent's robot was deleted by an
+    // account reset): use whichever legacy side is not me — the backend fills a
+    // removed side with an 'Unknown' placeholder — never my own robot.
+    const otherLegacySide = [battle.robot1, battle.robot2].find(
+      (side) => side != null && side.id !== myPart!.robotId,
+    ) ?? null;
+    opponent = battle.isByeMatch ? null : (opponentPart?.robot ?? otherLegacySide);
   } else {
     // Legacy fallback: determine side from robotId or userId
     const isRobot1 = robotId

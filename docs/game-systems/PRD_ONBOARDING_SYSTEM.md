@@ -2,8 +2,8 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: v2.0  
-**Last Updated**: April 9, 2026  
+**Version**: v2.1  
+**Last Updated**: October 19, 2026  
 **Status**: ✅ Implemented  
 **Owner**: Robert Teunissen  
 **Epic**: New Player Onboarding
@@ -13,7 +13,8 @@
 v1.0 (Mar 2, 2026): Initial PRD — 9-step tutorial design  
 v1.1 (Mar 15, 2026): Strategy analysis, budget system, facility ROI calculations  
 v1.2 (Mar 29, 2026): Streamlined to 5 display steps with automated purchases  
-v2.0 (Apr 9, 2026): Major rewrite — consolidated with ONBOARDING_IMPLEMENTATION_NOTES.md, replaced outdated 9-step flow with actual 5-step implementation, corrected component architecture, added proper versioning
+v2.0 (Apr 9, 2026): Major rewrite — consolidated with ONBOARDING_IMPLEMENTATION_NOTES.md, replaced outdated 9-step flow with actual 5-step implementation, corrected component architecture, added proper versioning  
+v2.1 (Oct 19, 2026): Reset works for stables with battle history (#294) — reset scope states what battle data is removed and kept; the API and the reset dialog accept only `RESET`
 
 ---
 
@@ -211,7 +212,7 @@ app/frontend/src/components/onboarding/
 Step components use direct `apiClient` calls for step advancement and purchases instead of the OnboardingContext's `advanceStep`/`setStep` methods. The context's `runAction` helper catches errors without re-throwing, making it impossible for calling code to detect failures.
 
 ### Account Reset for "Previous"
-The "Previous" button on steps 2 and 3 triggers a full account reset (`POST /api/onboarding/reset-account`) rather than trying to undo individual purchases. Safe during early onboarding since the user hasn't participated in any battles yet. Rate-limited to 3 requests per hour per user.
+The "Previous" button on steps 2 and 3 triggers a full account reset (`POST /api/onboarding/reset-account`) rather than trying to undo individual purchases. The reset also works for a stable that has already fought (see §10 Reset Scope). Rate-limited to 3 requests per hour per user.
 
 ### BudgetTracker Refresh
 Re-fetches credits from `/api/user/profile` whenever `tutorialState.currentStep` changes, ensuring it reflects purchases made during step transitions.
@@ -279,6 +280,8 @@ Warnings are non-blocking banners — players can still make purchases.
 **Reset**: Credits restored to ₡3,000,000, all robots/weapons/facilities/upgrades deleted, onboarding reset to Step 1, league standings and fame/prestige reset.  
 **Preserved**: User account, creation date, reset history log.
 
+**Battle history** (#294): the stable's own `battle_participants` rows are deleted with its robots. Battles, battle summaries, opponents' participant rows (their result, ELO change and rewards), ledger/audit history and season archives are kept, so another player's record against a reset robot survives and shows that side as `Unknown`. Deletion uses the same helper as the Generated_Stable purge (`deleteRobotBattleReferences`).
+
 ### Eligibility Checks
 
 | Check | Condition |
@@ -290,7 +293,7 @@ Warnings are non-blocking banners — players can still make purchases.
 ### Confirmation Flow
 1. System checks eligibility via `GET /api/onboarding/reset-eligibility`
 2. Warning dialog displayed
-3. Player must type exactly `RESET` (case-sensitive)
+3. Player must type exactly `RESET` (case-sensitive); the API rejects anything else and the dialog only enables the button for `RESET`
 4. On confirmation, execute reset and redirect to Step 1
 
 ### Rate Limiting

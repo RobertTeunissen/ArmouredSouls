@@ -160,6 +160,14 @@ describe('mapBattleRecord', () => {
     expect(result.winnerName).toBe('Beta');
   });
 
+  it('should show "Unknown" when the winner participant was removed (issue #294)', () => {
+    const winnerRemoved = { ...mockBattle, participants: mockBattle.participants.filter(p => p.robotId !== 1) };
+    const result = mapBattleRecord(winnerRemoved, '1v1');
+    expect(result.robot1).toBeNull();
+    expect(result.robot2).toEqual({ id: 2, name: 'Beta', userId: 20 });
+    expect(result.winnerName).toBe('Unknown');
+  });
+
   it('should default HP/ELO to 0 when participants are missing', () => {
     const noParticipants = { ...mockBattle, participants: [] };
     const result = mapBattleRecord(noParticipants as any, '2v2');

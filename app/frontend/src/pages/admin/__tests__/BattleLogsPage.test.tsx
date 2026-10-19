@@ -163,6 +163,43 @@ describe('BattleLogsPage', () => {
     });
   });
 
+  it('should render a battle whose robot was deleted as "Unknown" (issue #294)', async () => {
+    const user = userEvent.setup();
+    mockGet.mockImplementation((url: string) => {
+      if (url.includes('/api/admin/battles/1')) {
+        return Promise.resolve({
+          data: {
+            ...mockBattleDetail,
+            robot2: null,
+            participants: mockBattleDetail.participants.filter((p) => p.robotId !== 20),
+          },
+        });
+      }
+      return Promise.resolve({
+        data: {
+          ...mockBattlesResponse,
+          battles: [{ ...mockBattlesResponse.battles[0], robot2: null }],
+        },
+      });
+    });
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getAllByText('AlphaBot').length).toBeGreaterThanOrEqual(1);
+    });
+    expect(screen.getByText('Unknown')).toBeInTheDocument();
+    expect(screen.queryByText('BetaBot')).not.toBeInTheDocument();
+
+    const row = screen.getByText('#1').closest('tr');
+    expect(row).not.toBeNull();
+    await user.click(row!);
+
+    await waitFor(() => {
+      expect(screen.getByText('Battle #1')).toBeInTheDocument();
+    });
+    expect(screen.getAllByText('Unknown').length).toBeGreaterThanOrEqual(2);
+  });
+
   it('should fetch battles on mount', async () => {
     renderPage();
     await waitFor(() => {

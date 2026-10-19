@@ -39,6 +39,10 @@ export {
 } from './robotWeaponService';
 export { repairAllRobots } from './robotRepairService';
 export {
+  deleteRobotBattleReferences,
+  type RobotReferenceCleanupResult,
+} from './robotReferenceCleanup';
+export {
   ROBOT_CREATION_COST,
   validateRobotName,
   checkRosterCapacity,

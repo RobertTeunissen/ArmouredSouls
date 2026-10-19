@@ -15,6 +15,7 @@
 
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
+import { deleteRobotBattleReferences } from '../robot/robotReferenceCleanup';
 
 /** Starting credits granted at the beginning of a Competitive_Phase. */
 export const STARTING_CREDITS = 3_000_000;
@@ -81,18 +82,15 @@ export async function deleteGeneratedStables(): Promise<number> {
         });
       }
 
-      // battle_participants and team_battle_members reference robots through a
-      // RESTRICT foreign key (no cascade), so the robot deletions that cascade
-      // from `users` below would be blocked while these rows still point at a
-      // generated robot. A generated robot can appear in a shared battle
-      // alongside a human robot, so we clear the participant rows by robotId
-      // rather than by battle. Their permanent record already lives in
-      // battle_summaries and the season snapshot/accolade tables; the battles
-      // themselves are purged wholesale in a later stage.
-      if (robotIds.length > 0) {
-        await tx.battleParticipant.deleteMany({ where: { robotId: { in: robotIds } } });
-        await tx.teamBattleMember.deleteMany({ where: { robotId: { in: robotIds } } });
-      }
+      // battle_participants references robots through a RESTRICT foreign key
+      // (team_battle_members cascades since 20260829120000), so the robot
+      // deletions that cascade from `users` below would be blocked while these
+      // rows still point at a generated robot. A generated robot can appear in a
+      // shared battle alongside a human robot, so the participant rows are
+      // cleared by robotId rather than by battle. Their permanent record already
+      // lives in battle_summaries and the season snapshot/accolade tables; the
+      // battles themselves are purged wholesale in a later stage.
+      await deleteRobotBattleReferences(tx, robotIds);
 
       // The rest cascades from `users` via onDelete: Cascade.
       const result = await tx.user.deleteMany({ where: { id: { in: batch } } });

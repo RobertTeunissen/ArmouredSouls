@@ -1,14 +1,15 @@
 # Product Requirements Document: Battle Data Architecture
 
-**Last Updated**: October 15, 2026
+**Last Updated**: October 19, 2026
 **Status**: ✅ Implemented  
 **Owner**: Robert Teunissen  
 **Epic**: Battle System — Data Architecture  
-**Version**: 3.2
+**Version**: 3.3
 
 ---
 
 ## Version History
+- v3.3 (October 19, 2026) — Added "Robot Deletion and Battle Retention": account reset and the Generated_Stable purge delete only the deleted robots' participant rows (#294).
 - v3.2 (October 15, 2026) — Added "Forfeit Battle Records" (`battle_participants.forfeited`, the forfeit battle shape, the history classifier) and "Match failure policy" (#536).
 - v3.1 (October 14, 2026) — Added "Standings lifecycle": rows are created by `standingPlacement` on the first matchable subscription, never at robot/team creation or by battle recording.
 - v3.0 (June 25, 2026) — Added "Post-Battle Robot State Update (Unified)" section documenting `updateRobotCombatStats()` as the single source of truth for all orchestrators. Added bye-match handling patterns. Updated implementation files table to include team battle and team tournament orchestrators.
@@ -148,6 +149,19 @@ Unready robots are split off with `partitionPlacementField` and the rest fight. 
 ### Classification is permanent
 
 History and battle detail classify a forfeit from permanent data only (`classifyForfeit` in `matchHistoryService.ts`): any participant with `forfeited = true`, or a `tournament_matches` row with `status = 'forfeit'` linked to the battle. The `battleLog.isForfeit` flag is display data and is never read for classification.
+
+---
+
+## Robot Deletion and Battle Retention (#294)
+
+`battle_participants.robot_id` is a RESTRICT foreign key. Any path that deletes robots while their battles stay must delete those robots' participant rows first, by robot id, inside the deleting transaction. The shared helper is `deleteRobotBattleReferences` (`services/robot/robotReferenceCleanup.ts`), used by:
+
+- `performAccountReset` (`services/common/resetService.ts`) — a player's mid-season reset.
+- `deleteGeneratedStables` (`services/season/seasonPurgeService.ts`) — Season_Rollover purge of Generated_Stables (the battles themselves are purged in a later rollover stage).
+
+Durable battle rows outlive participants: the `battles` row, its `battle_summaries` row (which keeps each robot's name in `per_robot`) and every other robot's participant rows are kept. Readers must tolerate a missing side: the match history and battle log show it as `Unknown`, the admin battle list returns `robot1`/`robot2` as `null` and names a removed winner `Unknown` (a draw is only `winnerId = null`). Archive tables have no FK to robots or battles and are not touched.
+
+A bye or walkover whose only participant was a deleted robot ends with zero participants; see the unpaid-walkover signature in the [Financial Ledger Audit Guide](../guides/FINANCIAL_LEDGER_AUDIT_GUIDE.md).
 
 ---
 

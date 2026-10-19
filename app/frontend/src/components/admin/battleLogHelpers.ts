@@ -17,7 +17,7 @@ export const getBattleOutcome = (battle: Battle): { icon: string; label: string;
   }
 
   const winnerHP =
-    battle.winnerId === battle.robot1.id ? battle.robot1FinalHP : battle.robot2FinalHP;
+    battle.winnerId === battle.robot1?.id ? battle.robot1FinalHP : battle.robot2FinalHP;
 
   if (winnerHP > 50) {
     return { icon: '🏆', label: 'Clear Victory', color: 'text-success' };

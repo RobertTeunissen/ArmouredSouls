@@ -3,6 +3,7 @@ import { OnboardingError, OnboardingErrorCode } from '../../errors/onboardingErr
 import { AuthError, AuthErrorCode } from '../../errors/authErrors';
 import { lockUserForSpending } from '../../lib/creditGuard';
 import { lockRobotTeamMembership, lockTeamStandings } from '../standings/standingPlacement';
+import { deleteRobotBattleReferences } from '../robot/robotReferenceCleanup';
 // Spec #45: uploaded images survive an account reset (Image_Library), so this
 // service no longer deletes files from storage.
 
@@ -156,6 +157,10 @@ export async function validateResetEligibility(userId: number): Promise<ResetEli
  * and resets tutorial state to initial state.
  * All operations are performed in a transaction to ensure atomicity.
  *
+ * Works for stables with battle history: the stable's own battle participant
+ * rows are deleted, while battles, battle summaries, opponents' participant
+ * rows, ledger/audit history and season archives are kept (issue #294).
+ *
  * @param userId - The user ID to reset
  * @param reason - Optional reason for the reset
  * @returns void
@@ -251,20 +256,21 @@ export async function performAccountReset(userId: number, reason?: string): Prom
       });
     }
 
-    // Teams and their membership rows go BEFORE the robots.
+    // Battle participant and team membership rows go BEFORE the robots.
     //
-    // Spec #51: this used to delete the robots first and the teams twenty lines
-    // later, with the comment "Teams are removed because their members are gone" —
-    // the ordering was exactly backwards. `team_battle_members.robot_id` was
-    // RESTRICT, so the robot delete raised a foreign key violation and rolled the
-    // whole transaction back: POST /api/onboarding/reset-account failed outright for
-    // any player who had ever formed a team. The migration
-    // 20260829120000_cascade_team_membership_on_robot_delete makes that constraint
-    // cascade, so this ordering is no longer load-bearing, but it is still the
-    // correct order to state.
-    await tx.teamBattleMember.deleteMany({
-      where: { robotId: { in: userRobotIds.map(r => r.id) } },
-    });
+    // Issue #294: `battle_participants.robot_id` is a RESTRICT foreign key, so
+    // deleting a robot that had ever fought raised P2003
+    // (`battle_participants_robot_id_fkey`) and rolled the whole reset back —
+    // POST /api/onboarding/reset-account failed for every player with battle
+    // history. The shared helper (also used by the Generated_Stable purge)
+    // deletes only this stable's participant rows; the battles, their summaries
+    // and the opponents' participant rows stay, so other players keep their
+    // record against these robots.
+    //
+    // Spec #51: `team_battle_members.robot_id` had the same problem until
+    // migration 20260829120000_cascade_team_membership_on_robot_delete made it
+    // cascade; the helper still deletes those rows explicitly, before the teams.
+    await deleteRobotBattleReferences(tx, userRobotIds.map(r => r.id));
     // Team standings are polymorphic (no FK), so they go before their teams.
     if (userTeamIds.length > 0) {
       await tx.standing.deleteMany({
@@ -276,7 +282,9 @@ export async function performAccountReset(userId: number, reason?: string): Prom
     }
     await tx.teamBattle.deleteMany({ where: { stableId: userId } });
 
-    // Delete all robots (battle history and team membership cascade)
+    // Delete all robots. Their participant and membership rows are already
+    // gone; tuning, subscriptions and mode kills cascade, achievement and
+    // weapon links are SET NULL.
     await tx.robot.deleteMany({
       where: { userId },
     });
