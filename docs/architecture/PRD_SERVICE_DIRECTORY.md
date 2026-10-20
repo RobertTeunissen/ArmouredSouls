@@ -2,13 +2,14 @@
 
 **Project**: Armoured Souls
 **Document Type**: Product Requirements Document (PRD)
-**Version**: v1.7
+**Version**: v1.8
 **Last Updated**: October 19, 2026
 **Status**: ✅ Implemented
 **Owner**: Robert Teunissen
 
 **Revision History**:
-- v1.7 (Oct 19, 2026): Added `robot/robotReferenceCleanup`; `resetService` now works for stables with battle history (#294).
+- v1.8 (Oct 19, 2026): Added `robot/robotReferenceCleanup`; `resetService` now works for stables with battle history (#294).
+- v1.7 (Oct 19, 2026): Listed `unifiedFacilityROIService` and the recorded facility returns modules in `economy/` (#542).
 - v1.6 (Oct 15, 2026): Added `battle/combatReadiness`, `battle/walkoverClaim`, `battle/forfeitResolutionService` and `battle/matchFailurePolicy`; `executeSoloTournamentRound` and `resolveBelowMinimumField` (#536).
 - v1.5 (Oct 14, 2026): Added `league/leagueInstancePlacement` and `standings/standingPlacement` (unified standings creation rule); updated `teamBattleService` and `subscriptionService` rows.
 
@@ -208,6 +209,8 @@ Financial systems — repair costs, streaming revenue, facility ROI.
 | `repairService` | Robot repair logic (cost calculation, facility discounts, manual repair discount) |
 | `streamingRevenueService` | Per-battle streaming revenue calculation (Streaming Studio multiplier) |
 | `roiCalculatorService` | Facility ROI projections (break-even cycles, net daily benefit) |
+| `unifiedFacilityROIService` | Owned economic facility ROI (investment, returns, operating costs, payoff) from snapshots and recorded facts |
+| `recorded-facility-returns` / `recorded-facility-returns-queries` | Recorded Streaming Studio and Repair Bay returns: pure per-key formulas and the DB aggregates (SUM per stored `studioMultiplier` / `discountPercent`, #542) that feed them |
 | `facilityRecommendationService` | AI-driven facility upgrade recommendations based on spending patterns |
 | `spendingTracker` | Tracks spending by category for onboarding budget display |
 | `facilityUpgradeService` | `upgradeFacility`, `getFacilityUpgradeRequirement` (extracted from `routes/facility.ts`, Spec #55) |
