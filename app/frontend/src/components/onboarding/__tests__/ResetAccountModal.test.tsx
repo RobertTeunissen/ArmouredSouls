@@ -80,6 +80,9 @@ describe('ResetAccountModal', () => {
       expect(screen.getByPlaceholderText('Type RESET')).toBeInTheDocument();
       // "Reset Account" appears in both header and button; use role to find the button
       expect(screen.getByRole('button', { name: 'Reset Account' })).toBeInTheDocument();
+      // Issue #342: the reset revokes achievements and prestige; warn the player.
+      expect(screen.getByText('All your achievements and prestige')).toBeInTheDocument();
+      expect(screen.getByText(/you can earn them again/)).toBeInTheDocument();
     });
 
     it('should display blockers when not eligible', async () => {

@@ -15,6 +15,11 @@ import type {
   AchievementRarityCache,
 } from './achievementTypes';
 import { resolveTeamModeWins, emptyTeamModeWins } from './teamModeWins';
+import {
+  auditCounterSinceSql,
+  buildAuditCounterWhere,
+  getAchievementCounterStart,
+} from './achievementCounterWindow';
 
 // ─── Progress Computation ───────────────────────────────────────────
 
@@ -229,7 +234,9 @@ export async function getPlayerAchievements(
     };
   });
 
-  // (c) Run ALL remaining queries in parallel
+  // (c) Run ALL remaining queries in parallel. Sale/refinement counters only
+  // count audit history after the latest account reset (issue #342).
+  const counterStart = await getAchievementCounterStart(userId);
   const [
     unlocks, weaponCount, facilityCounts, tuningAllocations,
     earningsResult, streamingResult,
@@ -262,13 +269,13 @@ export async function getPlayerAchievements(
     robotIds.length > 0
       ? prisma.battleParticipant.aggregate({ where: { robotId: { in: robotIds } }, _sum: { streamingRevenue: true } })
       : Promise.resolve({ _sum: { streamingRevenue: null } }),
-    prisma.auditLog.count({ where: { userId, eventType: 'weapon_sale' } }),
+    prisma.auditLog.count({ where: buildAuditCounterWhere(userId, 'weapon_sale', counterStart) }),
     prisma.$queryRaw<{ total: bigint | null }[]>`
       SELECT COALESCE(SUM((payload->>'salePrice')::int), 0) as total
       FROM audit_logs
-      WHERE user_id = ${userId} AND event_type = 'weapon_sale'
+      WHERE user_id = ${userId} AND event_type = 'weapon_sale' ${auditCounterSinceSql(counterStart)}
     `,
-    prisma.auditLog.count({ where: { userId, eventType: 'weapon_refinement' } }),
+    prisma.auditLog.count({ where: buildAuditCounterWhere(userId, 'weapon_refinement', counterStart) }),
     prisma.weaponRefinement.aggregate({ _sum: { costPaid: true }, where: { weaponInventory: { userId } } }),
   ]);
 

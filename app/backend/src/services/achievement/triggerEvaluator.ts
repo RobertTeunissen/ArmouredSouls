@@ -10,6 +10,11 @@ import type { AchievementDefinition } from '../../config/achievements';
 import { STARTER_WEAPON_NAMES } from '../../config/starterWeapons';
 import type { AchievementEvent } from './achievementTypes';
 import { resolveTeamModeWins, type TeamModeWins } from './teamModeWins';
+import {
+  auditCounterSinceSql,
+  buildAuditCounterWhere,
+  getAchievementCounterStart,
+} from './achievementCounterWindow';
 
 // ─── Cached-Data Helpers (no DB queries) ────────────────────────────
 
@@ -109,8 +114,9 @@ export async function checkWeaponsSoldCount(
   threshold?: number,
 ): Promise<boolean> {
   if (threshold === undefined) return false;
+  const since = await getAchievementCounterStart(userId);
   const count = await prisma.auditLog.count({
-    where: { userId, eventType: 'weapon_sale' },
+    where: buildAuditCounterWhere(userId, 'weapon_sale', since),
   });
   return count >= threshold;
 }
@@ -120,10 +126,11 @@ export async function checkWeaponsSoldCredits(
   threshold?: number,
 ): Promise<boolean> {
   if (threshold === undefined) return false;
+  const since = await getAchievementCounterStart(userId);
   const result = await prisma.$queryRaw<{ total: bigint | null }[]>`
     SELECT COALESCE(SUM((payload->>'salePrice')::int), 0) as total
     FROM audit_logs
-    WHERE user_id = ${userId} AND event_type = 'weapon_sale'
+    WHERE user_id = ${userId} AND event_type = 'weapon_sale' ${auditCounterSinceSql(since)}
   `;
   const total = Number(result[0]?.total ?? 0);
   return total >= threshold;
@@ -134,8 +141,9 @@ export async function checkWeaponsRefinedCount(
   threshold?: number,
 ): Promise<boolean> {
   if (threshold === undefined) return false;
+  const since = await getAchievementCounterStart(userId);
   const count = await prisma.auditLog.count({
-    where: { userId, eventType: 'weapon_refinement' },
+    where: buildAuditCounterWhere(userId, 'weapon_refinement', since),
   });
   return count >= threshold;
 }

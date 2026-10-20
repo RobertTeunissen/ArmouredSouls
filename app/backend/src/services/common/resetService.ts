@@ -161,6 +161,11 @@ export async function validateResetEligibility(userId: number): Promise<ResetEli
  * rows are deleted, while battles, battle summaries, opponents' participant
  * rows, ledger/audit history and season archives are kept (issue #294).
  *
+ * Achievements and prestige are revoked (unlock rows deleted; prestige, titles
+ * and pins zeroed) without reversal ledger rows; each achievement can be
+ * earned again once. History-based achievement counters (weapon sales and
+ * refinements) restart at the `ResetLog` written here (issue #342).
+ *
  * @param userId - The user ID to reset
  * @param reason - Optional reason for the reset
  * @returns void
