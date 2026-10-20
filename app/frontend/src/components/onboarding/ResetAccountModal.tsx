@@ -67,17 +67,20 @@ const ResetAccountModal: React.FC<ResetAccountModalProps> = ({
 
   const getBlockerMessage = (type: string): string => {
     const messages: Record<string, string> = {
-      scheduled_battles: 'You have scheduled battles. Removing robots would create conflicts.',
-      active_tournament: 'You are participating in an active tournament.',
+      // Keys match the backend ResetBlocker.type values (resetService.ts).
+      scheduled_matches: 'You have scheduled battles. Removing robots would create conflicts.',
+      tournament: 'You are participating in an active tournament.',
       pending_battles: 'You have recent battle results being processed.',
       facility_construction: 'You have facilities under construction.',
+      pending_transactions: 'You have pending transactions being processed.',
     };
     return messages[type] || 'Unknown blocker';
   };
 
   const handleReset = async () => {
-    if (confirmationText !== 'RESET' && confirmationText !== 'START OVER') {
-      setError('Please type "RESET" or "START OVER" to confirm');
+    // The API accepts only "RESET" (PRD_ONBOARDING_SYSTEM §10).
+    if (confirmationText !== 'RESET') {
+      setError('Please type "RESET" to confirm');
       return;
     }
 
@@ -269,14 +272,13 @@ const ResetAccountModal: React.FC<ResetAccountModalProps> = ({
               {/* Confirmation Input */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-secondary mb-2">
-                  Type <span className="text-error font-bold">"RESET"</span> or{' '}
-                  <span className="text-error font-bold">"START OVER"</span> to confirm:
+                  Type <span className="text-error font-bold">"RESET"</span> to confirm:
                 </label>
                 <input
                   type="text"
                   value={confirmationText}
                   onChange={(e) => setConfirmationText(e.target.value)}
-                  placeholder="Type RESET or START OVER"
+                  placeholder="Type RESET"
                   className="w-full px-4 py-2 bg-background border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-primary"
                   disabled={isLoading}
                 />
@@ -304,10 +306,7 @@ const ResetAccountModal: React.FC<ResetAccountModalProps> = ({
           {canReset && !isCheckingEligibility && (
             <button
               onClick={handleReset}
-              disabled={
-                isLoading ||
-                (confirmationText !== 'RESET' && confirmationText !== 'START OVER')
-              }
+              disabled={isLoading || confirmationText !== 'RESET'}
               className="px-4 py-2 rounded-lg bg-error hover:bg-error/80 text-white transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? 'Resetting...' : 'Reset Account'}

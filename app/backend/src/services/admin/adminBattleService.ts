@@ -64,12 +64,16 @@ export function mapBattleRecord(battle: BattleWithDetails, battleFormat: '1v1' |
     robot1: robot1 ?? null,
     robot2: robot2 ?? null,
     winnerId: battle.winnerId,
+    // A winner whose participant row is gone (robot deleted by an account reset
+    // or the Generated_Stable purge) is 'Unknown', not a draw.
     winnerName:
-      battle.winnerId === robot1?.id
-        ? robot1?.name
+      battle.winnerId === null
+        ? 'Draw'
+        : battle.winnerId === robot1?.id
+        ? robot1.name
         : battle.winnerId === robot2?.id
-        ? robot2?.name
-        : 'Draw',
+        ? robot2.name
+        : 'Unknown',
     leagueType: battle.leagueType,
     durationSeconds: battle.durationSeconds,
     robot1FinalHP: robot1Participant?.finalHP || 0,

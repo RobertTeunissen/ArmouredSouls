@@ -81,8 +81,9 @@ export interface SystemStats {
 
 export interface Battle {
   id: number;
-  robot1: { id: number; name: string };
-  robot2: { id: number; name: string };
+  /** Null when that side's robot was deleted (account reset, Generated_Stable purge). */
+  robot1: { id: number; name: string } | null;
+  robot2: { id: number; name: string } | null;
   winnerId: number | null;
   winnerName: string;
   leagueType: string;

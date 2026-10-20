@@ -77,7 +77,7 @@ describe('ResetAccountModal', () => {
         })).toBeInTheDocument();
       });
 
-      expect(screen.getByPlaceholderText('Type RESET or START OVER')).toBeInTheDocument();
+      expect(screen.getByPlaceholderText('Type RESET')).toBeInTheDocument();
       // "Reset Account" appears in both header and button; use role to find the button
       expect(screen.getByRole('button', { name: 'Reset Account' })).toBeInTheDocument();
     });
@@ -88,7 +88,7 @@ describe('ResetAccountModal', () => {
           success: true,
           data: {
             canReset: false,
-            blockers: ['scheduled_battles', 'active_tournament'],
+            blockers: ['scheduled_matches', 'tournament'],
           },
         },
       });
@@ -157,7 +157,7 @@ describe('ResetAccountModal', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByPlaceholderText('Type RESET or START OVER')).toBeInTheDocument();
+        expect(screen.getByPlaceholderText('Type RESET')).toBeInTheDocument();
       });
     });
 
@@ -167,23 +167,23 @@ describe('ResetAccountModal', () => {
     });
 
     it('should enable reset button when "RESET" is typed', () => {
-      const input = screen.getByPlaceholderText('Type RESET or START OVER');
+      const input = screen.getByPlaceholderText('Type RESET');
       fireEvent.change(input, { target: { value: 'RESET' } });
 
       const resetButton = screen.getByRole('button', { name: 'Reset Account' });
       expect(resetButton).not.toBeDisabled();
     });
 
-    it('should enable reset button when "START OVER" is typed', () => {
-      const input = screen.getByPlaceholderText('Type RESET or START OVER');
+    it('should keep reset button disabled when "START OVER" is typed (API accepts only RESET)', () => {
+      const input = screen.getByPlaceholderText('Type RESET');
       fireEvent.change(input, { target: { value: 'START OVER' } });
 
       const resetButton = screen.getByRole('button', { name: 'Reset Account' });
-      expect(resetButton).not.toBeDisabled();
+      expect(resetButton).toBeDisabled();
     });
 
     it('should disable reset button when incorrect text is typed', () => {
-      const input = screen.getByPlaceholderText('Type RESET or START OVER');
+      const input = screen.getByPlaceholderText('Type RESET');
       fireEvent.change(input, { target: { value: 'reset' } }); // lowercase
 
       const resetButton = screen.getByRole('button', { name: 'Reset Account' });
@@ -191,7 +191,7 @@ describe('ResetAccountModal', () => {
     });
 
     it('should show error when attempting reset with invalid confirmation', async () => {
-      const input = screen.getByPlaceholderText('Type RESET or START OVER');
+      const input = screen.getByPlaceholderText('Type RESET');
       fireEvent.change(input, { target: { value: 'WRONG' } });
 
       const resetButton = screen.getByRole('button', { name: 'Reset Account' });
@@ -223,7 +223,7 @@ describe('ResetAccountModal', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByPlaceholderText('Type RESET or START OVER')).toBeInTheDocument();
+        expect(screen.getByPlaceholderText('Type RESET')).toBeInTheDocument();
       });
     });
 
@@ -235,7 +235,7 @@ describe('ResetAccountModal', () => {
         },
       });
 
-      const input = screen.getByPlaceholderText('Type RESET or START OVER');
+      const input = screen.getByPlaceholderText('Type RESET');
       fireEvent.change(input, { target: { value: 'RESET' } });
 
       const resetButton = screen.getByRole('button', { name: 'Reset Account' });
@@ -254,31 +254,16 @@ describe('ResetAccountModal', () => {
       expect(mockOnResetComplete).toHaveBeenCalled();
     });
 
-    it('should successfully reset account with "START OVER" confirmation', async () => {
-      mockedApiClient.post.mockResolvedValueOnce({
-        data: {
-          success: true,
-          data: { message: 'Account reset successfully' },
-        },
-      });
-
-      const input = screen.getByPlaceholderText('Type RESET or START OVER');
+    it('should not call the API with "START OVER" confirmation', () => {
+      const input = screen.getByPlaceholderText('Type RESET');
       fireEvent.change(input, { target: { value: 'START OVER' } });
 
       const resetButton = screen.getByRole('button', { name: 'Reset Account' });
       fireEvent.click(resetButton);
 
-      await waitFor(() => {
-        expect(mockedApiClient.post).toHaveBeenCalledWith(
-          '/api/onboarding/reset-account',
-          {
-            confirmation: 'START OVER',
-            reason: 'User requested reset from onboarding',
-          }
-        );
-      });
-
-      expect(mockOnResetComplete).toHaveBeenCalled();
+      expect(resetButton).toBeDisabled();
+      expect(mockedApiClient.post).not.toHaveBeenCalled();
+      expect(mockOnResetComplete).not.toHaveBeenCalled();
     });
 
     it('should show loading state during reset', async () => {
@@ -298,7 +283,7 @@ describe('ResetAccountModal', () => {
           )
       );
 
-      const input = screen.getByPlaceholderText('Type RESET or START OVER');
+      const input = screen.getByPlaceholderText('Type RESET');
       fireEvent.change(input, { target: { value: 'RESET' } });
 
       const resetButton = screen.getByRole('button', { name: 'Reset Account' });
@@ -319,7 +304,7 @@ describe('ResetAccountModal', () => {
         },
       });
 
-      const input = screen.getByPlaceholderText('Type RESET or START OVER');
+      const input = screen.getByPlaceholderText('Type RESET');
       fireEvent.change(input, { target: { value: 'RESET' } });
 
       const resetButton = screen.getByRole('button', { name: 'Reset Account' });
@@ -337,7 +322,7 @@ describe('ResetAccountModal', () => {
     it('should handle network error during reset', async () => {
       mockedApiClient.post.mockRejectedValueOnce(new Error('Network error'));
 
-      const input = screen.getByPlaceholderText('Type RESET or START OVER');
+      const input = screen.getByPlaceholderText('Type RESET');
       fireEvent.change(input, { target: { value: 'RESET' } });
 
       const resetButton = screen.getByRole('button', { name: 'Reset Account' });
@@ -436,11 +421,11 @@ describe('ResetAccountModal', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByPlaceholderText('Type RESET or START OVER')).toBeInTheDocument();
+        expect(screen.getByPlaceholderText('Type RESET')).toBeInTheDocument();
       });
 
       // Type confirmation text
-      const input = screen.getByPlaceholderText('Type RESET or START OVER');
+      const input = screen.getByPlaceholderText('Type RESET');
       fireEvent.change(input, { target: { value: 'RESET' } });
       expect(input).toHaveValue('RESET');
 
@@ -463,7 +448,7 @@ describe('ResetAccountModal', () => {
       );
 
       await waitFor(() => {
-        const newInput = screen.getByPlaceholderText('Type RESET or START OVER');
+        const newInput = screen.getByPlaceholderText('Type RESET');
         expect(newInput).toHaveValue('');
       });
     });
@@ -476,7 +461,7 @@ describe('ResetAccountModal', () => {
           success: true,
           data: {
             canReset: false,
-            blockers: ['scheduled_battles'],
+            blockers: ['scheduled_matches'],
           },
         },
       });
@@ -504,7 +489,7 @@ describe('ResetAccountModal', () => {
           success: true,
           data: {
             canReset: false,
-            blockers: ['active_tournament'],
+            blockers: ['tournament'],
           },
         },
       });
@@ -524,6 +509,34 @@ describe('ResetAccountModal', () => {
       expect(
         screen.getByText(/You are participating in an active tournament/)
       ).toBeInTheDocument();
+    });
+
+    it('should map every backend blocker type to its message, never "Unknown blocker"', async () => {
+      mockedApiClient.get.mockResolvedValueOnce({
+        data: {
+          success: true,
+          data: {
+            canReset: false,
+            blockers: ['scheduled_matches', 'tournament', 'pending_battles', 'facility_construction', 'pending_transactions'],
+          },
+        },
+      });
+
+      render(
+        <ResetAccountModal
+          isOpen={true}
+          onClose={mockOnClose}
+          onResetComplete={mockOnResetComplete}
+        />
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('Cannot Reset Account')).toBeInTheDocument();
+      });
+
+      expect(screen.getByText(/You have scheduled battles/)).toBeInTheDocument();
+      expect(screen.getByText(/You have pending transactions being processed/)).toBeInTheDocument();
+      expect(screen.queryByText('Unknown blocker')).not.toBeInTheDocument();
     });
 
     it('should display pending battles blocker', async () => {
@@ -560,7 +573,7 @@ describe('ResetAccountModal', () => {
           success: true,
           data: {
             canReset: false,
-            blockers: ['scheduled_battles', 'active_tournament', 'pending_battles'],
+            blockers: ['scheduled_matches', 'tournament', 'pending_battles'],
           },
         },
       });

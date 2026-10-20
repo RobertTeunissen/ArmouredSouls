@@ -2,7 +2,7 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Last Updated**: October 15, 2026 (`battle_participants.forfeited`)
+**Last Updated**: October 19, 2026 (`battle_participants.robot_id` deletion rule, #294)
 **Status**: Current Implementation  
 **Version**: v2.0
 
@@ -548,6 +548,8 @@ model BattleParticipant {
 - KotH (FFA): 5-6 participants (placement = 1-6)
 
 **`forfeited`** (migration `20261015120000_battle_participant_forfeited`, additive, default `false`): `true` when the robot, or the team it belongs to, forfeited because a robot had no main weapon when the battle ran. Forfeited rows are never simulated: `damageDealt = 0`, `finalHP = currentHP`, `destroyed = false`, `credits = 0`. A two-sided battle with any forfeited participant was never fought. A KotH/Grand Melee battle is forfeit-only when every participant forfeited; in a fought placement battle the forfeiters take the bottom placements. Battle history classifies forfeits from this column (plus `scheduled_tournament_matches.status = 'forfeit'`), never from `battle_log`.
+
+**`robot_id`** is a RESTRICT foreign key (no `onDelete`). Paths that delete robots while keeping their battles (account reset, Generated_Stable purge) delete the robots' participant rows explicitly first via `deleteRobotBattleReferences`; the battle, its summary and other robots' participant rows remain (#294).
 
 ---
 

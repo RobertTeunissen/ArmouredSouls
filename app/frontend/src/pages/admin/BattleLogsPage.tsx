@@ -92,8 +92,9 @@ interface BattleDetail {
   leagueType: string;
   durationSeconds: number;
   createdAt: string;
-  robot1: RobotDetail;
-  robot2: RobotDetail;
+  /** Null when that side's robot was deleted (account reset, Generated_Stable purge). */
+  robot1: RobotDetail | null;
+  robot2: RobotDetail | null;
   participants: Participant[];
   winnerId: number | null;
   robot1ELOBefore: number;
@@ -110,6 +111,9 @@ interface BattleDetail {
   };
   [key: string]: unknown;
 }
+
+/** Label for a battle side whose robot no longer exists. */
+const UNKNOWN_ROBOT_NAME = 'Unknown';
 
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */
@@ -276,15 +280,23 @@ function BattleLogsPage() {
                       )}
                     </td>
                     <td className="p-3">
-                      <Link to={`/robots/${battle.robot1.id}`} className="text-primary hover:underline" onClick={(e) => e.stopPropagation()}>
-                        {battle.robot1.name}
-                      </Link>
+                      {battle.robot1 ? (
+                        <Link to={`/robots/${battle.robot1.id}`} className="text-primary hover:underline" onClick={(e) => e.stopPropagation()}>
+                          {battle.robot1.name}
+                        </Link>
+                      ) : (
+                        <span className="text-secondary">{UNKNOWN_ROBOT_NAME}</span>
+                      )}
                       <div className="text-xs text-secondary">ELO: {battle.robot1ELOBefore} → {battle.robot1ELOAfter}</div>
                     </td>
                     <td className="p-3">
-                      <Link to={`/robots/${battle.robot2.id}`} className="text-purple-400 hover:underline" onClick={(e) => e.stopPropagation()}>
-                        {battle.robot2.name}
-                      </Link>
+                      {battle.robot2 ? (
+                        <Link to={`/robots/${battle.robot2.id}`} className="text-purple-400 hover:underline" onClick={(e) => e.stopPropagation()}>
+                          {battle.robot2.name}
+                        </Link>
+                      ) : (
+                        <span className="text-secondary">{UNKNOWN_ROBOT_NAME}</span>
+                      )}
                       <div className="text-xs text-secondary">ELO: {battle.robot2ELOBefore} → {battle.robot2ELOAfter}</div>
                     </td>
                     <td className="p-3">
@@ -386,12 +398,15 @@ function BattleDetailPanel({ battle }: { battle: BattleDetail }) {
   const log = battle.battleLog as BattleLogData | null;
   const detailedEvents: CombatEvent[] = (log?.detailedCombatEvents as CombatEvent[]) ?? [];
   const winner = battle.winnerId;
-  const r1Won = winner === battle.robot1.id;
-  const r2Won = winner === battle.robot2.id;
+  const { robot1, robot2 } = battle;
+  const robot1Name = robot1?.name ?? UNKNOWN_ROBOT_NAME;
+  const robot2Name = robot2?.name ?? UNKNOWN_ROBOT_NAME;
+  const r1Won = robot1 !== null && winner === robot1.id;
+  const r2Won = robot2 !== null && winner === robot2.id;
   const isDraw = winner === null;
 
-  const p1 = battle.participants.find(p => p.robotId === battle.robot1.id);
-  const p2 = battle.participants.find(p => p.robotId === battle.robot2.id);
+  const p1 = robot1 ? battle.participants.find(p => p.robotId === robot1.id) : undefined;
+  const p2 = robot2 ? battle.participants.find(p => p.robotId === robot2.id) : undefined;
 
   return (
     <div className="space-y-5">
@@ -399,19 +414,19 @@ function BattleDetailPanel({ battle }: { battle: BattleDetail }) {
       <div className="bg-surface-elevated rounded-lg p-4 text-center">
         <div className="flex items-center justify-center gap-4">
           <div className={`text-right flex-1 ${r1Won ? 'text-success' : ''}`}>
-            <p className="font-bold text-lg">{battle.robot1.name}</p>
-            <p className="text-xs text-secondary">{battle.robot1.stance} · {battle.robot1.loadout}</p>
+            <p className="font-bold text-lg">{robot1Name}</p>
+            {robot1 && <p className="text-xs text-secondary">{robot1.stance} · {robot1.loadout}</p>}
           </div>
           <div className="text-2xl font-bold text-secondary">vs</div>
           <div className={`text-left flex-1 ${r2Won ? 'text-success' : ''}`}>
-            <p className="font-bold text-lg">{battle.robot2.name}</p>
-            <p className="text-xs text-secondary">{battle.robot2.stance} · {battle.robot2.loadout}</p>
+            <p className="font-bold text-lg">{robot2Name}</p>
+            {robot2 && <p className="text-xs text-secondary">{robot2.stance} · {robot2.loadout}</p>}
           </div>
         </div>
         <div className="mt-2 text-sm">
           {isDraw
             ? <span className="text-secondary">⚖️ Draw</span>
-            : <span className="text-success">🏆 {r1Won ? battle.robot1.name : battle.robot2.name} wins</span>}
+            : <span className="text-success">🏆 {r1Won ? robot1Name : r2Won ? robot2Name : UNKNOWN_ROBOT_NAME} wins</span>}
           <span className="text-secondary ml-2">· {battle.battleType} · {battle.leagueType} · {battle.durationSeconds}s</span>
         </div>
         <p className="text-xs text-tertiary mt-1">{new Date(battle.createdAt).toLocaleString()}</p>
@@ -447,8 +462,8 @@ function BattleDetailPanel({ battle }: { battle: BattleDetail }) {
       <div className="bg-surface-elevated rounded-lg p-4">
         <h4 className="text-sm font-semibold text-secondary mb-3">📊 Participant Stats</h4>
         <div className="grid grid-cols-2 gap-4">
-          <ParticipantCard robot={battle.robot1} participant={p1} isWinner={r1Won} />
-          <ParticipantCard robot={battle.robot2} participant={p2} isWinner={r2Won} />
+          <ParticipantCard robot={robot1} participant={p1} isWinner={r1Won} />
+          <ParticipantCard robot={robot2} participant={p2} isWinner={r2Won} />
         </div>
       </div>
 
@@ -457,11 +472,11 @@ function BattleDetailPanel({ battle }: { battle: BattleDetail }) {
         <h4 className="text-sm font-semibold text-secondary mb-3">📈 ELO & Rewards</h4>
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
-            <p className="text-secondary">{battle.robot1.name}</p>
+            <p className="text-secondary">{robot1Name}</p>
             <p>ELO: {battle.robot1ELOBefore} → {battle.robot1ELOAfter} <EloChange before={battle.robot1ELOBefore} after={battle.robot1ELOAfter} /></p>
           </div>
           <div>
-            <p className="text-secondary">{battle.robot2.name}</p>
+            <p className="text-secondary">{robot2Name}</p>
             <p>ELO: {battle.robot2ELOBefore} → {battle.robot2ELOAfter} <EloChange before={battle.robot2ELOBefore} after={battle.robot2ELOAfter} /></p>
           </div>
         </div>
@@ -471,13 +486,13 @@ function BattleDetailPanel({ battle }: { battle: BattleDetail }) {
       </div>
 
       {/* Attribute Comparison */}
-      {battle.robot1.attributes && Object.keys(battle.robot1.attributes).length > 0 && (
+      {robot1 && robot2 && robot1.attributes && Object.keys(robot1.attributes).length > 0 && (
         <div className="bg-surface-elevated rounded-lg p-4">
           <h4 className="text-sm font-semibold text-secondary mb-3">⚙️ Attribute Comparison</h4>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
-            {Object.keys(battle.robot1.attributes).map((attr) => {
-              const val1 = Number(battle.robot1.attributes[attr]);
-              const val2 = Number(battle.robot2.attributes[attr]);
+            {Object.keys(robot1.attributes).map((attr) => {
+              const val1 = Number(robot1.attributes[attr]);
+              const val2 = Number(robot2.attributes[attr]);
               const diff = val1 - val2;
               return (
                 <div key={attr} className="bg-surface rounded p-2">
@@ -549,8 +564,8 @@ function BattleDetailPanel({ battle }: { battle: BattleDetail }) {
                             ))
                           : (
                             <>
-                              {event.robot1HP !== undefined && <span>{battle.robot1.name}: {event.robot1HP}HP / {event.robot1Shield ?? 0}S</span>}
-                              {event.robot2HP !== undefined && <span>{battle.robot2.name}: {event.robot2HP}HP / {event.robot2Shield ?? 0}S</span>}
+                              {event.robot1HP !== undefined && <span>{robot1Name}: {event.robot1HP}HP / {event.robot1Shield ?? 0}S</span>}
+                              {event.robot2HP !== undefined && <span>{robot2Name}: {event.robot2HP}HP / {event.robot2Shield ?? 0}S</span>}
                             </>
                           )}
                       </div>
@@ -695,8 +710,8 @@ function TeamBattleLogPanel({ log }: { log: BattleLogData }) {
 /*  Sub-components                                                     */
 /* ------------------------------------------------------------------ */
 
-function ParticipantCard({ robot, participant, isWinner }: { robot: RobotDetail; participant?: Participant; isWinner: boolean }) {
-  if (!participant) return <div className="text-secondary text-sm">No participant data</div>;
+function ParticipantCard({ robot, participant, isWinner }: { robot: RobotDetail | null; participant?: Participant; isWinner: boolean }) {
+  if (!robot || !participant) return <div className="text-secondary text-sm">No participant data</div>;
   return (
     <div className={`rounded p-3 text-sm ${isWinner ? 'bg-green-900/20 border border-green-700/30' : 'bg-surface'}`}>
       <p className="font-semibold mb-1">{robot.name} {isWinner && <span className="text-success text-xs">🏆</span>}</p>

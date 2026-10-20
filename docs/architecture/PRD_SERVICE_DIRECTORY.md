@@ -2,12 +2,13 @@
 
 **Project**: Armoured Souls
 **Document Type**: Product Requirements Document (PRD)
-**Version**: v1.7
+**Version**: v1.8
 **Last Updated**: October 19, 2026
 **Status**: ✅ Implemented
 **Owner**: Robert Teunissen
 
 **Revision History**:
+- v1.8 (Oct 19, 2026): Added `robot/robotReferenceCleanup`; `resetService` now works for stables with battle history (#294).
 - v1.7 (Oct 19, 2026): Listed `unifiedFacilityROIService` and the recorded facility returns modules in `economy/` (#542).
 - v1.6 (Oct 15, 2026): Added `battle/combatReadiness`, `battle/walkoverClaim`, `battle/forfeitResolutionService` and `battle/matchFailurePolicy`; `executeSoloTournamentRound` and `resolveBelowMinimumField` (#536).
 - v1.5 (Oct 14, 2026): Added `league/leagueInstancePlacement` and `standings/standingPlacement` (unified standings creation rule); updated `teamBattleService` and `subscriptionService` rows.
@@ -187,7 +188,7 @@ Shared infrastructure services used across domains.
 | `eventCompression` | Combat event deduplication and size estimation |
 | `guide-service` | In-game guide content loading and caching (Markdown + YAML frontmatter) |
 | `markdown-parser` | Markdown parsing with heading extraction |
-| `resetService` | Account reset logic (delete robots/weapons/facilities, restore credits) |
+| `resetService` | Account reset logic (delete robots/weapons/facilities, restore credits). Deletes the stable's own battle participant rows via `robotReferenceCleanup`; battles, summaries and opponents' records stay (#294) |
 
 ### cycle/
 Automated game loop — the scheduler and analytics snapshot system.
@@ -290,6 +291,7 @@ Robot management — the full lifecycle from creation to combat.
 | `robotWeaponService` | Weapon equip/unequip transactions (main, offhand, loadout type) |
 | `robotSettingsService` | `updateStance`, `updateYieldThreshold` (extracted from `routes/robots.ts`, Spec #55) |
 | `robotSanitizer` | Strips sensitive data for public robot viewing |
+| `robotReferenceCleanup` | `deleteRobotBattleReferences(tx, robotIds)`: deletes deleted robots' `battle_participants` and `team_battle_members` rows by robot id, keeping battles and other participants. Shared by account reset and the Generated_Stable purge (#294) |
 | `all-modes-battle-count` | All-modes battle count (`totalBattles` + KotH + Grand Melee `standings.total_matches`), single and batch, plus `getTopRobotsByAllModesBattleCount` (SQL ranking on the combined value, bigint sum, returns each robot's count from the same row). Used by streaming revenue, the financial report, facility recommendations, the robot detail/stable view payloads (#530, #532) and the Hall of Records "Most Battles" list and its season accolade |
 
 ### security/

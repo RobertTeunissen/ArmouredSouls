@@ -351,6 +351,8 @@ Two read-only signatures find the gaps.
 
    Not every hit owes money. A KotH or Grand Melee below-minimum match that crashed between its claim and the forfeiter participant rows also appears here: its battle has `battle_type` equal to the mode, `league_type` `koth` (KotH) or the tier (Grand Melee) and `winner_id` null. Forfeiters earn nothing and the ready robots' byes are separate rows, so nothing is owed for that battle.
 
+   An account reset (#294) also produces hits: it deletes the reset stable's participant rows, so a bye or walkover whose only participant was a reset robot has zero participants afterwards. Such a walkover was paid when the expected `buildByeBattleIncomeEventId` / `buildForfeitBattleIncomeEventId` ledger row exists (reset keeps ledger rows), and `reset_logs.reset_at` for that stable is later than the battle.
+
 2. **Fought battle with missing income** (any mode, error after the battle row was written). For some stable, the sum of its robots' `battle_participants.credits` is above 0 and that stable has no `battle_income` ledger row whose breakdown `metadata->>'battleId'` is the battle. The breakdown battle id is the field the Finance Center deployment query reads, and every battle-income writer sets it, so the predicate covers fought battles (`battle:` identities), byes (`bye:`) and forfeit wins (`forfeit:`) alike. Matching on the `battle:` identity prefix instead would report every paid walkover as unpaid. Stables with 0 credits are left out because `awardCreditsWithLedger` writes nothing for an amount of 0 or less. The check is battle-centric, so it also finds battles whose queued match was cancelled. The test helper `tests/helpers/foughtBattleSignature.ts` runs the same query.
 
    ```sql
