@@ -49,19 +49,34 @@ log() {
 }
 
 # --- Monitoring alert helper (best-effort, never blocks) ---
-# We rely on MONITORING_DISCORD_WEBHOOK / DISCORD_WEBHOOK_URL being present
-# in the inherited environment if a Discord alert is wanted. We deliberately
+# We rely on MONITORING_DISCORD_WEBHOOK being present in the inherited
+# environment if a Discord alert is wanted. There is no fallback to
+# DISCORD_WEBHOOK_URL: that is the player-facing game channel. We deliberately
 # do NOT `source /opt/armouredsouls/backend/.env` — sourcing crashes under
 # `set -e` whenever a value contains shell-special characters (the
 # 25 May ACC deploy failed at "line 7: 20: command not found"). If the
 # webhook env vars aren't present the alert is a no-op and the script's
 # exit code still drives the deploy success/failure decision.
+# Escape a string for use inside a JSON string literal. The disk-full alert
+# below is multi-line with code fences; unescaped, its raw newlines made the
+# payload invalid JSON and Discord rejected it with HTTP 400 — silently.
+# Canonical implementation: app/scripts/backup.sh
+json_escape() {
+  local s="$1"
+  s="${s//\\/\\\\}"
+  s="${s//\"/\\\"}"
+  s="${s//$'\n'/\\n}"
+  s="${s//$'\r'/\\r}"
+  s="${s//$'\t'/\\t}"
+  printf '%s' "$s"
+}
+
 send_alert() {
   local message="$1"
-  local webhook="${MONITORING_DISCORD_WEBHOOK:-${DISCORD_WEBHOOK_URL:-}}"
+  local webhook="${MONITORING_DISCORD_WEBHOOK:-}"
   if [ -n "$webhook" ]; then
     curl -s -H "Content-Type: application/json" \
-      -d "{\"content\": \"$message\"}" \
+      -d "{\"content\": \"$(json_escape "$message")\"}" \
       "$webhook" > /dev/null 2>&1 || true
   fi
 }

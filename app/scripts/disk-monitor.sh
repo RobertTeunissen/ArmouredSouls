@@ -22,17 +22,16 @@
 #     crontab -l | grep -c disk-monitor    # must print 1
 #
 # Environment (read via env_get, never sourced — see below):
-#   MONITORING_DISCORD_WEBHOOK    - Primary webhook for ops alerts
-#   DISCORD_WEBHOOK_URL           - Fallback if monitoring webhook not set
-#   DISK_ALERT_COOLDOWN_SECONDS   - Override the 2-hour default
+#   MONITORING_DISCORD_WEBHOOK    - Webhook for ops alerts (unset: log only)
+#   DISK_ALERT_COOLDOWN_SECONDS   - Override the 4-hour default
 #
 # Thresholds:
 #   >= 80% — WARNING alert
 #   >= 90% — CRITICAL alert
 #   <  80% — Silent exit
 #
-# Cooldown: 2 hours per severity. While disk sits above a threshold the operator
-# gets one alert every two hours, not one every cron tick. The cooldown resets
+# Cooldown: 4 hours per severity. While disk sits above a threshold the operator
+# gets one alert every four hours, not one every cron tick. The cooldown resets
 # when the disk drops below the threshold so the next cross-back-up alert fires
 # immediately. State is kept in /var/lib/armouredsouls/ (or /tmp as a fallback)
 # — content is the unix timestamp of the last alert.
@@ -59,14 +58,13 @@ env_get() {
 
 ENV_FILE="${DISK_MONITOR_ENV_FILE:-/opt/armouredsouls/backend/.env}"
 
-MONITORING_WEBHOOK="${MONITORING_DISCORD_WEBHOOK:-$(env_get MONITORING_DISCORD_WEBHOOK "$ENV_FILE")}"
-FALLBACK_WEBHOOK="${DISCORD_WEBHOOK_URL:-$(env_get DISCORD_WEBHOOK_URL "$ENV_FILE")}"
-WEBHOOK="${MONITORING_WEBHOOK:-$FALLBACK_WEBHOOK}"
+# No fallback to DISCORD_WEBHOOK_URL: that is the player-facing game channel.
+WEBHOOK="${MONITORING_DISCORD_WEBHOOK:-$(env_get MONITORING_DISCORD_WEBHOOK "$ENV_FILE")}"
 
 HOSTNAME=$(hostname)
 
 COOLDOWN_SECONDS="${DISK_ALERT_COOLDOWN_SECONDS:-$(env_get DISK_ALERT_COOLDOWN_SECONDS "$ENV_FILE")}"
-COOLDOWN_SECONDS="${COOLDOWN_SECONDS:-7200}"
+COOLDOWN_SECONDS="${COOLDOWN_SECONDS:-14400}"
 
 log() {
   echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"
@@ -101,11 +99,25 @@ else
   AVAIL_HUMAN="${AVAIL_KB}KB"
 fi
 
+# Escape a string for use inside a JSON string literal. A raw newline, quote
+# or backslash in the message makes the payload invalid JSON, which Discord
+# rejects with HTTP 400 — silently, since curl's output is discarded.
+# Canonical implementation: app/scripts/backup.sh
+json_escape() {
+  local s="$1"
+  s="${s//\\/\\\\}"
+  s="${s//\"/\\\"}"
+  s="${s//$'\n'/\\n}"
+  s="${s//$'\r'/\\r}"
+  s="${s//$'\t'/\\t}"
+  printf '%s' "$s"
+}
+
 send_alert() {
   local message="$1"
   if [ -n "$WEBHOOK" ]; then
     curl -s -H "Content-Type: application/json" \
-      -d "{\"content\": \"$message\"}" \
+      -d "{\"content\": \"$(json_escape "$message")\"}" \
       "$WEBHOOK" > /dev/null 2>&1 || true
   fi
   log "$message"

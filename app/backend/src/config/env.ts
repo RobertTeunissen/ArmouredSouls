@@ -267,7 +267,7 @@ export interface EnvConfig {
   accoladeDepth: number;
   /** Maximum retained custom robot images per stable. */
   retainedImagesPerStable: number;
-  /** Discord webhook URL for ops alerts. Falls back to DISCORD_WEBHOOK_URL. */
+  /** Discord webhook URL for ops alerts. No fallback: DISCORD_WEBHOOK_URL is the player channel. */
   monitoringDiscordWebhook: string | undefined;
   /** Generic Discord webhook for player notifications. */
   discordWebhookUrl: string | undefined;

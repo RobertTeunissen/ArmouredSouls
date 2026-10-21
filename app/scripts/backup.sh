@@ -92,8 +92,8 @@ if [ -z "${DB_USER}" ] || [ -z "${DB_NAME}" ]; then
   fi
 fi
 
+# No fallback to DISCORD_WEBHOOK_URL: that is the player-facing game channel.
 MONITORING_DISCORD_WEBHOOK="${MONITORING_DISCORD_WEBHOOK:-$(env_get MONITORING_DISCORD_WEBHOOK "$ENV_FILE")}"
-DISCORD_WEBHOOK_URL="${DISCORD_WEBHOOK_URL:-$(env_get DISCORD_WEBHOOK_URL "$ENV_FILE")}"
 
 # Apply defaults after env resolution
 DB_USER="${DB_USER:-armouredsouls}"
@@ -109,12 +109,26 @@ log() {
 }
 
 # --- Monitoring alert helper ---
+# Escape a string for use inside a JSON string literal. A raw newline, quote
+# or backslash in the message makes the payload invalid JSON, which Discord
+# rejects with HTTP 400 — silently, since curl's output is discarded.
+# Canonical implementation (copied into disk-monitor.sh and preflight.sh).
+json_escape() {
+  local s="$1"
+  s="${s//\\/\\\\}"
+  s="${s//\"/\\\"}"
+  s="${s//$'\n'/\\n}"
+  s="${s//$'\r'/\\r}"
+  s="${s//$'\t'/\\t}"
+  printf '%s' "$s"
+}
+
 send_alert() {
   local message="$1"
-  local webhook="${MONITORING_DISCORD_WEBHOOK:-${DISCORD_WEBHOOK_URL:-}}"
+  local webhook="${MONITORING_DISCORD_WEBHOOK:-}"
   if [ -n "$webhook" ]; then
     curl -s -H "Content-Type: application/json" \
-      -d "{\"content\": \"$message\"}" \
+      -d "{\"content\": \"$(json_escape "$message")\"}" \
       "$webhook" > /dev/null 2>&1 || true
   fi
   log "$message"

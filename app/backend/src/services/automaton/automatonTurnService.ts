@@ -23,7 +23,9 @@
  * - Program_Switch off: every due turn `skipped` / `program_off`, nothing
  *   upkept or bought (R2.7);
  * - one failing Automaton is recorded `failed` with its error code and an
- *   alert, and the others continue (R7.8).
+ *   alert, and the others continue (R7.8);
+ * - per-stable alerts are collected in an `AutomatonAlertDigest` and sent as
+ *   one webhook message per alert kind when the step ends.
  *
  * `runAutomatonTurn` is one stable's turn (design §11.2): the pinned
  * Strategy_Version and its stored Goal_Targets (a missing version or invalid
@@ -76,9 +78,12 @@ import {
   alertTurnFailed,
   alertTurnStepFailed,
   alertUpkeepIssues,
+  createAlertDigest,
   emptyTurnStepSummary,
+  flushAlertDigest,
   logTurnStepSummary,
   truncate,
+  type AutomatonAlertDigest,
   type TurnLabel,
   type TurnStepSummary,
 } from './automatonObservability';
@@ -368,6 +373,8 @@ export interface TurnEnvironment {
   weapons: ReadonlyMap<string, WeaponFacts>;
   phase: StableFacts['phase'];
   now: () => number;
+  /** Collects this step's per-stable alerts; sent when the step ends. Absent: alert at once. */
+  alerts?: AutomatonAlertDigest;
 }
 
 export interface AutomatonTurnResult {
@@ -426,7 +433,7 @@ export async function runAutomatonTurn(
       status: 'failed', reason: INVALID_PARAMETERS, endBalance: profile.balance, creditsSpent: 0, creditsReceived: 0,
       actions: [], goalOutcomes: [], upkeepIssues: [], durationMs: env.now() - started,
     });
-    await alertInvalidParameters(profile.catalogueKey, turn, resolved.detail);
+    await alertInvalidParameters(profile.catalogueKey, turn, resolved.detail, env.alerts);
     return { ...empty, status: 'failed', reason: INVALID_PARAMETERS };
   }
   const { strategy, params } = resolved;
@@ -445,7 +452,7 @@ export async function runAutomatonTurn(
     // 2. Facts and start balance (R11.8: alert on a negative start).
     facts = await loadStableFacts(prisma, profile.profileId, { season, blueprints });
     await recordStartBalance(record.id, facts.balance);
-    if (facts.balance < 0) await alertNegativeBalance(profile.catalogueKey, turn, facts.balance);
+    if (facts.balance < 0) await alertNegativeBalance(profile.catalogueKey, turn, facts.balance, env.alerts);
 
     const upkeepCtx = { userId: profile.userId, blueprints, teamNames, eventOrder };
     const execCtx: ExecutionContext = {
@@ -519,8 +526,8 @@ export async function runAutomatonTurn(
       upkeepIssues,
       durationMs: env.now() - started,
     });
-    await alertTurnFailed(profile.catalogueKey, turn, code, errorMessageOf(error));
-    if (upkeepIssues.length > 0) await alertUpkeepIssues(profile.catalogueKey, turn, upkeepIssues);
+    await alertTurnFailed(profile.catalogueKey, turn, code, errorMessageOf(error), env.alerts);
+    if (upkeepIssues.length > 0) await alertUpkeepIssues(profile.catalogueKey, turn, upkeepIssues, env.alerts);
     return {
       ...empty,
       status: 'failed',
@@ -548,11 +555,11 @@ export async function runAutomatonTurn(
     upkeepIssues,
     durationMs: env.now() - started,
   });
-  if (upkeepIssues.length > 0) await alertUpkeepIssues(profile.catalogueKey, turn, upkeepIssues);
+  if (upkeepIssues.length > 0) await alertUpkeepIssues(profile.catalogueKey, turn, upkeepIssues, env.alerts);
   if (savingGoalId !== null) {
     // Informational (R11.8): alert once, when the run first passes 14 turns.
     const streak = await savingStreakLength(profile.profileId, record.id, savingGoalId);
-    if (streak === SAVING_ALERT_TURNS + 1) await alertSavingStreak(profile.catalogueKey, savingGoalId, streak);
+    if (streak === SAVING_ALERT_TURNS + 1) await alertSavingStreak(profile.catalogueKey, savingGoalId, streak, env.alerts);
   }
   return {
     status: 'completed',
@@ -600,6 +607,8 @@ interface TurnStepRun {
   lease: TurnStepLease;
   env: TurnEnvironment | null;
   now: () => number;
+  /** This step's per-stable alerts, flushed when the step ends. */
+  alerts: AutomatonAlertDigest;
   /**
    * A cutover was seen mid-step; it sticks. Kept apart from `lease.lost` so a
    * later lease loss cannot hide the cutover alert.
@@ -673,7 +682,7 @@ async function runCohortProfile(run: TurnStepRun, profile: CohortProfile): Promi
     } catch (markError) {
       logger.error(`[automaton-turns] ${profile.catalogueKey}: could not mark the turn failed — ${errorMessageOf(markError)}`);
     }
-    await alertTurnFailed(profile.catalogueKey, turn, code, errorMessageOf(error));
+    await alertTurnFailed(profile.catalogueKey, turn, code, errorMessageOf(error), run.alerts);
     summary.failed++;
   }
 }
@@ -711,13 +720,19 @@ export async function runTurnStep(input: TurnStepInput, deps: TurnStepDependenci
     const enabled = await isProgramEnabled();
     const cohort = (await listActiveProfilesOrderedByUserId()).filter(deps.cohortFilter ?? ((): boolean => true));
     summary.processed = cohort.length;
+    const alerts = createAlertDigest();
     const env: TurnEnvironment | null = enabled && cohort.length > 0
-      ? { registry: deps.registry ?? getStrategyRegistry(), weapons: await loadWeaponCatalogue(), phase, now }
+      ? { registry: deps.registry ?? getStrategyRegistry(), weapons: await loadWeaponCatalogue(), phase, now, alerts }
       : null;
-    const run: TurnStepRun = { turn, summary, deadline, lease, env, now, cutoverSeen: false, notStarted: 0 };
+    const run: TurnStepRun = { turn, summary, deadline, lease, env, now, alerts, cutoverSeen: false, notStarted: 0 };
 
     // Starts in ascending User.id order (R7.9); at most `concurrency` turns at once.
-    await runWithConcurrency(cohort, concurrency, (profile) => runCohortProfile(run, profile));
+    try {
+      await runWithConcurrency(cohort, concurrency, (profile) => runCohortProfile(run, profile));
+    } finally {
+      // One message per alert kind, also when an infrastructure error ends the step.
+      await flushAlertDigest(alerts, turn);
+    }
 
     summary.durationMs = now() - started;
     summary.leaseLost = lease.lost;

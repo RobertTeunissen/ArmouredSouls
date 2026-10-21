@@ -64,11 +64,15 @@ function checkLoggingHealth(): { status: 'active' | 'stale' | 'unknown'; lastWri
   }
 }
 
+type BackupStatus = 'ok' | 'stale' | 'missing' | 'not_applicable';
+
 /**
  * Check the most recent database backup file.
- * Returns age and status.
+ * Returns age and status. Every status except `ok` and `not_applicable`
+ * (a local machine without the backup directory) makes the report Degraded:
+ * on a deployed host, no backup is at least as bad as an old one.
  */
-function checkBackupHealth(): { status: 'ok' | 'stale' | 'missing'; lastBackupAgo: string } {
+function checkBackupHealth(): { status: BackupStatus; lastBackupAgo: string } {
   const BACKUP_DIR = '/opt/armouredsouls/backups/daily';
   const STALE_THRESHOLD_MS = 26 * 60 * 60 * 1000; // 26 hours (daily backup with margin)
 
@@ -91,11 +95,15 @@ function checkBackupHealth(): { status: 'ok' | 'stale' | 'missing'; lastBackupAg
 
     return { status: 'ok', lastBackupAgo: `${hoursAgo}h ago` };
   } catch (err) {
-    // If backup directory doesn't exist, likely dev environment.
-    // But log the error so real production issues aren't silently masked.
+    // No backup directory: expected on a local machine, a failure on a deployed
+    // host (backup.sh creates it on its first run).
     const isENOENT = err instanceof Error && 'code' in err && (err as NodeJS.ErrnoException).code === 'ENOENT';
     if (isENOENT) {
-      return { status: 'missing', lastBackupAgo: 'N/A (dev)' };
+      const { nodeEnv } = getConfig();
+      const deployed = nodeEnv === 'acceptance' || nodeEnv === 'production';
+      return deployed
+        ? { status: 'missing', lastBackupAgo: 'backup directory not found' }
+        : { status: 'not_applicable', lastBackupAgo: 'N/A (dev)' };
     }
     logger.warn('[health-report] Backup health check failed', { error: err instanceof Error ? err.message : String(err) });
     return { status: 'missing', lastBackupAgo: 'error checking backups' };
@@ -171,7 +179,7 @@ export async function generateHealthReport(): Promise<string> {
     !dbConnected ||
     modules.status !== 'ok' ||
     logging.status === 'stale' ||
-    backup.status === 'stale';
+    (backup.status !== 'ok' && backup.status !== 'not_applicable');
 
   const now = new Date().toUTCString().slice(17, 22); // HH:MM
   const header = isDegraded
@@ -182,7 +190,8 @@ export async function generateHealthReport(): Promise<string> {
     ? `• Disk: ${disk.usagePercent}% used (${disk.availableMB}MB free) — OK`
     : `• Disk: ${disk.usagePercent}% used (${disk.availableMB}MB free) — ⚠️ ${disk.status.toUpperCase()}`;
 
-  const memLine = `• Memory: ${memory.usagePercent}% (${memory.usedMB}MB / ${memory.totalMB}MB) — OK`;
+  // Informational only: there is no memory threshold, so no OK/WARNING verdict.
+  const memLine = `• Memory: ${memory.usagePercent}% (${memory.usedMB}MB / ${memory.totalMB}MB)`;
   const dbLine = dbConnected ? '• Database: Connected' : '• Database: ⚠️ DISCONNECTED';
   const moduleLine = modules.status === 'ok'
     ? '• Modules: All verified'
@@ -202,7 +211,9 @@ export async function generateHealthReport(): Promise<string> {
     ? `• Backups: OK (last ${backup.lastBackupAgo})`
     : backup.status === 'stale'
       ? `• Backups: ⚠️ STALE (last ${backup.lastBackupAgo})`
-      : `• Backups: ${backup.lastBackupAgo}`;
+      : backup.status === 'missing'
+        ? `• Backups: ⚠️ MISSING (${backup.lastBackupAgo})`
+        : `• Backups: ${backup.lastBackupAgo}`;
 
   const message = [
     header,

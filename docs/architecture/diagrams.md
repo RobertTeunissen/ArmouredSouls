@@ -948,7 +948,10 @@ flowchart TB
         Health["/api/health endpoint"]
         SecMon["Security Monitor<br/>(rate limits, auth failures)"]
         CycleMon["Cycle Performance<br/>Monitor"]
-        DiskCheck["Disk Usage Check<br/>(15-min cooldown alerts)"]
+    end
+
+    subgraph Host["Host cron"]
+        DiskCheck["disk-monitor.sh<br/>(hourly, 4-hour cooldown)"]
     end
 
     subgraph Alerts["Discord Webhooks"]
@@ -959,8 +962,7 @@ flowchart TB
     end
 
     UR --> Health
-    Health --> DiskCheck
-    DiskCheck -->|>85%| DiskAlert
+    DiskCheck -->|>=80% / >=90%| DiskAlert
     App -->|startup failure| StartupFail
     App -->|backup cron fail| BackupFail
     CycleMon -->|daily 00:30| DailyReport

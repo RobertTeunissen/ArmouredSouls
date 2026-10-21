@@ -13,9 +13,9 @@ The monitoring system uses lightweight, zero-cost components:
 
 | Component | What it monitors | Alert channel |
 |---|---|---|
-| Enhanced Health Endpoint | Disk, memory, DB, modules | Discord (on threshold breach) |
+| Enhanced Health Endpoint | Disk, memory, DB, modules | None (status in response; 503 on critical disk or DB down) |
 | Startup Self-Test | Missing compiled modules | Discord + process exit |
-| Disk Monitor Script | Root filesystem usage | Discord (cron every 15 min) |
+| Disk Monitor Script | Root filesystem usage | Discord (hourly cron, 4-hour cooldown) |
 | Backup Script Alerting | Backup failures/skips | Discord |
 | Daily Health Report | All-in-one daily summary | Discord |
 | Deploy Notifications | CI/CD success/failure | Discord |
@@ -31,7 +31,7 @@ The monitoring system uses lightweight, zero-cost components:
 | Alert | Trigger | Message Format | Response |
 |---|---|---|---|
 | Disk Critical | Usage >= 90% | `🚨 Disk usage CRITICAL: {%}% used ({free} free) on {host}` | Free disk space immediately: remove old backups, vacuum journal, check Docker images |
-| Startup Failed | Missing compiled modules | `🚨 STARTUP FAILED: Missing modules: [list]. Server did not start.` | SSH in, check `dist/` directory, run `pnpm run build`, restart PM2 |
+| Startup Failed | Missing compiled modules (or an invalid strategy file) | `🚨 STARTUP FAILED: Missing modules: [list]. Server did not start.` (sent once per failure, not per PM2 restart) | SSH in, check `dist/` directory, run `pnpm run build`, restart PM2 |
 | Backup Failed | pg_dump non-zero exit | `🚨 Backup FAILED: pg_dump returned error on {host}` | Check DB connectivity, disk space, backup logs |
 | Deploy Failed | Any deploy step fails | `🚨 Deploy to {env} FAILED. Run: {url}` | Check GitHub Actions run, fix the failing step, re-deploy |
 
@@ -76,7 +76,12 @@ MONITORING_DISCORD_WEBHOOK=https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR
 - `MONITORING_DISCORD_WEBHOOK` → `#ops-alerts` channel (disk, startup, backup, deploy alerts)
 - `DISCORD_WEBHOOK_URL` → `#game-updates` channel (cycle completions, battle results)
 
-If `MONITORING_DISCORD_WEBHOOK` is not set, alerts fall back to `DISCORD_WEBHOOK_URL`.
+There is no fallback. If `MONITORING_DISCORD_WEBHOOK` is not set, the backend and the scripts (`disk-monitor.sh`, `backup.sh`, `preflight.sh`) log the alert and send nothing. They never post to `DISCORD_WEBHOOK_URL`, because ops alerts carry hostnames, disk figures and error codes players should not see. A missing Daily Health Report is the sign that the monitoring webhook is not configured.
+
+Message delivery details:
+- The scripts JSON-escape their message (`json_escape`), so multi-line alerts such as preflight's "Deploy ABORTED" disk report are valid payloads. Before this, raw newlines made Discord reject that alert with HTTP 400, hidden by `curl -s … || true`. `app/scripts/__tests__/alert-json.test.sh` covers all three scripts.
+- The backend cuts messages longer than Discord's 2000-character limit instead of having them rejected.
+- A startup failure is alerted once, not once per PM2 restart: the same message within an hour is logged only (state in `$TMPDIR/armouredsouls-startup-alert.json`).
 
 ---
 
@@ -158,16 +163,18 @@ Add this line — **hourly, and exactly one entry**:
 0 * * * * /opt/armouredsouls/scripts/disk-monitor.sh >> /var/log/armouredsouls/disk-monitor.log 2>&1
 ```
 
-### Cadence: hourly check, two-hour cooldown (Spec #46)
+### Cadence: hourly check, four-hour cooldown (Spec #46)
 
 | Setting | Value | Where |
 |---|---|---|
 | Check interval | Hourly (`0 * * * *`) | crontab, per host |
-| Disk_Alert_Cooldown | 7200 seconds (2 hours) per severity | `DISK_ALERT_COOLDOWN_SECONDS`, default in the script |
+| Disk_Alert_Cooldown | 14400 seconds (4 hours) per severity | `DISK_ALERT_COOLDOWN_SECONDS`, default in the script |
+
+This script is the only source of disk threshold alerts. The backend `/api/health` endpoint used to send its own (`(9195MB free)` format, 15-minute in-memory cooldown, fired by uptime polling), which duplicated every script alert; it now only reports disk status in its response and in the Daily Health Report. If the cron entry is missing, nothing alerts on disk, so check `crontab -l | grep -c disk-monitor` after host changes.
 
 **Why hourly and not every 15 minutes.** Disk consumption on these hosts is driven by the hourly battle and settlement cron jobs — each run writes battles, participants, summaries, and audit events. Usage rises in *steps* at those hourly boundaries and is essentially flat in between, so a 15-minute interval samples the same number four times and buys no earlier detection.
 
-**Why not longer than hourly.** Past one hour, latency on the *first* alert grows with no benefit, because the cooldown already caps the rate for every alert after the first. Hourly detection with a two-hour cooldown gives at most one alert every two hours while the disk stays above a threshold, and still catches the breach within an hour of it happening.
+**Why not longer than hourly.** Past one hour, latency on the *first* alert grows with no benefit, because the cooldown already caps the rate for every alert after the first. Hourly detection with a four-hour cooldown gives at most one alert every four hours while the disk stays above a threshold, and still catches the breach within an hour of it happening.
 
 ### The July 2026 alert storm on `armouredsouls-acc` — what actually happened
 
@@ -201,7 +208,7 @@ Spec #29 recorded a design decision that the disk monitor needs "no deduplicatio
 
 ### Environment Variables
 
-The script reads `/opt/armouredsouls/backend/.env` using the `env_get` helper — it does **not** `source` the file, because bash would evaluate unquoted values as commands (a cron expression like `LEAGUE_SCHEDULE=0 20 * * *` aborts the script). Ensure `MONITORING_DISCORD_WEBHOOK` is set there. `DISK_ALERT_COOLDOWN_SECONDS` is optional and overrides the two-hour default.
+The script reads `/opt/armouredsouls/backend/.env` using the `env_get` helper — it does **not** `source` the file, because bash would evaluate unquoted values as commands (a cron expression like `LEAGUE_SCHEDULE=0 20 * * *` aborts the script). Ensure `MONITORING_DISCORD_WEBHOOK` is set there. `DISK_ALERT_COOLDOWN_SECONDS` is optional and overrides the four-hour default.
 
 ### Verification
 
@@ -217,7 +224,7 @@ diff /opt/armouredsouls/scripts/disk-monitor.sh \
      /opt/armouredsouls/app/scripts/disk-monitor.sh && echo "in sync"
 
 # Confirm the cooldown default is present in the deployed copy
-grep -c 'COOLDOWN_SECONDS:-7200' /opt/armouredsouls/scripts/disk-monitor.sh
+grep -c 'COOLDOWN_SECONDS:-14400' /opt/armouredsouls/scripts/disk-monitor.sh
 
 # Run manually to test
 /opt/armouredsouls/scripts/disk-monitor.sh
@@ -249,7 +256,9 @@ DAILY_REPORT_SCHEDULE=0 9 * * *
 
 ### Content
 
-The report includes: uptime, disk usage, memory usage, database connectivity, module integrity, logging health, and last cycle job info.
+The report includes: uptime, disk usage, memory usage, database connectivity, module integrity, logging health, backups, and last cycle job info.
+
+Memory is informational (no threshold, so no OK/WARNING verdict). Backups make the report Degraded when the newest daily backup is older than 26 hours, when the backup directory holds no backup, when it cannot be read, or, on acceptance and production, when it does not exist. Only a local machine without `/opt/armouredsouls/backups/daily` shows `N/A (dev)` without degrading the report.
 
 ### Interpreting the Report
 
@@ -407,7 +416,7 @@ Symptom: more than one alert per Disk_Alert_Cooldown window while the disk sits 
 
 4. **Stale deployed copy.**
    ```bash
-   grep -c 'COOLDOWN_SECONDS:-7200' /opt/armouredsouls/scripts/disk-monitor.sh   # MUST print 1
+   grep -c 'COOLDOWN_SECONDS:-14400' /opt/armouredsouls/scripts/disk-monitor.sh   # MUST print 1
    diff /opt/armouredsouls/scripts/disk-monitor.sh /opt/armouredsouls/app/scripts/disk-monitor.sh
    ```
 
