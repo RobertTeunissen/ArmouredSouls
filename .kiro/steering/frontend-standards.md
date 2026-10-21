@@ -1,6 +1,7 @@
 ---
-inclusion: fileMatch
-fileMatchPattern: "**/frontend/src/**,**/*.tsx,**/*.jsx,**/*.css,**/tailwind.config.*,**/vite.config.*"
+inclusion: auto
+name: frontend-standards
+description: "React component structure, API integration, forms, accessibility, styling, and frontend testing. Use when creating or changing frontend UI code."
 ---
 
 # Frontend Standards

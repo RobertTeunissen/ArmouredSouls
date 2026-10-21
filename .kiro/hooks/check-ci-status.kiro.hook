@@ -8,6 +8,6 @@
   },
   "then": {
     "type": "askAgent",
-    "prompt": "Run this command to check CI status: `gh run list --branch $(git branch --show-current) --limit 1 --json status,conclusion,name,databaseId` then if there are failures, run `gh run view {databaseId} --log-failed` to get the failure details. Analyze the failures and fix them."
+    "prompt": "Run this command to check CI status: `gh run list --branch $(git branch --show-current) --limit 1 --json status,conclusion,name,databaseId` If it passed or is still running, report that and stop. On failure, run `gh run view {databaseId} --log-failed | grep -iE 'error|fail|✕|expected|received' | head -n 80` (widen to `| tail -n 150` only if that is not enough). Fix the root cause."
   }
 }

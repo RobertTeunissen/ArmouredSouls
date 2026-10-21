@@ -4,8 +4,7 @@ inclusion: always
 
 # Armoured Souls — Project Context
 
-## Identity
-Armoured Souls is a browser-based, turn-based robot-combat strategy game with leagues, tournaments, teams, progression, cycles, and a credit economy.
+Browser-based, turn-based robot-combat strategy game with leagues, tournaments, teams, progression, cycles, and a credit economy.
 
 ## Stack
 - Backend: Node.js 24, strict TypeScript 6.0.3, Express 5, Prisma 7, PostgreSQL 17, JWT/bcrypt, PM2.
@@ -16,27 +15,17 @@ Armoured Souls is a browser-based, turn-based robot-combat strategy game with le
 ## Repository map
 - `app/backend` — API, services, game engine, persistence, scheduled cycles.
 - `app/frontend` — player and admin React applications.
-- `app/shared` — frontend/backend formulas and shared game types.
-- `docs` — architecture, PRDs, guides, balance changes, design, and implementation notes.
+- `app/shared` — shared formulas and game types.
+- `docs/` — `architecture/` (system contracts, security), `game-systems/` (mechanics, balance), `prd_pages/` (page requirements), `guides/` (operations, finance), `implementation_notes/` (implementation and release evidence), plus `balance_changes/` and `design_ux/`.
 
 ## System map
-Combat, leagues, tournaments, teams/tag team, KotH, Grand Melee, Booking Office subscriptions, cycles/settlement, fame/prestige, facilities, weapons, tuning, achievements, changelog, admin portal, dashboard, monitoring, seasons, guided setup, Finance Center, and Automaton stables are implemented domains. Use the relevant service directory and PRD before changing behavior; the canonical service map is `docs/architecture/PRD_SERVICE_DIRECTORY.md`.
+Implemented domains: combat, leagues, tournaments, teams/tag team, KotH, Grand Melee, Booking Office subscriptions, cycles/settlement, fame/prestige, facilities, weapons, tuning, achievements, changelog, admin portal, dashboard, monitoring, seasons, guided setup, Finance Center, Automaton stables. Read the relevant service directory and PRD before changing behavior; the service map is `docs/architecture/PRD_SERVICE_DIRECTORY.md`.
 
-Important product boundaries:
-- **Credits:** `User.currency` is authoritative. Current-economy mutations go through `Credit_Mutation_Service`; ledger and financial-audit pairing rules live in `docs/guides/FINANCIAL_LEDGER_AUDIT_GUIDE.md`.
-- **Finance Center:** `/income` is the player destination; `/finances` and `/cycle-summary` are compatibility redirects. The report contract is `docs/implementation_notes/finance-center-reporting-contract.md`.
-- **Repairs and byes:** shared repair arithmetic is in `app/shared/utils/repairCost.ts`; bye rewards and resolution have dedicated backend modules. See `docs/architecture/PRD_BATTLE_DATA_ARCHITECTURE.md` and the relevant game-system PRDs.
-- **Battle retention:** permanent battle data belongs in summaries/proper columns, not ephemeral `battle_log`.
-- **Seasons:** live data is current-season scoped; cross-season history comes from archive tables only.
-- **Competitive ranking:** standings are the source of truth for league/KotH/tag-team ranking data.
-- **Stable types:** `User.stableType` is `human`, `generated` (`isGenerated` bots, deleted at rollover) or `automaton` (persistent computer-run Automaton stables; no login, no grants, no Manual_Repair; turns run after settlement). See `docs/game-systems/PRD_AUTOMATON_STABLES.md`.
-- **Shared formulas:** never duplicate a frontend/backend formula; put it in `app/shared/utils/`.
+Product boundaries:
+- **Credits:** `User.currency` is authoritative; current-economy mutations go through `Credit_Mutation_Service`. Pairing rules: `docs/guides/FINANCIAL_LEDGER_AUDIT_GUIDE.md`.
+- **Finance Center:** `/income` is the player destination; `/finances` and `/cycle-summary` redirect. Contract: `docs/implementation_notes/finance-center-reporting-contract.md`.
+- **Repairs and byes:** repair arithmetic is `app/shared/utils/repairCost.ts`; bye rewards and resolution have dedicated backend modules. See `docs/architecture/PRD_BATTLE_DATA_ARCHITECTURE.md`.
+- **Seasons:** live data is current-season scoped; cross-season history comes only from archive tables.
+- **Stable types:** `User.stableType` is `human`, `generated` (`isGenerated` bots, deleted at rollover), or `automaton` (persistent computer-run stables; no login, grants, or Manual_Repair; turns run after settlement). See `docs/game-systems/PRD_AUTOMATON_STABLES.md`.
 
-## Documentation map
-- `docs/architecture/` — system contracts and security.
-- `docs/game-systems/` — mechanics and balance behavior.
-- `docs/prd_pages/` — page requirements.
-- `docs/guides/` — operational and financial guidance.
-- `docs/implementation_notes/` — implementation and release evidence.
-
-Keep changes modular, secure, documented, and covered by the applicable test tier. Detailed rules are intentionally conditional in the other steering files; do not duplicate them here.
+Keep changes modular, secure, documented, and tested at the applicable tier. Detailed rules live in conditional steering files; do not duplicate them here.

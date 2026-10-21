@@ -1,6 +1,7 @@
 ---
-inclusion: fileMatch
-fileMatchPattern: "app/backend/src/game-engine/**,app/backend/src/services/battle/**,app/backend/src/services/combat/**,app/backend/src/services/matchmaking/**,app/backend/src/services/league/**,app/backend/src/services/tournament/**,app/backend/src/services/economy/**,app/backend/src/services/facility/**,app/backend/src/services/cycle/**,app/backend/src/services/fame/**,app/backend/src/services/team-battle/**,docs/architecture/**,docs/game-systems/**,docs/balance_changes/**"
+inclusion: auto
+name: guide-content-maintenance
+description: "Rules for keeping in-game player guide articles in sync. Use when a change alters mechanics, balance values, or player-facing behavior."
 ---
 
 # In-Game Guide Content Maintenance
