@@ -1,4 +1,4 @@
-import { sendMonitoringAlert } from '../monitoringWebhook';
+import { DISCORD_CONTENT_LIMIT, fitDiscordContent, sendMonitoringAlert } from '../monitoringWebhook';
 
 // Mock logger
 jest.mock('../../config/logger', () => ({
@@ -46,20 +46,30 @@ describe('sendMonitoringAlert', () => {
     );
   });
 
-  it('should fall back to DISCORD_WEBHOOK_URL when monitoring webhook not set', async () => {
+  it('never sends ops alerts to the player-facing DISCORD_WEBHOOK_URL', async () => {
     process.env.DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/game';
+
+    const result = await sendMonitoringAlert('Ops alert');
+
+    expect(result).toBe(false);
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it('cuts content over the 2000-character Discord limit instead of having it rejected', async () => {
+    process.env.MONITORING_DISCORD_WEBHOOK = 'https://discord.com/api/webhooks/monitoring';
     mockFetch.mockResolvedValue({ ok: true, text: () => Promise.resolve('') });
 
-    const result = await sendMonitoringAlert('Fallback alert');
+    await sendMonitoringAlert(`🚨${'x'.repeat(3000)}`);
 
-    expect(result).toBe(true);
-    expect(mockFetch).toHaveBeenCalledWith(
-      'https://discord.com/api/webhooks/game',
-      expect.objectContaining({
-        method: 'POST',
-        body: JSON.stringify({ content: 'Fallback alert' }),
-      })
-    );
+    const body = JSON.parse((mockFetch.mock.calls[0][1] as { body: string }).body) as { content: string };
+    expect(Array.from(body.content)).toHaveLength(DISCORD_CONTENT_LIMIT);
+    expect(body.content.startsWith('🚨')).toBe(true);
+    expect(body.content.endsWith('…')).toBe(true);
+  });
+
+  it('leaves content within the limit unchanged', () => {
+    const message = 'y'.repeat(DISCORD_CONTENT_LIMIT);
+    expect(fitDiscordContent(message)).toBe(message);
   });
 
   it('should return false and log when neither webhook is set', async () => {
@@ -105,7 +115,7 @@ describe('sendMonitoringAlert', () => {
     // No exception thrown — test passes if we reach here
   });
 
-  it('should prefer MONITORING_DISCORD_WEBHOOK over DISCORD_WEBHOOK_URL', async () => {
+  it('should use MONITORING_DISCORD_WEBHOOK when both webhooks are set', async () => {
     process.env.MONITORING_DISCORD_WEBHOOK = 'https://discord.com/api/webhooks/monitoring';
     process.env.DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/game';
     mockFetch.mockResolvedValue({ ok: true, text: () => Promise.resolve('') });

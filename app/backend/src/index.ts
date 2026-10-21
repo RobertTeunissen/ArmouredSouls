@@ -43,11 +43,9 @@ import {
   startModerationLifecycle,
 } from './services/moderation';
 import { getDiskUsage, getMemoryUsage, checkCriticalModules } from './utils/systemHealth';
-import { sendMonitoringAlert } from './utils/monitoringWebhook';
 import { initDailyHealthReport } from './services/monitoring/dailyHealthReport';
 import { initBattleLogRetention } from './services/retention/battleLogRetentionService';
 import { initAuditLogRetention } from './services/retention/auditLogRetentionService';
-import os from 'os';
 import { createGeneralLimiter, createAuthLimiter, createLoginLimiter } from './middleware/rateLimiter';
 import { createUserEconomicLimiter } from './middleware/userRateLimiter';
 import { authenticateToken } from './middleware/auth';
@@ -61,10 +59,6 @@ import { errorHandler } from './middleware/errorHandler';
 // validation; if env is invalid the process exits before binding the port.
 const config = loadEnvConfig();
 const app = express();
-
-// Disk alert cooldown state (15-minute cooldown per severity level)
-const DISK_ALERT_COOLDOWN_MS = 15 * 60 * 1000;
-const diskAlertCooldowns = new Map<string, number>();
 
 app.set('trust proxy', 1);
 
@@ -140,19 +134,9 @@ app.get('/api/health', async (req, res) => {
   const memory = getMemoryUsage();
   const modules = checkCriticalModules();
 
-  // Active alerting on disk threshold breach (15-minute cooldown per severity)
-  if (disk.status === 'warning' || disk.status === 'critical') {
-    const now = Date.now();
-    const lastAlert = diskAlertCooldowns.get(disk.status) || 0;
-    if (now - lastAlert >= DISK_ALERT_COOLDOWN_MS) {
-      diskAlertCooldowns.set(disk.status, now);
-      const emoji = disk.status === 'critical' ? '🚨' : '⚠️';
-      const label = disk.status.toUpperCase();
-      sendMonitoringAlert(
-        `${emoji} Disk usage ${label}: ${disk.usagePercent}% used (${disk.availableMB}MB free) on ${os.hostname()}`
-      );
-    }
-  }
+  // Disk threshold alerts to Discord come only from app/scripts/disk-monitor.sh
+  // (hourly cron, 4-hour cooldown). This endpoint reports disk status but never
+  // alerts, so the same breach is not announced twice.
 
   let dbConnected = true;
   try {

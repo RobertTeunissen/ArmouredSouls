@@ -13,7 +13,11 @@ import {
   alertTurnFailed,
   alertUpgradeRejected,
   alertUpkeepIssues,
+  createAlertDigest,
+  DIGEST_MESSAGE_LIMIT,
   emptyTurnStepSummary,
+  flushAlertDigest,
+  formatDigestMessage,
   formatTurnStepSummary,
   logTurnStepSummary,
   raiseAutomatonAlert,
@@ -105,6 +109,55 @@ describe('alerts (R11.8)', () => {
     setAlertSender(async () => { throw new Error('webhook down'); });
     await expect(raiseAutomatonAlert('automaton_turn_failed', 'x', 'y')).resolves.toContain('x: y');
     expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('alert dispatch failed: webhook down'));
+  });
+});
+
+describe('alert digest (one webhook message per kind per Turn_Step)', () => {
+  it('logs each alert at once but sends nothing until flushed', async () => {
+    const digest = createAlertDigest();
+    await alertNegativeBalance('a', TURN, -1, digest);
+    await alertNegativeBalance('b', TURN, -2, digest);
+
+    expect(sendMonitoringAlert).not.toHaveBeenCalled();
+    expect(logger.error).toHaveBeenCalledTimes(2);
+  });
+
+  it('sends one message per kind, in first-raised order, listing every stable', async () => {
+    const digest = createAlertDigest();
+    await alertNegativeBalance('white-base', TURN, -12_500, digest);
+    await alertTurnFailed('dalek-empire', TURN, 'INSUFFICIENT_CREDITS', 'Insufficient credits', digest);
+    await alertNegativeBalance('clone-legion', TURN, -3_000, digest);
+
+    const messages = await flushAlertDigest(digest, TURN);
+
+    expect(messages).toHaveLength(2);
+    expect(messages[0]).toBe(
+      '⚠️ Automaton balance negative at turn start — season 4 cycle 17: 2 stable(s)'
+      + '\n• white-base: season 4 cycle 17 started at ₡-12,500; upkeep only, nothing can be bought'
+      + '\n• clone-legion: season 4 cycle 17 started at ₡-3,000; upkeep only, nothing can be bought',
+    );
+    // A kind with one stable keeps the single-alert text.
+    expect(messages[1]).toBe('🚨 Automaton turn failed — dalek-empire: season 4 cycle 17 failed with INSUFFICIENT_CREDITS: Insufficient credits');
+    expect(sendMonitoringAlert).toHaveBeenCalledTimes(2);
+    expect(digest.entries.size).toBe(0);
+    expect(await flushAlertDigest(digest, TURN)).toEqual([]);
+  });
+
+  it('stays under the Discord message limit and counts the stables left out', () => {
+    const entries = Array.from({ length: 200 }, (_, i) => ({ subject: `stable-${i}`, detail: 'd'.repeat(ALERT_TEXT_LIMIT) }));
+    const message = formatDigestMessage('automaton_turn_failed', TURN, entries);
+
+    expect(message.length).toBeLessThanOrEqual(DIGEST_MESSAGE_LIMIT);
+    const listed = message.split('\n• ').length - 1;
+    expect(listed).toBeGreaterThan(0);
+    expect(message).toContain(`…and ${200 - listed} more (see [automaton-alert] log lines)`);
+  });
+
+  it('lists every stable when they fit', () => {
+    const entries = [{ subject: 'a', detail: 'x' }, { subject: 'b', detail: 'y' }];
+    expect(formatDigestMessage('automaton_upkeep_issues', TURN, entries)).toBe(
+      '⚠️ Automaton upkeep issue — season 4 cycle 17: 2 stable(s)\n• a: x\n• b: y',
+    );
   });
 });
 

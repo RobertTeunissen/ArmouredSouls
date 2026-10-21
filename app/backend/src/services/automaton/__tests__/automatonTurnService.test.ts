@@ -514,6 +514,20 @@ describe('runTurnStep — failures (R6.6, R7.8, R11.8)', () => {
     expect(alerts.some((a) => a.includes('balance negative at turn start') && a.includes('stable-1'))).toBe(true);
   });
 
+  it('sends one message per alert kind for the whole step, listing every stable', async () => {
+    addProfile(1, 10, { currency: -5_000 });
+    addProfile(2, 20, { currency: -7_000 });
+    addProfile(3, 30, { currency: -9_000 });
+    script = () => saving;
+
+    await runTurnStep(INPUT, sequential());
+
+    const negative = alerts.filter((a) => a.includes('balance negative at turn start'));
+    expect(negative).toHaveLength(1);
+    expect(negative[0]).toContain('season 3 cycle 42: 3 stable(s)');
+    for (const key of ['stable-1', 'stable-2', 'stable-3']) expect(negative[0]).toContain(`• ${key}: `);
+  });
+
   it('records Free_Upkeep issues once on the Turn_Record and alerts them', async () => {
     addProfile(1, 10);
     upkeepIssues.set(1, [{ part: 'teams', code: 'AUTOMATON_TEAM_NAME_MISSING', message: 'No Team_Names entry for 2v2 team 1', teamSize: 2, teamIndex: 0 }]);

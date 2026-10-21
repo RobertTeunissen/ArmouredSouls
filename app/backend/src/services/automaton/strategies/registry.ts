@@ -15,7 +15,7 @@
 import fs from 'fs';
 import path from 'path';
 import logger from '../../../config/logger';
-import { sendMonitoringAlert } from '../../../utils/monitoringWebhook';
+import { sendStartupFailureAlert } from '../../../utils/startupAlert';
 import type { BuildFocusWeightTable } from '../buildFocus';
 import { createAttributeGoal } from '../goals/attributeGoal';
 import { createFacilityGoal } from '../goals/facilityGoal';
@@ -234,7 +234,8 @@ export async function runStrategyStartupCheck(options: StrategyStartupCheckOptio
   if (!result.passed) {
     const message = `🚨 STARTUP FAILED: Strategy_Definition_File check failed: ${result.problems.join('; ')}. Server did not start.`;
     logger.error(`[strategy-startup-check] CRITICAL: ${message}`);
-    await (options.alert ?? sendMonitoringAlert)(message);
+    // Once per failure, not once per PM2 restart (startupAlert.ts).
+    await (options.alert ?? ((m: string): Promise<boolean> => sendStartupFailureAlert(m)))(message);
     return result;
   }
   logger.info(`[strategy-startup-check] ${result.strategyFiles} strategy file(s) valid; every stored version has a file.`);

@@ -9,7 +9,7 @@
  */
 
 import logger from '../config/logger';
-import { sendMonitoringAlert } from './monitoringWebhook';
+import { sendStartupFailureAlert } from './startupAlert';
 import { CRITICAL_MODULES } from './systemHealth';
 
 export interface SelfTestResult {
@@ -45,8 +45,9 @@ export async function runStartupSelfTest(): Promise<SelfTestResult> {
 
     logger.error(`[startup-self-test] CRITICAL: ${message}`);
 
-    // Send alert via direct webhook call — don't depend on notification service
-    await sendMonitoringAlert(message);
+    // Direct webhook call — don't depend on notification service. Sent once per
+    // failure, not once per PM2 restart (startupAlert.ts).
+    await sendStartupFailureAlert(message);
 
     return { passed: false, resolvedModules, failedModules };
   }

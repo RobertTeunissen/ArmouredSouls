@@ -10,8 +10,8 @@ jest.mock('../../config/logger', () => ({
   },
 }));
 
-jest.mock('../monitoringWebhook', () => ({
-  sendMonitoringAlert: jest.fn().mockResolvedValue(true),
+jest.mock('../startupAlert', () => ({
+  sendStartupFailureAlert: jest.fn().mockResolvedValue(true),
 }));
 
 jest.mock('../systemHealth', () => ({
@@ -26,7 +26,7 @@ describe('runStartupSelfTest', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockSendAlert = require('../monitoringWebhook').sendMonitoringAlert;
+    mockSendAlert = require('../startupAlert').sendStartupFailureAlert;
   });
 
   it('should return passed=false with failed module details when a module is missing', async () => {
@@ -40,7 +40,7 @@ describe('runStartupSelfTest', () => {
     expect(result.failedModules[0]).toHaveProperty('error');
   });
 
-  it('should call sendMonitoringAlert with failure message when modules are missing', async () => {
+  it('should send the startup failure alert when modules are missing', async () => {
     await runStartupSelfTest();
 
     expect(mockSendAlert).toHaveBeenCalledTimes(1);
@@ -76,8 +76,8 @@ describe('runStartupSelfTest — all modules pass', () => {
       __esModule: true,
       default: { error: jest.fn(), warn: jest.fn(), info: jest.fn() },
     }));
-    jest.doMock('../monitoringWebhook', () => ({
-      sendMonitoringAlert: jest.fn().mockResolvedValue(true),
+    jest.doMock('../startupAlert', () => ({
+      sendStartupFailureAlert: jest.fn().mockResolvedValue(true),
     }));
 
     const { runStartupSelfTest: freshTest } = require('../startupSelfTest');
@@ -88,7 +88,7 @@ describe('runStartupSelfTest — all modules pass', () => {
     expect(result.resolvedModules.length).toBeGreaterThan(0);
   });
 
-  it('should not call sendMonitoringAlert when all modules pass', async () => {
+  it('should not send a startup failure alert when all modules pass', async () => {
     jest.doMock('../systemHealth', () => ({
       CRITICAL_MODULES: ['../config/logger'],
     }));
@@ -97,8 +97,8 @@ describe('runStartupSelfTest — all modules pass', () => {
       default: { error: jest.fn(), warn: jest.fn(), info: jest.fn() },
     }));
     const mockAlert = jest.fn().mockResolvedValue(true);
-    jest.doMock('../monitoringWebhook', () => ({
-      sendMonitoringAlert: mockAlert,
+    jest.doMock('../startupAlert', () => ({
+      sendStartupFailureAlert: mockAlert,
     }));
 
     const { runStartupSelfTest: freshTest } = require('../startupSelfTest');

@@ -16,6 +16,11 @@
  * Every alert names the Catalogue_Key (or the step) and a reason, never
  * secrets: messages carry error codes and the domain services' own
  * player-facing messages, truncated.
+ *
+ * Inside a Turn_Step the per-stable alerts (failed turn, invalid parameters,
+ * negative balance, saving streak, upkeep issues) go through an
+ * `AutomatonAlertDigest`: logged at once, sent as one webhook message per
+ * kind when the step ends. Step-level alerts are sent at once.
  */
 import logger from '../../config/logger';
 import { sendMonitoringAlert } from '../../utils/monitoringWebhook';
@@ -84,43 +89,142 @@ export function setAlertSender(sender: AlertSender): AlertSender {
 }
 
 /**
- * Raise one operator alert: `logger.error` plus the monitoring webhook.
- * Never throws; returns the message sent.
+ * Per-stable alerts collected during one Turn_Step and sent as one webhook
+ * message per alert kind when the step ends (`flushAlertDigest`). Without it
+ * a step with 100 stables in the same state posted 100 messages at once,
+ * which Discord's per-webhook rate limit answers with HTTP 429 — dropping
+ * alerts sent in the same burst. Each alert is still logged at once.
  */
-export async function raiseAutomatonAlert(kind: AutomatonAlertKind, subject: string, detail: string): Promise<string> {
-  const message = `${TITLES[kind]} — ${subject}: ${truncate(detail)}`;
-  logger.error(`[automaton-alert] ${kind} ${subject}: ${truncate(detail)}`);
+export interface AutomatonAlertDigest {
+  readonly entries: Map<AutomatonAlertKind, Array<{ subject: string; detail: string }>>;
+}
+
+export function createAlertDigest(): AutomatonAlertDigest {
+  return { entries: new Map() };
+}
+
+/** Discord rejects messages over 2000 characters; stay below with margin. */
+export const DIGEST_MESSAGE_LIMIT = 1900;
+
+async function dispatch(message: string): Promise<void> {
   try {
     await alertSender(message);
   } catch (error) {
     logger.error(`[automaton-alert] alert dispatch failed: ${error instanceof Error ? error.message : String(error)}`);
   }
+}
+
+/**
+ * Raise one operator alert: `logger.error` plus the monitoring webhook, or,
+ * with a digest, `logger.error` now and the webhook when the digest is
+ * flushed. Never throws; returns the single-alert message text.
+ */
+export async function raiseAutomatonAlert(
+  kind: AutomatonAlertKind,
+  subject: string,
+  detail: string,
+  digest?: AutomatonAlertDigest,
+): Promise<string> {
+  const message = `${TITLES[kind]} — ${subject}: ${truncate(detail)}`;
+  logger.error(`[automaton-alert] ${kind} ${subject}: ${truncate(detail)}`);
+  if (digest) {
+    const list = digest.entries.get(kind) ?? [];
+    list.push({ subject, detail: truncate(detail) });
+    digest.entries.set(kind, list);
+    return message;
+  }
+  await dispatch(message);
   return message;
 }
 
+/**
+ * Format one digest message: the single-alert text for one stable, otherwise
+ * a heading plus one line per stable, cut at DIGEST_MESSAGE_LIMIT with a
+ * count of the lines left out (they are in the `[automaton-alert]` log).
+ */
+export function formatDigestMessage(
+  kind: AutomatonAlertKind,
+  turn: TurnLabel,
+  entries: ReadonlyArray<{ subject: string; detail: string }>,
+): string {
+  if (entries.length === 1) return `${TITLES[kind]} — ${entries[0].subject}: ${entries[0].detail}`;
+  let message = `${TITLES[kind]} — ${describeTurn(turn)}: ${entries.length} stable(s)`;
+  for (let i = 0; i < entries.length; i++) {
+    const line = `\n• ${entries[i].subject}: ${entries[i].detail}`;
+    const rest = entries.length - i;
+    const moreNote = `\n…and ${rest} more (see [automaton-alert] log lines)`;
+    // Keep room for the "…and N more" note whenever lines may still follow.
+    const reserve = i === entries.length - 1 ? 0 : moreNote.length;
+    if (message.length + line.length + reserve > DIGEST_MESSAGE_LIMIT) {
+      return `${message}${moreNote}`;
+    }
+    message += line;
+  }
+  return message;
+}
+
+/**
+ * Send the collected alerts, one message per kind in the order the kinds
+ * were first raised, and empty the digest. Never throws; returns the messages.
+ */
+export async function flushAlertDigest(digest: AutomatonAlertDigest, turn: TurnLabel): Promise<string[]> {
+  const messages: string[] = [];
+  for (const [kind, entries] of digest.entries) {
+    const message = formatDigestMessage(kind, turn, entries);
+    messages.push(message);
+    await dispatch(message);
+  }
+  digest.entries.clear();
+  return messages;
+}
+
 // ─── Typed helpers ───────────────────────────────────────────────────
+// The per-stable helpers take an optional digest; a Turn_Step passes one.
 
-export function alertTurnFailed(catalogueKey: string, turn: TurnLabel, code: string, message: string): Promise<string> {
-  return raiseAutomatonAlert('automaton_turn_failed', catalogueKey, `${describeTurn(turn)} failed with ${code}: ${message}`);
+export function alertTurnFailed(
+  catalogueKey: string,
+  turn: TurnLabel,
+  code: string,
+  message: string,
+  digest?: AutomatonAlertDigest,
+): Promise<string> {
+  return raiseAutomatonAlert('automaton_turn_failed', catalogueKey, `${describeTurn(turn)} failed with ${code}: ${message}`, digest);
 }
 
-export function alertInvalidParameters(catalogueKey: string, turn: TurnLabel, detail: string): Promise<string> {
-  return raiseAutomatonAlert('automaton_invalid_parameters', catalogueKey, `${describeTurn(turn)} ended invalid_parameters: ${detail}`);
+export function alertInvalidParameters(
+  catalogueKey: string,
+  turn: TurnLabel,
+  detail: string,
+  digest?: AutomatonAlertDigest,
+): Promise<string> {
+  return raiseAutomatonAlert('automaton_invalid_parameters', catalogueKey, `${describeTurn(turn)} ended invalid_parameters: ${detail}`, digest);
 }
 
-export function alertNegativeBalance(catalogueKey: string, turn: TurnLabel, balance: number): Promise<string> {
+export function alertNegativeBalance(
+  catalogueKey: string,
+  turn: TurnLabel,
+  balance: number,
+  digest?: AutomatonAlertDigest,
+): Promise<string> {
   return raiseAutomatonAlert(
     'automaton_negative_balance',
     catalogueKey,
     `${describeTurn(turn)} started at ₡${balance.toLocaleString('en-US')}; upkeep only, nothing can be bought`,
+    digest,
   );
 }
 
-export function alertSavingStreak(catalogueKey: string, goalId: string, turns: number): Promise<string> {
+export function alertSavingStreak(
+  catalogueKey: string,
+  goalId: string,
+  turns: number,
+  digest?: AutomatonAlertDigest,
+): Promise<string> {
   return raiseAutomatonAlert(
     'automaton_saving_streak',
     catalogueKey,
     `saving for ${goalId} for ${turns} consecutive turns (informational; the stable keeps saving)`,
+    digest,
   );
 }
 
@@ -130,12 +234,18 @@ export interface UpkeepIssueSummary {
   message: string;
 }
 
-export function alertUpkeepIssues(catalogueKey: string, turn: TurnLabel, issues: readonly UpkeepIssueSummary[]): Promise<string> {
+export function alertUpkeepIssues(
+  catalogueKey: string,
+  turn: TurnLabel,
+  issues: readonly UpkeepIssueSummary[],
+  digest?: AutomatonAlertDigest,
+): Promise<string> {
   const list = issues.map((issue) => `${issue.part} ${issue.code} (${issue.message})`).join('; ');
   return raiseAutomatonAlert(
     'automaton_upkeep_issues',
     catalogueKey,
     `${describeTurn(turn)}: ${issues.length} issue(s), retried next turn: ${list}`,
+    digest,
   );
 }
 

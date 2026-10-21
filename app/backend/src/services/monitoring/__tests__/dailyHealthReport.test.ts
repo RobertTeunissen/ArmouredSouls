@@ -59,7 +59,18 @@ jest.mock('fs', () => ({
   statSync: jest.fn().mockReturnValue({
     mtime: new Date(Date.now() - 2 * 60 * 1000), // 2 minutes ago
   }),
+  // One recent daily backup (its mtime comes from statSync above).
+  readdirSync: jest.fn().mockReturnValue(['armouredsouls_daily.dump']),
 }));
+
+let mockNodeEnv = 'acceptance';
+jest.mock('../../../config/env', () => ({
+  getConfig: () => ({ nodeEnv: mockNodeEnv, dailyReportSchedule: '30 0 * * *' }),
+}));
+
+function enoent(): Error {
+  return Object.assign(new Error('ENOENT: no such file or directory'), { code: 'ENOENT' });
+}
 
 describe('generateHealthReport', () => {
   beforeEach(() => {
@@ -151,5 +162,61 @@ describe('generateHealthReport', () => {
     expect(message).toContain('⚠️ Daily Health Report — Degraded');
     expect(message).toContain('DEGRADED');
     expect(message).toContain('cycleScheduler');
+  });
+
+  describe('backups', () => {
+    afterEach(() => {
+      mockNodeEnv = 'acceptance';
+    });
+
+    it('reports a recent backup as OK', async () => {
+      const message = await generateHealthReport();
+
+      expect(message).toContain('All systems operational');
+      expect(message).toContain('• Backups: OK (last 0h ago)');
+    });
+
+    it('is Degraded when the backup directory has no backup', async () => {
+      require('fs').readdirSync.mockReturnValueOnce([]);
+
+      const message = await generateHealthReport();
+
+      expect(message).toContain('⚠️ Daily Health Report — Degraded');
+      expect(message).toContain('• Backups: ⚠️ MISSING (none found)');
+    });
+
+    it('is Degraded when the backups cannot be read', async () => {
+      require('fs').readdirSync.mockImplementationOnce(() => { throw new Error('EACCES: permission denied'); });
+
+      const message = await generateHealthReport();
+
+      expect(message).toContain('⚠️ Daily Health Report — Degraded');
+      expect(message).toContain('• Backups: ⚠️ MISSING (error checking backups)');
+    });
+
+    it('is Degraded when a deployed host has no backup directory', async () => {
+      require('fs').readdirSync.mockImplementationOnce(() => { throw enoent(); });
+
+      const message = await generateHealthReport();
+
+      expect(message).toContain('⚠️ Daily Health Report — Degraded');
+      expect(message).toContain('• Backups: ⚠️ MISSING (backup directory not found)');
+    });
+
+    it('does not count a missing backup directory against a local machine', async () => {
+      mockNodeEnv = 'development';
+      require('fs').readdirSync.mockImplementationOnce(() => { throw enoent(); });
+
+      const message = await generateHealthReport();
+
+      expect(message).toContain('All systems operational');
+      expect(message).toContain('• Backups: N/A (dev)');
+    });
+  });
+
+  it('shows memory without an OK verdict, since it has no threshold', async () => {
+    const message = await generateHealthReport();
+
+    expect(message).toContain('• Memory: 71% (1420MB / 2000MB)\n');
   });
 });

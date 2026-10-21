@@ -62,7 +62,7 @@ RUN_STATUS=0
 run_monitor() {
   local pcent="$1"
   local state_dir="$2"
-  local cooldown="${3:-7200}"
+  local cooldown="${3:-14400}"
   local output
   set +e
   output=$(
@@ -112,8 +112,8 @@ fi
 STATE="$(fresh_state_dir)"
 run_monitor 95 "$STATE" > /dev/null
 # Backdate the state file well past the cooldown window.
-echo "$(( $(date +%s) - 10000 ))" > "${STATE}/disk-alert-critical.last"
-OUT="$(run_monitor 95 "$STATE" 7200)"
+echo "$(( $(date +%s) - 20000 ))" > "${STATE}/disk-alert-critical.last"
+OUT="$(run_monitor 95 "$STATE" 14400)"
 if [ "$(count_alerts "$OUT")" -eq 1 ]; then
   pass "a run after the cooldown window has elapsed emits a second alert"
 else
@@ -236,11 +236,11 @@ else
   fail "uses the env_get helper pattern"
 fi
 
-# 12. Cadence constants: 2-hour cooldown default and hourly cron in the header.
-if grep -q 'COOLDOWN_SECONDS:-7200' "$MONITOR"; then
-  pass "defaults the cooldown to 7200 seconds (2 hours)"
+# 12. Cadence constants: 4-hour cooldown default and hourly cron in the header.
+if grep -q 'COOLDOWN_SECONDS:-14400' "$MONITOR"; then
+  pass "defaults the cooldown to 14400 seconds (4 hours)"
 else
-  fail "defaults the cooldown to 7200 seconds (2 hours)"
+  fail "defaults the cooldown to 14400 seconds (4 hours)"
 fi
 
 if grep -q 'Cron: 0 \* \* \* \*' "$MONITOR"; then

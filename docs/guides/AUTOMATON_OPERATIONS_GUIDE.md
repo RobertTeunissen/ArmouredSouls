@@ -65,7 +65,9 @@ Editor → Build order panel. Each Goal of the stable's Build_Order has a target
 
 `concurrency` is the effective number of parallel turns, `budgetMs` the time the step had to start turns, and `deadline` where that came from: `schedule` (next scheduled job minus margin), `cap` (`AUTOMATON_TURN_STEP_MAX_MS`, e.g. scheduler off) or `floor` (the 300 s minimum when settlement ran late).
 
-**Alerts** go to the monitoring webhook (`sendMonitoringAlert`) and `logger.error` with an `[automaton-alert]` prefix, always with the Catalogue_Key and reason:
+**Alerts** go to the monitoring webhook (`sendMonitoringAlert`) and `logger.error` with an `[automaton-alert]` prefix, always with the Catalogue_Key and reason.
+
+Inside a Turn_Step the per-stable kinds (`automaton_turn_failed`, `automaton_invalid_parameters`, `automaton_negative_balance`, `automaton_saving_streak`, `automaton_upkeep_issues`) are logged at once but sent to Discord as one message per kind when the step ends: a heading such as `⚠️ Automaton balance negative at turn start — season 3 cycle 41: 23 stable(s)` and one `• catalogue-key: reason` line per stable. A kind with one stable keeps the single-alert text. A message that would pass Discord's 2000-character limit ends with `…and N more (see [automaton-alert] log lines)`. Before this, a step with many stables in the same state posted one message each, and Discord's per-webhook rate limit dropped alerts from the burst. Step-level kinds are sent at once.
 
 | Kind | Raised when | Meaning |
 |---|---|---|
