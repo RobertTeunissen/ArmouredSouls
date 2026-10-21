@@ -507,8 +507,7 @@ jobs:
             app/frontend/pnpm-lock.yaml
 
       # pnpm audit reads pnpm-lock.yaml directly, so we skip lifecycle scripts
-      # to avoid transient CDN timeouts from native-binary downloads
-      # (e.g., onnxruntime-node via gitnexus → @huggingface/transformers).
+      # to avoid transient CDN timeouts from native-binary downloads.
       - name: Install backend dependencies
         working-directory: ./app/backend
         run: pnpm install --frozen-lockfile --ignore-scripts

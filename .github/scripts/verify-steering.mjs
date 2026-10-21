@@ -28,7 +28,7 @@ function parseFrontmatter(text, file) {
 
   const fields = {};
   for (const line of match[1].split(/\r?\n/)) {
-    const field = line.match(/^(inclusion|fileMatchPattern):\s*(.+)$/);
+    const field = line.match(/^(inclusion|fileMatchPattern|name|description):\s*(.+)$/);
     if (field) fields[field[1]] = field[2].trim();
   }
   return fields;
@@ -127,12 +127,17 @@ for (const file of files) {
   const byteCount = Buffer.byteLength(text, 'utf8');
   const patterns = inclusion === 'fileMatch' ? parsePatterns(fields.fileMatchPattern) : [];
 
-  if (!['always', 'fileMatch', 'manual'].includes(inclusion)) {
-    errors.push(`${relativePath}: inclusion must be always, fileMatch, or manual`);
+  if (!['always', 'fileMatch', 'manual', 'auto'].includes(inclusion)) {
+    errors.push(`${relativePath}: inclusion must be always, fileMatch, manual, or auto`);
     continue;
   }
   if (inclusion === 'fileMatch' && patterns.length === 0) {
     errors.push(`${relativePath}: fileMatch requires fileMatchPattern`);
+  }
+  // Auto files load on demand when the request matches their description,
+  // so both fields must be present for the agent to discover them.
+  if (inclusion === 'auto' && (!fields.name || !fields.description)) {
+    errors.push(`${relativePath}: auto requires name and description`);
   }
 
   const lineLimit = manifest.maxLines[inclusion];

@@ -10,7 +10,7 @@ Measure first, identify the bottleneck, set a target, optimize, and measure agai
 ## Database and backend
 `database-best-practices.md` owns persistence/query rules. Apply its requirements: parameterized queries, indexes for real access paths, set-based queries instead of N+1 loops, selected fields, stable pagination, short transactions, and `EXPLAIN` for measured slow plans.
 
-For expensive game cycles, preserve background execution and bounded work. Finance Center query-growth and response budgets are owned by `testing-strategy.md` and `docs/implementation_notes/finance-center-reporting-contract.md`. Do not introduce generic queues, caches, retries, or idempotency schemes without a domain-specific design.
+For expensive game cycles, preserve background execution and bounded work. Finance Center query-growth and response budgets are owned by `testing-coverage-contracts.md` and `docs/implementation_notes/finance-center-reporting-contract.md`. Do not introduce generic queues, caches, retries, or idempotency schemes without a domain-specific design.
 
 ## Frontend
 `frontend-standards.md` owns lazy loading, derivation, memoization, responsive behavior, image handling, and accessibility. Optimize only when profiling or a measured bundle/query/render budget identifies a bottleneck.

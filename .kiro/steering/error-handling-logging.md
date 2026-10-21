@@ -1,6 +1,7 @@
 ---
-inclusion: fileMatch
-fileMatchPattern: "**/backend/src/errors/**,**/backend/src/middleware/errorHandler.ts,**/backend/src/**/error*.ts,**/backend/src/**/logger*.ts,**/backend/src/services/security/**,**/frontend/src/**/ErrorBoundary*.tsx"
+inclusion: auto
+name: error-handling-logging
+description: "Error contract, AppError hierarchy, error codes, and logging/security-logging rules. Use when adding errors, error handling, or logging."
 ---
 
 # Error Handling and Logging Standards

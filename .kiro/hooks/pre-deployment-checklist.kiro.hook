@@ -8,6 +8,6 @@
   },
   "then": {
     "type": "askAgent",
-    "prompt": "Before pushing to main (which triggers ACC deployment), verify: 1) All tests pass locally, 2) No console.log statements in production code, 3) Environment variables documented, 4) Database migrations tested, 5) Documentation updated."
+    "prompt": "Before pushing to main (which triggers ACC deployment), verify against `git diff main...HEAD --stat` only: 1) Tests for the changed areas pass, 2) No console.log in changed production code, 3) New environment variables documented, 4) New migrations tested, 5) Docs updated. Report a short pass/fail list."
   }
 }

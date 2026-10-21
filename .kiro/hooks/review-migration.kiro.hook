@@ -6,11 +6,11 @@
   "when": {
     "type": "fileCreated",
     "patterns": [
-      "prototype/backend/prisma/migrations/**/*.sql"
+      "app/backend/prisma/migrations/**/*.sql"
     ]
   },
   "then": {
     "type": "askAgent",
-    "prompt": "New database migration created. Review the SQL carefully for: 1) Data loss risks, 2) Performance impact, 3) Rollback strategy. Update docs/prd_core/DATABASE_SCHEMA.md if schema changed significantly."
+    "prompt": "New migration created. Review only that SQL file for data-loss risk, lock/performance impact, and rollback. Update docs/architecture/DATABASE_SCHEMA.md only if the schema changed significantly. Reply briefly."
   }
 }

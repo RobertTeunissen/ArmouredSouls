@@ -1,6 +1,7 @@
 ---
-inclusion: fileMatch
-fileMatchPattern: "**/routes/**,**/api/**,**/*.route.ts,**/*.router.ts"
+inclusion: auto
+name: api-versioning
+description: "API breaking-change classification and compatibility rules. Use when adding, removing, or changing API routes, fields, or response shapes."
 ---
 
 # API Versioning and Breaking Changes

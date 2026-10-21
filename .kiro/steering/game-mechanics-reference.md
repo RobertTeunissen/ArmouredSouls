@@ -1,6 +1,7 @@
 ---
-inclusion: fileMatch
-fileMatchPattern: "**/backend/src/game-engine/**,**/backend/src/services/battle/**,**/backend/src/services/combat/**,**/backend/src/services/matchmaking/**,**/backend/src/services/league/**,**/backend/src/services/cycle/**,**/backend/src/services/economy/**,**/backend/src/services/fame/**,**/backend/src/services/facility/**,**/backend/src/services/tournament/**,**/backend/src/services/team-battle/**"
+inclusion: auto
+name: game-mechanics-reference
+description: "Cross-domain game mechanics: Booking Office events, subscriptions, cycles, and team modes. Use when changing game-engine, battle, league, tournament, cycle, economy, fame, or facility services."
 ---
 
 # Game Mechanics Reference

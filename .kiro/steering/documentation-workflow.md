@@ -1,6 +1,7 @@
 ---
-inclusion: fileMatch
-fileMatchPattern: "docs/**,**/README.md,**/CONTRIBUTING.md"
+inclusion: auto
+name: documentation-workflow
+description: "When and how to update PRDs, architecture docs, implementation notes, and READMEs. Use when a change needs documentation or when editing docs/."
 ---
 
 # Documentation Workflow

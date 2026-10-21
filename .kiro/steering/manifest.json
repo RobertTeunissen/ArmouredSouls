@@ -1,17 +1,23 @@
 {
   "version": 1,
-  "maxAlwaysLines": 110,
+  "maxAlwaysLines": 95,
   "maxLines": {
-    "always": 60,
+    "always": 50,
     "fileMatch": 220,
+    "auto": 120,
     "manual": 550
   },
   "maxBytes": {
-    "always": 8000,
+    "always": 4000,
     "fileMatch": 14000,
+    "auto": 6000,
     "manual": 20000
   },
   "modeBudgets": {
+    "always": {
+      "maxAggregateLines": 95,
+      "maxAggregateBytes": 7000
+    },
     "manual": {
       "maxAggregateLines": 400,
       "maxAggregateBytes": 30000
@@ -26,9 +32,9 @@
     ".kiro/steering/pre-deployment-checklist.md": { "maxLines": 70, "maxBytes": 4000 }
   },
   "overlapBudgets": {
-    "maxMatchedFiles": 6,
-    "maxAggregateLines": 200,
-    "maxAggregateBytes": 18000
+    "maxMatchedFiles": 5,
+    "maxAggregateLines": 160,
+    "maxAggregateBytes": 13000
   },
   "representativePaths": [
     { "name": "backend-route", "path": "app/backend/src/routes/auth.ts" },

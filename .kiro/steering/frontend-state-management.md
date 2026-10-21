@@ -16,4 +16,4 @@ fileMatchPattern: "**/frontend/src/stores/**,**/frontend/src/**/*Store.ts,**/fro
 - Read Zustand state through selectors; never subscribe to the whole store. Select only fields needed by a component and use shallow comparison for multiple related fields.
 - Every store must be cleared during logout. When adding a store, add its `useXStore.getState().clear()` call to `AuthContext.logout()`.
 
-`frontend-standards.md` owns component/API/async UI rules; `coding-standards.md` owns the cross-cutting selector reminder. This file owns state ownership, store creation, selector scope, and logout cleanup.
+`frontend-standards.md` owns component/API/async UI rules. This file owns state ownership, store creation, selector scope, and logout cleanup.

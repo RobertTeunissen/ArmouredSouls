@@ -13,4 +13,4 @@ fileMatchPattern: "**/backend/src/services/economy/**,**/backend/src/services/fi
 - Repairs are per robot. `repair_cost` requires `repairType` `manual` or `automatic`; repair spend is sourced from subtype-bearing `robot_repair` audit rows, never battle payloads, cached quotes, or ledger totals. Quote each robot, apply discounts, round, then sum.
 - Settlement writes exactly one `passive_income` pair and one `operating_costs` pair per applicable stable/cycle, including zero values.
 - Reports use complete pairs and stored breakdown facts; never reconstruct historical amounts from current formulas or facilities. Legacy rows without `financialEventId` remain legacy.
-- Canonical details: `docs/guides/FINANCIAL_LEDGER_AUDIT_GUIDE.md` and `docs/implementation_notes/finance-center-reporting-contract.md`.
+- Canonical details: `docs/guides/FINANCIAL_LEDGER_AUDIT_GUIDE.md` and `docs/implementation_notes/finance-center-reporting-contract.md`. New or changed writers must satisfy `testing-coverage-contracts.md`.
