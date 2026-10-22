@@ -1,6 +1,6 @@
 # Armoured Souls — Maintenance Guide
 
-**Last Updated**: May 2026  
+**Last Updated**: October 2026  
 **Status**: ✅ Current
 
 Routine maintenance tasks for keeping the VPS healthy.
@@ -48,32 +48,50 @@ docker logs armouredsouls-db-prod -f   # live tail
 
 ---
 
-## Backup Verification
+## Backups
 
-Backups run daily at 2:00 AM via cron. Check that they're being created:
+Two kinds of database dump live in `/opt/armouredsouls/backups/`:
+
+| Dump | Written by | When | Format | Kept (default) | Setting |
+|---|---|---|---|---|---|
+| `daily/<db>_daily_<ts>.sql.gz` | `scripts/backup.sh` (cron) | 02:00 server time (UTC) | gzip'd SQL | 1 | `BACKUP_DAILY_RETAIN` |
+| `pre_deploy_<ts>.dump` | `scripts/pre-deploy-backup.sh` (deploy step) | every deploy, before migrations | `pg_dump -Fc` | 1 | `BACKUP_PRE_DEPLOY_RETAIN` |
+| `weekly/<db>_weekly_<ts>.sql.gz` | `scripts/backup.sh` | Sundays | copy of the daily | 0 (off) | `BACKUP_WEEKLY_RETAIN` |
+
+So a host normally holds two recent restore points: last night's dump and the dump taken just before the last deploy's migrations. Settings are read from the process environment, then `/opt/armouredsouls/backend/.env`, then the default above. `backup.sh`, `pre-deploy-backup.sh` and `preflight.sh` share one implementation (`scripts/backup-common.sh`), so they always agree on the retention.
+
+**How a dump is replaced.** Each dump is written as `<name>.partial`, verified (`gzip -t` for the daily, `pg_restore --list` for the pre-deploy dump), renamed, and only then is the previous dump of that kind deleted. A failed or interrupted dump therefore never removes the last good backup. The disk briefly holds one extra dump while the new one is written (about 20 minutes on ACC in October 2026). Before October 2026 the old daily dump was deleted *before* the new one was written, so with a retention of 2 the disk held 3 dumps every night until the next deploy trimmed it.
+
+**When the pre-migration backup fails, the deploy fails.** `pre-deploy-backup.sh` exits non-zero, with a `🚨 Deploy ABORTED` Discord alert, when no working `pg_dump` exists or the dump cannot be verified, and the migrations do not run. It uses the same method as the nightly backup: the host `pg_dump` first, then `docker exec` into `BACKUP_CONTAINER_NAME` (default `armouredsouls-db-prod`). The inline step it replaced only tried the container, failed on every ACC deploy from at least 12 October 2026, and let the migrations run without a backup after printing a warning.
+
+`scripts/preflight.sh` runs at the start of each deploy and also trims the backups to the retention. Normally that is a no-op; it catches overflow after a retention change and leftover `.partial` files.
+
+### Verify
 
 ```bash
-# List recent daily backups
-ls -lht /opt/armouredsouls/backups/daily/ | head -10
+# Dumps on disk: expect one daily and (after the first deploy) one pre_deploy dump
+ls -lh /opt/armouredsouls/backups/daily/ /opt/armouredsouls/backups/pre_deploy_*.dump
 
-# List weekly backups
-ls -lht /opt/armouredsouls/backups/weekly/
+# Last runs
+grep -E 'Daily backup complete|Removed old backup|SKIPPED|ERROR' /var/log/armouredsouls/backup.log | tail -10
 
-# Check backup log for errors
-grep -i error /var/log/armouredsouls/backup.log | tail -10
+# The retention a host is actually using (unset means the default of 1)
+grep -E '^BACKUP_(DAILY|PRE_DEPLOY|WEEKLY)_RETAIN=' /opt/armouredsouls/backend/.env
 ```
-
-Retention policy: 7 daily + 4 weekly backups. Older files are automatically cleaned up.
 
 ### Test a Backup (Non-Destructive)
 
 To verify a backup is valid without restoring it to the live database:
 
 ```bash
-# Check the file isn't empty / corrupted
+# Daily dump: no output = valid gzip
 gunzip -t /opt/armouredsouls/backups/daily/LATEST_BACKUP.sql.gz
-# No output = file is valid
+
+# Pre-deploy dump: prints the archive's table of contents if it is complete
+docker exec -i armouredsouls-db-prod pg_restore --list < /opt/armouredsouls/backups/pre_deploy_TIMESTAMP.dump | head
 ```
+
+Restore either kind with `scripts/restore.sh <file>` (see [TROUBLESHOOTING.md](TROUBLESHOOTING.md)); it is destructive and asks for confirmation.
 
 ---
 
@@ -152,9 +170,21 @@ du -sh /var/log/armouredsouls/             # Log size
 docker system df                           # Docker disk usage
 ```
 
-The VPS currently has a 25 GB SSD (upgraded from the original 20 GB in May 2026). Keep an eye on disk usage — if it exceeds 80%, clean up old logs or backups, or see [Disk Resize After Cloud Disk Upgrade](#disk-resize-after-cloud-disk-upgrade) below.
+ACC has a disk of about 45 GB (`df -h /` in October 2026: 11 GB free at 76% used). The 20 GB and 25 GB sizes in older notes are outdated; check `df -h /` rather than this figure after any resize.
 
-The `battles` table TOAST is the main long-term grower (~85 MB/day on ACC under normal load). When approaching 80% sustained, prioritize backlog item #53 (Battle Log Retention) rather than another disk upgrade.
+Disk budget on ACC, October 2026 (estimated from `df` readings and dump sizes, not a per-directory measurement):
+
+| Item | Approx. size |
+|---|---|
+| Everything except backups (OS, Docker, Postgres data, app, logs) | ~26.5 GB |
+| One daily dump (`*.sql.gz`) | ~3.7 GB, +0.2 GB on the last measured day |
+| One pre-deploy dump (`-Fc`) | similar to a daily dump (not yet measured) |
+| **Steady state: 1 daily + 1 pre-deploy** | **~34 GB (~76%)** |
+| Peak while a new dump is written (~20 min) | ~37.5 GB (~83%) |
+
+The disk monitor alerts at 80% (WARNING) and 90% (CRITICAL); `backup.sh` skips the nightly backup at 85% (`BACKUP_DISK_THRESHOLD`), and a deploy aborts at 90% or when the free space is under 1.5× the largest dump. If usage exceeds 80% outside the nightly backup window, clean up old logs, check `docker system df`, or see [Disk Resize After Cloud Disk Upgrade](#disk-resize-after-cloud-disk-upgrade) below.
+
+**Growth.** Every cycle adds battles, so the database and each dump keep growing (3.5 GB → 3.7 GB between the 21 and 22 October 2026 dumps). Battle Log Retention (Spec #39, 01:30 UTC daily, see [MONITORING.md](MONITORING.md#battle-log-retention-spec-39)) clears `battle_log` after 7 days, which keeps the dumps smaller, but Postgres does not return the freed space to the disk until a `VACUUM FULL`. When the steady state approaches 80%, the remaining levers are a larger disk or moving the dumps off the VPS; lowering the retention below one daily and one pre-deploy dump would leave a single restore point.
 
 ### Disk Resize After Cloud Disk Upgrade
 

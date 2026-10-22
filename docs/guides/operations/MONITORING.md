@@ -32,7 +32,8 @@ The monitoring system uses lightweight, zero-cost components:
 |---|---|---|---|
 | Disk Critical | Usage >= 90% | `🚨 Disk usage CRITICAL: {%}% used ({free} free) on {host}` | Free disk space immediately: remove old backups, vacuum journal, check Docker images |
 | Startup Failed | Missing compiled modules (or an invalid strategy file) | `🚨 STARTUP FAILED: Missing modules: [list]. Server did not start.` (sent once per failure, not per PM2 restart) | SSH in, check `dist/` directory, run `pnpm run build`, restart PM2 |
-| Backup Failed | pg_dump non-zero exit | `🚨 Backup FAILED: pg_dump returned error on {host}` | Check DB connectivity, disk space, backup logs |
+| Backup Failed | Nightly pg_dump fails or its dump fails `gzip -t` | `🚨 Backup FAILED: pg_dump returned error on {host}. The previous backup was kept.` | Check DB connectivity, disk space, backup logs |
+| Pre-migration backup failed | No working `pg_dump`, or the deploy's dump fails or fails `pg_restore --list` | `🚨 Deploy ABORTED on {host}: … Migrations were not run` | The deploy stopped before migrations. Check `pg_dump` on the host and the container (`BACKUP_CONTAINER_NAME`), then re-run the deploy. See [MAINTENANCE.md](MAINTENANCE.md#backups) |
 | Deploy Failed | Any deploy step fails | `🚨 Deploy to {env} FAILED. Run: {url}` | Check GitHub Actions run, fix the failing step, re-deploy |
 
 ### ⚠️ WARNING Alerts (Investigate Soon)
@@ -76,10 +77,10 @@ MONITORING_DISCORD_WEBHOOK=https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR
 - `MONITORING_DISCORD_WEBHOOK` → `#ops-alerts` channel (disk, startup, backup, deploy alerts)
 - `DISCORD_WEBHOOK_URL` → `#game-updates` channel (cycle completions, battle results)
 
-There is no fallback. If `MONITORING_DISCORD_WEBHOOK` is not set, the backend and the scripts (`disk-monitor.sh`, `backup.sh`, `preflight.sh`) log the alert and send nothing. They never post to `DISCORD_WEBHOOK_URL`, because ops alerts carry hostnames, disk figures and error codes players should not see. A missing Daily Health Report is the sign that the monitoring webhook is not configured.
+There is no fallback. If `MONITORING_DISCORD_WEBHOOK` is not set (in the environment or `/opt/armouredsouls/backend/.env`), the backend and the scripts (`disk-monitor.sh`, and `backup.sh`, `preflight.sh`, `pre-deploy-backup.sh` through `backup-common.sh`) log the alert and send nothing. They never post to `DISCORD_WEBHOOK_URL`, because ops alerts carry hostnames, disk figures and error codes players should not see. A missing Daily Health Report is the sign that the monitoring webhook is not configured.
 
 Message delivery details:
-- The scripts JSON-escape their message (`json_escape`), so multi-line alerts such as preflight's "Deploy ABORTED" disk report are valid payloads. Before this, raw newlines made Discord reject that alert with HTTP 400, hidden by `curl -s … || true`. `app/scripts/__tests__/alert-json.test.sh` covers all three scripts.
+- The scripts JSON-escape their message (`json_escape`), so multi-line alerts such as preflight's "Deploy ABORTED" disk report are valid payloads. Before this, raw newlines made Discord reject that alert with HTTP 400, hidden by `curl -s … || true`. `app/scripts/__tests__/alert-json.test.sh` covers `backup-common.sh` and `disk-monitor.sh`; `backup.test.sh` covers the backup retention and the pre-migration backup.
 - The backend cuts messages longer than Discord's 2000-character limit instead of having them rejected.
 - A startup failure is alerted once, not once per PM2 restart: the same message within an hour is logged only (state in `$TMPDIR/armouredsouls-startup-alert.json`).
 

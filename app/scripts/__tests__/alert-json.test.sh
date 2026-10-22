@@ -2,8 +2,8 @@
 # ============================================================================
 # Armoured Souls — Discord alert payload test harness
 #
-# backup.sh, disk-monitor.sh and preflight.sh build the Discord webhook JSON
-# by hand. Before json_escape existed, preflight's multi-line "Deploy ABORTED"
+# backup-common.sh (used by backup.sh, preflight.sh, pre-deploy-backup.sh) and
+# disk-monitor.sh build the Discord webhook JSON by hand. Before json_escape existed, preflight's multi-line "Deploy ABORTED"
 # alert put raw newlines into the JSON string, Discord answered HTTP 400, and
 # `curl -s … || true` hid it. This harness extracts each script's json_escape,
 # builds the payload exactly as send_alert does, and parses it with Node.
@@ -16,7 +16,9 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SCRIPTS=(backup.sh disk-monitor.sh preflight.sh)
+# backup.sh, preflight.sh and pre-deploy-backup.sh share backup-common.sh
+# (backup.test.sh checks they source it); disk-monitor.sh is standalone.
+SCRIPTS=(backup-common.sh disk-monitor.sh)
 
 PASS=0
 FAIL=0

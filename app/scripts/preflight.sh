@@ -6,17 +6,18 @@ set -euo pipefail
 #
 # Runs at the start of every deploy, BEFORE `pnpm install`. Two jobs:
 #
-#   1. Free up disk space by trimming old pre-deploy dumps and overflow
-#      daily/weekly backups. Mirrors backup.sh's retention logic so we don't
-#      have to wait for the next backup cron to reclaim space.
+#   1. Free up disk space by trimming backups beyond the retention and old
+#      per-cycle CSV logs. Uses the same settings and retention helper as
+#      backup.sh and pre-deploy-backup.sh (backup-common.sh), so the three
+#      can never disagree about how many dumps to keep.
 #
 #   2. Abort the deploy with a clear error and a Discord alert if disk usage
-#      is still too high after cleanup. Better to fail fast at second 1 than
-#      have pnpm install hit ENOSPC and time out at minute 10.
+#      is still too high after cleanup, or if there is no room for the
+#      pre-migration dump. Better to fail fast at second 1 than have
+#      pnpm install hit ENOSPC and time out at minute 10.
 #
 # Why this is its own script (not inline YAML):
 # - Same logic for ACC + prod — having it in two places in deploy.yml drifts.
-# - Shared with the daily backup cron's retention logic.
 # - Easier to test locally and update without touching workflow YAML.
 #
 # Why this isn't part of backup.sh:
@@ -24,62 +25,25 @@ set -euo pipefail
 # - backup.sh skips when disk is full. preflight.sh _has to_ free disk and
 #   only fails if it couldn't free enough.
 #
-# Tunables (override via env vars):
-# - PRE_DEPLOY_RETAIN: how many pre_deploy_*.dump files to keep (default: 1)
-# - DAILY_RETAIN:      how many daily backups to keep (default: 2)
-# - WEEKLY_RETAIN:     how many weekly backups to keep (default: 0)
+# Settings (process environment → backend .env → default; see backup-common.sh):
+# - BACKUP_PRE_DEPLOY_RETAIN, BACKUP_DAILY_RETAIN, BACKUP_WEEKLY_RETAIN
+# - MONITORING_DISCORD_WEBHOOK — read from .env too, so the abort alerts reach
+#   Discord from the deploy's SSH session (which does not export it).
+# Tunables (env only):
 # - CYCLE_LOGS_RETAIN: how many per-cycle CSV logs to keep (default: 30)
 # - CYCLE_LOGS_DIR:    location of cycleLogger.ts output (default: /opt/armouredsouls/backend/cycle_logs)
 # - DISK_HARD_LIMIT:   abort deploy if disk ≥ this percent post-cleanup (default: 90)
 # ============================================================================
 
-# Pre-deploy dumps are a short-term rollback safety net; the daily backups
-# provide history. On a near-full disk each ~5GB dump is expensive, so we keep
-# only the most recent one — this is what lets a deploy on an 88%-full disk
-# reclaim enough space to fit the next pre-migration dump (see the 25 May and
-# 29 Jul ACC incidents where retaining 2 dumps left too little headroom).
-BACKUP_DIR="${BACKUP_DIR:-/opt/armouredsouls/backups}"
-PRE_DEPLOY_RETAIN="${PRE_DEPLOY_RETAIN:-1}"
-DAILY_RETAIN="${DAILY_RETAIN:-2}"
-WEEKLY_RETAIN="${WEEKLY_RETAIN:-0}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DISK_HARD_LIMIT="${DISK_HARD_LIMIT:-90}"
 
 log() {
   echo "[$(date '+%Y-%m-%d %H:%M:%S')] preflight: $1"
 }
 
-# --- Monitoring alert helper (best-effort, never blocks) ---
-# We rely on MONITORING_DISCORD_WEBHOOK being present in the inherited
-# environment if a Discord alert is wanted. There is no fallback to
-# DISCORD_WEBHOOK_URL: that is the player-facing game channel. We deliberately
-# do NOT `source /opt/armouredsouls/backend/.env` — sourcing crashes under
-# `set -e` whenever a value contains shell-special characters (the
-# 25 May ACC deploy failed at "line 7: 20: command not found"). If the
-# webhook env vars aren't present the alert is a no-op and the script's
-# exit code still drives the deploy success/failure decision.
-# Escape a string for use inside a JSON string literal. The disk-full alert
-# below is multi-line with code fences; unescaped, its raw newlines made the
-# payload invalid JSON and Discord rejected it with HTTP 400 — silently.
-# Canonical implementation: app/scripts/backup.sh
-json_escape() {
-  local s="$1"
-  s="${s//\\/\\\\}"
-  s="${s//\"/\\\"}"
-  s="${s//$'\n'/\\n}"
-  s="${s//$'\r'/\\r}"
-  s="${s//$'\t'/\\t}"
-  printf '%s' "$s"
-}
-
-send_alert() {
-  local message="$1"
-  local webhook="${MONITORING_DISCORD_WEBHOOK:-}"
-  if [ -n "$webhook" ]; then
-    curl -s -H "Content-Type: application/json" \
-      -d "{\"content\": \"$(json_escape "$message")\"}" \
-      "$webhook" > /dev/null 2>&1 || true
-  fi
-}
+# shellcheck source=backup-common.sh
+. "${SCRIPT_DIR}/backup-common.sh"
 
 # --- Disk usage helper (portable: works on Linux + BSD/macOS) ---
 # Returns the disk percent for `/` as an integer (no `%` sign).
@@ -94,35 +58,15 @@ mkdir -p "${BACKUP_DIR}/daily" "${BACKUP_DIR}/weekly"
 DISK_BEFORE=$(disk_pct)
 log "Disk usage before cleanup: ${DISK_BEFORE}%"
 
-# --- 1. Cleanup old pre-deploy dumps -----------------------------------------
-PRE_DEPLOY_COUNT=$(find "${BACKUP_DIR}" -maxdepth 1 -name "pre_deploy_*.dump" -type f | wc -l)
-if [ "${PRE_DEPLOY_COUNT}" -gt "${PRE_DEPLOY_RETAIN}" ]; then
-  DELETE_COUNT=$((PRE_DEPLOY_COUNT - PRE_DEPLOY_RETAIN))
-  find "${BACKUP_DIR}" -maxdepth 1 -name "pre_deploy_*.dump" -type f -printf '%T+ %p\n' \
-    | sort | head -n "${DELETE_COUNT}" | awk '{print $2}' \
-    | xargs -r rm -f
-  log "Removed ${DELETE_COUNT} old pre-deploy backup(s) (kept latest ${PRE_DEPLOY_RETAIN})"
-fi
-
-# --- 2. Cleanup overflow daily backups (defensive — backup.sh runs nightly) --
-DAILY_COUNT=$(find "${BACKUP_DIR}/daily" \( -name "*.dump" -o -name "*.sql.gz" \) -type f | wc -l)
-if [ "${DAILY_COUNT}" -gt "${DAILY_RETAIN}" ]; then
-  DELETE_COUNT=$((DAILY_COUNT - DAILY_RETAIN))
-  find "${BACKUP_DIR}/daily" \( -name "*.dump" -o -name "*.sql.gz" \) -type f -printf '%T+ %p\n' \
-    | sort | head -n "${DELETE_COUNT}" | awk '{print $2}' \
-    | xargs -r rm -f
-  log "Removed ${DELETE_COUNT} overflow daily backup(s) (kept latest ${DAILY_RETAIN})"
-fi
-
-# --- 3. Cleanup overflow weekly backups --------------------------------------
-WEEKLY_COUNT=$(find "${BACKUP_DIR}/weekly" \( -name "*.dump" -o -name "*.sql.gz" \) -type f | wc -l)
-if [ "${WEEKLY_COUNT}" -gt "${WEEKLY_RETAIN}" ]; then
-  DELETE_COUNT=$((WEEKLY_COUNT - WEEKLY_RETAIN))
-  find "${BACKUP_DIR}/weekly" \( -name "*.dump" -o -name "*.sql.gz" \) -type f -printf '%T+ %p\n' \
-    | sort | head -n "${DELETE_COUNT}" | awk '{print $2}' \
-    | xargs -r rm -f
-  log "Removed ${DELETE_COUNT} overflow weekly backup(s) (kept latest ${WEEKLY_RETAIN})"
-fi
+# --- 1–3. Backups beyond the retention ----------------------------------------
+# Normally a no-op: backup.sh and pre-deploy-backup.sh each prune right after
+# writing a new dump. This catches overflow after a retention change and
+# leftovers of interrupted dumps (`*.partial`).
+remove_partial_dumps "${BACKUP_DIR}"
+remove_partial_dumps "${BACKUP_DIR}/daily"
+prune_backups "${BACKUP_DIR}" "${PRE_DEPLOY_RETAIN}" 'pre_deploy_*.dump'
+prune_backups "${BACKUP_DIR}/daily" "${DAILY_RETAIN}" '*.dump' '*.sql.gz'
+prune_backups "${BACKUP_DIR}/weekly" "${WEEKLY_RETAIN}" '*.dump' '*.sql.gz'
 
 # --- 4. Cleanup old per-cycle CSV logs ---------------------------------------
 # `cycleLogger.ts` writes one CSV per cycle to `cycle_logs/`. There's no in-app
@@ -141,7 +85,7 @@ if [ -d "${CYCLE_LOGS_DIR}" ]; then
   fi
 fi
 
-# --- 4. Disk hard-limit check -------------------------------------------------
+# --- 5. Disk hard-limit check -------------------------------------------------
 DISK_AFTER=$(disk_pct)
 DISK_FREE_HUMAN=$(df -h / | awk 'NR==2 {print $4}')
 log "Disk usage after cleanup: ${DISK_AFTER}% (${DISK_FREE_HUMAN} free)"
@@ -185,8 +129,10 @@ Investigate before retrying.")
   exit 1
 fi
 
-# --- 5. Reserve headroom for the pre-migration dump ------------------------------
-# The deploy runs `pg_dump > pre_deploy_<ts>.dump` a few steps after this script.
+# --- 6. Reserve headroom for the pre-migration dump ------------------------------
+# The deploy runs pre-deploy-backup.sh a few steps after this script. While it
+# writes, the previous pre-deploy dump is still on disk (it is deleted only
+# after the new one is verified), so the new dump needs its full size free.
 # The percentage guard above says nothing about whether that dump actually fits:
 # at exactly 89% on a 45GB disk there's ~5GB free, which a 4.5GB dump consumes
 # entirely. Estimate the incoming dump from the largest existing backup and

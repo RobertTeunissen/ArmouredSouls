@@ -49,11 +49,16 @@ set -euo pipefail
 # `20: command not found`. This has bitten us twice already (PR #332 in
 # preflight.sh, PR #336 in backup.sh). Read keys as plain text instead.
 # Canonical implementation: app/scripts/backup.sh
+#
+# `|| true` is load-bearing: a key missing from .env makes grep exit 1, and
+# under `set -euo pipefail` that aborted the whole script before the disk was
+# checked. DISK_ALERT_COOLDOWN_SECONDS is optional and usually absent, so the
+# monitor exited 1 on every run without alerting (found Oct 2026).
 env_get() {
   local key="$1"
   local file="$2"
   [ -f "$file" ] || return 0
-  grep -E "^${key}=" "$file" | tail -n 1 | cut -d= -f2- | sed -E 's/^"(.*)"$/\1/; s/^'\''(.*)'\''$/\1/'
+  grep -E "^${key}=" "$file" | tail -n 1 | cut -d= -f2- | sed -E 's/^"(.*)"$/\1/; s/^'\''(.*)'\''$/\1/' || true
 }
 
 ENV_FILE="${DISK_MONITOR_ENV_FILE:-/opt/armouredsouls/backend/.env}"
@@ -102,7 +107,7 @@ fi
 # Escape a string for use inside a JSON string literal. A raw newline, quote
 # or backslash in the message makes the payload invalid JSON, which Discord
 # rejects with HTTP 400 — silently, since curl's output is discarded.
-# Canonical implementation: app/scripts/backup.sh
+# Same implementation as app/scripts/backup-common.sh (this script is standalone).
 json_escape() {
   local s="$1"
   s="${s//\\/\\\\}"
