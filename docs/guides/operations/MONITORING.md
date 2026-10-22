@@ -33,7 +33,7 @@ The monitoring system uses lightweight, zero-cost components:
 | Disk Critical | Usage >= 90% | `🚨 Disk usage CRITICAL: {%}% used ({free} free) on {host}` | Free disk space immediately: remove old backups, vacuum journal, check Docker images |
 | Startup Failed | Missing compiled modules (or an invalid strategy file) | `🚨 STARTUP FAILED: Missing modules: [list]. Server did not start.` (sent once per failure, not per PM2 restart) | SSH in, check `dist/` directory, run `pnpm run build`, restart PM2 |
 | Backup Failed | Nightly pg_dump fails or its dump fails `gzip -t` | `🚨 Backup FAILED: pg_dump returned error on {host}. The previous backup was kept.` | Check DB connectivity, disk space, backup logs |
-| Pre-migration backup failed | No working `pg_dump`, or the deploy's dump fails or fails `pg_restore --list` | `🚨 Deploy ABORTED on {host}: … Migrations were not run` | The deploy stopped before migrations. Check `pg_dump` on the host and the container (`BACKUP_CONTAINER_NAME`), then re-run the deploy. See [MAINTENANCE.md](MAINTENANCE.md#backups) |
+| Pre-migration backup failed (PRD) | No working `pg_dump`, or the deploy's dump fails or fails `pg_restore --list` | `🚨 Deploy ABORTED on {host}: … Migrations were not run` | The deploy stopped before migrations. Check `pg_dump` on the host and the container (`BACKUP_CONTAINER_NAME`), then re-run the deploy. See [MAINTENANCE.md](MAINTENANCE.md#backups) |
 | Deploy Failed | Any deploy step fails | `🚨 Deploy to {env} FAILED. Run: {url}` | Check GitHub Actions run, fix the failing step, re-deploy |
 
 ### ⚠️ WARNING Alerts (Investigate Soon)

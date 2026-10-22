@@ -55,27 +55,31 @@ Two kinds of database dump live in `/opt/armouredsouls/backups/`:
 | Dump | Written by | When | Format | Kept (default) | Setting |
 |---|---|---|---|---|---|
 | `daily/<db>_daily_<ts>.sql.gz` | `scripts/backup.sh` (cron) | 02:00 server time (UTC) | gzip'd SQL | 1 | `BACKUP_DAILY_RETAIN` |
-| `pre_deploy_<ts>.dump` | `scripts/pre-deploy-backup.sh` (deploy step) | every deploy, before migrations | `pg_dump -Fc` | 1 | `BACKUP_PRE_DEPLOY_RETAIN` |
+| `pre_deploy_<ts>.dump` | `scripts/pre-deploy-backup.sh` (deploy step) | every **PRD** deploy, before migrations | `pg_dump -Fc` | 1 | `BACKUP_PRE_DEPLOY_RETAIN` |
 | `weekly/<db>_weekly_<ts>.sql.gz` | `scripts/backup.sh` | Sundays | copy of the daily | 0 (off) | `BACKUP_WEEKLY_RETAIN` |
 
-So a host normally holds two recent restore points: last night's dump and the dump taken just before the last deploy's migrations. Settings are read from the process environment, then `/opt/armouredsouls/backend/.env`, then the default above. `backup.sh`, `pre-deploy-backup.sh` and `preflight.sh` share one implementation (`scripts/backup-common.sh`), so they always agree on the retention.
+**ACC makes no pre-migration dump** (decision of 22 October 2026). On ACC a full dump took ~37 minutes, which pushed the deploy's PM2 restart into the 08:00 UTC league job and killed it, and losing up to a day of progress is acceptable there. ACC's only restore point is last night's dump. PRD keeps the pre-migration dump, so a PRD host holds two restore points: last night's dump and the dump taken just before the last deploy's migrations.
+
+Settings are read from the process environment, then `/opt/armouredsouls/backend/.env`, then the default above. `backup.sh`, `pre-deploy-backup.sh` and `preflight.sh` share one implementation (`scripts/backup-common.sh`), so they always agree on the retention.
 
 **How a dump is replaced.** Each dump is written as `<name>.partial`, verified (`gzip -t` for the daily, `pg_restore --list` for the pre-deploy dump), renamed, and only then is the previous dump of that kind deleted. A failed or interrupted dump therefore never removes the last good backup. The disk briefly holds one extra dump while the new one is written (about 20 minutes on ACC in October 2026). Before October 2026 the old daily dump was deleted *before* the new one was written, so with a retention of 2 the disk held 3 dumps every night until the next deploy trimmed it.
 
-**When the pre-migration backup fails, the deploy fails.** `pre-deploy-backup.sh` exits non-zero, with a `🚨 Deploy ABORTED` Discord alert, when no working `pg_dump` exists or the dump cannot be verified, and the migrations do not run. It uses the same method as the nightly backup: the host `pg_dump` first, then `docker exec` into `BACKUP_CONTAINER_NAME` (default `armouredsouls-db-prod`). The inline step it replaced only tried the container, failed on every ACC deploy from at least 12 October 2026, and let the migrations run without a backup after printing a warning.
+**When the pre-migration backup fails, the PRD deploy fails.** `pre-deploy-backup.sh` exits non-zero, with a `🚨 Deploy ABORTED` Discord alert, when no working `pg_dump` exists or the dump cannot be verified, and the migrations do not run. It uses the same method as the nightly backup: the host `pg_dump` first, then `docker exec` into `BACKUP_CONTAINER_NAME` (default `armouredsouls-db-prod`). The inline step it replaced only tried the container, failed on every ACC deploy from at least 12 October 2026, and let the migrations run without a backup after printing a warning.
 
 `scripts/preflight.sh` runs at the start of each deploy and also trims the backups to the retention. Normally that is a no-op; it catches overflow after a retention change and leftover `.partial` files.
 
 **Overlap between the nightly backup and a deploy.** All three scripts take a host-wide lock (`backups/.backup.lock`, holding the owner's PID) for their backup work, so they never clean up or dump while another is writing. A deploy during the 02:00 backup:
 - preflight skips its backup cleanup and logs `A backup is running … skipping backup cleanup`;
-- `pre-deploy-backup.sh` waits up to 30 min (`BACKUP_LOCK_WAIT_SECONDS`) for the nightly dump to finish, then fails the deploy if it still cannot get the lock.
+- on PRD, `pre-deploy-backup.sh` waits up to 30 min (`BACKUP_LOCK_WAIT_SECONDS`) for the nightly dump to finish, then fails the deploy if it still cannot get the lock.
+
+**A deploy's PM2 restart stops any running cycle job.** The backend has no graceful shutdown and the scheduler keeps its state in memory, so a league, tournament or other battle job running at restart time is killed and is not resumed (only an interrupted settlement is). Time deploys between scheduled jobs; season-end jobs can run 15–20 minutes.
 
 The nightly backup likewise waits up to 60 min for a running pre-deploy dump. A lock whose PID is no longer running, or that is over 6 hours old, is taken over automatically. To clear one by hand, check that no backup is running (`pgrep -af 'backup.sh|pre-deploy-backup.sh|pg_dump'`), then `rm -rf /opt/armouredsouls/backups/.backup.lock`.
 
 ### Verify
 
 ```bash
-# Dumps on disk: expect one daily and (after the first deploy) one pre_deploy dump
+# Dumps on disk: one daily; on PRD also one pre_deploy dump (after the first deploy)
 ls -lh /opt/armouredsouls/backups/daily/ /opt/armouredsouls/backups/pre_deploy_*.dump
 
 # Last runs
@@ -184,13 +188,13 @@ Disk budget on ACC, October 2026 (estimated from `df` readings and dump sizes, n
 |---|---|
 | Everything except backups (OS, Docker, Postgres data, app, logs) | ~26.5 GB |
 | One daily dump (`*.sql.gz`) | ~3.7 GB, +0.2 GB on the last measured day |
-| One pre-deploy dump (`-Fc`) | similar to a daily dump (not yet measured) |
-| **Steady state: 1 daily + 1 pre-deploy** | **~34 GB (~76%)** |
-| Peak while a new dump is written (~20 min) | ~37.5 GB (~83%) |
+| **Steady state on ACC: 1 daily, no pre-deploy dump** | **~30 GB (68% measured by preflight, 22 Oct 2026)** |
+| Peak while the nightly dump is written (~20 min) | ~34 GB (~76%) |
+| (PRD only) one pre-deploy dump (`-Fc`) | 3.7 GB on ACC's 22 Oct test deploy, the same as a daily dump |
 
 The disk monitor alerts at 80% (WARNING) and 90% (CRITICAL); `backup.sh` skips the nightly backup at 85% (`BACKUP_DISK_THRESHOLD`), and a deploy aborts at 90% or when the free space is under 1.5× the largest dump. If usage exceeds 80% outside the nightly backup window, clean up old logs, check `docker system df`, or see [Disk Resize After Cloud Disk Upgrade](#disk-resize-after-cloud-disk-upgrade) below.
 
-**Growth.** Every cycle adds battles, so the database and each dump keep growing (3.5 GB → 3.7 GB between the 21 and 22 October 2026 dumps). Battle Log Retention (Spec #39, 01:30 UTC daily, see [MONITORING.md](MONITORING.md#battle-log-retention-spec-39)) clears `battle_log` after 7 days, which keeps the dumps smaller, but Postgres does not return the freed space to the disk until a `VACUUM FULL`. When the steady state approaches 80%, the remaining levers are a larger disk or moving the dumps off the VPS; lowering the retention below one daily and one pre-deploy dump would leave a single restore point.
+**Growth.** Every cycle adds battles, so the database and each dump keep growing (3.5 GB → 3.7 GB between the 21 and 22 October 2026 dumps). Battle Log Retention (Spec #39, 01:30 UTC daily, see [MONITORING.md](MONITORING.md#battle-log-retention-spec-39)) clears `battle_log` after 7 days, which keeps the dumps smaller, but Postgres does not return the freed space to the disk until a `VACUUM FULL`. When the steady state approaches 80%, the remaining levers are a larger disk or moving the dumps off the VPS; ACC already keeps only one dump.
 
 ### Disk Resize After Cloud Disk Upgrade
 
