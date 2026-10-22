@@ -235,11 +235,15 @@ pnpm run build
 ### 3. Restore database (if migration caused issues)
 
 ```bash
-# List available backups (pre-deploy backups are created automatically)
-ls -lht /opt/armouredsouls/backups/
+# List available backups
+ls -lht /opt/armouredsouls/backups/ /opt/armouredsouls/backups/daily/
 
-# Restore from the pre-deploy backup
+# PRD: restore from the pre-deploy backup (taken just before the migrations)
 /opt/armouredsouls/scripts/restore.sh /opt/armouredsouls/backups/pre_deploy_TIMESTAMP.dump
+
+# ACC: no pre-deploy backup is made; restore last night's dump (loses the
+# progress since 02:00 UTC)
+/opt/armouredsouls/scripts/restore.sh /opt/armouredsouls/backups/daily/LATEST_BACKUP.sql.gz
 ```
 
 The restore script will:

@@ -22,4 +22,4 @@ For security-sensitive dependency changes, review the current workflow audit/all
 - Review PM2/deploy logs and preserve failure artifacts before retrying.
 
 ## Rollback
-Follow `environments-and-deployment.md`, `docs/guides/operations/TROUBLESHOOTING.md`, and `app/scripts/restore.sh`. The pre-migration backup is the rollback boundary; database restore is destructive and requires explicit confirmation. Do not improvise a reset, direct-main push, or destructive recovery command.
+Follow `environments-and-deployment.md`, `docs/guides/operations/TROUBLESHOOTING.md`, and `app/scripts/restore.sh`. The rollback boundary is the pre-migration backup on PRD and the nightly backup on ACC (up to a day of progress lost); database restore is destructive and requires explicit confirmation. Do not improvise a reset, direct-main push, or destructive recovery command.
