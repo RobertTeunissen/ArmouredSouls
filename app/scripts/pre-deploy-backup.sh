@@ -30,6 +30,15 @@ log() {
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 resolve_db_connection
 mkdir -p "${BACKUP_DIR}"
+
+# A deploy during the 02:00 nightly backup waits for it (~20 min) rather than
+# dumping twice at once (backup-common.sh, "Backup lock"). The deploy step's
+# command_timeout covers this wait plus the dump.
+LOCK_WAIT_SECONDS="$(setting BACKUP_LOCK_WAIT_SECONDS 1800)"
+if ! acquire_backup_lock "${LOCK_WAIT_SECONDS}"; then
+  send_alert "🚨 Deploy ABORTED on $(hostname): another backup (PID $(backup_lock_holder)) still held the backup lock after ${LOCK_WAIT_SECONDS}s, so no pre-migration backup was made. Migrations were not run."
+  exit 1
+fi
 remove_partial_dumps "${BACKUP_DIR}"
 
 if ! select_dump_method; then

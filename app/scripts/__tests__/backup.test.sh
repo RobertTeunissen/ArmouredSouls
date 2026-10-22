@@ -237,6 +237,63 @@ fresh
 run preflight.sh DF_PCENT=92
 check "still aborts the deploy when the disk stays at or above the hard limit" '[ "$STATUS" -ne 0 ] && grep -q "Deploy ABORTED" <<< "$OUT"'
 
+# ── Backup lock (overlapping cron backup and deploy) ────────────────
+
+echo "backup lock"
+
+# Hold the lock the way a running backup does: a live process's PID inside.
+hold_lock() {
+  mkdir -p "${BK}/backups/.backup.lock"
+  sleep 300 &
+  HOLDER=$!
+  echo "$HOLDER" > "${BK}/backups/.backup.lock/pid"
+}
+drop_lock() { kill "$HOLDER" 2>/dev/null || true; wait "$HOLDER" 2>/dev/null || true; rm -rf "${BK}/backups/.backup.lock"; }
+
+# Copilot review on #554: preflight's cleanup must not delete the `.partial`
+# of a nightly dump that is still being written.
+fresh
+make_file "${BK}/backups/daily/prev.sql.gz" 1440
+make_file "${BK}/backups/daily/armouredsouls_acc_daily_NOW.sql.gz.partial" 1
+make_file "${BK}/backups/daily/older.sql.gz" 2880
+hold_lock
+run preflight.sh
+check "preflight leaves a dump that is being written alone and skips backup cleanup while the lock is held" \
+  '[ "$STATUS" -eq 0 ] && exists "${BK}/backups/daily/armouredsouls_acc_daily_NOW.sql.gz.partial" && exists "${BK}/backups/daily/older.sql.gz" && grep -q "skipping backup cleanup" <<< "$OUT"'
+drop_lock
+
+fresh
+make_file "${BK}/backups/pre_deploy_prev.dump" 1440 custom
+hold_lock
+run pre-deploy-backup.sh BACKUP_LOCK_WAIT_SECONDS=2 BACKUP_LOCK_POLL_SECONDS=1
+check "a pre-deploy backup that cannot get the lock in time fails before migrations and keeps the previous dump" \
+  '[ "$STATUS" -ne 0 ] && exists "${BK}/backups/pre_deploy_prev.dump" && [ "$(count "${BK}/backups" "pre_deploy_*.dump")" -eq 1 ] && grep -q "still held the backup lock" <<< "$OUT"'
+drop_lock
+
+fresh
+hold_lock
+( sleep 2; drop_lock ) &
+RELEASER=$!
+run backup.sh BACKUP_LOCK_WAIT_SECONDS=30 BACKUP_LOCK_POLL_SECONDS=1
+wait "$RELEASER" 2>/dev/null || true
+check "the nightly backup waits for a running backup, then runs" \
+  '[ "$STATUS" -eq 0 ] && grep -q "Waiting for another backup" <<< "$OUT" && [ "$(count "${BK}/backups/daily" "*.sql.gz")" -eq 1 ]'
+
+fresh
+mkdir -p "${BK}/backups/.backup.lock"
+echo 999999 > "${BK}/backups/.backup.lock/pid"
+make_file "${BK}/backups/daily/old.sql.gz.partial" 600
+run backup.sh BACKUP_LOCK_WAIT_SECONDS=0
+check "takes over a stale lock (owner not running) and removes the dead run's partial file" \
+  '[ "$STATUS" -eq 0 ] && grep -q "Taking over a stale backup lock" <<< "$OUT" && ! exists "${BK}/backups/daily/old.sql.gz.partial" && [ "$(count "${BK}/backups/daily" "*.sql.gz")" -eq 1 ]'
+
+fresh
+run backup.sh
+check "releases the lock when done" '[ "$STATUS" -eq 0 ] && [ ! -e "${BK}/backups/.backup.lock" ]'
+fresh
+run backup.sh STUB_HOST_PG_DUMP=fail
+check "releases the lock when the dump fails" '[ "$STATUS" -ne 0 ] && [ ! -e "${BK}/backups/.backup.lock" ]'
+
 # ── Shared helpers ──────────────────────────────────────────────────
 
 echo "shared helpers"

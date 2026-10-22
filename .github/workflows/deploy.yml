@@ -647,8 +647,9 @@ jobs:
           key: ${{ secrets.ACC_SSH_KEY }}
           # Same pg_dump method as the nightly backup (host, then the container);
           # fails the deploy BEFORE migrations when no verified dump can be made.
-          # A full dump takes ~20 min on ACC (Oct 2026), hence the timeout.
-          command_timeout: 45m
+          # A full dump takes ~20 min on ACC (Oct 2026). The step may first wait up
+          # to 30 min for a running nightly backup (BACKUP_LOCK_WAIT_SECONDS).
+          command_timeout: 60m
           script: |
             bash /opt/armouredsouls/scripts/pre-deploy-backup.sh
 
@@ -1015,8 +1016,9 @@ jobs:
           key: ${{ secrets.PRD_SSH_KEY }}
           # Same pg_dump method as the nightly backup (host, then the container);
           # fails the deploy BEFORE migrations when no verified dump can be made.
-          # A full dump takes ~20 min on ACC (Oct 2026), hence the timeout.
-          command_timeout: 45m
+          # A full dump takes ~20 min on ACC (Oct 2026). The step may first wait up
+          # to 30 min for a running nightly backup (BACKUP_LOCK_WAIT_SECONDS).
+          command_timeout: 60m
           script: |
             bash /opt/armouredsouls/scripts/pre-deploy-backup.sh
 

@@ -13,6 +13,8 @@
 #     verified, so a failed dump never leaves the host with fewer backups.
 #   - A dump is written as `<name>.partial` and renamed when done, so a
 #     half-written file is never counted (or kept) as a backup.
+#   - All backup work happens under one host-wide lock (see "Backup lock"),
+#     so the scripts never clean up or dump while another one is writing.
 # ============================================================================
 
 BACKUP_DIR="${BACKUP_DIR:-/opt/armouredsouls/backups}"
@@ -203,8 +205,86 @@ prune_backups() {
 }
 
 # Removes `*.partial` leftovers of a dump that was interrupted (crash, reboot).
+# Call only while holding the backup lock: then no other script can be writing
+# a partial file, so every one found is abandoned.
 remove_partial_dumps() {
   local dir="$1"
   [ -d "$dir" ] || return 0
   find "$dir" -maxdepth 1 -type f -name '*.partial' -exec rm -f {} + 2>/dev/null || true
+}
+
+# --- Backup lock -------------------------------------------------------------
+#
+# backup.sh (cron, 02:00), preflight.sh and pre-deploy-backup.sh (deploys) can
+# overlap. Without coordination a deploy's cleanup deleted the nightly dump's
+# open `.partial` file mid-write (the writer finished into an unlinked file,
+# `gzip -t` then failed, and no nightly backup was published), and two dumps
+# at once could exhaust the disk. Each script holds this lock for its whole
+# backup work: cleanup, dump, verification, publication and pruning.
+#
+# A directory is the lock because `mkdir` is atomic on every filesystem and
+# needs no `flock`. It holds the owner's PID; a lock whose owner is no longer
+# running, or that is older than BACKUP_LOCK_STALE_MINUTES (a reboot can hand
+# the PID to an unrelated process), is stale and taken over.
+BACKUP_LOCK_DIR="${BACKUP_DIR}/.backup.lock"
+BACKUP_LOCK_POLL_SECONDS="${BACKUP_LOCK_POLL_SECONDS:-10}"
+BACKUP_LOCK_STALE_MINUTES="${BACKUP_LOCK_STALE_MINUTES:-360}"
+BACKUP_LOCK_OWNED=false
+
+backup_lock_holder() {
+  cat "${BACKUP_LOCK_DIR}/pid" 2>/dev/null || true
+}
+
+# True when the lock exists but its owner is gone or it is too old.
+backup_lock_is_stale() {
+  local holder
+  holder="$(backup_lock_holder)"
+  # No PID yet: the owner is between `mkdir` and writing it, unless the lock is old.
+  if [ -n "$holder" ] && ! ps -p "$holder" > /dev/null 2>&1; then
+    return 0
+  fi
+  [ -n "$(find "${BACKUP_LOCK_DIR}" -maxdepth 0 -mmin +"${BACKUP_LOCK_STALE_MINUTES}" 2>/dev/null)" ]
+}
+
+# acquire_backup_lock WAIT_SECONDS — 0 tries once. Returns 1 when another
+# script still holds the lock after WAIT_SECONDS. Releases on exit.
+acquire_backup_lock() {
+  local wait="$1"
+  local waited=0
+  mkdir -p "${BACKUP_DIR}"
+  until mkdir "${BACKUP_LOCK_DIR}" 2> /dev/null; do
+    if backup_lock_is_stale; then
+      # Serialize takeovers: without this, two waiters that both judged the
+      # lock stale could each delete it, the second one deleting the lock the
+      # first had just created. Re-check inside, then retry the mkdir.
+      if mkdir "${BACKUP_LOCK_DIR}.takeover" 2> /dev/null; then
+        if backup_lock_is_stale; then
+          log "Taking over a stale backup lock (PID $(backup_lock_holder) is not running or the lock is over ${BACKUP_LOCK_STALE_MINUTES} min old)"
+          rm -rf "${BACKUP_LOCK_DIR}"
+        fi
+        rmdir "${BACKUP_LOCK_DIR}.takeover"
+      elif [ -n "$(find "${BACKUP_LOCK_DIR}.takeover" -maxdepth 0 -mmin +5 2>/dev/null)" ]; then
+        rm -rf "${BACKUP_LOCK_DIR}.takeover"   # left by a takeover that crashed
+      fi
+      continue
+    fi
+    if [ "$waited" -ge "$wait" ]; then
+      return 1
+    fi
+    if [ "$waited" -eq 0 ]; then
+      log "Waiting for another backup to finish (lock held by PID $(backup_lock_holder))"
+    fi
+    sleep "${BACKUP_LOCK_POLL_SECONDS}"
+    waited=$((waited + BACKUP_LOCK_POLL_SECONDS))
+  done
+  echo "$$" > "${BACKUP_LOCK_DIR}/pid"
+  BACKUP_LOCK_OWNED=true
+  trap release_backup_lock EXIT
+}
+
+release_backup_lock() {
+  if [ "${BACKUP_LOCK_OWNED}" = true ] && [ "$(backup_lock_holder)" = "$$" ]; then
+    rm -rf "${BACKUP_LOCK_DIR}"
+  fi
+  BACKUP_LOCK_OWNED=false
 }

@@ -62,11 +62,21 @@ log "Disk usage before cleanup: ${DISK_BEFORE}%"
 # Normally a no-op: backup.sh and pre-deploy-backup.sh each prune right after
 # writing a new dump. This catches overflow after a retention change and
 # leftovers of interrupted dumps (`*.partial`).
-remove_partial_dumps "${BACKUP_DIR}"
-remove_partial_dumps "${BACKUP_DIR}/daily"
-prune_backups "${BACKUP_DIR}" "${PRE_DEPLOY_RETAIN}" 'pre_deploy_*.dump'
-prune_backups "${BACKUP_DIR}/daily" "${DAILY_RETAIN}" '*.dump' '*.sql.gz'
-prune_backups "${BACKUP_DIR}/weekly" "${WEEKLY_RETAIN}" '*.dump' '*.sql.gz'
+#
+# Only under the backup lock, tried once: if the nightly backup is writing,
+# its `.partial` file is live, so skip this cleanup instead of deleting it.
+# This step's 2-minute timeout cannot wait ~20 min for the backup;
+# pre-deploy-backup.sh waits for the lock itself later in the deploy.
+if acquire_backup_lock 0; then
+  remove_partial_dumps "${BACKUP_DIR}"
+  remove_partial_dumps "${BACKUP_DIR}/daily"
+  prune_backups "${BACKUP_DIR}" "${PRE_DEPLOY_RETAIN}" 'pre_deploy_*.dump'
+  prune_backups "${BACKUP_DIR}/daily" "${DAILY_RETAIN}" '*.dump' '*.sql.gz'
+  prune_backups "${BACKUP_DIR}/weekly" "${WEEKLY_RETAIN}" '*.dump' '*.sql.gz'
+  release_backup_lock
+else
+  log "A backup is running (lock held by PID $(backup_lock_holder)); skipping backup cleanup"
+fi
 
 # --- 4. Cleanup old per-cycle CSV logs ---------------------------------------
 # `cycleLogger.ts` writes one CSV per cycle to `cycle_logs/`. There's no in-app

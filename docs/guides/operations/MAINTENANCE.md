@@ -66,6 +66,12 @@ So a host normally holds two recent restore points: last night's dump and the du
 
 `scripts/preflight.sh` runs at the start of each deploy and also trims the backups to the retention. Normally that is a no-op; it catches overflow after a retention change and leftover `.partial` files.
 
+**Overlap between the nightly backup and a deploy.** All three scripts take a host-wide lock (`backups/.backup.lock`, holding the owner's PID) for their backup work, so they never clean up or dump while another is writing. A deploy during the 02:00 backup:
+- preflight skips its backup cleanup and logs `A backup is running … skipping backup cleanup`;
+- `pre-deploy-backup.sh` waits up to 30 min (`BACKUP_LOCK_WAIT_SECONDS`) for the nightly dump to finish, then fails the deploy if it still cannot get the lock.
+
+The nightly backup likewise waits up to 60 min for a running pre-deploy dump. A lock whose PID is no longer running, or that is over 6 hours old, is taken over automatically. To clear one by hand, check that no backup is running (`pgrep -af 'backup.sh|pre-deploy-backup.sh|pg_dump'`), then `rm -rf /opt/armouredsouls/backups/.backup.lock`.
+
 ### Verify
 
 ```bash

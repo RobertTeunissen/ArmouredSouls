@@ -41,6 +41,14 @@ WEEKLY_DIR="${BACKUP_DIR}/weekly"
 
 resolve_db_connection
 mkdir -p "${DAILY_DIR}" "${WEEKLY_DIR}"
+
+# A deploy's pre-migration dump takes ~20 min; wait for it rather than dumping
+# twice at once (backup-common.sh, "Backup lock").
+LOCK_WAIT_SECONDS="$(setting BACKUP_LOCK_WAIT_SECONDS 3600)"
+if ! acquire_backup_lock "${LOCK_WAIT_SECONDS}"; then
+  send_alert "🚨 Backup FAILED on $(hostname): another backup (PID $(backup_lock_holder)) still held the backup lock after ${LOCK_WAIT_SECONDS}s. No backup created; the previous backup was kept."
+  exit 1
+fi
 remove_partial_dumps "${DAILY_DIR}"
 
 # --- Remove overflow beyond the retention (BEFORE the disk guard) ---
