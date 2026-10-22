@@ -269,6 +269,7 @@ Copy the backup script:
 ```bash
 # On your local machine:
 scp app/scripts/backup.sh deploy@YOUR_VPS_IP:/opt/armouredsouls/scripts/
+scp app/scripts/backup-common.sh deploy@YOUR_VPS_IP:/opt/armouredsouls/scripts/   # sourced by backup.sh
 scp app/scripts/restore.sh deploy@YOUR_VPS_IP:/opt/armouredsouls/scripts/
 ```
 

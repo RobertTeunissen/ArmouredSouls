@@ -2,227 +2,111 @@
 set -euo pipefail
 
 # ============================================================================
-# Armoured Souls — Daily PostgreSQL Backup
-# Configurable retention via env vars (defaults: 2 daily + 0 weekly).
-# Old backups are cleaned BEFORE the disk-full guard so the script can
-# self-recover when disk usage is already above the threshold.
+# Armoured Souls — Daily PostgreSQL Backup (cron, 02:00)
 #
-# Supports two modes:
-#   1. Host pg_dump (if postgresql-client is installed on the VPS)
-#   2. Docker exec fallback (uses pg_dump inside the running container)
+# Writes one gzip'd SQL dump to backups/daily/ and keeps the newest
+# BACKUP_DAILY_RETAIN of them (default 1). The previous dump is deleted only
+# AFTER the new one has been written and verified, so a failed run never
+# leaves the host with fewer backups than before, and the disk holds one dump
+# more than the retention only while the new one is being written (~20 min).
+#
+# Overflow beyond the retention (for example after lowering it) is still
+# removed BEFORE the disk guard, so the script can recover on a full disk.
+#
+# Settings: process environment → /opt/armouredsouls/backend/.env → default.
+#   BACKUP_DAILY_RETAIN       daily dumps to keep (default 1, minimum 1)
+#   BACKUP_WEEKLY_RETAIN      weekly copies of the Sunday dump (default 0)
+#   BACKUP_PRE_DEPLOY_RETAIN  pre-migration dumps to keep (default 1)
+#   BACKUP_DISK_THRESHOLD     skip the backup at or above this disk % (default 85)
+#   BACKUP_CONTAINER_NAME     Postgres container for the docker fallback
+#
+# Dump method: host pg_dump if it runs, else `docker exec` into the container.
+# Shared helpers and the retention model: backup-common.sh.
 # ============================================================================
 
-BACKUP_DIR="/opt/armouredsouls/backups"
-TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-DAY_OF_WEEK=$(date +%u)  # 1=Monday, 7=Sunday
-
-# Read a single key from the .env file as plain text. Avoids `source .env`
-# entirely — bash's `source` interprets unquoted values as commands.
-env_get() {
-  local key="$1"
-  local file="$2"
-  [ -f "$file" ] || return 0
-  grep -E "^${key}=" "$file" | tail -n 1 | cut -d= -f2- | sed -E 's/^"(.*)"$/\1/; s/^'\''(.*)'\''$/\1/' || true
-}
-
-ENV_FILE="/opt/armouredsouls/backend/.env"
-
-# --- Retention / threshold tunables ---
-# Resolution order: process environment → backend .env → built-in default.
-# The .env fallback matters because the backup runs from cron, which starts
-# with an almost empty environment — before this, setting BACKUP_DAILY_RETAIN
-# in .env silently did nothing.
-DAILY_RETAIN="${BACKUP_DAILY_RETAIN:-$(env_get BACKUP_DAILY_RETAIN "$ENV_FILE")}"
-WEEKLY_RETAIN="${BACKUP_WEEKLY_RETAIN:-$(env_get BACKUP_WEEKLY_RETAIN "$ENV_FILE")}"
-PRE_DEPLOY_RETAIN="${BACKUP_PRE_DEPLOY_RETAIN:-$(env_get BACKUP_PRE_DEPLOY_RETAIN "$ENV_FILE")}"
-DISK_THRESHOLD="${BACKUP_DISK_THRESHOLD:-$(env_get BACKUP_DISK_THRESHOLD "$ENV_FILE")}"
-CONTAINER_NAME="${BACKUP_CONTAINER_NAME:-$(env_get BACKUP_CONTAINER_NAME "$ENV_FILE")}"
-
-DAILY_RETAIN="${DAILY_RETAIN:-2}"
-WEEKLY_RETAIN="${WEEKLY_RETAIN:-0}"
-PRE_DEPLOY_RETAIN="${PRE_DEPLOY_RETAIN:-2}"
-DISK_THRESHOLD="${DISK_THRESHOLD:-85}"
-CONTAINER_NAME="${CONTAINER_NAME:-armouredsouls-db-prod}"
-
-# --- Parse DATABASE_URL if individual POSTGRES_* vars are absent ---
-# Format: postgresql://user:password@host:port/dbname?params
-# Also handles password-less URLs: postgresql://user@host:port/dbname
-parse_database_url() {
-  local url="$1"
-  # Strip protocol prefix and query params
-  local without_proto="${url#*://}"
-  local without_params="${without_proto%%\?*}"
-  # Extract user[:password]@host:port/dbname
-  local userinfo="${without_params%%@*}"
-  local hostinfo="${without_params#*@}"
-  PARSED_USER="${userinfo%%:*}"
-  # Handle no-password form (user@host vs user:pass@host)
-  if [[ "$userinfo" == *":"* ]]; then
-    PARSED_PASS="${userinfo#*:}"
-  else
-    PARSED_PASS=""
-  fi
-  local hostport="${hostinfo%%/*}"
-  PARSED_DB="${hostinfo#*/}"
-  PARSED_HOST="${hostport%%:*}"
-  PARSED_PORT="${hostport#*:}"
-  # If no port separator was found, default to 5432
-  if [ "$PARSED_PORT" = "$PARSED_HOST" ]; then
-    PARSED_PORT="5432"
-  fi
-}
-
-# Try individual vars first, then fall back to DATABASE_URL parsing
-DB_USER="${POSTGRES_USER:-$(env_get POSTGRES_USER "$ENV_FILE")}"
-DB_NAME="${POSTGRES_DB:-$(env_get POSTGRES_DB "$ENV_FILE")}"
-DB_HOST="${POSTGRES_HOST:-$(env_get POSTGRES_HOST "$ENV_FILE")}"
-DB_PORT="${POSTGRES_PORT:-$(env_get POSTGRES_PORT "$ENV_FILE")}"
-DB_PASS="${POSTGRES_PASSWORD:-$(env_get POSTGRES_PASSWORD "$ENV_FILE")}"
-
-# If DB_USER or DB_NAME is still empty, parse from DATABASE_URL
-if [ -z "${DB_USER}" ] || [ -z "${DB_NAME}" ]; then
-  RAW_DATABASE_URL="${DATABASE_URL:-$(env_get DATABASE_URL "$ENV_FILE")}"
-  if [ -n "${RAW_DATABASE_URL}" ]; then
-    parse_database_url "${RAW_DATABASE_URL}"
-    DB_USER="${DB_USER:-$PARSED_USER}"
-    DB_NAME="${DB_NAME:-$PARSED_DB}"
-    DB_HOST="${DB_HOST:-$PARSED_HOST}"
-    DB_PORT="${DB_PORT:-$PARSED_PORT}"
-    DB_PASS="${DB_PASS:-$PARSED_PASS}"
-  fi
-fi
-
-# No fallback to DISCORD_WEBHOOK_URL: that is the player-facing game channel.
-MONITORING_DISCORD_WEBHOOK="${MONITORING_DISCORD_WEBHOOK:-$(env_get MONITORING_DISCORD_WEBHOOK "$ENV_FILE")}"
-
-# Apply defaults after env resolution
-DB_USER="${DB_USER:-armouredsouls}"
-DB_NAME="${DB_NAME:-armouredsouls}"
-DB_HOST="${DB_HOST:-127.0.0.1}"
-DB_PORT="${DB_PORT:-5432}"
-DB_PASS="${DB_PASS:-}"
-
-mkdir -p "${BACKUP_DIR}/daily" "${BACKUP_DIR}/weekly"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 log() {
   echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
 }
 
-# --- Monitoring alert helper ---
-# Escape a string for use inside a JSON string literal. A raw newline, quote
-# or backslash in the message makes the payload invalid JSON, which Discord
-# rejects with HTTP 400 — silently, since curl's output is discarded.
-# Canonical implementation (copied into disk-monitor.sh and preflight.sh).
-json_escape() {
-  local s="$1"
-  s="${s//\\/\\\\}"
-  s="${s//\"/\\\"}"
-  s="${s//$'\n'/\\n}"
-  s="${s//$'\r'/\\r}"
-  s="${s//$'\t'/\\t}"
-  printf '%s' "$s"
-}
+# shellcheck source=backup-common.sh
+. "${SCRIPT_DIR}/backup-common.sh"
 
-send_alert() {
-  local message="$1"
-  local webhook="${MONITORING_DISCORD_WEBHOOK:-}"
-  if [ -n "$webhook" ]; then
-    curl -s -H "Content-Type: application/json" \
-      -d "{\"content\": \"$(json_escape "$message")\"}" \
-      "$webhook" > /dev/null 2>&1 || true
-  fi
-  log "$message"
-}
+DISK_THRESHOLD="$(setting BACKUP_DISK_THRESHOLD 85)"
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+DAY_OF_WEEK=$(date +%u)  # 1=Monday, 7=Sunday
+DAILY_DIR="${BACKUP_DIR}/daily"
+WEEKLY_DIR="${BACKUP_DIR}/weekly"
 
-# --- Determine backup method ---
-# Prefer host pg_dump if it actually works; fall back to docker exec.
-# Some systems have a pg_dump wrapper that requires a postgresql-client-<version>
-# package — `command -v` finds it but it doesn't actually run.
-use_docker=false
-if ! pg_dump --version &> /dev/null; then
-  if docker exec "${CONTAINER_NAME}" pg_dump --version &> /dev/null; then
-    use_docker=true
-    log "pg_dump not functional on host — using docker exec (container: ${CONTAINER_NAME})"
-  else
-    log "ERROR: pg_dump not available on host or in container ${CONTAINER_NAME}"
-    send_alert "🚨 Backup FAILED on $(hostname): pg_dump not available on host or in Docker container '${CONTAINER_NAME}'."
-    exit 1
-  fi
+resolve_db_connection
+mkdir -p "${DAILY_DIR}" "${WEEKLY_DIR}"
+
+# A deploy's pre-migration dump takes ~20 min; wait for it rather than dumping
+# twice at once (backup-common.sh, "Backup lock").
+LOCK_WAIT_SECONDS="$(setting BACKUP_LOCK_WAIT_SECONDS 3600)"
+if ! acquire_backup_lock "${LOCK_WAIT_SECONDS}"; then
+  send_alert "🚨 Backup FAILED on $(hostname): another backup (PID $(backup_lock_holder)) still held the backup lock after ${LOCK_WAIT_SECONDS}s. No backup created; the previous backup was kept."
+  exit 1
 fi
+remove_partial_dumps "${DAILY_DIR}"
 
-# --- Cleanup old pre-deploy backups (runs BEFORE the disk guard) ---
-PRE_DEPLOY_COUNT=$(find "${BACKUP_DIR}" -maxdepth 1 -name "pre_deploy_*.dump" -type f | wc -l)
-if [ "${PRE_DEPLOY_COUNT}" -gt "${PRE_DEPLOY_RETAIN}" ]; then
-  DELETE_COUNT=$((PRE_DEPLOY_COUNT - PRE_DEPLOY_RETAIN))
-  find "${BACKUP_DIR}" -maxdepth 1 -name "pre_deploy_*.dump" -type f -printf '%T+ %p\n' \
-    | sort | head -n "${DELETE_COUNT}" | awk '{print $2}' \
-    | xargs rm -f
-  log "Cleaned up ${DELETE_COUNT} old pre-deploy backup(s)"
-fi
-
-# --- Cleanup old daily backups (runs BEFORE the disk guard) ---
-DAILY_COUNT=$(find "${BACKUP_DIR}/daily" \( -name "*.dump" -o -name "*.sql.gz" \) -type f | wc -l)
-if [ "${DAILY_COUNT}" -gt "${DAILY_RETAIN}" ]; then
-  DELETE_COUNT=$((DAILY_COUNT - DAILY_RETAIN))
-  find "${BACKUP_DIR}/daily" \( -name "*.dump" -o -name "*.sql.gz" \) -type f -printf '%T+ %p\n' \
-    | sort | head -n "${DELETE_COUNT}" | awk '{print $2}' \
-    | xargs rm -f
-  log "Cleaned up ${DELETE_COUNT} old daily backup(s)"
-fi
-
-# --- Cleanup old weekly backups (runs BEFORE the disk guard) ---
-WEEKLY_COUNT=$(find "${BACKUP_DIR}/weekly" \( -name "*.dump" -o -name "*.sql.gz" \) -type f | wc -l)
-if [ "${WEEKLY_COUNT}" -gt "${WEEKLY_RETAIN}" ]; then
-  DELETE_COUNT=$((WEEKLY_COUNT - WEEKLY_RETAIN))
-  find "${BACKUP_DIR}/weekly" \( -name "*.dump" -o -name "*.sql.gz" \) -type f -printf '%T+ %p\n' \
-    | sort | head -n "${DELETE_COUNT}" | awk '{print $2}' \
-    | xargs rm -f
-  log "Cleaned up ${DELETE_COUNT} old weekly backup(s)"
-fi
+# --- Remove overflow beyond the retention (BEFORE the disk guard) ---
+prune_backups "${BACKUP_DIR}" "${PRE_DEPLOY_RETAIN}" 'pre_deploy_*.dump'
+prune_backups "${DAILY_DIR}" "${DAILY_RETAIN}" '*.dump' '*.sql.gz'
+prune_backups "${WEEKLY_DIR}" "${WEEKLY_RETAIN}" '*.dump' '*.sql.gz'
 
 # --- Disk space guard ---
 DISK_USAGE=$(df / --output=pcent | tail -1 | tr -d ' %')
 if [ "${DISK_USAGE}" -ge "${DISK_THRESHOLD}" ]; then
   log "SKIPPED: Disk usage ${DISK_USAGE}% exceeds ${DISK_THRESHOLD}% threshold — free space before next backup"
-  send_alert "⚠️ Backup SKIPPED: Disk usage ${DISK_USAGE}% exceeds ${DISK_THRESHOLD}% threshold on $(hostname). No backup created."
+  send_alert "⚠️ Backup SKIPPED: Disk usage ${DISK_USAGE}% exceeds ${DISK_THRESHOLD}% threshold on $(hostname). No backup created; the previous backup was kept."
   exit 0
 fi
 
-# --- Create daily backup ---
-DAILY_FILE="${BACKUP_DIR}/daily/${DB_NAME}_daily_${TIMESTAMP}.sql.gz"
-log "Starting daily backup: ${DAILY_FILE}"
-
-run_pg_dump() {
-  if [ "$use_docker" = true ]; then
-    # Run pg_dump inside the Docker container, pipe through gzip to host file
-    docker exec "${CONTAINER_NAME}" pg_dump -U "${DB_USER}" "${DB_NAME}" | gzip > "${DAILY_FILE}"
-  else
-    # Run pg_dump on the host with password via PGPASSWORD, pipe through gzip
-    PGPASSWORD="${DB_PASS}" pg_dump -h "${DB_HOST}" -p "${DB_PORT}" -U "${DB_USER}" "${DB_NAME}" | gzip > "${DAILY_FILE}"
-  fi
-}
-
-if run_pg_dump; then
-  FILE_SIZE=$(du -h "${DAILY_FILE}" | cut -f1)
-  log "Daily backup complete: ${DAILY_FILE} (${FILE_SIZE})"
-else
-  # Remove empty/partial dump file on failure
-  rm -f "${DAILY_FILE}"
-  log "ERROR: Daily backup failed"
-  send_alert "🚨 Backup FAILED: pg_dump returned error on $(hostname). Check backup logs."
+if ! select_dump_method; then
+  send_alert "🚨 Backup FAILED on $(hostname): pg_dump not available on host or in Docker container '${CONTAINER_NAME}'. The previous backup was kept."
   exit 1
 fi
+if [ "${DUMP_VIA}" = docker ]; then
+  log "pg_dump not functional on host — using docker exec (container: ${CONTAINER_NAME})"
+fi
+
+# --- Create the daily backup as .partial, verify, then publish ---
+DAILY_FILE="${DAILY_DIR}/${DB_NAME}_daily_${TIMESTAMP}.sql.gz"
+PARTIAL_FILE="${DAILY_FILE}.partial"
+log "Starting daily backup: ${DAILY_FILE}"
+
+if ! dump_database | gzip > "${PARTIAL_FILE}"; then
+  rm -f "${PARTIAL_FILE}"
+  log "ERROR: Daily backup failed"
+  send_alert "🚨 Backup FAILED: pg_dump returned error on $(hostname). The previous backup was kept. Check backup logs."
+  exit 1
+fi
+if ! gzip -t "${PARTIAL_FILE}"; then
+  rm -f "${PARTIAL_FILE}"
+  log "ERROR: Daily backup failed verification (gzip -t)"
+  send_alert "🚨 Backup FAILED on $(hostname): the new dump failed verification (gzip -t). The previous backup was kept."
+  exit 1
+fi
+mv -f "${PARTIAL_FILE}" "${DAILY_FILE}"
+FILE_SIZE=$(du -h "${DAILY_FILE}" | cut -f1)
+log "Daily backup complete: ${DAILY_FILE} (${FILE_SIZE})"
+
+# --- Only now drop the backups the new one replaces ---
+prune_backups "${DAILY_DIR}" "${DAILY_RETAIN}" '*.dump' '*.sql.gz'
 
 # --- Promote Sunday backup to weekly ---
-# Skip entirely when WEEKLY_RETAIN is 0. Otherwise every Sunday we'd copy a
-# full dump only for the next run's cleanup to delete it — on ACC that was a
+# Skip entirely when BACKUP_WEEKLY_RETAIN is 0. Otherwise every Sunday we'd copy
+# a full dump only for the next run's cleanup to delete it — on ACC that was a
 # wasted 4.5GB duplicate sitting on disk for 24h (July 2026 disk-full incident).
 if [ "${WEEKLY_RETAIN}" -eq 0 ]; then
-  log "Weekly promotion skipped (WEEKLY_RETAIN=0)"
+  log "Weekly promotion skipped (BACKUP_WEEKLY_RETAIN=0)"
 elif [ "${DAY_OF_WEEK}" -eq 7 ]; then
-  WEEKLY_FILE="${BACKUP_DIR}/weekly/${DB_NAME}_weekly_${TIMESTAMP}.sql.gz"
+  WEEKLY_FILE="${WEEKLY_DIR}/${DB_NAME}_weekly_${TIMESTAMP}.sql.gz"
   cp "${DAILY_FILE}" "${WEEKLY_FILE}"
   log "Weekly backup created: ${WEEKLY_FILE}"
+  prune_backups "${WEEKLY_DIR}" "${WEEKLY_RETAIN}" '*.dump' '*.sql.gz'
 fi
 
 log "Backup process complete"

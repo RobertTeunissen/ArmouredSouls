@@ -645,34 +645,13 @@ jobs:
           host: ${{ secrets.ACC_VPS_IP }}
           username: ${{ secrets.ACC_VPS_USER }}
           key: ${{ secrets.ACC_SSH_KEY }}
+          # Same pg_dump method as the nightly backup (host, then the container);
+          # fails the deploy BEFORE migrations when no verified dump can be made.
+          # A full dump takes ~20 min on ACC (Oct 2026). The step may first wait up
+          # to 30 min for a running nightly backup (BACKUP_LOCK_WAIT_SECONDS).
+          command_timeout: 60m
           script: |
-            BACKUP_DIR="/opt/armouredsouls/backups"
-            mkdir -p "$BACKUP_DIR"
-            TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-            ENV_FILE="/opt/armouredsouls/backend/.env"
-            DB_USER=$(grep -E "^POSTGRES_USER=" "$ENV_FILE" | tail -n 1 | cut -d= -f2- | sed -E 's/^"(.*)"$/\1/; s/^'\''(.*)'\''$/\1/')
-            DB_NAME=$(grep -E "^POSTGRES_DB=" "$ENV_FILE" | tail -n 1 | cut -d= -f2- | sed -E 's/^"(.*)"$/\1/; s/^'\''(.*)'\''$/\1/')
-            # Fall back to parsing DATABASE_URL if either var is absent
-            if [ -z "$DB_USER" ] || [ -z "$DB_NAME" ]; then
-              DATABASE_URL=$(grep -E "^DATABASE_URL=" "$ENV_FILE" | tail -n 1 | cut -d= -f2- | sed -E 's/^"(.*)"$/\1/; s/^'\''(.*)'\''$/\1/')
-              if [ -n "$DATABASE_URL" ]; then
-                WITHOUT_PROTO="${DATABASE_URL#*://}"
-                WITHOUT_PARAMS="${WITHOUT_PROTO%%\?*}"
-                USERINFO="${WITHOUT_PARAMS%%@*}"
-                HOSTINFO="${WITHOUT_PARAMS#*@}"
-                DB_USER="${DB_USER:-${USERINFO%%:*}}"
-                DB_NAME="${DB_NAME:-${HOSTINFO#*/}}"
-              fi
-            fi
-            DB_USER="${DB_USER:-armouredsouls}"
-            DB_NAME="${DB_NAME:-armouredsouls}"
-            CONTAINER="armouredsouls-db-prod"
-            if docker exec "$CONTAINER" pg_dump --version > /dev/null 2>&1; then
-              docker exec "$CONTAINER" pg_dump -U "$DB_USER" -Fc "$DB_NAME" > "$BACKUP_DIR/pre_deploy_${TIMESTAMP}.dump"
-              echo "Backup created: pre_deploy_${TIMESTAMP}.dump ($(du -h "$BACKUP_DIR/pre_deploy_${TIMESTAMP}.dump" | cut -f1))"
-            else
-              echo "WARNING: Could not run pg_dump in container $CONTAINER — skipping pre-deploy backup"
-            fi
+            bash /opt/armouredsouls/scripts/pre-deploy-backup.sh
 
       - name: Run database migrations
         uses: appleboy/ssh-action@v1
@@ -1035,34 +1014,13 @@ jobs:
           host: ${{ secrets.PRD_VPS_IP }}
           username: ${{ secrets.PRD_VPS_USER }}
           key: ${{ secrets.PRD_SSH_KEY }}
+          # Same pg_dump method as the nightly backup (host, then the container);
+          # fails the deploy BEFORE migrations when no verified dump can be made.
+          # A full dump takes ~20 min on ACC (Oct 2026). The step may first wait up
+          # to 30 min for a running nightly backup (BACKUP_LOCK_WAIT_SECONDS).
+          command_timeout: 60m
           script: |
-            BACKUP_DIR="/opt/armouredsouls/backups"
-            mkdir -p "$BACKUP_DIR"
-            TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-            ENV_FILE="/opt/armouredsouls/backend/.env"
-            DB_USER=$(grep -E "^POSTGRES_USER=" "$ENV_FILE" | tail -n 1 | cut -d= -f2- | sed -E 's/^"(.*)"$/\1/; s/^'\''(.*)'\''$/\1/')
-            DB_NAME=$(grep -E "^POSTGRES_DB=" "$ENV_FILE" | tail -n 1 | cut -d= -f2- | sed -E 's/^"(.*)"$/\1/; s/^'\''(.*)'\''$/\1/')
-            # Fall back to parsing DATABASE_URL if either var is absent
-            if [ -z "$DB_USER" ] || [ -z "$DB_NAME" ]; then
-              DATABASE_URL=$(grep -E "^DATABASE_URL=" "$ENV_FILE" | tail -n 1 | cut -d= -f2- | sed -E 's/^"(.*)"$/\1/; s/^'\''(.*)'\''$/\1/')
-              if [ -n "$DATABASE_URL" ]; then
-                WITHOUT_PROTO="${DATABASE_URL#*://}"
-                WITHOUT_PARAMS="${WITHOUT_PROTO%%\?*}"
-                USERINFO="${WITHOUT_PARAMS%%@*}"
-                HOSTINFO="${WITHOUT_PARAMS#*@}"
-                DB_USER="${DB_USER:-${USERINFO%%:*}}"
-                DB_NAME="${DB_NAME:-${HOSTINFO#*/}}"
-              fi
-            fi
-            DB_USER="${DB_USER:-armouredsouls}"
-            DB_NAME="${DB_NAME:-armouredsouls}"
-            CONTAINER="armouredsouls-db-prod"
-            if docker exec "$CONTAINER" pg_dump --version > /dev/null 2>&1; then
-              docker exec "$CONTAINER" pg_dump -U "$DB_USER" -Fc "$DB_NAME" > "$BACKUP_DIR/pre_deploy_${TIMESTAMP}.dump"
-              echo "Backup created: pre_deploy_${TIMESTAMP}.dump ($(du -h "$BACKUP_DIR/pre_deploy_${TIMESTAMP}.dump" | cut -f1))"
-            else
-              echo "WARNING: Could not run pg_dump in container $CONTAINER — skipping pre-deploy backup"
-            fi
+            bash /opt/armouredsouls/scripts/pre-deploy-backup.sh
 
       - name: Run database migrations
         uses: appleboy/ssh-action@v1

@@ -217,6 +217,28 @@ else
   fail "exits zero in every case, including an unwritable state dir and no webhook"
 fi
 
+# 10b. A real .env that lacks the optional keys must not abort the monitor.
+# Before the `|| true` in env_get, a missing DISK_ALERT_COOLDOWN_SECONDS made
+# grep exit 1 and `set -euo pipefail` ended every run before the disk check.
+STATE="$(fresh_state_dir)"
+ENV_WITHOUT_KEYS="${WORKROOT}/without-optional-keys.env"
+printf 'NODE_ENV=acceptance\nLEAGUE_SCHEDULE=0 20 * * *\n' > "$ENV_WITHOUT_KEYS"
+set +e
+OUT=$(
+  env -u DISK_ALERT_COOLDOWN_SECONDS -u MONITORING_DISCORD_WEBHOOK \
+    PATH="${STUB_DIR}:${PATH}" DF_PCENT=85 DF_AVAIL=860000 STATE_DIR="$STATE" \
+    DISK_MONITOR_ENV_FILE="$ENV_WITHOUT_KEYS" \
+    bash "$MONITOR" 2>&1
+)
+RUN_STATUS=$?
+set -e
+if [ "$RUN_STATUS" -eq 0 ] && [ "$(count_alerts "$OUT")" -eq 1 ]; then
+  pass "a .env without the optional keys still checks the disk and alerts"
+else
+  fail "a .env without the optional keys still checks the disk and alerts (status $RUN_STATUS)"
+  echo "      output: $OUT"
+fi
+
 # 11. Steering compliance: no `source` of the env file, and fail-fast enabled.
 if grep -qE '^\s*source /opt/armouredsouls' "$MONITOR"; then
   fail "does not source .env directly (bash would evaluate unquoted values)"
