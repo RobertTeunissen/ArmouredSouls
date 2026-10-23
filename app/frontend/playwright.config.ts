@@ -75,11 +75,11 @@ export default defineConfig({
       name: 'admin-teardown',
       testMatch: /admin\.teardown\.ts/,
     },
-    // The admin Automatons page, the Automaton badge and Cycle Controls (which
+    // The admin Automatons page, the Automaton badge, Season Control and Cycle Controls (which
     // runs a real Grand Melee slot) run as admin
     {
       name: 'admin',
-      testMatch: /(admin-automatons|automaton-badge|admin-cycle-controls)\.spec\.ts/,
+      testMatch: /(admin-automatons|automaton-badge|admin-cycle-controls|admin-season-control)\.spec\.ts/,
       use: {
         ...devices['Desktop Chrome'],
         storageState: '.auth/admin.json',

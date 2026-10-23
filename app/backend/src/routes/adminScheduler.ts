@@ -17,7 +17,7 @@ import { positiveIntParam } from '../utils/securityValidation';
 // The constants module, not cycleScheduler: a test that mocks the scheduler
 // must not be able to turn this into `z.enum(undefined)`.
 import { SCHEDULER_JOB_NAMES, type SchedulerJobName } from '../services/cycle/schedulerJobNames';
-import { BULK_CYCLES_JOB_NAME } from '../types/schedulerTypes';
+import { BULK_CYCLES_JOB_NAME, SEASON_ROLLOVER_JOB_NAME } from '../types/schedulerTypes';
 import { startManualRun } from '../services/cycle/cycleScheduler';
 import {
   MAX_HISTORY_DAYS,
@@ -30,7 +30,7 @@ import { recordAction as recordAuditAction } from '../services/admin/adminAuditL
 const router = express.Router();
 
 const historyQuerySchema = z.object({
-  jobName: z.enum([...SCHEDULER_JOB_NAMES, BULK_CYCLES_JOB_NAME]).optional(),
+  jobName: z.enum([...SCHEDULER_JOB_NAMES, BULK_CYCLES_JOB_NAME, SEASON_ROLLOVER_JOB_NAME]).optional(),
   problemsOnly: z.enum(['true', 'false']).optional().transform((value) => value === 'true'),
   days: z.coerce.number().int().min(1).max(MAX_HISTORY_DAYS).default(7),
   page: z.coerce.number().int().positive().default(1),

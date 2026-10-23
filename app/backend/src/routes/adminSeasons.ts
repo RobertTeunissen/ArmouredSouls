@@ -1,5 +1,5 @@
 /**
- * Admin_Season_Portal routes (Spec #45).
+ * Admin_Season_Portal routes (Spec #45) — Season Control (`/admin/seasons`).
  *
  * Every route is admin-only and every action is recorded in the admin audit
  * trail. The manual rollover is the only way to close Season_Zero.
@@ -10,7 +10,6 @@ import { z } from 'zod';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { requireAdmin } from '../middleware/auth';
 import { validateRequest } from '../middleware/schemaValidator';
-import { loadEnvConfig } from '../config/env';
 import { SeasonError, SeasonErrorCode } from '../errors';
 import { recordAction } from '../services/admin/adminAuditLogService';
 import {
@@ -19,10 +18,9 @@ import {
   setRemainingPreparationCycles,
 } from '../services/season/seasonService';
 import { previewRollover } from '../services/season/seasonPurgeService';
-import {
-  executeSeasonRollover,
-  isRolloverInProgress,
-} from '../services/season/seasonRolloverService';
+import { getAdminSeasonState } from '../services/season/adminSeasonStateService';
+import { runAdminRollover, startAdminRollover } from '../services/season/adminSeasonRolloverRunService';
+import { getSeasonRolloverHistory } from '../services/season/seasonRolloverHistoryService';
 
 const router = express.Router();
 
@@ -33,28 +31,17 @@ router.use(requireAdmin);
 const rolloverBodySchema = z.object({
   confirm: z.literal('CONFIRM_ROLLOVER'),
   seasonNumber: z.number().int().min(0),
+  /** Start in the background and return the queued run (202). Default: wait for the result. */
+  background: z.boolean().optional(),
 });
 
 const extendBodySchema = z.object({ additionalCycles: z.number().int().min(1).max(365) });
-const preparationBodySchema = z.object({ remainingCycles: z.number().int().min(0).max(7) });
+/** The upper bound is the configured preparation window, checked by the service. */
+const preparationBodySchema = z.object({ remainingCycles: z.number().int().min(0).max(365) });
 
-/** Current season state plus whether balance changes are appropriate now. */
+/** Current season state, configuration, timeline anchors and the active rollover. */
 router.get('/state', validateRequest({}), async (_req: AuthRequest, res: Response) => {
-  const state = await getCurrentSeason();
-
-  return res.json({
-    ...state,
-    rolloverInProgress: isRolloverInProgress(),
-    // Balance changes belong in a preparation window (convention, not enforced).
-    balanceChangesAppropriate: state.phase === 'preparation',
-    config: {
-      seasonLengthCycles: loadEnvConfig().seasonLengthCycles,
-      preparationLengthCycles: loadEnvConfig().preparationLengthCycles,
-      countdownCycles: loadEnvConfig().countdownCycles,
-      accoladeDepth: loadEnvConfig().accoladeDepth,
-      retainedImagesPerStable: loadEnvConfig().retainedImagesPerStable,
-    },
-  });
+  return res.json(await getAdminSeasonState());
 });
 
 /** Read-only report of what a rollover would archive, delete, and purge. */
@@ -62,15 +49,25 @@ router.get('/rollover-preview', validateRequest({}), async (_req: AuthRequest, r
   return res.json(await previewRollover());
 });
 
-/** Execute a rollover now. Requires the confirmation phrase and season number. */
+/** Completed seasons with the rollover that closed each, and failed attempts. */
+router.get('/history', validateRequest({}), async (_req: AuthRequest, res: Response) => {
+  return res.json(await getSeasonRolloverHistory());
+});
+
+/**
+ * Roll the current season over. Requires the confirmation phrase and season
+ * number. Runs under the scheduler lock; 409 while another rollover is queued
+ * or running. With `background: true` it returns 202 and the queued run.
+ */
 router.post(
   '/rollover',
   validateRequest({ body: rolloverBodySchema }),
   async (req: AuthRequest, res: Response) => {
     const adminUserId = req.user!.userId;
+    const body = req.body as z.infer<typeof rolloverBodySchema>;
     const state = await getCurrentSeason();
 
-    if (req.body.seasonNumber !== state.seasonNumber) {
+    if (body.seasonNumber !== state.seasonNumber) {
       throw new SeasonError(
         SeasonErrorCode.SEASON_NUMBER_MISMATCH,
         `Season number mismatch: the current season is ${state.seasonNumber}`,
@@ -78,17 +75,14 @@ router.post(
       );
     }
 
-    try {
-      const result = await executeSeasonRollover({ trigger: 'admin', adminUserId });
-      recordAction(adminUserId, 'season_rollover', 'success', { ...result });
-      return res.json(result);
-    } catch (error) {
-      recordAction(adminUserId, 'season_rollover', 'failure', {
-        seasonNumber: state.seasonNumber,
-        error: error instanceof Error ? error.message : String(error),
+    if (body.background) {
+      const run = await startAdminRollover(adminUserId, state.seasonNumber);
+      // Same shape as POST /api/admin/scheduler/runs.
+      return res.status(202).json({
+        run: { id: run.runId, jobName: run.jobName, status: 'queued', queuedAt: run.queuedAt.toISOString() },
       });
-      throw error;
     }
+    return res.json(await runAdminRollover(adminUserId, state.seasonNumber));
   },
 );
 
@@ -106,7 +100,7 @@ router.post(
   },
 );
 
-/** Set how many preparation cycles remain in the current Preparation_Phase. */
+/** Set how many preparation cycles remain (0 to the configured window) in the current Preparation_Phase. */
 router.post(
   '/preparation-cycles',
   validateRequest({ body: preparationBodySchema }),

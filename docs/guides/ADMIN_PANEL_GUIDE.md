@@ -144,7 +144,32 @@ Sections, top to bottom:
 | Backend restarted | A `scheduler_processes` row: one per backend start, with a 60 s heartbeat. "Down X–Y" is the previous process's last heartbeat to this start. |
 | Missed | A daily slot with no cron or resumed run queued between 1 min before and 15 min after it, while the scheduler was enabled. A later manual run is its own row and does not hide the miss. Slots before history tracking started, while the scheduler was disabled, or less than 15 min ago are never missed. A miss inside a restart gap shows that downtime. |
 
+Season rollovers are runs too (job **Season rollover**, `seasonRollover`): trigger `manual` from Season Control, `cron` when the settlement rolls the season over. They appear in Run history and in the job filter.
+
 **API:** `GET /api/admin/scheduler/overview`, `GET /api/admin/scheduler/runs?jobName&problemsOnly&days(1–30)&page&limit`, `GET /api/admin/scheduler/runs/:id`, `POST /api/admin/scheduler/runs` `{ jobName }` → 202 `{ run }` (400 unknown job, 409 already active), `POST /api/admin/cycles/bulk` with `background: true` → 202 `{ run }` (without it the call waits and returns the full result, as before; 409 while a bulk run is active). `GET /api/admin/scheduler/status` (in-memory state) and `POST /api/admin/scheduler/trigger/:jobName` (waits for the job) remain for scripts; the page no longer uses them. All require `authenticateToken` + `requireAdmin`; manual and bulk starts write an `admin_audit_logs` row.
+
+### Season Control (`/admin/seasons`)
+
+Answers: where is the season, when does it roll over, what would a rollover do, and how did earlier rollovers go. All times are UTC. The page polls every 5 s while a rollover is queued or running and every 60 s otherwise.
+
+Sections, top to bottom:
+
+1. **Season timeline** — season number and phase; cycle (or preparation day) of the length with a progress bar; estimated dates; the configuration (season length, marked "extended" after an Extend, preparation length, countdown, accolade depth, images kept per stable). Competitive: player countdown start, rollover, next season's competitive start. Preparation: competitive start, rollover, balance-change window. Season 0 explains that only a manual rollover closes it.
+2. **Season rollover** — what it does, **Preview rollover** (on demand) and **Roll over Season N…**. The preview splits stables by type: human players and Automatons (archived, then reset) and generated stables (deleted; results stay in the archive), lists retained images, and groups the rows it empties into Battles and summaries / Ledger, audit and snapshots / Standings, tournaments and other, each expanding to per-table counts. While a rollover is queued or running (either trigger) the card shows who or what started it, the elapsed time and the five stages live: Archive, Verify, Purge and reset (with a generated-stables bar), Clean up, Automaton turns.
+3. **Rollover history** — every completed season (dates, cycles, stables archived, generated count) with the rollover that closed it: when, Admin · name or Settlement, duration, what it archived, deleted and emptied, and Details (stage durations). Failed and interrupted attempts fold under the season they tried to close, with the stage they stopped at. Failed attempts on the current season come first.
+4. **Testing tools** (collapsed) — Extend the season (1–365 cycles; shows "100 → 105 cycles · rollover moves to ~15 Nov" before confirming) and Remaining preparation cycles (0 to the configured preparation length, only during a preparation phase).
+
+**Roll over.** The dialog repeats the preview's counts and needs the phrase `CONFIRM_ROLLOVER` typed; the season number is sent for you. Confirming starts the rollover **in the background** under the scheduler lock (scheduled jobs wait for it), because a rollover on a full environment can outlast the proxy's 30 s response timeout. A queued rollover that finds the season changed while it waited (a settlement rolled it over) stops without changing anything. A second start while one is queued or running answers 409. When a rollover the page watched ends, a message gives the outcome.
+
+**Definitions**
+
+| Term | Definition |
+|---|---|
+| Estimated date | Counted from the scheduler's next settlement at one cycle per day: rollover = next settlement + (remaining − 1) days, next competitive start = rollover + preparation length. No dates when automated scheduling is off. |
+| Rollover run | A `scheduler_job_runs` row of job `seasonRollover` with the stage progress and result in its summary. |
+| Legacy rollover | A rollover from before runs were recorded, read from its `admin_audit_logs` `season_rollover` row (audit rows newer than the first run are not read again). |
+
+**API:** see [Season Management](#season-management-spec-45) below.
 
 ### Players (`/admin/players`)
 
@@ -394,19 +419,23 @@ All routes are admin-only and every action writes an `admin_audit_logs` entry.
 
 ### Season state — `GET /api/admin/seasons/state`
 
-Current season number, phase, cycles completed and remaining, whether a rollover is running, whether the phase is an appropriate window for balance changes, and the effective configuration.
+Current season number, phase, cycles completed and remaining, whether a rollover is queued or running (`rolloverInProgress`), whether the phase is an appropriate window for balance changes, and the effective configuration. Also `startedAt` (when the season opened), `nextSettlementAt` (the scheduler's next settlement, `null` with automated scheduling off) and `activeRollover` (`null`, or the queued / running rollover: run id, trigger, who, times and stage progress).
 
 ### Rollover preview — `GET /api/admin/seasons/rollover-preview`
 
-Read-only. Reports player stables and robots that would be archived, generated stables that would be **deleted** (reported separately), rows that would be purged per table, and image files that would be retained versus deleted. Modifies nothing — run this before any rollover.
+Read-only. Reports player stables and robots that would be archived (`humanStables` / `humanRobots` include Automatons), generated stables that would be **deleted**, the same split by type in `breakdown` (`human`, `automaton`, `generated`, using the rollover's own deletion criteria), rows per table for every table the rollover empties, and image files retained versus deleted. Modifies nothing — run this before any rollover.
 
 ### Manual rollover — `POST /api/admin/seasons/rollover`
 
 Requires both `confirm: "CONFIRM_ROLLOVER"` and the current `seasonNumber`. A mismatched season number is rejected, so a stale browser tab cannot reset the wrong season.
 
-This is the **only** way to close Season 0, which has no fixed length. It executes immediately rather than waiting for a settlement boundary.
+This is the **only** way to close Season 0, which has no fixed length. It runs under the scheduler lock (after the running job, if any) rather than waiting for a settlement boundary, and is recorded as a `seasonRollover` run.
 
-Returns archived counts, generated stables deleted, total rows purged, and per-stage durations. A concurrent rollover returns `409`.
+With `background: true` it answers 202 `{ run }` at once (Season Control uses this). Without it the call waits and returns archived counts, generated stables deleted, total rows purged and per-stage durations, as before. A rollover already queued or running (either trigger) returns `409 ROLLOVER_IN_PROGRESS`. A queued rollover whose season is no longer current when it reaches the lock fails with `SEASON_NUMBER_MISMATCH` and changes nothing.
+
+### Rollover history — `GET /api/admin/seasons/history`
+
+Completed seasons, newest first, each with the rollover that closed it and its failed or interrupted attempts, plus `currentSeasonAttempts`. Built from `seasonRollover` runs and, for rollovers before the first run, `admin_audit_logs` `season_rollover` rows.
 
 ### Extend the current season — `POST /api/admin/seasons/extend`
 
@@ -414,7 +443,7 @@ Defers the boundary for the current season only, leaving `SEASON_LENGTH_CYCLES` 
 
 ### Adjust the preparation window — `POST /api/admin/seasons/preparation-cycles`
 
-Sets remaining preparation cycles, 0–7. Rejected when the season is not in its preparation phase.
+Sets remaining preparation cycles, from 0 to `PREPARATION_LENGTH_CYCLES`. A larger value is rejected with `400 INVALID_PREPARATION_CYCLES` (it used to be clamped silently). Rejected when the season is not in its preparation phase.
 
 ### Before a rollover
 

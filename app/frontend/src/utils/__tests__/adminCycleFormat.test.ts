@@ -57,6 +57,7 @@ describe('labels and results', () => {
     expect(jobLabel('league')).toBe('League 1v1');
     expect(jobLabel('team3v3Tournament')).toBe('Tournament 3v3');
     expect(jobLabel('bulkCycles')).toBe('Bulk cycles');
+    expect(jobLabel('seasonRollover')).toBe('Season rollover');
   });
 
   it('describes the trigger and who started a manual run', () => {
@@ -79,6 +80,9 @@ describe('labels and results', () => {
       jobName: 'bulkCycles',
       summary: { bulk: { cyclesRequested: 2, cyclesCompleted: 2, totalDurationMs: 1, averageCycleDurationMs: 1, generateUsersPerCycle: false, includeTournaments: true, includeKoth: true, includeDailyFinances: true } },
     })).toBe('2 of 2 cycles completed');
+    const rollover = { seasonNumber: 1, newSeasonNumber: 2, stages: [], generatedStables: null, result: null };
+    expect(runResultText({ ...base, jobName: 'seasonRollover', summary: { rollover } })).toBe('Season 1 closed · Season 2 preparing');
+    expect(runResultText({ ...base, status: 'running', jobName: 'seasonRollover', summary: { rollover: { ...rollover, newSeasonNumber: null } } })).toBe('Season 1');
     expect(runResultText({ status: 'failed', error: 'arena collapsed', jobName: 'koth', summary: null })).toBe('arena collapsed');
     expect(runResultText({ ...base, jobName: 'league', summary: null })).toBeNull();
   });

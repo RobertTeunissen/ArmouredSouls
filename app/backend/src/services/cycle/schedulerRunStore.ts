@@ -153,6 +153,22 @@ export async function markRunning(runId: number | null, startedAt: Date): Promis
   }
 }
 
+/**
+ * Progress of a running run (season rollover stages). Best-effort: a failed
+ * write is logged and the run carries on; `markFinished` writes the final summary.
+ */
+export async function updateRunSummary(runId: number | null, summary: SchedulerRunSummary): Promise<void> {
+  if (runId === null) return;
+  try {
+    await prisma.schedulerJobRun.update({
+      where: { id: runId },
+      data: { summary: summary as unknown as Prisma.InputJsonValue },
+    });
+  } catch (error) {
+    logger.error(`[SchedulerRuns] could not record the progress of run ${runId} — ${describe(error)}`);
+  }
+}
+
 /** The run ended: success, failed or skipped. */
 export async function markFinished(
   runId: number | null,

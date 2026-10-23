@@ -3,7 +3,7 @@
  * UTC day labels and the one-line run result. Unit-tested without rendering.
  */
 import type { MissedRun, SchedulerJobName, SchedulerRun, SchedulerRunStatus, SchedulerRunTrigger } from './adminCycleApi';
-import { BULK_CYCLES_JOB_NAME } from './adminCycleApi';
+import { BULK_CYCLES_JOB_NAME, SEASON_ROLLOVER_JOB_NAME } from './adminCycleApi';
 import { jobLabel as dashboardJobLabel } from './adminDashboardFormat';
 
 /** What a manual run does, for the confirmation dialog. */
@@ -22,7 +22,9 @@ export const JOB_DESCRIPTIONS: Readonly<Record<SchedulerJobName, string>> = {
 
 /** The dashboard's job labels ("League 1v1"), so every admin page names a job the same way. */
 export function jobLabel(jobName: string): string {
-  return jobName === BULK_CYCLES_JOB_NAME ? 'Bulk cycles' : dashboardJobLabel(jobName);
+  if (jobName === BULK_CYCLES_JOB_NAME) return 'Bulk cycles';
+  if (jobName === SEASON_ROLLOVER_JOB_NAME) return 'Season rollover';
+  return dashboardJobLabel(jobName);
 }
 
 const BATTLE_WORD: Readonly<Partial<Record<string, string>>> = {
@@ -105,6 +107,10 @@ export function runResultText(run: Pick<SchedulerRun, 'jobName' | 'status' | 'su
   const summary = run.summary;
   if (!summary) return null;
   if (summary.skippedReason === 'season_preparation') return 'Skipped: the season is preparing';
+  if (summary.rollover) {
+    const { seasonNumber, newSeasonNumber } = summary.rollover;
+    return newSeasonNumber !== null ? `Season ${seasonNumber} closed · Season ${newSeasonNumber} preparing` : `Season ${seasonNumber}`;
+  }
   if (summary.bulk) {
     const { cyclesCompleted, cyclesRequested } = summary.bulk;
     return `${cyclesCompleted} of ${cyclesRequested} cycle${cyclesRequested === 1 ? '' : 's'} completed`;

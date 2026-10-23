@@ -957,7 +957,7 @@ model SchedulerProcess {
 // survives it. Written non-fatally: a failed write never fails a job.
 model SchedulerJobRun {
   id                Int              @id @default(autoincrement())
-  /// A scheduler job name, or "bulkCycles" for the admin bulk runner.
+  /// A scheduler job name, "bulkCycles" for the admin bulk runner, or "seasonRollover".
   jobName           String           @map("job_name") @db.VarChar(40)
   /// "cron" | "manual" | "resume" | "bulk"
   trigger           String           @db.VarChar(10)

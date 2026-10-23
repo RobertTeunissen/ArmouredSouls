@@ -6,6 +6,7 @@
  * `routes/adminMaintenance.ts` (`POST /cycles/bulk`).
  */
 import { api } from './api';
+import type { RolloverRunSummary } from './seasonApi';
 
 /** The ten scheduler jobs, in the backend's tuple order. */
 export const SCHEDULER_JOB_NAMES = [
@@ -24,7 +25,9 @@ export type SchedulerJobName = (typeof SCHEDULER_JOB_NAMES)[number];
 
 /** Job name of an admin bulk-cycle run in the history. */
 export const BULK_CYCLES_JOB_NAME = 'bulkCycles';
-export type SchedulerHistoryJobName = SchedulerJobName | typeof BULK_CYCLES_JOB_NAME;
+/** Job name of a season rollover in the history (Season Control). */
+export const SEASON_ROLLOVER_JOB_NAME = 'seasonRollover';
+export type SchedulerHistoryJobName = SchedulerJobName | typeof BULK_CYCLES_JOB_NAME | typeof SEASON_ROLLOVER_JOB_NAME;
 
 export type SchedulerRunStatus = 'queued' | 'running' | 'success' | 'failed' | 'skipped' | 'interrupted';
 export type SchedulerRunTrigger = 'cron' | 'manual' | 'resume' | 'bulk';
@@ -46,6 +49,8 @@ export interface SchedulerRunSummary {
     includeKoth: boolean;
     includeDailyFinances: boolean;
   };
+  /** Season rollovers: stage progress and result. */
+  rollover?: RolloverRunSummary;
 }
 
 export interface SchedulerRun {

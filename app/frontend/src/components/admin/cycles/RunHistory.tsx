@@ -7,6 +7,7 @@ import { useId } from 'react';
 import type { ReactNode, Ref } from 'react';
 import {
   BULK_CYCLES_JOB_NAME,
+  SEASON_ROLLOVER_JOB_NAME,
   SCHEDULER_JOB_NAMES,
   type SchedulerHistoryEntry,
   type SchedulerHistoryJobName,
@@ -121,7 +122,7 @@ export function RunHistory({ page, loading, error, query, now, onQueryChange, on
         className={SELECT}
       >
         <option value="">All jobs</option>
-        {[...SCHEDULER_JOB_NAMES, BULK_CYCLES_JOB_NAME].map((name) => <option key={name} value={name}>{jobLabel(name)}</option>)}
+        {[...SCHEDULER_JOB_NAMES, BULK_CYCLES_JOB_NAME, SEASON_ROLLOVER_JOB_NAME].map((name) => <option key={name} value={name}>{jobLabel(name)}</option>)}
       </select>
       <button
         type="button"

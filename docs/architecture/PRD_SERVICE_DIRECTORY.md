@@ -2,12 +2,13 @@
 
 **Project**: Armoured Souls
 **Document Type**: Product Requirements Document (PRD)
-**Version**: v1.9
+**Version**: v1.10
 **Last Updated**: October 23, 2026
 **Status**: ✅ Implemented
 **Owner**: Robert Teunissen
 
 **Revision History**:
+- v1.10 (Oct 23, 2026): Season Control redesign: `season/adminSeasonRolloverRunService`, `season/adminSeasonStateService`, `season/seasonRolloverHistoryService`, `season/rolloverProgress` (stage progress of `seasonRolloverService`).
 - v1.9 (Oct 23, 2026): Persistent scheduler run history (`cycle/schedulerRunStore`, `schedulerMissedRuns`, `schedulerHistoryService`), background manual runs and `admin/adminBulkCycleRunService` (Cycle Controls redesign).
 - v1.8 (Oct 19, 2026): Added `robot/robotReferenceCleanup`; `resetService` now works for stables with battle history (#294).
 - v1.7 (Oct 19, 2026): Listed `unifiedFacilityROIService` and the recorded facility returns modules in `economy/` (#542).
@@ -92,6 +93,9 @@ Admin panel operations — stats dashboards, cycle execution, battle viewer, HP 
 | `adminPlayerActivityService`, `adminKpiSnapshotService` | Login-based human-player counts; one `admin_kpi_snapshots` row per competitive settlement (non-fatal) for 7-day trends |
 | `adminThresholds` | Shared thresholds: bankruptcy risk, inactivity, settlement overdue, stuck-match grace |
 | `adminCycleService` | Bulk cycle execution (`executeBulkCycles`), snapshot backfill |
+| `season/adminSeasonRolloverRunService` | `POST /api/admin/seasons/rollover`: the admin rollover under the scheduler lock (`seasonRollover`), recorded as a run; `startAdminRollover` runs in the background (202), `runAdminRollover` waits. 409 while a rollover of either trigger is queued or running |
+| `season/adminSeasonStateService` | `GET /api/admin/seasons/state`: season state, configuration, `startedAt`, `nextSettlementAt`, the active rollover with stage progress |
+| `season/seasonRolloverHistoryService` | `GET /api/admin/seasons/history`: completed seasons with their rollover and failed attempts, from `seasonRollover` runs and older `season_rollover` audit rows |
 | `adminBulkCycleRunService` | `POST /api/admin/cycles/bulk`: runs bulk cycles under the scheduler lock and records them in the run history (`bulkCycles`); `startBulkCycles` runs in the background (202), `runBulkCycles` waits. 409 while one is active |
 | `adminBattleService` | Battle list queries, battle detail for admin viewer |
 | `adminMaintenanceService` | HP recalculation, robot repair (admin-triggered) |
