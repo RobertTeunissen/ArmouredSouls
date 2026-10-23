@@ -174,10 +174,6 @@ jest.mock('../../src/services/cycle/cycleScheduler', () => ({
   triggerJob: jest.fn().mockResolvedValue(undefined),
 }));
 
-jest.mock('../../src/services/practice-arena/practiceArenaMetrics', () => ({
-  __esModule: true,
-  practiceArenaMetrics: { getStats: jest.fn(), getHistory: jest.fn().mockResolvedValue([]) },
-}));
 
 jest.mock('../../src/services/moderation/adminUploadsHandler', () => ({
   __esModule: true,

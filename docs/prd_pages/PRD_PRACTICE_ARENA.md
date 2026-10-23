@@ -2,7 +2,7 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: 1.0  
+**Version**: 1.1  
 **Date**: April 2026  
 **Status**: ✅ IMPLEMENTED
 
@@ -10,7 +10,7 @@
 
 ## Executive Summary
 
-The Practice Arena (in-universe: "Combat Simulation Lab") is a 1v1 sandbox battle simulator that allows players to run consequence-free battles between their own robots or against configurable AI sparring partners. It reuses the exact same `simulateBattle` combat engine and `convertBattleEvents`/`convertSimulatorEvents` narrative pipeline as real league and tournament battles — zero forked or custom combat logic. Practice battles produce zero database writes, do not affect robot HP, ELO, league points, credits, fame, or prestige, and are excluded from battle history. Results are persisted in the browser's localStorage (last 10 results, keyed per player) so they survive page navigation and refreshes.
+The Practice Arena (in-universe: "Combat Simulation Lab") is a 1v1 sandbox battle simulator that allows players to run consequence-free battles between their own robots or against configurable AI sparring partners. It reuses the exact same `simulateBattle` combat engine and `convertBattleEvents`/`convertSimulatorEvents` narrative pipeline as real league and tournament battles — zero forked or custom combat logic. Practice battles write no battle records (only the stable's practice counter, achievements and one usage event per request), do not affect robot HP, ELO, league points, credits, fame, or prestige, and are excluded from battle history. Results are persisted in the browser's localStorage (last 10 results, keyed per player) so they survive page navigation and refreshes.
 
 **Key Capabilities:**
 - ✅ 1v1 battles between owned robots or against AI sparring partners
@@ -20,10 +20,10 @@ The Practice Arena (in-universe: "Combat Simulation Lab") is a 1v1 sandbox battl
 - ✅ 4 sparring partner tiers: WimpBot (attr 1), AverageBot (attr 5), ExpertBot (attr 10), UltimateBot (attr 15)
 - ✅ Auto-weapon selection via existing `selectWeapon`/`selectShield` from `weaponSelection.ts`
 - ✅ Batch runs (2-10 battles) with aggregate statistics
-- ✅ Zero database writes — no Battle, BattleParticipant, robot, or user records modified
+- ✅ No battle records — no Battle, BattleParticipant or robot rows; only the stable's practice counter, achievements and one usage event per request
 - ✅ Rate limiting: 30 battles per 15 minutes per user
 - ✅ Cycle execution guard: 503 when real battles are processing
-- ✅ In-memory admin metrics with daily flush to `practice_arena_daily_stats` table
+- ✅ Admin usage metrics persisted per request in `practice_arena_events` (admin Practice Arena page)
 - ✅ localStorage result history (last 10 results per player)
 
 ---
@@ -31,7 +31,7 @@ The Practice Arena (in-universe: "Combat Simulation Lab") is a 1v1 sandbox battl
 ## Related Documentation
 
 - [BATTLE_SIMULATION_ARCHITECTURE.md](../prd_core/BATTLE_SIMULATION_ARCHITECTURE.md) — Combat engine architecture (Practice Arena is the fifth consumer)
-- [PRD_ADMIN_PAGE.md](PRD_ADMIN_PAGE.md) — Admin portal (includes Practice Arena metrics in Dashboard tab)
+- [PRD_ADMIN_PAGE.md](PRD_ADMIN_PAGE.md) — Admin portal (Practice Arena page at `/admin/practice-arena`)
 - [PRD_SECURITY.md](../architecture/PRD_SECURITY.md) — Security strategy (includes Practice Arena rate limiting)
 - [COMBAT_FORMULAS.md](../prd_core/COMBAT_FORMULAS.md) — Combat math reference
 - [COMBAT_MESSAGES.md](../prd_core/COMBAT_MESSAGES.md) — Narrative generation system
@@ -250,23 +250,18 @@ Returns the 4 sparring partner type definitions. Protected by `authenticateToken
 }
 ```
 
+### `GET /api/admin/practice-arena/overview`
+
+The admin Practice Arena page (`authenticateToken` + `requireAdmin`): the last 30 UTC days (battles, requests, players, rate-limit and cycle refusals, unavailable time), season totals from each stable's `totalPracticeBattles`, the top 10 practitioners with their last recorded battle, and the usage split (matchups, sparring tiers, batch sizes, what-if overrides). Shape and definitions: `docs/guides/ADMIN_PANEL_GUIDE.md` §Practice Arena.
+
 ### `GET /api/admin/practice-arena/stats`
 
-Returns current in-memory counters plus historical daily summaries. Protected by `authenticateToken` + `requireAdmin`.
+The original shape, now computed from `practice_arena_events`. `totalBattlesSinceStart` is this season's battles (it used to count since the last restart); `history` lists the recorded UTC days, newest first.
 
-**Response:**
 ```json
 {
-  "current": {
-    "totalBattlesSinceStart": 1247,
-    "battlesToday": 83,
-    "rateLimitHitsToday": 2,
-    "uniquePlayersToday": 15
-  },
-  "history": [
-    { "date": "2026-04-02", "totalBattles": 142, "uniquePlayers": 23, "rateLimitHits": 5 },
-    { "date": "2026-04-01", "totalBattles": 98, "uniquePlayers": 18, "rateLimitHits": 1 }
-  ]
+  "current": { "totalBattlesSinceStart": 798, "battlesToday": 14, "rateLimitHitsToday": 2, "uniquePlayersToday": 3 },
+  "history": [{ "date": "2026-10-24", "totalBattles": 14, "uniquePlayers": 3, "rateLimitHits": 2 }]
 }
 ```
 
@@ -319,38 +314,41 @@ When the API returns 503 `CYCLE_IN_PROGRESS`, the page displays "Combat Simulati
 
 ## Admin Metrics
 
-### In-Memory Counters
+### Usage events
 
-The `practiceArenaMetrics` singleton tracks:
-- `totalBattlesSinceStart` — lifetime counter (resets on server restart)
-- `battlesToday` — daily counter
-- `rateLimitHitsToday` — daily counter
-- `uniquePlayersToday` — Set of player IDs (daily)
+Every `POST /api/practice-arena/battle` writes one `practice_arena_events` row (`practiceArenaUsageService.recordPracticeRequest`, fire-and-forget: a failed write is logged and never fails the request):
 
-### Daily Flush
+- `battle` — after the battles ran; `battles` = the count. A failed simulation records nothing.
+- `rate_limited` — refused by the 30-per-15-minutes limit (429).
+- `cycle_busy` — refused because a scheduler job holds the lock (503 `CYCLE_IN_PROGRESS`). Recorded before validation, so only the count is kept.
 
-At settlement time (23:00 UTC), `practiceArenaMetrics.flushAndReset()` is called by the settlement cycle. It:
-1. Inserts one row into `practice_arena_daily_stats` with the current day's counters and `playerIds` as a JSON array
-2. Zeroes `battlesToday`, `rateLimitHitsToday`, and `uniquePlayersToday`
-3. Does NOT reset `totalBattlesSinceStart`
+Each row also stores the matchup (`owned_vs_sparring`, `owned_vs_owned`, `sparring_vs_sparring`), the sparring opponent's tier (the second slot when it is a sparring partner, else the first) and whether an owned robot carried what-if overrides. Rows are per-season history: the season rollover empties the table.
 
-### Database Table: `practice_arena_daily_stats`
+This replaced in-memory counters flushed at settlement, which lost every battle since the last settlement on each restart (on ACC 455 of 798 Season 1 practice battles were never recorded) and filed each day under the next date. `practice_arena_daily_stats` is no longer written.
+
+### Unavailable time
+
+The admin overview reports, per UTC day, how long the arena refused practice: the union of the scheduler run intervals (`scheduler_job_runs` started → finished) that day. On ACC that was 1h 44m to 3h 15m a day in October, between 08:00 and 19:00 UTC. The guard itself is unchanged.
+
+### Database Table: `practice_arena_events`
 
 | Column | Type | Description |
 |--------|------|-------------|
 | `id` | Int (autoincrement) | Primary key |
-| `date` | Date (unique) | UTC date |
-| `totalBattles` | Int | Battles executed that day |
-| `uniquePlayers` | Int | Distinct players that day |
-| `rateLimitHits` | Int | Rate limit rejections that day |
-| `playerIds` | JSON | Array of integer user IDs |
-| `createdAt` | DateTime | Row creation timestamp |
+| `user_id` | Int | Requesting player (no FK) |
+| `occurred_at` | DateTime | When the request was handled |
+| `outcome` | VarChar(16) | `battle`, `rate_limited`, `cycle_busy` |
+| `requested` | Int | Battles requested (1–10) |
+| `battles` | Int | Battles run (`requested` for `battle`, else 0) |
+| `matchup` | VarChar(24)? | Slot types; null for `cycle_busy` |
+| `bot_tier` | VarChar(16)? | Sparring opponent's tier |
+| `overrides` | Boolean | What-if overrides used |
 
-### Admin Dashboard Integration
+Indexes: `occurred_at`; `(user_id, occurred_at)`.
 
-The Dashboard tab in the admin portal displays a "Practice Arena" section showing:
-- Battles today, unique players today, rate limit hits today, total battles since server start
-- Historical trend from the `practice_arena_daily_stats` table (last 30 days)
+### Admin page
+
+`/admin/practice-arena`: status strip, last 30 UTC days, top practitioners this season, how it is used. See `docs/guides/ADMIN_PANEL_GUIDE.md` §Practice Arena.
 
 ---
 
@@ -359,8 +357,9 @@ The Dashboard tab in the admin portal displays a "Practice Arena" section showin
 ### Backend Tests ✅
 - `practiceArenaService.test.ts` — Service unit tests (robot building, sparring partners, battle execution, zero DB writes)
 - `practiceArena.route.test.ts` — Route tests (validation, auth, rate limiting, cycle guard, batch)
-- `practiceArenaMetrics.test.ts` — Metrics counter tests (recording, flushing, history)
-- `practiceArena.property.test.ts` — Property-based tests with fast-check (zero side effects, weapon selection validity, override application, cost estimation, validation rejection, metrics accuracy, flush preservation)
+- `practiceArenaUsageService.test.ts` — Usage recording and aggregation (classification, UTC days, unavailable time, usage split)
+- `tests/integration/practiceArenaUsage.test.ts` — Admin overview against the database
+- `practiceArena.property.test.ts` — Property-based tests with fast-check (zero side effects, weapon selection validity, override application, cost estimation, validation rejection, per-day usage counts, unavailable time as the union of lock holds)
 
 ### Frontend Tests ✅
 - `PracticeArenaPage.test.tsx` — Page component tests (slots, toggles, bot tiers, loading, results, history, rate limits, responsive)
@@ -373,7 +372,7 @@ The Dashboard tab in the admin portal displays a "Practice Arena" section showin
 
 ### Backend
 - `app/backend/src/services/practice-arena/practiceArenaService.ts` — Core service (robot building, battle execution)
-- `app/backend/src/services/practice-arena/practiceArenaMetrics.ts` — In-memory metrics singleton
+- `app/backend/src/services/practice-arena/practiceArenaUsageService.ts` — Usage recording and the admin overview
 - `app/backend/src/services/practice-arena/index.ts` — Barrel exports
 - `app/backend/src/routes/practiceArena.ts` — API routes with Zod validation, rate limiting, cycle guard
 
@@ -382,5 +381,5 @@ The Dashboard tab in the admin portal displays a "Practice Arena" section showin
 - `app/frontend/src/hooks/usePracticeHistory.ts` — localStorage history hook
 
 ### Database
-- `app/backend/prisma/schema.prisma` — `PracticeArenaDailyStats` model
+- `app/backend/prisma/schema.prisma` — `PracticeArenaEvent` model (`practice_arena_events`); `PracticeArenaDailyStats` is no longer written
 - One migration: `add-practice-arena-daily-stats`

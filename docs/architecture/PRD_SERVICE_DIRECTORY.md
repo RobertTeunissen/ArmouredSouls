@@ -2,12 +2,13 @@
 
 **Project**: Armoured Souls
 **Document Type**: Product Requirements Document (PRD)
-**Version**: v1.10
+**Version**: v1.11
 **Last Updated**: October 23, 2026
 **Status**: ✅ Implemented
 **Owner**: Robert Teunissen
 
 **Revision History**:
+- v1.11 (Oct 23, 2026): `practice-arena/practiceArenaUsageService` replaces the in-memory `practiceArenaMetrics` (admin Practice Arena redesign).
 - v1.10 (Oct 23, 2026): Season Control redesign: `season/adminSeasonRolloverRunService`, `season/adminSeasonStateService`, `season/seasonRolloverHistoryService`, `season/rolloverProgress` (stage progress of `seasonRolloverService`).
 - v1.9 (Oct 23, 2026): Persistent scheduler run history (`cycle/schedulerRunStore`, `schedulerMissedRuns`, `schedulerHistoryService`), background manual runs and `admin/adminBulkCycleRunService` (Cycle Controls redesign).
 - v1.8 (Oct 19, 2026): Added `robot/robotReferenceCleanup`; `resetService` now works for stables with battle history (#294).
@@ -290,8 +291,8 @@ Offline practice battles against synthetic opponents.
 
 | Service | Purpose |
 |---------|---------|
-| `practiceArenaService` | Synthetic opponent generation, practice battle execution (no DB writes) |
-| `practiceArenaMetrics` | Daily practice battle stats (in-memory, flushed during settlement) |
+| `practiceArenaService` | Synthetic opponent generation, practice battle execution (no battle records; stable practice counter and achievements only) |
+| `practiceArenaUsageService` | One `practice_arena_events` row per request (battle, rate_limited, cycle_busy; never fails the request) and the admin overview (`GET /api/admin/practice-arena/overview`, `/stats`): UTC days, season totals, top practitioners, usage, unavailable time from scheduler runs |
 
 ### robot/
 Robot management — the full lifecycle from creation to combat.

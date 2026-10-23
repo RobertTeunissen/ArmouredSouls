@@ -25,7 +25,13 @@ export {
 } from './practiceArenaService';
 
 export {
-  practiceArenaMetrics,
-  PracticeArenaMetrics,
-  type PracticeArenaStatsResponse,
-} from './practiceArenaMetrics';
+  recordPracticeRequest,
+  classifyRequest,
+  getPracticeArenaOverview,
+  getLegacyPracticeArenaStats,
+  type PracticeOutcome,
+  type PracticeMatchup,
+  type PracticeArenaOverview,
+  type PracticeDayStats,
+  type PracticeUsage,
+} from './practiceArenaUsageService';

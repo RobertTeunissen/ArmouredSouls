@@ -26,7 +26,7 @@ import {
 import { backfillCycleSnapshots } from '../services/admin/adminCycleService';
 import { runBulkCycles, startBulkCycles } from '../services/admin/adminBulkCycleRunService';
 import { SchedulerError } from '../errors/schedulerErrors';
-import { practiceArenaMetrics } from '../services/practice-arena/practiceArenaMetrics';
+import { getLegacyPracticeArenaStats, getPracticeArenaOverview } from '../services/practice-arena/practiceArenaUsageService';
 
 const router = express.Router();
 
@@ -218,14 +218,21 @@ router.post('/scheduler/trigger/:jobName', authenticateToken, requireAdmin, vali
 });
 
 /**
+ * GET /api/admin/practice-arena/overview
+ * The admin Practice Arena page: UTC days, season totals, top practitioners,
+ * usage and unavailable time (persisted, survives restarts).
+ */
+router.get('/practice-arena/overview', authenticateToken, requireAdmin, validateRequest({}), async (_req: Request, res: Response) => {
+  res.json(await getPracticeArenaOverview());
+});
+
+/**
  * GET /api/admin/practice-arena/stats
- * Returns current in-memory practice arena metrics and historical daily stats.
+ * The original shape (`current` + daily `history`), computed from the
+ * persisted events. `totalBattlesSinceStart` is this season's battles.
  */
 router.get('/practice-arena/stats', authenticateToken, requireAdmin, validateRequest({}), async (_req: Request, res: Response) => {
-  res.json({
-    current: practiceArenaMetrics.getStats(),
-    history: await practiceArenaMetrics.getHistory(),
-  });
+  res.json(await getLegacyPracticeArenaStats());
 });
 
 export default router;

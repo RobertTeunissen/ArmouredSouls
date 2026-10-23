@@ -213,6 +213,8 @@ export async function purgeHistory(): Promise<Record<string, number>> {
     'league_history',
     'leaderboard_cache',
     'practice_arena_daily_stats',
+    // Practice Arena usage (admin Practice Arena page) is per-season history.
+    'practice_arena_events',
     'search_analytics_events',
     'search_analytics_failures',
     // Spec #55 R9.5: Turn_Records are per-season history.
@@ -332,7 +334,7 @@ export async function previewRollover(): Promise<RolloverPreview> {
     robotsWithImages,
     battleParticipants, tuningAllocations, subscriptions, teamBattleMembers,
     scheduledMatchParticipants, tournamentMatches, weaponRefinements, userAchievements,
-    robots, scheduledMatches, searchEvents, searchFailures, automatonTurns,
+    robots, scheduledMatches, searchEvents, searchFailures, automatonTurns, practiceEvents,
   ] = await Promise.all([
     prisma.user.count({ where: { isGenerated: false } }),
     prisma.robot.count({ where: { user: { isGenerated: false } } }),
@@ -368,6 +370,7 @@ export async function previewRollover(): Promise<RolloverPreview> {
     prisma.searchAnalyticsEvent.count(),
     prisma.searchAnalyticsFailure.count(),
     prisma.automatonTurn.count(),
+    prisma.practiceArenaEvent.count(),
   ]);
 
   const stablesOf = (type: StableType): number => typeStables[STABLE_TYPES.indexOf(type)] ?? 0;
@@ -403,6 +406,7 @@ export async function previewRollover(): Promise<RolloverPreview> {
       search_analytics_events: searchEvents,
       search_analytics_failures: searchFailures,
       automaton_turns: automatonTurns,
+      practice_arena_events: practiceEvents,
     },
     // Uploaded images are retained, never deleted, by a rollover.
     imagesRetained: robotsWithImages,

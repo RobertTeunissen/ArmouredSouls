@@ -45,9 +45,15 @@ jest.mock('../../src/services/admin/adminAuditLogService', () => ({
 }));
 
 jest.mock('../../src/services/admin/adminMaintenanceService', () => ({ __esModule: true, repairAllRobotsAdmin: jest.fn(), recalculateAllRobotHP: jest.fn() }));
+const mockPracticeOverview = jest.fn();
+const mockPracticeStats = jest.fn();
+jest.mock('../../src/services/practice-arena/practiceArenaUsageService', () => ({
+  __esModule: true,
+  getPracticeArenaOverview: () => mockPracticeOverview(),
+  getLegacyPracticeArenaStats: () => mockPracticeStats(),
+}));
 jest.mock('../../src/services/admin/adminCycleService', () => ({ __esModule: true, backfillCycleSnapshots: jest.fn() }));
 jest.mock('../../src/utils/economyCalculations', () => ({ __esModule: true, processAllDailyFinances: jest.fn() }));
-jest.mock('../../src/services/practice-arena/practiceArenaMetrics', () => ({ __esModule: true, practiceArenaMetrics: { getStats: jest.fn(), getHistory: jest.fn() } }));
 jest.mock('../../src/config/logger', () => ({ __esModule: true, default: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() } }));
 jest.mock('../../src/services/security/securityMonitor', () => ({
   securityMonitor: { logValidationFailure: jest.fn(), logAuthorizationFailure: jest.fn(), logAdminAccess: jest.fn(), trackRateLimitViolation: jest.fn() },
@@ -230,5 +236,28 @@ describe('POST /api/admin/cycles/bulk', () => {
     const res = await request(baseUrl).post('/api/admin/cycles/bulk').send({ cycles: 1 });
     expect(res.status).toBe(500);
     expect(res.body).toEqual({ error: 'Failed to run bulk cycles' });
+  });
+});
+
+describe('GET /api/admin/practice-arena/overview and /stats', () => {
+  it('returns the persisted overview and the original stats shape', async () => {
+    mockPracticeOverview.mockResolvedValue({ windowDays: 30, days: [], season: { number: 1, battles: 798, players: 20 } });
+    mockPracticeStats.mockResolvedValue({ current: { totalBattlesSinceStart: 798, battlesToday: 0, rateLimitHitsToday: 0, uniquePlayersToday: 0 }, history: [] });
+
+    const overview = await request(baseUrl).get('/api/admin/practice-arena/overview');
+    expect(overview.status).toBe(200);
+    expect(overview.body).toMatchObject({ windowDays: 30, season: { battles: 798 } });
+
+    const stats = await request(baseUrl).get('/api/admin/practice-arena/stats');
+    expect(stats.status).toBe(200);
+    expect(stats.body.current.totalBattlesSinceStart).toBe(798);
+  });
+
+  it('requires an admin', async () => {
+    mockUser = { userId: 2, username: 'player', role: 'user' };
+    expect((await request(baseUrl).get('/api/admin/practice-arena/overview')).status).toBe(403);
+    mockUser = null;
+    expect((await request(baseUrl).get('/api/admin/practice-arena/stats')).status).toBe(401);
+    expect(mockPracticeOverview).not.toHaveBeenCalled();
   });
 });

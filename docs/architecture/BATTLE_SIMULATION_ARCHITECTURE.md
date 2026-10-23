@@ -312,7 +312,7 @@ services/practice-arena/
   │
   └── practiceArenaMetrics.ts
         Pure in-memory counters, no battle-level DB dependency
-        (daily flush to practice_arena_daily_stats during settlement only)
+        (one practice_arena_events row per request, written by the route)
 ```
 
 ### Execution Flow
@@ -904,7 +904,7 @@ The acc/production environment uses individual cron triggers rather than a monol
 | `src/services/koth/kothBattleOrchestrator.ts` | KotH battle orchestration, placement rewards, zone scoring |
 | `src/services/koth/kothMatchmakingService.ts` | KotH-specific matchmaking (snake-draft, one-per-stable) |
 | `src/services/practice-arena/practiceArenaService.ts` | Practice Arena battle service — builds virtual robots, calls `simulateBattle`, returns results with zero DB writes |
-| `src/services/practice-arena/practiceArenaMetrics.ts` | In-memory usage counters with daily flush to `practice_arena_daily_stats` |
+| `src/services/practice-arena/practiceArenaUsageService.ts` | Usage recording (`practice_arena_events`, one row per request) and the admin overview |
 | `src/services/common/eventLogger.ts` | Audit log writer (one event per robot pattern) |
 | `src/services/economy/streamingRevenueService.ts` | Streaming revenue calculation and awarding |
 | `src/utils/battleMath.ts` | ELO calculations (K-factor, expected score, delta) |

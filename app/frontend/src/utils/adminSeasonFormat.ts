@@ -107,7 +107,7 @@ const GROUPS: ReadonlyArray<{ label: string; tables: readonly string[] }> = [
   },
   {
     label: 'Ledger, audit and snapshots',
-    tables: ['financial_ledger', 'audit_logs', 'cycle_snapshots', 'league_history', 'leaderboard_cache', 'practice_arena_daily_stats', 'search_analytics_events', 'search_analytics_failures', 'automaton_turns'],
+    tables: ['financial_ledger', 'audit_logs', 'cycle_snapshots', 'league_history', 'leaderboard_cache', 'practice_arena_daily_stats', 'search_analytics_events', 'search_analytics_failures', 'automaton_turns', 'practice_arena_events'],
   },
 ];
 const OTHER_LABEL = 'Standings, tournaments and other';

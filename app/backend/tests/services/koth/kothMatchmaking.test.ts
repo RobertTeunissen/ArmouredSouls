@@ -133,10 +133,6 @@ jest.mock('../../../src/services/tag-team/tagTeamMatchmakingService', () => ({
   runTagTeamMatchmaking: jest.fn(),
 }));
 
-jest.mock('../../../src/services/practice-arena/practiceArenaMetrics', () => ({
-  __esModule: true,
-  practiceArenaMetrics: { flushAndReset: jest.fn() },
-}));
 
 jest.mock('../../../src/services/common/eventLogger', () => ({
   __esModule: true,

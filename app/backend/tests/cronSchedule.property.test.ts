@@ -110,11 +110,6 @@ jest.mock('../src/services/common/eventLogger', () => ({
     CYCLE_END_BALANCE: 'CYCLE_END_BALANCE',
   },
 }));
-jest.mock('../src/services/practice-arena/practiceArenaMetrics', () => ({
-  practiceArenaMetrics: {
-    flushAndReset: jest.fn().mockResolvedValue(undefined),
-  },
-}));
 jest.mock('../src/services/notifications/notification-service', () => ({
   buildSuccessMessage: jest.fn().mockReturnValue(null),
   buildErrorMessage: jest.fn().mockReturnValue('error'),

@@ -803,7 +803,9 @@ model ResetLog {
   @@map("reset_logs")
 }
 
-// Practice Arena daily stats - one row per day, flushed from in-memory counters during settlement
+// Practice Arena daily stats — superseded by practice_arena_events (admin
+// Practice Arena redesign). No longer written; kept so the migration stays
+// additive. Rows from before the switch are emptied at the next rollover.
 model PracticeArenaDailyStats {
   id            Int      @id @default(autoincrement())
   date          DateTime @unique @db.Date
@@ -814,6 +816,31 @@ model PracticeArenaDailyStats {
   createdAt     DateTime @default(now())
 
   @@map("practice_arena_daily_stats")
+}
+
+// One row per Practice Arena request (admin Practice Arena page): the battles
+// it ran, or why it was refused. Per-season history: emptied at rollover.
+model PracticeArenaEvent {
+  id                Int      @id @default(autoincrement())
+  /// Requesting player. No FK: an event outlives a deleted account until rollover.
+  userId            Int      @map("user_id")
+  occurredAt        DateTime @default(now()) @map("occurred_at")
+  /// "battle" | "rate_limited" | "cycle_busy"
+  outcome           String   @db.VarChar(16)
+  /// Battles requested (1–10).
+  requested         Int
+  /// Battles run: `requested` for "battle", 0 for a refusal.
+  battles           Int
+  /// "owned_vs_sparring" | "owned_vs_owned" | "sparring_vs_sparring"; null when the request was refused before validation.
+  matchup           String?  @db.VarChar(24)
+  /// Tier of the sparring partner faced (the second slot when it is one, else the first).
+  botTier           String?  @map("bot_tier") @db.VarChar(16)
+  /// An owned robot carried what-if overrides.
+  overrides         Boolean  @default(false)
+
+  @@index([occurredAt])
+  @@index([userId, occurredAt])
+  @@map("practice_arena_events")
 }
 
 // Changelog entries for the in-game "What's New" feed

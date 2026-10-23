@@ -23,7 +23,6 @@ import { applyLoadoutFallbacks, evaluateCombatEntry } from '../battle/combatRead
 import { verifyRobotOwnership } from '../../middleware/ownership';
 import { Prisma, Weapon } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
-import { practiceArenaMetrics } from './practiceArenaMetrics';
 import { AppError } from '../../errors';
 import type { NarrativeEvent } from '../../types/battleLogTypes';
 import { achievementService, type UnlockedAchievement } from '../achievement';
@@ -565,8 +564,9 @@ async function buildRobotFromSlot(
 
 /**
  * Executes a single practice battle. Builds two RobotWithWeapons from the
- * request, calls simulateBattle, generates narrative, increments metrics.
- * Zero database writes.
+ * request, calls simulateBattle and generates narrative. The only writes are
+ * the stable's practice counter and achievements; usage is recorded by the
+ * route (`practiceArenaUsageService`).
  */
 export async function executePracticeBattle(
   userId: number,
@@ -594,9 +594,6 @@ export async function executePracticeBattle(
     robot2ELO: Number(robot2.elo),
     leagueType: 'practice',
   });
-
-  // Track metrics
-  practiceArenaMetrics.recordBattle(userId);
 
   // Increment totalPracticeBattles and check achievements
   let achievementUnlocks: UnlockedAchievement[] = [];
@@ -659,8 +656,6 @@ export async function executePracticeBatch(
       robot2ELO: Number(robot2.elo),
       leagueType: 'practice',
     });
-
-    practiceArenaMetrics.recordBattle(userId);
 
     results.push({
       combatResult,

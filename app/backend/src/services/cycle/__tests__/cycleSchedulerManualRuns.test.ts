@@ -102,7 +102,6 @@ jest.mock('../../common/eventLogger', () => ({
 jest.mock('../../achievement', () => ({
   achievementService: { checkAndAward: jest.fn(async () => []), refreshRarityCache: jest.fn(async () => undefined) },
 }));
-jest.mock('../../practice-arena/practiceArenaMetrics', () => ({ practiceArenaMetrics: { flushAndReset: jest.fn(async () => undefined) } }));
 jest.mock('../../../utils/userGeneration', () => ({ generateBattleReadyUsers: jest.fn(async () => ({ usersCreated: 0, robotsCreated: 0 })) }));
 jest.mock('../../leaderboard/leaderboardService', () => ({ leaderboardService: { refreshAll: jest.fn(async () => undefined) } }));
 jest.mock('../../../lib/prisma', () => ({

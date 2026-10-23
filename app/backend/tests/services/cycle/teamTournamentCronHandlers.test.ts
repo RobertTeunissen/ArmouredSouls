@@ -160,9 +160,6 @@ jest.mock('../../../src/services/common/eventLogger', () => ({
   })),
   EventType: { PASSIVE_INCOME: 'passive_income', OPERATING_COSTS: 'operating_costs', CYCLE_END_BALANCE: 'cycle_end_balance' },
 }));
-jest.mock('../../../src/services/practice-arena/practiceArenaMetrics', () => ({
-  practiceArenaMetrics: { flushAndReset: jest.fn() },
-}));
 jest.mock('../../../src/services/notifications/integration', () => ({
   __esModule: true,
   JobContext: {},

@@ -22,7 +22,7 @@ All pages manage their own data fetching. The sidebar collapses to icons on narr
 |---------|------|-------|-------------|
 | **Overview** | Dashboard | `/admin/dashboard` | Status strip, needs attention, player KPIs, battle activity per mode |
 | **Game Operations** | Cycle Controls | `/admin/cycles` | Running job, daily schedule with Run buttons, persistent run history (restarts, missed and interrupted runs), bulk cycle runner |
-| | Practice Arena | `/admin/practice-arena` | Practice battle usage and daily trends |
+| | Practice Arena | `/admin/practice-arena` | Practice usage per UTC day, refusals and unavailable time, top practitioners, how it is used |
 | **Battle Data** | Battle Logs | `/admin/battles` | Paginated battle history with type filters and detail slide-over |
 | | Robot Stats | `/admin/robot-stats` | Attribute analysis, outlier detection, win rate correlation |
 | | Meta | `/admin/meta` | What stables choose: stances, loadouts, yield thresholds, facilities, weapons |
@@ -305,9 +305,28 @@ All filters live in the URL (`period`, `from`, `to`, `count`, `tab`, `q`, `page`
 
 ### Practice Arena (`/admin/practice-arena`)
 
-Current session stats (battles today, unique players, rate limit hits, total since start) and daily usage history table.
+Answers: who practises, how much, how they use the arena, and how often it turned players away. All times UTC; days are UTC days. Every request is recorded (`practice_arena_events`), so the numbers survive restarts and deploys; the table is emptied at season rollover. Refreshes every 60 s.
 
-**API:** `GET /api/admin/practice-arena/stats`
+Sections, top to bottom:
+
+1. **Status strip** — Battles today (requests, yesterday), Players today, This season (battles and players from each stable's practice counter), Refused today (rate limit · during a job), Unavailable yesterday.
+2. **Last 30 days** — battles and refusals (bars) with players (line), and per day: battles, requests, players, rate limited, during a job, unavailable. Three days show; "Show all 30 days" opens the rest. Below 768 px the table becomes a list.
+3. **Top practitioners this season** — the 10 stables with the most practice battles (their season counter) and their last recorded practice ("before {date}" when it predates recording). Names open the player in Players.
+4. **How it is used** — last 30 days: opponent (own vs sparring, own vs own, sparring vs sparring, by battles), sparring partner tier (the opponent's, by battles), batch size (by requests) and the share of requests with what-if overrides.
+
+**Definitions**
+
+| Term | Definition |
+|---|---|
+| Battle / request | One `POST /api/practice-arena/battle` that ran: 1–10 battles. Recorded after the battles ran; a failed simulation is not counted. |
+| Players | Distinct players with at least one battle that day. |
+| Rate limited | Refused (429) by the limit of 30 battles per 15 minutes per player. |
+| During a job | Refused (503 `CYCLE_IN_PROGRESS`) because a scheduler job held the lock. |
+| Unavailable | Time scheduler jobs held the lock that day (the union of run intervals from Cycle Controls' run history), so practice was refused. "—" before run history existed. |
+| "—" in a day row | Before recording started this season (the later of the switch to per-request recording and the season start): no data, not zero. |
+| This season | Sum of `users.total_practice_battles` (reset at rollover), so it covers the whole season, including battles from before recording started. |
+
+**API:** `GET /api/admin/practice-arena/overview` (the page). `GET /api/admin/practice-arena/stats` keeps its original shape, now computed from the events; `totalBattlesSinceStart` is this season's battles. Both require `authenticateToken` + `requireAdmin`.
 
 ### Repair Log (`/admin/repair-log`)
 
