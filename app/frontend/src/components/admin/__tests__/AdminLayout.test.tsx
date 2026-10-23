@@ -37,6 +37,7 @@ const NAVIGATION_ITEMS = [
   { label: 'Practice Arena', path: '/admin/practice-arena' },
   { label: 'Battle Logs', path: '/admin/battles' },
   { label: 'Robot Stats', path: '/admin/robot-stats' },
+  { label: 'Meta', path: '/admin/meta' },
   { label: 'League Health', path: '/admin/league-health' },
   { label: 'League History', path: '/admin/league-history' },
   { label: 'Tournaments', path: '/admin/tournaments' },

@@ -1,5 +1,6 @@
 /**
- * Dashboard toolbar: the user-type filter, its scope, freshness and Refresh.
+ * Toolbar of the filtered admin overview pages (Dashboard, Meta): the
+ * stable-type filter, what it applies to, freshness and Refresh.
  */
 import type { ReactNode } from 'react';
 import { AdminFilterBar, ADMIN_FOCUS_RING, REAL_PLAYERS_HELP, type UserFilterType } from '../shared';
@@ -8,6 +9,8 @@ import { formatUtcTime } from '../../../utils/adminDashboardFormat';
 export interface DashboardToolbarProps {
   filter: UserFilterType;
   onFilterChange: (filter: UserFilterType) => void;
+  /** What the filter applies to on this page, shown next to it. */
+  scopeNote: string;
   lastUpdated: string | null;
   refreshing: boolean;
   onRefresh: () => void;
@@ -23,6 +26,7 @@ const FILTERS: ReadonlyArray<{ key: UserFilterType; label: string; shortLabel?: 
 export function DashboardToolbar({
   filter,
   onFilterChange,
+  scopeNote,
   lastUpdated,
   refreshing,
   onRefresh,
@@ -35,7 +39,7 @@ export function DashboardToolbar({
         filters={FILTERS.map((option) => ({ ...option, active: option.key === filter }))}
         onFilterToggle={(key) => onFilterChange(key as UserFilterType)}
       >
-        <span className="text-xs text-tertiary">Filter applies to robots, battles and meta</span>
+        <span className="text-xs text-tertiary">{scopeNote}</span>
       </AdminFilterBar>
 
       <div className="flex items-center justify-between gap-3 xl:justify-end xl:mb-4">
