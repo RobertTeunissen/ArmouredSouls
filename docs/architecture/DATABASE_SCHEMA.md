@@ -14,6 +14,7 @@
 - v1.2 - Updated to match current implementation (Decimal attributes, HP formula, tournament system, v1.2 weapon pricing)
 - v1.3 - Added onboarding tracking fields to User model (7 new columns for tutorial system) and ResetLog table for account reset tracking
 - v1.4 - Added King of the Hill (KotH) tables: ScheduledKothMatch, ScheduledKothMatchParticipant. Extended Robot model with 8 KotH cumulative stat fields. Added KotH relation on Battle model.
+- v2.1 - Added AdminKpiSnapshot (`admin_kpi_snapshots`) for admin dashboard trends.
 - v2.0 - Full schema audit against Prisma schema. Added BattleParticipant, AuditLog, CycleSnapshot, TagTeam, ScheduledTagTeamMatch models. Updated Battle model (removed per-robot columns migrated to BattleParticipant, added tag team fields). Updated User model (removed stale stats fields, added email and profile fields). Renamed ScheduledMatch → ScheduledLeagueMatch, TournamentMatch → ScheduledTournamentMatch. Fixed HP/Shield formulas. Added Weapon.rangeBand, Robot.imageUrl.
 
 ---
@@ -851,6 +852,40 @@ model CycleSnapshot {
 }
 ```
 
+### AdminKpiSnapshot Model
+
+Human-player activity counts captured once per competitive settlement, so the admin dashboard can show "vs previous 7 days" trends. `users.last_login_at` only holds the latest login, so these counts cannot be rebuilt later. Written by `adminKpiSnapshotService.recordKpiSnapshotNonFatal` after the cycle closes; a failure is logged and never fails settlement.
+
+```prisma
+model AdminKpiSnapshot {
+  id                Int      @id @default(autoincrement())
+  seasonNumber      Int      @map("season_number")
+  cycleNumber       Int      @map("cycle_number")
+  humanPlayers      Int      @map("human_players")
+  activePlayers7d   Int      @map("active_players_7d")
+  inactivePlayers3d Int      @map("inactive_players_3d")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  @@unique([seasonNumber, cycleNumber])
+  @@index([createdAt])
+  @@map("admin_kpi_snapshots")
+}
+```
+
+Not truncated at Season_Rollover. The global cycle counter restarts at 0 every season, which is why the key includes the season and lookups go by `created_at` (the row between 8 days and 7 days − 1 h old).
+
+### SearchAnalyticsEvent selection columns (2026-10-22)
+
+`search_analytics_events` (one row per completed universal search; truncated at Season_Rollover) gained privacy-light selection tracking and an index for the settled-search report:
+
+| Column | Type | Meaning |
+|---|---|---|
+| `selection_tracked` | `BOOLEAN NOT NULL DEFAULT false` | True for events written since selection tracking exists, so "opened nothing" is distinguishable from "not tracked". |
+| `selected_category` | `VARCHAR(10)` nullable | `robots`, `stables` or `guide` — the category of the result the player opened. Never the result itself. |
+| `selected_at` | `TIMESTAMP(3)` nullable | When the selection was recorded. |
+
+Index `(season_number, user_id, event_timestamp)` serves the latest-search lookup of a selection and the per-player "next search" window of the settled-search report. Rules: `docs/implementation_notes/UNIVERSAL_SEARCH_CONTRACT.md` §8.4–§8.5.
+
 ---
 
 ## CycleMetadata Model
@@ -1003,6 +1038,7 @@ One row per season. Exactly one row has a `phase` other than `completed`.
 | `competitive_cycles_completed` | int | Season_Cycle is this + 1 |
 | `preparation_cycles_completed` | int | Preparation day is this + 1 |
 | `generated_stable_count` | int | Stamped before generated stables are deleted, so the figure survives the purge |
+| `last_settlement_at` | timestamp? | Stamped by every daily settlement in both phases (`advancePreparationCycle` / `advanceCompetitiveCycle`). Preparation settlements leave `cycle_metadata.last_cycle_at` alone, so the admin dashboard's "settlement overdue" check reads the later of the two. Null until the season's first settlement (migration `20261023090000_season_last_settlement_at`) |
 | `started_at` / `ended_at` | timestamp | `ended_at` set when the season completes |
 
 There is deliberately no `scheduled_end_cycles` column: Season 0 closes by explicit admin action only.

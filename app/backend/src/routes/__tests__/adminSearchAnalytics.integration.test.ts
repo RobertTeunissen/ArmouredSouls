@@ -323,7 +323,7 @@ describe('Admin Search Analytics route integration', () => {
       }
     });
 
-    it('should make no analytics attempt for history, selection, category, or report-only operations', async () => {
+    it('should make no analytics write attempt for history, selection, category, or report-only operations', async () => {
       const storeSpy = jest.spyOn(searchAnalyticsStore, 'createEvent');
       const initialCount = await countFixtureEvents(owner.userId);
 
@@ -331,10 +331,17 @@ describe('Admin Search Analytics route integration', () => {
         const history = await request(app)
           .get('/api/search/history')
           .set('Authorization', `Bearer ${owner.token}`);
-        const selection = await request(app)
+        // Privacy-light selection tracking accepts `{ category }` only: a body
+        // carrying a result identity is rejected, and a valid one updates an
+        // existing event without ever creating a new one.
+        const selectionWithIdentity = await request(app)
           .post('/api/search/selection')
           .set('Authorization', `Bearer ${owner.token}`)
           .send({ category: 'robots', resultId: 1 });
+        const selection = await request(app)
+          .post('/api/search/selection')
+          .set('Authorization', `Bearer ${owner.token}`)
+          .send({ category: 'robots' });
         const category = await request(app)
           .post('/api/search/category')
           .set('Authorization', `Bearer ${owner.token}`)
@@ -344,7 +351,9 @@ describe('Admin Search Analytics route integration', () => {
           .set('Authorization', `Bearer ${admin.token}`);
 
         expect(history.status).toBe(404);
-        expect(selection.status).toBe(404);
+        expect(selectionWithIdentity.status).toBe(400);
+        expect(selection.status).toBe(204);
+        expect(selection.text).toBe('');
         expect(category.status).toBe(404);
         expect(report.status).toBe(200);
         expect(storeSpy).not.toHaveBeenCalled();

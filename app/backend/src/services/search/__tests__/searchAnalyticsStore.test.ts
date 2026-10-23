@@ -66,6 +66,7 @@ describe('searchAnalyticsStore', () => {
         guideResultCount: 3,
         totalResultCount: 6,
         noResult: false,
+        selectionTracked: true,
       },
       select: { id: true },
     });

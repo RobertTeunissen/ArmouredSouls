@@ -56,12 +56,23 @@ const ROBOT_ACCESS_RESPONSE = {
   guide: [],
 };
 
+// Shape of `GET /api/admin/search-analytics/report` (settled counting, see
+// docs/implementation_notes/UNIVERSAL_SEARCH_CONTRACT.md §8.5 and §10).
 const ADMIN_REPORT = {
-  period: { seasonNumber: 8, cycleNumber: 24, cycleFrom: null, cycleTo: null },
-  overview: { totalSearches: 120, uniqueSearchers: 18, noResultSearches: 9 },
+  period: { seasonNumber: 8, cycleNumber: 24, cycleFrom: 18, cycleTo: 24, mode: 'settled' },
+  overview: {
+    totalSearches: 120,
+    uniqueSearchers: 18,
+    noResultSearches: 9,
+    rawRequests: 300,
+    adminSearchers: 1,
+    noResultRate: 7.5,
+    selection: { trackedSearches: 60, ledToResult: 40, rate: 66.7, trackedSinceCycle: 22 },
+  },
+  comparison: { cycleFrom: 11, cycleTo: 17, totalSearches: 100, noResultRate: 9 },
   trends: [
-    { cycleNumber: 23, totalSearches: 80, uniqueSearchers: 14, noResultSearches: 4 },
-    { cycleNumber: 24, totalSearches: 120, uniqueSearchers: 18, noResultSearches: 9 },
+    { cycleNumber: 23, totalSearches: 80, uniqueSearchers: 14, noResultSearches: 4, noResultRate: 5 },
+    { cycleNumber: 24, totalSearches: 120, uniqueSearchers: 18, noResultSearches: 9, noResultRate: 7.5 },
   ],
   topPhrases: [
     { phrase: 'admin-only phrase', count: 40 },
@@ -69,16 +80,47 @@ const ADMIN_REPORT = {
   ],
   noResultPhrases: [{ phrase: 'missing guide', count: 9 }],
   categoryUsage: { robots: 60, stables: 35, guide: 16 },
+  categoryResults: {
+    robots: { returnedShare: 70, chosenShare: 40 },
+    stables: { returnedShare: 30, chosenShare: 15 },
+    guide: { returnedShare: 20, chosenShare: 10 },
+    openedNothingShare: 35,
+  },
   playerAnalysis: {
     entries: [
       { userId: 42, stableName: 'North Star', searchCount: 12, noResultCount: 2 },
       { userId: 7, stableName: null, searchCount: 4, noResultCount: 1 },
     ],
     page: 1,
-    limit: 50,
+    limit: 25,
     total: 101,
   },
   limitations: [{ code: 'analyticsDataIncomplete', message: 'Some telemetry may be missing.' }],
+};
+
+// Shape of `GET /api/admin/search-analytics/phrases`.
+const ADMIN_PHRASES = {
+  rows: [
+    {
+      phrase: 'admin-only phrase',
+      searches: 40,
+      share: 33.3,
+      noResultRate: 0,
+      returned: { robots: true, stables: false, guide: true },
+      mostChosen: { category: 'robots', share: 62.5 },
+    },
+    {
+      phrase: 'missing guide',
+      searches: 9,
+      share: 7.5,
+      noResultRate: 100,
+      returned: { robots: false, stables: false, guide: false },
+      mostChosen: null,
+    },
+  ],
+  total: 2,
+  page: 1,
+  limit: 20,
 };
 
 const ADMIN_REPORT_PAGE_2 = {
@@ -157,14 +199,27 @@ async function expectPaletteResult(page: Page, label = 'Robot: Atlas'): Promise<
   await expect(searchDialog(page).getByRole('button', { name: label, exact: true })).toBeVisible({ timeout: 5000 });
 }
 
-async function mockAdminReport(page: Page): Promise<string[]> {
-  const requestUrls: string[] = [];
+/** Mocks the report and the phrase table; returns the report and phrase request URLs. */
+async function mockAdminReport(page: Page): Promise<{ report: string[]; phrases: string[] }> {
+  const report: string[] = [];
+  const phrases: string[] = [];
   await page.route('**/api/admin/search-analytics/report**', async (route) => {
-    requestUrls.push(route.request().url());
+    report.push(route.request().url());
     const requestedPage = new URL(route.request().url()).searchParams.get('page');
     await fulfillJson(route, requestedPage === '2' ? ADMIN_REPORT_PAGE_2 : ADMIN_REPORT);
   });
-  return requestUrls;
+  await page.route('**/api/admin/search-analytics/phrases**', async (route) => {
+    phrases.push(route.request().url());
+    await fulfillJson(route, ADMIN_PHRASES);
+  });
+  return { report, phrases };
+}
+
+/** Opens the collapsed Searchers panel. */
+async function openSearchers(page: Page): Promise<void> {
+  const toggle = page.getByRole('button', { name: /^Searchers \(101\)/ });
+  await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
 }
 
 test.describe('Universal search — authenticated responsive discovery', () => {
@@ -440,6 +495,7 @@ test.describe('Universal search — request isolation', () => {
     const rawQuery = '  private phrase  ';
     const normalizedQuery = rawQuery.trim();
     const searchRequests: Array<{ url: string; postData: string | null }> = [];
+    const selectionRequests: Array<{ url: string; method: string; postData: string | null }> = [];
     const guideSearchRequests: string[] = [];
     const adminRequests: string[] = [];
     const requestUrls: string[] = [];
@@ -453,6 +509,9 @@ test.describe('Universal search — request isolation', () => {
       requestUrls.push(url);
       if (pathname === '/api/search') {
         searchRequests.push({ url, postData: request.postData() });
+      }
+      if (pathname === '/api/search/selection') {
+        selectionRequests.push({ url, method: request.method(), postData: request.postData() });
       }
       if (pathname.startsWith('/api/guide')) guideSearchRequests.push(url);
       if (pathname === '/api/admin/search-analytics/report') adminRequests.push(url);
@@ -488,8 +547,10 @@ test.describe('Universal search — request isolation', () => {
     expect(guideSearchRequests).toHaveLength(0);
     expect(adminRequests).toHaveLength(0);
 
-    // Search history, result selection, category selection, keystrokes, and
-    // telemetry are client-only concerns and must not create another request.
+    // Search history, keystrokes and typing are client-only and never create
+    // another request. Opening a result sends exactly one category-only
+    // selection request (contract §8.4), asserted after the click below.
+    expect(selectionRequests).toHaveLength(0);
     const forbiddenSearchEventRequests = requestUrls.filter((url) => {
       const pathname = new URL(url).pathname;
       if (pathname === '/api/search' || pathname === '/api/admin/search-analytics/report') return false;
@@ -521,6 +582,15 @@ test.describe('Universal search — request isolation', () => {
     expect(searchRequests).toHaveLength(1);
     expect(adminRequests).toHaveLength(0);
 
+    // The selection carries the category and nothing else: no query, id,
+    // label, position or route, in the body or the URL.
+    await expect.poll(() => selectionRequests.length).toBe(1);
+    const selection = selectionRequests[0];
+    expect(selection?.method).toBe('POST');
+    expect(JSON.parse(selection?.postData ?? 'null')).toEqual({ category: 'robots' });
+    expect(new URL(selection?.url ?? 'http://x').search).toBe('');
+    expect(decodeURIComponent(selection?.postData ?? '')).not.toContain(normalizedQuery);
+
     for (const navigatedUrl of navigatedUrls) {
       const decodedUrl = decodeURIComponent(navigatedUrl);
       expect(decodedUrl).not.toContain(rawQuery);
@@ -538,32 +608,45 @@ test.describe('Search Analytics admin portal', () => {
   });
 
   test('authorizes admins, shows active-season report fields, and paginates safely', async ({ page }) => {
-    const reportRequests = await mockAdminReport(page);
+    const requests = await mockAdminReport(page);
     await page.goto('/admin/search-analytics', { waitUntil: 'domcontentloaded' });
 
-    const reportPage = page.getByTestId('search-analytics-page');
-    await expect(reportPage).toBeVisible();
-    await expect(page.getByTestId('search-analytics-page').getByRole('heading', { name: 'Search Analytics' })).toBeVisible();
-    await expect(page.getByText('Season 8 · Current cycle 24')).toBeVisible();
-    await expect(page.getByText('admin-only phrase')).toBeVisible();
-    await expect(page.getByText('missing guide')).toBeVisible();
-    await expect(page.getByText('Category usage')).toBeVisible();
-    await expect(page.getByText('Robots')).toBeVisible();
-    await expect(page.getByTestId('search-analytics-category-usage').getByText('Stables', { exact: true })).toBeVisible();
-    await expect(page.getByText('Guide articles')).toBeVisible();
-    await expect(page.getByText('analyticsDataIncomplete:')).toBeVisible();
-    await expect(page.getByText('Page 1 of 3 (101 players)')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Next player analysis page' })).toBeVisible();
+    await expect(page.getByTestId('search-analytics-page')).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'Search Analytics' })).toBeVisible();
+    await expect(page.getByText('Season 8 · cycles 18–24')).toBeVisible();
 
-    await page.getByLabel('Filter from cycle').fill('5');
-    await page.getByLabel('Filter to cycle').fill('20');
-    await page.getByRole('button', { name: 'Apply filters' }).click();
-    await expect.poll(() => reportRequests.some((url) => url.includes('cycleFrom=5') && url.includes('cycleTo=20'))).toBe(true);
+    // Default scope: last 7 cycles resolved on the server, settled counting.
+    await expect.poll(() => requests.report.some((url) => url.includes('lastCycles=7') && url.includes('mode=settled'))).toBe(true);
+    await expect(page.getByRole('region', { name: 'How searches are counted' })).toContainText('120 of 300 requests');
+    const totals = page.getByRole('region', { name: 'Search totals' });
+    await expect(totals).toContainText('120');
+    await expect(totals).toContainText('Includes 1 admin account');
 
-    await page.getByRole('button', { name: 'Next player analysis page' }).click();
-    await expect(page.getByText('East Wind')).toBeVisible();
-    await expect(page.getByText('Page 2 of 3 (101 players)')).toBeVisible();
-    expect(reportRequests.some((url) => url.includes('page=2'))).toBe(true);
+    const phrases = page.getByRole('region', { name: 'Phrases' });
+    await expect(phrases.getByText('admin-only phrase')).toBeVisible();
+    await expect(phrases.getByText('missing guide')).toBeVisible();
+    const categories = page.getByRole('region', { name: 'Results by category' });
+    await expect(categories.getByText('Robots', { exact: true })).toBeVisible();
+    await expect(categories.getByText('Stables', { exact: true })).toBeVisible();
+    await expect(categories.getByText('Guide articles', { exact: true })).toBeVisible();
+    await expect(page.getByRole('status', { name: 'Reporting limitations' })).toContainText('Some telemetry may be missing.');
+
+    // A custom range replaces the preset in both requests.
+    await page.getByRole('button', { name: /^Custom/ }).click();
+    await page.getByLabel('From cycle').fill('5');
+    await page.getByLabel('To cycle').fill('20');
+    await page.getByRole('button', { name: 'Apply', exact: true }).click();
+    const customScope = (url: string): boolean => url.includes('cycleFrom=5') && url.includes('cycleTo=20') && !url.includes('lastCycles');
+    await expect.poll(() => requests.report.some(customScope)).toBe(true);
+    await expect.poll(() => requests.phrases.some(customScope)).toBe(true);
+
+    await openSearchers(page);
+    await expect(page.getByRole('link', { name: 'North Star' })).toBeVisible();
+    await expect(page.getByText('1–25 of 101 players')).toBeVisible();
+    await page.getByRole('button', { name: 'Next page of players' }).click();
+    await expect(page.getByRole('link', { name: 'East Wind' })).toBeVisible();
+    await expect(page.getByText('26–50 of 101 players')).toBeVisible();
+    expect(requests.report.some((url) => url.includes('page=2'))).toBe(true);
 
     // Admin pages are a separate layout, never the player shell/palette.
     await expect(page.locator('button[aria-label="Open search"]:visible')).toHaveCount(0);
@@ -573,32 +656,48 @@ test.describe('Search Analytics admin portal', () => {
 
   test('stacks filters and report sections below 1024px with touch-sized controls', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 900 });
-    const reportRequests = await mockAdminReport(page);
+    const requests = await mockAdminReport(page);
     await page.goto('/admin/search-analytics', { waitUntil: 'domcontentloaded' });
     await expect(page.getByTestId('search-analytics-page')).toBeVisible();
-    await expect(page.getByText('Season 8 · Current cycle 24')).toBeVisible();
+    await expect(page.getByText('Season 8 · cycles 18–24')).toBeVisible();
 
-    const fromCycle = page.getByLabel('Filter from cycle');
-    const toCycle = page.getByLabel('Filter to cycle');
-    const apply = page.getByRole('button', { name: 'Apply filters' });
-    const fromBox = await fromCycle.boundingBox();
-    const toBox = await toCycle.boundingBox();
-    const applyBox = await apply.boundingBox();
-    expect(fromBox).not.toBeNull();
-    expect(toBox).not.toBeNull();
-    expect(applyBox).not.toBeNull();
-    expect(toBox?.y ?? 0).toBeGreaterThan(fromBox?.y ?? 0);
-    expect(applyBox?.y ?? 0).toBeGreaterThan(toBox?.y ?? 0);
+    // Period presets, counting toggle and the custom range are touch-sized.
+    for (const name of ['This cycle', 'Last 7 cycles', 'Whole season', 'Custom…']) {
+      await expectMinimumTarget(page.getByRole('button', { name, exact: true }));
+    }
+    await expectMinimumTarget(page.getByRole('button', { name: 'Settled', exact: true }));
+    await expectMinimumTarget(page.getByRole('button', { name: 'All requests', exact: true }));
+    await page.getByRole('button', { name: 'Custom…', exact: true }).click();
+    await expectMinimumTarget(page.getByLabel('From cycle'));
+    await expectMinimumTarget(page.getByLabel('To cycle'));
+    await expectMinimumTarget(page.getByRole('button', { name: 'Apply', exact: true }));
 
-    await expectMinimumTarget(fromCycle);
-    await expectMinimumTarget(toCycle);
-    await expectMinimumTarget(apply);
-    await expectMinimumTarget(page.getByRole('button', { name: 'Next player analysis page' }));
+    // Report sections stack in one column.
+    const chartBox = await page.getByRole('region', { name: 'Searches per cycle' }).boundingBox();
+    const categoryBox = await page.getByRole('region', { name: 'Results by category' }).boundingBox();
+    const phraseBox = await page.getByRole('region', { name: 'Phrases' }).boundingBox();
+    expect(chartBox).not.toBeNull();
+    expect(categoryBox).not.toBeNull();
+    expect(phraseBox).not.toBeNull();
+    expect(categoryBox?.y ?? 0).toBeGreaterThan((chartBox?.y ?? 0) + (chartBox?.height ?? 0) - 1);
+    expect(phraseBox?.y ?? 0).toBeGreaterThan((categoryBox?.y ?? 0) + (categoryBox?.height ?? 0) - 1);
+    expect(Math.abs((categoryBox?.x ?? 0) - (chartBox?.x ?? 0))).toBeLessThanOrEqual(1);
+
+    // Below md the phrase table switches column sets instead of scrolling.
+    const phrases = page.getByRole('region', { name: 'Phrases' });
+    await expect(phrases.getByRole('columnheader', { name: 'No-result' })).not.toBeVisible();
+    await expectMinimumTarget(phrases.getByRole('button', { name: 'Quality', exact: true }));
+    await phrases.getByRole('button', { name: 'Quality', exact: true }).click();
+    await expect(phrases.getByRole('columnheader', { name: 'No-result' })).toBeVisible();
     await expectNoHorizontalOverflow(page);
 
-    await page.getByRole('button', { name: 'Next player analysis page' }).click();
-    await expect(page.getByText('East Wind')).toBeVisible();
-    expect(reportRequests.some((url) => url.includes('page=2'))).toBe(true);
+    await openSearchers(page);
+    const next = page.getByRole('button', { name: 'Next page of players' });
+    await expectMinimumTarget(next);
+    await next.click();
+    await expect(page.getByRole('link', { name: 'East Wind' })).toBeVisible();
+    expect(requests.report.some((url) => url.includes('page=2'))).toBe(true);
+    await expectNoHorizontalOverflow(page);
   });
 
   test('does not expose admin phrases or category report data on player surfaces', async ({ page }) => {

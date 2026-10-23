@@ -90,6 +90,8 @@ function toCreateInput(
     guideResultCount: input.guideResultCount,
     totalResultCount: input.totalResultCount,
     noResult: input.noResult,
+    // Every event written from now on can receive a category-only selection.
+    selectionTracked: true,
   };
 }
 

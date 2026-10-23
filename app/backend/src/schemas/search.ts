@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { MAXIMUM_QUERY_LENGTH } from '../services/search/searchTypes';
+import { MAXIMUM_QUERY_LENGTH, SEARCH_SELECTION_CATEGORIES } from '../services/search/searchTypes';
 
 const SEARCH_QUERY_FIELD_MESSAGE = 'Search query must be a string';
 const SEARCH_QUERY_LENGTH_MESSAGE = `Search query cannot exceed ${MAXIMUM_QUERY_LENGTH} characters`;
@@ -47,3 +47,11 @@ export const searchQuerySchema = z.preprocess((input: unknown, context) => {
 }, searchQueryObjectSchema);
 
 export type SearchQuery = z.infer<typeof searchQuerySchema>;
+
+/**
+ * Privacy-light selection body: the category of the opened result and nothing
+ * else. `.strict()` rejects any extra field (result id, label, route…).
+ */
+export const searchSelectionBodySchema = z.object({
+  category: z.enum(SEARCH_SELECTION_CATEGORIES),
+}).strict();

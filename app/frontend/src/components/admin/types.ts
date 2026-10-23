@@ -13,7 +13,8 @@ export interface SessionLogEntry {
 export interface SystemStats {
   robots: {
     total: number;
-    byTier: Array<{ league: string; count: number }>;
+    /** League 1v1 tiers from `standings`, restricted to the filter. */
+    byTier: Array<{ league: string; count: number; averageElo?: number }>;
     battleReady: number;
     battleReadyPercentage: number;
   };
@@ -51,6 +52,7 @@ export interface SystemStats {
   facilities: {
     summary: Array<{
       type: string;
+      /** Stables owning the facility at level 1 or higher. */
       purchaseCount: number;
       avgLevel: number;
     }>;
@@ -59,7 +61,10 @@ export interface SystemStats {
   };
   weapons: {
     totalBought: number;
+    /** Robots with a main weapon (ignores offhands). */
     equipped: number;
+    /** Owned weapons sitting in any robot's main or offhand slot. */
+    equippedInventoryItems?: number;
   };
   stances: Array<{
     stance: string;

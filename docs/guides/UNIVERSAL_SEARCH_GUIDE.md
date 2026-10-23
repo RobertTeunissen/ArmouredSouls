@@ -190,6 +190,14 @@ The store is a write boundary. It does not return raw event rows, write an `Audi
 
 Short, malformed, over-length, unauthenticated, rate-limited, and source-failed requests are not completed eligible searches and create no analytics attempt or event.
 
+### Selection category (`POST /api/search/selection`)
+
+`useSearchPalette.selectResult` calls `recordSearchSelection(result.category)` (`utils/searchApi.ts`) fire-and-forget before navigating. The strict body is `{ category }` only; anything else is a `400`. `searchSelectionService.recordSearchSelection` runs one parameterized `UPDATE` that sets `selected_category`/`selected_at` on the player's newest active-season event from the last 60 s with `selection_tracked = true` and no selection yet; it never creates an event, never throws, and the route always returns `204`. New events are written with `selection_tracked = true` (`searchAnalyticsStore`).
+
+### Settled searches in the report
+
+`searchAnalyticsReportService.buildSource(scope, mode)` builds the `scoped → ordered → src` CTE used by every report, phrase and export query. In `settled` mode (default) an event is dropped when the same player's next event (`LEAD` over `user_id`, ordered by `event_timestamp, id`) follows within `SETTLED_SEARCH_WINDOW_SECONDS` (5) and strictly extends the phrase (`left(next, length(phrase)) = phrase`). `mode=all` keeps every event. The phrase table and CSV export live in `searchAnalyticsPhraseService.ts`.
+
 ### Admin_Search_Analytics_Resource
 
 Authorized administrators use the separate Admin Portal page at `/admin/search-analytics`, backed by:

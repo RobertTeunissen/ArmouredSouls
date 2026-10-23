@@ -14,6 +14,7 @@ import type { SearchResponse, SearchResult } from '../../../utils/searchTypes';
 
 vi.mock('../../../utils/searchApi', () => ({
   search: vi.fn(),
+  recordSearchSelection: vi.fn(),
 }));
 
 const mockedSearch = vi.mocked(search);

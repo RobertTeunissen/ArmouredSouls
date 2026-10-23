@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type RefObject } from 'react';
 import type { SearchPaletteState } from './SearchPalette';
-import { search } from '../../utils/searchApi';
+import { recordSearchSelection, search } from '../../utils/searchApi';
 import { isAbortError } from '../../utils/abort';
 import {
   addRecentSearch,
@@ -241,6 +241,8 @@ export function useSearchPalette(
   const selectResult = useCallback(
     (result: SearchResult): void => {
       submitQuery();
+      // Category only; fire-and-forget so navigation never waits on telemetry.
+      recordSearchSelection(result.category);
       closeSearch();
       onResultSelect?.(result);
     },

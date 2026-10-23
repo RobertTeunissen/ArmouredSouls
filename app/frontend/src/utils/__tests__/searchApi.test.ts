@@ -1,13 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { api } from '../api';
-import { search } from '../searchApi';
+import { recordSearchSelection, search } from '../searchApi';
 import type { SearchResponse } from '../searchTypes';
 
 vi.mock('../api', () => ({
-  api: { get: vi.fn() },
+  api: { get: vi.fn(), post: vi.fn() },
 }));
 
 const mockedGet = vi.mocked(api.get);
+const mockedPost = vi.mocked(api.post);
 
 const SEARCH_RESPONSE: SearchResponse = {
   robots: [
@@ -66,5 +67,20 @@ describe('searchApi', () => {
     expect(mockedGet.mock.calls[0]?.[1]).not.toHaveProperty('params.userId');
     expect(mockedGet.mock.calls[0]?.[1]).not.toHaveProperty('params.selection');
     expect(mockedGet.mock.calls[0]?.[1]).not.toHaveProperty('params.analytics');
+  });
+
+  it('sends a selection as the category only', () => {
+    mockedPost.mockResolvedValueOnce(undefined);
+
+    recordSearchSelection('stables');
+
+    expect(mockedPost).toHaveBeenCalledWith('/api/search/selection', { category: 'stables' }, { skipAuthRedirect: true });
+  });
+
+  it('swallows a failed selection request', async () => {
+    mockedPost.mockRejectedValueOnce(new Error('offline'));
+
+    expect(() => recordSearchSelection('guide')).not.toThrow();
+    await Promise.resolve();
   });
 });

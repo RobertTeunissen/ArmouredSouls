@@ -417,6 +417,16 @@ export async function executeSettlement(): Promise<JobContext> {
     logger.error(`Daily Settlement: Failed to refresh leaderboard cache — ${err instanceof Error ? err.message : String(err)}`);
   }
 
+  // Admin dashboard trend data: human-player activity counts for the closed
+  // cycle. Non-fatal by construction (the helper logs and swallows its errors);
+  // the import is guarded too so a module-load failure cannot fail settlement.
+  try {
+    const { recordKpiSnapshotNonFatal } = await import('../admin/adminKpiSnapshotService');
+    await recordKpiSnapshotNonFatal(seasonAtStart.seasonNumber, closingCycle);
+  } catch (err) {
+    logger.error(`Daily Settlement: Failed to record admin KPI snapshot — ${err instanceof Error ? err.message : String(err)}`);
+  }
+
   // Spec #45 R2.2/R2.3: advance the season counter, then roll over if the
   // season has reached its length. The rollover runs AFTER every settlement
   // step above, so the final cycle of a season settles normally before

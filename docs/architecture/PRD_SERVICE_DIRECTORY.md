@@ -84,6 +84,12 @@ Admin panel operations — stats dashboards, cycle execution, battle viewer, HP 
 | Service | Purpose |
 |---------|---------|
 | `adminStatsService` | Dashboard statistics (robot stats, facility stats, economy stats, at-risk users) |
+| `adminDashboardService` | Dashboard KPIs (`GET /api/admin/dashboard/kpis`): human-player activity with trends, battle-ready robots; engagement and economy overview |
+| `adminDashboardStatusService` | Dashboard status strip and "Needs attention" facts (`GET /api/admin/dashboard/status`); pure `computeCycleHealth` / `summarizeScheduler`. Read-only, sends no alerts |
+| `adminBattleActivityService` | Battles per mode: last cycle, season, walkovers, queued, draw/kill/duration rates (`GET /api/admin/dashboard/battle-activity`, 60 s cache per filter) |
+| `adminQueuedMatches` | Queued matches per mode, system-wide (scheduled matches + outstanding bracket rows) |
+| `adminPlayerActivityService`, `adminKpiSnapshotService` | Login-based human-player counts; one `admin_kpi_snapshots` row per competitive settlement (non-fatal) for 7-day trends |
+| `adminThresholds` | Shared thresholds: bankruptcy risk, inactivity, settlement overdue, stuck-match grace |
 | `adminCycleService` | Bulk cycle execution (`POST /api/admin/cycles/bulk`), snapshot backfill |
 | `adminBattleService` | Battle list queries, battle detail for admin viewer |
 | `adminMaintenanceService` | HP recalculation, robot repair (admin-triggered) |

@@ -107,6 +107,24 @@ describe('AdminStatCard', () => {
     expect(screen.getByTestId('custom-icon')).toBeInTheDocument();
   });
 
+  it('should colour a rising value red when lower is better', () => {
+    render(<AdminStatCard label="Inactive" value={7} trend="up" trendValue="1" trendIntent="lower-is-better" />);
+
+    expect(screen.getByLabelText('Trend: up 1')).toHaveClass('text-error');
+  });
+
+  it('should colour a falling value green when lower is better', () => {
+    render(<AdminStatCard label="Inactive" value={5} trend="down" trendValue="2" trendIntent="lower-is-better" />);
+
+    expect(screen.getByLabelText('Trend: down 2')).toHaveClass('text-success');
+  });
+
+  it('should render a caption under the value', () => {
+    render(<AdminStatCard label="Battle-ready" value="86.1%" caption="124 of 144 robots" />);
+
+    expect(screen.getByText('124 of 144 robots')).toBeInTheDocument();
+  });
+
   it('should not render icon container when icon is not provided', () => {
     const { container } = render(
       <AdminStatCard label="No Icon" value={5} />,

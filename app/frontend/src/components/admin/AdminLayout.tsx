@@ -1,86 +1,12 @@
 import { Component, Suspense } from 'react';
 import type { ReactNode, ErrorInfo } from 'react';
-import { NavLink, Outlet, useLocation, Link } from 'react-router-dom';
+import { Outlet, useLocation, Link } from 'react-router-dom';
 import { createLogger } from '../../utils/logger';
+import { AdminNavList } from './AdminNav';
+import { AdminMobileNav } from './AdminMobileNav';
+import { ADMIN_FOCUS_RING } from './shared/focusRing';
 
 const log = createLogger('AdminLayout');
-
-// ---------------------------------------------------------------------------
-// Navigation configuration
-// ---------------------------------------------------------------------------
-
-interface NavItem {
-  label: string;
-  path: string;
-  icon: string;
-}
-
-interface NavGroup {
-  section: string;
-  items: NavItem[];
-}
-
-const NAV_GROUPS: NavGroup[] = [
-  {
-    section: 'Overview',
-    items: [
-      { label: 'Dashboard', path: '/admin/dashboard', icon: '📊' },
-      { label: 'Search Analytics', path: '/admin/search-analytics', icon: '🔎' },
-    ],
-  },
-  {
-    section: 'Game Operations',
-    items: [
-      { label: 'Cycle Controls', path: '/admin/cycles', icon: '⚙️' },
-      { label: 'Season Control', path: '/admin/seasons', icon: '🗓️' },
-      { label: 'Practice Arena', path: '/admin/practice-arena', icon: '🏟️' },
-    ],
-  },
-  {
-    section: 'Battle Data',
-    items: [
-      { label: 'Battle Logs', path: '/admin/battles', icon: '⚔️' },
-      { label: 'Robot Stats', path: '/admin/robot-stats', icon: '🤖' },
-      { label: 'League Health', path: '/admin/league-health', icon: '🏆' },
-      { label: 'League History', path: '/admin/league-history', icon: '📈' },
-      { label: 'Tournaments', path: '/admin/tournaments', icon: '🎖️' },
-      { label: 'Weapons', path: '/admin/weapons', icon: '🔫' },
-    ],
-  },
-  {
-    section: 'Player Management',
-    items: [
-      { label: 'Players', path: '/admin/players', icon: '👥' },
-      { label: 'Economy', path: '/admin/economy', icon: '💰' },
-      { label: 'Automatons', path: '/admin/automatons', icon: '🤖' },
-    ],
-  },
-  {
-    section: 'Security & Moderation',
-    items: [
-      { label: 'Security', path: '/admin/security', icon: '🛡️' },
-      { label: 'Image Uploads', path: '/admin/image-uploads', icon: '🖼️' },
-    ],
-  },
-  {
-    section: 'Content',
-    items: [
-      { label: 'Changelog', path: '/admin/changelog', icon: '📝' },
-      { label: 'Achievements', path: '/admin/achievements', icon: '🏅' },
-      { label: 'Tuning', path: '/admin/tuning', icon: '🎛️' },
-      { label: 'Refinement', path: '/admin/refinement', icon: '🔨' },
-      { label: 'Subscriptions', path: '/admin/subscriptions', icon: '📋' },
-    ],
-  },
-  {
-    section: 'Maintenance',
-    items: [
-      { label: 'Repair Log', path: '/admin/repair-log', icon: '🔧' },
-      { label: 'Audit Log', path: '/admin/audit-log', icon: '📋' },
-    ],
-  },
-];
-
 
 /** Map route paths to human-readable page titles for the header bar. */
 const PAGE_TITLES: Record<string, string> = {
@@ -165,72 +91,19 @@ function LoadingFallback() {
 }
 
 // ---------------------------------------------------------------------------
-// Sidebar component
+// Desktop sidebar (md and up). Below md the AdminMobileNav drawer replaces it.
 // ---------------------------------------------------------------------------
 
 function Sidebar() {
-  const location = useLocation();
-
-  /**
-   * Determine whether a nav item should be highlighted as active.
-   * Exact match is used for most routes. For `/admin/cycles` we need
-   * exact match to avoid highlighting it when on `/admin/cycles/history`.
-   */
-  const isActive = (path: string): boolean => {
-    if (path === '/admin/cycles') {
-      return location.pathname === '/admin/cycles';
-    }
-    return location.pathname.startsWith(path);
-  };
-
   return (
     <aside
-      className="fixed top-0 left-0 h-screen bg-surface-elevated border-r border-white/10 flex flex-col overflow-y-auto z-40
-                 w-16 md:w-60 transition-[width] duration-200"
+      className="fixed top-0 left-0 h-screen w-60 bg-surface-elevated border-r border-white/10 hidden md:flex flex-col overflow-y-auto z-40"
       aria-label="Admin sidebar navigation"
     >
-      {/* Sidebar header */}
       <div className="h-14 flex items-center px-4 border-b border-white/10 shrink-0">
-        <span className="hidden md:inline text-primary font-bold text-lg tracking-tight">
-          Admin Portal
-        </span>
-        <span className="md:hidden text-primary font-bold text-lg">⚡</span>
+        <span className="text-primary font-bold text-lg tracking-tight">Admin Portal</span>
       </div>
-
-      {/* Navigation groups */}
-      <nav className="flex-1 py-3 space-y-4">
-        {NAV_GROUPS.map((group) => (
-          <div key={group.section}>
-            <h3 className="hidden md:block px-4 mb-1 text-xs font-semibold text-tertiary uppercase tracking-wider">
-              {group.section}
-            </h3>
-            <ul className="space-y-0.5">
-              {group.items.map((item) => {
-                const active = isActive(item.path);
-                return (
-                  <li key={item.path}>
-                    <NavLink
-                      to={item.path}
-                      end={item.path === '/admin/cycles'}
-                      className={`flex items-center gap-3 px-4 py-2 text-sm transition-colors
-                        ${active
-                          ? 'bg-primary/15 text-primary border-r-2 border-primary'
-                          : 'text-secondary hover:text-white hover:bg-white/5'
-                        }`}
-                      title={item.label}
-                    >
-                      <span className="text-base shrink-0" role="img" aria-hidden="true">
-                        {item.icon}
-                      </span>
-                      <span className="hidden md:inline truncate">{item.label}</span>
-                    </NavLink>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        ))}
-      </nav>
+      <AdminNavList />
     </aside>
   );
 }
@@ -247,21 +120,25 @@ function AdminLayout() {
     <div className="min-h-screen bg-background text-white">
       <Sidebar />
 
-      {/* Main content area — offset by sidebar width */}
-      <div className="ml-16 md:ml-60 flex flex-col min-h-screen transition-[margin] duration-200">
-        {/* Header bar */}
-        <header className="h-14 flex items-center justify-between px-6 bg-surface border-b border-white/10 shrink-0">
-          <h1 className="text-lg font-semibold text-white">{pageTitle}</h1>
+      {/* Main content area — offset by the sidebar width from md */}
+      <div className="md:ml-60 flex flex-col min-h-screen">
+        <header className="h-14 flex items-center justify-between gap-3 px-4 sm:px-6 bg-surface border-b border-white/10 shrink-0">
+          <div className="flex items-center gap-2 min-w-0">
+            <AdminMobileNav />
+            <h1 className="text-lg font-semibold text-white truncate">{pageTitle}</h1>
+          </div>
           <Link
             to="/dashboard"
-            className="text-sm text-secondary hover:text-primary transition-colors"
+            aria-label="Back to Game"
+            className={`shrink-0 rounded text-sm text-secondary hover:text-primary transition-colors ${ADMIN_FOCUS_RING}`}
           >
-            ← Back to Game
+            <span aria-hidden="true">← </span>
+            <span className="sm:hidden">Game</span>
+            <span className="hidden sm:inline">Back to Game</span>
           </Link>
         </header>
 
-        {/* Page content */}
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-4 sm:p-6">
           <AdminErrorBoundary>
             <Suspense fallback={<LoadingFallback />}>
               <Outlet />

@@ -181,6 +181,41 @@ describe('PlayersPage', () => {
     });
   });
 
+  it('should open the At-Risk sub-view from the ?tab= deep link (dashboard "Needs attention")', async () => {
+    render(
+      <MemoryRouter initialEntries={['/admin/players?tab=at-risk']}>
+        <PlayersPage />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('No users at risk of bankruptcy')).toBeInTheDocument();
+    });
+    expect(screen.getByText('⚠️ At-Risk')).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('should open the player detail panel from the ?user= deep link (Search Analytics → Searchers)', async () => {
+    render(
+      <MemoryRouter initialEntries={['/admin/players?user=1']}>
+        <PlayersPage />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(mockGet).toHaveBeenCalledWith(expect.stringContaining('/api/admin/users/1'));
+    });
+  });
+
+  it('should fall back to New Players for an unknown ?tab= value', () => {
+    render(
+      <MemoryRouter initialEntries={['/admin/players?tab=bogus']}>
+        <PlayersPage />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText('👥 New Players')).toHaveAttribute('aria-pressed', 'true');
+  });
+
   it('should trigger password reset API call', async () => {
     const user = userEvent.setup();
     renderPage();

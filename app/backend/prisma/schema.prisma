@@ -234,6 +234,13 @@ model SearchAnalyticsEvent {
   guideResultCount    Int      @map("guide_result_count")
   totalResultCount    Int      @map("total_result_count")
   noResult            Boolean  @map("no_result")
+  // Privacy-light selection tracking: only the CATEGORY of the result a player
+  // opened ("robots" | "stables" | "guide"), never its id, label, position or
+  // route. `selectionTracked` separates "opened nothing" from rows written
+  // before tracking existed.
+  selectionTracked    Boolean   @default(false) @map("selection_tracked")
+  selectedCategory    String?   @map("selected_category") @db.VarChar(10)
+  selectedAt          DateTime? @map("selected_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -241,6 +248,9 @@ model SearchAnalyticsEvent {
   @@index([seasonNumber, eventTimestamp])
   @@index([seasonNumber, userId])
   @@index([seasonNumber, normalizedPhrase])
+  // Latest-search lookup for a selection and the per-user "next search" window
+  // of the settled-search report.
+  @@index([seasonNumber, userId, eventTimestamp])
   @@map("search_analytics_events")
 }
 
@@ -906,6 +916,25 @@ model AdminAuditLog {
   @@map("admin_audit_logs")
 }
 
+// Human-player activity counts captured once per competitive settlement, so the
+// admin dashboard can show "vs previous 7 days" trends. `users.last_login_at`
+// only holds the latest login, so these counts cannot be rebuilt later.
+// Deliberately NOT truncated at Season_Rollover: cycle numbers restart at 0 each
+// season, which is why the key includes the season and lookups go by time.
+model AdminKpiSnapshot {
+  id                Int      @id @default(autoincrement())
+  seasonNumber      Int      @map("season_number")
+  cycleNumber       Int      @map("cycle_number")
+  humanPlayers      Int      @map("human_players")
+  activePlayers7d   Int      @map("active_players_7d")
+  inactivePlayers3d Int      @map("inactive_players_3d")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  @@unique([seasonNumber, cycleNumber])
+  @@index([createdAt])
+  @@map("admin_kpi_snapshots")
+}
+
 model LeagueHistory {
   id                  Int      @id @default(autoincrement())
   entityType          String   @map("entity_type") @db.VarChar(20) // "robot", "tag_team", or "team_battle"
@@ -1195,6 +1224,11 @@ model Season {
   // Captured before Generated_Stables are deleted, so the count is still
   // reportable after the rows are gone (Spec #45 R29.15).
   generatedStableCount       Int       @default(0) @map("generated_stable_count")
+  // When a daily settlement last advanced this season, in either phase.
+  // Preparation settlements leave cycle_metadata.last_cycle_at untouched, so
+  // this is the persistent evidence the admin dashboard's "settlement overdue"
+  // check needs during a Preparation_Phase.
+  lastSettlementAt           DateTime? @map("last_settlement_at")
   startedAt                  DateTime  @map("started_at")
   endedAt                    DateTime? @map("ended_at")
   createdAt                  DateTime  @default(now()) @map("created_at")

@@ -42,6 +42,12 @@ export interface ApiRequestConfig {
   signal?: AbortSignal;
   /** Request body for methods without a body argument (e.g. a DELETE that carries data). */
   data?: unknown;
+  /**
+   * Fire-and-forget telemetry only: a 401/403 on this request must not clear
+   * the session or redirect to `/login`. The error is still rejected to the
+   * caller. Never set this on a request whose failure the user should see.
+   */
+  skipAuthRedirect?: boolean;
 }
 
 /**
@@ -107,6 +113,7 @@ const buildAxiosConfig = (config?: ApiRequestConfig): AxiosRequestConfig | undef
   if (config.responseType !== undefined) out.responseType = config.responseType;
   if (config.signal !== undefined) out.signal = config.signal;
   if (config.data !== undefined) out.data = config.data;
+  if (config.skipAuthRedirect === true) out.skipAuthRedirect = true;
   return out;
 };
 
