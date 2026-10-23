@@ -26,16 +26,6 @@ vi.mock('../../../utils/apiClient', () => ({
 }));
 
 // ----------------------------------------------------------------
-// adminStore mock (used by the meta snapshot only)
-// ----------------------------------------------------------------
-const mockFetchStats = vi.fn<(filter?: string, force?: boolean) => Promise<void>>();
-let mockStoreState: Record<string, unknown> = {};
-
-vi.mock('../../../stores/adminStore', () => ({
-  useAdminStore: (selector: (state: Record<string, unknown>) => unknown) => selector(mockStoreState),
-}));
-
-// ----------------------------------------------------------------
 // Fixtures
 // ----------------------------------------------------------------
 const kpis = (overrides: Partial<DashboardKpis['humanPlayers']> = {}, active7d = 38): DashboardKpis => ({
@@ -90,8 +80,11 @@ const systemStats = {
   yieldThresholds: { distribution: [{ threshold: 10, count: 50 }], mostCommon: 10, mostCommonCount: 50 },
 };
 
-function routeApi(handlers: Partial<Record<'kpis' | 'status' | 'activity', (config?: Config) => Promise<unknown>>> = {}): void {
+function routeApi(handlers: Partial<Record<'kpis' | 'status' | 'activity' | 'stats', (config?: Config) => Promise<unknown>>> = {}): void {
   mockGet.mockImplementation((url, config) => {
+    if (url === '/api/admin/stats') {
+      return (handlers.stats?.(config) ?? Promise.resolve(systemStats)).then((data) => ({ data }));
+    }
     if (url === '/api/admin/dashboard/status') {
       return (handlers.status?.(config) ?? Promise.resolve(statusFixture())).then((data) => ({ data }));
     }
@@ -124,8 +117,6 @@ const callsTo = (url: string) => mockGet.mock.calls.filter(([called]) => called 
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mockFetchStats.mockResolvedValue(undefined);
-  mockStoreState = { systemStats: null, statsLoading: false, statsLastFilter: null, fetchStats: mockFetchStats };
   routeApi();
 });
 
@@ -296,17 +287,42 @@ describe('DashboardPage', () => {
 
     const toggle = screen.getByRole('button', { name: /Meta snapshot/ });
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
-    expect(mockFetchStats).not.toHaveBeenCalled();
+    expect(callsTo('/api/admin/stats')).toHaveLength(0);
 
-    mockStoreState = { ...mockStoreState, systemStats, statsLastFilter: 'real' };
     await user.click(toggle);
 
     expect(toggle).toHaveAttribute('aria-expanded', 'true');
-    expect(mockFetchStats).toHaveBeenCalledWith('real', false);
+    expect(callsTo('/api/admin/stats')[0]?.[1]?.params).toEqual({ filter: 'real' });
     expect(await screen.findByText('Stances')).toBeInTheDocument();
     expect(screen.getByText('Weapon shield')).toBeInTheDocument();
     expect(screen.queryByText(/tiers/i)).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'League Health' })).toHaveAttribute('href', '/admin/league-health');
     expect(screen.getByText('75.0%')).toBeInTheDocument(); // 150 of 200 equipped, offhands included
+  });
+
+  it('keeps the meta snapshot on the current filter when an old response arrives late', async () => {
+    const user = userEvent.setup();
+    let resolveReal: (value: typeof systemStats) => void = () => undefined;
+    const autoStats = { ...systemStats, stances: [{ stance: 'balanced', count: 9 }] };
+    routeApi({
+      stats: (config) => (config?.params?.filter === 'real'
+        ? new Promise<typeof systemStats>((resolve) => { resolveReal = resolve; })
+        : Promise.resolve(autoStats)),
+    });
+    renderPage();
+    await screen.findByRole('region', { name: 'System status' });
+
+    await user.click(screen.getByRole('button', { name: /Meta snapshot/ }));
+    await user.click(screen.getByRole('button', { name: /Auto-generated/ }));
+    expect(await screen.findByText('Balanced')).toBeInTheDocument();
+
+    // The slow Real response lands after the Auto one: it must not replace it
+    // or blank the panel.
+    resolveReal(systemStats);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(screen.getByText('Balanced')).toBeInTheDocument();
+    expect(screen.queryByText('Offensive')).not.toBeInTheDocument();
+    expect(callsTo('/api/admin/stats').at(-1)?.[1]?.signal?.aborted).toBe(false);
+    expect(callsTo('/api/admin/stats')[0]?.[1]?.signal?.aborted).toBe(true);
   });
 });

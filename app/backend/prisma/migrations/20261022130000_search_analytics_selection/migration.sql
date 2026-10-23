@@ -8,5 +8,5 @@ ALTER TABLE "search_analytics_events"
   ADD COLUMN "selected_category" VARCHAR(10),
   ADD COLUMN "selected_at" TIMESTAMP(3);
 
-CREATE INDEX "search_analytics_events_season_number_user_id_event_timestamp_idx"
+CREATE INDEX "search_analytics_events_season_number_user_id_event_timesta_idx"
   ON "search_analytics_events"("season_number", "user_id", "event_timestamp");

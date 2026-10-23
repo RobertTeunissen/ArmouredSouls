@@ -22,8 +22,10 @@ export async function search(query: string, signal?: AbortSignal): Promise<Searc
  * the player opened. No result id, label, position, route or query is sent.
  *
  * Fire-and-forget: never awaited by navigation, and every failure is
- * swallowed so telemetry can never affect the player.
+ * swallowed so telemetry can never affect the player. `skipAuthRedirect`
+ * keeps an expired token from clearing the session and redirecting to
+ * `/login` from this request alone.
  */
 export function recordSearchSelection(category: SearchResult['category']): void {
-  void api.post<void>('/api/search/selection', { category }).catch(() => undefined);
+  void api.post<void>('/api/search/selection', { category }, { skipAuthRedirect: true }).catch(() => undefined);
 }

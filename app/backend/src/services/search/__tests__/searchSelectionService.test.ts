@@ -34,7 +34,10 @@ describe('recordSearchSelection', () => {
     const sql = mockExecuteRaw.mock.calls[0][0] as Prisma.Sql;
     const text = sql.strings.join('?');
     expect(text).toContain('SET "selected_category" = ?, "selected_at" = ?');
-    expect(text).toContain('"selected_category" IS NULL');
+    // Both the outer UPDATE target and the subquery guard against replacing
+    // an existing selection (the outer one closes the concurrent-writer race).
+    expect(text).toMatch(/SET "selected_category" = \?, "selected_at" = \?\s+WHERE "selected_category" IS NULL\s+AND "id" = \(/);
+    expect(text.match(/"selected_category" IS NULL/g)).toHaveLength(2);
     expect(text).toContain('"selection_tracked" = TRUE');
     expect(text).toContain('ORDER BY "event_timestamp" DESC, "id" DESC');
     expect(text).toContain('LIMIT 1');

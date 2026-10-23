@@ -152,5 +152,28 @@ describe('API Client Interceptors - Property Tests', () => {
         { numRuns: 100 },
       );
     });
+
+    it('keeps the session on a backend 401/403 when the request opted out (telemetry)', async () => {
+      await fc.assert(
+        fc.asyncProperty(fc.constantFrom(401, 403), fc.string({ minLength: 1 }), async (status, message) => {
+          vi.mocked(localStorage.getItem).mockReturnValue('some-token');
+          vi.mocked(localStorage.removeItem).mockClear();
+          (window.location as unknown as { href: string }).href = '';
+
+          mock.onPost('/api/search/selection').reply(status, { error: message });
+
+          await expect(
+            apiClient.post('/api/search/selection', { category: 'robots' }, { skipAuthRedirect: true }),
+          ).rejects.toBeDefined();
+
+          expect(localStorage.removeItem).not.toHaveBeenCalled();
+          expect(window.location.href).toBe('');
+          expect(mock.history.post[0]?.headers).not.toHaveProperty('skipAuthRedirect');
+
+          mock.reset();
+        }),
+        { numRuns: 25 },
+      );
+    });
   });
 });

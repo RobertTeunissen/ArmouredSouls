@@ -74,7 +74,7 @@ describe('searchApi', () => {
 
     recordSearchSelection('stables');
 
-    expect(mockedPost).toHaveBeenCalledWith('/api/search/selection', { category: 'stables' });
+    expect(mockedPost).toHaveBeenCalledWith('/api/search/selection', { category: 'stables' }, { skipAuthRedirect: true });
   });
 
   it('swallows a failed selection request', async () => {

@@ -33,10 +33,16 @@ export async function recordSearchSelection(
   try {
     const season = await getCurrentSeason();
     const since = new Date(now.getTime() - SEARCH_SELECTION_WINDOW_MS);
+    // The outer `"selected_category" IS NULL` is deliberate: when two
+    // selections race, both subqueries can pick the same event. The second
+    // writer waits on the row lock, re-evaluates the outer predicate against
+    // the committed row (READ COMMITTED) and updates nothing, so an existing
+    // selection is never replaced.
     const updated = await prisma.$executeRaw(Prisma.sql`
       UPDATE "search_analytics_events"
       SET "selected_category" = ${category}, "selected_at" = ${now}
-      WHERE "id" = (
+      WHERE "selected_category" IS NULL
+        AND "id" = (
         SELECT "id" FROM "search_analytics_events"
         WHERE "user_id" = ${userId}
           AND "season_number" = ${season.seasonNumber}

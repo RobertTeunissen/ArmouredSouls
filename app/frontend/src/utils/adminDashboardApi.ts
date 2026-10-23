@@ -8,6 +8,7 @@
  */
 import { api } from './api';
 import type { UserFilterType } from '../components/admin/shared';
+import type { SystemStats } from '../components/admin/types';
 
 export interface DashboardHumanPlayers {
   total: number;
@@ -88,4 +89,13 @@ export function getBattleActivity(filter: UserFilterType, fresh: boolean, signal
     params: { filter, fresh: fresh ? 'true' : 'false' },
     signal,
   });
+}
+
+/**
+ * `/api/admin/stats` for the meta snapshot. Deliberately not the shared
+ * `adminStore.fetchStats()` slot: that commits every response, so a slow
+ * response for an old filter could overwrite a newer one.
+ */
+export function getMetaStats(filter: UserFilterType, signal?: AbortSignal): Promise<SystemStats> {
+  return api.get<SystemStats>('/api/admin/stats', { params: { filter }, signal });
 }

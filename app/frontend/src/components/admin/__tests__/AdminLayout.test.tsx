@@ -319,6 +319,21 @@ describe('AdminLayout', () => {
       expect(trigger).toHaveFocus();
     });
 
+    it('should close after choosing a link and return focus to the hamburger', async () => {
+      const user = userEvent.setup();
+      renderLayout();
+      const trigger = screen.getByRole('button', { name: 'Open navigation' });
+
+      await user.click(trigger);
+      const dialog = screen.getByRole('dialog');
+      const security = within(dialog).getAllByRole('link').find((l) => l.getAttribute('href') === '/admin/security');
+      security!.focus();
+      await user.keyboard('{Enter}');
+
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(trigger).toHaveFocus();
+    });
+
     it('should close from the close button and the backdrop', async () => {
       const user = userEvent.setup();
       renderLayout();

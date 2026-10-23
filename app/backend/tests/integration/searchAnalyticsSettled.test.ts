@@ -13,11 +13,11 @@ import http from 'http';
 import type { AddressInfo } from 'net';
 
 import prisma from '../../src/lib/prisma';
-import { authenticateToken } from '../../src/middleware/auth';
 import { errorHandler } from '../../src/middleware/errorHandler';
 import adminAnalyticsRoutes from '../../src/routes/adminAnalytics';
 import searchRoutes from '../../src/routes/search';
 import { getCurrentSeason, invalidateSeasonCache } from '../../src/services/season/seasonService';
+import { recordSearchSelection } from '../../src/services/search/searchSelectionService';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'test-secret';
 const suffix = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
@@ -226,6 +226,21 @@ describe('Search Analytics settled searches, selection tracking and phrases (dat
       // The second selection found no other recent, unselected, tracked search.
       expect(byId.get(untracked)?.selectedCategory).toBeNull();
       expect(byId.get(old)?.selectedCategory).toBeNull();
+    });
+
+    it('lets exactly one of two concurrent selections attach, and never replaces it', async () => {
+      const now = new Date();
+      const only = await insert(playerC, `${T} race`, 0, { robots: 1, stables: 1 }, { at: new Date(now.getTime() - 5 * SECOND) });
+
+      const outcomes = await Promise.all([
+        recordSearchSelection(playerC.userId, 'robots', now),
+        recordSearchSelection(playerC.userId, 'stables', now),
+      ]);
+
+      expect(outcomes.filter((outcome) => outcome === 'attached')).toHaveLength(1);
+      const winner = outcomes[0] === 'attached' ? 'robots' : 'stables';
+      const row = await prisma.searchAnalyticsEvent.findUnique({ where: { id: BigInt(only) }, select: { selectedCategory: true } });
+      expect(row?.selectedCategory).toBe(winner);
     });
 
     it('rejects anything but a known category and requires authentication', async () => {

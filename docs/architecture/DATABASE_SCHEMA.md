@@ -1038,6 +1038,7 @@ One row per season. Exactly one row has a `phase` other than `completed`.
 | `competitive_cycles_completed` | int | Season_Cycle is this + 1 |
 | `preparation_cycles_completed` | int | Preparation day is this + 1 |
 | `generated_stable_count` | int | Stamped before generated stables are deleted, so the figure survives the purge |
+| `last_settlement_at` | timestamp? | Stamped by every daily settlement in both phases (`advancePreparationCycle` / `advanceCompetitiveCycle`). Preparation settlements leave `cycle_metadata.last_cycle_at` alone, so the admin dashboard's "settlement overdue" check reads the later of the two. Null until the season's first settlement (migration `20261023090000_season_last_settlement_at`) |
 | `started_at` / `ended_at` | timestamp | `ended_at` set when the season completes |
 
 There is deliberately no `scheduled_end_cycles` column: Season 0 closes by explicit admin action only.

@@ -221,7 +221,7 @@ export async function advanceCompetitiveCycle(): Promise<CompetitiveAdvanceResul
 
   const updated = await prisma.season.update({
     where: { id: row.id },
-    data: { competitiveCyclesCompleted: { increment: 1 } },
+    data: { competitiveCyclesCompleted: { increment: 1 }, lastSettlementAt: new Date() },
   });
   invalidateSeasonCache();
 
@@ -247,6 +247,9 @@ export async function advancePreparationCycle(): Promise<PreparationAdvanceResul
 
   const nextCompleted = row.preparationCyclesCompleted + 1;
   const shouldTransition = nextCompleted >= config.preparationLengthCycles;
+  // Stamped in both phases: the admin dashboard reads it as persistent
+  // evidence of a settlement, because preparation leaves last_cycle_at alone.
+  const lastSettlementAt = new Date();
 
   const updated = await prisma.season.update({
     where: { id: row.id },
@@ -255,8 +258,9 @@ export async function advancePreparationCycle(): Promise<PreparationAdvanceResul
           preparationCyclesCompleted: nextCompleted,
           phase: 'competitive',
           competitiveCyclesCompleted: 0,
+          lastSettlementAt,
         }
-      : { preparationCyclesCompleted: nextCompleted },
+      : { preparationCyclesCompleted: nextCompleted, lastSettlementAt },
   });
   invalidateSeasonCache();
 

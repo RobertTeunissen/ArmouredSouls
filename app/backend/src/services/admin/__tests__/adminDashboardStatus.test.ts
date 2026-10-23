@@ -2,6 +2,7 @@
  * Unit tests for the dashboard status helpers and their composition.
  */
 const mockCycleMetadataFindUnique = jest.fn();
+const mockSeasonFindFirst = jest.fn();
 const mockUserCount = jest.fn();
 const mockScheduledMatchCount = jest.fn();
 const mockGetSchedulerState = jest.fn();
@@ -14,6 +15,7 @@ jest.mock('../../../lib/prisma', () => ({
   __esModule: true,
   default: {
     cycleMetadata: { findUnique: (...args: unknown[]) => mockCycleMetadataFindUnique(...args) },
+    season: { findFirst: (...args: unknown[]) => mockSeasonFindFirst(...args) },
     user: { count: (...args: unknown[]) => mockUserCount(...args) },
     scheduledMatch: { count: (...args: unknown[]) => mockScheduledMatchCount(...args) },
   },
@@ -40,7 +42,12 @@ jest.mock('../adminQueuedMatches', () => ({
 }));
 
 import type { JobState, SchedulerState } from '../../cycle/cycleScheduler';
-import { computeCycleHealth, getDashboardStatus, summarizeScheduler } from '../adminDashboardStatusService';
+import {
+  computeCycleHealth,
+  getDashboardStatus,
+  latestSettlement,
+  summarizeScheduler,
+} from '../adminDashboardStatusService';
 import { SETTLEMENT_OVERDUE_AFTER_MS, STUCK_MATCH_GRACE_MS } from '../adminThresholds';
 
 const NOW = new Date('2026-10-22T14:00:00.000Z');
@@ -92,6 +99,22 @@ describe('computeCycleHealth', () => {
   });
 });
 
+describe('latestSettlement', () => {
+  const earlier = new Date('2026-10-20T00:01:00.000Z');
+  const later = new Date('2026-10-22T00:01:00.000Z');
+
+  it('takes the later of the two timestamps, whichever source it comes from', () => {
+    expect(latestSettlement(earlier, later)).toBe(later);
+    expect(latestSettlement(later, earlier)).toBe(later);
+  });
+
+  it('falls back to the one that is present, and null when neither is', () => {
+    expect(latestSettlement(null, later)).toBe(later);
+    expect(latestSettlement(earlier, null)).toBe(earlier);
+    expect(latestSettlement(null, null)).toBeNull();
+  });
+});
+
 describe('summarizeScheduler', () => {
   it('counts succeeded, failed and not-yet-reported jobs', () => {
     const summary = summarizeScheduler(
@@ -126,6 +149,7 @@ describe('getDashboardStatus', () => {
     mockGetSchedulerState.mockReturnValue(scheduler([job('league', 'success'), job('settlement', 'success', nextSettlement)]));
     mockCycleMetadataFindUnique.mockResolvedValue({ totalCycles: 412, lastCycleAt: new Date('2026-10-22T00:01:00.000Z') });
     mockGetCurrentSeason.mockResolvedValue({ seasonNumber: 2, phase: 'competitive', seasonCycle: 38 });
+    mockSeasonFindFirst.mockResolvedValue({ lastSettlementAt: new Date('2026-10-22T00:01:00.000Z') });
     mockCountQueued.mockResolvedValue(new Map([['league_1v1', 96], ['koth', 6]]));
     mockUserCount.mockResolvedValue(3);
     mockGetAutomatonStatus.mockResolvedValue({ needAttentionCount: 5, failedCount: 1 });
@@ -150,6 +174,30 @@ describe('getDashboardStatus', () => {
       cycleHealth: { settlementOverdue: false, failedJobs: [], stuckMatches: 0 },
     });
     expect(status.timestamp).toBe(NOW.toISOString());
+  });
+
+  it('stays healthy through a preparation phase whose settlements leave last_cycle_at alone', async () => {
+    // Rollover reset last_cycle_at three days ago; daily preparation
+    // settlements since then only stamped the season.
+    mockCycleMetadataFindUnique.mockResolvedValue({ totalCycles: 0, lastCycleAt: new Date('2026-10-19T00:01:00.000Z') });
+    mockSeasonFindFirst.mockResolvedValue({ lastSettlementAt: new Date('2026-10-22T00:01:00.000Z') });
+    mockGetCurrentSeason.mockResolvedValue({ seasonNumber: 3, phase: 'preparation', seasonCycle: 0 });
+
+    const status = await getDashboardStatus(NOW);
+
+    expect(mockSeasonFindFirst).toHaveBeenCalledWith({ orderBy: { seasonNumber: 'desc' }, select: { lastSettlementAt: true } });
+    expect(status.cycle.lastSettlementAt).toBe('2026-10-22T00:01:00.000Z');
+    expect(status.attention.cycleHealth.settlementOverdue).toBe(false);
+  });
+
+  it('still flags a missed preparation settlement', async () => {
+    mockCycleMetadataFindUnique.mockResolvedValue({ totalCycles: 0, lastCycleAt: new Date('2026-10-19T00:01:00.000Z') });
+    mockSeasonFindFirst.mockResolvedValue({ lastSettlementAt: new Date('2026-10-20T00:01:00.000Z') });
+    mockGetCurrentSeason.mockResolvedValue({ seasonNumber: 3, phase: 'preparation', seasonCycle: 0 });
+
+    const status = await getDashboardStatus(NOW);
+
+    expect(status.attention.cycleHealth.settlementOverdue).toBe(true);
   });
 
   it('counts stuck matches with the grace period', async () => {

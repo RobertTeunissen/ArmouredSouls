@@ -99,7 +99,7 @@ export function AdminMobileNav(): ReactNode {
                 <span aria-hidden="true" className="text-xl leading-none">×</span>
               </button>
             </div>
-            <AdminNavList onNavigate={() => setOpen(false)} />
+            <AdminNavList onNavigate={close} />
           </div>
         </div>
       )}

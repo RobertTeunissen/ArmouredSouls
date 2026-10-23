@@ -1224,6 +1224,11 @@ model Season {
   // Captured before Generated_Stables are deleted, so the count is still
   // reportable after the rows are gone (Spec #45 R29.15).
   generatedStableCount       Int       @default(0) @map("generated_stable_count")
+  // When a daily settlement last advanced this season, in either phase.
+  // Preparation settlements leave cycle_metadata.last_cycle_at untouched, so
+  // this is the persistent evidence the admin dashboard's "settlement overdue"
+  // check needs during a Preparation_Phase.
+  lastSettlementAt           DateTime? @map("last_settlement_at")
   startedAt                  DateTime  @map("started_at")
   endedAt                    DateTime? @map("ended_at")
   createdAt                  DateTime  @default(now()) @map("created_at")

@@ -117,6 +117,16 @@ describe('api helper', () => {
         // No body, no config → URL only.
         expect(mockedPost).toHaveBeenCalledWith('/api/action');
       });
+
+      it('should pass the skipAuthRedirect opt-out through to apiClient, and nothing extra when absent', async () => {
+        mockedPost.mockResolvedValue({ data: undefined });
+
+        await api.post('/api/search/selection', { category: 'robots' }, { skipAuthRedirect: true });
+        await api.post('/api/action', { a: 1 }, { skipAuthRedirect: false });
+
+        expect(mockedPost).toHaveBeenNthCalledWith(1, '/api/search/selection', { category: 'robots' }, { skipAuthRedirect: true });
+        expect(mockedPost).toHaveBeenNthCalledWith(2, '/api/action', { a: 1 }, {});
+      });
     });
   });
 

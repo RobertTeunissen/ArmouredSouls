@@ -24,6 +24,17 @@ const log = createLogger('apiClient');
  * so they can intercept the actual axios calls the wrapper makes. Outside
  * of tests, an ESLint rule blocks direct imports of this file.
  */
+declare module 'axios' {
+  interface AxiosRequestConfig {
+    /**
+     * Set through `ApiRequestConfig.skipAuthRedirect` for fire-and-forget
+     * telemetry: the response interceptor leaves the session alone on 401/403.
+     * Client-side only; never sent to the server.
+     */
+    skipAuthRedirect?: boolean;
+  }
+}
+
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '',
   withCredentials: true,
@@ -54,6 +65,12 @@ apiClient.interceptors.response.use(
     const url = error.config?.url || '';
     const isAuthRoute = url.includes('/api/auth/');
     const status = error.response?.status;
+
+    // Telemetry that opted out must never end the session or interrupt the
+    // navigation it accompanies; the next real request handles an expired token.
+    if (error.config?.skipAuthRedirect === true) {
+      return Promise.reject(error);
+    }
 
     // Only clear token and redirect on definitive auth failures from our
     // own backend. Proxy/WAF/DDoS layers (Cloudflare, Caddy, etc.) may

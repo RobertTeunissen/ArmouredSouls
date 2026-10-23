@@ -8,7 +8,9 @@
  * Cycle health deliberately leans on persistent signals. `getSchedulerState()`
  * is in-memory and every job reads `null` after a restart or deploy, so a
  * missed cron job is also detected from the database: an overdue settlement
- * and matches left `scheduled` past their slot.
+ * (the later of `cycle_metadata.last_cycle_at` and the season's
+ * `last_settlement_at`, so both phases count) and matches left `scheduled`
+ * past their slot.
  */
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
@@ -102,6 +104,21 @@ export function computeCycleHealth(input: CycleHealthInput): DashboardCycleHealt
   };
 }
 
+/**
+ * The most recent persistent evidence of a successful settlement. Pure.
+ *
+ * `cycle_metadata.last_cycle_at` moves only on competitive settlements (and is
+ * reset at rollover); `seasons.last_settlement_at` is stamped by every
+ * settlement in both phases. Taking the later of the two keeps the overdue
+ * check honest through a Preparation_Phase without disabling it there, so a
+ * missed preparation settlement still shows.
+ */
+export function latestSettlement(lastCycleAt: Date | null, seasonLastSettlementAt: Date | null): Date | null {
+  if (lastCycleAt === null) return seasonLastSettlementAt;
+  if (seasonLastSettlementAt === null) return lastCycleAt;
+  return seasonLastSettlementAt.getTime() > lastCycleAt.getTime() ? seasonLastSettlementAt : lastCycleAt;
+}
+
 /** Resolve one section; log and return null when its source fails. */
 async function settle<T>(label: string, read: () => Promise<T>): Promise<T | null> {
   try {
@@ -119,8 +136,9 @@ export async function getDashboardStatus(now: Date = new Date()): Promise<Dashbo
   const scheduler = summarizeScheduler(schedulerState, processStartedAt);
   const settlementJob = (schedulerState.jobs ?? []).find((job) => job.name === SETTLEMENT_JOB);
 
-  const [cycleMetadata, season, queuedByMode, bankruptcyCount, automatonStatus, stuckMatches] = await Promise.all([
+  const [cycleMetadata, seasonSettlement, season, queuedByMode, bankruptcyCount, automatonStatus, stuckMatches] = await Promise.all([
     prisma.cycleMetadata.findUnique({ where: { id: 1 }, select: { totalCycles: true, lastCycleAt: true } }),
+    prisma.season.findFirst({ orderBy: { seasonNumber: 'desc' }, select: { lastSettlementAt: true } }),
     settle('season', () => getCurrentSeason()),
     settle('queued matches', () => countQueuedMatchesByMode()),
     settle('bankruptcy risk', () => prisma.user.count({
@@ -140,7 +158,7 @@ export async function getDashboardStatus(now: Date = new Date()): Promise<Dashbo
     logger.error(`[AdminDashboard] security summary unavailable — ${error instanceof Error ? error.message : String(error)}`);
   }
 
-  const lastSettlementAt = cycleMetadata?.lastCycleAt ?? null;
+  const lastSettlementAt = latestSettlement(cycleMetadata?.lastCycleAt ?? null, seasonSettlement?.lastSettlementAt ?? null);
 
   return {
     cycle: {

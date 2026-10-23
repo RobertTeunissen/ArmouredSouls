@@ -2,14 +2,15 @@
  * Meta snapshot: what players (or Automatons) choose — stances, loadouts,
  * yield thresholds, facilities and weapons. Tier distributions are results,
  * not choices, and live on League Health. Collapsed by default;
- * `/api/admin/stats` is only fetched once it is opened.
+ * `/api/admin/stats` is only fetched once it is opened, by a loader scoped to
+ * the current filter rather than the shared admin store slot.
  */
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { useShallow } from 'zustand/react/shallow';
-import { useAdminStore } from '../../../stores/adminStore';
 import { ApiError } from '../../../utils/ApiError';
+import { isAbortError } from '../../../utils/abort';
+import { getMetaStats } from '../../../utils/adminDashboardApi';
 import { ADMIN_FOCUS_RING, type UserFilterType } from '../shared';
 import type { SystemStats } from '../types';
 import { formatCount, formatDecimal } from '../../../utils/adminDashboardFormat';
@@ -116,27 +117,36 @@ function MetaContent({ stats }: { stats: SystemStats }): ReactNode {
 
 export function MetaSnapshot({ filter, refreshToken }: MetaSnapshotProps): ReactNode {
   const [open, setOpen] = useState(false);
+  // Stats are kept with the filter they were loaded for, so data for another
+  // filter is never shown, even for a moment.
+  const [loaded, setLoaded] = useState<{ filter: UserFilterType; stats: SystemStats } | null>(null);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const contentId = useId();
-  const lastToken = useRef(refreshToken);
-  const { systemStats, statsLoading, statsLastFilter, fetchStats } = useAdminStore(useShallow((s) => ({
-    systemStats: s.systemStats,
-    statsLoading: s.statsLoading,
-    statsLastFilter: s.statsLastFilter,
-    fetchStats: s.fetchStats,
-  })));
 
+  // One request per (open, filter, refresh). A filter change or close aborts
+  // the previous request and its late response is ignored, so a slow response
+  // for an old filter can never replace the current one.
   useEffect(() => {
     if (!open) return;
-    const force = lastToken.current !== refreshToken;
-    lastToken.current = refreshToken;
+    const controller = new AbortController();
+    setLoading(true);
     setError(null);
-    fetchStats(filter, force).catch((err: unknown) => {
-      setError((err instanceof ApiError && err.message) || 'Could not load the meta snapshot.');
-    });
-  }, [open, filter, refreshToken, fetchStats]);
+    getMetaStats(filter, controller.signal)
+      .then((stats) => {
+        if (controller.signal.aborted) return;
+        setLoaded({ filter, stats });
+        setLoading(false);
+      })
+      .catch((err: unknown) => {
+        if (controller.signal.aborted || isAbortError(err, controller.signal)) return;
+        setError((err instanceof ApiError && err.message) || 'Could not load the meta snapshot.');
+        setLoading(false);
+      });
+    return () => controller.abort();
+  }, [open, filter, refreshToken]);
 
-  const current = systemStats && statsLastFilter === filter ? systemStats : null;
+  const current = loaded && loaded.filter === filter ? loaded.stats : null;
 
   return (
     <section className="rounded-lg border border-white/10 bg-surface">
@@ -155,7 +165,7 @@ export function MetaSnapshot({ filter, refreshToken }: MetaSnapshotProps): React
       </h2>
       <div id={contentId} hidden={!open} className="border-t border-white/10">
         {error && <PanelError message={error} />}
-        {!current && statsLoading && <PanelSkeleton rows={6} />}
+        {!current && loading && <PanelSkeleton rows={6} />}
         {current && <MetaContent stats={current} />}
         <p className="px-5 pb-4 text-xs text-tertiary">
           Full detail:{' '}
