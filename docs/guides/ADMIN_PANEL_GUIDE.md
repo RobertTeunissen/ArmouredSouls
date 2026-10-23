@@ -25,6 +25,7 @@ All pages manage their own data fetching. The sidebar collapses to icons on narr
 | | Practice Arena | `/admin/practice-arena` | Practice battle usage and daily trends |
 | **Battle Data** | Battle Logs | `/admin/battles` | Paginated battle history with type filters and detail slide-over |
 | | Robot Stats | `/admin/robot-stats` | Attribute analysis, outlier detection, win rate correlation |
+| | Meta | `/admin/meta` | What stables choose: stances, loadouts, yield thresholds, facilities, weapons |
 | | League Health | `/admin/league-health` | Per-league robot counts, ELO averages, instance counts |
 | | Weapons | `/admin/weapons` | Weapon popularity, type breakdown, ownership stats |
 | **Player Management** | Players | `/admin/players` | Player list with tabs (New Players, Auto-Generated, At-Risk), churn risk, engagement, search, detail slide-over |
@@ -73,11 +74,12 @@ Sections, top to bottom:
 3. **KPI cards** — Active players (7 days), New players (7 days), Inactive players (3+ days), Battle-ready robots.
 4. **Needs attention** (system-wide) — open items first, each linking to the page that resolves it; OK items collapse to a muted ✓ line.
 5. **Battle activity** — one row per battle mode plus Total. Below 768 px a Volume / Rates toggle switches columns.
-6. **Meta snapshot** — what stables choose: stances, loadouts, yield thresholds, facilities and weapons. Collapsed by default; fetches `/api/admin/stats` only when opened. Tier distributions (1v1, 2v2, 3v3, Tag Team) are on League Health.
+
+What stables choose (stances, loadouts, yield thresholds, facilities, weapons) is on the [Meta](#meta-adminmeta) page; tier distributions are on League Health.
 
 Below 1280 px the sections stack in one column. Below 768 px the admin sidebar is replaced by a hamburger menu that opens the navigation in a drawer (all admin pages).
 
-**Filter scope.** The filter applies to Battle-ready robots, the Last cycle and Season columns of Battle activity, and the Meta snapshot. The status strip, Needs attention and the Queued column are system-wide. The three player cards are always human stables, because they are login-based and bots and Automatons never log in.
+**Filter scope.** The filter applies to Battle-ready robots and the Last cycle and Season columns of Battle activity. The status strip, Needs attention and the Queued column are system-wide. The three player cards are always human stables, because they are login-based and bots and Automatons never log in.
 
 **Definitions**
 
@@ -97,10 +99,25 @@ Below 1280 px the sections stack in one column. Below 768 px the admin sidebar i
 | Battle activity · Walkovers | Byes and battle-time forfeits (`is_bye_match` on the scheduling row, a forfeited participant, or a bracket row with status `forfeit`). Counted as battles, left out of the rates. |
 | Battle activity · Queued | System-wide: `scheduled_matches_v2` rows still `scheduled`, plus outstanding bracket rows of active tournaments that already have a participant. |
 | Draw % / Kill % / Avg time | Over fought battles. Draw = `winner_id IS NULL AND winning_side IS NULL` (team battles record their result in `winning_side`); n/a for KotH and Grand Melee. Kill = at least one participant `destroyed`. |
-| Meta · Facilities | Stables owning each facility at level ≥ 1, and their average level. |
-| Meta · Weapons equipped | Owned weapons in any robot's main **or** offhand slot (`equippedInventoryItems`). |
 
-**API:** `GET /api/admin/dashboard/status` (no filter), `GET /api/admin/dashboard/kpis?filter=`, `GET /api/admin/dashboard/battle-activity?filter=&fresh=` (cached 60 s per filter; `fresh=true` bypasses), `GET /api/admin/stats?filter=` (Meta snapshot). All require `authenticateToken` + `requireAdmin`. `kpis.activeUsersLast7d` is deprecated (it counted robots updated by battles); use `humanPlayers.active7d`.
+**API:** `GET /api/admin/dashboard/status` (no filter), `GET /api/admin/dashboard/kpis?filter=`, `GET /api/admin/dashboard/battle-activity?filter=&fresh=` (cached 60 s per filter; `fresh=true` bypasses). All require `authenticateToken` + `requireAdmin`. `kpis.activeUsersLast7d` is deprecated (it counted robots updated by battles); use `humanPlayers.active7d`.
+
+### Meta (`/admin/meta`)
+
+An overview of what stables choose, for the selected stable type. It moved off the Dashboard (where it was the collapsed "Meta snapshot") so the landing page stays short. The toolbar is the Dashboard's: the same filter (`?filter=`, default `real`), "Last updated" and Refresh.
+
+Sections (desktop: three cards, then Yield thresholds beside Facilities; they stack below 1280 px and 768 px):
+
+| Section | Shows |
+|---|---|
+| Stances / Loadouts | One stacked bar per distribution plus a legend: share and robot count per option, largest first. |
+| Weapons | Owned, Equipped (owned weapons in any robot's main **or** offhand slot, `equippedInventoryItems`) and the equip rate; links to Weapons. |
+| Yield thresholds | One column per threshold in use (labels at 0–20% in steps of 5 and on the highest), the most common value highlighted. Above it: Most common (with its share), Median (the threshold of the middle robot) and Above 20% (robots and share). Exact counts per threshold are in each column's tooltip and in a screen-reader table. |
+| Facilities | Stables owning each facility at level ≥ 1 and their average level (L), most owned first, with a bar relative to the most owned; two columns from 640 px. |
+
+All counts are robots (or stables, for Facilities) owned by users in the filter. With All or Auto-generated, generated stables dominate and their choices are randomised, so near-even splits are expected; Real players shows what people pick. Usage share next to win rate is planned as a follow-up.
+
+**API:** `GET /api/admin/stats?filter=` (`authenticateToken` + `requireAdmin`), read by its own filter-scoped loader (`hooks/useMetaOverview.ts`): a filter change aborts the previous request, so a late response for another filter is never shown.
 
 ### Cycle Controls (`/admin/cycles`)
 

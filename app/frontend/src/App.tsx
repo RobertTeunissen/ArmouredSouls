@@ -47,6 +47,7 @@ const AdminCycleControlsPage = React.lazy(() => import('./pages/admin/CycleContr
 const AdminPracticeArenaPage = React.lazy(() => import('./pages/admin/PracticeArenaPage'));
 const AdminBattleLogsPage = React.lazy(() => import('./pages/admin/BattleLogsPage'));
 const AdminRobotStatsPage = React.lazy(() => import('./pages/admin/RobotStatsPage'));
+const AdminMetaPage = React.lazy(() => import('./pages/admin/MetaPage'));
 const AdminLeagueHealthPage = React.lazy(() => import('./pages/admin/LeagueHealthPage'));
 const AdminWeaponAnalyticsPage = React.lazy(() => import('./pages/admin/WeaponAnalyticsPage'));
 const AdminPlayersPage = React.lazy(() => import('./pages/admin/PlayersPage'));
@@ -102,6 +103,7 @@ function AppRoutes() {
         <Route path="practice-arena" element={<AdminPracticeArenaPage />} />
         <Route path="battles" element={<AdminBattleLogsPage />} />
         <Route path="robot-stats" element={<AdminRobotStatsPage />} />
+        <Route path="meta" element={<AdminMetaPage />} />
         <Route path="league-health" element={<AdminLeagueHealthPage />} />
         <Route path="weapons" element={<AdminWeaponAnalyticsPage />} />
         <Route path="players" element={<AdminPlayersPage />} />

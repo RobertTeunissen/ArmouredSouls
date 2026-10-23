@@ -4,4 +4,3 @@ export { StatusStrip } from './StatusStrip';
 export { KpiRow } from './KpiRow';
 export { NeedsAttentionPanel } from './NeedsAttentionPanel';
 export { BattleActivityTable } from './BattleActivityTable';
-export { MetaSnapshot } from './MetaSnapshot';
