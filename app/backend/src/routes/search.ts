@@ -10,8 +10,33 @@ import {
 import searchService from '../services/search/searchService';
 import { MINIMUM_QUERY_LENGTH } from '../services/search/searchTypes';
 import type { ActiveSeasonContext } from '../services/search/searchAnalyticsTypes';
+import { searchSelectionBodySchema } from '../schemas/search';
+import { recordSearchSelection } from '../services/search/searchSelectionService';
+import type { SearchSelectionCategory } from '../services/search/searchTypes';
 
 const router = express.Router();
+
+/**
+ * POST /api/search/selection — privacy-light selection telemetry.
+ *
+ * Body: `{ category }` only. Always 204 with no body, whether or not a recent
+ * search was found, so the endpoint reveals nothing. Covered by the per-user
+ * limiter mounted on `/api/search`.
+ */
+router.post(
+  '/selection',
+  authenticateToken,
+  validateRequest({ body: searchSelectionBodySchema }),
+  async (req: AuthRequest, res: Response) => {
+    const authenticatedUser = req.user;
+    if (!authenticatedUser || !Number.isSafeInteger(authenticatedUser.userId) || authenticatedUser.userId <= 0) {
+      throw new AppError('UNAUTHORIZED', 'Authentication required', 401);
+    }
+    const { category } = req.body as { category: SearchSelectionCategory };
+    await recordSearchSelection(authenticatedUser.userId, category);
+    res.status(204).end();
+  },
+);
 
 router.get(
   '/',

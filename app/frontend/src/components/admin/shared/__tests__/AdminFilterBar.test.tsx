@@ -121,6 +121,39 @@ describe('AdminFilterBar', () => {
     expect(screen.getByRole('button', { name: 'Automatons' })).not.toHaveAttribute('aria-describedby');
   });
 
+  describe('segmented variant', () => {
+    const segmented: FilterChip[] = [
+      { key: 'real', label: 'Real players', shortLabel: 'Real', active: true, description: REAL_PLAYERS_HELP },
+      { key: 'auto', label: 'Auto-generated', shortLabel: 'Generated', active: false },
+      { key: 'all', label: 'All', active: false },
+    ];
+
+    it('renders one labelled group of pressed/unpressed buttons', () => {
+      render(<AdminFilterBar variant="segmented" groupLabel="Stable type filter" filters={segmented} onFilterToggle={vi.fn()} />);
+
+      const group = screen.getByRole('group', { name: 'Stable type filter' });
+      expect(group).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Real players/ })).toHaveAttribute('aria-pressed', 'true');
+      expect(screen.getByRole('button', { name: /Auto-generated/ })).toHaveAttribute('aria-pressed', 'false');
+    });
+
+    it('renders both the short and the full label (shown per breakpoint)', () => {
+      render(<AdminFilterBar variant="segmented" filters={segmented} onFilterToggle={vi.fn()} />);
+
+      expect(screen.getByText('Generated')).toHaveClass('sm:hidden');
+      expect(screen.getByText('Auto-generated')).toHaveClass('hidden', 'sm:inline');
+    });
+
+    it('keeps the help text and reports the clicked key', () => {
+      const onFilterToggle = vi.fn();
+      render(<AdminFilterBar variant="segmented" filters={segmented} onFilterToggle={onFilterToggle} />);
+
+      expect(screen.getByRole('button', { name: /Real players/ })).toHaveAccessibleDescription(REAL_PLAYERS_HELP);
+      fireEvent.click(screen.getByRole('button', { name: 'All' }));
+      expect(onFilterToggle).toHaveBeenCalledWith('all');
+    });
+  });
+
   it('should render children in the trailing slot', () => {
     render(
       <AdminFilterBar filters={filters} onFilterToggle={vi.fn()}>

@@ -160,6 +160,10 @@ const DB_DEPENDENT = [
   'tests/integration/kothZoneRadiusBackfillMigration.test.ts',
   // #542 — Facility ROI recorded returns via DB aggregates: equivalence + bounded statements
   'tests/services/economy/facilityRoiRecordedAggregates.integration.test.ts',
+  // Admin dashboard redesign — battle activity SQL, tier filter, activity windows, KPI snapshots
+  'tests/integration/adminDashboard.test.ts',
+  // Admin Search Analytics redesign — settled searches, selection tracking, phrases, CSV
+  'tests/integration/searchAnalyticsSettled.test.ts',
   // Spec #55 — Domain_Service_Extraction (task group 2)
   'src/services/economy/__tests__/facilityUpgradeService.test.ts',
   'src/services/economy/__tests__/weaponPurchaseService.test.ts',

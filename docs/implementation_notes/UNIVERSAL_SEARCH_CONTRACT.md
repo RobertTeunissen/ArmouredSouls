@@ -194,7 +194,7 @@ The adapter accepts only strings, trims each value, discards empty/whitespace-on
 
 When the palette is open with an empty normalized query, it shows existing history when available and shows Clear_History_Control. Submitting a non-empty query or selecting a Search_Result stores the normalized query once. Selecting a Recent_Search puts it in the input and follows normal two-character/debounce behavior. Clearing removes all values from the current browser and shows the empty-history state.
 
-Recent_Search_History is never sent to `GET /api/search`, stored in the backend, copied into a URL, or converted into a Search_Analytics_Event. Keystrokes, history operations, result selections, and selected categories are not analytics events.
+Recent_Search_History is never sent to `GET /api/search`, stored in the backend, copied into a URL, or converted into a Search_Analytics_Event. Keystrokes, history operations and result selections never create an analytics event. The one exception to "selections are not measured" is §8.4: selecting a Search_Result reports its **category only**, which is attached to an existing event.
 
 ## 8. Search analytics contract
 
@@ -213,8 +213,7 @@ No Search_Analytics_Store attempt and no Search_Analytics_Event row is created f
 - a source/dependency failure before grouped search completes;
 - keystrokes or debounce activity;
 - Recent_Search_History reads, writes, selection, or clearing;
-- result selection; or
-- selected-category activity.
+- result selection or selected-category activity (a selection may only annotate an existing event, see §8.4).
 
 ### 8.2 Event fields and cardinality
 
@@ -244,6 +243,16 @@ Search_Analytics_Event rows are operational active-season data. The store and re
 
 A rollover purge removes the season's Search_Analytics_Event values, reports the deletion through the existing purge accounting, and creates no archive or cross-season fallback. A required purge failure must remain visible through the existing rollover failure path; the rollover must not claim complete purge success. The MVP provides no cross-season Search_Analytics_Event archive or trend source.
 
+### 8.4 Privacy-light selection category (2026-10-22)
+
+When a player opens a Search_Result, the Search_Client sends `POST /api/search/selection` with exactly `{ "category": "robots" | "stables" | "guide" }`, fire-and-forget (navigation never waits and every failure is swallowed). The body is strict: a result id, label, position, route, query or any other field is rejected with `400`. The route requires authentication, is covered by the per-user limiter on `/api/search`, and always answers `204` with no body.
+
+The backend attaches the category (and a server timestamp) to the player's **most recent** active-season Search_Analytics_Event from the last 60 seconds that is selection-tracked and has no selection yet. It never creates an event; with no such event it does nothing. Stored: `selection_tracked` (true for events written since this change, so "opened nothing" can be told apart from "not tracked"), `selected_category`, `selected_at`. Never stored: which result was opened. Failures are logged without phrases or results and never affect the player.
+
+### 8.5 Settled searches (report-side)
+
+The Search_Client sends a request after every typing pause, so one intended search can record several prefixes ("la", "laser", "laser c"). Recording is unchanged; the admin report counts **settled searches** by default: an event is not counted when the same player's next event follows within **5 seconds** and is a strictly longer phrase that starts with it. A non-prefix correction ("lasr" → "laser") and the same phrase searched twice remain separate searches. The report's `mode=all` counts every recorded request.
+
 ## 10. Admin_Search_Analytics_Resource
 
 The Admin_Portal exposes the administrator-only report API:
@@ -258,8 +267,10 @@ The route uses the existing `authenticateToken` and `requireAdmin` boundaries pl
 interface SearchAnalyticsReportQuery {
   cycleFrom?: number;
   cycleTo?: number;
+  lastCycles?: number;      // the last N cycles up to the current one, resolved on the server
   page?: number;
   limit?: number;
+  mode?: 'settled' | 'all'; // default 'settled' (§8.5)
 }
 ```
 
@@ -272,6 +283,16 @@ The service resolves the active season server-side and rejects historical-season
 - `categoryUsage` for `robots`, `stables`, and `guide`;
 - bounded, paginated `playerAnalysis` with safe `userId`, `stableName`, `searchCount`, `noResultCount`, `page`, `limit`, and `total`; and
 - typed `limitations`, including `analyticsDataIncomplete` when failed persistence is known for the requested scope.
+- additively (2026-10-22): `period.mode`; `overview.rawRequests`, `overview.adminSearchers`, `overview.noResultRate` and `overview.selection` (tracked searches, searches that led to a result, rate, first tracked cycle); `comparison` with the same-length window before the selected one (null for the whole season or at its start); per-cycle `noResultRate`; and `categoryResults` (share of searches that returned a result per category, share where one was opened, share that opened nothing). `categoryUsage` (sums of result counts) is kept for compatibility and deprecated.
+
+Two more admin-only endpoints use the same scope, mode and validation:
+
+```text
+GET /api/admin/search-analytics/phrases?tab=all|noResult&q=&page=&limit=   (limit ≤ 100, default 20)
+GET /api/admin/search-analytics/phrases/export                              (CSV, ≤ 5,000 rows)
+```
+
+Per phrase: searches, share, no-result rate, which categories returned results, and the most often opened category with its share of the phrase's tracked searches. `q` is a case-insensitive substring filter whose `%`, `_` and `\` match literally. CSV cells are quoted and a leading `=`, `+`, `-`, `@`, tab or carriage return is prefixed with `'` so spreadsheets never evaluate them.
 
 Raw event rows, raw event IDs, database payloads, passwords, tokens, unrelated-user data, and unbounded details are not returned. Raw phrases are available only to authorized administrators through the bounded report fields. Non-administrators receive the existing admin authorization failure without analytics data. The report page is `/admin/search-analytics`, remains inside the Admin_Portal, and is never exposed through Player_Shell or the player Search_Palette.
 
@@ -286,7 +307,7 @@ The following remain outside this MVP and must not be added through an apparentl
 - fuzzy, phonetic, edit-distance, approximate, typo-correcting, or token-expansion matching;
 - anonymous or unauthenticated search;
 - server-side or cross-device Recent_Search_History storage/synchronization;
-- Search_Result click tracking, selected-result tracking, selected-category tracking, keystroke tracking, or browser-activity analytics;
+- Search_Result click or selected-result tracking beyond the category-only annotation of §8.4, keystroke tracking, or browser-activity analytics;
 - player-visible analytics or raw Search_Analytics_Event access;
 - analytics destinations outside the Admin_Portal Admin_Search_Analytics_Resource;
 - retrying, duplicating, queueing, synthesizing, or backfilling failed telemetry;

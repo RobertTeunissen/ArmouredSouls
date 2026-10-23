@@ -1,425 +1,312 @@
 /**
- * Unit Tests for DashboardPage
+ * Unit tests for the admin DashboardPage.
  *
- * Tests KPI cards render with correct values, trend indicators display,
- * battle type breakdowns render, facility breakdown shows all types,
- * and global filter toggles work.
- *
- * _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5_
+ * Covers the status strip, KPI cards and trends, "Needs attention", the battle
+ * activity table (including the mobile Volume/Rates toggle), the collapsed meta
+ * snapshot, the URL filter, refresh, per-section errors and the stale-response
+ * race on a filter change. API shapes match the backend contracts.
  */
-
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import DashboardPage from '../DashboardPage';
+import type { BattleActivity, DashboardKpis, DashboardStatus } from '../../../utils/adminDashboardApi';
 
 // ----------------------------------------------------------------
-// Mock apiClient
+// apiClient mock: routes each URL to a handler
 // ----------------------------------------------------------------
-const mockGet = vi.fn();
+type Config = { params?: Record<string, unknown>; signal?: AbortSignal };
+const mockGet = vi.fn<(url: string, config?: Config) => Promise<{ data: unknown }>>();
 
 vi.mock('../../../utils/apiClient', () => ({
   default: {
-    get: (...args: unknown[]) => mockGet(...args),
+    get: (url: string, config?: Config) => mockGet(url, config),
   },
 }));
 
 // ----------------------------------------------------------------
-// Mock useAdminStore
+// adminStore mock (used by the meta snapshot only)
 // ----------------------------------------------------------------
-const mockFetchStats = vi.fn();
-
-const defaultSystemStats = {
-  robots: {
-    total: 150,
-    byTier: [
-      { league: 'Bronze', count: 50 },
-      { league: 'Silver', count: 40 },
-      { league: 'Gold', count: 30 },
-      { league: 'Platinum', count: 20 },
-      { league: 'Diamond', count: 10 },
-    ],
-    battleReady: 120,
-    battleReadyPercentage: 80.0,
-  },
-  matches: {
-    scheduled: 25,
-    completed: 200,
-    byType: {
-      league: { scheduled: 10, completed: 100 },
-      tournament: { scheduled: 5, completed: 40 },
-      tagTeam: { scheduled: 6, completed: 35 },
-      koth: { scheduled: 4, completed: 25 },
-    },
-  },
-  battles: {
-    last24Hours: 42,
-    total: 1500,
-    draws: 150,
-    drawPercentage: 10,
-    avgDuration: 45,
-    kills: 300,
-    killPercentage: 20,
-  },
-  finances: {
-    totalCredits: 500000,
-    avgBalance: 3333,
-    usersAtRisk: 5,
-    totalUsers: 50,
-  },
-  facilities: {
-    summary: [
-      { type: 'repair_bay', purchaseCount: 30, avgLevel: 2.5 },
-      { type: 'training_ground', purchaseCount: 25, avgLevel: 1.8 },
-      { type: 'weapons_lab', purchaseCount: 20, avgLevel: 3.0 },
-    ],
-    totalPurchases: 75,
-    mostPopular: 'repair_bay',
-  },
-  weapons: {
-    totalBought: 200,
-    equipped: 150,
-  },
-  stances: [
-    { stance: 'aggressive', count: 40 },
-    { stance: 'defensive', count: 35 },
-    { stance: 'balanced', count: 50 },
-  ],
-  loadouts: [
-    { type: 'heavy_armor', count: 30 },
-    { type: 'light_speed', count: 45 },
-  ],
-  yieldThresholds: {
-    distribution: [
-      { threshold: 10, count: 5 },
-      { threshold: 20, count: 15 },
-      { threshold: 30, count: 25 },
-    ],
-    mostCommon: 30,
-    mostCommonCount: 25,
-  },
-};
-
-let mockStoreState = {
-  systemStats: defaultSystemStats,
-  statsLoading: false,
-  fetchStats: mockFetchStats,
-};
+const mockFetchStats = vi.fn<(filter?: string, force?: boolean) => Promise<void>>();
+let mockStoreState: Record<string, unknown> = {};
 
 vi.mock('../../../stores/adminStore', () => ({
-  useAdminStore: (selector: (state: typeof mockStoreState) => unknown) =>
-    selector(mockStoreState),
+  useAdminStore: (selector: (state: Record<string, unknown>) => unknown) => selector(mockStoreState),
 }));
 
 // ----------------------------------------------------------------
-// Default KPI response
+// Fixtures
 // ----------------------------------------------------------------
-const defaultKpiResponse = {
-  data: {
-    inactivePlayers: 12,
-    battlesToday: 42,
-    scheduledMatches: 25,
-    currentCycle: 100,
-    trends: {
-      inactivePlayers: 'up' as const,
-      battlesToday: 'down' as const,
-    },
+const kpis = (overrides: Partial<DashboardKpis['humanPlayers']> = {}, active7d = 38): DashboardKpis => ({
+  currentCycle: 412,
+  lastCycleAt: '2026-10-22T00:01:00.000Z',
+  humanPlayers: {
+    total: 52, active7d, new7d: 5, inactive3d: 7,
+    previous: { active7d: 32, new7d: 7, inactive3d: 6 },
+    ...overrides,
   },
+  robots: { total: 144, battleReady: 124, battleReadyPercentage: 86.1 },
+  timestamp: '2026-10-22T14:02:31.000Z',
+});
+
+const statusFixture = (attention: Partial<DashboardStatus['attention']> = {}): DashboardStatus => ({
+  cycle: { number: 412, lastSettlementAt: '2026-10-22T00:01:00.000Z', nextSettlementAt: '2026-10-23T00:00:00.000Z' },
+  season: { number: 2, phase: 'competitive', seasonCycle: 38 },
+  scheduler: {
+    active: true, runningJob: null, queueLength: 0, jobsTotal: 10, jobsSucceeded: 10,
+    jobsFailed: [], jobsNotYetReported: 0, processStartedAt: '2026-10-20T09:00:00.000Z',
+  },
+  queuedMatches: 180,
+  attention: {
+    bankruptcyRisk: { count: 3, threshold: 10000 },
+    security: { activeAlerts: 1, critical: 1 },
+    automatons: { needAttention: 5, failed: 0 },
+    cycleHealth: { settlementOverdue: false, failedJobs: [], stuckMatches: 0 },
+    ...attention,
+  },
+  timestamp: '2026-10-22T14:02:30.000Z',
+});
+
+const activityFixture: BattleActivity = {
+  rows: [
+    { mode: 'league_1v1', lastCycle: 96, season: 39552, walkovers: 12, queued: 96, drawRate: 4.2, killRate: 31.3, avgDurationSeconds: 48.6 },
+    { mode: 'koth', lastCycle: 6, season: 2472, walkovers: 0, queued: 6, drawRate: null, killRate: 44, avgDurationSeconds: 92.1 },
+  ],
+  totals: { lastCycle: 102, season: 42024, walkovers: 12, queued: 102, drawRate: 4.2, killRate: 31.9, avgDurationSeconds: 51.2 },
+  lastCycleWindow: { cycleNumber: 412, from: '2026-10-21T00:01:00.000Z', to: '2026-10-22T00:01:00.000Z' },
+  timestamp: '2026-10-22T14:02:31.000Z',
 };
+
+const systemStats = {
+  robots: { total: 144, byTier: [{ league: 'silver', count: 20 }, { league: 'bronze', count: 100 }], battleReady: 124, battleReadyPercentage: 86.1 },
+  matches: { scheduled: 0, completed: 0 },
+  battles: { last24Hours: 0, total: 0, draws: 0, drawPercentage: 0, avgDuration: 0, kills: 0, killPercentage: 0 },
+  finances: { totalCredits: 0, avgBalance: 0, usersAtRisk: 0, totalUsers: 52 },
+  facilities: { summary: [{ type: 'repair_bay', purchaseCount: 30, avgLevel: 2.5 }], totalPurchases: 30, mostPopular: 'repair_bay' },
+  weapons: { totalBought: 200, equipped: 120, equippedInventoryItems: 150 },
+  stances: [{ stance: 'offensive', count: 60 }, { stance: 'defensive', count: 40 }],
+  loadouts: [{ type: 'weapon_shield', count: 70 }],
+  yieldThresholds: { distribution: [{ threshold: 10, count: 50 }], mostCommon: 10, mostCommonCount: 50 },
+};
+
+function routeApi(handlers: Partial<Record<'kpis' | 'status' | 'activity', (config?: Config) => Promise<unknown>>> = {}): void {
+  mockGet.mockImplementation((url, config) => {
+    if (url === '/api/admin/dashboard/status') {
+      return (handlers.status?.(config) ?? Promise.resolve(statusFixture())).then((data) => ({ data }));
+    }
+    if (url === '/api/admin/dashboard/kpis') {
+      return (handlers.kpis?.(config) ?? Promise.resolve(kpis())).then((data) => ({ data }));
+    }
+    if (url === '/api/admin/dashboard/battle-activity') {
+      return (handlers.activity?.(config) ?? Promise.resolve(activityFixture)).then((data) => ({ data }));
+    }
+    return Promise.reject(new Error(`unexpected ${url}`));
+  });
+}
+
+function LocationProbe() {
+  const location = useLocation();
+  return <output data-testid="location">{location.search}</output>;
+}
+
+function renderPage(search = '') {
+  return render(
+    <MemoryRouter initialEntries={[`/admin/dashboard${search}`]}>
+      <Routes>
+        <Route path="/admin/dashboard" element={<><DashboardPage /><LocationProbe /></>} />
+      </Routes>
+    </MemoryRouter>,
+  );
+}
+
+const callsTo = (url: string) => mockGet.mock.calls.filter(([called]) => called === url);
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  mockFetchStats.mockResolvedValue(undefined);
+  mockStoreState = { systemStats: null, statsLoading: false, statsLastFilter: null, fetchStats: mockFetchStats };
+  routeApi();
+});
 
 // ----------------------------------------------------------------
 // Tests
 // ----------------------------------------------------------------
-
 describe('DashboardPage', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    mockStoreState = {
-      systemStats: defaultSystemStats,
-      statsLoading: false,
-      fetchStats: mockFetchStats,
-    };
-    mockGet.mockResolvedValue(defaultKpiResponse);
+  it('renders the status strip', async () => {
+    renderPage();
+
+    const strip = await screen.findByRole('region', { name: 'System status' });
+    await waitFor(() => expect(within(strip).getByText('412 · Season 2')).toBeInTheDocument());
+    expect(within(strip).getByText('Healthy · 10 jobs')).toBeInTheDocument();
+    expect(within(strip).getByText('180')).toBeInTheDocument();
+    expect(within(strip).getByText(/^00:00 UTC · /)).toBeInTheDocument();
   });
 
-  /**
-   * Requirement 5.1: THE Dashboard page SHALL display a top row of KPI_Cards
-   * showing: Inactive Real Players, Battles Today, Scheduled Matches,
-   * Current Cycle number, and Cycle Status.
-   */
-  it('should render KPI cards with correct values from API response', async () => {
-    render(<DashboardPage />);
+  it('renders KPI cards with trends; a rising inactive count is red', async () => {
+    renderPage();
 
-    await waitFor(() => {
-      expect(screen.getByText('Inactive Real Players (3+ days)')).toBeInTheDocument();
+    expect(await screen.findByText('38')).toBeInTheDocument();
+    expect(screen.getByLabelText('Trend: up 6')).toHaveClass('text-success');
+    expect(screen.getByLabelText('Trend: down 2')).toHaveClass('text-error');
+    expect(screen.getByLabelText('Trend: up 1')).toHaveClass('text-error');
+    expect(screen.getByText('86.1%')).toBeInTheDocument();
+    expect(screen.getByText('124 of 144 robots')).toBeInTheDocument();
+  });
+
+  it('says "No comparison yet" until a snapshot exists', async () => {
+    routeApi({ kpis: () => Promise.resolve(kpis({ previous: { active7d: null, new7d: 7, inactive3d: null } })) });
+    renderPage();
+
+    await screen.findByText('38');
+    expect(screen.getAllByText('No comparison yet')).toHaveLength(2);
+  });
+
+  it('lists open attention items first as links, and OK items as plain text', async () => {
+    renderPage();
+
+    const panel = await screen.findByRole('region', { name: 'Needs attention' });
+    await waitFor(() => expect(within(panel).getByText('3 open')).toBeInTheDocument());
+
+    const links = within(panel).getAllByRole('link');
+    expect(links.map((link) => link.getAttribute('href'))).toEqual([
+      '/admin/players?tab=at-risk',
+      '/admin/security',
+      '/admin/automatons?tab=stables&filter=attention',
+    ]);
+    expect(within(panel).getByText('Last cycle healthy')).toBeInTheDocument();
+    expect(within(panel).getByText('Last cycle healthy').closest('a')).toBeNull();
+  });
+
+  it('shows "All clear" when nothing needs attention', async () => {
+    routeApi({
+      status: () => Promise.resolve(statusFixture({
+        bankruptcyRisk: { count: 0, threshold: 10000 },
+        security: { activeAlerts: 0, critical: 0 },
+        automatons: { needAttention: 0, failed: 0 },
+      })),
     });
+    renderPage();
 
-    // Verify KPI labels are present
-    expect(screen.getByText('Inactive Real Players (3+ days)')).toBeInTheDocument();
-    expect(screen.getByText('Battles Today')).toBeInTheDocument();
-    expect(screen.getByText('Scheduled Matches')).toBeInTheDocument();
-    expect(screen.getByText('Current Cycle')).toBeInTheDocument();
-
-    // Verify KPI values appear (use getAllByText for values that appear in multiple sections)
-    expect(screen.getByText('12')).toBeInTheDocument(); // Inactive Players (unique)
-
-    // Battles Today (42) also appears in battles.last24Hours — use getAllByText
-    const fortyTwos = screen.getAllByText('42');
-    expect(fortyTwos.length).toBeGreaterThanOrEqual(1);
+    const panel = await screen.findByRole('region', { name: 'Needs attention' });
+    await waitFor(() => expect(within(panel).getByText('All clear')).toBeInTheDocument());
+    expect(within(panel).queryAllByRole('link')).toHaveLength(0);
   });
 
-  /**
-   * Requirement 5.2: WHEN a KPI_Card value has changed compared to the
-   * previous cycle, THE Dashboard page SHALL display a trend indicator.
-   */
-  it('should display trend indicators on KPI cards', async () => {
-    render(<DashboardPage />);
+  it('renders battle activity rows and totals, with n/a draws for KotH', async () => {
+    renderPage();
 
-    await waitFor(() => {
-      expect(screen.getByText('12')).toBeInTheDocument();
-    });
-
-    // Inactive Players has 'up' trend, Battles Today has 'down' trend
-    const upTrend = screen.getByLabelText('Trend: up');
-    expect(upTrend).toBeInTheDocument();
-
-    const downTrend = screen.getByLabelText('Trend: down');
-    expect(downTrend).toBeInTheDocument();
+    const table = await screen.findByRole('table', { name: 'Battles per mode for the selected filter' });
+    const koth = within(table).getByRole('row', { name: /King of the Hill/ });
+    expect(within(koth).getByText('n/a')).toBeInTheDocument();
+    expect(within(table).getByRole('row', { name: /Total/ })).toHaveTextContent('42,024');
+    expect(screen.getByText(/Last cycle: cycle 412, settled 00:01 UTC/)).toBeInTheDocument();
   });
 
-  /**
-   * Requirement 5.4: THE Dashboard page SHALL display battle statistics
-   * broken down by battle type (League, Tournament, Tag Team, KotH).
-   */
-  it('should render battle type breakdown cards', async () => {
-    render(<DashboardPage />);
-
-    await waitFor(() => {
-      expect(screen.getByText('12')).toBeInTheDocument();
-    });
-
-    // Battle Statistics section header
-    expect(screen.getByText('⚔️ Battle Statistics')).toBeInTheDocument();
-
-    // Overall battles card
-    expect(screen.getByText('Overall Battles')).toBeInTheDocument();
-
-    // Per-type cards
-    expect(screen.getByText('League')).toBeInTheDocument();
-    expect(screen.getByText('Tournament')).toBeInTheDocument();
-    expect(screen.getByText('Tag Team')).toBeInTheDocument();
-    expect(screen.getByText('KotH')).toBeInTheDocument();
-  });
-
-  it('should show scheduled and completed counts for each battle type', async () => {
-    render(<DashboardPage />);
-
-    await waitFor(() => {
-      expect(screen.getByText('League')).toBeInTheDocument();
-    });
-
-    // Verify the Scheduled/Completed labels appear in battle type cards
-    const scheduledLabels = screen.getAllByText('Scheduled:');
-    const completedLabels = screen.getAllByText('Completed:');
-    expect(scheduledLabels.length).toBe(4); // League, Tournament, Tag Team, KotH
-    expect(completedLabels.length).toBe(4);
-  });
-
-  /**
-   * Requirement 5.5: THE Dashboard page SHALL display a facility investment
-   * breakdown showing ALL facility types with purchase count AND level
-   * distribution.
-   */
-  it('should render facility breakdown table with all facility types', async () => {
-    render(<DashboardPage />);
-
-    await waitFor(() => {
-      expect(screen.getByText(/Facility Investment/)).toBeInTheDocument();
-    });
-
-    // All facility types should be rendered (with underscores replaced by spaces)
-    expect(screen.getByText('repair bay')).toBeInTheDocument();
-    expect(screen.getByText('training ground')).toBeInTheDocument();
-    expect(screen.getByText('weapons lab')).toBeInTheDocument();
-
-    // Average levels — use getAllByText for values that may appear elsewhere
-    expect(screen.getByText('2.5')).toBeInTheDocument();
-    expect(screen.getByText('1.8')).toBeInTheDocument();
-    const threePointZeros = screen.getAllByText('3.0');
-    expect(threePointZeros.length).toBeGreaterThanOrEqual(1);
-
-    // Table headers
-    expect(screen.getByText('Facility Type')).toBeInTheDocument();
-    expect(screen.getByText('Purchases')).toBeInTheDocument();
-    expect(screen.getByText('Avg Level')).toBeInTheDocument();
-  });
-
-  it('should show total purchases count in facility section', async () => {
-    render(<DashboardPage />);
-
-    await waitFor(() => {
-      expect(screen.getByText('12')).toBeInTheDocument();
-    });
-
-    expect(screen.getByText('(75 total purchases)')).toBeInTheDocument();
-  });
-
-  /**
-   * Requirement 5.3: THE Dashboard page SHALL provide a global filter toggle
-   * to switch between "Real Players Only", "Auto-Generated Only", and "All".
-   */
-  it('should render global filter toggle buttons', async () => {
-    render(<DashboardPage />);
-
-    await waitFor(() => {
-      expect(screen.getByText('12')).toBeInTheDocument();
-    });
-
-    expect(screen.getByText('Real Players')).toBeInTheDocument();
-    expect(screen.getByText('Auto-Generated')).toBeInTheDocument();
-    expect(screen.getByText('All')).toBeInTheDocument();
-  });
-
-  it('should have Real Players filter active by default', async () => {
-    render(<DashboardPage />);
-
-    await waitFor(() => {
-      expect(screen.getByText('12')).toBeInTheDocument();
-    });
-
-    const realButton = screen.getByText('Real Players');
-    expect(realButton).toHaveAttribute('aria-pressed', 'true');
-
-    const autoButton = screen.getByText('Auto-Generated');
-    expect(autoButton).toHaveAttribute('aria-pressed', 'false');
-
-    const allButton = screen.getByText('All');
-    expect(allButton).toHaveAttribute('aria-pressed', 'false');
-  });
-
-  it('should re-fetch KPIs when filter is changed', async () => {
+  it('switches column sets on mobile with the Volume/Rates toggle', async () => {
     const user = userEvent.setup();
-    render(<DashboardPage />);
+    renderPage();
 
-    await waitFor(() => {
-      expect(screen.getByText('12')).toBeInTheDocument();
-    });
+    const table = await screen.findByRole('table');
+    const drawHeader = within(table).getByRole('columnheader', { name: 'Draw %' });
+    const seasonHeader = within(table).getByRole('columnheader', { name: 'Season' });
+    expect(drawHeader).toHaveClass('hidden', 'md:table-cell');
+    expect(seasonHeader).toHaveClass('table-cell');
 
-    // Initial fetch with 'real' filter
-    expect(mockGet).toHaveBeenCalledWith('/api/admin/dashboard/kpis', { params: { filter: 'real' } });
+    await user.click(screen.getByRole('button', { name: 'Rates' }));
+
+    expect(screen.getByRole('button', { name: 'Rates' })).toHaveAttribute('aria-pressed', 'true');
+    expect(drawHeader).toHaveClass('table-cell');
+    expect(seasonHeader).toHaveClass('hidden', 'md:table-cell');
+  });
+
+  it('defaults to the real filter, takes the filter from the URL and ignores unknown values', async () => {
+    const { unmount } = renderPage('?filter=automaton');
+    await waitFor(() => expect(callsTo('/api/admin/dashboard/kpis')[0]?.[1]?.params).toEqual({ filter: 'automaton' }));
+    unmount();
 
     mockGet.mockClear();
-
-    // Click "Auto-Generated" filter
-    await user.click(screen.getByText('Auto-Generated'));
-
-    await waitFor(() => {
-      expect(mockGet).toHaveBeenCalledWith('/api/admin/dashboard/kpis', { params: { filter: 'auto' } });
-    });
+    renderPage('?filter=bogus');
+    await waitFor(() => expect(callsTo('/api/admin/dashboard/kpis')[0]?.[1]?.params).toEqual({ filter: 'real' }));
+    expect(callsTo('/api/admin/dashboard/battle-activity')[0]?.[1]?.params).toEqual({ filter: 'real', fresh: 'false' });
   });
 
-  it('should fetch KPIs from the API on mount', async () => {
-    render(<DashboardPage />);
+  it('refetches filtered sections on a filter change, updates the URL, and leaves the status alone', async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByText('38');
+    expect(callsTo('/api/admin/dashboard/status')).toHaveLength(1);
 
-    await waitFor(() => {
-      expect(mockGet).toHaveBeenCalledWith('/api/admin/dashboard/kpis', { params: { filter: 'real' } });
-    });
+    await user.click(screen.getByRole('button', { name: /Auto-generated/ }));
+
+    await waitFor(() => expect(callsTo('/api/admin/dashboard/kpis').at(-1)?.[1]?.params).toEqual({ filter: 'auto' }));
+    expect(callsTo('/api/admin/dashboard/battle-activity').at(-1)?.[1]?.params).toEqual({ filter: 'auto', fresh: 'false' });
+    expect(callsTo('/api/admin/dashboard/status')).toHaveLength(1);
+    expect(screen.getByTestId('location')).toHaveTextContent('?filter=auto');
+    expect(screen.getByRole('button', { name: /Auto-generated/ })).toHaveAttribute('aria-pressed', 'true');
   });
 
-  it('should call fetchStats from admin store on mount', async () => {
-    render(<DashboardPage />);
-
-    await waitFor(() => {
-      expect(mockFetchStats).toHaveBeenCalled();
+  it('never lets a slow response for the previous filter overwrite the current one', async () => {
+    const user = userEvent.setup();
+    let resolveReal: (value: DashboardKpis) => void = () => undefined;
+    routeApi({
+      kpis: (config) => (config?.params?.filter === 'real'
+        ? new Promise<DashboardKpis>((resolve) => { resolveReal = resolve; })
+        : Promise.resolve(kpis({}, 11))),
     });
+    renderPage();
+    await screen.findByRole('region', { name: 'System status' });
+
+    await user.click(screen.getByRole('button', { name: /Auto-generated/ }));
+    expect(await screen.findByText('11')).toBeInTheDocument();
+
+    resolveReal(kpis({}, 99));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(screen.queryByText('99')).not.toBeInTheDocument();
+    expect(screen.getByText('11')).toBeInTheDocument();
   });
 
-  it('should show loading state when stats and KPIs are not yet loaded', () => {
-    mockStoreState = {
-      systemStats: null,
-      statsLoading: true,
-      fetchStats: mockFetchStats,
-    };
-    mockGet.mockReturnValue(new Promise(() => {})); // Never resolves
+  it('shows a per-section error and keeps the other sections', async () => {
+    routeApi({ activity: () => Promise.reject({ response: { status: 500, data: { error: 'Battle activity failed', code: 'INTERNAL' } } }) });
+    renderPage();
 
-    render(<DashboardPage />);
-
-    expect(screen.getByText('Loading dashboard...')).toBeInTheDocument();
+    const panel = await screen.findByRole('region', { name: 'Battle activity' });
+    expect(await within(panel).findByRole('alert')).toHaveTextContent('Battle activity failed');
+    expect(await screen.findByText('38')).toBeInTheDocument();
+    expect(screen.getByText('Stables at bankruptcy risk')).toBeInTheDocument();
   });
 
-  it('should render the page header with title and subtitle', async () => {
-    render(<DashboardPage />);
+  it('refresh refetches everything and bypasses the battle-activity cache', async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByText('38');
+    await waitFor(() => expect(screen.getByText(/Last updated 14:02:31 UTC/)).toBeInTheDocument());
 
-    await waitFor(() => {
-      expect(screen.getByText('12')).toBeInTheDocument();
-    });
+    await user.click(screen.getByRole('button', { name: /Refresh/ }));
 
-    expect(screen.getByText('Dashboard')).toBeInTheDocument();
-    expect(screen.getByText('Operational overview')).toBeInTheDocument();
+    await waitFor(() => expect(callsTo('/api/admin/dashboard/status')).toHaveLength(2));
+    expect(callsTo('/api/admin/dashboard/kpis')).toHaveLength(2);
+    expect(callsTo('/api/admin/dashboard/battle-activity').at(-1)?.[1]?.params).toEqual({ filter: 'real', fresh: 'true' });
   });
 
-  it('should render weapon economy section', async () => {
-    render(<DashboardPage />);
+  it('keeps the meta snapshot collapsed and unfetched until opened', async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByText('38');
 
-    await waitFor(() => {
-      expect(screen.getByText(/Weapon Economy/)).toBeInTheDocument();
-    });
+    const toggle = screen.getByRole('button', { name: /Meta snapshot/ });
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    expect(mockFetchStats).not.toHaveBeenCalled();
 
-    expect(screen.getByText(/Weapon Economy/)).toBeInTheDocument();
-    expect(screen.getByText('Total Purchased')).toBeInTheDocument();
-    expect(screen.getByText('Equipped')).toBeInTheDocument();
-    expect(screen.getByText('Equip Rate')).toBeInTheDocument();
-    expect(screen.getByText('Unequipped')).toBeInTheDocument();
-    expect(screen.getByText('75%')).toBeInTheDocument(); // Equip Rate (150/200)
-  });
+    mockStoreState = { ...mockStoreState, systemStats, statsLastFilter: 'real' };
+    await user.click(toggle);
 
-  it('should render roster overview section', async () => {
-    render(<DashboardPage />);
-
-    await waitFor(() => {
-      expect(screen.getByText('12')).toBeInTheDocument();
-    });
-
-    expect(screen.getByText(/Roster Overview/)).toBeInTheDocument();
-    expect(screen.getByText('Total Robots')).toBeInTheDocument();
-    expect(screen.getByText('Battle Ready')).toBeInTheDocument();
-    expect(screen.getByText('Total Players')).toBeInTheDocument();
-  });
-
-  it('should render collapsible stance, loadout, and yield sections', async () => {
-    render(<DashboardPage />);
-
-    await waitFor(() => {
-      expect(screen.getByText('12')).toBeInTheDocument();
-    });
-
-    expect(screen.getByText('Stance Distribution')).toBeInTheDocument();
-    expect(screen.getByText('Loadout Distribution')).toBeInTheDocument();
-    expect(screen.getByText('Yield Threshold Distribution')).toBeInTheDocument();
-  });
-
-  it('should display KPI error when API call fails', async () => {
-    mockGet.mockRejectedValue(new Error('Network error'));
-
-    render(<DashboardPage />);
-
-    await waitFor(() => {
-      // Bare Errors don't carry a backend response shape, so the api
-      // wrapper drops their message and the page renders its fallback copy.
-      expect(screen.getByText('Failed to load KPI data')).toBeInTheDocument();
-    });
-  });
-
-  it('should render overall battle stats with correct values', async () => {
-    render(<DashboardPage />);
-
-    await waitFor(() => {
-      expect(screen.getByText('12')).toBeInTheDocument();
-    });
-
-    // Total battles
-    expect(screen.getByText('1,500')).toBeInTheDocument();
-    // Avg Duration
-    expect(screen.getByText('45s')).toBeInTheDocument();
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    expect(mockFetchStats).toHaveBeenCalledWith('real', false);
+    expect(await screen.findByText('Stances')).toBeInTheDocument();
+    expect(screen.getByText('Weapon shield')).toBeInTheDocument();
+    expect(screen.queryByText(/tiers/i)).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'League Health' })).toHaveAttribute('href', '/admin/league-health');
+    expect(screen.getByText('75.0%')).toBeInTheDocument(); // 150 of 200 equipped, offhands included
   });
 });

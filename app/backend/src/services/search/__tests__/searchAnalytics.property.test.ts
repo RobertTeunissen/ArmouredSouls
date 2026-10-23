@@ -54,7 +54,7 @@ import fc from 'fast-check';
 import { describe, expect, it, jest } from '@jest/globals';
 import { requireAdmin } from '../../../middleware/auth';
 import { purgeHistory } from '../../season/seasonPurgeService';
-import { getSearchAnalyticsReport } from '../searchAnalyticsReportService';
+import { getSearchAnalyticsReport, previousWindow } from '../searchAnalyticsReportService';
 import { SearchAnalyticsService } from '../searchAnalyticsService';
 import type {
   ActiveSeasonContext,
@@ -727,6 +727,13 @@ function reportQueryRows(
   };
 }
 
+
+/** Five report queries, plus one for the previous-period comparison when it exists. */
+function expectedQueryCount(cycleFrom: number | undefined, cycleTo: number | undefined, currentCycle: number): number {
+  const scope = { seasonNumber: 0, cycleFrom: cycleFrom ?? null, cycleTo: cycleTo ?? null, currentCycle };
+  return previousWindow(scope) ? 6 : 5;
+}
+
 /**
  * Feature: universal-search, Property 15: Admin analytics aggregation and bounded reporting
  *
@@ -776,16 +783,21 @@ describe('Property 15: Admin analytics aggregation and bounded reporting', () =>
           .mockResolvedValueOnce(rows.trends)
           .mockResolvedValueOnce(rows.topPhrases)
           .mockResolvedValueOnce(rows.noResultPhrases)
-          .mockResolvedValueOnce(rows.playerAnalysis);
+          .mockResolvedValueOnce(rows.playerAnalysis)
+          .mockResolvedValueOnce(rows.overview);
 
         const report = await getSearchAnalyticsReport(query);
 
-        expect(report).toEqual({
+        // Additive fields (mode, rates, selection, comparison, categoryResults)
+        // are covered by searchAnalyticsReportService.test.ts; this property
+        // keeps asserting the original aggregates as a subset.
+        expect(report).toMatchObject({
           period: {
             seasonNumber: fixture.activeSeasonContext.seasonNumber,
             cycleNumber: fixture.activeSeasonContext.cycleNumber,
             cycleFrom: fixture.cycleFrom,
             cycleTo: fixture.cycleTo,
+            mode: 'settled',
           },
           overview: {
             totalSearches: persistedEvents.length,
@@ -831,7 +843,7 @@ describe('Property 15: Admin analytics aggregation and bounded reporting', () =>
             })),
         );
         expect(mockReportPersistenceFailure).toHaveBeenCalledTimes(1);
-        expect(mockReportPrisma.$queryRaw).toHaveBeenCalledTimes(5);
+        expect(mockReportPrisma.$queryRaw).toHaveBeenCalledTimes(expectedQueryCount(fixture.cycleFrom, fixture.cycleTo, fixture.activeSeasonContext.cycleNumber));
 
         const persistedPhrases = new Set(persistedEvents.map((event) => event.normalizedPhrase));
         for (const failedWrite of fixture.failedWrites) {
@@ -1064,7 +1076,8 @@ describe('Property 16: Admin authorization and active-season report isolation', 
           .mockResolvedValueOnce(rows.trends)
           .mockResolvedValueOnce(rows.topPhrases)
           .mockResolvedValueOnce(rows.noResultPhrases)
-          .mockResolvedValueOnce(rows.playerAnalysis);
+          .mockResolvedValueOnce(rows.playerAnalysis)
+          .mockResolvedValueOnce(rows.overview);
         mockReportPersistenceFailure.mockReset();
         mockReportPersistenceFailure.mockImplementation((scope: ReportFailureScopeFixture) => (
           fixture.failedWrites.some((write) => (
@@ -1099,8 +1112,9 @@ describe('Property 16: Admin authorization and active-season report isolation', 
           cycleNumber: fixture.activeSeasonContext.cycleNumber,
           cycleFrom: fixture.cycleFrom,
           cycleTo: fixture.cycleTo,
+          mode: 'settled',
         });
-        expect(report.overview).toEqual({
+        expect(report.overview).toMatchObject({
           totalSearches: activeEvents.length,
           uniqueSearchers: new Set(activeEvents.map((event) => event.userId)).size,
           noResultSearches: activeEvents.filter((event) => event.noResult).length,
@@ -1155,7 +1169,7 @@ describe('Property 16: Admin authorization and active-season report isolation', 
         ]) {
           expect(reportKeys).not.toContain(rawEventKey);
         }
-        expect(mockReportPrisma.$queryRaw).toHaveBeenCalledTimes(5);
+        expect(mockReportPrisma.$queryRaw).toHaveBeenCalledTimes(expectedQueryCount(fixture.cycleFrom, fixture.cycleTo, fixture.activeSeasonContext.cycleNumber));
         expect(mockReportPersistenceFailure).toHaveBeenCalledTimes(1);
 
         let retainedEventCount = fixture.persistedEvents.length;

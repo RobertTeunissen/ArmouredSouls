@@ -52,6 +52,17 @@ jest.mock('../../services/admin/adminStatsService', () => ({
   getRefinementAdoption: (...args: unknown[]) => mockGetRefinementAdoption(...args),
 }));
 
+const mockGetDashboardStatus = jest.fn();
+const mockGetBattleActivity = jest.fn();
+
+jest.mock('../../services/admin/adminDashboardStatusService', () => ({
+  getDashboardStatus: (...args: unknown[]) => mockGetDashboardStatus(...args),
+}));
+
+jest.mock('../../services/admin/adminBattleActivityService', () => ({
+  getBattleActivity: (...args: unknown[]) => mockGetBattleActivity(...args),
+}));
+
 jest.mock('../../services/admin/adminAuditLogService', () => ({
   recordAction: (...args: unknown[]) => mockRecordAuditAction(...args),
   getEntries: (...args: unknown[]) => mockGetAuditEntries(...args),
@@ -217,15 +228,52 @@ app.use(errorHandler);
 // Sample data
 // ---------------------------------------------------------------------------
 
+// The shape `getDashboardKpis` actually returns (DashboardKpis). This mock used
+// to describe a third shape that neither the service nor the page used.
 const sampleKpis = {
-  inactiveRealPlayers: 5,
-  battlesToday: 42,
-  scheduledMatches: 10,
+  totalUsers: 52,
+  newUsersLast7d: 5,
+  totalRobots: 144,
+  battlesLast24h: 190,
+  totalBattles: 73_792,
+  activeUsersLast7d: 50,
   currentCycle: 100,
-  trends: {
-    inactiveRealPlayers: { direction: 'up', previous: 3 },
-    battlesToday: { direction: 'down', previous: 50 },
+  lastCycleAt: '2026-10-22T00:01:00.000Z',
+  humanPlayers: {
+    total: 52,
+    active7d: 38,
+    new7d: 5,
+    inactive3d: 7,
+    previous: { active7d: 32, new7d: 7, inactive3d: 6 },
   },
+  robots: { total: 144, battleReady: 124, battleReadyPercentage: 86.1 },
+  timestamp: '2026-10-22T14:02:31.000Z',
+};
+
+const sampleStatus = {
+  cycle: { number: 100, lastSettlementAt: '2026-10-22T00:01:00.000Z', nextSettlementAt: '2026-10-23T00:00:00.000Z' },
+  season: { number: 2, phase: 'competitive', seasonCycle: 38 },
+  scheduler: {
+    active: true, runningJob: null, queueLength: 0, jobsTotal: 10, jobsSucceeded: 10,
+    jobsFailed: [], jobsNotYetReported: 0, processStartedAt: '2026-10-20T09:00:00.000Z',
+  },
+  queuedMatches: 180,
+  attention: {
+    bankruptcyRisk: { count: 3, threshold: 10000 },
+    security: { activeAlerts: 1, critical: 1 },
+    automatons: { needAttention: 5, failed: 0 },
+    cycleHealth: { settlementOverdue: false, failedJobs: [], stuckMatches: 0 },
+  },
+  timestamp: '2026-10-22T14:02:31.000Z',
+};
+
+const sampleBattleActivity = {
+  rows: [
+    { mode: 'league_1v1', lastCycle: 96, season: 39552, walkovers: 12, queued: 96, drawRate: 4.2, killRate: 31.3, avgDurationSeconds: 48.6 },
+  ],
+  totals: { lastCycle: 96, season: 39552, walkovers: 12, queued: 96, drawRate: 4.2, killRate: 31.3, avgDurationSeconds: 48.6 },
+  lastCycleWindow: { cycleNumber: 100, from: '2026-10-21T00:01:00.000Z', to: '2026-10-22T00:01:00.000Z' },
+  timestamp: '2026-10-22T14:02:31.000Z',
 };
 
 const sampleEngagement = {
@@ -399,10 +447,9 @@ describe('Admin API — New Endpoints Integration Tests', () => {
       const res = await request(app).get('/api/admin/dashboard/kpis');
 
       expect(res.status).toBe(200);
-      expect(res.body).toHaveProperty('inactiveRealPlayers');
-      expect(res.body).toHaveProperty('battlesToday');
-      expect(res.body).toHaveProperty('scheduledMatches');
-      expect(res.body).toHaveProperty('currentCycle');
+      expect(res.body).toEqual(sampleKpis);
+      expect(res.body.humanPlayers.previous).toEqual({ active7d: 32, new7d: 7, inactive3d: 6 });
+      expect(res.body.robots.battleReadyPercentage).toBe(86.1);
     });
 
     // The route resolves `?filter=` into a Prisma.UserWhereInput via buildUserFilter
@@ -438,6 +485,61 @@ describe('Admin API — New Endpoints Integration Tests', () => {
 
     it('should reject invalid filter values via Zod validation', async () => {
       const res = await request(app).get('/api/admin/dashboard/kpis?filter=invalid');
+
+      expect(res.status).toBe(400);
+      expect(res.body.code).toBe('VALIDATION_ERROR');
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // GET /api/admin/dashboard/status
+  // -----------------------------------------------------------------------
+
+  describe('GET /api/admin/dashboard/status', () => {
+    it('should return the status facts', async () => {
+      mockGetDashboardStatus.mockResolvedValue(sampleStatus);
+
+      const res = await request(app).get('/api/admin/dashboard/status');
+
+      expect(res.status).toBe(200);
+      expect(res.body).toEqual(sampleStatus);
+      expect(mockGetDashboardStatus).toHaveBeenCalledTimes(1);
+    });
+
+    it('should require an admin', async () => {
+      mockUser = { userId: 2, username: 'player', role: 'user' };
+
+      const res = await request(app).get('/api/admin/dashboard/status');
+
+      expect(res.status).toBe(403);
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // GET /api/admin/dashboard/battle-activity
+  // -----------------------------------------------------------------------
+
+  describe('GET /api/admin/dashboard/battle-activity', () => {
+    it('should default to the real filter and the cache', async () => {
+      mockGetBattleActivity.mockResolvedValue(sampleBattleActivity);
+
+      const res = await request(app).get('/api/admin/dashboard/battle-activity');
+
+      expect(res.status).toBe(200);
+      expect(res.body).toEqual(sampleBattleActivity);
+      expect(mockGetBattleActivity).toHaveBeenCalledWith('real', { fresh: false });
+    });
+
+    it('should pass filter and fresh through', async () => {
+      mockGetBattleActivity.mockResolvedValue(sampleBattleActivity);
+
+      await request(app).get('/api/admin/dashboard/battle-activity?filter=automaton&fresh=true');
+
+      expect(mockGetBattleActivity).toHaveBeenCalledWith('automaton', { fresh: true });
+    });
+
+    it('should reject an invalid fresh value', async () => {
+      const res = await request(app).get('/api/admin/dashboard/battle-activity?fresh=yes');
 
       expect(res.status).toBe(400);
       expect(res.body.code).toBe('VALIDATION_ERROR');

@@ -20,7 +20,7 @@ All pages manage their own data fetching. The sidebar collapses to icons on narr
 
 | Section | Page | Route | Description |
 |---------|------|-------|-------------|
-| **Overview** | Dashboard | `/admin/dashboard` | KPI cards, system stats, battle type breakdown |
+| **Overview** | Dashboard | `/admin/dashboard` | Status strip, needs attention, player KPIs, battle activity per mode |
 | **Game Operations** | Cycle Controls | `/admin/cycles` | Scheduler status, manual triggers, bulk cycle runner |
 | | Practice Arena | `/admin/practice-arena` | Practice battle usage and daily trends |
 | **Battle Data** | Battle Logs | `/admin/battles` | Paginated battle history with type filters and detail slide-over |
@@ -35,6 +35,7 @@ All pages manage their own data fetching. The sidebar collapses to icons on narr
 | **Content** | Changelog | `/admin/changelog` | Create, edit, publish changelog entries |
 | | Achievements | `/admin/achievements` | Unlock rates, participation stats |
 | | Tuning | `/admin/tuning` | Tuning allocation adoption, attribute ranking |
+| | Search Analytics | `/admin/search-analytics` | Settled searches, no-result rate, results by category, phrase table with CSV export |
 | **Maintenance** | Repair Log | `/admin/repair-log` | Manual vs automatic repairs, savings tracking |
 | | Audit Log | `/admin/audit-log` | Admin action audit trail with filters |
 
@@ -63,10 +64,43 @@ All pages use the `AdminFilterBar` component for filter controls — pill-shaped
 
 ### Dashboard (`/admin/dashboard`)
 
-KPI cards showing total users, new users (7d), total robots, battles (24h), total battles, active users (7d), current cycle, and last cycle timestamp. Below the KPIs: system stats grid with robot tier breakdown, match scheduling, battle statistics (overall and per-type: league/tournament/tag team/KotH), economy overview, facility stats, weapon stats, stance/loadout/yield distributions.
+The landing page answers "is the game healthy, and does anything need me?". It is read-only and sends no alerts (Discord alerts have their own single emitters).
 
-**API:** `GET /api/admin/dashboard/kpis`, `GET /api/admin/stats`
-**Filter:** Real / Auto / Automatons / All user filter
+Sections, top to bottom:
+
+1. **Toolbar** — the user filter (Real players / Auto-generated / Automatons / All, kept in the URL as `?filter=`, default `real`), "Last updated" and Refresh. Refresh refetches every section and bypasses the battle-activity cache.
+2. **Status strip** (system-wide) — Cycle and Season (with a "(preparation)" marker), Last cycle (settlement time and age), Next cycle (next `settlement` cron run), Scheduler, Queued matches.
+3. **KPI cards** — Active players (7 days), New players (7 days), Inactive players (3+ days), Battle-ready robots.
+4. **Needs attention** (system-wide) — open items first, each linking to the page that resolves it; OK items collapse to a muted ✓ line.
+5. **Battle activity** — one row per battle mode plus Total. Below 768 px a Volume / Rates toggle switches columns.
+6. **Meta snapshot** — what stables choose: stances, loadouts, yield thresholds, facilities and weapons. Collapsed by default; fetches `/api/admin/stats` only when opened. Tier distributions (1v1, 2v2, 3v3, Tag Team) are on League Health.
+
+Below 1280 px the sections stack in one column. Below 768 px the admin sidebar is replaced by a hamburger menu that opens the navigation in a drawer (all admin pages).
+
+**Filter scope.** The filter applies to Battle-ready robots, the Last cycle and Season columns of Battle activity, and the Meta snapshot. The status strip, Needs attention and the Queued column are system-wide. The three player cards are always human stables, because they are login-based and bots and Automatons never log in.
+
+**Definitions**
+
+| Number | Definition |
+|---|---|
+| Active players (7 days) | Human stables with `lastLoginAt` in the last 7 days. `lastLoginAt` is written at password login; JWTs expire after 24 h without refresh, so it is at most a day stale. |
+| New players (7 days) | Human stables registered in the last 7 days; trend vs `[now − 14d, now − 7d)`. |
+| Inactive players (3+ days) | Human stables whose last login (or registration, if they never logged in) is more than 3 days ago. A rise is shown red. |
+| Trends on Active / Inactive | Compared with the `admin_kpi_snapshots` row captured about 7 days ago (each competitive settlement writes one). "No comparison yet" until such a row exists. |
+| Battle-ready robots | `currentHP ≥ maxHP` and a main weapon, as a percentage with one decimal. |
+| Bankruptcy risk | Human stables below ₡10,000 (`BANKRUPTCY_RISK_THRESHOLD`). Links to Players → At-Risk (`/admin/players?tab=at-risk`). |
+| Security alerts | Warning + critical events in the security monitor's in-memory buffer; an error if any is critical. |
+| Automatons need attention | `needAttentionCount` of the Automatons status bar; an error if any turn failed. Links to the Stables tab filtered on attention. |
+| Cycle problems | One item, red if any of: settlement overdue (scheduler active and the last settlement missing or older than 26 h); a scheduler job whose last run failed; matches still `scheduled` more than 2 h after their slot ("left behind"). Otherwise "Last cycle healthy". The scheduler's job states are in memory and reset on every restart or deploy, so the item then reports "k/10 jobs reported since restart"; the overdue and left-behind checks read the database and work across restarts. |
+| Battle activity · Last cycle | Battles created between the ends of the two most recent settlements (`cycle_snapshots.end_time`). "—" until a season has two settlements. |
+| Battle activity · Season | Every row in `battles` (truncated at Season_Rollover). Counts include battles with at least one participant robot owned by a filtered user. |
+| Battle activity · Walkovers | Byes and battle-time forfeits (`is_bye_match` on the scheduling row, a forfeited participant, or a bracket row with status `forfeit`). Counted as battles, left out of the rates. |
+| Battle activity · Queued | System-wide: `scheduled_matches_v2` rows still `scheduled`, plus outstanding bracket rows of active tournaments that already have a participant. |
+| Draw % / Kill % / Avg time | Over fought battles. Draw = `winner_id IS NULL AND winning_side IS NULL` (team battles record their result in `winning_side`); n/a for KotH and Grand Melee. Kill = at least one participant `destroyed`. |
+| Meta · Facilities | Stables owning each facility at level ≥ 1, and their average level. |
+| Meta · Weapons equipped | Owned weapons in any robot's main **or** offhand slot (`equippedInventoryItems`). |
+
+**API:** `GET /api/admin/dashboard/status` (no filter), `GET /api/admin/dashboard/kpis?filter=`, `GET /api/admin/dashboard/battle-activity?filter=&fresh=` (cached 60 s per filter; `fresh=true` bypasses), `GET /api/admin/stats?filter=` (Meta snapshot). All require `authenticateToken` + `requireAdmin`. `kpis.activeUsersLast7d` is deprecated (it counted robots updated by battles); use `humanPlayers.active7d`.
 
 ### Cycle Controls (`/admin/cycles`)
 
@@ -175,6 +209,36 @@ Weapon Refinement (Spec #34) feature usage. Tracks adoption rate (users who refi
 
 **API:** `GET /api/admin/refinement/adoption`
 **Filter:** Real / Auto / Automatons / All user filter
+
+### Search Analytics (`/admin/search-analytics`)
+
+What players search for in the universal search, what they don't find, and whether a search led anywhere. Active season only (events are purged at Season_Rollover). Under **Content** in the navigation.
+
+Sections, top to bottom:
+
+1. **Toolbar** — period: This cycle / Last 7 cycles (default) / Whole season / Custom… (from–to range, validated), the resolved "Season N · cycles a–b", "Last updated" and Refresh.
+2. **Counting banner** — how many requests were typing in progress, with a Settled / All requests switch.
+3. **Cards** — Settled searches (trend vs the previous same-length window), Unique searchers (says how many are admin accounts; they are included), No-result rate (a drop is green), Led to a result.
+4. **Searches per cycle** — bars plus no-result-rate line; "View as table" shows the numbers.
+5. **Results by category** — per category the share of searches that returned a result and the share where the player opened one.
+6. **Phrases** — All phrases / No results tabs, a filter, Export CSV, and per phrase: searches, share, no-result rate, which categories returned results (R/S/G), mostly chosen category. Below 768 px a Volume / Quality toggle switches columns.
+7. **Searchers** — collapsed; per-player search and no-result counts, each linking to `/admin/players?user=<id>`.
+
+All filters live in the URL (`period`, `from`, `to`, `count`, `tab`, `q`, `page`). Controls keep 44 px touch targets (search contract).
+
+**Definitions**
+
+| Number | Definition |
+|---|---|
+| Settled search | A recorded search that the same player did not extend within 5 seconds (a strictly longer phrase starting with it). The palette sends a request after every typing pause, so "la", "laser", "laser c" before "laser cannon" are typing in progress. Corrections that are not prefixes and repeated phrases still count. |
+| All requests | Every recorded search request. |
+| No-result rate | Searches with no result in any category ÷ searches, one decimal. |
+| Led to a result | Searches after which the player opened a result ÷ searches recorded since selection tracking started (category-only, see the search contract §8.4). "Not tracked yet" before then. |
+| Returned (category) | Share of searches with at least one result in that category. |
+| Chosen (category) | Share of tracked searches where the player opened a result of that category; the rest "opened nothing". |
+| Previous period | The same number of cycles just before the selected range. None for Whole season or at the start of a season. |
+
+**API:** `GET /api/admin/search-analytics/report`, `GET /api/admin/search-analytics/phrases`, `GET /api/admin/search-analytics/phrases/export` (CSV, ≤ 5,000 rows, formulas neutralised). All accept `mode=settled|all`, `lastCycles` or `cycleFrom`/`cycleTo`. Contract: `docs/implementation_notes/UNIVERSAL_SEARCH_CONTRACT.md` §8 and §10.
 
 ### Practice Arena (`/admin/practice-arena`)
 

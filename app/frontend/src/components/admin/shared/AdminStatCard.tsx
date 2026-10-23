@@ -5,6 +5,13 @@ export interface AdminStatCardProps {
   value: string | number;
   trend?: TrendDirection;
   trendValue?: string;
+  /**
+   * Whether a rising value is good news. Defaults to `higher-is-better`
+   * (up = green). Use `lower-is-better` for counts like inactive players.
+   */
+  trendIntent?: 'higher-is-better' | 'lower-is-better';
+  /** Secondary line under the value (e.g. "vs previous 7 days", "124 of 144 robots"). */
+  caption?: string;
   color?: 'primary' | 'success' | 'warning' | 'error' | 'info';
   icon?: React.ReactNode;
 }
@@ -23,17 +30,25 @@ const TREND_ICON: Record<TrendDirection, string> = {
   neutral: '—',
 };
 
-const TREND_COLOR: Record<TrendDirection, string> = {
-  up: 'text-success',
-  down: 'text-error',
-  neutral: 'text-secondary',
+const TREND_WORD: Record<TrendDirection, string> = {
+  up: 'up',
+  down: 'down',
+  neutral: 'unchanged',
 };
+
+function trendColor(trend: TrendDirection, intent: NonNullable<AdminStatCardProps['trendIntent']>): string {
+  if (trend === 'neutral') return 'text-secondary';
+  const good = intent === 'higher-is-better' ? trend === 'up' : trend === 'down';
+  return good ? 'text-success' : 'text-error';
+}
 
 export function AdminStatCard({
   label,
   value,
   trend,
   trendValue,
+  trendIntent = 'higher-is-better',
+  caption,
   color = 'primary',
   icon,
 }: AdminStatCardProps): React.ReactElement {
@@ -51,18 +66,20 @@ export function AdminStatCard({
       </div>
 
       <div className="flex items-end gap-2">
-        <span className="text-2xl font-bold text-white">{value}</span>
+        <span className="text-2xl font-bold text-white tabular-nums">{value}</span>
 
         {trend && trend !== 'neutral' && (
           <span
-            className={`text-xs font-medium ${TREND_COLOR[trend]} flex items-center gap-0.5 pb-0.5`}
-            aria-label={`Trend: ${trend}${trendValue ? ` ${trendValue}` : ''}`}
+            className={`text-xs font-medium ${trendColor(trend, trendIntent)} flex items-center gap-0.5 pb-0.5`}
+            aria-label={`Trend: ${TREND_WORD[trend]}${trendValue ? ` ${trendValue}` : ''}`}
           >
             <span aria-hidden="true">{TREND_ICON[trend]}</span>
-            {trendValue && <span>{trendValue}</span>}
+            {trendValue && <span aria-hidden="true">{trendValue}</span>}
           </span>
         )}
       </div>
+
+      {caption && <span className="text-xs text-secondary">{caption}</span>}
     </div>
   );
 }

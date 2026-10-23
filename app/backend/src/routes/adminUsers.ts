@@ -32,12 +32,9 @@ import { recordAction as recordAuditAction, getEntries as getAuditEntries } from
 import { handleAdminUploads, handleAdminCleanup } from '../services/moderation/adminUploadsHandler';
 import prisma from '../lib/prisma';
 import { getRobotLeagueTiers, tierOf } from '../services/standings/robotLeagueTiers';
+import { BANKRUPTCY_RISK_THRESHOLD } from '../services/admin/adminThresholds';
 
 const router = express.Router();
-
-// --- Configuration constants ---
-
-const BANKRUPTCY_RISK_THRESHOLD = 10000; // Credits below which a user is considered at risk
 
 // --- Zod schemas ---
 

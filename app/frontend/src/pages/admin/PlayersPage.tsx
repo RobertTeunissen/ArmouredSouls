@@ -7,7 +7,8 @@
  *
  * Requirements: 9.1–9.8, 13.1–13.5, 25.1–25.6
  */
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { AdminPageHeader, AdminStatCard, AdminDataTable, AdminFilterBar, AdminSlideOver } from '../../components/admin/shared';
 import { api } from '../../utils/api';
 import { ApiError } from '../../utils/ApiError';
@@ -18,6 +19,14 @@ import type { AtRiskUser, AtRiskUsersResponse, RecentUser, RecentUsersResponse }
 /* ------------------------------------------------------------------ */
 
 type Tab = 'new-players' | 'auto-generated' | 'at-risk';
+
+const TABS: readonly Tab[] = ['new-players', 'auto-generated', 'at-risk'];
+const DEFAULT_TAB: Tab = 'new-players';
+
+/** The `?tab=` value (deep links, e.g. the dashboard's bankruptcy item); unknown → default. */
+function readTab(value: string | null): Tab {
+  return TABS.find((tab) => tab === value) ?? DEFAULT_TAB;
+}
 
 interface SearchUser {
   id: number;
@@ -80,7 +89,16 @@ function daysSince(dateStr: string | null): string {
 /* ------------------------------------------------------------------ */
 
 function PlayersPage() {
-  const [tab, setTab] = useState<Tab>('new-players');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tab = readTab(searchParams.get('tab'));
+  const setTab = useCallback((next: Tab): void => {
+    setSearchParams((params) => {
+      const updated = new URLSearchParams(params);
+      if (next === DEFAULT_TAB) updated.delete('tab');
+      else updated.set('tab', next);
+      return updated;
+    }, { replace: true });
+  }, [setSearchParams]);
 
   // Search
   const [searchQuery, setSearchQuery] = useState('');
@@ -173,6 +191,16 @@ function PlayersPage() {
   useEffect(() => { fetchPlayers(); }, [fetchPlayers]);
   useEffect(() => { if (tab === 'auto-generated') fetchAutoUsers(); }, [tab, fetchAutoUsers]);
   useEffect(() => { if (tab === 'at-risk' && !atRiskData) fetchAtRisk(); }, [tab, atRiskData, fetchAtRisk]);
+
+  // Deep link `?user=<id>` (e.g. from Search Analytics → Searchers) opens that
+  // player's detail panel once on arrival.
+  const deepLinkUser = Number(searchParams.get('user'));
+  const deepLinkOpened = useRef<number | null>(null);
+  useEffect(() => {
+    if (!Number.isSafeInteger(deepLinkUser) || deepLinkUser <= 0 || deepLinkOpened.current === deepLinkUser) return;
+    deepLinkOpened.current = deepLinkUser;
+    void openPlayerDetail(deepLinkUser);
+  }, [deepLinkUser]);
 
   const openPlayerDetail = async (userId: number, listUser?: RecentUser) => {
     setDetailLoading(true);

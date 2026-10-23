@@ -237,7 +237,7 @@ Recent_Search_History is stored only in the current browser under the client-loc
 - Selecting a recent value puts it in the input and follows the same Minimum_Query_Length, debounce and request behavior as newly entered text.
 - Clear_History_Control removes all current-browser values and shows the empty-history state.
 - History is never sent to the Search_Backend, included in `GET /api/search`, or synchronized to the account.
-- Account identifiers, selected categories, selected results and history mutations are not search requests or player-visible analytics events.
+- Account identifiers, selected results and history mutations are not search requests or player-visible analytics events. Opening a result reports only its category to the admin measurement (§12.2).
 - Invalid local entries—non-strings, whitespace-only values or values longer than Maximum_Query_Length—are discarded while valid entries remain.
 - Malformed local storage and unavailable local storage fail safely; current-query search continues.
 
@@ -292,6 +292,8 @@ The Search_Analytics_Store is separate from the Search_Response, browser-local R
 - the Admin_Search_Analytics_Resource exposes a typed incomplete-telemetry limitation under Telemetry_Fail_Open.
 
 Short, malformed, over-length, unauthenticated, rate-limited and failed requests do not create an event or make an analytics write attempt. Keystrokes, history operations, result selections and selected categories do not create events.
+
+**Category-only selection (2026-10-22).** When a player opens a result, only its category (robots, stables or guide) is attached to that player's latest search from the last 60 seconds. No result identity, label, position or route is sent or stored, no event is created, and the request never affects navigation. Admins see per category how often a search led to an opened result. **Settled searches:** the admin report does not count a phrase the same player extended within 5 seconds (typing in progress); recording itself is unchanged. Details: `docs/implementation_notes/UNIVERSAL_SEARCH_CONTRACT.md` §8.4–§8.5.
 
 A successful event records only server-owned measurement fields: authenticated player identity, server-generated timestamp, Active_Season_Context, exact normalized phrase, per-category result counts, total result count and no-result status. These values are unavailable to players. The Admin_Search_Analytics_Resource is admin-authorized, active-season scoped and bounded/paginated; its detailed analysis does not expose raw event payloads or security data.
 

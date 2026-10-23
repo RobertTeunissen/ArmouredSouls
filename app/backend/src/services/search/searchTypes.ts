@@ -22,6 +22,10 @@ export const MAXIMUM_QUERY_LENGTH = 100;
 /** Minimum length used by the service/client eligibility branch. */
 export const MINIMUM_QUERY_LENGTH = 2;
 
+/** Result categories a privacy-light selection may report (nothing else). */
+export const SEARCH_SELECTION_CATEGORIES = ['robots', 'stables', 'guide'] as const;
+export type SearchSelectionCategory = (typeof SEARCH_SELECTION_CATEGORIES)[number];
+
 /** Maximum number of references returned in one category group. */
 export const MAX_RESULTS_PER_CATEGORY = 10;
 

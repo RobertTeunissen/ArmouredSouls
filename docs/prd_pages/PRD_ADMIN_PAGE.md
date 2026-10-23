@@ -19,6 +19,8 @@
 - v3.1 - Added Repair Log tab (8th tab) for viewing manual and automatic repair events with cost breakdowns.
 - v3.2 - Added Security tab (9th tab) consuming backend security monitoring APIs from spec 11. Displays security event summary with severity counts, flagged users, filterable events table with expandable detail rows.
 - v3.3 (Oct 10, 2026) - Added the Automatons page (`/admin/automatons`) and the Automatons user filter (Spec #55).
+- v3.5 (Oct 22, 2026) - Redesigned Search Analytics (`/admin/search-analytics`), now under Content: settled-search counting (5 s typing window), category-only selection tracking, period presets, no-result rate with trend, results by category, a filterable phrase table with CSV export, collapsed searchers linked to player detail. Definitions in `docs/guides/ADMIN_PANEL_GUIDE.md` §Search Analytics.
+- v3.4 (Oct 22, 2026) - Redesigned the Dashboard (`/admin/dashboard`): status strip, login-based player KPIs with 7-day trends, "Needs attention", per-mode battle activity, collapsed meta snapshot. Below 768 px the admin sidebar became a hamburger + navigation drawer. The section below describing the old `DashboardTab` is superseded; the current page and every definition are in `docs/guides/ADMIN_PANEL_GUIDE.md` §Dashboard.
 
 ---
 
@@ -73,7 +75,21 @@ The Admin Page has been fully implemented with the following features:
 - AdminPage is a thin shell (~100-200 lines) that handles tab navigation and renders the active tab component
 - Each tab is an independent component in `components/admin/` with its own state management and data fetching
 
-#### 2. **Dashboard Tab** ✅ COMPLETE
+#### 2. **Dashboard** ✅ REDESIGNED (v3.4)
+
+The Dashboard is now the page `pages/admin/DashboardPage.tsx`, composed from `components/admin/dashboard/` (toolbar, status strip, KPI row, "Needs attention", battle activity table, meta snapshot) with data from `hooks/useAdminDashboard.ts`:
+
+- **Status strip** (system-wide): cycle and season, last and next settlement, scheduler health, queued matches.
+- **KPI cards**: active (7 days), new (7 days) and inactive (3+ days) human players with trends vs about 7 days ago; battle-ready robots for the filter.
+- **Needs attention** (system-wide): bankruptcy risk, security alerts, Automatons needing attention, and one "cycle problems" item (settlement overdue, failed job, matches left behind), each linking to its page.
+- **Battle activity**: all nine modes plus Total, with last cycle, season, walkovers, queued, draw %, kill % and average time.
+- **Meta snapshot**: stances, loadouts, yield thresholds, facilities and weapons (player choices); collapsed, loaded on demand. Tier distributions for every league are on League Health, not here.
+- **Filter** in the URL (`?filter=`); scope, definitions and endpoints: `docs/guides/ADMIN_PANEL_GUIDE.md` §Dashboard.
+
+The removed System Health and Practice Arena sections below are kept for history only: Practice Arena has its own page (`/admin/practice-arena`), and cycle health is now the "cycle problems" item.
+
+<details><summary>Superseded: the v3.0 DashboardTab</summary>
+
 - **Component**: `DashboardTab.tsx` in `components/admin/`
 - **System Statistics** (auto-loaded on page mount):
   - Robot stats: Total, by tier, battle-ready percentage
@@ -100,6 +116,8 @@ The Admin Page has been fully implemented with the following features:
   - Data integrity status: valid/invalid cycles, issues
   - Event log statistics: total events, active users/robots, events by type
   - Collapsible by default to keep Dashboard clean; expand on demand
+
+</details>
 
 #### 3. **Cycle Controls Tab** ✅ COMPLETE
 - **Component**: `CycleControlsTab.tsx` in `components/admin/`

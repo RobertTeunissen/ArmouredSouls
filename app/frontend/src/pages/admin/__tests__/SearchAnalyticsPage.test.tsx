@@ -1,295 +1,280 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+/**
+ * Unit tests for the admin SearchAnalyticsPage: periods and counting mode in
+ * the URL, cards and trends, categories, the phrase table (tabs, filter,
+ * export), searchers, per-section errors and stale responses.
+ */
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
+import type { ReactNode } from 'react';
 import SearchAnalyticsPage from '../SearchAnalyticsPage';
-import type { AdminSearchAnalyticsReport } from '../../../utils/adminSearchAnalyticsApi';
 import { ApiError } from '../../../utils/ApiError';
+import type { AdminSearchAnalyticsReport } from '../../../utils/adminSearchAnalyticsApi';
+import { makePhrases, makeReport } from './searchAnalyticsFixtures';
 
 const mockGetReport = vi.hoisted(() => vi.fn());
+const mockGetPhrases = vi.hoisted(() => vi.fn());
+const mockDownload = vi.hoisted(() => vi.fn());
 
 vi.mock('../../../utils/adminSearchAnalyticsApi', () => ({
   getAdminSearchAnalyticsReport: mockGetReport,
+  getAdminSearchAnalyticsPhrases: mockGetPhrases,
+  downloadAdminSearchAnalyticsPhrasesCsv: mockDownload,
 }));
 
-const REPORT: AdminSearchAnalyticsReport = {
-  period: { seasonNumber: 8, cycleNumber: 24, cycleFrom: null, cycleTo: null },
-  overview: { totalSearches: 120, uniqueSearchers: 18, noResultSearches: 9 },
-  trends: [
-    { cycleNumber: 23, totalSearches: 80, uniqueSearchers: 14, noResultSearches: 4 },
-    { cycleNumber: 24, totalSearches: 120, uniqueSearchers: 18, noResultSearches: 9 },
-  ],
-  topPhrases: [
-    { phrase: 'atlas', count: 40 },
-    { phrase: 'north star', count: 21 },
-  ],
-  noResultPhrases: [
-    { phrase: 'missing guide', count: 9 },
-    { phrase: 'unknown robot', count: 3 },
-  ],
-  categoryUsage: { robots: 60, stables: 35, guide: 16 },
-  playerAnalysis: {
-    entries: [
-      { userId: 42, stableName: 'North Star', searchCount: 12, noResultCount: 2 },
-      { userId: 7, stableName: null, searchCount: 4, noResultCount: 1 },
-    ],
-    page: 1,
-    limit: 50,
-    total: 101,
-  },
-  limitations: [{ code: 'analyticsDataIncomplete', message: 'Some telemetry may be missing.' }],
-};
+vi.mock('recharts', () => {
+  const Box = ({ children }: { children?: ReactNode }) => <div data-testid="chart">{children}</div>;
+  const Empty = () => null;
+  return {
+    ResponsiveContainer: Box, ComposedChart: Box, Bar: Empty, Line: Empty, XAxis: Empty, YAxis: Empty,
+    CartesianGrid: Empty, Tooltip: Empty, Legend: Empty,
+  };
+});
 
-const REPORT_PAGE_2: AdminSearchAnalyticsReport = {
-  ...REPORT,
-  playerAnalysis: {
-    ...REPORT.playerAnalysis,
-    entries: [{ userId: 63, stableName: 'East Wind', searchCount: 8, noResultCount: 0 }],
-    page: 2,
-  },
-};
-
-const REPORT_WITH_UNSAFE_EXTRA_DATA = {
-  ...REPORT,
-  rawEvents: [{ eventId: 'event-raw-1', payload: { normalizedPhrase: 'secret phrase' } }],
-  playerSearchResponse: {
-    robots: [{ id: 99, name: 'Private Robot', targetRoute: '/robots/99' }],
-    stables: [],
-    guide: [],
-  },
-} as unknown as AdminSearchAnalyticsReport;
-
-function deferred<T>(): {
-  promise: Promise<T>;
-  resolve: (value: T) => void;
-  reject: (reason?: unknown) => void;
-} {
-  let resolvePromise: (value: T) => void = () => undefined;
-  let rejectPromise: (reason?: unknown) => void = () => undefined;
-  const promise = new Promise<T>((resolve, reject) => {
-    resolvePromise = resolve;
-    rejectPromise = reject;
-  });
-  return { promise, resolve: resolvePromise, reject: rejectPromise };
+function LocationProbe() {
+  const location = useLocation();
+  return <output data-testid="location">{location.search}</output>;
 }
 
+function renderPage(search = '') {
+  return render(
+    <MemoryRouter initialEntries={[`/admin/search-analytics${search}`]}>
+      <Routes>
+        <Route path="/admin/search-analytics" element={<><SearchAnalyticsPage /><LocationProbe /></>} />
+      </Routes>
+    </MemoryRouter>,
+  );
+}
+
+const lastReportQuery = () => mockGetReport.mock.calls.at(-1)?.[0];
+const lastPhraseQuery = () => mockGetPhrases.mock.calls.at(-1)?.[0];
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  mockGetReport.mockResolvedValue(makeReport());
+  mockGetPhrases.mockResolvedValue(makePhrases());
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
+
 describe('SearchAnalyticsPage', () => {
-  beforeEach(() => {
-    mockGetReport.mockReset();
-    mockGetReport.mockResolvedValue(REPORT);
+  it('loads the last 7 cycles of settled searches by default', async () => {
+    renderPage();
+
+    expect(await screen.findByText('412')).toBeInTheDocument();
+    expect(lastReportQuery()).toEqual({ lastCycles: 7, mode: 'settled', page: 1, limit: 25 });
+    expect(lastPhraseQuery()).toEqual({ lastCycles: 7, mode: 'settled', tab: 'all', q: '', page: 1, limit: 20 });
+    expect(screen.getByText('Season 2 · cycles 32–38')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Last 7 cycles' })).toHaveAttribute('aria-pressed', 'true');
   });
 
-  it('renders a loading state while the admin report request is pending', async () => {
-    let resolveReport!: (report: AdminSearchAnalyticsReport) => void;
-    const pendingReport = new Promise<AdminSearchAnalyticsReport>((resolve) => {
-      resolveReport = resolve;
-    });
-    mockGetReport.mockReset();
-    mockGetReport.mockReturnValueOnce(pendingReport);
+  it('explains settled counting and how many requests were typing in progress', async () => {
+    renderPage();
 
-    render(<SearchAnalyticsPage />);
-
-    expect(screen.getByText('Loading search analytics…')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Loading…' })).toBeDisabled();
-
-    resolveReport(REPORT);
-    await waitFor(() => expect(screen.getByText('atlas')).toBeInTheDocument());
+    const banner = await screen.findByRole('region', { name: 'How searches are counted' });
+    await waitFor(() => expect(banner).toHaveTextContent('412 of 1,284 requests'));
+    expect(banner).toHaveTextContent('The other 872 were typing in progress');
   });
 
-  it('does not show a stale cancellation error after a newer report request starts', async () => {
-    const firstRequest = deferred<AdminSearchAnalyticsReport>();
-    const secondRequest = deferred<AdminSearchAnalyticsReport>();
-    mockGetReport.mockReset();
-    mockGetReport.mockReturnValueOnce(firstRequest.promise).mockReturnValueOnce(secondRequest.promise);
+  it('shows the cards with trends; a falling no-result rate is green', async () => {
+    renderPage();
 
-    render(<SearchAnalyticsPage />);
-    await waitFor(() => expect(mockGetReport).toHaveBeenCalledTimes(1));
-
-    fireEvent.change(screen.getByLabelText('Filter from cycle'), { target: { value: '5' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Apply filters' }));
-    await waitFor(() => expect(mockGetReport).toHaveBeenCalledTimes(2));
-
-    firstRequest.reject(new ApiError('stale backend detail', 'STALE_REQUEST', 500));
-    await Promise.resolve();
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-
-    secondRequest.resolve(REPORT);
-    await waitFor(() => expect(screen.getByText('atlas')).toBeInTheDocument());
-    expect(screen.queryByText('stale backend detail')).not.toBeInTheDocument();
+    await screen.findByText('412');
+    expect(screen.getByLabelText('Trend: up 38')).toHaveClass('text-success');
+    expect(screen.getByLabelText('Trend: down 3.1 pts')).toHaveClass('text-success');
+    expect(screen.getByText('18.4%')).toBeInTheDocument();
+    expect(screen.getByText('Includes 1 admin account')).toBeInTheDocument();
+    expect(screen.getByText('60.8%')).toBeInTheDocument();
+    expect(screen.getByText('Tracked since cycle 36')).toBeInTheDocument();
+    expect(screen.getAllByText('vs cycles 25–31')).toHaveLength(2);
   });
 
-  it('does not report expected cancellation errors when an admin request is canceled', async () => {
-    const canceledRequest = new ApiError('', 'ERR_CANCELED', 0);
-    canceledRequest.name = 'CanceledError';
-    mockGetReport.mockReset();
-    mockGetReport.mockRejectedValueOnce(canceledRequest);
+  it('says "Not tracked yet" before selection tracking has data', async () => {
+    mockGetReport.mockResolvedValue(makeReport({
+      overview: { ...makeReport().overview, selection: { trackedSearches: 0, ledToResult: 0, rate: null, trackedSinceCycle: null } },
+    }));
+    renderPage();
 
-    render(<SearchAnalyticsPage />);
-
-    await waitFor(() => expect(mockGetReport).toHaveBeenCalledTimes(1));
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-    expect(screen.queryByText('Unable to load search analytics. Try again.')).not.toBeInTheDocument();
+    expect(await screen.findByText('Not tracked yet')).toBeInTheDocument();
+    expect(screen.getByText('Starts counting with new searches')).toBeInTheDocument();
   });
 
-  it('does not report native DOMException AbortError as an admin request failure', async () => {
-    mockGetReport.mockReset();
-    mockGetReport.mockRejectedValueOnce(new DOMException('The operation was aborted.', 'AbortError'));
+  it('switches presets and keeps the period in the URL', async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByText('412');
 
-    render(<SearchAnalyticsPage />);
+    await user.click(screen.getByRole('button', { name: 'This cycle' }));
+    await waitFor(() => expect(lastReportQuery()).toMatchObject({ lastCycles: 1 }));
+    expect(screen.getByTestId('location')).toHaveTextContent('?period=this');
 
-    await waitFor(() => expect(mockGetReport).toHaveBeenCalledTimes(1));
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-    expect(screen.queryByText('Unable to load search analytics. Try again.')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Whole season' }));
+    await waitFor(() => expect(lastReportQuery()).not.toHaveProperty('lastCycles'));
+    expect(screen.getByTestId('location')).toHaveTextContent('?period=season');
   });
 
-  it('renders active-season totals, trends, phrases, category usage, and typed limitations', async () => {
-    render(<SearchAnalyticsPage />);
-    await screen.findByText('Search Analytics');
-    const stats = screen.getByTestId('search-analytics-stats');
-    expect(within(stats).getByText('120')).toBeInTheDocument();
-    expect(within(stats).getByText('18')).toBeInTheDocument();
-    expect(within(stats).getByText('9')).toBeInTheDocument();
-    expect(within(stats).getByText('24')).toBeInTheDocument();
-    expect(screen.getByText('Season 8 · Current cycle 24')).toBeInTheDocument();
+  it('validates a custom range before requesting it', async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByText('412');
 
-    const trends = screen.getByRole('heading', { name: 'Cycle trends' }).closest('section');
-    expect(trends).not.toBeNull();
-    expect(within(trends as HTMLElement).getByText('#23')).toBeInTheDocument();
-    expect(within(trends as HTMLElement).getByText('#24')).toBeInTheDocument();
-    expect(within(trends as HTMLElement).getByText('80')).toBeInTheDocument();
-    expect(within(trends as HTMLElement).getByText('14')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Custom…' }));
+    const form = screen.getByRole('form', { name: 'Custom cycle range' });
+    await user.type(within(form).getByLabelText('From cycle'), '30');
+    await user.type(within(form).getByLabelText('To cycle'), '20');
+    const callsBefore = mockGetReport.mock.calls.length;
+    await user.click(within(form).getByRole('button', { name: 'Apply' }));
 
-    const topPhrases = screen.getByRole('list', { name: 'Top phrases list' });
-    const noResultPhrases = screen.getByRole('list', { name: 'No-result phrases list' });
-    expect(within(topPhrases).getByText('atlas')).toBeInTheDocument();
-    expect(within(topPhrases).getByText('north star')).toBeInTheDocument();
-    expect(within(noResultPhrases).getByText('missing guide')).toBeInTheDocument();
-    expect(within(noResultPhrases).getByText('unknown robot')).toBeInTheDocument();
+    expect(within(form).getByRole('alert')).toHaveTextContent('The starting cycle cannot be after the ending cycle.');
+    expect(mockGetReport.mock.calls.length).toBe(callsBefore);
 
-    const categoryUsage = screen.getByTestId('search-analytics-category-usage');
-    expect(within(categoryUsage).getByText('Robots')).toBeInTheDocument();
-    expect(within(categoryUsage).getByText('60')).toBeInTheDocument();
-    expect(within(categoryUsage).getByText('Stables')).toBeInTheDocument();
-    expect(within(categoryUsage).getByText('35')).toBeInTheDocument();
-    expect(within(categoryUsage).getByText('Guide articles')).toBeInTheDocument();
-    expect(within(categoryUsage).getByText('16')).toBeInTheDocument();
+    await user.clear(within(form).getByLabelText('To cycle'));
+    await user.type(within(form).getByLabelText('To cycle'), '35');
+    await user.click(within(form).getByRole('button', { name: 'Apply' }));
 
-    expect(screen.getByText('analyticsDataIncomplete:')).toBeInTheDocument();
-    expect(screen.getByText('Some telemetry may be missing.')).toBeInTheDocument();
+    await waitFor(() => expect(lastReportQuery()).toMatchObject({ cycleFrom: 30, cycleTo: 35 }));
+    expect(screen.getByTestId('location')).toHaveTextContent('?period=custom&from=30&to=35');
   });
 
-  it('applies validated active-season cycle filters and resets pagination to page one', async () => {
-    render(<SearchAnalyticsPage />);
-    await waitFor(() => expect(mockGetReport).toHaveBeenCalledTimes(1));
+  it('switches to all requests', async () => {
+    const user = userEvent.setup();
+    mockGetReport.mockImplementation(async (query: { mode: string }) => makeReport({
+      period: { ...makeReport().period, mode: query.mode as 'settled' | 'all' },
+    }));
+    renderPage();
+    await screen.findByText('412');
 
-    fireEvent.change(screen.getByLabelText('Filter from cycle'), { target: { value: '5' } });
-    fireEvent.change(screen.getByLabelText('Filter to cycle'), { target: { value: '20' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Apply filters' }));
+    await user.click(screen.getByRole('button', { name: 'All requests' }));
 
-    await waitFor(() => {
-      expect(mockGetReport).toHaveBeenLastCalledWith(
-        { cycleFrom: 5, cycleTo: 20, page: 1, limit: 50 },
-        expect.any(AbortSignal),
-      );
-    });
+    await waitFor(() => expect(lastReportQuery()).toMatchObject({ mode: 'all' }));
+    expect(lastPhraseQuery()).toMatchObject({ mode: 'all' });
+    expect(screen.getByTestId('location')).toHaveTextContent('?count=all');
+    expect(await screen.findByText('Search requests')).toBeInTheDocument();
   });
 
-  it('rejects an invalid cycle range without making another report request', async () => {
-    render(<SearchAnalyticsPage />);
-    await waitFor(() => expect(mockGetReport).toHaveBeenCalledTimes(1));
+  it('renders phrase rows with returned categories and the mostly chosen category', async () => {
+    renderPage();
 
-    fireEvent.change(screen.getByLabelText('Filter from cycle'), { target: { value: '20' } });
-    fireEvent.change(screen.getByLabelText('Filter to cycle'), { target: { value: '5' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Apply filters' }));
-
-    expect(screen.getByRole('alert')).toHaveTextContent('starting cycle cannot be greater');
-    expect(mockGetReport).toHaveBeenCalledTimes(1);
+    const table = await screen.findByRole('table', { name: 'Searched phrases' });
+    const cannon = within(table).getByRole('row', { name: /laser cannon/ });
+    expect(cannon).toHaveTextContent('Robots, Guide articles');
+    expect(cannon).toHaveTextContent('Robot · 71.4%');
+    const misspelt = within(table).getByRole('row', { name: /plasma sheild/ });
+    expect(within(misspelt).getByText('100%')).toHaveClass('text-error');
+    expect(misspelt).toHaveTextContent('No results');
+    expect(misspelt).toHaveTextContent('Not tracked');
   });
 
-  it('loads the bounded next player-analysis page with the existing limit', async () => {
-    mockGetReport.mockReset();
-    mockGetReport.mockResolvedValueOnce(REPORT).mockResolvedValueOnce(REPORT_PAGE_2);
-    render(<SearchAnalyticsPage />);
+  it('switches to the no-result tab and filters phrases after a pause', async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByRole('table', { name: 'Searched phrases' });
 
-    await screen.findByText('North Star');
-    expect(screen.getByText('Page 1 of 3 (101 players)')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Top phrases' })).toHaveAttribute('id', 'search-analytics-phrases-top-phrases');
-    expect(screen.getByRole('heading', { name: 'No-result phrases' })).toHaveAttribute('id', 'search-analytics-phrases-no-result-phrases');
-    expect(screen.getByRole('button', { name: 'Previous player analysis page' })).toHaveClass('focus-visible:outline-primary', 'focus-visible:ring-primary/50');
-    expect(screen.getByRole('button', { name: 'Next player analysis page' })).toHaveClass('focus-visible:outline-primary', 'focus-visible:ring-primary/50');
-    expect(screen.getByText('User #7')).toBeInTheDocument();
-    expect(screen.getByText('Unnamed stable')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'No results' }));
+    await waitFor(() => expect(lastPhraseQuery()).toMatchObject({ tab: 'noResult', page: 1 }));
+    expect(screen.getByTestId('location')).toHaveTextContent('tab=noResult');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Next player analysis page' }));
-
-    await waitFor(() => {
-      expect(mockGetReport).toHaveBeenLastCalledWith(
-        { page: 2, limit: 50 },
-        expect.any(AbortSignal),
-      );
-      expect(screen.getByText('East Wind')).toBeInTheDocument();
-    });
-    expect(screen.getByText('Page 2 of 3 (101 players)')).toBeInTheDocument();
+    await user.type(screen.getByLabelText('Filter phrases'), 'plasma');
+    await waitFor(() => expect(lastPhraseQuery()).toMatchObject({ q: 'plasma', tab: 'noResult' }), { timeout: 2000 });
+    expect(screen.getByTestId('location')).toHaveTextContent('q=plasma');
   });
 
-  it('retries a failed report with a player-safe message and preserves active filters', async () => {
-    mockGetReport.mockReset();
-    mockGetReport
-      .mockResolvedValueOnce(REPORT)
-      .mockRejectedValueOnce(new ApiError('backend detail', 'SEARCH_ANALYTICS_ERROR', 500))
-      .mockResolvedValueOnce(REPORT);
-    render(<SearchAnalyticsPage />);
+  it('exports the current phrase selection as CSV', async () => {
+    const user = userEvent.setup();
+    const createObjectURL = vi.fn(() => 'blob:csv');
+    const revokeObjectURL = vi.fn();
+    Object.assign(URL, { createObjectURL, revokeObjectURL });
+    mockDownload.mockResolvedValue(new Blob(['"Phrase"']));
+    renderPage('?tab=noResult&q=plasma');
+    await screen.findByText('412');
 
-    await screen.findByText('North Star');
-    fireEvent.change(screen.getByLabelText('Filter from cycle'), { target: { value: '5' } });
-    fireEvent.change(screen.getByLabelText('Filter to cycle'), { target: { value: '20' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Apply filters' }));
+    await user.click(screen.getByRole('button', { name: 'Export CSV' }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Unable to load search analytics. Try again.');
-    expect(screen.queryByText('backend detail')).not.toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
-
-    await waitFor(() => {
-      expect(mockGetReport).toHaveBeenLastCalledWith(
-        { cycleFrom: 5, cycleTo: 20, page: 1, limit: 50 },
-        expect.any(AbortSignal),
-      );
-      expect(screen.getByText('atlas')).toBeInTheDocument();
-    });
+    await waitFor(() => expect(mockDownload).toHaveBeenCalledWith({ lastCycles: 7, mode: 'settled', tab: 'noResult', q: 'plasma' }));
+    expect(createObjectURL).toHaveBeenCalled();
   });
 
-  it('renders only safe player/stable fields and does not render raw events or player Search_Response data', async () => {
-    mockGetReport.mockReset();
-    mockGetReport.mockResolvedValueOnce(REPORT_WITH_UNSAFE_EXTRA_DATA);
-    render(<SearchAnalyticsPage />);
+  it('shows the category results with what was opened', async () => {
+    renderPage();
 
-    await screen.findByText('North Star');
-    expect(screen.getByText('User #42')).toBeInTheDocument();
-    expect(screen.getByText('Unnamed stable')).toBeInTheDocument();
-    const playerAnalysis = screen.getByRole('heading', { name: 'Player and stable analysis' }).closest('section');
-    expect(playerAnalysis).not.toBeNull();
-    expect(within(playerAnalysis as HTMLElement).getByRole('columnheader', { name: 'Player' })).toBeInTheDocument();
-    expect(within(playerAnalysis as HTMLElement).getByRole('columnheader', { name: 'Stable' })).toBeInTheDocument();
-    expect(within(playerAnalysis as HTMLElement).getByRole('columnheader', { name: 'Searches' })).toBeInTheDocument();
-    expect(within(playerAnalysis as HTMLElement).getByRole('columnheader', { name: 'No results' })).toBeInTheDocument();
-    expect(screen.getAllByRole('table')).toHaveLength(2);
-
-    expect(screen.queryByText('event-raw-1')).not.toBeInTheDocument();
-    expect(screen.queryByText('secret phrase')).not.toBeInTheDocument();
-    expect(screen.queryByText('Private Robot')).not.toBeInTheDocument();
-    expect(screen.queryByText('/robots/99')).not.toBeInTheDocument();
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(screen.queryByText('Search robots, stables, or guide articles')).not.toBeInTheDocument();
+    const table = await screen.findByRole('table', { name: /per category/ });
+    expect(within(table).getByRole('row', { name: /Robots/ })).toHaveTextContent('74.0%38.0%');
+    expect(screen.getByText(/39.0% opened nothing/)).toBeInTheDocument();
   });
 
-  it('maps authorization failures to a safe admin-only error without exposing backend details', async () => {
-    mockGetReport.mockReset();
-    mockGetReport.mockRejectedValueOnce(new ApiError('database credentials', 'FORBIDDEN', 403));
-    render(<SearchAnalyticsPage />);
+  it('shows the trend as a table on request', async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByText('412');
+
+    await user.click(screen.getByRole('button', { name: 'View as table' }));
+
+    const table = screen.getByRole('table', { name: 'Settled searches and no-result rate per cycle' });
+    expect(within(table).getByRole('row', { name: /38/ })).toHaveTextContent('14.7%');
+  });
+
+  it('keeps searchers collapsed and links each to the player detail', async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByText('412');
+
+    const toggle = screen.getByRole('button', { name: /Searchers \(9\)/ });
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    await user.click(toggle);
+
+    expect(screen.getByRole('link', { name: 'Iron House' })).toHaveAttribute('href', '/admin/players?user=9');
+  });
+
+  it('shows a report error with Retry and keeps the phrases', async () => {
+    const user = userEvent.setup();
+    mockGetReport.mockRejectedValueOnce(new ApiError('internal detail', 'INTERNAL', 500));
+    renderPage();
 
     const alert = await screen.findByRole('alert');
-    expect(alert).toHaveTextContent('You are not authorized to view search analytics.');
-    expect(alert).not.toHaveTextContent('database credentials');
-    expect(screen.queryByText('atlas')).not.toBeInTheDocument();
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(alert).toHaveTextContent('Unable to load search analytics. Try again.');
+    expect(alert).not.toHaveTextContent('internal detail');
+    expect(await screen.findByRole('table', { name: 'Searched phrases' })).toBeInTheDocument();
+
+    await user.click(within(alert).getByRole('button', { name: 'Retry' }));
+    expect(await screen.findByText('412')).toBeInTheDocument();
+  });
+
+  it('maps authorization failures to a safe message', async () => {
+    mockGetReport.mockRejectedValue(new ApiError('Admin access required', 'FORBIDDEN', 403));
+    renderPage();
+
+    expect(await screen.findByText('You are not authorized to view search analytics.')).toBeInTheDocument();
+  });
+
+  it('shows reporting limitations', async () => {
+    mockGetReport.mockResolvedValue(makeReport({
+      limitations: [{ code: 'analyticsDataIncomplete', message: 'Search analytics data may be incomplete because persistence failed.' }],
+    }));
+    renderPage();
+
+    expect(await screen.findByRole('status', { name: 'Reporting limitations' })).toHaveTextContent('may be incomplete');
+  });
+
+  it('never lets a slow report for an older period replace the current one', async () => {
+    const user = userEvent.setup();
+    let resolveSlow: (report: AdminSearchAnalyticsReport) => void = () => undefined;
+    mockGetReport.mockImplementation((query: { lastCycles?: number }) => (
+      query.lastCycles === 7
+        ? new Promise((resolve) => { resolveSlow = resolve; })
+        : Promise.resolve(makeReport({ overview: { ...makeReport().overview, totalSearches: 11 } }))
+    ));
+    renderPage();
+
+    await user.click(screen.getByRole('button', { name: 'This cycle' }));
+    expect(await screen.findByText('11')).toBeInTheDocument();
+
+    await act(async () => {
+      resolveSlow(makeReport({ overview: { ...makeReport().overview, totalSearches: 999 } }));
+      await Promise.resolve();
+    });
+    expect(screen.queryByText('999')).not.toBeInTheDocument();
   });
 });

@@ -28,6 +28,8 @@ import {
   getTuningAdoption,
   getRefinementAdoption,
 } from '../services/admin/adminStatsService';
+import { getDashboardStatus } from '../services/admin/adminDashboardStatusService';
+import { getBattleActivity } from '../services/admin/adminBattleActivityService';
 import {
   LEAGUE_HISTORY_MODES,
   getHistoryByCycleRange,
@@ -47,6 +49,14 @@ import {
   SEARCH_ANALYTICS_REPORT_MAX_LIMIT,
   SEARCH_ANALYTICS_REPORT_MAX_PAGE,
 } from '../services/search/searchAnalyticsReportService';
+import {
+  exportSearchAnalyticsPhrasesCsv,
+  getSearchAnalyticsPhrases,
+  SEARCH_PHRASES_DEFAULT_LIMIT,
+  SEARCH_PHRASES_MAX_LIMIT,
+  SEARCH_PHRASES_MAX_PAGE,
+} from '../services/search/searchAnalyticsPhraseService';
+import { MAXIMUM_QUERY_LENGTH } from '../services/search/searchTypes';
 
 const router = express.Router();
 
@@ -58,6 +68,12 @@ const statsQuerySchema = z.object({
 
 const dashboardKpisQuerySchema = z.object({
   filter: z.enum(USER_FILTER_TYPES).optional().default('real'),
+});
+
+const dashboardBattleActivityQuerySchema = z.object({
+  filter: z.enum(USER_FILTER_TYPES).optional().default('real'),
+  /** `true` bypasses the 60 s cache (the dashboard's Refresh button). */
+  fresh: z.enum(['true', 'false']).optional().default('false'),
 });
 
 const engagementPlayersQuerySchema = z.object({
@@ -116,12 +132,14 @@ const leagueHistoryYoYoSchema = z.object({
   mode: leagueHistoryModeSchema.optional(),
 });
 
-const searchAnalyticsReportQuerySchema = z.object({
-  cycleFrom: z.coerce.number().int().min(0).max(SEARCH_ANALYTICS_REPORT_MAX_CYCLE).optional(),
-  cycleTo: z.coerce.number().int().min(0).max(SEARCH_ANALYTICS_REPORT_MAX_CYCLE).optional(),
-  page: z.coerce.number().int().positive().max(SEARCH_ANALYTICS_REPORT_MAX_PAGE).default(SEARCH_ANALYTICS_REPORT_DEFAULT_PAGE),
-  limit: z.coerce.number().int().positive().max(SEARCH_ANALYTICS_REPORT_MAX_LIMIT).default(SEARCH_ANALYTICS_REPORT_DEFAULT_LIMIT),
-}).strict().superRefine((value, context) => {
+const searchAnalyticsCycleRange = (value: { cycleFrom?: number; cycleTo?: number; lastCycles?: number }, context: z.RefinementCtx): void => {
+  if (value.lastCycles !== undefined && (value.cycleFrom !== undefined || value.cycleTo !== undefined)) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['lastCycles'],
+      message: 'lastCycles cannot be combined with cycleFrom or cycleTo',
+    });
+  }
   if (value.cycleFrom !== undefined && value.cycleTo !== undefined && value.cycleFrom > value.cycleTo) {
     context.addIssue({
       code: z.ZodIssueCode.custom,
@@ -129,7 +147,40 @@ const searchAnalyticsReportQuerySchema = z.object({
       message: 'cycleFrom cannot be greater than cycleTo',
     });
   }
-});
+};
+
+const searchAnalyticsCycleField = z.coerce.number().int().min(0).max(SEARCH_ANALYTICS_REPORT_MAX_CYCLE).optional();
+const searchAnalyticsModeField = z.enum(['settled', 'all']).optional().default('settled');
+/** "This cycle" (1) / "Last 7 cycles" (7) presets, resolved on the server. */
+const searchAnalyticsLastCyclesField = z.coerce.number().int().min(1).max(SEARCH_ANALYTICS_REPORT_MAX_CYCLE).optional();
+
+const searchAnalyticsReportQuerySchema = z.object({
+  cycleFrom: searchAnalyticsCycleField,
+  cycleTo: searchAnalyticsCycleField,
+  lastCycles: searchAnalyticsLastCyclesField,
+  page: z.coerce.number().int().positive().max(SEARCH_ANALYTICS_REPORT_MAX_PAGE).default(SEARCH_ANALYTICS_REPORT_DEFAULT_PAGE),
+  limit: z.coerce.number().int().positive().max(SEARCH_ANALYTICS_REPORT_MAX_LIMIT).default(SEARCH_ANALYTICS_REPORT_DEFAULT_LIMIT),
+  mode: searchAnalyticsModeField,
+}).strict().superRefine(searchAnalyticsCycleRange);
+
+const searchAnalyticsPhraseFilterFields = {
+  cycleFrom: searchAnalyticsCycleField,
+  cycleTo: searchAnalyticsCycleField,
+  lastCycles: searchAnalyticsLastCyclesField,
+  mode: searchAnalyticsModeField,
+  tab: z.enum(['all', 'noResult']).optional().default('all'),
+  q: z.string().trim().max(MAXIMUM_QUERY_LENGTH).optional(),
+};
+
+const searchAnalyticsPhrasesQuerySchema = z.object({
+  ...searchAnalyticsPhraseFilterFields,
+  page: z.coerce.number().int().positive().max(SEARCH_PHRASES_MAX_PAGE).default(1),
+  limit: z.coerce.number().int().positive().max(SEARCH_PHRASES_MAX_LIMIT).default(SEARCH_PHRASES_DEFAULT_LIMIT),
+}).strict().superRefine(searchAnalyticsCycleRange);
+
+const searchAnalyticsPhrasesExportQuerySchema = z.object(searchAnalyticsPhraseFilterFields)
+  .strict()
+  .superRefine(searchAnalyticsCycleRange);
 
 // --- Routes ---
 
@@ -176,6 +227,24 @@ router.get('/dashboard/kpis', authenticateToken, requireAdmin, validateRequest({
   const userFilter = buildUserFilter(filter);
   const kpis = await getDashboardKpis(userFilter);
   res.json(kpis);
+});
+
+/**
+ * GET /api/admin/dashboard/status
+ * Status strip and "Needs attention" facts. System-wide: takes no filter.
+ */
+router.get('/dashboard/status', authenticateToken, requireAdmin, validateRequest({}), async (_req: Request, res: Response) => {
+  res.json(await getDashboardStatus());
+});
+
+/**
+ * GET /api/admin/dashboard/battle-activity
+ * Battles per mode (last cycle, season, walkovers, queued, rates).
+ */
+router.get('/dashboard/battle-activity', authenticateToken, requireAdmin, validateRequest({ query: dashboardBattleActivityQuerySchema }), async (req: Request, res: Response) => {
+  const filter = (req.query.filter as UserFilterType) || 'real';
+  const fresh = req.query.fresh === 'true';
+  res.json(await getBattleActivity(filter, { fresh }));
 });
 
 /**
@@ -339,6 +408,28 @@ router.get('/search-analytics/report', authenticateToken, requireAdmin, validate
   const query = searchAnalyticsReportQuerySchema.parse(req.query);
   const report = await getSearchAnalyticsReport(query);
   res.json(report);
+});
+
+/**
+ * GET /api/admin/search-analytics/phrases
+ * Paginated phrase table (settled searches by default).
+ */
+router.get('/search-analytics/phrases', authenticateToken, requireAdmin, validateRequest({ query: searchAnalyticsPhrasesQuerySchema }), async (req: Request, res: Response) => {
+  const query = searchAnalyticsPhrasesQuerySchema.parse(req.query);
+  res.json(await getSearchAnalyticsPhrases(query));
+});
+
+/**
+ * GET /api/admin/search-analytics/phrases/export
+ * The same phrase table as CSV (capped at 5,000 rows; spreadsheet formulas neutralised).
+ */
+router.get('/search-analytics/phrases/export', authenticateToken, requireAdmin, validateRequest({ query: searchAnalyticsPhrasesExportQuerySchema }), async (req: Request, res: Response) => {
+  const query = searchAnalyticsPhrasesExportQuerySchema.parse(req.query);
+  const csv = await exportSearchAnalyticsPhrasesCsv(query);
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', 'attachment; filename="search-phrases.csv"');
+  res.setHeader('Cache-Control', 'no-store');
+  res.send(csv);
 });
 
 export default router;

@@ -5,13 +5,14 @@
  * - Sidebar renders all 7 navigation sections with correct links
  * - Header renders page title based on current route and "← Back to Game" link
  * - Active route is visually highlighted
- * - Responsive sidebar collapse at 768px breakpoint (w-16 vs w-60)
+ * - Below 768px the sidebar is replaced by a hamburger + navigation drawer
  *
  * _Requirements: 1.1, 1.2, 1.3, 1.5, 1.6, 1.7_
  */
 
 import { describe, it, expect } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import AdminLayout from '../AdminLayout';
 
@@ -31,7 +32,6 @@ const NAVIGATION_SECTIONS = [
 
 const NAVIGATION_ITEMS = [
   { label: 'Dashboard', path: '/admin/dashboard' },
-  { label: 'Search Analytics', path: '/admin/search-analytics' },
   { label: 'Cycle Controls', path: '/admin/cycles' },
   { label: 'Season Control', path: '/admin/seasons' },
   { label: 'Practice Arena', path: '/admin/practice-arena' },
@@ -51,6 +51,7 @@ const NAVIGATION_ITEMS = [
   { label: 'Tuning', path: '/admin/tuning' },
   { label: 'Refinement', path: '/admin/refinement' },
   { label: 'Subscriptions', path: '/admin/subscriptions' },
+  { label: 'Search Analytics', path: '/admin/search-analytics' },
   { label: 'Repair Log', path: '/admin/repair-log' },
   { label: 'Audit Log', path: '/admin/audit-log' },
 ];
@@ -126,12 +127,13 @@ describe('AdminLayout', () => {
       expect(screen.getByRole('heading', { level: 1, name: 'Dashboard' })).toBeInTheDocument();
     });
 
-    it('should render "← Back to Game" link pointing to /dashboard', () => {
+    it('should render a "Back to Game" link pointing to /dashboard (shortened to "Game" below sm)', () => {
       renderLayout('/admin/dashboard');
 
-      const backLink = screen.getByText('← Back to Game');
-      expect(backLink).toBeInTheDocument();
-      expect(backLink.closest('a')).toHaveAttribute('href', '/dashboard');
+      const backLink = screen.getByRole('link', { name: 'Back to Game' });
+      expect(backLink).toHaveAttribute('href', '/dashboard');
+      expect(within(backLink).getByText('Game')).toHaveClass('sm:hidden');
+      expect(within(backLink).getByText('Back to Game')).toHaveClass('hidden', 'sm:inline');
     });
 
     it('should update page title when navigating to different routes', () => {
@@ -221,61 +223,142 @@ describe('AdminLayout', () => {
   });
 
   /**
-   * Requirement 1.3: When the viewport width is below 768px, the Sidebar
-   * SHALL collapse to display only icons without text labels.
-   *
-   * The sidebar uses Tailwind responsive classes: w-16 (collapsed) and
-   * md:w-60 (expanded at ≥768px). We verify the CSS classes are present.
+   * Below 768px (md) the sidebar is hidden and a hamburger in the header opens
+   * the full, labelled navigation in a drawer. This replaced the 64px icon rail
+   * (admin dashboard redesign, decision D5); from md the sidebar is unchanged.
    */
-  describe('Responsive sidebar collapse', () => {
-    it('should have w-16 class for collapsed state (below 768px)', () => {
+  describe('Responsive layout', () => {
+    it('should hide the sidebar below md and show it from md at full width', () => {
       renderLayout();
 
       const sidebar = screen.getByRole('complementary', { name: /admin sidebar navigation/i });
-      expect(sidebar.className).toContain('w-16');
+      expect(sidebar).toHaveClass('hidden', 'md:flex', 'w-60');
     });
 
-    it('should have md:w-60 class for expanded state (at 768px and above)', () => {
+    it('should show section headings and labels in the sidebar (no icon-only rail)', () => {
       renderLayout();
 
       const sidebar = screen.getByRole('complementary', { name: /admin sidebar navigation/i });
-      expect(sidebar.className).toContain('md:w-60');
-    });
-
-    it('should hide text labels below md breakpoint using hidden md:inline classes', () => {
-      renderLayout();
-
-      const sidebar = screen.getByRole('complementary', { name: /admin sidebar navigation/i });
-
-      // Section headings use "hidden md:block"
       for (const section of NAVIGATION_SECTIONS) {
-        const heading = within(sidebar).getByText(section);
-        expect(heading.className).toContain('hidden');
-        expect(heading.className).toContain('md:block');
+        expect(within(sidebar).getByText(section)).not.toHaveClass('hidden');
       }
+      expect(within(sidebar).getByText('Dashboard')).not.toHaveClass('hidden');
     });
 
-    it('should hide nav item text labels below md breakpoint using hidden md:inline classes', () => {
+    it('should offset the main content by the sidebar width from md only', () => {
       renderLayout();
 
-      const sidebar = screen.getByRole('complementary', { name: /admin sidebar navigation/i });
-
-      // Nav item labels use "hidden md:inline"
-      const dashboardLabel = within(sidebar).getByText('Dashboard');
-      expect(dashboardLabel.className).toContain('hidden');
-      expect(dashboardLabel.className).toContain('md:inline');
-    });
-
-    it('should offset main content area by sidebar width with responsive margin', () => {
-      renderLayout();
-
-      // The main content wrapper uses ml-16 md:ml-60
       const sidebar = screen.getByRole('complementary', { name: /admin sidebar navigation/i });
       const mainWrapper = sidebar.nextElementSibling;
 
       expect(mainWrapper).not.toBeNull();
-      expect(mainWrapper!.className).toContain('ml-16');
       expect(mainWrapper!.className).toContain('md:ml-60');
+      expect(mainWrapper!.className).not.toMatch(/(^|\s)ml-16(\s|$)/);
+    });
+
+    it('should show the hamburger button below md only', () => {
+      renderLayout();
+
+      const button = screen.getByRole('button', { name: 'Open navigation' });
+      expect(button).toHaveClass('md:hidden');
+      expect(button).toHaveAttribute('aria-expanded', 'false');
+    });
+  });
+
+  describe('Navigation grouping', () => {
+    it('should list Search Analytics last under Content, not under Overview', () => {
+      renderLayout();
+
+      const sidebar = screen.getByRole('complementary', { name: /admin sidebar navigation/i });
+      const overview = within(sidebar).getByText('Overview').parentElement!;
+      const content = within(sidebar).getByText('Content').parentElement!;
+
+      expect(within(overview).queryByText('Search Analytics')).not.toBeInTheDocument();
+      const contentLinks = within(content).getAllByRole('link');
+      expect(contentLinks.at(-1)).toHaveAttribute('href', '/admin/search-analytics');
+    });
+  });
+
+  describe('Mobile navigation drawer', () => {
+    it('should open a labelled dialog with every navigation link', async () => {
+      const user = userEvent.setup();
+      renderLayout();
+
+      await user.click(screen.getByRole('button', { name: 'Open navigation' }));
+
+      const dialog = screen.getByRole('dialog', { name: 'Admin Portal' });
+      expect(dialog).toHaveAttribute('aria-modal', 'true');
+      expect(screen.getByRole('button', { name: 'Open navigation' })).toHaveAttribute('aria-expanded', 'true');
+      expect(within(dialog).getAllByRole('link')).toHaveLength(NAVIGATION_ITEMS.length);
+      for (const section of NAVIGATION_SECTIONS) {
+        expect(within(dialog).getByText(section)).toBeInTheDocument();
+      }
+    });
+
+    it('should move focus into the drawer and highlight the active page', async () => {
+      const user = userEvent.setup();
+      renderLayout('/admin/security');
+
+      await user.click(screen.getByRole('button', { name: 'Open navigation' }));
+
+      const dialog = screen.getByRole('dialog');
+      expect(dialog.contains(document.activeElement)).toBe(true);
+      const security = within(dialog).getAllByRole('link').find((l) => l.getAttribute('href') === '/admin/security');
+      expect(security!.className).toContain('bg-primary/15');
+    });
+
+    it('should close on Escape and return focus to the hamburger', async () => {
+      const user = userEvent.setup();
+      renderLayout();
+      const trigger = screen.getByRole('button', { name: 'Open navigation' });
+
+      await user.click(trigger);
+      await user.keyboard('{Escape}');
+
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(trigger).toHaveFocus();
+    });
+
+    it('should close from the close button and the backdrop', async () => {
+      const user = userEvent.setup();
+      renderLayout();
+
+      await user.click(screen.getByRole('button', { name: 'Open navigation' }));
+      await user.click(screen.getByRole('button', { name: 'Close navigation' }));
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: 'Open navigation' }));
+      await user.click(screen.getByTestId('admin-nav-backdrop'));
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    it('should keep Tab focus inside the drawer', async () => {
+      const user = userEvent.setup();
+      renderLayout();
+
+      await user.click(screen.getByRole('button', { name: 'Open navigation' }));
+      const dialog = screen.getByRole('dialog');
+      const close = within(dialog).getByRole('button', { name: 'Close navigation' });
+      expect(close).toHaveFocus();
+
+      await user.tab({ shift: true });
+      expect(dialog.contains(document.activeElement)).toBe(true);
+      expect(within(dialog).getAllByRole('link').at(-1)).toHaveFocus();
+
+      await user.tab();
+      expect(close).toHaveFocus();
+    });
+
+    it('should close after choosing a page', async () => {
+      const user = userEvent.setup();
+      renderLayout();
+
+      await user.click(screen.getByRole('button', { name: 'Open navigation' }));
+      const dialog = screen.getByRole('dialog');
+      await user.click(within(dialog).getAllByRole('link').find((l) => l.getAttribute('href') === '/admin/players')!);
+
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 1, name: 'Players' })).toBeInTheDocument();
     });
   });
 

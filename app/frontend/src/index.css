@@ -44,6 +44,7 @@
   --animate-fade-in-delayed: fade-in 300ms linear 100ms backwards;
   --animate-error-slide-in: error-slide-in 200ms ease-out;
   --animate-slide-in-right: slide-in-right 300ms ease-out;
+  --animate-slide-in-left: slide-in-left 200ms ease-out;
   --animate-scale-in: scale-in 250ms ease-out;
 }
 
@@ -59,6 +60,11 @@
 
 @keyframes slide-in-right {
   0% { transform: translateX(100%); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes slide-in-left {
+  0% { transform: translateX(-100%); }
   100% { transform: translateX(0); }
 }
 
