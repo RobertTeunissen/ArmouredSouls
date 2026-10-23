@@ -3,7 +3,8 @@
  * Feature: admin-portal-redesign
  *
  * Property 3: TTL cache correctness
- * Property 4: Session log round-trip persistence
+ * (Property 4, session log round-trip, was retired with the session log in
+ * the Cycle Controls redesign.)
  *
  * Uses fast-check with minimum 100 iterations per property.
  *
@@ -88,11 +89,8 @@ beforeEach(() => {
     statsLastFetched: null,
     statsLastFilter: null,
     statsLoading: false,
-    schedulerStatus: null,
-    schedulerLastFetched: null,
     securitySummary: null,
     securityLastFetched: null,
-    sessionLog: [],
     ttlMs: 60_000,
   });
 });
@@ -208,129 +206,6 @@ describe('Property 3: TTL cache correctness', () => {
           await useAdminStore.getState().fetchStats(undefined, true);
           expect(mockedApiGet).toHaveBeenCalledTimes(1);
           expect(useAdminStore.getState().systemStats).toEqual(stats);
-        },
-      ),
-      { numRuns: 100 },
-    );
-  });
-});
-
-// ----------------------------------------------------------------
-// Property 4: Session log round-trip persistence
-// ----------------------------------------------------------------
-
-describe('Property 4: Session log round-trip persistence', () => {
-  /**
-   * **Validates: Requirements 4.4**
-   *
-   * For any session log entry (with valid type, message, and optional details),
-   * after adding it to the admin store via addSessionLog(), the entry SHALL be
-   * retrievable from both the store's in-memory sessionLog array and from
-   * localStorage.
-   */
-
-  /** Arbitrary for valid session log entry types */
-  const logTypeArb = fc.constantFrom('success', 'info', 'warning', 'error') as fc.Arbitrary<
-    'success' | 'info' | 'warning' | 'error'
-  >;
-
-  /** Arbitrary for log messages — non-empty strings */
-  const logMessageArb = fc.string({ minLength: 1, maxLength: 200 });
-
-  /** Arbitrary for optional details — JSON-serializable values */
-  const logDetailsArb = fc.oneof(
-    fc.constant(undefined),
-    fc.string(),
-    fc.integer(),
-    fc.boolean(),
-    fc.dictionary(fc.string({ minLength: 1, maxLength: 10 }), fc.string()),
-    fc.array(fc.integer(), { maxLength: 5 }),
-  );
-
-  it('entry appears in both store state and localStorage after addSessionLog', () => {
-    fc.assert(
-      fc.property(logTypeArb, logMessageArb, logDetailsArb, (type, message, details) => {
-        // Reset store session log and localStorage before each iteration
-        useAdminStore.setState({ sessionLog: [] });
-        storage = {};
-
-        // Add the session log entry
-        useAdminStore.getState().addSessionLog(type, message, details);
-
-        // Verify entry is in the store's in-memory sessionLog
-        const storeLog = useAdminStore.getState().sessionLog;
-        expect(storeLog.length).toBeGreaterThanOrEqual(1);
-
-        const entry = storeLog[0]; // Most recent entry is prepended
-        expect(entry.type).toBe(type);
-        expect(entry.message).toBe(message);
-        if (details !== undefined) {
-          expect(entry.details).toEqual(details);
-        }
-        expect(entry.timestamp).toBeTypeOf('string');
-
-        // Verify entry is persisted in localStorage
-        const stored = localStorage.getItem('admin_session_log');
-        expect(stored).not.toBeNull();
-        expect(typeof stored).toBe('string');
-
-        const parsed = JSON.parse(stored as string);
-        expect(Array.isArray(parsed)).toBe(true);
-        expect(parsed.length).toBeGreaterThanOrEqual(1);
-
-        const storedEntry = parsed[0];
-        expect(storedEntry.type).toBe(type);
-        expect(storedEntry.message).toBe(message);
-        if (details !== undefined) {
-          // JSON round-trip: undefined details are omitted by JSON.stringify
-          expect(storedEntry.details).toEqual(details);
-        }
-        expect(storedEntry.timestamp).toBeTypeOf('string');
-      }),
-      { numRuns: 100 },
-    );
-  });
-
-  /**
-   * Additional sub-property: multiple entries accumulate correctly.
-   * Adding N entries results in N entries in both store and localStorage.
-   *
-   * **Validates: Requirements 4.4**
-   */
-  it('multiple entries accumulate in both store and localStorage', () => {
-    fc.assert(
-      fc.property(
-        fc.array(
-          fc.tuple(logTypeArb, logMessageArb, logDetailsArb),
-          { minLength: 1, maxLength: 20 },
-        ),
-        (entries) => {
-          // Reset store session log and localStorage
-          useAdminStore.setState({ sessionLog: [] });
-          storage = {};
-
-          // Add all entries
-          for (const [type, message, details] of entries) {
-            useAdminStore.getState().addSessionLog(type, message, details);
-          }
-
-          // Verify store has all entries
-          const storeLog = useAdminStore.getState().sessionLog;
-          expect(storeLog).toHaveLength(entries.length);
-
-          // Verify localStorage has all entries
-          const stored = localStorage.getItem('admin_session_log');
-          expect(stored).not.toBeNull();
-          const parsed = JSON.parse(stored as string);
-          expect(parsed).toHaveLength(entries.length);
-
-          // Entries are prepended (newest first), so reverse to match input order
-          const reversedStore = [...storeLog].reverse();
-          for (let i = 0; i < entries.length; i++) {
-            const [type, message] = entries[i];
-            expect(reversedStore[i].type).toBe(type);
-            expect(reversedStore[i].message).toBe(message);
-          }
         },
       ),
       { numRuns: 100 },

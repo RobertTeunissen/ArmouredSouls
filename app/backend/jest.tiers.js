@@ -85,6 +85,8 @@ const HEAVY_TESTS = [
   'tests/integration/kothNeverPlayedPromotion.test.ts',
   'tests/integration/seasonPurgeAndReset.test.ts',
   'tests/integration/seasonRollover.test.ts',
+  // Cycle Controls: every Run button and the bulk runner, end to end (real jobs).
+  'tests/integration/schedulerManualRuns.test.ts',
   'tests/integration/tagTeamAutoRepair.test.ts',
   'tests/integration/tagTeamByeHandling.test.ts',
   'tests/integration/tagTeamCompleteCycle.test.ts',
@@ -164,6 +166,8 @@ const DB_DEPENDENT = [
   'tests/integration/adminDashboard.test.ts',
   // Admin Search Analytics redesign — settled searches, selection tracking, phrases, CSV
   'tests/integration/searchAnalyticsSettled.test.ts',
+  // Cycle Controls: scheduler run store, missed/interrupted runs, overview.
+  'tests/integration/schedulerRunHistory.test.ts',
   // Spec #55 — Domain_Service_Extraction (task group 2)
   'src/services/economy/__tests__/facilityUpgradeService.test.ts',
   'src/services/economy/__tests__/weaponPurchaseService.test.ts',

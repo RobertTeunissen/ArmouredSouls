@@ -99,6 +99,7 @@ describe('executeSettlement — Automaton Turn_Steps', () => {
   it('never fails settlement when the Turn_Step call throws (R7.8)', async () => {
     mockTurnStep.mockRejectedValueOnce(new Error('unexpected'));
 
-    await expect(executeSettlement()).resolves.toEqual({ jobName: 'settlement' });
+    // The closed cycle is reported for the scheduler run history.
+    await expect(executeSettlement()).resolves.toEqual({ jobName: 'settlement', cycleNumber: 42 });
   });
 });

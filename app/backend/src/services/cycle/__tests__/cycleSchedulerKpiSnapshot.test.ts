@@ -94,6 +94,7 @@ describe('executeSettlement — admin KPI snapshot', () => {
   it('never fails settlement when the snapshot throws', async () => {
     mockRecord.mockRejectedValueOnce(new Error('unexpected'));
 
-    await expect(executeSettlement()).resolves.toEqual({ jobName: 'settlement' });
+    // The closed cycle is reported for the scheduler run history.
+    await expect(executeSettlement()).resolves.toEqual({ jobName: 'settlement', cycleNumber: 42 });
   });
 });

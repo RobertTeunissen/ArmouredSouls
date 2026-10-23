@@ -320,6 +320,16 @@ try {
 }
 ```
 
+## SchedulerErrorCode (Cycle Controls)
+
+`SchedulerError` in `app/backend/src/errors/schedulerErrors.ts`.
+
+| Code | HTTP | Description |
+|---|---|---|
+| `SCHEDULER_UNKNOWN_JOB` | 400 | The job name is not one of the scheduler's jobs (`startManualRun`). Route validation normally rejects it first with `VALIDATION_ERROR`. |
+| `SCHEDULER_JOB_ALREADY_ACTIVE` | 409 | That job (or a bulk run) is already queued or running; a second start would run it twice (`POST /api/admin/scheduler/runs`, `POST /api/admin/cycles/bulk`). |
+| `SCHEDULER_RUN_NOT_FOUND` | 404 | No run with that id (`GET /api/admin/scheduler/runs/:id`). |
+
 ## SeasonErrorCode (Spec #45)
 
 | Code | HTTP | Meaning |

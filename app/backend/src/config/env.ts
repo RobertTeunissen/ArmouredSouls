@@ -153,6 +153,8 @@ const EnvSchema = z
     // ── Optional integrations ────────────────────────────────────────
     APP_BASE_URL: z.string().optional(),
     ENABLE_MODERATION: boolFlag,
+    /** Release label shown on Cycle Controls' "Backend restarted" markers. */
+    DEPLOY_TAG: z.string().max(80).optional(),
 
   })
   .superRefine((env, ctx) => {
@@ -274,6 +276,7 @@ export interface EnvConfig {
   dailyReportSchedule: string;
   /** Base URL of the deployed app, used in notification links. */
   appBaseUrl: string | undefined;
+  deployTag: string | undefined;
   /** Force-enable image moderation in development and test environments. */
   enableModeration: boolean;
 }
@@ -324,6 +327,7 @@ const toEnvConfig = (parsed: z.infer<typeof EnvSchema>): EnvConfig => ({
   discordWebhookUrl: parsed.DISCORD_WEBHOOK_URL || undefined,
   dailyReportSchedule: parsed.DAILY_REPORT_SCHEDULE,
   appBaseUrl: parsed.APP_BASE_URL || undefined,
+  deployTag: parsed.DEPLOY_TAG || undefined,
   enableModeration: parsed.ENABLE_MODERATION,
 });
 

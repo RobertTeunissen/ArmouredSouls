@@ -21,7 +21,7 @@ All pages manage their own data fetching. The sidebar collapses to icons on narr
 | Section | Page | Route | Description |
 |---------|------|-------|-------------|
 | **Overview** | Dashboard | `/admin/dashboard` | Status strip, needs attention, player KPIs, battle activity per mode |
-| **Game Operations** | Cycle Controls | `/admin/cycles` | Scheduler status, manual triggers, bulk cycle runner |
+| **Game Operations** | Cycle Controls | `/admin/cycles` | Running job, daily schedule with Run buttons, persistent run history (restarts, missed and interrupted runs), bulk cycle runner |
 | | Practice Arena | `/admin/practice-arena` | Practice battle usage and daily trends |
 | **Battle Data** | Battle Logs | `/admin/battles` | Paginated battle history with type filters and detail slide-over |
 | | Robot Stats | `/admin/robot-stats` | Attribute analysis, outlier detection, win rate correlation |
@@ -121,9 +121,30 @@ All counts are robots (or stables, for Facilities) owned by users in the filter.
 
 ### Cycle Controls (`/admin/cycles`)
 
-Scheduler status panel showing active state, running job, and queue. Manual trigger buttons with confirmation dialogs for: matchmaking, battles, league rebalancing, repairs, daily finances, KotH. Bulk cycle runner with configurable cycle count (1-100), tournament/KotH/finance/user-generation toggles. Session log with export and clear.
+Answers three questions: what is running right now and for how long, did every slot run, and what happened around a deploy. All times are UTC. The page polls every 10 s while a job is queued or running and every 60 s otherwise.
 
-**API:** `GET /api/admin/scheduler/status`, `POST /api/admin/cycles/bulk`, and individual operation endpoints
+Sections, top to bottom:
+
+1. **Status strip** — Season and cycle (phase, season day); Scheduler (Active / Disabled, and since when this backend runs, with `DEPLOY_TAG` when set); **Running now** (job, start, elapsed time); Queue (jobs waiting for the lock); Next (next slot and countdown, or "after the running job").
+2. **Missed-run banner** — shown when a slot did not run in the last 7 days; "Show in history" filters the history to problems.
+3. **Daily schedule** — the ten slots in time order. Per slot: last run (day, time, trigger), status, duration (`3s`, `4m 12s`, `1h 50m`), one-line result ("669 battles", "Round 3/12 · 512 matches", "Cycle 81 closed") and **Run**. A queued or running slot shows Queued / Running instead of the button. Below 768 px the table becomes a list.
+4. **Run history** — runs, **Backend restarted** markers and **Missed** runs, newest first. Filters: job (including Bulk cycles), Problems only (failed, interrupted, missed, restarts), last 24 h / 7 / 14 / 30 days. 25 entries per page.
+5. **Testing tools** (collapsed) — the bulk cycle runner: cycles (1–100) and options (stable generation **off** by default, tournaments, KotH, finances), an estimate from the last run of every slot on this environment, and the state of an active bulk run.
+
+**Run buttons.** Each opens a confirmation describing the job (settlement and bulk runs get the red confirm). Confirming starts the job **in the background**: the server answers at once and the job waits for the scheduler lock, then runs exactly like its cron run (repair, preparation gate, notifications). A slot can take 20 minutes on a full environment; the proxy cuts responses at 30 s, which is why runs no longer wait for the result. Starting a job that is already queued or running answers 409 ("already queued or running"). Jobs can be run by hand with `SCHEDULER_ENABLED=false` too (local, CI); only automated scheduling is off then.
+
+**Definitions**
+
+| Term | Definition |
+|---|---|
+| Run | One row of `scheduler_job_runs`: job, trigger (`cron`, `manual`, `resume` for a settlement resumed at startup, `bulk`), who started it, status, queued / started / finished, duration, result summary or error. Written for every run, never failing the job. |
+| Queued / Running | Waiting for the scheduler lock / holding it. |
+| Skipped | A battle job that returned at once because the season is in its Preparation_Phase. |
+| Interrupted | The backend stopped (usually a deploy) before the run finished. Marked at the next start; it ends at the stopped process's last heartbeat. |
+| Backend restarted | A `scheduler_processes` row: one per backend start, with a 60 s heartbeat. "Down X–Y" is the previous process's last heartbeat to this start. |
+| Missed | A daily slot with no cron or resumed run queued between 1 min before and 15 min after it, while the scheduler was enabled. A later manual run is its own row and does not hide the miss. Slots before history tracking started, while the scheduler was disabled, or less than 15 min ago are never missed. A miss inside a restart gap shows that downtime. |
+
+**API:** `GET /api/admin/scheduler/overview`, `GET /api/admin/scheduler/runs?jobName&problemsOnly&days(1–30)&page&limit`, `GET /api/admin/scheduler/runs/:id`, `POST /api/admin/scheduler/runs` `{ jobName }` → 202 `{ run }` (400 unknown job, 409 already active), `POST /api/admin/cycles/bulk` with `background: true` → 202 `{ run }` (without it the call waits and returns the full result, as before; 409 while a bulk run is active). `GET /api/admin/scheduler/status` (in-memory state) and `POST /api/admin/scheduler/trigger/:jobName` (waits for the job) remain for scripts; the page no longer uses them. All require `authenticateToken` + `requireAdmin`; manual and bulk starts write an `admin_audit_logs` row.
 
 ### Players (`/admin/players`)
 

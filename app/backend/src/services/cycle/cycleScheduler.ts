@@ -42,6 +42,9 @@ import {
 } from './canonicalCycleIdentity';
 import { logCycleEndBalances } from './cycle-closing-evidence';
 import type { TurnStepInput } from '../automaton/automatonTurnService';
+import { markFinished, markRunning, recordQueued } from './schedulerRunStore';
+import { SchedulerError, SchedulerErrorCode } from '../../errors/schedulerErrors';
+import type { SchedulerRunSummary, SchedulerRunTrigger } from '../../types/schedulerTypes';
 
 const eventLogger = new EventLogger();
 
@@ -461,7 +464,7 @@ export async function executeSettlement(): Promise<JobContext> {
     });
   }
 
-  return { jobName: 'settlement' };
+  return { jobName: 'settlement', cycleNumber: closingCycle };
 }
 
 /**
@@ -725,7 +728,38 @@ const BATTLE_EVENT_JOBS: ReadonlySet<JobState['name']> = new Set<JobState['name'
   'team3v3Tournament',
 ]);
 
-export async function runJob(jobName: JobState['name'], handler: () => Promise<JobContext | void>): Promise<void> {
+/** How a run was started, and the history row it already has (manual runs). */
+export interface RunJobOptions {
+  trigger?: SchedulerRunTrigger;
+  triggeredByUserId?: number | null;
+  /** A row recorded by the caller (`startManualRun`); otherwise one is recorded here. */
+  runId?: number | null;
+}
+
+/** The one-line result kept in `scheduler_job_runs.summary`. */
+export function toRunSummary(context: JobContext | void | null | undefined): SchedulerRunSummary | null {
+  if (!context) return null;
+  const summary: SchedulerRunSummary = {};
+  if (context.matchesCompleted !== undefined) summary.matchesCompleted = context.matchesCompleted;
+  if (context.tournamentName !== undefined) summary.tournamentName = context.tournamentName;
+  if (context.tournamentRound !== undefined) summary.tournamentRound = context.tournamentRound;
+  if (context.tournamentMaxRounds !== undefined) summary.tournamentMaxRounds = context.tournamentMaxRounds;
+  if (context.cycleNumber !== undefined) summary.cycleNumber = context.cycleNumber;
+  return Object.keys(summary).length > 0 ? summary : null;
+}
+
+export async function runJob(
+  jobName: JobState['name'],
+  handler: () => Promise<JobContext | void>,
+  options: RunJobOptions = {},
+): Promise<void> {
+  // The history write is started, not awaited, so the lock below is still the
+  // first await: it keeps the queue FIFO (see the next comment). It is awaited
+  // once the lock is held.
+  const runIdPromise: Promise<number | null> = options.runId !== undefined
+    ? Promise.resolve(options.runId)
+    : recordQueued({ jobName, trigger: options.trigger ?? 'manual', triggeredByUserId: options.triggeredByUserId });
+
   // The lock is taken first, before any await. Spec #45's preparation gate used to
   // sit above this line and it does an `await import(...)`, so a battle-event job
   // yielded before reaching `acquireLock` and an infrastructure job called later
@@ -737,6 +771,8 @@ export async function runJob(jobName: JobState['name'], handler: () => Promise<J
 
   const state = jobStates.get(jobName);
   const startTime = new Date();
+  const runId = await runIdPromise;
+  await markRunning(runId, startTime);
 
   try {
     // Spec #45 R3.1–R3.3: suspend every battle event during the preparation
@@ -768,6 +804,12 @@ export async function runJob(jobName: JobState['name'], handler: () => Promise<J
           `(Season ${season.seasonNumber}, preparation day ${season.preparationDay}, ` +
           `${season.remainingPreparationCycles} preparation cycle(s) remaining)`,
         );
+        await markFinished(runId, {
+          status: 'skipped',
+          startedAt: startTime,
+          finishedAt: new Date(),
+          summary: { skippedReason: 'season_preparation' },
+        });
         return;
       }
     }
@@ -787,6 +829,7 @@ export async function runJob(jobName: JobState['name'], handler: () => Promise<J
     }
 
     logger.info(`Scheduler: job "${jobName}" completed at ${endTime.toISOString()} (duration: ${durationMs}ms)`);
+    await markFinished(runId, { status: 'success', startedAt: startTime, finishedAt: endTime, summary: toRunSummary(jobContext) });
 
     // Structured log entry for telemetry (R7.1)
     logger.info({
@@ -824,6 +867,7 @@ export async function runJob(jobName: JobState['name'], handler: () => Promise<J
     }
 
     logger.error(`Scheduler: job "${jobName}" failed at ${endTime.toISOString()} (duration: ${durationMs}ms) — ${errorMessage}`);
+    await markFinished(runId, { status: 'failed', startedAt: startTime, finishedAt: endTime, error: errorMessage });
 
     // Structured log entry for telemetry (R7.1, R7.4)
     logger.info({
@@ -863,18 +907,18 @@ export async function resumeInterruptedSettlement(): Promise<boolean> {
     `Scheduler: resuming interrupted financial cycle ${identity.closingCycle} `
     + `— ${formatProcessMemoryUsage()}`,
   );
-  await runJob('settlement', executeSettlement);
+  await runJob('settlement', executeSettlement, { trigger: 'resume' });
   return true;
 }
 
+/**
+ * Register the ten jobs. Their handlers and state are registered whether or
+ * not automated scheduling is enabled, so an admin can always run a job by
+ * hand (locally and in CI the scheduler is disabled). Only the cron
+ * registration depends on `config.enabled`.
+ */
 export function initScheduler(config: SchedulerConfig): void {
-  if (!config.enabled) {
-    schedulerActive = false;
-    logger.info('Scheduler: automated scheduling is disabled (SCHEDULER_ENABLED is not true)');
-    return;
-  }
-
-  schedulerActive = true;
+  schedulerActive = config.enabled;
 
   // Define all 10 jobs in canonical slot map order (R1.1)
   const jobs: Array<{ name: JobState['name']; schedule: string; handler: () => Promise<JobContext> }> = [
@@ -902,12 +946,14 @@ export function initScheduler(config: SchedulerConfig): void {
       nextRunAt: null,
     });
 
-    // Store handler for manual triggering via triggerJob()
+    // Store handler for manual triggering via triggerJob() / startManualRun()
     jobHandlers.set(job.name, job.handler);
+
+    if (!config.enabled) continue;
 
     // Register cron job (UTC timezone)
     const task = cron.schedule(job.schedule, () => {
-      runJob(job.name, job.handler);
+      void runJob(job.name, job.handler, { trigger: 'cron' });
     }, {
       timezone: 'UTC',
       name: job.name,
@@ -918,7 +964,11 @@ export function initScheduler(config: SchedulerConfig): void {
     logger.info(`Scheduler: registered "${job.name}" job with schedule "${job.schedule}" (UTC)`);
   }
 
-  logger.info('Scheduler: all 10 jobs registered and active');
+  if (config.enabled) {
+    logger.info('Scheduler: all 10 jobs registered and active');
+  } else {
+    logger.info('Scheduler: automated scheduling is disabled (SCHEDULER_ENABLED is not true); jobs can still be run by hand');
+  }
 }
 
 // --- State query ---
@@ -945,12 +995,67 @@ export function getSchedulerState(): SchedulerState {
  * Runs through runJob() so it gets: mutex lock, state tracking, notifications, error handling.
  * Throws if the job name is not registered.
  */
-export async function triggerJob(jobName: JobState['name']): Promise<void> {
+export async function triggerJob(jobName: JobState['name'], triggeredByUserId?: number | null): Promise<void> {
   const handler = jobHandlers.get(jobName);
   if (!handler) {
     throw new Error(`Unknown job name: ${jobName}. Scheduler may not be initialized.`);
   }
-  await runJob(jobName, handler);
+  await runJob(jobName, handler, { trigger: 'manual', triggeredByUserId });
+}
+
+/** Jobs holding or waiting for the lock right now, by name. */
+export function getActiveJobNames(): string[] {
+  return runningJob === null ? [...jobQueue] : [runningJob, ...jobQueue];
+}
+
+/** Job names reserved by a manual start that has not reached the lock yet. */
+const pendingManualStarts = new Set<string>();
+
+/**
+ * Start a job by hand and return at once with its history row, while the job
+ * waits for the lock and runs in the background (Cycle Controls). The run goes
+ * through `runJob`, so it is identical to a cron run: lock, preparation gate,
+ * state, notifications.
+ *
+ * Throws `SchedulerError` 400 for an unknown job and 409 when that job is
+ * already queued or running, so a double click cannot run it twice.
+ */
+export async function startManualRun(
+  jobName: JobState['name'],
+  triggeredByUserId: number,
+): Promise<{ runId: number | null; jobName: JobState['name']; queuedAt: Date }> {
+  const handler = jobHandlers.get(jobName);
+  if (!handler) {
+    throw new SchedulerError(SchedulerErrorCode.UNKNOWN_JOB, `Unknown scheduler job: ${jobName}`, 400);
+  }
+  // Synchronous check-and-reserve: two requests cannot both pass it.
+  if (pendingManualStarts.has(jobName) || getActiveJobNames().includes(jobName)) {
+    throw new SchedulerError(SchedulerErrorCode.JOB_ALREADY_ACTIVE, `${jobName} is already queued or running`, 409);
+  }
+  pendingManualStarts.add(jobName);
+  const queuedAt = new Date();
+  try {
+    const runId = await recordQueued({ jobName, trigger: 'manual', triggeredByUserId, queuedAt });
+    // Not awaited: runJob reaches the lock synchronously (running or queued),
+    // so the reservation can be dropped right after.
+    void runJob(jobName, handler, { trigger: 'manual', triggeredByUserId, runId });
+    return { runId, jobName, queuedAt };
+  } finally {
+    pendingManualStarts.delete(jobName);
+  }
+}
+
+/**
+ * Run work under the scheduler's lock (the admin bulk runner), so it never
+ * overlaps a cron or manual job.
+ */
+export async function runExclusive<T>(lockName: string, work: () => Promise<T>): Promise<T> {
+  await acquireLock(lockName);
+  try {
+    return await work();
+  } finally {
+    releaseLock();
+  }
 }
 
 // --- Exported for testing ---
@@ -965,6 +1070,8 @@ export function resetScheduler(): void {
   }
   scheduledTasks.length = 0;
   jobStates.clear();
+  jobHandlers.clear();
+  pendingManualStarts.clear();
   runningJob = null;
   jobQueue.length = 0;
   lockResolve = null;

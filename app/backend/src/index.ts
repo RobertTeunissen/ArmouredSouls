@@ -36,6 +36,7 @@ import {
   initScheduler,
   resumeInterruptedSettlement,
 } from './services/cycle/cycleScheduler';
+import { startProcess as startSchedulerProcess } from './services/cycle/schedulerRunStore';
 import { registerSubscribableEvent } from './services/subscription/eventRegistry';
 import {
   contentModerationService,
@@ -292,14 +293,19 @@ import { runStrategyStartupCheck } from './services/automaton/strategies/registr
       team3v3TournamentSchedule: config.team3v3TournamentSchedule,
       grandMeleeSchedule: config.grandMeleeSchedule,
     });
-    if (config.schedulerEnabled) {
-      void resumeInterruptedSettlement().catch((error: unknown) => {
+    // Register this process in the scheduler history (never throws) before a
+    // resumed settlement records its run, so that run belongs to this process
+    // and the previous process's unfinished runs are marked interrupted first.
+    void startSchedulerProcess({ schedulerEnabled: config.schedulerEnabled, deployTag: config.deployTag })
+      .then(async () => {
+        if (config.schedulerEnabled) await resumeInterruptedSettlement();
+      })
+      .catch((error: unknown) => {
         logger.error(
           `Failed to inspect interrupted settlement state: `
           + `${error instanceof Error ? error.message : String(error)}`,
         );
       });
-    }
 
     // Initialize daily health report (independent of scheduler)
     initDailyHealthReport();

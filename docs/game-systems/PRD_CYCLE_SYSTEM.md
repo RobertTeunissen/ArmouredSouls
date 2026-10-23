@@ -2,8 +2,8 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: v2.0  
-**Last Updated**: October 17, 2026 (Season 2 Repair Bay discount, #525)  
+**Version**: v2.1  
+**Last Updated**: October 23, 2026 (scheduler run history, Cycle Controls)  
 **Status**: ✅ Implemented  
 **Owner**: Robert Teunissen  
 **Epic**: Game Systems — Time Management
@@ -12,7 +12,8 @@
 
 v1.0 (Feb 2026): Initial PRD — monolithic 15-step cycle design  
 v1.1 (Mar 2026): Added KotH cycle, tag team odd-cycle logic  
-v2.0 (Apr 2026): Major rewrite — documented production scheduler (5 independent cron jobs), admin bulk cycle, corrected schema to match implementation, removed references to non-existent docs, and consolidated legacy cycle-process documentation into this PRD
+v2.0 (Apr 2026): Major rewrite — documented production scheduler (5 independent cron jobs), admin bulk cycle, corrected schema to match implementation, removed references to non-existent docs, and consolidated legacy cycle-process documentation into this PRD  
+v2.1 (Oct 23, 2026): §5.1 — manual runs in the background, handlers registered with the scheduler disabled, persistent run history (`scheduler_processes`, `scheduler_job_runs`), interrupted and missed runs; bulk runs under the scheduler lock
 
 ---
 
@@ -186,6 +187,17 @@ The admin bulk endpoint (`POST /api/admin/cycles/bulk`) runs all game phases in 
 | 8 | Grand Melee (reserved stub) | Always (no-op log) |
 | 9 | Team 3v3 Tournament (reserved stub) | Always (no-op log) |
 | 10 | Settlement (user gen → finances → cycle counters → snapshots → orphan cleanup) | Always |
+
+The bulk run takes the scheduler's lock (`runExclusive('bulkCycles', …)` in `adminBulkCycleRunService.ts`), so it never overlaps a cron or manual job, and is recorded as a `bulkCycles` run. With `background: true` the endpoint answers 202 with the queued run at once; without it the call waits and returns the full result. A second bulk start while one is queued or running answers 409.
+
+### 5.1 Manual runs and run history (Cycle Controls)
+
+- **Handlers are always registered.** `initScheduler` registers the ten handlers and their state whether or not `SCHEDULER_ENABLED` is true; only cron registration depends on it. A job can therefore be run by hand locally and in CI.
+- **Manual runs go through `runJob`**, the same path as cron: lock, preparation gate, state, notifications. `startManualRun(jobName, userId)` records the run, returns at once and runs the job in the background; it refuses with `SCHEDULER_JOB_ALREADY_ACTIVE` (409) when that job is already queued or running. `triggerJob` (waits) remains for `POST /api/admin/scheduler/trigger/:jobName`.
+- **Persistent history.** `scheduler_processes` holds one row per backend start (with a 60 s heartbeat and an optional `DEPLOY_TAG`); `scheduler_job_runs` holds every run: trigger (`cron`, `manual`, `resume`, `bulk`), status `queued` → `running` → `success` / `failed` / `skipped` (preparation gate), duration, a small result summary (`JobContext`; settlement adds the closed `cycleNumber`) or the error. Writes are non-fatal and never fail or delay a job. At startup, runs an earlier process left `queued` or `running` become `interrupted`, ending at that process's last heartbeat.
+- **Missed runs** are derived, not stored (`schedulerMissedRuns.ts`): a daily slot with no cron or resumed run queued from 1 min before to 15 min after it, while the scheduler was enabled and after tracking started. A miss in the gap between two processes carries that downtime window.
+
+Definitions and the page: `docs/guides/ADMIN_PANEL_GUIDE.md` §Cycle Controls.
 
 ---
 
