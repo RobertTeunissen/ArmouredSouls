@@ -53,7 +53,10 @@ The product owner made automatic upgrades a permanent rule (24 October 2026): no
 ## Verification
 
 - Backend unit tier (7,948 tests), every `tests/integration/automaton*.test.ts` suite (history loader against seeded ledger rows and battles included), lint, build, `typecheck:tests` and `test:tiers:verify`; frontend Automaton admin Vitest suites and type-check.
-- Heavy `automatonMultiSeason.test.ts` on a throwaway local database (205 repository Catalogue_Entries, new Event_Allocation and history loader; first run with the v1 pins, rerun with the v2 pins below): passed in 282 s, no failed or skipped turns, settlement Turn_Steps 1.6–2.1 s for 205 stables, opening steps 72 s (preparation) and 65 s (`season_open`), peak 12 database connections, 8 alerts over two seasons.
+- Heavy `automatonMultiSeason.test.ts` on a throwaway local database (205 repository Catalogue_Entries, new Event_Allocation and history loader), no failed or skipped turns in either run:
+  - catalogue on v1: 282 s; opening steps 72 s (preparation) and 65 s (`season_open`); settlement steps 1.6–2.1 s; 8 alerts over two seasons;
+  - catalogue on v2 (run alone): 936 s; opening steps 308 s and 310 s (2,927 and 2,938 charged actions); settlement steps 13–16 s in season 1 and 3.0–3.8 s in season 2 (108–149 charged actions, about four times v1's); 0 alerts; peak 13 database connections.
+  The v2 build orders buy more, smaller steps (facility levels before attribute milestones), and the opening Turn_Step is about 4.5 times slower per stable. At 205 stables it stays far inside the 6 h Turn_Step deadline. The cause of the higher per-action cost in the opening was not profiled.
 
 ## Not verified
 
