@@ -71,6 +71,7 @@ import { ensureProgramSettings, isProgramEnabled, PROGRAM_SETTINGS_ID } from './
 import type { StrategyRegistry } from './strategies/registry';
 import { getStrategyRegistry } from './strategies/defaultRegistry';
 import {
+  alertBalanceRecovered,
   alertInvalidParameters,
   alertNegativeBalance,
   alertSavingStreak,
@@ -88,6 +89,7 @@ import {
   type TurnStepSummary,
 } from './automatonObservability';
 import {
+  balanceTransition,
   claimTurnRecord,
   CUTOVER_IN_PROGRESS,
   finishTurnRecord,
@@ -95,6 +97,7 @@ import {
   markTurnFailed,
   markTurnSkipped,
   PROGRAM_OFF,
+  previousStartBalance,
   recordStartBalance,
   SAVING_ALERT_TURNS,
   savingStreakLength,
@@ -452,7 +455,7 @@ export async function runAutomatonTurn(
     // 2. Facts and start balance (R11.8: alert on a negative start).
     facts = await loadStableFacts(prisma, profile.profileId, { season, blueprints });
     await recordStartBalance(record.id, facts.balance);
-    if (facts.balance < 0) await alertNegativeBalance(profile.catalogueKey, turn, facts.balance, env.alerts);
+    await reportBalanceTransition(profile, record.id, turn, facts.balance, env.alerts);
 
     const upkeepCtx = { userId: profile.userId, blueprints, teamNames, eventOrder };
     const execCtx: ExecutionContext = {
@@ -570,6 +573,24 @@ export async function runAutomatonTurn(
     savingGoalId,
     blocked: outcomes.filter((o) => o.kind === 'blocked').length,
   };
+}
+
+/**
+ * Negative-balance alerting (R11.8, low-rate since the Automaton economy
+ * change): alert when a stable turns negative or recovers; a stable that
+ * stays negative is only counted in the step's digest.
+ */
+async function reportBalanceTransition(
+  profile: CohortProfile,
+  recordId: number,
+  turn: TurnLabel,
+  balance: number,
+  alerts: AutomatonAlertDigest | undefined,
+): Promise<void> {
+  const transition = balanceTransition(balance, await previousStartBalance(profile.profileId, recordId));
+  if (balance < 0 && alerts) alerts.negativeBalanceTotal++;
+  if (transition === 'turned_negative') await alertNegativeBalance(profile.catalogueKey, turn, balance, alerts);
+  if (transition === 'recovered') await alertBalanceRecovered(profile.catalogueKey, turn, balance, alerts);
 }
 
 async function currentBalance(userId: number): Promise<number | null> {

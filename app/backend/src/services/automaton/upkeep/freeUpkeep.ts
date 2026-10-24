@@ -32,7 +32,7 @@ import { updateStance, updateYieldThreshold } from '../../robot/robotSettingsSer
 import { achievementService } from '../../achievement/achievementService';
 import type { AchievementEvent } from '../../achievement/achievementTypes';
 import { BUILD_FOCUS_WEIGHTS, type BuildFocusWeightTable } from '../buildFocus';
-import { loadStableFacts, type BlueprintFacts, type StableFacts } from '../stableFacts';
+import { loadStableFacts, reloadOptions, type BlueprintFacts, type StableFacts } from '../stableFacts';
 import { teamsDue } from './teamUpkeep';
 import { subscriptionChanges } from './subscriptionUpkeep';
 import { blueprintDrift } from './blueprintSync';
@@ -99,10 +99,7 @@ export async function awardQuietly(userId: number, robotId: number | null, event
 }
 
 function reload(facts: StableFacts, blueprints: readonly BlueprintFacts[]): Promise<StableFacts> {
-  return loadStableFacts(prisma, facts.profileId, {
-    season: { seasonNumber: facts.seasonNumber, phase: facts.phase },
-    blueprints,
-  });
+  return loadStableFacts(prisma, facts.profileId, reloadOptions(facts, blueprints));
 }
 
 async function registerDueTeams(facts: StableFacts, ctx: FreeUpkeepContext, issues: FreeUpkeepIssue[]): Promise<number> {

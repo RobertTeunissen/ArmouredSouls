@@ -38,7 +38,7 @@ import {
 } from './executionSteps';
 import { executeRobotChain } from './robotFitout';
 import { awardQuietly, type FreeUpkeepIssue } from './upkeep/freeUpkeep';
-import { loadStableFacts, type Hand, type RobotFacts, type StableFacts } from './stableFacts';
+import { loadStableFacts, reloadOptions, type Hand, type RobotFacts, type StableFacts } from './stableFacts';
 import type { PlannedAction } from './goals/goalTypes';
 
 export {
@@ -203,9 +203,6 @@ export async function executeAction(
       await executeRefinement(action, goalId, ctx, cursor);
       break;
   }
-  const reloaded = await loadStableFacts(prisma, facts.profileId, {
-    season: { seasonNumber: facts.seasonNumber, phase: facts.phase },
-    blueprints: ctx.blueprints,
-  });
+  const reloaded = await loadStableFacts(prisma, facts.profileId, reloadOptions(facts, ctx.blueprints));
   return { facts: reloaded, upkeepIssues };
 }

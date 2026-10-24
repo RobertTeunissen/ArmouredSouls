@@ -63,6 +63,8 @@ function buysText(type: GoalType, facilityType: FacilityType | undefined, isMax:
       return 'Each robot\'s weapons up to the target stage, plus room in storage';
     case 'refine':
       return 'Refinement plan steps of every robot up to the target, plus the Refinement Lab level each step needs';
+    case 'economy':
+      return 'While recent income is below running costs: the Repair Bay, Merchandising Hub or Streaming Studio level that pays for itself soonest, within the target in cycles';
     case 'facility': {
       const label = facilityType ? facilityLabel(facilityType) : 'Facility';
       return facilityType === 'booking_office'

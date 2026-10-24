@@ -109,11 +109,12 @@ Automaton_Stables: computer-run stables that play by human rules. Public API in 
 | `automatonTurnService` | `runTurnStep` / `runTurnStepNonFatal` / `runAutomatonTurn`: cohort, Turn_Records, retries, heartbeat Turn_Step lease, deadline, bounded concurrency, mid-step cutover guard |
 | `turnStepPool` | `runWithConcurrency`: bounded worker pool; items start in index order, the first error stops new starts |
 | `turnPlanner` | Pure planner: walks the Build_Order and returns the next Goal_Outcome |
-| `goals/` | Goal_Library: `robotCountGoal`, `facilityGoal`, `attributeGoal`, `weaponStageGoal`, `refinementGoal` (+ `goalTypes`, `goalSupport`) |
+| `goals/` | Goal_Library: `robotCountGoal`, `facilityGoal`, `attributeGoal`, `weaponStageGoal`, `refinementGoal`, `economyGoal` (+ `goalTypes`, `goalSupport`) |
 | `actionExecutor`, `executionSteps`, `robotFitout` | Execute planned actions through the domain services; Robot_Chain and Robot_Fitout |
 | `fitoutRecovery` | Turn start: resume the fit-out of robots that fail the loadout readiness rule (reuse storage first, buy only what is missing) |
-| `upkeep/` | Free_Upkeep: `teamUpkeep`, `subscriptionUpkeep` (Event_Allocation), `blueprintSync`, `tuningUpkeep`, `freeUpkeep` |
+| `upkeep/` | Free_Upkeep: `teamUpkeep`, `subscriptionUpkeep` (Event_Allocation ranked by expected value), `blueprintSync`, `tuningUpkeep`, `freeUpkeep` |
 | `stableFacts`, `factProjector`, `pricing`, `buildFocus`, `teamRule`, `standingsTier` | Fact loading, pure projection, shared-formula pricing, Build_Focus maths, Team_Rule, played-only highest tier with mode (rules in `app/shared/utils/automatonStandingsTier.ts`) |
+| `stableHistory`, `economyEstimate` | History facts read once per turn (economy window from `financial_ledger`, each robot's recent battles per event) and the pure recurring-economy estimate the Economy Goal uses |
 | `robotNaming`, `requestKeys`, `turnBudget` | Blueprint names with "Mk II" suffixing, deterministic request keys, per-turn `TURN_*` budget constants, Turn_Step deadline (`resolveTurnStepDeadline`) and concurrency clamp (`effectiveTurnConcurrency`) |
 | `strategies/` | `registry` (loads Strategy_Definition_Files, startup check), `strategyDefinitionSchema`, `strategyParameters`, `migrateTargets`, `strategyLibrary`, `strategyDraftService`, `strategyUpgradeService`, `scenarioProjector`, `defaultRegistry` |
 | `automatonProfileService`, `automatonProfileRules` | Profile and blueprint CRUD, validation, Activation |

@@ -62,7 +62,9 @@ const SHIELD = {
   refinementPlan: [{ tier: 'sharpen', hand: 'main', magnitude: 1 }],
 };
 
-const paragon = getStrategyRegistry().getStrategy('paragon', 1)!;
+/** The latest Paragon version: what a stable created on the admin page is pinned to. */
+const PARAGON_LATEST = getStrategyRegistry().latestVersion('paragon')!;
+const paragon = getStrategyRegistry().getStrategy('paragon', PARAGON_LATEST)!;
 const paragonRobots2 = paragon.buildOrder.find((d) => d.type === 'robots' && d.bounds.max === 2)!;
 
 describe('Admin automaton profile endpoints (Spec #55 tasks 9.1–9.4)', () => {
@@ -170,7 +172,7 @@ describe('Admin automaton profile endpoints (Spec #55 tasks 9.1–9.4)', () => {
         userId: null,
         eventOrder: [...SUBSCRIBABLE_EVENT_TYPES],
         teamNames: { twoVsTwo: [], threeVsThree: [] },
-        strategy: { key: 'paragon', version: 1, parametersValid: true },
+        strategy: { key: 'paragon', version: PARAGON_LATEST, parametersValid: true },
       });
       expect(detail.body.strategy.buildOrder).toHaveLength(paragon.buildOrder.length);
       const entries = await auditEntries(auditBefore + 1);

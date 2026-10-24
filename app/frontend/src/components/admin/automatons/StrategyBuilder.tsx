@@ -255,6 +255,7 @@ export function StrategyBuilder({ draftId, profiles, onBack, onChanged }: Strate
                           {prefix && <span aria-hidden="true">{prefix}</span>}
                           <TargetField label={`Default: ${name}`} value={entry.defaultTarget} allowMax={allowMax} onChange={(v) => patchEntry(index, { defaultTarget: v })} />
                           {entry.goal.type === 'refine' && <span className="text-xs text-secondary">steps</span>}
+                          {entry.goal.type === 'economy' && <span className="text-xs text-secondary">cycles</span>}
                         </span>
                         <span className="flex min-w-0 flex-wrap items-center gap-1">
                           <span className="text-secondary">Allowed</span>

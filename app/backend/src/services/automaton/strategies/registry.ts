@@ -18,6 +18,7 @@ import logger from '../../../config/logger';
 import { sendStartupFailureAlert } from '../../../utils/startupAlert';
 import type { BuildFocusWeightTable } from '../buildFocus';
 import { createAttributeGoal } from '../goals/attributeGoal';
+import { createEconomyGoal } from '../goals/economyGoal';
 import { createFacilityGoal } from '../goals/facilityGoal';
 import { createRefinementGoal } from '../goals/refinementGoal';
 import { createRobotCountGoal } from '../goals/robotCountGoal';
@@ -102,6 +103,8 @@ export function createGoal(spec: GoalSpec, options: StrategyRegistryOptions): Go
       return createWeaponStageGoal(spec.id);
     case 'refine':
       return createRefinementGoal(spec.id);
+    case 'economy':
+      return createEconomyGoal(spec.id);
   }
 }
 

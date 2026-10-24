@@ -40,7 +40,7 @@ import {
   type ExecutionCursor,
 } from './executionSteps';
 import { awardQuietly, runFreeUpkeep, type FreeUpkeepIssue } from './upkeep/freeUpkeep';
-import { blueprintForSlot, loadStableFacts, type BlueprintFacts, type Hand, type StableFacts } from './stableFacts';
+import { blueprintForSlot, loadStableFacts, reloadOptions, type BlueprintFacts, type Hand, type StableFacts } from './stableFacts';
 import type { ChainStep, PlannedAction } from './goals/goalTypes';
 
 type RobotChainAction = Extract<PlannedAction, { kind: 'robot_chain' }>;
@@ -131,10 +131,7 @@ async function fitRobot(
     await equipHand(ctx, robotId, equip.hand, inventoryId);
   }
 
-  const fitted = await loadStableFacts(prisma, facts.profileId, {
-    season: { seasonNumber: facts.seasonNumber, phase: facts.phase },
-    blueprints: ctx.blueprints,
-  });
+  const fitted = await loadStableFacts(prisma, facts.profileId, reloadOptions(facts, ctx.blueprints));
   const upkeep = await runFreeUpkeep(
     fitted,
     { userId, blueprints: ctx.blueprints, teamNames: ctx.teamNames, eventOrder: ctx.eventOrder, weightTable: ctx.weightTable },

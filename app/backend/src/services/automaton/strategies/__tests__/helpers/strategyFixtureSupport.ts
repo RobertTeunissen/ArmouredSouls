@@ -65,6 +65,8 @@ export function renderBuildOrder(strategy: UpgradeStrategy): BuildOrderRow[] {
         };
       case 'refine':
         return { ...row, defaultTarget: `${spec.defaultTarget} steps`, allowed: `${range(spec.bounds.min, spec.bounds.max, String)} steps` };
+      case 'economy':
+        return { ...row, defaultTarget: `${spec.defaultTarget} cycles`, allowed: `${range(spec.bounds.min, spec.bounds.max, String)} cycles` };
       case 'attributes':
         if (spec.isMax) return { ...row, defaultTarget: 'Max', allowed: 'Max' };
         return { ...row, defaultTarget: String(spec.defaultTarget), allowed: range(spec.bounds.min, spec.bounds.max, String) };

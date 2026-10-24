@@ -74,7 +74,7 @@ function TargetInput({ row, value, onChange }: { row: BuildOrderRow; value: numb
   if (row.isMax) return <span className="text-white">Max</span>;
   const error = targetError(row, value);
   const prefix = row.type === 'facility' ? 'L' : '';
-  const suffix = row.type === 'refine' ? 'steps' : row.type === 'weapons' && value >= 3 ? 'final' : '';
+  const suffix = row.type === 'refine' ? 'steps' : row.type === 'economy' ? 'cycles' : row.type === 'weapons' && value >= 3 ? 'final' : '';
   return (
     <span className="flex items-center gap-1">
       {prefix && <span aria-hidden="true">{prefix}</span>}

@@ -241,6 +241,13 @@ export const fakePrisma = {
         .slice(0, args.take)
         .map((t) => pick(t, args.select));
     },
+    /** `previousStartBalance`: the latest other turn of the profile, any status. */
+    async findFirst(args: { where: { profileId: number; id: { not: number } }; select?: Record<string, unknown> }): Promise<Row | null> {
+      const row = fakeDb.turns
+        .filter((t) => t.profileId === args.where.profileId && t.id !== args.where.id.not)
+        .sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime() || b.id - a.id)[0];
+      return row ? pick(row, args.select) : null;
+    },
   },
 
   user: {

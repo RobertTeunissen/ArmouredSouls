@@ -1,6 +1,6 @@
 # Automaton Stables
 
-**Spec:** #55 (engine and starter stables), #57 (catalogue expansion) · **Status:** Implemented (ACC; the Expansion_Stables of spec 57 arrive with the next ACC deploy) · **Last updated:** 14 October 2026
+**Spec:** #55 (engine and starter stables), #57 (catalogue expansion), economy and event-fit change (`docs/implementation_notes/AUTOMATON_ECONOMY_AND_EVENT_FIT.md`) · **Status:** Implemented (ACC) · **Last updated:** 24 October 2026
 
 Automaton_Stables are persistent, themed, computer-run stables that play by the same rules as human players. They buy robots, facilities, attributes, weapons and refinements through the same services and credit paths as a player, enter the same events, survive every Season_Rollover and rebuild themselves from the human starting balance.
 
@@ -32,7 +32,9 @@ Invariant I1: `isGenerated = true` ⇔ `stableType = generated`. Because Automat
 
 ## Strategies
 
-An Upgrade_Strategy is a numbered Build_Order of Goals. Each strategy version is a Strategy_Definition_File (`app/backend/src/config/automaton-strategies/{key}.v{n}.json`) that combines Goal types from the code Goal_Library (`services/automaton/goals/`): `robots`, `facility(type)`, `attributes`, `weapons`, `refine`. New Goal types are code changes; new strategies and versions are data.
+An Upgrade_Strategy is a numbered Build_Order of Goals. Each strategy version is a Strategy_Definition_File (`app/backend/src/config/automaton-strategies/{key}.v{n}.json`) that combines Goal types from the code Goal_Library (`services/automaton/goals/`): `robots`, `facility(type)`, `attributes`, `weapons`, `refine`, `economy`. New Goal types are code changes; new strategies and versions are data.
+
+Every strategy exists in v1 (the approved spec-55 Build_Orders) and v2 (October 2026, `docs/implementation_notes/AUTOMATON_ECONOMY_AND_EVENT_FIT.md`). v2 keeps every v1 Goal and target, so an upgrade migrates targets unchanged, and adds two things: an Economy Goal right after the opening robots and Booking Office L1, and Repair Bay, Merchandising Hub and Streaming Studio levels ahead of the larger attribute milestones (Swarm and Trio: Merchandising Hub and Repair Bay before the first attribute milestone; Swarm: Streaming Studio before the fourth robot). Booking Office L3 moves behind them. Existing stables stay on v1 until an admin upgrades them; admin-created stables get the latest version; new Catalogue_Entries should pin v2.
 
 | Strategy | Intent |
 |---|---|
@@ -52,6 +54,16 @@ Rules every strategy follows (decisions 1, 2, 14, 19, 29, 30):
 
 Goal_Targets are editable per stable in the admin page within the bounds of the strategy version. The conformance suite proves every target combination inside those bounds safe, so a target edit needs no deploy and no test run.
 
+### Economy Goal
+
+"Economy → {n} cycles" (`goals/economyGoal.ts`, estimate in `economyEstimate.ts`). Target 0 turns it off; bounds 0–50; v2 default 20.
+
+- **Input:** the stable's recurring ledger entries of the last three closed cycles of the current season (`stableHistory.ts`): battle income, streaming revenue divided by the Studio Multiplier recorded on each row, repair cost divided by (1 − the Repair Bay discount recorded on each row), and the operating costs facility levels do not explain (roster upkeep). Achievement rewards, purchases and sales are left out. Read once per turn; the turn's own purchases do not change the past.
+- **Estimate:** those amounts re-priced at the current facility levels with the charging formulas (`calculateRepairBayDiscountPercent`, the Studio Multiplier, `calculateMerchandisingIncome`, `calculateFacilityOperatingCost`).
+- **Acts** only while the estimate is a deficit: it buys the next level of Repair Bay, Merchandising Hub or Streaming Studio with the shortest payback (cost ÷ change of the recurring net), provided the payback is at most the target and at most the competitive cycles left in the season (facilities reset at rollover). Like every Goal it saves when the balance is short, so nothing below it is bought meanwhile. Because the estimate is re-priced after each level, it stops once the deficit is covered.
+- **Satisfied** with target 0, fewer than two closed cycles of recurring entries this season (the opening build), no deficit, or no level that pays back in time. **Blocked** when none of the three can be bought (Prestige_Gate or maximum level).
+- It is not a required Goal type; v1 files do not have it.
+
 ### Build_Focus
 
 Each Robot_Blueprint has one of six Build_Focus presets (Bruiser, Deadeye, Warden, Sprinter, Tactician, Versatile). A preset is a set of attribute-group weights. Attribute milestones are raised group by group in the preset's priority order across all robots, lowest attribute first; the same weights split the Tuning Bay pool. Weights and opening builds are in the Review_Pack `STRATEGIES.md` §3–§10.
@@ -67,7 +79,12 @@ Each Robot_Blueprint has one of six Build_Focus presets (Bruiser, Deadeye, Warde
 ### Teams and events
 
 - Team_Rule (fixed): 2v2 teams are slots 1+2, 3+4, 5+6, 7+8, 9+10; 3v3 teams are slots 1–3, 4–6, 7–9; slot 11 is in no team. A team registers in the turn its last member joins and is never disbanded, swapped or renamed. Registering creates no standings: a team's standings row for a mode appears when Event_Allocation subscribes the whole team to that mode (the unified rule in `PRD_LEAGUE_SYSTEM.md` "Entering a League"). A robot's 1v1 League, KotH and Grand Melee standings likewise appear on its first subscription to that event. The catalogue only supplies Team_Names.
-- Event_Order: each stable lists all 9 subscribable event types in order of preference. Solo events go to every robot with a free Booking Office slot; a team event goes to the whole team or to none of it.
+- Event_Order: each stable lists all 9 subscribable event types in order of preference. A team event goes to the whole team or to none of it.
+- Event_Allocation (`upkeep/subscriptionUpkeep.ts`) fills each robot's Booking Office slots in this order, every turn:
+  1. Held event types (a booked match is still owed).
+  2. The robot's first league in the Event_Order it can enter (1v1, 2v2 or 3v3 League, Tag Team), whatever it pays: its promotion path, where higher tiers pay more.
+  3. Every other event by expected value per battle: income (credits plus streaming) minus the repair that battle's damage would cost the robot now (its current attribute total and Repair Bay level, the shared repair quote, so a destroyed robot costs double). The battles are the robot's own last 10 in that event, or, below 3, those of the stable's robots with the same main-weapon range band, or of all its robots. A robot that does well in Grand Melee keeps Grand Melee; one that is destroyed there for little pay gives the slot to a better event. A team event scores the mean of its members. An event without enough battles counts as neutral (₡0), so a new stable tries its events in Event_Order order and keeps those that pay. An event the robot already holds gets ₡1,000 extra, so near-equal events do not swap every turn.
+  Ties and events without results follow the Event_Order. Every free slot is still filled; ranking decides which events get the slots, not whether a robot plays. Without results (a hand-built fact set) the allocation is the Event_Order alone, plus the pinned league.
 
 ### Versioning and pinned profiles
 
@@ -105,7 +122,7 @@ Measured on the heavy simulation (100 Active_Automatons, local Apple Silicon, Po
 - Every charge goes through the extracted domain services and Credit_Mutation_Service, with one Financial_Pair per charged action and an Automaton audit context. No code in `services/automaton/` writes `User.currency`.
 - No grants: an Automaton gets exactly the human starting balance (₡3,000,000) and the income every stable earns. There is no catch-up money.
 - **Handicap:** Automatons never use Manual_Repair. Automatic_Repair before each battle charges them the full quote, as it does a human who did not repair manually.
-- A negative balance is possible, as for humans (operating costs). The turn still runs upkeep, buys nothing, and raises a negative-balance alert.
+- A negative balance is possible, as for humans (repairs and operating costs). The turn still runs upkeep and buys nothing. An alert names the stable when it turns negative and when it recovers; a stable that stays negative is only counted in those messages and in the step log, so a persistent state does not repeat every night.
 
 ## Season_Rollover behaviour
 

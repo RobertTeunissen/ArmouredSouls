@@ -40,6 +40,8 @@ export const ROBOTS_MAX_TARGET = 11;
 export const ATTRIBUTES_MIN_TARGET = 1;
 export const WEAPONS_MAX_TARGET = 3;
 export const REFINE_MAX_TARGET = 10;
+/** Longest payback, in cycles, an Economy Goal may accept (a season is 100 cycles by default). */
+export const ECONOMY_MAX_TARGET = 50;
 
 /** Academies are bought by attributes Goals (R4.4) and may not be a facility Goal. */
 export const ACADEMY_FACILITY_TYPES: readonly FacilityType[] = [
@@ -98,6 +100,7 @@ const goalReferenceSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('attributes') }).strict(),
   z.object({ type: z.literal('weapons') }).strict(),
   z.object({ type: z.literal('refine') }).strict(),
+  z.object({ type: z.literal('economy') }).strict(),
 ]);
 
 /** One Build_Order entry (structure only; the builder rules run over the whole list). */
@@ -128,6 +131,7 @@ const GOAL_TYPE_LABELS: Readonly<Record<Exclude<GoalType, 'facility'>, string>> 
   attributes: 'Attributes',
   weapons: 'Weapons',
   refine: 'Refine',
+  economy: 'Economy',
 };
 
 /** Display name of a facility type (`config/facilities.ts`). */
@@ -159,6 +163,8 @@ function limitsFor(goal: FileBuildOrderEntry['goal']): TypeLimits {
       return { min: 0, max: WEAPONS_MAX_TARGET, allowsMax: false, message: 'Weapons allow stage 0–3.' };
     case 'refine':
       return { min: 0, max: REFINE_MAX_TARGET, allowsMax: false, message: 'Refine allows 0–10 steps.' };
+    case 'economy':
+      return { min: 0, max: ECONOMY_MAX_TARGET, allowsMax: false, message: `Economy allows 0–${ECONOMY_MAX_TARGET} cycles.` };
     case 'facility':
       if (goal.facilityType === 'booking_office') {
         return { min: 0, max: BOOKING_OFFICE_MAX_TARGET, allowsMax: false, message: 'Booking Office cannot go above L6.' };

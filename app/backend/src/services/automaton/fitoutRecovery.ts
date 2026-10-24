@@ -43,7 +43,7 @@ import { planStartingStage } from './goals/robotCountGoal';
 import { planStorageRoom, stageHands, takeReusable, unequippedItems, weaponByName } from './goals/goalSupport';
 import type { EquipSource, WeaponPurchasePart, WeaponSaleStep, FacilityLevelStep } from './goals/goalTypes';
 import { checkTurnBudget } from './turnBudget';
-import { loadStableFacts, type BlueprintFacts, type Hand, type InventoryFacts, type RobotFacts, type StableFacts } from './stableFacts';
+import { loadStableFacts, reloadOptions, type BlueprintFacts, type Hand, type InventoryFacts, type RobotFacts, type StableFacts } from './stableFacts';
 
 /** Goal id recorded on the charged steps (Turn_Record actions, audit context). */
 export const FITOUT_RECOVERY_GOAL_ID = 'fitout_recovery';
@@ -268,10 +268,7 @@ export async function resumeIncompleteFitouts(
     }
 
     // Reload whatever happened: committed steps change the facts the next robot is planned on.
-    current = await loadStableFacts(prisma, current.profileId, {
-      season: { seasonNumber: current.seasonNumber, phase: current.phase },
-      blueprints: ctx.blueprints,
-    });
+    current = await loadStableFacts(prisma, current.profileId, reloadOptions(current, ctx.blueprints));
     const after = current.robots.find((r) => r.robotId === robotId);
     if (after && isLoadoutReady(after)) {
       logger.warn(`${label}: robot ${robotId} (slot ${robot.slotIndex}) fit-out resumed; battle-ready again`);
