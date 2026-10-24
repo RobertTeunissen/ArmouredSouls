@@ -34,9 +34,13 @@ describe('Strategy_Library and Strategy_Drafts (Spec #55 task 9.8)', () => {
     const registry = getStrategyRegistry();
     expect(res.body.strategies.map((s: { key: string }) => s.key)).toEqual([...registry.byKey.keys()].sort());
     const duo = res.body.strategies.find((s: { key: string }) => s.key === 'duo');
-    const duoCount = await prisma.automatonProfile.count({ where: { strategyKey: 'duo', strategyVersion: 1 } });
-    expect(duo).toMatchObject({ key: 'duo', latestVersion: 1, profileCount: duoCount });
-    expect(duo.versions[0]).toMatchObject({ version: 1, latest: true, profileCount: duoCount, displayName: registry.getStrategy('duo', 1)!.displayName });
+    const duoV1Count = await prisma.automatonProfile.count({ where: { strategyKey: 'duo', strategyVersion: 1 } });
+    const duoCount = await prisma.automatonProfile.count({ where: { strategyKey: 'duo' } });
+    expect(duo).toMatchObject({ key: 'duo', latestVersion: 2, profileCount: duoCount });
+    // Versions oldest first.
+    expect(duo.versions.map((v: { version: number }) => v.version)).toEqual([1, 2]);
+    expect(duo.versions[0]).toMatchObject({ version: 1, latest: false, profileCount: duoV1Count, displayName: registry.getStrategy('duo', 1)!.displayName });
+    expect(duo.versions[1]).toMatchObject({ version: 2, latest: true });
     expect(duo.versions[0].buildOrder[1]).toMatchObject({
       position: 2,
       goalId: 'duo.v1.02.robots',
@@ -122,7 +126,8 @@ describe('Strategy_Library and Strategy_Drafts (Spec #55 task 9.8)', () => {
   it('creates a new version from key.vN, keeps its key and refuses a duplicate', async () => {
     const res = await harness.api('post', '/strategy-drafts').send({ basedOn: 'duo.v1' });
     expect(res.status).toBe(201);
-    expect(res.body).toMatchObject({ basedOn: 'duo.v1', definition: { key: 'duo', version: 2 }, ready: true });
+    // A new version is numbered latest + 1 whatever it is based on (the repository has duo.v1 and duo.v2).
+    expect(res.body).toMatchObject({ basedOn: 'duo.v1', definition: { key: 'duo', version: 3 }, ready: true });
     expect(Array.isArray(res.body.upgradeWarning)).toBe(true);
     const keyChange = await harness.api('put', `/strategy-drafts/${res.body.id}`).send({ key: 'duo-renamed' });
     expect(keyChange.status).toBe(400);

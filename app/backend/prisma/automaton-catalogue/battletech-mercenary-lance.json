@@ -6,7 +6,7 @@
   "backstory": "BattleTech Mercenary Lance enters the arena with a clear doctrine. Heavy anchor, ranged all-rounder, fast scout. Every surviving machine returns to the workshop before the next booking.",
   "strategy": {
     "key": "trio",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

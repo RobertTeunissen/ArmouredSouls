@@ -43,8 +43,8 @@ describe('draftIssues (R6.11 builder rules through the draft service)', () => {
       expect.objectContaining({ rule: 'key_exists', message: 'Key "duo" already exists.' }),
     ]);
     expect(rules({ ...valid(), version: 2 })).toEqual(['version_not_next']);
-    expect(draftIssues({ ...valid(), key: 'duo', version: 3 }, latest)[0]).toMatchObject({ rule: 'version_not_next', message: 'The next version of "duo" is v2.' });
-    expect(draftIssues({ ...valid(), key: 'duo', version: 2 }, latest)).toEqual([]);
+    expect(draftIssues({ ...valid(), key: 'duo', version: 4 }, latest)[0]).toMatchObject({ rule: 'version_not_next', message: 'The next version of "duo" is v3.' });
+    expect(draftIssues({ ...valid(), key: 'duo', version: 3 }, latest)).toEqual([]);
   });
 
   it('goal count: at least 1, at most 40', () => {

@@ -6,7 +6,7 @@
   "backstory": "A single compact proxy carries an intelligence's arena contract. The arsenal purchases one heavy distant weapon path; the larger ship remains background rather than a free second combatant.",
   "strategy": {
     "key": "paragon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

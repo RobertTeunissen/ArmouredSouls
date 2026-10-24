@@ -21,6 +21,8 @@ export function newGoal(goal: FileGoalReference): Omit<FileBuildOrderEntry, 'pos
       return { goal, defaultTarget: 3, bounds: { min: 0, max: 3 } };
     case 'refine':
       return { goal, defaultTarget: 10, bounds: { min: 0, max: 10 } };
+    case 'economy':
+      return { goal, defaultTarget: 20, bounds: { min: 0, max: 50 } };
     case 'facility':
       return { goal, defaultTarget: 1, bounds: { min: 0, max: goal.facilityType === 'booking_office' ? 6 : 10 } };
   }
@@ -80,7 +82,7 @@ export function targetFieldText(value: FileTargetValue): string {
   return value === 'max' ? 'Max' : String(value);
 }
 
-/** The Goal_Library choices of "Add goal": Robots · Facility ({facility}) · Attributes · Weapons · Refine. */
+/** The Goal_Library choices of "Add goal": Robots · Facility ({facility}) · Attributes · Weapons · Refine · Economy. */
 export function goalLibraryChoices(facilityTypes: readonly string[]): { value: string; label: string; goal: FileGoalReference }[] {
   return [
     { value: 'robots', label: 'Robots', goal: { type: 'robots' } },
@@ -88,5 +90,6 @@ export function goalLibraryChoices(facilityTypes: readonly string[]): { value: s
     { value: 'attributes', label: 'Attributes', goal: { type: 'attributes' } },
     { value: 'weapons', label: 'Weapons', goal: { type: 'weapons' } },
     { value: 'refine', label: 'Refine', goal: { type: 'refine' } },
+    { value: 'economy', label: 'Economy', goal: { type: 'economy' } },
   ];
 }

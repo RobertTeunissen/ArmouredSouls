@@ -21,7 +21,7 @@ export type ProfileStatus = 'draft' | 'active';
 export type LeagueTier = 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond' | 'champion';
 export type TurnTrigger = 'settlement' | 'preparation' | 'season_open';
 export type TurnStatus = 'in_progress' | 'completed' | 'failed' | 'skipped';
-export type GoalType = 'robots' | 'facility' | 'attributes' | 'weapons' | 'refine';
+export type GoalType = 'robots' | 'facility' | 'attributes' | 'weapons' | 'refine' | 'economy';
 export type LoadoutType = 'single' | 'weapon_shield' | 'dual_wield' | 'two_handed';
 export type Stance = 'offensive' | 'defensive' | 'balanced';
 export type BuildFocusKey = 'bruiser' | 'deadeye' | 'warden' | 'sprinter' | 'tactician' | 'versatile';
@@ -539,7 +539,8 @@ export type FileGoalReference =
   | { type: 'facility'; facilityType: string }
   | { type: 'attributes' }
   | { type: 'weapons' }
-  | { type: 'refine' };
+  | { type: 'refine' }
+  | { type: 'economy' };
 
 export interface FileBuildOrderEntry {
   position: number;

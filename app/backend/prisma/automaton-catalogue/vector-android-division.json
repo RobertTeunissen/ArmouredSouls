@@ -6,7 +6,7 @@
   "backstory": "A single combat android anchors the division's investment. Heavy ranged equipment receives the workshop's concentrated progression and refinement budget.",
   "strategy": {
     "key": "paragon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

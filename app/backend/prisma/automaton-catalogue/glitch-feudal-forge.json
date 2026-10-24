@@ -6,9 +6,9 @@
   "backstory": "A blade fighter, a forge worker and a protected ledger keeper earn the feudal workshop's facility budget. Commerce precedes premium equipment for the repaired three-machine roster.",
   "strategy": {
     "key": "tycoon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {
-      "20": 3
+      "21": 3
     }
   },
   "teamNames": {

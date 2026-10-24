@@ -6,7 +6,7 @@
   "backstory": "Eggman Badnik Works enters the arena with a clear doctrine. Numerous small aggressive machines led by an elite design. Every surviving machine returns to the workshop before the next booking.",
   "strategy": {
     "key": "swarm",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

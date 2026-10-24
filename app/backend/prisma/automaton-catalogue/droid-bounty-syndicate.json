@@ -6,7 +6,7 @@
   "backstory": "Three hunters share the entry fees and very little else. Precision, mobile pressure and protected support divide the work while the quartermaster upgrades the trio together.",
   "strategy": {
     "key": "trio",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

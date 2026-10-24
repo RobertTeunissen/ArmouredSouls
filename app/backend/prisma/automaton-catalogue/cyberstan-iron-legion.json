@@ -6,7 +6,7 @@
   "backstory": "Infantry establish the line before the assembly yard releases its heavy machines. Every purchase adds a distinct battlefield job to the growing mechanical column.",
   "strategy": {
     "key": "swarm",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

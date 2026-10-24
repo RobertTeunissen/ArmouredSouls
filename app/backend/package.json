@@ -26,6 +26,8 @@
     "test:matchmaking": "tsx scripts/testMatchmaking.ts",
     "test:robot-stats": "tsx scripts/testRobotStats.ts",
     "automaton:sync": "tsx scripts/automatonCatalogueSync.ts",
+    "automaton:upgrade": "tsx scripts/automatonStrategyUpgrade.ts",
+    "automaton:catalogue-upgrade": "tsx scripts/automatonCatalogueUpgrade.ts",
     "automaton:unpack": "tsx scripts/automatonCatalogueUnpack.ts"
   },
   "keywords": [

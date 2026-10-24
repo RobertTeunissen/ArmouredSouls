@@ -6,9 +6,9 @@
   "backstory": "Three contrasting combat frames keep the foundry ready for changing brackets. A flexible lead, a mobile skirmisher and a heavy contact machine divide the upgrades.",
   "strategy": {
     "key": "generalist",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {
-      "14": 3
+      "15": 3
     }
   },
   "teamNames": {

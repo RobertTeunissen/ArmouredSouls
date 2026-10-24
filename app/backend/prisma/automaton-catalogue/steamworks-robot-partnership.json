@@ -6,7 +6,7 @@
   "backstory": "A compact security machine and a large gardening frame turn the steamworks into a complementary partner stable. Flexible fire and heavy contact receive balanced upgrades.",
   "strategy": {
     "key": "duo",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

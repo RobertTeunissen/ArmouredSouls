@@ -6,7 +6,7 @@
   "backstory": "CyberLife Deviants enters the arena with a clear doctrine. Precise shooter, defensive survival build, balanced leader. Every surviving machine returns to the workshop before the next booking.",
   "strategy": {
     "key": "trio",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

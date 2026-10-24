@@ -6,7 +6,7 @@
   "backstory": "Gray Mann Robot Works enters the arena with a clear doctrine. A wide roster with easily understood specializations. Every surviving machine returns to the workshop before the next booking.",
   "strategy": {
     "key": "swarm",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

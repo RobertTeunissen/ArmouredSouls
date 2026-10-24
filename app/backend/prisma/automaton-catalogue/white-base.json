@@ -4,7 +4,7 @@
   "stableName": "White Base Mobile Suits",
   "franchise": "Mobile Suit Gundam",
   "backstory": "A battered carrier, a green crew and three prototypes nobody planned to send into combat. White Base learns on the job: upgrade what survives, refit what does not, and keep the formation tight.",
-  "strategy": { "key": "trio", "version": 1, "targetOverrides": {} },
+  "strategy": { "key": "trio", "version": 2, "targetOverrides": {} },
   "teamNames": {
     "twoVsTwo": ["Cannon Support", "Argama Escort"],
     "threeVsThree": ["White Base Squadron"]

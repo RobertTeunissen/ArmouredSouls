@@ -6,9 +6,9 @@
   "backstory": "The workshop sells dependable coverage: a flexible vanguard, a protected anchor and a precision specialist. Facility income finances the completed three-frame contract team.",
   "strategy": {
     "key": "tycoon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {
-      "20": 3
+      "21": 3
     }
   },
   "teamNames": {

@@ -6,9 +6,9 @@
   "backstory": "Metal Men Laboratory enters the arena with a clear doctrine. A balanced synthetic leader, durable heavy, and agile specialist. Every surviving machine returns to the workshop before the next booking.",
   "strategy": {
     "key": "trio",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {
-      "12": 4
+      "13": 4
     }
   },
   "teamNames": {

@@ -6,7 +6,7 @@
   "backstory": "A repaired caretaker protects the workshop's future with cautious close-range equipment. Every new purchase must leave enough credits to keep the single frame running.",
   "strategy": {
     "key": "paragon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

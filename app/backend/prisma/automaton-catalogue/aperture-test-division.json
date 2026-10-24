@@ -6,7 +6,7 @@
   "backstory": "Aperture Test Division enters the arena with a clear doctrine. Invest in a complementary pair: compact defensive anchor and tall mobile shooter. Every surviving machine returns to the workshop before the next booking.",
   "strategy": {
     "key": "duo",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

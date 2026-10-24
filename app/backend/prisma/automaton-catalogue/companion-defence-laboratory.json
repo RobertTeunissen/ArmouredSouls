@@ -6,7 +6,7 @@
   "backstory": "A nimble companion machine and a military specialist share an uneasy arena collection. The workshop funds distinct close and distant jobs through balanced partner upgrades.",
   "strategy": {
     "key": "duo",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

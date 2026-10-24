@@ -6,9 +6,9 @@
   "backstory": "Riveted walkers keep the dieselworks earning while the owners expand its facilities. The eventual trio covers practical fire, heavy contact and long-range support.",
   "strategy": {
     "key": "tycoon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {
-      "20": 3
+      "21": 3
     }
   },
   "teamNames": {

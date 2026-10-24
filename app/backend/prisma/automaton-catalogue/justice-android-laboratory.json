@@ -6,7 +6,7 @@
   "backstory": "A heavy android and a mobile synthetic form an arena partnership across very different origins. Balanced investment gives both machines useful work in the same two-frame account.",
   "strategy": {
     "key": "duo",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

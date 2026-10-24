@@ -6,7 +6,7 @@
   "backstory": "Three synthetic fighters bring speed, direct pressure and mobility to a battered workshop. The roster advances as a trio rather than splitting its funds between rival flagships.",
   "strategy": {
     "key": "trio",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

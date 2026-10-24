@@ -6,7 +6,7 @@
   "backstory": "A self-assembled contender turns scrap into a heavy contact build. The workshop improves one complete body through concentrated equipment and refinement spending.",
   "strategy": {
     "key": "paragon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

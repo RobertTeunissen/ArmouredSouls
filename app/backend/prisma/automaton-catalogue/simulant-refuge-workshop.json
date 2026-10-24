@@ -6,9 +6,9 @@
   "backstory": "A military lead, a protected guard and a cautious civilian frame give the refuge a small adaptable roster. Their equipment roles are arena contracts rather than new source-world identities.",
   "strategy": {
     "key": "generalist",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {
-      "14": 3
+      "15": 3
     }
   },
   "teamNames": {

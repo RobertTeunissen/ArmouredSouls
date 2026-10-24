@@ -6,9 +6,9 @@
   "backstory": "A line machine, a low contact specialist and a heavy platform give the mechworks a practical three-role roster. The workshop upgrades the lead while bringing its heavy third chassis online.",
   "strategy": {
     "key": "generalist",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {
-      "14": 3
+      "15": 3
     }
   },
   "teamNames": {

@@ -45,6 +45,8 @@ describe('automatonText (approved admin text, PLAYER_FACING_TEXT §6)', () => {
   it('formats targets and bounds per Goal type', () => {
     expect(targetText({ type: 'facility', isMax: false }, 3)).toBe('L3');
     expect(targetText({ type: 'refine', isMax: false }, 8)).toBe('8 steps');
+    expect(targetText({ type: 'economy', isMax: false }, 20)).toBe('20 cycles');
+    expect(targetText({ type: 'economy', isMax: false }, 0)).toBe('off');
     expect(targetText({ type: 'weapons', isMax: false }, 3)).toBe('final');
     expect(targetText({ type: 'attributes', isMax: true }, 50)).toBe('Max');
     expect(boundsText({ type: 'facility', isMax: false }, { min: 0, max: 6 })).toBe('L0–L6');
@@ -59,6 +61,8 @@ describe('automatonText (approved admin text, PLAYER_FACING_TEXT §6)', () => {
     expect(lastCycleText(PROFILES[2])).toBe('Not active yet');
     const saving = listItem({ lastTurn: { ...PROFILES[0].lastTurn!, actionCount: 0, savingGoal: { goalId: 'g', position: 3, label: 'Robots', target: 4 } } });
     expect(lastCycleText(saving)).toBe('Saving for Robot 4');
+    const economy = listItem({ lastTurn: { ...PROFILES[0].lastTurn!, actionCount: 0, savingGoal: { goalId: 'g', position: 4, label: 'Economy', target: 20 } } });
+    expect(lastCycleText(economy)).toBe('Saving for Economy (payback ≤ 20 cycles)');
   });
 
   it('writes the highest tier with its mode', () => {

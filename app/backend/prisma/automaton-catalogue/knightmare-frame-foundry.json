@@ -6,7 +6,7 @@
   "backstory": "Knightmare Frame Foundry enters the arena with a clear doctrine. Fast, heavy, and defensive specialist frames. Every surviving machine returns to the workshop before the next booking.",
   "strategy": {
     "key": "trio",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

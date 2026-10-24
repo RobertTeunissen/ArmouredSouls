@@ -84,23 +84,25 @@ describe('repository Automaton_Catalogue (R10.1, Spec #57 R4.2)', () => {
     expect(unresolved).toEqual([]);
   });
 
+  // Pinned to the latest version since automatic upgrades (October 2026); the overrides are the approved
+  // v1 Goals (generalist: third Robots goal; tycoon: third Robots goal) at their v2 positions.
   it('keeps the approved starter strategies and Goal_Target overrides (decisions 21, 30)', () => {
     const starterKeys: readonly string[] = STARTER_CATALOGUE_KEYS;
     const strategies = Object.fromEntries(entries
       .filter((entry) => starterKeys.includes(entry.catalogueKey))
       .map((entry) => [entry.catalogueKey, entry.strategy]));
     expect(strategies).toEqual({
-      'autobots-ark': { key: 'generalist', version: 1, targetOverrides: { 14: 3 } },
-      'clone-legion': { key: 'swarm', version: 1, targetOverrides: {} },
-      'dalek-empire': { key: 'swarm', version: 1, targetOverrides: {} },
-      'decepticon-armada': { key: 'trio', version: 1, targetOverrides: {} },
-      'jaeger-corps': { key: 'duo', version: 1, targetOverrides: {} },
-      'light-labs': { key: 'duo', version: 1, targetOverrides: {} },
-      'planet-express': { key: 'tycoon', version: 1, targetOverrides: {} },
-      'robocop-precinct': { key: 'paragon', version: 1, targetOverrides: {} },
-      'skynet-terminators': { key: 'paragon', version: 1, targetOverrides: {} },
-      'white-base': { key: 'trio', version: 1, targetOverrides: {} },
-      'world-robot-boxing': { key: 'tycoon', version: 1, targetOverrides: { 20: 3 } },
+      'autobots-ark': { key: 'generalist', version: 2, targetOverrides: { 15: 3 } },
+      'clone-legion': { key: 'swarm', version: 2, targetOverrides: {} },
+      'dalek-empire': { key: 'swarm', version: 2, targetOverrides: {} },
+      'decepticon-armada': { key: 'trio', version: 2, targetOverrides: {} },
+      'jaeger-corps': { key: 'duo', version: 2, targetOverrides: {} },
+      'light-labs': { key: 'duo', version: 2, targetOverrides: {} },
+      'planet-express': { key: 'tycoon', version: 2, targetOverrides: {} },
+      'robocop-precinct': { key: 'paragon', version: 2, targetOverrides: {} },
+      'skynet-terminators': { key: 'paragon', version: 2, targetOverrides: {} },
+      'white-base': { key: 'trio', version: 2, targetOverrides: {} },
+      'world-robot-boxing': { key: 'tycoon', version: 2, targetOverrides: { 21: 3 } },
     });
   });
 });

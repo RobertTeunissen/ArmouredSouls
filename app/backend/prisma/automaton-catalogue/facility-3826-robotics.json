@@ -6,9 +6,9 @@
   "backstory": "Facility 3826 Robotics enters the arena with a clear doctrine. Different machine classes receive different build focuses. Every surviving machine returns to the workshop before the next booking.",
   "strategy": {
     "key": "generalist",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {
-      "14": 3
+      "15": 3
     }
   },
   "teamNames": {

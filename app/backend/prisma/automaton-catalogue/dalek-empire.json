@@ -4,7 +4,7 @@
   "stableName": "Skaro Dalek Empire",
   "franchise": "Doctor Who — Daleks",
   "backstory": "They do not negotiate, they do not retreat, and they do not take the stairs. The Empire rolls out in numbers, shields up and guns forward, and treats every bracket as a planet to be conquered.",
-  "strategy": { "key": "swarm", "version": 1, "targetOverrides": {} },
+  "strategy": { "key": "swarm", "version": 2, "targetOverrides": {} },
   "teamNames": {
     "twoVsTwo": ["Skaro Vanguard", "Kaled Remnant", "Supreme Command", "Emperor's Escort", "New Paradigm"],
     "threeVsThree": ["Cult of Skaro", "Time War Assault", "Imperial Guard"]

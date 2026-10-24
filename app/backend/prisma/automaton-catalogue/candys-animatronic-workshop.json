@@ -6,9 +6,9 @@
   "backstory": "Three intact stage machines earn the venue's next facility improvement. Flexible fire, precise support and heavy contact give the business practical arena coverage.",
   "strategy": {
     "key": "tycoon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {
-      "20": 3
+      "21": 3
     }
   },
   "teamNames": {

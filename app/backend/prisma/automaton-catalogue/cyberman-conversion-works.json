@@ -6,7 +6,7 @@
   "backstory": "A controller and a leader establish the conversion works' arena line. The remaining converted machines fill infantry, protection and heavy support roles before refinement spending is considered.",
   "strategy": {
     "key": "swarm",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

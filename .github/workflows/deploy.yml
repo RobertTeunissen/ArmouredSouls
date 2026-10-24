@@ -748,6 +748,25 @@ jobs:
           script: |
             bash /opt/armouredsouls/scripts/deployment-health-check.sh acceptance
 
+      # Automatic Strategy_Version upgrades: every Automaton_Profile (drafts the
+      # sync just inserted included) moves to the latest version of its
+      # strategy. After the restart on purpose: the previous backend's registry
+      # does not know a new version, so an upgraded profile must never meet it.
+      # Idempotent; a profile the upgrade would break stays on its version and
+      # raises an automaton_upgrade_rejected alert (exit 0).
+      - name: Upgrade Automaton strategies
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.ACC_VPS_IP }}
+          username: ${{ secrets.ACC_VPS_USER }}
+          key: ${{ secrets.ACC_SSH_KEY }}
+          command_timeout: 5m
+          script: |
+            set -euo pipefail
+            export PATH="$HOME/.npm-global/bin:$PATH"
+            cd /opt/armouredsouls/backend
+            bash /opt/armouredsouls/scripts/with-db-retry.sh pnpm run automaton:upgrade
+
       # A failed health gate can mean the backend never listened or that it
       # listened with an unhealthy database, disk/modules failure, or the wrong
       # environment. Keep PM2 and application logs intact across deployments so

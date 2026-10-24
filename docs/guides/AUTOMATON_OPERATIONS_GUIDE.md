@@ -1,6 +1,6 @@
 # Automaton Operations Guide
 
-**Spec:** #55, #57 · **Audience:** administrators and developers · **Last updated:** 14 October 2026
+**Spec:** #55, #57 · **Audience:** administrators and developers · **Last updated:** 24 October 2026
 
 How to run Automaton_Stables: adding and activating stables, tuning them, reading their turns and alerts, handling incidents, and moving definitions and strategies between the admin page and the repository. Product rules are in `docs/game-systems/PRD_AUTOMATON_STABLES.md`.
 
@@ -10,6 +10,8 @@ Everything below happens on `/admin/automatons` (admin login required; every mut
 |---|---|
 | `pnpm run automaton:sync [--dry-run]` | Catalogue_Sync: add Draft_Automatons for new Catalogue_Entries and fill missing Repository_Images |
 | `pnpm run automaton:unpack <file> [--force]` | Catalogue_Unpack / Strategy_Unpack: write an exported file into the repository |
+| `pnpm run automaton:upgrade [--dry-run]` | Move every stable to the latest version of its strategy (the deploy runs it after the restart) |
+| `pnpm run automaton:catalogue-upgrade [--dry-run]` | Move every Catalogue_Entry to the latest version of its strategy, carrying its overrides (run after adding a strategy version) |
 
 ## 1. Creating and activating stables
 
@@ -52,7 +54,7 @@ Editor → Build order panel. Each Goal of the stable's Build_Order has a target
 | Reason | Meaning | Typical action |
 |---|---|---|
 | Last cycle failed: {reason} | The most recent Turn_Record is `failed` | Read the turn in Cycle history; fix the profile or report a defect |
-| Balance negative | `User.currency < 0` | Usually operating costs; the stable recovers with income. Check repair levels and yield thresholds if it persists |
+| Balance negative | `User.currency < 0` | Usually repairs outgrowing low-tier income. On a v1 strategy, upgrade the stable to v2 (§8, Economy Goal and income facilities first); check repair levels and yield thresholds if it persists |
 | Nothing bought for {n} cycles | 14 or more consecutive completed turns with no charged action | Check the Saving Goal in the preview |
 
 **Cycle history** (Editor) lists the stable's Turn_Records: trigger, slot, attempt, status and reason, start and end balance, credits spent and received, actions and the final Goal outcomes. Turn_Records are purged at rollover.
@@ -67,7 +69,7 @@ Editor → Build order panel. Each Goal of the stable's Build_Order has a target
 
 **Alerts** go to the monitoring webhook (`sendMonitoringAlert`) and `logger.error` with an `[automaton-alert]` prefix, always with the Catalogue_Key and reason.
 
-Inside a Turn_Step the per-stable kinds (`automaton_turn_failed`, `automaton_invalid_parameters`, `automaton_negative_balance`, `automaton_saving_streak`, `automaton_upkeep_issues`) are logged at once but sent to Discord as one message per kind when the step ends: a heading such as `⚠️ Automaton balance negative at turn start — season 3 cycle 41: 23 stable(s)` and one `• catalogue-key: reason` line per stable. A kind with one stable keeps the single-alert text. A message that would pass Discord's 2000-character limit ends with `…and N more (see [automaton-alert] log lines)`. Before this, a step with many stables in the same state posted one message each, and Discord's per-webhook rate limit dropped alerts from the burst. Step-level kinds are sent at once.
+Inside a Turn_Step the per-stable kinds (`automaton_turn_failed`, `automaton_invalid_parameters`, `automaton_negative_balance`, `automaton_balance_recovered`, `automaton_saving_streak`, `automaton_upkeep_issues`) are logged at once but sent to Discord as one message per kind when the step ends: a heading such as `⚠️ Automaton balance turned negative — season 3 cycle 41: 4 stable(s) (23 stable(s) negative in total)` and one `• catalogue-key: reason` line per stable. A kind with one stable keeps the single-alert text. A message that would pass Discord's 2000-character limit ends with `…and N more (see [automaton-alert] log lines)`. Before this, a step with many stables in the same state posted one message each, and Discord's per-webhook rate limit dropped alerts from the burst. Step-level kinds are sent at once.
 
 | Kind | Raised when | Meaning |
 |---|---|---|
@@ -75,13 +77,14 @@ Inside a Turn_Step the per-stable kinds (`automaton_turn_failed`, `automaton_inv
 | `automaton_turn_step_failed` | The Turn_Step itself failed, a cutover started during it (`AUTOMATON_CUTOVER_IN_PROGRESS`, rest skipped `cutover_in_progress`) or it lost its lease (`TURN_STEP_LEASE_LOST`, rest not started) | Settlement continued; check the log. The stables act at their next turn |
 | `automaton_step_budget_exhausted` | "Turn_Step deadline reached": stables were not started before the deadline | They were skipped (`step_budget_exhausted`) and build at their next turn. Should not happen on the default schedule; check the alert's deadline, budget and concurrency |
 | `automaton_invalid_parameters` | Pinned Strategy_Version missing or stored Goal_Targets invalid | Restore the file or fix the targets |
-| `automaton_negative_balance` | Balance below zero at turn start | Upkeep only this turn |
+| `automaton_negative_balance` | Balance below zero at turn start after a non-negative previous turn (or no previous turn) | Upkeep only until it recovers. A stable that stays negative is not listed again; it is only counted in the "negative in total" note and the step log line `N stable(s) started their turn with a negative balance` |
+| `automaton_balance_recovered` | Balance at ₡0 or more at turn start after a negative previous turn | Informational; the stable can buy again |
 | `automaton_saving_streak` | Same Goal Saving for more than 14 consecutive turns | Informational; the stable keeps saving |
 | `automaton_upkeep_issues` | A team registration, subscription, settings or tuning call failed | Retried next turn |
 | `automaton_upgrade_rejected` | A Strategy_Version upgrade rejected a stable | Fix blueprints or Team_Names, then upgrade that stable |
 | `automaton_catalogue_sync_conflicts` | Catalogue_Sync skipped an entry whose stable name is taken | See §6 |
 
-In the heavy simulation (no battle income) operating costs pushed many stables below zero after the opening build, producing 88 negative-balance alerts over two seasons. Alert volume with real battle income has not been measured; watch it after the first season opening on ACC.
+In the heavy simulation (no battle income) operating costs pushed many stables below zero after the opening build, producing 88 negative-balance alerts over two seasons. On ACC in Season 1 (stables activated late, cycles 70–71) the v1 strategies left over half the stables negative within ten cycles and the alert listed 100+ stables every night, which is why it now lists transitions only. The cause and the v2 response are in `docs/implementation_notes/AUTOMATON_ECONOMY_AND_EVENT_FIT.md`.
 
 ## 4. Program_Switch incident procedure
 
@@ -121,9 +124,13 @@ Catalogue_Sync skips an entry when its stable name is taken by a stable or anoth
 2. **Preview:** the draft preview runs the draft against a chosen stable (Turn_Preview path) and against a simulated fresh ₡3,000,000 stable over the opening turns. Both are read-only.
 3. **Export strategy file:** saves `{key}.v{n}.json` (disabled while the draft has rule errors). For a new version, the export lists the stables an upgrade would reject (too few blueprints, missing Team_Names); fix those stables before the version is deployed.
 4. **Unpack:** `pnpm run automaton:unpack {key}.v{n}.json` writes `app/backend/src/config/automaton-strategies/{key}.v{n}.json` (never over an existing file).
-5. **Pull request:** approved by the product owner. CI runs the conformance suite and the generic scenario test over every Strategy_Definition_File, so a new file needs no new test.
-6. **Deploy:** the file loads at server start and appears in the Strategy_Library and the strategy dropdown. No stable changes.
-7. **Upgrade:** Strategy_Library → **Upgrade** (one stable or all stables on an older version). The dry run shows old → new targets per Goal and any stable that would be rejected; confirm to apply. Each stable is upgraded or rejected on its own, with one audit entry each.
+5. **Catalogue:** for a new version, run `pnpm run automaton:catalogue-upgrade` in `app/backend` and commit the rewritten catalogue files. Every Catalogue_Entry must pin the latest version of its strategy (`catalogueUpgrade.test.ts` fails otherwise); the script carries each entry's Goal_Target overrides to their new Goal positions and stops, writing nothing, if an override no longer fits.
+6. **Pull request:** approved by the product owner. CI runs the conformance suite and the generic scenario test over every Strategy_Definition_File, so a new file needs no new test.
+7. **Deploy:** the file loads at server start and appears in the Strategy_Library and the strategy dropdown. Right after the restart the deploy runs `pnpm run automaton:upgrade`: every stable on an older version of that strategy is upgraded, targets migrating by Goal type and occurrence. A stable the upgrade would break stays on its version and raises `automaton_upgrade_rejected` at each deploy until you fix its blueprints or Team_Names. Strategy_Library → **Upgrade** (dry run, then confirm) is still there for an immediate upgrade of one or all stables.
+
+**Moving a stable to another strategy.** Editor → strategy dropdown. The stable is pinned to the latest version of the new strategy, with that version's default targets, and later versions of it reach the stable automatically. Automatic upgrades never change a stable's strategy key.
+
+**v2 rollout (October 2026).** Every strategy has a v2 file (Economy Goal, income and repair facilities earlier; `docs/implementation_notes/AUTOMATON_ECONOMY_AND_EVENT_FIT.md`). The deploy that brings it upgrades every stable: each v1 Goal maps to v2 with its target kept and only the Economy Goal (default 20 cycles) is new, so no stable should be rejected. The catalogue files pin v2.
 
 **Never delete a Strategy_Definition_File that a profile still uses.** The server refuses to start when a pinned file is missing, and if it disappears at runtime the stable's turns fail with `invalid_parameters` and an alert. Upgrade every stable off a version (the Library shows "N stables on vX") before removing it.
 

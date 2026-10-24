@@ -4,7 +4,7 @@
   "stableName": "Planet Express Crew",
   "franchise": "Futurama",
   "backstory": "Planet Express treats the arena as a side business. The merchandise sells, the streams pay, and the robots are mostly there to keep the cameras rolling. Profit first; glory if it is cheap.",
-  "strategy": { "key": "tycoon", "version": 1, "targetOverrides": {} },
+  "strategy": { "key": "tycoon", "version": 2, "targetOverrides": {} },
   "teamNames": {
     "twoVsTwo": ["Delivery Crew"],
     "threeVsThree": ["Robot Arms Apts"]

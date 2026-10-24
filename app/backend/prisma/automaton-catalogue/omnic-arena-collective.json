@@ -6,9 +6,9 @@
   "backstory": "Omnic Arena Collective enters the arena with a clear doctrine. Grow a balanced roster with distinct build focuses. Every surviving machine returns to the workshop before the next booking.",
   "strategy": {
     "key": "generalist",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {
-      "14": 4
+      "15": 4
     }
   },
   "teamNames": {

@@ -115,7 +115,8 @@ describe('Strategy_Draft preview and upgrade warning (Spec #55 task 9.10)', () =
   it('still exports a new version with the warning; a new strategy has no warning', async () => {
     const exported = await harness.api('get', `/strategy-drafts/${newVersionDraft}/export`);
     expect(exported.status).toBe(200);
-    expect(exported.body.fileName).toBe('duo.v2.json');
+    // Numbered latest + 1: the repository already has duo.v2.json.
+    expect(exported.body.fileName).toBe('duo.v3.json');
     expect(exported.body.upgradeWarning.filter((w: { catalogueKey: string }) => w.catalogueKey.startsWith(KEY_PREFIX)).map((w: { catalogueKey: string }) => w.catalogueKey))
       .toEqual([key('few'), key('teams')]);
     const fresh = await harness.api('get', `/strategy-drafts/${newStrategyDraft}/export`);

@@ -40,12 +40,14 @@ describe('Strategy_Registry (R6.2, R6.6, R6.8, design §14.0)', () => {
     expect(fs.existsSync(STRATEGY_DIRECTORY)).toBe(true);
   });
 
-  it('holds the six version-1 strategies and they pass the startup check (task 4.2, R6.1–R6.3)', () => {
+  it('holds the six strategies in versions 1 and 2 and they pass the startup check (task 4.2, R6.1–R6.3)', () => {
     const registry = loadStrategyRegistry({ weightTable: BUILD_FOCUS_WEIGHTS });
-    expect(registry.all().map((s) => `${s.key}.v${s.version}`))
-      .toEqual(['duo.v1', 'generalist.v1', 'paragon.v1', 'swarm.v1', 'trio.v1', 'tycoon.v1']);
+    expect(registry.all().map((s) => `${s.key}.v${s.version}`)).toEqual([
+      'duo.v1', 'duo.v2', 'generalist.v1', 'generalist.v2', 'paragon.v1', 'paragon.v2',
+      'swarm.v1', 'swarm.v2', 'trio.v1', 'trio.v2', 'tycoon.v1', 'tycoon.v2',
+    ]);
     const stored = registry.all().map((s) => ({ strategyKey: s.key, strategyVersion: s.version }));
-    expect(checkStrategyDirectory(stored)).toEqual({ passed: true, strategyFiles: 6, problems: [] });
+    expect(checkStrategyDirectory(stored)).toEqual({ passed: true, strategyFiles: 12, problems: [] });
   });
 
   it('loads a directory, derives Goal ids and builds every Goal through the factories', () => {

@@ -6,7 +6,7 @@
   "backstory": "Fine mechanisms and a disciplined guard make this atelier a patient champion's workshop. Its one automaton earns carefully staged shield and weapon improvements.",
   "strategy": {
     "key": "paragon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

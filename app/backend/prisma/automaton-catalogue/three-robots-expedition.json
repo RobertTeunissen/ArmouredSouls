@@ -6,7 +6,7 @@
   "backstory": "An impulsive scout, a sturdy partner and a precise observer turn expedition hardware into a three-role arena team. Their equipment grows together without changing their distinctive bodies.",
   "strategy": {
     "key": "trio",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

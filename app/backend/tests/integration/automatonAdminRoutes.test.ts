@@ -101,7 +101,8 @@ describe('Admin_Automaton_Control route table (Spec #55 task 9.5)', () => {
   let harness: AdminApiHarness;
   let previousUploadDir: string;
   let programBefore: boolean;
-  const paragon = getStrategyRegistry().getStrategy('paragon', 1)!;
+  // The latest version: what a stable created on the admin page is pinned to.
+  const paragon = getStrategyRegistry().getStrategy('paragon', getStrategyRegistry().latestVersion('paragon')!)!;
   const paragonRobots2 = paragon.buildOrder.find((d) => d.type === 'robots' && d.bounds.max === 2)!;
 
   const api = (method: HttpMethod, url: string, token?: string | null) => harness.api(method, url, token);

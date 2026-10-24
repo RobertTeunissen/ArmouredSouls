@@ -6,9 +6,9 @@
   "backstory": "Satellite Six Robot Club enters the arena with a clear doctrine. Audience income supports a small roster. Every surviving machine returns to the workshop before the next booking.",
   "strategy": {
     "key": "tycoon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {
-      "20": 3
+      "21": 3
     }
   },
   "teamNames": {

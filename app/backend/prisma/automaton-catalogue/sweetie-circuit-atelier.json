@@ -6,7 +6,7 @@
   "backstory": "A small mechanical quadruped supports the atelier through mobile close-range work. One restrained arena allocation improves without changing the selected story's familiar body.",
   "strategy": {
     "key": "paragon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

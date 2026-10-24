@@ -6,7 +6,7 @@
   "backstory": "The puppet workshop stakes its account on one agile close-combat fighter. Repairs come first, followed by a complete paired weapon upgrade and patient refinement.",
   "strategy": {
     "key": "paragon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

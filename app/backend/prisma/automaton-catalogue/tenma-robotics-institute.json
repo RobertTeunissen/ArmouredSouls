@@ -6,10 +6,10 @@
   "backstory": "Tenma Robotics Institute enters the arena with a clear doctrine. An agile all-rounder with concentrated upgrades. Every surviving machine returns to the workshop before the next booking.",
   "strategy": {
     "key": "paragon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {
       "3": 4,
-      "8": 2
+      "12": 2
     }
   },
   "teamNames": {

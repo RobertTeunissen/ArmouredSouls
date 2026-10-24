@@ -6,7 +6,7 @@
   "backstory": "A construction walker, compact handler and heavy loader leave the lunar yard with complementary jobs. Long-range support, practical fire and close pressure advance as one trio.",
   "strategy": {
     "key": "trio",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

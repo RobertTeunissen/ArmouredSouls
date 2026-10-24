@@ -6,7 +6,7 @@
   "backstory": "A mobile specialist and a disciplined marksman share a small hangar. Their partner upgrades favour reliable equipment and manageable repair costs.",
   "strategy": {
     "key": "duo",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {
