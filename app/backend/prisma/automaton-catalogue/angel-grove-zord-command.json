@@ -6,7 +6,7 @@
   "backstory": "A shielded champion holds the front while its partner supplies heavy ranged pressure. The hangar upgrades both complete machines without counting their component forms as extra fighters.",
   "strategy": {
     "key": "duo",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

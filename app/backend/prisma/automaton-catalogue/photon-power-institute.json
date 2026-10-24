@@ -6,7 +6,7 @@
   "backstory": "Photon Power Institute enters the arena with a clear doctrine. Two heavily invested combat machines. Every surviving machine returns to the workshop before the next booking.",
   "strategy": {
     "key": "duo",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

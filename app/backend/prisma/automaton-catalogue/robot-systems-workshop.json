@@ -6,7 +6,7 @@
   "backstory": "A compact command machine turns a small systems workshop into a one-frame contender. Precise equipment purchases matter more than a parade of spare bodies.",
   "strategy": {
     "key": "paragon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

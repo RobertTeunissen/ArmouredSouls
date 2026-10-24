@@ -6,7 +6,7 @@
   "backstory": "An imposing industrial frame brings heavy contact pressure to a small robotics workshop. The owners refine one final weapon after the machinery and repair reserve are secure.",
   "strategy": {
     "key": "paragon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

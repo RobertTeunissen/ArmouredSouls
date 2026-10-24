@@ -6,7 +6,7 @@
   "backstory": "One repaired commando chassis carries the workshop's contracts. Practical mid-range equipment receives concentrated upgrades while a repair reserve stays in the account.",
   "strategy": {
     "key": "paragon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

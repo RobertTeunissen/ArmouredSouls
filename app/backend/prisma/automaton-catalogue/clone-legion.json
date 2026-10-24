@@ -4,7 +4,7 @@
   "stableName": "Kamino Clone Legion",
   "franchise": "Star Wars — Clone Troopers",
   "backstory": "Grown, drilled and shipped in batches. The Legion fields more robots than anyone else in the arena, every one of them identical in discipline if not in paint. The sergeants keep the numbers up; the quartermasters keep the repair bills down. Mostly.",
-  "strategy": { "key": "swarm", "version": 1, "targetOverrides": {} },
+  "strategy": { "key": "swarm", "version": 2, "targetOverrides": {} },
   "teamNames": {
     "twoVsTwo": ["Torrent Company", "Domino Squad", "Ghost Company", "Foxtrot Company", "Coruscant Guard"],
     "threeVsThree": ["Bad Batch", "Delta Squad", "Omega Squad"]

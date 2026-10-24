@@ -6,7 +6,7 @@
   "backstory": "Medabot Tournament Club enters the arena with a clear doctrine. A ranged/melee pair with an obvious team identity. Every surviving machine returns to the workshop before the next booking.",
   "strategy": {
     "key": "duo",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

@@ -6,7 +6,7 @@
   "backstory": "The service shop backs one wheeled caretaker with protective arena equipment. Careful repairs and shield investment keep its familiar domestic chassis in the contest.",
   "strategy": {
     "key": "paragon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

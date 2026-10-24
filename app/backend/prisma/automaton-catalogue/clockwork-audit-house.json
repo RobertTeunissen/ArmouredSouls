@@ -6,7 +6,7 @@
   "backstory": "The Chancellor records every credit before committing it to a precise final weapon. One formal automaton receives the audit house's entire champion and refinement budget.",
   "strategy": {
     "key": "paragon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

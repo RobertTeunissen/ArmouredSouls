@@ -6,7 +6,7 @@
   "backstory": "Two segmented mission machines bring protected contact and precision support to a patient workshop. Partner investment and repair reserves matter more than extravagant loadouts.",
   "strategy": {
     "key": "duo",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

@@ -6,7 +6,7 @@
   "backstory": "Eleven articulated machines fill distinct arena jobs from mobile scouts to heavy support. Their shared origin supplies the atmosphere; each body buys its own supported equipment.",
   "strategy": {
     "key": "swarm",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

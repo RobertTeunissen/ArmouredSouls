@@ -6,7 +6,7 @@
   "backstory": "A lanky repair machine becomes the yard's unlikely arena champion. Practical mid-range equipment and gradual refinement keep the budget tied to one complete body.",
   "strategy": {
     "key": "paragon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

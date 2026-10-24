@@ -6,10 +6,10 @@
   "backstory": "Cygnus Robotics Division enters the arena with a clear doctrine. Compact precision-oriented partners with distinct defensive priorities. Every surviving machine returns to the workshop before the next booking.",
   "strategy": {
     "key": "duo",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {
-      "11": 6,
-      "13": 3
+      "12": 6,
+      "14": 3
     }
   },
   "teamNames": {

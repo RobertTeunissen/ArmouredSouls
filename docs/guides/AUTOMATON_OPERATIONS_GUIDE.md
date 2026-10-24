@@ -10,6 +10,8 @@ Everything below happens on `/admin/automatons` (admin login required; every mut
 |---|---|
 | `pnpm run automaton:sync [--dry-run]` | Catalogue_Sync: add Draft_Automatons for new Catalogue_Entries and fill missing Repository_Images |
 | `pnpm run automaton:unpack <file> [--force]` | Catalogue_Unpack / Strategy_Unpack: write an exported file into the repository |
+| `pnpm run automaton:upgrade [--dry-run]` | Move every stable to the latest version of its strategy (the deploy runs it after the restart) |
+| `pnpm run automaton:catalogue-upgrade [--dry-run]` | Move every Catalogue_Entry to the latest version of its strategy, carrying its overrides (run after adding a strategy version) |
 
 ## 1. Creating and activating stables
 
@@ -122,11 +124,13 @@ Catalogue_Sync skips an entry when its stable name is taken by a stable or anoth
 2. **Preview:** the draft preview runs the draft against a chosen stable (Turn_Preview path) and against a simulated fresh ₡3,000,000 stable over the opening turns. Both are read-only.
 3. **Export strategy file:** saves `{key}.v{n}.json` (disabled while the draft has rule errors). For a new version, the export lists the stables an upgrade would reject (too few blueprints, missing Team_Names); fix those stables before the version is deployed.
 4. **Unpack:** `pnpm run automaton:unpack {key}.v{n}.json` writes `app/backend/src/config/automaton-strategies/{key}.v{n}.json` (never over an existing file).
-5. **Pull request:** approved by the product owner. CI runs the conformance suite and the generic scenario test over every Strategy_Definition_File, so a new file needs no new test.
-6. **Deploy:** the file loads at server start and appears in the Strategy_Library and the strategy dropdown. No stable changes.
-7. **Upgrade:** Strategy_Library → **Upgrade** (one stable or all stables on an older version). The dry run shows old → new targets per Goal and any stable that would be rejected; confirm to apply. Each stable is upgraded or rejected on its own, with one audit entry each.
+5. **Catalogue:** for a new version, run `pnpm run automaton:catalogue-upgrade` in `app/backend` and commit the rewritten catalogue files. Every Catalogue_Entry must pin the latest version of its strategy (`catalogueUpgrade.test.ts` fails otherwise); the script carries each entry's Goal_Target overrides to their new Goal positions and stops, writing nothing, if an override no longer fits.
+6. **Pull request:** approved by the product owner. CI runs the conformance suite and the generic scenario test over every Strategy_Definition_File, so a new file needs no new test.
+7. **Deploy:** the file loads at server start and appears in the Strategy_Library and the strategy dropdown. Right after the restart the deploy runs `pnpm run automaton:upgrade`: every stable on an older version of that strategy is upgraded, targets migrating by Goal type and occurrence. A stable the upgrade would break stays on its version and raises `automaton_upgrade_rejected` at each deploy until you fix its blueprints or Team_Names. Strategy_Library → **Upgrade** (dry run, then confirm) is still there for an immediate upgrade of one or all stables.
 
-**v2 rollout (October 2026).** Every strategy has a v2 file (Economy Goal, income and repair facilities earlier; `docs/implementation_notes/AUTOMATON_ECONOMY_AND_EVENT_FIT.md`). After the deploy, run **Upgrade** → all stables for each strategy: every v1 Goal maps to v2 with its target kept, and only the Economy Goal (default 20 cycles) is new, so no stable should be rejected. Admin-created stables already get v2. New Catalogue_Entries should pin `"version": 2`; existing entries stay on v1 because Catalogue_Sync never updates an existing profile.
+**Moving a stable to another strategy.** Editor → strategy dropdown. The stable is pinned to the latest version of the new strategy, with that version's default targets, and later versions of it reach the stable automatically. Automatic upgrades never change a stable's strategy key.
+
+**v2 rollout (October 2026).** Every strategy has a v2 file (Economy Goal, income and repair facilities earlier; `docs/implementation_notes/AUTOMATON_ECONOMY_AND_EVENT_FIT.md`). The deploy that brings it upgrades every stable: each v1 Goal maps to v2 with its target kept and only the Economy Goal (default 20 cycles) is new, so no stable should be rejected. The catalogue files pin v2.
 
 **Never delete a Strategy_Definition_File that a profile still uses.** The server refuses to start when a pinned file is missing, and if it disappears at runtime the stable's turns fail with `invalid_parameters` and an alert. Upgrade every stable off a version (the Library shows "N stables on vX") before removing it.
 

@@ -6,10 +6,10 @@
   "backstory": "Weyland Synthetic Unit enters the arena with a clear doctrine. A pair of precise android builds. Every surviving machine returns to the workshop before the next booking.",
   "strategy": {
     "key": "duo",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {
-      "11": 6,
-      "13": 3
+      "12": 6,
+      "14": 3
     }
   },
   "teamNames": {

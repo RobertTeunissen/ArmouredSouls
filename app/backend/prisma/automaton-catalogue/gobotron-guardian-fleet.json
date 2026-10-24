@@ -6,7 +6,7 @@
   "backstory": "Gobotron Guardian Fleet enters the arena with a clear doctrine. Mixed-role transforming-machine designs presented in robot form. Every surviving machine returns to the workshop before the next booking.",
   "strategy": {
     "key": "trio",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

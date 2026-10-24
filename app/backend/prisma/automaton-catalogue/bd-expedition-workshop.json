@@ -6,7 +6,7 @@
   "backstory": "A small expedition machine survives through mobility, careful retreat and a compact arena weapon. The workshop keeps its one familiar body intact while buying measured upgrades.",
   "strategy": {
     "key": "paragon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

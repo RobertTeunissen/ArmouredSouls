@@ -6,7 +6,7 @@
   "backstory": "Section Nine Tachikomas enters the arena with a clear doctrine. Repeatable agile tank robots with ranged builds. Every surviving machine returns to the workshop before the next booking.",
   "strategy": {
     "key": "swarm",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

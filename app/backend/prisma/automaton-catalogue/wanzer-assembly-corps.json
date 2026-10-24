@@ -6,7 +6,7 @@
   "backstory": "Wanzer Assembly Corps enters the arena with a clear doctrine. Give the squad melee, ranged, and defensive builds. Every surviving machine returns to the workshop before the next booking.",
   "strategy": {
     "key": "trio",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

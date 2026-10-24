@@ -4,7 +4,7 @@
   "stableName": "Light Labs",
   "franchise": "Mega Man",
   "backstory": "Built to help, upgraded to fight. Light Labs sends its two brothers into the tag-team circuit with a simple philosophy: learn from every opponent, charge the shot, and never leave a teammate behind.",
-  "strategy": { "key": "duo", "version": 1, "targetOverrides": {} },
+  "strategy": { "key": "duo", "version": 2, "targetOverrides": {} },
   "teamNames": {
     "twoVsTwo": ["Blue Bomber Brothers"],
     "threeVsThree": ["Light Family"]

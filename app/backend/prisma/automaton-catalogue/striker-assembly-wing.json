@@ -6,7 +6,7 @@
   "backstory": "The assembly wing fields a flexible shooter, a heavy contact fighter and a defensive anchor. The three frames advance together through measured equipment upgrades.",
   "strategy": {
     "key": "trio",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

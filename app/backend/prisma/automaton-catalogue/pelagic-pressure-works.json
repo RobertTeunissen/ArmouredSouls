@@ -6,9 +6,9 @@
   "backstory": "Pressure hulls and sealed joints give the workshop a durable three-machine roster. A crawler, an inspector and a bastion divide flexible fire, precision and protection.",
   "strategy": {
     "key": "generalist",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {
-      "14": 3
+      "15": 3
     }
   },
   "teamNames": {

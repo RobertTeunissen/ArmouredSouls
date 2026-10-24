@@ -6,10 +6,10 @@
   "backstory": "Jupiter Robot Hangar enters the arena with a clear doctrine. One durable heavy machine. Every surviving machine returns to the workshop before the next booking.",
   "strategy": {
     "key": "paragon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {
       "3": 4,
-      "8": 2
+      "12": 2
     }
   },
   "teamNames": {

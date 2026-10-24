@@ -6,7 +6,7 @@
   "backstory": "An enforcement foundry builds a broad line of manufactured machines. Heavy command, a mobile specialist and varied patrol frames grow into eleven ordinary arena allocations.",
   "strategy": {
     "key": "swarm",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

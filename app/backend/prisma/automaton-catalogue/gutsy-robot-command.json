@@ -6,9 +6,9 @@
   "backstory": "GGG deploys a champion and two vehicle robots, then reinforces the formation with wind, thunder, and reconnaissance. Six machines answer the call; every pair and trio has a permanent assignment.",
   "strategy": {
     "key": "trio",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {
-      "12": 6
+      "13": 6
     }
   },
   "teamNames": {

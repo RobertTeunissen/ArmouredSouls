@@ -6,9 +6,9 @@
   "backstory": "A patched scout, an exacting inventory specialist and a heavy security frame keep this workshop adaptable. They buy the third chassis before settling into specialist upgrades.",
   "strategy": {
     "key": "generalist",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {
-      "14": 3
+      "15": 3
     }
   },
   "teamNames": {

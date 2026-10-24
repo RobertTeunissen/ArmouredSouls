@@ -6,7 +6,7 @@
   "backstory": "A ceramic-shielded furnace frame anchors the forge while its long-limbed partner works from range. Concentrated partner upgrades preserve both machines' distinct jobs.",
   "strategy": {
     "key": "duo",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

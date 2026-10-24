@@ -6,9 +6,9 @@
   "backstory": "The Consortium fields a protected opening trio and spends its next contracts on mobility and precision. Six specialist chassis make a complete arena squadron, with every machine assigned to a pair and a trio.",
   "strategy": {
     "key": "trio",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {
-      "12": 6
+      "13": 6
     }
   },
   "teamNames": {

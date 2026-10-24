@@ -6,7 +6,7 @@
   "backstory": "A compact hovering machine is the array's sole arena investment. Its two weapon allocations provide close pressure while ordinary movement and damage rules govern the fight.",
   "strategy": {
     "key": "paragon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

@@ -6,9 +6,9 @@
   "backstory": "Three weathered mechanical drifters bring agile contact, protection and heavy fire to a salvage-minded workshop. Their distinct jobs guide purchases without erasing their source chassis.",
   "strategy": {
     "key": "generalist",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {
-      "14": 3
+      "15": 3
     }
   },
   "teamNames": {

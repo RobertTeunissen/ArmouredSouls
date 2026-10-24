@@ -6,7 +6,7 @@
   "backstory": "A single composed synthetic receives precise mid-range equipment and patient refinement. Its workshop invests in supported hardware rather than assigning combat effects to exceptional source abilities.",
   "strategy": {
     "key": "paragon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

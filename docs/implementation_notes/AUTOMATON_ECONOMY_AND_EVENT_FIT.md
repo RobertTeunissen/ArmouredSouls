@@ -42,19 +42,21 @@ Opening builds from ₡3,000,000 with the starter blueprints (projection, `proje
 | Trio | Booking L1 (3 robots) | Repair L1, Merchandising L1, Booking L1 (3 robots, fewer attributes) |
 | Tycoon | Merchandising L2, Streaming L1, Booking L2 | Merchandising L2, Streaming L1, Repair L2, Booking L1 |
 
-## Rollout
+## Rollout: automatic upgrades
 
-- Deploying the files changes no stable. Upgrade existing stables in Strategy_Library → **Upgrade** per strategy (dry run first; every v1 Goal maps to v2, only the Economy Goal is new).
-- Event_Allocation and the alert apply to every stable, v1 or v2, from the first turn after the deploy.
-- New Catalogue_Entries should pin `"version": 2`; admin-created stables get the latest version already. Existing entries stay on v1 (Catalogue_Sync is insert-only and the entries are approved content).
+The product owner made automatic upgrades a permanent rule (24 October 2026): no stable should stay on an older version of its strategy.
+
+- **Profiles:** `pnpm run automaton:upgrade` (`strategies/autoUpgrade.ts`, reusing `confirmUpgrade`) moves every profile to the latest version of its strategy. The ACC deploy runs it after the PM2 restart and health check, because the previous backend's registry would not know the new file. A rejected profile stays on its version and is alerted once per deploy. The strategy key is never changed; moving a stable to another strategy remains an Editor action.
+- **Catalogue:** every Catalogue_Entry pins the latest version (`catalogueUpgrade.test.ts`). `pnpm run automaton:catalogue-upgrade` rewrote all 205 entries to v2 and moved their overrides by Goal type and occurrence, for example Generalist `"14": 3` → `"15": 3`, Tycoon `"20": 3` → `"21": 3`, Trio squadrons `"12": 6` → `"13": 6`, Duo `"11": 6, "13": 3` → `"12": 6, "14": 3`, Paragon `"8": 2` → `"12": 2`. Only the `strategy` member of each file changed.
+- Event_Allocation and the alert apply to every stable from the first turn after the deploy.
 
 ## Verification
 
 - Backend unit tier (7,948 tests), every `tests/integration/automaton*.test.ts` suite (history loader against seeded ledger rows and battles included), lint, build, `typecheck:tests` and `test:tiers:verify`; frontend Automaton admin Vitest suites and type-check.
-- Heavy `automatonMultiSeason.test.ts` on a throwaway local database (205 repository Catalogue_Entries, v1 pins, new Event_Allocation and history loader): passed in 282 s, no failed or skipped turns, settlement Turn_Steps 1.6–2.1 s for 205 stables, opening steps 72 s (preparation) and 65 s (`season_open`), peak 12 database connections, 8 alerts over two seasons.
+- Heavy `automatonMultiSeason.test.ts` on a throwaway local database (205 repository Catalogue_Entries, new Event_Allocation and history loader; first run with the v1 pins, rerun with the v2 pins below): passed in 282 s, no failed or skipped turns, settlement Turn_Steps 1.6–2.1 s for 205 stables, opening steps 72 s (preparation) and 65 s (`season_open`), peak 12 database connections, 8 alerts over two seasons.
 
 ## Not verified
 
 - Live effect on ACC: no stable has run v2 or the new allocation yet. Watch the Strategy_Comparison and the alert after the next activations.
-- The heavy multi-season simulation runs the repository catalogue, which still pins v1; v2 is covered by the conformance and scenario suites (unit tier) and `strategiesV2.test.ts`.
+- The `automaton:upgrade` deploy step has not run on ACC yet; it is covered by `tests/integration/automatonAutoUpgrade.test.ts`.
 - Expected values use each robot's current max HP for past battles; a robot whose HP grew since then looks slightly more damaged than it was.

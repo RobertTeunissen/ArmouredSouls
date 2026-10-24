@@ -6,7 +6,7 @@
   "backstory": "A substantial caretaker protects a one-machine workshop with defensive equipment and cautious retreats. Shield and weapon improvements follow funded maintenance milestones.",
   "strategy": {
     "key": "paragon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

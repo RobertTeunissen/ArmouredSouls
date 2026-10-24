@@ -6,9 +6,9 @@
   "backstory": "Three Northern Gears secure the first contract. Scouts and a heavy reserve follow, giving the yard a six-machine force with reconnaissance, protection, and sustained fire in each formation.",
   "strategy": {
     "key": "trio",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {
-      "12": 6
+      "13": 6
     }
   },
   "teamNames": {

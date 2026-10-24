@@ -4,7 +4,7 @@
   "stableName": "Decepticon Armada",
   "franchise": "Transformers — Decepticons",
   "backstory": "Peace through tyranny, and tyranny through superior firepower. The Armada fields three of its most notorious commanders as one 3v3 unit and lets the rest of the arena argue about who is really in charge.",
-  "strategy": { "key": "trio", "version": 1, "targetOverrides": {} },
+  "strategy": { "key": "trio", "version": 2, "targetOverrides": {} },
   "teamNames": {
     "twoVsTwo": ["Air Command", "Science Division"],
     "threeVsThree": ["Decepticon High Command"]

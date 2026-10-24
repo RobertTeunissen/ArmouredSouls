@@ -34,7 +34,7 @@ Invariant I1: `isGenerated = true` ⇔ `stableType = generated`. Because Automat
 
 An Upgrade_Strategy is a numbered Build_Order of Goals. Each strategy version is a Strategy_Definition_File (`app/backend/src/config/automaton-strategies/{key}.v{n}.json`) that combines Goal types from the code Goal_Library (`services/automaton/goals/`): `robots`, `facility(type)`, `attributes`, `weapons`, `refine`, `economy`. New Goal types are code changes; new strategies and versions are data.
 
-Every strategy exists in v1 (the approved spec-55 Build_Orders) and v2 (October 2026, `docs/implementation_notes/AUTOMATON_ECONOMY_AND_EVENT_FIT.md`). v2 keeps every v1 Goal and target, so an upgrade migrates targets unchanged, and adds two things: an Economy Goal right after the opening robots and Booking Office L1, and Repair Bay, Merchandising Hub and Streaming Studio levels ahead of the larger attribute milestones (Swarm and Trio: Merchandising Hub and Repair Bay before the first attribute milestone; Swarm: Streaming Studio before the fourth robot). Booking Office L3 moves behind them. Existing stables stay on v1 until an admin upgrades them; admin-created stables get the latest version; new Catalogue_Entries should pin v2.
+Every strategy exists in v1 (the approved spec-55 Build_Orders) and v2 (October 2026, `docs/implementation_notes/AUTOMATON_ECONOMY_AND_EVENT_FIT.md`). v2 keeps every v1 Goal and target, so an upgrade migrates targets unchanged, and adds two things: an Economy Goal right after the opening robots and Booking Office L1, and Repair Bay, Merchandising Hub and Streaming Studio levels ahead of the larger attribute milestones (Swarm and Trio: Merchandising Hub and Repair Bay before the first attribute milestone; Swarm: Streaming Studio before the fourth robot). Booking Office L3 moves behind them. Every stable and Catalogue_Entry moves to v2 automatically (see "Versioning and pinned profiles").
 
 | Strategy | Intent |
 |---|---|
@@ -88,7 +88,9 @@ Each Robot_Blueprint has one of six Build_Focus presets (Bruiser, Deadeye, Warde
 
 ### Versioning and pinned profiles
 
-Each Automaton_Profile is pinned to a Strategy_Version. Deploying `{key}.v{n+1}.json` changes no stable. An admin upgrades stables in the Strategy_Library with a dry run and confirmation; Goal_Targets migrate by Goal type and occurrence, clamped to the new bounds. A stable whose migrated targets break its own rules stays on its version and raises an alert (decision 37). The server refuses to start when a profile's pinned file is missing or invalid.
+Each Automaton_Profile is pinned to a Strategy_Version, and every profile runs the latest version of its strategy (product owner, 24 October 2026; this replaces the spec-55 rule that a deploy changes no stable and an admin upgrades by hand). The ACC deploy runs `pnpm run automaton:upgrade` after the backend restart: every profile, draft or active, on an older version is upgraded. Goal_Targets migrate by Goal type and occurrence, clamped to the new bounds. A stable whose migrated targets break its own rules stays on its version and raises an alert (decision 37), again at each deploy until it is fixed. The strategy key never changes automatically: moving a stable to a different strategy is an admin edit (Editor → strategy), which pins the latest version of the new key, and later versions of that key then reach it automatically. The Strategy_Library's manual **Upgrade** still exists for an immediate upgrade. The server refuses to start when a profile's pinned file is missing or invalid.
+
+Catalogue_Entries follow the same rule: every entry pins the latest version of its strategy (`catalogueUpgrade.test.ts`). After adding `{key}.v{n+1}.json`, run `pnpm run automaton:catalogue-upgrade`, which rewrites each entry's `strategy` member and carries its Goal_Target overrides (stored by Goal position) to the new positions by Goal type and occurrence.
 
 New strategies are designed in the admin Strategy_Builder, previewed, exported and merged through a pull request; CI runs the conformance suite and the generic scenario test on every file (see the operations guide).
 
@@ -151,8 +153,8 @@ Spec 55 delivered these stables (decision 32); spec 57 adds the Expansion_Stable
 | `decepticon-armada` | Decepticon Armada | Transformers — Decepticons | Trio | 4 |
 | `white-base` | White Base Mobile Suits | Mobile Suit Gundam | Trio | 4 |
 | `planet-express` | Planet Express Crew | Futurama | Tycoon | 3 |
-| `world-robot-boxing` | World Robot Boxing | Real Steel | Tycoon (goal 20 Robots → 3) | 3 |
-| `autobots-ark` | Autobots of the Ark | Transformers — Autobots | Generalist (goal 14 Robots → 3) | 4 |
+| `world-robot-boxing` | World Robot Boxing | Real Steel | Tycoon (v2 goal 21 Robots → 3) | 3 |
+| `autobots-ark` | Autobots of the Ark | Transformers — Autobots | Generalist (v2 goal 15 Robots → 3) | 4 |
 
 Franchise and backstory are admin-only; showing them to players is backlog #61.
 

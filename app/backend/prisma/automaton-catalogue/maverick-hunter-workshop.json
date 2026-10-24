@@ -6,7 +6,7 @@
   "backstory": "A flexible ranged hunter and an agile close-combat partner share the workshop budget. Their contrasting equipment paths improve together without multiplying alternate forms into extra slots.",
   "strategy": {
     "key": "duo",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

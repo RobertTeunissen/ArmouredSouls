@@ -6,7 +6,7 @@
   "backstory": "A single methodical assassin turns contract revenue into precision equipment. The workshop upgrades and refines one weapon path without buying an army of spare identities.",
   "strategy": {
     "key": "paragon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

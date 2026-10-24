@@ -6,7 +6,7 @@
   "backstory": "Giant Robo Command enters the arena with a clear doctrine. One durable heavy machine with major weapon investment. Every surviving machine returns to the workshop before the next booking.",
   "strategy": {
     "key": "paragon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

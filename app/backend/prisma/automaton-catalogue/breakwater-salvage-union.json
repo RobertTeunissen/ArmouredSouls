@@ -6,9 +6,9 @@
   "backstory": "Salt-worn salvage machines earn the union's facility budget. A protected tug, a heavy clamp and a distant recovery platform turn repaired work equipment into three arena roles.",
   "strategy": {
     "key": "tycoon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {
-      "20": 3
+      "21": 3
     }
   },
   "teamNames": {

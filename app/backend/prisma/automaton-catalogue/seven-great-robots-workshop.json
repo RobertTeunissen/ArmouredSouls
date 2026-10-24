@@ -6,9 +6,9 @@
   "backstory": "A detective, two arena veterans, and three very different guardians enter a new competition. Six individuals share a workshop, but every body, temperament, and assignment remains distinct.",
   "strategy": {
     "key": "trio",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {
-      "12": 6
+      "13": 6
     }
   },
   "teamNames": {

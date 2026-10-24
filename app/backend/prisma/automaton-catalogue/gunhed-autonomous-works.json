@@ -6,7 +6,7 @@
   "backstory": "An industrial combat machine carries the works' heavy-fire contracts. Concentrated upgrades and refinement improve its standing arena configuration without buying its alternate mode as another robot.",
   "strategy": {
     "key": "paragon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

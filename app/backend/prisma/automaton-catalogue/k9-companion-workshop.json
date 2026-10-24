@@ -6,7 +6,7 @@
   "backstory": "A compact mechanical companion earns its workshop a place in the arena. One precise mounted weapon receives the champion's upgrade budget without changing the familiar canine body.",
   "strategy": {
     "key": "paragon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

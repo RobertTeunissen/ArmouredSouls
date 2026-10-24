@@ -6,7 +6,7 @@
   "backstory": "Scouts open the account, contact machines close the gap and heavy platforms complete the autonomous column. The arsenal recruits its full roster before considering luxury improvements.",
   "strategy": {
     "key": "swarm",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

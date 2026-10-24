@@ -6,7 +6,7 @@
   "backstory": "The war foundry builds an infantry base, then adds specialised assault and support frames. Recruitment takes priority over polishing an expensive flagship.",
   "strategy": {
     "key": "swarm",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

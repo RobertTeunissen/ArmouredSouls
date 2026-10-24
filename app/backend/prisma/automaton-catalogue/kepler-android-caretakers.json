@@ -6,7 +6,7 @@
   "backstory": "Two caretaker androids divide protection and measured ranged work. Their workshop keeps a balanced partner budget and treats exceptional source abilities as narrative context.",
   "strategy": {
     "key": "duo",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

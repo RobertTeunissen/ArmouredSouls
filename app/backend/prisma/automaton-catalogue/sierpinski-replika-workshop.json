@@ -6,7 +6,7 @@
   "backstory": "A repaired synthetic technician relies on practical close-range equipment and a guarded credit reserve. The workshop concentrates upgrades and refinement on one functioning frame.",
   "strategy": {
     "key": "paragon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

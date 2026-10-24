@@ -6,7 +6,7 @@
   "backstory": "YoRHa Combat Division enters the arena with a clear doctrine. Two melee-oriented combatants and a tactical counterpart. Every surviving machine returns to the workshop before the next booking.",
   "strategy": {
     "key": "trio",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

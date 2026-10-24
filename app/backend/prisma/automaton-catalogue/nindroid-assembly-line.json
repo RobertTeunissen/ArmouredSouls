@@ -6,7 +6,7 @@
   "backstory": "Nindroid Assembly Line enters the arena with a clear doctrine. Numerous agile melee-oriented machines. Every surviving machine returns to the workshop before the next booking.",
   "strategy": {
     "key": "swarm",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {
