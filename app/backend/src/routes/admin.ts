@@ -4,6 +4,7 @@ import battleTriggerRoutes from './adminBattleTriggers';
 import maintenanceRoutes from './adminMaintenance';
 import analyticsRoutes from './adminAnalytics';
 import usersRoutes from './adminUsers';
+import schedulerRoutes from './adminScheduler';
 
 const router = express.Router();
 
@@ -13,5 +14,6 @@ router.use('/', maintenanceRoutes);
 router.use('/', analyticsRoutes);
 router.use('/', usersRoutes);
 router.use('/', battleTriggerRoutes);
+router.use('/', schedulerRoutes);
 
 export default router;

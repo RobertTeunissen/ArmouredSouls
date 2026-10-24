@@ -155,10 +155,6 @@ jest.mock('../../../src/services/koth/kothMatchmakingService', () => ({
   runKothMatchmaking: jest.fn().mockResolvedValue(0),
 }));
 
-jest.mock('../../../src/services/practice-arena/practiceArenaMetrics', () => ({
-  __esModule: true,
-  practiceArenaMetrics: { flushAndReset: jest.fn() },
-}));
 
 jest.mock('../../../src/services/common/eventLogger', () => ({
   __esModule: true,

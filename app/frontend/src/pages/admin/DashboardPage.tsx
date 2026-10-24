@@ -3,14 +3,15 @@
  * need me?
  *
  * Sections: status strip (cycle, settlement, scheduler, queue), KPI cards,
- * "Needs attention", battle activity per mode, and a collapsed meta snapshot.
- * The status strip and "Needs attention" are system-wide; the filter (kept in
- * the URL as `?filter=`) applies to robots, battles and the meta snapshot.
+ * "Needs attention" and battle activity per mode. The status strip and
+ * "Needs attention" are system-wide; the filter (kept in the URL as
+ * `?filter=`) applies to robots and battles. What stables choose (stances,
+ * loadouts, yield thresholds, facilities, weapons) is on the Meta page.
  * The page title comes from AdminLayout's header.
  *
  * Definitions of every number: docs/guides/ADMIN_PANEL_GUIDE.md §Dashboard.
  */
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import type { UserFilterType } from '../../components/admin/shared';
 import { DEFAULT_DASHBOARD_FILTER, readDashboardFilter } from '../../utils/adminDashboardFormat';
@@ -18,7 +19,6 @@ import {
   BattleActivityTable,
   DashboardToolbar,
   KpiRow,
-  MetaSnapshot,
   NeedsAttentionPanel,
   StatusStrip,
 } from '../../components/admin/dashboard';
@@ -28,7 +28,6 @@ function AdminDashboardPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const filter = readDashboardFilter(searchParams.get('filter'));
   const { status, kpis, activity, lastUpdated, refresh } = useAdminDashboard(filter);
-  const [refreshToken, setRefreshToken] = useState(0);
 
   const changeFilter = useCallback((next: UserFilterType): void => {
     setSearchParams((params) => {
@@ -38,11 +37,6 @@ function AdminDashboardPage() {
       return updated;
     }, { replace: true });
   }, [setSearchParams]);
-
-  const handleRefresh = useCallback((): void => {
-    refresh();
-    setRefreshToken((token) => token + 1);
-  }, [refresh]);
 
   const refreshing = (status.loading && status.data !== null)
     || (kpis.loading && kpis.data !== null)
@@ -54,9 +48,10 @@ function AdminDashboardPage() {
       <DashboardToolbar
         filter={filter}
         onFilterChange={changeFilter}
+        scopeNote="Filter applies to robots and battles"
         lastUpdated={lastUpdated}
         refreshing={refreshing}
-        onRefresh={handleRefresh}
+        onRefresh={refresh}
       />
 
       <StatusStrip status={status.data} loading={status.loading} error={status.error} now={now} />
@@ -71,8 +66,6 @@ function AdminDashboardPage() {
         />
         <BattleActivityTable activity={activity.data} loading={activity.loading} error={activity.error} />
       </div>
-
-      <MetaSnapshot filter={filter} refreshToken={refreshToken} />
     </div>
   );
 }

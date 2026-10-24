@@ -2,12 +2,15 @@
 
 **Project**: Armoured Souls
 **Document Type**: Product Requirements Document (PRD)
-**Version**: v1.8
-**Last Updated**: October 19, 2026
+**Version**: v1.11
+**Last Updated**: October 23, 2026
 **Status**: ✅ Implemented
 **Owner**: Robert Teunissen
 
 **Revision History**:
+- v1.11 (Oct 23, 2026): `practice-arena/practiceArenaUsageService` replaces the in-memory `practiceArenaMetrics` (admin Practice Arena redesign).
+- v1.10 (Oct 23, 2026): Season Control redesign: `season/adminSeasonRolloverRunService`, `season/adminSeasonStateService`, `season/seasonRolloverHistoryService`, `season/rolloverProgress` (stage progress of `seasonRolloverService`).
+- v1.9 (Oct 23, 2026): Persistent scheduler run history (`cycle/schedulerRunStore`, `schedulerMissedRuns`, `schedulerHistoryService`), background manual runs and `admin/adminBulkCycleRunService` (Cycle Controls redesign).
 - v1.8 (Oct 19, 2026): Added `robot/robotReferenceCleanup`; `resetService` now works for stables with battle history (#294).
 - v1.7 (Oct 19, 2026): Listed `unifiedFacilityROIService` and the recorded facility returns modules in `economy/` (#542).
 - v1.6 (Oct 15, 2026): Added `battle/combatReadiness`, `battle/walkoverClaim`, `battle/forfeitResolutionService` and `battle/matchFailurePolicy`; `executeSoloTournamentRound` and `resolveBelowMinimumField` (#536).
@@ -90,7 +93,11 @@ Admin panel operations — stats dashboards, cycle execution, battle viewer, HP 
 | `adminQueuedMatches` | Queued matches per mode, system-wide (scheduled matches + outstanding bracket rows) |
 | `adminPlayerActivityService`, `adminKpiSnapshotService` | Login-based human-player counts; one `admin_kpi_snapshots` row per competitive settlement (non-fatal) for 7-day trends |
 | `adminThresholds` | Shared thresholds: bankruptcy risk, inactivity, settlement overdue, stuck-match grace |
-| `adminCycleService` | Bulk cycle execution (`POST /api/admin/cycles/bulk`), snapshot backfill |
+| `adminCycleService` | Bulk cycle execution (`executeBulkCycles`), snapshot backfill |
+| `season/adminSeasonRolloverRunService` | `POST /api/admin/seasons/rollover`: the admin rollover under the scheduler lock (`seasonRollover`), recorded as a run; `startAdminRollover` runs in the background (202), `runAdminRollover` waits. 409 while a rollover of either trigger is queued or running |
+| `season/adminSeasonStateService` | `GET /api/admin/seasons/state`: season state, configuration, `startedAt`, `nextSettlementAt`, the active rollover with stage progress |
+| `season/seasonRolloverHistoryService` | `GET /api/admin/seasons/history`: completed seasons with their rollover and failed attempts, from `seasonRollover` runs and older `season_rollover` audit rows |
+| `adminBulkCycleRunService` | `POST /api/admin/cycles/bulk`: runs bulk cycles under the scheduler lock and records them in the run history (`bulkCycles`); `startBulkCycles` runs in the background (202), `runBulkCycles` waits. 409 while one is active |
 | `adminBattleService` | Battle list queries, battle detail for admin viewer |
 | `adminMaintenanceService` | HP recalculation, robot repair (admin-triggered) |
 
@@ -201,7 +208,10 @@ Automated game loop — the scheduler and analytics snapshot system.
 
 | Service | Purpose |
 |---------|---------|
-| `cycleScheduler` | 10 independent cron jobs (league, team2v2League, tournament, tagTeam, koth, team3v3League, team2v2Tournament, grandMelee, team3v3Tournament, settlement) — all league modes use unified matchmaking pipeline |
+| `cycleScheduler` | 10 independent cron jobs (league, team2v2League, tournament, tagTeam, koth, team3v3League, team2v2Tournament, grandMelee, team3v3Tournament, settlement) — all league modes use unified matchmaking pipeline. Handlers are registered even with `SCHEDULER_ENABLED=false` (only cron is gated), so jobs can always be run by hand: `startManualRun` (background, 409 when already active), `triggerJob` (waits), `runExclusive` (the bulk runner under the same lock). Every run is recorded through `schedulerRunStore` |
+| `schedulerRunStore` | Persistent run history: one `scheduler_processes` row per backend start with a 60 s heartbeat; `scheduler_job_runs` queued → running → success / failed / skipped; marks an earlier process's unfinished runs `interrupted`. All writes non-fatal |
+| `schedulerMissedRuns` | Pure: daily slots with no covering cron/resume run (15 min grace), with the downtime window when the backend was down |
+| `schedulerHistoryService` | Cycle Controls reads: `GET /api/admin/scheduler/overview` (status strip, slots with last run, missed runs), `GET /api/admin/scheduler/runs` (runs + restart markers + missed, paginated), `GET /api/admin/scheduler/runs/:id` |
 | `schedulerWindow` | Leaf module: `nextScheduledJobRunAt` from the configured cron schedules (null when the scheduler is off); feeds the Automaton Turn_Step deadline without importing `cycleScheduler` |
 | `cycleSnapshotService` | Aggregates AuditLog events into CycleSnapshot for fast analytics |
 | `cycleCsvExportService` | Exports cycle data to CSV files |
@@ -281,8 +291,8 @@ Offline practice battles against synthetic opponents.
 
 | Service | Purpose |
 |---------|---------|
-| `practiceArenaService` | Synthetic opponent generation, practice battle execution (no DB writes) |
-| `practiceArenaMetrics` | Daily practice battle stats (in-memory, flushed during settlement) |
+| `practiceArenaService` | Synthetic opponent generation, practice battle execution (no battle records; stable practice counter and achievements only) |
+| `practiceArenaUsageService` | One `practice_arena_events` row per request (battle, rate_limited, cycle_busy; never fails the request) and the admin overview (`GET /api/admin/practice-arena/overview`, `/stats`): UTC days, season totals, top practitioners, usage, unavailable time from scheduler runs |
 
 ### robot/
 Robot management — the full lifecycle from creation to combat.
@@ -377,7 +387,7 @@ slot until fought. See `scheduling/eventScheduleScope` below and
 
 ## Cron Schedule
 
-The production scheduler (`cycleScheduler.ts`) fires 10 independent cron jobs daily. Each job acquires an in-memory mutex lock before executing, preventing overlap. Settlement at 00:00 UTC closes the cycle.
+The production scheduler (`cycleScheduler.ts`) fires 10 independent cron jobs daily. Each job acquires an in-memory mutex lock before executing, preventing overlap; manual runs and the admin bulk runner take the same lock. Every run (cron, manual, resumed settlement, bulk) is recorded in `scheduler_job_runs`. Settlement at 00:00 UTC closes the cycle.
 
 ### Season phase gating (Spec #45)
 

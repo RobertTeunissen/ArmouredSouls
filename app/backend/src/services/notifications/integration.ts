@@ -18,4 +18,6 @@ export interface JobContext {
   tournamentMaxRounds?: number;
   tournamentScheduled?: boolean;
   matchesCompleted?: number;
+  /** Settlement: the financial cycle it closed (run history only; not in messages). */
+  cycleNumber?: number;
 }

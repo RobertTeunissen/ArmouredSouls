@@ -353,14 +353,22 @@ export async function extendCurrentSeason(additionalCycles: number): Promise<Sea
   return getCurrentSeason();
 }
 
-/** Set how many preparation cycles remain in the current Preparation_Phase. */
+/**
+ * Set how many preparation cycles remain in the current Preparation_Phase.
+ *
+ * The window is the configured Preparation_Length_Cycles, so at most that many
+ * can remain; a larger value is rejected rather than silently clamped (it used
+ * to be clamped, which made "set 3" on a 2-cycle window quietly mean 2).
+ */
 export async function setRemainingPreparationCycles(remaining: number): Promise<SeasonState> {
   const config = loadEnvConfig();
-  if (!Number.isInteger(remaining) || remaining < 0 || remaining > 7) {
+  const max = config.preparationLengthCycles;
+  if (!Number.isInteger(remaining) || remaining < 0 || remaining > max) {
     throw new SeasonError(
-      SeasonErrorCode.CONFIRMATION_REQUIRED,
-      'Remaining preparation cycles must be a whole number between 0 and 7',
+      SeasonErrorCode.INVALID_PREPARATION_CYCLES,
+      `Remaining preparation cycles must be a whole number from 0 to ${max} (the preparation window)`,
       400,
+      { min: 0, max },
     );
   }
   const row = await getOrCreateActiveSeason();
@@ -373,9 +381,7 @@ export async function setRemainingPreparationCycles(remaining: number): Promise<
   }
   await prisma.season.update({
     where: { id: row.id },
-    data: {
-      preparationCyclesCompleted: Math.max(0, config.preparationLengthCycles - remaining),
-    },
+    data: { preparationCyclesCompleted: max - remaining },
   });
   invalidateSeasonCache();
   return getCurrentSeason();

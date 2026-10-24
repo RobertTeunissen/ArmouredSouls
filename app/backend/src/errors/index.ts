@@ -14,3 +14,4 @@ export * from './subscriptionErrors';
 export * from './seasonErrors';
 export * from './financialErrors';
 export * from './automatonErrors';
+export * from './schedulerErrors';

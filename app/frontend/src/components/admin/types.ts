@@ -3,13 +3,6 @@
  * Extracted from AdminPage.tsx for use across decomposed tab components.
  */
 
-export interface SessionLogEntry {
-  timestamp: string;
-  type: 'success' | 'info' | 'warning' | 'error';
-  message: string;
-  details?: unknown;
-}
-
 export interface SystemStats {
   robots: {
     total: number;

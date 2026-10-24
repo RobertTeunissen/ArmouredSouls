@@ -37,7 +37,7 @@ describe('purgeHistory', () => {
 
     expect(rowsDeleted.search_analytics_events).toBe(7);
     expect(rowsDeleted.search_analytics_failures).toBe(0);
-    expect(prisma.$queryRawUnsafe).toHaveBeenCalledTimes(11);
+    expect(prisma.$queryRawUnsafe).toHaveBeenCalledTimes(12);
     expect(prisma.$executeRawUnsafe).toHaveBeenCalledWith(
       expect.stringContaining('"search_analytics_events"'),
     );

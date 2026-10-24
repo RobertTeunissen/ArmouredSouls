@@ -180,12 +180,6 @@ jest.mock('../../services/admin/adminCycleService', () => ({
   executeBulkCycles: jest.fn(),
   backfillCycleSnapshots: jest.fn(),
 }));
-jest.mock('../../services/practice-arena/practiceArenaMetrics', () => ({
-  practiceArenaMetrics: {
-    getStats: jest.fn().mockReturnValue({}),
-    getHistory: jest.fn().mockResolvedValue([]),
-  },
-}));
 jest.mock('../../services/auth/passwordResetService', () => ({
   resetPassword: jest.fn(),
 }));

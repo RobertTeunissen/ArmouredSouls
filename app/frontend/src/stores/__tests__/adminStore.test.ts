@@ -1,9 +1,11 @@
 /**
  * Unit tests for useAdminStore
  *
- * Tests fetchStats, clearCache, clear, sessionLog CRUD, TTL expiry, force refresh.
+ * Tests fetchStats, clearCache, clear, TTL expiry, force refresh. The session
+ * log was retired with the Cycle Controls redesign (run history is persistent
+ * on the backend), so its CRUD tests went with it.
  *
- * Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7
+ * Requirements: 4.1, 4.2, 4.3, 4.5, 4.6, 4.7
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
@@ -73,11 +75,8 @@ function resetStore(): void {
     statsLastFetched: null,
     statsLastFilter: null,
     statsLoading: false,
-    schedulerStatus: null,
-    schedulerLastFetched: null,
     securitySummary: null,
     securityLastFetched: null,
-    sessionLog: [],
     ttlMs: 60_000,
   });
 }
@@ -210,10 +209,8 @@ describe('clearCache', () => {
     await useAdminStore.getState().fetchStats();
     expect(useAdminStore.getState().systemStats).not.toBeNull();
 
-    // Also set scheduler and security data
+    // Also set security data
     useAdminStore.setState({
-      schedulerStatus: { active: true, runningJob: null, queue: [], jobs: [] },
-      schedulerLastFetched: Date.now(),
       securitySummary: { totalEvents: 5, bySeverity: { info: 3, warning: 1, critical: 1 }, activeAlerts: 1, flaggedUserIds: [] },
       securityLastFetched: Date.now(),
     });
@@ -225,19 +222,8 @@ describe('clearCache', () => {
     expect(state.statsLastFetched).toBeNull();
     expect(state.statsLastFilter).toBeNull();
     expect(state.statsLoading).toBe(false);
-    expect(state.schedulerStatus).toBeNull();
-    expect(state.schedulerLastFetched).toBeNull();
     expect(state.securitySummary).toBeNull();
     expect(state.securityLastFetched).toBeNull();
-  });
-
-  it('should not affect session log', () => {
-    useAdminStore.getState().addSessionLog('info', 'test entry');
-    expect(useAdminStore.getState().sessionLog).toHaveLength(1);
-
-    useAdminStore.getState().clearCache();
-
-    expect(useAdminStore.getState().sessionLog).toHaveLength(1);
   });
 });
 
@@ -246,16 +232,14 @@ describe('clearCache', () => {
 // ----------------------------------------------------------------
 
 describe('clear', () => {
-  it('should reset everything including session log', async () => {
+  it('should reset everything', async () => {
     const stats = makeSystemStats(10);
     mockedApiGet.mockResolvedValue({ data: stats });
 
-    // Populate cache and session log
     await useAdminStore.getState().fetchStats();
-    useAdminStore.getState().addSessionLog('info', 'test entry');
     useAdminStore.setState({
-      schedulerStatus: { active: true, runningJob: null, queue: [], jobs: [] },
-      schedulerLastFetched: Date.now(),
+      securitySummary: { totalEvents: 1, bySeverity: { info: 1, warning: 0, critical: 0 }, activeAlerts: 0, flaggedUserIds: [] },
+      securityLastFetched: Date.now(),
     });
 
     useAdminStore.getState().clear();
@@ -265,128 +249,16 @@ describe('clear', () => {
     expect(state.statsLastFetched).toBeNull();
     expect(state.statsLastFilter).toBeNull();
     expect(state.statsLoading).toBe(false);
-    expect(state.schedulerStatus).toBeNull();
-    expect(state.schedulerLastFetched).toBeNull();
     expect(state.securitySummary).toBeNull();
     expect(state.securityLastFetched).toBeNull();
-    expect(state.sessionLog).toEqual([]);
   });
 
-  it('should remove session log from localStorage', () => {
-    useAdminStore.getState().addSessionLog('info', 'test entry');
-    expect(storage['admin_session_log']).toBeDefined();
+  it('should remove the retired session log from localStorage', () => {
+    storage['admin_session_log'] = '[]';
 
     useAdminStore.getState().clear();
 
     expect(storage['admin_session_log']).toBeUndefined();
-  });
-});
-
-// ----------------------------------------------------------------
-// addSessionLog
-// ----------------------------------------------------------------
-
-describe('addSessionLog', () => {
-  it('should add entry to sessionLog array', () => {
-    useAdminStore.getState().addSessionLog('success', 'Operation completed');
-
-    const log = useAdminStore.getState().sessionLog;
-    expect(log).toHaveLength(1);
-    expect(log[0].type).toBe('success');
-    expect(log[0].message).toBe('Operation completed');
-    expect(log[0].timestamp).toBeTypeOf('string');
-  });
-
-  it('should prepend new entries (newest first)', () => {
-    useAdminStore.getState().addSessionLog('info', 'First');
-    useAdminStore.getState().addSessionLog('warning', 'Second');
-
-    const log = useAdminStore.getState().sessionLog;
-    expect(log).toHaveLength(2);
-    expect(log[0].message).toBe('Second');
-    expect(log[1].message).toBe('First');
-  });
-
-  it('should include optional details', () => {
-    useAdminStore.getState().addSessionLog('error', 'Failed', { code: 500, reason: 'timeout' });
-
-    const entry = useAdminStore.getState().sessionLog[0];
-    expect(entry.details).toEqual({ code: 500, reason: 'timeout' });
-  });
-
-  it('should persist to localStorage', () => {
-    useAdminStore.getState().addSessionLog('info', 'Persisted entry');
-
-    const stored = localStorage.getItem('admin_session_log');
-    expect(stored).not.toBeNull();
-    const parsed = JSON.parse(stored as string);
-    expect(parsed).toHaveLength(1);
-    expect(parsed[0].message).toBe('Persisted entry');
-  });
-
-  it('should cap at MAX_SESSION_LOG_ENTRIES (100)', () => {
-    for (let i = 0; i < 105; i++) {
-      useAdminStore.getState().addSessionLog('info', `Entry ${i}`);
-    }
-
-    expect(useAdminStore.getState().sessionLog).toHaveLength(100);
-    // Most recent entry should be the last one added
-    expect(useAdminStore.getState().sessionLog[0].message).toBe('Entry 104');
-  });
-});
-
-// ----------------------------------------------------------------
-// clearSessionLog
-// ----------------------------------------------------------------
-
-describe('clearSessionLog', () => {
-  it('should empty sessionLog array', () => {
-    useAdminStore.getState().addSessionLog('info', 'Entry 1');
-    useAdminStore.getState().addSessionLog('info', 'Entry 2');
-    expect(useAdminStore.getState().sessionLog).toHaveLength(2);
-
-    useAdminStore.getState().clearSessionLog();
-
-    expect(useAdminStore.getState().sessionLog).toEqual([]);
-  });
-
-  it('should remove session log from localStorage', () => {
-    useAdminStore.getState().addSessionLog('info', 'Entry');
-    expect(storage['admin_session_log']).toBeDefined();
-
-    useAdminStore.getState().clearSessionLog();
-
-    expect(storage['admin_session_log']).toBeUndefined();
-  });
-});
-
-// ----------------------------------------------------------------
-// exportSessionLog
-// ----------------------------------------------------------------
-
-describe('exportSessionLog', () => {
-  it('should create and trigger a download', () => {
-    // Mock DOM APIs for download
-    const mockClick = vi.fn();
-    const mockCreateElement = vi.spyOn(document, 'createElement').mockReturnValue({
-      href: '',
-      download: '',
-      click: mockClick,
-    } as unknown as HTMLAnchorElement);
-    const mockCreateObjectURL = vi.fn().mockReturnValue('blob:test-url');
-    const mockRevokeObjectURL = vi.fn();
-    global.URL.createObjectURL = mockCreateObjectURL;
-    global.URL.revokeObjectURL = mockRevokeObjectURL;
-
-    useAdminStore.getState().addSessionLog('info', 'Export test');
-    useAdminStore.getState().exportSessionLog();
-
-    expect(mockCreateElement).toHaveBeenCalledWith('a');
-    expect(mockCreateObjectURL).toHaveBeenCalled();
-    expect(mockClick).toHaveBeenCalled();
-    expect(mockRevokeObjectURL).toHaveBeenCalledWith('blob:test-url');
-
-    mockCreateElement.mockRestore();
   });
 });
 

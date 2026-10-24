@@ -21,10 +21,11 @@ All pages manage their own data fetching. The sidebar collapses to icons on narr
 | Section | Page | Route | Description |
 |---------|------|-------|-------------|
 | **Overview** | Dashboard | `/admin/dashboard` | Status strip, needs attention, player KPIs, battle activity per mode |
-| **Game Operations** | Cycle Controls | `/admin/cycles` | Scheduler status, manual triggers, bulk cycle runner |
-| | Practice Arena | `/admin/practice-arena` | Practice battle usage and daily trends |
+| **Game Operations** | Cycle Controls | `/admin/cycles` | Running job, daily schedule with Run buttons, persistent run history (restarts, missed and interrupted runs), bulk cycle runner |
+| | Practice Arena | `/admin/practice-arena` | Practice usage per UTC day, refusals and unavailable time, top practitioners, how it is used |
 | **Battle Data** | Battle Logs | `/admin/battles` | Paginated battle history with type filters and detail slide-over |
 | | Robot Stats | `/admin/robot-stats` | Attribute analysis, outlier detection, win rate correlation |
+| | Meta | `/admin/meta` | What stables choose: stances, loadouts, yield thresholds, facilities, weapons |
 | | League Health | `/admin/league-health` | Per-league robot counts, ELO averages, instance counts |
 | | Weapons | `/admin/weapons` | Weapon popularity, type breakdown, ownership stats |
 | **Player Management** | Players | `/admin/players` | Player list with tabs (New Players, Auto-Generated, At-Risk), churn risk, engagement, search, detail slide-over |
@@ -73,11 +74,12 @@ Sections, top to bottom:
 3. **KPI cards** — Active players (7 days), New players (7 days), Inactive players (3+ days), Battle-ready robots.
 4. **Needs attention** (system-wide) — open items first, each linking to the page that resolves it; OK items collapse to a muted ✓ line.
 5. **Battle activity** — one row per battle mode plus Total. Below 768 px a Volume / Rates toggle switches columns.
-6. **Meta snapshot** — what stables choose: stances, loadouts, yield thresholds, facilities and weapons. Collapsed by default; fetches `/api/admin/stats` only when opened. Tier distributions (1v1, 2v2, 3v3, Tag Team) are on League Health.
+
+What stables choose (stances, loadouts, yield thresholds, facilities, weapons) is on the [Meta](#meta-adminmeta) page; tier distributions are on League Health.
 
 Below 1280 px the sections stack in one column. Below 768 px the admin sidebar is replaced by a hamburger menu that opens the navigation in a drawer (all admin pages).
 
-**Filter scope.** The filter applies to Battle-ready robots, the Last cycle and Season columns of Battle activity, and the Meta snapshot. The status strip, Needs attention and the Queued column are system-wide. The three player cards are always human stables, because they are login-based and bots and Automatons never log in.
+**Filter scope.** The filter applies to Battle-ready robots and the Last cycle and Season columns of Battle activity. The status strip, Needs attention and the Queued column are system-wide. The three player cards are always human stables, because they are login-based and bots and Automatons never log in.
 
 **Definitions**
 
@@ -97,16 +99,77 @@ Below 1280 px the sections stack in one column. Below 768 px the admin sidebar i
 | Battle activity · Walkovers | Byes and battle-time forfeits (`is_bye_match` on the scheduling row, a forfeited participant, or a bracket row with status `forfeit`). Counted as battles, left out of the rates. |
 | Battle activity · Queued | System-wide: `scheduled_matches_v2` rows still `scheduled`, plus outstanding bracket rows of active tournaments that already have a participant. |
 | Draw % / Kill % / Avg time | Over fought battles. Draw = `winner_id IS NULL AND winning_side IS NULL` (team battles record their result in `winning_side`); n/a for KotH and Grand Melee. Kill = at least one participant `destroyed`. |
-| Meta · Facilities | Stables owning each facility at level ≥ 1, and their average level. |
-| Meta · Weapons equipped | Owned weapons in any robot's main **or** offhand slot (`equippedInventoryItems`). |
 
-**API:** `GET /api/admin/dashboard/status` (no filter), `GET /api/admin/dashboard/kpis?filter=`, `GET /api/admin/dashboard/battle-activity?filter=&fresh=` (cached 60 s per filter; `fresh=true` bypasses), `GET /api/admin/stats?filter=` (Meta snapshot). All require `authenticateToken` + `requireAdmin`. `kpis.activeUsersLast7d` is deprecated (it counted robots updated by battles); use `humanPlayers.active7d`.
+**API:** `GET /api/admin/dashboard/status` (no filter), `GET /api/admin/dashboard/kpis?filter=`, `GET /api/admin/dashboard/battle-activity?filter=&fresh=` (cached 60 s per filter; `fresh=true` bypasses). All require `authenticateToken` + `requireAdmin`. `kpis.activeUsersLast7d` is deprecated (it counted robots updated by battles); use `humanPlayers.active7d`.
+
+### Meta (`/admin/meta`)
+
+An overview of what stables choose, for the selected stable type. It moved off the Dashboard (where it was the collapsed "Meta snapshot") so the landing page stays short. The toolbar is the Dashboard's: the same filter (`?filter=`, default `real`), "Last updated" and Refresh.
+
+Sections (desktop: three cards, then Yield thresholds beside Facilities; they stack below 1280 px and 768 px):
+
+| Section | Shows |
+|---|---|
+| Stances / Loadouts | One stacked bar per distribution plus a legend: share and robot count per option, largest first. |
+| Weapons | Owned, Equipped (owned weapons in any robot's main **or** offhand slot, `equippedInventoryItems`) and the equip rate; links to Weapons. |
+| Yield thresholds | One column per threshold in use (labels at 0–20% in steps of 5 and on the highest), the most common value highlighted. Above it: Most common (with its share), Median (the threshold of the middle robot) and Above 20% (robots and share). Exact counts per threshold are in each column's tooltip and in a screen-reader table. |
+| Facilities | Stables owning each facility at level ≥ 1 and their average level (L), most owned first, with a bar relative to the most owned; two columns from 640 px. |
+
+All counts are robots (or stables, for Facilities) owned by users in the filter. With All or Auto-generated, generated stables dominate and their choices are randomised, so near-even splits are expected; Real players shows what people pick. Usage share next to win rate is planned as a follow-up.
+
+**API:** `GET /api/admin/stats?filter=` (`authenticateToken` + `requireAdmin`), read by its own filter-scoped loader (`hooks/useMetaOverview.ts`): a filter change aborts the previous request, so a late response for another filter is never shown.
 
 ### Cycle Controls (`/admin/cycles`)
 
-Scheduler status panel showing active state, running job, and queue. Manual trigger buttons with confirmation dialogs for: matchmaking, battles, league rebalancing, repairs, daily finances, KotH. Bulk cycle runner with configurable cycle count (1-100), tournament/KotH/finance/user-generation toggles. Session log with export and clear.
+Answers three questions: what is running right now and for how long, did every slot run, and what happened around a deploy. All times are UTC. The page polls every 10 s while a job is queued or running and every 60 s otherwise.
 
-**API:** `GET /api/admin/scheduler/status`, `POST /api/admin/cycles/bulk`, and individual operation endpoints
+Sections, top to bottom:
+
+1. **Status strip** — Season and cycle (phase, season day); Scheduler (Active / Disabled, and since when this backend runs, with `DEPLOY_TAG` when set); **Running now** (job, start, elapsed time); Queue (jobs waiting for the lock); Next (next slot and countdown, or "after the running job").
+2. **Missed-run banner** — shown when a slot did not run in the last 7 days; "Show in history" filters the history to problems.
+3. **Daily schedule** — the ten slots in time order. Per slot: last run (day, time, trigger), status, duration (`3s`, `4m 12s`, `1h 50m`), one-line result ("669 battles", "Round 3/12 · 512 matches", "Cycle 81 closed") and **Run**. A queued or running slot shows Queued / Running instead of the button. Below 768 px the table becomes a list.
+4. **Run history** — runs, **Backend restarted** markers and **Missed** runs, newest first. Filters: job (including Bulk cycles), Problems only (failed, interrupted, missed, restarts), last 24 h / 7 / 14 / 30 days. 25 entries per page.
+5. **Testing tools** (collapsed) — the bulk cycle runner: cycles (1–100) and options (stable generation **off** by default, tournaments, KotH, finances), an estimate from the last run of every slot on this environment, and the state of an active bulk run.
+
+**Run buttons.** Each opens a confirmation describing the job (settlement and bulk runs get the red confirm). Confirming starts the job **in the background**: the server answers at once and the job waits for the scheduler lock, then runs exactly like its cron run (repair, preparation gate, notifications). A slot can take 20 minutes on a full environment; the proxy cuts responses at 30 s, which is why runs no longer wait for the result. Starting a job that is already queued or running answers 409 ("already queued or running"). Jobs can be run by hand with `SCHEDULER_ENABLED=false` too (local, CI); only automated scheduling is off then.
+
+**Definitions**
+
+| Term | Definition |
+|---|---|
+| Run | One row of `scheduler_job_runs`: job, trigger (`cron`, `manual`, `resume` for a settlement resumed at startup, `bulk`), who started it, status, queued / started / finished, duration, result summary or error. Written for every run, never failing the job. A bulk run counts only cycles that ran through as completed; if any cycle threw, the run is Failed and its error lists the failed cycles. |
+| Queued / Running | Waiting for the scheduler lock / holding it. |
+| Skipped | A battle job that returned at once because the season is in its Preparation_Phase. |
+| Interrupted | The backend stopped (usually a deploy) before the run finished. Marked at the next start; it ends at the stopped process's last heartbeat. |
+| Backend restarted | A `scheduler_processes` row: one per backend start, with a 60 s heartbeat. "Down X–Y" is the previous process's last heartbeat to this start. |
+| Missed | A daily slot with no cron or resumed run queued between 1 min before and 15 min after it, while the scheduler was enabled. A later manual run is its own row and does not hide the miss. Slots before history tracking started, while the scheduler was disabled, or less than 15 min ago are never missed. A miss inside a restart gap shows that downtime. |
+
+Season rollovers are runs too (job **Season rollover**, `seasonRollover`): trigger `manual` from Season Control, `cron` when the settlement rolls the season over. They appear in Run history and in the job filter.
+
+**API:** `GET /api/admin/scheduler/overview`, `GET /api/admin/scheduler/runs?jobName&problemsOnly&days(1–30)&page&limit`, `GET /api/admin/scheduler/runs/:id`, `POST /api/admin/scheduler/runs` `{ jobName }` → 202 `{ run }` (400 unknown job, 409 already active), `POST /api/admin/cycles/bulk` with `background: true` → 202 `{ run }` (without it the call waits and returns the full result, as before; 409 while a bulk run is active). `GET /api/admin/scheduler/status` (in-memory state) and `POST /api/admin/scheduler/trigger/:jobName` (waits for the job) remain for scripts; the page no longer uses them. All require `authenticateToken` + `requireAdmin`; manual and bulk starts write an `admin_audit_logs` row.
+
+### Season Control (`/admin/seasons`)
+
+Answers: where is the season, when does it roll over, what would a rollover do, and how did earlier rollovers go. All times are UTC. The page polls every 5 s while a rollover is queued or running and every 60 s otherwise.
+
+Sections, top to bottom:
+
+1. **Season timeline** — season number and phase; cycle (or preparation day) of the length with a progress bar; estimated dates; the configuration (season length, marked "extended" after an Extend, preparation length, countdown, accolade depth, images kept per stable). Competitive: player countdown start, rollover, next season's competitive start. Preparation: competitive start, rollover, balance-change window. Season 0 explains that only a manual rollover closes it.
+2. **Season rollover** — what it does, **Preview rollover** (on demand) and **Roll over Season N…**. The preview splits stables by type: human players and Automatons (archived, then reset) and generated stables (deleted; results stay in the archive), lists retained images, and groups the rows it empties into Battles and summaries / Ledger, audit and snapshots / Standings, tournaments and other, each expanding to per-table counts. While a rollover is queued or running (either trigger) the card shows who or what started it, the elapsed time and the five stages live: Archive, Verify, Purge and reset (with a generated-stables bar), Clean up, Automaton turns.
+3. **Rollover history** — every completed season (dates, cycles, stables archived, generated count) with the rollover that closed it: when, Admin · name or Settlement, duration, what it archived, deleted and emptied, and Details (stage durations). Failed and interrupted attempts fold under the season they tried to close, with the stage they stopped at. Failed attempts on the current season come first.
+4. **Testing tools** (collapsed) — Extend the season (1–365 cycles; shows "100 → 105 cycles · rollover moves to ~15 Nov" before confirming) and Remaining preparation cycles (0 to the configured preparation length, only during a preparation phase).
+
+**Roll over.** The dialog repeats the preview's counts and needs the phrase `CONFIRM_ROLLOVER` typed. It is bound to the season it was opened for, and that season number is sent for you: if the page's polling finds that season closed (or a rollover started) while the dialog is open, the confirm button is disabled until you reopen it. Confirming starts the rollover **in the background** under the scheduler lock (scheduled jobs wait for it), because a rollover on a full environment can outlast the proxy's 30 s response timeout. A queued rollover that finds the season changed while it waited (a settlement rolled it over) stops without changing anything. A second start while one is queued or running answers 409. When a rollover the page watched ends, a message gives the outcome.
+
+**Definitions**
+
+| Term | Definition |
+|---|---|
+| Estimated date | Counted from the scheduler's next settlement at one cycle per day: rollover = next settlement + (remaining − 1) days, next competitive start = rollover + preparation length. No dates when automated scheduling is off. |
+| Rollover run | A `scheduler_job_runs` row of job `seasonRollover` with the stage progress and result in its summary. |
+| Legacy rollover | A rollover from before runs were recorded, read from its `admin_audit_logs` `season_rollover` row (audit rows newer than the first run are not read again). |
+
+**API:** see [Season Management](#season-management-spec-45) below.
 
 ### Players (`/admin/players`)
 
@@ -242,9 +305,28 @@ All filters live in the URL (`period`, `from`, `to`, `count`, `tab`, `q`, `page`
 
 ### Practice Arena (`/admin/practice-arena`)
 
-Current session stats (battles today, unique players, rate limit hits, total since start) and daily usage history table.
+Answers: who practises, how much, how they use the arena, and how often it turned players away. All times UTC; days are UTC days. Every request is recorded (`practice_arena_events`), so the numbers survive restarts and deploys; the table is emptied at season rollover. Refreshes every 60 s.
 
-**API:** `GET /api/admin/practice-arena/stats`
+Sections, top to bottom:
+
+1. **Status strip** — Battles today (requests, yesterday), Players today, This season (battles and players from each stable's practice counter), Refused today (rate limit · during a job), Unavailable yesterday.
+2. **Last 30 days** — battles and refusals (bars) with players (line), and per day: battles, requests, players, rate limited, during a job, unavailable. Three days show; "Show all 30 days" opens the rest. Below 768 px the table becomes a list.
+3. **Top practitioners this season** — the 10 stables with the most practice battles (their season counter) and their last recorded practice ("before {date}" when it predates recording). Names open the player in Players.
+4. **How it is used** — last 30 days: opponent (own vs sparring, own vs own, sparring vs sparring, by battles), sparring partner tier (the opponent's, by battles), batch size (by requests) and the share of requests with what-if overrides.
+
+**Definitions**
+
+| Term | Definition |
+|---|---|
+| Battle / request | One `POST /api/practice-arena/battle` that ran: 1–10 battles. Recorded after the battles ran; a failed simulation is not counted. |
+| Players | Distinct players with at least one battle that day. |
+| Rate limited | Refused (429) by the limit of 30 battles per 15 minutes per player. |
+| During a job | Refused (503 `CYCLE_IN_PROGRESS`) because a scheduler job held the lock. |
+| Unavailable | Time scheduler jobs held the lock that day (the union of run intervals from Cycle Controls' run history), so practice was refused. "—" before run history existed. |
+| "—" in a day row | Before recording started this season (the later of the switch to per-request recording and the season start): no data, not zero. |
+| This season | Sum of `users.total_practice_battles` (reset at rollover), so it covers the whole season, including battles from before recording started. |
+
+**API:** `GET /api/admin/practice-arena/overview` (the page). `GET /api/admin/practice-arena/stats` keeps its original shape, now computed from the events: `history` rows carry `date` as a full ISO timestamp (UTC midnight) and the day's `playerIds`; `totalBattlesSinceStart` is this season's battles. Both require `authenticateToken` + `requireAdmin`.
 
 ### Repair Log (`/admin/repair-log`)
 
@@ -356,19 +438,23 @@ All routes are admin-only and every action writes an `admin_audit_logs` entry.
 
 ### Season state — `GET /api/admin/seasons/state`
 
-Current season number, phase, cycles completed and remaining, whether a rollover is running, whether the phase is an appropriate window for balance changes, and the effective configuration.
+Current season number, phase, cycles completed and remaining, whether a rollover is queued or running (`rolloverInProgress`), whether the phase is an appropriate window for balance changes, and the effective configuration. Also `startedAt` (when the season opened), `nextSettlementAt` (the scheduler's next settlement, `null` with automated scheduling off) and `activeRollover` (`null`, or the queued / running rollover: run id, trigger, who, times and stage progress).
 
 ### Rollover preview — `GET /api/admin/seasons/rollover-preview`
 
-Read-only. Reports player stables and robots that would be archived, generated stables that would be **deleted** (reported separately), rows that would be purged per table, and image files that would be retained versus deleted. Modifies nothing — run this before any rollover.
+Read-only. Reports player stables and robots that would be archived (`humanStables` / `humanRobots` include Automatons), generated stables that would be **deleted**, the same split by type in `breakdown` (`human`, `automaton`, `generated`, using the rollover's own deletion criteria), rows per table for every table the rollover empties, and image files retained versus deleted. Modifies nothing — run this before any rollover.
 
 ### Manual rollover — `POST /api/admin/seasons/rollover`
 
 Requires both `confirm: "CONFIRM_ROLLOVER"` and the current `seasonNumber`. A mismatched season number is rejected, so a stale browser tab cannot reset the wrong season.
 
-This is the **only** way to close Season 0, which has no fixed length. It executes immediately rather than waiting for a settlement boundary.
+This is the **only** way to close Season 0, which has no fixed length. It runs under the scheduler lock (after the running job, if any) rather than waiting for a settlement boundary, and is recorded as a `seasonRollover` run.
 
-Returns archived counts, generated stables deleted, total rows purged, and per-stage durations. A concurrent rollover returns `409`.
+With `background: true` it answers 202 `{ run }` at once (Season Control uses this). Without it the call waits and returns archived counts, generated stables deleted, total rows purged and per-stage durations, as before. A rollover already queued or running (either trigger) returns `409 ROLLOVER_IN_PROGRESS`. A queued rollover whose season is no longer current when it reaches the lock fails with `SEASON_NUMBER_MISMATCH` and changes nothing.
+
+### Rollover history — `GET /api/admin/seasons/history`
+
+Completed seasons, newest first, each with the rollover that closed it and its failed or interrupted attempts, plus `currentSeasonAttempts`. Built from `seasonRollover` runs and, for rollovers before the first run, `admin_audit_logs` `season_rollover` rows.
 
 ### Extend the current season — `POST /api/admin/seasons/extend`
 
@@ -376,7 +462,7 @@ Defers the boundary for the current season only, leaving `SEASON_LENGTH_CYCLES` 
 
 ### Adjust the preparation window — `POST /api/admin/seasons/preparation-cycles`
 
-Sets remaining preparation cycles, 0–7. Rejected when the season is not in its preparation phase.
+Sets remaining preparation cycles, from 0 to `PREPARATION_LENGTH_CYCLES`. A larger value is rejected with `400 INVALID_PREPARATION_CYCLES` (it used to be clamped silently). Rejected when the season is not in its preparation phase.
 
 ### Before a rollover
 

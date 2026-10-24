@@ -45,8 +45,8 @@ const mockPrisma = {
   auditLog: {
     create: jest.fn(),
   },
-  practiceArenaDailyStats: {
-    upsert: jest.fn(),
+  practiceArenaEvent: {
+    create: jest.fn(),
   },
 };
 
@@ -71,16 +71,6 @@ jest.mock('../../src/services/battle/combatMessageGenerator', () => ({
     convertSimulatorEvents: mockConvertSimulatorEvents,
   },
 }));
-
-jest.mock('../../src/services/practice-arena/practiceArenaMetrics', () => {
-  const actual = jest.requireActual('../../src/services/practice-arena/practiceArenaMetrics');
-  return {
-    ...actual,
-    practiceArenaMetrics: {
-      recordBattle: jest.fn(),
-    },
-  };
-});
 
 jest.mock('../../src/config/logger', () => ({
   __esModule: true,
@@ -110,7 +100,7 @@ import {
   getLoadoutBonus,
   type WeaponInventoryLike,
 } from '../../src/shared/utils/robotStats';
-import { PracticeArenaMetrics } from '../../src/services/practice-arena/practiceArenaMetrics';
+import { aggregateDays, mergeIntervals, unavailableByDay, type UsageEvent } from '../../src/services/practice-arena/practiceArenaUsageService';
 import { z } from 'zod';
 
 // ---------------------------------------------------------------------------
@@ -504,42 +494,44 @@ describe('Practice Arena Property Tests', () => {
      */
   });
 
+
   // =========================================================================
-  // Property 14: Metrics counter accuracy
+  // Property 14: Usage counts per UTC day (persisted events)
   // =========================================================================
-  describe('Feature: practice-arena, Property 14: Metrics counter accuracy', () => {
-    it('for any random sequence of recordBattle/recordRateLimitHit calls, getStats returns correct counts', () => {
+  describe('Feature: practice-arena, Property 14: Usage counts per UTC day', () => {
+    it('for any events of today, the day counts battles, requests, players and refusals exactly', () => {
+      const now = new Date('2026-10-23T18:00:00.000Z');
+      const dayStart = Date.parse('2026-10-23T00:00:00.000Z');
       fc.assert(
         fc.property(
           fc.array(
-            fc.oneof(
-              fc.record({ type: fc.constant('battle' as const), userId: fc.integer({ min: 1, max: 100 }) }),
-              fc.record({ type: fc.constant('rateLimit' as const) }),
-            ),
-            { minLength: 0, maxLength: 50 },
+            fc.record({
+              userId: fc.integer({ min: 1, max: 20 }),
+              offsetMs: fc.integer({ min: 0, max: 18 * 3_600_000 - 1 }),
+              outcome: fc.constantFrom('battle', 'rate_limited', 'cycle_busy'),
+              requested: fc.integer({ min: 1, max: 10 }),
+            }),
+            { maxLength: 60 },
           ),
-          (actions) => {
-            const metrics = new PracticeArenaMetrics();
-            let expectedBattles = 0;
-            let expectedRateLimitHits = 0;
-            const uniqueUsers = new Set<number>();
-
-            for (const action of actions) {
-              if (action.type === 'battle') {
-                metrics.recordBattle(action.userId);
-                expectedBattles++;
-                uniqueUsers.add(action.userId);
-              } else {
-                metrics.recordRateLimitHit();
-                expectedRateLimitHits++;
-              }
-            }
-
-            const stats = metrics.getStats();
-            expect(stats.totalBattlesSinceStart).toBe(expectedBattles);
-            expect(stats.battlesToday).toBe(expectedBattles);
-            expect(stats.rateLimitHitsToday).toBe(expectedRateLimitHits);
-            expect(stats.uniquePlayersToday).toBe(uniqueUsers.size);
+          (raw) => {
+            const events: UsageEvent[] = raw.map((event) => ({
+              userId: event.userId,
+              occurredAt: new Date(dayStart + event.offsetMs),
+              outcome: event.outcome,
+              requested: event.requested,
+              battles: event.outcome === 'battle' ? event.requested : 0,
+              matchup: null,
+              botTier: null,
+              overrides: false,
+            }));
+            const [today] = aggregateDays({ events, intervals: [], now, days: 2, recordingSince: new Date(0), lockTrackingSince: null });
+            const battleEvents = events.filter((event) => event.outcome === 'battle');
+            expect(today.date).toBe('2026-10-23');
+            expect(today.battles).toBe(battleEvents.reduce((sum, event) => sum + event.battles, 0));
+            expect(today.requests).toBe(battleEvents.length);
+            expect(today.players).toBe(new Set(battleEvents.map((event) => event.userId)).size);
+            expect(today.rateLimited).toBe(events.filter((event) => event.outcome === 'rate_limited').length);
+            expect(today.cycleBusy).toBe(events.filter((event) => event.outcome === 'cycle_busy').length);
           },
         ),
         { numRuns: 100 },
@@ -552,39 +544,33 @@ describe('Practice Arena Property Tests', () => {
   });
 
   // =========================================================================
-  // Property 15: Metrics daily flush preserves lifetime counter
+  // Property 15: Unavailable time never double counts overlapping lock holds
   // =========================================================================
-  describe('Feature: practice-arena, Property 15: Metrics daily flush preserves lifetime counter', () => {
-    it('for any metrics state, after flushAndReset, daily counters are zero but totalBattlesSinceStart is unchanged', async () => {
-      await fc.assert(
-        fc.asyncProperty(
+  describe('Feature: practice-arena, Property 15: Unavailable time is the union of lock holds', () => {
+    it('for any intervals, the days sum to the merged length inside the window and no day exceeds 24 h', () => {
+      const now = new Date('2026-10-23T12:00:00.000Z');
+      const windowStart = Date.parse('2026-10-20T00:00:00.000Z');
+      const keys = ['2026-10-23', '2026-10-22', '2026-10-21', '2026-10-20'];
+      fc.assert(
+        fc.property(
           fc.array(
-            fc.record({ type: fc.constant('battle' as const), userId: fc.integer({ min: 1, max: 100 }) }),
-            { minLength: 1, maxLength: 30 },
+            fc.record({ start: fc.integer({ min: 0, max: 4 * 86_400_000 }), length: fc.integer({ min: 0, max: 30 * 3_600_000 }) }),
+            { maxLength: 25 },
           ),
-          fc.integer({ min: 0, max: 10 }),
-          async (battles, rateLimitHits) => {
-            mockPrisma.practiceArenaDailyStats.upsert.mockResolvedValue({});
-
-            const metrics = new PracticeArenaMetrics();
-
-            for (const b of battles) {
-              metrics.recordBattle(b.userId);
-            }
-            for (let i = 0; i < rateLimitHits; i++) {
-              metrics.recordRateLimitHit();
-            }
-
-            const preFlush = metrics.getStats();
-            const expectedLifetime = preFlush.totalBattlesSinceStart;
-
-            await metrics.flushAndReset();
-
-            const postFlush = metrics.getStats();
-            expect(postFlush.battlesToday).toBe(0);
-            expect(postFlush.rateLimitHitsToday).toBe(0);
-            expect(postFlush.uniquePlayersToday).toBe(0);
-            expect(postFlush.totalBattlesSinceStart).toBe(expectedLifetime);
+          (raw) => {
+            const intervals = raw.map((interval) => ({
+              start: new Date(windowStart - 86_400_000 + interval.start),
+              end: new Date(windowStart - 86_400_000 + interval.start + interval.length),
+            }));
+            const byDay = unavailableByDay(intervals, keys, now);
+            const expected = mergeIntervals(intervals).reduce((sum, interval) => {
+              const start = Math.max(windowStart, interval.start.getTime());
+              const end = Math.min(now.getTime(), interval.end.getTime());
+              return sum + Math.max(0, end - start);
+            }, 0);
+            const total = [...byDay.values()].reduce((sum, value) => sum + value, 0);
+            expect(total).toBe(expected);
+            for (const value of byDay.values()) expect(value).toBeLessThanOrEqual(86_400_000);
           },
         ),
         { numRuns: 100 },

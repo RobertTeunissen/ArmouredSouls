@@ -15,11 +15,11 @@ import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { validateRequest } from '../middleware/schemaValidator';
 import { positiveInt } from '../utils/securityValidation';
 import { securityMonitor } from '../services/security/securityMonitor';
-import { practiceArenaMetrics } from '../services/practice-arena';
 import {
   executePracticeBattle,
   executePracticeBatch,
   getSparringPartnerDefinitions,
+  recordPracticeRequest,
 } from '../services/practice-arena';
 import { getSchedulerState } from '../services/cycle/cycleScheduler';
 
@@ -109,6 +109,12 @@ const practiceBattleRequestSchema = z.object({
 function rejectDuringCycleExecution(req: express.Request, res: Response, next: NextFunction): void {
   const state = getSchedulerState();
   if (state.runningJob !== null) {
+    const userId = (req as AuthRequest).user?.userId;
+    if (userId) {
+      // Unvalidated body: only the count is read, and it is clamped when stored.
+      const count: unknown = req.body?.count;
+      void recordPracticeRequest({ userId, outcome: 'cycle_busy', requested: typeof count === 'number' ? count : 1 });
+    }
     res.status(503).json({
       error: 'Practice Arena is temporarily unavailable while battles are being processed',
       code: 'CYCLE_IN_PROGRESS',
@@ -155,7 +161,12 @@ function practiceRateLimiter(req: express.Request, res: Response, next: NextFunc
   const remaining = RATE_LIMIT_MAX_BATTLES - entry.count;
 
   if (requestedCount > remaining) {
-    practiceArenaMetrics.recordRateLimitHit();
+    void recordPracticeRequest({
+      userId,
+      outcome: 'rate_limited',
+      requested: requestedCount,
+      request: { robot1: req.body.robot1, robot2: req.body.robot2 },
+    });
     securityMonitor.trackRateLimitViolation(userId, req.originalUrl);
     const retryAfterMs = RATE_LIMIT_WINDOW_MS - (now - entry.windowStart);
     const retryAfterSeconds = Math.ceil(retryAfterMs / 1000);
@@ -200,13 +211,12 @@ router.post(
 
     const request = { robot1, robot2 };
 
-    if (count === 1) {
-      const result = await executePracticeBattle(userId, request);
-      res.json(result);
-    } else {
-      const result = await executePracticeBatch(userId, request, count);
-      res.json(result);
-    }
+    const result = count === 1
+      ? await executePracticeBattle(userId, request)
+      : await executePracticeBatch(userId, request, count);
+    // Recorded once the battles ran (a failed simulation is not usage).
+    void recordPracticeRequest({ userId, outcome: 'battle', requested: count, request });
+    res.json(result);
   },
 );
 

@@ -211,24 +211,109 @@ export interface AdminSeasonConfig {
   retainedImagesPerStable: number;
 }
 
+/** The five stages of a rollover, in order. */
+export const ROLLOVER_STAGES = ['archive', 'verify', 'purge', 'post', 'automaton'] as const;
+export type RolloverStageName = (typeof ROLLOVER_STAGES)[number];
+
+export interface RolloverStageProgress {
+  stage: RolloverStageName;
+  status: 'pending' | 'running' | 'done' | 'skipped' | 'failed';
+  startedAt: string | null;
+  finishedAt: string | null;
+  detail: string | null;
+}
+
+/** Stage progress and, once finished, the result of a rollover run. */
+export interface RolloverRunSummary {
+  seasonNumber: number;
+  newSeasonNumber: number | null;
+  stages: RolloverStageProgress[];
+  generatedStables: { deleted: number; total: number } | null;
+  result: Omit<RolloverResult, 'completedSeasonNumber' | 'newSeasonNumber'> | null;
+}
+
+/** The rollover queued or executing right now. */
+export interface AdminActiveRollover {
+  runId: number | null;
+  status: 'queued' | 'running';
+  /** `manual` (admin) or `cron` (settlement). */
+  trigger: 'manual' | 'cron';
+  triggeredBy: { userId: number; username: string | null } | null;
+  queuedAt: string | null;
+  startedAt: string | null;
+  progress: RolloverRunSummary | null;
+}
+
 /** Admin view of the current season — the player state plus operational flags. */
 export interface AdminSeasonState extends SeasonState {
-  /** True while a rollover is executing; the trigger button must stay disabled. */
+  /** True while a rollover is queued or executing; the trigger button must stay disabled. */
   rolloverInProgress: boolean;
   /** True only during a preparation window, when balance changes are appropriate. */
   balanceChangesAppropriate: boolean;
   config: AdminSeasonConfig;
+  /** When the current season opened. */
+  startedAt: string | null;
+  /** The scheduler's next settlement, or null when automated scheduling is off. */
+  nextSettlementAt: string | null;
+  activeRollover: AdminActiveRollover | null;
+}
+
+export interface StableTypeCounts {
+  stables: number;
+  robots: number;
 }
 
 /** Read-only projection of what a rollover would archive, delete, and purge. */
 export interface RolloverPreview {
+  /** Every non-generated stable (human players and Automatons). */
   humanStables: number;
   humanRobots: number;
   generatedStables: number;
   generatedRobots: number;
+  breakdown: { human: StableTypeCounts; automaton: StableTypeCounts; generated: StableTypeCounts };
   rowsToPurge: Record<string, number>;
   imagesRetained: number;
   imagesDeleted: number;
+}
+
+/** One rollover attempt in the history (a run, or a legacy audit row). */
+export interface RolloverAttempt {
+  source: 'run' | 'audit';
+  id: number;
+  at: string;
+  status: 'success' | 'failed' | 'interrupted';
+  trigger: 'manual' | 'cron';
+  triggeredBy: { userId: number; username: string | null } | null;
+  durationMs: number | null;
+  error: string | null;
+  failedStage: RolloverStageName | null;
+  stages: RolloverStageProgress[] | null;
+  result: RolloverRunSummary['result'];
+}
+
+export interface SeasonHistoryEntry {
+  seasonNumber: number;
+  isLegacy: boolean;
+  startedAt: string;
+  endedAt: string | null;
+  competitiveCycles: number;
+  humanStableCount: number;
+  generatedStableCount: number;
+  rollover: RolloverAttempt | null;
+  failedAttempts: RolloverAttempt[];
+}
+
+export interface SeasonRolloverHistory {
+  seasons: SeasonHistoryEntry[];
+  currentSeasonAttempts: RolloverAttempt[];
+}
+
+/** The queued run returned by a background rollover (202). */
+export interface QueuedRolloverRun {
+  id: number | null;
+  jobName: string;
+  status: 'queued';
+  queuedAt: string;
 }
 
 /** Summary returned after a rollover completes. */
@@ -244,22 +329,27 @@ export interface RolloverResult {
   durations: { archiveMs: number; purgeMs: number; postMs: number; totalMs: number };
 }
 
-export const getAdminSeasonState = (): Promise<AdminSeasonState> =>
-  api.get<AdminSeasonState>('/api/admin/seasons/state');
+export const getAdminSeasonState = (signal?: AbortSignal): Promise<AdminSeasonState> =>
+  api.get<AdminSeasonState>('/api/admin/seasons/state', { signal });
 
-export const getRolloverPreview = (): Promise<RolloverPreview> =>
-  api.get<RolloverPreview>('/api/admin/seasons/rollover-preview');
+export const getRolloverPreview = (signal?: AbortSignal): Promise<RolloverPreview> =>
+  api.get<RolloverPreview>('/api/admin/seasons/rollover-preview', { signal });
+
+export const getSeasonRolloverHistory = (signal?: AbortSignal): Promise<SeasonRolloverHistory> =>
+  api.get<SeasonRolloverHistory>('/api/admin/seasons/history', { signal });
 
 /**
- * Execute a rollover now. The confirmation phrase and season number are fixed
- * server-side guards — the number must match the current season or the request
- * is rejected with a 400.
+ * Start a rollover in the background (202): it waits for the scheduler lock
+ * and reports its stages through `GET /state` while it runs. The confirmation
+ * phrase and season number are server-side guards: a season number that is
+ * no longer current is rejected with a 400.
  */
-export const executeRollover = (seasonNumber: number): Promise<RolloverResult> =>
-  api.post<RolloverResult>('/api/admin/seasons/rollover', {
+export const startRollover = async (seasonNumber: number): Promise<QueuedRolloverRun> =>
+  (await api.post<{ run: QueuedRolloverRun }>('/api/admin/seasons/rollover', {
     confirm: 'CONFIRM_ROLLOVER',
     seasonNumber,
-  });
+    background: true,
+  })).run;
 
 export const extendSeason = (additionalCycles: number): Promise<SeasonState> =>
   api.post<SeasonState>('/api/admin/seasons/extend', { additionalCycles });

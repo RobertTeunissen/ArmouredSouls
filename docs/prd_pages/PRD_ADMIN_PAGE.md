@@ -20,6 +20,10 @@
 - v3.2 - Added Security tab (9th tab) consuming backend security monitoring APIs from spec 11. Displays security event summary with severity counts, flagged users, filterable events table with expandable detail rows.
 - v3.3 (Oct 10, 2026) - Added the Automatons page (`/admin/automatons`) and the Automatons user filter (Spec #55).
 - v3.5 (Oct 22, 2026) - Redesigned Search Analytics (`/admin/search-analytics`), now under Content: settled-search counting (5 s typing window), category-only selection tracking, period presets, no-result rate with trend, results by category, a filterable phrase table with CSV export, collapsed searchers linked to player detail. Definitions in `docs/guides/ADMIN_PANEL_GUIDE.md` §Search Analytics.
+- v3.9 (Oct 23, 2026) - Redesigned Practice Arena (`/admin/practice-arena`): usage recorded per request in `practice_arena_events` (the in-memory counters lost every battle since the last settlement on each restart), status strip, last 30 UTC days with refusals (rate limit, during a scheduler job) and unavailable time, top practitioners this season, and how the arena is used (opponents, tiers, batch sizes, what-if overrides). Definitions in `docs/guides/ADMIN_PANEL_GUIDE.md` §Practice Arena.
+- v3.8 (Oct 23, 2026) - Redesigned Season Control (`/admin/seasons`): season timeline with estimated countdown, rollover and next-competitive dates and the configuration; rollover card with an on-demand preview by stable type (human players, Automatons, generated) and grouped purge counts; typed confirmation that starts the rollover in the background under the scheduler lock with live stage progress (`seasonRollover` runs, 409 when one is active); persistent rollover history with failed attempts folded; Extend and remaining preparation cycles under Testing tools (preparation cycles validated against the configured window instead of clamped). Definitions in `docs/guides/ADMIN_PANEL_GUIDE.md` §Season Control.
+- v3.7 (Oct 23, 2026) - Redesigned Cycle Controls (`/admin/cycles`): status strip with the running job and its elapsed time, daily schedule with a working Run button per job (background runs, 409 when already active), persistent run history with "Backend restarted" markers and missed / interrupted runs, and the bulk runner under Testing tools (under the scheduler lock, stable generation off by default). The browser-only session log is gone. Definitions in `docs/guides/ADMIN_PANEL_GUIDE.md` §Cycle Controls.
+- v3.6 (Oct 23, 2026) - Moved the Dashboard's meta snapshot to its own Meta page (`/admin/meta`, Battle Data) with a compact presentation: stacked bars for stances and loadouts, one column chart for yield thresholds with most common / median / above 20%, a two-column facilities list, and weapon totals. Definitions in `docs/guides/ADMIN_PANEL_GUIDE.md` §Meta.
 - v3.4 (Oct 22, 2026) - Redesigned the Dashboard (`/admin/dashboard`): status strip, login-based player KPIs with 7-day trends, "Needs attention", per-mode battle activity, collapsed meta snapshot. Below 768 px the admin sidebar became a hamburger + navigation drawer. The section below describing the old `DashboardTab` is superseded; the current page and every definition are in `docs/guides/ADMIN_PANEL_GUIDE.md` §Dashboard.
 
 ---
@@ -77,13 +81,13 @@ The Admin Page has been fully implemented with the following features:
 
 #### 2. **Dashboard** ✅ REDESIGNED (v3.4)
 
-The Dashboard is now the page `pages/admin/DashboardPage.tsx`, composed from `components/admin/dashboard/` (toolbar, status strip, KPI row, "Needs attention", battle activity table, meta snapshot) with data from `hooks/useAdminDashboard.ts`:
+The Dashboard is now the page `pages/admin/DashboardPage.tsx`, composed from `components/admin/dashboard/` (toolbar, status strip, KPI row, "Needs attention", battle activity table) with data from `hooks/useAdminDashboard.ts`:
 
 - **Status strip** (system-wide): cycle and season, last and next settlement, scheduler health, queued matches.
 - **KPI cards**: active (7 days), new (7 days) and inactive (3+ days) human players with trends vs about 7 days ago; battle-ready robots for the filter.
 - **Needs attention** (system-wide): bankruptcy risk, security alerts, Automatons needing attention, and one "cycle problems" item (settlement overdue, failed job, matches left behind), each linking to its page.
 - **Battle activity**: all nine modes plus Total, with last cycle, season, walkovers, queued, draw %, kill % and average time.
-- **Meta snapshot**: stances, loadouts, yield thresholds, facilities and weapons (player choices); collapsed, loaded on demand. Tier distributions for every league are on League Health, not here.
+- **Meta**: stances, loadouts, yield thresholds, facilities and weapons (player choices) moved to their own page, `pages/admin/MetaPage.tsx` (`/admin/meta`, v3.6). Tier distributions for every league are on League Health.
 - **Filter** in the URL (`?filter=`); scope, definitions and endpoints: `docs/guides/ADMIN_PANEL_GUIDE.md` §Dashboard.
 
 The removed System Health and Practice Arena sections below are kept for history only: Practice Arena has its own page (`/admin/practice-arena`), and cycle health is now the "cycle problems" item.

@@ -73,13 +73,6 @@ jest.mock('../../src/services/battle/combatMessageGenerator', () => ({
   },
 }));
 
-const mockRecordBattle = jest.fn();
-jest.mock('../../src/services/practice-arena/practiceArenaMetrics', () => ({
-  practiceArenaMetrics: {
-    recordBattle: mockRecordBattle,
-  },
-}));
-
 jest.mock('../../src/config/logger', () => ({
   __esModule: true,
   default: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
@@ -694,9 +687,6 @@ describe('Practice Arena Service', () => {
         expect.objectContaining({ name: expect.stringContaining('WimpBot') }),
         expect.objectContaining({ name: expect.stringContaining('ExpertBot') }),
       );
-
-      // Verify metrics were recorded
-      expect(mockRecordBattle).toHaveBeenCalledWith(1);
     });
   });
 

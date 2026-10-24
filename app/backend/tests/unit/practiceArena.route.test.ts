@@ -14,14 +14,13 @@
 const mockExecutePracticeBattle = jest.fn();
 const mockExecutePracticeBatch = jest.fn();
 const mockGetSparringPartnerDefinitions = jest.fn();
+const mockRecordPracticeRequest = jest.fn((_record: unknown) => Promise.resolve());
 
 jest.mock('../../src/services/practice-arena', () => ({
   executePracticeBattle: mockExecutePracticeBattle,
   executePracticeBatch: mockExecutePracticeBatch,
   getSparringPartnerDefinitions: mockGetSparringPartnerDefinitions,
-  practiceArenaMetrics: {
-    recordRateLimitHit: jest.fn(),
-  },
+  recordPracticeRequest: (record: unknown) => mockRecordPracticeRequest(record),
 }));
 
 const mockGetSchedulerState = jest.fn();
@@ -273,6 +272,40 @@ describe('Practice Arena Route', () => {
       expect(res.status).toBe(503);
       expect(res.body.code).toBe('CYCLE_IN_PROGRESS');
       expect(res.body.runningJob).toBe('league');
+      // Counted for the admin page, with the requested count read from the (unvalidated) body.
+      expect(mockRecordPracticeRequest).toHaveBeenCalledWith({ userId: 1, outcome: 'cycle_busy', requested: 1 });
+      expect(mockExecutePracticeBattle).not.toHaveBeenCalled();
+    });
+  });
+
+  // =========================================================================
+  // Usage recording (admin Practice Arena page)
+  // =========================================================================
+  describe('POST /battle — usage recording', () => {
+    it('records a battle event with the validated request once the battles ran', async () => {
+      mockExecutePracticeBatch.mockResolvedValue({ results: [], aggregate: {} });
+      const body = { ...validBattleBody(), count: 4 };
+      const res = await request(app)
+        .post('/api/practice-arena/battle')
+        .set('Authorization', `Bearer ${authToken(7)}`)
+        .send(body);
+      expect(res.status).toBe(200);
+      expect(mockRecordPracticeRequest).toHaveBeenCalledWith({
+        userId: 7,
+        outcome: 'battle',
+        requested: 4,
+        request: { robot1: body.robot1, robot2: body.robot2 },
+      });
+    });
+
+    it('records nothing when the simulation fails', async () => {
+      mockExecutePracticeBattle.mockRejectedValue(new Error('engine exploded'));
+      const res = await request(app)
+        .post('/api/practice-arena/battle')
+        .set('Authorization', `Bearer ${authToken()}`)
+        .send(validBattleBody());
+      expect(res.status).toBe(500);
+      expect(mockRecordPracticeRequest).not.toHaveBeenCalled();
     });
   });
 
@@ -412,6 +445,9 @@ describe('Practice Arena Route', () => {
       expect(res.status).toBe(429);
       expect(res.body).toHaveProperty('retryAfter');
       expect(res.body.code).toBe('RATE_LIMIT_EXCEEDED');
+      expect(mockRecordPracticeRequest).toHaveBeenCalledWith(expect.objectContaining({ outcome: 'rate_limited', requested: 1 }));
+      // The refused request is the last one recorded; it ran no battle.
+      expect(mockRecordPracticeRequest.mock.calls.at(-1)?.[0]).toMatchObject({ outcome: 'rate_limited' });
     }, 30000);
   });
 });

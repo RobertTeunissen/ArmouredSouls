@@ -803,7 +803,9 @@ model ResetLog {
   @@map("reset_logs")
 }
 
-// Practice Arena daily stats - one row per day, flushed from in-memory counters during settlement
+// Practice Arena daily stats — superseded by practice_arena_events (admin
+// Practice Arena redesign). No longer written; kept so the migration stays
+// additive. Rows from before the switch are emptied at the next rollover.
 model PracticeArenaDailyStats {
   id            Int      @id @default(autoincrement())
   date          DateTime @unique @db.Date
@@ -814,6 +816,31 @@ model PracticeArenaDailyStats {
   createdAt     DateTime @default(now())
 
   @@map("practice_arena_daily_stats")
+}
+
+// One row per Practice Arena request (admin Practice Arena page): the battles
+// it ran, or why it was refused. Per-season history: emptied at rollover.
+model PracticeArenaEvent {
+  id                Int      @id @default(autoincrement())
+  /// Requesting player. No FK: an event outlives a deleted account until rollover.
+  userId            Int      @map("user_id")
+  occurredAt        DateTime @default(now()) @map("occurred_at")
+  /// "battle" | "rate_limited" | "cycle_busy"
+  outcome           String   @db.VarChar(16)
+  /// Battles requested (1–10).
+  requested         Int
+  /// Battles run: `requested` for "battle", 0 for a refusal.
+  battles           Int
+  /// "owned_vs_sparring" | "owned_vs_owned" | "sparring_vs_sparring"; null when the request was refused before validation.
+  matchup           String?  @db.VarChar(24)
+  /// Tier of the sparring partner faced (the second slot when it is one, else the first).
+  botTier           String?  @map("bot_tier") @db.VarChar(16)
+  /// An owned robot carried what-if overrides.
+  overrides         Boolean  @default(false)
+
+  @@index([occurredAt])
+  @@index([userId, occurredAt])
+  @@map("practice_arena_events")
 }
 
 // Changelog entries for the in-game "What's New" feed
@@ -933,6 +960,52 @@ model AdminKpiSnapshot {
   @@unique([seasonNumber, cycleNumber])
   @@index([createdAt])
   @@map("admin_kpi_snapshots")
+}
+
+// One row per backend start, with a heartbeat while it runs. The gap between a
+// process's last heartbeat and the next start is downtime (usually a deploy),
+// which is how Cycle Controls explains a missed or interrupted run. Never
+// truncated at Season_Rollover: the scheduler's history spans seasons.
+model SchedulerProcess {
+  id               Int               @id @default(autoincrement())
+  startedAt        DateTime          @default(now()) @map("started_at")
+  lastHeartbeatAt  DateTime          @default(now()) @map("last_heartbeat_at")
+  schedulerEnabled Boolean           @map("scheduler_enabled")
+  /// Optional DEPLOY_TAG of the release, when the deploy sets it.
+  deployTag        String?           @map("deploy_tag") @db.VarChar(80)
+  runs             SchedulerJobRun[]
+
+  @@index([startedAt])
+  @@map("scheduler_processes")
+}
+
+// Persistent history of scheduler job runs (cron, manual, resumed settlement,
+// bulk cycles). The in-memory scheduler state resets on every restart; this
+// survives it. Written non-fatally: a failed write never fails a job.
+model SchedulerJobRun {
+  id                Int              @id @default(autoincrement())
+  /// A scheduler job name, "bulkCycles" for the admin bulk runner, or "seasonRollover".
+  jobName           String           @map("job_name") @db.VarChar(40)
+  /// "cron" | "manual" | "resume" | "bulk"
+  trigger           String           @db.VarChar(10)
+  /// Admin who started a manual or bulk run. No FK: the user may be deleted.
+  triggeredByUserId Int?             @map("triggered_by_user_id")
+  processId         Int              @map("process_id")
+  process           SchedulerProcess @relation(fields: [processId], references: [id])
+  /// "queued" | "running" | "success" | "failed" | "skipped" | "interrupted"
+  status            String           @db.VarChar(12)
+  queuedAt          DateTime         @default(now()) @map("queued_at")
+  startedAt         DateTime?        @map("started_at")
+  finishedAt        DateTime?        @map("finished_at")
+  durationMs        Int?             @map("duration_ms")
+  /// Small result summary (SchedulerRunSummary in src/types/schedulerTypes.ts).
+  summary           Json?
+  error             String?          @db.VarChar(500)
+
+  @@index([jobName, queuedAt])
+  @@index([queuedAt])
+  @@index([status])
+  @@map("scheduler_job_runs")
 }
 
 model LeagueHistory {

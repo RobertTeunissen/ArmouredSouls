@@ -158,9 +158,6 @@ jest.mock('../../services/cycle/cycleScheduler', () => ({
   getSchedulerState: jest.fn(),
 }));
 
-jest.mock('../../services/practice-arena/practiceArenaMetrics', () => ({
-  practiceArenaMetrics: { getStats: jest.fn(), getHistory: jest.fn().mockResolvedValue([]) },
-}));
 
 jest.mock('../../services/auth/passwordResetService', () => ({
   resetPassword: jest.fn(),

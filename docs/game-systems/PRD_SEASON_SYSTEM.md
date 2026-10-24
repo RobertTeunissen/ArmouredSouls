@@ -37,7 +37,7 @@ At a Season_Rollover everything below is archived, then deleted.
 
 **Deleted:** `robots`, `battle_participants`, `tuning_allocations`, `subscriptions`, `weapon_inventory`, `weapon_refinement`, `facilities`, `team_battles`, `team_battle_members`, `standings`, `scheduled_matches_v2`, `scheduled_match_participants`, `tournaments`, `tournament_matches`, `user_achievements`.
 
-**Purged history:** `battles`, `battle_summaries`, `audit_logs`, `cycle_snapshots`, `financial_ledger`, `league_history`, `leaderboard_cache`, `practice_arena_daily_stats`, `automaton_turns` (Spec #55 Turn_Records). The global cycle counter resets to 0.
+**Purged history:** `battles`, `battle_summaries`, `audit_logs`, `cycle_snapshots`, `financial_ledger`, `league_history`, `leaderboard_cache`, `practice_arena_daily_stats`, `practice_arena_events` (Practice Arena usage), `search_analytics_events`, `search_analytics_failures`, `automaton_turns` (Spec #55 Turn_Records). The global cycle counter resets to 0.
 
 **Reset on every Human_Stable:** `currency` to ₡3,000,000 regardless of prior balance, `prestige` to 0, all four championship counters to 0, `pinnedAchievements` emptied, `totalPracticeBattles` to 0.
 
@@ -81,7 +81,7 @@ Stage 1 ARCHIVE  — write stable/robot archives, standings snapshot, accolades.
 Stage 2 VERIFY   — one stable archive per Human_Stable, robot archive count
                    equals Human_Stable robot count. Counts humans only.
                    Failure aborts with all operational data intact.
-Stage 3 PURGE    — delete generated stables (200 per transaction), reset
+Stage 3 PURGE    — delete generated stables (50 per transaction), reset
                    competitive/economic state, purge history, reset counter,
                    open the next season in preparation.
 Stage 4 POST     — orphan sweep, VACUUM, preserved-state achievement
@@ -95,7 +95,9 @@ The orphan sweep is scoped to `uploads/user-robots/`, so Automaton images in `up
 
 Stage 3 is batched by user so an interruption leaves whole users done and whole users untouched, never a half-reset stable. Stage 4 is non-transactional because `VACUUM` cannot run inside a transaction block.
 
-The rollover is idempotent per season: a retry detects a complete archive and skips to Stage 3. Concurrency is guarded by the scheduler's existing job mutex; the admin trigger routes through it and returns `409` when held.
+The rollover is idempotent per season: a retry detects a complete archive and skips to Stage 3 (Stage 2 is then skipped: the archive was verified when written).
+
+Both triggers run under the scheduler's job lock. The settlement-triggered rollover runs inside the settlement job, which already holds it. The admin trigger (Season Control) takes it as `seasonRollover` (`adminSeasonRolloverRunService`), so it waits for a running job and scheduled jobs wait for it; it returns `409 ROLLOVER_IN_PROGRESS` while a rollover of either trigger is queued or running, and a queued admin rollover refuses a season that stopped being current while it waited. Every rollover is a `scheduler_job_runs` row (job `seasonRollover`, trigger `manual` or `cron`) whose summary carries the stage progress and result; Season Control's rollover history reads these, and the `admin_audit_logs` rows for rollovers before the first run.
 
 ## Archive model
 

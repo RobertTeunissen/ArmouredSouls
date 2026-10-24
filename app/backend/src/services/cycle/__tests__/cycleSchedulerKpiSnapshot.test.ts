@@ -39,7 +39,6 @@ jest.mock('../../common/eventLogger', () => ({
 jest.mock('../../achievement', () => ({
   achievementService: { checkAndAward: jest.fn(async () => []), refreshRarityCache: jest.fn(async () => undefined) },
 }));
-jest.mock('../../practice-arena/practiceArenaMetrics', () => ({ practiceArenaMetrics: { flushAndReset: jest.fn(async () => undefined) } }));
 jest.mock('../../../utils/userGeneration', () => ({ generateBattleReadyUsers: jest.fn(async () => ({ usersCreated: 0, robotsCreated: 0 })) }));
 jest.mock('../../leaderboard/leaderboardService', () => ({ leaderboardService: { refreshAll: jest.fn(async () => undefined) } }));
 jest.mock('../../../lib/prisma', () => ({
@@ -94,6 +93,7 @@ describe('executeSettlement — admin KPI snapshot', () => {
   it('never fails settlement when the snapshot throws', async () => {
     mockRecord.mockRejectedValueOnce(new Error('unexpected'));
 
-    await expect(executeSettlement()).resolves.toEqual({ jobName: 'settlement' });
+    // The closed cycle is reported for the scheduler run history.
+    await expect(executeSettlement()).resolves.toEqual({ jobName: 'settlement', cycleNumber: 42 });
   });
 });

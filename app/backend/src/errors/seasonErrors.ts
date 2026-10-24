@@ -23,6 +23,8 @@ export const SeasonErrorCode = {
    * distinguishable from a missing confirmation. See adminSeasons rollover.
    */
   SEASON_NUMBER_MISMATCH: 'SEASON_NUMBER_MISMATCH',
+  /** Remaining preparation cycles outside 0..Preparation_Length_Cycles (Season Control). */
+  INVALID_PREPARATION_CYCLES: 'INVALID_PREPARATION_CYCLES',
   /** The action is not permitted while the season is in its Preparation_Phase. */
   PREPARATION_PHASE_ACTIVE: 'PREPARATION_PHASE_ACTIVE',
   /** No Season record exists for the requested season number. */

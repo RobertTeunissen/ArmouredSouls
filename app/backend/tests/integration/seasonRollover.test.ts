@@ -23,7 +23,14 @@ import {
   LEGACY_SEASON_NUMBER,
 } from '../../src/services/season/seasonService';
 import { verifyArchive, writeSeasonArchive } from '../../src/services/season/seasonArchiveService';
-import { executeSeasonRollover } from '../../src/services/season/seasonRolloverService';
+import { executeSeasonRollover, getActiveRolloverProgress } from '../../src/services/season/seasonRolloverService';
+import { setRemainingPreparationCycles } from '../../src/services/season/seasonService';
+import { previewRollover } from '../../src/services/season/seasonPurgeService';
+import { startAdminRollover } from '../../src/services/season/adminSeasonRolloverRunService';
+import { getSeasonRolloverHistory } from '../../src/services/season/seasonRolloverHistoryService';
+import { resetRunStore, startProcess } from '../../src/services/cycle/schedulerRunStore';
+import { loadEnvConfig } from '../../src/config/env';
+import type { SchedulerRunSummary } from '../../src/types/schedulerTypes';
 
 dotenv.config();
 
@@ -437,6 +444,78 @@ describe('Season Rollover Integration', () => {
         where: { seasonNumber: LEGACY_SEASON_NUMBER },
       });
       expect(archivesAfterSecond).toBe(archivesAfterFirst);
+    });
+  });
+
+  describe('Season Control: rollover runs, history and preparation cycles', () => {
+    let human: SeededStable;
+    let generated: SeededStable;
+    let processId: number | null;
+
+    beforeEach(async () => {
+      await resetSeasonTables();
+      await prisma.schedulerJobRun.deleteMany({ where: { jobName: 'seasonRollover' } });
+      await getCurrentSeason();
+      human = await seedStable(false);
+      generated = await seedStable(true);
+      processId = await startProcess({ schedulerEnabled: false });
+    });
+
+    afterEach(async () => {
+      resetRunStore();
+      await prisma.schedulerJobRun.deleteMany({ where: { jobName: 'seasonRollover' } });
+      if (processId !== null) {
+        await prisma.schedulerJobRun.deleteMany({ where: { processId } });
+        await prisma.schedulerProcess.delete({ where: { id: processId } }).catch(() => undefined);
+      }
+      await prisma.adminAuditLog.deleteMany({ where: { adminUserId: human.userId } });
+      await cleanupStable(human.userId).catch(() => undefined);
+      await cleanupStable(generated.userId).catch(() => undefined);
+      await resetSeasonTables();
+    });
+
+    it('previews by stable type before the rollover', async () => {
+      const preview = await previewRollover();
+      expect(preview.breakdown.human.stables).toBeGreaterThanOrEqual(1);
+      expect(preview.breakdown.generated).toMatchObject({ stables: expect.any(Number), robots: expect.any(Number) });
+      expect(preview.breakdown.generated.stables).toBeGreaterThanOrEqual(1);
+      expect(preview.rowsToPurge.robots).toBeGreaterThanOrEqual(2);
+      expect(preview.rowsToPurge).toHaveProperty('automaton_turns');
+    });
+
+    it('runs a background admin rollover as a seasonRollover run with every stage done, then lists it in the history', async () => {
+      const queued = await startAdminRollover(human.userId, LEGACY_SEASON_NUMBER);
+      expect(queued.runId).not.toBeNull();
+
+      // Poll the run row until the background rollover finishes.
+      let run = await prisma.schedulerJobRun.findUnique({ where: { id: queued.runId! } });
+      for (let i = 0; i < 600 && run && (run.status === 'queued' || run.status === 'running'); i += 1) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        run = await prisma.schedulerJobRun.findUnique({ where: { id: queued.runId! } });
+      }
+      expect(run).toMatchObject({ jobName: 'seasonRollover', trigger: 'manual', triggeredByUserId: human.userId, status: 'success' });
+      const summary = (run!.summary as unknown as SchedulerRunSummary).rollover!;
+      expect(summary.stages.map((stage) => stage.status)).toEqual(['done', 'done', 'done', 'done', 'done']);
+      expect(summary).toMatchObject({ seasonNumber: LEGACY_SEASON_NUMBER, newSeasonNumber: LEGACY_SEASON_NUMBER + 1 });
+      expect(summary.result?.generatedStablesDeleted).toBeGreaterThanOrEqual(1);
+      expect(summary.generatedStables?.deleted).toBe(summary.generatedStables?.total);
+      expect(getActiveRolloverProgress()).toBeNull();
+
+      const history = await getSeasonRolloverHistory();
+      expect(history.seasons[0]).toMatchObject({
+        seasonNumber: LEGACY_SEASON_NUMBER,
+        rollover: { source: 'run', id: queued.runId, status: 'success', trigger: 'manual' },
+        failedAttempts: [],
+      });
+    });
+
+    it('validates remaining preparation cycles against the configured window instead of clamping', async () => {
+      await executeSeasonRollover({ trigger: 'admin', adminUserId: human.userId });
+      const window = loadEnvConfig().preparationLengthCycles;
+
+      await expect(setRemainingPreparationCycles(window + 1)).rejects.toMatchObject({ code: 'INVALID_PREPARATION_CYCLES', statusCode: 400 });
+      const state = await setRemainingPreparationCycles(Math.max(0, window - 1));
+      expect(state.remainingPreparationCycles).toBe(Math.max(0, window - 1));
     });
   });
 });
