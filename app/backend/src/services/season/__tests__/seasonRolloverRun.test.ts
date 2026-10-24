@@ -137,7 +137,12 @@ describe('executeSeasonRollover run recording', () => {
     await expect(executeSeasonRollover({ trigger: 'admin', adminUserId: 5, runId: 12, expectedSeasonNumber: 0 }))
       .rejects.toMatchObject({ code: 'SEASON_NUMBER_MISMATCH', statusCode: 409 });
     expect(writeSeasonArchive).not.toHaveBeenCalled();
-    expect(mocked(markFinished).mock.calls.at(-1)?.[1]).toMatchObject({ status: 'failed', summary: null });
+    // Kept on the season it targeted, with no stage marked, so the history files it under Season 0.
+    const finished = mocked(markFinished).mock.calls.at(-1)?.[1];
+    expect(finished).toMatchObject({ status: 'failed', error: expect.stringContaining('Season 0 is no longer current') });
+    const summary = (finished?.summary as SchedulerRunSummary).rollover as RolloverRunSummary;
+    expect(summary).toMatchObject({ seasonNumber: 0, newSeasonNumber: null, result: null });
+    expect(summary.stages.every((stage) => stage.status === 'pending')).toBe(true);
   });
 
   it('rejects a second rollover while one runs and closes the run the caller recorded', async () => {

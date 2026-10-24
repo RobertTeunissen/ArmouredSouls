@@ -122,6 +122,8 @@ export async function recordQueued(input: {
   trigger: SchedulerRunTrigger;
   triggeredByUserId?: number | null;
   queuedAt?: Date;
+  /** Known before the run starts (a rollover's target season). */
+  summary?: SchedulerRunSummary | null;
 }): Promise<number | null> {
   if (currentProcessId === null) return null;
   try {
@@ -133,6 +135,7 @@ export async function recordQueued(input: {
         processId: currentProcessId,
         status: 'queued',
         queuedAt: input.queuedAt ?? new Date(),
+        ...(input.summary ? { summary: input.summary as unknown as Prisma.InputJsonValue } : {}),
       },
       select: { id: true },
     });

@@ -14,7 +14,13 @@ export const CONFIRM_PHRASE = 'CONFIRM_ROLLOVER';
 const plural = (count: number, noun: string): string => `${formatCount(count)} ${noun}${count === 1 ? '' : 's'}`;
 
 export interface RolloverConfirmDialogProps {
+  /** The season the dialog was opened for. */
   seasonNumber: number;
+  /**
+   * That season is no longer current, or a rollover started meanwhile: the
+   * confirm button stays disabled and the admin has to reopen the dialog.
+   */
+  stale?: boolean;
   preview: RolloverPreview | null;
   busy: boolean;
   /** Why the last attempt did not start, shown in the dialog. */
@@ -23,11 +29,12 @@ export interface RolloverConfirmDialogProps {
   onCancel: () => void;
 }
 
-export function RolloverConfirmDialog({ seasonNumber, preview, busy, error, onConfirm, onCancel }: RolloverConfirmDialogProps): ReactNode {
+export function RolloverConfirmDialog({ seasonNumber, stale = false, preview, busy, error, onConfirm, onCancel }: RolloverConfirmDialogProps): ReactNode {
   const [text, setText] = useState('');
   const inputId = useId();
   const helpId = useId();
   const matches = text === CONFIRM_PHRASE;
+  const canConfirm = matches && !busy && !stale;
   const rows = preview ? Object.values(preview.rowsToPurge).reduce((sum, value) => sum + value, 0) : null;
 
   return (
@@ -37,7 +44,7 @@ export function RolloverConfirmDialog({ seasonNumber, preview, busy, error, onCo
       actions={(
         <>
           <ActionButton onClick={onCancel} disabled={busy}>Cancel</ActionButton>
-          <ActionButton variant="danger" onClick={onConfirm} disabled={!matches || busy}>
+          <ActionButton variant="danger" onClick={onConfirm} disabled={!canConfirm}>
             {busy ? 'Starting…' : `Roll over Season ${seasonNumber}`}
           </ActionButton>
         </>
@@ -71,13 +78,18 @@ export function RolloverConfirmDialog({ seasonNumber, preview, busy, error, onCo
           value={text}
           onChange={(event) => setText(event.target.value)}
           onKeyDown={(event) => {
-            if (event.key === 'Enter' && matches && !busy) onConfirm();
+            if (event.key === 'Enter' && canConfirm) onConfirm();
           }}
           aria-describedby={helpId}
           className={`${INPUT_CLASS} font-mono`}
         />
         <p id={helpId} className="mt-1 text-xs text-tertiary">The season number ({seasonNumber}) is sent with it.</p>
       </div>
+      {stale && (
+        <p role="alert" className="text-sm text-error">
+          Season {seasonNumber} is no longer the current season, or a rollover has started. Close this dialog and check the page again.
+        </p>
+      )}
       {error && <p role="alert" className="text-sm text-error">{error}</p>}
     </Dialog>
   );

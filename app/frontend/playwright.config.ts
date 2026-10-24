@@ -3,6 +3,13 @@ import { defineConfig, devices } from '@playwright/test';
 const baseURL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000';
 const isRemote = !!process.env.PLAYWRIGHT_BASE_URL;
 
+/**
+ * Specs that run only in the `admin` project (admin login). The `chromium`
+ * project ignores the same list, so a full run never runs them as the
+ * seeded player (who is redirected away from /admin).
+ */
+const ADMIN_SPECS = /(admin-automatons|automaton-badge|admin-cycle-controls|admin-season-control|admin-practice-arena)\.spec\.ts/;
+
 export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: false, // Run tests serially to avoid interference
@@ -50,7 +57,7 @@ export default defineConfig({
     },
     {
       name: 'chromium',
-      testIgnore: [/login\.spec\.ts/, /admin-automatons\.spec\.ts/, /automaton-badge\.spec\.ts/, /env-branding\.spec\.ts/],
+      testIgnore: [/login\.spec\.ts/, ADMIN_SPECS, /env-branding\.spec\.ts/],
       use: {
         ...devices['Desktop Chrome'],
         screenshot: 'on',
@@ -79,7 +86,7 @@ export default defineConfig({
     // runs a real Grand Melee slot) run as admin
     {
       name: 'admin',
-      testMatch: /(admin-automatons|automaton-badge|admin-cycle-controls|admin-season-control|admin-practice-arena)\.spec\.ts/,
+      testMatch: ADMIN_SPECS,
       use: {
         ...devices['Desktop Chrome'],
         storageState: '.auth/admin.json',

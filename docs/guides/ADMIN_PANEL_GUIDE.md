@@ -137,7 +137,7 @@ Sections, top to bottom:
 
 | Term | Definition |
 |---|---|
-| Run | One row of `scheduler_job_runs`: job, trigger (`cron`, `manual`, `resume` for a settlement resumed at startup, `bulk`), who started it, status, queued / started / finished, duration, result summary or error. Written for every run, never failing the job. |
+| Run | One row of `scheduler_job_runs`: job, trigger (`cron`, `manual`, `resume` for a settlement resumed at startup, `bulk`), who started it, status, queued / started / finished, duration, result summary or error. Written for every run, never failing the job. A bulk run counts only cycles that ran through as completed; if any cycle threw, the run is Failed and its error lists the failed cycles. |
 | Queued / Running | Waiting for the scheduler lock / holding it. |
 | Skipped | A battle job that returned at once because the season is in its Preparation_Phase. |
 | Interrupted | The backend stopped (usually a deploy) before the run finished. Marked at the next start; it ends at the stopped process's last heartbeat. |
@@ -159,7 +159,7 @@ Sections, top to bottom:
 3. **Rollover history** — every completed season (dates, cycles, stables archived, generated count) with the rollover that closed it: when, Admin · name or Settlement, duration, what it archived, deleted and emptied, and Details (stage durations). Failed and interrupted attempts fold under the season they tried to close, with the stage they stopped at. Failed attempts on the current season come first.
 4. **Testing tools** (collapsed) — Extend the season (1–365 cycles; shows "100 → 105 cycles · rollover moves to ~15 Nov" before confirming) and Remaining preparation cycles (0 to the configured preparation length, only during a preparation phase).
 
-**Roll over.** The dialog repeats the preview's counts and needs the phrase `CONFIRM_ROLLOVER` typed; the season number is sent for you. Confirming starts the rollover **in the background** under the scheduler lock (scheduled jobs wait for it), because a rollover on a full environment can outlast the proxy's 30 s response timeout. A queued rollover that finds the season changed while it waited (a settlement rolled it over) stops without changing anything. A second start while one is queued or running answers 409. When a rollover the page watched ends, a message gives the outcome.
+**Roll over.** The dialog repeats the preview's counts and needs the phrase `CONFIRM_ROLLOVER` typed. It is bound to the season it was opened for, and that season number is sent for you: if the page's polling finds that season closed (or a rollover started) while the dialog is open, the confirm button is disabled until you reopen it. Confirming starts the rollover **in the background** under the scheduler lock (scheduled jobs wait for it), because a rollover on a full environment can outlast the proxy's 30 s response timeout. A queued rollover that finds the season changed while it waited (a settlement rolled it over) stops without changing anything. A second start while one is queued or running answers 409. When a rollover the page watched ends, a message gives the outcome.
 
 **Definitions**
 
@@ -326,7 +326,7 @@ Sections, top to bottom:
 | "—" in a day row | Before recording started this season (the later of the switch to per-request recording and the season start): no data, not zero. |
 | This season | Sum of `users.total_practice_battles` (reset at rollover), so it covers the whole season, including battles from before recording started. |
 
-**API:** `GET /api/admin/practice-arena/overview` (the page). `GET /api/admin/practice-arena/stats` keeps its original shape, now computed from the events; `totalBattlesSinceStart` is this season's battles. Both require `authenticateToken` + `requireAdmin`.
+**API:** `GET /api/admin/practice-arena/overview` (the page). `GET /api/admin/practice-arena/stats` keeps its original shape, now computed from the events: `history` rows carry `date` as a full ISO timestamp (UTC midnight) and the day's `playerIds`; `totalBattlesSinceStart` is this season's battles. Both require `authenticateToken` + `requireAdmin`.
 
 ### Repair Log (`/admin/repair-log`)
 

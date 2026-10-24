@@ -15,6 +15,7 @@ import logger from '../../../config/logger';
 import {
   aggregateDays,
   aggregateUsage,
+  battlePlayersByDay,
   classifyRequest,
   lastUtcDays,
   mergeIntervals,
@@ -141,5 +142,19 @@ describe('aggregateUsage', () => {
       batchSizes: { single: 1, small: 1, large: 1 },
       overridesRequests: 1,
     });
+  });
+});
+
+describe('battlePlayersByDay', () => {
+  it('lists distinct battle players per UTC day, ascending, ignoring refusals', () => {
+    const players = battlePlayersByDay([
+      event({ userId: 9 }),
+      event({ userId: 2 }),
+      event({ userId: 9 }),
+      event({ userId: 5, outcome: 'cycle_busy', battles: 0 }),
+      event({ userId: 4, occurredAt: at('2026-10-22T23:59:00Z') }),
+    ]);
+    expect(players.get('2026-10-23')).toEqual([2, 9]);
+    expect(players.get('2026-10-22')).toEqual([4]);
   });
 });

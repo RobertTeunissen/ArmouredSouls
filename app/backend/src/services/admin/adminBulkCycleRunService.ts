@@ -20,11 +20,21 @@ import { BULK_CYCLES_JOB_NAME, type SchedulerRunSummary } from '../../types/sche
 /** A bulk start that has not reached the lock yet (closes the double-click gap). */
 let pendingStart = false;
 
+/** Cycles whose whole cycle threw (`results[].error`); block-level errors inside a cycle do not count. */
+function failedCycles(result: BulkCycleResult): Array<{ cycle: number; error: string }> {
+  return result.results
+    .filter((entry): entry is typeof entry & { error: string } => typeof entry.error === 'string')
+    .map((entry) => ({ cycle: entry.cycle, error: entry.error }));
+}
+
 function summarize(options: Required<BulkCycleOptions>, result: BulkCycleResult): SchedulerRunSummary {
+  const failed = failedCycles(result);
   return {
     bulk: {
       cyclesRequested: options.cycles,
-      cyclesCompleted: result.cyclesCompleted,
+      // `executeBulkCycles` reports the requested count; only cycles that ran through count here.
+      cyclesCompleted: Math.max(0, result.results.length - failed.length),
+      cyclesFailed: failed.length,
       totalDurationMs: result.totalDuration,
       averageCycleDurationMs: result.averageCycleDuration,
       generateUsersPerCycle: options.generateUsersPerCycle,
@@ -33,6 +43,11 @@ function summarize(options: Required<BulkCycleOptions>, result: BulkCycleResult)
       includeDailyFinances: options.includeDailyFinances,
     },
   };
+}
+
+/** "2 of 5 cycles failed — cycle 82: …; cycle 83: …" (trimmed by the run store). */
+function failureText(failed: ReadonlyArray<{ cycle: number; error: string }>, requested: number): string {
+  return `${failed.length} of ${requested} cycle${requested === 1 ? '' : 's'} failed — ${failed.map((entry) => `cycle ${entry.cycle}: ${entry.error}`).join('; ')}`;
 }
 
 function withDefaults(options: BulkCycleOptions): Required<BulkCycleOptions> {
@@ -51,7 +66,14 @@ async function execute(runId: number | null, options: Required<BulkCycleOptions>
     await markRunning(runId, startedAt);
     try {
       const result = await executeBulkCycles(options);
-      await markFinished(runId, { status: 'success', startedAt, finishedAt: new Date(), summary: summarize(options, result) });
+      const failed = failedCycles(result);
+      await markFinished(runId, {
+        status: failed.length === 0 ? 'success' : 'failed',
+        startedAt,
+        finishedAt: new Date(),
+        summary: summarize(options, result),
+        error: failed.length === 0 ? null : failureText(failed, options.cycles),
+      });
       return result;
     } catch (error) {
       await markFinished(runId, {

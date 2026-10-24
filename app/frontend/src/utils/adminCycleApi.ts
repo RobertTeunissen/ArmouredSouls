@@ -42,6 +42,8 @@ export interface SchedulerRunSummary {
   bulk?: {
     cyclesRequested: number;
     cyclesCompleted: number;
+    /** Cycles that threw (newer runs only). */
+    cyclesFailed?: number;
     totalDurationMs: number;
     averageCycleDurationMs: number;
     generateUsersPerCycle: boolean;

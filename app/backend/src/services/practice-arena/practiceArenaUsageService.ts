@@ -286,6 +286,10 @@ async function eventsMigrationFinishedAt(): Promise<Date | null> {
 
 /** Everything the admin Practice Arena page shows. */
 export async function getPracticeArenaOverview(now: Date = new Date()): Promise<PracticeArenaOverview> {
+  return (await loadOverview(now)).overview;
+}
+
+async function loadOverview(now: Date): Promise<{ overview: PracticeArenaOverview; events: UsageEvent[] }> {
   const keys = lastUtcDays(now, OVERVIEW_DAYS);
   const from = new Date(dayStart(keys[keys.length - 1]));
 
@@ -327,7 +331,7 @@ export async function getPracticeArenaOverview(now: Date = new Date()): Promise<
     // A queued-then-running run without an end is still holding the lock (or the process died; then it is marked interrupted at the next start).
     .map((run) => ({ start: run.startedAt, end: run.finishedAt ?? now }));
 
-  return {
+  const overview: PracticeArenaOverview = {
     timestamp: now.toISOString(),
     windowDays: OVERVIEW_DAYS,
     recordingSince: recordingSince?.toISOString() ?? null,
@@ -342,18 +346,45 @@ export async function getPracticeArenaOverview(now: Date = new Date()): Promise<
     })),
     usage: aggregateUsage(events),
   };
+  return { overview, events };
+}
+
+/** One `history` row of the original `/stats` response. */
+export interface LegacyPracticeHistoryRow {
+  /** The UTC day as a full ISO timestamp (midnight), as the daily table serialized it. */
+  date: string;
+  totalBattles: number;
+  uniquePlayers: number;
+  rateLimitHits: number;
+  /** Distinct players who ran a battle that day, ascending. */
+  playerIds: number[];
+}
+
+/** Distinct battle players per UTC day key. */
+export function battlePlayersByDay(events: readonly UsageEvent[]): Map<string, number[]> {
+  const sets = new Map<string, Set<number>>();
+  for (const event of events) {
+    if (event.outcome !== 'battle') continue;
+    const key = utcDayKey(event.occurredAt);
+    const set = sets.get(key) ?? new Set<number>();
+    set.add(event.userId);
+    sets.set(key, set);
+  }
+  return new Map([...sets].map(([key, set]) => [key, [...set].sort((a, b) => a - b)]));
 }
 
 /**
- * The original `GET /api/admin/practice-arena/stats` shape, now computed from
- * the events. `totalBattlesSinceStart` is this season's battles (it used to
- * count since the last restart).
+ * The original `GET /api/admin/practice-arena/stats` contract, now computed
+ * from the events: `history` rows keep `playerIds` and the full ISO `date`.
+ * `totalBattlesSinceStart` is this season's battles (it used to count since
+ * the last restart).
  */
 export async function getLegacyPracticeArenaStats(now: Date = new Date()): Promise<{
   current: { totalBattlesSinceStart: number; battlesToday: number; rateLimitHitsToday: number; uniquePlayersToday: number };
-  history: Array<{ date: string; totalBattles: number; uniquePlayers: number; rateLimitHits: number }>;
+  history: LegacyPracticeHistoryRow[];
 }> {
-  const overview = await getPracticeArenaOverview(now);
+  const { overview, events } = await loadOverview(now);
+  const players = battlePlayersByDay(events);
   const today = overview.days[0];
   return {
     current: {
@@ -364,6 +395,12 @@ export async function getLegacyPracticeArenaStats(now: Date = new Date()): Promi
     },
     history: overview.days
       .filter((day) => day.recorded)
-      .map((day) => ({ date: day.date, totalBattles: day.battles, uniquePlayers: day.players, rateLimitHits: day.rateLimited })),
+      .map((day) => ({
+        date: `${day.date}T00:00:00.000Z`,
+        totalBattles: day.battles,
+        uniquePlayers: day.players,
+        rateLimitHits: day.rateLimited,
+        playerIds: players.get(day.date) ?? [],
+      })),
   };
 }

@@ -42,7 +42,7 @@ import {
   purgeHistory,
   reclaimSpace,
 } from './seasonPurgeService';
-import { RolloverTracker } from './rolloverProgress';
+import { RolloverTracker, pendingRolloverSummary } from './rolloverProgress';
 import { markFinished, markRunning, recordQueued, updateRunSummary } from '../cycle/schedulerRunStore';
 import { SEASON_ROLLOVER_JOB_NAME, type RolloverRunSummary } from '../../types/schedulerTypes';
 
@@ -146,7 +146,13 @@ export async function executeSeasonRollover(options: RolloverOptions): Promise<R
     // A run the caller recorded must not stay queued forever.
     if (options.runId !== undefined && options.runId !== null) {
       const at = new Date();
-      await markFinished(options.runId, { status: 'failed', startedAt: at, finishedAt: at, error: message });
+      await markFinished(options.runId, {
+        status: 'failed',
+        startedAt: at,
+        finishedAt: at,
+        summary: options.expectedSeasonNumber !== undefined ? { rollover: pendingRolloverSummary(options.expectedSeasonNumber) } : null,
+        error: message,
+      });
     }
     throw new SeasonError(SeasonErrorCode.ROLLOVER_IN_PROGRESS, message, 409);
   }
@@ -383,13 +389,14 @@ export async function executeSeasonRollover(options: RolloverOptions): Promise<R
   } catch (error) {
     const message = describeError(error);
     tracker?.fail(message);
-    await markFinished(runId, {
-      status: 'failed',
-      startedAt,
-      finishedAt: new Date(),
-      summary: tracker ? { rollover: tracker.snapshot() } : null,
-      error: message,
-    });
+    // Refused before the first stage (e.g. the season changed while queued):
+    // keep the season it targeted, with no stage marked, for the history.
+    const summary = tracker
+      ? { rollover: tracker.snapshot() }
+      : options.expectedSeasonNumber !== undefined
+        ? { rollover: pendingRolloverSummary(options.expectedSeasonNumber) }
+        : null;
+    await markFinished(runId, { status: 'failed', startedAt, finishedAt: new Date(), summary, error: message });
     const mismatch = error instanceof SeasonError && error.code === SeasonErrorCode.SEASON_NUMBER_MISMATCH;
     if (!(error instanceof SeasonError && error.code === SeasonErrorCode.ARCHIVE_VERIFICATION_FAILED) && !mismatch) {
       await notify(`🚨 Season rollover FAILED — ${message}`);

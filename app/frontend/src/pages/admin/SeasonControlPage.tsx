@@ -29,7 +29,8 @@ import { formatDuration } from '../../utils/adminCycleFormat';
 import { attemptProblemText, extendEffect, formatCount, latestAttempt } from '../../utils/adminSeasonFormat';
 
 type Pending =
-  | { kind: 'rollover' }
+  /** The season the dialog was opened for; confirming rolls over only that one. */
+  | { kind: 'rollover'; seasonNumber: number }
   | { kind: 'extend'; cycles: number }
   | { kind: 'preparation'; remaining: number };
 
@@ -72,7 +73,7 @@ function SeasonControlPage(): React.ReactElement {
     if (!pending || !data) return;
     setBusy(true);
     const result = pending.kind === 'rollover'
-      ? await startRollover(data.seasonNumber)
+      ? await startRollover(pending.seasonNumber)
       : pending.kind === 'extend' ? await extend(pending.cycles) : await setPreparation(pending.remaining);
     setBusy(false);
     if (!result.ok) {
@@ -80,7 +81,7 @@ function SeasonControlPage(): React.ReactElement {
       return;
     }
     const text = pending.kind === 'rollover'
-      ? `Season ${data.seasonNumber} rollover started. It runs in the background; this page follows its stages.`
+      ? `Season ${pending.seasonNumber} rollover started. It runs in the background; this page follows its stages.`
       : pending.kind === 'extend'
         ? `Season ${data.seasonNumber} extended by ${pending.cycles} cycle${pending.cycles === 1 ? '' : 's'}.`
         : `Remaining preparation cycles set to ${pending.remaining}.`;
@@ -130,8 +131,9 @@ function SeasonControlPage(): React.ReactElement {
         now={now}
         onLoadPreview={loadPreview}
         onRollover={() => {
+          if (!data) return;
           if (!preview.data && !preview.loading) loadPreview();
-          setPending({ kind: 'rollover' });
+          setPending({ kind: 'rollover', seasonNumber: data.seasonNumber });
         }}
       />
 
@@ -155,7 +157,9 @@ function SeasonControlPage(): React.ReactElement {
 
       {pending?.kind === 'rollover' && data && (
         <RolloverConfirmDialog
-          seasonNumber={data.seasonNumber}
+          seasonNumber={pending.seasonNumber}
+          // The page keeps polling: a settlement or another admin may roll the season over while this is open.
+          stale={data.seasonNumber !== pending.seasonNumber || data.activeRollover !== null}
           preview={preview.data}
           busy={busy}
           error={dialogError}

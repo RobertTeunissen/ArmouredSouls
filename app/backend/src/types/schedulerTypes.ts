@@ -65,7 +65,10 @@ export interface SchedulerRunSummary {
   /** Bulk runs. */
   bulk?: {
     cyclesRequested: number;
+    /** Cycles that ran through (a cycle that threw is not completed). */
     cyclesCompleted: number;
+    /** Cycles that threw; their errors are in the run's `error`. Absent on older rows. */
+    cyclesFailed?: number;
     totalDurationMs: number;
     averageCycleDurationMs: number;
     generateUsersPerCycle: boolean;

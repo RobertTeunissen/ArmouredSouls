@@ -21,6 +21,21 @@ export const PROGRESS_WRITE_INTERVAL_MS = 3_000;
 
 export type PersistSummary = (summary: RolloverRunSummary) => Promise<void>;
 
+/**
+ * The summary of a rollover of `seasonNumber` that has not started a stage:
+ * stored on a queued run, and on a run refused before its first stage, so the
+ * history attributes it to the season it targeted.
+ */
+export function pendingRolloverSummary(seasonNumber: number): RolloverRunSummary {
+  return {
+    seasonNumber,
+    newSeasonNumber: null,
+    stages: ROLLOVER_STAGES.map((stage): RolloverStageProgress => ({ stage, status: 'pending', startedAt: null, finishedAt: null, detail: null })),
+    generatedStables: null,
+    result: null,
+  };
+}
+
 export class RolloverTracker {
   private readonly state: RolloverRunSummary;
   private lastGeneratedWrite = 0;
@@ -30,19 +45,7 @@ export class RolloverTracker {
     private readonly persist: PersistSummary,
     private readonly now: () => Date = () => new Date(),
   ) {
-    this.state = {
-      seasonNumber,
-      newSeasonNumber: null,
-      stages: ROLLOVER_STAGES.map((stage): RolloverStageProgress => ({
-        stage,
-        status: 'pending',
-        startedAt: null,
-        finishedAt: null,
-        detail: null,
-      })),
-      generatedStables: null,
-      result: null,
-    };
+    this.state = pendingRolloverSummary(seasonNumber);
   }
 
   /** A deep copy, safe to hand out or serialise. */

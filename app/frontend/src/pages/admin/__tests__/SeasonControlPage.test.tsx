@@ -4,7 +4,7 @@
  * and its outcome message, the history, and the testing tools.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import SeasonControlPage from '../SeasonControlPage';
 import { ApiError } from '../../../utils/ApiError';
@@ -158,6 +158,24 @@ describe('SeasonControlPage', () => {
     expect(mockStartRollover).toHaveBeenCalledWith(1);
     expect(await screen.findByText(/Season 1 rollover started/)).toBeInTheDocument();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('disables the confirm button when the season rolled over while the dialog was open', async () => {
+    const user = userEvent.setup();
+    render(<SeasonControlPage />);
+    await user.click(await screen.findByRole('button', { name: 'Roll over Season 1…' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Roll over Season 1?' });
+    await user.type(within(dialog).getByLabelText(/to confirm/), 'CONFIRM_ROLLOVER');
+    expect(within(dialog).getByRole('button', { name: 'Roll over Season 1' })).toBeEnabled();
+
+    // A poll finds Season 2 open (triggered here through Refresh, dispatched directly because the modal covers it).
+    mockGetState.mockResolvedValue(preparing);
+    fireEvent.click(screen.getByRole('button', { name: 'Refresh' }));
+
+    expect(await within(dialog).findByRole('alert')).toHaveTextContent('Season 1 is no longer the current season');
+    expect(within(dialog).getByRole('button', { name: 'Roll over Season 1' })).toBeDisabled();
+    await user.keyboard('{Enter}');
+    expect(mockStartRollover).not.toHaveBeenCalled();
   });
 
   it('keeps the dialog open with the reason when the rollover is refused', async () => {

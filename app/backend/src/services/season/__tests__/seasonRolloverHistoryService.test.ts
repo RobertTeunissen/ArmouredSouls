@@ -89,3 +89,19 @@ it('reads every audit row when no run was ever recorded, and copes with missing 
   expect(history.seasons[0].rollover).toBeNull();
   expect(history.currentSeasonAttempts).toEqual([]);
 });
+
+it('files a queued rollover refused as stale under the season it targeted, not the one current when it ran', async () => {
+  db.schedulerJobRun.findMany.mockResolvedValue([
+    {
+      id: 10, trigger: 'manual', triggeredByUserId: 1, status: 'failed', queuedAt: at('2026-11-10T00:00:30Z'), startedAt: at('2026-11-10T00:05:00Z'), durationMs: 5,
+      summary: { rollover: { seasonNumber: 1, newSeasonNumber: null, stages: stages(null).map((stage) => ({ ...stage, status: 'pending' })), generatedStables: null, result: null } },
+      error: 'Season 1 is no longer current (the current season is 2); nothing was changed',
+    },
+  ]);
+  db.adminAuditLog.findMany.mockResolvedValue([]);
+
+  const history = await getSeasonRolloverHistory();
+
+  expect(history.currentSeasonAttempts).toEqual([]);
+  expect(history.seasons[0].failedAttempts).toEqual([expect.objectContaining({ id: 10, failedStage: null, error: expect.stringContaining('no longer current') })]);
+});

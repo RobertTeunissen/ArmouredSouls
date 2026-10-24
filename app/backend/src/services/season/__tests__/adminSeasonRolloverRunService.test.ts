@@ -60,7 +60,13 @@ describe('startAdminRollover', () => {
     const run = await startAdminRollover(5, 1);
 
     expect(run).toMatchObject({ runId: 41, jobName: 'seasonRollover' });
-    expect(recordQueued).toHaveBeenCalledWith(expect.objectContaining({ jobName: 'seasonRollover', trigger: 'manual', triggeredByUserId: 5 }));
+    expect(recordQueued).toHaveBeenCalledWith(expect.objectContaining({
+      jobName: 'seasonRollover',
+      trigger: 'manual',
+      triggeredByUserId: 5,
+      // The target season is on the queued row from the start.
+      summary: { rollover: expect.objectContaining({ seasonNumber: 1, newSeasonNumber: null, result: null }) },
+    }));
     await flush();
     expect(mockRunExclusive).toHaveBeenCalledWith('seasonRollover', expect.any(Function));
     // Waiting behind the lock: queued, and a second start is refused.

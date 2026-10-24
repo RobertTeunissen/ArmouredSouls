@@ -256,12 +256,12 @@ The admin Practice Arena page (`authenticateToken` + `requireAdmin`): the last 3
 
 ### `GET /api/admin/practice-arena/stats`
 
-The original shape, now computed from `practice_arena_events`. `totalBattlesSinceStart` is this season's battles (it used to count since the last restart); `history` lists the recorded UTC days, newest first.
+The original shape, now computed from `practice_arena_events`. `totalBattlesSinceStart` is this season's battles (it used to count since the last restart); `history` lists the recorded UTC days, newest first, with `date` as a full ISO timestamp and the day's distinct battle `playerIds`, as before.
 
 ```json
 {
   "current": { "totalBattlesSinceStart": 798, "battlesToday": 14, "rateLimitHitsToday": 2, "uniquePlayersToday": 3 },
-  "history": [{ "date": "2026-10-24", "totalBattles": 14, "uniquePlayers": 3, "rateLimitHits": 2 }]
+  "history": [{ "date": "2026-10-24T00:00:00.000Z", "totalBattles": 14, "uniquePlayers": 3, "rateLimitHits": 2, "playerIds": [412, 413, 10775] }]
 }
 ```
 

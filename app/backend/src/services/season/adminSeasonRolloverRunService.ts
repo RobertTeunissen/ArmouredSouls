@@ -22,6 +22,7 @@ import { getActiveJobNames, runExclusive } from '../cycle/cycleScheduler';
 import { recordQueued } from '../cycle/schedulerRunStore';
 import { SEASON_ROLLOVER_JOB_NAME } from '../../types/schedulerTypes';
 import { executeSeasonRollover, isRolloverInProgress, type RolloverResult } from './seasonRolloverService';
+import { pendingRolloverSummary } from './rolloverProgress';
 
 /** A queued admin rollover, until it starts executing. */
 export interface QueuedAdminRollover {
@@ -80,7 +81,15 @@ async function enqueue(adminUserId: number, seasonNumber: number): Promise<Queue
   pendingStart = true;
   try {
     const queuedAt = new Date();
-    const runId = await recordQueued({ jobName: SEASON_ROLLOVER_JOB_NAME, trigger: 'manual', triggeredByUserId: adminUserId, queuedAt });
+    // The target season goes on the queued row, so the history attributes the
+    // attempt to it even if it never starts (refused as stale, or interrupted).
+    const runId = await recordQueued({
+      jobName: SEASON_ROLLOVER_JOB_NAME,
+      trigger: 'manual',
+      triggeredByUserId: adminUserId,
+      queuedAt,
+      summary: { rollover: pendingRolloverSummary(seasonNumber) },
+    });
     const entry: QueuedAdminRollover = { runId, adminUserId, seasonNumber, queuedAt };
     queued = entry;
     return entry;
