@@ -6,7 +6,7 @@
   "backstory": "Three stitched constructs make salvage hardware serve flexible fire, precision and agile contact. The workshop equips the complete trio without replacing their unusual bodies.",
   "strategy": {
     "key": "trio",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

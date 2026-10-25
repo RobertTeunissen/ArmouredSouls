@@ -6,7 +6,7 @@
   "backstory": "One partner improvises under pressure; the other insists on a sensible risk assessment. Their workshop spends on a dependable pair before buying anything that needs a larger hangar.",
   "strategy": {
     "key": "duo",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

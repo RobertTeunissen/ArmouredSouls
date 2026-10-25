@@ -6,9 +6,9 @@
   "backstory": "A protected commander keeps the production account open while two lighter combat machines earn arena revenue. The factory invests in income before premium equipment.",
   "strategy": {
     "key": "tycoon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {
-      "20": 3
+      "21": 3
     }
   },
   "teamNames": {

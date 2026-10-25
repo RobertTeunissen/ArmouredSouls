@@ -6,7 +6,7 @@
   "backstory": "Three military chassis divide practical fire, close pressure and heavy assault. The hangar stocks distinct equipment while upgrading the full trio through the same spending rules.",
   "strategy": {
     "key": "trio",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

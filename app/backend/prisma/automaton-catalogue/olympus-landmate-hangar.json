@@ -6,7 +6,7 @@
   "backstory": "Olympus Landmate Hangar enters the arena with a clear doctrine. Two heavy mechanical combat builds. Every surviving machine returns to the workshop before the next booking.",
   "strategy": {
     "key": "duo",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

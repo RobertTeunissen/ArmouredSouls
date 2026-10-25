@@ -6,7 +6,7 @@
   "backstory": "A personable turret becomes a mobile arena contender through an adapted transport mount. Two supported close-range allocations carry the workshop's concentrated equipment investment.",
   "strategy": {
     "key": "paragon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

@@ -37,11 +37,19 @@ export function duoV2Definition(key = 'duo'): StrategyDefinitionFile {
   return definition;
 }
 
-/** The repository registry plus the given definitions (default: Duo v2). */
+/**
+ * The repository registry plus the given definitions (default: the synthetic
+ * Duo v2 above). A given definition replaces a repository file of the same
+ * key and version (the repository has its own `duo.v2.json`), and any later
+ * repository version of that key is left out, so the synthetic version is the
+ * latest one, as these suites assume.
+ */
 export function registryWith(definitions: readonly StrategyDefinitionFile[] = [duoV2Definition()]): StrategyRegistry {
   const base = getStrategyRegistry();
+  const replaced = (key: string, version: number): boolean =>
+    definitions.some((definition) => definition.key === key && version >= definition.version);
   return createStrategyRegistry([
-    ...base.all(),
+    ...base.all().filter((strategy) => !replaced(strategy.key, strategy.version)),
     ...definitions.map((definition) => interpretStrategy(definition, { weightTable: BUILD_FOCUS_WEIGHTS })),
   ]);
 }

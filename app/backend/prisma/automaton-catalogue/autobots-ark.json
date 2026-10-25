@@ -4,7 +4,7 @@
   "stableName": "Autobots of the Ark",
   "franchise": "Transformers — Autobots",
   "backstory": "Disciplined, adaptable and stubbornly decent. The Autobots bring a little of everything to the arena — a leader, a scout, a heavy and a medic — and grow carefully, one well-equipped robot at a time.",
-  "strategy": { "key": "generalist", "version": 1, "targetOverrides": { "14": 3 } },
+  "strategy": { "key": "generalist", "version": 2, "targetOverrides": { "15": 3 } },
   "teamNames": {
     "twoVsTwo": ["Autobot Vanguard", "Ark Repair Crew"],
     "threeVsThree": ["Ark Defenders"]

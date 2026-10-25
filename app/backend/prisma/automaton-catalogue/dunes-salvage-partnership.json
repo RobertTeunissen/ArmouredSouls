@@ -6,7 +6,7 @@
   "backstory": "A repaired humanoid and a small precise companion share a desert workshop. Protected endurance and careful distant fire divide a practical partner upgrade account.",
   "strategy": {
     "key": "duo",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

@@ -30,6 +30,7 @@ import { resolveOutstandingEventsForRobots } from '../scheduling/eventScheduleSc
 import { getCurrentSeason } from '../season/seasonService';
 import logger from '../../config/logger';
 import { robotNameCandidates } from './robotNaming';
+import { loadStableHistory, type StableHistoryFacts } from './stableHistory';
 import type { BuildFocusKey, RefinementStep, WeaponStage } from '../../types/automaton';
 
 /** Facility types in the order of `FACILITY_TYPES` (`config/facilities.ts`); a unit test keeps them equal. */
@@ -113,6 +114,13 @@ export interface StableFacts {
   teams: TeamFacts[];
   /** Robot names already taken in the game that the next robot could use. */
   takenRobotNames: string[];
+  /**
+   * Recent economy and per-event battle results (`stableHistory.ts`). Set by
+   * the loader; absent in projected or hand-built facts, in which case the
+   * Economy Goal is Satisfied and Event_Allocation falls back to the
+   * Event_Order alone.
+   */
+  history?: StableHistoryFacts;
 }
 
 /** Robot_Blueprint as the planner sees it. */
@@ -225,6 +233,21 @@ export interface LoadStableFactsOptions {
    * `stageIndex` and the robot names that matter; read when omitted.
    */
   blueprints?: readonly BlueprintFacts[];
+  /**
+   * History facts already read this turn (`facts.history` of the facts being
+   * reloaded). Nothing a turn does changes them, so a reload reuses them
+   * instead of querying again; read when omitted.
+   */
+  history?: StableHistoryFacts;
+}
+
+/** Reload options that keep the season, blueprints and history of `facts`. */
+export function reloadOptions(facts: StableFacts, blueprints: readonly BlueprintFacts[]): LoadStableFactsOptions {
+  return {
+    season: { seasonNumber: facts.seasonNumber, phase: facts.phase },
+    blueprints,
+    ...(facts.history ? { history: facts.history } : {}),
+  };
 }
 
 const LOADOUT_TYPES: readonly LoadoutType[] = ['single', 'weapon_shield', 'dual_wield', 'two_handed'];
@@ -431,6 +454,13 @@ export async function loadStableFacts(
     ? []
     : await db.robot.findMany({ where: { name: { in: candidates } }, select: { name: true }, orderBy: { name: 'asc' } });
 
+  const history = options.history ?? await loadStableHistory(db, {
+    userId,
+    seasonNumber: season.seasonNumber,
+    robotIds: robots.map((robot) => robot.robotId),
+    facilities,
+  });
+
   return {
     profileId,
     userId,
@@ -444,6 +474,7 @@ export async function loadStableFacts(
     inventory,
     teams,
     takenRobotNames: taken.map((row) => row.name),
+    history,
   };
 }
 

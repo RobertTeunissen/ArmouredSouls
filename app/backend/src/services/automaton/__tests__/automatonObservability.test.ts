@@ -5,6 +5,7 @@ import logger from '../../../config/logger';
 import { sendMonitoringAlert } from '../../../utils/monitoringWebhook';
 import {
   ALERT_TEXT_LIMIT,
+  alertBalanceRecovered,
   alertCatalogueSyncConflicts,
   alertInvalidParameters,
   alertNegativeBalance,
@@ -124,23 +125,38 @@ describe('alert digest (one webhook message per kind per Turn_Step)', () => {
 
   it('sends one message per kind, in first-raised order, listing every stable', async () => {
     const digest = createAlertDigest();
+    digest.negativeBalanceTotal = 7;
     await alertNegativeBalance('white-base', TURN, -12_500, digest);
     await alertTurnFailed('dalek-empire', TURN, 'INSUFFICIENT_CREDITS', 'Insufficient credits', digest);
     await alertNegativeBalance('clone-legion', TURN, -3_000, digest);
+    await alertBalanceRecovered('light-labs', TURN, 4_000, digest);
 
     const messages = await flushAlertDigest(digest, TURN);
 
-    expect(messages).toHaveLength(2);
+    expect(messages).toHaveLength(3);
     expect(messages[0]).toBe(
-      '⚠️ Automaton balance negative at turn start — season 4 cycle 17: 2 stable(s)'
+      '⚠️ Automaton balance turned negative — season 4 cycle 17: 2 stable(s) (7 stable(s) negative in total)'
       + '\n• white-base: season 4 cycle 17 started at ₡-12,500; upkeep only, nothing can be bought'
       + '\n• clone-legion: season 4 cycle 17 started at ₡-3,000; upkeep only, nothing can be bought',
     );
     // A kind with one stable keeps the single-alert text.
     expect(messages[1]).toBe('🚨 Automaton turn failed — dalek-empire: season 4 cycle 17 failed with INSUFFICIENT_CREDITS: Insufficient credits');
-    expect(sendMonitoringAlert).toHaveBeenCalledTimes(2);
+    expect(messages[2]).toBe(
+      '✅ Automaton balance recovered — light-labs: season 4 cycle 17 started at ₡4,000 after a negative balance (7 stable(s) negative in total)',
+    );
+    expect(sendMonitoringAlert).toHaveBeenCalledTimes(3);
     expect(digest.entries.size).toBe(0);
+    expect(digest.negativeBalanceTotal).toBe(0);
     expect(await flushAlertDigest(digest, TURN)).toEqual([]);
+  });
+
+  it('sends no balance message for a step where stables only stayed negative', async () => {
+    const digest = createAlertDigest();
+    digest.negativeBalanceTotal = 3;
+
+    expect(await flushAlertDigest(digest, TURN)).toEqual([]);
+    expect(sendMonitoringAlert).not.toHaveBeenCalled();
+    expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('3 stable(s) started their turn with a negative balance'));
   });
 
   it('stays under the Discord message limit and counts the stables left out', () => {

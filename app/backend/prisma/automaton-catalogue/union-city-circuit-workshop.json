@@ -6,7 +6,7 @@
   "backstory": "One compact industrial companion carries the workshop's arena prospects. Mobility and gradual equipment refinement preserve its selected body instead of assembling several vessels into a roster.",
   "strategy": {
     "key": "paragon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

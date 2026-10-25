@@ -6,7 +6,7 @@
   "backstory": "Two steam-powered suits share a maintenance crew and a partner upgrade account. A guarded front and an agile contact fighter give the workshop complementary investments.",
   "strategy": {
     "key": "duo",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

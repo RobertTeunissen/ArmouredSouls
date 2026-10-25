@@ -6,9 +6,9 @@
   "backstory": "Galactic Robot Workshop enters the arena with a clear doctrine. Small tactician, heavier specialist, aggressive ranged fighter. Every surviving machine returns to the workshop before the next booking.",
   "strategy": {
     "key": "generalist",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {
-      "14": 3
+      "15": 3
     }
   },
   "teamNames": {

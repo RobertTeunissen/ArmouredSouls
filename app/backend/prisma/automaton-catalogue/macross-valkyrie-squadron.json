@@ -6,7 +6,7 @@
   "backstory": "Macross Valkyrie Squadron enters the arena with a clear doctrine. Three mobile ranged mecha builds. Every surviving machine returns to the workshop before the next booking.",
   "strategy": {
     "key": "trio",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

@@ -6,7 +6,7 @@
   "backstory": "One articulated cyborg takes the workshop's concentrated contact-combat investment. A complete paired weapon upgrade precedes refinement, with repairs funded before every purchase.",
   "strategy": {
     "key": "paragon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

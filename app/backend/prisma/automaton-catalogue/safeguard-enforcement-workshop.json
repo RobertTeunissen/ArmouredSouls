@@ -6,7 +6,7 @@
   "backstory": "A single enforcement entity receives a heavy distant weapon and patient workshop investment. Its selected body remains one roster slot through every equipment stage.",
   "strategy": {
     "key": "paragon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

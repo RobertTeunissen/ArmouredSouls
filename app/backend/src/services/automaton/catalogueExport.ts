@@ -39,7 +39,7 @@ export interface CatalogueExportOptions {
 }
 
 /** Goal position → Goal_Target for every target that differs from the strategy default. */
-function targetOverrides(strategyKey: string, strategyVersion: number, params: StrategyParametersV1, strategies: StrategyRegistry): Record<string, number> {
+export function targetOverrides(strategyKey: string, strategyVersion: number, params: StrategyParametersV1, strategies: StrategyRegistry): Record<string, number> {
   const strategy = strategies.getStrategy(strategyKey, strategyVersion);
   if (!strategy) {
     throw new AutomatonError(AutomatonErrorCode.AUTOMATON_CATALOGUE_INVALID, `Strategy ${strategyKey} v${strategyVersion} has no Strategy_Definition_File`, 409);

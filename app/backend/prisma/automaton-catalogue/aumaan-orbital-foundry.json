@@ -6,7 +6,7 @@
   "backstory": "Two sculpted combat frames trade mobility against distant firepower. Their arena partnership depends on balanced investment rather than either machine dominating the workshop budget.",
   "strategy": {
     "key": "duo",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

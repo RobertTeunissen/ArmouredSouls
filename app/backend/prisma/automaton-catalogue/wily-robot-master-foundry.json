@@ -6,9 +6,9 @@
   "backstory": "Wily requisitions six specialists with very different day jobs and equally difficult personalities. The first industrial trio secures the arena; ice, fire, and electricity complete the roster.",
   "strategy": {
     "key": "trio",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {
-      "12": 6
+      "13": 6
     }
   },
   "teamNames": {

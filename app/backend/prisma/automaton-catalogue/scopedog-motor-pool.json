@@ -6,7 +6,7 @@
   "backstory": "Compact military walkers bring practical fire, protected endurance and heavy pressure to the same maintenance bay. The motor pool equips the whole trio before chasing prestige purchases.",
   "strategy": {
     "key": "trio",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

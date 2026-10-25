@@ -6,7 +6,7 @@
   "backstory": "Guardian Reboot Camp enters the arena with a clear doctrine. A pair of mobile shooters that upgrade together. Every surviving machine returns to the workshop before the next booking.",
   "strategy": {
     "key": "duo",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

@@ -6,7 +6,7 @@
   "backstory": "V Model Combat Lab enters the arena with a clear doctrine. Two highly mobile combat builds with contrasting equipment. Every surviving machine returns to the workshop before the next booking.",
   "strategy": {
     "key": "duo",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

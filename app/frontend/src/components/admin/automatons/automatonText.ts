@@ -125,6 +125,7 @@ export const GOAL_TYPE_LABELS: Readonly<Record<GoalType, string>> = {
   attributes: 'Attributes',
   weapons: 'Weapons',
   refine: 'Refine',
+  economy: 'Economy',
 };
 
 export function facilityLabel(facilityType: string | undefined): string {
@@ -245,6 +246,8 @@ export function targetText(goal: Pick<GoalLike, 'type' | 'isMax'>, target: numbe
       return target >= 3 ? 'final' : String(target);
     case 'refine':
       return `${target} steps`;
+    case 'economy':
+      return target === 0 ? 'off' : `${target} cycles`;
     default:
       return String(target);
   }
@@ -382,6 +385,7 @@ export function savingGoalText(label: string, target: number): string {
   const isFacility = Object.values(FACILITY_LABELS).includes(label);
   if (isFacility) return `${label} L${target}`;
   if (label === 'Robots') return `Robot ${target}`;
+  if (label === GOAL_TYPE_LABELS.economy) return `${label} (payback ≤ ${target} cycles)`;
   return `${label} → ${target}`;
 }
 

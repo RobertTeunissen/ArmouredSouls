@@ -6,7 +6,7 @@
   "backstory": "Rannoch Geth Consensus enters the arena with a clear doctrine. Grow a role-diverse machine roster. Every surviving machine returns to the workshop before the next booking.",
   "strategy": {
     "key": "swarm",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

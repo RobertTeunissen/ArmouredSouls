@@ -4,7 +4,7 @@
   "stableName": "Pan Pacific Defense Corps",
   "franchise": "Pacific Rim — Jaegers",
   "backstory": "Two pilots, one mind, a lot of steel. The Corps fights in pairs because that is the only way it knows how — linked, shoulder to shoulder, holding the line one tag-team bout at a time.",
-  "strategy": { "key": "duo", "version": 1, "targetOverrides": {} },
+  "strategy": { "key": "duo", "version": 2, "targetOverrides": {} },
   "teamNames": {
     "twoVsTwo": ["Drift Compatible"],
     "threeVsThree": ["Shatterdome Strike"]

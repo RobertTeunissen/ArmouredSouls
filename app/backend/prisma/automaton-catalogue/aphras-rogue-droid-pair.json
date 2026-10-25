@@ -6,7 +6,7 @@
   "backstory": "A calculated protocol machine and an aggressive weapon platform share an uncompromising two-frame account. Protected support and close pressure receive balanced partner upgrades.",
   "strategy": {
     "key": "duo",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

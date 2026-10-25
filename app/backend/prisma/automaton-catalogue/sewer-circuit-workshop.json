@@ -6,9 +6,9 @@
   "backstory": "A stubborn armoured fighter, a precise synthetic and a low scavenging machine turn an unlikely workshop into a versatile arena roster.",
   "strategy": {
     "key": "generalist",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {
-      "14": 3
+      "15": 3
     }
   },
   "teamNames": {

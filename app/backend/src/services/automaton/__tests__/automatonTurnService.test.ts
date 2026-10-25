@@ -511,7 +511,7 @@ describe('runTurnStep — failures (R6.6, R7.8, R11.8)', () => {
     expect(mockUpkeep).toHaveBeenCalledTimes(2);
     expect(mockExecute).not.toHaveBeenCalled();
     expect(turnsOf(1)[0]).toMatchObject({ status: 'completed', startBalance: -5_000, endBalance: -5_000 });
-    expect(alerts.some((a) => a.includes('balance negative at turn start') && a.includes('stable-1'))).toBe(true);
+    expect(alerts.some((a) => a.includes('balance turned negative') && a.includes('stable-1'))).toBe(true);
   });
 
   it('sends one message per alert kind for the whole step, listing every stable', async () => {
@@ -522,10 +522,40 @@ describe('runTurnStep — failures (R6.6, R7.8, R11.8)', () => {
 
     await runTurnStep(INPUT, sequential());
 
-    const negative = alerts.filter((a) => a.includes('balance negative at turn start'));
+    const negative = alerts.filter((a) => a.includes('balance turned negative'));
     expect(negative).toHaveLength(1);
-    expect(negative[0]).toContain('season 3 cycle 42: 3 stable(s)');
+    expect(negative[0]).toContain('season 3 cycle 42: 3 stable(s) (3 stable(s) negative in total)');
     for (const key of ['stable-1', 'stable-2', 'stable-3']) expect(negative[0]).toContain(`• ${key}: `);
+  });
+
+  it('lists only stables that turned negative or recovered, with the negative total', async () => {
+    // Stable 1 was negative last turn and still is; stable 2 turns negative; stable 3 recovers.
+    addProfile(1, 10, { currency: -5_000 });
+    addProfile(2, 20, { currency: -7_000 });
+    addProfile(3, 30, { currency: 12_000 });
+    seedTurn({ profileId: 1, seasonNumber: 3, trigger: 'settlement', slot: 41, startBalance: -2_000 });
+    seedTurn({ profileId: 2, seasonNumber: 3, trigger: 'settlement', slot: 41, startBalance: 4_000 });
+    seedTurn({ profileId: 3, seasonNumber: 3, trigger: 'settlement', slot: 41, startBalance: -3_000 });
+    script = () => saving;
+
+    await runTurnStep(INPUT, sequential());
+
+    const negative = alerts.filter((a) => a.includes('balance turned negative'));
+    expect(negative).toEqual([expect.stringContaining('stable-2: season 3 cycle 42 started at ₡-7,000')]);
+    expect(negative[0]).toContain('(2 stable(s) negative in total)');
+    expect(negative[0]).not.toContain('stable-1');
+    const recovered = alerts.filter((a) => a.includes('balance recovered'));
+    expect(recovered).toEqual([expect.stringContaining('stable-3: season 3 cycle 42 started at ₡12,000 after a negative balance')]);
+  });
+
+  it('sends nothing when every negative stable was already negative', async () => {
+    addProfile(1, 10, { currency: -5_000 });
+    seedTurn({ profileId: 1, seasonNumber: 3, trigger: 'settlement', slot: 41, startBalance: -2_000 });
+    script = () => saving;
+
+    await runTurnStep(INPUT, sequential());
+
+    expect(alerts.filter((a) => a.includes('balance'))).toEqual([]);
   });
 
   it('records Free_Upkeep issues once on the Turn_Record and alerts them', async () => {

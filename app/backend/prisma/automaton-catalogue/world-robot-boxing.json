@@ -4,7 +4,7 @@
   "stableName": "World Robot Boxing",
   "franchise": "Real Steel",
   "backstory": "Somewhere between a sport and a spectacle. The league sells tickets, streams every bout and puts the takings back into the ring. Its fighters range from scrapped-together sparring bots to polished champions, and the crowd loves an underdog.",
-  "strategy": { "key": "tycoon", "version": 1, "targetOverrides": { "20": 3 } },
+  "strategy": { "key": "tycoon", "version": 2, "targetOverrides": { "21": 3 } },
   "teamNames": {
     "twoVsTwo": ["Underworld Circuit"],
     "threeVsThree": ["Crash Palace"]

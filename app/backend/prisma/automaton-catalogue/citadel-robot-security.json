@@ -6,7 +6,7 @@
   "backstory": "Citadel Robot Security enters the arena with a clear doctrine. A practical progression from utility frames to stronger weapons platforms. Every surviving machine returns to the workshop before the next booking.",
   "strategy": {
     "key": "swarm",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

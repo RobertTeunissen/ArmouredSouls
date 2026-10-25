@@ -118,6 +118,7 @@ const DB_DEPENDENT = [
   'tests/integration/automatonStableTypeMigration.test.ts',
   'tests/integration/automatonUserFilter.test.ts',
   'tests/integration/automatonStableFacts.test.ts',
+  'tests/integration/automatonAutoUpgrade.test.ts',
   'tests/integration/automatonExecution.test.ts',
   'tests/integration/automatonSeasonArchive.test.ts',
   'tests/integration/automatonPreservedStateAchievement.test.ts',

@@ -6,7 +6,7 @@
   "backstory": "An industrial intelligence sends a coherent line of reconstruction machines into the arena. Eleven separately equipped bodies rebuild the account through recruitment, maintenance and practical upgrades.",
   "strategy": {
     "key": "swarm",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

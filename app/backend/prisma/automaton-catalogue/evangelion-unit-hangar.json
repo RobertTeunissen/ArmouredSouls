@@ -6,7 +6,7 @@
   "backstory": "Three biomechanical units cover defence, contact pressure and heavy fire. The hangar treats each complete unit as one roster slot and equips the trio through ordinary budgets.",
   "strategy": {
     "key": "trio",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

@@ -12,7 +12,7 @@ import type { Goal } from '../goals/goalTypes';
 import type { FacilityType } from '../stableFacts';
 
 /** Goal_Library types a Build_Order entry can reference. */
-export const GOAL_TYPES = ['robots', 'facility', 'attributes', 'weapons', 'refine'] as const;
+export const GOAL_TYPES = ['robots', 'facility', 'attributes', 'weapons', 'refine', 'economy'] as const;
 export type GoalType = (typeof GOAL_TYPES)[number];
 
 /** A target as written in a Strategy_Definition_File: a number, or `"max"` (attributes only). */
@@ -24,7 +24,8 @@ export type FileGoalReference =
   | { type: 'facility'; facilityType: FacilityType }
   | { type: 'attributes' }
   | { type: 'weapons' }
-  | { type: 'refine' };
+  | { type: 'refine' }
+  | { type: 'economy' };
 
 export interface FileBuildOrderEntry {
   position: number;

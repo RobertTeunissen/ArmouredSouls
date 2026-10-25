@@ -6,7 +6,7 @@
   "backstory": "A methodical assembly line expands from three machines to a full eleven-slot roster. Precision, protection and direct pressure distribute the equipment bill across the array.",
   "strategy": {
     "key": "swarm",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

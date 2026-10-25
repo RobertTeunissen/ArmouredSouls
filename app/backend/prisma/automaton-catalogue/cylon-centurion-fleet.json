@@ -6,7 +6,7 @@
   "backstory": "Cylon Centurion Fleet enters the arena with a clear doctrine. Mass-produced ranged fighters with heavy variants. Every surviving machine returns to the workshop before the next booking.",
   "strategy": {
     "key": "swarm",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

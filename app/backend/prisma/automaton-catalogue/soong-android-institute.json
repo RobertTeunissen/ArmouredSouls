@@ -6,7 +6,7 @@
   "backstory": "Soong Android Institute enters the arena with a clear doctrine. Three android builds with different investment priorities. Every surviving machine returns to the workshop before the next booking.",
   "strategy": {
     "key": "trio",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

@@ -6,7 +6,7 @@
   "backstory": "B12 Companion Workshop enters the arena with a clear doctrine. A very small precision-oriented machine. Every surviving machine returns to the workshop before the next booking.",
   "strategy": {
     "key": "paragon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

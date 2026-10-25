@@ -6,7 +6,7 @@
   "backstory": "A compact core takes the facility's arena allocation through an explicitly adapted mobile mount. Its modest weapon path and staged refinement leave the original identity recognisable.",
   "strategy": {
     "key": "paragon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

@@ -6,7 +6,7 @@
   "backstory": "A vulnerable synthetic worker makes cautious arena purchases to keep the workshop alive. One modest weapon path improves gradually after repairs and essential maintenance are secure.",
   "strategy": {
     "key": "paragon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

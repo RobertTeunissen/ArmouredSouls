@@ -6,7 +6,7 @@
   "backstory": "PTMC Mining Rebellion enters the arena with a clear doctrine. Varied industrial drones built around ranged pressure. Every surviving machine returns to the workshop before the next booking.",
   "strategy": {
     "key": "swarm",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

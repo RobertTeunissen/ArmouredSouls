@@ -6,7 +6,7 @@
   "backstory": "Heavy firepower, protected endurance and mobile pressure give the laboratory three different answers to an arena contract. All three receive equipment before any luxury spending.",
   "strategy": {
     "key": "trio",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

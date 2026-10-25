@@ -6,7 +6,7 @@
   "backstory": "Two giant contenders divide a gladiator workshop between protected contact and heavy ranged pressure. Both receive final equipment before the owners expand their workshop ambitions.",
   "strategy": {
     "key": "duo",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

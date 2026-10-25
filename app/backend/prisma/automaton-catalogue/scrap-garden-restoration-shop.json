@@ -6,7 +6,7 @@
   "backstory": "A small determined machine rebuilds the shop through mobile close-range work. The final weapon and its refinements are bought in stages without enlarging the familiar chassis.",
   "strategy": {
     "key": "paragon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

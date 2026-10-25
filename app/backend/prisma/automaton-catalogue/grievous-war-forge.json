@@ -6,7 +6,7 @@
   "backstory": "The forge pours its earnings into one relentless close-combat machine. Extra blades make a statement; the account still pays for two supported weapon allocations.",
   "strategy": {
     "key": "paragon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

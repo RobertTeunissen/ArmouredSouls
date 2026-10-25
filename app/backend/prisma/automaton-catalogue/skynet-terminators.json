@@ -4,7 +4,7 @@
   "stableName": "Cyberdyne Skynet",
   "franchise": "The Terminator",
   "backstory": "It will not stop. It will not yield. Skynet sends a single unit back into every season and spends everything it has on making that unit harder to kill.",
-  "strategy": { "key": "paragon", "version": 1, "targetOverrides": {} },
+  "strategy": { "key": "paragon", "version": 2, "targetOverrides": {} },
   "teamNames": {
     "twoVsTwo": ["Judgment Day"],
     "threeVsThree": []

@@ -15,6 +15,7 @@ import {
   loadWeaponCatalogue,
 } from '../../src/services/automaton/stableFacts';
 import { createAutomatonStable, deleteAutomatonStables, type AutomatonStableFixture } from '../helpers/automatonStable';
+import { createTestBattle } from '../testHelpers';
 
 const suffix = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 const userIds: number[] = [];
@@ -203,6 +204,89 @@ describe('loadStableFacts (Spec #55 task 5.1)', () => {
     } finally {
       await prisma.automatonProfile.delete({ where: { id: draft.id } });
     }
+  });
+
+  describe('history facts (Economy Goal and Event_Allocation)', () => {
+    const CLOSED = 900_000 + Math.floor(Math.random() * 1000);
+    let originalTotalCycles: number | null = null;
+    const battleIds: number[] = [];
+    const eventId = (n: number): string => `facts-history-${suffix}-${n}`;
+
+    beforeAll(async () => {
+      const metadata = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
+      originalTotalCycles = metadata?.totalCycles ?? null;
+      await prisma.cycleMetadata.upsert({ where: { id: 1 }, update: { totalCycles: CLOSED }, create: { id: 1, totalCycles: CLOSED } });
+      const { userId } = fixture;
+      const row = (n: number, cycleNumber: number, transactionType: string, amount: number, metadata: object = {}) => ({
+        cycleNumber, userId, transactionType, amount, balanceAfter: 0, description: 'history test', metadata, financialEventId: eventId(n),
+      });
+      await prisma.financialLedger.createMany({
+        data: [
+          row(1, CLOSED, 'battle_income', 10_000),
+          row(2, CLOSED, 'streaming_revenue', 3_000, { studioMultiplier: 1.5 }),
+          row(3, CLOSED, 'repair_cost', -9_400, { repairBayDiscountPercent: 6 }),
+          row(4, CLOSED, 'operating_costs', -4_000),
+          row(5, CLOSED, 'achievement_reward', 50_000),
+          row(6, CLOSED - 1, 'battle_income', 20_000),
+          row(7, CLOSED - 1, 'repair_cost', -10_000, { repairBayDiscountPercent: 0 }),
+          // A cycle with upkeep but no battles (a Preparation_Phase cycle) does not count.
+          row(10, CLOSED - 2, 'operating_costs', -9_000),
+          // Outside the window: before it, and the cycle still in progress.
+          row(8, CLOSED - 5, 'battle_income', 999_999),
+          row(9, CLOSED + 1, 'battle_income', 999_999),
+        ],
+      });
+      for (let i = 0; i < 12; i++) {
+        battleIds.push((await createTestBattle({
+          robot1Id: r1, robot2Id: r3, battleType: 'league_1v1', robot1Credits: 1_500 + i, robot1StreamingRevenue: 0, robot1FinalHP: 10,
+        })).id);
+      }
+      battleIds.push((await createTestBattle({
+        robot1Id: r1, robot2Id: r3, battleType: 'grand_melee', leagueType: 'bronze',
+        robot1Credits: 7_000, robot1StreamingRevenue: 500, robot1FinalHP: 0, robot1Destroyed: true,
+      })).id);
+      battleIds.push((await createTestBattle({
+        robot1Id: r1, robot2Id: r3, battleType: 'koth', leagueType: 'koth', robot1Credits: 4_000, robot1StreamingRevenue: 1_000, robot1FinalHP: 5,
+      })).id);
+      // A forfeit is never simulated and is left out.
+      battleIds.push((await createTestBattle({ robot1Id: r1, robot2Id: r3, battleType: 'tag_team', robot1Credits: 9_999, robot1Forfeited: true })).id);
+    });
+
+    afterAll(async () => {
+      await prisma.battle.deleteMany({ where: { id: { in: battleIds } } });
+      await prisma.financialLedger.deleteMany({ where: { financialEventId: { startsWith: `facts-history-${suffix}` } } });
+      if (originalTotalCycles !== null) {
+        await prisma.cycleMetadata.update({ where: { id: 1 }, data: { totalCycles: originalTotalCycles } });
+      }
+    });
+
+    it('averages recurring income and costs over the closed cycles of the window, normalised for discounts', async () => {
+      const facts = await loadStableFacts(prisma, fixture.profileId, { season: SEASON });
+      const economy = facts.history?.economy;
+      expect(economy).toMatchObject({ cycles: 2, battleIncomePerCycle: 15_000, streamingBasePerCycle: 1_000 });
+      expect(economy?.repairBasePerCycle).toBeCloseTo(10_000);
+      // ₡2,000 operating costs per cycle minus the facility upkeep held now (Workshop L3, Lab L2, Storage L1, Booking L1 = ₡1,150).
+      expect(economy?.otherOperatingPerCycle).toBeCloseTo(850);
+    });
+
+    it('keeps each robot’s last 10 battles per event type with income and final HP, and its range band', async () => {
+      const facts = await loadStableFacts(prisma, fixture.profileId, { season: SEASON });
+      const one = facts.history?.eventResults.find((r) => r.robotId === r1);
+      const pistol = await prisma.weapon.findFirstOrThrow({ where: { name: 'Laser Pistol' }, select: { rangeBand: true } });
+      expect(one?.rangeBand).toBe(pistol.rangeBand);
+      expect(one?.byEvent.league_1v1).toHaveLength(10);
+      expect(one?.byEvent.league_1v1?.[0]).toEqual({ income: 1_511, hpPercent: 100 });
+      expect(one?.byEvent.grand_melee).toEqual([{ income: 7_500, hpPercent: 0 }]);
+      expect(one?.byEvent.koth).toEqual([{ income: 5_000, hpPercent: 50 }]);
+      expect(one?.byEvent.tag_team).toBeUndefined();
+      expect(facts.history?.eventResults.find((r) => r.robotId === r3)?.rangeBand).toBeNull();
+    });
+
+    it('reuses the history it is given instead of reading it again', async () => {
+      const history = { economy: null, eventResults: [] };
+      const facts = await loadStableFacts(prisma, fixture.profileId, { season: SEASON, history });
+      expect(facts.history).toBe(history);
+    });
   });
 
   it('loads the Robot_Blueprints and the weapon catalogue as planner facts', async () => {

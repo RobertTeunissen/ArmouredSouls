@@ -6,9 +6,9 @@
   "backstory": "Hyperion Loader Division enters the arena with a clear doctrine. Corporate income and facilities fund industrial fighting machines. Every surviving machine returns to the workshop before the next booking.",
   "strategy": {
     "key": "tycoon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {
-      "20": 3
+      "21": 3
     }
   },
   "teamNames": {

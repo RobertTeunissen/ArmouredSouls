@@ -6,7 +6,7 @@
   "backstory": "A reluctant security construct keeps one arena account functioning through practical equipment and disciplined repairs. Concentrated refinement follows a complete final weapon upgrade.",
   "strategy": {
     "key": "paragon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

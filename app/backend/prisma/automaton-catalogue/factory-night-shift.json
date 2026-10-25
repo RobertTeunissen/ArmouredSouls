@@ -6,9 +6,9 @@
   "backstory": "When the supervisors leave, the first three machines take the arena booking. The overtime crew follows: six factory robots turn a night shift into three pairs, two trios, and a very expensive maintenance report.",
   "strategy": {
     "key": "trio",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {
-      "12": 6
+      "13": 6
     }
   },
   "teamNames": {

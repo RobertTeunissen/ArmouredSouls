@@ -756,7 +756,11 @@ pnpm run automaton:sync --dry-run  # reports what it would add and fill
 
 ### Strategy_Definition_Files
 
-**Location**: `app/backend/src/config/automaton-strategies/{key}.v{version}.json`; six files at version 1 (`swarm`, `paragon`, `duo`, `trio`, `tycoon`, `generalist`). `pnpm run build` copies the directory into `dist/config/automaton-strategies/`.
+**Location**: `app/backend/src/config/automaton-strategies/{key}.v{version}.json`; six strategies (`swarm`, `paragon`, `duo`, `trio`, `tycoon`, `generalist`), each at versions 1 and 2. `pnpm run build` copies the directory into `dist/config/automaton-strategies/`.
+
+Every Catalogue_Entry pins the latest version of its strategy; `pnpm run automaton:catalogue-upgrade` moves entries (and their position-keyed `targetOverrides`) to a new version.
+
+Goal types: `robots`, `facility` (with `facilityType`), `attributes`, `weapons`, `refine`, `economy` (target = longest payback in cycles, 0–50, 0 = off; see `PRD_AUTOMATON_STABLES.md` "Economy Goal").
 
 **Format** (`schemaVersion` 1, validated by `strategyDefinitionSchema` plus the builder rules):
 

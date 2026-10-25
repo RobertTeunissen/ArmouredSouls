@@ -6,7 +6,7 @@
   "backstory": "Sweepers establish the municipal account, cutters add pressure and compactors complete the heavy line. Recruitment and practical equipment keep the eleven-machine grid productive.",
   "strategy": {
     "key": "swarm",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

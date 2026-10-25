@@ -6,9 +6,9 @@
   "backstory": "Cauldron Machineworks enters the arena with a clear doctrine. Develop a scout, ranged hunter, and heavy platform. Every surviving machine returns to the workshop before the next booking.",
   "strategy": {
     "key": "generalist",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {
-      "14": 4
+      "15": 4
     }
   },
   "teamNames": {

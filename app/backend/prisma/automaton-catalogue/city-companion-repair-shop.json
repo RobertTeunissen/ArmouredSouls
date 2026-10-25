@@ -6,7 +6,7 @@
   "backstory": "A simple companion machine rebuilds its arena prospects through modest equipment and careful repairs. The shop improves one body and keeps its retreat policy conservative.",
   "strategy": {
     "key": "paragon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

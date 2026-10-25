@@ -244,3 +244,29 @@ export async function savingStreakLength(profileId: number, currentId: number, g
   }
   return streak;
 }
+
+// ─── Balance transitions ─────────────────────────────────────────────
+
+/** How a turn's start balance relates to the previous turn's (negative-balance alert). */
+export type BalanceTransition = 'turned_negative' | 'still_negative' | 'recovered' | 'non_negative';
+
+/**
+ * Start balance of the profile's latest earlier turn of any status (skipped
+ * turns record the cohort balance), or null when there is none (first turn,
+ * or the first turn after Season_Rollover purged the history).
+ */
+export async function previousStartBalance(profileId: number, currentId: number): Promise<number | null> {
+  const previous = await prisma.automatonTurn.findFirst({
+    where: { profileId, id: { not: currentId } },
+    orderBy: [{ startedAt: 'desc' }, { id: 'desc' }],
+    select: { startBalance: true },
+  });
+  return previous?.startBalance ?? null;
+}
+
+/** Classify a start balance against the previous one; no previous turn counts as non-negative. */
+export function balanceTransition(balance: number, previous: number | null): BalanceTransition {
+  const wasNegative = previous !== null && previous < 0;
+  if (balance < 0) return wasNegative ? 'still_negative' : 'turned_negative';
+  return wasNegative ? 'recovered' : 'non_negative';
+}

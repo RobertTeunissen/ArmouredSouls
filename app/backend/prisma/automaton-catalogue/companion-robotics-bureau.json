@@ -6,7 +6,7 @@
   "backstory": "The bureau sends one service machine into the arena with restrained equipment and a conservative retreat policy. Incremental refinement follows dependable maintenance.",
   "strategy": {
     "key": "paragon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

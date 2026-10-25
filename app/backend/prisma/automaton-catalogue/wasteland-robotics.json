@@ -6,9 +6,9 @@
   "backstory": "Wasteland Robotics enters the arena with a clear doctrine. Grow from utility machinery to specialist combat models. Every surviving machine returns to the workshop before the next booking.",
   "strategy": {
     "key": "generalist",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {
-      "14": 4
+      "15": 4
     }
   },
   "teamNames": {

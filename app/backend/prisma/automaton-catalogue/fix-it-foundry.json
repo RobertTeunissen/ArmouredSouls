@@ -6,10 +6,10 @@
   "backstory": "Fix It Foundry enters the arena with a clear doctrine. Small durable partners with protective build choices. Every surviving machine returns to the workshop before the next booking.",
   "strategy": {
     "key": "duo",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {
-      "11": 6,
-      "13": 3
+      "12": 6,
+      "14": 3
     }
   },
   "teamNames": {

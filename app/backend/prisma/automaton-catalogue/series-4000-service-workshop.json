@@ -6,7 +6,7 @@
   "backstory": "A conscientious service mechanoid protects its equipment and keeps meticulous repair accounts. The workshop backs one defensive contender with gradual shield and weapon improvements.",
   "strategy": {
     "key": "paragon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

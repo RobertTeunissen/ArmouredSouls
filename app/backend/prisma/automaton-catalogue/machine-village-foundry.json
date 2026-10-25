@@ -6,9 +6,9 @@
   "backstory": "A careful village machine, a small contact frame and a heavier biped make an adaptable repaired roster. Modest purchases and maintenance keep all three useful.",
   "strategy": {
     "key": "generalist",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {
-      "14": 3
+      "15": 3
     }
   },
   "teamNames": {

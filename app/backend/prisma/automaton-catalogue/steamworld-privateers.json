@@ -6,9 +6,9 @@
   "backstory": "SteamWorld Privateers enters the arena with a clear doctrine. Build income before overextending the crew. Every surviving machine returns to the workshop before the next booking.",
   "strategy": {
     "key": "tycoon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {
-      "20": 3
+      "21": 3
     }
   },
   "teamNames": {

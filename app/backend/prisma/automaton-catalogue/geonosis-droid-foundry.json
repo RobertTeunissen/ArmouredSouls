@@ -6,7 +6,7 @@
   "backstory": "The foundry ships practical infantry first, then fills the line with guards, walkers and heavy platforms. Kalani keeps the production queue moving and the repair bill under control.",
   "strategy": {
     "key": "swarm",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

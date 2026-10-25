@@ -6,7 +6,7 @@
   "backstory": "Two agricultural machines turn practical construction into complementary arena work. A heavy contact frame and protected utility partner share equipment spending and a repair account.",
   "strategy": {
     "key": "duo",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

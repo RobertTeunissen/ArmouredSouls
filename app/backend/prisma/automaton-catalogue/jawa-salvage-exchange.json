@@ -6,9 +6,9 @@
   "backstory": "The exchange turns discarded service machines into paying arena assets. Income facilities come first, and the repaired trio earns its equipment one careful purchase at a time.",
   "strategy": {
     "key": "tycoon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {
-      "20": 3
+      "21": 3
     }
   },
   "teamNames": {

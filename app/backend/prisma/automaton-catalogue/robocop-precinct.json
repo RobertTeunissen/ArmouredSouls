@@ -4,7 +4,7 @@
   "stableName": "Old Detroit Precinct",
   "franchise": "RoboCop",
   "backstory": "Part man, part machine, all paperwork. One unit, one sidearm, and an upgrade budget signed off by the board. The precinct does not field a team — it does not need one.",
-  "strategy": { "key": "paragon", "version": 1, "targetOverrides": {} },
+  "strategy": { "key": "paragon", "version": 2, "targetOverrides": {} },
   "teamNames": {
     "twoVsTwo": ["Delta City Patrol"],
     "threeVsThree": []

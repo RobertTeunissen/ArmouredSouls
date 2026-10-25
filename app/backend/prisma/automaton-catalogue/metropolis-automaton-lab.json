@@ -6,7 +6,7 @@
   "backstory": "Metropolis Automaton Lab enters the arena with a clear doctrine. An iconic balanced metal automaton with concentrated refinement. Every surviving machine returns to the workshop before the next booking.",
   "strategy": {
     "key": "paragon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

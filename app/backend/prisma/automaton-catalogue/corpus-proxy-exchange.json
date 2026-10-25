@@ -6,9 +6,9 @@
   "backstory": "The Exchange buys machines the way other firms buy securities: in complementary lots. Three light proxies establish the account; three Bursas turn it into a six-unit enforcement portfolio.",
   "strategy": {
     "key": "trio",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {
-      "12": 6
+      "13": 6
     }
   },
   "teamNames": {

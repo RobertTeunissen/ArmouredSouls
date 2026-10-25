@@ -6,7 +6,7 @@
   "backstory": "Scavenged armour and a dangerous close-range weapon give the salvage yard its single champion. Concentrated upgrades improve one repaired machine rather than creating disposable replacements.",
   "strategy": {
     "key": "paragon",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {

@@ -6,9 +6,9 @@
   "backstory": "The Foundry opens with a shielded spearhead, a ranged platform, and a stubborn brawler. Its second delivery completes a six-machine formation built to keep three pairs and two trios in work.",
   "strategy": {
     "key": "trio",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {
-      "12": 6
+      "13": 6
     }
   },
   "teamNames": {

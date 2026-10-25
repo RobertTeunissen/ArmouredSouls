@@ -6,9 +6,9 @@
   "backstory": "Three mechanical creatures bring heavy contact, short-range pressure and a guarded front to the forge. Their source forms remain single complete bodies with ordinary arena loadouts.",
   "strategy": {
     "key": "generalist",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {
-      "14": 3
+      "15": 3
     }
   },
   "teamNames": {

@@ -6,8 +6,9 @@
  *   `notify` wraps; it never throws) plus `logger.error`, for: a failed turn,
  *   a Turn_Step that reached its deadline (kind
  *   `automaton_step_budget_exhausted`), the same Goal Saving for more than 14
- *   consecutive turns (informational), a negative balance at turn start,
- *   `invalid_parameters`, Free_Upkeep issues (the product owner asked to be
+ *   consecutive turns (informational), a balance that turned negative at
+ *   turn start or recovered from one (a stable that stays negative is only
+ *   counted, in the same messages and the step log), `invalid_parameters`, Free_Upkeep issues (the product owner asked to be
  *   told whenever something fails), a failed Turn_Step call (also a cutover
  *   or a lost lease that stopped a running step), a rejected
  *   Strategy_Version upgrade (one alert per profile, task 9.9) and
@@ -32,6 +33,7 @@ export const AUTOMATON_ALERT_KINDS = [
   'automaton_step_budget_exhausted',
   'automaton_saving_streak',
   'automaton_negative_balance',
+  'automaton_balance_recovered',
   'automaton_invalid_parameters',
   'automaton_upkeep_issues',
   'automaton_turn_step_failed',
@@ -47,7 +49,8 @@ const TITLES: Record<AutomatonAlertKind, string> = {
   automaton_turn_failed: '🚨 Automaton turn failed',
   automaton_step_budget_exhausted: '🚨 Automaton Turn_Step deadline reached',
   automaton_saving_streak: 'ℹ️ Automaton saving for the same goal',
-  automaton_negative_balance: '⚠️ Automaton balance negative at turn start',
+  automaton_negative_balance: '⚠️ Automaton balance turned negative',
+  automaton_balance_recovered: '✅ Automaton balance recovered',
   automaton_invalid_parameters: '🚨 Automaton strategy parameters invalid',
   automaton_upkeep_issues: '⚠️ Automaton upkeep issue',
   automaton_turn_step_failed: '🚨 Automaton Turn_Step failed',
@@ -97,10 +100,25 @@ export function setAlertSender(sender: AlertSender): AlertSender {
  */
 export interface AutomatonAlertDigest {
   readonly entries: Map<AutomatonAlertKind, Array<{ subject: string; detail: string }>>;
+  /**
+   * Stables of the step that started their turn with a negative balance,
+   * whether they just turned negative or already were. Only the transitions
+   * are listed (`automaton_negative_balance`, `automaton_balance_recovered`);
+   * this total is added to their messages. Nothing is sent when no stable
+   * changed state.
+   */
+  negativeBalanceTotal: number;
 }
 
 export function createAlertDigest(): AutomatonAlertDigest {
-  return { entries: new Map() };
+  return { entries: new Map(), negativeBalanceTotal: 0 };
+}
+
+/** Kinds whose digest message also states the step's negative-balance total. */
+const BALANCE_KINDS: ReadonlySet<AutomatonAlertKind> = new Set(['automaton_negative_balance', 'automaton_balance_recovered']);
+
+function negativeTotalNote(total: number): string {
+  return ` (${total} stable(s) negative in total)`;
 }
 
 /** Discord rejects messages over 2000 characters; stay below with margin. */
@@ -146,9 +164,11 @@ export function formatDigestMessage(
   kind: AutomatonAlertKind,
   turn: TurnLabel,
   entries: ReadonlyArray<{ subject: string; detail: string }>,
+  negativeTotal: number | null = null,
 ): string {
-  if (entries.length === 1) return `${TITLES[kind]} — ${entries[0].subject}: ${entries[0].detail}`;
-  let message = `${TITLES[kind]} — ${describeTurn(turn)}: ${entries.length} stable(s)`;
+  const totalNote = negativeTotal !== null && BALANCE_KINDS.has(kind) ? negativeTotalNote(negativeTotal) : '';
+  if (entries.length === 1) return `${TITLES[kind]} — ${entries[0].subject}: ${entries[0].detail}${totalNote}`;
+  let message = `${TITLES[kind]} — ${describeTurn(turn)}: ${entries.length} stable(s)${totalNote}`;
   for (let i = 0; i < entries.length; i++) {
     const line = `\n• ${entries[i].subject}: ${entries[i].detail}`;
     const rest = entries.length - i;
@@ -170,11 +190,15 @@ export function formatDigestMessage(
 export async function flushAlertDigest(digest: AutomatonAlertDigest, turn: TurnLabel): Promise<string[]> {
   const messages: string[] = [];
   for (const [kind, entries] of digest.entries) {
-    const message = formatDigestMessage(kind, turn, entries);
+    const message = formatDigestMessage(kind, turn, entries, digest.negativeBalanceTotal);
     messages.push(message);
     await dispatch(message);
   }
+  if (digest.negativeBalanceTotal > 0) {
+    logger.info(`[automaton-turns] ${describeTurn(turn)}: ${digest.negativeBalanceTotal} stable(s) started their turn with a negative balance`);
+  }
   digest.entries.clear();
+  digest.negativeBalanceTotal = 0;
   return messages;
 }
 
@@ -200,6 +224,7 @@ export function alertInvalidParameters(
   return raiseAutomatonAlert('automaton_invalid_parameters', catalogueKey, `${describeTurn(turn)} ended invalid_parameters: ${detail}`, digest);
 }
 
+/** The stable started this turn negative after a non-negative previous turn (or no previous turn). */
 export function alertNegativeBalance(
   catalogueKey: string,
   turn: TurnLabel,
@@ -210,6 +235,21 @@ export function alertNegativeBalance(
     'automaton_negative_balance',
     catalogueKey,
     `${describeTurn(turn)} started at ₡${balance.toLocaleString('en-US')}; upkeep only, nothing can be bought`,
+    digest,
+  );
+}
+
+/** The stable started this turn at ₡0 or more after a negative previous turn. */
+export function alertBalanceRecovered(
+  catalogueKey: string,
+  turn: TurnLabel,
+  balance: number,
+  digest?: AutomatonAlertDigest,
+): Promise<string> {
+  return raiseAutomatonAlert(
+    'automaton_balance_recovered',
+    catalogueKey,
+    `${describeTurn(turn)} started at ₡${balance.toLocaleString('en-US')} after a negative balance`,
     digest,
   );
 }

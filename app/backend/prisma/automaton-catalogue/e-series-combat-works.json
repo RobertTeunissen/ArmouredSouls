@@ -6,7 +6,7 @@
   "backstory": "A measured precision platform and a heavy close-pressure machine share a compact combat account. The workshop equips both before refining the eligible final gear.",
   "strategy": {
     "key": "duo",
-    "version": 1,
+    "version": 2,
     "targetOverrides": {}
   },
   "teamNames": {
