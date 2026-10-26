@@ -105,9 +105,10 @@ interface BattleParticipantStats {
   robotName: string;
   team: number;
   damageDealt: number;
-  damageReceived: number;
+  /** From the battle summary; null when it has none. */
+  damageReceived: number | null;
   finalHP: number;
-  criticalHits: number;
+  criticalHits: number | null;
 }
 
 interface BattleDetail {
@@ -304,9 +305,9 @@ function TeamStatsGroup({
             <span className="text-white font-medium truncate max-w-[120px]">{p.robotName}</span>
             <div className="flex gap-3 text-tertiary">
               <span title="Damage Dealt">⚔️ {p.damageDealt}</span>
-              <span title="Damage Received">🛡️ {p.damageReceived}</span>
+              <span title="Damage Received">🛡️ {p.damageReceived ?? '—'}</span>
               <span title="HP Remaining">❤️ {p.finalHP}</span>
-              <span title="Critical Hits">💥 {p.criticalHits}</span>
+              <span title="Critical Hits">💥 {p.criticalHits ?? '—'}</span>
             </div>
           </div>
         ))}

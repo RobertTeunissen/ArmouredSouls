@@ -38,7 +38,7 @@ import { GameModeState, GameModeConfig, RobotCombatState, ArenaConfig } from '..
 // ── Constants ────────────────────────────────────────────────────────
 
 /** Maximum battle duration in seconds before declaring a draw (R1.7) */
-const TEAM_BATTLE_MAX_DURATION = 300;
+export const TEAM_BATTLE_MAX_DURATION = 300;
 
 /** Simulation tick interval in seconds (matches combatSimulator) */
 const SIMULATION_TICK = 0.1;

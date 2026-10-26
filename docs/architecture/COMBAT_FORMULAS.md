@@ -198,6 +198,8 @@ When a weapon malfunctions:
 
 ### Display Format (Extended Battle Logs - Admin)
 
+Stored per event as `formulaBreakdown.calculation` in `battle_log.detailedCombatEvents` (every mode; KotH and Grand Melee since the Battles redesign) and shown in the admin Battles page's combat log and its "Copy for analysis" export (`/admin/battles`). The player battle report does not receive it.
+
 **Successful Attack**:
 ```
 Malfunction: 20 base - (15.0 weapon_control × 0.4) = 14.0% (rolled 45.3, result: weapon reliable)

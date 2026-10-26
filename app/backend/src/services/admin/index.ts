@@ -1,12 +1,10 @@
 export {
-  mapBattleRecord,
-  buildTagTeamWhere,
-  fetchTagTeamBattles,
   getAdminBattleList,
   getAdminBattleDetail,
-  type BattleQueryParams,
-  type BattleWithDetails,
-} from './adminBattleService';
+  getAdminBattleLog,
+  exportBattleText,
+  exportBattleJson,
+} from './battles';
 
 export {
   getWeaponStats,

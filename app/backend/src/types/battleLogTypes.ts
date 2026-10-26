@@ -117,9 +117,21 @@ export interface TagTeamBattleLogData {
  * Battle log JSON for a King of the Hill battle.
  * Produced by `CombatMessageGenerator.buildKothBattleLog()`.
  */
+/**
+ * How a KotH / Grand Melee log's `detailedCombatEvents` were stored. Logs
+ * without this marker predate it: high-frequency events sampled, formulas stripped.
+ */
+export interface KothLogStorage {
+  /** Per-event `formulaBreakdown` kept (admin calculation checks). */
+  formulas: boolean;
+  /** Movement / range / shield-regen events thinned by `sampleEventsForStorage`. */
+  sampled: boolean;
+}
+
 export interface KothBattleLogData {
   events: NarrativeEvent[];
   detailedCombatEvents: unknown[];
+  storage: KothLogStorage;
   isKothMatch: true;
   participantCount: number;
   arenaRadius: number;

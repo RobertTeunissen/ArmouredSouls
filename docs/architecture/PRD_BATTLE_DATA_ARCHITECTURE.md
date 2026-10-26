@@ -9,6 +9,7 @@
 ---
 
 ## Version History
+- v3.4 (October 25, 2026) — Added "Combat Log Storage": KotH and Grand Melee logs keep formula breakdowns (`battleLog.storage` marker), the player battle log no longer sends them, and the admin Battles page reads them.
 - v3.3 (October 19, 2026) — Added "Robot Deletion and Battle Retention": account reset and the Generated_Stable purge delete only the deleted robots' participant rows (#294).
 - v3.2 (October 15, 2026) — Added "Forfeit Battle Records" (`battle_participants.forfeited`, the forfeit battle shape, the history classifier) and "Match failure policy" (#536).
 - v3.1 (October 14, 2026) — Added "Standings lifecycle": rows are created by `standingPlacement` on the first matchable subscription, never at robot/team creation or by battle recording.
@@ -159,9 +160,24 @@ History and battle detail classify a forfeit from permanent data only (`classify
 - `performAccountReset` (`services/common/resetService.ts`) — a player's mid-season reset.
 - `deleteGeneratedStables` (`services/season/seasonPurgeService.ts`) — Season_Rollover purge of Generated_Stables (the battles themselves are purged in a later rollover stage).
 
-Durable battle rows outlive participants: the `battles` row, its `battle_summaries` row (which keeps each robot's name in `per_robot`) and every other robot's participant rows are kept. Readers must tolerate a missing side: the match history and battle log show it as `Unknown`, the admin battle list returns `robot1`/`robot2` as `null` and names a removed winner `Unknown` (a draw is only `winnerId = null`). Archive tables have no FK to robots or battles and are not touched.
+Durable battle rows outlive participants: the `battles` row, its `battle_summaries` row (which keeps each robot's name in `per_robot`) and every other robot's participant rows are kept. Readers must tolerate a missing side: the match history and battle log show it as `Unknown`, and the admin Battles list shows the side as `Unknown` with no winner marked; the battle stays a win (a draw is only `winnerId = null` and `winningSide = null`). Archive tables have no FK to robots or battles and are not touched.
 
 A bye or walkover whose only participant was a deleted robot ends with zero participants; see the unpaid-walkover signature in the [Financial Ledger Audit Guide](../guides/FINANCIAL_LEDGER_AUDIT_GUIDE.md).
+
+---
+
+## Combat Log Storage
+
+`battles.battle_log` holds the replay and debug data; the nightly retention job (`services/retention/battleLogRetentionService.ts`, 01:30 UTC) sets it to NULL after `BATTLE_LOG_RETENTION_DAYS` (7). Everything permanent lives in `battle_participants` and `battle_summaries`.
+
+| Modes | `detailedCombatEvents` |
+|---|---|
+| League 1v1, 2v2, 3v3, Tag Team, all tournaments | Every simulator event, with `formulaBreakdown` (calculation text, components, result) on attack, critical, miss, counter and malfunction events, and positions |
+| KotH, Grand Melee | `buildKothBattleLog` (`services/battle/combat-messages/kothEventConverter.ts`) under `KOTH_LOG_STORAGE`: every event with its formula breakdown, like the other modes. The log records this in `battleLog.storage = { formulas, sampled }`; logs without the marker predate it (sampled by `sampleEventsForStorage`, no formulas) |
+
+Storing every KotH / Grand Melee event measured ×4–5 the size of the old log (Grand Melee ~20 MB raw JSON per battle; ≈ +5.5 GB for the 7-day window on ACC). If disk runs short, `sampled: true` in `KOTH_LOG_STORAGE` thins movement, range-transition and shield-regen events again (≈ +0.9 GB with formulas kept).
+
+Formula breakdowns are admin-only: `/api/matches/battles/:id/log` strips `formulaBreakdown`, `rangePenalty` and `attackAngle` (`PLAYER_LOG_HIDDEN_FIELDS` in `matchHistoryService.ts`); the admin Battles routes (`/api/admin/battles/:id/log`, `/export`) serve them. The admin outcome rule (`services/admin/battles/battleOutcome.ts`) reads only permanent data.
 
 ---
 

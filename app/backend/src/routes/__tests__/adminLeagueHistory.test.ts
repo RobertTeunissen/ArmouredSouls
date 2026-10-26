@@ -116,9 +116,13 @@ jest.mock('../../services/admin/adminAuditLogService', () => ({
   getEntries: jest.fn(),
 }));
 
-jest.mock('../../services/admin/adminBattleService', () => ({
+jest.mock('../../services/admin/battles', () => ({
+  ...jest.requireActual('../../services/admin/battles/battleFilters'),
   getAdminBattleList: jest.fn(),
   getAdminBattleDetail: jest.fn(),
+  getAdminBattleLog: jest.fn(),
+  exportBattleText: jest.fn(),
+  exportBattleJson: jest.fn(),
 }));
 
 jest.mock('../../services/moderation/adminUploadsHandler', () => ({

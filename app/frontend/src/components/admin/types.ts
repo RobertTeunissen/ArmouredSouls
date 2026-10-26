@@ -77,53 +77,6 @@ export interface SystemStats {
   };
 }
 
-export interface Battle {
-  id: number;
-  /** Null when that side's robot was deleted (account reset, Generated_Stable purge). */
-  robot1: { id: number; name: string } | null;
-  robot2: { id: number; name: string } | null;
-  winnerId: number | null;
-  winnerName: string;
-  leagueType: string;
-  durationSeconds: number;
-  robot1FinalHP: number;
-  robot2FinalHP: number;
-  robot1ELOBefore: number;
-  robot2ELOBefore: number;
-  robot1ELOAfter: number;
-  robot2ELOAfter: number;
-  createdAt: string;
-  /** Distinguishes 1v1 from 2v2 battles when returned by the admin battles endpoint */
-  battleFormat?: '1v1' | '2v2';
-  /** Battle type: league_1v1, tournament_1v1, tagteam, koth, grand_melee, league_2v2, or league_3v3 */
-  battleType?: 'league' | 'league_1v1' | 'tournament' | 'tournament_1v1' | 'tagteam' | 'koth' | 'grand_melee' | 'league_2v2' | 'league_3v3';
-  /** Team size for team battles (2 for 2v2, 3 for 3v3) */
-  teamSize?: number;
-  /** Team 1 active robot name (for 2v2 tag team battles) */
-  team1ActiveName?: string;
-  /** Team 1 reserve robot name (for 2v2 tag team battles) */
-  team1ReserveName?: string;
-  /** Team 2 active robot name (for 2v2 tag team battles) */
-  team2ActiveName?: string;
-  /** Team 2 reserve robot name (for 2v2 tag team battles) */
-  team2ReserveName?: string;
-  /** Team 1 ID (for 2v2 tag team battles) */
-  team1Id?: number;
-  /** Team 2 ID (for 2v2 tag team battles) */
-  team2Id?: number;
-}
-
-export interface BattleListResponse {
-  battles: Battle[];
-  pagination: {
-    page: number;
-    limit: number;
-    totalBattles: number;
-    totalPages: number;
-    hasMore: boolean;
-  };
-}
-
 export interface RobotStats {
   summary: {
     totalRobots: number;
@@ -254,27 +207,6 @@ export interface RecentUsersResponse {
   usersWithIssues: number;
   users: RecentUser[];
   timestamp: string;
-}
-
-/** Tag team battle data shape for 2v2 battles displayed in admin Battle Logs */
-export interface TagTeamBattle extends Battle {
-  battleFormat: '1v1' | '2v2';
-  teams?: {
-    team1: {
-      id: number;
-      activeRobot: { id: number; name: string };
-      reserveRobot: { id: number; name: string };
-      stableId: number;
-      league: string;
-    };
-    team2: {
-      id: number;
-      activeRobot: { id: number; name: string };
-      reserveRobot: { id: number; name: string };
-      stableId: number;
-      league: string;
-    };
-  };
 }
 
 /** Repair log event from the admin audit-log repairs endpoint */

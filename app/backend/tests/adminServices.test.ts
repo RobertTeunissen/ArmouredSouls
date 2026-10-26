@@ -1,11 +1,9 @@
 /**
  * Unit tests for pure (non-database) admin service functions.
- * Tests calculateStats, buildTagTeamWhere, and mapBattleRecord.
+ * Tests calculateStats.
  */
 
 import { calculateStats } from '../src/services/admin/adminStatsService';
-import { buildTagTeamWhere, mapBattleRecord } from '../src/services/admin/adminBattleService';
-import type { BattleWithDetails } from '../src/services/admin/adminBattleService';
 
 // ── calculateStats ───────────────────────────────────────────────────
 
@@ -70,112 +68,5 @@ describe('calculateStats', () => {
     expect(typeof result.stdDev).toBe('number');
     // Verify rounding: stdDev of [1,2,3] = sqrt(((1-2)^2+(2-2)^2+(3-2)^2)/3) = sqrt(2/3) ≈ 0.8165
     expect(result.stdDev).toBe(0.82);
-  });
-});
-
-// ── buildTagTeamWhere ────────────────────────────────────────────────
-
-describe('buildTagTeamWhere', () => {
-  it('should return base where clause with no args', () => {
-    const where = buildTagTeamWhere();
-    expect(where.battleType).toBe('tag_team');
-    expect(where.leagueType).toBeUndefined();
-    expect(where.OR).toBeUndefined();
-  });
-
-  it('should add leagueType filter when leagueType is provided', () => {
-    const where = buildTagTeamWhere(undefined, 'gold');
-    expect(where.leagueType).toBe('gold');
-  });
-
-  it('should not add leagueType filter when leagueType is "all"', () => {
-    const where = buildTagTeamWhere(undefined, 'all');
-    expect(where.leagueType).toBeUndefined();
-  });
-
-  it('should add search condition when search is provided', () => {
-    const where = buildTagTeamWhere('Destroyer');
-    expect(where.OR).toBeDefined();
-    expect(where.OR).toHaveLength(1);
-    expect((where.OR as any)[0].participants.some.robot.name.contains).toBe('Destroyer');
-  });
-
-  it('should combine search and leagueType filters', () => {
-    const where = buildTagTeamWhere('Destroyer', 'silver');
-    expect(where.leagueType).toBe('silver');
-    expect(where.OR).toBeDefined();
-    expect((where.OR as any)[0].participants.some.robot.name.contains).toBe('Destroyer');
-  });
-});
-
-// ── mapBattleRecord ──────────────────────────────────────────────────
-
-describe('mapBattleRecord', () => {
-  const mockBattle: BattleWithDetails = {
-    id: 42,
-    winnerId: 1,
-    leagueType: 'gold',
-    battleType: 'league_1v1',
-    durationSeconds: 120,
-    createdAt: new Date('2025-01-15T12:00:00Z'),
-    participants: [
-      { robotId: 1, team: 1, role: null, robot: { id: 1, name: 'Alpha', userId: 10 }, finalHP: 50, eloBefore: 1200, eloAfter: 1220 } as any,
-      { robotId: 2, team: 2, role: null, robot: { id: 2, name: 'Beta', userId: 20 }, finalHP: 0, eloBefore: 1180, eloAfter: 1160 } as any,
-    ],
-  } as any;
-
-  it('should map battle to correct response shape', () => {
-    const result = mapBattleRecord(mockBattle, '1v1');
-
-    expect(result.id).toBe(42);
-    expect(result.robot1).toEqual({ id: 1, name: 'Alpha', userId: 10 });
-    expect(result.robot2).toEqual({ id: 2, name: 'Beta', userId: 20 });
-    expect(result.winnerId).toBe(1);
-    expect(result.winnerName).toBe('Alpha');
-    expect(result.leagueType).toBe('gold');
-    expect(result.durationSeconds).toBe(120);
-    expect(result.battleFormat).toBe('1v1');
-  });
-
-  it('should extract participant HP and ELO data', () => {
-    const result = mapBattleRecord(mockBattle, '1v1');
-
-    expect(result.robot1FinalHP).toBe(50);
-    expect(result.robot2FinalHP).toBe(0);
-    expect(result.robot1ELOBefore).toBe(1200);
-    expect(result.robot2ELOBefore).toBe(1180);
-    expect(result.robot1ELOAfter).toBe(1220);
-    expect(result.robot2ELOAfter).toBe(1160);
-  });
-
-  it('should show "Draw" when winnerId is null', () => {
-    const drawBattle = { ...mockBattle, winnerId: null };
-    const result = mapBattleRecord(drawBattle as any, '1v1');
-    expect(result.winnerName).toBe('Draw');
-  });
-
-  it('should show robot2 name when robot2 wins', () => {
-    const r2Wins = { ...mockBattle, winnerId: 2 };
-    const result = mapBattleRecord(r2Wins as any, '1v1');
-    expect(result.winnerName).toBe('Beta');
-  });
-
-  it('should show "Unknown" when the winner participant was removed (issue #294)', () => {
-    const winnerRemoved = { ...mockBattle, participants: mockBattle.participants.filter(p => p.robotId !== 1) };
-    const result = mapBattleRecord(winnerRemoved, '1v1');
-    expect(result.robot1).toBeNull();
-    expect(result.robot2).toEqual({ id: 2, name: 'Beta', userId: 20 });
-    expect(result.winnerName).toBe('Unknown');
-  });
-
-  it('should default HP/ELO to 0 when participants are missing', () => {
-    const noParticipants = { ...mockBattle, participants: [] };
-    const result = mapBattleRecord(noParticipants as any, '2v2');
-
-    expect(result.robot1FinalHP).toBe(0);
-    expect(result.robot2FinalHP).toBe(0);
-    expect(result.robot1ELOBefore).toBe(0);
-    expect(result.robot2ELOBefore).toBe(0);
-    expect(result.battleFormat).toBe('2v2');
   });
 });

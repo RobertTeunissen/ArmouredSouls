@@ -5,7 +5,7 @@
  */
 
 import { CombatEvent } from '../combatSimulator';
-import { NarrativeEvent, KothBattleLogData } from '../../../types/battleLogTypes';
+import { NarrativeEvent, KothBattleLogData, KothLogStorage } from '../../../types/battleLogTypes';
 import { compressEventsForStorage } from '../../common/eventCompression';
 import {
   generateAttack,
@@ -16,6 +16,15 @@ import {
   generateDestruction,
 } from './messageGenerators';
 import { sampleEventsForStorage } from './eventSampling';
+
+/**
+ * How KotH and Grand Melee logs are stored: every event with its formula
+ * breakdown, like the other modes, so calculations and movement can be debugged.
+ * This measured ×4–5 the size of the old sampled, formula-less log (≈ +5.5 GB
+ * for the 7-day window on ACC). If disk runs short, `sampled: true` thins
+ * movement / range / shield-regen events again (≈ +0.9 GB with formulas kept).
+ */
+export const KOTH_LOG_STORAGE: KothLogStorage = { formulas: true, sampled: false };
 
 /**
  * Convert KotH simulator events into narrative events.
@@ -137,21 +146,23 @@ export function buildKothBattleLog(data: {
     kills: number;
     destroyed: boolean;
   }>;
-}): KothBattleLogData {
-  // 1. Sample events to reduce count
-  const sampledEvents = sampleEventsForStorage(data.events);
+}, storage: KothLogStorage = KOTH_LOG_STORAGE): KothBattleLogData {
+  // 1. Thin out high-frequency events (movement, range, shield regen) unless storing everything
+  const storedEvents = storage.sampled ? sampleEventsForStorage(data.events) : data.events;
 
-  // 2. Compress events to reduce size (strip debug fields)
-  const compressedEvents = compressEventsForStorage(sampledEvents, false);
+  // 2. Detailed events keep their formula breakdowns for admin calculation checks;
+  //    without formulas, strip the debug-only fields as before.
+  const detailedEvents = compressEventsForStorage(storedEvents, storage.formulas);
 
-  // Convert combat events to narrative messages while passing through KotH-specific events
+  // Narrative events never carry formulas (they'd be stored twice).
   const narrativeEvents = convertKothSimulatorEvents(
-    compressedEvents.filter(e => e.type !== 'movement' && e.type !== 'out_of_range')
+    compressEventsForStorage(storedEvents, false).filter(e => e.type !== 'movement' && e.type !== 'out_of_range')
   );
 
   return {
     events: narrativeEvents,
-    detailedCombatEvents: compressedEvents,
+    detailedCombatEvents: detailedEvents,
+    storage,
     isKothMatch: true,
     participantCount: data.participantCount,
     arenaRadius: data.arenaRadius,

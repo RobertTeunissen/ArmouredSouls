@@ -35,7 +35,7 @@ const NAVIGATION_ITEMS = [
   { label: 'Cycle Controls', path: '/admin/cycles' },
   { label: 'Season Control', path: '/admin/seasons' },
   { label: 'Practice Arena', path: '/admin/practice-arena' },
-  { label: 'Battle Logs', path: '/admin/battles' },
+  { label: 'Battles', path: '/admin/battles' },
   { label: 'Robot Stats', path: '/admin/robot-stats' },
   { label: 'Meta', path: '/admin/meta' },
   { label: 'League Health', path: '/admin/league-health' },
@@ -140,7 +140,7 @@ describe('AdminLayout', () => {
     it('should update page title when navigating to different routes', () => {
       renderLayout('/admin/battles');
 
-      expect(screen.getByRole('heading', { level: 1, name: 'Battle Logs' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 1, name: 'Battles' })).toBeInTheDocument();
     });
 
     it('should show "Admin" as fallback title for unknown routes', () => {

@@ -23,7 +23,7 @@ All pages manage their own data fetching. The sidebar collapses to icons on narr
 | **Overview** | Dashboard | `/admin/dashboard` | Status strip, needs attention, player KPIs, battle activity per mode |
 | **Game Operations** | Cycle Controls | `/admin/cycles` | Running job, daily schedule with Run buttons, persistent run history (restarts, missed and interrupted runs), bulk cycle runner |
 | | Practice Arena | `/admin/practice-arena` | Practice usage per UTC day, refusals and unavailable time, top practitioners, how it is used |
-| **Battle Data** | Battle Logs | `/admin/battles` | Paginated battle history with type filters and detail slide-over |
+| **Battle Data** | Battles | `/admin/battles` | Find any battle (all 9 modes, stable type, outcome, date, search); admin check with payout check, combat log with formulas, and export |
 | | Robot Stats | `/admin/robot-stats` | Attribute analysis, outlier detection, win rate correlation |
 | | Meta | `/admin/meta` | What stables choose: stances, loadouts, yield thresholds, facilities, weapons |
 | | League Health | `/admin/league-health` | Per-league robot counts, ELO averages, instance counts |
@@ -46,7 +46,7 @@ All pages manage their own data fetching. The sidebar collapses to icons on narr
 
 All pages use the `AdminFilterBar` component for filter controls — pill-shaped toggle buttons with a consistent look. This includes:
 - Tab-like navigation within pages (e.g., Players: New Players / Auto-Generated / At-Risk)
-- Data type filters (e.g., Battle Logs: All / League / Tournament / Tag Team / KotH)
+- Data type filters (e.g., Battles: All / Draws / Byes / Forfeits / Time limit)
 - User type filters (e.g., Achievements: Real Players / Auto-Generated / All)
 
 ### Stat Cards
@@ -227,11 +227,33 @@ Credit circulation, average/median balance, bankruptcy risk count, and facility 
 
 **API:** `GET /api/admin/economy/overview`
 
-### Battle Logs (`/admin/battles`)
+### Battles (`/admin/battles`)
 
-Paginated battle list with type filter (All / League / Tournament / Tag Team / KotH), robot name search, format indicators (1v1 / 2v2 / KotH), ELO changes, and duration. Detail slide-over shows formula breakdowns.
+A lookup tool for any battle this season, across all stables, plus an admin check of one battle. Any battle also opens in the player report (`/battle/:id`); this page adds what players can't see and doesn't repeat the report.
 
-**API:** `GET /api/admin/battles`, `GET /api/admin/battles/:id`
+**List.** Filters (all kept in the URL, together with the open battle `?battle=`, so a view can be linked):
+- **Stables:** All / Players / Generated / Automatons. Matches battles with at least one robot whose stable has that `users.stable_type`. Every side shows the same tag.
+- **Mode:** the 9 battle types, grouped League (1v1, 2v2, 3v3, Tag Team), Tournament (1v1, 2v2, 3v3), Multi-robot (KotH, Grand Melee).
+- **Date range:** last 24 h, last 7 days (default; the combat-log window), last 30 days, this season.
+- **Search:** robot name, stable name or username, or `#id` / `id` (an id search ignores the date range).
+- **Outcome:** Draws, Byes, Forfeits, Time limit. Byes and forfeits are never counted as draws or time limits.
+
+A row shows mode and tier (or tournament and round, or field size), the sides with their stable (team modes show the team name; KotH and Grand Melee show the winner and "+ N others" by stable type), the result (Win / Draw / Bye / Forfeit), how it ended (Destroyed, Yield, Team eliminated, Time limit, Score reached, Last standing), the largest ELO change, the length and the UTC time. The scope line above the table states the count and every active filter.
+
+**Outcome rule.** Team modes store the winning *team* id in `battles.winner_id`, so the side comes from `winning_side` first, then from the winner robot's team; neither is a draw. Byes come from `is_bye_match` on the schedule or bracket row; forfeits follow `classifyForfeit` (match history service). "Time limit" means the battle lasted the mode's engine limit: 120 s (1v1, tournament 1v1, Grand Melee), 300 s (team modes, Tag Team), 150 s (KotH default). "Score reached" is a KotH winner at the score threshold (from `battle_summaries`). Only permanent data is used, never `battle_log`.
+
+**Admin check (slide-over).**
+- **Copy for analysis:** the whole battle as text: context, the robots' setup at battle start (from the battle-start event), results per robot, payouts against the ledger with the battle-income formula inputs, and every stored event in time order (movement included), with each hit's stored calculation text verbatim. Meant for pasting into an analysis chat or checking calculations by hand.
+- **Download JSON:** the complete record (detail, ledger entries, summary, full stored log).
+- **Open player report ↗.**
+- **Result and context:** cycle (from the ledger entries), league instance or tournament and round, scheduled or bracket match id, and when the combat log is removed.
+- **Participants:** grouped by side (by placement for KotH / Grand Melee): end HP, damage, ELO (or zone score and kills), credits, streaming, prestige, fame, and when each robot was destroyed or yielded.
+- **Payout check:** per stable, the credits on the participants against the `battle_income` and `streaming_revenue` ledger entries that reference the battle (Match / Mismatch with the gap / Missing). Prestige and fame aren't in the ledger.
+- **Combat log:** loaded separately; chips for All / Combat / Movement / Critical hits / Misses / Destroyed and a robot filter; 200 events at a time; "Formula" opens a hit's calculation and components. The log is removed after `BATTLE_LOG_RETENTION_DAYS` (7) by the 01:30 UTC retention job; older battles keep everything else.
+
+KotH and Grand Melee logs store every event with its formula breakdown from this release, like the other modes (`KOTH_LOG_STORAGE` in `kothEventConverter.ts`). That measured ×4–5 the size of the old log (≈ +5.5 GB for the 7-day window on ACC); if disk runs short, `sampled: true` thins movement, range and shield-regen events again (≈ +0.9 GB). Logs from before the change have no formulas and thinned movement, and the panel and export say so.
+
+**API:** `GET /api/admin/battles` (`page`, `limit` ≤ 100, `mode`, `stable`, `outcome`, `range`, `q`), `GET /api/admin/battles/:id`, `GET /api/admin/battles/:id/log`, `GET /api/admin/battles/:id/export?format=text|json`. Admin-only, read-only. Unknown filter values are rejected with 400; a missing battle is 404 `BATTLE_NOT_FOUND`.
 
 ### League Health (`/admin/league-health`)
 

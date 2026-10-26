@@ -1,8 +1,8 @@
 /**
  * Admin Users & Security Routes
  *
- * User management, search, password reset, security events, uploads, audit log,
- * and battle inspection endpoints.
+ * User management, search, password reset, security events, uploads and audit
+ * log endpoints. Battle inspection lives in `adminBattles.ts`.
  * Mounted at /api/admin/ from the main admin router.
  */
 
@@ -11,7 +11,7 @@ import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
 import { authenticateToken, requireAdmin, AuthRequest } from '../middleware/auth';
 import { validateRequest } from '../middleware/schemaValidator';
-import { positiveIntParam, paginationQuery } from '../utils/securityValidation';
+import { positiveIntParam } from '../utils/securityValidation';
 import logger from '../config/logger';
 import { AppError } from '../errors';
 import { securityMonitor } from '../services/security/securityMonitor';
@@ -24,10 +24,6 @@ import {
   getRecentUserActivity,
   getRepairAuditLog,
 } from '../services/admin/adminStatsService';
-import {
-  getAdminBattleList,
-  getAdminBattleDetail,
-} from '../services/admin/adminBattleService';
 import { recordAction as recordAuditAction, getEntries as getAuditEntries } from '../services/admin/adminAuditLogService';
 import { handleAdminUploads, handleAdminCleanup } from '../services/moderation/adminUploadsHandler';
 import prisma from '../lib/prisma';
@@ -37,15 +33,6 @@ import { BANKRUPTCY_RISK_THRESHOLD } from '../services/admin/adminThresholds';
 const router = express.Router();
 
 // --- Zod schemas ---
-
-const battleIdParamsSchema = z.object({
-  id: positiveIntParam,
-});
-
-const battlesQuerySchema = paginationQuery.extend({
-  leagueType: z.string().optional(),
-  battleType: z.string().optional(),
-});
 
 const recentUsersQuerySchema = z.object({
   cycles: z.coerce.number().int().positive().max(200).optional().default(10),
@@ -404,52 +391,6 @@ router.post('/audit-log', authenticateToken, requireAdmin, validateRequest({ bod
   res.json({ success: true });
 });
 
-/**
- * GET /api/admin/battles
- * Get paginated list of battles with filtering and search.
- * Supports battleType: 'all' | 'league' | 'tournament' | 'tagteam' | 'koth'
- * Returns battleFormat ('1v1' | '2v2') on each record.
- */
-router.get('/battles', authenticateToken, requireAdmin, validateRequest({ query: battlesQuerySchema }), async (req: Request, res: Response) => {
-  try {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = Math.min(parseInt(req.query.limit as string) || 20, 100);
-    const search = req.query.search as string;
-    const leagueType = req.query.leagueType as string;
-    const battleType = req.query.battleType as string;
-
-    const result = await getAdminBattleList({ page, limit, search, leagueType, battleType });
-    res.json(result);
-  } catch (error) {
-    logger.error('[Admin] Battles list error:', error);
-    res.status(500).json({
-      error: 'Failed to retrieve battles',
-    });
-  }
-});
-
-/**
- * GET /api/admin/battles/:id
- * Get detailed battle information including full combat log.
- * Detects tag team battles via TagTeamMatch and returns team data when present.
- */
-router.get('/battles/:id', authenticateToken, requireAdmin, validateRequest({ params: battleIdParamsSchema }), async (req: Request, res: Response) => {
-  try {
-    const battleId = parseInt(String(req.params.id));
-
-    if (isNaN(battleId)) {
-      throw new AppError('INVALID_BATTLE_ID', 'Invalid battle ID', 400);
-    }
-
-    const result = await getAdminBattleDetail(battleId);
-    res.json(result);
-  } catch (error) {
-    logger.error('[Admin] Battle detail error:', error);
-    res.status(500).json({
-      error: 'Failed to retrieve battle details',
-    });
-  }
-});
 
 /**
  * GET /api/admin/audit-log/repairs

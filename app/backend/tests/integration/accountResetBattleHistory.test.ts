@@ -23,7 +23,7 @@ import { createTestRobot, createTestUser } from '../testHelpers';
 import { enterRobotStanding, enterTeamStanding } from '../helpers/standings';
 import { performAccountReset } from '../../src/services/common/resetService';
 import { getMatchHistory, getBattleLog } from '../../src/services/match/matchHistoryService';
-import { getAdminBattleList, getAdminBattleDetail } from '../../src/services/admin/adminBattleService';
+import { getAdminBattleList, getAdminBattleDetail } from '../../src/services/admin/battles';
 
 const SUFFIX = randomUUID().slice(0, 8);
 const SEASON_NUMBER = 92940 + Math.floor(Math.random() * 1000);
@@ -395,12 +395,17 @@ describe('Issue #294 — account reset with battle history', () => {
 
     await expect(getBattleLog(battleIds.a)).resolves.not.toBeNull();
 
-    const list = await getAdminBattleList({ page: 1, limit: 50, search: robotNames[o1] });
+    const list = await getAdminBattleList({
+      page: 1, limit: 50, mode: 'all', stable: 'all', outcome: 'all', range: 'season', q: robotNames[o1],
+    });
     const recordA = list.battles.find((b) => b.id === battleIds.a);
     expect(recordA).toBeDefined();
-    expect(recordA?.robot1).toBeNull();
-    expect(recordA?.winnerName).toBe('Unknown');
-    await expect(getAdminBattleDetail(battleIds.a)).resolves.toBeDefined();
+    // The reset removed side 1's robot (the winner): it reads as Unknown, not as a draw.
+    expect(recordA?.result).toBe('win');
+    expect(recordA?.sides.map((s) => s.label)).toEqual(['Unknown', robotNames[o1]]);
+    expect(recordA?.sides.some((s) => s.isWinner)).toBe(false);
+    const detailA = await getAdminBattleDetail(battleIds.a);
+    expect(detailA.participants.map((p) => p.robotId)).toEqual([o1]);
   });
 
   it('a second reset with no robots left also succeeds', async () => {
