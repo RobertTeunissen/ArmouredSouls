@@ -594,6 +594,7 @@ model Battle {
 
   participants       BattleParticipant[] // Per-participant battle data (single source of truth for combatants)
   summary            BattleSummary?       // Pre-computed battle statistics (permanent)
+  builds             BattleParticipantBuild[] // Battle-time builds of the robots that fought
 
   @@index([createdAt])
   @@index([tournamentId])
@@ -601,6 +602,37 @@ model Battle {
   @@index([leagueInstanceId])
   @@index([winnerId])
   @@map("battles")
+}
+
+// Battle-time build of each robot that fought (not byes or forfeiters): what it
+// fought with, for the admin "what wins" analyses. Robot rows change after the
+// battle (upgrades, tuning, weapon swaps); this does not. Shape:
+// src/types/combatBuildTypes.ts. Purged with battles at season rollover.
+model BattleParticipantBuild {
+  id                  Int      @id @default(autoincrement())
+  battleId            Int      @map("battle_id")
+  // No FK: robots can be deleted (account reset) while the battle stays.
+  robotId             Int      @map("robot_id")
+  battleType          String   @map("battle_type") @db.VarChar(20)
+  baseAttributes      Json     @map("base_attributes")
+  tuning              Json
+  effectiveAttributes Json     @map("effective_attributes")
+  // Catalogue weapons.id; refinements as StoredRefinement[].
+  mainWeaponId        Int?     @map("main_weapon_id")
+  mainRefinements     Json?    @map("main_refinements")
+  offhandWeaponId     Int?     @map("offhand_weapon_id")
+  offhandRefinements  Json?    @map("offhand_refinements")
+  loadoutType         String   @map("loadout_type") @db.VarChar(20)
+  stance              String   @db.VarChar(20)
+  yieldThreshold      Int      @map("yield_threshold")
+  createdAt           DateTime @default(now()) @map("created_at")
+
+  battle Battle @relation(fields: [battleId], references: [id], onDelete: Cascade)
+
+  @@unique([battleId, robotId])
+  @@index([battleType, createdAt])
+  @@index([robotId])
+  @@map("battle_participant_builds")
 }
 
 model BattleSummary {

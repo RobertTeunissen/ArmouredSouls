@@ -5,6 +5,7 @@ import {
   getLoadoutBonus,
   getLoadoutModifiedAttributes,
   prepareRobotForCombat,
+  getCombatBuild,
   LOADOUT_BONUSES,
   BASE_HP,
   HP_MULTIPLIER,
@@ -575,6 +576,41 @@ describe('Robot Calculations', () => {
         expect(robot.maxShield).toBeCloseTo(displayed.shieldCapacity * SHIELD_MULTIPLIER, 10);
         expect(robot.currentHP).toBe(robot.maxHP);
         expect(robot.currentShield).toBe(robot.maxShield);
+      });
+    });
+
+    describe('battle-time build capture (admin "what wins")', () => {
+      it('records base levels, tuning, the effective values, weapons with refinements and the setup', () => {
+        const robot = buildRobot('dual_wield', true);
+        robot.stance = 'offensive';
+        robot.yieldThreshold = 15;
+        expect(getCombatBuild(robot)).toBeNull();
+        prepareRobotForCombat(robot, TUNING);
+        const build = getCombatBuild(robot)!;
+        ROBOT_ATTRIBUTES.forEach((attr, i) => {
+          expect({ attr, base: build.baseAttributes[attr] }).toEqual({ attr, base: 10 + i });
+          expect({ attr, effective: build.effectiveAttributes[attr] }).toEqual({ attr, effective: Number(robot[attr as keyof Robot]) });
+        });
+        expect(build.tuning).toEqual(TUNING);
+        expect(build.mainWeapon).toEqual({ weaponId: 1, refinements: [{ tier: 'hone', magnitude: 2, targetAttribute: 'attackSpeed' }] });
+        expect(build.offhandWeapon).toEqual({ weaponId: 2, refinements: [] });
+        expect(build).toMatchObject({ loadoutType: 'dual_wield', stance: 'offensive', yieldThreshold: 15 });
+      });
+
+      it('records no weapon for an empty hand, and nothing for a spread copy', () => {
+        const robot = buildRobot('single', false);
+        prepareRobotForCombat(robot);
+        expect(getCombatBuild(robot)?.offhandWeapon).toBeNull();
+        expect(getCombatBuild(robot)?.tuning).toEqual({});
+        expect(getCombatBuild({ ...robot })).toBeNull();
+      });
+
+      it('keeps the first capture when preparation runs again', () => {
+        const robot = buildRobot('single', false);
+        prepareRobotForCombat(robot, TUNING);
+        const first = getCombatBuild(robot);
+        prepareRobotForCombat(robot, {});
+        expect(getCombatBuild(robot)).toBe(first);
       });
     });
 

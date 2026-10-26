@@ -30,6 +30,7 @@ import { getLeagueWinReward } from '../../utils/economyFormulas';
 import type { PlacementRewardComponent } from '../../types/financialTypes';
 import schedulingService from '../scheduling/schedulingService';
 import { defer } from '../common/deferredWork';
+import { recordCombatBuilds } from '../battle/combatBuildRecorder';
 
 /** Yield the event loop so Express can serve requests between heavy DB work */
 const throttle = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
@@ -480,6 +481,8 @@ async function processGrandMeleeBattle(
       })),
     ],
   });
+
+  await recordCombatBuilds(battle.id, 'grand_melee', ready);
 
   // 11. Write pre-computed battle summary (Spec #39). The hit-grade and id maps
   // are event-driven, so they cover the ready robots only.

@@ -47,6 +47,7 @@ import { runFinancialWriteTransaction } from '../cycle/financialWriteTransaction
 import { prepareRobotForCombat } from '../../utils/robotCalculations';
 import { getTuningBonusesBatch } from '../tuning-pool';
 import standingsService from '../standings/standingsService';
+import { recordCombatBuilds } from '../battle/combatBuildRecorder';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -669,6 +670,8 @@ async function executeSingleTeamBattle(
 
     return battleRecord;
   }, { timeout: 30_000 }); // End transaction (R7.11: rollback on failure)
+
+  await recordCombatBuilds(battle.id, battleType, [...team1Robots, ...team2Robots]);
 
   // Write pre-computed battle summary (Spec #39 — outside transaction, non-blocking)
   const allRobots = [...team1Robots, ...team2Robots];

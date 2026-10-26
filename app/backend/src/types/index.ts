@@ -16,3 +16,4 @@ export * from './prestigeTypes';
 export * from './financeReport';
 export * from './automaton';
 export * from './schedulerTypes';
+export * from './combatBuildTypes';

@@ -2,7 +2,7 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Last Updated**: October 19, 2026 (`battle_participants.robot_id` deletion rule, #294)
+**Last Updated**: October 25, 2026 (`battle_participant_builds`, battle-time builds)
 **Status**: Current Implementation  
 **Version**: v2.0
 
@@ -551,6 +551,29 @@ model BattleParticipant {
 **`forfeited`** (migration `20261015120000_battle_participant_forfeited`, additive, default `false`): `true` when the robot, or the team it belongs to, forfeited because a robot had no main weapon when the battle ran. Forfeited rows are never simulated: `damageDealt = 0`, `finalHP = currentHP`, `destroyed = false`, `credits = 0`. A two-sided battle with any forfeited participant was never fought. A KotH/Grand Melee battle is forfeit-only when every participant forfeited; in a fought placement battle the forfeiters take the bottom placements. Battle history classifies forfeits from this column (plus `scheduled_tournament_matches.status = 'forfeit'`), never from `battle_log`.
 
 **`robot_id`** is a RESTRICT foreign key (no `onDelete`). Paths that delete robots while keeping their battles (account reset, Generated_Stable purge) delete the robots' participant rows explicitly first via `deleteRobotBattleReferences`; the battle, its summary and other robots' participant rows remain (#294).
+
+---
+
+## BattleParticipantBuild Model (`battle_participant_builds`)
+
+The battle-time build of every robot that fought one battle: what it fought with, which the `robots` row can no longer tell after upgrades, tuning or weapon swaps. Written by `recordCombatBuilds` (`services/battle/combatBuildRecorder.ts`) from the build `prepareRobotForCombat` captured; never for byes or forfeiters. Read by the admin Attributes and Weapons analyses. Purged with battles at season rollover.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | Int (PK) | Auto-increment |
+| `battle_id` | Int (FK → battles, cascade) | |
+| `robot_id` | Int | No FK: a deleted robot's rows are removed with its participant rows |
+| `battle_type` | VarChar(20) | The battle's type, for per-mode queries |
+| `base_attributes` | JSONB | Attribute levels bought (23 keys) |
+| `tuning` | JSONB | Tuning bonus per attribute (sparse) |
+| `effective_attributes` | JSONB | What the simulator used: `round2((base + weapon bonuses + tuning) × (1 + loadout))` |
+| `main_weapon_id` / `offhand_weapon_id` | Int? | Catalogue `weapons.id`; null for an empty hand |
+| `main_refinements` / `offhand_refinements` | JSONB? | `{ tier, magnitude, targetAttribute }[]` |
+| `loadout_type`, `stance` | VarChar(20) | As fought (after any battle-time loadout fallback) |
+| `yield_threshold` | Int | |
+| `created_at` | DateTime | |
+
+Unique `(battle_id, robot_id)`; indexes on `(battle_type, created_at)` and `robot_id`. Shape: `src/types/combatBuildTypes.ts`.
 
 ---
 

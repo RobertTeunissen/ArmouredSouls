@@ -57,6 +57,7 @@ import {
   getTierFactor,
   KOTH_CREDIT_BASE_MULTIPLIER,
 } from '../../utils/economyFormulas';
+import { recordCombatBuilds } from '../battle/combatBuildRecorder';
 
 const KOTH_PLACEMENT_CREDIT_MULTIPLIERS: Record<number, number> = {
   1: 1.0, 2: 0.7, 3: 0.5, 4: 0.35, 5: 0.25, 6: 0.2,
@@ -489,6 +490,8 @@ async function processKothBattle(
       })),
     ],
   });
+
+  await recordCombatBuilds(battle.id, 'koth', ready);
 
   // Write pre-computed battle summary (Spec #39). The hit-grade and id maps are
   // event-driven, so they cover the ready robots only.

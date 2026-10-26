@@ -4,6 +4,7 @@ import logger from '../../config/logger';
 import { CombatMessageGenerator } from '../battle/combatMessageGenerator';
 import { computeBattleSummary } from '../battle/battleSummaryComputer';
 import { TagTeamWithRobots, TagTeamBattleResult } from './tagTeamTypes';
+import { recordCombatBuilds } from '../battle/combatBuildRecorder';
 
 /** Minimal shape of a scheduled tag-team match as passed from the orchestrator. */
 interface TagTeamMatchInput {
@@ -142,6 +143,7 @@ export async function createTagTeamBattleRecord(
   ].filter(p => p.robotId > 0); // Skip bye robots (negative IDs)
 
   await prisma.battleParticipant.createMany({ data: participantRows });
+  await recordCombatBuilds(battle.id, 'tag_team', [team1.activeRobot, team1.reserveRobot, team2.activeRobot, team2.reserveRobot]);
 
   // Write pre-computed battle summary (Spec #39)
   const summaryData = computeBattleSummary({

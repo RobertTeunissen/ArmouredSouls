@@ -40,6 +40,7 @@ import { applyLoadoutFallbacks, evaluateCombatEntry, evaluateMatchEntry, type Ma
 import { resolveForfeitEvent } from '../battle/forfeitResolutionService';
 import { BYE_BATTLE_DURATION_SECONDS } from '../battle/byeResolutionService';
 import { completeByeMatch, getCurrentRoundMatches, resolveHigherSeed } from './tournamentService';
+import { recordCombatBuilds } from '../battle/combatBuildRecorder';
 
 // Economic constants
 const _REPAIR_COST_PER_HP = 50; // Cost to repair 1 HP
@@ -691,6 +692,8 @@ async function createTournamentBattleRecord(
       },
     ],
   });
+
+  await recordCombatBuilds(battle.id, 'tournament_1v1', [robot1, robot2]);
 
   // Write pre-computed battle summary (Spec #39)
   const summaryData = computeBattleSummary({

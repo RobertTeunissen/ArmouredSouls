@@ -17,6 +17,7 @@ import { Robot, WeaponInventory, Weapon, Prisma } from '../../generated/prisma';
 import { toNumber } from '../lib/prismaHelpers';
 import { ROBOT_ATTRIBUTES } from '../shared/utils/robotAttributes';
 import type { TuningAttributeMap } from '../services/tuning-pool';
+import type { CombatBuildSnapshot, CombatWeaponSnapshot } from '../types/combatBuildTypes';
 import {
   applyRefinementsToWeapon,
   type RefinementRow,
@@ -145,6 +146,15 @@ export function prepareRobotForCombat(
 ): void {
   if (isPreparedForCombat(robot)) return;
 
+  // Battle-time build (admin "what wins" analysis): base levels before they are
+  // overwritten below, and the weapons with their refinements before folding.
+  const baseAttributes: Record<string, number> = {};
+  for (const attr of ROBOT_ATTRIBUTES) {
+    baseAttributes[attr] = toNumber(robot[attr as keyof Robot] as number | Prisma.Decimal);
+  }
+  const mainWeapon = weaponSnapshot(robot.mainWeapon ?? null);
+  const offhandWeapon = weaponSnapshot(robot.offhandWeapon ?? null);
+
   // Spec #34: Fold weapon refinements into the weapon's effective stats here.
   foldWeaponRefinements(robot.mainWeapon ?? null);
   foldWeaponRefinements(robot.offhandWeapon ?? null);
@@ -167,7 +177,44 @@ export function prepareRobotForCombat(
   robot.currentHP = robot.maxHP;
   robot.currentShield = robot.maxShield;
 
+  combatBuilds.set(robot, {
+    baseAttributes,
+    tuning: { ...(tuningBonuses ?? {}) } as Record<string, number>,
+    effectiveAttributes: Object.fromEntries(ROBOT_ATTRIBUTES.map((attr) => [attr, Number(effective[attr])])),
+    mainWeapon,
+    offhandWeapon,
+    loadoutType: robot.loadoutType,
+    stance: robot.stance,
+    yieldThreshold: robot.yieldThreshold,
+  });
+
   markNonEnumerable(robot, COMBAT_PREPARED);
+}
+
+/**
+ * Battle-time builds of prepared robots, keyed by the robot object. A WeakMap so
+ * a robot object that is dropped takes its build with it; a spread copy has no
+ * entry (the same contract as the prepared marker).
+ */
+const combatBuilds = new WeakMap<object, CombatBuildSnapshot>();
+
+/** The battle-time build `prepareRobotForCombat` captured for this robot object, if any. */
+export function getCombatBuild(robot: object): CombatBuildSnapshot | null {
+  return combatBuilds.get(robot) ?? null;
+}
+
+function weaponSnapshot(
+  inventory: (WeaponInventory & { refinements?: Array<{ tier: string; magnitude: number; targetAttribute: string | null }> }) | null,
+): CombatWeaponSnapshot | null {
+  if (!inventory) return null;
+  return {
+    weaponId: inventory.weaponId,
+    refinements: (inventory.refinements ?? []).map((r) => ({
+      tier: r.tier,
+      magnitude: Number(r.magnitude),
+      targetAttribute: r.targetAttribute,
+    })),
+  };
 }
 
 /**

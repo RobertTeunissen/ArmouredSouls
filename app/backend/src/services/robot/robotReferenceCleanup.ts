@@ -43,6 +43,8 @@ export async function deleteRobotBattleReferences(
   }
 
   const participants = await tx.battleParticipant.deleteMany({ where: { robotId: { in: robotIds } } });
+  // Battle-time builds have no FK to robots; they go with the participant rows.
+  await tx.battleParticipantBuild.deleteMany({ where: { robotId: { in: robotIds } } });
   const memberships = await tx.teamBattleMember.deleteMany({ where: { robotId: { in: robotIds } } });
 
   return { participantsDeleted: participants.count, teamMembershipsDeleted: memberships.count };

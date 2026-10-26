@@ -206,6 +206,8 @@ export async function purgeHistory(): Promise<Record<string, number>> {
   // season archive tables — those key off `seasons`, not off any table here.
   const TRUNCATE_TABLES = [
     'battle_summaries',
+    // Battle-time builds (admin Attributes / Weapons analyses).
+    'battle_participant_builds',
     'battles',
     'audit_logs',
     'cycle_snapshots',
@@ -256,6 +258,7 @@ export async function reclaimSpace(): Promise<boolean> {
   const tables = [
     'battles',
     'battle_summaries',
+    'battle_participant_builds',
     'battle_participants',
     'audit_logs',
     'cycle_snapshots',
@@ -334,7 +337,7 @@ export async function previewRollover(): Promise<RolloverPreview> {
     robotsWithImages,
     battleParticipants, tuningAllocations, subscriptions, teamBattleMembers,
     scheduledMatchParticipants, tournamentMatches, weaponRefinements, userAchievements,
-    robots, scheduledMatches, searchEvents, searchFailures, automatonTurns, practiceEvents,
+    robots, scheduledMatches, searchEvents, searchFailures, automatonTurns, practiceEvents, battleBuilds,
   ] = await Promise.all([
     prisma.user.count({ where: { isGenerated: false } }),
     prisma.robot.count({ where: { user: { isGenerated: false } } }),
@@ -371,6 +374,7 @@ export async function previewRollover(): Promise<RolloverPreview> {
     prisma.searchAnalyticsFailure.count(),
     prisma.automatonTurn.count(),
     prisma.practiceArenaEvent.count(),
+    prisma.battleParticipantBuild.count(),
   ]);
 
   const stablesOf = (type: StableType): number => typeStables[STABLE_TYPES.indexOf(type)] ?? 0;
@@ -407,6 +411,7 @@ export async function previewRollover(): Promise<RolloverPreview> {
       search_analytics_failures: searchFailures,
       automaton_turns: automatonTurns,
       practice_arena_events: practiceEvents,
+      battle_participant_builds: battleBuilds,
     },
     // Uploaded images are retained, never deleted, by a rollover.
     imagesRetained: robotsWithImages,

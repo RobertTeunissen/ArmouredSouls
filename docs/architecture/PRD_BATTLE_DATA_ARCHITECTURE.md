@@ -9,6 +9,7 @@
 ---
 
 ## Version History
+- v3.5 (October 25, 2026) — Added "Battle-Time Builds" (`battle_participant_builds`).
 - v3.4 (October 25, 2026) — Added "Combat Log Storage": KotH and Grand Melee logs keep formula breakdowns (`battleLog.storage` marker), the player battle log no longer sends them, and the admin Battles page reads them.
 - v3.3 (October 19, 2026) — Added "Robot Deletion and Battle Retention": account reset and the Generated_Stable purge delete only the deleted robots' participant rows (#294).
 - v3.2 (October 15, 2026) — Added "Forfeit Battle Records" (`battle_participants.forfeited`, the forfeit battle shape, the history classifier) and "Match failure policy" (#536).
@@ -176,6 +177,18 @@ A bye or walkover whose only participant was a deleted robot ends with zero part
 | KotH, Grand Melee | `buildKothBattleLog` (`services/battle/combat-messages/kothEventConverter.ts`) under `KOTH_LOG_STORAGE`: every event with its formula breakdown, like the other modes. The log records this in `battleLog.storage = { formulas, sampled }`; logs without the marker predate it (sampled by `sampleEventsForStorage`, no formulas) |
 
 Storing every KotH / Grand Melee event measured ×4–5 the size of the old log (Grand Melee ~20 MB raw JSON per battle; ≈ +5.5 GB for the 7-day window on ACC). If disk runs short, `sampled: true` in `KOTH_LOG_STORAGE` thins movement, range-transition and shield-regen events again (≈ +0.9 GB with formulas kept).
+
+---
+
+## Battle-Time Builds (`battle_participant_builds`)
+
+Robot rows change after a battle (attribute upgrades, tuning, weapon swaps, refinements), so they can't say what a robot fought with. One row per robot that fought records it: base attribute levels, tuning per attribute, the effective values the simulator used (`round2((base + weapon bonuses incl. refinements + tuning) × (1 + loadout))`), main and offhand catalogue weapon ids with their refinements, loadout (after any battle-time fallback), stance and yield threshold. Shape: `src/types/combatBuildTypes.ts`.
+
+- **Captured** by `prepareRobotForCombat` (`utils/robotCalculations.ts`), the one step every mode passes through, before the base values are overwritten; read with `getCombatBuild(robot)`. A spread copy has no build (the same contract as the prepared marker).
+- **Written** by `recordCombatBuilds` (`services/battle/combatBuildRecorder.ts`) in all seven fought-battle writers (league 1v1, tournament 1v1, team league, team tournament, tag team, KotH, Grand Melee) right after the participant rows. It only feeds admin analysis: a failed write is logged and never fails the battle.
+- **Not written** for byes and forfeiters: they never reach combat.
+- **Keys:** unique `(battle_id, robot_id)`, FK to `battles` (cascade), no FK to robots; deleted robots' rows go with their participant rows (`deleteRobotBattleReferences`). Purged with battles at season rollover.
+- **Readers:** the admin Attributes and Weapons analyses ("what wins").
 
 Formula breakdowns are admin-only: `/api/matches/battles/:id/log` strips `formulaBreakdown`, `rangePenalty` and `attackAngle` (`PLAYER_LOG_HIDDEN_FIELDS` in `matchHistoryService.ts`); the admin Battles routes (`/api/admin/battles/:id/log`, `/export`) serve them. The admin outcome rule (`services/admin/battles/battleOutcome.ts`) reads only permanent data.
 

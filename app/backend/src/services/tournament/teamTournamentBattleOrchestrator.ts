@@ -55,6 +55,7 @@ import {
 } from '../battle/combatReadiness';
 import { resolveForfeitEvent, type ForfeitSide } from '../battle/forfeitResolutionService';
 import { BYE_BATTLE_DURATION_SECONDS } from '../battle/byeResolutionService';
+import { recordCombatBuilds } from '../battle/combatBuildRecorder';
 
 // ─── Team Tournament Prestige (Stepped Curve) ────────────────────────────────
 
@@ -362,6 +363,7 @@ export async function processTeamTournamentBattle(
   });
 
   await prisma.battleParticipant.createMany({ data: participantRecords });
+  await recordCombatBuilds(battle.id, battleType, [...team1Robots, ...team2Robots]);
 
   // Write pre-computed battle summary (Spec #39)
   const allRobots = [...team1Robots, ...team2Robots];
