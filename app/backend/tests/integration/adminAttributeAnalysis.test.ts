@@ -154,9 +154,11 @@ describe('analysis data', () => {
     expect(layerValue(winner!, 'base', cp)).toBe(20);
     expect(layerValue(winner!, 'tuning', cp)).toBe(2);
     expect(layerValue(winner!, 'refinements', pen)).toBe(1);
-    expect(winner?.stance[cp]).toBeCloseTo(0.15, 10);
-    const values = layeredValues(winner!, { ...ALL_LAYERS_ON, stance: false });
+    // Stance is kept as its own effect; it never changes the attribute values (combat doesn't either).
+    expect(winner?.stance).toBe('offensive');
+    const values = layeredValues(winner!, ALL_LAYERS_ON);
     expect(values[cp]).toBeCloseTo((20 + 2) * 1.1, 1);
+    expect(layeredValues(winner!, { ...ALL_LAYERS_ON, stance: false })[cp]).toBe(values[cp]);
   });
 
   it('samples deterministically by battle id', async () => {
