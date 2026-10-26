@@ -151,6 +151,23 @@ describe('BattlesPage buttons', () => {
     expect(screen.getByRole('button', { name: 'Reset filters' })).toBeDisabled();
   });
 
+  it('Reset filters cancels a pending search, so the typed query is not applied afterwards', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+      renderPage('/admin/battles?outcome=bye');
+      await screen.findByText('1,284 battles');
+      await user.type(screen.getByRole('searchbox', { name: 'Search by robot, stable or battle id' }), 'Quasar');
+      await user.click(screen.getByRole('button', { name: 'Reset filters' }));
+      await waitFor(() => expect(currentSearch).toBe(''));
+      act(() => { vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS * 2); });
+      expect(currentSearch).toBe('');
+      expect(screen.getByRole('searchbox', { name: 'Search by robot, stable or battle id' })).toHaveValue('');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('Next and Previous page through the list', async () => {
     const user = userEvent.setup();
     renderPage();

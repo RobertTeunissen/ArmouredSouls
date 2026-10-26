@@ -54,10 +54,27 @@ const FORFEIT_SQL = Prisma.sql`(
       AND NOT EXISTS (SELECT 1 FROM battle_participants p WHERE p.battle_id = b.id AND NOT p.forfeited))
 )`;
 
-const TIME_LIMIT_SQL = Prisma.sql`(CASE b.battle_type ${Prisma.join(
-  BATTLE_MODES.map(mode => Prisma.sql`WHEN ${mode} THEN ${MODE_TIME_LIMIT_SECONDS[mode]}::int`),
-  ' ',
-)} ELSE ${MODE_TIME_LIMIT_SECONDS.league_1v1}::int END)`;
+/** Engine limit per mode; KotH uses the scheduled match's `time_limit` when set (mirrors `timeLimitFor`). */
+const TIME_LIMIT_SQL = Prisma.sql`(CASE
+  WHEN b.battle_type = 'koth' THEN COALESCE(
+    (SELECT sm.time_limit FROM scheduled_matches_v2 sm WHERE sm.battle_id = b.id AND sm.time_limit > 0 LIMIT 1),
+    ${MODE_TIME_LIMIT_SECONDS.koth}::int)
+  ${Prisma.join(
+    BATTLE_MODES.filter(mode => mode !== 'koth').map(mode => Prisma.sql`WHEN b.battle_type = ${mode} THEN ${MODE_TIME_LIMIT_SECONDS[mode]}::int`),
+    ' ',
+  )}
+  ELSE ${MODE_TIME_LIMIT_SECONDS.league_1v1}::int END)`;
+
+/**
+ * "Ended by time limit", as `classifyBattleOutcome` decides it: the battle lasted its
+ * limit, or it is a tag-team draw with a robot still standing (a phase timed out at
+ * 120 s before the 300 s outer limit; see `TAG_TEAM_PHASE_TIME_LIMIT_SECONDS`).
+ */
+const TIME_LIMIT_REACHED_SQL = Prisma.sql`(
+  b.duration_seconds >= ${TIME_LIMIT_SQL}
+  OR (b.battle_type = 'tag_team' AND b.winner_id IS NULL AND b.winning_side IS NULL
+      AND EXISTS (SELECT 1 FROM battle_participants p WHERE p.battle_id = b.id AND NOT p.destroyed AND NOT p.yielded AND NOT p.forfeited))
+)`;
 
 export function buildBattleWhere(params: BattleListParams): Prisma.Sql {
   const conditions: Prisma.Sql[] = [];
@@ -107,7 +124,7 @@ export function buildBattleWhere(params: BattleListParams): Prisma.Sql {
       conditions.push(Prisma.sql`b.winner_id IS NULL AND b.winning_side IS NULL AND NOT ${BYE_SQL} AND NOT ${FORFEIT_SQL}`);
       break;
     case 'time_limit':
-      conditions.push(Prisma.sql`b.duration_seconds >= ${TIME_LIMIT_SQL} AND NOT ${BYE_SQL} AND NOT ${FORFEIT_SQL}`);
+      conditions.push(Prisma.sql`${TIME_LIMIT_REACHED_SQL} AND NOT ${BYE_SQL} AND NOT ${FORFEIT_SQL}`);
       break;
     case 'all':
       break;

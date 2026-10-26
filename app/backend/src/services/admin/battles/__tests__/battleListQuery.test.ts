@@ -37,8 +37,11 @@ describe('battle list filters → SQL', () => {
     expect(draw).toContain('b.winner_id IS NULL AND b.winning_side IS NULL AND NOT');
     expect(draw).toContain('is_bye_match');
     const limit = buildBattleWhere(params({ range: 'season', outcome: 'time_limit' }));
-    expect(limit.sql).toContain('b.duration_seconds >= (CASE b.battle_type WHEN');
-    expect(limit.values).toEqual(expect.arrayContaining(['league_1v1', 120, 'league_2v2', 300, 'koth', 150]));
+    expect(limit.sql).toContain('b.duration_seconds >= (CASE');
+    expect(limit.values).toEqual(expect.arrayContaining(['league_1v1', 120, 'league_2v2', 300, 150]));
+    // KotH honours the scheduled match's time_limit; tag-team draws with a robot standing are phase timeouts.
+    expect(limit.sql).toContain('sm.time_limit');
+    expect(limit.sql).toMatch(/b.battle_type = 'tag_team' AND b.winner_id IS NULL AND b.winning_side IS NULL/);
   });
 });
 

@@ -318,3 +318,84 @@ describe('routes', () => {
     await api(`/${battleIds.team}/log`, playerToken).expect(403);
   });
 });
+
+// Review fixes (PR #560): battle-time max HP, deleted KotH winners, tag-team phase
+// timeouts, scheduled KotH limits and placement payout formulas. Its own battles are
+// created after the earlier describes ran, so their totals are unaffected.
+describe('battle-time details and edge outcomes', () => {
+  const extra: Record<string, number> = {};
+
+  beforeAll(async () => {
+    // Tag team: phase 2 timed out at its own 120 s limit → a draw at 190 s with robots standing.
+    extra.phaseDraw = await makeBattle('phaseDraw', { battleType: 'tag_team', durationSeconds: 190,
+      participants: [{ robot: 'G1', team: 1, destroyed: true }, { robot: 'G2', team: 1 }, { robot: 'G3', team: 2 }, { robot: 'G4', team: 2 }] });
+    // KotH scheduled with a 120 s limit that ran to it, below the score threshold.
+    extra.kothShort = await makeBattle('kothShort', { battleType: 'koth', winnerId: robot.P1, durationSeconds: 120, leagueType: 'koth',
+      participants: [{ robot: 'P1', team: 1, placement: 1 }, { robot: 'G2', team: 1, placement: 2 }, { robot: 'G3', team: 1, placement: 3 }] });
+    await prisma.scheduledMatch.create({ data: { matchType: 'koth', status: 'completed', scheduledFor: new Date(), battleId: extra.kothShort, timeLimit: 120, scoreThreshold: 30 } });
+    // KotH whose winner robot is gone (participant row deleted), winner_id survives.
+    extra.kothGone = await makeBattle('kothGone', { battleType: 'koth', winnerId: 2_000_000_001, durationSeconds: 150, leagueType: 'koth',
+      participants: [{ robot: 'P2', team: 1, placement: 2 }, { robot: 'G4', team: 1, placement: 3 }] });
+    // Battle-time build for P1 in the short KotH: effective hull 100 → max HP 50 + 100 × 5.
+    await prisma.battleParticipantBuild.create({ data: {
+      battleId: extra.kothShort, robotId: robot.P1, battleType: 'koth',
+      baseAttributes: { hullIntegrity: 90 }, tuning: {}, effectiveAttributes: { hullIntegrity: 100 },
+      loadoutType: 'single', stance: 'balanced', yieldThreshold: 10,
+    } });
+    const shortBattle = await prisma.battle.findUniqueOrThrow({ where: { id: extra.kothShort } });
+    const cycle = await estimateBattleCycle(shortBattle.createdAt);
+    await prisma.financialLedger.create({ data: {
+      cycleNumber: cycle, userId: userIds[0], robotId: null, transactionType: 'battle_income', amount: 11250, balanceAfter: 0,
+      description: 'test placement income', financialEventId: `bt-${TAG}-${extra.kothShort}-placement`,
+      metadata: {
+        battleId: extra.kothShort, participationFloor: 0, winComponent: 0, teamSize: 1, modifiers: [], formula: 'battle.placement_income', formulaVersion: '1', outcome: 'win',
+        placementRewardComponents: [{ mode: 'koth', robotId: robot.P1, tier: 'gold', placement: 1, credits: 11250, tierBaseReward: 7500, modeBaseMultiplier: 1.5, placementMultiplier: 1, zoneScore: 22, zoneTime: 60, uncontestedScore: 10, zoneDominanceBonus: false, zoneDominanceMultiplier: 1 }],
+      },
+    } });
+    await prisma.battleParticipant.updateMany({ where: { battleId: extra.kothShort, robotId: robot.P1 }, data: { credits: 11250 } });
+  });
+
+  afterAll(async () => {
+    const ids = Object.values(extra);
+    await prisma.scheduledMatch.deleteMany({ where: { battleId: { in: ids } } });
+    await prisma.battle.deleteMany({ where: { id: { in: ids } } });
+  });
+
+  it('classifies a tag-team phase timeout as a time-limit draw, in the row and the filter', async () => {
+    const rows = new Map((await getAdminBattleList(listParams())).battles.map(b => [b.id, b]));
+    expect(rows.get(extra.phaseDraw)).toMatchObject({ result: 'draw', endedBy: 'time_limit' });
+    const timeLimited = (await getAdminBattleList(listParams({ outcome: 'time_limit' }))).battles.map(b => b.id);
+    expect(timeLimited).toEqual(expect.arrayContaining([extra.phaseDraw, extra.kothShort]));
+    // The 150 s KotH without an override counts at the 150 s default.
+    expect(timeLimited).toContain(extra.kothGone);
+  });
+
+  it('uses the scheduled KotH time limit in the detail', async () => {
+    expect((await getAdminBattleDetail(extra.kothShort)).timeLimitSeconds).toBe(120);
+    expect((await getAdminBattleDetail(extra.kothGone)).timeLimitSeconds).toBe(150);
+  });
+
+  it('shows an unknown winner when the KotH winner robot was deleted, never the runner-up', async () => {
+    const row = (await getAdminBattleList(listParams({ q: `#${extra.kothGone}` }))).battles[0];
+    expect(row.result).toBe('win');
+    expect(row.sides).toEqual([{ team: 1, label: 'Unknown', robotCount: 1, stable: null, isWinner: true }]);
+    expect(row.field?.others).toBe(2);
+  });
+
+  it('reads max HP from the battle-time build, null without one', async () => {
+    const d = await getAdminBattleDetail(extra.kothShort);
+    expect(d.participants.find(p => p.robotId === robot.P1)?.maxHP).toBe(550);
+    expect(d.participants.find(p => p.robotId === robot.G2)?.maxHP).toBeNull();
+  });
+
+  it('keeps the placement payout formula per robot', async () => {
+    const d = await getAdminBattleDetail(extra.kothShort);
+    const player = d.payout.stables.find(s => s.stable.userId === userIds[0]);
+    expect(player).toMatchObject({ status: 'match', battleIncome: { participants: 11250, ledger: 11250 } });
+    expect(player?.inputs?.placementComponents).toEqual([
+      expect.objectContaining({ robotId: robot.P1, robotName: name('P1'), placement: 1, credits: 11250, tierBaseReward: 7500, modeBaseMultiplier: 1.5, placementMultiplier: 1, bonus: null }),
+    ]);
+    const text = await exportBattleText(extra.kothShort);
+    expect(text).toContain(`${name('P1')} · placement 1 · tier gold: ₡7,500 × 1.5 × 1 = ₡11,250`);
+  });
+});

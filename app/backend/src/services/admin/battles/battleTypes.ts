@@ -72,8 +72,10 @@ export interface BattleParticipantDetail {
   destroyed: boolean;
   yielded: boolean;
   forfeited: boolean;
-  /** Seconds the robot stayed in the fight, from `battle_summaries`. */
+  /** Seconds the robot was active in the fight (from entering to leaving), from `battle_summaries`. */
   survivalSeconds: number | null;
+  /** Battle time at which the robot was destroyed, yielded or tagged out (`perRobot.exitTime`); null when it stayed to the end. */
+  exitSeconds: number | null;
   /** KotH zone score, from `battle_summaries`. */
   zoneScore: number | null;
   kills: number | null;
@@ -86,6 +88,27 @@ export interface BattleSideDetail {
   isWinner: boolean;
 }
 
+/**
+ * One robot's placement award in a KotH / Grand Melee `battle.placement_income`
+ * entry (`placementRewardComponents`):
+ * credits = tierBaseReward × modeBaseMultiplier × placementMultiplier (× bonus), rounded.
+ */
+export interface PlacementPayoutComponent {
+  robotId: number;
+  robotName: string | null;
+  mode: string;
+  tier: string;
+  placement: number;
+  credits: number;
+  tierBaseReward: number;
+  modeBaseMultiplier: number;
+  placementMultiplier: number;
+  /** KotH zone dominance (×1.25) when it applied. */
+  bonus: { label: string; multiplier: number } | null;
+  /** Grand Melee: the participation-floor multiplier was used for this placement. */
+  participationFloorApplied: boolean;
+}
+
 export interface PayoutInputs {
   participationFloor: number | null;
   winComponent: number | null;
@@ -94,6 +117,8 @@ export interface PayoutInputs {
   formula: string | null;
   formulaVersion: string | null;
   outcome: string | null;
+  /** Per-robot placement awards (KotH / Grand Melee); null for side-based income. */
+  placementComponents: PlacementPayoutComponent[] | null;
 }
 
 export interface StablePayoutCheck {

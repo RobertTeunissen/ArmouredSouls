@@ -78,13 +78,13 @@ export function detail(partial: Partial<BattleDetail> = {}): BattleDetail {
         robotId: 10, robotName: 'Ironclad', stable: PLAYER, team: 1, role: null, placement: null, finalHP: 0, maxHP: 1850,
         damageDealt: 1204, damageReceived: 1850, criticalHits: 2, eloBefore: 1512, eloAfter: 1503, credits: 9000,
         streamingRevenue: 1240, prestigeAwarded: 0, fameAwarded: 0, destroyed: true, yielded: false, forfeited: false,
-        survivalSeconds: 100, zoneScore: null, kills: null,
+        survivalSeconds: 100, exitSeconds: 100, zoneScore: null, kills: null,
       },
       {
         robotId: 20, robotName: 'Quasar', stable: AUTOMATON, team: 2, role: null, placement: null, finalHP: 412, maxHP: 1900,
         damageDealt: 1620, damageReceived: 1488, criticalHits: 4, eloBefore: 1530, eloAfter: 1539, credits: 27000,
         streamingRevenue: 1380, prestigeAwarded: 12, fameAwarded: 4, destroyed: false, yielded: false, forfeited: false,
-        survivalSeconds: 112, zoneScore: null, kills: null,
+        survivalSeconds: 112, exitSeconds: null, zoneScore: null, kills: null,
       },
     ],
     payout: {
@@ -93,11 +93,11 @@ export function detail(partial: Partial<BattleDetail> = {}): BattleDetail {
       stables: [
         {
           stable: PLAYER, battleIncome: { participants: 9000, ledger: 9000 }, streaming: { participants: 1240, ledger: 1240 }, status: 'match',
-          inputs: { participationFloor: 9000, winComponent: 0, teamSize: 2, modifiers: [], formula: 'battle_income', formulaVersion: '1', outcome: 'loss' },
+          inputs: { participationFloor: 9000, winComponent: 0, teamSize: 2, modifiers: [], formula: 'battle_income', formulaVersion: '1', outcome: 'loss', placementComponents: null },
         },
         {
           stable: AUTOMATON, battleIncome: { participants: 27000, ledger: 25000 }, streaming: { participants: 1380, ledger: 1380 }, status: 'mismatch',
-          inputs: { participationFloor: 9000, winComponent: 16000, teamSize: 2, modifiers: [], formula: 'battle_income', formulaVersion: '1', outcome: 'win' },
+          inputs: { participationFloor: 9000, winComponent: 16000, teamSize: 2, modifiers: [], formula: 'battle_income', formulaVersion: '1', outcome: 'win', placementComponents: null },
         },
       ],
     },

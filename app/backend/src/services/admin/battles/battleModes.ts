@@ -39,7 +39,22 @@ export const MODE_TIME_LIMIT_SECONDS: Readonly<Record<BattleMode, number>> = {
   grand_melee: MAX_BATTLE_DURATION,
 };
 
-/** Time limit for a stored battle type; unknown legacy types fall back to the 1v1 limit. */
-export function timeLimitFor(mode: string): number {
+/**
+ * Time limit of a stored battle. KotH honours the scheduled match's
+ * `scheduled_matches_v2.time_limit` (kothBattleOrchestrator), so that override
+ * wins when present; every other mode runs under its engine limit. Unknown
+ * legacy types fall back to the 1v1 limit.
+ */
+export function timeLimitFor(mode: string, scheduledTimeLimit: number | null = null): number {
+  if (mode === 'koth' && scheduledTimeLimit !== null && scheduledTimeLimit > 0) return scheduledTimeLimit;
   return isBattleMode(mode) ? MODE_TIME_LIMIT_SECONDS[mode] : MAX_BATTLE_DURATION;
 }
+
+/**
+ * Tag team runs each phase as its own simulation with the 1v1 limit (120 s), and
+ * a phase that times out ends the whole battle in a draw before the 300 s outer
+ * limit (`tagTeamSimulation.ts`). The engine declares a tag-team draw only on a
+ * timeout (outer or phase), when every robot is out, or on exactly equal HP; so
+ * a tag-team draw with a robot still standing is classified as a time limit.
+ */
+export const TAG_TEAM_PHASE_TIME_LIMIT_SECONDS = MAX_BATTLE_DURATION;

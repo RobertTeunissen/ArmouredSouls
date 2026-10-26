@@ -295,7 +295,15 @@ export function calculateMaxHP(
   tuningBonuses?: TuningAttributeMap,
 ): number {
   const effectiveStats = calculateEffectiveStats(robot, tuningBonuses);
-  return BASE_HP + (effectiveStats.hullIntegrity * HP_MULTIPLIER);
+  return maxHPFromHullIntegrity(effectiveStats.hullIntegrity);
+}
+
+/**
+ * Max HP from an effective (combat-precision) hull integrity value.
+ * Formula: BASE_HP + (effectiveHullIntegrity × HP_MULTIPLIER)
+ */
+export function maxHPFromHullIntegrity(effectiveHullIntegrity: number): number {
+  return BASE_HP + (effectiveHullIntegrity * HP_MULTIPLIER);
 }
 
 /**

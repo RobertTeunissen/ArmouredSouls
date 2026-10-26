@@ -10,7 +10,7 @@
  */
 import prisma from '../../../lib/prisma';
 import type { ParticipantFact } from './battleFacts';
-import type { PayoutCheck, PayoutInputs, StablePayoutCheck, StableRef } from './battleTypes';
+import type { PayoutCheck, PayoutInputs, PlacementPayoutComponent, StablePayoutCheck, StableRef } from './battleTypes';
 
 export interface LedgerEntry {
   id: number;
@@ -70,7 +70,41 @@ export async function loadBattleLedgerEntries(
 const num = (v: unknown): number | null => (typeof v === 'number' && Number.isFinite(v) ? v : null);
 const str = (v: unknown): string | null => (typeof v === 'string' ? v : null);
 
-export function payoutInputs(metadata: Record<string, unknown> | null): PayoutInputs | null {
+function placementComponents(value: unknown, robotNames: ReadonlyMap<number, string>): PlacementPayoutComponent[] | null {
+  if (!Array.isArray(value)) return null;
+  const out: PlacementPayoutComponent[] = [];
+  for (const raw of value) {
+    if (!raw || typeof raw !== 'object') continue;
+    const c = raw as Record<string, unknown>;
+    const robotId = num(c.robotId);
+    if (robotId === null) continue;
+    const dominance = c.zoneDominanceBonus === true ? num(c.zoneDominanceMultiplier) : null;
+    out.push({
+      robotId,
+      robotName: robotNames.get(robotId) ?? null,
+      mode: str(c.mode) ?? 'unknown',
+      tier: c.tier === undefined || c.tier === null ? 'unknown' : String(c.tier),
+      placement: num(c.placement) ?? 0,
+      credits: num(c.credits) ?? 0,
+      tierBaseReward: num(c.tierBaseReward) ?? 0,
+      modeBaseMultiplier: num(c.modeBaseMultiplier) ?? 0,
+      placementMultiplier: num(c.placementMultiplier) ?? 0,
+      bonus: dominance !== null && dominance !== 1 ? { label: 'zone dominance', multiplier: dominance } : null,
+      participationFloorApplied: c.participationFloorApplied === true,
+    });
+  }
+  return out.length > 0 ? out.sort((a, b) => a.placement - b.placement) : null;
+}
+
+/**
+ * Formula inputs of a `battle_income` entry. Placement modes (KotH, Grand Melee,
+ * formula `battle.placement_income`) write zero floor/win components and keep the
+ * real per-robot calculation in `placementRewardComponents`.
+ */
+export function payoutInputs(
+  metadata: Record<string, unknown> | null,
+  robotNames: ReadonlyMap<number, string> = new Map(),
+): PayoutInputs | null {
   if (!metadata) return null;
   return {
     participationFloor: num(metadata.participationFloor),
@@ -80,11 +114,13 @@ export function payoutInputs(metadata: Record<string, unknown> | null): PayoutIn
     formula: str(metadata.formula),
     formulaVersion: str(metadata.formulaVersion),
     outcome: str(metadata.outcome),
+    placementComponents: placementComponents(metadata.placementRewardComponents, robotNames),
   };
 }
 
 /** Compare participant credits with ledger entries, per stable. Pure. */
 export function comparePayouts(participants: readonly ParticipantFact[], entries: readonly LedgerEntry[]): PayoutCheck {
+  const robotNames = new Map(participants.map(p => [p.robotId, p.robotName] as const));
   const stables = new Map<number, { stable: StableRef; credits: number; streaming: number }>();
   for (const p of participants) {
     const s = stables.get(p.stable.userId) ?? { stable: p.stable, credits: 0, streaming: 0 };
@@ -109,7 +145,7 @@ export function comparePayouts(participants: readonly ParticipantFact[], entries
       battleIncome: { participants: s.credits, ledger: incomeLedger },
       streaming: { participants: s.streaming, ledger: streamingLedger },
       status: missing ? 'missing' : incomeOk && streamingOk ? 'match' : 'mismatch',
-      inputs: payoutInputs(income[0]?.metadata ?? null),
+      inputs: payoutInputs(income[0]?.metadata ?? null, robotNames),
     });
   }
 

@@ -25,7 +25,7 @@ const detail = (overrides: Partial<BattleDetailResponse> = {}): BattleDetailResp
     robotId: 10, robotName: 'Ironclad', stable: { userId: 1, name: 'Rustbucket Co.', stableType: 'human' }, team: 1, role: null,
     placement: null, finalHP: 0, maxHP: 1850, damageDealt: 1204, damageReceived: 1850, criticalHits: 2,
     eloBefore: 1512, eloAfter: 1503, credits: 9000, streamingRevenue: 1240, prestigeAwarded: 0, fameAwarded: 0,
-    destroyed: true, yielded: false, forfeited: false, survivalSeconds: 100, zoneScore: null, kills: null,
+    destroyed: true, yielded: false, forfeited: false, survivalSeconds: 100, exitSeconds: 100, zoneScore: null, kills: null,
   }],
   payout: {
     status: 'match',
@@ -35,7 +35,7 @@ const detail = (overrides: Partial<BattleDetailResponse> = {}): BattleDetailResp
       battleIncome: { participants: 9000, ledger: 9000 },
       streaming: { participants: 1240, ledger: 1240 },
       status: 'match',
-      inputs: { participationFloor: 9000, winComponent: 0, teamSize: 2, modifiers: [], formula: 'battle_income', formulaVersion: '1', outcome: 'loss' },
+      inputs: { participationFloor: 9000, winComponent: 0, teamSize: 2, modifiers: [], formula: 'battle_income', formulaVersion: '1', outcome: 'loss', placementComponents: null },
     }],
   },
   combatLog: { available: true, removesOn: '2026-11-02T01:30:00.000Z', hasFormulas: true, movementSampled: false },
@@ -105,6 +105,47 @@ describe('buildBattleExportText', () => {
     );
     expect(text).toContain('Combat log removed on 2026-10-18 (retention).');
     expect(text).toContain('## Results');
+  });
+
+  it('times a tag-team reserve exit on the battle clock and keeps its active duration apart', () => {
+    const base = detail().participants[0];
+    const text = buildBattleExportText(detail({
+      battleType: 'tag_team',
+      participants: [
+        { ...base, robotId: 11, robotName: 'Reserve', role: 'reserve', survivalSeconds: 40, exitSeconds: 100 },
+        { ...base, robotId: 12, robotName: 'Starter', role: 'active', destroyed: false, survivalSeconds: 60, exitSeconds: 60 },
+      ],
+    }), [], []);
+    expect(text).toContain('destroyed at 1m 40.0s, active 40.0s');
+    expect(text).toContain('tagged out at 1m 0.0s, active 1m 0.0s');
+  });
+
+  it('shows the KotH placement formula per robot instead of zero floor/win components', () => {
+    const text = buildBattleExportText(detail({
+      battleType: 'koth',
+      sides: [],
+      payout: {
+        status: 'match',
+        ledgerEntries: 1,
+        stables: [{
+          stable: { userId: 1, name: 'Rustbucket Co.', stableType: 'human' },
+          battleIncome: { participants: 9844, ledger: 9844 },
+          streaming: { participants: 0, ledger: null },
+          status: 'match',
+          inputs: {
+            participationFloor: 0, winComponent: 0, teamSize: 1, modifiers: [], formula: 'battle.placement_income', formulaVersion: '1', outcome: 'win',
+            placementComponents: [{
+              robotId: 10, robotName: 'Ironclad', mode: 'koth', tier: 'gold', placement: 2, credits: 9844,
+              tierBaseReward: 7500, modeBaseMultiplier: 1.5, placementMultiplier: 0.7,
+              bonus: { label: 'zone dominance', multiplier: 1.25 }, participationFloorApplied: false,
+            }],
+          },
+        }],
+      },
+    }), [], []);
+    expect(text).toContain('  Ironclad · placement 2 · tier gold: ₡7,500 × 1.5 × 0.7 × 1.25 zone dominance = ₡9,844');
+    expect(text).toContain('  total ₡9,844 · formula battle.placement_income v1 · outcome win');
+    expect(text).not.toContain('participationFloor 0 + winComponent 0');
   });
 
   it('notes KotH / Grand Melee storage limits', () => {

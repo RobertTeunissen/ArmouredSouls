@@ -4,7 +4,7 @@
  * verbatim; every stored event is included, movement too.
  */
 import type { LedgerEntry } from './battlePayoutCheck';
-import type { AdminCombatEvent, BattleDetailResponse, BattleParticipantDetail, StableRef } from './battleTypes';
+import type { AdminCombatEvent, BattleDetailResponse, BattleParticipantDetail, PlacementPayoutComponent, StableRef } from './battleTypes';
 
 const MODE_LABELS: Record<string, string> = {
   league_1v1: 'League 1v1',
@@ -104,8 +104,10 @@ function setupLines(events: readonly AdminCombatEvent[]): string[] {
 function notes(p: BattleParticipantDetail): string {
   const out: string[] = [];
   if (p.forfeited) out.push('forfeited');
-  if (p.destroyed) out.push(p.survivalSeconds !== null ? `destroyed at ${formatEventTime(p.survivalSeconds)}` : 'destroyed');
-  if (p.yielded) out.push(p.survivalSeconds !== null ? `yielded at ${formatEventTime(p.survivalSeconds)}` : 'yielded');
+  if (p.destroyed) out.push(p.exitSeconds !== null ? `destroyed at ${formatEventTime(p.exitSeconds)}` : 'destroyed');
+  if (p.yielded) out.push(p.exitSeconds !== null ? `yielded at ${formatEventTime(p.exitSeconds)}` : 'yielded');
+  if (!p.destroyed && !p.yielded && !p.forfeited && p.exitSeconds !== null) out.push(`tagged out at ${formatEventTime(p.exitSeconds)}`);
+  if (p.survivalSeconds !== null && (p.destroyed || p.yielded || p.exitSeconds !== null)) out.push(`active ${formatEventTime(p.survivalSeconds)}`);
   if (p.placement !== null) out.push(`placement ${p.placement}`);
   if (p.zoneScore !== null) out.push(`zone score ${round1(p.zoneScore)}`);
   if (p.kills !== null && p.kills > 0) out.push(`${p.kills} kills`);
@@ -145,7 +147,16 @@ function payoutLines(d: BattleDetailResponse): string[] {
         + ` · streaming ${credits(s.streaming.participants)} (ledger ${credits(s.streaming.ledger)}) · ${s.status}`,
     ];
     const i = s.inputs;
-    if (i) {
+    if (i?.placementComponents) {
+      // KotH / Grand Melee: the floor/win components are zero; the award is per robot and placement.
+      const meta = [
+        i.formula ? `formula ${i.formula}${i.formulaVersion ? ` v${i.formulaVersion}` : ''}` : null,
+        i.outcome ? `outcome ${i.outcome}` : null,
+      ].filter(Boolean).join(' · ');
+      for (const c of i.placementComponents) lines.push(`  ${placementComponentText(c, credits)}`);
+      const total = i.placementComponents.reduce((sum, c) => sum + c.credits, 0);
+      lines.push(`  total ${credits(total)}${meta ? ` · ${meta}` : ''}`);
+    } else if (i) {
       const parts = [
         i.participationFloor !== null ? `participationFloor ${int(i.participationFloor)}` : null,
         i.winComponent !== null ? `winComponent ${int(i.winComponent)}` : null,
@@ -160,6 +171,17 @@ function payoutLines(d: BattleDetailResponse): string[] {
     }
     return lines;
   });
+}
+
+/** "Name · placement 2 · tier gold: ₡7,500 × 1.5 × 0.7 × 1.25 zone dominance = ₡9,844" for one placement award. */
+export function placementComponentText(c: PlacementPayoutComponent, formatCredits: (n: number) => string): string {
+  const factors = [
+    formatCredits(c.tierBaseReward),
+    `${c.modeBaseMultiplier}`,
+    `${c.placementMultiplier}${c.participationFloorApplied ? ' (participation floor)' : ''}`,
+    ...(c.bonus ? [`${c.bonus.multiplier} ${c.bonus.label}`] : []),
+  ];
+  return `${c.robotName ?? `Robot #${c.robotId}`} · placement ${c.placement} · tier ${c.tier}: ${factors.join(' × ')} = ${formatCredits(c.credits)}`;
 }
 
 function stateText(e: AdminCombatEvent): string | null {

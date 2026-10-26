@@ -83,7 +83,7 @@ describe('comparePayouts', () => {
 describe('payoutInputs / cycleFromEntries', () => {
   it('reads only well-typed inputs', () => {
     expect(payoutInputs({ participationFloor: '1', winComponent: 5, modifiers: 'x' })).toEqual({
-      participationFloor: null, winComponent: 5, teamSize: null, modifiers: [], formula: null, formulaVersion: null, outcome: null,
+      participationFloor: null, winComponent: 5, teamSize: null, modifiers: [], formula: null, formulaVersion: null, outcome: null, placementComponents: null,
     });
     expect(payoutInputs(null)).toBeNull();
   });
@@ -91,5 +91,31 @@ describe('payoutInputs / cycleFromEntries', () => {
   it('takes the cycle from the ledger rows', () => {
     expect(cycleFromEntries([entry(1, 'battle_income', 1, 1)])).toBe(47);
     expect(cycleFromEntries([])).toBeNull();
+  });
+});
+
+describe('payoutInputs — placement income (KotH / Grand Melee)', () => {
+  it('keeps the per-robot placement components with names, sorted by placement', () => {
+    const metadata = {
+      participationFloor: 0, winComponent: 0, teamSize: 1, modifiers: [], formula: 'battle.placement_income', formulaVersion: '1', outcome: 'win',
+      placementRewardComponents: [
+        { mode: 'koth', robotId: 11, tier: 'gold', placement: 4, credits: 3375, tierBaseReward: 7500, modeBaseMultiplier: 1.5, placementMultiplier: 0.3, zoneScore: 4, zoneTime: 12, uncontestedScore: 1, zoneDominanceBonus: false, zoneDominanceMultiplier: 1 },
+        { mode: 'koth', robotId: 10, tier: 'gold', placement: 1, credits: 14063, tierBaseReward: 7500, modeBaseMultiplier: 1.5, placementMultiplier: 1, zoneScore: 30, zoneTime: 80, uncontestedScore: 25, zoneDominanceBonus: true, zoneDominanceMultiplier: 1.25 },
+      ],
+    };
+    const inputs = payoutInputs(metadata, new Map([[10, 'Ironclad'], [11, 'Lumen']]));
+    expect(inputs?.placementComponents).toEqual([
+      expect.objectContaining({ robotId: 10, robotName: 'Ironclad', placement: 1, credits: 14063, bonus: { label: 'zone dominance', multiplier: 1.25 } }),
+      expect.objectContaining({ robotId: 11, robotName: 'Lumen', placement: 4, credits: 3375, bonus: null }),
+    ]);
+  });
+
+  it('marks the Grand Melee participation floor and leaves side-based income without components', () => {
+    const gm = payoutInputs({
+      formula: 'battle.placement_income',
+      placementRewardComponents: [{ mode: 'grand_melee', robotId: 5, tier: 'bronze', placement: 14, credits: 300, tierBaseReward: 2000, modeBaseMultiplier: 1.5, placementMultiplier: 0.1, totalParticipants: 20, participationFloorApplied: true, participationFloorMultiplier: 0.1 }],
+    });
+    expect(gm?.placementComponents?.[0]).toMatchObject({ robotName: null, participationFloorApplied: true, bonus: null });
+    expect(payoutInputs({ participationFloor: 1000, winComponent: 500 })?.placementComponents).toBeNull();
   });
 });

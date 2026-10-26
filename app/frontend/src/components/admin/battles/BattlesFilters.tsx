@@ -37,6 +37,14 @@ export function BattlesFilters({ filters, onChange, onReset }: BattlesFiltersPro
     if (value.trim() !== filters.q.trim()) onChange({ q: value, page: 1 });
   };
 
+  // A pending debounce must not re-apply the typed query after the reset.
+  const reset = (): void => {
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = null;
+    setSearch('');
+    onReset();
+  };
+
   const onSearchChange = (value: string): void => {
     setSearch(value);
     if (timer.current) clearTimeout(timer.current);
@@ -117,8 +125,8 @@ export function BattlesFilters({ filters, onChange, onReset }: BattlesFiltersPro
         </div>
         <button
           type="button"
-          onClick={onReset}
-          disabled={isDefaultFilters(filters)}
+          onClick={reset}
+          disabled={isDefaultFilters(filters) && search.trim() === ''}
           className={`ml-auto min-h-11 rounded px-2 text-sm text-primary hover:underline disabled:cursor-default disabled:text-tertiary disabled:no-underline ${ADMIN_FOCUS_RING}`}
         >
           Reset filters

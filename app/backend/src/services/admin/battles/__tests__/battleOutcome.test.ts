@@ -1,6 +1,7 @@
 jest.mock('../../../../lib/prisma', () => ({ __esModule: true, default: {} }));
 
 import { classifyBattleOutcome, eloSwing, type OutcomeInput, type OutcomeParticipant } from '../battleOutcome';
+import { timeLimitFor } from '../battleModes';
 
 const p = (robotId: number, team: number, extra: Partial<OutcomeParticipant> = {}): OutcomeParticipant => ({
   robotId, team, destroyed: false, yielded: false, forfeited: false, ...extra,
@@ -58,6 +59,26 @@ describe('classifyBattleOutcome — team modes', () => {
     const out = classifyBattleOutcome(base({ battleType: 'league_3v3', durationSeconds: 300, participants: [p(1, 1), p(2, 2)] }));
     expect(out).toMatchObject({ result: 'draw', endedBy: 'time_limit' });
   });
+
+  it('a tag-team draw before 300 s with a robot standing is a phase time limit', () => {
+    // Phase 1 decided at 70 s, phase 2 timed out at its own 120 s: 190 s in total.
+    const field = [p(10, 1, { destroyed: true }), p(11, 1), p(20, 2), p(21, 2)];
+    const out = classifyBattleOutcome(base({ battleType: 'tag_team', durationSeconds: 190, participants: field }));
+    expect(out).toMatchObject({ result: 'draw', endedBy: 'time_limit' });
+  });
+
+  it('a tag-team draw with every robot out is not a time limit', () => {
+    const out = classifyBattleOutcome(base({
+      battleType: 'tag_team', durationSeconds: 150,
+      participants: [p(10, 1, { destroyed: true }), p(11, 1, { destroyed: true }), p(20, 2, { destroyed: true }), p(21, 2, { destroyed: true })],
+    }));
+    expect(out.endedBy).toBe('team_eliminated');
+  });
+
+  it('a non-tag-team draw before its limit with robots standing has no reason', () => {
+    const out = classifyBattleOutcome(base({ battleType: 'league_2v2', durationSeconds: 190, participants: [p(1, 1), p(2, 2)] }));
+    expect(out.endedBy).toBeNull();
+  });
 });
 
 describe('classifyBattleOutcome — byes and forfeits', () => {
@@ -100,6 +121,14 @@ describe('classifyBattleOutcome — placement modes', () => {
       koth: { winnerZoneScore: 22, scoreThreshold: 30 },
     }));
     expect(out.endedBy).toBe('time_limit');
+  });
+
+  it('KotH: the scheduled match time limit overrides the 150 s default', () => {
+    expect(timeLimitFor('koth')).toBe(150);
+    expect(timeLimitFor('koth', 120)).toBe(120);
+    expect(timeLimitFor('koth', null)).toBe(150);
+    // Only KotH honours the override.
+    expect(timeLimitFor('league_1v1', 90)).toBe(120);
   });
 
   it('Grand Melee: last standing when one robot is left', () => {

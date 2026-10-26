@@ -40,8 +40,7 @@ export {
 
 import {
   STANCE_MODIFIERS,
-  BASE_HP,
-  HP_MULTIPLIER,
+  maxHPFromHullIntegrity,
   SHIELD_MULTIPLIER,
   calculateCombatEffectiveStats,
   roundToCombatPrecision,
@@ -170,7 +169,7 @@ export function prepareRobotForCombat(
     (robot as Record<string, unknown>)[attr] = effective[attr];
   }
 
-  robot.maxHP = BASE_HP + effective.hullIntegrity * HP_MULTIPLIER;
+  robot.maxHP = maxHPFromHullIntegrity(effective.hullIntegrity);
   robot.maxShield = effective.shieldCapacity * SHIELD_MULTIPLIER;
 
   // Robots enter combat at full health
@@ -265,7 +264,7 @@ function foldWeaponRefinements(
  */
 export function calculateMaxHP(robot: RobotWithWeapons, tuningBonuses?: TuningAttributeMap): number {
   const effectiveStats = calculateEffectiveStats(robot, tuningBonuses);
-  return BASE_HP + (effectiveStats.hullIntegrity * HP_MULTIPLIER);
+  return maxHPFromHullIntegrity(effectiveStats.hullIntegrity);
 }
 
 /**

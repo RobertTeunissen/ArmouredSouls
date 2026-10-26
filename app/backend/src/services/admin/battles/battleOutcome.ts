@@ -38,6 +38,8 @@ export interface OutcomeInput {
   isBye: boolean;
   /** `tournament_matches.status = 'forfeit'` for this battle. */
   isForfeitTournamentBattle: boolean;
+  /** The scheduled match's `time_limit` (KotH honours it); null uses the mode's engine limit. */
+  scheduledTimeLimit?: number | null;
   /** KotH only: the winner's zone score and the match's score threshold, from `battle_summaries`. */
   koth?: { winnerZoneScore: number | null; scoreThreshold: number | null } | null;
 }
@@ -76,7 +78,7 @@ function placementEndedBy(input: OutcomeInput): EndedBy {
 }
 
 function twoSidedEndedBy(input: OutcomeInput, winningSide: 1 | 2 | null): EndedBy | null {
-  const atLimit = input.durationSeconds >= timeLimitFor(input.battleType);
+  const atLimit = input.durationSeconds >= timeLimitFor(input.battleType, input.scheduledTimeLimit ?? null);
   const isDuel = modeShape(input.battleType) === 'duel';
 
   if (winningSide === null) {
@@ -84,6 +86,8 @@ function twoSidedEndedBy(input: OutcomeInput, winningSide: 1 | 2 | null): EndedB
     if (input.participants.length > 0 && input.participants.every(isOut)) {
       return isDuel ? 'destroyed' : 'team_eliminated';
     }
+    // A tag-team draw with a robot still standing is a phase (120 s) or outer timeout.
+    if (input.battleType === 'tag_team') return 'time_limit';
     return null;
   }
 

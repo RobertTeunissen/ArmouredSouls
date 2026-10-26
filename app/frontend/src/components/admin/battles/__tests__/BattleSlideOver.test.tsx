@@ -144,6 +144,55 @@ describe('BattleSlideOver buttons', () => {
     expect(within(table).queryByText(/winComponent ₡16,000/)).not.toBeInTheDocument();
   });
 
+  it('Show formula lists the KotH placement award per robot instead of zero floor/win components', async () => {
+    const user = userEvent.setup();
+    const base = detail();
+    mockGetDetail.mockResolvedValue(detail({
+      battleType: 'koth',
+      sides: [],
+      payout: {
+        status: 'match',
+        ledgerEntries: 1,
+        stables: [{
+          stable: base.payout.stables[0].stable,
+          battleIncome: { participants: 9844, ledger: 9844 },
+          streaming: { participants: 0, ledger: null },
+          status: 'match',
+          inputs: {
+            participationFloor: 0, winComponent: 0, teamSize: 1, modifiers: [], formula: 'battle.placement_income', formulaVersion: '1', outcome: 'win',
+            placementComponents: [{
+              robotId: 10, robotName: 'Ironclad', mode: 'koth', tier: 'gold', placement: 2, credits: 9844,
+              tierBaseReward: 7500, modeBaseMultiplier: 1.5, placementMultiplier: 0.7,
+              bonus: { label: 'zone dominance', multiplier: 1.25 }, participationFloorApplied: false,
+            }],
+          },
+        }],
+      },
+    }));
+    renderPanel();
+    const table = await screen.findByRole('table', { name: 'Payout check per stable' });
+    await user.click(within(table).getByRole('button', { name: 'Show formula' }));
+    const line = within(table).getByText(/Ironclad · 2nd · tier gold:/).closest('li') as HTMLElement;
+    expect(line).toHaveTextContent('Ironclad · 2nd · tier gold: ₡7,500 × 1.5 × 0.7 × 1.25 zone dominance = ₡9,844');
+    expect(within(table).getByText('Total ₡9,844 · ledger ₡9,844')).toBeInTheDocument();
+    expect(within(table).queryByText(/participationFloor/)).not.toBeInTheDocument();
+  });
+
+  it('times a tag-team exit on the battle clock', async () => {
+    const base = detail();
+    mockGetDetail.mockResolvedValue(detail({
+      battleType: 'tag_team',
+      participants: [
+        { ...base.participants[0], role: 'reserve', survivalSeconds: 40, exitSeconds: 100 },
+        { ...base.participants[1], role: 'active', destroyed: false, survivalSeconds: 60, exitSeconds: 60 },
+      ],
+    }));
+    renderPanel();
+    const participants = await screen.findByRole('table', { name: /Participants of battle/ });
+    expect(within(participants).getByText('Destroyed at 1m 40.0s')).toBeInTheDocument();
+    expect(within(participants).getByText('Tagged out at 1m 0.0s')).toBeInTheDocument();
+  });
+
   it('Formula opens the stored calculation of a hit', async () => {
     const user = userEvent.setup();
     renderPanel();

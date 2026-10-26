@@ -91,6 +91,8 @@ export interface BattleParticipantDetail {
   yielded: boolean;
   forfeited: boolean;
   survivalSeconds: number | null;
+  /** Battle time of destruction, yield or tag-out; null when the robot stayed to the end. */
+  exitSeconds: number | null;
   zoneScore: number | null;
   kills: number | null;
 }
@@ -102,6 +104,21 @@ export interface BattleSideDetail {
   isWinner: boolean;
 }
 
+/** One robot's KotH / Grand Melee placement award: tierBaseReward × mode × placement (× bonus). */
+export interface PlacementPayoutComponent {
+  robotId: number;
+  robotName: string | null;
+  mode: string;
+  tier: string;
+  placement: number;
+  credits: number;
+  tierBaseReward: number;
+  modeBaseMultiplier: number;
+  placementMultiplier: number;
+  bonus: { label: string; multiplier: number } | null;
+  participationFloorApplied: boolean;
+}
+
 export interface PayoutInputs {
   participationFloor: number | null;
   winComponent: number | null;
@@ -110,6 +127,8 @@ export interface PayoutInputs {
   formula: string | null;
   formulaVersion: string | null;
   outcome: string | null;
+  /** Per-robot placement awards (KotH / Grand Melee); null for side-based income. */
+  placementComponents: PlacementPayoutComponent[] | null;
 }
 
 export type PayoutStatus = 'match' | 'mismatch' | 'missing';

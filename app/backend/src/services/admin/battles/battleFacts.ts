@@ -40,7 +40,8 @@ export interface ParticipantFact {
   fameAwarded: number;
   damageDealt: number;
   finalHP: number;
-  maxHP: number;
+  /** Battle-time max HP (from the battle-time build record); null when not recorded. */
+  maxHP: number | null;
   stable: StableRef;
 }
 
@@ -54,6 +55,8 @@ export interface BattleFacts {
   teamNames: Map<number, string>;
   kothPlacements: KothPlacement[] | null;
   scoreThreshold: number | null;
+  /** `scheduled_matches_v2.time_limit` of the match that produced the battle (KotH honours it). */
+  scheduledTimeLimit: number | null;
 }
 
 const NO_FACTS = (): BattleFacts => ({
@@ -65,6 +68,7 @@ const NO_FACTS = (): BattleFacts => ({
   teamNames: new Map(),
   kothPlacements: null,
   scoreThreshold: null,
+  scheduledTimeLimit: null,
 });
 
 const UNKNOWN = 'Unknown';
@@ -91,7 +95,6 @@ export async function loadBattleFacts(rows: readonly BattleCoreRow[]): Promise<M
         robot: {
           select: {
             name: true,
-            maxHP: true,
             user: { select: { id: true, username: true, stableName: true, stableType: true } },
           },
         },
@@ -101,7 +104,7 @@ export async function loadBattleFacts(rows: readonly BattleCoreRow[]): Promise<M
     prisma.scheduledMatch.findMany({
       where: { battleId: { in: ids } },
       select: {
-        id: true, battleId: true, isByeMatch: true, scoreThreshold: true,
+        id: true, battleId: true, isByeMatch: true, scoreThreshold: true, timeLimit: true,
         participants: { select: { slot: true, participantType: true, participantId: true } },
       },
     }),
@@ -126,6 +129,7 @@ export async function loadBattleFacts(rows: readonly BattleCoreRow[]): Promise<M
     f.scheduledMatchId = sm.id;
     if (sm.isByeMatch === true) f.isBye = true;
     if (sm.scoreThreshold !== null) f.scoreThreshold = sm.scoreThreshold;
+    if (sm.timeLimit !== null) f.scheduledTimeLimit = sm.timeLimit;
     for (const p of sm.participants) {
       if (p.participantType !== 'team') continue;
       const sides = teamIdBySide.get(sm.battleId) ?? new Map<number, number>();
@@ -182,7 +186,7 @@ export async function loadBattleFacts(rows: readonly BattleCoreRow[]): Promise<M
       fameAwarded: p.fameAwarded,
       damageDealt: p.damageDealt,
       finalHP: p.finalHP,
-      maxHP: p.robot.maxHP,
+      maxHP: null,
       stable: stableRef(p.robot.user),
     });
   }
@@ -211,6 +215,7 @@ export function outcomeOf(row: BattleCoreRow, f: BattleFacts): BattleOutcome {
     participants: f.participants,
     isBye: f.isBye,
     isForfeitTournamentBattle: f.isForfeitTournamentBattle,
+    scheduledTimeLimit: f.scheduledTimeLimit,
     koth: row.battleType === 'koth'
       ? { winnerZoneScore: winnerPlacement?.zoneScore ?? null, scoreThreshold: f.scoreThreshold }
       : null,
@@ -242,17 +247,25 @@ export function summariseSides(
   outcome: BattleOutcome,
 ): { sides: BattleSideSummary[]; field: PlacementFieldSummary | null } {
   if (modeShape(row.battleType) === 'placement') {
-    const winner = f.participants.find(p => p.robotId === outcome.winnerRobotId)
-      ?? [...f.participants].sort((a, b) => (a.placement ?? 99) - (b.placement ?? 99))[0];
-    const others = f.participants.filter(p => p !== winner);
+    // A recorded winner whose robot was deleted (its participant row is gone) is shown as
+    // unknown: falling back to the best remaining placement would crown the runner-up.
+    // Only without a recorded winner (draw, bye, forfeit) is the top placement shown.
+    const recordedWinner = outcome.winnerRobotId !== null
+      ? f.participants.find(p => p.robotId === outcome.winnerRobotId) ?? null
+      : null;
+    const lead = outcome.winnerRobotId === null
+      ? [...f.participants].sort((a, b) => (a.placement ?? 99) - (b.placement ?? 99))[0] ?? null
+      : recordedWinner;
+    const others = f.participants.filter(p => p !== lead);
     const byType: Record<StableKind, number> = { human: 0, generated: 0, automaton: 0 };
     for (const p of others) byType[p.stable.stableType] += 1;
-    return {
-      sides: winner
-        ? [{ team: winner.team, label: winner.robotName, robotCount: 1, stable: winner.stable, isWinner: outcome.result === 'win' }]
-        : [],
-      field: { others: others.length, othersByStableType: byType },
-    };
+    let sides: BattleSideSummary[] = [];
+    if (lead) {
+      sides = [{ team: lead.team, label: lead.robotName, robotCount: 1, stable: lead.stable, isWinner: outcome.result === 'win' && lead === recordedWinner }];
+    } else if (outcome.winnerRobotId !== null && outcome.result === 'win') {
+      sides = [{ team: 1, label: UNKNOWN, robotCount: 1, stable: null, isWinner: true }];
+    }
+    return { sides, field: { others: others.length, othersByStableType: byType } };
   }
 
   const teams = [...new Set([1, 2, ...f.participants.map(p => p.team)])].sort((a, b) => a - b);

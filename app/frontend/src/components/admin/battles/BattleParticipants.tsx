@@ -7,10 +7,12 @@ import type { BattleDetail, BattleParticipantDetail } from './types';
 import { formatCredits, formatEventTime, formatNumber } from '../../../utils/adminBattlesFormat';
 
 function fate(p: BattleParticipantDetail): { text: string; tone: string } {
-  const at = p.survivalSeconds !== null ? ` at ${formatEventTime(p.survivalSeconds)}` : '';
+  // Battle time of the exit; survival is the active duration (a tag-team reserve enters mid-battle).
+  const at = p.exitSeconds !== null ? ` at ${formatEventTime(p.exitSeconds)}` : '';
   if (p.forfeited) return { text: 'Forfeited', tone: 'text-warning' };
   if (p.destroyed) return { text: `Destroyed${at}`, tone: 'text-error' };
   if (p.yielded) return { text: `Yielded${at}`, tone: 'text-warning' };
+  if (p.exitSeconds !== null) return { text: `Tagged out${at}`, tone: 'text-secondary' };
   return { text: 'Survived', tone: 'text-secondary' };
 }
 

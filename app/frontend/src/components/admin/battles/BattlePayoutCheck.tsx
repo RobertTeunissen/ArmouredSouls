@@ -5,7 +5,7 @@
 import { useState } from 'react';
 import { ADMIN_FOCUS_RING } from '../shared';
 import { StableTag } from './BattleBadges';
-import type { PayoutCheck, StablePayoutCheck } from './types';
+import type { PayoutCheck, PlacementPayoutComponent, StablePayoutCheck } from './types';
 import { formatCredits, formatNumber } from '../../../utils/adminBattlesFormat';
 
 const OVERALL: Record<PayoutCheck['status'], { text: string; tone: string }> = {
@@ -34,9 +34,45 @@ function Amount({ robots, ledger }: { robots: number; ledger: number | null }): 
   );
 }
 
+/** KotH / Grand Melee: one line per robot, tier base × mode × placement (× bonus) = credits. */
+function PlacementFormula({ s, components }: { s: StablePayoutCheck; components: PlacementPayoutComponent[] }): React.ReactElement {
+  const i = s.inputs;
+  const total = components.reduce((sum, c) => sum + c.credits, 0);
+  const meta = [
+    i?.formula ? `formula ${i.formula}${i.formulaVersion ? ` v${i.formulaVersion}` : ''}` : null,
+    i?.outcome ? `outcome ${i.outcome}` : null,
+  ].filter(Boolean).join(' · ');
+  return (
+    <div className="mx-4 mb-3 space-y-1 rounded bg-background px-3 py-2">
+      <ul className="space-y-1 font-mono text-xs text-white">
+        {components.map((c) => (
+          <li key={c.robotId}>
+            <span className="text-secondary">{c.robotName ?? `Robot #${c.robotId}`} · {ordinal(c.placement)} · tier {c.tier}: </span>
+            {formatCredits(c.tierBaseReward)} × {c.modeBaseMultiplier} × {c.placementMultiplier}
+            {c.participationFloorApplied && <span className="text-secondary"> (participation floor)</span>}
+            {c.bonus && <> × {c.bonus.multiplier} <span className="text-secondary">{c.bonus.label}</span></>}
+            {' '}= {formatCredits(c.credits)}
+          </li>
+        ))}
+      </ul>
+      <p className="font-mono text-xs text-white">
+        Total {formatCredits(total)}{s.battleIncome.ledger !== null && ` · ledger ${formatCredits(s.battleIncome.ledger)}`}
+      </p>
+      {meta && <p className="text-xs text-secondary">{meta}</p>}
+    </div>
+  );
+}
+
+function ordinal(n: number): string {
+  const tens = n % 100;
+  if (tens >= 11 && tens <= 13) return `${n}th`;
+  return `${n}${({ 1: 'st', 2: 'nd', 3: 'rd' } as Record<number, string>)[n % 10] ?? 'th'}`;
+}
+
 function Formula({ s }: { s: StablePayoutCheck }): React.ReactElement | null {
   const i = s.inputs;
   if (!i) return null;
+  if (i.placementComponents) return <PlacementFormula s={s} components={i.placementComponents} />;
   const parts = [
     i.participationFloor !== null ? `participationFloor ${formatCredits(i.participationFloor)}` : null,
     i.winComponent !== null ? `winComponent ${formatCredits(i.winComponent)}` : null,
