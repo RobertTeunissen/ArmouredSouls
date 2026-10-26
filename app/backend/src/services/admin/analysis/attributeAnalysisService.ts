@@ -29,7 +29,9 @@ import {
   GROUP_PAIRS,
   LayeredValueCache,
   buildDesign,
+  featureCount,
   penaltyMask,
+  stanceFeatureIndex,
   profileTallies,
   usageSummary,
   type ModelKind,
@@ -175,7 +177,7 @@ async function fitColumn(comparisons: Comparison[], column: AnalysisColumn, cach
   const fits: Record<ModelKind, FitResult | null> = { attributes: null, groups: null, groupPairs: null };
   if (enough) {
     for (const kind of ['attributes', 'groups', 'groupPairs'] as const) {
-      fits[kind] = await fitLogistic(await buildDesign(comparisons, cache, kind), { penalised: penaltyMask(kind) });
+      fits[kind] = await fitLogistic(await buildDesign(comparisons, cache, kind), { penalised: penaltyMask(kind, cache.toggles.stance) });
     }
   }
   return { column, comparisons: comparisons.length, enough, fits };
@@ -208,7 +210,7 @@ async function computeLayerFit(comparisons: readonly Comparison[]): Promise<Laye
   const rows: LayerFitRow[] = [];
   for (let step = 0; step < LAYER_STEPS.length; step++) {
     const cache = new LayeredValueCache(cumulativeToggles(step));
-    const fit = await fitLogistic(await buildDesign(train, cache, 'attributes'), { penalised: penaltyMask('attributes') });
+    const fit = await fitLogistic(await buildDesign(train, cache, 'attributes'), { penalised: penaltyMask('attributes', cache.toggles.stance) });
     if (!fit) return null;
     const scored = await evaluate(await buildDesign(test, cache, 'attributes'), fit.beta);
     rows.push({ layer: LAYER_STEPS[step], logLoss: round(scored.logLoss, 4), accuracy: round(scored.accuracy, 4) });
@@ -296,9 +298,11 @@ async function compute(params: AttributeAnalysisParams, since: Date, newestId: n
   const columns: ColumnFits[] = [];
   for (const column of ANALYSIS_COLUMNS) columns.push(await fitColumn(subset(comparisons, column), column, cache));
 
-  const attributeD = 1 + ATTRIBUTE_COUNT;
-  const groupD = 1 + GROUP_COUNT;
-  const pairD = 1 + GROUP_COUNT + GROUP_PAIRS.length;
+  const withStance = params.toggles.stance;
+  const attributeD = featureCount('attributes', withStance);
+  const groupD = featureCount('groups', withStance);
+  const pairD = featureCount('groupPairs', withStance);
+  const stanceAt = stanceFeatureIndex('attributes');
   const shareScale = SHARE_STEP * PP_PER_LOGIT;
 
   const profiles = await buildProfiles(comparisons, dataset.set, cache);
@@ -329,6 +333,12 @@ async function compute(params: AttributeAnalysisParams, since: Date, newestId: n
     comparisons: c.comparisons,
     enough: c.enough,
     investmentEffect: estimate(c.fits.attributes, unitContrast(attributeD, 0), INVESTMENT_STEP * PP_PER_LOGIT, c.enough),
+    stanceEffects: withStance
+      ? {
+        offensive: estimate(c.fits.attributes, unitContrast(attributeD, stanceAt), PP_PER_LOGIT, c.enough),
+        defensive: estimate(c.fits.attributes, unitContrast(attributeD, stanceAt + 1), PP_PER_LOGIT, c.enough),
+      }
+      : null,
   }));
 
   const layerFit = await getLayerFit(params.range, newestId, dataset, now.getTime());

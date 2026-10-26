@@ -48,6 +48,14 @@ export function ColumnSummaries({ columns, selected }: { columns: AnalysisColumn
                 <span className="whitespace-nowrap font-semibold text-white">{formatEffect(s.investmentEffect.effect)}</span>
               </p>
             )}
+            {s.enough && s.stanceEffects && (
+              <p className="mt-0.5 text-xs text-secondary">
+                vs balanced: offensive{' '}
+                <span className={`whitespace-nowrap ${s.stanceEffects.offensive.significant ? 'font-semibold text-white' : ''}`}>{formatEffect(s.stanceEffects.offensive.effect)}</span>
+                {' · '}defensive{' '}
+                <span className={`whitespace-nowrap ${s.stanceEffects.defensive.significant ? 'font-semibold text-white' : ''}`}>{formatEffect(s.stanceEffects.defensive.effect)}</span>
+              </p>
+            )}
           </li>
         );
       })}
@@ -275,7 +283,7 @@ export function MethodNote(): React.ReactElement {
         Every fought battle becomes paired comparisons: side against side in 1v1 and team modes (a team is the average of its robots), and every pair of robots with different placements in King of the Hill and Grand Melee (each battle weighs half its field; Grand Melee uses up to 30 sampled pairs). Byes, forfeits, draws and tied placements are left out.
       </p>
       <p>
-        A logistic model compares the two sides’ shares of points per attribute and controls for the difference in total points, so an attribute scores well only when spending points on it beats spending them elsewhere. Standard errors are clustered by battle. Values come from the battle-time build of each robot, so later upgrades never change the result.
+        A logistic model compares the two sides’ shares of points per attribute and controls for the difference in total points, so an attribute scores well only when spending points on it beats spending them elsewhere. Standard errors are clustered by battle. Values come from the battle-time build of each robot, so later upgrades never change the result. With every attribute layer on they are exactly the values combat read. Stance never changes attribute values in combat (it acts in the hit, damage, counter and regen formulas), so it enters the model as its own effect, offensive or defensive against balanced.
       </p>
       <p>
         The effect is an association, not a guarantee: builds that put points into one attribute often share other choices (weapons, stance). The layer toggles and the model fit by layer help separate them. Generated stables’ random builds give most of the variation; “Players’ share” shows what human players actually build.

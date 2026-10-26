@@ -22,6 +22,12 @@ export interface AnalysisColumnSummary {
   enough: boolean;
   /** Win-chance change for 10% more total points than the opponent. */
   investmentEffect: EffectEstimate;
+  /**
+   * Win-chance change for fighting offensive / defensive instead of balanced, at the
+   * same attributes. Null when the stance toggle is off. Stance is its own effect:
+   * combat applies it in its formulas, never to attribute values.
+   */
+  stanceEffects: { offensive: EffectEstimate; defensive: EffectEstimate } | null;
 }
 
 export interface AttributeEffectRow {

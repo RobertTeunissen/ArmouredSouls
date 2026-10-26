@@ -28,8 +28,13 @@ export function BattlesFilters({ filters, onChange, onReset }: BattlesFiltersPro
   const [search, setSearch] = useState(filters.q);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Keep the box in step when the URL changes from outside (Reset, back button).
-  useEffect(() => setSearch(filters.q), [filters.q]);
+  // Keep the box in step when the URL changes from outside (Reset, back button), and
+  // drop any pending debounce so a discarded draft can't reapply itself afterwards.
+  useEffect(() => {
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = null;
+    setSearch(filters.q);
+  }, [filters.q]);
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
 
   const commitSearch = (value: string): void => {

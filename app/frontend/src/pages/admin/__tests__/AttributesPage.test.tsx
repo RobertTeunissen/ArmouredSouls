@@ -80,6 +80,9 @@ describe('AttributesPage analysis', () => {
     const summaries = screen.getByRole('list', { name: 'Battles per mode column' });
     expect(within(summaries).getByText(/240 comparisons · too few to analyse/)).toBeInTheDocument();
     expect(within(summaries).getAllByText('+4.1 pp').length).toBe(1);
+    // Stance is reported as its own effect per column, not folded into the attributes.
+    const all = within(summaries).getByText('All modes').closest('li') as HTMLElement;
+    expect(all).toHaveTextContent('vs balanced: offensive +1.8 pp · defensive \u22120.4 pp');
   });
 
   it('orders the heatmap by effect, with a group order option', async () => {

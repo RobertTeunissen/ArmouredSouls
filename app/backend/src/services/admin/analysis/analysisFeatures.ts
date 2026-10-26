@@ -2,6 +2,11 @@
  * Features of the "what wins" models, built from paired comparisons for one
  * set of layer toggles.
  *
+ * Stance (when its toggle is on) adds two features of its own: the share of the
+ * side fighting offensive and defensive (balanced is the reference). Combat
+ * applies stance inside its formulas, never to attribute values, so it is
+ * modelled as a separate effect rather than folded into the shares.
+ *
  * Every model controls for investment: feature 0 is log(total A) − log(total B),
  * where total is the sum of the 23 layered values. The rest are differences of
  * shares (value / total), so they say how the points are spread, not how many.
@@ -30,10 +35,22 @@ export const GROUP_PAIRS: ReadonlyArray<readonly [number, number]> = ATTRIBUTE_G
 /** "Comparable investment": totals within about ±10%. */
 export const COMPARABLE_LOG_TOTAL = 0.1;
 
-export function featureCount(kind: ModelKind): number {
+/** Stance features (offensive, defensive) appended when the stance toggle is on. */
+export const STANCE_FEATURES = 2;
+
+function baseFeatureCount(kind: ModelKind): number {
   if (kind === 'attributes') return 1 + ATTRIBUTE_COUNT;
   if (kind === 'groups') return 1 + GROUP_COUNT;
   return 1 + GROUP_COUNT + GROUP_PAIRS.length;
+}
+
+export function featureCount(kind: ModelKind, withStance = false): number {
+  return baseFeatureCount(kind) + (withStance ? STANCE_FEATURES : 0);
+}
+
+/** Index of the offensive stance feature (defensive follows it). */
+export function stanceFeatureIndex(kind: ModelKind): number {
+  return baseFeatureCount(kind);
 }
 
 /** Layered values per build for one toggle set, computed once per build. */
@@ -56,6 +73,9 @@ export interface SideProfile {
   total: number;
   shares: Float64Array;
   groupShares: Float64Array;
+  /** Share of the side's robots fighting offensive / defensive. */
+  offensive: number;
+  defensive: number;
 }
 
 function profileOfValues(values: Float64Array): SideProfile {
@@ -69,7 +89,7 @@ function profileOfValues(values: Float64Array): SideProfile {
       groupShares[GROUP_INDEX[k]] += shares[k];
     }
   }
-  return { total, shares, groupShares };
+  return { total, shares, groupShares, offensive: 0, defensive: 0 };
 }
 
 export function sideProfile(builds: readonly LayeredBuild[], cache: LayeredValueCache): SideProfile {
@@ -78,15 +98,26 @@ export function sideProfile(builds: readonly LayeredBuild[], cache: LayeredValue
     const v = cache.get(build);
     for (let k = 0; k < ATTRIBUTE_COUNT; k++) mean[k] += v[k] / builds.length;
   }
-  return profileOfValues(mean);
+  const profile = profileOfValues(mean);
+  profile.offensive = builds.filter((b) => b.stance === 'offensive').length / builds.length;
+  profile.defensive = builds.filter((b) => b.stance === 'defensive').length / builds.length;
+  return profile;
 }
 
 export function robotProfile(build: LayeredBuild, cache: LayeredValueCache): SideProfile {
-  return profileOfValues(cache.get(build));
+  const profile = profileOfValues(cache.get(build));
+  profile.offensive = build.stance === 'offensive' ? 1 : 0;
+  profile.defensive = build.stance === 'defensive' ? 1 : 0;
+  return profile;
 }
 
-function writeFeatures(kind: ModelKind, a: SideProfile, b: SideProfile, x: Float64Array, o: number): void {
+function writeFeatures(kind: ModelKind, withStance: boolean, a: SideProfile, b: SideProfile, x: Float64Array, o: number): void {
   x[o] = Math.log(a.total) - Math.log(b.total);
+  if (withStance) {
+    const s = o + stanceFeatureIndex(kind);
+    x[s] = a.offensive - b.offensive;
+    x[s + 1] = a.defensive - b.defensive;
+  }
   if (kind === 'attributes') {
     for (let k = 0; k < ATTRIBUTE_COUNT; k++) x[o + 1 + k] = a.shares[k] - b.shares[k];
     return;
@@ -104,7 +135,8 @@ const yieldToEventLoop = (): Promise<void> => new Promise((resolve) => setImmedi
 
 /** Design matrix for `comparisons` (kept in battle order, so clusters stay contiguous). */
 export async function buildDesign(comparisons: readonly Comparison[], cache: LayeredValueCache, kind: ModelKind): Promise<DesignMatrix> {
-  const d = featureCount(kind);
+  const withStance = cache.toggles.stance;
+  const d = featureCount(kind, withStance);
   const n = comparisons.length;
   const x = new Float64Array(n * d);
   const y = new Float64Array(n);
@@ -118,7 +150,7 @@ export async function buildDesign(comparisons: readonly Comparison[], cache: Lay
     const a = sideProfile(c.a, cache);
     const b = sideProfile(c.b, cache);
     if (!(a.total > 0) || !(b.total > 0)) continue;
-    writeFeatures(kind, a, b, x, rows * d);
+    writeFeatures(kind, withStance, a, b, x, rows * d);
     y[rows] = c.y;
     w[rows] = c.w;
     cluster[rows] = c.battleId;
@@ -134,9 +166,10 @@ export async function buildDesign(comparisons: readonly Comparison[], cache: Lay
   };
 }
 
-/** Penalise every share feature, never the investment control. */
-export function penaltyMask(kind: ModelKind): boolean[] {
-  return Array.from({ length: featureCount(kind) }, (_, j) => j > 0);
+/** Penalise every share feature, never the investment control or the stance effects. */
+export function penaltyMask(kind: ModelKind, withStance = false): boolean[] {
+  const stanceAt = stanceFeatureIndex(kind);
+  return Array.from({ length: featureCount(kind, withStance) }, (_, j) => j > 0 && j < stanceAt);
 }
 
 // ── Build profiles ───────────────────────────────────────────────────

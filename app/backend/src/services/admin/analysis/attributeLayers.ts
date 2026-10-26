@@ -4,18 +4,25 @@
  *
  * Combat computes (canonical formula, `shared/utils/robotStats.ts`):
  *   effective = round2((base + catalog weapon bonuses + Hone/Augment + tuning) × (1 + loadout))
- * and applies the stance modifiers on top inside the simulator (not stored).
+ * and the simulator reads exactly those values (`prepareRobotForCombat`). With
+ * every attribute layer on, the rebuilt values are the stored effective values.
+ *
+ * Stance is NOT an attribute layer: combat never changes attribute values by
+ * stance. It applies stance inside its formulas (hit chance, damage, counter
+ * chance, shield regen, movement speed), so the analysis models stance as its
+ * own effect (see `analysisFeatures.ts`). `STANCE_MODIFIERS` in the shared
+ * module is a display table and must not be used here.
  *
  * The record keeps base, tuning, effective and the refinements, but only the
  * weapon id, so the catalog bonus per attribute is derived from the stored
  * effective value. That stays right when the catalog changes mid-season.
  *
  * A season can hold hundreds of thousands of builds, so each is kept compact:
- * one Float32Array with the four additive layers, plus loadout and stance
- * modifier tables shared by every build with the same loadout or stance.
+ * one Float32Array with the four additive layers, plus a loadout modifier
+ * table shared by every build with the same loadout.
  */
 import { ROBOT_ATTRIBUTES } from '../../../shared/utils/robotAttributes';
-import { getLoadoutBonus, getStanceModifier } from '../../../shared/utils/robotStats';
+import { getLoadoutBonus } from '../../../shared/utils/robotStats';
 import type { AttributeValues, StoredRefinement } from '../../../types/combatBuildTypes';
 import type { LayerToggles } from './analysisOptions';
 
@@ -44,24 +51,31 @@ export const LAYER_OFFSET = {
 
 export type AdditiveLayer = keyof typeof LAYER_OFFSET;
 
+/** The stances combat distinguishes; anything else fights as balanced. */
+export type CombatStance = 'offensive' | 'defensive' | 'balanced';
+
 export interface LayeredBuild {
   data: Float32Array;
   /** `getLoadoutBonus` per attribute (shared table). */
   loadout: Float64Array;
-  /** `getStanceModifier` per attribute (shared table). */
-  stance: Float64Array;
+  /** The stance the robot fought in (an effect of its own, not an attribute layer). */
+  stance: CombatStance;
 }
 
 const loadoutTables = new Map<string, Float64Array>();
-const stanceTables = new Map<string, Float64Array>();
 
-function table(cache: Map<string, Float64Array>, key: string, lookup: (key: string, attr: string) => number): Float64Array {
-  let values = cache.get(key);
+function loadoutTable(loadoutType: string): Float64Array {
+  let values = loadoutTables.get(loadoutType);
   if (!values) {
-    values = Float64Array.from(ROBOT_ATTRIBUTES, (attr) => lookup(key, attr));
-    cache.set(key, values);
+    values = Float64Array.from(ROBOT_ATTRIBUTES, (attr) => getLoadoutBonus(loadoutType, attr));
+    loadoutTables.set(loadoutType, values);
   }
   return values;
+}
+
+/** Combat checks `stance === 'offensive'` / `'defensive'`; every other value is balanced. */
+export function combatStance(stance: string): CombatStance {
+  return stance === 'offensive' || stance === 'defensive' ? stance : 'balanced';
 }
 
 const round2 = (value: number): number => Math.round(value * 100) / 100;
@@ -81,8 +95,7 @@ function refinementBonus(refinements: readonly StoredRefinement[] | null, attrib
 
 export function layerBuild(raw: RawBuild): LayeredBuild {
   const data = new Float32Array(4 * ATTRIBUTE_COUNT);
-  const loadout = table(loadoutTables, raw.loadoutType, getLoadoutBonus);
-  const stance = table(stanceTables, raw.stance, getStanceModifier);
+  const loadout = loadoutTable(raw.loadoutType);
   ROBOT_ATTRIBUTES.forEach((attr, k) => {
     const base = num(raw.baseAttributes, attr);
     const tuning = num(raw.tuning, attr);
@@ -94,7 +107,7 @@ export function layerBuild(raw: RawBuild): LayeredBuild {
     data[LAYER_OFFSET.catalog + k] = round2(effective / (1 + loadout[k]) - base - tuning - refine);
     data[LAYER_OFFSET.refinements + k] = refine;
   });
-  return { data, loadout, stance };
+  return { data, loadout, stance: combatStance(raw.stance) };
 }
 
 /** One additive layer's value for attribute index `k`. */
@@ -102,7 +115,10 @@ export function layerValue(build: LayeredBuild, layer: AdditiveLayer, k: number)
   return build.data[LAYER_OFFSET[layer] + k];
 }
 
-/** Attribute values with the chosen layers on, never below zero. */
+/**
+ * Attribute values with the chosen attribute layers on, never below zero. The
+ * `stance` toggle has no effect here (stance is modelled separately).
+ */
 export function layeredValues(build: LayeredBuild, toggles: LayerToggles): Float64Array {
   const out = new Float64Array(ATTRIBUTE_COUNT);
   const { data } = build;
@@ -112,7 +128,6 @@ export function layeredValues(build: LayeredBuild, toggles: LayerToggles): Float
     if (toggles.weapons) value += data[LAYER_OFFSET.catalog + k];
     if (toggles.refinements) value += data[LAYER_OFFSET.refinements + k];
     if (toggles.loadout) value *= 1 + build.loadout[k];
-    if (toggles.stance) value *= 1 + build.stance[k];
     out[k] = value > 0 ? value : 0;
   }
   return out;

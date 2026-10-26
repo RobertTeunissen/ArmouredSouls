@@ -6,7 +6,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, within, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import AdminBattlesPage from '../BattlesPage';
 import { ApiError } from '../../../utils/ApiError';
 import { SEARCH_DEBOUNCE_MS } from '../../../components/admin/battles';
@@ -30,6 +30,12 @@ let currentSearch = '';
 function LocationSpy(): null {
   currentSearch = useLocation().search;
   return null;
+}
+
+/** Stands in for the browser's back button. */
+function HistoryBack(): React.ReactElement {
+  const navigate = useNavigate();
+  return <button type="button" onClick={() => navigate(-1)}>History back</button>;
 }
 
 function renderPage(url = '/admin/battles'): void {
@@ -163,6 +169,30 @@ describe('BattlesPage buttons', () => {
       act(() => { vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS * 2); });
       expect(currentSearch).toBe('');
       expect(screen.getByRole('searchbox', { name: 'Search by robot, stable or battle id' })).toHaveValue('');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('a query change from outside (browser history) cancels a pending search draft', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+      render(
+        <MemoryRouter initialEntries={['/admin/battles?q=Iron', '/admin/battles?q=Quasar']} initialIndex={1}>
+          <Routes>
+            <Route path="/admin/battles" element={<><AdminBattlesPage /><LocationSpy /><HistoryBack /></>} />
+          </Routes>
+        </MemoryRouter>,
+      );
+      await screen.findByText('1,284 battles');
+      const box = screen.getByRole('searchbox', { name: 'Search by robot, stable or battle id' });
+      await user.type(box, 'zzz');
+      await user.click(screen.getByRole('button', { name: 'History back' }));
+      await waitFor(() => expect(currentSearch).toBe('?q=Iron'));
+      act(() => { vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS * 2); });
+      expect(currentSearch).toBe('?q=Iron');
+      expect(box).toHaveValue('Iron');
     } finally {
       vi.useRealTimers();
     }

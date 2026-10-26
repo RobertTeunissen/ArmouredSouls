@@ -47,7 +47,7 @@ export const LAYER_OPTIONS: ReadonlyArray<{ key: LayerKey; label: string; descri
   { key: 'weapons', label: 'Weapon bonuses', description: 'Attribute bonuses of the equipped weapons (catalog values).' },
   { key: 'refinements', label: 'Refinements', description: 'Hone and Augment bonuses on the weapons.' },
   { key: 'loadout', label: 'Loadout', description: 'The loadout multiplier (single, two-handed, dual wield, weapon and shield).' },
-  { key: 'stance', label: 'Stance', description: 'Stance modifiers, applied after the loadout as in combat.' },
+  { key: 'stance', label: 'Stance', description: 'The stance as its own effect (offensive / defensive vs balanced). Combat applies stance in its hit, damage, counter and regen formulas, never to attribute values.' },
 ];
 
 const LAYER_STEP_LABELS: Record<LayerStep, string> = {
@@ -56,7 +56,7 @@ const LAYER_STEP_LABELS: Record<LayerStep, string> = {
   weapons: '+ Weapon bonuses',
   refinements: '+ Refinements',
   loadout: '+ Loadout',
-  stance: '+ Stance',
+  stance: '+ Stance (effect)',
 };
 
 export function layerStepLabel(step: LayerStep): string {

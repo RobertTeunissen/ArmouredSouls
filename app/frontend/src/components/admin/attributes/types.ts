@@ -38,6 +38,8 @@ export interface AnalysisColumnSummary {
   comparisons: number;
   enough: boolean;
   investmentEffect: EffectEstimate;
+  /** Offensive / defensive instead of balanced at the same attributes; null with the stance toggle off. */
+  stanceEffects: { offensive: EffectEstimate; defensive: EffectEstimate } | null;
 }
 
 export interface AttributeEffectRow {

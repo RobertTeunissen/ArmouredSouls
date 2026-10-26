@@ -1,9 +1,9 @@
 import { ROBOT_ATTRIBUTES } from '../../../../shared/utils/robotAttributes';
-import { getLoadoutBonus, getStanceModifier } from '../../../../shared/utils/robotStats';
+import { getLoadoutBonus } from '../../../../shared/utils/robotStats';
 import { ALL_LAYERS_ON, type LayerToggles } from '../analysisOptions';
 import { layerBuild, layerValue, layeredValues, type LayeredBuild, type RawBuild } from '../attributeLayers';
 import { addBattle, emptyComparisonSet, PLACEMENT_PAIR_CAP, type AnalysisBattle, type AnalysisParticipant } from '../comparisons';
-import { GROUP_PAIRS, GROUP_SIZE, LayeredValueCache, buildDesign, profileKey, profileTallies, robotProfile } from '../analysisFeatures';
+import { GROUP_PAIRS, GROUP_SIZE, LayeredValueCache, buildDesign, penaltyMask, profileKey, profileTallies, robotProfile } from '../analysisFeatures';
 
 const OFF: LayerToggles = { tuning: false, weapons: false, refinements: false, loadout: false, stance: false };
 
@@ -60,13 +60,14 @@ describe('attribute layers', () => {
     ROBOT_ATTRIBUTES.forEach((a, k) => expect(Math.abs(values[k] - effective[a])).toBeLessThanOrEqual(0.011));
   });
 
-  it('applies the stance after the loadout, and shows only base with everything off', () => {
+  it('never changes attribute values by stance (combat applies it in its formulas), and shows only base with everything off', () => {
     const built = layerBuild(raw);
+    expect(built.stance).toBe('offensive');
     const on = layeredValues(built, ALL_LAYERS_ON);
-    const k = ROBOT_ATTRIBUTES.indexOf('combatPower');
-    expect(on[k]).toBeCloseTo(effective.combatPower * (1 + getStanceModifier('offensive', 'combatPower')), 1);
+    ROBOT_ATTRIBUTES.forEach((a, k) => expect(Math.abs(on[k] - effective[a])).toBeLessThanOrEqual(0.011));
     const off = layeredValues(built, OFF);
     ROBOT_ATTRIBUTES.forEach((a, i) => expect(off[i]).toBe(base[a]));
+    expect(layerBuild({ ...raw, stance: 'unknown' }).stance).toBe('balanced');
   });
 
   it('adds tuning alone when only tuning is on', () => {
@@ -147,6 +148,19 @@ describe('features and profiles', () => {
     expect(m.rows).toBe(1);
     expect(m.x[0]).toBeCloseTo(Math.log(2), 10);
     for (let j = 1; j < m.features; j++) expect(m.x[j]).toBeCloseTo(0, 12);
+  });
+
+  it('adds offensive/defensive stance features only with the stance toggle, unpenalised', async () => {
+    const offensive = layerBuild({ baseAttributes: attrs(10), tuning: {}, effectiveAttributes: attrs(10), mainRefinements: null, offhandRefinements: null, loadoutType: 'test', stance: 'offensive' });
+    const defensive = layerBuild({ baseAttributes: attrs(10), tuning: {}, effectiveAttributes: attrs(10), mainRefinements: null, offhandRefinements: null, loadoutType: 'test', stance: 'defensive' });
+    const comparison = { battleId: 1, column: 'team' as const, a: [offensive, defensive], b: [defensive, defensive], y: 1 as const, w: 1 };
+    const withStance = await buildDesign([comparison], new LayeredValueCache(ALL_LAYERS_ON), 'attributes');
+    expect(withStance.features).toBe(26);
+    expect(withStance.x[24]).toBeCloseTo(0.5, 12); // offensive share: 0.5 vs 0
+    expect(withStance.x[25]).toBeCloseTo(-0.5, 12); // defensive share: 0.5 vs 1
+    const without = await buildDesign([comparison], new LayeredValueCache({ ...ALL_LAYERS_ON, stance: false }), 'attributes');
+    expect(without.features).toBe(24);
+    expect(penaltyMask('attributes', true)).toEqual([false, ...Array(23).fill(true), false, false]);
   });
 
   it('has 10 group pairs and group sizes 6/5/5/4/3', () => {

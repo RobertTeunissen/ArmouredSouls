@@ -12,6 +12,7 @@ import {
   SHIELD_MULTIPLIER,
 } from '../src/utils/robotCalculations';
 import { ROBOT_ATTRIBUTES } from '../src/shared/utils/robotAttributes';
+import { layerBuild, layeredValues, type RawBuild } from '../src/services/admin/analysis/attributeLayers';
 import { Robot, WeaponInventory, Weapon, Prisma } from '../generated/prisma';
 
 // Mock robot data
@@ -604,6 +605,26 @@ describe('Robot Calculations', () => {
         expect(getCombatBuild(robot)?.tuning).toEqual({});
         expect(getCombatBuild({ ...robot })).toBeNull();
       });
+
+      it.each(['offensive', 'defensive', 'balanced'])(
+        'parity with the simulator (%s): the analysis layers rebuild exactly the attributes combat reads',
+        (stance) => {
+          const robot = buildRobot('dual_wield', true);
+          robot.stance = stance;
+          prepareRobotForCombat(robot, TUNING);
+          const layered = layerBuild(getCombatBuild(robot)! as unknown as RawBuild);
+          const allOn = layeredValues(layered, { tuning: true, weapons: true, refinements: true, loadout: true, stance: true });
+          const stanceOff = layeredValues(layered, { tuning: true, weapons: true, refinements: true, loadout: true, stance: false });
+          ROBOT_ATTRIBUTES.forEach((attr, k) => {
+            // The simulator reads the prepared attribute fields (e.g. calcCooldown uses robot.attackSpeed);
+            // stance never changes them, so the analysis must not either.
+            const combat = Number(robot[attr as keyof Robot]);
+            expect({ attr, delta: Math.abs(allOn[k] - combat) <= 0.011 }).toEqual({ attr, delta: true });
+            expect(stanceOff[k]).toBe(allOn[k]);
+          });
+          expect(layered.stance).toBe(stance);
+        },
+      );
 
       it('keeps the first capture when preparation runs again', () => {
         const robot = buildRobot('single', false);

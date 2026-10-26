@@ -45,10 +45,10 @@ export function readyResponse(overrides: Partial<AttributeAnalysisReady> = {}): 
     window: { range: '7d', from: '2026-11-03T12:00:00.000Z', to: '2026-11-10T12:00:00.000Z', battlesInRange: 21_480, battlesUsed: 21_480, sampled: false },
     toggles: { tuning: true, weapons: true, refinements: true, loadout: true, stance: true },
     columns: [
-      { column: 'all', battles: 21_480, comparisons: 96_310, enough: true, investmentEffect: est(4.1, 0.2) },
-      { column: 'duel', battles: 12_020, comparisons: 12_020, enough: true, investmentEffect: est(4.6, 0.3) },
-      { column: 'team', battles: 4_225, comparisons: 4_225, enough: true, investmentEffect: est(3.2, 0.5) },
-      { column: 'multi', battles: 210, comparisons: 240, enough: false, investmentEffect: est(null) },
+      { column: 'all', battles: 21_480, comparisons: 96_310, enough: true, investmentEffect: est(4.1, 0.2), stanceEffects: { offensive: est(1.8, 0.3), defensive: est(-0.4, 0.3) } },
+      { column: 'duel', battles: 12_020, comparisons: 12_020, enough: true, investmentEffect: est(4.6, 0.3), stanceEffects: { offensive: est(2.2, 0.4), defensive: est(-0.9, 0.4) } },
+      { column: 'team', battles: 4_225, comparisons: 4_225, enough: true, investmentEffect: est(3.2, 0.5), stanceEffects: { offensive: est(0.6, 0.6), defensive: est(1.4, 0.6) } },
+      { column: 'multi', battles: 210, comparisons: 240, enough: false, investmentEffect: est(null), stanceEffects: { offensive: est(null), defensive: est(null) } },
     ],
     attributes: ATTRIBUTES.map(([attribute, group]) => ({
       attribute,
