@@ -101,7 +101,7 @@ const adminSubPaths = [
   'practice-arena',
   'players',
   'battles',
-  'robot-stats',
+  'attributes',
   'league-health',
   'weapons',
   'tournaments',

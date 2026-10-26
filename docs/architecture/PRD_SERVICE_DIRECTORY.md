@@ -99,6 +99,7 @@ Admin panel operations — stats dashboards, cycle execution, battle viewer, HP 
 | `season/seasonRolloverHistoryService` | `GET /api/admin/seasons/history`: completed seasons with their rollover and failed attempts, from `seasonRollover` runs and older `season_rollover` audit rows |
 | `adminBulkCycleRunService` | `POST /api/admin/cycles/bulk`: runs bulk cycles under the scheduler lock and records them in the run history (`bulkCycles`); `startBulkCycles` runs in the background (202), `runBulkCycles` waits. 409 while one is active |
 | `battles/` (`battleListService`, `battleDetailService`, `battleOutcome`, `battlePayoutCheck`, `battleLogAccess`, `battleExportText`) | Admin Battles page: list query (never reads `battle_log`), outcome and "ended by" per mode, payout check against the ledger, combat log access, text / JSON export |
+| `analysis/` (`attributeAnalysisService`, `analysisData`, `comparisons`, `attributeLayers`, `analysisFeatures`, `logisticFit`) | Admin "what wins" analyses (`GET /api/admin/analysis/attributes`, Attributes page): reads `battle_participant_builds` into paired comparisons, rebuilds attribute layers, fits the cluster-robust logistic models; cached per window and layer set. Weapons and Meta will reuse it |
 | `adminMaintenanceService` | HP recalculation, robot repair (admin-triggered) |
 
 ### automaton/ (Spec #55)

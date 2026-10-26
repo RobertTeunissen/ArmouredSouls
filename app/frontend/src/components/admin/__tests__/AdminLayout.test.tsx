@@ -36,7 +36,7 @@ const NAVIGATION_ITEMS = [
   { label: 'Season Control', path: '/admin/seasons' },
   { label: 'Practice Arena', path: '/admin/practice-arena' },
   { label: 'Battles', path: '/admin/battles' },
-  { label: 'Robot Stats', path: '/admin/robot-stats' },
+  { label: 'Attributes', path: '/admin/attributes' },
   { label: 'Meta', path: '/admin/meta' },
   { label: 'League Health', path: '/admin/league-health' },
   { label: 'League History', path: '/admin/league-history' },

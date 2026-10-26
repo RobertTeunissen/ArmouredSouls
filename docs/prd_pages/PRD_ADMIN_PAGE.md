@@ -20,6 +20,7 @@
 - v3.2 - Added Security tab (9th tab) consuming backend security monitoring APIs from spec 11. Displays security event summary with severity counts, flagged users, filterable events table with expandable detail rows.
 - v3.3 (Oct 10, 2026) - Added the Automatons page (`/admin/automatons`) and the Automatons user filter (Spec #55).
 - v3.10 (Oct 25, 2026) - Redesigned Battle Logs as **Battles** (`/admin/battles`): one list query without the combat log (the old page loaded every row's `battle_log`, 100 kB–1 MB each, and skipped battles when paging "All Types"), all 9 modes, a stable-type filter including Automatons, outcome and date filters, search by robot / stable / `#id`, correct winners in team modes (`winning_side`), and an admin check per battle: payout check against the ledger, combat log with per-hit formulas, "Copy for analysis" text export and JSON download. KotH and Grand Melee logs now keep formula breakdowns; the player battle report no longer sends them. The sections below describing the Battle Logs tab and its API are superseded; definitions are in `docs/guides/ADMIN_PANEL_GUIDE.md` §Battles.
+- v3.11 (Oct 26, 2026) - Replaced Robot Stats with **Attributes** (`/admin/attributes`; `/admin/robot-stats` redirects): which attributes, attribute groups and build profiles win, per mode column, from the battle-time build records (`battle_participant_builds`). Paired comparisons with a logistic model that controls for total investment, cluster-robust errors, layer toggles (tuning, weapon bonuses, refinements, loadout, stance), date range, model fit by layer. `GET /api/admin/stats/robots` and `getRobotAttributeStats` removed; `GET /api/admin/analysis/attributes` added. See `docs/guides/ADMIN_PANEL_GUIDE.md` §Attributes.
 - v3.5 (Oct 22, 2026) - Redesigned Search Analytics (`/admin/search-analytics`), now under Content: settled-search counting (5 s typing window), category-only selection tracking, period presets, no-result rate with trend, results by category, a filterable phrase table with CSV export, collapsed searchers linked to player detail. Definitions in `docs/guides/ADMIN_PANEL_GUIDE.md` §Search Analytics.
 - v3.9 (Oct 23, 2026) - Redesigned Practice Arena (`/admin/practice-arena`): usage recorded per request in `practice_arena_events` (the in-memory counters lost every battle since the last settlement on each restart), status strip, last 30 UTC days with refusals (rate limit, during a scheduler job) and unavailable time, top practitioners this season, and how the arena is used (opponents, tiers, batch sizes, what-if overrides). Definitions in `docs/guides/ADMIN_PANEL_GUIDE.md` §Practice Arena.
 - v3.8 (Oct 23, 2026) - Redesigned Season Control (`/admin/seasons`): season timeline with estimated countdown, rollover and next-competitive dates and the configuration; rollover card with an on-demand preview by stable type (human players, Automatons, generated) and grouped purge counts; typed confirmation that starts the rollover in the background under the scheduler lock with live stage progress (`seasonRollover` runs, 409 when one is active); persistent rollover history with failed attempts folded; Extend and remaining preparation cycles under Testing tools (preparation cycles validated against the configured window instead of clamped). Definitions in `docs/guides/ADMIN_PANEL_GUIDE.md` §Season Control.
@@ -178,7 +179,7 @@ The removed System Health and Practice Arena sections below are kept for history
   - Explains all icons and border colors
   - Helps users quickly identify interesting battles
 
-#### 6. **Robot Stats Tab** ✅ COMPLETE
+#### 6. **Robot Stats Tab** (superseded by v3.11: now the Attributes page, see `docs/guides/ADMIN_PANEL_GUIDE.md` §Attributes)
 - **Component**: `RobotStatsTab.tsx` in `components/admin/`
 - **Summary Statistics**:
   - Total robots, robots with battles, total battles
@@ -361,7 +362,7 @@ All admin endpoints are implemented and operational:
    - Detects if battle has an associated `TagTeamMatch` record
    - When tag team: returns `battleFormat: '2v2'` and team data (team1/team2 with activeRobot and reserveRobot)
    - When 1v1: returns standard robot1/robot2 data (unchanged)
-10. **GET /api/admin/stats/robots** - Get comprehensive robot statistics
+10. **GET /api/admin/analysis/attributes** - Which attributes, groups and build profiles win (replaced `GET /api/admin/stats/robots` in v3.11)
     - Returns: Statistical analysis, outlier detection, win rate correlation, league comparison, top/bottom performers
 
 ### Testing Status
@@ -847,7 +848,7 @@ GET  /api/admin/battles/:id/log          // Stored combat log with formula break
 GET  /api/admin/battles/:id/export       // ?format=text|json: the whole battle for analysis
 
 // Robot Analytics
-GET  /api/admin/stats/robots             // Robot statistics
+GET  /api/admin/analysis/attributes      // Attributes analysis (what wins)
 
 // Bankruptcy Monitoring
 GET  /api/admin/users/at-risk            // At-risk users for bankruptcy monitor

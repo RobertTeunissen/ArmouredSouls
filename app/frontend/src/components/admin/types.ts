@@ -77,48 +77,6 @@ export interface SystemStats {
   };
 }
 
-export interface RobotStats {
-  summary: {
-    totalRobots: number;
-    robotsWithBattles: number;
-    totalBattles: number;
-    overallWinRate: number;
-    averageElo: number;
-  };
-  attributeStats: Record<string, {
-    mean: number;
-    median: number;
-    stdDev: number;
-    min: number;
-    max: number;
-    q1: number;
-    q3: number;
-    iqr: number;
-    lowerBound: number;
-    upperBound: number;
-  }>;
-  outliers: Record<string, Array<{
-    id: number;
-    name: string;
-    value: number;
-    league: string;
-    elo: number;
-    winRate: number;
-  }>>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  statsByLeague: Record<string, any>;
-  winRateAnalysis: Record<string, Array<{
-    quintile: number;
-    avgValue: number;
-    avgWinRate: number;
-    sampleSize: number;
-  }>>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  topPerformers: Record<string, any[]>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  bottomPerformers: Record<string, any[]>;
-}
-
 export interface AtRiskUser {
   userId: number;
   username: string;

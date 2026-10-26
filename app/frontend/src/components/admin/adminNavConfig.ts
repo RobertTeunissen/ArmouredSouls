@@ -33,7 +33,7 @@ export const NAV_GROUPS: NavGroup[] = [
     section: 'Battle Data',
     items: [
       { label: 'Battles', path: '/admin/battles', icon: '⚔️' },
-      { label: 'Robot Stats', path: '/admin/robot-stats', icon: '🤖' },
+      { label: 'Attributes', path: '/admin/attributes', icon: '◧' },
       { label: 'Meta', path: '/admin/meta', icon: '🧭' },
       { label: 'League Health', path: '/admin/league-health', icon: '🏆' },
       { label: 'League History', path: '/admin/league-history', icon: '📈' },

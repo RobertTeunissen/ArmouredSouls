@@ -16,7 +16,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/admin/seasons': 'Season Control',
   '/admin/practice-arena': 'Practice Arena',
   '/admin/battles': 'Battles',
-  '/admin/robot-stats': 'Robot Stats',
+  '/admin/attributes': 'Attributes',
   '/admin/meta': 'Meta',
   '/admin/league-health': 'League Health',
   '/admin/weapons': 'Weapons',

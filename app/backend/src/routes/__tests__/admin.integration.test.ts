@@ -38,7 +38,6 @@ const mockRecordAuditAction = jest.fn();
 jest.mock('../../services/admin/adminStatsService', () => ({
   getSystemStats: jest.fn(),
   getAtRiskUsers: jest.fn(),
-  getRobotAttributeStats: jest.fn(),
   getRecentUserActivity: jest.fn(),
   getRepairAuditLog: jest.fn(),
   getDashboardKpis: (...args: unknown[]) => mockGetDashboardKpis(...args),

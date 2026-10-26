@@ -15,7 +15,6 @@ export {
   calculateStats,
   getSystemStats,
   getAtRiskUsers,
-  getRobotAttributeStats,
   getRecentUserActivity,
   getRepairAuditLog,
   getDashboardKpis,

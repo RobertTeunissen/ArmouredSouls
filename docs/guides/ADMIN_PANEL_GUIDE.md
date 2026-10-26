@@ -24,7 +24,7 @@ All pages manage their own data fetching. The sidebar collapses to icons on narr
 | **Game Operations** | Cycle Controls | `/admin/cycles` | Running job, daily schedule with Run buttons, persistent run history (restarts, missed and interrupted runs), bulk cycle runner |
 | | Practice Arena | `/admin/practice-arena` | Practice usage per UTC day, refusals and unavailable time, top practitioners, how it is used |
 | **Battle Data** | Battles | `/admin/battles` | Find any battle (all 9 modes, stable type, outcome, date, search); admin check with payout check, combat log with formulas, and export |
-| | Robot Stats | `/admin/robot-stats` | Attribute analysis, outlier detection, win rate correlation |
+| | Attributes | `/admin/attributes` | Which attributes, groups and build profiles win, per mode, from battle-time builds (was Robot Stats) |
 | | Meta | `/admin/meta` | What stables choose: stances, loadouts, yield thresholds, facilities, weapons |
 | | League Health | `/admin/league-health` | Per-league robot counts, ELO averages, instance counts |
 | | Weapons | `/admin/weapons` | Weapon popularity, type breakdown, ownership stats |
@@ -374,11 +374,32 @@ Uploaded image history with user/robot info, moderation event log (rejections, w
 
 **API:** `GET /api/admin/uploads`, `POST /api/admin/uploads/cleanup`, `GET /api/admin/security/events`
 
-### Robot Stats (`/admin/robot-stats`)
+### Attributes (`/admin/attributes`)
 
-Statistical analysis of all 23 robot attributes: mean/median/stddev, outlier detection (IQR method), win rate correlation by quintile, league tier comparison, top/bottom performers.
+Which attributes, attribute groups and build profiles win battles, to plan how the meta should shift next season. Replaces Robot Stats; `/admin/robot-stats` redirects here. Weapons, refinements and loadouts get their own page on the same engine; stance and yield win rates follow on Meta.
 
-**API:** `GET /api/admin/stats/robots`
+**Data.** The battle-time build of every robot that fought (`battle_participant_builds`, written by all seven fought-battle writers), never the robots' current values. Recording started with this release; until there are seven days of records the page shows when the analysis appears. Ranges never reach back before recording started.
+
+**Controls** (kept in the URL: `?range=&column=&off=`):
+- **Battles from:** last 7 days (default), 14 days, 30 days, this season. Late-season shifts show in the shorter ranges.
+- **Sort by:** All modes / 1v1 / Team / Multi-robot. Sorts the heatmap and picks the column of the biggest-effects list, group matrix and profiles.
+- **Layers:** base attributes, then + Tuning, + Weapon bonuses (catalog), + Refinements (Hone/Augment), + Loadout (multiplier), + Stance (modifiers, applied after loadout as in combat). All on = what the simulator fought with. The catalog bonus is derived from the stored effective value, so it stays right if the catalog changes mid-season. Damage and cooldown refinements (Sharpen) are weapon stats, not attributes.
+
+**Columns.** All modes; 1v1 (league and tournament); Team (2v2, 3v3, tag team, team tournaments; a side is the average of its robots); Multi-robot (KotH and Grand Melee by placement). A column with fewer than 300 comparisons is not analysed.
+
+**Method.**
+- Every fought battle becomes paired comparisons. Two-sided modes: side 1 against side 2, winner from `winning_side`, then `winner_id`. KotH / Grand Melee: every pair of robots with different placements, the better placement winning; a battle weighs n/2 in total (each robot once), spread over its pairs, and Grand Melee is sampled to 30 pairs per battle. Byes, forfeits, draws and tied placements are left out and counted.
+- A logistic model without intercept on the difference in log total points (the investment control) and the differences in each attribute's share of points, with a small ridge penalty on the shares (they sum to one). Standard errors are cluster-robust by battle.
+- **Attribute effect:** the change in win chance (percentage points, at even odds) from moving 5 share points into the attribute, taken evenly from the other 22, against an opponent with the same total. Coloured only when at least twice its standard error. The 23 effects of a column sum to zero.
+- **10% more points:** the investment effect per column, for scale.
+- **Group combinations:** a second model on the five group shares (Combat 6, Defence 5, Chassis 5, AI 4, Team 3) plus the ten pairwise products. Diagonal: moving 5 share points into the group; above it: the extra win chance when both groups are 10 share points above average, beyond what each adds alone.
+- **Build profiles:** a group is heavy at ≥ 1.5× the share an even spread gives it; a pair needs both groups at ≥ 1.25×; otherwise Balanced. Win rate against a different profile with a total within about 10% (shown from 50 comparisons), plus the share of all robots and of human players' robots that fought.
+- **Model fit by layer:** log-loss and accuracy on held-out battles (one in five, by battle id) for base only, then each layer added in combat order (All modes, up to 60,000 training comparisons). A coin flip scores 0.693 and 50%.
+- Effects are associations: builds that favour an attribute often share other choices. Generated stables' random builds give most of the variation; "Players' share" shows what humans build.
+
+**Cost.** Up to 100,000 comparisons per window; longer windows are sampled deterministically by battle id (the page says so). A cold analysis at that size takes several seconds (about 7 s locally) and yields to the event loop throughout; results are cached per window and layer set until a new build is recorded (at most 10 minutes), and the loaded battles of the last window (about 70 MB) are kept for other layer sets.
+
+**API:** `GET /api/admin/analysis/attributes?range=7d|14d|30d|season&tuning=&weapons=&refinements=&loadout=&stance=` (layer flags `true`/`false`, default `true`). Admin-only, read-only. Answers `{ status: 'collecting', recordingSince, availableFrom, battlesRecorded }` or the full analysis with `status: 'ready'`.
 
 ## Churn Risk Classification
 

@@ -46,7 +46,7 @@ const AdminSearchAnalyticsPage = React.lazy(() => import('./pages/admin/SearchAn
 const AdminCycleControlsPage = React.lazy(() => import('./pages/admin/CycleControlsPage'));
 const AdminPracticeArenaPage = React.lazy(() => import('./pages/admin/PracticeArenaPage'));
 const AdminBattlesPage = React.lazy(() => import('./pages/admin/BattlesPage'));
-const AdminRobotStatsPage = React.lazy(() => import('./pages/admin/RobotStatsPage'));
+const AdminAttributesPage = React.lazy(() => import('./pages/admin/AttributesPage'));
 const AdminMetaPage = React.lazy(() => import('./pages/admin/MetaPage'));
 const AdminLeagueHealthPage = React.lazy(() => import('./pages/admin/LeagueHealthPage'));
 const AdminWeaponAnalyticsPage = React.lazy(() => import('./pages/admin/WeaponAnalyticsPage'));
@@ -102,7 +102,8 @@ function AppRoutes() {
         <Route path="cycles" element={<AdminCycleControlsPage />} />
         <Route path="practice-arena" element={<AdminPracticeArenaPage />} />
         <Route path="battles" element={<AdminBattlesPage />} />
-        <Route path="robot-stats" element={<AdminRobotStatsPage />} />
+        <Route path="attributes" element={<AdminAttributesPage />} />
+        <Route path="robot-stats" element={<Navigate to="/admin/attributes" replace />} />
         <Route path="meta" element={<AdminMetaPage />} />
         <Route path="league-health" element={<AdminLeagueHealthPage />} />
         <Route path="weapons" element={<AdminWeaponAnalyticsPage />} />
