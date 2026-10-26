@@ -44,6 +44,23 @@ declare global {
   var prisma: PrismaClient | undefined;
 }
 
+/**
+ * Default limits of every interactive transaction (`prisma.$transaction(async tx => …)`);
+ * a call can still pass its own.
+ *
+ * Prisma's defaults (wait 2 s for a connection, 5 s to finish) are too short
+ * for transactions that queue on a shared lock. Every audit write takes the
+ * per-cycle advisory lock of `withAuditSequence` (`services/common/auditSequence.ts`),
+ * so concurrent writers (Automaton turns, Grand Melee rewards, achievement
+ * audit rows) run one after another; under load a queued transaction passed
+ * 5 s and failed with "A query cannot be executed on an expired transaction".
+ * On ACC that silently dropped `audit_logs` rows (hundreds per day in Oct 2026)
+ * and failed Automaton turns in the multi-season simulation. Waiting is the
+ * correct outcome for a queue, and the 30 s statement timeout still ends a
+ * runaway query.
+ */
+const INTERACTIVE_TRANSACTION_OPTIONS = { maxWait: 10_000, timeout: 20_000 } as const;
+
 function createPrismaClient(): PrismaClient {
   const { databaseUrl, nodeEnv } = getConfig();
   if (!databaseUrl) {
@@ -79,6 +96,7 @@ function createPrismaClient(): PrismaClient {
   return new PrismaClient({
     adapter,
     log: nodeEnv === 'development' ? ['error', 'warn'] : ['error'],
+    transactionOptions: INTERACTIVE_TRANSACTION_OPTIONS,
   });
 }
 

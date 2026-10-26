@@ -15,5 +15,12 @@ module.exports = {
   testRegex: undefined,
   testMatch: testMatchFor('heavy'),
   maxWorkers: 1,
+  // Same reason as jest.config.integration.js: in-band runs keep every suite's
+  // module registry alive. After automatonMultiSeason (205 Automatons, a season
+  // of bulk battles) the process held ~2.4 GB and the next suites slowed from
+  // seconds to many minutes (multiMatchScheduling: 7 s alone, 958 s after it)
+  // until they hit the test timeout. A memory limit makes Jest use one worker
+  // process (still serialized) and recycle it between files.
+  workerIdleMemoryLimit: '1GB',
   testTimeout: 120000,
 };
