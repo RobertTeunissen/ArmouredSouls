@@ -33,6 +33,7 @@ import { handleMatchFailure } from '../battle/matchFailurePolicy';
 import { prepareRobotForCombat } from '../../utils/robotCalculations';
 import { getTuningBonusesBatch } from '../tuning-pool';
 import standingsService from '../standings/standingsService';
+import { recordCombatBuilds } from '../battle/combatBuildRecorder';
 
 // Re-export so existing consumers don't break
 export { getCurrentCycleNumber };
@@ -626,6 +627,8 @@ async function createBattleRecord(
       },
     ],
   });
+
+  await recordCombatBuilds(battle.id, 'league_1v1', [robot1, robot2]);
 
   // Write pre-computed battle summary (Spec #39 — permanent stats for overview tab)
   const summaryData = computeBattleSummary({

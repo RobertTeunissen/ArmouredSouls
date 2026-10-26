@@ -171,7 +171,7 @@ Unified N-column combat statistics table. One rendering path for all battle type
 - Target Switches — how many times this robot changed target
 - Per-target rows (`→ Robot Name`) — time spent targeting each opponent in seconds. Durations are normalized to sum to the robot's active time. Sorted by total time across all robots (most-targeted first). `—` if that robot never targeted that opponent.
 
-**Expected chances**: From `formulaBreakdown.components`. Base values without random variance and without spatial modifiers. Falls back to variance-included values for old battle data.
+**Expected chances**: From `formulaBreakdown.components`, computed when the battle is stored and read from `battle_summaries` (the report's `battleLog` no longer carries `formulaBreakdown`, `rangePenalty` or `attackAngle`; those stay admin-only on `/admin/battles`). Base values without random variance and without spatial modifiers. Falls back to variance-included values for old battle data.
 
 ### 3. StableRewards (Battle Outcomes)
 **File**: `battle-detail/StableRewards.tsx`

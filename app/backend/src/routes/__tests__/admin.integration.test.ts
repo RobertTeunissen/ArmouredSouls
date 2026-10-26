@@ -38,7 +38,6 @@ const mockRecordAuditAction = jest.fn();
 jest.mock('../../services/admin/adminStatsService', () => ({
   getSystemStats: jest.fn(),
   getAtRiskUsers: jest.fn(),
-  getRobotAttributeStats: jest.fn(),
   getRecentUserActivity: jest.fn(),
   getRepairAuditLog: jest.fn(),
   getDashboardKpis: (...args: unknown[]) => mockGetDashboardKpis(...args),
@@ -168,9 +167,13 @@ jest.mock('../../utils/economyCalculations', () => ({
 jest.mock('../../services/cycle/cycleScheduler', () => ({
   getSchedulerState: jest.fn().mockReturnValue({ active: false }),
 }));
-jest.mock('../../services/admin/adminBattleService', () => ({
+jest.mock('../../services/admin/battles', () => ({
+  ...jest.requireActual('../../services/admin/battles/battleFilters'),
   getAdminBattleList: jest.fn(),
   getAdminBattleDetail: jest.fn(),
+  getAdminBattleLog: jest.fn(),
+  exportBattleText: jest.fn(),
+  exportBattleJson: jest.fn(),
 }));
 jest.mock('../../services/admin/adminMaintenanceService', () => ({
   repairAllRobotsAdmin: jest.fn(),

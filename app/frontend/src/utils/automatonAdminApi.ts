@@ -741,14 +741,4 @@ export function listWeapons(): Promise<CatalogueWeapon[]> {
 // ── Downloads ────────────────────────────────────────────────────────
 
 /** Save a JSON value as a file (Catalogue_Export, Strategy_Definition_File). */
-export function downloadJson(fileName: string, value: unknown): void {
-  const blob = new Blob([`${JSON.stringify(value, null, 2)}\n`], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = fileName;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(url);
-}
+export { downloadJson } from './download';

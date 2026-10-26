@@ -137,6 +137,9 @@ const DB_DEPENDENT = [
   'tests/integration/automatonAdminRoutes.test.ts',
   // Issue #294 — account reset with battle history keeps opponents' records
   'tests/integration/accountResetBattleHistory.test.ts',
+  // Admin Battles page — list, detail, payout check, log and export routes
+  'tests/integration/adminBattles.test.ts',
+  'tests/integration/adminAttributeAnalysis.test.ts',
   // Issue #342 — achievements vs. account reset and weapon/shield resale
   'tests/integration/accountResetAchievements.test.ts',
   // Achievement unlock serialization (pre-existing duplicate-insert fix)
@@ -187,7 +190,6 @@ const DB_DEPENDENT = [
   'src/services/economy/__tests__/unifiedFacilityROI.preservation.property.test.ts',
   'src/services/matchmaking/__tests__/deterministicTieBreaking.property.test.ts',
   'tests/adminRepairAuditLog.test.ts',
-  'tests/adminRobotStats.test.ts',
   'tests/analyticsApi.test.ts',
   'tests/arenaLayout.test.ts',
   'tests/auth.test.ts',

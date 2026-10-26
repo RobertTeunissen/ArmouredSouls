@@ -639,6 +639,13 @@ export interface HistoryParams {
 }
 
 /**
+ * Combat-event fields the player battle report never sends: they exist for the
+ * admin Battles page (`/api/admin/battles/:id/log`), which reads the stored log
+ * directly. Summaries already carry the derived "expected chance" statistics.
+ */
+export const PLAYER_LOG_HIDDEN_FIELDS: ReadonlySet<string> = new Set(['formulaBreakdown', 'rangePenalty', 'attackAngle']);
+
+/**
  * Fetch paginated battle history with optional robot/type filters.
  * Returns the exact response shape expected by the frontend.
  */
@@ -1094,11 +1101,13 @@ export async function getBattleLog(battleId: number) {
     tournamentId: battleData.tournamentId ?? null,
     duration: battleData.durationSeconds,
     playbackAvailable: battleData.battleLog !== null,
+    // Admin-only debug fields (formula breakdowns with every roll) are stripped:
+    // no player view reads them, and they are the bulk of large logs.
     battleLog:
       typeof battleData.battleLog === 'object' && battleData.battleLog !== null
         ? JSON.parse(
-            JSON.stringify(battleData.battleLog, (_key, value) =>
-              typeof value === 'bigint' ? Number(value) : value,
+            JSON.stringify(battleData.battleLog, (key, value) =>
+              PLAYER_LOG_HIDDEN_FIELDS.has(key) ? undefined : typeof value === 'bigint' ? Number(value) : value,
             ),
           )
         : battleData.battleLog,

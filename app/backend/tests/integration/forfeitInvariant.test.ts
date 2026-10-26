@@ -410,5 +410,25 @@ describe('T24: one cycle with an unarmed robot in every mode', () => {
     });
     // One forfeit win per two-sided mode; KotH/GM forfeiters give nobody a walkover.
     expect(forfeitWins).toBe(7);
+
+    // 5. Every robot that fought has its battle-time build, in every mode; a
+    //    forfeiter has none (it never reached combat). Byes and forfeit battles
+    //    write a summary with hasData = false; fought battles have data.
+    const fought = await prisma.battleParticipant.findMany({
+      where: { robotId: { in: robotIds }, forfeited: false, battle: { summary: { hasData: true } } },
+      select: { battleId: true, robotId: true, battle: { select: { battleType: true } } },
+    });
+    const builds = await prisma.battleParticipantBuild.findMany({
+      where: { robotId: { in: robotIds } },
+      select: { battleId: true, robotId: true, battleType: true, effectiveAttributes: true, mainWeaponId: true },
+    });
+    const key = (b: { battleId: number; robotId: number }): string => `${b.battleId}:${b.robotId}`;
+    const buildKeys = new Set(builds.map(key));
+    const missing = fought.filter((p) => !buildKeys.has(key(p))).map((p) => `${p.battle.battleType}:${key(p)}`);
+    expect(missing).toEqual([]);
+    expect(new Set(builds.map((b) => b.battleType))).toEqual(new Set(prepared.map((p) => p.mode)));
+    const unarmed = new Set(prepared.map((p) => p.unarmed.robotId));
+    expect(builds.filter((b) => unarmed.has(b.robotId) && b.mainWeaponId === null)).toEqual([]);
+    expect(builds.every((b) => typeof (b.effectiveAttributes as Record<string, number>).combatPower === 'number')).toBe(true);
   });
 });

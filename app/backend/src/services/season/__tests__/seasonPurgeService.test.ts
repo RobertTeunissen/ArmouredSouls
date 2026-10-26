@@ -37,11 +37,25 @@ describe('purgeHistory', () => {
 
     expect(rowsDeleted.search_analytics_events).toBe(7);
     expect(rowsDeleted.search_analytics_failures).toBe(0);
-    expect(prisma.$queryRawUnsafe).toHaveBeenCalledTimes(12);
+    expect(prisma.$queryRawUnsafe).toHaveBeenCalledTimes(13);
     expect(prisma.$executeRawUnsafe).toHaveBeenCalledWith(
       expect.stringContaining('"search_analytics_events"'),
     );
     expect(prisma.cycleMetadata.update).toHaveBeenCalledTimes(1);
+  });
+
+  it('counts and truncates the battle-time build records', async () => {
+    (prisma.$queryRawUnsafe as jest.Mock).mockImplementation(async (query: string) => {
+      const table = query.match(/FROM "([^"]+)"/)?.[1];
+      return [{ count: BigInt(table === 'battle_participant_builds' ? 9 : 0) }];
+    });
+
+    const rowsDeleted = await purgeHistory();
+
+    expect(rowsDeleted.battle_participant_builds).toBe(9);
+    expect(prisma.$executeRawUnsafe).toHaveBeenCalledWith(
+      expect.stringContaining('"battle_participant_builds"'),
+    );
   });
 
   it('counts and truncates the Automaton Turn_Records (Spec #55 R9.5)', async () => {

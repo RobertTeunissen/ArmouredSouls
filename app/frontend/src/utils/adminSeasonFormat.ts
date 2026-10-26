@@ -103,7 +103,7 @@ export interface PurgeGroup {
 const GROUPS: ReadonlyArray<{ label: string; tables: readonly string[] }> = [
   {
     label: 'Battles and summaries',
-    tables: ['battles', 'battle_summaries', 'battle_participants', 'team_battles', 'team_battle_members', 'scheduled_matches_v2', 'scheduled_match_participants', 'robot_mode_kills'],
+    tables: ['battles', 'battle_summaries', 'battle_participants', 'battle_participant_builds', 'team_battles', 'team_battle_members', 'scheduled_matches_v2', 'scheduled_match_participants', 'robot_mode_kills'],
   },
   {
     label: 'Ledger, audit and snapshots',

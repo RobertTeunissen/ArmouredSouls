@@ -5,11 +5,15 @@ import maintenanceRoutes from './adminMaintenance';
 import analyticsRoutes from './adminAnalytics';
 import usersRoutes from './adminUsers';
 import schedulerRoutes from './adminScheduler';
+import battlesRoutes from './adminBattles';
+import analysisRoutes from './adminAnalysis';
 
 const router = express.Router();
 
 // Mount sub-routers — each applies authenticateToken + requireAdmin on every route
 router.use('/tournaments', tournamentRoutes);
+router.use('/battles', battlesRoutes);
+router.use('/analysis', analysisRoutes);
 router.use('/', maintenanceRoutes);
 router.use('/', analyticsRoutes);
 router.use('/', usersRoutes);

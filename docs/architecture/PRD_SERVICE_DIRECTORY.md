@@ -98,7 +98,8 @@ Admin panel operations — stats dashboards, cycle execution, battle viewer, HP 
 | `season/adminSeasonStateService` | `GET /api/admin/seasons/state`: season state, configuration, `startedAt`, `nextSettlementAt`, the active rollover with stage progress |
 | `season/seasonRolloverHistoryService` | `GET /api/admin/seasons/history`: completed seasons with their rollover and failed attempts, from `seasonRollover` runs and older `season_rollover` audit rows |
 | `adminBulkCycleRunService` | `POST /api/admin/cycles/bulk`: runs bulk cycles under the scheduler lock and records them in the run history (`bulkCycles`); `startBulkCycles` runs in the background (202), `runBulkCycles` waits. 409 while one is active |
-| `adminBattleService` | Battle list queries, battle detail for admin viewer |
+| `battles/` (`battleListService`, `battleDetailService`, `battleOutcome`, `battlePayoutCheck`, `battleLogAccess`, `battleExportText`) | Admin Battles page: list query (never reads `battle_log`), outcome and "ended by" per mode, payout check against the ledger, combat log access, text / JSON export |
+| `analysis/` (`attributeAnalysisService`, `analysisData`, `comparisons`, `attributeLayers`, `analysisFeatures`, `logisticFit`) | Admin "what wins" analyses (`GET /api/admin/analysis/attributes`, Attributes page): reads `battle_participant_builds` into paired comparisons, rebuilds attribute layers, fits the cluster-robust logistic models; cached per window and layer set. Weapons and Meta will reuse it |
 | `adminMaintenanceService` | HP recalculation, robot repair (admin-triggered) |
 
 ### automaton/ (Spec #55)
@@ -184,6 +185,7 @@ Core combat engine — the simulator and shared orchestration helpers.
 | `combatSimulator` | Tick-based 1v1 and N-robot combat simulation (`simulateBattle`, `simulateBattleMulti`) |
 | `baseOrchestrator` | Shared battle orchestration pipeline (validate → simulate → record) |
 | `battlePostCombat` | Shared post-combat helpers (streaming revenue, audit logging, stat updates, credit/prestige/fame awards) |
+| `combatBuildRecorder` | `recordCombatBuilds`: writes `battle_participant_builds` (base and effective attributes, tuning, weapons with refinements, loadout, stance, yield) for every robot that fought, from the build `prepareRobotForCombat` captured. Called by all seven fought-battle writers; never fails a battle |
 | `byeResolutionService` | The single writer for a Bye_Event in all nine modes — entity resolution, the Bye_Award_Claim, the whole Bye_Record and the credit award. Simulates nothing (Spec #49) |
 | `combatReadiness` | Pure battle-time readiness (#536), run by every orchestrator on the robots loaded for the battle: `evaluateCombatEntry` (no main weapon → forfeit; incomplete loadout → single), `evaluateMatchEntry` (fight / forfeit / double forfeit for two sides), `partitionPlacementField` (KotH/GM ready vs forfeited), `applyLoadoutFallbacks` (in-memory single fallback) and `assertAllRobotsArmed` (the simulator's `ROBOT_NOT_BATTLE_READY` backstop). The scheduling-time rule is `analytics/matchmakingService.checkSchedulingReadiness` |
 | `walkoverClaim` | The queued-match claim shared by byes and forfeits (`claimQueuedMatch`, `readClaimedBattleId`): a conditional update on `scheduled_matches_v2` or `tournament_matches` taken before any payment, so a rerun or a concurrent run pays nothing |
@@ -309,7 +311,7 @@ Robot management — the full lifecycle from creation to combat.
 | `robotWeaponService` | Weapon equip/unequip transactions (main, offhand, loadout type) |
 | `robotSettingsService` | `updateStance`, `updateYieldThreshold` (extracted from `routes/robots.ts`, Spec #55) |
 | `robotSanitizer` | Strips sensitive data for public robot viewing |
-| `robotReferenceCleanup` | `deleteRobotBattleReferences(tx, robotIds)`: deletes deleted robots' `battle_participants` and `team_battle_members` rows by robot id, keeping battles and other participants. Shared by account reset and the Generated_Stable purge (#294) |
+| `robotReferenceCleanup` | `deleteRobotBattleReferences(tx, robotIds)`: deletes deleted robots' `battle_participants`, `battle_participant_builds` and `team_battle_members` rows by robot id, keeping battles and other participants. Shared by account reset and the Generated_Stable purge (#294) |
 | `all-modes-battle-count` | All-modes battle count (`totalBattles` + KotH + Grand Melee `standings.total_matches`), single and batch, plus `getTopRobotsByAllModesBattleCount` (SQL ranking on the combined value, bigint sum, returns each robot's count from the same row). Used by streaming revenue, the financial report, facility recommendations, the robot detail/stable view payloads (#530, #532) and the Hall of Records "Most Battles" list and its season accolade |
 
 ### security/

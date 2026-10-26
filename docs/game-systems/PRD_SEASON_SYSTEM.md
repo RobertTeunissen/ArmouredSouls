@@ -37,7 +37,7 @@ At a Season_Rollover everything below is archived, then deleted.
 
 **Deleted:** `robots`, `battle_participants`, `tuning_allocations`, `subscriptions`, `weapon_inventory`, `weapon_refinement`, `facilities`, `team_battles`, `team_battle_members`, `standings`, `scheduled_matches_v2`, `scheduled_match_participants`, `tournaments`, `tournament_matches`, `user_achievements`.
 
-**Purged history:** `battles`, `battle_summaries`, `audit_logs`, `cycle_snapshots`, `financial_ledger`, `league_history`, `leaderboard_cache`, `practice_arena_daily_stats`, `practice_arena_events` (Practice Arena usage), `search_analytics_events`, `search_analytics_failures`, `automaton_turns` (Spec #55 Turn_Records). The global cycle counter resets to 0.
+**Purged history:** `battles`, `battle_summaries`, `battle_participant_builds`, `audit_logs`, `cycle_snapshots`, `financial_ledger`, `league_history`, `leaderboard_cache`, `practice_arena_daily_stats`, `practice_arena_events` (Practice Arena usage), `search_analytics_events`, `search_analytics_failures`, `automaton_turns` (Spec #55 Turn_Records). The global cycle counter resets to 0.
 
 **Reset on every Human_Stable:** `currency` to ₡3,000,000 regardless of prior balance, `prestige` to 0, all four championship counters to 0, `pinnedAchievements` emptied, `totalPracticeBattles` to 0.
 

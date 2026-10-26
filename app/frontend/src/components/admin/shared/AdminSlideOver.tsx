@@ -1,17 +1,19 @@
 import { useEffect, useCallback } from 'react';
+import { ADMIN_FOCUS_RING } from './focusRing';
 
 export interface AdminSlideOverProps {
   open: boolean;
   onClose: () => void;
   title: string;
   children: React.ReactNode;
-  width?: 'md' | 'lg' | 'xl';
+  width?: 'md' | 'lg' | 'xl' | '3xl';
 }
 
 const WIDTH_MAP: Record<NonNullable<AdminSlideOverProps['width']>, string> = {
   md: 'max-w-md',
   lg: 'max-w-lg',
   xl: 'max-w-xl',
+  '3xl': 'max-w-3xl',
 };
 
 export function AdminSlideOver({
@@ -48,7 +50,7 @@ export function AdminSlideOver({
 
       {/* Panel */}
       <div
-        className={`relative w-full ${WIDTH_MAP[width]} bg-surface border-l border-white/10 flex flex-col animate-slide-in-right`}
+        className={`relative w-full min-w-0 ${WIDTH_MAP[width]} bg-surface border-l border-white/10 flex flex-col animate-slide-in-right`}
         role="dialog"
         aria-modal="true"
         aria-label={title}
@@ -59,7 +61,7 @@ export function AdminSlideOver({
           <button
             type="button"
             onClick={onClose}
-            className="text-secondary hover:text-white transition-colors text-xl leading-none"
+            className={`inline-flex min-h-11 min-w-11 items-center justify-center rounded text-xl leading-none text-secondary transition-colors hover:text-white ${ADMIN_FOCUS_RING}`}
             aria-label="Close panel"
           >
             ✕

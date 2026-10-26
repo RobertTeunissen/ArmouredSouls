@@ -55,7 +55,6 @@ jest.mock('../../src/services/admin/adminStatsService', () => ({
   __esModule: true,
   getSystemStats: jest.fn(),
   getAtRiskUsers: jest.fn(),
-  getRobotAttributeStats: jest.fn(),
   getRecentUserActivity: jest.fn(),
   getRepairAuditLog: jest.fn(),
   getDashboardKpis: jest.fn(),
@@ -81,10 +80,14 @@ jest.mock('../../src/services/admin/adminCycleService', () => ({
   backfillCycleSnapshots: jest.fn(),
 }));
 
-jest.mock('../../src/services/admin/adminBattleService', () => ({
+jest.mock('../../src/services/admin/battles', () => ({
   __esModule: true,
+  ...jest.requireActual('../../src/services/admin/battles/battleFilters'),
   getAdminBattleList: jest.fn(),
   getAdminBattleDetail: jest.fn(),
+  getAdminBattleLog: jest.fn(),
+  exportBattleText: jest.fn(),
+  exportBattleJson: jest.fn(),
 }));
 
 jest.mock('../../src/services/league/leagueBattleOrchestrator', () => ({

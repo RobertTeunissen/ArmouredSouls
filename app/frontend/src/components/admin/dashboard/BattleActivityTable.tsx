@@ -78,7 +78,7 @@ export function BattleActivityTable({ activity, loading, error }: BattleActivity
     <div className="flex items-center gap-3">
       <ViewToggle view={view} onChange={setView} />
       <Link to="/admin/battles" className={`hidden text-sm text-primary hover:underline sm:inline ${ADMIN_FOCUS_RING}`}>
-        Battle Logs <span aria-hidden="true">→</span>
+        Battles <span aria-hidden="true">→</span>
       </Link>
     </div>
   );

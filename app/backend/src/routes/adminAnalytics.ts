@@ -16,7 +16,6 @@ import { buildUserFilter, USER_FILTER_TYPES } from '../utils/buildUserFilter';
 import type { UserFilterType } from '../utils/buildUserFilter';
 import {
   getSystemStats,
-  getRobotAttributeStats,
   getDashboardKpis,
   getEngagementPlayers,
   getEconomyOverview,
@@ -198,22 +197,6 @@ router.get('/stats', authenticateToken, requireAdmin, validateRequest({ query: s
     logger.error('[Admin] Stats error:', error);
     res.status(500).json({
       error: 'Failed to retrieve stats',
-    });
-  }
-});
-
-/**
- * GET /api/admin/stats/robots
- * Get comprehensive statistics about robot attributes for debugging and outlier detection
- */
-router.get('/stats/robots', authenticateToken, requireAdmin, validateRequest({}), async (req: Request, res: Response) => {
-  try {
-    const result = await getRobotAttributeStats();
-    res.json(result);
-  } catch (error) {
-    logger.error('[Admin] Robot stats error:', error);
-    res.status(500).json({
-      error: 'Failed to retrieve robot statistics',
     });
   }
 });

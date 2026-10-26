@@ -5,12 +5,14 @@ import {
   getLoadoutBonus,
   getLoadoutModifiedAttributes,
   prepareRobotForCombat,
+  getCombatBuild,
   LOADOUT_BONUSES,
   BASE_HP,
   HP_MULTIPLIER,
   SHIELD_MULTIPLIER,
 } from '../src/utils/robotCalculations';
 import { ROBOT_ATTRIBUTES } from '../src/shared/utils/robotAttributes';
+import { layerBuild, layeredValues, type RawBuild } from '../src/services/admin/analysis/attributeLayers';
 import { Robot, WeaponInventory, Weapon, Prisma } from '../generated/prisma';
 
 // Mock robot data
@@ -575,6 +577,61 @@ describe('Robot Calculations', () => {
         expect(robot.maxShield).toBeCloseTo(displayed.shieldCapacity * SHIELD_MULTIPLIER, 10);
         expect(robot.currentHP).toBe(robot.maxHP);
         expect(robot.currentShield).toBe(robot.maxShield);
+      });
+    });
+
+    describe('battle-time build capture (admin "what wins")', () => {
+      it('records base levels, tuning, the effective values, weapons with refinements and the setup', () => {
+        const robot = buildRobot('dual_wield', true);
+        robot.stance = 'offensive';
+        robot.yieldThreshold = 15;
+        expect(getCombatBuild(robot)).toBeNull();
+        prepareRobotForCombat(robot, TUNING);
+        const build = getCombatBuild(robot)!;
+        ROBOT_ATTRIBUTES.forEach((attr, i) => {
+          expect({ attr, base: build.baseAttributes[attr] }).toEqual({ attr, base: 10 + i });
+          expect({ attr, effective: build.effectiveAttributes[attr] }).toEqual({ attr, effective: Number(robot[attr as keyof Robot]) });
+        });
+        expect(build.tuning).toEqual(TUNING);
+        expect(build.mainWeapon).toEqual({ weaponId: 1, refinements: [{ tier: 'hone', magnitude: 2, targetAttribute: 'attackSpeed' }] });
+        expect(build.offhandWeapon).toEqual({ weaponId: 2, refinements: [] });
+        expect(build).toMatchObject({ loadoutType: 'dual_wield', stance: 'offensive', yieldThreshold: 15 });
+      });
+
+      it('records no weapon for an empty hand, and nothing for a spread copy', () => {
+        const robot = buildRobot('single', false);
+        prepareRobotForCombat(robot);
+        expect(getCombatBuild(robot)?.offhandWeapon).toBeNull();
+        expect(getCombatBuild(robot)?.tuning).toEqual({});
+        expect(getCombatBuild({ ...robot })).toBeNull();
+      });
+
+      it.each(['offensive', 'defensive', 'balanced'])(
+        'parity with the simulator (%s): the analysis layers rebuild exactly the attributes combat reads',
+        (stance) => {
+          const robot = buildRobot('dual_wield', true);
+          robot.stance = stance;
+          prepareRobotForCombat(robot, TUNING);
+          const layered = layerBuild(getCombatBuild(robot)! as unknown as RawBuild);
+          const allOn = layeredValues(layered, { tuning: true, weapons: true, refinements: true, loadout: true, stance: true });
+          const stanceOff = layeredValues(layered, { tuning: true, weapons: true, refinements: true, loadout: true, stance: false });
+          ROBOT_ATTRIBUTES.forEach((attr, k) => {
+            // The simulator reads the prepared attribute fields (e.g. calcCooldown uses robot.attackSpeed);
+            // stance never changes them, so the analysis must not either.
+            const combat = Number(robot[attr as keyof Robot]);
+            expect({ attr, delta: Math.abs(allOn[k] - combat) <= 0.011 }).toEqual({ attr, delta: true });
+            expect(stanceOff[k]).toBe(allOn[k]);
+          });
+          expect(layered.stance).toBe(stance);
+        },
+      );
+
+      it('keeps the first capture when preparation runs again', () => {
+        const robot = buildRobot('single', false);
+        prepareRobotForCombat(robot, TUNING);
+        const first = getCombatBuild(robot);
+        prepareRobotForCombat(robot, {});
+        expect(getCombatBuild(robot)).toBe(first);
       });
     });
 

@@ -28,9 +28,14 @@ function sleep(ms: number): Promise<void> {
  * Processes in batches to avoid long-running locks.
  * Idempotent — already-NULLed battles are skipped by the WHERE clause.
  */
-export async function runBattleLogRetention(): Promise<RetentionResult> {
+/** Days a battle keeps its `battle_log` (`BATTLE_LOG_RETENTION_DAYS`, default 7). */
+export function getBattleLogRetentionDays(): number {
   const rawDays = parseInt(process.env.BATTLE_LOG_RETENTION_DAYS || '7', 10);
-  const retentionDays = Number.isFinite(rawDays) && rawDays >= 1 ? rawDays : 7;
+  return Number.isFinite(rawDays) && rawDays >= 1 ? rawDays : 7;
+}
+
+export async function runBattleLogRetention(): Promise<RetentionResult> {
+  const retentionDays = getBattleLogRetentionDays();
   const cutoff = new Date(Date.now() - retentionDays * 86400000);
   const startTime = Date.now();
   let totalProcessed = 0;

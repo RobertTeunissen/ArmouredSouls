@@ -59,7 +59,7 @@ const VALID_ADMIN_ROUTES = [
   'practice-arena',
   'players',
   'battles',
-  'robot-stats',
+  'attributes',
   'league-health',
   'weapons',
   'seasons',
