@@ -1,0 +1,199 @@
+{
+  "schemaVersion": 1,
+  "catalogueKey": "battlebots-arena-legends",
+  "stableName": "BattleBots Arena Legends",
+  "franchise": "BattleBots",
+  "backstory": "BattleBots Arena Legends opens around Tombstone. The Battle Ledger crew shares an upgrade account while each machine keeps its own battlefield job.",
+  "strategy": {
+    "key": "tycoon",
+    "version": 2,
+    "targetOverrides": {
+      "21": 3
+    }
+  },
+  "teamNames": {
+    "twoVsTwo": [
+      "Battle Ledger Pair 1"
+    ],
+    "threeVsThree": [
+      "Battle Ledger Trio 1"
+    ]
+  },
+  "eventOrder": [
+    "league_2v2",
+    "tag_team",
+    "league_1v1",
+    "league_3v3",
+    "koth",
+    "grand_melee",
+    "tournament_2v2",
+    "tournament_3v3",
+    "tournament_1v1"
+  ],
+  "blueprints": [
+    {
+      "slot": 1,
+      "robotName": "Tombstone",
+      "loadoutType": "two_handed",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "bruiser",
+      "weaponPath": [
+        {
+          "main": "Shock Maul"
+        },
+        {
+          "main": "Heavy Hammer"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "targetAttribute": "combatPower",
+          "magnitude": 2
+        }
+      ]
+    },
+    {
+      "slot": 2,
+      "robotName": "Minotaur",
+      "loadoutType": "single",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "sprinter",
+      "weaponPath": [
+        {
+          "main": "Practice Sword"
+        },
+        {
+          "main": "Vibro Mace"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "targetAttribute": "gyroStabilizers",
+          "magnitude": 2
+        }
+      ]
+    },
+    {
+      "slot": 3,
+      "robotName": "Witch Doctor",
+      "loadoutType": "weapon_shield",
+      "stance": "defensive",
+      "yieldThreshold": 25,
+      "buildFocus": "warden",
+      "weaponPath": [
+        {
+          "main": "Practice Sword",
+          "offhand": "Light Shield"
+        },
+        {
+          "main": "Vibro Mace",
+          "offhand": "Aegis Bulwark"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "targetAttribute": "counterProtocols",
+          "magnitude": 2
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "targetAttribute": "evasionThrusters",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "targetAttribute": "evasionThrusters",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "targetAttribute": "evasionThrusters",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "targetAttribute": "evasionThrusters",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "targetAttribute": "evasionThrusters",
+          "magnitude": 1
+        }
+      ]
+    }
+  ]
+}

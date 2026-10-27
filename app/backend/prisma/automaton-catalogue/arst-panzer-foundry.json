@@ -1,0 +1,199 @@
+{
+  "schemaVersion": 1,
+  "catalogueKey": "arst-panzer-foundry",
+  "stableName": "Arst Panzer Foundry",
+  "franchise": "Panzer World Galient",
+  "backstory": "Arst Panzer Foundry opens around Galient. The Arst Watch crew shares an upgrade account while each machine keeps its own battlefield job.",
+  "strategy": {
+    "key": "generalist",
+    "version": 2,
+    "targetOverrides": {
+      "15": 3
+    }
+  },
+  "teamNames": {
+    "twoVsTwo": [
+      "Arst Watch Pair 1"
+    ],
+    "threeVsThree": [
+      "Arst Watch Trio 1"
+    ]
+  },
+  "eventOrder": [
+    "league_1v1",
+    "league_2v2",
+    "tag_team",
+    "league_3v3",
+    "koth",
+    "grand_melee",
+    "tournament_1v1",
+    "tournament_2v2",
+    "tournament_3v3"
+  ],
+  "blueprints": [
+    {
+      "slot": 1,
+      "robotName": "Galient",
+      "loadoutType": "single",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "sprinter",
+      "weaponPath": [
+        {
+          "main": "Practice Sword"
+        },
+        {
+          "main": "Vibro Mace"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "targetAttribute": "gyroStabilizers",
+          "magnitude": 2
+        }
+      ]
+    },
+    {
+      "slot": 2,
+      "robotName": "Wingal",
+      "loadoutType": "single",
+      "stance": "balanced",
+      "yieldThreshold": 20,
+      "buildFocus": "deadeye",
+      "weaponPath": [
+        {
+          "main": "Beam Pistol"
+        },
+        {
+          "main": "Particle Lance"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "targetAttribute": "combatPower",
+          "magnitude": 2
+        }
+      ]
+    },
+    {
+      "slot": 3,
+      "robotName": "Zuwel",
+      "loadoutType": "weapon_shield",
+      "stance": "defensive",
+      "yieldThreshold": 25,
+      "buildFocus": "warden",
+      "weaponPath": [
+        {
+          "main": "Practice Sword",
+          "offhand": "Light Shield"
+        },
+        {
+          "main": "Vibro Mace",
+          "offhand": "Aegis Bulwark"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "targetAttribute": "counterProtocols",
+          "magnitude": 2
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "targetAttribute": "evasionThrusters",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "targetAttribute": "evasionThrusters",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "targetAttribute": "evasionThrusters",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "targetAttribute": "evasionThrusters",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "targetAttribute": "evasionThrusters",
+          "magnitude": 1
+        }
+      ]
+    }
+  ]
+}

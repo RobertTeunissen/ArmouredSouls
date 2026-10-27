@@ -1,6 +1,6 @@
 # Automaton Stables
 
-**Spec:** #55 (engine and starter stables), #57 (catalogue expansion), economy and event-fit change (`docs/implementation_notes/AUTOMATON_ECONOMY_AND_EVENT_FIT.md`) · **Status:** Implemented (ACC) · **Last updated:** 24 October 2026
+**Spec:** #55 (engine and starter stables), #57 (catalogue expansion), economy and event-fit change (`docs/implementation_notes/AUTOMATON_ECONOMY_AND_EVENT_FIT.md`), second catalogue expansion (`docs/implementation_notes/AUTOMATON_CATALOGUE_500.md`) · **Status:** Implemented (ACC) · **Last updated:** 27 October 2026
 
 Automaton_Stables are persistent, themed, computer-run stables that play by the same rules as human players. They buy robots, facilities, attributes, weapons and refinements through the same services and credit paths as a player, enter the same events, survive every Season_Rollover and rebuild themselves from the human starting balance.
 
@@ -160,12 +160,13 @@ Franchise and backstory are admin-only; showing them to players is backlog #61.
 
 ### Expansion stables (spec 57)
 
-The Automaton_Catalogue is the Starter_Stables plus the Expansion_Stables of spec 57, whatever their number: the folder `app/backend/prisma/automaton-catalogue/` is the source, and its file count is the catalogue size (`ls app/backend/prisma/automaton-catalogue/*.json | wc -l`). The current totals per origin and per strategy are in the generated Totals block of the spec-57 `review/FINDINGS.md`.
+The Automaton_Catalogue is the Starter_Stables plus the Expansion_Stables of spec 57 and of the second expansion below, whatever their number: the folder `app/backend/prisma/automaton-catalogue/` is the source, and its file count is the catalogue size (`ls app/backend/prisma/automaton-catalogue/*.json | wc -l`). The current totals per origin and per strategy are in the generated Totals block of the spec-57 `review/FINDINGS.md`.
 
 - **Review and approval**: every Expansion_Stable was converted from the product owner's drafts, validated against every spec-55 catalogue rule and the built code, and approved with the spec-57 Expansion_Review_Pack (`.kiro/specs/done-october26/57-automaton-catalogue-expansion/review/`, Content_Approval 11 October 2026). The approved entries were copied byte-identical into the catalogue folder; the starter entries are unchanged.
 - **Strategies**: the engine and the six strategies are unchanged. The collection's Squadron stables were converted as Trio with robots target 6 (`targetOverrides {"12": 6}`, decision 12).
 - **Names**: Catalogue_Keys, stable names (case-insensitive), robot names and team names are unique across the whole catalogue (`catalogueSchema.test.ts`).
 - **Portraits**: each expansion Blueprint_Slot has its Repository_Image at `app/frontend/public/assets/automatons/{catalogueKey}/{slot}.webp`; renamed slots follow their portrait (decision 18).
+- **Second expansion (Automaton Package, October 2026)**: the external art-and-authoring handoff `AUTOMATON_STABLES_001-500_COMPLETE` added further Expansion_Stables with their portraits. It was delivered without a spec: its import candidates were checked with the same catalogue tests, moved to the latest strategy version with `pnpm run automaton:catalogue-upgrade`, and a few names were changed to pass the profanity rule, cross-catalogue uniqueness and the 30-character stable-name limit. The renames, the checks and the ACC rollout are recorded in `docs/implementation_notes/AUTOMATON_CATALOGUE_500.md`.
 - **No activation cap** (decision 19): after the deploy every Expansion_Stable is a Draft_Automaton, and an admin activates them (`docs/guides/AUTOMATON_OPERATIONS_GUIDE.md` §1); the Turn_Step deadline serves every opening build the same night. What the built engine needs for very large populations is investigated in `.kiro/specs/done-october26/57-automaton-catalogue-expansion/review/SCALING.md`; of its open items, parallel turns, a deadline scaled to the night window and a lease heartbeat are done (`docs/implementation_notes/AUTOMATON_TURN_STEP_DEADLINE.md`), the rest are not implemented.
 
 ## Competitive parity and matchmaking
