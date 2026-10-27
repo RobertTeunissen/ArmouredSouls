@@ -158,14 +158,17 @@ async function simulateSeed(mockPrisma: ReturnType<typeof createMockPrisma>, mod
     create: { username: 'bye_robot_user', passwordHash: 'hash', currency: 0, prestige: 0 },
   });
 
-  // Acceptance + Development: admin + 200 WimpBots
+  // Acceptance + Development: admin
   if (mode === 'acceptance' || mode === 'development') {
     await mockPrisma.user.upsert({
       where: { username: 'admin' },
       update: { passwordHash: 'hash', role: 'admin', currency: 3000000, prestige: 0 },
       create: { username: 'admin', passwordHash: 'hash', role: 'admin', currency: 3000000, prestige: 0, stableName: 'Admin Stable' },
     });
+  }
 
+  // Development only: 200 WimpBots (E2E login test_user_001 and its opponents)
+  if (mode === 'development') {
     for (let i = 1; i <= 200; i++) {
       const username = `test_user_${String(i).padStart(3, '0')}`;
       await mockPrisma.user.upsert({
@@ -369,7 +372,7 @@ describe('Seed Script - Property Tests', () => {
       );
     });
 
-    test('acceptance mode seeds admin and WimpBot users', async () => {
+    test('acceptance mode seeds the admin and no WimpBot users', async () => {
       await fc.assert(
         fc.asyncProperty(
           fc.integer({ min: 1, max: 3 }),
@@ -380,24 +383,23 @@ describe('Seed Script - Property Tests', () => {
             }
             const usernames = [...mockPrisma._stores.user.keys()];
             expect(usernames).toContain('admin');
-            expect(usernames).toContain('test_user_001');
-            expect(usernames).toContain('test_user_200');
+            // Automaton_Stables fill ACC's leagues; no seeded test stables.
             const wimpBots = usernames.filter(u => u.startsWith('test_user_'));
-            expect(wimpBots.length).toBe(200);
+            expect(wimpBots).toEqual([]);
             // No player1-5 or attribute users
             const playerUsers = usernames.filter(u => u.startsWith('player'));
             expect(playerUsers).toEqual([]);
             const attrUsers = usernames.filter(u => u.startsWith('attr_'));
             expect(attrUsers).toEqual([]);
-            // bye_robot_user + admin + WimpBot(200) = 202
-            expect(usernames.length).toBe(202);
+            // bye_robot_user + admin = 2
+            expect(usernames.length).toBe(2);
           }
         ),
         { numRuns: NUM_RUNS }
       );
     });
 
-    test('development mode seeds same as acceptance (admin + WimpBots)', async () => {
+    test('development mode seeds the admin and the 200 WimpBots', async () => {
       await fc.assert(
         fc.asyncProperty(
           fc.constant(1),
@@ -422,7 +424,7 @@ describe('Seed Script - Property Tests', () => {
       );
     });
 
-    test('for any seed mode, user sets form superset chain: prod ⊂ acc = dev', async () => {
+    test('for any seed mode, user sets form superset chain: prod ⊂ acc ⊂ dev', async () => {
       await fc.assert(
         fc.asyncProperty(
           fc.constant(1),
@@ -446,14 +448,13 @@ describe('Seed Script - Property Tests', () => {
             }
             expect(prodUsers.size).toBeLessThan(accUsers.size);
 
-            // Acceptance = Development (identical user sets)
-            expect(accUsers.size).toBe(devUsers.size);
+            // Acceptance ⊂ Development: development adds only the WimpBots
             for (const user of accUsers) {
               expect(devUsers.has(user)).toBe(true);
             }
-            for (const user of devUsers) {
-              expect(accUsers.has(user)).toBe(true);
-            }
+            const devOnly = [...devUsers].filter((user) => !accUsers.has(user));
+            expect(devOnly.length).toBe(200);
+            expect(devOnly.every((user) => user.startsWith('test_user_'))).toBe(true);
           }
         ),
         { numRuns: NUM_RUNS }

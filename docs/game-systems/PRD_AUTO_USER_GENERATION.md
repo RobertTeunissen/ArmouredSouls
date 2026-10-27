@@ -98,7 +98,7 @@ This PRD defines the requirements for an automated user and robot generation sys
 
 ### Current State
 - The admin dashboard allows triggering cycles via `POST /api/admin/cycles/bulk`
-- User base includes 200 WimpBot seed users + admin + bye-robot
+- User base includes the admin and bye-robot, plus 200 WimpBot seed users in development mode only (acceptance relies on Automaton_Stables; `docs/architecture/SEED_DATA_SPECIFICATION.md`)
 - Tiered stable system creates diverse user population during cycles
 
 ### Desired State

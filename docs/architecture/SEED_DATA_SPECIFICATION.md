@@ -2,9 +2,9 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Technical Specification  
-**Last Updated**: October 11, 2026 (Automaton catalogue expansion, Spec #57)  
+**Last Updated**: October 27, 2026 (WimpBot test users development-only)  
 **Status**: Current Implementation  
-**Version**: v1.5
+**Version**: v1.7
 
 ---
 
@@ -32,6 +32,7 @@ This document specifies the complete seed data loaded into the database during i
 - **v1.4** (Mar 21, 2026): Weapon damage reduction (~25%), shield capacity formula doubled (×2 → ×4), weapon pricing updated with M=3.0 baseline DPS=2.0
 - **v1.5** (Mar 21, 2026): Weapon roster expansion from 26 to 47 weapons — added 21 new weapons filling all empty grid slots, reclassified Laser Rifle (now 2H Short Mid) and Assault Rifle (now 1H Short Premium), acknowledged Battle Axe tier correction to Luxury, added `rangeBand` field to all weapons, simplified range classification logic
 - **v1.6** (Mar 26, 2026): Replaced archetype-based user generation with tiered stable system (WimpBot/AverageBot/ExpertBot), removed player1-5 accounts, updated admin to ₡3M/prestige 0, expanded WimpBot population to 200 users with new naming format
+- **v1.7** (Oct 27, 2026): The 200 WimpBot test users (`test_user_001`–`200`) are seeded in development mode only; acceptance seeds just the admin. Removed the team-tournament seeding step: it needed teams owned by `test_user_` stables, which the seed never created, so it always skipped.
 
 ---
 
@@ -446,13 +447,14 @@ All weapons use the DPS-inclusive pricing formula. Prices are the Season 2 value
 **Prestige**: 0  
 **Stable Name**: Auto-generated unique name (e.g., "Swift Thunder")
 
-### WimpBot Test User Accounts (200)
+### WimpBot Test User Accounts (200, development mode only)
 
+**Seeded in**: development mode only (local databases and the CI E2E database). Acceptance mode no longer seeds them: the Automaton_Stables fill ACC's leagues. The copies already on ACC are Generated_Stables, so the next Season_Rollover deletes them, and no later deploy re-creates them.  
 **Username Format**: test_user_001 to test_user_200  
 **Password**: See `prisma/seed.ts`  
 **Currency**: ₡100,000 each  
 **Stable Name**: Auto-generated unique name per user  
-**Purpose**: Matchmaking and league testing - baseline "mob" for tournaments and testing
+**Purpose**: `test_user_001` is the E2E player login (Playwright `auth.setup.ts`); all 200 are the opponents in E2E and local bulk cycles, which run without user generation.
 
 **Weapon Distribution** (50 users per weapon type):
 - Users 001-050: Practice Sword (melee, one-handed) → loadout: single
@@ -658,22 +660,19 @@ Examples:
 
 ## Total Seed Data Summary
 
-**Users**: 202 total (at initial seed in dev/acceptance mode)
-- 1 admin (₡3,000,000, prestige 0)
-- 200 WimpBot test users (₡100,000 each)
-- 1 bye-robot user
+**Users** (at initial seed):
+- Development mode: 202. That is 1 admin (₡3,000,000, prestige 0), 200 WimpBot test users (₡100,000 each) and 1 bye-robot user.
+- Acceptance mode: 2. That is 1 admin and 1 bye-robot user. The league population comes from the Automaton_Catalogue (Catalogue_Sync after the seed) and from cycle user generation.
 
 **Production mode**: Only bye-robot user is seeded (weapons and cycle metadata are always seeded).
 
-**Robots**: 201 total (at initial seed)
-- 200 WimpBot robots (1 per test user, distributed across 4 practice weapons)
-- 1 bye-robot
+**Robots** (at initial seed): development mode 201 (200 WimpBot robots, 1 per test user across 4 practice weapons, plus the bye-robot). Acceptance mode: the bye-robot only.
 
 **Tag Teams**: 0 at initial seed (created dynamically during cycles for WimpBot and AverageBot stables)
 
 **Weapons**: 47 in catalog
 
-**Weapon Inventory Entries**: 201 (one per robot)
+**Weapon Inventory Entries**: one per seeded WimpBot robot (development mode)
 
 **Facilities**: None at initial seed (created on-demand by users)
 
