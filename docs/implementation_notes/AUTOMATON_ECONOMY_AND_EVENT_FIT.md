@@ -56,7 +56,8 @@ The product owner made automatic upgrades a permanent rule (24 October 2026): no
 - Heavy `automatonMultiSeason.test.ts` on a throwaway local database (205 repository Catalogue_Entries, new Event_Allocation and history loader), no failed or skipped turns in either run:
   - catalogue on v1: 282 s; opening steps 72 s (preparation) and 65 s (`season_open`); settlement steps 1.6–2.1 s; 8 alerts over two seasons;
   - catalogue on v2 (run alone): 936 s; opening steps 308 s and 310 s (2,927 and 2,938 charged actions); settlement steps 13–16 s in season 1 and 3.0–3.8 s in season 2 (108–149 charged actions, about four times v1's); 0 alerts; peak 13 database connections.
-  The v2 build orders buy more, smaller steps (facility levels before attribute milestones), and the opening Turn_Step is about 4.5 times slower per stable. At 205 stables it stays far inside the 6 h Turn_Step deadline. The cause of the higher per-action cost in the opening was not profiled.
+  The v2 build orders buy more, smaller steps (facility levels before attribute milestones).
+  - **Correction (27 October 2026):** the v2 run above was slow because of the machine, not because of v2. Profiled on the same code, two fresh local databases and the 205-entry catalogue at v1 and at v2, the first preparation settlement (the opening build) took 66.1 s on v1 and 61.2 s on v2. Charged actions were 2,524 vs 2,927 (facility levels 1,002 vs 1,536, attribute steps 580 vs 449), robots 403 in both, Node CPU 32.9 s vs 29.2 s. CI agrees: before the v2 merge, the 205-stable heavy runs took 250–419 s for `automatonMultiSeason` (opening 73–118 s); on main after it, 331–343 s (opening 87–92 s). v2 does not slow the opening build per stable.
 
 ## Not verified
 

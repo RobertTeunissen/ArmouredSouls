@@ -87,7 +87,7 @@ Heavy timing (500 Active_Automatons, local Apple Silicon, PostgreSQL 17 in Docke
 | s2 prep 1–2 | preparation | 2.8–2.9 s | 0.006 | 0.03 s | 0 | 0 | 12 |
 | s2 cycles 1–5 | settlement | 7.2–9.3 s | 0.014–0.019 | 0.16 s | 260–418 | 0 | 10–12 |
 
-Strategy_Comparison answered in 318 ms and 300 ms (limit 2 s). The opening step at 500 stables (179 s) is faster than the 205-stable v2 run recorded in `AUTOMATON_ECONOMY_AND_EVENT_FIT.md` (308 s). The difference was not investigated; that run may have been slowed by the machine. The CI heavy job (30-minute limit) took 12–14 minutes on main at 205 stables; this suite now takes about 10 minutes locally.
+Strategy_Comparison answered in 318 ms and 300 ms (limit 2 s). The opening step's cost per stable does not depend on the strategy version: a same-code profile gave 66.1 s (v1) and 61.2 s (v2) for the 205-entry opening (correction in `AUTOMATON_ECONOMY_AND_EVENT_FIT.md`). The heavy suite's duration grows with the number of catalogue entries. On CI, PR #561 took 1,011 s for `automatonMultiSeason` with opening steps of 296 s and 301 s (0.59 s per stable), against 331–343 s at 205 entries on main. The heavy job took 21.6 minutes in all, against its 30-minute limit and 10.5–14 minutes on main at 205 stables. Locally the suite takes about 10 minutes.
 
 ## Heavy test population (follow-up, 27 October 2026)
 
@@ -120,4 +120,3 @@ Local run (fresh throwaway database, 500 entries synced, 11 active): 3 tests pas
 
 - ACC opening-build duration at this population (the local heavy run is on Apple Silicon; ACC has 2 vCPUs with PostgreSQL on the same host).
 - Matchmaking and battle-slot duration with about 1,000 more robots.
-- The CI heavy job at this population (30-minute limit). It first runs on the PR.
