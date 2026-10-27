@@ -104,7 +104,7 @@ Strategy_Comparison answered in 318 ms and 300 ms (limit 2 s). The opening step 
 3. **First Turn_Step** (next 00:00 settlement): every new stable makes its opening build from ₡3,000,000. The step's deadline is 6 h, with 3 turns in parallel. Expected settlement growth on ACC's 2 vCPUs: tens of minutes for the opening builds, and later about 2.4 times today's turn time per night. Check the Status_Bar and `automaton_turns` for `failed` or `step_budget_exhausted`.
 4. **Watch for a few cycles**: battle volume (the Automaton robot count grows from 403 toward about 1,400, roughly +12 % of all robots), the battle-slot durations, and `automaton_negative_balance` alerts.
 
-**Timing.** Activating now gives the new stables the last ~15 cycles of season 1, after which Season_Rollover rebuilds every Automaton from the starting balance. Activating at the rollover gives a clean start in season 2 but no live data before it. Both are supported; the choice is the product owner's.
+**Timing.** Activating now gives the new stables the last ~15 cycles of season 1, after which Season_Rollover rebuilds every Automaton from the starting balance. Activating at the rollover gives a clean start in season 2 but no live data before it. Product owner decision (27 October 2026): activate every new stable right after the deploy, to see in the remaining season-1 cycles whether the v2 economy changes take effect and whether the new stables are viable.
 
 ## Not verified
 
