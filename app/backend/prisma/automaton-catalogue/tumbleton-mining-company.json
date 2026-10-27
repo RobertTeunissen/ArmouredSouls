@@ -1,0 +1,167 @@
+{
+  "schemaVersion": 1,
+  "catalogueKey": "tumbleton-mining-company",
+  "stableName": "Tumbleton Mining Company",
+  "franchise": "SteamWorld Dig",
+  "backstory": "Tumbleton Mining Company opens around Rusty (SteamWorld). The Tumbleton Ore crew shares an upgrade account while each machine keeps its own battlefield job.",
+  "strategy": {
+    "key": "tycoon",
+    "version": 2,
+    "targetOverrides": {
+      "21": 3
+    }
+  },
+  "teamNames": {
+    "twoVsTwo": [
+      "Tumbleton Ore Pair 1"
+    ],
+    "threeVsThree": [
+      "Tumbleton Ore Trio 1"
+    ]
+  },
+  "eventOrder": [
+    "league_2v2",
+    "tag_team",
+    "league_1v1",
+    "league_3v3",
+    "koth",
+    "grand_melee",
+    "tournament_2v2",
+    "tournament_3v3",
+    "tournament_1v1"
+  ],
+  "blueprints": [
+    {
+      "slot": 1,
+      "robotName": "Rusty - SteamWorld",
+      "loadoutType": "single",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "sprinter",
+      "weaponPath": [
+        {
+          "main": "Practice Sword"
+        },
+        {
+          "main": "Vibro Mace"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "targetAttribute": "gyroStabilizers",
+          "magnitude": 2
+        }
+      ]
+    },
+    {
+      "slot": 2,
+      "robotName": "Dorothy",
+      "loadoutType": "single",
+      "stance": "balanced",
+      "yieldThreshold": 20,
+      "buildFocus": "sprinter",
+      "weaponPath": [
+        {
+          "main": "Laser Pistol"
+        },
+        {
+          "main": "Volt Sabre"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "targetAttribute": "powerCore",
+          "magnitude": 2
+        }
+      ]
+    },
+    {
+      "slot": 3,
+      "robotName": "Hank McCrank",
+      "loadoutType": "two_handed",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "bruiser",
+      "weaponPath": [
+        {
+          "main": "Shock Maul"
+        },
+        {
+          "main": "Heavy Hammer"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "targetAttribute": "combatPower",
+          "magnitude": 2
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "catalogueKey": "delta-city-robocain-foundry",
+  "stableName": "Delta City RoboCain Foundry",
+  "franchise": "RoboCop 2",
+  "backstory": "Delta City RoboCain Foundry opens around RoboCain. The Delta Vault crew shares an upgrade account while each machine keeps its own battlefield job.",
+  "strategy": {
+    "key": "paragon",
+    "version": 2,
+    "targetOverrides": {}
+  },
+  "teamNames": {
+    "twoVsTwo": [],
+    "threeVsThree": []
+  },
+  "eventOrder": [
+    "league_1v1",
+    "tournament_1v1",
+    "koth",
+    "grand_melee",
+    "league_2v2",
+    "tag_team",
+    "tournament_2v2",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "blueprints": [
+    {
+      "slot": 1,
+      "robotName": "RoboCain",
+      "loadoutType": "two_handed",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "bruiser",
+      "weaponPath": [
+        {
+          "main": "Scatter Cannon"
+        },
+        {
+          "main": "Arc Projector"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        }
+      ]
+    }
+  ]
+}

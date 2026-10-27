@@ -1,0 +1,330 @@
+{
+  "schemaVersion": 1,
+  "catalogueKey": "virtual-on-challenge-arcade",
+  "stableName": "Virtual-On Challenge Arcade",
+  "franchise": "Cyber Troopers Virtual-On",
+  "backstory": "Virtual-On Challenge Arcade opens around Viper II. The Virtual Arcade crew shares an upgrade account while each machine keeps its own battlefield job.",
+  "strategy": {
+    "key": "trio",
+    "version": 2,
+    "targetOverrides": {
+      "13": 6
+    }
+  },
+  "teamNames": {
+    "twoVsTwo": [
+      "Virtual Arcade Pair 1",
+      "Virtual Arcade Pair 2",
+      "Virtual Arcade Pair 3"
+    ],
+    "threeVsThree": [
+      "Virtual Arcade Trio 1",
+      "Virtual Arcade Trio 2"
+    ]
+  },
+  "eventOrder": [
+    "league_3v3",
+    "league_2v2",
+    "tag_team",
+    "tournament_3v3",
+    "tournament_2v2",
+    "league_1v1",
+    "koth",
+    "grand_melee",
+    "tournament_1v1"
+  ],
+  "blueprints": [
+    {
+      "slot": 1,
+      "robotName": "Viper II",
+      "loadoutType": "single",
+      "stance": "balanced",
+      "yieldThreshold": 20,
+      "buildFocus": "sprinter",
+      "weaponPath": [
+        {
+          "main": "Laser Pistol"
+        },
+        {
+          "main": "Volt Sabre"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "targetAttribute": "powerCore",
+          "magnitude": 3
+        }
+      ]
+    },
+    {
+      "slot": 2,
+      "robotName": "Fei-Yen",
+      "loadoutType": "dual_wield",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "sprinter",
+      "weaponPath": [
+        {
+          "main": "Laser Pistol",
+          "offhand": "Laser Pistol"
+        },
+        {
+          "main": "Volt Sabre",
+          "offhand": "Volt Sabre"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "offhand",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "offhand",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "offhand",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "offhand",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "targetAttribute": "powerCore",
+          "magnitude": 3
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "targetAttribute": "powerCore",
+          "magnitude": 3
+        }
+      ]
+    },
+    {
+      "slot": 3,
+      "robotName": "Dorkas",
+      "loadoutType": "two_handed",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "bruiser",
+      "weaponPath": [
+        {
+          "main": "Shock Maul"
+        },
+        {
+          "main": "Heavy Hammer"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "targetAttribute": "combatPower",
+          "magnitude": 3
+        }
+      ]
+    },
+    {
+      "slot": 4,
+      "robotName": "Belgdor",
+      "loadoutType": "two_handed",
+      "stance": "balanced",
+      "yieldThreshold": 15,
+      "buildFocus": "deadeye",
+      "weaponPath": [
+        {
+          "main": "Training Beam"
+        },
+        {
+          "main": "Ion Beam"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "targetAttribute": "targetingSystems",
+          "magnitude": 3
+        }
+      ]
+    },
+    {
+      "slot": 5,
+      "robotName": "Apharmd",
+      "loadoutType": "single",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "sprinter",
+      "weaponPath": [
+        {
+          "main": "Practice Sword"
+        },
+        {
+          "main": "Vibro Mace"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "targetAttribute": "gyroStabilizers",
+          "magnitude": 3
+        }
+      ]
+    },
+    {
+      "slot": 6,
+      "robotName": "Bal-Bas-Bow",
+      "loadoutType": "single",
+      "stance": "balanced",
+      "yieldThreshold": 20,
+      "buildFocus": "deadeye",
+      "weaponPath": [
+        {
+          "main": "Beam Pistol"
+        },
+        {
+          "main": "Particle Lance"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "targetAttribute": "combatPower",
+          "magnitude": 3
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 1,
+  "catalogueKey": "earth-defense-android-workshop",
+  "stableName": "Earth Defense Android Workshop",
+  "franchise": "Buck Rogers in the 25th Century",
+  "backstory": "Earth Defense Android Workshop opens around Twiki. The Earth Defense crew shares an upgrade account while each machine keeps its own battlefield job.",
+  "strategy": {
+    "key": "duo",
+    "version": 2,
+    "targetOverrides": {}
+  },
+  "teamNames": {
+    "twoVsTwo": [
+      "Earth Defense Pair 1"
+    ],
+    "threeVsThree": []
+  },
+  "eventOrder": [
+    "league_2v2",
+    "tag_team",
+    "tournament_2v2",
+    "league_1v1",
+    "koth",
+    "grand_melee",
+    "tournament_1v1",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "blueprints": [
+    {
+      "slot": 1,
+      "robotName": "Twiki",
+      "loadoutType": "single",
+      "stance": "defensive",
+      "yieldThreshold": 30,
+      "buildFocus": "tactician",
+      "weaponPath": [
+        {
+          "main": "Practice Blaster"
+        },
+        {
+          "main": "Volt Sabre"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        }
+      ]
+    },
+    {
+      "slot": 2,
+      "robotName": "Crichton",
+      "loadoutType": "single",
+      "stance": "balanced",
+      "yieldThreshold": 20,
+      "buildFocus": "deadeye",
+      "weaponPath": [
+        {
+          "main": "Beam Pistol"
+        },
+        {
+          "main": "Particle Lance"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "targetAttribute": "combatPower",
+          "magnitude": 1
+        }
+      ]
+    }
+  ]
+}

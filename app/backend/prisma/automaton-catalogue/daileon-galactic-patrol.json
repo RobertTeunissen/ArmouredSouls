@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 1,
+  "catalogueKey": "daileon-galactic-patrol",
+  "stableName": "Daileon Galactic Patrol",
+  "franchise": "Juspion",
+  "backstory": "Daileon Galactic Patrol opens around Daileon. The Galactic Pair crew shares an upgrade account while each machine keeps its own battlefield job.",
+  "strategy": {
+    "key": "duo",
+    "version": 2,
+    "targetOverrides": {}
+  },
+  "teamNames": {
+    "twoVsTwo": [
+      "Galactic Pair Pair 1"
+    ],
+    "threeVsThree": []
+  },
+  "eventOrder": [
+    "league_2v2",
+    "tag_team",
+    "tournament_2v2",
+    "league_1v1",
+    "koth",
+    "grand_melee",
+    "tournament_1v1",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "blueprints": [
+    {
+      "slot": 1,
+      "robotName": "Daileon",
+      "loadoutType": "two_handed",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "bruiser",
+      "weaponPath": [
+        {
+          "main": "Training Rifle"
+        },
+        {
+          "main": "Plasma Cannon"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "targetAttribute": "combatPower",
+          "magnitude": 1
+        }
+      ]
+    },
+    {
+      "slot": 2,
+      "robotName": "Anri",
+      "loadoutType": "single",
+      "stance": "defensive",
+      "yieldThreshold": 30,
+      "buildFocus": "tactician",
+      "weaponPath": [
+        {
+          "main": "Practice Blaster"
+        },
+        {
+          "main": "Volt Sabre"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        }
+      ]
+    }
+  ]
+}

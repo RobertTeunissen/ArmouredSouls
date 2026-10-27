@@ -1,0 +1,223 @@
+{
+  "schemaVersion": 1,
+  "catalogueKey": "newport-tank-police-workshop",
+  "stableName": "Newport Tank Police Workshop",
+  "franchise": "Dominion Tank Police",
+  "backstory": "Newport Tank Police Workshop opens around Bonaparte. The Newport Patrol crew shares an upgrade account while each machine keeps its own battlefield job.",
+  "strategy": {
+    "key": "generalist",
+    "version": 2,
+    "targetOverrides": {
+      "15": 3
+    }
+  },
+  "teamNames": {
+    "twoVsTwo": [
+      "Newport Patrol Pair 1"
+    ],
+    "threeVsThree": [
+      "Newport Patrol Trio 1"
+    ]
+  },
+  "eventOrder": [
+    "league_1v1",
+    "league_2v2",
+    "tag_team",
+    "league_3v3",
+    "koth",
+    "grand_melee",
+    "tournament_1v1",
+    "tournament_2v2",
+    "tournament_3v3"
+  ],
+  "blueprints": [
+    {
+      "slot": 1,
+      "robotName": "Bonaparte",
+      "loadoutType": "two_handed",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "bruiser",
+      "weaponPath": [
+        {
+          "main": "Training Rifle"
+        },
+        {
+          "main": "Plasma Cannon"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "targetAttribute": "combatPower",
+          "magnitude": 2
+        }
+      ]
+    },
+    {
+      "slot": 2,
+      "robotName": "Annapuma",
+      "loadoutType": "dual_wield",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "sprinter",
+      "weaponPath": [
+        {
+          "main": "Practice Sword",
+          "offhand": "Practice Sword"
+        },
+        {
+          "main": "Vibro Mace",
+          "offhand": "Vibro Mace"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "offhand",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "offhand",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "offhand",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "offhand",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "targetAttribute": "gyroStabilizers",
+          "magnitude": 2
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "targetAttribute": "gyroStabilizers",
+          "magnitude": 2
+        }
+      ]
+    },
+    {
+      "slot": 3,
+      "robotName": "Unipuma",
+      "loadoutType": "dual_wield",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "sprinter",
+      "weaponPath": [
+        {
+          "main": "Laser Pistol",
+          "offhand": "Laser Pistol"
+        },
+        {
+          "main": "Volt Sabre",
+          "offhand": "Volt Sabre"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "offhand",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "offhand",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "offhand",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "offhand",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "targetAttribute": "powerCore",
+          "magnitude": 2
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "targetAttribute": "powerCore",
+          "magnitude": 2
+        }
+      ]
+    }
+  ]
+}

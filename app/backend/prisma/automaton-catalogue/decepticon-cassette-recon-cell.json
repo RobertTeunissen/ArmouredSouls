@@ -1,0 +1,330 @@
+{
+  "schemaVersion": 1,
+  "catalogueKey": "decepticon-cassette-recon-cell",
+  "stableName": "Decepticon Cassette Recon Cell",
+  "franchise": "Transformers G1",
+  "backstory": "Decepticon Cassette Recon Cell opens around Laserbeak. The Cassette Cell crew shares an upgrade account while each machine keeps its own battlefield job.",
+  "strategy": {
+    "key": "trio",
+    "version": 2,
+    "targetOverrides": {
+      "13": 6
+    }
+  },
+  "teamNames": {
+    "twoVsTwo": [
+      "Cassette Cell Pair 1",
+      "Cassette Cell Pair 2",
+      "Cassette Cell Pair 3"
+    ],
+    "threeVsThree": [
+      "Cassette Cell Trio 1",
+      "Cassette Cell Trio 2"
+    ]
+  },
+  "eventOrder": [
+    "league_3v3",
+    "league_2v2",
+    "tag_team",
+    "tournament_3v3",
+    "tournament_2v2",
+    "league_1v1",
+    "koth",
+    "grand_melee",
+    "tournament_1v1"
+  ],
+  "blueprints": [
+    {
+      "slot": 1,
+      "robotName": "Laserbeak",
+      "loadoutType": "single",
+      "stance": "balanced",
+      "yieldThreshold": 20,
+      "buildFocus": "deadeye",
+      "weaponPath": [
+        {
+          "main": "Beam Pistol"
+        },
+        {
+          "main": "Particle Lance"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "targetAttribute": "combatPower",
+          "magnitude": 3
+        }
+      ]
+    },
+    {
+      "slot": 2,
+      "robotName": "Ravage",
+      "loadoutType": "single",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "sprinter",
+      "weaponPath": [
+        {
+          "main": "Practice Sword"
+        },
+        {
+          "main": "Vibro Mace"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "targetAttribute": "gyroStabilizers",
+          "magnitude": 3
+        }
+      ]
+    },
+    {
+      "slot": 3,
+      "robotName": "Rumble",
+      "loadoutType": "two_handed",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "bruiser",
+      "weaponPath": [
+        {
+          "main": "Shock Maul"
+        },
+        {
+          "main": "Heavy Hammer"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "targetAttribute": "combatPower",
+          "magnitude": 3
+        }
+      ]
+    },
+    {
+      "slot": 4,
+      "robotName": "Frenzy",
+      "loadoutType": "dual_wield",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "sprinter",
+      "weaponPath": [
+        {
+          "main": "Laser Pistol",
+          "offhand": "Laser Pistol"
+        },
+        {
+          "main": "Volt Sabre",
+          "offhand": "Volt Sabre"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "offhand",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "offhand",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "offhand",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "offhand",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "targetAttribute": "powerCore",
+          "magnitude": 3
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "targetAttribute": "powerCore",
+          "magnitude": 3
+        }
+      ]
+    },
+    {
+      "slot": 5,
+      "robotName": "Ratbat",
+      "loadoutType": "single",
+      "stance": "balanced",
+      "yieldThreshold": 20,
+      "buildFocus": "sprinter",
+      "weaponPath": [
+        {
+          "main": "Laser Pistol"
+        },
+        {
+          "main": "Volt Sabre"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "targetAttribute": "powerCore",
+          "magnitude": 3
+        }
+      ]
+    },
+    {
+      "slot": 6,
+      "robotName": "Buzzsaw",
+      "loadoutType": "single",
+      "stance": "balanced",
+      "yieldThreshold": 20,
+      "buildFocus": "deadeye",
+      "weaponPath": [
+        {
+          "main": "Beam Pistol"
+        },
+        {
+          "main": "Particle Lance"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "targetAttribute": "combatPower",
+          "magnitude": 3
+        }
+      ]
+    }
+  ]
+}

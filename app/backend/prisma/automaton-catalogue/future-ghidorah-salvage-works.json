@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "catalogueKey": "future-ghidorah-salvage-works",
+  "stableName": "Future Ghidorah Salvage Works",
+  "franchise": "Godzilla vs. King Ghidorah",
+  "backstory": "Future Ghidorah Salvage Works opens around Mecha-King Ghidorah. The Future Salvage crew shares an upgrade account while each machine keeps its own battlefield job.",
+  "strategy": {
+    "key": "paragon",
+    "version": 2,
+    "targetOverrides": {}
+  },
+  "teamNames": {
+    "twoVsTwo": [],
+    "threeVsThree": []
+  },
+  "eventOrder": [
+    "league_1v1",
+    "tournament_1v1",
+    "koth",
+    "grand_melee",
+    "league_2v2",
+    "tag_team",
+    "tournament_2v2",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "blueprints": [
+    {
+      "slot": 1,
+      "robotName": "Mecha-King Ghidorah",
+      "loadoutType": "two_handed",
+      "stance": "balanced",
+      "yieldThreshold": 15,
+      "buildFocus": "deadeye",
+      "weaponPath": [
+        {
+          "main": "Training Beam"
+        },
+        {
+          "main": "Ion Beam"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        }
+      ]
+    }
+  ]
+}

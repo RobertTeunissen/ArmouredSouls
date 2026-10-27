@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "catalogueKey": "trinity-energy-hangar",
+  "stableName": "Trinity Energy Hangar",
+  "franchise": "Space Emperor God Sigma",
+  "backstory": "Trinity Energy Hangar opens around God Sigma. The Trinity Charge crew shares an upgrade account while each machine keeps its own battlefield job.",
+  "strategy": {
+    "key": "paragon",
+    "version": 2,
+    "targetOverrides": {}
+  },
+  "teamNames": {
+    "twoVsTwo": [],
+    "threeVsThree": []
+  },
+  "eventOrder": [
+    "league_1v1",
+    "tournament_1v1",
+    "koth",
+    "grand_melee",
+    "league_2v2",
+    "tag_team",
+    "tournament_2v2",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "blueprints": [
+    {
+      "slot": 1,
+      "robotName": "God Sigma",
+      "loadoutType": "weapon_shield",
+      "stance": "defensive",
+      "yieldThreshold": 25,
+      "buildFocus": "warden",
+      "weaponPath": [
+        {
+          "main": "Practice Sword",
+          "offhand": "Light Shield"
+        },
+        {
+          "main": "Vibro Mace",
+          "offhand": "Aegis Bulwark"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "targetAttribute": "evasionThrusters",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "targetAttribute": "evasionThrusters",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "targetAttribute": "evasionThrusters",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "targetAttribute": "evasionThrusters",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "targetAttribute": "evasionThrusters",
+          "magnitude": 1
+        }
+      ]
+    }
+  ]
+}

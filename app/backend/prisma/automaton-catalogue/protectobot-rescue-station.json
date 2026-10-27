@@ -1,0 +1,320 @@
+{
+  "schemaVersion": 1,
+  "catalogueKey": "protectobot-rescue-station",
+  "stableName": "Protectobot Rescue Station",
+  "franchise": "Transformers G1 — Protectobots",
+  "backstory": "Protectobot Rescue Station opens around Hot Spot. The Rescue Watch crew shares an upgrade account while each machine keeps its own battlefield job.",
+  "strategy": {
+    "key": "trio",
+    "version": 2,
+    "targetOverrides": {
+      "13": 5
+    }
+  },
+  "teamNames": {
+    "twoVsTwo": [
+      "Rescue Watch Pair 1",
+      "Rescue Watch Pair 2"
+    ],
+    "threeVsThree": [
+      "Rescue Watch Trio 1"
+    ]
+  },
+  "eventOrder": [
+    "league_3v3",
+    "league_2v2",
+    "tag_team",
+    "tournament_3v3",
+    "tournament_2v2",
+    "league_1v1",
+    "koth",
+    "grand_melee",
+    "tournament_1v1"
+  ],
+  "blueprints": [
+    {
+      "slot": 1,
+      "robotName": "Hot Spot",
+      "loadoutType": "weapon_shield",
+      "stance": "defensive",
+      "yieldThreshold": 25,
+      "buildFocus": "warden",
+      "weaponPath": [
+        {
+          "main": "Laser Pistol",
+          "offhand": "Light Shield"
+        },
+        {
+          "main": "Volt Sabre",
+          "offhand": "Aegis Bulwark"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "augment",
+          "hand": "main",
+          "targetAttribute": "armorPlating",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "targetAttribute": "evasionThrusters",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "targetAttribute": "evasionThrusters",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "targetAttribute": "evasionThrusters",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "targetAttribute": "evasionThrusters",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "targetAttribute": "evasionThrusters",
+          "magnitude": 1
+        }
+      ]
+    },
+    {
+      "slot": 2,
+      "robotName": "Blades",
+      "loadoutType": "single",
+      "stance": "balanced",
+      "yieldThreshold": 20,
+      "buildFocus": "sprinter",
+      "weaponPath": [
+        {
+          "main": "Laser Pistol"
+        },
+        {
+          "main": "Volt Sabre"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "targetAttribute": "powerCore",
+          "magnitude": 2
+        }
+      ]
+    },
+    {
+      "slot": 3,
+      "robotName": "Streetwise",
+      "loadoutType": "single",
+      "stance": "balanced",
+      "yieldThreshold": 15,
+      "buildFocus": "tactician",
+      "weaponPath": [
+        {
+          "main": "Bolt Carbine"
+        },
+        {
+          "main": "Nova Caster"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "augment",
+          "hand": "main",
+          "targetAttribute": "combatAlgorithms",
+          "magnitude": 1
+        }
+      ]
+    },
+    {
+      "slot": 4,
+      "robotName": "First Aid",
+      "loadoutType": "weapon_shield",
+      "stance": "defensive",
+      "yieldThreshold": 25,
+      "buildFocus": "tactician",
+      "weaponPath": [
+        {
+          "main": "Bolt Carbine",
+          "offhand": "Light Shield"
+        },
+        {
+          "main": "Nova Caster",
+          "offhand": "Aegis Bulwark"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "augment",
+          "hand": "main",
+          "targetAttribute": "combatAlgorithms",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "targetAttribute": "evasionThrusters",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "targetAttribute": "evasionThrusters",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "targetAttribute": "evasionThrusters",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "targetAttribute": "evasionThrusters",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "targetAttribute": "evasionThrusters",
+          "magnitude": 1
+        }
+      ]
+    },
+    {
+      "slot": 5,
+      "robotName": "Groove",
+      "loadoutType": "single",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "sprinter",
+      "weaponPath": [
+        {
+          "main": "Practice Sword"
+        },
+        {
+          "main": "Vibro Mace"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "targetAttribute": "gyroStabilizers",
+          "magnitude": 2
+        }
+      ]
+    }
+  ]
+}

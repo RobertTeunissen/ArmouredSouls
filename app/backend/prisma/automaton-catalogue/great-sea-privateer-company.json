@@ -1,0 +1,195 @@
+{
+  "schemaVersion": 1,
+  "catalogueKey": "great-sea-privateer-company",
+  "stableName": "Great Sea Privateer Company",
+  "franchise": "SteamWorld Heist II",
+  "backstory": "Great Sea Privateer Company opens around Captain Quincy Leeway. The Great Sea crew shares an upgrade account while each machine keeps its own battlefield job.",
+  "strategy": {
+    "key": "tycoon",
+    "version": 2,
+    "targetOverrides": {
+      "21": 3
+    }
+  },
+  "teamNames": {
+    "twoVsTwo": [
+      "Great Sea Pair 1"
+    ],
+    "threeVsThree": [
+      "Great Sea Trio 1"
+    ]
+  },
+  "eventOrder": [
+    "league_2v2",
+    "tag_team",
+    "league_1v1",
+    "league_3v3",
+    "koth",
+    "grand_melee",
+    "tournament_2v2",
+    "tournament_3v3",
+    "tournament_1v1"
+  ],
+  "blueprints": [
+    {
+      "slot": 1,
+      "robotName": "Captain Quincy Leeway",
+      "loadoutType": "single",
+      "stance": "balanced",
+      "yieldThreshold": 20,
+      "buildFocus": "deadeye",
+      "weaponPath": [
+        {
+          "main": "Beam Pistol"
+        },
+        {
+          "main": "Particle Lance"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "targetAttribute": "combatPower",
+          "magnitude": 2
+        }
+      ]
+    },
+    {
+      "slot": 2,
+      "robotName": "Daisy Clutch",
+      "loadoutType": "dual_wield",
+      "stance": "offensive",
+      "yieldThreshold": 10,
+      "buildFocus": "sprinter",
+      "weaponPath": [
+        {
+          "main": "Laser Pistol",
+          "offhand": "Laser Pistol"
+        },
+        {
+          "main": "Volt Sabre",
+          "offhand": "Volt Sabre"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "offhand",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "offhand",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "offhand",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "offhand",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "targetAttribute": "powerCore",
+          "magnitude": 2
+        },
+        {
+          "tier": "hone",
+          "hand": "offhand",
+          "targetAttribute": "powerCore",
+          "magnitude": 2
+        }
+      ]
+    },
+    {
+      "slot": 3,
+      "robotName": "Wesley Hotchkiss",
+      "loadoutType": "two_handed",
+      "stance": "balanced",
+      "yieldThreshold": 15,
+      "buildFocus": "deadeye",
+      "weaponPath": [
+        {
+          "main": "Training Beam"
+        },
+        {
+          "main": "Ion Beam"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "hone",
+          "hand": "main",
+          "targetAttribute": "combatPower",
+          "magnitude": 2
+        }
+      ]
+    }
+  ]
+}

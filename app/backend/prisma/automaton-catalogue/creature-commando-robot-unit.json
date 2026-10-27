@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "catalogueKey": "creature-commando-robot-unit",
+  "stableName": "Creature Commando Robot Unit",
+  "franchise": "DC — Creature Commandos",
+  "backstory": "Creature Commando Robot Unit opens around G.I. Robot. The Commando Unit crew shares an upgrade account while each machine keeps its own battlefield job.",
+  "strategy": {
+    "key": "paragon",
+    "version": 2,
+    "targetOverrides": {}
+  },
+  "teamNames": {
+    "twoVsTwo": [],
+    "threeVsThree": []
+  },
+  "eventOrder": [
+    "league_1v1",
+    "tournament_1v1",
+    "koth",
+    "grand_melee",
+    "league_2v2",
+    "tag_team",
+    "tournament_2v2",
+    "league_3v3",
+    "tournament_3v3"
+  ],
+  "blueprints": [
+    {
+      "slot": 1,
+      "robotName": "G.I. Robot",
+      "loadoutType": "single",
+      "stance": "balanced",
+      "yieldThreshold": 15,
+      "buildFocus": "tactician",
+      "weaponPath": [
+        {
+          "main": "Bolt Carbine"
+        },
+        {
+          "main": "Nova Caster"
+        }
+      ],
+      "refinementPlan": [
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "sharpen",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        },
+        {
+          "tier": "forge",
+          "hand": "main",
+          "magnitude": 1
+        }
+      ]
+    }
+  ]
+}

@@ -702,7 +702,7 @@ Automaton stables and strategies are repository data, but **not** seed data: `pr
 
 ### Automaton_Catalogue
 
-**Location**: `app/backend/prisma/automaton-catalogue/{catalogueKey}.json`, one Catalogue_Entry per file. The folder holds the Starter_Stables of spec 55 (decision 32) plus the Expansion_Stables of spec 57. The entry count is whatever the folder holds (`ls app/backend/prisma/automaton-catalogue/*.json | wc -l`); no document or test states it.
+**Location**: `app/backend/prisma/automaton-catalogue/{catalogueKey}.json`, one Catalogue_Entry per file. The folder holds the Starter_Stables of spec 55 (decision 32) plus the Expansion_Stables of spec 57 and of the October 2026 Automaton Package (`docs/implementation_notes/AUTOMATON_CATALOGUE_500.md`). The entry count is whatever the folder holds (`ls app/backend/prisma/automaton-catalogue/*.json | wc -l`); no document or test states it.
 
 **Format** (`schemaVersion` 1, validated by `catalogueEntrySchema` in `services/automaton/automatonCatalogueService.ts`; strict, unknown keys rejected):
 
