@@ -9,6 +9,7 @@
  */
 import prisma from '../../src/lib/prisma';
 import { getBattleLog, getMatchHistory } from '../../src/services/match/matchHistoryService';
+import { battleLogFixture } from '../helpers/battleLogFixture';
 
 const RUN = `fh${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;
 
@@ -50,7 +51,7 @@ async function battleWith(battleType: string, winnerId: number | null, rows: Row
       loserReward: 0,
       tournamentId: tournamentId ?? null,
       // No forfeit marker: the classifier must not depend on battle_log.
-      battleLog: { events: [] },
+      ...battleLogFixture({ events: [] }),
       participants: {
         create: rows.map((r) => ({
           robotId: r.robotId,

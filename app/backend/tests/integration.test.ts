@@ -9,6 +9,7 @@ import { runMatchmaking } from '../src/services/analytics/matchmakingService';
 import { rebalanceLeagues } from '../src/services/league/leagueRebalancingService';
 import { createLeagueCohort, deleteLeagueCohort, type LeagueCohort } from './helpers/leagueCohort';
 import { useFinancialCaptureTestEnvironment } from './financialCaptureTestHelper';
+import { readBattleLogFixture } from './helpers/battleLogFixture';
 
 useFinancialCaptureTestEnvironment();
 
@@ -169,13 +170,13 @@ describe('Integration Test: Complete Daily Cycle', () => {
       orderBy: { createdAt: 'desc' },
     });
     const battleWithLog = cohortBattlesWithLogs.find(
-      battle => (battle.battleLog as { isByeMatch?: boolean } | null)?.isByeMatch !== true,
+      battle => (readBattleLogFixture(battle) as { isByeMatch?: boolean } | null)?.isByeMatch !== true,
     );
 
     expect(battleWithLog).toBeDefined();
-    expect(battleWithLog?.battleLog).toBeDefined();
+    expect(readBattleLogFixture(battleWithLog!)).not.toBeNull();
     
-    const battleLog = battleWithLog?.battleLog as any;
+    const battleLog = readBattleLogFixture(battleWithLog!) as any;
     expect(battleLog.events).toBeDefined();
     expect(Array.isArray(battleLog.events)).toBe(true);
     expect(battleLog.events.length).toBeGreaterThan(0);
@@ -283,7 +284,7 @@ describe('Integration Test: Complete Daily Cycle', () => {
     // Every fought battle has both sides. Byes are excluded: nothing was fought and only
     // the real side is recorded.
     const foughtBattles = cohortBattles.filter(
-      b => (b.battleLog as { isByeMatch?: boolean } | null)?.isByeMatch !== true,
+      b => (readBattleLogFixture(b) as { isByeMatch?: boolean } | null)?.isByeMatch !== true,
     );
     const invalidBattles = foughtBattles.filter(b => b.participants.length < 2);
     expect(invalidBattles.length).toBe(0);

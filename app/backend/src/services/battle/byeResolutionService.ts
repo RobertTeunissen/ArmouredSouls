@@ -19,7 +19,7 @@
  * @module services/battle/byeResolutionService
  */
 
-import { Prisma } from '../../../generated/prisma';
+import { encodeBattleLog } from './battleLogCodec';
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import {
@@ -170,7 +170,7 @@ export async function resolveByeEvent(
       durationSeconds: BYE_BATTLE_DURATION_SECONDS,
       winnerReward: reward.credits,
       loserReward: 0,
-      battleLog: battleLog as unknown as Prisma.InputJsonValue,
+      ...(await encodeBattleLog(battleLog)),
     },
   });
 

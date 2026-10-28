@@ -1,4 +1,5 @@
-import { Robot, Battle, Prisma } from '../../../generated/prisma';
+import { Robot, Battle } from '../../../generated/prisma';
+import { encodeBattleLog } from '../battle/battleLogCodec';
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { CombatMessageGenerator } from '../battle/combatMessageGenerator';
@@ -571,7 +572,7 @@ async function createBattleRecord(
       leagueInstanceId: scheduledMatch.leagueInstanceId, // From scheduled match (standings-derived)
       
       // Battle log with combat messages AND detailed combat events for admin debugging
-      battleLog: {
+      ...(await encodeBattleLog({
         events: battleLog,
         isByeMatch: result.isByeMatch,
         detailedCombatEvents: result.combatEvents || [], // Admin debugging: formula breakdowns, attribute usage
@@ -579,7 +580,7 @@ async function createBattleRecord(
         arenaRadius: result.arenaRadius,
         startingPositions: result.startingPositions,
         endingPositions: result.endingPositions,
-      } as unknown as Prisma.InputJsonValue,
+      })),
       durationSeconds: result.durationSeconds,
       
       // Economic data

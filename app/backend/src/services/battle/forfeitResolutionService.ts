@@ -17,7 +17,8 @@
  *
  * @module services/battle/forfeitResolutionService
  */
-import { Prisma, StandingsMode } from '../../../generated/prisma';
+import { StandingsMode } from '../../../generated/prisma';
+import { encodeBattleLog } from './battleLogCodec';
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { BattleError, BattleErrorCode } from '../../errors/battleErrors';
@@ -151,7 +152,7 @@ export async function resolveForfeitEvent(
       durationSeconds: BYE_BATTLE_DURATION_SECONDS,
       winnerReward: credits,
       loserReward: 0,
-      battleLog: battleLog as unknown as Prisma.InputJsonValue,
+      ...(await encodeBattleLog(battleLog)),
     },
   });
 

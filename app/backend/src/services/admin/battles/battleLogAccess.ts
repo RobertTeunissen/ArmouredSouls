@@ -1,10 +1,14 @@
 /**
- * Admin access to a battle's stored combat log (`battles.battle_log`), which the
- * nightly retention job removes after `BATTLE_LOG_RETENTION_DAYS`.
+ * Admin access to a battle's stored combat log, which the nightly retention job
+ * removes after `BATTLE_LOG_RETENTION_DAYS`. Stored compressed in
+ * `battles.battle_log_zst` (descriptor in `battle_log_meta`); logs written before
+ * the zstd codec are still in the legacy jsonb `battles.battle_log`. All decoding
+ * goes through `services/battle/battleLogCodec.ts`.
  */
 import prisma from '../../../lib/prisma';
 import { BattleError, BattleErrorCode } from '../../../errors';
 import { getBattleLogRetentionDays } from '../../retention/battleLogRetentionService';
+import { BATTLE_LOG_SELECT, decodeBattleLog } from '../../battle/battleLogCodec';
 import type { KothLogStorage } from '../../../types/battleLogTypes';
 import { modeShape } from './battleModes';
 import type { AdminCombatEvent, BattleLogResponse, CombatLogStatus } from './battleTypes';
@@ -39,10 +43,15 @@ export function combatLogStatus(
   };
 }
 
-/** Status without loading the (large) log itself. */
+/**
+ * Status without loading the (large) log itself: the storage marker comes from
+ * the small `battle_log_meta` column, or from the legacy jsonb log.
+ */
 export async function loadCombatLogStatus(battleId: number, battleType: string, createdAt: Date): Promise<CombatLogStatus> {
   const rows = await prisma.$queryRaw<Array<{ has_log: boolean; storage: unknown }>>`
-    SELECT battle_log IS NOT NULL AS has_log, battle_log -> 'storage' AS storage
+    SELECT (battle_log_zst IS NOT NULL OR battle_log IS NOT NULL) AS has_log,
+           CASE WHEN battle_log_zst IS NOT NULL THEN battle_log_meta -> 'storage'
+                ELSE battle_log -> 'storage' END AS storage
     FROM battles WHERE id = ${battleId}
   `;
   const row = rows[0];
@@ -63,12 +72,10 @@ export async function loadStoredLog(battleId: number): Promise<{
 }> {
   const battle = await prisma.battle.findUnique({
     where: { id: battleId },
-    select: { battleType: true, createdAt: true, battleLog: true },
+    select: { battleType: true, createdAt: true, ...BATTLE_LOG_SELECT },
   });
   if (!battle) throw new BattleError(BattleErrorCode.BATTLE_NOT_FOUND, 'Battle not found', 404, { battleId });
-  const log = battle.battleLog !== null && typeof battle.battleLog === 'object' && !Array.isArray(battle.battleLog)
-    ? (battle.battleLog as unknown as Record<string, unknown>)
-    : null;
+  const log = await decodeBattleLog(battle, battleId);
   return { battleType: battle.battleType, createdAt: battle.createdAt, log };
 }
 

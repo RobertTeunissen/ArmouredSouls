@@ -9,6 +9,7 @@ import prisma from '../src/lib/prisma';
 import fc from 'fast-check';
 import { robotPerformanceService } from '../src/services/analytics/robotPerformanceService';
 import { cleanupTestData } from './cleanupHelper';
+import { battleLogFixture } from './helpers/battleLogFixture';
 
 
 describe('ELO Progression Property-Based Tests', () => {
@@ -169,7 +170,7 @@ describe('ELO Progression Property-Based Tests', () => {
                   winnerId: eloChange > 0 ? robotId : (eloChange < 0 ? opponentId : null),
                   battleType: 'league_1v1',
                   leagueType: 'bronze',
-                  battleLog: {},
+                  ...battleLogFixture({}),
                   durationSeconds: 30,
                   winnerReward: eloChange > 0 ? 1000 : 500,
                   loserReward: eloChange < 0 ? 500 : 1000,
@@ -348,7 +349,7 @@ describe('ELO Progression Property-Based Tests', () => {
                   winnerId: eloChange > 0 ? robotId : (eloChange < 0 ? opponentId : null),
                   battleType: 'league_1v1',
                   leagueType: 'bronze',
-                  battleLog: {},
+                  ...battleLogFixture({}),
                   durationSeconds: 30,
                   winnerReward: eloChange > 0 ? 1000 : 500,
                   loserReward: eloChange < 0 ? 500 : 1000,
@@ -515,7 +516,7 @@ describe('ELO Progression Property-Based Tests', () => {
                   winnerId: eloChange > 0 ? robotId : (eloChange < 0 ? opponentId : null),
                   battleType: 'league_1v1',
                   leagueType: 'bronze',
-                  battleLog: {},
+                  ...battleLogFixture({}),
                   durationSeconds: 30,
                   winnerReward: eloChange > 0 ? 1000 : 500,
                   loserReward: eloChange < 0 ? 500 : 1000,
@@ -658,7 +659,7 @@ describe('ELO Progression Property-Based Tests', () => {
                 winnerId: eloChange > 0 ? robotId : (eloChange < 0 ? opponentId : null),
                 battleType: 'league_1v1',
                 leagueType: 'bronze',
-                battleLog: {},
+                ...battleLogFixture({}),
                 durationSeconds: 30,
                 winnerReward: eloChange > 0 ? 1000 : 500,
                 loserReward: eloChange < 0 ? 500 : 1000,

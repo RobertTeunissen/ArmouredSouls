@@ -17,7 +17,8 @@
  * @module services/scheduling/thinInstanceByes
  */
 
-import { $Enums, Prisma } from '../../../generated/prisma';
+import { $Enums } from '../../../generated/prisma';
+import { encodeBattleLog } from '../battle/battleLogCodec';
 import logger from '../../config/logger';
 import { BattleError, BattleErrorCode } from '../../errors/battleErrors';
 import type { KothPlacement } from '../../types';
@@ -229,11 +230,11 @@ export async function resolveBelowMinimumField(
         durationSeconds: BYE_BATTLE_DURATION_SECONDS,
         winnerReward: 0,
         loserReward: 0,
-        battleLog: {
+        ...(await encodeBattleLog({
           events: [{ timestamp: 0, type: 'forfeit', message }],
           isForfeit: true,
           detailedCombatEvents: [],
-        } as unknown as Prisma.InputJsonValue,
+        })),
       },
     });
     forfeitBattleId = battle.id;

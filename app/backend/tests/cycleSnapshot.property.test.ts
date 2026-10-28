@@ -9,6 +9,7 @@ import prisma from '../src/lib/prisma';
 import fc from 'fast-check';
 import { EventLogger, EventType } from '../src/services/common/eventLogger';
 import { CycleSnapshotService } from '../src/services/cycle/cycleSnapshotService';
+import { battleLogFixture } from './helpers/battleLogFixture';
 
 const eventLogger = new EventLogger();
 const cycleSnapshotService = new CycleSnapshotService();
@@ -323,7 +324,7 @@ describe('CycleSnapshotService Property-Based Tests', () => {
                   winnerId,
                   winnerReward: battle.winnerReward,
                   loserReward: battle.loserReward,
-                  battleLog: {},
+                  ...battleLogFixture({}),
                   durationSeconds: 60,
                   battleType: 'league',
                   leagueType: 'bronze',
@@ -591,7 +592,7 @@ describe('CycleSnapshotService Property-Based Tests', () => {
                   winnerId: robot1.id, // Robot 1 always wins for simplicity
                   winnerReward: battle.winnerReward,
                   loserReward: battle.loserReward,
-                  battleLog: {},
+                  ...battleLogFixture({}),
                   durationSeconds: 60,
                   battleType: 'league',
                   leagueType: 'bronze',
@@ -723,7 +724,7 @@ describe('CycleSnapshotService Property-Based Tests', () => {
                 winnerId: robot1.id,
                 winnerReward: data.battleCredits,
                 loserReward: 0,
-                battleLog: {},
+                ...battleLogFixture({}),
                 durationSeconds: 60,
                 battleType: 'league',
                 leagueType: 'bronze',

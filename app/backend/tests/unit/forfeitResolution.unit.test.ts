@@ -69,6 +69,7 @@ import {
   resolveForfeitEvent,
   type ForfeitResolutionInput,
 } from '../../src/services/battle/forfeitResolutionService';
+import { readBattleLogFixture } from '../helpers/battleLogFixture';
 
 // ─── Fixtures ────────────────────────────────────────────────────────────────
 
@@ -236,8 +237,8 @@ describe('single forfeit', () => {
       winnerReward: reward.credits,
       loserReward: 0,
     });
-    expect(battle.battleLog).toMatchObject({ isForfeit: true, detailedCombatEvents: [] });
-    expect(battle.battleLog.events).toEqual([{ timestamp: 0, type: 'forfeit', message: 'Unarmed forfeits' }]);
+    expect(readBattleLogFixture(battle)).toMatchObject({ isForfeit: true, detailedCombatEvents: [] });
+    expect(readBattleLogFixture(battle)?.events).toEqual([{ timestamp: 0, type: 'forfeit', message: 'Unarmed forfeits' }]);
 
     const rows = mockParticipantCreate.mock.calls.map((c) => c[0].data);
     expect(rows).toHaveLength(2);

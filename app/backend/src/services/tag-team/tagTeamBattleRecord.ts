@@ -1,4 +1,5 @@
-import { Battle, Prisma } from '../../../generated/prisma';
+import { Battle } from '../../../generated/prisma';
+import { encodeBattleLog } from '../battle/battleLogCodec';
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { CombatMessageGenerator } from '../battle/combatMessageGenerator';
@@ -38,7 +39,7 @@ export async function createTagTeamBattleRecord(
 
       // Battle log with all combat events, tag-out, and tag-in events (Requirement 7.1)
       // Convert raw simulator events + tag events into narrative messages
-      battleLog: {
+      ...(await encodeBattleLog({
         events: CombatMessageGenerator.convertTagTeamEvents(result.battleLog, {
           team1Name: result.team1Name,
           team2Name: result.team2Name,
@@ -55,7 +56,7 @@ export async function createTagTeamBattleRecord(
         arenaRadius: result.arenaRadius,
         startingPositions: result.startingPositions,
         endingPositions: result.endingPositions,
-      } as unknown as Prisma.InputJsonValue,
+      })),
       durationSeconds: result.durationSeconds,
 
       // Economic data (placeholder)

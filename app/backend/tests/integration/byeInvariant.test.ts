@@ -33,6 +33,7 @@ import {
 import { getParticipationReward } from '../../src/utils/economyFormulas';
 import { calculateTournamentParticipationReward } from '../../src/utils/tournamentRewards';
 import { useFinancialCaptureTestEnvironment } from '../financialCaptureTestHelper';
+import { readBattleLogFixture } from '../helpers/battleLogFixture';
 
 useFinancialCaptureTestEnvironment();
 
@@ -217,7 +218,7 @@ describe('Bye_Invariant (Spec #49)', () => {
         include: { participants: true, summary: true },
       });
       expect(battle).not.toBeNull();
-      expect((battle!.battleLog as { isByeMatch?: boolean }).isByeMatch).toBe(true);
+      expect((readBattleLogFixture(battle!) as { isByeMatch?: boolean }).isByeMatch).toBe(true);
       expect(battle!.durationSeconds).toBe(BYE_BATTLE_DURATION_SECONDS);
       expect(battle!.loserReward).toBe(0);
 

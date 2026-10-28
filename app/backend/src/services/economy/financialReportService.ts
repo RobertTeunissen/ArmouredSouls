@@ -5,6 +5,7 @@
  */
 
 import prisma from '../../lib/prisma';
+import { BATTLE_LOG_OMIT } from '../battle/battleLogCodec';
 import { AuthError, AuthErrorCode } from '../../errors/authErrors';
 import {
   generateFinancialReport,
@@ -59,6 +60,7 @@ export async function getDailyFinancialReport(userId: number) {
         createdAt: { gte: sevenDaysAgo },
         participants: { some: { robotId: { in: robotIds } } },
       },
+      omit: BATTLE_LOG_OMIT,
       include: {
         participants: { where: { robotId: { in: robotIds } }, select: { robotId: true } },
       },

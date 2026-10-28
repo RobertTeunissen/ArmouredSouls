@@ -128,6 +128,21 @@ export interface KothLogStorage {
   sampled: boolean;
 }
 
+/**
+ * Uncompressed descriptor stored in `battles.battle_log_meta` next to the
+ * zstd-compressed log (`battle_log_zst`). Small on purpose: SQL reads it
+ * (e.g. the admin log status) without touching the compressed bytes.
+ */
+export interface BattleLogMeta {
+  codec: 'zstd';
+  /** zstd compression level used for this log. */
+  level: number;
+  /** UTF-8 byte length of the log's JSON before compression. */
+  rawBytes: number;
+  /** Copied from the log for KotH / Grand Melee; absent for other modes. */
+  storage?: KothLogStorage;
+}
+
 export interface KothBattleLogData {
   events: NarrativeEvent[];
   detailedCombatEvents: unknown[];

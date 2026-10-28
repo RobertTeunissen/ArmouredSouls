@@ -8,6 +8,7 @@ import stablesRoutes from '../src/routes/stables';
 import authRoutes from '../src/routes/auth';
 import { errorHandler } from '../src/middleware/errorHandler';
 import { SENSITIVE_ROBOT_FIELDS } from '../src/routes/robots';
+import { battleLogFixture } from './helpers/battleLogFixture';
 
 dotenv.config();
 
@@ -285,7 +286,7 @@ describe('Stables API - GET /api/stables/:userId', () => {
           battleType: 'league_1v1',
           leagueType: 'bronze',
           durationSeconds: 30,
-          battleLog: { events: [] },
+          ...battleLogFixture({ events: [] }),
           participants: {
             create: [
               { robotId: ours.id, team: 1, credits: 0, eloBefore: 1200, eloAfter: 1200, finalHP: 50 },

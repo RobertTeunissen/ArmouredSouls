@@ -24,6 +24,7 @@ import { enterRobotStanding, enterTeamStanding } from '../helpers/standings';
 import { performAccountReset } from '../../src/services/common/resetService';
 import { getMatchHistory, getBattleLog } from '../../src/services/match/matchHistoryService';
 import { getAdminBattleList, getAdminBattleDetail } from '../../src/services/admin/battles';
+import { battleLogFixture } from '../helpers/battleLogFixture';
 
 const SUFFIX = randomUUID().slice(0, 8);
 const SEASON_NUMBER = 92940 + Math.floor(Math.random() * 1000);
@@ -61,7 +62,7 @@ async function createBattle(spec: BattleSpec): Promise<number> {
       durationSeconds: 30,
       winnerReward: 1000,
       loserReward: 500,
-      battleLog: { events: [] },
+      ...battleLogFixture({ events: [] }),
       createdAt: ONE_HOUR_AGO,
       participants: {
         create: spec.participants.map((p) => ({

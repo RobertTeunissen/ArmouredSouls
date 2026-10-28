@@ -62,6 +62,7 @@ jest.mock('../../../../src/services/standings/standingsService', () => ({
 }));
 
 import { resolveByeEvent } from '../../../../src/services/battle/byeResolutionService';
+import { readBattleLogFixture } from '../../../helpers/battleLogFixture';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -140,7 +141,7 @@ describe('the Bye_Invariant holds in every mode', () => {
     // One battles row, flagged as a bye.
     expect(mockBattleCreate).toHaveBeenCalledTimes(1);
     const battleData = mockBattleCreate.mock.calls[0][0].data;
-    expect(battleData.battleLog.isByeMatch).toBe(true);
+    expect(readBattleLogFixture(battleData)?.isByeMatch).toBe(true);
     expect(battleData.loserReward).toBe(0);
 
     // One participant row per real robot, all inert, HP untouched.

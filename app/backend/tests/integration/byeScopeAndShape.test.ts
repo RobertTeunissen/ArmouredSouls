@@ -19,6 +19,7 @@ import {
 import { resolveRobotIdsForEvent } from '../../src/services/economy/repairScope';
 import { resolveOutstandingEventsForRobot } from '../../src/services/scheduling/eventScheduleScope';
 import { useFinancialCaptureTestEnvironment } from '../financialCaptureTestHelper';
+import { readBattleLogFixture } from '../helpers/battleLogFixture';
 
 useFinancialCaptureTestEnvironment();
 
@@ -170,7 +171,7 @@ describe('Bye record shape, creation and scoping (Spec #49)', () => {
         expect(r.summary).not.toBeNull();
         expect(r.summary!.hasData).toBe(false);
         expect(r.summary!.totalEvents).toBe(0);
-        expect((r.battleLog as { isByeMatch?: boolean }).isByeMatch).toBe(true);
+        expect((readBattleLogFixture(r) as { isByeMatch?: boolean }).isByeMatch).toBe(true);
       }
     });
   });

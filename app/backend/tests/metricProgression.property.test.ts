@@ -11,6 +11,7 @@ import prisma from '../src/lib/prisma';
 import fc from 'fast-check';
 import { robotPerformanceService, RobotMetric } from '../src/services/analytics/robotPerformanceService';
 import { cleanupTestData } from './cleanupHelper';
+import { battleLogFixture } from './helpers/battleLogFixture';
 
 
 describe('Metric Progression Property-Based Tests', () => {
@@ -350,7 +351,7 @@ describe('Metric Progression Property-Based Tests', () => {
                 winnerId: eloChange > 0 ? robotId : (eloChange < 0 ? robotId + 10000 : null),
                 battleType: 'league',
                 leagueType: 'bronze',
-                battleLog: {},
+                ...battleLogFixture({}),
                 durationSeconds: 30,
                 winnerReward: 1000,
                 loserReward: 500,
@@ -563,7 +564,7 @@ async function createBattlesWithELOChanges(
         winnerId: eloChange > 0 ? robotId : (eloChange < 0 ? opponentId : null),
         battleType: 'league',
         leagueType: 'bronze',
-        battleLog: {},
+        ...battleLogFixture({}),
         durationSeconds: 30,
         winnerReward: 1000,
         loserReward: 500,
@@ -604,7 +605,7 @@ async function createBattlesWithFameAwards(
         winnerId: robotId,
         battleType: 'league',
         leagueType: 'bronze',
-        battleLog: {},
+        ...battleLogFixture({}),
         durationSeconds: 30,
         winnerReward: 1000,
         loserReward: 500,
@@ -644,7 +645,7 @@ async function createBattlesWithDamage(
         winnerId: robotId,
         battleType: 'league',
         leagueType: 'bronze',
-        battleLog: {},
+        ...battleLogFixture({}),
         durationSeconds: 30,
         winnerReward: 1000,
         loserReward: 500,
@@ -684,7 +685,7 @@ async function createBattlesWithOutcomes(
         winnerId: isWin ? robotId : opponentId,
         battleType: 'league',
         leagueType: 'bronze',
-        battleLog: {},
+        ...battleLogFixture({}),
         durationSeconds: 30,
         winnerReward: 1000,
         loserReward: 500,
@@ -724,7 +725,7 @@ async function createBattlesWithCredits(
         winnerId: robotId,
         battleType: 'league',
         leagueType: 'bronze',
-        battleLog: {},
+        ...battleLogFixture({}),
         durationSeconds: 30,
         winnerReward: credits,
         loserReward: Math.floor(credits / 2),

@@ -33,6 +33,7 @@ import type { KothPlacement } from '../../src/types';
 import { battlesForRobots, scheduledMatchesForRobots } from '../cleanupHelper';
 import { useFinancialCaptureTestEnvironment } from '../financialCaptureTestHelper';
 import { enterRobotStandings } from '../helpers/standings';
+import { readBattleLogFixture } from '../helpers/battleLogFixture';
 
 useFinancialCaptureTestEnvironment();
 
@@ -279,7 +280,7 @@ async function expectT12(c: PlacementCase, size: number) {
   );
   expect(battle.winnerId).not.toBe(forfeiter);
 
-  const log = battle.battleLog as unknown as {
+  const log = readBattleLogFixture(battle) as unknown as {
     participantCount: number;
     arenaRadius: number;
     kothData: { participantCount: number };
@@ -550,7 +551,7 @@ describe('Grand Melee', () => {
     expect(simulate).toHaveBeenCalledTimes(1);
     expect(simulate.mock.calls[0][0].map((r) => r.id).sort((a, b) => a - b)).toEqual([...field.ready].sort((a, b) => a - b));
     // 16 + (ready.length - 2) * 3 with 8 ready robots, not 37 from 9.
-    expect((battle.battleLog as unknown as { arenaRadius: number }).arenaRadius).toBe(34);
+    expect((readBattleLogFixture(battle) as unknown as { arenaRadius: number }).arenaRadius).toBe(34);
     expect(simulate.mock.calls[0][1]?.arenaRadius).toBe(34);
   });
 

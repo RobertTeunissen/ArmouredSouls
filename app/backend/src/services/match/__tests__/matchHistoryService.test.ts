@@ -9,6 +9,7 @@
 
 import prisma from '../../../lib/prisma';
 import { formatBattleHistoryEntry, getUpcomingMatches } from '../matchHistoryService';
+import { battleLogFixture } from '../../../../tests/helpers/battleLogFixture';
 
 jest.mock('../../../lib/prisma', () => ({
   __esModule: true,
@@ -90,7 +91,7 @@ function makeBattle(overrides: Record<string, unknown> = {}): Record<string, unk
     leagueInstanceId: 'bronze_1',
     tournamentId: null,
     tournamentRound: null,
-    battleLog: { events: [] },
+    ...battleLogFixture({ events: [] }),
     durationSeconds: 120,
     winnerReward: 500,
     loserReward: 100,

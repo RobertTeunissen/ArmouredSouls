@@ -6,6 +6,7 @@
  */
 
 import prisma from '../../lib/prisma';
+import { BATTLE_LOG_OMIT } from '../battle/battleLogCodec';
 import schedulingService from '../scheduling/schedulingService';
 import type { BattleParticipant, Prisma } from '../../../generated/prisma';
 import { KeyedCache } from '../../lib/keyedCache';
@@ -232,6 +233,7 @@ export async function getMatchHistory(
 
   const battles = await prisma.battle.findMany({
     where: { participants: { some: { robotId: robotId } } },
+    omit: BATTLE_LOG_OMIT,
     include: {
       participants: {
         include: { robot: { include: { user: { select: { id: true, username: true } } } } },

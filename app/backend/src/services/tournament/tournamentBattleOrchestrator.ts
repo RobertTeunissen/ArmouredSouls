@@ -10,7 +10,8 @@
  * and follow their existing path.
  */
 
-import { Robot, ScheduledTournamentMatch, Battle, Prisma } from '../../../generated/prisma';
+import { Robot, ScheduledTournamentMatch, Battle } from '../../../generated/prisma';
+import { encodeBattleLog } from '../battle/battleLogCodec';
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { simulateBattle, CombatResult, type RobotWithWeapons } from '../battle/combatSimulator';
@@ -633,7 +634,7 @@ async function createTournamentBattleRecord(
       tournamentRound: round,
 
       // Battle log
-      battleLog: {
+      ...(await encodeBattleLog({
         events: battleLog,
         isTournament: true,
         round,
@@ -644,7 +645,7 @@ async function createTournamentBattleRecord(
         arenaRadius: combatResult.arenaRadius,
         startingPositions: combatResult.startingPositions,
         endingPositions: combatResult.endingPositions,
-      } as unknown as Prisma.InputJsonValue,
+      })),
       durationSeconds: combatResult.durationSeconds,
 
       // Economic data

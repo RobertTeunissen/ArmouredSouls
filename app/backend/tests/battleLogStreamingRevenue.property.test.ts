@@ -20,6 +20,7 @@ import cors from 'cors';
 import matchesRoutes from '../src/routes/matches';
 import jwt from 'jsonwebtoken';
 import { errorHandler } from '../src/middleware/errorHandler';
+import { battleLogFixture } from './helpers/battleLogFixture';
 
 /**
  * Hand reference for the v2 streaming formula (#524):
@@ -115,7 +116,7 @@ async function createBattleWithStreamingRevenue(
       durationSeconds: 30,
       battleType: 'league_1v1',
       leagueType: 'bronze',
-      battleLog: { events: [] },
+      ...battleLogFixture({ events: [] }),
     },
   });
 

@@ -11,7 +11,8 @@
  * @module services/team-battle/teamBattleOrchestrator
  */
 
-import { Prisma, StandingsMode, MatchType, Robot } from '../../../generated/prisma';
+import { StandingsMode, MatchType, Robot } from '../../../generated/prisma';
+import { encodeBattleLog } from '../battle/battleLogCodec';
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { RobotWithWeapons } from '../battle/combatSimulator';
@@ -469,6 +470,8 @@ async function executeSingleTeamBattle(
   );
 
   // R7.11: Use Prisma interactive transaction for reward distribution
+  // Compressed before the transaction so zstd time is not spent holding it.
+  const encodedLog = await encodeBattleLog(buildBattleLog(battleResult, teamSize));
   const battle = await runFinancialWriteTransaction(async (tx, financialCycleNumber) => {
     // Create Battle record
     const battleRecord = await tx.battle.create({
@@ -482,7 +485,7 @@ async function executeSingleTeamBattle(
         winnerReward: 0, // Updated below
         loserReward: 0,  // Updated below
 
-        battleLog: buildBattleLog(battleResult, teamSize) as unknown as Prisma.InputJsonValue,
+        ...encodedLog,
       },
     });
 
