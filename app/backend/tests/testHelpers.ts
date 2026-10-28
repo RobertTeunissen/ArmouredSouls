@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import prisma from '../src/lib/prisma';
 import bcrypt from 'bcrypt';
+import { battleLogFixture } from './helpers/battleLogFixture';
 
 
 /**
@@ -137,7 +138,7 @@ export async function createTestBattle(opts: {
       winnerReward: opts.winnerReward ?? 1000,
       loserReward: opts.loserReward ?? 500,
       durationSeconds: opts.durationSeconds ?? 30,
-      battleLog: opts.battleLog || { events: [] },
+      ...battleLogFixture(opts.battleLog || { events: [] }),
       participants: {
         create: [
           {

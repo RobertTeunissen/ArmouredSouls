@@ -136,8 +136,10 @@ app.get('/api/health', async (req, res) => {
   const modules = checkCriticalModules();
 
   // Disk threshold alerts to Discord come only from app/scripts/disk-monitor.sh
-  // (hourly cron, 4-hour cooldown). This endpoint reports disk status but never
-  // alerts, so the same breach is not announced twice.
+  // (cron, 4-hour cooldown). This endpoint reports disk status in its body but
+  // never alerts and never fails on disk: a full-ish disk is not an outage, and
+  // returning 503 for it made uptime monitors report the site DOWN alongside the
+  // disk alert. Only an unreachable database makes the service unhealthy.
 
   let dbConnected = true;
   try {
@@ -146,7 +148,7 @@ app.get('/api/health', async (req, res) => {
     dbConnected = false;
   }
 
-  const isHealthy = dbConnected && disk.status !== 'critical';
+  const isHealthy = dbConnected;
 
   res.status(isHealthy ? 200 : 503).json({
     status: isHealthy ? 'ok' : 'error',

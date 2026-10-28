@@ -215,6 +215,8 @@ pm2 save
 
 If a deployment breaks the application:
 
+> Rolling back past the zstd combat-log release (28 Oct 2026) is safe for data, but the older code only reads the jsonb `battle_log` column: logs written by the newer code (in `battle_log_zst`) show as "no log", and its retention job does not clear them, until you redeploy the newer code. They are not lost.
+
 ### 1. Stop the backend
 
 ```bash
@@ -242,8 +244,9 @@ ls -lht /opt/armouredsouls/backups/ /opt/armouredsouls/backups/daily/
 /opt/armouredsouls/scripts/restore.sh /opt/armouredsouls/backups/pre_deploy_TIMESTAMP.dump
 
 # ACC: no pre-deploy backup is made; restore last night's dump (loses the
-# progress since 02:00 UTC)
-/opt/armouredsouls/scripts/restore.sh /opt/armouredsouls/backups/daily/LATEST_BACKUP.sql.gz
+# progress since 02:00 UTC). Nightly dumps are *.sql.zst since 28 Oct 2026;
+# older *.sql.gz dumps restore the same way.
+/opt/armouredsouls/scripts/restore.sh /opt/armouredsouls/backups/daily/LATEST_BACKUP.sql.zst
 ```
 
 The restore script will:

@@ -3,7 +3,10 @@ set -euo pipefail
 
 # ============================================================================
 # Armoured Souls — PostgreSQL Backup Restore
-# Usage: ./restore.sh <backup_file.dump|backup_file.sql.gz>
+# Usage: ./restore.sh <backup_file.dump|backup_file.sql.zst|backup_file.sql.gz>
+#
+# Nightly dumps are zstd'd SQL (`*.sql.zst`) since Oct 2026; older nightly
+# dumps are gzip'd SQL (`*.sql.gz`); pre-deploy dumps are custom format (`*.dump`).
 #
 # Supports two modes:
 #   1. Host pg_restore/psql (if postgresql-client is installed)
@@ -13,7 +16,7 @@ set -euo pipefail
 CONTAINER_NAME="${BACKUP_CONTAINER_NAME:-armouredsouls-db-prod}"
 
 if [ $# -lt 1 ]; then
-  echo "Usage: $0 <backup_file.dump|backup_file.sql.gz>"
+  echo "Usage: $0 <backup_file.dump|backup_file.sql.zst|backup_file.sql.gz>"
   echo ""
   echo "Available backups:"
   ls -lht /opt/armouredsouls/backups/daily/ 2>/dev/null || echo "  No daily backups found"
@@ -57,6 +60,26 @@ if ! command -v pg_restore &> /dev/null; then
     use_docker=true
   else
     echo "ERROR: pg_restore not available on host or in container ${CONTAINER_NAME}"
+    exit 1
+  fi
+fi
+
+# A zstd dump is decompressed on this host (Docker restores too). Check that it
+# can be read BEFORE the backend is stopped and the database dropped: failing
+# afterwards would leave an empty database.
+if [[ "${BACKUP_FILE}" == *.sql.zst ]]; then
+  if ! command -v zstd &> /dev/null; then
+    echo "ERROR: ${BACKUP_FILE} is zstd-compressed and zstd is not installed (sudo apt-get install -y zstd). Nothing was changed."
+    exit 1
+  fi
+  echo "Verifying ${BACKUP_FILE} (zstd -t)..."
+  if ! zstd -q -t -- "${BACKUP_FILE}"; then
+    echo "ERROR: ${BACKUP_FILE} failed zstd verification. Nothing was changed."
+    exit 1
+  fi
+elif [[ "${BACKUP_FILE}" == *.sql.gz ]]; then
+  if ! gzip -t -- "${BACKUP_FILE}"; then
+    echo "ERROR: ${BACKUP_FILE} failed gzip verification. Nothing was changed."
     exit 1
   fi
 fi
@@ -109,10 +132,16 @@ if [[ "${BACKUP_FILE}" == *.dump ]]; then
     PGPASSWORD="${DB_PASS}" pg_restore -h "${DB_HOST}" -p "${DB_PORT}" -U "${DB_USER}" -d "${DB_NAME}" --no-owner --no-acl "${BACKUP_FILE}"
   fi
 else
-  if [ "$use_docker" = true ]; then
-    gunzip -c "${BACKUP_FILE}" | docker exec -i "${CONTAINER_NAME}" psql -U "${DB_USER}" "${DB_NAME}" > /dev/null
+  # Plain SQL dump: zstd (*.sql.zst) or, for older dumps, gzip (*.sql.gz).
+  if [[ "${BACKUP_FILE}" == *.sql.zst ]]; then
+    decompress=(zstd -q -dc -- "${BACKUP_FILE}")
   else
-    gunzip -c "${BACKUP_FILE}" | PGPASSWORD="${DB_PASS}" psql -h "${DB_HOST}" -p "${DB_PORT}" -U "${DB_USER}" "${DB_NAME}" > /dev/null
+    decompress=(gunzip -c -- "${BACKUP_FILE}")
+  fi
+  if [ "$use_docker" = true ]; then
+    "${decompress[@]}" | docker exec -i "${CONTAINER_NAME}" psql -U "${DB_USER}" "${DB_NAME}" > /dev/null
+  else
+    "${decompress[@]}" | PGPASSWORD="${DB_PASS}" psql -h "${DB_HOST}" -p "${DB_PORT}" -U "${DB_USER}" "${DB_NAME}" > /dev/null
   fi
 fi
 

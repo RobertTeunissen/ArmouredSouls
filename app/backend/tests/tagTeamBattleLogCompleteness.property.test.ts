@@ -1,6 +1,7 @@
 import prisma from '../src/lib/prisma';
 import * as fc from 'fast-check';
 import { executeTagTeamBattle } from '../src/services/tag-team/tagTeamBattleOrchestrator';
+import { readBattleLogFixture } from './helpers/battleLogFixture';
 
 /** Helper: Create a 2v2 TeamBattle with members (slot 0 = active, slot 1 = reserve) */
 async function createTagTeamFixture(stableId: number, activeRobotId: number, reserveRobotId: number) {
@@ -305,9 +306,9 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
           });
 
           expect(battle).not.toBeNull();
-          expect(battle!.battleLog).toBeDefined();
+          expect(readBattleLogFixture(battle!)).not.toBeNull();
 
-          const battleLog = battle!.battleLog as any;
+          const battleLog = readBattleLogFixture(battle!) as any;
           expect(battleLog.events).toBeDefined();
           expect(Array.isArray(battleLog.events)).toBe(true);
 
@@ -459,9 +460,9 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
           });
 
           expect(battle).not.toBeNull();
-          expect(battle!.battleLog).toBeDefined();
+          expect(readBattleLogFixture(battle!)).not.toBeNull();
 
-          const battleLog = battle!.battleLog as any;
+          const battleLog = readBattleLogFixture(battle!) as any;
           expect(battleLog.events).toBeDefined();
           expect(Array.isArray(battleLog.events)).toBe(true);
 
@@ -618,9 +619,9 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
           });
 
           expect(battle).not.toBeNull();
-          expect(battle!.battleLog).toBeDefined();
+          expect(readBattleLogFixture(battle!)).not.toBeNull();
 
-          const battleLog = battle!.battleLog as any;
+          const battleLog = readBattleLogFixture(battle!) as any;
           expect(battleLog.events).toBeDefined();
           expect(Array.isArray(battleLog.events)).toBe(true);
 
@@ -778,9 +779,9 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
           });
 
           expect(battle).not.toBeNull();
-          expect(battle!.battleLog).toBeDefined();
+          expect(readBattleLogFixture(battle!)).not.toBeNull();
 
-          const battleLog = battle!.battleLog as any;
+          const battleLog = readBattleLogFixture(battle!) as any;
           expect(battleLog.events).toBeDefined();
           expect(Array.isArray(battleLog.events)).toBe(true);
 
@@ -937,9 +938,9 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
           });
 
           expect(battle).not.toBeNull();
-          expect(battle!.battleLog).toBeDefined();
+          expect(readBattleLogFixture(battle!)).not.toBeNull();
 
-          const battleLog = battle!.battleLog as any;
+          const battleLog = readBattleLogFixture(battle!) as any;
           
           // Property 5: Battle log should have proper structure
           expect(battleLog.events).toBeDefined();

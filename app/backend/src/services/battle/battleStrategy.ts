@@ -29,7 +29,7 @@
  * └─────────────────────────────────────────────────────────────┘
  */
 
-import { Robot, Battle, Prisma } from '../../../generated/prisma';
+import { Robot, Battle } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { CombatEvent } from './combatSimulator';
@@ -44,6 +44,7 @@ import {
   AuditEventExtras,
 } from './battlePostCombat';
 import { getCurrentCycleNumber } from './baseOrchestrator';
+import { encodeBattleLog } from './battleLogCodec';
 
 // ─── Types ───────────────────────────────────────────────────────────
 
@@ -267,6 +268,7 @@ export class BattleProcessor<TMatch = unknown> {
 
     const extraBattleFields = strategy.getExtraBattleFields(simResult, match);
     const battleLog = strategy.buildBattleLog(simResult, participants, match);
+    const encodedLog = await encodeBattleLog(battleLog);
 
     const battle = await prisma.battle.create({
       data: {
@@ -274,7 +276,7 @@ export class BattleProcessor<TMatch = unknown> {
         battleType: strategy.battleType,
         leagueType: strategy.leagueType,
         leagueInstanceId: strategy.leagueInstanceId,
-        battleLog: battleLog as unknown as Prisma.InputJsonValue,
+        ...encodedLog,
         durationSeconds: simResult.durationSeconds,
         winnerReward,
         loserReward,

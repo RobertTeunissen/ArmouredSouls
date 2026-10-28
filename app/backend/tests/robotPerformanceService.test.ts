@@ -9,6 +9,7 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from '@jest/glo
 import prisma from '../src/lib/prisma';
 import { robotPerformanceService } from '../src/services/analytics/robotPerformanceService';
 import { eventLogger } from '../src/services/common/eventLogger';
+import { battleLogFixture } from './helpers/battleLogFixture';
 
 /**
  * Helper to create a battle with BattleParticipant records.
@@ -27,7 +28,7 @@ async function createBattleWithParticipants(opts: {
       winnerId: opts.winnerId,
       battleType: 'league',
       leagueType: 'bronze',
-      battleLog: { events: [] },
+      ...battleLogFixture({ events: [] }),
       durationSeconds: 30,
       winnerReward: opts.winnerId ? opts.robot1Id === opts.winnerId ? opts.robot1.credits : opts.robot2.credits : 0,
       loserReward: opts.winnerId ? opts.robot1Id === opts.winnerId ? opts.robot2.credits : opts.robot1.credits : 500,

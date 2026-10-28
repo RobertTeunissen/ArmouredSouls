@@ -19,7 +19,8 @@
  * @module services/tournament/teamTournamentBattleOrchestrator
  */
 
-import { Tournament, ScheduledTournamentMatch, Prisma } from '../../../generated/prisma';
+import { Tournament, ScheduledTournamentMatch } from '../../../generated/prisma';
+import { BATTLE_LOG_OMIT, encodeBattleLog } from '../battle/battleLogCodec';
 import prisma from '../../lib/prisma';
 import { computeBattleSummary } from '../battle/battleSummaryComputer';
 import { countKillsByRobot } from '../../shared/utils/battleStatistics';
@@ -331,7 +332,7 @@ export async function processTeamTournamentBattle(
       winnerReward: 0, // Rewards handled in Task 5.3
       loserReward: 0,
 
-      battleLog: buildTeamTournamentBattleLog(battleResult, teamSize, tournament) as unknown as Prisma.InputJsonValue,
+      ...(await encodeBattleLog(buildTeamTournamentBattleLog(battleResult, teamSize, tournament))),
     },
   });
 
@@ -556,6 +557,7 @@ async function resumeTeamTournamentBattleFinalization(
 ): Promise<TeamTournamentBattleResult> {
   const battle = await prisma.battle.findUnique({
     where: { id: match.battleId! },
+    omit: BATTLE_LOG_OMIT,
     include: { participants: true },
   });
   const winningSide = battle?.winningSide as 1 | 2 | null;

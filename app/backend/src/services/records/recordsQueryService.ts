@@ -1,4 +1,5 @@
 import prisma from '../../lib/prisma';
+import { BATTLE_LOG_OMIT } from '../battle/battleLogCodec';
 import type { StableType } from '../../../generated/prisma';
 import { getTopModeKills } from '../battle/modeKillsQueries';
 import { getTopRobotsByAllModesBattleCount } from '../robot/all-modes-battle-count';
@@ -222,6 +223,7 @@ export async function fetchUpsetRecords() {
   const upsetBattlesData = upsetBattleIds.length > 0
     ? await prisma.battle.findMany({
         where: { id: { in: upsetBattleIds } },
+        omit: BATTLE_LOG_OMIT,
         include: battleWithParticipantsInclude,
       })
     : [];
@@ -287,6 +289,7 @@ export async function fetchUpsetRecords() {
   const teamUpsetBattles = teamUpsetBattleIds.length > 0
     ? await prisma.battle.findMany({
         where: { id: { in: teamUpsetBattleIds } },
+        omit: BATTLE_LOG_OMIT,
         include: battleWithParticipantsInclude,
       })
     : [];
@@ -616,11 +619,12 @@ async function fetchTeamBattleRecordsForSize(battleType: 'league_2v2' | 'league_
     where: { battleType, winnerId: { not: null }, durationSeconds: { gt: 0 } },
     orderBy: { durationSeconds: 'asc' },
     take: 10,
+    omit: BATTLE_LOG_OMIT,
     include: battleWithParticipantsInclude,
   });
 
-  // 2. Longest survival by a single robot (from battle_summaries — Spec #39)
-  // Falls back to battle_log->'participants' for battles without summaries
+  // 2. Longest survival by a single robot (from battle_summaries — Spec #39;
+  // the combat log is never read here)
   const survivalRows = await prisma.$queryRaw<TeamBattleSurvivalRow[]>`
     SELECT
       b.id AS battle_id,
@@ -676,6 +680,7 @@ async function fetchTeamBattleRecordsForSize(battleType: 'league_2v2' | 'league_
   const decisiveBattles = decisiveBattleIds.length > 0
     ? await prisma.battle.findMany({
         where: { id: { in: decisiveBattleIds } },
+        omit: BATTLE_LOG_OMIT,
         include: battleWithParticipantsInclude,
       })
     : [];
@@ -686,6 +691,7 @@ async function fetchTeamBattleRecordsForSize(battleType: 'league_2v2' | 'league_
     where: { battleType, winnerId: { not: null } },
     orderBy: { durationSeconds: 'desc' },
     take: 10,
+    omit: BATTLE_LOG_OMIT,
     include: battleWithParticipantsInclude,
   });
 

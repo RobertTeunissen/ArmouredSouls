@@ -23,6 +23,7 @@ import {
 } from '../../src/services/admin/battles';
 import { estimateBattleCycle } from '../../src/services/admin/battles/battlePayoutCheck';
 import { getBattleLog } from '../../src/services/match/matchHistoryService';
+import { encodeBattleLog } from '../../src/services/battle/battleLogCodec';
 
 const TAG = `${Date.now().toString().slice(-7)}${Math.floor(Math.random() * 900 + 100)}`;
 const name = (n: string): string => `Bt${n}${TAG}`;
@@ -52,7 +53,7 @@ interface P { robot: string; team: number; credits?: number; streaming?: number;
 
 async function makeBattle(key: string, data: {
   battleType: string; winnerId?: number | null; winningSide?: number | null; durationSeconds: number;
-  participants: P[]; battleLog?: Prisma.InputJsonValue; createdAt?: Date; leagueType?: string;
+  participants: P[]; battleLog?: Prisma.InputJsonValue; legacyBattleLog?: Prisma.InputJsonValue; createdAt?: Date; leagueType?: string;
 }): Promise<number> {
   const battle = await prisma.battle.create({
     data: {
@@ -62,7 +63,9 @@ async function makeBattle(key: string, data: {
       winnerId: data.winnerId ?? null,
       winningSide: data.winningSide ?? null,
       durationSeconds: data.durationSeconds,
-      battleLog: data.battleLog ?? Prisma.DbNull,
+      ...(data.battleLog ? await encodeBattleLog(data.battleLog as object) : {}),
+      // A log written before the zstd codec (jsonb `battle_log`).
+      legacyBattleLog: data.legacyBattleLog ?? Prisma.DbNull,
       ...(data.createdAt ? { createdAt: data.createdAt } : {}),
       participants: {
         create: data.participants.map((p) => ({
@@ -397,5 +400,82 @@ describe('battle-time details and edge outcomes', () => {
     ]);
     const text = await exportBattleText(extra.kothShort);
     expect(text).toContain(`${name('P1')} · placement 1 · tier gold: ₡7,500 × 1.5 × 1 = ₡11,250`);
+  });
+});
+
+// zstd log storage (battle_log_zst + battle_log_meta) next to legacy jsonb logs,
+// and retention clearing both. Runs last: its battles do not change earlier totals.
+describe('combat log storage', () => {
+  const stored: Record<string, number> = {};
+  const kothLog = {
+    events: [{ timestamp: 0, type: 'battle_start', message: 'Zone opens' }],
+    detailedCombatEvents: [
+      { timestamp: 1.5, type: 'attack', attacker: name('A1'), defender: name('G1'), message: 'hit for 9', formulaBreakdown: { calculation: 'Hit: 60 base', components: {}, result: 9 } },
+    ],
+    storage: { formulas: true, sampled: false },
+    placements: [{ robotId: 0, zoneScore: 12, zoneTime: 30, kills: 0, destroyed: false }],
+  };
+
+  beforeAll(async () => {
+    stored.zst = await makeBattle('logZst', { battleType: 'koth', winnerId: robot.A1, durationSeconds: 90, leagueType: 'koth', battleLog: kothLog,
+      participants: [{ robot: 'A1', team: 1, placement: 1 }, { robot: 'G1', team: 1, placement: 2 }] });
+    stored.legacy = await makeBattle('logLegacy', { battleType: 'koth', winnerId: robot.A1, durationSeconds: 90, leagueType: 'koth', legacyBattleLog: kothLog,
+      participants: [{ robot: 'A1', team: 1, placement: 1 }, { robot: 'G1', team: 1, placement: 2 }] });
+    stored.expired = await makeBattle('logExpired', { battleType: 'league_1v1', winnerId: robot.G1, durationSeconds: 30, battleLog: formulaLog,
+      createdAt: new Date(Date.now() - 30 * 86_400_000), participants: [{ robot: 'G1', team: 1 }, { robot: 'G2', team: 2, destroyed: true }] });
+    stored.expiredLegacy = await makeBattle('logExpiredLegacy', { battleType: 'league_1v1', winnerId: robot.G1, durationSeconds: 30, legacyBattleLog: formulaLog,
+      createdAt: new Date(Date.now() - 30 * 86_400_000), participants: [{ robot: 'G1', team: 1 }, { robot: 'G2', team: 2, destroyed: true }] });
+  });
+
+  it('writes the compressed column and a small descriptor, not the legacy jsonb column', async () => {
+    const rows = await prisma.$queryRaw<Array<{ legacy: boolean; zst_bytes: number; meta: { codec: string; rawBytes: number; storage?: unknown } }>>`
+      SELECT battle_log IS NOT NULL AS legacy, octet_length(battle_log_zst) AS zst_bytes, battle_log_meta AS meta
+      FROM battles WHERE id = ${stored.zst}
+    `;
+    expect(rows[0].legacy).toBe(false);
+    expect(rows[0].meta).toMatchObject({ codec: 'zstd', storage: { formulas: true, sampled: false } });
+    expect(rows[0].meta.rawBytes).toBe(Buffer.byteLength(JSON.stringify(kothLog)));
+    expect(rows[0].zst_bytes).toBeGreaterThan(0);
+  });
+
+  it('reads the storage marker from the descriptor for the log status', async () => {
+    const d = await getAdminBattleDetail(stored.zst);
+    expect(d.combatLog).toMatchObject({ available: true, hasFormulas: true, movementSampled: false });
+  });
+
+  it('serves the same log from the compressed and the legacy column', async () => {
+    const fromZst = await getAdminBattleLog(stored.zst);
+    const fromLegacy = await getAdminBattleLog(stored.legacy);
+    expect(fromZst.events).toEqual(kothLog.detailedCombatEvents);
+    expect(fromLegacy.events).toEqual(fromZst.events);
+    expect(fromLegacy.status).toEqual(fromZst.status);
+
+    const playerZst = await getBattleLog(stored.zst) as Record<string, unknown>;
+    const playerLegacy = await getBattleLog(stored.legacy) as Record<string, unknown>;
+    expect(playerZst.playbackAvailable).toBe(true);
+    expect(playerZst.battleLog).toEqual(playerLegacy.battleLog);
+    const events = (playerZst.battleLog as { detailedCombatEvents: Array<Record<string, unknown>> }).detailedCombatEvents;
+    expect(events.some(e => 'formulaBreakdown' in e)).toBe(false);
+  });
+
+  it('retention clears the compressed, descriptor and legacy columns of expired battles only', async () => {
+    const { runBattleLogRetention } = await import('../../src/services/retention/battleLogRetentionService');
+    await runBattleLogRetention();
+    const rows = await prisma.battle.findMany({
+      where: { id: { in: Object.values(stored) } },
+      select: { id: true, battleLogZst: true, battleLogMeta: true, legacyBattleLog: true },
+    });
+    const byId = new Map(rows.map(r => [r.id, r]));
+    for (const id of [stored.expired, stored.expiredLegacy]) {
+      expect(byId.get(id)).toMatchObject({ battleLogZst: null, battleLogMeta: null, legacyBattleLog: null });
+    }
+    expect(byId.get(stored.zst)?.battleLogZst).not.toBeNull();
+    expect(byId.get(stored.legacy)?.legacyBattleLog).not.toBeNull();
+    expect((await getAdminBattleLog(stored.expired)).status.available).toBe(false);
+  });
+
+  it('refuses a corrupt compressed log instead of returning part of it', async () => {
+    await prisma.battle.update({ where: { id: stored.zst }, data: { battleLogZst: new Uint8Array([1, 2, 3, 4]) } });
+    await expect(getAdminBattleLog(stored.zst)).rejects.toMatchObject({ code: 'BATTLE_LOG_UNREADABLE' });
   });
 });

@@ -21,6 +21,7 @@ import { createTagTeamFixture, clearTagTeamCompetition } from '../helpers/tagTea
 import { runTagTeamMatchmaking } from '../../src/services/tag-team/tagTeamMatchmakingService';
 import { executeScheduledTagTeamBattles } from '../../src/services/tag-team/tagTeamBattleOrchestrator';
 import { useFinancialCaptureTestEnvironment } from '../financialCaptureTestHelper';
+import { readBattleLogFixture } from '../helpers/battleLogFixture';
 
 useFinancialCaptureTestEnvironment();
 
@@ -293,7 +294,7 @@ describe('Tag Team Bye-Team Handling Integration Test', () => {
       include: { participants: true },
     });
     const byeBattles = allTagTeamBattles.filter(
-      b => (b.battleLog as { isByeMatch?: boolean } | null)?.isByeMatch === true,
+      b => (readBattleLogFixture(b) as { isByeMatch?: boolean } | null)?.isByeMatch === true,
     );
 
     expect(byeBattles.length).toBeGreaterThan(0);
@@ -364,7 +365,7 @@ describe('Tag Team Bye-Team Handling Integration Test', () => {
       include: { participants: true },
     });
     const byeBattles = allTagTeamBattles.filter(
-      b => (b.battleLog as { isByeMatch?: boolean } | null)?.isByeMatch === true,
+      b => (readBattleLogFixture(b) as { isByeMatch?: boolean } | null)?.isByeMatch === true,
     );
 
     // The bye must exist. The early return that used to hide its absence is gone.

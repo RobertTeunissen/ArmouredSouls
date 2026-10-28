@@ -6,6 +6,7 @@
 
 import { Robot, TeamBattle } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
+import { BATTLE_LOG_OMIT } from '../battle/battleLogCodec';
 import logger from '../../config/logger';
 import {
   logBattleAuditEvent,
@@ -427,6 +428,7 @@ export async function updateTagTeamBattleResults(
   
   const battle = await prisma.battle.findUnique({
     where: { id: result.battleId },
+    omit: BATTLE_LOG_OMIT,
   });
 
   if (battle) {

@@ -9,6 +9,7 @@ import {
   performAccountReset,
   getResetHistory,
 } from '../src/services/common/resetService';
+import { battleLogFixture } from './helpers/battleLogFixture';
 
 /**
  * Reset Service Tests
@@ -227,7 +228,7 @@ describe('ResetService', () => {
         data: {
           battleType: 'league',
           leagueType: 'bronze',
-          battleLog: {},
+          ...battleLogFixture({}),
           durationSeconds: 60,
           createdAt: new Date(), // Just now
           // Combatants are battle_participants rows since Spec #43 dropped
@@ -271,7 +272,7 @@ describe('ResetService', () => {
         data: {
           battleType: 'league',
           leagueType: 'bronze',
-          battleLog: {},
+          ...battleLogFixture({}),
           durationSeconds: 60,
           createdAt: new Date(Date.now() - 10 * 60 * 1000), // 10 minutes ago
           participants: {

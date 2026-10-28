@@ -142,6 +142,13 @@ jest.mock('../src/services/battle/combatMessageGenerator', () => ({
   },
 }));
 
+// Real zstd runs on libuv's thread pool, which fake timers cannot fast-forward:
+// `runAllTimersAsync` would return while a compression is in flight and the
+// throttle delays after it would then elapse in real time.
+jest.mock('../src/services/battle/battleLogCodec', () => ({
+  encodeBattleLog: jest.fn(async () => ({ battleLogZst: new Uint8Array(), battleLogMeta: {} })),
+}));
+
 jest.mock('../src/services/battle/battlePostCombat', () => ({
   logBattleAuditEvent: jest.fn().mockResolvedValue(undefined),
   checkAndAwardAchievements: jest.fn().mockResolvedValue([]),

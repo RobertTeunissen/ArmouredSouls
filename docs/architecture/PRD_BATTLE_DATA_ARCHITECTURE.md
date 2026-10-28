@@ -9,6 +9,7 @@
 ---
 
 ## Version History
+- v3.6 (October 28, 2026) — "Combat Log Storage": logs are stored zstd-compressed in `battle_log_zst` with a `battle_log_meta` descriptor, through `battleLogCodec.ts`; the jsonb `battle_log` is a read-only fallback until its last log expires.
 - v3.5 (October 25, 2026) — Added "Battle-Time Builds" (`battle_participant_builds`).
 - v3.4 (October 25, 2026) — Added "Combat Log Storage": KotH and Grand Melee logs keep formula breakdowns (`battleLog.storage` marker), the player battle log no longer sends them, and the admin Battles page reads them.
 - v3.3 (October 19, 2026) — Added "Robot Deletion and Battle Retention": account reset and the Generated_Stable purge delete only the deleted robots' participant rows (#294).
@@ -169,14 +170,27 @@ A bye or walkover whose only participant was a deleted robot ends with zero part
 
 ## Combat Log Storage
 
-`battles.battle_log` holds the replay and debug data; the nightly retention job (`services/retention/battleLogRetentionService.ts`, 01:30 UTC) sets it to NULL after `BATTLE_LOG_RETENTION_DAYS` (7). Everything permanent lives in `battle_participants` and `battle_summaries`.
+The combat log holds the replay and debug data. The nightly retention job (`services/retention/battleLogRetentionService.ts`, 01:30 UTC) clears it after `BATTLE_LOG_RETENTION_DAYS` (7). Everything permanent lives in `battle_participants` and `battle_summaries`.
+
+### Storage format (zstd)
+
+| Column | Prisma field | Contents |
+|---|---|---|
+| `battle_log_zst` (bytea, `STORAGE EXTERNAL`) | `battleLogZst` | One zstd frame (level 6, content checksum) of the log's JSON |
+| `battle_log_meta` (jsonb) | `battleLogMeta` | Small uncompressed descriptor `BattleLogMeta`: `codec`, `level`, `rawBytes`, and the KotH / Grand Melee `storage` marker |
+| `battle_log` (jsonb) | `legacyBattleLog` | Logs written before the codec (28 Oct 2026). Read-only fallback; dropped once its last log passes the retention window |
+
+- **One codec.** Battle code writes and reads logs only through `services/battle/battleLogCodec.ts`: writers spread `await encodeBattleLog(log)` into the battle's `data`; readers select `BATTLE_LOG_SELECT` and call `decodeBattleLog`, which prefers `battle_log_zst` and falls back to `battle_log`. A corrupt frame throws `BATTLE_LOG_UNREADABLE` (500); a log is never returned in part.
+- **Reads that don't need the log** pass `omit: BATTLE_LOG_OMIT` (match history, robot match list, records, financial report), so they don't load the bytes.
+- **No SQL on log content.** The compressed bytes can't be queried with jsonb operators. SQL that needs a log fact reads `battle_log_meta` (the admin log status reads `battle_log_meta -> 'storage'`), permanent columns, or `battle_summaries`. To inspect a log by hand, use the admin export (`/api/admin/battles/:id/export?format=json`).
+- **Why.** Postgres' pglz TOAST compression looks back only 4 KB, so it reached ~3.3× on full KotH / Grand Melee logs and ~7× on 1v1 logs. zstd level 6 measured on ACC (28 Oct 2026): Grand Melee ×28, KotH ×20, 1v1 ×14 against raw JSON, at ~50 ms per KotH / Grand Melee log and ~12 ms per 1v1 log on the 2-core host. Compression runs on libuv's thread pool, and team battles compress before their financial transaction opens.
 
 | Modes | `detailedCombatEvents` |
 |---|---|
 | League 1v1, 2v2, 3v3, Tag Team, all tournaments | Every simulator event, with `formulaBreakdown` (calculation text, components, result) on attack, critical, miss, counter and malfunction events, and positions |
 | KotH, Grand Melee | `buildKothBattleLog` (`services/battle/combat-messages/kothEventConverter.ts`) under `KOTH_LOG_STORAGE`: every event with its formula breakdown, like the other modes. The log records this in `battleLog.storage = { formulas, sampled }`; logs without the marker predate it (sampled by `sampleEventsForStorage`, no formulas) |
 
-Storing every KotH / Grand Melee event measured ×4–5 the size of the old log (Grand Melee ~20 MB raw JSON per battle; ≈ +5.5 GB for the 7-day window on ACC). If disk runs short, `sampled: true` in `KOTH_LOG_STORAGE` thins movement, range-transition and shield-regen events again (≈ +0.9 GB with formulas kept).
+Storing every KotH / Grand Melee event was estimated at ×4–5 the old log; on ACC the first full day (27 Oct 2026) measured ×9 for Grand Melee (8.8 MB stored, ~28 MB raw JSON per battle) and ×3.6 for KotH under pglz, taking stored logs from ~1.1 to 2.85 GB per day. zstd storage (above) keeps every event and formula at about a quarter of that (≈ 0.7 GB per day at 27 Oct volumes, estimated from the measured ratios). `sampled: true` in `KOTH_LOG_STORAGE` still thins movement, range-transition and shield-regen events if it is ever needed.
 
 ---
 
@@ -203,7 +217,7 @@ Key fields on Battle:
 - `winnerId` — winner's robot ID (null for draws; team ID for tag team)
 - `battleType` — `"league"`, `"tournament"`, `"tag_team"`, `"koth"`
 - `leagueType` — tier name (e.g., `"bronze"`, `"silver"`)
-- `battleLog` — JSON combat event log
+- `battleLogZst` / `battleLogMeta` — zstd-compressed combat event log and its descriptor (see "Combat Log Storage"); `legacyBattleLog` for logs written before 28 Oct 2026
 - `durationSeconds` — battle length
 - `winnerReward`, `loserReward` — aggregate credit awards
 - Tag team fields: `team1ActiveRobotId`, `team1ReserveRobotId`, etc.

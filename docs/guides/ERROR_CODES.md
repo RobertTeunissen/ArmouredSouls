@@ -82,6 +82,7 @@ Example with details:
 | `BATTLE_ALREADY_COMPLETED` | 400 | Battle has already finished |
 | `BATTLE_SIMULATION_FAILED` | 400 | Battle simulation encountered an error |
 | `ROBOT_NOT_BATTLE_READY` | 500 | Internal: a robot without a main weapon reached the combat simulator. The battle-time readiness check forfeits such robots first, so this only fires if that check was bypassed; the match is cancelled by the per-match failure policy. `details.robotIds` lists the weaponless robots. Never returned to players |
+| `BATTLE_LOG_UNREADABLE` | 500 | Internal: a battle's stored combat log (`battle_log_zst`) could not be decompressed or parsed. `details.battleId` names the battle. The log is never partially returned |
 
 ### Economy Errors
 

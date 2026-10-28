@@ -16,6 +16,7 @@ import { cycleSnapshotService } from '../src/services/cycle/cycleSnapshotService
 import { eventLogger } from '../src/services/common/eventLogger';
 import prisma from '../src/lib/prisma';
 import { battlesForRobots } from './cleanupHelper';
+import { battleLogFixture } from './helpers/battleLogFixture';
 
 /**
  * Every analytics route now sits behind `authenticateToken`, and the
@@ -611,7 +612,7 @@ describe('Analytics API - Robot Performance Endpoint', () => {
           winnerId: i % 2 === 0 ? testRobotId : testRobotId + 1,
           battleType: 'league',
           leagueType: 'bronze',
-          battleLog: {},
+          ...battleLogFixture({}),
           winnerReward: 100,
           loserReward: 50,
           durationSeconds: 60,
@@ -1149,7 +1150,7 @@ describe('Analytics API - Robot ELO Progression Endpoint', () => {
             durationSeconds: 60,
             battleType: 'league',
             leagueType: 'bronze',
-            battleLog: {},
+            ...battleLogFixture({}),
             createdAt: new Date(Date.now() + cycleNumber * 1000),
             participants: {
               create: [
@@ -1496,7 +1497,7 @@ describe('Analytics API - Robot ELO Progression Endpoint', () => {
         durationSeconds: 60,
         battleType: 'league',
         leagueType: 'bronze',
-        battleLog: {},
+        ...battleLogFixture({}),
         createdAt: new Date(Date.now() + testCycleStart * 1000),
         participants: {
           create: [
@@ -1616,7 +1617,7 @@ describe('Analytics API - Robot Metric Progression Endpoint', () => {
             durationSeconds: 60,
             battleType: 'league',
             leagueType: 'bronze',
-            battleLog: {},
+            ...battleLogFixture({}),
             createdAt: new Date(Date.now() + cycleNumber * 1000),
             participants: {
               create: [

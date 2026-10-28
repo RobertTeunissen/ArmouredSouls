@@ -1,7 +1,7 @@
 // ─── KotH Battle Orchestration ──────────────────────────────────────
 
 import prisma from '../../lib/prisma';
-import { Prisma } from '../../../generated/prisma';
+import { encodeBattleLog } from '../battle/battleLogCodec';
 import logger from '../../config/logger';
 import { resolveBelowMinimumField, resolvePlacementBye } from '../scheduling/thinInstanceByes';
 import { handleMatchFailure } from '../battle/matchFailurePolicy';
@@ -383,7 +383,7 @@ async function processKothBattle(
       winnerId: winnerRobot.id,
       battleType: 'koth',
       leagueType: 'koth',
-      battleLog: CombatMessageGenerator.buildKothBattleLog({
+      ...(await encodeBattleLog(CombatMessageGenerator.buildKothBattleLog({
         events: simResult.events,
         participantCount: totalParticipants,
         arenaRadius,
@@ -403,7 +403,7 @@ async function processKothBattle(
           })),
           ...forfeitedLogPlacements,
         ],
-      }) as unknown as Prisma.InputJsonValue,
+      }))),
       durationSeconds: simResult.durationSeconds,
       winnerReward: 0,
       loserReward: 0,

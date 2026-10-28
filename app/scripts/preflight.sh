@@ -71,8 +71,8 @@ if acquire_backup_lock 0; then
   remove_partial_dumps "${BACKUP_DIR}"
   remove_partial_dumps "${BACKUP_DIR}/daily"
   prune_backups "${BACKUP_DIR}" "${PRE_DEPLOY_RETAIN}" 'pre_deploy_*.dump'
-  prune_backups "${BACKUP_DIR}/daily" "${DAILY_RETAIN}" '*.dump' '*.sql.gz'
-  prune_backups "${BACKUP_DIR}/weekly" "${WEEKLY_RETAIN}" '*.dump' '*.sql.gz'
+  prune_backups "${BACKUP_DIR}/daily" "${DAILY_RETAIN}" "${DUMP_GLOBS[@]}"
+  prune_backups "${BACKUP_DIR}/weekly" "${WEEKLY_RETAIN}" "${DUMP_GLOBS[@]}"
   release_backup_lock
 else
   log "A backup is running (lock held by PID $(backup_lock_holder)); skipping backup cleanup"
@@ -155,7 +155,7 @@ BACKUP_HEADROOM_FACTOR="${BACKUP_HEADROOM_FACTOR:-150}"  # percent
 # backups rather than for being short of disk. `|| true` keeps the probe advisory:
 # no backups simply means no estimate, and the guard below is skipped.
 LARGEST_BACKUP_KB=$(
-  { find "${BACKUP_DIR}" -type f \( -name "*.dump" -o -name "*.sql.gz" \) -printf '%s\n' 2>/dev/null || true; } \
+  { find "${BACKUP_DIR}" -type f \( -name "*.dump" -o -name "*.sql.gz" -o -name "*.sql.zst" \) -printf '%s\n' 2>/dev/null || true; } \
     | sort -n | tail -1 | awk '{printf "%d", $1 / 1024}'
 )
 LARGEST_BACKUP_KB="${LARGEST_BACKUP_KB:-0}"

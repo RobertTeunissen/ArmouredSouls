@@ -1,7 +1,8 @@
 /**
  * Battle Log Retention Service (Spec #39)
  *
- * Nightly job that NULLs battle_log for battles older than the retention window.
+ * Nightly job that NULLs the stored combat log (battle_log_zst, battle_log_meta
+ * and the legacy jsonb battle_log) for battles older than the retention window.
  * Runs at 01:30 UTC daily (after settlement, before backup).
  *
  * The summary table preserves all overview data permanently.
@@ -43,10 +44,12 @@ export async function runBattleLogRetention(): Promise<RetentionResult> {
   logger.info(`[retention] Starting battle_log retention (cutoff: ${cutoff.toISOString()}, batch: ${BATCH_SIZE})`);
 
   while (true) {
+    // A log lives in battle_log_zst (+ battle_log_meta) or, for logs written
+    // before the zstd codec, in the legacy jsonb battle_log. Clear all three.
     const batch = await prisma.$queryRaw<{ id: number }[]>`
       SELECT id FROM battles
       WHERE created_at < ${cutoff}
-        AND battle_log IS NOT NULL
+        AND (battle_log_zst IS NOT NULL OR battle_log IS NOT NULL OR battle_log_meta IS NOT NULL)
       ORDER BY id ASC
       LIMIT ${BATCH_SIZE}
     `;
@@ -55,7 +58,8 @@ export async function runBattleLogRetention(): Promise<RetentionResult> {
 
     const ids = batch.map(b => b.id);
     await prisma.$executeRaw`
-      UPDATE battles SET battle_log = NULL WHERE id = ANY(${ids}::int[])
+      UPDATE battles SET battle_log = NULL, battle_log_zst = NULL, battle_log_meta = NULL
+      WHERE id = ANY(${ids}::int[])
     `;
 
     totalProcessed += batch.length;

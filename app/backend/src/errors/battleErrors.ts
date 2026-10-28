@@ -19,6 +19,8 @@ export const BattleErrorCode = {
   BATTLE_SIMULATION_FAILED: 'BATTLE_SIMULATION_FAILED',
   /** A robot without a main weapon reached the simulator (battle-time readiness backstop). */
   ROBOT_NOT_BATTLE_READY: 'ROBOT_NOT_BATTLE_READY',
+  /** A stored combat log could not be decompressed or parsed (corrupt `battle_log_zst`). */
+  BATTLE_LOG_UNREADABLE: 'BATTLE_LOG_UNREADABLE',
 } as const;
 
 export type BattleErrorCodeType = typeof BattleErrorCode[keyof typeof BattleErrorCode];

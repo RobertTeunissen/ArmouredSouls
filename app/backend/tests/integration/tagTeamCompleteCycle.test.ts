@@ -19,6 +19,7 @@ import { executeScheduledTagTeamBattles } from '../../src/services/tag-team/tagT
 import { createTagTeamFixture, clearTagTeamCompetition } from '../helpers/tagTeam';
 import * as robotCalculations from '../../src/utils/robotCalculations';
 import { calculateCombatEffectiveStat } from '../../src/shared/utils/robotStats';
+import { readBattleLogFixture } from '../helpers/battleLogFixture';
 
 describe('Tag Team Complete Cycle Integration Test', () => {
   let testUserIds: number[] = [];
@@ -373,10 +374,10 @@ describe('Tag Team Complete Cycle Integration Test', () => {
 
     // The battle must exist — the early-return that used to hide its absence is gone.
     expect(battle).not.toBeNull();
-    expect(battle!.battleLog).toBeDefined();
+    expect(readBattleLogFixture(battle!)).not.toBeNull();
     
     // Verify battle log structure
-    const battleLog = battle!.battleLog as any;
+    const battleLog = readBattleLogFixture(battle!) as any;
     expect(battleLog.tagTeamBattle).toBe(true);
     expect(battleLog.events).toBeDefined();
     expect(Array.isArray(battleLog.events)).toBe(true);

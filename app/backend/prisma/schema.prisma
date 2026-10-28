@@ -577,8 +577,16 @@ model Battle {
   tournamentRound Int? @map("tournament_round") // Round number in tournament
 
   // ===== TIME-BASED COMBAT DATA =====
-  battleLog       Json? @map("battle_log") // Nullable: NULLed after 7-day retention window
-  winningSide     Int?  @map("winning_side") @db.SmallInt // 1 = team 1 won, 2 = team 2 won, NULL = draw or 1v1
+  // Combat log, written and read only through services/battle/battleLogCodec.ts.
+  // `battleLogZst` is one zstd frame of the log's JSON; `battleLogMeta` is a small
+  // uncompressed descriptor (codec, level, raw size, KotH/GM storage marker).
+  // `legacyBattleLog` is the pre-zstd jsonb column: read-only fallback until the
+  // last legacy log passes the retention window, then dropped. All three are
+  // NULLed together after the BATTLE_LOG_RETENTION_DAYS window.
+  legacyBattleLog Json?  @map("battle_log")
+  battleLogZst    Bytes? @map("battle_log_zst")
+  battleLogMeta   Json?  @map("battle_log_meta")
+  winningSide     Int?   @map("winning_side") @db.SmallInt // 1 = team 1 won, 2 = team 2 won, NULL = draw or 1v1
   durationSeconds Int   @map("duration_seconds") // Battle length in seconds
 
   // ===== ECONOMIC DATA =====

@@ -175,6 +175,7 @@ describe('getPerformanceContext team-mode outcomes (#531)', () => {
 
     const args = mockBattleFindMany.mock.calls[0][0] as { select: Record<string, unknown> };
     expect(args.select.winningSide).toBe(true);
-    expect(args.select).not.toHaveProperty('battleLog');
+    expect(args.select).not.toHaveProperty('battleLogZst');
+    expect(args.select).not.toHaveProperty('legacyBattleLog');
   });
 });

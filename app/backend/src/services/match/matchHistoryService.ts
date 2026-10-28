@@ -3,6 +3,7 @@ import { Prisma, BattleParticipant, StandingsMode, type StableType } from '../..
 import { getConfig } from '../../config/env';
 import type { KothPlacement } from '../../types';
 import { getNextCronOccurrence } from '../../utils/scheduleUtils';
+import { BATTLE_LOG_OMIT, BATTLE_LOG_SELECT, decodeBattleLog } from '../battle/battleLogCodec';
 import {
   getAwardedByeReward,
   getExpectedByeReward,
@@ -59,6 +60,7 @@ type ActiveTournamentRound = {
 };
 
 type BattleWithFullRelations = Prisma.BattleGetPayload<{
+  omit: typeof BATTLE_LOG_OMIT;
   include: {
     participants: {
       include: { robot: { include: { user: { select: { id: true; username: true; stableName: true } } } } };
@@ -685,6 +687,8 @@ export async function getMatchHistory(params: HistoryParams) {
     prisma.battle.count({ where: whereClause }),
     prisma.battle.findMany({
       where: whereClause,
+      // The history list never reads the combat log (up to ~1 MB compressed per Grand Melee).
+      omit: BATTLE_LOG_OMIT,
       include: {
         participants: {
           include: { robot: { include: { user: { select: { id: true, username: true, stableName: true } } } } },
@@ -892,10 +896,22 @@ export async function formatBattleHistoryEntry(
   return baseData;
 }
 
+/** A robot's KotH zone score from the battle's stored log, or null without one. */
+async function zoneScoreFromStoredLog(battleId: number, robotId: number): Promise<number | null> {
+  const row = await prisma.battle.findUnique({ where: { id: battleId }, select: BATTLE_LOG_SELECT });
+  if (!row) return null;
+  const stored = (await decodeBattleLog(row, battleId))?.placements;
+  const placements = Array.isArray(stored) ? (stored as Array<{ robotId?: unknown; zoneScore?: unknown }>) : [];
+  const entry = placements.find((p) => p.robotId === robotId);
+  return typeof entry?.zoneScore === 'number' ? entry.zoneScore : null;
+}
+
 async function formatKothHistoryEntry(battle: BattleWithFullRelations, baseData: Record<string, unknown>, targetRobotIds: number[]) {
   const userParticipant = battle.participants.find((p) => targetRobotIds.includes(p.robotId));
 
-  // Read zone score from eager-loaded summary (Spec #39), fallback to battle_log for pre-migration battles
+  // Zone score from the permanent summary (Spec #39). Summary writes are
+  // best-effort, so a battle can lack one; then read the stored log, loaded only
+  // for that battle (the history query omits the logs).
   let userZoneScore: number | null = null;
   const summary = (battle as unknown as { summary?: { kothPlacements: unknown } | null }).summary;
   if (summary?.kothPlacements && userParticipant) {
@@ -903,14 +919,8 @@ async function formatKothHistoryEntry(battle: BattleWithFullRelations, baseData:
     const entry = placements.find(p => p.robotId === userParticipant.robotId);
     if (entry) userZoneScore = entry.zoneScore;
   }
-  // Fallback to battle_log if no summary exists
   if (userZoneScore === null && userParticipant) {
-    const battleLogData = battle.battleLog !== null && typeof battle.battleLog === 'object'
-      ? battle.battleLog as Record<string, unknown>
-      : {};
-    const logPlacements = ((battleLogData).placements || []) as Array<{ robotId: number; zoneScore: number }>;
-    const logEntry = logPlacements.find(lp => lp.robotId === userParticipant.robotId);
-    if (logEntry) userZoneScore = logEntry.zoneScore;
+    userZoneScore = await zoneScoreFromStoredLog(battle.id, userParticipant.robotId);
   }
 
   const kothData: Record<string, unknown> = {
@@ -1077,8 +1087,10 @@ export async function getBattleLog(battleId: number) {
     // KotH/bye fallback: use second participant if no team 2 exists
     ?? battle.participants.find(p => p.robotId !== robot1Participant?.robotId);
 
+  const { battleLogZst, legacyBattleLog, ...battleColumns } = battle;
   const battleData = {
-    ...battle,
+    ...battleColumns,
+    battleLog: await decodeBattleLog({ battleLogZst, legacyBattleLog }, battle.id),
     robot1: robot1Participant?.robot ?? null,
     robot2: robot2Participant?.robot ?? null,
   };
@@ -1104,13 +1116,13 @@ export async function getBattleLog(battleId: number) {
     // Admin-only debug fields (formula breakdowns with every roll) are stripped:
     // no player view reads them, and they are the bulk of large logs.
     battleLog:
-      typeof battleData.battleLog === 'object' && battleData.battleLog !== null
+      battleData.battleLog !== null
         ? JSON.parse(
             JSON.stringify(battleData.battleLog, (key, value) =>
               PLAYER_LOG_HIDDEN_FIELDS.has(key) ? undefined : typeof value === 'bigint' ? Number(value) : value,
             ),
           )
-        : battleData.battleLog,
+        : null,
   };
 
   // Pre-computed summary (Spec #39) and the bracket forfeit marker, which the
@@ -1206,11 +1218,8 @@ export async function getBattleLog(battleId: number) {
     baseResponse.winner = battleData.winnerId === team1Id ? 'robot1' : battleData.winnerId === team2Id ? 'robot2' : null;
   } else if (battleData.battleType === 'league_2v2' || battleData.battleType === 'league_3v3' || battleData.battleType === 'tournament_2v2' || battleData.battleType === 'tournament_3v3') {
     // For team battles, winnerId stores the winning team ID (not a robot ID).
-    // Use the winning_side column (populated at battle creation) to determine winner.
-    // Falls back to battleLog.winningSide for battles created before Spec #39.
-    const winningSide = battleData.winningSide
-      ?? (battleData.battleLog as unknown as { winningSide?: 1 | 2 | null })?.winningSide
-      ?? null;
+    // Use the permanent winning_side column (populated at battle creation, Spec #39).
+    const winningSide = battleData.winningSide ?? null;
     if (winningSide === 1) {
       baseResponse.winner = 'robot1';
     } else if (winningSide === 2) {

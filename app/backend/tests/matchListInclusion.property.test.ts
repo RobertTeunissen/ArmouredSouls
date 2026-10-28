@@ -6,6 +6,7 @@ import cors from 'cors';
 import jwt from 'jsonwebtoken';
 import matchesRoutes from '../src/routes/matches';
 import { errorHandler } from '../src/middleware/errorHandler';
+import { battleLogFixture } from './helpers/battleLogFixture';
 
 const app = express();
 
@@ -347,7 +348,7 @@ describe('Feature: tag-team-matches, Property 25: Match List Inclusion', () => {
                 durationSeconds: 30,
                 winnerReward: 1000,
                 loserReward: 500,
-                battleLog: {},
+                ...battleLogFixture({}),
                 participants: {
                   create: [
                     { robotId: robots[i * 2].id, team: 1, credits: 1000, eloBefore: 1200, eloAfter: 1216, damageDealt: 100, finalHP: 50, fameAwarded: 10, prestigeAwarded: 5 },
@@ -370,7 +371,7 @@ describe('Feature: tag-team-matches, Property 25: Match List Inclusion', () => {
                 durationSeconds: 45,
                 winnerReward: 2000,
                 loserReward: 1000,
-                battleLog: {},
+                ...battleLogFixture({}),
                 participants: {
                   create: [
                     { robotId: robots[i * 4].id, team: 1, credits: 2000, eloBefore: 1200, eloAfter: 1216, damageDealt: 150, finalHP: 50, fameAwarded: 15, prestigeAwarded: 8 },

@@ -13,6 +13,7 @@ import { generateFinancialReport } from '../src/utils/economyCalculations';
 import { getDailyFinancialReport } from '../src/services/economy/financialReportService';
 import { calculateStreamingRevenue } from '../src/services/economy/streamingRevenueService';
 import { enterRobotStanding } from './helpers/standings';
+import { battleLogFixture } from './helpers/battleLogFixture';
 
 describe('Financial Report - Streaming Revenue Integration', () => {
   let testUserIds: number[] = [];
@@ -72,7 +73,7 @@ describe('Financial Report - Streaming Revenue Integration', () => {
         winnerId,
         battleType: 'league_1v1',
         leagueType: 'bronze',
-        battleLog: {},
+        ...battleLogFixture({}),
         durationSeconds: 60,
         winnerReward: 7500,
         loserReward: 1500,

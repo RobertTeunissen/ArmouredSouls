@@ -177,9 +177,15 @@ list_custom_dump() {
 
 # --- Retention ---------------------------------------------------------------
 
+# Daily / weekly dump files, newest format last: zstd'd SQL (`*.sql.zst`, since
+# Oct 2026), the gzip'd SQL it replaced (`*.sql.gz`) and custom-format dumps.
+# Retention counts them together, so the first zstd dump replaces the last
+# gzip one.
+DUMP_GLOBS=('*.dump' '*.sql.gz' '*.sql.zst')
+
 # prune_backups DIR RETAIN PATTERN... — delete all but the RETAIN newest files
 # (by modification time) directly in DIR that match any PATTERN, and log each
-# deletion. `*.partial` files never match `*.dump` / `*.sql.gz`.
+# deletion. `*.partial` files never match the DUMP_GLOBS patterns.
 prune_backups() {
   local dir="$1"
   local retain="$2"
