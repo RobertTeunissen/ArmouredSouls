@@ -298,6 +298,9 @@ export async function executeSettlement(): Promise<JobContext> {
         ? ` — Season ${advanced.seasonNumber} now competitive`
         : ''),
     );
+    // The rollover deleted every generated stable: rebuild the population now,
+    // before competitive cycle 1 creates the first tournaments. Non-fatal.
+    await topUpGeneratedStablesStep('Daily Settlement (preparation)');
     // Spec #55 R7.3: Automaton turns for this preparation day. Non-fatal.
     await runAutomatonTurnStep({
       trigger: 'preparation',
@@ -382,15 +385,10 @@ export async function executeSettlement(): Promise<JobContext> {
   // (Step 6, the Practice Arena counter flush, is gone: usage is recorded per
   // request in practice_arena_events.)
 
-  // Step 7: Auto-generate users if needed
-  logger.info('Daily Settlement: Step 7 — Auto-generating users');
-  try {
-    const { generateBattleReadyUsers } = await import('../../utils/userGeneration');
-    const userGenSummary = await generateBattleReadyUsers(closingCycle);
-    logger.info(`Daily Settlement: Generated ${userGenSummary.usersCreated} users, ${userGenSummary.robotsCreated} robots`);
-  } catch (userGenError) {
-    logger.error(`Daily Settlement: Failed to auto-generate users — ${userGenError instanceof Error ? userGenError.message : String(userGenError)}`);
-  }
+  // Step 7: Top up the generated stables to their target (normally nothing to
+  // do: the first preparation day after a rollover built them).
+  logger.info('Daily Settlement: Step 7 — Topping up generated stables');
+  await topUpGeneratedStablesStep('Daily Settlement');
 
   logger.info(`Daily Settlement: Completed — passive income ₡${totalPassiveIncome.toLocaleString()}, operating costs ₡${totalOperatingCosts.toLocaleString()}, ${endOfCycleUserCount} users processed`);
 
@@ -458,6 +456,23 @@ export async function executeSettlement(): Promise<JobContext> {
   }
 
   return { jobName: 'settlement', cycleNumber: closingCycle };
+}
+
+/**
+ * Top up the generated stables to `GENERATED_STABLE_TARGET`. Non-fatal: a
+ * failure is logged and settlement continues (the next settlement retries).
+ */
+async function topUpGeneratedStablesStep(label: string): Promise<void> {
+  try {
+    const { topUpGeneratedStables } = await import('../../utils/userGeneration');
+    const summary = await topUpGeneratedStables();
+    logger.info(
+      `${label}: generated stables ${summary.existingBefore} → ${summary.existingBefore + summary.usersCreated} ` +
+      `(target ${summary.target}; created ${summary.usersCreated} stables, ${summary.robotsCreated} robots)`,
+    );
+  } catch (error) {
+    logger.error(`${label}: Failed to top up generated stables — ${error instanceof Error ? error.message : String(error)}`);
+  }
 }
 
 /**

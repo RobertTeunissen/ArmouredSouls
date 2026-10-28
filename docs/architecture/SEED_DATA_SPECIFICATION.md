@@ -2,9 +2,9 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Technical Specification  
-**Last Updated**: October 27, 2026 (WimpBot test users development-only)  
+**Last Updated**: October 28, 2026 (generated stables: fixed filler population)  
 **Status**: Current Implementation  
-**Version**: v1.7
+**Version**: v1.8
 
 ---
 
@@ -33,6 +33,7 @@ This document specifies the complete seed data loaded into the database during i
 - **v1.5** (Mar 21, 2026): Weapon roster expansion from 26 to 47 weapons — added 21 new weapons filling all empty grid slots, reclassified Laser Rifle (now 2H Short Mid) and Assault Rifle (now 1H Short Premium), acknowledged Battle Axe tier correction to Luxury, added `rangeBand` field to all weapons, simplified range classification logic
 - **v1.6** (Mar 26, 2026): Replaced archetype-based user generation with tiered stable system (WimpBot/AverageBot/ExpertBot), removed player1-5 accounts, updated admin to ₡3M/prestige 0, expanded WimpBot population to 200 users with new naming format
 - **v1.7** (Oct 27, 2026): The 200 WimpBot test users (`test_user_001`–`200`) are seeded in development mode only; acceptance seeds just the admin. Removed the team-tournament seeding step: it needed teams owned by `test_user_` stables, which the seed never created, so it always skipped.
+- **v1.8** (Oct 28, 2026): Generated stables are a fixed population of three-robot filler stables topped up to `GENERATED_STABLE_TARGET` at settlement, replacing N stables on cycle N.
 
 ---
 
@@ -507,46 +508,21 @@ All weapons use the DPS-inclusive pricing formula. Prices are the Season 2 value
 
 ---
 
-## Dynamic User Generation (Tiered Stable System)
+## Dynamic User Generation (Generated Stables)
 
-When cycles are run, the system creates new users following a tiered stable system. The number of stables created per cycle equals the cycle number (Cycle 1 = 1 stable, Cycle 2 = 2 stables, etc.).
+Generated stables are not seed data: every settlement tops them up to `GENERATED_STABLE_TARGET` (default 150), and the first preparation day after a rollover builds the whole population. The full rule, the filler-stable shape and the sizing are in [PRD_AUTO_USER_GENERATION.md](../game-systems/PRD_AUTO_USER_GENERATION.md#current-behaviour-v30). Until October 2026 cycle N created N stables (N × (N + 1) / 2 after N cycles).
 
-### Tier Distribution
+### Filler stable
 
-Users are distributed across three tiers using the `distributeTiers(n)` function:
-- **WimpBot**: Lowest tier, 3 robots per stable, budget weapons
-- **AverageBot**: Middle tier, 2 robots per stable, mid-tier weapons
-- **ExpertBot**: Highest tier, 1 robot per stable, premium weapons
+- **Robots per stable**: 3, Booking Office L1. Robots 1–2: `league_3v3`, `tournament_3v3`, `tournament_1v1`, `tournament_2v2`; robot 3: the same with `grand_melee` instead of `tournament_2v2`.
+- **Teams**: one 3v3 team (3v3 league; eligible for the 3v3 tournament) and one 2v2 team of robots 1–2 (2v2 tournament only).
+- **Tier** (split evenly with `distributeTiers(n)`, remainder WimpBot-first, then AverageBot): sets strength only.
 
-Distribution formula: Integer division by 3 with remainder allocated WimpBot-first, then AverageBot, then ExpertBot.
-
-**Examples**:
-- Cycle 1 (1 stable): 1 WimpBot, 0 AverageBot, 0 ExpertBot
-- Cycle 3 (3 stables): 1 WimpBot, 1 AverageBot, 1 ExpertBot
-- Cycle 10 (10 stables): 4 WimpBot, 3 AverageBot, 3 ExpertBot
-
-### Tier Specifications
-
-#### WimpBot Tier
-- **Robots per stable**: 3
-- **Attribute level**: 1.00 (all attributes)
-- **Weapon price tier**: Budget (₡50K-₡150K)
-- **Tag team**: Yes (first 2 robots)
-- **HP**: 55, Shield: 4
-
-#### AverageBot Tier
-- **Robots per stable**: 2
-- **Attribute level**: 5.00 (all attributes)
-- **Weapon price tier**: Mid (₡150K-₡300K)
-- **Tag team**: Yes (both robots)
-- **HP**: 75, Shield: 20
-
-#### ExpertBot Tier
-- **Robots per stable**: 1
-- **Attribute level**: 10.00 (all attributes)
-- **Weapon price tier**: Premium (₡300K+)
-- **Tag team**: No (single robot)
-- **HP**: 100, Shield: 40
+| Tier | Attribute level | Weapon price band (`TIER_CONFIGS`) | HP / Shield |
+|---|---|---|---|
+| WimpBot | 1.00 | ₡0–₡99,999 | 55 / 4 |
+| AverageBot | 5.00 | ₡100,000–₡250,000 | 75 / 20 |
+| ExpertBot | 10.00 | ₡250,000–₡400,000 | 100 / 40 |
 
 ### Robot Configuration
 
@@ -555,25 +531,15 @@ Each robot is configured with:
 - **Range Band**: Random (25% each: melee, short, mid, long)
 - **Stance**: Random (33% each: balanced, offensive, defensive)
 - **Yield Threshold**: Random integer 0-20
-- **League**: Bronze (assigned via `assignLeagueInstance('bronze')`)
+- **Standings**: Bronze, 0 LP, only for subscribed standing-backed modes (3v3 league for the team, Grand Melee for robot 3)
 
 ### Robot Naming Convention
 
-Format: `{Tier} {LoadoutTitle} {WeaponCodename} {Number}`
-
-**Examples**:
-- "WimpBot Lone Blade 1"
-- "AverageBot Guardian Rifle 5"
-- "ExpertBot Heavy Cannon 3"
+Format: `{Tier} {LoadoutTitle} {WeaponCodename} {Number}`, e.g. "WimpBot Lone Blade 1", "AverageBot Guardian Rifle 5", "ExpertBot Heavy Cannon 3".
 
 ### Username Format
 
-Format: `auto_{tier}_{sequential_number}`
-
-**Examples**:
-- `auto_wimpbot_1`, `auto_wimpbot_2`, ...
-- `auto_averagebot_1`, `auto_averagebot_2`, ...
-- `auto_expertbot_1`, `auto_expertbot_2`, ...
+Format: `auto_{tier}_{NNNN}` (`auto_wimpbot_0001`, `auto_averagebot_0042`, `auto_expertbot_0007`).
 
 ### Weapon Selection
 
@@ -583,21 +549,6 @@ Weapons are selected using a 3-level fallback chain:
 3. **Fallback 2**: Any weapon in price tier
 
 Shields are selected for weapon_shield loadouts from the appropriate price tier.
-
-### Growth Projections
-
-**Total Stables After N Cycles**: Sum of 1 to N = N × (N + 1) / 2
-- After 5 cycles: 15 stables
-- After 10 cycles: 55 stables
-- After 20 cycles: 210 stables
-- After 50 cycles: 1,275 stables
-
-**Total Robots After N Cycles** (varies by tier distribution):
-- WimpBot stables contribute 3 robots each
-- AverageBot stables contribute 2 robots each
-- ExpertBot stables contribute 1 robot each
-
-**Tag Teams Created**: One per WimpBot stable (3 robots, first 2 form team) and one per AverageBot stable (2 robots form team). ExpertBot stables have no tag teams.
 
 ---
 
@@ -662,13 +613,13 @@ Examples:
 
 **Users** (at initial seed):
 - Development mode: 202. That is 1 admin (₡3,000,000, prestige 0), 200 WimpBot test users (₡100,000 each) and 1 bye-robot user.
-- Acceptance mode: 2. That is 1 admin and 1 bye-robot user. The league population comes from the Automaton_Catalogue (Catalogue_Sync after the seed) and from cycle user generation.
+- Acceptance mode: 2. That is 1 admin and 1 bye-robot user. The league population comes from the Automaton_Catalogue (Catalogue_Sync after the seed) and from the generated-stable top-up at settlement.
 
 **Production mode**: Only bye-robot user is seeded (weapons and cycle metadata are always seeded).
 
 **Robots** (at initial seed): development mode 201 (200 WimpBot robots, 1 per test user across 4 practice weapons, plus the bye-robot). Acceptance mode: the bye-robot only.
 
-**Tag Teams**: 0 at initial seed (created dynamically during cycles for WimpBot and AverageBot stables)
+**Teams**: 0 at initial seed (generated stables register a 3v3 and a 2v2 team each when the settlement top-up creates them)
 
 **Weapons**: 47 in catalog
 

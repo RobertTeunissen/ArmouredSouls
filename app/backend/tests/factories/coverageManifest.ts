@@ -527,7 +527,7 @@ const directCurrencyEntries: readonly CoverageManifestEntry[] = [
     status: 'opening-balance-boundary',
     currentSource: {
       file: 'app/backend/src/utils/userGeneration.ts',
-      symbol: 'generateBattleReadyUsers',
+      symbol: 'createGeneratedStables',
     },
     finalService: 'Opening_Balance_Boundary',
     expectedTaxonomy: [],
@@ -1068,7 +1068,7 @@ export const COVERAGE_MANIFEST: CoverageManifest = {
   lifecycleBoundaries: [
     {
       id: 'generated-stable-creation',
-      currentSource: { file: 'app/backend/src/utils/userGeneration.ts', symbol: 'generateBattleReadyUsers' },
+      currentSource: { file: 'app/backend/src/utils/userGeneration.ts', symbol: 'createGeneratedStables' },
       operation: 'account_creation',
       financialOutput: 'none',
       domainRecords: ['User row with isGenerated=true', 'generated robot/team domain rows'],

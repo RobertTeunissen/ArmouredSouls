@@ -48,7 +48,7 @@ function estimateCycleMs(overview: SchedulerOverview | null): number | null {
 
 function bulkDescription(options: BulkCycleOptions, estimate: number | null): ReactNode {
   const parts = [
-    options.generateUsersPerCycle ? 'generates stables' : 'no stable generation',
+    options.generateUsersPerCycle ? 'tops up generated stables' : 'no stable generation',
     options.includeTournaments ? 'tournaments' : 'no tournaments',
     options.includeKoth ? 'KotH' : 'no KotH',
     options.includeDailyFinances ? 'finances' : 'no finances',

@@ -102,7 +102,7 @@ jest.mock('../../common/eventLogger', () => ({
 jest.mock('../../achievement', () => ({
   achievementService: { checkAndAward: jest.fn(async () => []), refreshRarityCache: jest.fn(async () => undefined) },
 }));
-jest.mock('../../../utils/userGeneration', () => ({ generateBattleReadyUsers: jest.fn(async () => ({ usersCreated: 0, robotsCreated: 0 })) }));
+jest.mock('../../../utils/userGeneration', () => ({ topUpGeneratedStables: jest.fn(async () => ({ usersCreated: 0, robotsCreated: 0, target: 150, existingBefore: 150 })) }));
 jest.mock('../../leaderboard/leaderboardService', () => ({ leaderboardService: { refreshAll: jest.fn(async () => undefined) } }));
 jest.mock('../../../lib/prisma', () => ({
   __esModule: true,

@@ -14,6 +14,11 @@ import { flushDeferredWork } from '../src/services/common/deferredWork';
 
 // Load environment variables from .env file
 config({ path: path.resolve(__dirname, '../.env') });
+// Every real settlement tops the generated stables up to GENERATED_STABLE_TARGET
+// (default 150 = 450 robots). Suites that run settlements for other reasons must
+// not build that population, so tests default to 0; suites that test generation
+// set the target themselves.
+process.env.GENERATED_STABLE_TARGET ??= '0';
 
 let weaponsSeeded = false;
 

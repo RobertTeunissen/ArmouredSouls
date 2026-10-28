@@ -42,7 +42,7 @@ jest.mock('../../src/services/cycle/cycleSnapshotService', () => ({ cycleSnapsho
 jest.mock('../../src/services/financial/settlementService', () => ({
   settlementService: { settleCycle: jest.fn(async () => ({ totalPassiveIncome: 0, totalOperatingCosts: 0, usersProcessed: 5 })) },
 }));
-jest.mock('../../src/utils/userGeneration', () => ({ generateBattleReadyUsers: jest.fn(async () => ({ usersCreated: 0, robotsCreated: 0 })) }));
+jest.mock('../../src/utils/userGeneration', () => ({ topUpGeneratedStables: jest.fn(async () => ({ usersCreated: 0, robotsCreated: 0, target: 150, existingBefore: 150 })) }));
 jest.mock('../../src/services/leaderboard/leaderboardService', () => ({ leaderboardService: { refreshAll: jest.fn(async () => undefined) } }));
 jest.mock('../../src/services/common/eventLogger', () => ({
   ...jest.requireActual('../../src/services/common/eventLogger'),

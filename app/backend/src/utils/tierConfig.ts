@@ -1,44 +1,18 @@
-// Tier configuration constants and shared types for the tiered auto-generation system.
-// Used by both the seed system (seed.ts) and the auto-generation system (userGeneration.ts).
+// Bot tier constants and shared types: the attribute level and weapon price
+// band of generated stables (userGeneration.ts) and Practice Arena sparring bots.
+// Every generated stable has the same shape (three robots, see
+// FILLER_ROBOTS_PER_STABLE); the tier only sets how strong its robots are.
 
 export interface TierConfig {
   name: 'WimpBot' | 'AverageBot' | 'ExpertBot';
-  robotCount: number;
   attributeLevel: number;
   priceTier: { min: number; max: number };
-  createTagTeam: boolean;
-  createLeague2v2: boolean;
-  createLeague3v3: boolean;
 }
 
 export const TIER_CONFIGS: TierConfig[] = [
-  {
-    name: 'WimpBot',
-    robotCount: 3,
-    attributeLevel: 1.0,
-    priceTier: { min: 0, max: 99999 },
-    createTagTeam: true,
-    createLeague2v2: true,
-    createLeague3v3: true,
-  },
-  {
-    name: 'AverageBot',
-    robotCount: 2,
-    attributeLevel: 5.0,
-    priceTier: { min: 100000, max: 250000 },
-    createTagTeam: true,
-    createLeague2v2: true,
-    createLeague3v3: false,
-  },
-  {
-    name: 'ExpertBot',
-    robotCount: 1,
-    attributeLevel: 10.0,
-    priceTier: { min: 250000, max: 400000 },
-    createTagTeam: false,
-    createLeague2v2: false,
-    createLeague3v3: false,
-  },
+  { name: 'WimpBot', attributeLevel: 1.0, priceTier: { min: 0, max: 99999 } },
+  { name: 'AverageBot', attributeLevel: 5.0, priceTier: { min: 100000, max: 250000 } },
+  { name: 'ExpertBot', attributeLevel: 10.0, priceTier: { min: 250000, max: 400000 } },
 ];
 
 export const LOADOUT_TITLES: Record<string, string> = {

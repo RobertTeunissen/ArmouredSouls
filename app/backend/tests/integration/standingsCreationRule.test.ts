@@ -42,7 +42,7 @@ import { disbandTeam, registerTeam, swapTeamMember } from '../../src/services/te
 import { performAccountReset } from '../../src/services/common/resetService';
 import { runFreeUpkeep } from '../../src/services/automaton/upkeep/freeUpkeep';
 import { loadBlueprintFacts, loadStableFacts } from '../../src/services/automaton/stableFacts';
-import { generateBattleReadyUsers } from '../../src/utils/userGeneration';
+import { createGeneratedStables } from '../../src/utils/userGeneration';
 import { runMatchmakingForTier } from '../../src/services/analytics/matchmakingService';
 import {
   ROBOT_TEAM_MEMBERSHIP_LOCK_NAMESPACE,
@@ -738,7 +738,7 @@ describe('case 11: Automaton free upkeep', () => {
 
 describe('case 12: generated stables (userGeneration)', () => {
   it('have rows exactly for their subscribed standing-backed events', async () => {
-    const result = await generateBattleReadyUsers(6);
+    const result = await createGeneratedStables(6);
     const users = await prisma.user.findMany({ where: { username: { in: result.usernames } }, select: { id: true } });
     userIds.push(...users.map((u) => u.id));
     expect(users).toHaveLength(6);

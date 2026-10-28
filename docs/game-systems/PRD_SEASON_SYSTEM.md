@@ -71,7 +71,7 @@ No `settlement` Automaton_Turn runs on the boundary settlement, so Automatons sp
 
 ### Bot population after a rollover
 
-Because the global cycle counter resets to 0 and `generateBattleReadyUsers(cycleNumber)` creates N stables on cycle N, the bot population restarts at one stable on cycle 1 and grows with the season — roughly 55 stables by cycle 10 and 210 by cycle 20. Early-season matchmaking pools are therefore thin; the existing pipeline handles this by fabricating an in-memory bye robot. This is a known property, not a defect.
+Stage 3 deletes every generated stable. Every settlement tops them back up to `GENERATED_STABLE_TARGET` (default 150 three-robot filler stables), preparation days included, so the **first preparation day** rebuilds the whole population. Battle jobs and tournament creation are skipped during preparation, so competitive cycle 1 schedules and creates the first tournaments with the full population (Automaton opening builds plus the filler stables). The population then stays fixed for the season. Rule and sizing: [PRD_AUTO_USER_GENERATION.md](PRD_AUTO_USER_GENERATION.md#current-behaviour-v30). Before October 2026 cycle N created N stables, so the population started at one stable and grew all season.
 
 ## Rollover stages
 

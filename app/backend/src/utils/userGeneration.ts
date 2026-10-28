@@ -15,6 +15,43 @@ import { generateStableName } from './stableNameGenerator';
 import { selectWeapon, selectShield, WeaponRecord } from './weaponSelection';
 import { stableTypeForCreation } from './stableType';
 
+/*
+ * Generated_Stables: filler stables that keep every battle type populated.
+ *
+ * Since Oct 2026 the population is a fixed target (`GENERATED_STABLE_TARGET`,
+ * default 150) instead of N new stables on cycle N. Automatons fill the 1v1,
+ * 2v2, Tag Team and KotH leagues; generated stables fill what they leave
+ * short: the 3v3 league, Grand Melee and all three tournaments, so every
+ * tournament opens the season with at least 128 entrants. Tournaments are the
+ * cheapest events to fill (one bracket costs entrants − 1 battles in total),
+ * leagues the dearest (about half a battle per entry every cycle), so the
+ * filler stables enter no other league. Sizing: PRD_AUTO_USER_GENERATION.md.
+ */
+
+// ── Constants ────────────────────────────────────────────────────────
+
+/** Default size of the generated-stable population (`GENERATED_STABLE_TARGET`). */
+export const GENERATED_STABLE_TARGET_DEFAULT = 150;
+
+/** Every filler stable has three robots: one 3v3 team, one 2v2 team. */
+export const FILLER_ROBOTS_PER_STABLE = 3;
+
+/** Events every robot of a filler stable holds. */
+const FILLER_SHARED_EVENTS = ['league_3v3', 'tournament_3v3', 'tournament_1v1'] as const;
+/** Fourth event per robot slot: slots 0–1 form the 2v2 tournament team, slot 2 enters Grand Melee. */
+const FILLER_SLOT_EVENT = ['tournament_2v2', 'tournament_2v2', 'grand_melee'] as const;
+
+const LOADOUT_TYPES = ['single', 'weapon_shield', 'dual_wield', 'two_handed'] as const;
+const RANGE_BANDS = ['melee', 'short', 'mid', 'long'] as const;
+const STANCES = ['balanced', 'offensive', 'defensive'] as const;
+
+/** Every generated username starts with one of these (`auto_wimpbot_0001`, …). */
+const TIER_PREFIX: Record<TierConfig['name'], string> = {
+  WimpBot: 'auto_wimpbot',
+  AverageBot: 'auto_averagebot',
+  ExpertBot: 'auto_expertbot',
+};
+
 // ── Helpers ──────────────────────────────────────────────────────────
 
 /** Build an attributes object with all 23 robot attributes set to `level`. */
@@ -51,60 +88,67 @@ function randomElement<T>(arr: readonly T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-// ── Constants ────────────────────────────────────────────────────────
-
-const LOADOUT_TYPES = ['single', 'weapon_shield', 'dual_wield', 'two_handed'] as const;
-const RANGE_BANDS = ['melee', 'short', 'mid', 'long'] as const;
-const STANCES = ['balanced', 'offensive', 'defensive'] as const;
-
-// ── Tier prefix helpers ──────────────────────────────────────────────
-
-/** Map tier name to the username prefix used for auto-generated users. */
-function tierPrefix(tierName: TierConfig['name']): string {
-  const map: Record<TierConfig['name'], string> = {
-    WimpBot: 'auto_wimpbot',
-    AverageBot: 'auto_averagebot',
-    ExpertBot: 'auto_expertbot',
-  };
-  return map[tierName];
+/**
+ * Target size of the generated-stable population: `GENERATED_STABLE_TARGET`
+ * when it is a non-negative integer (0 turns generation off), else the default.
+ */
+export function getGeneratedStableTarget(): number {
+  const raw = process.env.GENERATED_STABLE_TARGET;
+  if (raw === undefined || raw.trim() === '') return GENERATED_STABLE_TARGET_DEFAULT;
+  const parsed = Number(raw);
+  return Number.isInteger(parsed) && parsed >= 0 ? parsed : GENERATED_STABLE_TARGET_DEFAULT;
 }
 
-// ── Main function ────────────────────────────────────────────────────
+/** The four events (the Booking Office L1 cap) the filler robot in `slot` (0–2) holds. */
+export function fillerSubscriptionsFor(slot: number): string[] {
+  return [...FILLER_SHARED_EVENTS, FILLER_SLOT_EVENT[slot]];
+}
+
+function emptyResult(): TieredGenerationResult {
+  return {
+    usersCreated: 0,
+    robotsCreated: 0,
+    tagTeamsCreated: 0,
+    league2v2TeamsCreated: 0,
+    league3v3TeamsCreated: 0,
+    usernames: [],
+    tierBreakdown: { wimpBot: 0, averageBot: 0, expertBot: 0 },
+  };
+}
+
+/** Generated filler stables that exist now (the `auto_*` bot stables). */
+export async function countGeneratedStables(): Promise<number> {
+  return prisma.user.count({
+    where: {
+      isGenerated: true,
+      OR: Object.values(TIER_PREFIX).map((prefix) => ({ username: { startsWith: `${prefix}_` } })),
+    },
+  });
+}
+
+// ── Creation ─────────────────────────────────────────────────────────
 
 /**
- * Generate battle-ready users using the tiered stable system.
+ * Create `count` filler stables, split evenly over the WimpBot / AverageBot /
+ * ExpertBot attribute levels (1 / 5 / 10). Each stable: three armed robots,
+ * Booking Office L1, the filler subscriptions, a 3v3 team (3v3 league and
+ * tournament) and a 2v2 team of robots 1–2 (2v2 tournament only).
  *
- * Cycle N creates N stables distributed across WimpBot / AverageBot / ExpertBot.
- * Each stable is created inside a Prisma $transaction for atomicity.
+ * Each stable is created in its own transaction; a failed stable is logged and
+ * skipped. Teams are registered afterwards through `registerTeam`, which places
+ * them in every standing-backed mode all members hold.
  */
-export async function generateBattleReadyUsers(
-  cycleNumber: number,
-): Promise<TieredGenerationResult> {
-  // Early return for invalid cycle numbers
-  if (cycleNumber <= 0) {
-    logger.warn(`[UserGeneration] cycleNumber ${cycleNumber} is <= 0, skipping generation.`);
-    return {
-      usersCreated: 0,
-      robotsCreated: 0,
-      tagTeamsCreated: 0,
-      league2v2TeamsCreated: 0,
-      league3v3TeamsCreated: 0,
-      usernames: [],
-      tierBreakdown: { wimpBot: 0, averageBot: 0, expertBot: 0 },
-    };
-  }
+export async function createGeneratedStables(count: number): Promise<TieredGenerationResult> {
+  if (count <= 0) return emptyResult();
 
   const startTime = Date.now();
-  const tierBreakdown = distributeTiers(cycleNumber);
+  const tierBreakdown = distributeTiers(count);
   logger.info(
-    `[UserGeneration] Generating ${cycleNumber} stables for Cycle ${cycleNumber} ` +
+    `[UserGeneration] Creating ${count} generated stables ` +
     `(WimpBot: ${tierBreakdown.wimpBot}, AverageBot: ${tierBreakdown.averageBot}, ExpertBot: ${tierBreakdown.expertBot})`,
   );
 
-  // Fetch all weapons once and cast to WeaponRecord[]
   const allWeapons = (await prisma.weapon.findMany()) as unknown as WeaponRecord[];
-
-  // Gather existing stable names for collision avoidance
   const existingStableNames = new Set(
     (await prisma.user.findMany({
       where: { stableName: { not: null } },
@@ -112,145 +156,108 @@ export async function generateBattleReadyUsers(
     })).map((u) => u.stableName as string),
   );
 
-  // Track robot counts per tier+loadout+weapon combination for sequential numbering
-  // We'll populate this lazily as we create robots
+  // Sequential numbering per robot name prefix and per username prefix.
   const robotCountsByNamePrefix: Record<string, number> = {};
-
-  // Count existing users per tier prefix for sequential username numbering
   const userCountsByTier: Record<string, number> = {};
   for (const tier of TIER_CONFIGS) {
-    const prefix = tierPrefix(tier.name);
-    const count = await prisma.user.count({
-      where: { username: { startsWith: prefix } },
+    userCountsByTier[tier.name] = await prisma.user.count({
+      where: { username: { startsWith: TIER_PREFIX[tier.name] } },
     });
-    userCountsByTier[tier.name] = count;
   }
 
-  // Build the list of stables to create: [ { tierConfig, count }, ... ]
   const stablePlan: { tier: TierConfig; count: number }[] = [
     { tier: TIER_CONFIGS[0], count: tierBreakdown.wimpBot },
     { tier: TIER_CONFIGS[1], count: tierBreakdown.averageBot },
     { tier: TIER_CONFIGS[2], count: tierBreakdown.expertBot },
   ];
 
+  // One hash for the whole run: these accounts never log in.
+  const passwordHash = await bcrypt.hash('testpass123', 10);
   const usernames: string[] = [];
   let totalRobotsCreated = 0;
-  const totalTagTeamsCreated = 0;
   let totalLeague2v2TeamsCreated = 0;
   let totalLeague3v3TeamsCreated = 0;
 
-  for (const { tier, count } of stablePlan) {
-    for (let i = 0; i < count; i++) {
-      // Sequential username: auto_wimpbot_0001, auto_averagebot_0042, etc.
+  for (const { tier, count: tierCount } of stablePlan) {
+    for (let i = 0; i < tierCount; i++) {
       userCountsByTier[tier.name]++;
-      const seqNum = userCountsByTier[tier.name];
-      const username = `${tierPrefix(tier.name)}_${String(seqNum).padStart(4, '0')}`;
+      const username = `${TIER_PREFIX[tier.name]}_${String(userCountsByTier[tier.name]).padStart(4, '0')}`;
 
-      // Track data needed for team registration after transaction
-      let userIdForTeams: number;
-      let stableNameForTeams: string;
-      let createdRobotsForTeams: { id: number; subscriptions: string[] }[];
-
+      let created: { userId: number; stableName: string; robotIds: number[] };
       try {
-        const txResult = await prisma.$transaction(async (tx) => {
-          // ── Create user ──────────────────────────────────────
+        created = await prisma.$transaction(async (tx) => {
           const stableName = generateStableName(existingStableNames);
           existingStableNames.add(stableName);
 
-          const hashedPassword = await bcrypt.hash('testpass123', 10);
           const user = await tx.user.create({
             data: {
               username,
-              passwordHash: hashedPassword,
+              passwordHash,
               currency: 100000,
               role: 'user',
               stableName,
-              // Spec #45: marks this as a Generated_Stable, deleted rather than
-              // reset at each Season_Rollover.
+              // Spec #45: a Generated_Stable is deleted, not reset, at each Season_Rollover.
               isGenerated: true,
               // Spec #55 I1: Stable_Type follows isGenerated.
               stableType: stableTypeForCreation(true),
             },
           });
 
-          // ── Create robots ────────────────────────────────────
-          const createdRobots: { id: number; name: string }[] = [];
-          const robotsWithSubscriptions: { id: number; subscriptions: string[] }[] = [];
+          // Booking Office L1: four subscriptions per robot.
+          await tx.facility.create({ data: { userId: user.id, facilityType: 'booking_office', level: 1 } });
 
-          for (let r = 0; r < tier.robotCount; r++) {
+          const robotIds: number[] = [];
+          for (let slot = 0; slot < FILLER_ROBOTS_PER_STABLE; slot++) {
             const loadoutType = randomElement(LOADOUT_TYPES);
             const rangeBand = randomElement(RANGE_BANDS);
             const stance = randomElement(STANCES);
             const yieldThreshold = Math.floor(Math.random() * 21); // 0–20
 
-            // Select main weapon via fallback chain
-            const mainWeaponRecord = selectWeapon(allWeapons, {
-              loadoutType,
-              rangeBand,
-              priceTier: tier.priceTier,
-            });
-
-            // Create weapon inventory for main weapon
-            // pricePaid: 0 because starter weapons are granted free during user generation
+            const mainWeaponRecord = selectWeapon(allWeapons, { loadoutType, rangeBand, priceTier: tier.priceTier });
+            // pricePaid: 0 because starter weapons are granted free during generation
             const mainInv = await tx.weaponInventory.create({
               data: { userId: user.id, weaponId: mainWeaponRecord.id, pricePaid: 0 },
             });
 
             let offhandInvId: number | null = null;
-
             if (loadoutType === 'weapon_shield') {
               const shieldRecord = selectShield(allWeapons, tier.priceTier);
-              const shieldInv = await tx.weaponInventory.create({
+              offhandInvId = (await tx.weaponInventory.create({
                 data: { userId: user.id, weaponId: shieldRecord.id, pricePaid: 0 },
-              });
-              offhandInvId = shieldInv.id;
+              })).id;
             } else if (loadoutType === 'dual_wield') {
-              // Second copy of the same weapon
-              const dualInv = await tx.weaponInventory.create({
+              offhandInvId = (await tx.weaponInventory.create({
                 data: { userId: user.id, weaponId: mainWeaponRecord.id, pricePaid: 0 },
-              });
-              offhandInvId = dualInv.id;
+              })).id;
             }
 
             // Robot name: "{Tier} {LoadoutTitle} {WeaponCodename} {Number}"
             const loadoutTitle = LOADOUT_TITLES[loadoutType] || 'Lone';
             const weaponCodename = WEAPON_CODENAMES[mainWeaponRecord.name] || 'Unknown';
             const namePrefix = `${tier.name} ${loadoutTitle} ${weaponCodename}`;
-            
-            // Get or initialize count for this name prefix
             if (robotCountsByNamePrefix[namePrefix] === undefined) {
-              // Query existing robots with this exact prefix to find the highest number
               const existingRobots = await tx.robot.findMany({
                 where: { name: { startsWith: namePrefix } },
                 select: { name: true },
               });
-              // Extract numbers from existing names and find the max
               let maxNum = 0;
               for (const robot of existingRobots) {
                 // eslint-disable-next-line security/detect-non-literal-regexp -- namePrefix is escaped via standard regex escape pattern
                 const match = robot.name.match(new RegExp(`^${namePrefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} (\\d+)$`));
-                if (match) {
-                  const num = parseInt(match[1], 10);
-                  if (num > maxNum) maxNum = num;
-                }
+                if (match) maxNum = Math.max(maxNum, parseInt(match[1], 10));
               }
               robotCountsByNamePrefix[namePrefix] = maxNum;
             }
-            
             robotCountsByNamePrefix[namePrefix]++;
-            const robotNumber = robotCountsByNamePrefix[namePrefix];
-            const robotName = `${namePrefix} ${robotNumber}`;
 
-            const attributes = buildAttributes(tier.attributeLevel);
             const maxHP = 50 + Math.floor(tier.attributeLevel * 5);
             const maxShield = Math.floor(tier.attributeLevel * 4);
-
             const robot = await tx.robot.create({
               data: {
                 userId: user.id,
-                name: robotName,
+                name: `${namePrefix} ${robotCountsByNamePrefix[namePrefix]}`,
                 frameId: 1,
-                ...attributes,
+                ...buildAttributes(tier.attributeLevel),
                 currentHP: maxHP,
                 maxHP,
                 currentShield: maxShield,
@@ -266,200 +273,90 @@ export async function generateBattleReadyUsers(
               },
             });
 
-            createdRobots.push(robot);
-            totalRobotsCreated++;
-          }
-
-          // ── Booking Office L1 for multi-robot stables ──────
-          if (createdRobots.length >= 2) {
-            await tx.facility.create({
-              data: {
-                userId: user.id,
-                facilityType: 'booking_office',
-                level: 1,
-              },
-            });
-          }
-
-          // ── Team creation moved to AFTER subscriptions (outside transaction) ──
-          // 2v2 teams participate in both league_2v2 and tag_team via subscriptions.
-          // A single TeamBattle entity handles both modes. Created via registerTeam below.
-
-          // ── Subscriptions for each robot ─────────────────────
-          // Subscription assignment rules per stable size (R15.2):
-          // - 1-robot stables (L0, cap 3): league_1v1, tournament_1v1, koth
-          // - 2-robot stables (L1, cap 4): pick 2 from {league_2v2, tag_team, tournament_2v2} + pick 2 from {koth, league_1v1, tournament_1v1}
-          // - 3-robot stables (L1, cap 4): slot 1: league_3v3 or tournament_3v3. slot 2: pick 1 from {league_2v2, tag_team, tournament_2v2}. slots 3-4: pick from remaining pool.
-          //
-          // IMPORTANT: Randomization is per-STABLE, not per-robot. All robots in a stable get the same set.
-
-          let stableSubscriptions: string[];
-
-          if (createdRobots.length === 1) {
-            // 1-robot stables: L0, cap 3 — randomly pick 3 from the 4 solo modes
-            const soloPool = ['league_1v1', 'tournament_1v1', 'koth', 'grand_melee'];
-            const shuffled = [...soloPool].sort(() => Math.random() - 0.5);
-            stableSubscriptions = shuffled.slice(0, 3);
-          } else if (createdRobots.length === 2) {
-            // 2-robot stables: L1, cap 4 — pick 2 from team modes + pick 2 from solo modes
-            const teamModes: string[] = ['league_2v2', 'tag_team', 'tournament_2v2'];
-            const shuffledTeamModes = [...teamModes].sort(() => Math.random() - 0.5);
-            const teamPicks = shuffledTeamModes.slice(0, 2);
-
-            const soloModes = ['koth', 'league_1v1', 'tournament_1v1', 'grand_melee'];
-            const shuffledSoloModes = [...soloModes].sort(() => Math.random() - 0.5);
-            const soloPicks = shuffledSoloModes.slice(0, 2);
-
-            stableSubscriptions = [...teamPicks, ...soloPicks];
-          } else {
-            // 3-robot stables: L1, cap 4
-            const subs: string[] = [];
-
-            // Slot 1: league_3v3 or tournament_3v3 (random pick)
-            // Always include league_3v3 when tier.createLeague3v3 is true (needed for team creation)
-            if (tier.createLeague3v3) {
-              subs.push('league_3v3');
-            } else {
-              subs.push('tournament_3v3');
-            }
-
-            // Slot 2: pick 1 from {league_2v2, tag_team, tournament_2v2}
-            const teamModes: string[] = [];
-            if (tier.createLeague2v2) teamModes.push('league_2v2');
-            if (tier.createTagTeam) teamModes.push('tag_team');
-            teamModes.push('tournament_2v2');
-            if (teamModes.length > 0) {
-              subs.push(teamModes[Math.floor(Math.random() * teamModes.length)]);
-            }
-
-            // Slots 3-4: pick from remaining pool
-            const allEvents = ['league_1v1', 'tournament_1v1', 'koth', 'grand_melee', 'tag_team', 'league_2v2', 'league_3v3', 'tournament_2v2', 'tournament_3v3'];
-            const remaining = allEvents.filter(e => !subs.includes(e));
-            const shuffledRemaining = [...remaining].sort(() => Math.random() - 0.5);
-            while (subs.length < 4 && shuffledRemaining.length > 0) {
-              subs.push(shuffledRemaining.shift()!);
-            }
-
-            stableSubscriptions = subs;
-          }
-
-          // Apply the same subscription set to ALL robots in this stable
-          for (const robot of createdRobots) {
+            const subscriptions = fillerSubscriptionsFor(slot);
             await tx.subscription.createMany({
-              data: stableSubscriptions.map(eventType => ({
-                robotId: robot.id,
-                eventType,
-                status: 'active',
-              })),
+              data: subscriptions.map((eventType) => ({ robotId: robot.id, eventType, status: 'active' })),
               skipDuplicates: true,
             });
-
-            // Standings only for subscribed robot modes (no inactive inflation),
-            // placed by the shared rule (least-full Bronze instance).
-            const robotStandingModes = STANDING_BACKED_EVENTS
-              .filter((definition) => definition.entityType === 'robot')
-              .map((definition) => definition.event)
-              .filter((mode) => stableSubscriptions.includes(mode));
-            for (const mode of robotStandingModes) {
-              await ensureStanding(tx, 'robot', robot.id, mode);
+            // Robot standings only for subscribed robot modes (Grand Melee for slot 2).
+            for (const definition of STANDING_BACKED_EVENTS) {
+              if (definition.entityType === 'robot' && subscriptions.includes(definition.event)) {
+                await ensureStanding(tx, 'robot', robot.id, definition.event);
+              }
             }
-
-            robotsWithSubscriptions.push({ id: robot.id, subscriptions: stableSubscriptions });
+            robotIds.push(robot.id);
           }
 
-          return { userId: user.id, stableName, robotsWithSubscriptions };
+          return { userId: user.id, stableName, robotIds };
         });
-
-        userIdForTeams = txResult.userId;
-        stableNameForTeams = txResult.stableName;
-        createdRobotsForTeams = txResult.robotsWithSubscriptions;
-
-        usernames.push(username);
-
-        // ── Team Battle registration (outside transaction — uses own transaction per R15.5) ──
-        // Register teams from subscribed pool using same validation path as player-initiated registration
-        // A single 2v2 TeamBattle entity participates in all team-2 modes (league_2v2, tag_team, tournament_2v2)
-        if (tier.createLeague2v2 && createdRobotsForTeams.length >= 2) {
-          try {
-            // Create 2v2 team if stable has ANY 2v2-mode subscription
-            const has2v2Mode = createdRobotsForTeams[0]?.subscriptions.some(s =>
-              ['league_2v2', 'tag_team', 'tournament_2v2'].includes(s)
-            );
-            if (has2v2Mode) {
-              const teamRobotIds = createdRobotsForTeams.slice(0, 2).map(r => r.id);
-              const teamName = `${stableNameForTeams} 2v2`;
-              // registerTeam places the team in every team mode all members hold
-              // (every robot of a generated stable shares one subscription set).
-              await registerTeam(userIdForTeams, teamRobotIds, teamName, 2, userIdForTeams);
-
-              totalLeague2v2TeamsCreated++;
-              logger.info(`[UserGeneration] Created 2v2 team for ${username}`);
-            }
-          } catch (teamError) {
-            // R15.8: log and skip, continue
-            const errorCode = (teamError as { code?: string }).code || 'UNKNOWN';
-            logger.warn(`[UserGeneration] Failed to create 2v2 team for ${username}: ${errorCode} - ${teamError}`);
-          }
-        }
-
-        if (tier.createLeague3v3 && createdRobotsForTeams.length >= 3) {
-          try {
-            // Find robots subscribed to league_3v3
-            const subscribedTo3v3 = createdRobotsForTeams.filter(r =>
-              r.subscriptions.includes('league_3v3')
-            );
-            if (subscribedTo3v3.length >= 3) {
-              const teamRobotIds = subscribedTo3v3.slice(0, 3).map(r => r.id);
-              const teamName = `${stableNameForTeams} 3v3`;
-              // registerTeam places the team in league_3v3 (all members hold it).
-              await registerTeam(userIdForTeams, teamRobotIds, teamName, 3, userIdForTeams);
-
-              totalLeague3v3TeamsCreated++;
-              logger.info(`[UserGeneration] Created 3v3 team for ${username}`);
-            }
-          } catch (teamError) {
-            // R15.8: log and skip, continue
-            const errorCode = (teamError as { code?: string }).code || 'UNKNOWN';
-            logger.warn(`[UserGeneration] Failed to create 3v3 team for ${username}: ${errorCode} - ${teamError}`);
-          }
-        }
       } catch (error) {
         logger.error(`[UserGeneration] Failed to create stable ${username}:`, error);
-        // Continue to next stable — transaction rolled back automatically
+        continue; // transaction rolled back
       }
 
-      // Progress logging
-      if ((usernames.length) % 5 === 0 || i + 1 === count) {
-        logger.info(`[UserGeneration] ${tier.name}: created ${i + 1}/${count} stables`);
+      usernames.push(username);
+      totalRobotsCreated += created.robotIds.length;
+
+      // Teams after the transaction (registerTeam runs its own, R15.5). A failed
+      // team is logged and skipped; the stable keeps its robots.
+      try {
+        await registerTeam(created.userId, created.robotIds, `${created.stableName} 3v3`, 3, created.userId);
+        totalLeague3v3TeamsCreated++;
+      } catch (teamError) {
+        const errorCode = (teamError as { code?: string }).code || 'UNKNOWN';
+        logger.warn(`[UserGeneration] Failed to create 3v3 team for ${username}: ${errorCode} - ${teamError}`);
+      }
+      try {
+        await registerTeam(created.userId, created.robotIds.slice(0, 2), `${created.stableName} 2v2`, 2, created.userId);
+        totalLeague2v2TeamsCreated++;
+      } catch (teamError) {
+        const errorCode = (teamError as { code?: string }).code || 'UNKNOWN';
+        logger.warn(`[UserGeneration] Failed to create 2v2 team for ${username}: ${errorCode} - ${teamError}`);
+      }
+
+      if (usernames.length % 25 === 0) {
+        logger.info(`[UserGeneration] ${usernames.length}/${count} stables created`);
       }
     }
   }
 
-  // ── Bankruptcy logging ───────────────────────────────────────────
-  const bankruptUsers = await prisma.user.findMany({
-    where: { currency: { lt: 0 } },
-    select: { username: true, currency: true },
-  });
-  for (const u of bankruptUsers) {
-    logger.warn(
-      `[UserGeneration] Bankruptcy: ${u.username} has ₡${u.currency} after cycle ${cycleNumber}`,
-    );
-  }
-
-  const duration = Date.now() - startTime;
   logger.info(
-    `[UserGeneration] ✅ Created ${usernames.length} stables, ` +
-    `${totalRobotsCreated} robots, ${totalTagTeamsCreated} tag teams, ` +
-    `${totalLeague2v2TeamsCreated} 2v2 teams, ${totalLeague3v3TeamsCreated} 3v3 teams in ${duration}ms`,
+    `[UserGeneration] ✅ Created ${usernames.length} stables, ${totalRobotsCreated} robots, ` +
+    `${totalLeague2v2TeamsCreated} 2v2 teams, ${totalLeague3v3TeamsCreated} 3v3 teams in ${Date.now() - startTime}ms`,
   );
 
   return {
     usersCreated: usernames.length,
     robotsCreated: totalRobotsCreated,
-    tagTeamsCreated: totalTagTeamsCreated,
+    tagTeamsCreated: 0,
     league2v2TeamsCreated: totalLeague2v2TeamsCreated,
     league3v3TeamsCreated: totalLeague3v3TeamsCreated,
     usernames,
     tierBreakdown,
   };
+}
+
+/** Result of a top-up: what was created, and the target and count it worked from. */
+export interface GeneratedStableTopUpResult extends TieredGenerationResult {
+  target: number;
+  existingBefore: number;
+}
+
+/**
+ * Create the generated stables missing from the target population. Runs in
+ * every settlement, preparation days included, so the first preparation day
+ * after a rollover (which deleted every generated stable) builds the whole
+ * population before competitive cycle 1 creates the first tournaments. Later
+ * runs normally create nothing.
+ */
+export async function topUpGeneratedStables(): Promise<GeneratedStableTopUpResult> {
+  const target = getGeneratedStableTarget();
+  const existingBefore = await countGeneratedStables();
+  const missing = Math.max(0, target - existingBefore);
+  if (missing === 0) {
+    logger.info(`[UserGeneration] ${existingBefore} generated stables, target ${target}: nothing to create`);
+    return { ...emptyResult(), target, existingBefore };
+  }
+  const result = await createGeneratedStables(missing);
+  return { ...result, target, existingBefore };
 }

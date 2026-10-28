@@ -457,7 +457,7 @@ A cycle represents one "day" in the game world. The bulk cycle runner on the Cyc
 3. Post-tournament repair
 4. League battle execution
 5. League rebalancing (promotions/demotions)
-6. Auto-generate users (optional)
+6. Top up generated stables to `GENERATED_STABLE_TARGET` (optional, "Top up generated stables"; default 150; also runs on preparation days)
 7. Post-league repair
 8. Matchmaking for next cycle
 
