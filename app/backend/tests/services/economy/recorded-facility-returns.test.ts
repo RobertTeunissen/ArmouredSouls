@@ -281,6 +281,21 @@ describe('grouped helpers equal the per-row reference (#542)', () => {
     );
   });
 
+  it('Streaming Studio: an exact .5 total rounds the same in both forms (CI counterexample)', () => {
+    // Exact total 163,797.5 (thirds and sixths summing to a half); before
+    // roundSummedCredits the grouped float landed above the tie and the
+    // per-row float below it, so they rounded to 163,798 and 163,797.
+    const rows: RecordedStreamingRow[] = [
+      { amount: 77357, metadata: { formulaVersion: '1', studioMultiplier: 6 } },
+      { amount: 72804, metadata: { formulaVersion: '1', studioMultiplier: 4.5 } },
+      { amount: 36254, metadata: { formulaVersion: '1', studioMultiplier: 6 } },
+      { amount: 37487, metadata: { formulaVersion: '1', studioMultiplier: 1.5 } },
+      { amount: 2, metadata: { formulaVersion: '1', studioMultiplier: 1.5 } },
+    ];
+    expect(sumStudioAttributableStreaming(rows)).toBe(163798);
+    expect(sumStudioAttributableStreamingFromGroups(groupStreamingLikeSql(rows))).toBe(163798);
+  });
+
   it('Repair Bay: grouping by stored discount gives the per-row total', () => {
     fc.assert(
       fc.property(fc.array(repairPayloadArb, { maxLength: 200 }), (payloads) => {
