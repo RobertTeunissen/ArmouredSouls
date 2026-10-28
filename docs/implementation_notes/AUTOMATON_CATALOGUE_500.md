@@ -89,6 +89,16 @@ Heavy timing (500 Active_Automatons, local Apple Silicon, PostgreSQL 17 in Docke
 
 Strategy_Comparison answered in 318 ms and 300 ms (limit 2 s). The opening step at 500 stables (179 s) is faster than the 205-stable v2 run recorded in `AUTOMATON_ECONOMY_AND_EVENT_FIT.md` (308 s). The difference was not investigated; that run may have been slowed by the machine. The CI heavy job (30-minute limit) took 12–14 minutes on main at 205 stables; this suite now takes about 10 minutes locally.
 
+## Heavy test population (follow-up, 27 October 2026)
+
+At 500 entries the CI heavy job took 21.6 minutes, against its 30-minute limit, and it would keep growing with the catalogue. Product owner direction: the heavy test checks that the rules work, and every stable must fit those rules; it does not need to run every stable for two seasons. So `automatonMultiSeason.test.ts` now does two things:
+- **Syncs every repository entry as a draft.** Each one must still sync against the database.
+- **Activates only the 11 Starter_Stables.** `automatonCatalogueCoverage.test.ts` proves they cover every strategy, Build_Focus, loadout, stance, range band and team edge case. Each entry's fit is checked by the catalogue unit tests.
+
+`AUTOMATON_HEAVY_POPULATION=catalogue` restores the full run as a scale measurement: the manual `.github/workflows/automaton-scale.yml` workflow, with a 90-minute limit and a concurrency input.
+
+Local run (fresh throwaway database, 500 entries synced, 11 active): 3 tests passed, 48 s wall time, against about 10 minutes with all 500 active. Opening steps took 3.8 s each (161 and 163 charged actions, 24 robots); settlement steps took 0.17–0.26 s; 0 alerts, 0 failed or skipped turns. Strategy_Comparison answered in 276 ms and 454 ms.
+
 ## ACC baseline (read-only, 27 October 2026)
 
 - Season 1, competitive, cycle 85 of 100 (rollover in about 15 cycles).

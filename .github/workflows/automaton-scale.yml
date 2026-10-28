@@ -1,0 +1,79 @@
+name: Automaton scale run
+# Manual scale measurement, not a PR gate. The CI heavy job runs the Automaton
+# multi-season simulation on the Starter_Stables (they cover every rule; see
+# app/backend/tests/helpers/automatonHeavyFixture.ts). This workflow activates
+# every repository Catalogue_Entry instead, to measure the Turn_Step at the
+# catalogue's full size. Run it after changes to the Turn_Step, concurrency or
+# purchase paths. Read the `[automaton-heavy]` lines in the log for per-step
+# durations and seconds per Automaton.
+on:
+  workflow_dispatch:
+    inputs:
+      concurrency:
+        description: AUTOMATON_TURN_CONCURRENCY (1–8, clamped by the DB pool)
+        required: false
+        default: '3'
+permissions:
+  contents: read
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+jobs:
+  automaton-scale:
+    name: Automaton scale run (full catalogue)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: armouredsouls_heavy
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          --shm-size=256mb
+        ports:
+          - 5432:5432
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+          cache-dependency-path: app/backend/pnpm-lock.yaml
+
+      - name: Install backend dependencies
+        working-directory: ./app/backend
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        working-directory: ./app/backend
+        env:
+          DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
+        run: pnpm run prisma:generate
+
+      - name: Run database migrations
+        working-directory: ./app/backend
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_heavy?connection_limit=5
+        run: pnpm exec prisma migrate deploy
+
+      - name: Run the multi-season simulation with every catalogue entry
+        working-directory: ./app/backend
+        shell: bash
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_heavy?connection_limit=5
+          JWT_SECRET: test-secret-key-for-ci
+          NODE_ENV: test
+          AUTOMATON_HEAVY_POPULATION: catalogue
+          AUTOMATON_TURN_CONCURRENCY: ${{ inputs.concurrency }}
+        run: pnpm run test:heavy -- tests/integration/automatonMultiSeason.test.ts

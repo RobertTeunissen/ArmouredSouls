@@ -544,7 +544,7 @@ The scheduled batch model allows:
 **Design Decision**: Separate admin dashboard provides comprehensive testing tools without cluttering main app. Bulk cycle execution enables rapid balance testing with realistic cost simulation.
 
 **Test Data Requirements**:
-- 100 test users (test_user_001 to test_user_100, credentials in prisma/seed.ts)
+- Test users `test_user_001`–`test_user_200` in development mode only (credentials in prisma/seed.ts; see `docs/architecture/SEED_DATA_SPECIFICATION.md`)
 - 100 test robots (1 per user, creative thematic names)
 - All attributes set to 1
 - Single weapon loadout

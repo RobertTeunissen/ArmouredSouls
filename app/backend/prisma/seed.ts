@@ -1046,7 +1046,13 @@ async function seedAdminAccount() {
   return { adminUser };
 }
 
-/** Seeds 200 WimpBot test users — development & acceptance */
+/**
+ * Seeds 200 WimpBot test users — development only (local play and the CI E2E
+ * database). `test_user_001` is the E2E player login; the others are the only
+ * opponents in E2E bulk cycles, which do not generate users. Acceptance no
+ * longer gets them: Automaton_Stables fill ACC's leagues, and the copies
+ * already on ACC are Generated_Stables that the next Season_Rollover deletes.
+ */
 async function seedWimpBotUsers(weapons: { id: number; name: string }[]) {
   console.log('Creating 200 test users with WimpBot robots...');
   const testHashedPassword = await bcrypt.hash('testpass123', 10);
@@ -1170,96 +1176,29 @@ async function seedWimpBotUsers(weapons: { id: number; name: string }[]) {
   console.log('✅ 200 WimpBot test users upserted (2 leagues × 100 robots, 25 per weapon type per league)');
 }
 
-// ===== TEAM TOURNAMENT SEEDING =====
-
-/**
- * Seeds team tournament subscriptions for existing test_user teams.
- * Subscribes member robots to tournament_2v2/tournament_3v3 (respecting cap).
- * Tournaments are created organically by the cron scheduler — no seeded brackets.
- *
- * Uses upsert semantics — safe to re-run without duplicates.
- *
- * Requirements: R14.1–R14.7
- */
-async function seedTeamTournaments(_weapons: { id: number; name: string }[]) {
-  console.log('Adding team tournament subscriptions...');
-
-  // Helper: ensure subscription exists for a robot, respecting Booking Office cap
-  // Pre-fetch cap data for all test users to avoid N+1 queries
-  const testUserFacilities = await prisma.facility.findMany({
-    where: { facilityType: 'booking_office', user: { username: { startsWith: 'test_user_' } } },
-    select: { userId: true, level: true },
-  });
-  const facilityLevelMap = new Map(testUserFacilities.map(f => [f.userId, f.level]));
-
-  async function ensureSubscription(robotId: number, robotUserId: number, eventType: string): Promise<void> {
-    const existing = await prisma.subscription.findUnique({
-      where: { subscription_robot_event: { robotId, eventType } },
-    });
-    if (existing) return;
-
-    const { getSubscriptionCap } = await import('../src/config/subscriptions');
-    const level = facilityLevelMap.get(robotUserId) ?? 0;
-    const cap = getSubscriptionCap(level);
-    const currentCount = await prisma.subscription.count({ where: { robotId } });
-    if (currentCount >= cap) return;
-
-    await prisma.subscription.create({
-      data: { robotId, eventType, status: 'active' },
-    });
-  }
-
-  // Step 1: Find existing teams owned by generated users and subscribe their members
-  const existing2v2Teams = await prisma.teamBattle.findMany({
-    where: { teamSize: 2, stable: { username: { startsWith: 'test_user_' } } },
-    include: { members: { select: { robotId: true, robot: { select: { userId: true } } } } },
-    take: 8,
-    orderBy: { createdAt: 'asc' },
-  });
-
-  const existing3v3Teams = await prisma.teamBattle.findMany({
-    where: { teamSize: 3, stable: { username: { startsWith: 'test_user_' } } },
-    include: { members: { select: { robotId: true, robot: { select: { userId: true } } } } },
-    take: 8,
-    orderBy: { createdAt: 'asc' },
-  });
-
-  if (existing2v2Teams.length < 4 || existing3v3Teams.length < 4) {
-    console.log(`   ⚠️ Not enough existing teams for tournament seeding (2v2: ${existing2v2Teams.length}, 3v3: ${existing3v3Teams.length}). Need at least 4 each. Skipping.`);
-    return;
-  }
-
-  // Subscribe all member robots to tournament events (only if they have cap room)
-  for (const team of existing2v2Teams) {
-    for (const member of team.members) {
-      await ensureSubscription(member.robotId, member.robot.userId, 'tournament_2v2');
-    }
-  }
-  for (const team of existing3v3Teams) {
-    for (const member of team.members) {
-      await ensureSubscription(member.robotId, member.robot.userId, 'tournament_3v3');
-    }
-  }
-
-  console.log(`   ✅ Tournament subscriptions added (${existing2v2Teams.length}× 2v2 teams, ${existing3v3Teams.length}× 3v3 teams)`);
-
-  // Tournaments are created organically by the cron scheduler (autoCreateNextTeamTournament).
-  // No seeded tournaments needed — the subscriptions above are sufficient.
-
-  console.log('✅ Team tournament seed data complete');
-}
-
 // ===== MAIN =====
 
-async function main() {
-  const seedMode = getSeedMode();
-  console.log(`🌱 Seeding database in ${seedMode.toUpperCase()} mode...`);
-  console.log(`   NODE_ENV=${process.env.NODE_ENV || '(not set, defaulting to development)'}\n`);
+type SeededWeapon = { id: number; name: string };
 
+/** The seed's steps; `main` passes the real ones, tests pass mocks. */
+export interface SeedSteps {
+  seedCycleMetadata: () => Promise<unknown>;
+  seedSeason: () => Promise<unknown>;
+  seedWeapons: () => Promise<SeededWeapon[]>;
+  seedAdminAccount: () => Promise<unknown>;
+  seedWimpBotUsers: (weapons: SeededWeapon[]) => Promise<unknown>;
+}
+
+/**
+ * Run the seed steps for `seedMode` and return the seeded weapons. Essential
+ * data in every mode; the admin in acceptance and development; the WimpBot
+ * test users in development only (see `seedWimpBotUsers`).
+ */
+export async function runSeedSteps(seedMode: SeedMode, steps: SeedSteps): Promise<SeededWeapon[]> {
   // --- Essential data (ALL environments) ---
-  await seedCycleMetadata();
-  await seedSeason();
-  const weapons = await seedWeapons();
+  await steps.seedCycleMetadata();
+  await steps.seedSeason();
+  const weapons = await steps.seedWeapons();
 
   const practiceSword = weapons.find((w) => w.name === 'Practice Sword');
   if (!practiceSword) {
@@ -1270,10 +1209,28 @@ async function main() {
 
   // --- Acceptance + development data ---
   if (seedMode === 'acceptance' || seedMode === 'development') {
-    await seedAdminAccount();
-    await seedWimpBotUsers(weapons);
-    await seedTeamTournaments(weapons);
+    await steps.seedAdminAccount();
   }
+
+  // --- Development data (local play and the CI E2E database) ---
+  if (seedMode === 'development') {
+    await steps.seedWimpBotUsers(weapons);
+  }
+  return weapons;
+}
+
+async function main() {
+  const seedMode = getSeedMode();
+  console.log(`🌱 Seeding database in ${seedMode.toUpperCase()} mode...`);
+  console.log(`   NODE_ENV=${process.env.NODE_ENV || '(not set, defaulting to development)'}\n`);
+
+  const weapons = await runSeedSteps(seedMode, {
+    seedCycleMetadata,
+    seedSeason,
+    seedWeapons,
+    seedAdminAccount,
+    seedWimpBotUsers,
+  });
 
   // --- Summary ---
   console.log('');
@@ -1292,14 +1249,17 @@ async function main() {
     console.log('   🔄 Cycle metadata initialized');
     console.log('   🤖 Bye-Robot for matchmaking');
     console.log('   👤 Admin account (₡3,000,000)');
-    console.log('   👤 200 WimpBot test users (50 per weapon type)');
-    console.log('   🏆 Team tournament data (subscriptions added to existing league teams, 2 completed + 2 active tournaments)');
+    if (seedMode === 'development') {
+      console.log('   👤 200 WimpBot test users (50 per weapon type)');
+    }
   }
 
   console.log('');
   console.log('🔐 Login Credentials (if seeded):');
   if (seedMode !== 'production') {
     console.log('   - Admin: admin / admin123');
+  }
+  if (seedMode === 'development') {
     console.log('   - Test users: test_user_001-200 / testpass123');
   }
   console.log('');

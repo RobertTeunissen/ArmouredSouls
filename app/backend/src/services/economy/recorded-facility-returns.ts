@@ -15,7 +15,8 @@
  *   `discountPercent`) and sums the amount per group, so the query returns at
  *   most one row per distinct key regardless of history length. Each per-row
  *   term is linear in the summed amount for a fixed key, and both forms round
- *   once at the end, so the grouped total equals the per-row total.
+ *   once at the end (`roundSummedCredits`, which ignores floating-point
+ *   noise), so the grouped total equals the per-row total.
  */
 
 import { readRepairChargedCredits } from './repairPayloadKeys';
@@ -56,6 +57,23 @@ export function isRecordedRepairDiscountPercent(value: unknown): value is number
   return typeof value === 'number' && Number.isFinite(value) && value >= 0 && value < 100;
 }
 
+/** Decimal places kept before the final rounding; far above the float noise of these sums. */
+const SUM_SNAP_DECIMALS = 6;
+
+/**
+ * Round a summed credit total to whole credits, ignoring floating-point noise.
+ *
+ * The per-row and grouped forms add the same exact value in a different order,
+ * so their float results can differ in the last bits. When the exact total is
+ * a tie (e.g. thirds from a 1.5 or 6.0 studio multiplier summing to x.5), that
+ * noise decides whether `Math.round` goes up or down. Snapping to
+ * `SUM_SNAP_DECIMALS` places first makes both forms round the same exact value.
+ */
+export function roundSummedCredits(total: number): number {
+  const scale = 10 ** SUM_SNAP_DECIMALS;
+  return Math.round(Math.round(total * scale) / scale);
+}
+
 function readStudioMultiplier(metadata: unknown): number | null {
   if (typeof metadata !== 'object' || metadata === null || Array.isArray(metadata)) {
     return null;
@@ -85,7 +103,7 @@ export function sumStudioAttributableStreaming(rows: ReadonlyArray<RecordedStrea
     }
     total += row.amount * (1 - 1 / studioMultiplier);
   }
-  return Math.round(total);
+  return roundSummedCredits(total);
 }
 
 /**
@@ -103,7 +121,7 @@ export function sumStudioAttributableStreamingFromGroups(
     }
     total += group.amountSum * (1 - 1 / group.studioMultiplier);
   }
-  return Math.round(total);
+  return roundSummedCredits(total);
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -139,7 +157,7 @@ export function sumRepairBaySavingsFromRecords(payloads: ReadonlyArray<unknown>)
     }
     total += (charged * discountPercent) / (100 - discountPercent);
   }
-  return Math.round(total);
+  return roundSummedCredits(total);
 }
 
 /**
@@ -157,5 +175,5 @@ export function sumRepairBaySavingsFromGroups(groups: ReadonlyArray<RepairCharge
     }
     total += (group.chargedSum * discountPercent) / (100 - discountPercent);
   }
-  return Math.round(total);
+  return roundSummedCredits(total);
 }
