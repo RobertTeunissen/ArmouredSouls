@@ -2,7 +2,7 @@
 title: "Reading Your Season Archive"
 description: "Where your past seasons live, what is recorded, and how to read the standings and records of seasons that have ended."
 order: 4
-lastUpdated: "2026-07-28"
+lastUpdated: "2026-10-28"
 relatedArticles:
   - seasons/what-resets
   - seasons/what-is-a-season
@@ -28,7 +28,7 @@ A rank here is your true position in that league instance, counting every compet
 
 The Season Archive at `/seasons` is the shared view: every completed season, its final standings in every mode, its champions, and the records it produced. Stable names link through to that stable's own history.
 
-System-generated stables appear here and are labelled as such. They are not hidden, because they hold most league positions — filtering them out would misrepresent where players actually finished.
+System-generated stables appear here and are labelled as such. They are not hidden, because they hold many league positions — filtering them out would misrepresent where players actually finished.
 
 ## What an accolade is
 

@@ -8,7 +8,7 @@
  *   file itself and run inside a rolled-back transaction, so the test proves the
  *   shipped SQL without changing the shared database.
  * - Every non-Activation creation path writes a row that satisfies I1:
- *   registration (`createUser`), `generateBattleReadyUsers` and the seed's
+ *   registration (`createUser`), `createGeneratedStables` and the seed's
  *   `upsertUser`.
  * - The single Program_Switch row is seeded (I6).
  */
@@ -16,7 +16,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import prisma from '../../src/lib/prisma';
 import { createUser } from '../../src/services/auth/userService';
-import { generateBattleReadyUsers } from '../../src/utils/userGeneration';
+import { createGeneratedStables } from '../../src/utils/userGeneration';
 import { disconnectSeedClient, upsertUser } from '../../prisma/seed';
 import { satisfiesStableTypeInvariant } from '../../src/utils/stableType';
 
@@ -169,8 +169,8 @@ describe('Stable_Type migration and invariant I1 (Spec #55)', () => {
       expect(row).toEqual({ isGenerated: false, stableType: 'human' });
     });
 
-    it('generateBattleReadyUsers creates generated stables', async () => {
-      const result = await generateBattleReadyUsers(1);
+    it('createGeneratedStables creates generated stables', async () => {
+      const result = await createGeneratedStables(1);
       const rows = await prisma.user.findMany({
         where: { username: { in: result.usernames } },
         select: { id: true, isGenerated: true, stableType: true },

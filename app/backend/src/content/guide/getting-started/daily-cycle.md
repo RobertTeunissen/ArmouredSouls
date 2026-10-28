@@ -2,7 +2,7 @@
 title: "The Daily Cycle"
 description: "How the daily cycle works, what gets processed, and when your battles happen."
 order: 2
-lastUpdated: "2026-06-15"
+lastUpdated: "2026-10-28"
 relatedArticles:
   - getting-started/core-game-loop
   - economy/credits-and-income
@@ -100,7 +100,7 @@ The day closes with financial processing.
 3. **Balance logging** — Every player's end-of-day balance is recorded for the audit trail.
 4. **Cycle counter increment** — The global cycle number advances, and each robot's "cycles in current league" counter ticks up (this determines promotion/demotion eligibility — you need ≥5 cycles in a tier).
 5. **Analytics snapshot** — A complete snapshot of the game state is saved, powering the dashboard analytics and historical views.
-6. **Auto-generate users** — New AI-controlled users may be generated to keep the population growing.
+6. **System stables** — If any system-generated stables are missing, they are created. This normally only happens at the start of a season (on the first preparation day), so the population stays the same all season.
 
 ```callout-warning
 If your balance drops below zero after operating costs are deducted, you're in trouble. Keep an eye on your finances in the [Financial Report](/guide/economy/credits-and-income) to make sure your income covers your expenses.

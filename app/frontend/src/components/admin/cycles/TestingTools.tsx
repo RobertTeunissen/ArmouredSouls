@@ -23,7 +23,7 @@ export interface TestingToolsProps {
 const MAX_CYCLES = 100;
 
 const OPTIONS: ReadonlyArray<{ key: keyof Omit<BulkCycleOptions, 'cycles'>; label: string; help: string }> = [
-  { key: 'generateUsersPerCycle', label: 'Generate stables each cycle', help: 'Adds N generated stables on cycle N.' },
+  { key: 'generateUsersPerCycle', label: 'Top up generated stables', help: 'Creates generated stables up to the target (GENERATED_STABLE_TARGET, default 150).' },
   { key: 'includeTournaments', label: 'Tournaments', help: 'Run the tournament slots.' },
   { key: 'includeKoth', label: 'King of the Hill', help: 'Run the KotH slot.' },
   { key: 'includeDailyFinances', label: 'Finances', help: 'Passive income and operating costs at settlement.' },

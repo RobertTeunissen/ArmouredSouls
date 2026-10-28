@@ -1,60 +1,69 @@
-# Product Requirements Document: Auto-User Generation Per Cycle
-
+# Product Requirements Document: Generated Stables (Auto-User Generation)
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: v2.1
-**Date**: October 14, 2026
-**Status**: ✅ Implemented & Tested (Unit Tests Complete)
-**Testing Status**: ✅ Unit Tests Complete | ✅ Integration Tests Complete
-
+**Version**: v3.0
+**Date**: October 28, 2026
+**Status**: ✅ Implemented
 ---
-
 ## Version History
+- v3.0 - Fixed population instead of growth: settlement tops the generated stables up to `GENERATED_STABLE_TARGET` (default 150), including on preparation days, and every generated stable is a three-robot filler stable with fixed subscriptions (3v3 league and tournament, 1v1 and 2v2 tournament, Grand Melee). Replaces "N stables on cycle N" (October 28, 2026)
 - v2.1 - Standings follow the unified creation rule: robot rows via `ensureStanding` for each subscribed robot mode, team rows via `registerTeam` (`ensureTeamStandings`) for modes every member holds; subscriptions are still written directly (October 14, 2026)
 - v2.0 - Replaced archetype system with tiered stable system (WimpBot/AverageBot/ExpertBot) (March 26, 2026)
 - v1.3 - Unit tests added and documentation updated (February 9, 2026)
 - v1.2 - Implementation review and status update (February 9, 2026)
 - v1.1 - Review and consolidation (February 9, 2026)
 - v1.0 - Initial draft by GitHub Copilot (February 4, 2026)
+---
+
+## Current behaviour (v3.0)
+
+### Why a fixed population
+
+Generated_Stables only exist to keep every battle type populated. Until v3.0 cycle N created N stables, so the population grew quadratically (3,903 stables / 7,663 robots on ACC at cycle 87 of season 2) while 78% of daily battles had only generated robots in them, and robots that join after roughly cycle 30–40 can no longer reach Champion. Automaton_Stables (500 on ACC, reset to an opening build at every rollover) now carry the leagues, so generated stables fill only what the Automatons leave short, all at the start of the season.
+
+### Rule
+
+- **Target:** `GENERATED_STABLE_TARGET` (default **150**; `0` turns generation off; an invalid value falls back to the default). Counted: `auto_wimpbot_*`, `auto_averagebot_*` and `auto_expertbot_*` stables with `is_generated = true` (seeded `test_user_*` stables are not counted).
+- **Top-up:** `topUpGeneratedStables()` (`app/backend/src/utils/userGeneration.ts`) creates `max(0, target − existing)` stables with `createGeneratedStables(count)`.
+- **When:** every scheduled settlement — on each Preparation_Phase day (before the Automaton turn) and in competitive step 7. The rollover deletes every generated stable, so the **first preparation day** rebuilds the whole population; battle jobs (and tournament creation) are skipped during preparation, so the first tournaments on competitive cycle 1 see all of it. Later settlements normally create nothing. A failed top-up is logged and never fails settlement.
+- **Manual runs:** Cycle Controls' "Top up generated stables" option (`generateUsersPerCycle` in `POST /api/admin/cycles/bulk`) runs the same top-up in competitive and preparation cycles; off by default.
+- **Tests:** `tests/setup.ts` defaults the target to `0` so suites that run real settlements don't build 450 robots; generation suites set it explicitly.
+
+### Filler stable
+
+| | |
+|---|---|
+| Robots | 3 per stable, Booking Office L1 (4 subscriptions per robot) |
+| Tier | Split evenly by `distributeTiers` over WimpBot / AverageBot / ExpertBot: attribute level 1 / 5 / 10 and the tier's weapon price band (`TIER_CONFIGS`). The tier sets strength only; every stable has the same shape |
+| Robots 1–2 | `league_3v3`, `tournament_3v3`, `tournament_1v1`, `tournament_2v2` |
+| Robot 3 | `league_3v3`, `tournament_3v3`, `tournament_1v1`, `grand_melee` |
+| Teams | One 3v3 team (all three; enters the 3v3 league, eligible for the 3v3 tournament) and one 2v2 team of robots 1–2 (2v2 tournament only, no league) |
+| Standings | 3v3 league (team) and Grand Melee (robot 3), Bronze, 0 LP |
+| Not entered | 1v1 league, 2v2 league, Tag Team, KotH — Automatons fill those |
+
+Usernames, stable names, robot names (`{Tier} {LoadoutTitle} {WeaponCodename} {Number}`), random loadout / range / stance / yield threshold, HP and shield formulas, ELO 1200 and the ₡100,000 opening balance are unchanged from v2.
+
+### Sizing (October 2026)
+
+Goal set by the product owner: every tournament opens the season with at least **128 entrants** (7+ rounds), every league tier of every mode stays healthy, and as few battles as possible are fought that nobody watches. Tournaments are the cheapest events to fill (a bracket costs entrants − 1 battles in total); leagues the dearest (about half a battle per entry every cycle).
+
+Automaton opening build, measured on ACC on 28 Oct 2026 (295 stables whose robots were all created that day) and scaled to 500 stables, against the population with 150 filler stables:
+
+| Event | Automatons (est.) | + 150 filler stables | Filler alone |
+|---|---|---|---|
+| 1v1 tournament | ~58 robots | ~508 | 450 |
+| 2v2 tournament | ~92 teams | ~242 | 150 |
+| 3v3 tournament | ~245 teams | ~395 | 150 |
+| 3v3 league | ~255 teams | ~405 | 150 |
+| Grand Melee | ~215 robots | ~365 | 150 |
+| 1v1 league / KotH | ~720 / ~660 robots | unchanged | 0 |
+| 2v2 league / Tag Team | ~450 teams each | unchanged | 0 |
+
+The filler stables alone keep every tournament at ≥128 even if the Automaton estimate is far off. A Monte Carlo of the live promotion rules (99 battle cycles, LP thresholds 25 → 125, ≥5 cycles per tier, 10% zones in instances of ≥10) opened Champion in every simulated season for all head-to-head leagues at these sizes (first Champion around cycle 77–83, 24–66 Champions by cycle 100); Champion became unreliable below ~200 entities. Champion timing is set by the LP thresholds, not population.
 
 ---
 
-## Implementation Status Summary
-
-### ✅ Completed Features
-- **Database Schema**: `CycleMetadata` model with migration `20260204134733_add_cycle_metadata`
-- **User Generation Utility**: `generateBattleReadyUsers()` in `app/backend/src/utils/userGeneration.ts`
-- **Tiered Stable System**: WimpBot/AverageBot/ExpertBot tiers with varying robot counts (3/2/1)
-- **Backend API**: `POST /api/admin/cycles/bulk` with `generateUsersPerCycle` flag
-- **Frontend UI**: Admin dashboard checkbox with help text and result display
-- **Cycle Persistence**: Global cycle counter persists across bulk runs
-- **Error Handling**: Graceful error handling with logging and user feedback
-
-### ⚠️ Pending Items
-- None - all features implemented and tested
-
-### ✅ Testing Complete
-- **Unit Tests**: Comprehensive tests for `generateBattleReadyUsers()` function
-  - Test file: `app/backend/tests/userGeneration.test.ts`
-  - Coverage: Tiered generation, robot creation, weapon inventory, attributes, battle readiness, error handling, performance
-- **Integration Tests**: `app/backend/tests/integration/adminCycleGeneration.test.ts`
-- **Property Tests**: Tier distribution, weapon selection, robot naming validation
-
-### 📝 Implementation Notes
-- Auto-generated users use a dummy password hash (not production-ready for authentication)
-- User generation runs in Step 0 (before matchmaking) in each cycle
-- Frontend displays user generation results in both session log and cycle summary
-- Error in user generation does not halt cycle execution (logged and continues)
-- **Tiered Stable System**: Users are created as stables with multiple robots based on tier:
-  - WimpBot: 3 robots per stable, budget weapons, tag team from first 2 robots
-  - AverageBot: 2 robots per stable, mid-tier weapons, tag team from both robots
-  - ExpertBot: 1 robot per stable, premium weapons, no tag team
-- **Subscription Assignment Rules** (R15.2):
-  - 1-robot stables (L0, cap 3): Fixed `league_1v1`, `tournament_1v1`, `koth`
-  - 2-robot stables (L1, cap 4): Pick 2 from `{league_2v2, tag_team, tournament_2v2}` + pick 2 from `{koth, league_1v1, tournament_1v1}`
-  - 3-robot stables (L1, cap 4): Slot 1: `league_3v3` or `tournament_3v3`. Slot 2: pick 1 from `{league_2v2, tag_team, tournament_2v2}`. Slots 3-4: pick from remaining pool of all 8 events.
-
----
+> Sections 1–13 below are the original v1/v2 PRD (N stables on cycle N, random subscriptions). They are kept for history; "Current behaviour (v3.0)" above supersedes them wherever they differ.
 
 ## 1. Executive Summary
 

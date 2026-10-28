@@ -2,8 +2,8 @@
  * Admin Cycle Generation Integration Tests
  * Tests for POST /api/admin/cycles/bulk with generateUsersPerCycle flag
  *
- * Updated for the tiered stable system (WimpBot/AverageBot/ExpertBot).
- * Cycle N creates N stables distributed across the three tiers.
+ * The flag tops up the generated stables to GENERATED_STABLE_TARGET (this suite
+ * uses 4): the first cycle creates them, later cycles create only what is missing.
  */
 
 import request from 'supertest';
@@ -40,11 +40,16 @@ app.use('/api/admin', adminRoutes);
  */
 const MAX_CYCLE_TOUCHED = 50;
 
+/** Small target keeps every bulk run fast; restored after the suite. */
+const SUITE_TARGET = 4;
+const ORIGINAL_TARGET = process.env.GENERATED_STABLE_TARGET;
+
 describe('Admin Cycle Generation Integration Tests', () => {
   let adminUser: { id: number; username: string };
   let adminToken: string;
 
   beforeAll(async () => {
+    process.env.GENERATED_STABLE_TARGET = String(SUITE_TARGET);
     await prisma.$connect();
     // Bulk-cycle execution consumes every unified queued match, so this suite
     // owns a clean schedule rather than inheriting another heavy test's work.
@@ -110,6 +115,8 @@ describe('Admin Cycle Generation Integration Tests', () => {
   });
 
   afterAll(async () => {
+    if (ORIGINAL_TARGET === undefined) delete process.env.GENERATED_STABLE_TARGET;
+    else process.env.GENERATED_STABLE_TARGET = ORIGINAL_TARGET;
     // Cleanup admin user
     if (adminUser) {
       await deleteTestUser(adminUser.id);
@@ -119,7 +126,7 @@ describe('Admin Cycle Generation Integration Tests', () => {
   });
 
   describe('POST /api/admin/cycles/bulk with generateUsersPerCycle', () => {
-    it('should generate progressive users per cycle', async () => {
+    it('tops up to the target on the first cycle, then creates nothing', async () => {
       const response = await request(app)
         .post('/api/admin/cycles/bulk')
         .set('Authorization', `Bearer ${adminToken}`)
@@ -140,19 +147,18 @@ describe('Admin Cycle Generation Integration Tests', () => {
         expect(result.error).toBeUndefined();
         expect(result.settlement).toBeDefined();
       });
-      expect(response.body.results[0].settlement.userGeneration.usersCreated).toBe(1);
-      expect(response.body.results[1].settlement.userGeneration.usersCreated).toBe(2);
-      expect(response.body.results[2].settlement.userGeneration.usersCreated).toBe(3);
+      expect(response.body.results.map((r: { settlement: { userGeneration: { usersCreated: number } } }) =>
+        r.settlement.userGeneration.usersCreated)).toEqual([SUITE_TARGET, 0, 0]);
+      expect(response.body.results[1].settlement.userGeneration).toMatchObject({ target: SUITE_TARGET, existingBefore: SUITE_TARGET });
 
-      // Total: 1+2+3 = 6 users with auto_ prefix
       const totalUsers = await prisma.user.count({
         where: { username: { startsWith: 'auto_' } },
       });
-      expect(totalUsers).toBe(6);
+      expect(totalUsers).toBe(SUITE_TARGET);
     }, 120000);
 
     it('should persist cycle count across multiple runs', async () => {
-      // First run: 5 cycles → 1+2+3+4+5 = 15 users
+      // First run: 5 cycles; the first creates the whole target
       const response1 = await request(app)
         .post('/api/admin/cycles/bulk')
         .set('Authorization', `Bearer ${adminToken}`)
@@ -171,7 +177,7 @@ describe('Admin Cycle Generation Integration Tests', () => {
       const metadata1 = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
       expect(metadata1!.totalCycles).toBe(5);
 
-      // Second run: 3 cycles (cycles 6, 7, 8) → 6+7+8 = 21 more users
+      // Second run: 3 cycles (cycles 6, 7, 8); the target is already met
       const response2 = await request(app)
         .post('/api/admin/cycles/bulk')
         .set('Authorization', `Bearer ${adminToken}`)
@@ -192,15 +198,14 @@ describe('Admin Cycle Generation Integration Tests', () => {
         expect(result.error).toBeUndefined();
         expect(result.settlement).toBeDefined();
       });
-      expect(response2.body.results[0].settlement.userGeneration.usersCreated).toBe(6);
-      expect(response2.body.results[1].settlement.userGeneration.usersCreated).toBe(7);
-      expect(response2.body.results[2].settlement.userGeneration.usersCreated).toBe(8);
+      response2.body.results.forEach((result: { settlement: { userGeneration: { usersCreated: number } } }) => {
+        expect(result.settlement.userGeneration.usersCreated).toBe(0);
+      });
 
-      // Total: 15 + 21 = 36 users
       const totalUsers = await prisma.user.count({
         where: { username: { startsWith: 'auto_' } },
       });
-      expect(totalUsers).toBe(36);
+      expect(totalUsers).toBe(SUITE_TARGET);
 
       const metadata2 = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
       expect(metadata2!.totalCycles).toBe(8);
@@ -312,6 +317,8 @@ describe('Admin Cycle Generation Integration Tests', () => {
         expect(ug).toHaveProperty('usernames');
         expect(ug).toHaveProperty('tierBreakdown');
 
+        expect(ug).toHaveProperty('target', SUITE_TARGET);
+        expect(ug).toHaveProperty('existingBefore');
         const tb = ug.tierBreakdown as Record<string, number>;
         expect(tb).toHaveProperty('wimpBot');
         expect(tb).toHaveProperty('averageBot');
@@ -359,44 +366,28 @@ describe('Admin Cycle Generation Integration Tests', () => {
         });
 
       expect(response.status).toBe(200);
-      expect(response.body.results[0].settlement.userGeneration.usersCreated).toBe(1);
+      expect(response.body.results[0].settlement.userGeneration.usersCreated).toBe(SUITE_TARGET);
 
       const metadata = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
       expect(metadata).not.toBeNull();
       expect(metadata!.totalCycles).toBe(1);
     }, 60000);
 
-    it('should generate correct total user count formula (N*(N+1)/2)', async () => {
-      // Use 5 cycles to keep test runtime reasonable: sum(1..5) = 15 users
-      const cycles = 5;
-      const expectedTotal = (cycles * (cycles + 1)) / 2; // 15 users
+    it('creates the difference when the target is raised between runs', async () => {
+      const body = { autoRepair: false, includeDailyFinances: false, includeTournaments: false, includeKoth: false, generateUsersPerCycle: true };
+      const first = await request(app).post('/api/admin/cycles/bulk').set('Authorization', `Bearer ${adminToken}`).send({ cycles: 1, ...body });
+      expect(first.body.results[0].settlement.userGeneration.usersCreated).toBe(SUITE_TARGET);
 
-      const response = await request(app)
-        .post('/api/admin/cycles/bulk')
-        .set('Authorization', `Bearer ${adminToken}`)
-        .send({
-          cycles,
-          autoRepair: false,
-          includeDailyFinances: false,
-          includeTournaments: false,
-          includeKoth: false,
-          generateUsersPerCycle: true,
+      process.env.GENERATED_STABLE_TARGET = String(SUITE_TARGET + 2);
+      try {
+        const second = await request(app).post('/api/admin/cycles/bulk').set('Authorization', `Bearer ${adminToken}`).send({ cycles: 1, ...body });
+        expect(second.body.results[0].settlement.userGeneration).toMatchObject({
+          target: SUITE_TARGET + 2, existingBefore: SUITE_TARGET, usersCreated: 2,
         });
-
-      expect(response.status).toBe(200);
-      expect(response.body.results).toHaveLength(cycles);
-      response.body.results.forEach((result: Record<string, unknown>, index: number) => {
-        expect(result.error).toBeUndefined();
-        expect(result.settlement).toBeDefined();
-        const settlement = result.settlement as { userGeneration: { usersCreated: number } };
-        expect(settlement.userGeneration.usersCreated).toBe(index + 1);
-      });
-
-      const totalUsers = await prisma.user.count({
-        where: { username: { startsWith: 'auto_' } },
-      });
-
-      expect(totalUsers).toBe(expectedTotal);
+      } finally {
+        process.env.GENERATED_STABLE_TARGET = String(SUITE_TARGET);
+      }
+      expect(await prisma.user.count({ where: { username: { startsWith: 'auto_' } } })).toBe(SUITE_TARGET + 2);
     }, 180000);
 
     it('should create robots eligible for matchmaking', async () => {
@@ -417,7 +408,7 @@ describe('Admin Cycle Generation Integration Tests', () => {
       expect(response.status).toBe(200);
       expect(response.body.results).toHaveLength(1);
       expect(response.body.results[0].error).toBeUndefined();
-      expect(response.body.results[0].settlement.userGeneration.usersCreated).toBe(1);
+      expect(response.body.results[0].settlement.userGeneration.usersCreated).toBe(SUITE_TARGET);
 
       const robots = await prisma.robot.findMany({
         where: { user: { username: { startsWith: 'auto_' } } },

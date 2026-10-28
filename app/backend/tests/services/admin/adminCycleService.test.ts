@@ -117,7 +117,7 @@ jest.mock('../../../src/services/moderation/orphanCleanupJob', () => ({
 }));
 
 jest.mock('../../../src/utils/userGeneration', () => ({
-  generateBattleReadyUsers: jest.fn().mockResolvedValue({ usersCreated: 0 }),
+  topUpGeneratedStables: jest.fn().mockResolvedValue({ usersCreated: 0, target: 150, existingBefore: 150 }),
 }));
 
 jest.mock('../../../src/services/common/eventLogger', () => ({

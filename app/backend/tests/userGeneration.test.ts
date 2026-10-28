@@ -1,113 +1,82 @@
 /**
- * User Generation Unit Tests (Tiered Stable System)
+ * Generated_Stable creation and top-up (userGeneration.ts), against the real DB.
  *
- * Tests for generateBattleReadyUsers() — the tiered auto-generation system
- * that creates WimpBot (3 robots), AverageBot (2 robots), and ExpertBot (1 robot)
- * stables during each cycle.
- *
- * Requirements: 8.1, 8.2, 9.1, 10.1, 11.1, R15.1–R15.8
+ * Every generated stable is a three-robot filler stable: one 3v3 team (3v3
+ * league + tournament), one 2v2 team of robots 1–2 (2v2 tournament only), all
+ * three robots in the 1v1 tournament and robot 3 in Grand Melee. The tier
+ * (WimpBot / AverageBot / ExpertBot, split evenly) sets only attribute level and
+ * weapon price band. The population is topped up to GENERATED_STABLE_TARGET.
  */
 
-import prisma from '../src/lib/prisma';
-import { generateBattleReadyUsers } from '../src/utils/userGeneration';
-import { TIER_CONFIGS, distributeTiers, LOADOUT_TITLES, WEAPON_CODENAMES } from '../src/utils/tierConfig';
 import fc from 'fast-check';
+import prisma from '../src/lib/prisma';
+import {
+  createGeneratedStables,
+  countGeneratedStables,
+  topUpGeneratedStables,
+  FILLER_ROBOTS_PER_STABLE,
+} from '../src/utils/userGeneration';
+import { TIER_CONFIGS, LOADOUT_TITLES, WEAPON_CODENAMES } from '../src/utils/tierConfig';
+import { getEligibleTeamsForTournament } from '../src/services/tournament/teamTournamentService';
+import { getEligibleRobotsForTournament } from '../src/services/tournament/tournamentService';
 
-/**
- * Cleanup helper: removes all auto-generated users and their associated data.
- * Targets usernames starting with 'auto_' (auto_wimpbot_*, auto_averagebot_*, auto_expertbot_*).
- */
+const TIER_OF_PREFIX: Record<string, (typeof TIER_CONFIGS)[number]> = {
+  auto_wimpbot_: TIER_CONFIGS[0],
+  auto_averagebot_: TIER_CONFIGS[1],
+  auto_expertbot_: TIER_CONFIGS[2],
+};
+
+function tierOf(username: string): (typeof TIER_CONFIGS)[number] {
+  const prefix = Object.keys(TIER_OF_PREFIX).find((p) => username.startsWith(p));
+  if (!prefix) throw new Error(`not a generated username: ${username}`);
+  return TIER_OF_PREFIX[prefix];
+}
+
+/** Remove every auto-generated stable and what it owns (standings have no FK). */
 async function cleanupAutoUsers(): Promise<void> {
-  const autoUsers = await prisma.user.findMany({
+  const userIds = (await prisma.user.findMany({
     where: { username: { startsWith: 'auto_' } },
     select: { id: true },
-  });
-  const userIds = autoUsers.map((u) => u.id);
+  })).map((u) => u.id);
   if (userIds.length === 0) return;
 
-  const robots = await prisma.robot.findMany({
-    where: { userId: { in: userIds } },
-    select: { id: true },
+  const robotIds = (await prisma.robot.findMany({ where: { userId: { in: userIds } }, select: { id: true } })).map((r) => r.id);
+  const teamIds = (await prisma.teamBattle.findMany({ where: { stableId: { in: userIds } }, select: { id: true } })).map((t) => t.id);
+
+  await prisma.standing.deleteMany({
+    where: {
+      OR: [
+        { entityType: 'robot', entityId: { in: robotIds } },
+        { entityType: 'team', entityId: { in: teamIds } },
+      ],
+    },
   });
-  const robotIds = robots.map((r) => r.id);
-
-  if (robotIds.length > 0) {
-    // Delete team battle members and teams before robots
-    const teamBattleIds = (
-      await prisma.teamBattle.findMany({
-        where: { stableId: { in: userIds } },
-        select: { id: true },
-      })
-    ).map((t) => t.id);
-
-    if (teamBattleIds.length > 0) {
-      await prisma.scheduledMatchParticipant.deleteMany({
-        where: {
-          participantType: 'team',
-          participantId: { in: teamBattleIds },
-        },
-      });
-      await prisma.teamBattleMember.deleteMany({
-        where: { teamId: { in: teamBattleIds } },
-      });
-      await prisma.teamBattle.deleteMany({
-        where: { id: { in: teamBattleIds } },
-      });
-    }
-
-
-    await prisma.battleParticipant.deleteMany({
-      where: { robotId: { in: robotIds } },
-    });
-    await prisma.battle.deleteMany({
-      where: {
-        participants: { some: { robotId: { in: robotIds } } },
-      },
-    });
-    await prisma.scheduledMatchParticipant.deleteMany({
-      where: { participantId: { in: robotIds }, participantType: 'robot' },
-    });
-    await prisma.scheduledMatch.deleteMany({
-      where: {
-        participants: { some: { participantId: { in: robotIds } } },
-      },
-    });
-    // Delete subscriptions before robots
-    await prisma.subscription.deleteMany({
-      where: { robotId: { in: robotIds } },
-    });
+  if (teamIds.length > 0) {
+    await prisma.scheduledMatchParticipant.deleteMany({ where: { participantType: 'team', participantId: { in: teamIds } } });
+    await prisma.teamBattleMember.deleteMany({ where: { teamId: { in: teamIds } } });
+    await prisma.teamBattle.deleteMany({ where: { id: { in: teamIds } } });
   }
-
+  if (robotIds.length > 0) {
+    await prisma.battleParticipant.deleteMany({ where: { robotId: { in: robotIds } } });
+    await prisma.scheduledMatchParticipant.deleteMany({ where: { participantType: 'robot', participantId: { in: robotIds } } });
+    await prisma.subscription.deleteMany({ where: { robotId: { in: robotIds } } });
+  }
   await prisma.weaponInventory.deleteMany({ where: { userId: { in: userIds } } });
   await prisma.facility.deleteMany({ where: { userId: { in: userIds } } });
   await prisma.robot.deleteMany({ where: { userId: { in: userIds } } });
   await prisma.user.deleteMany({ where: { id: { in: userIds } } });
 }
 
-describe('User Generation (Tiered Stable System)', () => {
+const ORIGINAL_TARGET = process.env.GENERATED_STABLE_TARGET;
 
-/**
- * The four solo events a 1-robot stable draws from, and every event a generated
- * stable can subscribe to. `grand_melee` belongs to both since Spec #44 made Grand
- * Melee a real mode; these lists omitted it, so any run that happened to pick it
- * failed.
- */
-const SOLO_EVENTS = ['league_1v1', 'tournament_1v1', 'koth', 'grand_melee'];
-const ALL_SUBSCRIBABLE_EVENTS = [
-  ...SOLO_EVENTS,
-  'tag_team',
-  'league_2v2',
-  'league_3v3',
-  'tournament_2v2',
-  'tournament_3v3',
-];
-
+describe('Generated stables', () => {
   beforeAll(async () => {
     await prisma.$connect();
-    // Weapons are seeded globally via tests/setup.ts (all 47 WEAPON_DEFINITIONS)
+    // Weapons are seeded globally via tests/setup.ts
   });
 
   afterAll(async () => {
+    await cleanupAutoUsers();
     await prisma.$disconnect();
   });
 
@@ -115,916 +84,192 @@ const ALL_SUBSCRIBABLE_EVENTS = [
     await cleanupAutoUsers();
   });
 
-  afterEach(async () => {
-    await cleanupAutoUsers();
+  afterEach(() => {
+    if (ORIGINAL_TARGET === undefined) delete process.env.GENERATED_STABLE_TARGET;
+    else process.env.GENERATED_STABLE_TARGET = ORIGINAL_TARGET;
   });
 
-  describe('generateBattleReadyUsers', () => {
-    it('should create N stables for cycle N', async () => {
-      const result = await generateBattleReadyUsers(3);
-
-      expect(result.usersCreated).toBe(3);
-      expect(result.usernames).toHaveLength(3);
-      const uniqueUsernames = new Set(result.usernames);
-      expect(uniqueUsernames.size).toBe(3);
+  describe('createGeneratedStables', () => {
+    it('creates nothing for a count of 0 or less', async () => {
+      for (const count of [0, -2]) {
+        const result = await createGeneratedStables(count);
+        expect(result).toMatchObject({ usersCreated: 0, robotsCreated: 0, usernames: [] });
+      }
+      expect(await countGeneratedStables()).toBe(0);
     });
 
-    it('should return TieredGenerationResult with tierBreakdown', async () => {
-      const result = await generateBattleReadyUsers(3);
+    it('splits the stables evenly over the three tiers, three robots each', async () => {
+      const result = await createGeneratedStables(3);
 
-      expect(result).toHaveProperty('usersCreated');
-      expect(result).toHaveProperty('robotsCreated');
-      expect(result).toHaveProperty('tagTeamsCreated');
-      expect(result).toHaveProperty('usernames');
-      expect(result).toHaveProperty('tierBreakdown');
-      expect(result.tierBreakdown).toHaveProperty('wimpBot');
-      expect(result.tierBreakdown).toHaveProperty('averageBot');
-      expect(result.tierBreakdown).toHaveProperty('expertBot');
-
-      // Cycle 3: 1 WimpBot + 1 AverageBot + 1 ExpertBot = 3
-      expect(result.tierBreakdown.wimpBot).toBe(1);
-      expect(result.tierBreakdown.averageBot).toBe(1);
-      expect(result.tierBreakdown.expertBot).toBe(1);
-      expect(
-        result.tierBreakdown.wimpBot +
-        result.tierBreakdown.averageBot +
-        result.tierBreakdown.expertBot,
-      ).toBe(3);
-    });
-
-    it('should create correct robot counts per tier', async () => {
-      // Cycle 3: 1 WimpBot(3 robots) + 1 AverageBot(2 robots) + 1 ExpertBot(1 robot) = 6 robots
-      const result = await generateBattleReadyUsers(3);
-
-      expect(result.robotsCreated).toBe(6);
-
-      // Verify per-user robot counts by querying the DB
-      const users = await prisma.user.findMany({
-        where: { username: { startsWith: 'auto_' } },
-        include: { robots: true },
-        orderBy: { username: 'asc' },
+      expect(result).toMatchObject({
+        usersCreated: 3,
+        robotsCreated: 9,
+        league3v3TeamsCreated: 3,
+        league2v2TeamsCreated: 3,
+        tagTeamsCreated: 0,
+        tierBreakdown: { wimpBot: 1, averageBot: 1, expertBot: 1 },
       });
-
-      const wimpBotUsers = users.filter((u) => u.username.startsWith('auto_wimpbot_'));
-      const averageBotUsers = users.filter((u) => u.username.startsWith('auto_averagebot_'));
-      const expertBotUsers = users.filter((u) => u.username.startsWith('auto_expertbot_'));
-
-      expect(wimpBotUsers).toHaveLength(1);
-      expect(averageBotUsers).toHaveLength(1);
-      expect(expertBotUsers).toHaveLength(1);
-
-      // WimpBot: 3 robots, AverageBot: 2 robots, ExpertBot: 1 robot
-      wimpBotUsers.forEach((u) => expect(u.robots).toHaveLength(3));
-      averageBotUsers.forEach((u) => expect(u.robots).toHaveLength(2));
-      expertBotUsers.forEach((u) => expect(u.robots).toHaveLength(1));
-    });
-
-    it('should use auto_<tier>_NNNN username format', async () => {
-      const result = await generateBattleReadyUsers(3);
-
-      const wimpBotNames = result.usernames.filter((u) => u.startsWith('auto_wimpbot_'));
-      const averageBotNames = result.usernames.filter((u) => u.startsWith('auto_averagebot_'));
-      const expertBotNames = result.usernames.filter((u) => u.startsWith('auto_expertbot_'));
-
-      expect(wimpBotNames.length).toBe(1);
-      expect(averageBotNames.length).toBe(1);
-      expect(expertBotNames.length).toBe(1);
-
-      // Verify the NNNN format (4-digit zero-padded)
       for (const username of result.usernames) {
         expect(username).toMatch(/^auto_(wimpbot|averagebot|expertbot)_\d{4}$/);
       }
-    });
-
-    it('should set currency to 100000 for all generated users', async () => {
-      await generateBattleReadyUsers(3);
 
       const users = await prisma.user.findMany({
-        where: { username: { startsWith: 'auto_' } },
+        where: { username: { in: result.usernames } },
+        include: { robots: true, facilities: true },
       });
-
       expect(users).toHaveLength(3);
-      users.forEach((user) => {
-        expect(user.currency).toBe(100000);
-        expect(user.role).toBe('user');
-      });
-    });
-
-    it('should assign stable names to all generated users', async () => {
-      await generateBattleReadyUsers(3);
-
-      const users = await prisma.user.findMany({
-        where: { username: { startsWith: 'auto_' } },
-      });
-
-      expect(users).toHaveLength(3);
-      users.forEach((user) => {
-        expect(user.stableName).not.toBeNull();
-        expect(typeof user.stableName).toBe('string');
-        expect((user.stableName as string).length).toBeGreaterThan(0);
-      });
-
-      // All stable names should be unique
-      const stableNames = users.map((u) => u.stableName);
-      expect(new Set(stableNames).size).toBe(stableNames.length);
-    });
-
-    it('should create robots with tier-appropriate attributes', async () => {
-      await generateBattleReadyUsers(3);
-
-      // WimpBot robots: all attributes = 1.0
-      const wimpBotRobots = await prisma.robot.findMany({
-        where: { user: { username: { startsWith: 'auto_wimpbot_' } } },
-      });
-      expect(wimpBotRobots.length).toBe(3);
-      for (const robot of wimpBotRobots) {
-        expect(Number(robot.combatPower)).toBe(1.0);
-        expect(Number(robot.targetingSystems)).toBe(1.0);
-        expect(Number(robot.armorPlating)).toBe(1.0);
-        expect(Number(robot.shieldCapacity)).toBe(1.0);
-      }
-
-      // AverageBot robots: all attributes = 5.0
-      const avgBotRobots = await prisma.robot.findMany({
-        where: { user: { username: { startsWith: 'auto_averagebot_' } } },
-      });
-      expect(avgBotRobots.length).toBe(2);
-      for (const robot of avgBotRobots) {
-        expect(Number(robot.combatPower)).toBe(5.0);
-        expect(Number(robot.targetingSystems)).toBe(5.0);
-        expect(Number(robot.armorPlating)).toBe(5.0);
-        expect(Number(robot.shieldCapacity)).toBe(5.0);
-      }
-
-      // ExpertBot robots: all attributes = 10.0
-      const expertBotRobots = await prisma.robot.findMany({
-        where: { user: { username: { startsWith: 'auto_expertbot_' } } },
-      });
-      expect(expertBotRobots.length).toBe(1);
-      for (const robot of expertBotRobots) {
-        expect(Number(robot.combatPower)).toBe(10.0);
-        expect(Number(robot.targetingSystems)).toBe(10.0);
-        expect(Number(robot.armorPlating)).toBe(10.0);
-        expect(Number(robot.shieldCapacity)).toBe(10.0);
+      expect(new Set(users.map((u) => u.stableName)).size).toBe(3);
+      for (const user of users) {
+        expect(user).toMatchObject({ currency: 100000, role: 'user', isGenerated: true, stableType: 'generated' });
+        expect(user.robots).toHaveLength(FILLER_ROBOTS_PER_STABLE);
+        expect(user.facilities).toEqual([expect.objectContaining({ facilityType: 'booking_office', level: 1 })]);
       }
     });
 
-    it('should equip robots with weapons from correct price tier', async () => {
-      await generateBattleReadyUsers(3);
-
-      // WimpBot: budget tier (cost < 100000)
-      const wimpBotRobots = await prisma.robot.findMany({
-        where: { user: { username: { startsWith: 'auto_wimpbot_' } } },
-        include: { mainWeapon: { include: { weapon: true } } },
-      });
-      for (const robot of wimpBotRobots) {
-        expect(robot.mainWeapon).not.toBeNull();
-        const weaponCost = robot.mainWeapon!.weapon.cost;
-        expect(weaponCost).toBeGreaterThanOrEqual(TIER_CONFIGS[0].priceTier.min);
-        expect(weaponCost).toBeLessThanOrEqual(TIER_CONFIGS[0].priceTier.max);
-      }
-
-      // AverageBot: mid tier (100000-250000)
-      const avgBotRobots = await prisma.robot.findMany({
-        where: { user: { username: { startsWith: 'auto_averagebot_' } } },
-        include: { mainWeapon: { include: { weapon: true } } },
-      });
-      for (const robot of avgBotRobots) {
-        expect(robot.mainWeapon).not.toBeNull();
-        const weaponCost = robot.mainWeapon!.weapon.cost;
-        expect(weaponCost).toBeGreaterThanOrEqual(TIER_CONFIGS[1].priceTier.min);
-        expect(weaponCost).toBeLessThanOrEqual(TIER_CONFIGS[1].priceTier.max);
-      }
-
-      // ExpertBot: premium tier (250000-400000)
-      const expertBotRobots = await prisma.robot.findMany({
-        where: { user: { username: { startsWith: 'auto_expertbot_' } } },
-        include: { mainWeapon: { include: { weapon: true } } },
-      });
-      for (const robot of expertBotRobots) {
-        expect(robot.mainWeapon).not.toBeNull();
-        const weaponCost = robot.mainWeapon!.weapon.cost;
-        expect(weaponCost).toBeGreaterThanOrEqual(TIER_CONFIGS[2].priceTier.min);
-        expect(weaponCost).toBeLessThanOrEqual(TIER_CONFIGS[2].priceTier.max);
-      }
-    });
-
-    it('should place all robots in bronze league with ELO 1200', async () => {
-      await generateBattleReadyUsers(3);
-
+    it('builds robots with the tier attribute level, derived HP/shield and a weapon from the tier price band', async () => {
+      const result = await createGeneratedStables(3);
       const robots = await prisma.robot.findMany({
-        where: { user: { username: { startsWith: 'auto_' } } },
+        where: { user: { username: { in: result.usernames } } },
+        include: { user: true, mainWeapon: { include: { weapon: true } } },
       });
-
-      expect(robots.length).toBe(6);
-      robots.forEach((robot) => {
+      expect(robots).toHaveLength(9);
+      for (const robot of robots) {
+        const tier = tierOf(robot.user.username);
+        expect(Number(robot.combatPower)).toBe(tier.attributeLevel);
+        expect(Number(robot.formationTactics)).toBe(tier.attributeLevel);
+        expect(robot.maxHP).toBe(50 + Math.floor(tier.attributeLevel * 5));
+        expect(robot.currentHP).toBe(robot.maxHP);
+        expect(robot.maxShield).toBe(Math.floor(tier.attributeLevel * 4));
         expect(robot.elo).toBe(1200);
         expect(robot.battleReadiness).toBe(100);
-      });
+        expect(robot.mainWeapon).not.toBeNull();
+        expect(robot.mainWeapon!.weapon.cost).toBeGreaterThanOrEqual(tier.priceTier.min);
+        expect(robot.mainWeapon!.weapon.cost).toBeLessThanOrEqual(tier.priceTier.max);
+      }
     });
 
-    it('should return early with zero counts for cycleNumber <= 0', async () => {
-      const resultZero = await generateBattleReadyUsers(0);
-      expect(resultZero.usersCreated).toBe(0);
-      expect(resultZero.robotsCreated).toBe(0);
-      expect(resultZero.tagTeamsCreated).toBe(0);
-      expect(resultZero.usernames).toHaveLength(0);
-      expect(resultZero.tierBreakdown).toEqual({
-        wimpBot: 0,
-        averageBot: 0,
-        expertBot: 0,
+    it('subscribes every robot to the filler events: 2v2 tournament for robots 1–2, Grand Melee for robot 3', async () => {
+      const result = await createGeneratedStables(3);
+      const users = await prisma.user.findMany({
+        where: { username: { in: result.usernames } },
+        include: { robots: { include: { subscriptions: true }, orderBy: { id: 'asc' } } },
       });
-
-      const resultNeg = await generateBattleReadyUsers(-1);
-      expect(resultNeg.usersCreated).toBe(0);
-      expect(resultNeg.robotsCreated).toBe(0);
-      expect(resultNeg.tagTeamsCreated).toBe(0);
-      expect(resultNeg.usernames).toHaveLength(0);
+      for (const user of users) {
+        const sets = user.robots.map((r) => r.subscriptions.map((s) => s.eventType).sort());
+        expect(sets).toEqual([
+          ['league_3v3', 'tournament_1v1', 'tournament_2v2', 'tournament_3v3'],
+          ['league_3v3', 'tournament_1v1', 'tournament_2v2', 'tournament_3v3'],
+          ['grand_melee', 'league_3v3', 'tournament_1v1', 'tournament_3v3'],
+        ]);
+      }
     });
-  });
 
-  /**
-   * Property-Based Tests for User Generation
-   *
-   * These tests verify universal properties that should hold across all valid
-   * cycle numbers. Each test uses fast-check to generate random inputs and
-   * verify the property holds.
-   */
-  describe('Property-Based Tests', () => {
-    /**
-     * Property 2: Generated robots have tier-appropriate attributes
-     * **Validates: Requirements 9.1, 10.1, 11.1**
-     *
-     * For any tier configuration (WimpBot/AverageBot/ExpertBot) and any generated
-     * robot in that tier, all 23 attributes should equal the tier's attribute level
-     * (1.00 for WimpBot, 5.00 for AverageBot, 10.00 for ExpertBot), and the robot
-     * count per stable should match the tier's robot count (3, 2, or 1 respectively).
-     */
-    it('Property 2: Generated robots have tier-appropriate attributes', async () => {
+    it('registers a 3v3 team in the 3v3 league and a 2v2 team of robots 1–2 in no league', async () => {
+      const result = await createGeneratedStables(3);
+      const users = await prisma.user.findMany({
+        where: { username: { in: result.usernames } },
+        include: { robots: { orderBy: { id: 'asc' } } },
+      });
+      for (const user of users) {
+        const teams = await prisma.teamBattle.findMany({ where: { stableId: user.id }, include: { members: true } });
+        const team3 = teams.find((t) => t.teamSize === 3);
+        const team2 = teams.find((t) => t.teamSize === 2);
+        expect(team3?.members.map((m) => m.robotId).sort()).toEqual(user.robots.map((r) => r.id).sort());
+        expect(team2?.members.map((m) => m.robotId).sort()).toEqual(user.robots.slice(0, 2).map((r) => r.id).sort());
+
+        const team3Modes = await prisma.standing.findMany({ where: { entityType: 'team', entityId: team3!.id } });
+        expect(team3Modes.map((s) => s.mode)).toEqual(['league_3v3']);
+        expect(team3Modes[0]).toMatchObject({ tier: 'bronze', leaguePoints: 0 });
+        expect(await prisma.standing.count({ where: { entityType: 'team', entityId: team2!.id } })).toBe(0);
+      }
+    });
+
+    it('gives robot standings only in Grand Melee, for robot 3', async () => {
+      const result = await createGeneratedStables(3);
+      const robots = await prisma.robot.findMany({
+        where: { user: { username: { in: result.usernames } } },
+        orderBy: { id: 'asc' },
+        select: { id: true, userId: true },
+      });
+      const thirdRobotOf = new Map<number, number>();
+      for (const robot of robots) thirdRobotOf.set(robot.userId, robot.id); // last (third) robot per stable
+      const standings = await prisma.standing.findMany({
+        where: { entityType: 'robot', entityId: { in: robots.map((r) => r.id) } },
+      });
+      expect(standings.map((s) => s.mode)).toEqual(['grand_melee', 'grand_melee', 'grand_melee']);
+      expect(standings.map((s) => s.entityId).sort()).toEqual([...thirdRobotOf.values()].sort());
+    });
+
+    it('makes every team and robot eligible for its tournament', async () => {
+      const result = await createGeneratedStables(3);
+      const userIds = (await prisma.user.findMany({ where: { username: { in: result.usernames } }, select: { id: true } })).map((u) => u.id);
+      const teams = await prisma.teamBattle.findMany({ where: { stableId: { in: userIds } } });
+      const robots = await prisma.robot.findMany({ where: { userId: { in: userIds } }, select: { id: true } });
+
+      const eligible3 = new Set((await getEligibleTeamsForTournament(3)).map((p) => p.id));
+      const eligible2 = new Set((await getEligibleTeamsForTournament(2)).map((p) => p.id));
+      const eligible1 = new Set((await getEligibleRobotsForTournament()).map((r) => r.id));
+      for (const team of teams) {
+        expect((team.teamSize === 3 ? eligible3 : eligible2).has(team.id)).toBe(true);
+      }
+      for (const robot of robots) expect(eligible1.has(robot.id)).toBe(true);
+    });
+
+    it('property: names encode tier, loadout and weapon and stay unique', async () => {
+      const titles = Object.values(LOADOUT_TITLES);
       await fc.assert(
-        fc.asyncProperty(fc.integer({ min: 3, max: 6 }), async (cycleNumber) => {
+        fc.asyncProperty(fc.integer({ min: 2, max: 4 }), async (count) => {
           await cleanupAutoUsers();
-
-          await generateBattleReadyUsers(cycleNumber);
-
-          // Verify WimpBot robots (attributeLevel = 1.0)
-          const wimpBotRobots = await prisma.robot.findMany({
-            where: { user: { username: { startsWith: 'auto_wimpbot_' } } },
-          });
-          for (const robot of wimpBotRobots) {
-            expect(Number(robot.combatPower)).toBe(1.0);
-            expect(Number(robot.targetingSystems)).toBe(1.0);
-            expect(Number(robot.armorPlating)).toBe(1.0);
-            expect(Number(robot.shieldCapacity)).toBe(1.0);
-            expect(Number(robot.criticalSystems)).toBe(1.0);
-            expect(Number(robot.penetration)).toBe(1.0);
-            expect(Number(robot.weaponControl)).toBe(1.0);
-            expect(Number(robot.attackSpeed)).toBe(1.0);
-            expect(Number(robot.evasionThrusters)).toBe(1.0);
-            expect(Number(robot.damageDampeners)).toBe(1.0);
-            expect(Number(robot.counterProtocols)).toBe(1.0);
-            expect(Number(robot.hullIntegrity)).toBe(1.0);
-            expect(Number(robot.servoMotors)).toBe(1.0);
-            expect(Number(robot.gyroStabilizers)).toBe(1.0);
-            expect(Number(robot.hydraulicSystems)).toBe(1.0);
-            expect(Number(robot.powerCore)).toBe(1.0);
-            expect(Number(robot.combatAlgorithms)).toBe(1.0);
-            expect(Number(robot.threatAnalysis)).toBe(1.0);
-            expect(Number(robot.adaptiveAI)).toBe(1.0);
-            expect(Number(robot.logicCores)).toBe(1.0);
-            expect(Number(robot.syncProtocols)).toBe(1.0);
-            expect(Number(robot.supportSystems)).toBe(1.0);
-            expect(Number(robot.formationTactics)).toBe(1.0);
-          }
-
-          // Verify AverageBot robots (attributeLevel = 5.0)
-          const avgBotRobots = await prisma.robot.findMany({
-            where: { user: { username: { startsWith: 'auto_averagebot_' } } },
-          });
-          for (const robot of avgBotRobots) {
-            expect(Number(robot.combatPower)).toBe(5.0);
-            expect(Number(robot.targetingSystems)).toBe(5.0);
-            expect(Number(robot.armorPlating)).toBe(5.0);
-            expect(Number(robot.shieldCapacity)).toBe(5.0);
-          }
-
-          // Verify ExpertBot robots (attributeLevel = 10.0)
-          const expertBotRobots = await prisma.robot.findMany({
-            where: { user: { username: { startsWith: 'auto_expertbot_' } } },
-          });
-          for (const robot of expertBotRobots) {
-            expect(Number(robot.combatPower)).toBe(10.0);
-            expect(Number(robot.targetingSystems)).toBe(10.0);
-            expect(Number(robot.armorPlating)).toBe(10.0);
-            expect(Number(robot.shieldCapacity)).toBe(10.0);
-          }
-
-          // Verify robot counts per stable match tier configuration
-          const wimpBotUsers = await prisma.user.findMany({
-            where: { username: { startsWith: 'auto_wimpbot_' } },
-            include: { robots: true },
-          });
-          for (const user of wimpBotUsers) {
-            expect(user.robots).toHaveLength(3); // WimpBot: 3 robots
-          }
-
-          const avgBotUsers = await prisma.user.findMany({
-            where: { username: { startsWith: 'auto_averagebot_' } },
-            include: { robots: true },
-          });
-          for (const user of avgBotUsers) {
-            expect(user.robots).toHaveLength(2); // AverageBot: 2 robots
-          }
-
-          const expertBotUsers = await prisma.user.findMany({
-            where: { username: { startsWith: 'auto_expertbot_' } },
-            include: { robots: true },
-          });
-          for (const user of expertBotUsers) {
-            expect(user.robots).toHaveLength(1); // ExpertBot: 1 robot
-          }
-
-          await cleanupAutoUsers();
-        }),
-        { numRuns: 5 }
-      );
-    }, 60000);
-
-    /**
-     * Property 5: All generated robots start in Bronze league with ELO 1200
-     * **Validates: Requirements 5.7, 9.7, 10.7, 11.7, 15.1**
-     *
-     * For any generated robot (regardless of tier), its elo should be 1200.
-     */
-    it('Property 5: All generated robots start with ELO 1200', async () => {
-      await fc.assert(
-        fc.asyncProperty(fc.integer({ min: 1, max: 6 }), async (cycleNumber) => {
-          await cleanupAutoUsers();
-
-          await generateBattleReadyUsers(cycleNumber);
-
+          const result = await createGeneratedStables(count);
           const robots = await prisma.robot.findMany({
-            where: { user: { username: { startsWith: 'auto_' } } },
+            where: { user: { username: { in: result.usernames } } },
+            include: { user: true, mainWeapon: { include: { weapon: true } } },
           });
-
+          expect(robots).toHaveLength(count * FILLER_ROBOTS_PER_STABLE);
+          expect(new Set(robots.map((r) => r.name)).size).toBe(robots.length);
           for (const robot of robots) {
-            expect(robot.elo).toBe(1200);
-          }
-
-          await cleanupAutoUsers();
-        }),
-        { numRuns: 5 }
-      );
-    }, 60000);
-
-    /**
-     * Property 6: All generated users start with ₡100,000 and a stable name
-     * **Validates: Requirements 5.2, 5.3, 8.4, 8.5, 16.1, 16.2**
-     *
-     * For any generated user (both seeded test users and cycle-generated users),
-     * currency should equal 100000 and stableName should be a non-null, non-empty string.
-     */
-    it('Property 6: All generated users start with ₡100,000 and a stable name', async () => {
-      await fc.assert(
-        fc.asyncProperty(fc.integer({ min: 1, max: 6 }), async (cycleNumber) => {
-          await cleanupAutoUsers();
-
-          await generateBattleReadyUsers(cycleNumber);
-
-          const users = await prisma.user.findMany({
-            where: { username: { startsWith: 'auto_' } },
-          });
-
-          for (const user of users) {
-            expect(user.currency).toBe(100000);
-            expect(user.stableName).not.toBeNull();
-            expect(typeof user.stableName).toBe('string');
-            expect((user.stableName as string).length).toBeGreaterThan(0);
-          }
-
-          // All stable names should be unique
-          const stableNames = users.map((u) => u.stableName);
-          expect(new Set(stableNames).size).toBe(stableNames.length);
-
-          await cleanupAutoUsers();
-        }),
-        { numRuns: 5 }
-      );
-    }, 60000);
-
-    /**
-     * Property 10: Generated robots have valid stance and yield threshold
-     * **Validates: Requirements 12.1, 12.2**
-     *
-     * For any generated robot, its stance should be one of "balanced", "offensive",
-     * or "defensive", and its yieldThreshold should be an integer in the range [0, 20].
-     */
-    it('Property 10: Generated robots have valid stance and yield threshold', async () => {
-      await fc.assert(
-        fc.asyncProperty(fc.integer({ min: 3, max: 6 }), async (cycleNumber) => {
-          await cleanupAutoUsers();
-
-          await generateBattleReadyUsers(cycleNumber);
-
-          const robots = await prisma.robot.findMany({
-            where: { user: { username: { startsWith: 'auto_' } } },
-          });
-
-          const validStances = ['balanced', 'offensive', 'defensive'];
-
-          for (const robot of robots) {
-            // Verify stance is valid
-            expect(validStances).toContain(robot.stance);
-
-            // Verify yieldThreshold is an integer in [0, 20]
-            expect(Number.isInteger(robot.yieldThreshold)).toBe(true);
+            const parts = robot.name.split(' ');
+            expect(parts[0]).toBe(tierOf(robot.user.username).name);
+            expect(titles).toContain(parts[1]);
+            const codename = WEAPON_CODENAMES[robot.mainWeapon!.weapon.name];
+            if (codename) expect(robot.name).toContain(` ${codename} `);
+            expect(parseInt(parts[parts.length - 1], 10)).toBeGreaterThan(0);
+            expect(['balanced', 'offensive', 'defensive']).toContain(robot.stance);
+            expect(['single', 'weapon_shield', 'two_handed', 'dual_wield']).toContain(robot.loadoutType);
             expect(robot.yieldThreshold).toBeGreaterThanOrEqual(0);
             expect(robot.yieldThreshold).toBeLessThanOrEqual(20);
           }
-
-          await cleanupAutoUsers();
         }),
-        { numRuns: 5 }
+        { numRuns: 3 },
       );
-    }, 60000);
-
-    /**
-     * Property 11: Generated robots have valid loadout type and range band selection
-     * **Validates: Requirements 9.2, 9.3, 10.2, 10.3, 11.2, 11.3**
-     *
-     * For any generated robot, its loadoutType should be one of "single",
-     * "weapon_shield", "two_handed", or "dual_wield", and the equipped weapon's
-     * rangeBand should be one of "melee", "short", "mid", or "long".
-     */
-    it('Property 11: Generated robots have valid loadout type and range band selection', async () => {
-      await fc.assert(
-        fc.asyncProperty(fc.integer({ min: 3, max: 6 }), async (cycleNumber) => {
-          await cleanupAutoUsers();
-
-          await generateBattleReadyUsers(cycleNumber);
-
-          const robots = await prisma.robot.findMany({
-            where: { user: { username: { startsWith: 'auto_' } } },
-            include: { mainWeapon: { include: { weapon: true } } },
-          });
-
-          const validLoadoutTypes = ['single', 'weapon_shield', 'two_handed', 'dual_wield'];
-          const validRangeBands = ['melee', 'short', 'mid', 'long'];
-
-          for (const robot of robots) {
-            // Verify loadoutType is valid
-            expect(validLoadoutTypes).toContain(robot.loadoutType);
-
-            // Verify weapon's rangeBand is valid
-            expect(robot.mainWeapon).not.toBeNull();
-            expect(validRangeBands).toContain(robot.mainWeapon!.weapon.rangeBand);
-          }
-
-          await cleanupAutoUsers();
-        }),
-        { numRuns: 5 }
-      );
-    }, 60000);
-
-    /**
-     * Property 12: HP and shield are correctly derived from attributes
-     * **Validates: Requirements 5.4, 9.1, 10.1, 11.1**
-     *
-     * For any generated robot with attribute level A:
-     * - maxHP should equal 50 + floor(A * 5)
-     * - maxShield should equal floor(A * 4)
-     * - currentHP should equal maxHP
-     * - currentShield should equal maxShield
-     *
-     * Tier attribute levels: WimpBot=1.0, AverageBot=5.0, ExpertBot=10.0
-     * Expected values:
-     * - WimpBot: HP = 55, Shield = 4
-     * - AverageBot: HP = 75, Shield = 20
-     * - ExpertBot: HP = 100, Shield = 40
-     */
-    it('Property 12: HP and shield are correctly derived from attributes', async () => {
-      await fc.assert(
-        fc.asyncProperty(fc.integer({ min: 3, max: 6 }), async (cycleNumber) => {
-          await cleanupAutoUsers();
-
-          await generateBattleReadyUsers(cycleNumber);
-
-          // WimpBot: attributeLevel = 1.0 → HP = 55, Shield = 4
-          const wimpBotRobots = await prisma.robot.findMany({
-            where: { user: { username: { startsWith: 'auto_wimpbot_' } } },
-          });
-          for (const robot of wimpBotRobots) {
-            const expectedHP = 50 + Math.floor(1.0 * 5); // 55
-            const expectedShield = Math.floor(1.0 * 4); // 4
-            expect(robot.maxHP).toBe(expectedHP);
-            expect(robot.currentHP).toBe(expectedHP);
-            expect(robot.maxShield).toBe(expectedShield);
-            expect(robot.currentShield).toBe(expectedShield);
-          }
-
-          // AverageBot: attributeLevel = 5.0 → HP = 75, Shield = 20
-          const avgBotRobots = await prisma.robot.findMany({
-            where: { user: { username: { startsWith: 'auto_averagebot_' } } },
-          });
-          for (const robot of avgBotRobots) {
-            const expectedHP = 50 + Math.floor(5.0 * 5); // 75
-            const expectedShield = Math.floor(5.0 * 4); // 20
-            expect(robot.maxHP).toBe(expectedHP);
-            expect(robot.currentHP).toBe(expectedHP);
-            expect(robot.maxShield).toBe(expectedShield);
-            expect(robot.currentShield).toBe(expectedShield);
-          }
-
-          // ExpertBot: attributeLevel = 10.0 → HP = 100, Shield = 40
-          const expertBotRobots = await prisma.robot.findMany({
-            where: { user: { username: { startsWith: 'auto_expertbot_' } } },
-          });
-          for (const robot of expertBotRobots) {
-            const expectedHP = 50 + Math.floor(10.0 * 5); // 100
-            const expectedShield = Math.floor(10.0 * 4); // 40
-            expect(robot.maxHP).toBe(expectedHP);
-            expect(robot.currentHP).toBe(expectedHP);
-            expect(robot.maxShield).toBe(expectedShield);
-            expect(robot.currentShield).toBe(expectedShield);
-          }
-
-          await cleanupAutoUsers();
-        }),
-        { numRuns: 5 }
-      );
-    }, 60000);
-
-    /**
-     * Property 7: Robot names encode loadout and are unique
-     * **Validates: Requirements 13.1, 13.2, 13.3, 13.4, 13.6**
-     *
-     * For any set of generated robots:
-     * - All robot names should be unique
-     * - Each name should contain the tier identifier ("WimpBot", "AverageBot", or "ExpertBot")
-     * - Each name should contain a valid loadout title ("Lone", "Guardian", "Twin", or "Heavy")
-     * - Each name should contain a valid weapon codename from WEAPON_CODENAMES that matches
-     *   the robot's equipped weapon
-     */
-    it('Property 7: Robot names encode loadout and are unique', async () => {
-      const validTierIdentifiers = ['WimpBot', 'AverageBot', 'ExpertBot'];
-      const validLoadoutTitles = Object.values(LOADOUT_TITLES);
-      const validWeaponCodenames = Object.values(WEAPON_CODENAMES);
-
-      await fc.assert(
-        fc.asyncProperty(fc.integer({ min: 3, max: 9 }), async (cycleNumber) => {
-          await cleanupAutoUsers();
-
-          await generateBattleReadyUsers(cycleNumber);
-
-          const robots = await prisma.robot.findMany({
-            where: { user: { username: { startsWith: 'auto_' } } },
-            include: { mainWeapon: { include: { weapon: true } } },
-          });
-
-          // Verify all robot names are unique
-          const robotNames = robots.map((r) => r.name);
-          const uniqueNames = new Set(robotNames);
-          expect(uniqueNames.size).toBe(robotNames.length);
-
-          for (const robot of robots) {
-            const name = robot.name;
-
-            // Verify name contains a valid tier identifier
-            const containsTierIdentifier = validTierIdentifiers.some((tier) =>
-              name.startsWith(tier)
-            );
-            expect(containsTierIdentifier).toBe(true);
-
-            // Verify name contains a valid loadout title
-            const containsLoadoutTitle = validLoadoutTitles.some((title) =>
-              name.includes(` ${title} `)
-            );
-            expect(containsLoadoutTitle).toBe(true);
-
-            // Verify name contains a valid weapon codename that matches the equipped weapon
-            expect(robot.mainWeapon).not.toBeNull();
-            const equippedWeaponName = robot.mainWeapon!.weapon.name;
-            const expectedCodename = WEAPON_CODENAMES[equippedWeaponName];
-            // Some weapons may not have codenames if the map hasn't been updated
-            if (expectedCodename) {
-              expect(name).toContain(expectedCodename);
-            }
-
-            // Verify the name follows the format: {Tier} {LoadoutTitle} {WeaponCodename} {Number}
-            // Extract components and verify structure
-            const nameParts = name.split(' ');
-            expect(nameParts.length).toBeGreaterThanOrEqual(4);
-
-            const tierPart = nameParts[0];
-            const numberPart = nameParts[nameParts.length - 1];
-            expect(validTierIdentifiers).toContain(tierPart);
-            expect(parseInt(numberPart, 10)).toBeGreaterThan(0);
-          }
-
-          await cleanupAutoUsers();
-        }),
-        { numRuns: 5 }
-      );
-    }, 60000);
+    }, 120000);
   });
 
-  /**
-   * Team Battle Integration Tests (R15.1–R15.8)
-   *
-   * Tests for the team battle extensions to seeded user generation:
-   * - Subscription assignment rules per stable size
-   * - Booking Office L1 grant for multi-robot stables
-   * - Team creation from subscribed pool
-   * - Graceful failure handling
-   * - league2v2TeamsCreated and league3v3TeamsCreated counts
-   */
-  describe('Team Battle Integration (R15)', () => {
-    it('should grant Booking Office L1 to stables with 2+ robots (R15.4)', async () => {
-      const result = await generateBattleReadyUsers(3);
+  describe('topUpGeneratedStables', () => {
+    it('creates only the missing stables, then nothing', async () => {
+      process.env.GENERATED_STABLE_TARGET = '4';
 
-      // WimpBot (3 robots) and AverageBot (2 robots) should have Booking Office L1
-      const wimpBotUsers = await prisma.user.findMany({
-        where: { username: { startsWith: 'auto_wimpbot_' } },
-        include: { facilities: true },
-      });
-      for (const user of wimpBotUsers) {
-        const bookingOffice = user.facilities.find(f => f.facilityType === 'booking_office');
-        expect(bookingOffice).toBeDefined();
-        expect(bookingOffice!.level).toBe(1);
+      const first = await topUpGeneratedStables();
+      expect(first).toMatchObject({ target: 4, existingBefore: 0, usersCreated: 4, robotsCreated: 12 });
+      expect(first.tierBreakdown).toEqual({ wimpBot: 2, averageBot: 1, expertBot: 1 });
+
+      const second = await topUpGeneratedStables();
+      expect(second).toMatchObject({ target: 4, existingBefore: 4, usersCreated: 0 });
+      expect(await countGeneratedStables()).toBe(4);
+    }, 60000);
+
+    it('creates the difference when the target is raised, and nothing when it is lowered or 0', async () => {
+      process.env.GENERATED_STABLE_TARGET = '2';
+      await topUpGeneratedStables();
+
+      process.env.GENERATED_STABLE_TARGET = '5';
+      expect(await topUpGeneratedStables()).toMatchObject({ existingBefore: 2, usersCreated: 3 });
+
+      for (const target of ['1', '0']) {
+        process.env.GENERATED_STABLE_TARGET = target;
+        expect(await topUpGeneratedStables()).toMatchObject({ existingBefore: 5, usersCreated: 0 });
       }
-
-      const avgBotUsers = await prisma.user.findMany({
-        where: { username: { startsWith: 'auto_averagebot_' } },
-        include: { facilities: true },
-      });
-      for (const user of avgBotUsers) {
-        const bookingOffice = user.facilities.find(f => f.facilityType === 'booking_office');
-        expect(bookingOffice).toBeDefined();
-        expect(bookingOffice!.level).toBe(1);
-      }
-
-      // ExpertBot (1 robot) should NOT have Booking Office
-      const expertBotUsers = await prisma.user.findMany({
-        where: { username: { startsWith: 'auto_expertbot_' } },
-        include: { facilities: true },
-      });
-      for (const user of expertBotUsers) {
-        const bookingOffice = user.facilities.find(f => f.facilityType === 'booking_office');
-        expect(bookingOffice).toBeUndefined();
-      }
-    });
-
-    it('should assign 3 of the 4 solo events to 1-robot stables (R15.2)', async () => {
-      const result = await generateBattleReadyUsers(3);
-
-      // ExpertBot has 1 robot — should get exactly league_1v1, tournament_1v1, koth
-      const expertBotRobots = await prisma.robot.findMany({
-        where: { user: { username: { startsWith: 'auto_expertbot_' } } },
-        include: { subscriptions: true },
-      });
-
-      expect(expertBotRobots.length).toBe(1);
-      const subs = expertBotRobots[0].subscriptions.map(s => s.eventType);
-      // A 1-robot stable is capped at 3 and picks 3 at random from the four solo
-      // events. `grand_melee` became the fourth when Spec #44 made Grand Melee a real
-      // mode, so the set is no longer the fixed triple this asserted.
-      expect(subs).toHaveLength(3);
-      expect(new Set(subs).size).toBe(3);
-      for (const eventType of subs) {
-        expect(SOLO_EVENTS).toContain(eventType);
-      }
-    });
-
-    it('should assign 4 subscriptions to 2-robot stables with team modes (R15.2)', async () => {
-      const result = await generateBattleReadyUsers(3);
-
-      // AverageBot has 2 robots — each should have 4 subscriptions
-      const avgBotRobots = await prisma.robot.findMany({
-        where: { user: { username: { startsWith: 'auto_averagebot_' } } },
-        include: { subscriptions: true },
-      });
-
-      expect(avgBotRobots.length).toBe(2);
-      for (const robot of avgBotRobots) {
-        expect(robot.subscriptions.length).toBe(4);
-
-        const eventTypes = robot.subscriptions.map(s => s.eventType);
-        // All subscriptions should be valid event types
-        const validEvents = ALL_SUBSCRIBABLE_EVENTS;
-        for (const eventType of eventTypes) {
-          expect(validEvents).toContain(eventType);
-        }
-
-        // Should have at least 1 team mode (league_2v2, tag_team, or tournament_2v2)
-        const teamModes = eventTypes.filter(e => e === 'league_2v2' || e === 'tag_team' || e === 'tournament_2v2');
-        expect(teamModes.length).toBeGreaterThanOrEqual(1);
-      }
-    });
-
-    it('should assign 4 subscriptions to 3-robot stables prioritising 3v3 modes (R15.2)', async () => {
-      const result = await generateBattleReadyUsers(3);
-
-      // WimpBot has 3 robots and createLeague3v3: true — each should have 4 subscriptions
-      const wimpBotRobots = await prisma.robot.findMany({
-        where: { user: { username: { startsWith: 'auto_wimpbot_' } } },
-        include: { subscriptions: true },
-      });
-
-      expect(wimpBotRobots.length).toBe(3);
-      for (const robot of wimpBotRobots) {
-        expect(robot.subscriptions.length).toBe(4);
-
-        const eventTypes = robot.subscriptions.map(s => s.eventType);
-        // WimpBot tier has createLeague3v3: true, so league_3v3 or tournament_3v3 should be present
-        const has3v3 = eventTypes.includes('league_3v3') || eventTypes.includes('tournament_3v3');
-        expect(has3v3).toBe(true);
-
-        // All subscriptions should be valid event types
-        const validEvents = ALL_SUBSCRIBABLE_EVENTS;
-        for (const eventType of eventTypes) {
-          expect(validEvents).toContain(eventType);
-        }
-      }
-    });
-
-    it('should create 2v2 teams from subscribed pool for eligible stables (R15.3)', async () => {
-      const result = await generateBattleReadyUsers(3);
-
-      // WimpBot (3 robots, createLeague2v2: true) and AverageBot (2 robots, createLeague2v2: true)
-      // should have 2v2 teams created
-      expect(result.league2v2TeamsCreated).toBeGreaterThanOrEqual(1);
-
-      // Verify teams exist in the database
-      const wimpBotUsers = await prisma.user.findMany({
-        where: { username: { startsWith: 'auto_wimpbot_' } },
-        select: { id: true },
-      });
-      const avgBotUsers = await prisma.user.findMany({
-        where: { username: { startsWith: 'auto_averagebot_' } },
-        select: { id: true },
-      });
-
-      const eligibleUserIds = [...wimpBotUsers, ...avgBotUsers].map(u => u.id);
-      const teams2v2 = await prisma.teamBattle.findMany({
-        where: {
-          stableId: { in: eligibleUserIds },
-          teamSize: 2,
-        },
-        include: { members: true },
-      });
-
-      // At least one 2v2 team should exist (depends on subscription randomness)
-      expect(teams2v2.length).toBeGreaterThanOrEqual(1);
-
-      // Each 2v2 team should have exactly 2 members
-      for (const team of teams2v2) {
-        expect(team.members.length).toBe(2);
-      }
-    });
-
-    it('should create 3v3 teams from subscribed pool for eligible stables (R15.3)', async () => {
-      const result = await generateBattleReadyUsers(3);
-
-      // WimpBot (3 robots, createLeague3v3: true) should have 3v3 teams
-      expect(result.league3v3TeamsCreated).toBeGreaterThanOrEqual(1);
-
-      // Verify teams exist in the database
-      const wimpBotUsers = await prisma.user.findMany({
-        where: { username: { startsWith: 'auto_wimpbot_' } },
-        select: { id: true },
-      });
-
-      const teams3v3 = await prisma.teamBattle.findMany({
-        where: {
-          stableId: { in: wimpBotUsers.map(u => u.id) },
-          teamSize: 3,
-        },
-        include: { members: true },
-      });
-
-      // WimpBot has createLeague3v3: true and 3 robots, so at least 1 team should exist
-      expect(teams3v3.length).toBeGreaterThanOrEqual(1);
-
-      // Each 3v3 team should have exactly 3 members
-      for (const team of teams3v3) {
-        expect(team.members.length).toBe(3);
-      }
-    });
-
-    it('should NOT create 3v3 teams for stables with createLeague3v3: false (R15.3)', async () => {
-      const result = await generateBattleReadyUsers(3);
-
-      // AverageBot has createLeague3v3: false and only 2 robots — no 3v3 teams
-      const avgBotUsers = await prisma.user.findMany({
-        where: { username: { startsWith: 'auto_averagebot_' } },
-        select: { id: true },
-      });
-
-      const teams3v3 = await prisma.teamBattle.findMany({
-        where: {
-          stableId: { in: avgBotUsers.map(u => u.id) },
-          teamSize: 3,
-        },
-      });
-
-      expect(teams3v3.length).toBe(0);
-    });
-
-    it('should return league2v2TeamsCreated and league3v3TeamsCreated in result (R15.7)', async () => {
-      const result = await generateBattleReadyUsers(3);
-
-      expect(result).toHaveProperty('league2v2TeamsCreated');
-      expect(result).toHaveProperty('league3v3TeamsCreated');
-      expect(typeof result.league2v2TeamsCreated).toBe('number');
-      expect(typeof result.league3v3TeamsCreated).toBe('number');
-      expect(result.league2v2TeamsCreated).toBeGreaterThanOrEqual(0);
-      expect(result.league3v3TeamsCreated).toBeGreaterThanOrEqual(0);
-    });
-
-    it('should handle team registration failures gracefully (R15.8)', async () => {
-      // Generate users — even if some team registrations fail, the function should
-      // complete without throwing and return valid results
-      const result = await generateBattleReadyUsers(3);
-
-      // The function should complete successfully regardless of team registration outcomes
-      expect(result.usersCreated).toBe(3);
-      expect(result.robotsCreated).toBe(6);
-      expect(result.usernames).toHaveLength(3);
-
-      // Team counts should be non-negative (0 if all failed, >0 if some succeeded)
-      expect(result.league2v2TeamsCreated).toBeGreaterThanOrEqual(0);
-      expect(result.league3v3TeamsCreated).toBeGreaterThanOrEqual(0);
-    });
-
-    it('should assign teams to bronze league tier (R15.6)', async () => {
-      await generateBattleReadyUsers(3);
-
-      // All created teams should exist
-      const teams = await prisma.teamBattle.findMany({
-        where: {
-          stable: { username: { startsWith: 'auto_' } },
-        },
-      });
-
-      expect(teams.length).toBeGreaterThan(0);
-    });
-
-    it('should ensure team members are subscribed to the corresponding event (R15.5)', async () => {
-      await generateBattleReadyUsers(3);
-
-      // A 2v2 TeamBattle is created when the stable subscribes to ANY team-2 mode —
-      // league_2v2, tag_team or tournament_2v2 — because one TeamBattle entity
-      // participates in all of them. Requiring `league_2v2` specifically failed
-      // whenever the generator picked tournament_2v2 or tag_team instead. The real
-      // invariant is that a team member holds at least one mode of the right size.
-      const TEAM_2_MODES = ['league_2v2', 'tag_team', 'tournament_2v2'];
-      const TEAM_3_MODES = ['league_3v3', 'tournament_3v3'];
-
-      const teams2v2 = await prisma.teamBattle.findMany({
-        where: {
-          stable: { username: { startsWith: 'auto_' } },
-          teamSize: 2,
-        },
-        include: { members: { include: { robot: { include: { subscriptions: true } } } } },
-      });
-
-      for (const team of teams2v2) {
-        for (const member of team.members) {
-          const subs = member.robot.subscriptions.map(s => s.eventType);
-          expect(subs.some((e) => TEAM_2_MODES.includes(e))).toBe(true);
-        }
-      }
-
-      // Verify 3v3 team members have league_3v3 subscription
-      const teams3v3 = await prisma.teamBattle.findMany({
-        where: {
-          stable: { username: { startsWith: 'auto_' } },
-          teamSize: 3,
-        },
-        include: { members: { include: { robot: { include: { subscriptions: true } } } } },
-      });
-
-      for (const team of teams3v3) {
-        for (const member of team.members) {
-          const subs = member.robot.subscriptions.map(s => s.eventType);
-          expect(subs.some((e) => TEAM_3_MODES.includes(e))).toBe(true);
-        }
-      }
-    });
-
-    it('should NOT create teams for ExpertBot (1 robot, no team flags) (R15.3)', async () => {
-      await generateBattleReadyUsers(3);
-
-      const expertBotUsers = await prisma.user.findMany({
-        where: { username: { startsWith: 'auto_expertbot_' } },
-        select: { id: true },
-      });
-
-      const expertTeams = await prisma.teamBattle.findMany({
-        where: { stableId: { in: expertBotUsers.map(u => u.id) } },
-      });
-
-      expect(expertTeams.length).toBe(0);
-    });
+      expect(await countGeneratedStables()).toBe(5);
+    }, 60000);
   });
 });

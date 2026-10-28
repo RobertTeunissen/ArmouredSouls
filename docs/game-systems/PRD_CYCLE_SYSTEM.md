@@ -151,7 +151,7 @@ Heavy modes (1v1 League, KotH) are spaced 5 hours apart. Reserved slots are no-o
 | 4 | Increment cycle counters (`cyclesInCurrentLeague`, `cyclesInTagTeamLeague`, `totalCycles`) |
 | 5 | Create analytics snapshot (CycleSnapshot) |
 | 6 | Flush practice arena daily stats |
-| 7 | Auto-generate users (if configured) |
+| 7 | Top up generated stables to `GENERATED_STABLE_TARGET` (default 150; normally nothing to do — the first preparation day after a rollover builds them; see `PRD_AUTO_USER_GENERATION.md`) |
 | 8 | Automaton Turn_Step after the season counter advances, skipped on the boundary settlement (Spec #55; see "Automaton Turn_Step" below) |
 
 ---
@@ -483,7 +483,9 @@ For financial questions, the paired records are the `Canonical_Source`; for repa
 
 The Settlement_Job reads the current Season_Phase before any other step.
 
-**During a Preparation_Phase** it advances the preparation counter and returns before step 1, skipping passive income, operating costs, end-of-cycle balance logging, the `cycle_metadata.total_cycles` increment, the `cyclesInTier` increment, analytics snapshot creation, practice arena stat flushing, user auto-generation, achievement rarity refresh, and the leaderboard refresh. The global cycle counter is therefore unchanged across a preparation window — preparation cycles are not game cycles and produce no financial ledger or snapshot rows.
+**During a Preparation_Phase** it advances the preparation counter and returns before step 1, skipping passive income, operating costs, end-of-cycle balance logging, the `cycle_metadata.total_cycles` increment, the `cyclesInTier` increment, analytics snapshot creation, practice arena stat flushing, achievement rarity refresh, and the leaderboard refresh. The global cycle counter is therefore unchanged across a preparation window — preparation cycles are not game cycles and produce no financial ledger or snapshot rows.
+
+It does run two steps before returning: the generated-stable top-up (the first preparation day after a rollover rebuilds the whole population, see `PRD_AUTO_USER_GENERATION.md`), then the Automaton `preparation` Turn_Step.
 
 Gating is an early return rather than per-step conditionals, so the skip list cannot drift out of sync as settlement steps are added.
 

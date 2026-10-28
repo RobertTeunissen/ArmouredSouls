@@ -15,7 +15,7 @@ export type StableTypeValue = 'human' | 'generated' | 'automaton';
 
 /**
  * Stable_Type for a user created outside Activation (registration,
- * `generateBattleReadyUsers`, `prisma/seed.ts`).
+ * `createGeneratedStables`, `prisma/seed.ts`).
  */
 export function stableTypeForCreation(isGenerated: boolean): 'human' | 'generated' {
   return isGenerated ? 'generated' : 'human';

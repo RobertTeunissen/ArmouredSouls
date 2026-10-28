@@ -344,7 +344,7 @@ describe('CycleControlsPage — bulk runner', () => {
     expect(toggle).toHaveTextContent('About 2h 12m per cycle here.');
     await user.click(toggle);
 
-    expect(screen.getByRole('checkbox', { name: 'Generate stables each cycle' })).not.toBeChecked();
+    expect(screen.getByRole('checkbox', { name: 'Top up generated stables' })).not.toBeChecked();
     expect(screen.getByRole('checkbox', { name: 'Finances' })).toBeChecked();
     await user.clear(screen.getByLabelText('Cycles'));
     await user.type(screen.getByLabelText('Cycles'), '2');

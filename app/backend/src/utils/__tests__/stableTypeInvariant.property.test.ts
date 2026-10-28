@@ -1,7 +1,7 @@
 /**
  * Spec #55 invariant I1 (R1.3): `isGenerated = true` ⇔ `stableType = generated`.
  *
- * Every non-Activation creation path (registration, `generateBattleReadyUsers`,
+ * Every non-Activation creation path (registration, `createGeneratedStables`,
  * `prisma/seed.ts` `upsertUser`) derives its Stable_Type through
  * `stableTypeForCreation`, so proving the helper satisfies I1 for every input
  * proves it for every path. The integration suite

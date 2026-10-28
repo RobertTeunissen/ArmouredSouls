@@ -9,7 +9,7 @@ import { executeScheduledTagTeamBattles } from '../tag-team/tagTeamBattleOrchest
 import { executeScheduledTeamBattles } from '../team-battle/teamBattleOrchestrator';
 import { rebalanceTeamBattleLeagues } from '../team-battle/teamBattleAdapter';
 import { runTeamBattleMatchmaking } from '../team-battle/teamBattleMatchmakingService';
-import { generateBattleReadyUsers } from '../../utils/userGeneration';
+import { topUpGeneratedStables, type GeneratedStableTopUpResult } from '../../utils/userGeneration';
 import { repairRobotsForEvent } from '../economy/repairService';
 import {
   getActiveTournaments,
@@ -40,6 +40,22 @@ import type { TurnStepInput, TurnStepOutcome } from '../automaton/automatonTurnS
  * Run an Automaton Turn_Step for a bulk cycle (Spec #55 R7.3, R7.4) and
  * return its outcome for the bulk response. Never throws (R7.8).
  */
+/**
+ * Top up the generated stables to `GENERATED_STABLE_TARGET` for a manual run
+ * (the "generateUsersPerCycle" option). A failure is reported in the cycle
+ * result instead of failing the run, as before.
+ */
+async function topUpGeneratedStablesForAdmin(): Promise<GeneratedStableTopUpResult | { error: string }> {
+  try {
+    const summary = await topUpGeneratedStables();
+    logger.info(`[Admin] Generated stables: created ${summary.usersCreated} (had ${summary.existingBefore}, target ${summary.target})`);
+    return summary;
+  } catch (error) {
+    logger.error(`[Admin] Error topping up generated stables:`, error);
+    return { error: error instanceof Error ? error.message : String(error) };
+  }
+}
+
 async function runAutomatonTurnStep(input: TurnStepInput): Promise<TurnStepOutcome> {
   try {
     const { runTurnStepNonFatal } = await import('../automaton');
@@ -243,6 +259,9 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
     for (let i = 0; i < cycleCount; i += 1) {
       const cycleStart = Date.now();
       const advanced = await advancePreparationCycle();
+      // As in scheduled settlement: the first preparation day rebuilds the
+      // generated stables the rollover deleted.
+      const userGeneration = generateUsersPerCycle ? await topUpGeneratedStablesForAdmin() : null;
       // Spec #55 R7.3: the preparation Automaton turn, as in scheduled settlement.
       const automatonTurns = await runAutomatonTurnStep({
         trigger: 'preparation',
@@ -255,7 +274,7 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
         reservedSlotsFired: [],
         duration: Date.now() - cycleStart,
         settlement: {
-          userGeneration: null,
+          userGeneration,
           finances: { skipped: true, reason: 'preparation_phase' },
           cycleCounters: { preparationCyclesCompleted: advanced.preparationCyclesCompleted },
           snapshot: null,
@@ -273,7 +292,7 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
       includeTournaments: false,
       includeKoth: false,
       includeDailyFinances: false,
-      generateUsersPerCycleEnabled: false,
+      generateUsersPerCycleEnabled: generateUsersPerCycle,
       totalDuration: duration,
       averageCycleDuration: cycleCount === 0 ? 0 : Math.round(duration / cycleCount),
       results: preparationResults,
@@ -897,28 +916,17 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
       // ═══════════════════════════════════════════════════════════════════
       logger.info(`[Admin] Slot 10: Settlement`);
 
-      // 10.1 Auto Generate New Users (battle ready)
+      // 10.1 Top up generated stables to GENERATED_STABLE_TARGET
       stepNumber++;
-      logger.info(`[Admin] Step ${stepNumber}: Auto Generate New Users`);
+      logger.info(`[Admin] Step ${stepNumber}: Top up generated stables`);
       const userGenStart = Date.now();
-      let userGenerationSummary = null;
-      if (generateUsersPerCycle) {
-        try {
-          userGenerationSummary = await generateBattleReadyUsers(currentCycleNumber);
-          logger.info(`[Admin] Generated ${userGenerationSummary.usersCreated} users for cycle ${currentCycleNumber}`);
-        } catch (error) {
-          logger.error(`[Admin] Error generating users:`, error);
-          userGenerationSummary = {
-            error: error instanceof Error ? error.message : String(error),
-          };
-        }
-      }
+      const userGenerationSummary = generateUsersPerCycle ? await topUpGeneratedStablesForAdmin() : null;
       await eventLogger.logCycleStepComplete(
         currentCycleNumber,
         'auto_generate_users',
         stepNumber,
         Date.now() - userGenStart,
-        { usersCreated: userGenerationSummary?.usersCreated || 0 }
+        { usersCreated: userGenerationSummary && 'usersCreated' in userGenerationSummary ? userGenerationSummary.usersCreated : 0 }
       );
 
       // 10.2 Calculate and Log Passive Income & Operating Costs
