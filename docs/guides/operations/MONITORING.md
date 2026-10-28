@@ -13,7 +13,7 @@ The monitoring system uses lightweight, zero-cost components:
 
 | Component | What it monitors | Alert channel |
 |---|---|---|
-| Enhanced Health Endpoint | Disk, memory, DB, modules | None (status in response; 503 on critical disk or DB down) |
+| Enhanced Health Endpoint | Disk, memory, DB, modules | None (status in response; 503 only when the DB is down — disk status never fails the check) |
 | Startup Self-Test | Missing compiled modules | Discord + process exit |
 | Disk Monitor Script | Root filesystem usage | Discord (hourly cron, 4-hour cooldown) |
 | Backup Script Alerting | Backup failures/skips | Discord |
@@ -32,7 +32,7 @@ The monitoring system uses lightweight, zero-cost components:
 |---|---|---|---|
 | Disk Critical | Usage >= 90% | `🚨 Disk usage CRITICAL: {%}% used ({free} free) on {host}` | Free disk space immediately: remove old backups, vacuum journal, check Docker images |
 | Startup Failed | Missing compiled modules (or an invalid strategy file) | `🚨 STARTUP FAILED: Missing modules: [list]. Server did not start.` (sent once per failure, not per PM2 restart) | SSH in, check `dist/` directory, run `pnpm run build`, restart PM2 |
-| Backup Failed | Nightly pg_dump fails or its dump fails `gzip -t` | `🚨 Backup FAILED: pg_dump returned error on {host}. The previous backup was kept.` | Check DB connectivity, disk space, backup logs |
+| Backup Failed | Nightly pg_dump fails, its dump fails `zstd -t`, or `zstd` is not installed | `🚨 Backup FAILED: pg_dump returned error on {host}. The previous backup was kept.` | Check DB connectivity, disk space, backup logs |
 | Pre-migration backup failed (PRD) | No working `pg_dump`, or the deploy's dump fails or fails `pg_restore --list` | `🚨 Deploy ABORTED on {host}: … Migrations were not run` | The deploy stopped before migrations. Check `pg_dump` on the host and the container (`BACKUP_CONTAINER_NAME`), then re-run the deploy. See [MAINTENANCE.md](MAINTENANCE.md#backups) |
 | Deploy Failed | Any deploy step fails | `🚨 Deploy to {env} FAILED. Run: {url}` | Check GitHub Actions run, fix the failing step, re-deploy |
 
@@ -171,7 +171,7 @@ Add this line — **hourly, and exactly one entry**:
 | Check interval | Hourly (`0 * * * *`) | crontab, per host |
 | Disk_Alert_Cooldown | 14400 seconds (4 hours) per severity | `DISK_ALERT_COOLDOWN_SECONDS`, default in the script |
 
-This script is the only source of disk threshold alerts. The backend `/api/health` endpoint used to send its own (`(9195MB free)` format, 15-minute in-memory cooldown, fired by uptime polling), which duplicated every script alert; it now only reports disk status in its response and in the Daily Health Report. If the cron entry is missing, nothing alerts on disk, so check `crontab -l | grep -c disk-monitor` after host changes.
+This script is the only source of disk threshold alerts. The backend `/api/health` endpoint used to send its own (`(9195MB free)` format, 15-minute in-memory cooldown, fired by uptime polling), which duplicated every script alert; it now only reports disk status in its response and in the Daily Health Report. A critical disk no longer makes `/api/health` return 503 either: that turned every disk CRITICAL into a second "site DOWN" alert from UptimeRobot while the app was serving normally (28 Oct 2026, during the nightly backup). If the cron entry is missing, nothing alerts on disk, so check `crontab -l | grep -c disk-monitor` after host changes.
 
 **Why hourly and not every 15 minutes.** Disk consumption on these hosts is driven by the hourly battle and settlement cron jobs — each run writes battles, participants, summaries, and audit events. Usage rises in *steps* at those hourly boundaries and is essentially flat in between, so a 15-minute interval samples the same number four times and buys no earlier detection.
 
