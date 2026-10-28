@@ -1178,15 +1178,27 @@ async function seedWimpBotUsers(weapons: { id: number; name: string }[]) {
 
 // ===== MAIN =====
 
-async function main() {
-  const seedMode = getSeedMode();
-  console.log(`🌱 Seeding database in ${seedMode.toUpperCase()} mode...`);
-  console.log(`   NODE_ENV=${process.env.NODE_ENV || '(not set, defaulting to development)'}\n`);
+type SeededWeapon = { id: number; name: string };
 
+/** The seed's steps; `main` passes the real ones, tests pass mocks. */
+export interface SeedSteps {
+  seedCycleMetadata: () => Promise<unknown>;
+  seedSeason: () => Promise<unknown>;
+  seedWeapons: () => Promise<SeededWeapon[]>;
+  seedAdminAccount: () => Promise<unknown>;
+  seedWimpBotUsers: (weapons: SeededWeapon[]) => Promise<unknown>;
+}
+
+/**
+ * Run the seed steps for `seedMode` and return the seeded weapons. Essential
+ * data in every mode; the admin in acceptance and development; the WimpBot
+ * test users in development only (see `seedWimpBotUsers`).
+ */
+export async function runSeedSteps(seedMode: SeedMode, steps: SeedSteps): Promise<SeededWeapon[]> {
   // --- Essential data (ALL environments) ---
-  await seedCycleMetadata();
-  await seedSeason();
-  const weapons = await seedWeapons();
+  await steps.seedCycleMetadata();
+  await steps.seedSeason();
+  const weapons = await steps.seedWeapons();
 
   const practiceSword = weapons.find((w) => w.name === 'Practice Sword');
   if (!practiceSword) {
@@ -1197,13 +1209,28 @@ async function main() {
 
   // --- Acceptance + development data ---
   if (seedMode === 'acceptance' || seedMode === 'development') {
-    await seedAdminAccount();
+    await steps.seedAdminAccount();
   }
 
   // --- Development data (local play and the CI E2E database) ---
   if (seedMode === 'development') {
-    await seedWimpBotUsers(weapons);
+    await steps.seedWimpBotUsers(weapons);
   }
+  return weapons;
+}
+
+async function main() {
+  const seedMode = getSeedMode();
+  console.log(`🌱 Seeding database in ${seedMode.toUpperCase()} mode...`);
+  console.log(`   NODE_ENV=${process.env.NODE_ENV || '(not set, defaulting to development)'}\n`);
+
+  const weapons = await runSeedSteps(seedMode, {
+    seedCycleMetadata,
+    seedSeason,
+    seedWeapons,
+    seedAdminAccount,
+    seedWimpBotUsers,
+  });
 
   // --- Summary ---
   console.log('');

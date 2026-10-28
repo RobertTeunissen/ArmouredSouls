@@ -1,5 +1,5 @@
 import * as fc from 'fast-check';
-import { getSeedMode } from '../prisma/seed';
+import { getSeedMode, runSeedSteps, type SeedSteps } from '../prisma/seed';
 
 const NUM_RUNS = 10;
 
@@ -179,6 +179,63 @@ async function simulateSeed(mockPrisma: ReturnType<typeof createMockPrisma>, mod
     }
   }
 }
+
+/**
+ * The real seed orchestration (`runSeedSteps`, which `main` calls) with
+ * mocked steps: which steps each mode runs, also over repeated runs. The
+ * `simulateSeed` model below only checks the upsert pattern, so without these
+ * a regression in the mode guards would go unnoticed.
+ */
+describe('runSeedSteps: steps per seed mode', () => {
+  function mockSteps(): { steps: SeedSteps; calls: string[] } {
+    const calls: string[] = [];
+    const weapons = [{ id: 1, name: 'Practice Sword' }];
+    const record = (name: string) => async (): Promise<void> => { calls.push(name); };
+    return {
+      calls,
+      steps: {
+        seedCycleMetadata: record('cycleMetadata'),
+        seedSeason: record('season'),
+        seedWeapons: async () => { calls.push('weapons'); return weapons; },
+        seedAdminAccount: record('admin'),
+        seedWimpBotUsers: async (passed) => {
+          expect(passed).toBe(weapons);
+          calls.push('wimpBots');
+        },
+      },
+    };
+  }
+
+  const ESSENTIAL = ['cycleMetadata', 'season', 'weapons'];
+  const EXPECTED: Record<'production' | 'acceptance' | 'development', string[]> = {
+    production: ESSENTIAL,
+    acceptance: [...ESSENTIAL, 'admin'],
+    development: [...ESSENTIAL, 'admin', 'wimpBots'],
+  };
+
+  test.each(['production', 'acceptance', 'development'] as const)('%s runs exactly its steps on every run', async (mode) => {
+    const { steps, calls } = mockSteps();
+    for (let run = 1; run <= 3; run += 1) {
+      calls.length = 0;
+      await runSeedSteps(mode, steps);
+      expect(calls).toEqual(EXPECTED[mode]);
+    }
+  });
+
+  test('acceptance never seeds the WimpBot test users (ACC: Automaton_Stables fill the leagues)', async () => {
+    const { steps, calls } = mockSteps();
+    await runSeedSteps('acceptance', steps);
+    expect(calls).not.toContain('wimpBots');
+  });
+
+  test('fails before seeding users when Practice Sword is missing', async () => {
+    const { steps, calls } = mockSteps();
+    steps.seedWeapons = async () => [{ id: 2, name: 'Combat Knife' }];
+    await expect(runSeedSteps('development', steps)).rejects.toThrow('Practice Sword');
+    expect(calls).not.toContain('admin');
+    expect(calls).not.toContain('wimpBots');
+  });
+});
 
 describe('Seed Script - Property Tests', () => {
   describe('Property 12: Seed script idempotence', () => {
