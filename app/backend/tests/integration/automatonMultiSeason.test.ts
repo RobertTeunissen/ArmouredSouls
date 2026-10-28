@@ -1,7 +1,6 @@
 /**
- * Spec #55 task 12.2, extended by Spec #57 R5.4 — heavy multi-season
- * simulation with every repository Catalogue_Entry active (R11.14, R14.4,
- * design §21 Heavy row). Spec 55 R7.10 (300 s Turn_Step budget, design §19)
+ * Spec #55 task 12.2 — heavy multi-season
+ * simulation of the Automaton rules (R11.14, R14.4, design §21 Heavy row). Spec 55 R7.10 (300 s Turn_Step budget, design §19)
  * is superseded by the Turn_Step deadline rule
  * (`docs/implementation_notes/AUTOMATON_TURN_STEP_DEADLINE.md`).
  *
@@ -10,10 +9,13 @@
  * database. Run it only on a dedicated database (CI's heavy job or a local
  * `armouredsouls_heavy`), never on a shared dev database.
  *
- * Population (Spec #57 R5.4, design D18): every Catalogue_Entry of the
- * repository Automaton_Catalogue, whatever their number (the starters are
- * checked by `STARTER_CATALOGUE_KEYS`; no generated entries), created through
- * Catalogue_Sync from the repository folder and activated one by one.
+ * Population (`loadHeavyPopulation`, header of `tests/helpers/automatonHeavyFixture.ts`):
+ * Catalogue_Sync adds every repository Catalogue_Entry as a draft (each one
+ * must sync against the database), and only the heavy population is
+ * activated and takes turns: the Starter_Stables, which alone cover the
+ * Coverage_Matrix, so the run tests every rule without growing with the
+ * catalogue. `AUTOMATON_HEAVY_POPULATION=catalogue` activates every entry
+ * for a scale measurement (manual `Automaton scale run` workflow).
  *
  * Timeline, every step through the real `executeSettlement` (scheduler path)
  * with `SEASON_LENGTH_CYCLES = 6` and `PREPARATION_LENGTH_CYCLES = 2`:
@@ -70,20 +72,25 @@ import {
   STARTER_CATALOGUE_KEYS,
   deletePopulation,
   deleteStables,
+  heavyPopulationMode,
   insertSeasonOfBattles,
+  loadHeavyPopulation,
   loadRepositoryEntries,
   type BulkBattleResult,
 } from '../helpers/automatonHeavyFixture';
 import { runTag, startAdminApi, type AdminApiHarness } from '../helpers/automatonAdminApi';
 
-/** Every repository Catalogue_Entry (Spec #57 R5.4): the heavy population. */
-const POPULATION = loadRepositoryEntries();
+/** Every repository Catalogue_Entry: all are synced as drafts. */
+const REPOSITORY = loadRepositoryEntries();
+/** The stables that are activated and take turns (starters, or every entry for a scale run). */
+const POPULATION_MODE = heavyPopulationMode();
+const POPULATION = loadHeavyPopulation(POPULATION_MODE);
 
 /**
  * Per phase (`beforeAll`, each `it`, `afterAll`). Spec 55 measured ~14 min in
  * all for 100 Automatons, dominated by the two opening-build Turn_Steps
  * (~250 s each), with a 15-minute phase timeout. 9 s per Automaton reproduces
- * that timeout at 100 and grows with the catalogue; there is no cap. The
+ * that timeout at 100 and grows with the population (a scale run). The
  * Turn_Step itself is no longer bounded at 300 s (spec 55 R7.10 superseded):
  * it runs until its deadline, so this phase timeout, not the step, is what
  * fails a pathologically slow run. CI's heavy job has 30 minutes for the
@@ -165,8 +172,11 @@ async function resetSeasonTables(): Promise<void> {
   invalidateSeasonCache();
 }
 
-describe('Automaton multi-season simulation (Spec #55 task 12.2, Spec #57 R5.4)', () => {
+describe('Automaton multi-season simulation (Spec #55 task 12.2)', () => {
+  /** Catalogue_Keys of the active population. */
   const catalogueKeys: string[] = [];
+  /** Catalogue_Keys of every synced entry (drafts included), for cleanup. */
+  const repositoryKeys: string[] = [];
   const automatonUserIds: number[] = [];
   const profileIds: number[] = [];
   const humanUserIds: number[] = [];
@@ -221,7 +231,7 @@ describe('Automaton multi-season simulation (Spec #55 task 12.2, Spec #57 R5.4)'
     const concurrency = currentConcurrency();
     const sampler = startConnectionSampler();
     const started = performance.now();
-    let peakConnections = 0;
+    let peakConnections: number;
     try {
       await executeSettlement();
     } finally {
@@ -320,22 +330,23 @@ describe('Automaton multi-season simulation (Spec #55 task 12.2, Spec #57 R5.4)'
     process.env.SEASON_LENGTH_CYCLES = String(SEASON_LENGTH);
     process.env.PREPARATION_LENGTH_CYCLES = String(PREPARATION_LENGTH);
 
-    // Spec #57 R5.4: every repository Catalogue_Entry, validated by the catalogue rules.
+    // Every repository Catalogue_Entry is validated and synced; the population covers every strategy and Build_Focus.
     const strategies = getStrategyRegistry();
     const entries = POPULATION;
     catalogueKeys.push(...entries.map((e) => e.catalogueKey));
+    repositoryKeys.push(...REPOSITORY.map((e) => e.catalogueKey));
     expect(STARTER_CATALOGUE_KEYS.filter((key) => !catalogueKeys.includes(key))).toEqual([]);
     expect(new Set(entries.map((e) => e.strategy.key))).toEqual(new Set(HEAVY_STRATEGY_KEYS));
     expect(new Set(entries.flatMap((e) => e.blueprints.map((b) => b.buildFocus)))).toEqual(new Set(BUILD_FOCUS_KEYS));
     const context = { weapons: await loadWeaponCatalogue(), strategies };
-    const invalid = entries
+    const invalid = REPOSITORY
       .map((entry) => ({ key: entry.catalogueKey, result: validateCatalogueEntry(entry, context) }))
       .filter((v) => !v.result.ok)
       .map((v) => v.key);
     expect(invalid).toEqual([]);
 
     // A dedicated database; clear leftovers of an aborted run, then start season 1 in preparation.
-    await deletePopulation(catalogueKeys);
+    await deletePopulation(repositoryKeys);
     const leftoverHumans = await prisma.user.findMany({ where: { username: { startsWith: 't55hv_' } }, select: { id: true } });
     await deleteStables(leftoverHumans.map((u) => u.id));
     await resetSeasonTables();
@@ -350,11 +361,11 @@ describe('Automaton multi-season simulation (Spec #55 task 12.2, Spec #57 R5.4)'
     const sync = await syncCatalogue({ catalogueDirectory: CATALOGUE_DIRECTORY, alertConflicts: async () => undefined });
     if (!sync.ok) throw new Error(`Catalogue_Sync failed: ${sync.problems.join('; ')}`);
     expect(sync.summary.conflicts).toEqual([]);
-    expect(sync.summary.added).toHaveLength(POPULATION.length);
+    expect(sync.summary.added).toHaveLength(REPOSITORY.length);
     for (const key of catalogueKeys) automatonUserIds.push((await activateProfile(key)).result.userId);
     profileIds.push(...(await prisma.automatonProfile.findMany({ where: { catalogueKey: { in: catalogueKeys } }, select: { id: true } })).map((p) => p.id));
     expect(profileIds).toHaveLength(POPULATION.length);
-    // Every repository entry active.
+    // Every population entry active; the rest of the catalogue stays draft.
     expect(await prisma.automatonProfile.count({ where: { catalogueKey: { in: catalogueKeys }, status: 'active' } })).toBe(POPULATION.length);
 
     for (let i = 0; i < HUMAN_STABLES; i += 1) {
@@ -371,7 +382,7 @@ describe('Automaton multi-season simulation (Spec #55 task 12.2, Spec #57 R5.4)'
     if (previousEnv.preparation === undefined) delete process.env.PREPARATION_LENGTH_CYCLES;
     else process.env.PREPARATION_LENGTH_CYCLES = previousEnv.preparation;
     // Durations for the implementation record.
-    logger.info(`[automaton-heavy] population: ${POPULATION.length} repository Catalogue_Entries`);
+    logger.info(`[automaton-heavy] population: ${POPULATION.length} active (${POPULATION_MODE}) of ${REPOSITORY.length} synced Catalogue_Entries`);
     logger.info(
       `[automaton-heavy] concurrency: effective=${currentConcurrency()} configured=${getConfig().automatonTurnConcurrency} `
       + `dbPoolMax=${resolveDbPoolMax()} stepMaxMs=${getConfig().automatonTurnStepMaxMs}`,
@@ -401,7 +412,7 @@ describe('Automaton multi-season simulation (Spec #55 task 12.2, Spec #57 R5.4)'
 
     const bulk = lastBulk;
     if (bulk) await prisma.battle.deleteMany({ where: { id: { gte: bulk.firstBattleId, lte: bulk.lastBattleId } } });
-    await deletePopulation(catalogueKeys);
+    await deletePopulation(repositoryKeys);
     // Generated stables created by the settlements of this run (Step 7 user generation).
     const generatedUsers = await prisma.user.findMany({ where: { id: { gte: firstUserId }, isGenerated: true }, select: { id: true } });
     await deleteStables([...humanUserIds, ...generatedUsers.map((u) => u.id)]);

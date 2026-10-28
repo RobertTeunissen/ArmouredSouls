@@ -1,12 +1,18 @@
 /**
- * Spec #55 task 12.1, changed by Spec #57 R5.4 (design D18) — the heavy-test
- * population and the bulk data the heavy simulation needs.
+ * Spec #55 task 12.1 — the heavy-test population and the bulk data the heavy
+ * simulation needs.
  *
- * Population: every Catalogue_Entry of the repository Automaton_Catalogue
- * (`app/backend/prisma/automaton-catalogue/`), the Starter_Stables plus the
- * Expansion_Stables, whatever their number. There is no fixed population size
- * and there are no generated entries; the heavy test's duration grows with
- * the catalogue. `STARTER_CATALOGUE_KEYS` stays for the starter checks.
+ * Population (`loadHeavyPopulation`): the heavy test checks that the rules
+ * work, not every stable. That every Catalogue_Entry fits the rules is checked
+ * per entry by the catalogue unit tests (`catalogueSchema`, `catalogueImages`)
+ * and by the full Catalogue_Sync the heavy test runs against the database.
+ * So the stables that take turns for two seasons are the Starter_Stables:
+ * `automatonCatalogueCoverage.test.ts` proves they alone cover the
+ * Coverage_Matrix (every strategy, Build_Focus, loadout, stance, range band
+ * and team edge case), and their number does not grow with the catalogue.
+ *
+ * `AUTOMATON_HEAVY_POPULATION=catalogue` runs every repository entry instead:
+ * a scale measurement (manual `Automaton scale run` workflow), not a PR gate.
  *
  * Only tests use this.
  */
@@ -82,6 +88,19 @@ export function loadRepositoryEntries(directory: string = CATALOGUE_DIRECTORY): 
       return catalogueEntryShape.parse(raw);
     })
     .sort((a, b) => compareCatalogueKeys(a.catalogueKey, b.catalogueKey));
+}
+
+/** Which entries take turns in the heavy simulation (see the file header). */
+export type HeavyPopulationMode = 'starters' | 'catalogue';
+
+/** `AUTOMATON_HEAVY_POPULATION`: `catalogue` for a scale run; anything else (or unset) is `starters`. */
+export function heavyPopulationMode(env: NodeJS.ProcessEnv = process.env): HeavyPopulationMode {
+  return env.AUTOMATON_HEAVY_POPULATION === 'catalogue' ? 'catalogue' : 'starters';
+}
+
+/** The heavy population: the Starter_Stables by default, every repository entry for a scale run. */
+export function loadHeavyPopulation(mode: HeavyPopulationMode = heavyPopulationMode(), directory: string = CATALOGUE_DIRECTORY): CatalogueEntry[] {
+  return mode === 'catalogue' ? loadRepositoryEntries(directory) : loadStarterEntries(directory);
 }
 
 /**
