@@ -78,6 +78,22 @@ esac
 STUB
 
 printf '#!/usr/bin/env bash\nexit 0\n' > "${STUB_DIR}/curl"
+
+# zstd, backed by gzip so the harness runs where zstd is not installed (macOS).
+# Compress: stdin → stdout. `-t FILE` verifies, `-dc FILE` decompresses.
+# STUB_ZSTD: ok | corrupt (writes output that fails `-t`).
+cat > "${STUB_DIR}/zstd" <<'STUB'
+#!/usr/bin/env bash
+mode="${STUB_ZSTD:-ok}"
+for arg in "$@"; do
+  case "$arg" in
+    -t) shift "$(($# - 1))"; exec gzip -t "$1" ;;
+    -dc) shift "$(($# - 1))"; exec gzip -dc "$1" ;;
+  esac
+done
+if [ "$mode" = corrupt ]; then cat > /dev/null; printf 'not a compressed frame'; exit 0; fi
+exec gzip -c
+STUB
 chmod +x "${STUB_DIR}"/*
 
 # ── Scaffolding ─────────────────────────────────────────────────────
@@ -119,6 +135,8 @@ run() {
 }
 
 count() { find "$1" -maxdepth 1 -type f -name "$2" | wc -l | tr -d ' '; }
+# Published plain-SQL dumps in DIR, either format (zstd since Oct 2026, gzip before).
+dumps() { find "$1" -maxdepth 1 -type f \( -name '*.sql.zst' -o -name '*.sql.gz' \) | wc -l | tr -d ' '; }
 exists() { [ -f "$1" ]; }
 
 # ── backup.sh ───────────────────────────────────────────────────────
@@ -128,14 +146,20 @@ echo "backup.sh"
 fresh
 make_file "${BK}/backups/daily/armouredsouls_acc_daily_OLD.sql.gz" 1440
 run backup.sh
-NEW="$(find "${BK}/backups/daily" -name '*.sql.gz' -type f)"
-check "keeps one daily dump by default: the new one replaces the old one" \
-  '[ "$STATUS" -eq 0 ] && [ "$(count "${BK}/backups/daily" "*.sql.gz")" -eq 1 ] && ! exists "${BK}/backups/daily/armouredsouls_acc_daily_OLD.sql.gz"'
-check "the new daily dump is a complete gzip file named after the database" \
-  '[[ "$NEW" == *"/armouredsouls_acc_daily_"*".sql.gz" ]] && gzip -t "$NEW"'
+NEW="$(find "${BK}/backups/daily" -name '*.sql.zst' -type f)"
+check "keeps one daily dump by default: the new zstd dump replaces the old gzip one" \
+  '[ "$STATUS" -eq 0 ] && [ "$(dumps "${BK}/backups/daily")" -eq 1 ] && [ "$(count "${BK}/backups/daily" "*.sql.zst")" -eq 1 ] && ! exists "${BK}/backups/daily/armouredsouls_acc_daily_OLD.sql.gz"'
+check "the new daily dump is a verified zstd file named after the database" \
+  '[[ "$NEW" == *"/armouredsouls_acc_daily_"*".sql.zst" ]] && "${STUB_DIR}/zstd" -q -t "$NEW" && grep -q "PostgreSQL database dump" <("${STUB_DIR}/zstd" -q -dc "$NEW")'
 check "deletes the old dump only after the new one is complete (logged in that order)" \
   '[ "$(grep -n "Daily backup complete" <<< "$OUT" | cut -d: -f1)" -lt "$(grep -n "Removed old backup" <<< "$OUT" | cut -d: -f1)" ]'
 check "leaves no .partial file behind" '[ "$(count "${BK}/backups/daily" "*.partial")" -eq 0 ]'
+
+fresh
+make_file "${BK}/backups/daily/armouredsouls_acc_daily_OLD.sql.zst" 1440
+run backup.sh STUB_ZSTD=corrupt
+check "a dump that fails zstd verification exits non-zero, keeps the previous dump and removes the partial file" \
+  '[ "$STATUS" -ne 0 ] && exists "${BK}/backups/daily/armouredsouls_acc_daily_OLD.sql.zst" && [ "$(count "${BK}/backups/daily" "*")" -eq 1 ] && grep -q "failed verification (zstd -t)" <<< "$OUT"'
 
 fresh
 make_file "${BK}/backups/daily/old.sql.gz" 1440
@@ -153,7 +177,7 @@ check "no working pg_dump anywhere: exits non-zero and keeps the previous dump" 
 fresh
 run backup.sh STUB_HOST_PG_DUMP=missing STUB_DOCKER=ok
 check "falls back to docker exec when the host pg_dump does not run" \
-  '[ "$STATUS" -eq 0 ] && grep -q "using docker exec" <<< "$OUT" && [ "$(count "${BK}/backups/daily" "*.sql.gz")" -eq 1 ]'
+  '[ "$STATUS" -eq 0 ] && grep -q "using docker exec" <<< "$OUT" && [ "$(dumps "${BK}/backups/daily")" -eq 1 ]'
 
 fresh
 make_file "${BK}/backups/daily/a.sql.gz" 4320
@@ -169,7 +193,7 @@ make_file "${BK}/backups/daily/a.sql.gz" 2880
 make_file "${BK}/backups/daily/b.sql.gz" 1440
 run backup.sh
 check "reads BACKUP_DAILY_RETAIN from .env: with 2, keeps the newest old dump and the new one" \
-  '[ "$STATUS" -eq 0 ] && [ "$(count "${BK}/backups/daily" "*.sql.gz")" -eq 2 ] && exists "${BK}/backups/daily/b.sql.gz" && ! exists "${BK}/backups/daily/a.sql.gz"'
+  '[ "$STATUS" -eq 0 ] && [ "$(dumps "${BK}/backups/daily")" -eq 2 ] && exists "${BK}/backups/daily/b.sql.gz" && ! exists "${BK}/backups/daily/a.sql.gz"'
 
 fresh
 printf 'BACKUP_DAILY_RETAIN=0\n' >> "$ENVF"
@@ -229,9 +253,10 @@ make_file "${BK}/backups/daily/b.sql.gz" 1440
 make_file "${BK}/backups/pre_deploy_1.dump" 2880 custom
 make_file "${BK}/backups/pre_deploy_2.dump" 1440 custom
 make_file "${BK}/backups/pre_deploy_3.dump.partial" 30 custom
+make_file "${BK}/backups/daily/older.sql.zst" 2880
 run preflight.sh
 check "trims to the shared retention (1 daily, 1 pre-deploy) and removes partial dumps" \
-  '[ "$STATUS" -eq 0 ] && exists "${BK}/backups/daily/b.sql.gz" && ! exists "${BK}/backups/daily/a.sql.gz" && exists "${BK}/backups/pre_deploy_2.dump" && [ "$(count "${BK}/backups" "pre_deploy_*")" -eq 1 ]'
+  '[ "$STATUS" -eq 0 ] && exists "${BK}/backups/daily/b.sql.gz" && ! exists "${BK}/backups/daily/a.sql.gz" && ! exists "${BK}/backups/daily/older.sql.zst" && exists "${BK}/backups/pre_deploy_2.dump" && [ "$(count "${BK}/backups" "pre_deploy_*")" -eq 1 ]'
 
 fresh
 run preflight.sh DF_PCENT=92
@@ -277,7 +302,7 @@ RELEASER=$!
 run backup.sh BACKUP_LOCK_WAIT_SECONDS=30 BACKUP_LOCK_POLL_SECONDS=1
 wait "$RELEASER" 2>/dev/null || true
 check "the nightly backup waits for a running backup, then runs" \
-  '[ "$STATUS" -eq 0 ] && grep -q "Waiting for another backup" <<< "$OUT" && [ "$(count "${BK}/backups/daily" "*.sql.gz")" -eq 1 ]'
+  '[ "$STATUS" -eq 0 ] && grep -q "Waiting for another backup" <<< "$OUT" && [ "$(dumps "${BK}/backups/daily")" -eq 1 ]'
 
 fresh
 mkdir -p "${BK}/backups/.backup.lock"
@@ -285,7 +310,7 @@ echo 999999 > "${BK}/backups/.backup.lock/pid"
 make_file "${BK}/backups/daily/old.sql.gz.partial" 600
 run backup.sh BACKUP_LOCK_WAIT_SECONDS=0
 check "takes over a stale lock (owner not running) and removes the dead run's partial file" \
-  '[ "$STATUS" -eq 0 ] && grep -q "Taking over a stale backup lock" <<< "$OUT" && ! exists "${BK}/backups/daily/old.sql.gz.partial" && [ "$(count "${BK}/backups/daily" "*.sql.gz")" -eq 1 ]'
+  '[ "$STATUS" -eq 0 ] && grep -q "Taking over a stale backup lock" <<< "$OUT" && ! exists "${BK}/backups/daily/old.sql.gz.partial" && [ "$(dumps "${BK}/backups/daily")" -eq 1 ]'
 
 fresh
 run backup.sh
