@@ -3,7 +3,7 @@ import { Prisma, BattleParticipant, StandingsMode, type StableType } from '../..
 import { getConfig } from '../../config/env';
 import type { KothPlacement } from '../../types';
 import { getNextCronOccurrence } from '../../utils/scheduleUtils';
-import { BATTLE_LOG_OMIT, decodeBattleLog } from '../battle/battleLogCodec';
+import { BATTLE_LOG_OMIT, BATTLE_LOG_SELECT, decodeBattleLog } from '../battle/battleLogCodec';
 import {
   getAwardedByeReward,
   getExpectedByeReward,
@@ -896,17 +896,31 @@ export async function formatBattleHistoryEntry(
   return baseData;
 }
 
+/** A robot's KotH zone score from the battle's stored log, or null without one. */
+async function zoneScoreFromStoredLog(battleId: number, robotId: number): Promise<number | null> {
+  const row = await prisma.battle.findUnique({ where: { id: battleId }, select: BATTLE_LOG_SELECT });
+  if (!row) return null;
+  const stored = (await decodeBattleLog(row, battleId))?.placements;
+  const placements = Array.isArray(stored) ? (stored as Array<{ robotId?: unknown; zoneScore?: unknown }>) : [];
+  const entry = placements.find((p) => p.robotId === robotId);
+  return typeof entry?.zoneScore === 'number' ? entry.zoneScore : null;
+}
+
 async function formatKothHistoryEntry(battle: BattleWithFullRelations, baseData: Record<string, unknown>, targetRobotIds: number[]) {
   const userParticipant = battle.participants.find((p) => targetRobotIds.includes(p.robotId));
 
-  // Zone score from the permanent summary (Spec #39). Every battle that still
-  // has a combat log also has a summary, so the log is never needed here.
+  // Zone score from the permanent summary (Spec #39). Summary writes are
+  // best-effort, so a battle can lack one; then read the stored log, loaded only
+  // for that battle (the history query omits the logs).
   let userZoneScore: number | null = null;
   const summary = (battle as unknown as { summary?: { kothPlacements: unknown } | null }).summary;
   if (summary?.kothPlacements && userParticipant) {
     const placements = summary.kothPlacements as unknown as KothPlacement[];
     const entry = placements.find(p => p.robotId === userParticipant.robotId);
     if (entry) userZoneScore = entry.zoneScore;
+  }
+  if (userZoneScore === null && userParticipant) {
+    userZoneScore = await zoneScoreFromStoredLog(battle.id, userParticipant.robotId);
   }
 
   const kothData: Record<string, unknown> = {

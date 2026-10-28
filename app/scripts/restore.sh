@@ -64,6 +64,26 @@ if ! command -v pg_restore &> /dev/null; then
   fi
 fi
 
+# A zstd dump is decompressed on this host (Docker restores too). Check that it
+# can be read BEFORE the backend is stopped and the database dropped: failing
+# afterwards would leave an empty database.
+if [[ "${BACKUP_FILE}" == *.sql.zst ]]; then
+  if ! command -v zstd &> /dev/null; then
+    echo "ERROR: ${BACKUP_FILE} is zstd-compressed and zstd is not installed (sudo apt-get install -y zstd). Nothing was changed."
+    exit 1
+  fi
+  echo "Verifying ${BACKUP_FILE} (zstd -t)..."
+  if ! zstd -q -t -- "${BACKUP_FILE}"; then
+    echo "ERROR: ${BACKUP_FILE} failed zstd verification. Nothing was changed."
+    exit 1
+  fi
+elif [[ "${BACKUP_FILE}" == *.sql.gz ]]; then
+  if ! gzip -t -- "${BACKUP_FILE}"; then
+    echo "ERROR: ${BACKUP_FILE} failed gzip verification. Nothing was changed."
+    exit 1
+  fi
+fi
+
 FILE_SIZE=$(du -h "${BACKUP_FILE}" | cut -f1)
 
 echo "============================================"

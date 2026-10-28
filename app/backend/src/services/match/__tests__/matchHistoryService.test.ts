@@ -21,6 +21,7 @@ jest.mock('../../../lib/prisma', () => ({
     user: { findUnique: jest.fn() },
     teamBattle: { findMany: jest.fn(), findUnique: jest.fn() },
     standing: { findMany: jest.fn() },
+    battle: { findUnique: jest.fn() },
   },
 }));
 
@@ -238,6 +239,53 @@ describe('formatBattleHistoryEntry — economic fields', () => {
     expect(result.prestigeAwarded).toBe(8);
     expect(result.fameAwarded).toBe(4);
     expect(result.streamingRevenue).toBe(150);
+  });
+});
+
+describe('formatBattleHistoryEntry — KotH zone score', () => {
+  const kothBattle = (overrides: Record<string, unknown> = {}): Record<string, unknown> => makeBattle({
+    battleType: 'koth',
+    battleLogZst: null,
+    battleLogMeta: null,
+    legacyBattleLog: null,
+    participants: [
+      { ...makeBattleParticipant({ robotId: 10, team: 1, placement: 1 }), robot: makeRobotWithUser({ id: 10, userId: 1 }) },
+      { ...makeBattleParticipant({ robotId: 20, team: 1, placement: 2 }), robot: makeRobotWithUser({ id: 20, userId: 2 }) },
+    ],
+    ...overrides,
+  });
+
+  beforeEach(() => {
+    (prisma.battle.findUnique as jest.Mock).mockReset();
+  });
+
+  it('reads the score from the battle summary without loading the log', async () => {
+    const battle = kothBattle({ summary: { kothPlacements: [{ robotId: 10, zoneScore: 42 }] } });
+
+    const result = await formatBattleHistoryEntry(battle as never, [10]) as HistoryResult;
+
+    expect(result.kothZoneScore).toBe(42);
+    expect(prisma.battle.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('falls back to the stored log when the best-effort summary is missing', async () => {
+    (prisma.battle.findUnique as jest.Mock).mockResolvedValue({
+      ...battleLogFixture({ placements: [{ robotId: 10, zoneScore: 17 }, { robotId: 20, zoneScore: 5 }] }),
+      legacyBattleLog: null,
+    });
+
+    const result = await formatBattleHistoryEntry(kothBattle({ summary: null }) as never, [10]) as HistoryResult;
+
+    expect(result.kothZoneScore).toBe(17);
+    expect(prisma.battle.findUnique).toHaveBeenCalledWith(expect.objectContaining({ where: { id: 100 } }));
+  });
+
+  it('is null when there is neither a summary score nor a stored log', async () => {
+    (prisma.battle.findUnique as jest.Mock).mockResolvedValue({ battleLogZst: null, legacyBattleLog: null });
+
+    const result = await formatBattleHistoryEntry(kothBattle({ summary: null }) as never, [10]) as HistoryResult;
+
+    expect(result.kothZoneScore).toBeNull();
   });
 });
 

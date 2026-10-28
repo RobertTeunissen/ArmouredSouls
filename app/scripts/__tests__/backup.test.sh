@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================================
-# Armoured Souls — backup.sh / pre-deploy-backup.sh / preflight.sh harness
+# Armoured Souls — backup.sh / pre-deploy-backup.sh / preflight.sh / restore.sh harness
 #
 # Covers the retention model in backup-common.sh: an old dump is deleted only
 # after its replacement is written and verified, a failed dump keeps the
@@ -318,6 +318,43 @@ check "releases the lock when done" '[ "$STATUS" -eq 0 ] && [ ! -e "${BK}/backup
 fresh
 run backup.sh STUB_HOST_PG_DUMP=fail
 check "releases the lock when the dump fails" '[ "$STATUS" -ne 0 ] && [ ! -e "${BK}/backups/.backup.lock" ]'
+
+# ── restore.sh ──────────────────────────────────────────────────────
+
+echo "restore.sh"
+
+# pm2/dropdb/createdb stubs record that the destructive steps ran.
+for tool in pm2 dropdb createdb; do
+  printf '#!/usr/bin/env bash\necho "%s $*" >> "${STUB_CALLS}"\n' "$tool" > "${STUB_DIR}/${tool}"
+  chmod +x "${STUB_DIR}/${tool}"
+done
+
+# run_restore FILE — runs restore.sh FILE answering "no" to the prompt; sets OUT, STATUS, CALLS.
+run_restore() {
+  STUB_CALLS="${WORKROOT}/restore-calls.$RANDOM"
+  : > "$STUB_CALLS"
+  STATUS=0
+  OUT="$(echo no | env PATH="${STUB_DIR}:${PATH}" STUB_CALLS="$STUB_CALLS" bash "${SCRIPTS}/restore.sh" "$1" 2>&1)" || STATUS=$?
+  CALLS="$(cat "$STUB_CALLS")"
+}
+
+fresh
+printf 'not a zstd frame' > "${BK}/broken.sql.zst"
+run_restore "${BK}/broken.sql.zst"
+check "a zstd dump that fails verification stops before the backend is stopped or the database dropped" \
+  '[ "$STATUS" -ne 0 ] && grep -q "failed zstd verification. Nothing was changed" <<< "$OUT" && [ -z "$CALLS" ]'
+
+fresh
+printf 'not gzip' > "${BK}/broken.sql.gz"
+run_restore "${BK}/broken.sql.gz"
+check "a gzip dump that fails verification stops before anything is changed" \
+  '[ "$STATUS" -ne 0 ] && grep -q "failed gzip verification" <<< "$OUT" && [ -z "$CALLS" ]'
+
+fresh
+printf -- '-- dump\n' | gzip > "${BK}/good.sql.zst"
+run_restore "${BK}/good.sql.zst"
+check "a readable zstd dump reaches the confirmation prompt (answered no: nothing changed)" \
+  '[ "$STATUS" -eq 0 ] && grep -q "Restore cancelled" <<< "$OUT" && [ -z "$CALLS" ]'
 
 # ── Shared helpers ──────────────────────────────────────────────────
 
