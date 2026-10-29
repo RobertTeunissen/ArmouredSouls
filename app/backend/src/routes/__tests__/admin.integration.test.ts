@@ -26,8 +26,7 @@
 const mockGetDashboardKpis = jest.fn();
 const mockGetEngagementPlayers = jest.fn();
 const mockGetEconomyOverview = jest.fn();
-const mockGetLeagueHealth = jest.fn();
-const mockGetTeamBattleLeagueHealth = jest.fn();
+const mockGetLeagueHealthOverview = jest.fn();
 const mockGetWeaponAnalytics = jest.fn();
 const mockGetAchievementAnalytics = jest.fn();
 const mockGetTuningAdoption = jest.fn();
@@ -43,14 +42,15 @@ jest.mock('../../services/admin/adminStatsService', () => ({
   getDashboardKpis: (...args: unknown[]) => mockGetDashboardKpis(...args),
   getEngagementPlayers: (...args: unknown[]) => mockGetEngagementPlayers(...args),
   getEconomyOverview: (...args: unknown[]) => mockGetEconomyOverview(...args),
-  getLeagueHealth: (...args: unknown[]) => mockGetLeagueHealth(...args),
-  getTeamBattleLeagueHealth: (...args: unknown[]) => mockGetTeamBattleLeagueHealth(...args),
   getWeaponAnalytics: (...args: unknown[]) => mockGetWeaponAnalytics(...args),
   getAchievementAnalytics: (...args: unknown[]) => mockGetAchievementAnalytics(...args),
   getTuningAdoption: (...args: unknown[]) => mockGetTuningAdoption(...args),
   getRefinementAdoption: (...args: unknown[]) => mockGetRefinementAdoption(...args),
 }));
 
+jest.mock('../../services/admin/league-health', () => ({
+  getLeagueHealthOverview: (...args: unknown[]) => mockGetLeagueHealthOverview(...args),
+}));
 const mockGetDashboardStatus = jest.fn();
 const mockGetBattleActivity = jest.fn();
 
@@ -306,18 +306,12 @@ const sampleEconomy = {
 };
 
 const sampleLeagueHealth = {
-  solo: {
-    tiers: [
-      { tier: 'bronze', robotCount: 20, avgElo: 1000, promotionEligible: 5, demotionEligible: 2 },
-    ],
-  },
-  tagTeam: {
-    tiers: [
-      { tier: 'bronze', teamCount: 8, avgElo: 1000, promotionEligible: 2, demotionEligible: 1 },
-    ],
-  },
+  generatedAt: '2026-10-28T09:42:00.000Z',
+  season: { number: 1, phase: 'competitive', cycle: 87, lengthCycles: 100 },
+  thresholds: { lowPromotionShare: 0.25, unsubscribedNoticeShare: 0.05 },
+  modes: [{ mode: 'league_1v1', entityType: 'robot', total: 0, active: 0, tiers: [] }],
+  attention: [],
 };
-
 const sampleWeaponAnalytics = {
   weapons: [
     {
@@ -622,25 +616,32 @@ describe('Admin API — New Endpoints Integration Tests', () => {
   // -----------------------------------------------------------------------
 
   describe('GET /api/admin/league-health', () => {
-    it('should return league health data with correct response shape', async () => {
-      mockGetLeagueHealth.mockResolvedValue(sampleLeagueHealth);
-
+    it('should return the league health overview', async () => {
+      mockGetLeagueHealthOverview.mockResolvedValue(sampleLeagueHealth);
       const res = await request(app).get('/api/admin/league-health');
-
       expect(res.status).toBe(200);
-      expect(res.body).toHaveProperty('solo');
-      expect(res.body).toHaveProperty('tagTeam');
+      expect(res.body.modes[0].mode).toBe('league_1v1');
+      expect(res.body).toHaveProperty('attention');
     });
-
     it('should propagate service errors as 500', async () => {
-      mockGetLeagueHealth.mockRejectedValue(new Error('Query failed'));
-
+      mockGetLeagueHealthOverview.mockRejectedValue(new Error('Query failed'));
       const res = await request(app).get('/api/admin/league-health');
-
       expect(res.status).toBe(500);
     });
+    it('should reject non-admin users', async () => {
+      mockUser = { userId: 2, username: 'player', role: 'user' };
+      const res = await request(app).get('/api/admin/league-health');
+      expect(res.status).toBe(403);
+      expect(mockGetLeagueHealthOverview).not.toHaveBeenCalled();
+    });
+    it.each(['/api/admin/team-battle-league-health', '/api/admin/tag-team-league-health'])(
+      'no longer serves the removed endpoint %s',
+      async (path) => {
+        const res = await request(app).get(path);
+        expect(res.status).toBe(404);
+      },
+    );
   });
-
   // -----------------------------------------------------------------------
   // GET /api/admin/weapons/analytics
   // -----------------------------------------------------------------------

@@ -1,272 +1,193 @@
 /**
- * Unit Tests for LeagueHealthPage
- *
- * Tests tier counts render, ELO distribution displays, promo/demo eligibility shows.
- * Tests 2v2 and 3v3 league health sections render with team counts, avg ELO, and rebalancing indicators.
- * Tests tag team league health section renders with team counts, distribution, and rebalancing indicators.
- *
- * _Requirements: 15.2, 15.3, 15.4, R11.6, 14.1, 14.2, 14.3, 14.4, 14.5, 14.6_
+ * Unit tests for the admin LeagueHealthPage (`/admin/league-health`): one
+ * request, Needs attention with links, the mode × tier grid, mode tabs and
+ * expanded tiers in the URL, the standings and League History links, Refresh,
+ * and errors with Retry.
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import LeagueHealthPage from '../LeagueHealthPage';
+import { overview } from './leagueHealthFixture';
 
-/* ------------------------------------------------------------------ */
-/*  Mocks                                                              */
-/* ------------------------------------------------------------------ */
-
-const mockGet = vi.fn();
+type Config = { params?: Record<string, unknown>; signal?: AbortSignal };
+const mockGet = vi.fn<(url: string, config?: Config) => Promise<{ data: unknown }>>();
 vi.mock('../../../utils/apiClient', () => ({
-  default: { get: (...args: unknown[]) => mockGet(...args) },
+  default: { get: (url: string, config?: Config) => mockGet(url, config) },
 }));
 
-const mockLeagueHealthData = {
-  leagues: [
-    { league: 'bronze', robotCount: 20, averageElo: 1000, instances: 2, instanceDetails: [{ id: 'bronze-1', robotCount: 10 }, { id: 'bronze-2', robotCount: 10 }] },
-    { league: 'silver', robotCount: 15, averageElo: 1200, instances: 1, instanceDetails: [{ id: 'silver-1', robotCount: 15 }] },
-    { league: 'gold', robotCount: 8, averageElo: 1500, instances: 1, instanceDetails: [{ id: 'gold-1', robotCount: 8 }] },
-  ],
-  totalRobots: 43,
-};
+function LocationProbe() {
+  const location = useLocation();
+  return <output data-testid="location">{`${location.pathname}${location.search}`}</output>;
+}
 
-const mockTeamBattleLeagueHealthData = {
-  league2v2: {
-    leagues: [
-      { league: 'bronze', teamCount: 10, averageElo: 2000, instances: 1, instanceDetails: [{ id: 'bronze_1', teamCount: 10 }], needsRebalancing: false },
-      { league: 'silver', teamCount: 6, averageElo: 2400, instances: 1, instanceDetails: [{ id: 'silver_1', teamCount: 6 }], needsRebalancing: false },
-      { league: 'gold', teamCount: 0, averageElo: 0, instances: 0, instanceDetails: [], needsRebalancing: false },
-    ],
-    totalTeams: 16,
-  },
-  league3v3: {
-    leagues: [
-      { league: 'bronze', teamCount: 8, averageElo: 3000, instances: 1, instanceDetails: [{ id: 'bronze_1', teamCount: 8 }], needsRebalancing: false },
-      { league: 'silver', teamCount: 4, averageElo: 3600, instances: 1, instanceDetails: [{ id: 'silver_1', teamCount: 4 }], needsRebalancing: true },
-      { league: 'gold', teamCount: 0, averageElo: 0, instances: 0, instanceDetails: [], needsRebalancing: false },
-    ],
-    totalTeams: 12,
-  },
-};
+function renderPage(search = '') {
+  return render(
+    <MemoryRouter initialEntries={[`/admin/league-health${search}`]}>
+      <Routes>
+        <Route path="/admin/league-health" element={<><LeagueHealthPage /><LocationProbe /></>} />
+        <Route path="*" element={<LocationProbe />} />
+      </Routes>
+    </MemoryRouter>,
+  );
+}
 
-const mockTagTeamLeagueHealthData = {
-  leagues: [
-    { league: 'bronze', teamCount: 12, instances: 1, instanceDetails: [{ id: 'bronze_1', teamCount: 12 }], teamsPerInstance: { min: 12, max: 12, avg: 12 }, needsRebalancing: false },
-    { league: 'silver', teamCount: 5, instances: 1, instanceDetails: [{ id: 'silver_1', teamCount: 5 }], teamsPerInstance: { min: 5, max: 5, avg: 5 }, needsRebalancing: true },
-    { league: 'gold', teamCount: 0, instances: 0, instanceDetails: [], teamsPerInstance: { min: 0, max: 0, avg: 0 }, needsRebalancing: false },
-  ],
-  totalTeams: 17,
-  timestamp: '2026-06-01T00:00:00.000Z',
-};
-
-/* ------------------------------------------------------------------ */
-/*  Tests                                                              */
-/* ------------------------------------------------------------------ */
+const location = (): string => screen.getByTestId('location').textContent ?? '';
+const tierTable = (): HTMLElement => screen.getByTestId('league-health-tier-table');
 
 describe('LeagueHealthPage', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    mockGet.mockImplementation((url: string) => {
-      if (url === '/api/admin/league-health') {
-        return Promise.resolve({ data: mockLeagueHealthData });
-      }
-      if (url === '/api/admin/team-battle-league-health') {
-        return Promise.resolve({ data: mockTeamBattleLeagueHealthData });
-      }
-      if (url === '/api/admin/tag-team-league-health') {
-        return Promise.resolve({ data: mockTagTeamLeagueHealthData });
-      }
-      return Promise.reject(new Error(`Unexpected URL: ${url}`));
-    });
+    mockGet.mockReset();
+    mockGet.mockResolvedValue({ data: overview() });
   });
 
-  const renderPage = () =>
-    render(
-      <MemoryRouter>
-        <LeagueHealthPage />
-      </MemoryRouter>,
-    );
-
-  it('should render the page header', () => {
+  it('loads the overview once from the league health endpoint', async () => {
     renderPage();
-    expect(screen.getByText('League Health')).toBeInTheDocument();
+    await screen.findByTestId('league-health-attention');
+    expect(mockGet).toHaveBeenCalledTimes(1);
+    expect(mockGet.mock.calls[0][0]).toBe('/api/admin/league-health');
+    expect(screen.getByText(/Season 1 · cycle 88 of 100/)).toBeInTheDocument();
+    expect(screen.getByText('Last updated 17:30:00 UTC')).toBeInTheDocument();
   });
 
-  it('should display summary stat cards', async () => {
+  it('lists attention items with their sentence and destination', async () => {
     renderPage();
-    await waitFor(() => {
-      expect(screen.getByText('Total Robots')).toBeInTheDocument();
-      expect(screen.getByText('Active Tiers')).toBeInTheDocument();
-      expect(screen.getByText('Empty Tiers')).toBeInTheDocument();
-    });
+    const list = await screen.findByTestId('league-health-attention');
+    const links = within(list).getAllByRole('link');
+    expect(links).toHaveLength(4);
+    expect(links[0]).toHaveTextContent("Champion can't open in 2v2, 3v3 and Tag Team");
+    expect(links[0]).toHaveTextContent('Diamond has 18, 17 and 16 teams: 1 promotion place each.');
+    expect(links[0]).toHaveAttribute('href', '/admin/league-health?mode=league_2v2&tier=diamond');
+    expect(links[1]).toHaveTextContent('Few promotions out of 1v1 Platinum');
+    expect(links[2]).toHaveTextContent('Demotion rarely moves');
+    expect(links[3]).toHaveTextContent('Unsubscribed standings rows');
+    expect(screen.getByText('2 open')).toBeInTheDocument(); // notices are not counted
   });
 
-  it('should display total robot count', async () => {
+  it('opens the tier of an attention item', async () => {
+    const user = userEvent.setup();
     renderPage();
-    await waitFor(() => {
-      expect(screen.getByText('43')).toBeInTheDocument();
-    });
+    const list = await screen.findByTestId('league-health-attention');
+    await user.click(within(list).getAllByRole('link')[0]);
+    expect(location()).toBe('/admin/league-health?mode=league_2v2&tier=diamond');
+    expect(within(tierTable()).getByTestId('league-health-instances-diamond')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '2v2 League' })).toHaveAttribute('aria-pressed', 'true');
   });
 
-  it('should display active tiers count', async () => {
+  it('shows every mode and tier in the grid, and a cell opens that tier', async () => {
+    const user = userEvent.setup();
     renderPage();
-    await waitFor(() => {
-      // 3 active tiers (all have robotCount > 0)
-      expect(screen.getByText('3')).toBeInTheDocument();
-    });
+    const cell = await screen.findByRole('button', { name: /^2v2 League Diamond: 18 active\. Promotion blocked$/ });
+    expect(screen.getByRole('button', { name: /^1v1 League Bronze: 2,666 \/ 2,900 active\. OK · 8% unsubscribed$/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^King of the Hill Gold: 90 active\. OK · few demotions$/ })).toBeInTheDocument();
+    await user.click(cell);
+    expect(location()).toBe('/admin/league-health?mode=league_2v2&tier=diamond');
   });
 
-  it('should render 1v1 league tiers table', async () => {
-    renderPage();
-    await waitFor(() => {
-      expect(screen.getByText('1v1 League Tiers')).toBeInTheDocument();
-    });
+  it('selects a mode from a mobile strip without expanding a tier', async () => {
+    const user = userEvent.setup();
+    renderPage('?tier=gold');
+    const strip = await screen.findByRole('button', { name: /^Tag Team\. Bronze/ });
+    await user.click(strip);
+    expect(location()).toBe('/admin/league-health?mode=tag_team');
+    expect(strip).toHaveAttribute('aria-pressed', 'true');
   });
 
-  it('should display robot counts per tier', async () => {
-    renderPage();
-    await waitFor(() => {
-      expect(screen.getByText('20')).toBeInTheDocument();
-    });
+  it('switches modes with the tabs and collapses the expanded tier', async () => {
+    const user = userEvent.setup();
+    renderPage('?tier=platinum');
+    await screen.findByTestId('league-health-tier-table');
+    await user.click(screen.getByRole('button', { name: 'King of the Hill' }));
+    expect(location()).toBe('/admin/league-health?mode=koth');
+    expect(within(tierTable()).getByRole('columnheader', { name: 'Avg ELO' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: '1v1 League' }));
+    expect(location()).toBe('/admin/league-health');
   });
 
-  it('should display instance counts', async () => {
-    renderPage();
-    await waitFor(() => {
-      // bronze has 2 instances — verify in the 1v1 table context
-      // The "2" text appears in multiple places now, so check the table has the value
-      const tables = screen.getAllByRole('table');
-      expect(tables.length).toBeGreaterThanOrEqual(1);
-      // The first table (1v1) should contain "2" for bronze instances
-      expect(tables[0].textContent).toContain('2');
-    });
+  it('labels team ELO as combined in team modes', async () => {
+    renderPage('?mode=league_3v3');
+    await screen.findByTestId('league-health-tier-table');
+    expect(within(tierTable()).getByRole('columnheader', { name: 'Avg team ELO' })).toBeInTheDocument();
+    expect(screen.getByText(/Team ELO is the members' combined ELO/)).toBeInTheDocument();
   });
 
-  it('should fetch from all league-health endpoints', async () => {
+  it('shows movement from history and status per tier', async () => {
     renderPage();
-    await waitFor(() => {
-      expect(mockGet).toHaveBeenCalledWith('/api/admin/league-health');
-      expect(mockGet).toHaveBeenCalledWith('/api/admin/team-battle-league-health');
-      expect(mockGet).toHaveBeenCalledWith('/api/admin/tag-team-league-health');
-    });
+    const platinum = await screen.findByTestId('league-health-tier-platinum');
+    expect(platinum).toHaveTextContent('7 of 27');
+    expect(platinum).toHaveTextContent('avg 6.4 · needs 100 LP');
+    expect(platinum).toHaveTextContent('Low promotion');
+    expect(platinum).toHaveTextContent('avg 6.4 of 27 places');
+    const bronze = screen.getByTestId('league-health-tier-bronze');
+    expect(bronze).toHaveTextContent('2,666 / 2,900');
+    expect(bronze).toHaveTextContent('lowest tier');
+    expect(bronze).toHaveTextContent('234 unsubscribed');
   });
 
-  it('should display error state when API fails', async () => {
-    mockGet.mockRejectedValue({ response: { data: { error: 'League query failed' } } });
+  it('expands and collapses a tier through its toggle and the URL', async () => {
+    const user = userEvent.setup();
     renderPage();
-    await waitFor(() => {
-      expect(screen.getByText('League query failed')).toBeInTheDocument();
-    });
+    const toggle = await within(await screen.findByTestId('league-health-tier-platinum')).findByRole('button', { name: /Platinum/ });
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    await user.click(toggle);
+    expect(location()).toBe('/admin/league-health?tier=platinum');
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    const instances = within(tierTable()).getByTestId('league-health-instances-platinum');
+    expect(within(instances).getByText('96 LP · rank 9')).toBeInTheDocument();
+    expect(within(instances).getByText('94 / 95')).toBeInTheDocument();
+    await user.click(toggle);
+    expect(location()).toBe('/admin/league-health');
+    expect(within(tierTable()).queryByTestId('league-health-instances-platinum')).not.toBeInTheDocument();
   });
 
-  // 2v2 League section tests
-  it('should render 2v2 League section', async () => {
-    renderPage();
-    await waitFor(() => {
-      expect(screen.getByText('2v2 League Tiers')).toBeInTheDocument();
-      expect(screen.getByTestId('league-health-2v2')).toBeInTheDocument();
-    });
+  it('links each instance to its player standings', async () => {
+    const user = userEvent.setup();
+    renderPage('?mode=tag_team&tier=diamond');
+    const instances = within(await screen.findByTestId('league-health-tier-table')).getByTestId('league-health-instances-diamond');
+    // The instance block renders a table (md and up) and a list (below md).
+    const [link] = within(instances).getAllByRole('link', { name: /Standings of diamond_1/ });
+    expect(link).toHaveAttribute('href', '/league-standings?mode=tag_team&tier=diamond&instance=diamond_1');
+    await user.click(link);
+    expect(location()).toBe('/league-standings?mode=tag_team&tier=diamond&instance=diamond_1');
   });
 
-  it('should display 2v2 total teams count', async () => {
-    renderPage();
-    await waitFor(() => {
-      expect(screen.getByText('16')).toBeInTheDocument();
-    });
+  it('links to the player standings of the mode and to League History', async () => {
+    renderPage('?mode=grand_melee');
+    await screen.findByTestId('league-health-tier-table');
+    expect(screen.getByRole('link', { name: /Player standings/ })).toHaveAttribute('href', '/league-standings?mode=grand_melee&tier=bronze');
+    expect(screen.getByRole('link', { name: /League History/ })).toHaveAttribute('href', '/admin/league-history');
   });
 
-  // 3v3 League section tests
-  it('should render 3v3 League section', async () => {
+  it('refreshes on Refresh and keeps the data on screen meanwhile', async () => {
+    const user = userEvent.setup();
     renderPage();
-    await waitFor(() => {
-      expect(screen.getByText('3v3 League Tiers')).toBeInTheDocument();
-      expect(screen.getByTestId('league-health-3v3')).toBeInTheDocument();
-    });
+    await screen.findByTestId('league-health-attention');
+    let resolve: (value: { data: unknown }) => void = () => {};
+    mockGet.mockImplementationOnce(() => new Promise((r) => { resolve = r; }));
+    await user.click(screen.getByRole('button', { name: 'Refresh' }));
+    expect(mockGet).toHaveBeenCalledTimes(2);
+    expect(screen.getByText('Refreshing…')).toBeInTheDocument();
+    expect(screen.getByTestId('league-health-attention')).toBeInTheDocument();
+    resolve({ data: overview({ generatedAt: '2026-10-29T18:00:00.000Z' }) });
+    expect(await screen.findByText('Last updated 18:00:00 UTC')).toBeInTheDocument();
   });
 
-  it('should display 3v3 total teams count', async () => {
+  it('shows an error with Retry when the first load fails', async () => {
+    const user = userEvent.setup();
+    mockGet.mockRejectedValueOnce(new Error('boom'));
     renderPage();
-    await waitFor(() => {
-      const section3v3 = screen.getByTestId('league-health-3v3');
-      // 3v3 total teams = 12
-      expect(section3v3.textContent).toContain('12');
-    });
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Could not load league health.');
+    await user.click(within(alert).getByRole('button', { name: 'Retry' }));
+    await waitFor(() => expect(mockGet).toHaveBeenCalledTimes(2));
+    expect(await screen.findByTestId('league-health-attention')).toBeInTheDocument();
   });
 
-  it('should show needs-rebalancing indicator for 3v3 silver tier', async () => {
-    renderPage();
-    await waitFor(() => {
-      const section3v3 = screen.getByTestId('league-health-3v3');
-      // The 3v3 silver tier has needsRebalancing: true, so there should be a warning indicator
-      expect(section3v3.querySelector('.text-yellow-400')).toBeInTheDocument();
-    });
-  });
-
-  it('should show balanced indicator for 2v2 tiers', async () => {
-    renderPage();
-    await waitFor(() => {
-      const section2v2 = screen.getByTestId('league-health-2v2');
-      // All 2v2 tiers have needsRebalancing: false, so no warning indicators
-      expect(section2v2.querySelector('.text-yellow-400')).not.toBeInTheDocument();
-    });
-  });
-
-  it('should display "Total Teams" stat cards for 2v2, 3v3, and tag team', async () => {
-    renderPage();
-    await waitFor(() => {
-      const totalTeamsLabels = screen.getAllByText('Total Teams');
-      expect(totalTeamsLabels).toHaveLength(3); // One for 2v2, one for 3v3, one for tag team
-    });
-  });
-
-  it('should display "Needs Rebalancing" stat cards for 2v2, 3v3, and tag team', async () => {
-    renderPage();
-    await waitFor(() => {
-      const rebalancingLabels = screen.getAllByText('Needs Rebalancing');
-      expect(rebalancingLabels).toHaveLength(3); // One for 2v2, one for 3v3, one for tag team
-    });
-  });
-
-  // Tag Team League section tests
-  it('should render Tag Team League section', async () => {
-    renderPage();
-    await waitFor(() => {
-      expect(screen.getByText('Tag Team League Tiers')).toBeInTheDocument();
-      expect(screen.getByTestId('league-health-tag-team')).toBeInTheDocument();
-    });
-  });
-
-  it('should display tag team total teams count', async () => {
-    renderPage();
-    await waitFor(() => {
-      expect(screen.getByText('17')).toBeInTheDocument();
-    });
-  });
-
-  it('should show needs-rebalancing indicator for tag team silver tier', async () => {
-    renderPage();
-    await waitFor(() => {
-      const sectionTagTeam = screen.getByTestId('league-health-tag-team');
-      // The tag team silver tier has needsRebalancing: true, so there should be a warning indicator
-      expect(sectionTagTeam.querySelector('.text-yellow-400')).toBeInTheDocument();
-    });
-  });
-
-  it('should display distribution column (min/max/avg) in tag team section', async () => {
-    renderPage();
-    await waitFor(() => {
-      const sectionTagTeam = screen.getByTestId('league-health-tag-team');
-      // Bronze tier: min 12, max 12, avg 12
-      expect(sectionTagTeam.textContent).toContain('12/12/12');
-      // Silver tier: min 5, max 5, avg 5
-      expect(sectionTagTeam.textContent).toContain('5/5/5');
-    });
-  });
-
-  it('should fetch from tag-team-league-health endpoint on page load', async () => {
-    renderPage();
-    await waitFor(() => {
-      expect(mockGet).toHaveBeenCalledWith('/api/admin/tag-team-league-health');
-    });
+  it('falls back to the default mode for an unknown ?mode=', async () => {
+    renderPage('?mode=nonsense&tier=bogus');
+    await screen.findByTestId('league-health-tier-table');
+    expect(screen.getByRole('button', { name: '1v1 League' })).toHaveAttribute('aria-pressed', 'true');
+    expect(within(tierTable()).queryByTestId(/league-health-instances-/)).not.toBeInTheDocument();
   });
 });

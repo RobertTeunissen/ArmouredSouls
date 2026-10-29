@@ -60,8 +60,6 @@ jest.mock('../../src/services/admin/adminStatsService', () => ({
   getDashboardKpis: jest.fn(),
   getEngagementPlayers: jest.fn(),
   getEconomyOverview: jest.fn(),
-  getLeagueHealth: jest.fn(),
-  getTeamBattleLeagueHealth: jest.fn(),
   getWeaponAnalytics: jest.fn(),
   getAchievementAnalytics: jest.fn(),
   getTuningAdoption: jest.fn(),

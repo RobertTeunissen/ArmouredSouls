@@ -26,3 +26,22 @@ export const SETTLEMENT_OVERDUE_AFTER_MS = 26 * 60 * 60 * 1000;
  * behind by its battle-event job. The margin covers a job that is still running.
  */
 export const STUCK_MATCH_GRACE_MS = 2 * 60 * 60 * 1000;
+
+/**
+ * League Health judges promotion and demotion flow over a mode's last this-many
+ * rebalances (`league_history`). With fewer, a tier's flow is not judged.
+ */
+export const LEAGUE_HISTORY_WINDOW = 5;
+
+/**
+ * League Health flags "Low promotion" (and notes "few demotions") when, on
+ * average over the history window, fewer than this share of a tier's current
+ * places were filled.
+ */
+export const LEAGUE_LOW_MOVEMENT_SHARE = 0.25;
+
+/**
+ * League Health notes a tier whose unsubscribed standings rows reach this share.
+ * Those rows keep their instance seat and count toward the 10% zone sizes.
+ */
+export const LEAGUE_UNSUBSCRIBED_NOTICE_SHARE = 0.05;

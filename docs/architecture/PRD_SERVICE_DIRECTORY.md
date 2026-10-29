@@ -2,12 +2,13 @@
 
 **Project**: Armoured Souls
 **Document Type**: Product Requirements Document (PRD)
-**Version**: v1.11
-**Last Updated**: October 23, 2026
+**Version**: v1.12
+**Last Updated**: October 29, 2026
 **Status**: ✅ Implemented
 **Owner**: Robert Teunissen
 
 **Revision History**:
+- v1.12 (Oct 29, 2026): `admin/league-health/` replaces `admin/adminLeagueHealthService` (League Health redesign).
 - v1.11 (Oct 23, 2026): `practice-arena/practiceArenaUsageService` replaces the in-memory `practiceArenaMetrics` (admin Practice Arena redesign).
 - v1.10 (Oct 23, 2026): Season Control redesign: `season/adminSeasonRolloverRunService`, `season/adminSeasonStateService`, `season/seasonRolloverHistoryService`, `season/rolloverProgress` (stage progress of `seasonRolloverService`).
 - v1.9 (Oct 23, 2026): Persistent scheduler run history (`cycle/schedulerRunStore`, `schedulerMissedRuns`, `schedulerHistoryService`), background manual runs and `admin/adminBulkCycleRunService` (Cycle Controls redesign).
@@ -92,7 +93,8 @@ Admin panel operations — stats dashboards, cycle execution, battle viewer, HP 
 | `adminBattleActivityService` | Battles per mode: last cycle, season, walkovers, queued, draw/kill/duration rates (`GET /api/admin/dashboard/battle-activity`, 60 s cache per filter) |
 | `adminQueuedMatches` | Queued matches per mode, system-wide (scheduled matches + outstanding bracket rows) |
 | `adminPlayerActivityService`, `adminKpiSnapshotService` | Login-based human-player counts; one `admin_kpi_snapshots` row per competitive settlement (non-fatal) for 7-day trends |
-| `adminThresholds` | Shared thresholds: bankruptcy risk, inactivity, settlement overdue, stuck-match grace |
+| `adminThresholds` | Shared thresholds: bankruptcy risk, inactivity, settlement overdue, stuck-match grace, League Health history window and low-movement / unsubscribed shares |
+| `league-health/` (`leagueHealthService`, `leagueHealthData`, `leagueHealthPlan`, `leagueHealthStatus`) | Admin League Health (`GET /api/admin/league-health`): every tiered mode's tiers and instances from the rebalance planner on current standings, promotion and demotion flow from the last 5 rebalances in `league_history`, tier status and the grouped Needs attention list. Read-only |
 | `adminCycleService` | Bulk cycle execution (`executeBulkCycles`), snapshot backfill |
 | `season/adminSeasonRolloverRunService` | `POST /api/admin/seasons/rollover`: the admin rollover under the scheduler lock (`seasonRollover`), recorded as a run; `startAdminRollover` runs in the background (202), `runAdminRollover` waits. 409 while a rollover of either trigger is queued or running |
 | `season/adminSeasonStateService` | `GET /api/admin/seasons/state`: season state, configuration, `startedAt`, `nextSettlementAt`, the active rollover with stage progress |

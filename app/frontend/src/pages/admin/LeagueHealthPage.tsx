@@ -1,371 +1,156 @@
 /**
- * LeagueHealthPage — Robots/Teams per tier, ELO distribution.
+ * LeagueHealthPage — every tiered league (1v1, 2v2, 3v3, Tag Team, King of the
+ * Hill, Grand Melee): who is in each tier and what the next rebalance would do.
  *
- * Fetches from GET /api/admin/league-health (1v1),
- * GET /api/admin/team-battle-league-health (2v2/3v3), and
- * GET /api/admin/tag-team-league-health (tag team).
+ * Sections: toolbar (season, last updated, Refresh), Needs attention, the
+ * mode × tier grid, and the detail of one mode (`?mode=`) with the instances of
+ * an expanded tier (`?tier=`). Structure (places, zones, who qualifies now)
+ * comes from the rebalancer's own planner on the current standings; whether
+ * anyone actually moves comes from the mode's last rebalances in
+ * `league_history` (`GET /api/admin/league-health`).
  *
- * Requirements: 15.1, 15.2, 15.3, 15.4, R11.6, 14.1, 14.2, 14.3, 14.4, 14.5, 14.6
+ * Definitions: docs/guides/ADMIN_PANEL_GUIDE.md §League Health.
  */
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useRef } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { LeagueGrid, LeagueHealthAttention, LeagueModeTabs, TierTable } from '../../components/admin/league-health';
+import { ADMIN_FOCUS_RING, PanelError, PanelSkeleton } from '../../components/admin/shared';
+import { useLeagueHealth } from '../../hooks/useLeagueHealth';
+import type { LeagueHealthMode } from '../../utils/adminLeagueHealthApi';
+import { formatUtcTime } from '../../utils/adminDashboardFormat';
 import {
-  AdminPageHeader,
-  AdminStatCard,
-  AdminDataTable,
-} from '../../components/admin/shared';
-import { api } from '../../utils/api';
-import { ApiError } from '../../utils/ApiError';
+  DEFAULT_LEAGUE_HEALTH_MODE,
+  modeLabel,
+  readLeagueHealthMode,
+  readLeagueHealthTier,
+  rulesSummary,
+  seasonLabel,
+  standingsHref,
+} from '../../utils/adminLeagueHealthFormat';
 
-/* ------------------------------------------------------------------ */
-/*  Types                                                              */
-/* ------------------------------------------------------------------ */
-
-interface LeagueTier {
-  league: string;
-  robotCount: number;
-  averageElo: number;
-  instances: number;
-  instanceDetails: { id: string; robotCount: number }[];
-  [key: string]: unknown;
+function prefersReducedMotion(): boolean {
+  return typeof window !== 'undefined'
+    && typeof window.matchMedia === 'function'
+    && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
-interface LeagueHealthData {
-  leagues: LeagueTier[];
-  totalRobots: number;
-}
+function LeagueHealthPage(): React.ReactElement {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const mode = readLeagueHealthMode(searchParams.get('mode'));
+  const expandedTier = readLeagueHealthTier(searchParams.get('tier'));
+  const { data, loading, error, reload } = useLeagueHealth();
+  const detailRef = useRef<HTMLElement>(null);
+  const refreshing = loading && data !== null;
 
-interface TeamBattleLeagueTier {
-  league: string;
-  teamCount: number;
-  averageElo: number;
-  instances: number;
-  instanceDetails: { id: string; teamCount: number }[];
-  needsRebalancing: boolean;
-  [key: string]: unknown;
-}
-
-interface TeamBattleLeagueData {
-  leagues: TeamBattleLeagueTier[];
-  totalTeams: number;
-}
-
-interface TeamBattleLeagueHealthData {
-  league2v2: TeamBattleLeagueData;
-  league3v3: TeamBattleLeagueData;
-}
-
-interface TagTeamLeagueTier {
-  league: string;
-  teamCount: number;
-  instances: number;
-  instanceDetails: { id: string; teamCount: number }[];
-  teamsPerInstance: { min: number; max: number; avg: number };
-  needsRebalancing: boolean;
-  [key: string]: unknown;
-}
-
-interface TagTeamLeagueHealthData {
-  leagues: TagTeamLeagueTier[];
-  totalTeams: number;
-  timestamp: string;
-}
-
-/* ------------------------------------------------------------------ */
-/*  Component                                                          */
-/* ------------------------------------------------------------------ */
-
-function LeagueHealthPage() {
-  const [data, setData] = useState<LeagueHealthData | null>(null);
-  const [teamBattleData, setTeamBattleData] = useState<TeamBattleLeagueHealthData | null>(null);
-  const [tagTeamData, setTagTeamData] = useState<TagTeamLeagueHealthData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const [leagueData, tbData, ttData] = await Promise.all([
-        api.get<LeagueHealthData>('/api/admin/league-health'),
-        api.get<TeamBattleLeagueHealthData>('/api/admin/team-battle-league-health'),
-        api.get<TagTeamLeagueHealthData>('/api/admin/tag-team-league-health'),
-      ]);
-      setData(leagueData);
-      setTeamBattleData(tbData);
-      setTagTeamData(ttData);
-    } catch (err: unknown) {
-      const msg = (err instanceof ApiError && err.message) || 'Failed to load league health data';
-      setError(msg);
-    } finally {
-      setLoading(false);
-    }
+  const scrollToDetail = useCallback((): void => {
+    // After the URL update has rendered the selected mode and tier.
+    window.setTimeout(() => {
+      detailRef.current?.scrollIntoView?.({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'start' });
+    }, 0);
   }, []);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  const select = useCallback((nextMode: LeagueHealthMode, tier: string | null, scroll = false): void => {
+    setSearchParams((params) => {
+      const updated = new URLSearchParams(params);
+      if (nextMode === DEFAULT_LEAGUE_HEALTH_MODE) updated.delete('mode');
+      else updated.set('mode', nextMode);
+      if (tier) updated.set('tier', tier);
+      else updated.delete('tier');
+      return updated;
+    }, { replace: true });
+    if (scroll) scrollToDetail();
+  }, [setSearchParams, scrollToDetail]);
 
-  const leagues = data?.leagues ?? [];
-  const totalRobots = data?.totalRobots ?? 0;
-  const emptyTiers = leagues.filter((l) => l.robotCount === 0).length;
-  const activeTiers = leagues.filter((l) => l.robotCount > 0).length;
+  const toggleTier = useCallback((tier: string): void => {
+    select(mode, expandedTier === tier ? null : tier);
+  }, [select, mode, expandedTier]);
 
-  const league2v2 = teamBattleData?.league2v2;
-  const league3v3 = teamBattleData?.league3v3;
+  const summary = data?.modes.find((item) => item.mode === mode) ?? null;
+  const season = seasonLabel(data?.season ?? null);
 
   return (
-    <div data-testid="league-health-page" className="space-y-6">
-      <AdminPageHeader
-        title="League Health"
-        subtitle="Tier distribution and ELO stats"
-        actions={
+    <div data-testid="league-health-page" className="space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-secondary">
+          Who is in each tier, and whether promotion and demotion move{season ? ` · ${season}` : ''}
+        </p>
+        <div className="flex items-center gap-3">
+          <span className="whitespace-nowrap text-xs text-secondary" aria-live="polite">
+            {refreshing ? 'Refreshing…' : data ? `Last updated ${formatUtcTime(data.generatedAt, true)}` : 'Not loaded yet'}
+          </span>
           <button
             type="button"
-            onClick={fetchData}
+            onClick={reload}
             disabled={loading}
-            className="px-3 py-1.5 text-sm bg-surface-elevated text-secondary hover:text-white rounded transition-colors"
+            className={`min-h-11 whitespace-nowrap rounded-md border border-white/10 bg-surface-elevated px-3 text-sm text-white hover:bg-white/10 disabled:opacity-60 ${ADMIN_FOCUS_RING}`}
           >
-            {loading ? 'Loading...' : '↻ Refresh'}
+            <span aria-hidden="true">↻ </span>Refresh
           </button>
-        }
-      />
+        </div>
+      </div>
 
-      {error && (
-        <div className="bg-red-900/50 border border-red-700 text-red-200 px-4 py-3 rounded text-sm">
-          {error}
+      <LeagueHealthAttention
+        items={data?.attention ?? null}
+        lowMovementShare={data?.thresholds.lowMovementShare ?? 0.25}
+        loading={loading}
+        error={data ? null : error}
+        onRetry={reload}
+        onNavigate={scrollToDetail}
+      />
+      {data && error && (
+        <div className="rounded-lg border border-white/10 bg-surface">
+          <PanelError message={`${error} Showing the data from ${formatUtcTime(data.generatedAt, true)}.`} onRetry={reload} />
         </div>
       )}
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        <AdminStatCard label="Total Robots" value={totalRobots} color="primary" icon={<span>🤖</span>} />
-        <AdminStatCard label="Active Tiers" value={activeTiers} color="success" icon={<span>🏆</span>} />
-        <AdminStatCard label="Empty Tiers" value={emptyTiers} color={emptyTiers > 0 ? 'warning' : 'success'} icon={<span>📭</span>} />
-      </div>
+      <LeagueGrid
+        modes={data?.modes ?? null}
+        selectedMode={mode}
+        loading={loading}
+        onSelect={(nextMode, tier) => select(nextMode, tier, true)}
+      />
 
-      {/* 1v1 League Tiers Table */}
-      <div className="bg-surface rounded-lg p-6">
-        <h3 className="text-lg font-semibold mb-3">1v1 League Tiers</h3>
-        <AdminDataTable<LeagueTier>
-          columns={[
-            {
-              key: 'league',
-              label: 'Tier',
-              render: (row) => <span className="capitalize font-medium">{row.league}</span>,
-            },
-            { key: 'robotCount', label: 'Robots', align: 'right' },
-            {
-              key: 'instances',
-              label: 'Instances',
-              align: 'right',
-              render: (row) => row.instances > 0 ? (
-                <span title={row.instanceDetails.map((i: { id: string; robotCount: number }) => `${i.id}: ${i.robotCount}`).join(', ')}>
-                  {row.instances}
-                </span>
-              ) : '—',
-            },
-            {
-              key: 'averageElo',
-              label: 'Avg ELO',
-              align: 'right',
-              render: (row) => row.robotCount > 0 ? row.averageElo.toLocaleString() : '—',
-            },
-          ]}
-          data={leagues}
-          loading={loading}
-          emptyMessage="No league data available"
-        />
-      </div>
-
-      {/* 2v2 League Tiers Table */}
-      <div className="bg-surface rounded-lg p-6" data-testid="league-health-2v2">
-        <h3 className="text-lg font-semibold mb-3">2v2 League Tiers</h3>
-        {league2v2 && (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
-            <AdminStatCard label="Total Teams" value={league2v2.totalTeams} color="primary" icon={<span>👥</span>} />
-            <AdminStatCard
-              label="Active Tiers"
-              value={league2v2.leagues.filter((l) => l.teamCount > 0).length}
-              color="success"
-              icon={<span>🏆</span>}
-            />
-            <AdminStatCard
-              label="Needs Rebalancing"
-              value={league2v2.leagues.filter((l) => l.needsRebalancing).length}
-              color={league2v2.leagues.some((l) => l.needsRebalancing) ? 'warning' : 'success'}
-              icon={<span>⚖️</span>}
-            />
+      <section
+        ref={detailRef}
+        aria-labelledby="league-health-detail-heading"
+        className="scroll-mt-4 rounded-lg border border-white/10 bg-surface"
+        data-testid="league-health-detail"
+      >
+        <div className="space-y-3 border-b border-white/10 px-5 py-3.5">
+          <h2 id="league-health-detail-heading" className="sr-only">{modeLabel(mode)} tiers</h2>
+          <LeagueModeTabs selected={mode} onSelect={(nextMode) => select(nextMode, null)} />
+          {summary && (
+            <div className="flex flex-col gap-1 text-xs text-secondary lg:flex-row lg:items-center lg:justify-between">
+              <span>{rulesSummary(summary)}</span>
+              <Link to={standingsHref(mode, 'bronze')} className={`whitespace-nowrap text-primary hover:underline ${ADMIN_FOCUS_RING}`}>
+                Player standings <span aria-hidden="true">→</span>
+              </Link>
+            </div>
+          )}
+        </div>
+        <div className="p-3 md:p-2">
+          {summary ? (
+            <TierTable mode={summary} expandedTier={expandedTier} onToggleTier={toggleTier} />
+          ) : loading ? (
+            <PanelSkeleton rows={6} />
+          ) : null}
+        </div>
+        {summary && (
+          <div className="space-y-1 border-t border-white/10 px-5 py-3 text-xs text-secondary">
+            <p>
+              Promotion and demotion: how many moved in the last rebalance of the places the rebalancer's planner gives each tier,
+              and the average over the last {summary.rebalanceCycles.length > 0 ? summary.rebalanceCycles.length : data?.thresholds.historyWindow} rebalances
+              {summary.rebalanceCycles.length > 0 ? ` (cycles ${summary.rebalanceCycles[summary.rebalanceCycles.length - 1]}–${summary.rebalanceCycles[0]})` : ''}.
+              {summary.rebalanceCycles.length < (data?.thresholds.historyWindow ?? 5) ? ' Not judged until the league has that many rebalances this season.' : ''}
+            </p>
+            <p>
+              Active = subscribed to this event ({summary.entityType === 'team' ? 'every team member' : 'the robot'}). Unsubscribed rows keep their seat and count toward zone sizes.
+              {summary.entityType === 'team' ? ' Team ELO is the members\' combined ELO, as on the league pages.' : ''}
+              {' '}Past promotions and demotions: <Link to="/admin/league-history" className={`text-primary hover:underline ${ADMIN_FOCUS_RING}`}>League History <span aria-hidden="true">→</span></Link>
+            </p>
           </div>
         )}
-        <AdminDataTable<TeamBattleLeagueTier>
-          columns={[
-            {
-              key: 'league',
-              label: 'Tier',
-              render: (row) => <span className="capitalize font-medium">{row.league}</span>,
-            },
-            { key: 'teamCount', label: 'Teams', align: 'right' },
-            {
-              key: 'instances',
-              label: 'Instances',
-              align: 'right',
-              render: (row) => row.instances > 0 ? (
-                <span title={row.instanceDetails.map((i: { id: string; teamCount: number }) => `${i.id}: ${i.teamCount}`).join(', ')}>
-                  {row.instances}
-                </span>
-              ) : '—',
-            },
-            {
-              key: 'averageElo',
-              label: 'Avg ELO',
-              align: 'right',
-              render: (row) => row.teamCount > 0 ? row.averageElo.toLocaleString() : '—',
-            },
-            {
-              key: 'needsRebalancing',
-              label: 'Rebalancing',
-              align: 'center',
-              render: (row) => row.needsRebalancing ? (
-                <span className="text-yellow-400" title="Needs rebalancing">⚠️</span>
-              ) : (
-                <span className="text-green-400" title="Balanced">✓</span>
-              ),
-            },
-          ]}
-          data={league2v2?.leagues ?? []}
-          loading={loading}
-          emptyMessage="No 2v2 league data available"
-        />
-      </div>
-
-      {/* 3v3 League Tiers Table */}
-      <div className="bg-surface rounded-lg p-6" data-testid="league-health-3v3">
-        <h3 className="text-lg font-semibold mb-3">3v3 League Tiers</h3>
-        {league3v3 && (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
-            <AdminStatCard label="Total Teams" value={league3v3.totalTeams} color="primary" icon={<span>👥</span>} />
-            <AdminStatCard
-              label="Active Tiers"
-              value={league3v3.leagues.filter((l) => l.teamCount > 0).length}
-              color="success"
-              icon={<span>🏆</span>}
-            />
-            <AdminStatCard
-              label="Needs Rebalancing"
-              value={league3v3.leagues.filter((l) => l.needsRebalancing).length}
-              color={league3v3.leagues.some((l) => l.needsRebalancing) ? 'warning' : 'success'}
-              icon={<span>⚖️</span>}
-            />
-          </div>
-        )}
-        <AdminDataTable<TeamBattleLeagueTier>
-          columns={[
-            {
-              key: 'league',
-              label: 'Tier',
-              render: (row) => <span className="capitalize font-medium">{row.league}</span>,
-            },
-            { key: 'teamCount', label: 'Teams', align: 'right' },
-            {
-              key: 'instances',
-              label: 'Instances',
-              align: 'right',
-              render: (row) => row.instances > 0 ? (
-                <span title={row.instanceDetails.map((i: { id: string; teamCount: number }) => `${i.id}: ${i.teamCount}`).join(', ')}>
-                  {row.instances}
-                </span>
-              ) : '—',
-            },
-            {
-              key: 'averageElo',
-              label: 'Avg ELO',
-              align: 'right',
-              render: (row) => row.teamCount > 0 ? row.averageElo.toLocaleString() : '—',
-            },
-            {
-              key: 'needsRebalancing',
-              label: 'Rebalancing',
-              align: 'center',
-              render: (row) => row.needsRebalancing ? (
-                <span className="text-yellow-400" title="Needs rebalancing">⚠️</span>
-              ) : (
-                <span className="text-green-400" title="Balanced">✓</span>
-              ),
-            },
-          ]}
-          data={league3v3?.leagues ?? []}
-          loading={loading}
-          emptyMessage="No 3v3 league data available"
-        />
-      </div>
-
-      {/* Tag Team League Tiers Table */}
-      <div className="bg-surface rounded-lg p-6" data-testid="league-health-tag-team">
-        <h3 className="text-lg font-semibold mb-3">Tag Team League Tiers</h3>
-        {tagTeamData && (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
-            <AdminStatCard label="Total Teams" value={tagTeamData.totalTeams} color="primary" icon={<span>🤝</span>} />
-            <AdminStatCard
-              label="Active Tiers"
-              value={tagTeamData.leagues.filter((l) => l.teamCount > 0).length}
-              color="success"
-              icon={<span>🏆</span>}
-            />
-            <AdminStatCard
-              label="Needs Rebalancing"
-              value={tagTeamData.leagues.filter((l) => l.needsRebalancing).length}
-              color={tagTeamData.leagues.some((l) => l.needsRebalancing) ? 'warning' : 'success'}
-              icon={<span>⚖️</span>}
-            />
-          </div>
-        )}
-        <AdminDataTable<TagTeamLeagueTier>
-          columns={[
-            {
-              key: 'league',
-              label: 'Tier',
-              render: (row) => (
-                <span className="capitalize font-medium">
-                  {row.needsRebalancing && <span className="text-yellow-400 mr-1" title="Needs rebalancing">⚠️</span>}
-                  {row.league}
-                </span>
-              ),
-            },
-            { key: 'teamCount', label: 'Teams', align: 'right' },
-            {
-              key: 'instances',
-              label: 'Instances',
-              align: 'right',
-              render: (row) => row.instances > 0 ? (
-                <span title={row.instanceDetails.map((i) => `${i.id}: ${i.teamCount}`).join(', ')}>
-                  {row.instances}
-                </span>
-              ) : '—',
-            },
-            {
-              key: 'teamsPerInstance' as string,
-              label: 'Distribution',
-              align: 'right',
-              render: (row) => row.instances > 0
-                ? `${row.teamsPerInstance.min}/${row.teamsPerInstance.max}/${row.teamsPerInstance.avg}`
-                : '—',
-            },
-            {
-              key: 'needsRebalancing',
-              label: 'Rebalancing',
-              align: 'center',
-              render: (row) => row.needsRebalancing ? (
-                <span className="text-yellow-400" title="Needs rebalancing">⚠️</span>
-              ) : (
-                <span className="text-green-400" title="Balanced">✓</span>
-              ),
-            },
-          ]}
-          data={tagTeamData?.leagues ?? []}
-          loading={loading}
-          emptyMessage="No tag team league data available"
-        />
-      </div>
+      </section>
     </div>
   );
 }

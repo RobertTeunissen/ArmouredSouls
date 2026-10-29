@@ -19,14 +19,12 @@ import {
   getDashboardKpis,
   getEngagementPlayers,
   getEconomyOverview,
-  getLeagueHealth,
-  getTeamBattleLeagueHealth,
-  getTagTeamLeagueHealth,
   getWeaponAnalytics,
   getAchievementAnalytics,
   getTuningAdoption,
   getRefinementAdoption,
 } from '../services/admin/adminStatsService';
+import { getLeagueHealthOverview } from '../services/admin/league-health';
 import { getDashboardStatus } from '../services/admin/adminDashboardStatusService';
 import { getBattleActivity } from '../services/admin/adminBattleActivityService';
 import {
@@ -256,28 +254,12 @@ router.get('/economy/overview', authenticateToken, requireAdmin, validateRequest
 
 /**
  * GET /api/admin/league-health
- * Get league health metrics.
+ * Every tiered league (1v1, 2v2, 3v3, Tag Team, KotH, Grand Melee): tiers,
+ * instances, stable mix, and what the next rebalance would do, plus a
+ * "Needs attention" list. Read-only.
  */
 router.get('/league-health', authenticateToken, requireAdmin, validateRequest({}), async (_req: Request, res: Response) => {
-  const result = await getLeagueHealth();
-  res.json(result);
-});
-
-/**
- * GET /api/admin/team-battle-league-health
- * Get team battle (2v2 and 3v3) league health metrics.
- */
-router.get('/team-battle-league-health', authenticateToken, requireAdmin, validateRequest({}), async (_req: Request, res: Response) => {
-  const result = await getTeamBattleLeagueHealth();
-  res.json(result);
-});
-
-/**
- * GET /api/admin/tag-team-league-health
- * Get tag team league health metrics for 2v2 teams.
- */
-router.get('/tag-team-league-health', authenticateToken, requireAdmin, validateRequest({}), async (_req: Request, res: Response) => {
-  const result = await getTagTeamLeagueHealth();
+  const result = await getLeagueHealthOverview();
   res.json(result);
 });
 

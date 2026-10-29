@@ -26,7 +26,7 @@ All pages manage their own data fetching. The sidebar collapses to icons on narr
 | **Battle Data** | Battles | `/admin/battles` | Find any battle (all 9 modes, stable type, outcome, date, search); admin check with payout check, combat log with formulas, and export |
 | | Attributes | `/admin/attributes` | Which attributes, groups and build profiles win, per mode, from battle-time builds (was Robot Stats) |
 | | Meta | `/admin/meta` | What stables choose: stances, loadouts, yield thresholds, facilities, weapons |
-| | League Health | `/admin/league-health` | Per-league robot counts, ELO averages, instance counts |
+| | League Health | `/admin/league-health` | Every tiered league: tiers, instances, stable mix, and whether promotion and demotion move |
 | | Weapons | `/admin/weapons` | Weapon popularity, type breakdown, ownership stats |
 | **Player Management** | Players | `/admin/players` | Player list with tabs (New Players, Auto-Generated, At-Risk), churn risk, engagement, search, detail slide-over |
 | | Automatons | `/admin/automatons` | Automaton stables: status bar, stables, strategies, editor, catalogue (Spec #55) |
@@ -257,9 +257,33 @@ KotH and Grand Melee logs store every event with its formula breakdown from this
 
 ### League Health (`/admin/league-health`)
 
-Per-league tier breakdown: robot count, average ELO, number of league instances, and per-instance robot counts.
+Is every tiered league working: does promotion and demotion actually move, and can each tier be played? Covers all six tiered modes: 1v1, 2v2, 3v3, Tag Team, King of the Hill and Grand Melee. Read-only.
 
-**API:** `GET /api/admin/league-health`
+**Sections**
+1. **Needs attention**: one line per problem, linking to the tier. Identical problems in the same tier are grouped across modes ("Champion can't open in 2v2, 3v3 and Tag Team"); few demotions and unsubscribed rows are one notice each. The badge counts blocked and warning items, not notices.
+2. **All leagues**: a mode × tier grid with the active count (and the total when some rows are unsubscribed) and the status. A cell opens that mode and tier below. Below 768 px each mode is one strip of short counts; tapping it selects the mode.
+3. **League detail** of one mode (`?mode=`, default 1v1): the rules line, then one row per tier (cards below 768 px): active / total, instances (count · size range), stable mix (human / Automaton / generated, by `users.stable_type`), average ELO, eligible (enough cycles in tier), promotion and demotion, status. `?tier=` expands a tier's instances: size, humans, top LP, the LP at the promotion and demotion lines with their rank, who qualifies now, and a link to the player standings of that instance (`/league-standings?mode=&tier=&instance=`).
+
+**Two kinds of numbers**
+- **Structure (now)**: places, zones and who qualifies come from the rebalancer's own planner (`league-rebalancing-planner.ts`) on the current standings. Each league rebalances right after its event's battles, so a snapshot taken after a rebalance always shows almost nobody qualifying. "Qualify now" is therefore shown only in the instance view, labelled as a snapshot.
+- **Flow (history)**: promotion and demotion cells read "moved in the last rebalance of the places · average", from the mode's last 5 rebalances in `league_history`. A rebalance is observed as a cycle with at least one row for that mode (every rebalance of a populated mode moves someone); KotH can skip a cycle, so its window can span 6 cycles. `league_history` is emptied at season rollover; until a mode has 5 rebalances, flow is "not judged yet".
+
+**Status** (first match wins; thresholds in `services/admin/adminThresholds.ts`)
+| Status | Rule |
+|---|---|
+| Empty | no standings rows |
+| Promotion blocked | the tier above is empty and this tier has fewer promotion places than the 3 an empty tier needs to open, so it never can |
+| Frozen | every instance is below the 10 entities an instance needs for zones |
+| No promotions | the tier has promotion places, but nobody was promoted in the last 5 rebalances |
+| Low promotion | on average fewer than a quarter of the promotion places were filled |
+| OK | otherwise; notices: "N% unsubscribed" at ≥ 5% of the tier's rows, "few demotions" when fewer than a quarter of the demotion places are filled on average |
+
+**Definitions**
+- **Active**: a robot with an active subscription to the event; a team when every member is subscribed. Standings rows survive an unsubscribe, keep their instance seat and count toward the 10% zone sizes.
+- **ELO**: current robot ELO; team modes show the combined team ELO (sum of the members), as the league pages do.
+- **Places**: floor(10%) of each instance with at least 10 entities; zones are fixed places, so a place that doesn't qualify (LP or cycles in tier) stays empty and nobody below moves up into it.
+
+**API:** `GET /api/admin/league-health` (admin-only, no parameters): `{ generatedAt, season, thresholds, modes[], attention[] }`, built by `services/admin/league-health/`. The former `GET /api/admin/team-battle-league-health` and `GET /api/admin/tag-team-league-health` were removed (this page was their only caller). On ACC (Oct 2026) the standings query takes ~0.4 s for 19k rows and the history query ~70 ms.
 
 ### Weapons (`/admin/weapons`)
 

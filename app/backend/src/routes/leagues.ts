@@ -2,7 +2,7 @@ import express, { Request, Response } from 'express';
 import { z } from 'zod';
 import { getInstancesForTier, LeagueTier, LEAGUE_TIERS } from '../services/league/leagueInstanceService';
 import { getLeagueTierPreview } from '../services/league/league-rebalancing-preview';
-import { HEAD_TO_HEAD_LEAGUE_RULES, LeagueRuleSet } from '../services/league/league-rules';
+import { getLeagueRulesForMode, LeagueRuleSet } from '../services/league/league-rules';
 import { getMinLPForPromotion } from '../services/league/leaguePromotionThresholds';
 import prisma from '../lib/prisma';
 import type { Prisma, StandingsMode } from '../../generated/prisma';
@@ -29,11 +29,8 @@ router.get('/:tier/standings', validateRequest({ params: leagueTierParamsSchema 
   const page = Math.max(1, parseInt(req.query.page as string) || 1);
   const perPage = Math.min(100, Math.max(1, parseInt(req.query.perPage as string) || 50));
   const mode = (req.query.mode as string) || 'league_1v1';
-  const isPlacementMode = mode === 'koth' || mode === 'grand_melee';
   const subscriptionEvent = mode === 'koth' ? 'koth' : mode === 'grand_melee' ? 'grand_melee' : 'league_1v1';
-  const leagueRules: LeagueRuleSet = isPlacementMode
-    ? { ...HEAD_TO_HEAD_LEAGUE_RULES, minCyclesForRebalancing: 10, promotionMinLPOverride: 0 }
-    : HEAD_TO_HEAD_LEAGUE_RULES;
+  const leagueRules: LeagueRuleSet = getLeagueRulesForMode(mode);
 
   if (!LEAGUE_TIERS.includes(tier)) {
     throw new LeagueError(LeagueErrorCode.INVALID_LEAGUE_TIER, 'Invalid tier', 400, { validTiers: LEAGUE_TIERS });

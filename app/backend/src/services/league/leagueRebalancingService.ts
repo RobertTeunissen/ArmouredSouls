@@ -21,7 +21,7 @@ import {
   demoteEntity,
 } from './leagueEngine';
 
-import { HEAD_TO_HEAD_LEAGUE_RULES } from './league-rules';
+import { HEAD_TO_HEAD_LEAGUE_RULES, PLACEMENT_LEAGUE_RULES } from './league-rules';
 
 // Re-export for consumers that need the helper
 export { getMinLPForPromotion } from './leaguePromotionThresholds';
@@ -237,8 +237,7 @@ export function createStandingsAdapter(mode: string, options: StandingsAdapterOp
 export async function rebalanceKothLeagues(): Promise<FullRebalancingSummary> {
   const kothConfig: LeagueEngineConfig = {
     ...ROBOT_LEAGUE_CONFIG,
-    minCyclesForRebalancing: 10,
-    promotionMinLPOverride: 0,
+    ...PLACEMENT_LEAGUE_RULES,
     logPrefix: 'KotH Rebalancing',
   };
   const kothAdapter = createStandingsAdapter('koth', {
@@ -274,8 +273,7 @@ export async function rebalanceKothLeagues(): Promise<FullRebalancingSummary> {
 export async function rebalanceGrandMeleeLeagues(): Promise<FullRebalancingSummary> {
   const grandMeleeConfig: LeagueEngineConfig = {
     ...ROBOT_LEAGUE_CONFIG,
-    minCyclesForRebalancing: 10,
-    promotionMinLPOverride: 0,
+    ...PLACEMENT_LEAGUE_RULES,
     logPrefix: 'Grand Melee Rebalancing',
   };
   const grandMeleeAdapter = createStandingsAdapter('grand_melee', {
