@@ -124,3 +124,51 @@ export interface LeagueHealthOverview {
 export function getLeagueHealth(signal?: AbortSignal): Promise<LeagueHealthOverview> {
   return api.get<LeagueHealthOverview>('/api/admin/league-health', { signal });
 }
+
+/* ------------------------------------------------------------------ */
+/*  This season (GET /api/admin/league-health/season)                  */
+/* ------------------------------------------------------------------ */
+
+export type LeagueSeasonStableFilter = 'all' | 'human' | 'automaton' | 'generated';
+
+export interface SeasonCycleMoves {
+  cycle: number;
+  promoted: number;
+  demoted: number;
+}
+
+export interface SeasonBoundary {
+  lower: string;
+  upper: string;
+  promoted: number;
+  demoted: number;
+  /** Promotions old enough to judge (at most `judgedThroughCycle`). */
+  judged: number;
+  /** Of those, demoted back across the boundary within the window. */
+  back: number;
+  share: number | null;
+  noted: boolean;
+}
+
+export interface LeagueSeasonOverview {
+  mode: LeagueHealthMode;
+  stable: LeagueSeasonStableFilter;
+  window: number;
+  noteShare: number;
+  minSample: number;
+  firstCycle: number | null;
+  lastCycle: number | null;
+  judgedThroughCycle: number | null;
+  cycles: SeasonCycleMoves[];
+  quietCycles: number[];
+  totals: { promoted: number; demoted: number };
+  boundaries: SeasonBoundary[];
+}
+
+export function getLeagueSeason(
+  mode: LeagueHealthMode,
+  stable: LeagueSeasonStableFilter,
+  signal?: AbortSignal,
+): Promise<LeagueSeasonOverview> {
+  return api.get<LeagueSeasonOverview>('/api/admin/league-health/season', { params: { mode, stable }, signal });
+}

@@ -9,6 +9,7 @@ import type {
   LeagueHealthModeSummary,
   LeagueHealthOverview,
   LeagueHealthTier,
+  LeagueSeasonOverview,
 } from '../../../utils/adminLeagueHealthApi';
 
 const TIERS = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'];
@@ -152,6 +153,37 @@ export function overview(overrides: Partial<LeagueHealthOverview> = {}): LeagueH
         code: 'unsubscribed', severity: 'notice', tier: null, nextTier: null, minCohortForNewTier: 3, minEntitiesPerInstance: 10, historyWindow: 5,
         entries: [{ mode: 'league_1v1', tier: 'bronze', total: 2900, unsubscribed: 234, promotionSlots: 290, promotionAverage: 87, demotionSlots: 0, demotionAverage: null, minLp: 25 }],
       },
+    ],
+    ...overrides,
+  };
+}
+
+/** "This season" for one mode: cycles 80–84 with cycle 82 quiet, two noted boundaries. */
+export function season(overrides: Partial<LeagueSeasonOverview> = {}): LeagueSeasonOverview {
+  return {
+    mode: 'league_1v1',
+    stable: 'all',
+    window: 10,
+    noteShare: 0.2,
+    minSample: 20,
+    firstCycle: 80,
+    lastCycle: 84,
+    judgedThroughCycle: 74,
+    cycles: [
+      { cycle: 80, promoted: 120, demoted: 20 },
+      { cycle: 81, promoted: 140, demoted: 50 },
+      { cycle: 82, promoted: 0, demoted: 0 },
+      { cycle: 83, promoted: 151, demoted: 35 },
+      { cycle: 84, promoted: 173, demoted: 30 },
+    ],
+    quietCycles: [82],
+    totals: { promoted: 4449, demoted: 906 },
+    boundaries: [
+      { lower: 'bronze', upper: 'silver', promoted: 2754, demoted: 624, judged: 2057, back: 530, share: 530 / 2057, noted: true },
+      { lower: 'silver', upper: 'gold', promoted: 1163, demoted: 209, judged: 817, back: 175, share: 175 / 817, noted: true },
+      { lower: 'gold', upper: 'platinum', promoted: 428, demoted: 62, judged: 254, back: 44, share: 44 / 254, noted: false },
+      { lower: 'platinum', upper: 'diamond', promoted: 93, demoted: 11, judged: 12, back: 3, share: 0.25, noted: false },
+      { lower: 'diamond', upper: 'champion', promoted: 11, demoted: 0, judged: 0, back: 0, share: null, noted: false },
     ],
     ...overrides,
   };

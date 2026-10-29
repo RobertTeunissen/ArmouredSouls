@@ -39,7 +39,6 @@ const NAVIGATION_ITEMS = [
   { label: 'Attributes', path: '/admin/attributes' },
   { label: 'Meta', path: '/admin/meta' },
   { label: 'League Health', path: '/admin/league-health' },
-  { label: 'League History', path: '/admin/league-history' },
   { label: 'Tournaments', path: '/admin/tournaments' },
   { label: 'Weapons', path: '/admin/weapons' },
   { label: 'Players', path: '/admin/players' },

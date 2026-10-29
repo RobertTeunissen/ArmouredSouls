@@ -51,7 +51,7 @@ jest.mock('../../../config/logger', () => ({
 
 // ── Imports (after mocks) ───────────────────────────────────────────
 
-import { getHistoryByCycleRange, getEntityHistory } from '../leagueHistoryService';
+import { getEntityHistory } from '../leagueHistoryService';
 
 // ── Fixtures ────────────────────────────────────────────────────────
 
@@ -76,7 +76,7 @@ beforeEach(() => {
 // ── Tests ───────────────────────────────────────────────────────────
 
 describe('leagueHistoryService — name enrichment', () => {
-  describe('getHistoryByCycleRange', () => {
+  describe('enrichment of mixed rows (via getEntityHistory)', () => {
     it('populates entityName from Robot.name and stableName from User.stableName', async () => {
       mockPrisma.leagueHistory.findMany.mockResolvedValue([
         { id: 1, entityType: 'robot', entityId: 5, userId: 10, ...baseRecord },
@@ -87,7 +87,7 @@ describe('leagueHistoryService — name enrichment', () => {
         { id: 10, username: 'rob', stableName: 'Iron Stable' },
       ]);
 
-      const result = await getHistoryByCycleRange({ startCycle: 1, endCycle: 100 });
+      const result = { data: await getEntityHistory('robot', 5) };
 
       expect(result.data).toHaveLength(1);
       expect(result.data[0].entityName).toBe('Crusher');
@@ -104,7 +104,7 @@ describe('leagueHistoryService — name enrichment', () => {
         { id: 10, username: 'rob', stableName: null },
       ]);
 
-      const result = await getHistoryByCycleRange({ startCycle: 1, endCycle: 100 });
+      const result = { data: await getEntityHistory('robot', 5) };
 
       expect(result.data[0].stableName).toBe('rob');
     });
@@ -124,7 +124,7 @@ describe('leagueHistoryService — name enrichment', () => {
         { id: 11, username: 'lia', stableName: 'Forge' },
       ]);
 
-      const result = await getHistoryByCycleRange({ startCycle: 1, endCycle: 100 });
+      const result = { data: await getEntityHistory('robot', 5) };
 
       expect(result.data[0].entityName).toBe('Hammer & Anvil');
       expect(result.data[0].stableName).toBe('Forge');
@@ -153,7 +153,7 @@ describe('leagueHistoryService — name enrichment', () => {
         { id: 11, username: 'lia', stableName: 'Forge' },
       ]);
 
-      const result = await getHistoryByCycleRange({ startCycle: 1, endCycle: 100 });
+      const result = { data: await getEntityHistory('robot', 5) };
 
       // One call per entity type — no N+1
       expect(mockPrisma.robot.findMany).toHaveBeenCalledTimes(1);
@@ -197,7 +197,7 @@ describe('leagueHistoryService — name enrichment', () => {
         { id: 10, username: 'rob', stableName: 'Iron Stable' },
       ]);
 
-      const result = await getHistoryByCycleRange({ startCycle: 1, endCycle: 100 });
+      const result = { data: await getEntityHistory('robot', 5) };
 
       expect(result.data[0].entityName).toBeUndefined();
       expect(result.data[0].stableName).toBe('Iron Stable');
@@ -207,7 +207,7 @@ describe('leagueHistoryService — name enrichment', () => {
       mockPrisma.leagueHistory.findMany.mockResolvedValue([]);
       mockPrisma.leagueHistory.count.mockResolvedValue(0);
 
-      const result = await getHistoryByCycleRange({ startCycle: 1, endCycle: 100 });
+      const result = { data: await getEntityHistory('robot', 5) };
 
       expect(result.data).toEqual([]);
       expect(mockPrisma.robot.findMany).not.toHaveBeenCalled();

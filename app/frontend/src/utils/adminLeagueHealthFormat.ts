@@ -11,6 +11,9 @@ import type {
   LeagueHealthMode,
   LeagueHealthModeSummary,
   LeagueHealthTier,
+  LeagueSeasonOverview,
+  LeagueSeasonStableFilter,
+  SeasonBoundary,
 } from './adminLeagueHealthApi';
 
 export const LEAGUE_HEALTH_MODES: readonly LeagueHealthMode[] = [
@@ -364,4 +367,65 @@ export function seasonLabel(season: { number: number; phase: string; cycle: numb
   if (!season) return null;
   if (season.phase !== 'competitive') return `Season ${season.number} · preparation`;
   return `Season ${season.number} · cycle ${season.cycle} of ${season.lengthCycles}`;
+}
+
+/* ------------------------------------------------------------------ */
+/*  This season                                                        */
+/* ------------------------------------------------------------------ */
+
+export const SEASON_STABLE_FILTERS: ReadonlyArray<{ key: LeagueSeasonStableFilter; label: string; description?: string }> = [
+  { key: 'all', label: 'All' },
+  { key: 'human', label: 'Players', description: 'Moves of robots and teams from human players\u2019 stables.' },
+  { key: 'automaton', label: 'Automatons', description: 'Moves of robots and teams from Automaton stables.' },
+  { key: 'generated', label: 'Generated', description: 'Moves of robots and teams from generated (bot) stables.' },
+];
+
+/** The stable type in `?stable=`, or All. */
+export function readSeasonStable(value: string | null): LeagueSeasonStableFilter {
+  return SEASON_STABLE_FILTERS.some((option) => option.key === value) ? value as LeagueSeasonStableFilter : 'all';
+}
+
+/** "Bronze ↔ Silver". */
+export function boundaryLabel(boundary: Pick<SeasonBoundary, 'lower' | 'upper'>): string {
+  return `${tierLabel(boundary.lower)} \u2194 ${tierLabel(boundary.upper)}`;
+}
+
+/** "26%" or "—" when there is nothing to judge. */
+export function bounceShareText(boundary: SeasonBoundary): string {
+  return boundary.share === null ? '\u2014' : `${Math.round(boundary.share * 100)}%`;
+}
+
+/** "530 of 2,057", or why the boundary is not judged. */
+export function bounceFractionText(boundary: SeasonBoundary): string {
+  if (boundary.judged === 0) return 'not judged yet';
+  return `${formatCount(boundary.back)} of ${formatCount(boundary.judged)}`;
+}
+
+/** The note of a boundary: "About 1 in 4 promoted robots is back within 10 cycles", or null. */
+export function bounceNote(boundary: SeasonBoundary, season: LeagueSeasonOverview, noun: string): string | null {
+  if (boundary.noted && boundary.share !== null) {
+    return `About 1 in ${Math.max(2, Math.round(1 / boundary.share))} promoted ${noun} is back within ${season.window} cycles`;
+  }
+  if (boundary.judged === 0 && boundary.promoted > 0) {
+    return season.judgedThroughCycle === null
+      ? `Too early: promotions need ${season.window} cycles before they can be judged`
+      : `Promotions too recent to judge (all after cycle ${season.judgedThroughCycle})`;
+  }
+  if (boundary.judged > 0 && boundary.judged < season.minSample) {
+    return `Only ${boundary.judged} promotion${boundary.judged === 1 ? '' : 's'} to judge`;
+  }
+  return null;
+}
+
+/** "4,449 promotions, 906 demotions (5 : 1)". */
+export function seasonTotalsText(season: LeagueSeasonOverview): string {
+  const { promoted, demoted } = season.totals;
+  const ratio = demoted > 0 ? ` (${Math.max(1, Math.round(promoted / demoted))} : 1)` : '';
+  return `${formatCount(promoted)} promotion${promoted === 1 ? '' : 's'}, ${formatCount(demoted)} demotion${demoted === 1 ? '' : 's'}${ratio}`;
+}
+
+/** "Cycles 10–87", or null without moves. */
+export function seasonRangeText(season: LeagueSeasonOverview): string | null {
+  if (season.firstCycle === null || season.lastCycle === null) return null;
+  return season.firstCycle === season.lastCycle ? `Cycle ${season.firstCycle}` : `Cycles ${season.firstCycle}\u2013${season.lastCycle}`;
 }

@@ -192,10 +192,7 @@ jest.mock('../../src/services/league/leagueHistoryService', () => ({
     'koth',
     'grand_melee',
   ],
-  getHistoryByCycleRange: jest.fn(),
-  getAggregates: jest.fn(),
   getEntityHistory: jest.fn(),
-  detectYoYoCandidates: jest.fn(),
 }));
 
 // Mock team tournament services (used by dynamic imports in trigger endpoints)

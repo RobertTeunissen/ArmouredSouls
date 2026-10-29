@@ -278,7 +278,7 @@ The frontend route declarations live in `app/frontend/src/App.tsx`. Current play
 - **Competition**: LeagueStandingsPage, Leaderboards pages, TournamentsPage, TeamBattlesPage, SeasonArchivePage, StableViewPage
 - **Economy and progression**: FacilitiesPage, WeaponShopPage, FinanceCenterPage, BookingOfficePage, AchievementsPage, HallOfRecordsPage
 - **Guide and history**: GuidePage, ChangelogPage
-- **Administration**: Admin dashboard, cycle, battle, player, economy, security, upload, changelog, achievement, tuning, refinement, repair, audit, league-history, subscription, tournament, and season pages
+- **Administration**: Admin dashboard, cycle, battle, player, economy, security, upload, changelog, achievement, tuning, refinement, repair, audit, subscription, tournament, and season pages
 
 Legacy `/finances`, `/cycle-summary`, and `/tag-teams` paths redirect to their current destinations for compatibility. There is no in-game friends, guild, chat, marketplace, customization, blueprint, prestige-store, or robot-comparison surface on the current branch.
 

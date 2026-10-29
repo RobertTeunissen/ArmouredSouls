@@ -41,6 +41,18 @@ export const LEAGUE_HISTORY_WINDOW = 5;
 export const LEAGUE_LOW_MOVEMENT_SHARE = 0.25;
 
 /**
+ * League Health "This season": a promotion "bounces back" when the same entity
+ * is demoted back across the same boundary within this many cycles.
+ */
+export const LEAGUE_BOUNCE_WINDOW_CYCLES = 10;
+
+/** Bounce-back share above which a tier boundary gets a note. */
+export const LEAGUE_BOUNCE_NOTE_SHARE = 0.2;
+
+/** Judged promotions a boundary needs before its bounce-back share gets a note. */
+export const LEAGUE_BOUNCE_MIN_SAMPLE = 20;
+
+/**
  * League Health notes a tier whose unsubscribed standings rows reach this share.
  * Those rows keep their instance seat and count toward the 10% zone sizes.
  */

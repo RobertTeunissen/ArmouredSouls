@@ -27,6 +27,7 @@ const mockGetDashboardKpis = jest.fn();
 const mockGetEngagementPlayers = jest.fn();
 const mockGetEconomyOverview = jest.fn();
 const mockGetLeagueHealthOverview = jest.fn();
+const mockGetLeagueSeason = jest.fn();
 const mockGetWeaponAnalytics = jest.fn();
 const mockGetAchievementAnalytics = jest.fn();
 const mockGetTuningAdoption = jest.fn();
@@ -50,6 +51,8 @@ jest.mock('../../services/admin/adminStatsService', () => ({
 
 jest.mock('../../services/admin/league-health', () => ({
   getLeagueHealthOverview: (...args: unknown[]) => mockGetLeagueHealthOverview(...args),
+  getLeagueSeason: (...args: unknown[]) => mockGetLeagueSeason(...args),
+  LEAGUE_SEASON_STABLE_FILTERS: ['all', 'human', 'automaton', 'generated'],
 }));
 const mockGetDashboardStatus = jest.fn();
 const mockGetBattleActivity = jest.fn();
@@ -634,7 +637,36 @@ describe('Admin API — New Endpoints Integration Tests', () => {
       expect(res.status).toBe(403);
       expect(mockGetLeagueHealthOverview).not.toHaveBeenCalled();
     });
-    it.each(['/api/admin/team-battle-league-health', '/api/admin/tag-team-league-health'])(
+    it('serves one mode\'s season with defaults', async () => {
+      mockGetLeagueSeason.mockResolvedValue({ mode: 'league_1v1', stable: 'all', cycles: [] });
+      const res = await request(app).get('/api/admin/league-health/season');
+      expect(res.status).toBe(200);
+      expect(mockGetLeagueSeason).toHaveBeenCalledWith('league_1v1', 'all');
+    });
+    it('passes the mode and stable type through', async () => {
+      mockGetLeagueSeason.mockResolvedValue({ mode: 'koth', stable: 'human', cycles: [] });
+      const res = await request(app).get('/api/admin/league-health/season?mode=koth&stable=human');
+      expect(res.status).toBe(200);
+      expect(mockGetLeagueSeason).toHaveBeenCalledWith('koth', 'human');
+    });
+    it.each(['mode=tournament_1v1', 'stable=bots', 'mode=x'])('rejects an unknown %s with 400', async (query) => {
+      const res = await request(app).get(`/api/admin/league-health/season?${query}`);
+      expect(res.status).toBe(400);
+      expect(mockGetLeagueSeason).not.toHaveBeenCalled();
+    });
+    it('rejects non-admin users on the season endpoint', async () => {
+      mockUser = { userId: 2, username: 'player', role: 'user' };
+      const res = await request(app).get('/api/admin/league-health/season');
+      expect(res.status).toBe(403);
+    });
+    it.each([
+      '/api/admin/team-battle-league-health',
+      '/api/admin/tag-team-league-health',
+      '/api/admin/league-history?startCycle=1&endCycle=10',
+      '/api/admin/league-history/aggregates?startCycle=1&endCycle=10',
+      '/api/admin/league-history/entity/robot/1',
+      '/api/admin/league-history/yo-yo',
+    ])(
       'no longer serves the removed endpoint %s',
       async (path) => {
         const res = await request(app).get(path);

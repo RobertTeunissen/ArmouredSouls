@@ -15,6 +15,8 @@ export interface LeagueHealthState {
   loading: boolean;
   error: string | null;
   reload: () => void;
+  /** Increments on every reload, so dependent sections can reload too. */
+  reloadToken: number;
 }
 
 export function useLeagueHealth(): LeagueHealthState {
@@ -42,5 +44,5 @@ export function useLeagueHealth(): LeagueHealthState {
   }, [token]);
 
   const reload = useCallback(() => setToken((value) => value + 1), []);
-  return { data, loading, error, reload };
+  return { data, loading, error, reload, reloadToken: token };
 }

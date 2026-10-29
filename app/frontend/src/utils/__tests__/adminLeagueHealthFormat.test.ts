@@ -4,6 +4,13 @@
 import { describe, expect, it } from 'vitest';
 import {
   attentionText,
+  bounceFractionText,
+  bounceNote,
+  bounceShareText,
+  boundaryLabel,
+  readSeasonStable,
+  seasonRangeText,
+  seasonTotalsText,
   demotionText,
   formatShare,
   formatShortCount,
@@ -18,7 +25,7 @@ import {
   standingsHref,
   tierStatusText,
 } from '../adminLeagueHealthFormat';
-import { overview, tier } from '../../pages/admin/__tests__/leagueHealthFixture';
+import { overview, season, tier } from '../../pages/admin/__tests__/leagueHealthFixture';
 
 const data = overview();
 const oneV1 = data.modes[0];
@@ -144,5 +151,39 @@ describe('attention sentences', () => {
     const base = { ...data.attention[1], entries: [{ ...data.attention[1].entries[0], tier: 'champion', total: 7, promotionSlots: 0 }] };
     expect(attentionText({ ...base, code: 'frozen', tier: 'champion' }).title).toBe('1v1 Champion is frozen');
     expect(attentionText({ ...base, code: 'no_promotions', tier: 'champion' }).detail).toBe('None in the last 5 rebalances, with 0 promotion places.');
+  });
+});
+
+describe('this season texts', () => {
+  const s = season();
+  const [bronze, , gold, platinum, diamond] = s.boundaries;
+
+  it('reads the stable type from the URL', () => {
+    expect(readSeasonStable('human')).toBe('human');
+    expect(readSeasonStable('bots')).toBe('all');
+    expect(readSeasonStable(null)).toBe('all');
+  });
+
+  it('labels boundaries, shares and fractions', () => {
+    expect(boundaryLabel(bronze)).toBe('Bronze ↔ Silver');
+    expect(bounceShareText(bronze)).toBe('26%');
+    expect(bounceFractionText(bronze)).toBe('530 of 2,057');
+    expect(bounceShareText(diamond)).toBe('—');
+    expect(bounceFractionText(diamond)).toBe('not judged yet');
+  });
+
+  it('writes the note of a boundary', () => {
+    expect(bounceNote(bronze, s, 'robots')).toBe('About 1 in 4 promoted robots is back within 10 cycles');
+    expect(bounceNote(gold, s, 'robots')).toBeNull();
+    expect(bounceNote(platinum, s, 'teams')).toBe('Only 12 promotions to judge');
+    expect(bounceNote(diamond, s, 'robots')).toBe('Promotions too recent to judge (all after cycle 74)');
+    expect(bounceNote(diamond, season({ judgedThroughCycle: null }), 'robots')).toBe('Too early: promotions need 10 cycles before they can be judged');
+  });
+
+  it('summarises totals and the cycle range', () => {
+    expect(seasonTotalsText(s)).toBe('4,449 promotions, 906 demotions (5 : 1)');
+    expect(seasonTotalsText(season({ totals: { promoted: 1, demoted: 0 } }))).toBe('1 promotion, 0 demotions');
+    expect(seasonRangeText(s)).toBe('Cycles 80–84');
+    expect(seasonRangeText(season({ firstCycle: null, lastCycle: null }))).toBeNull();
   });
 });

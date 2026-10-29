@@ -81,6 +81,37 @@ test.describe('Admin League Health', () => {
     await expect(page).toHaveURL(new RegExp(`/league-standings\\?mode=1v1&tier=bronze&instance=${firstInstance}$`));
   });
 
+  test('replaces League History: the old URL redirects and "This season" follows mode and stable type', async ({ page, request }) => {
+    const token = await adminToken(request);
+    const response = await request.get(`${API_URL}/api/admin/league-health/season?mode=league_1v1&stable=generated`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    expect(response.status()).toBe(200);
+    const season = (await response.json()) as { boundaries: unknown[]; stable: string };
+    expect(season.stable).toBe('generated');
+    expect(season.boundaries).toHaveLength(5);
+    expect((await request.get(`${API_URL}/api/admin/league-history/yo-yo`, { headers: { Authorization: `Bearer ${token}` } })).status()).toBe(404);
+
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await gotoAuthed(page, '/admin/league-history');
+    await expect(page).toHaveURL(/\/admin\/league-health$/);
+    await expect(page.getByRole('link', { name: 'League History' })).toHaveCount(0);
+
+    const block = page.getByTestId('league-season');
+    await expect(block.getByRole('heading', { name: 'This season · 1v1 League' })).toBeVisible();
+    const seasonLoaded = page.waitForResponse((r) => r.url().includes('/api/admin/league-health/season') && r.url().includes('stable=human'));
+    await block.getByRole('group', { name: 'Stable type' }).getByRole('button', { name: 'Players', exact: true }).click();
+    await seasonLoaded;
+    await expect(page).toHaveURL(/\?stable=human$/);
+    // A freshly seeded database has no rebalances yet, so either outcome is valid.
+    await expect(block.getByTestId('season-boundaries').or(block.getByText('No promotions or demotions recorded in this league this season yet.'))).toBeVisible();
+
+    const kothLoaded = page.waitForResponse((r) => r.url().includes('/api/admin/league-health/season') && r.url().includes('mode=koth'));
+    await page.getByRole('button', { name: 'King of the Hill', exact: true }).click();
+    await kothLoaded;
+    await expect(block.getByRole('heading', { name: 'This season · King of the Hill' })).toBeVisible();
+  });
+
   test('stays within the viewport with touch-sized controls on mobile', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 900 });
     await gotoAuthed(page, '/admin/league-health?tier=bronze');

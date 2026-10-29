@@ -10,7 +10,7 @@
  */
 import prisma from '../../src/lib/prisma';
 import type { StandingsMode } from '../../generated/prisma';
-import { getLeagueHealthOverview } from '../../src/services/admin/league-health';
+import { getLeagueHealthOverview, getLeagueSeason } from '../../src/services/admin/league-health';
 import { loadLeagueHealthRows, loadRebalanceHistory } from '../../src/services/admin/league-health/leagueHealthData';
 import { getLeagueTierPreview } from '../../src/services/league/league-rebalancing-preview';
 import { getLeagueRulesForMode } from '../../src/services/league/league-rules';
@@ -144,6 +144,50 @@ describe('League Health overview (database)', () => {
       expect(goldPromotions?.sort()).toEqual([[2, 1], [4, 2], [6, 1]]);
     } finally {
       await prisma.leagueHistory.deleteMany({ where: { cycleNumber: { gte: base } } });
+    }
+  });
+
+  it('builds this season per cycle, per boundary and per stable type from league_history', async () => {
+    // Deltas against the season before the fixture rows, so rows other suites
+    // left in the shared database do not matter.
+    const before = await getLeagueSeason('league_3v3', 'human');
+    const beforeAll = await getLeagueSeason('league_3v3', 'all');
+    const row = (cycle: number, changeType: 'promotion' | 'demotion', sourceTier: string, destinationTier: string, userId: number, entityId: number) => ({
+      entityType: 'team_battle', entityId, userId, changeType, mode: 'league_3v3',
+      sourceTier, destinationTier, sourceLeagueId: `${sourceTier}_1`, destinationLeagueId: `${destinationTier}_1`,
+      leaguePoints: 30, cycleNumber: cycle,
+    });
+    const [humanId, automatonId] = userIds;
+    const created = await prisma.leagueHistory.createManyAndReturn({
+      data: [
+        row(1, 'promotion', 'bronze', 'silver', humanId, 9_001), // bounces back at cycle 6
+        row(6, 'demotion', 'silver', 'bronze', humanId, 9_001),
+        row(1, 'promotion', 'bronze', 'silver', humanId, 9_002), // stays
+        row(2, 'promotion', 'bronze', 'silver', automatonId, 9_003), // other stable type
+        row(12, 'promotion', 'silver', 'gold', humanId, 9_004),
+      ],
+      select: { id: true },
+    });
+    try {
+      const after = await getLeagueSeason('league_3v3', 'human');
+      const afterAll = await getLeagueSeason('league_3v3', 'all');
+      const at = (season: typeof after, cycle: number) => season.cycles.find((c) => c.cycle === cycle) ?? { promoted: 0, demoted: 0 };
+      expect(at(after, 1).promoted - at(before, 1).promoted).toBe(2);
+      expect(at(after, 2).promoted - at(before, 2).promoted).toBe(0); // the Automaton's move is filtered out
+      expect(at(afterAll, 2).promoted - at(beforeAll, 2).promoted).toBe(1);
+      expect(at(after, 6).demoted - at(before, 6).demoted).toBe(1);
+      expect(after.totals.promoted - before.totals.promoted).toBe(3);
+
+      const boundary = (season: typeof after, lower: string) => season.boundaries.find((b) => b.lower === lower)!;
+      expect(boundary(after, 'bronze').promoted - boundary(before, 'bronze').promoted).toBe(2);
+      expect(boundary(after, 'bronze').demoted - boundary(before, 'bronze').demoted).toBe(1);
+      expect(boundary(after, 'silver').promoted - boundary(before, 'silver').promoted).toBe(1);
+      // Cycle 12 makes cycles 1-2 old enough to judge (window 10): 2 judged, 1 back.
+      expect(after.judgedThroughCycle).not.toBeNull();
+      expect(boundary(after, 'bronze').judged - boundary(before, 'bronze').judged).toBe(2);
+      expect(boundary(after, 'bronze').back - boundary(before, 'bronze').back).toBe(1);
+    } finally {
+      await prisma.leagueHistory.deleteMany({ where: { id: { in: created.map((c) => c.id) } } });
     }
   });
 

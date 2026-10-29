@@ -3,8 +3,9 @@
  * Hill, Grand Melee): who is in each tier and what the next rebalance would do.
  *
  * Sections: toolbar (season, last updated, Refresh), Needs attention, the
- * mode × tier grid, and the detail of one mode (`?mode=`) with the instances of
- * an expanded tier (`?tier=`). Structure (places, zones, who qualifies now)
+ * mode × tier grid, the detail of one mode (`?mode=`) with the instances of
+ * an expanded tier (`?tier=`), and "This season" for that mode by stable type
+ * (`?stable=`), which replaced the former League History page. Structure (places, zones, who qualifies now)
  * comes from the rebalancer's own planner on the current standings; whether
  * anyone actually moves comes from the mode's last rebalances in
  * `league_history` (`GET /api/admin/league-health`).
@@ -13,16 +14,17 @@
  */
 import { useCallback, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { LeagueGrid, LeagueHealthAttention, LeagueModeTabs, TierTable } from '../../components/admin/league-health';
+import { LeagueGrid, LeagueHealthAttention, LeagueModeTabs, LeagueSeason, TierTable } from '../../components/admin/league-health';
 import { ADMIN_FOCUS_RING, PanelError, PanelSkeleton } from '../../components/admin/shared';
 import { useLeagueHealth } from '../../hooks/useLeagueHealth';
-import type { LeagueHealthMode } from '../../utils/adminLeagueHealthApi';
+import type { LeagueHealthMode, LeagueSeasonStableFilter } from '../../utils/adminLeagueHealthApi';
 import { formatUtcTime } from '../../utils/adminDashboardFormat';
 import {
   DEFAULT_LEAGUE_HEALTH_MODE,
   modeLabel,
   readLeagueHealthMode,
   readLeagueHealthTier,
+  readSeasonStable,
   rulesSummary,
   seasonLabel,
   standingsHref,
@@ -38,7 +40,8 @@ function LeagueHealthPage(): React.ReactElement {
   const [searchParams, setSearchParams] = useSearchParams();
   const mode = readLeagueHealthMode(searchParams.get('mode'));
   const expandedTier = readLeagueHealthTier(searchParams.get('tier'));
-  const { data, loading, error, reload } = useLeagueHealth();
+  const stable = readSeasonStable(searchParams.get('stable'));
+  const { data, loading, error, reload, reloadToken } = useLeagueHealth();
   const detailRef = useRef<HTMLElement>(null);
   const refreshing = loading && data !== null;
 
@@ -60,6 +63,15 @@ function LeagueHealthPage(): React.ReactElement {
     }, { replace: true });
     if (scroll) scrollToDetail();
   }, [setSearchParams, scrollToDetail]);
+
+  const changeStable = useCallback((next: LeagueSeasonStableFilter): void => {
+    setSearchParams((params) => {
+      const updated = new URLSearchParams(params);
+      if (next === 'all') updated.delete('stable');
+      else updated.set('stable', next);
+      return updated;
+    }, { replace: true });
+  }, [setSearchParams]);
 
   const toggleTier = useCallback((tier: string): void => {
     select(mode, expandedTier === tier ? null : tier);
@@ -146,9 +158,17 @@ function LeagueHealthPage(): React.ReactElement {
             <p>
               Active = subscribed to this event ({summary.entityType === 'team' ? 'every team member' : 'the robot'}). Unsubscribed rows keep their seat and count toward zone sizes.
               {summary.entityType === 'team' ? ' Team ELO is the members\' combined ELO, as on the league pages.' : ''}
-              {' '}Past promotions and demotions: <Link to="/admin/league-history" className={`text-primary hover:underline ${ADMIN_FOCUS_RING}`}>League History <span aria-hidden="true">→</span></Link>
             </p>
           </div>
+        )}
+        {summary && (
+          <LeagueSeason
+            mode={mode}
+            entityType={summary.entityType}
+            stable={stable}
+            onStableChange={changeStable}
+            reloadToken={reloadToken}
+          />
         )}
       </section>
     </div>
