@@ -26,3 +26,47 @@ export const SETTLEMENT_OVERDUE_AFTER_MS = 26 * 60 * 60 * 1000;
  * behind by its battle-event job. The margin covers a job that is still running.
  */
 export const STUCK_MATCH_GRACE_MS = 2 * 60 * 60 * 1000;
+
+/**
+ * League Health judges promotion and demotion flow over a mode's last this-many
+ * rebalances (`league_history`). With fewer, a tier's flow is not judged.
+ */
+export const LEAGUE_HISTORY_WINDOW = 5;
+
+/**
+ * League Health flags "Low promotion" (and notes "few demotions") when, on
+ * average over the history window, fewer than this share of a tier's current
+ * places were filled.
+ */
+export const LEAGUE_LOW_MOVEMENT_SHARE = 0.25;
+
+/**
+ * League Health "This season": a promotion "bounces back" when the same entity
+ * is demoted back across the same boundary within this many cycles.
+ */
+export const LEAGUE_BOUNCE_WINDOW_CYCLES = 10;
+
+/** Bounce-back share above which a tier boundary gets a note. */
+export const LEAGUE_BOUNCE_NOTE_SHARE = 0.2;
+
+/** Judged promotions a boundary needs before its bounce-back share gets a note. */
+export const LEAGUE_BOUNCE_MIN_SAMPLE = 20;
+
+/**
+ * League Health notes a tier whose unsubscribed standings rows reach this share.
+ * Those rows keep their instance seat and count toward the 10% zone sizes.
+ */
+export const LEAGUE_UNSUBSCRIBED_NOTICE_SHARE = 0.05;
+
+/**
+ * Tournaments: a running tournament whose last progress (last finished match,
+ * or its start) is older than this is "not advancing". One round runs per
+ * daily cycle, so 26 h allows the same 2 h margin as settlement.
+ */
+export const TOURNAMENT_STALLED_AFTER_MS = 26 * 60 * 60 * 1000;
+
+/** Tournaments: note a stable that holds more than this share of a type's titles. */
+export const TOURNAMENT_DOMINANCE_SHARE = 0.5;
+
+/** Completed tournaments of a type needed before the dominance note can show. */
+export const TOURNAMENT_DOMINANCE_MIN_COMPLETED = 3;

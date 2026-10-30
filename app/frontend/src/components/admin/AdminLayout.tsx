@@ -31,7 +31,6 @@ const PAGE_TITLES: Record<string, string> = {
   '/admin/refinement': 'Refinement',
   '/admin/repair-log': 'Repair Log',
   '/admin/audit-log': 'Audit Log',
-  '/admin/league-history': 'League History',
   '/admin/tournaments': 'Tournaments',
 };
 

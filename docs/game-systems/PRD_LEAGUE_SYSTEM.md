@@ -9,6 +9,7 @@
 ---
 
 ## Version History
+- v2.6 (October 29, 2026) — The placement-mode rules (KotH, Grand Melee: 10 cycles in tier, no LP gate) are declared once as `PLACEMENT_LEAGUE_RULES`, with `getLeagueRulesForMode(mode)` used by the rebalancer, the standings route and the admin League Health page. No behaviour change.
 - v2.5 (October 15, 2026) — Battle-time forfeits and the match failure policy (#536). See [Forfeits](#forfeits).
 - v2.4 (October 14, 2026) — Unified standings creation: a robot or team enters a mode's Bronze league the first time it becomes matchable by subscription, never at robot or team creation. See [Entering a League](#entering-a-league).
 - v2.3 (September 12, 2026) — Unified `league_1v1`, `league_2v2`, `league_3v3`, and `tag_team` behind one policy and planner. Zones now use complete instance population and fixed positions before LP/residency filters; standings previews and history reporting use the same mode-aware results.
@@ -205,6 +206,8 @@ export const HEAD_TO_HEAD_LEAGUE_RULES = {
 };
 ```
 
+KotH and Grand Melee use `PLACEMENT_LEAGUE_RULES` (the same, with `minCyclesForRebalancing: 10` and `promotionMinLPOverride: 0`). `getLeagueRulesForMode(mode)` returns the rule set for a standings mode.
+
 Per-tier LP thresholds remain declared once in `services/league/leaguePromotionThresholds.ts`.
 
 ### Instance Management (`services/league/leagueInstanceService.ts`)
@@ -234,7 +237,7 @@ All paths relative to `app/backend/src/`.
 
 | File | Responsibility |
 |---|---|
-| `services/league/league-rules.ts` | Canonical rules shared by all four head-to-head modes |
+| `services/league/league-rules.ts` | Canonical rules: head-to-head modes, placement modes, `getLeagueRulesForMode` |
 | `services/league/league-rebalancing-planner.ts` | Pure fixed-zone, no-backfill, and cohort planner |
 | `services/league/league-rebalancing-preview.ts` | Standings preview built from the execution planner |
 | `services/league/leagueEngine.ts` | Shared execution pipeline for all mode adapters |
@@ -246,6 +249,7 @@ All paths relative to `app/backend/src/`.
 | `services/standings/standingPlacement.ts` | The standings creation rule (`ensureStanding`, `ensureTeamStandings`, `ensureStandingsForSubscriptionGain`) |
 | `services/analytics/matchmakingService.ts` | LP-primary matchmaking, robot pairing, scheduled match creation |
 | `services/tag-team/tagTeamMatchmakingService.ts` | Tag team matchmaking |
+| `services/admin/league-health/` | Admin League Health: the planner on current standings plus promotion and demotion flow from `league_history` (`docs/guides/ADMIN_PANEL_GUIDE.md` §League Health) |
 
 ---
 

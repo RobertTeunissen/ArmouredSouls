@@ -53,6 +53,9 @@ htmlcov/
 # Generated review artifacts
 semantic-review/
 audit-report-*.json
+# Agent workflow scratch space (plans, reviews, run logs); safe to delete
+.agents/
+
 
 # Build outputs
 dist/

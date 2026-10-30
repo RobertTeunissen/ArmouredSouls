@@ -6,7 +6,6 @@
  * - GET /api/admin/engagement/players
  * - GET /api/admin/economy/overview
  * - GET /api/admin/league-health
- * - GET /api/admin/weapons/analytics
  * - GET /api/admin/achievements/analytics
  * - GET /api/admin/tuning/adoption
  * - GET /api/admin/audit-log
@@ -26,9 +25,8 @@
 const mockGetDashboardKpis = jest.fn();
 const mockGetEngagementPlayers = jest.fn();
 const mockGetEconomyOverview = jest.fn();
-const mockGetLeagueHealth = jest.fn();
-const mockGetTeamBattleLeagueHealth = jest.fn();
-const mockGetWeaponAnalytics = jest.fn();
+const mockGetLeagueHealthOverview = jest.fn();
+const mockGetLeagueSeason = jest.fn();
 const mockGetAchievementAnalytics = jest.fn();
 const mockGetTuningAdoption = jest.fn();
 const mockGetRefinementAdoption = jest.fn();
@@ -43,14 +41,16 @@ jest.mock('../../services/admin/adminStatsService', () => ({
   getDashboardKpis: (...args: unknown[]) => mockGetDashboardKpis(...args),
   getEngagementPlayers: (...args: unknown[]) => mockGetEngagementPlayers(...args),
   getEconomyOverview: (...args: unknown[]) => mockGetEconomyOverview(...args),
-  getLeagueHealth: (...args: unknown[]) => mockGetLeagueHealth(...args),
-  getTeamBattleLeagueHealth: (...args: unknown[]) => mockGetTeamBattleLeagueHealth(...args),
-  getWeaponAnalytics: (...args: unknown[]) => mockGetWeaponAnalytics(...args),
   getAchievementAnalytics: (...args: unknown[]) => mockGetAchievementAnalytics(...args),
   getTuningAdoption: (...args: unknown[]) => mockGetTuningAdoption(...args),
   getRefinementAdoption: (...args: unknown[]) => mockGetRefinementAdoption(...args),
 }));
 
+jest.mock('../../services/admin/league-health', () => ({
+  getLeagueHealthOverview: (...args: unknown[]) => mockGetLeagueHealthOverview(...args),
+  getLeagueSeason: (...args: unknown[]) => mockGetLeagueSeason(...args),
+  LEAGUE_SEASON_STABLE_FILTERS: ['all', 'human', 'automaton', 'generated'],
+}));
 const mockGetDashboardStatus = jest.fn();
 const mockGetBattleActivity = jest.fn();
 
@@ -195,11 +195,10 @@ jest.mock('../../services/moderation/adminUploadsHandler', () => ({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   handleAdminCleanup: jest.fn((_req: any, res: any) => res.json({ success: true })),
 }));
-jest.mock('../adminTournaments', () => {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { Router } = require('express');
-  return { __esModule: true, default: Router() };
-});
+const mockGetTournamentOverview = jest.fn();
+jest.mock('../../services/admin/tournaments', () => ({
+  getTournamentOverview: (...args: unknown[]) => mockGetTournamentOverview(...args),
+}));
 
 // ---------------------------------------------------------------------------
 // Imports (after mocks)
@@ -306,35 +305,12 @@ const sampleEconomy = {
 };
 
 const sampleLeagueHealth = {
-  solo: {
-    tiers: [
-      { tier: 'bronze', robotCount: 20, avgElo: 1000, promotionEligible: 5, demotionEligible: 2 },
-    ],
-  },
-  tagTeam: {
-    tiers: [
-      { tier: 'bronze', teamCount: 8, avgElo: 1000, promotionEligible: 2, demotionEligible: 1 },
-    ],
-  },
+  generatedAt: '2026-10-28T09:42:00.000Z',
+  season: { number: 1, phase: 'competitive', cycle: 87, lengthCycles: 100 },
+  thresholds: { lowPromotionShare: 0.25, unsubscribedNoticeShare: 0.05 },
+  modes: [{ mode: 'league_1v1', entityType: 'robot', total: 0, active: 0, tiers: [] }],
+  attention: [],
 };
-
-const sampleWeaponAnalytics = {
-  weapons: [
-    {
-      id: 1,
-      name: 'Laser Cannon',
-      tier: 'common',
-      purchaseCount: 50,
-      equipCount: 30,
-      equipRate: 0.6,
-      neverPurchased: false,
-      highPurchaseLowEquip: false,
-      pricePerformanceOutlier: false,
-    },
-  ],
-  summary: { totalWeapons: 1, totalPurchases: 50, avgEquipRate: 0.6 },
-};
-
 const sampleAchievementAnalytics = {
   achievements: [
     {
@@ -622,54 +598,100 @@ describe('Admin API — New Endpoints Integration Tests', () => {
   // -----------------------------------------------------------------------
 
   describe('GET /api/admin/league-health', () => {
-    it('should return league health data with correct response shape', async () => {
-      mockGetLeagueHealth.mockResolvedValue(sampleLeagueHealth);
-
+    it('should return the league health overview', async () => {
+      mockGetLeagueHealthOverview.mockResolvedValue(sampleLeagueHealth);
       const res = await request(app).get('/api/admin/league-health');
-
       expect(res.status).toBe(200);
-      expect(res.body).toHaveProperty('solo');
-      expect(res.body).toHaveProperty('tagTeam');
+      expect(res.body.modes[0].mode).toBe('league_1v1');
+      expect(res.body).toHaveProperty('attention');
     });
-
     it('should propagate service errors as 500', async () => {
-      mockGetLeagueHealth.mockRejectedValue(new Error('Query failed'));
-
+      mockGetLeagueHealthOverview.mockRejectedValue(new Error('Query failed'));
       const res = await request(app).get('/api/admin/league-health');
-
       expect(res.status).toBe(500);
+    });
+    it('should reject non-admin users', async () => {
+      mockUser = { userId: 2, username: 'player', role: 'user' };
+      const res = await request(app).get('/api/admin/league-health');
+      expect(res.status).toBe(403);
+      expect(mockGetLeagueHealthOverview).not.toHaveBeenCalled();
+    });
+    it('serves one mode\'s season with defaults', async () => {
+      mockGetLeagueSeason.mockResolvedValue({ mode: 'league_1v1', stable: 'all', cycles: [] });
+      const res = await request(app).get('/api/admin/league-health/season');
+      expect(res.status).toBe(200);
+      expect(mockGetLeagueSeason).toHaveBeenCalledWith('league_1v1', 'all');
+    });
+    it('passes the mode and stable type through', async () => {
+      mockGetLeagueSeason.mockResolvedValue({ mode: 'koth', stable: 'human', cycles: [] });
+      const res = await request(app).get('/api/admin/league-health/season?mode=koth&stable=human');
+      expect(res.status).toBe(200);
+      expect(mockGetLeagueSeason).toHaveBeenCalledWith('koth', 'human');
+    });
+    it.each(['mode=tournament_1v1', 'stable=bots', 'mode=x'])('rejects an unknown %s with 400', async (query) => {
+      const res = await request(app).get(`/api/admin/league-health/season?${query}`);
+      expect(res.status).toBe(400);
+      expect(mockGetLeagueSeason).not.toHaveBeenCalled();
+    });
+    it('rejects non-admin users on the season endpoint', async () => {
+      mockUser = { userId: 2, username: 'player', role: 'user' };
+      const res = await request(app).get('/api/admin/league-health/season');
+      expect(res.status).toBe(403);
+    });
+    it.each([
+      '/api/admin/team-battle-league-health',
+      '/api/admin/tag-team-league-health',
+      '/api/admin/league-history?startCycle=1&endCycle=10',
+      '/api/admin/league-history/aggregates?startCycle=1&endCycle=10',
+      '/api/admin/league-history/entity/robot/1',
+      '/api/admin/league-history/yo-yo',
+    ])(
+      'no longer serves the removed endpoint %s',
+      async (path) => {
+        const res = await request(app).get(path);
+        expect(res.status).toBe(404);
+      },
+    );
+  });
+  // -----------------------------------------------------------------------
+  // GET /api/admin/tournaments/overview
+  // -----------------------------------------------------------------------
+
+  describe('GET /api/admin/tournaments/overview', () => {
+    it('returns the overview', async () => {
+      mockGetTournamentOverview.mockResolvedValue({ generatedAt: 'x', seasonPhase: 'competitive', types: [] });
+      const res = await request(app).get('/api/admin/tournaments/overview');
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty('types');
+    });
+    it('rejects non-admin users', async () => {
+      mockUser = { userId: 2, username: 'player', role: 'user' };
+      const res = await request(app).get('/api/admin/tournaments/overview');
+      expect(res.status).toBe(403);
+      expect(mockGetTournamentOverview).not.toHaveBeenCalled();
+    });
+    it.each([
+      ['get', '/api/admin/tournaments'],
+      ['get', '/api/admin/tournaments/history'],
+      ['get', '/api/admin/tournaments/eligible-robots'],
+      ['get', '/api/admin/tournaments/5'],
+      ['post', '/api/admin/tournaments/create'],
+      ['post', '/api/admin/tournaments/5/execute-round'],
+    ] as const)('no longer serves %s %s', async (method, path) => {
+      const res = await request(app)[method](path);
+      expect(res.status).toBe(404);
     });
   });
 
   // -----------------------------------------------------------------------
-  // GET /api/admin/weapons/analytics
+  // GET /api/admin/weapons/analytics (removed: the Weapons page reads
+  // GET /api/admin/analysis/weapons)
   // -----------------------------------------------------------------------
 
   describe('GET /api/admin/weapons/analytics', () => {
-    it('should return weapon analytics with correct response shape', async () => {
-      mockGetWeaponAnalytics.mockResolvedValue(sampleWeaponAnalytics);
-
+    it('is no longer served', async () => {
       const res = await request(app).get('/api/admin/weapons/analytics');
-
-      expect(res.status).toBe(200);
-      expect(res.body).toHaveProperty('weapons');
-      expect(res.body).toHaveProperty('summary');
-      expect(Array.isArray(res.body.weapons)).toBe(true);
-    });
-
-    it('should pass user filter to service', async () => {
-      mockGetWeaponAnalytics.mockResolvedValue(sampleWeaponAnalytics);
-
-      await request(app).get('/api/admin/weapons/analytics?filter=auto');
-
-      expect(mockGetWeaponAnalytics).toHaveBeenCalledWith(expect.any(Object));
-    });
-
-    it('should reject invalid filter values', async () => {
-      const res = await request(app).get('/api/admin/weapons/analytics?filter=bad');
-
-      expect(res.status).toBe(400);
-      expect(res.body.code).toBe('VALIDATION_ERROR');
+      expect(res.status).toBe(404);
     });
   });
 

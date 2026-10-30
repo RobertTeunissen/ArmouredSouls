@@ -140,6 +140,7 @@ const DB_DEPENDENT = [
   // Admin Battles page — list, detail, payout check, log and export routes
   'tests/integration/adminBattles.test.ts',
   'tests/integration/adminAttributeAnalysis.test.ts',
+  'tests/integration/adminWeaponAnalysis.test.ts',
   // Issue #342 — achievements vs. account reset and weapon/shield resale
   'tests/integration/accountResetAchievements.test.ts',
   // Achievement unlock serialization (pre-existing duplicate-insert fix)
@@ -168,6 +169,8 @@ const DB_DEPENDENT = [
   'tests/services/economy/facilityRoiRecordedAggregates.integration.test.ts',
   // Admin dashboard redesign — battle activity SQL, tier filter, activity windows, KPI snapshots
   'tests/integration/adminDashboard.test.ts',
+  'tests/integration/adminLeagueHealth.test.ts',
+  'tests/integration/adminTournaments.test.ts',
   // Admin Search Analytics redesign — settled searches, selection tracking, phrases, CSV
   'tests/integration/searchAnalyticsSettled.test.ts',
   // Cycle Controls: scheduler run store, missed/interrupted runs, overview.

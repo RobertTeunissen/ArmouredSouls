@@ -1,8 +1,8 @@
 /**
  * Admin Analytics & Dashboard Routes
  *
- * System stats, KPIs, engagement, economy, league health, weapon/achievement/tuning analytics,
- * and league history endpoints.
+ * System stats, KPIs, engagement, economy, league health, achievement/tuning analytics.
+ * (Weapons moved to the "what wins" analyses: GET /api/admin/analysis/weapons.)
  * Mounted at /api/admin/ from the main admin router.
  */
 
@@ -10,7 +10,6 @@ import express, { Request, Response } from 'express';
 import { z } from 'zod';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 import { validateRequest } from '../middleware/schemaValidator';
-import { positiveIntParam } from '../utils/securityValidation';
 import logger from '../config/logger';
 import { buildUserFilter, USER_FILTER_TYPES } from '../utils/buildUserFilter';
 import type { UserFilterType } from '../utils/buildUserFilter';
@@ -19,27 +18,18 @@ import {
   getDashboardKpis,
   getEngagementPlayers,
   getEconomyOverview,
-  getLeagueHealth,
-  getTeamBattleLeagueHealth,
-  getTagTeamLeagueHealth,
-  getWeaponAnalytics,
   getAchievementAnalytics,
   getTuningAdoption,
   getRefinementAdoption,
 } from '../services/admin/adminStatsService';
+import {
+  getLeagueHealthOverview,
+  getLeagueSeason,
+  LEAGUE_SEASON_STABLE_FILTERS,
+} from '../services/admin/league-health';
+import { TIERED_LEAGUE_MODES } from '../services/league/league-rules';
 import { getDashboardStatus } from '../services/admin/adminDashboardStatusService';
 import { getBattleActivity } from '../services/admin/adminBattleActivityService';
-import {
-  LEAGUE_HISTORY_MODES,
-  getHistoryByCycleRange,
-  getAggregates,
-  getEntityHistory,
-  detectYoYoCandidates,
-} from '../services/league/leagueHistoryService';
-import type {
-  EntityType,
-  LeagueHistoryMode,
-} from '../services/league/leagueHistoryService';
 import {
   getSearchAnalyticsReport,
   SEARCH_ANALYTICS_REPORT_DEFAULT_LIMIT,
@@ -81,10 +71,6 @@ const engagementPlayersQuerySchema = z.object({
   limit: z.coerce.number().int().positive().max(100).optional().default(50),
 });
 
-const weaponAnalyticsQuerySchema = z.object({
-  filter: z.enum(USER_FILTER_TYPES).optional().default('real'),
-});
-
 const achievementAnalyticsQuerySchema = z.object({
   filter: z.enum(USER_FILTER_TYPES).optional().default('real'),
 });
@@ -93,42 +79,13 @@ const tuningAdoptionQuerySchema = z.object({
   filter: z.enum(USER_FILTER_TYPES).optional().default('real'),
 });
 
+const leagueSeasonQuerySchema = z.object({
+  mode: z.enum(TIERED_LEAGUE_MODES).optional().default('league_1v1'),
+  stable: z.enum(LEAGUE_SEASON_STABLE_FILTERS).optional().default('all'),
+});
+
 const refinementAdoptionQuerySchema = z.object({
   filter: z.enum(USER_FILTER_TYPES).optional().default('real'),
-});
-
-const leagueHistoryEntityTypeSchema = z.enum(['robot', 'tag_team', 'team_battle']);
-const leagueHistoryModeSchema = z.enum(LEAGUE_HISTORY_MODES);
-
-const leagueHistoryQuerySchema = z.object({
-  startCycle: z.coerce.number().int().positive(),
-  endCycle: z.coerce.number().int().positive(),
-  entityType: leagueHistoryEntityTypeSchema.optional(),
-  mode: leagueHistoryModeSchema.optional(),
-  page: z.coerce.number().int().positive().optional().default(1),
-  perPage: z.coerce.number().int().positive().max(100).optional().default(50),
-});
-
-const leagueHistoryAggregatesSchema = z.object({
-  startCycle: z.coerce.number().int().positive(),
-  endCycle: z.coerce.number().int().positive(),
-  entityType: leagueHistoryEntityTypeSchema.optional(),
-  mode: leagueHistoryModeSchema.optional(),
-});
-
-const leagueHistoryEntitySchema = z.object({
-  entityType: leagueHistoryEntityTypeSchema,
-  entityId: positiveIntParam,
-});
-
-const leagueHistoryEntityQuerySchema = z.object({
-  mode: leagueHistoryModeSchema.optional(),
-});
-
-const leagueHistoryYoYoSchema = z.object({
-  cycleWindow: z.coerce.number().int().positive().optional().default(20),
-  minChanges: z.coerce.number().int().min(2).optional().default(3),
-  mode: leagueHistoryModeSchema.optional(),
 });
 
 const searchAnalyticsCycleRange = (value: { cycleFrom?: number; cycleTo?: number; lastCycles?: number }, context: z.RefinementCtx): void => {
@@ -256,40 +213,25 @@ router.get('/economy/overview', authenticateToken, requireAdmin, validateRequest
 
 /**
  * GET /api/admin/league-health
- * Get league health metrics.
+ * Every tiered league (1v1, 2v2, 3v3, Tag Team, KotH, Grand Melee): tiers,
+ * instances, stable mix, and what the next rebalance would do, plus a
+ * "Needs attention" list. Read-only.
  */
 router.get('/league-health', authenticateToken, requireAdmin, validateRequest({}), async (_req: Request, res: Response) => {
-  const result = await getLeagueHealth();
+  const result = await getLeagueHealthOverview();
   res.json(result);
 });
 
 /**
- * GET /api/admin/team-battle-league-health
- * Get team battle (2v2 and 3v3) league health metrics.
+ * GET /api/admin/league-health/season
+ * This season's promotions and demotions of one mode (`mode`, default
+ * league_1v1) for one stable type (`stable`: all | human | automaton |
+ * generated): per cycle, quiet cycles, and per tier boundary with the
+ * bounce-back share. Read-only, from `league_history`.
  */
-router.get('/team-battle-league-health', authenticateToken, requireAdmin, validateRequest({}), async (_req: Request, res: Response) => {
-  const result = await getTeamBattleLeagueHealth();
-  res.json(result);
-});
-
-/**
- * GET /api/admin/tag-team-league-health
- * Get tag team league health metrics for 2v2 teams.
- */
-router.get('/tag-team-league-health', authenticateToken, requireAdmin, validateRequest({}), async (_req: Request, res: Response) => {
-  const result = await getTagTeamLeagueHealth();
-  res.json(result);
-});
-
-/**
- * GET /api/admin/weapons/analytics
- * Get weapon analytics data.
- */
-router.get('/weapons/analytics', authenticateToken, requireAdmin, validateRequest({ query: weaponAnalyticsQuerySchema }), async (req: Request, res: Response) => {
-  const filter = (req.query.filter as UserFilterType) || 'real';
-  const userFilter = buildUserFilter(filter);
-  const result = await getWeaponAnalytics(userFilter);
-  res.json(result);
+router.get('/league-health/season', authenticateToken, requireAdmin, validateRequest({ query: leagueSeasonQuerySchema }), async (req: Request, res: Response) => {
+  const query = leagueSeasonQuerySchema.parse(req.query);
+  res.json(await getLeagueSeason(query.mode, query.stable));
 });
 
 /**
@@ -322,68 +264,6 @@ router.get('/refinement/adoption', authenticateToken, requireAdmin, validateRequ
   const filter = (req.query.filter as UserFilterType) || 'real';
   const userFilter = buildUserFilter(filter);
   const result = await getRefinementAdoption(userFilter);
-  res.json(result);
-});
-
-/**
- * GET /api/admin/league-history
- * Paginated tier changes by cycle range.
- */
-router.get('/league-history', authenticateToken, requireAdmin, validateRequest({ query: leagueHistoryQuerySchema }), async (req: Request, res: Response) => {
-  const startCycle = Number(req.query.startCycle);
-  const endCycle = Number(req.query.endCycle);
-  const entityType = req.query.entityType as EntityType | undefined;
-  const mode = req.query.mode as LeagueHistoryMode | undefined;
-  const page = req.query.page ? Number(req.query.page) : 1;
-  const perPage = req.query.perPage ? Number(req.query.perPage) : 50;
-  const result = await getHistoryByCycleRange({
-    startCycle,
-    endCycle,
-    entityType,
-    mode,
-    page,
-    perPage,
-  });
-  res.json(result);
-});
-
-/**
- * GET /api/admin/league-history/aggregates
- * Promotion/demotion counts by mode and tier for a cycle range.
- */
-router.get('/league-history/aggregates', authenticateToken, requireAdmin, validateRequest({ query: leagueHistoryAggregatesSchema }), async (req: Request, res: Response) => {
-  const startCycle = Number(req.query.startCycle);
-  const endCycle = Number(req.query.endCycle);
-  const entityType = req.query.entityType as EntityType | undefined;
-  const mode = req.query.mode as LeagueHistoryMode | undefined;
-  const result = await getAggregates(startCycle, endCycle, entityType, mode);
-  res.json(result);
-});
-
-/**
- * GET /api/admin/league-history/entity/:entityType/:entityId
- * Mode-scoped history for one entity.
- */
-router.get('/league-history/entity/:entityType/:entityId', authenticateToken, requireAdmin, validateRequest({
-  params: leagueHistoryEntitySchema,
-  query: leagueHistoryEntityQuerySchema,
-}), async (req: Request, res: Response) => {
-  const entityType = req.params.entityType as EntityType;
-  const entityId = Number(req.params.entityId);
-  const mode = req.query.mode as LeagueHistoryMode | undefined;
-  const data = await getEntityHistory(entityType, entityId, mode);
-  res.json({ data });
-});
-
-/**
- * GET /api/admin/league-history/yo-yo
- * Mode-separated yo-yo detection candidates.
- */
-router.get('/league-history/yo-yo', authenticateToken, requireAdmin, validateRequest({ query: leagueHistoryYoYoSchema }), async (req: Request, res: Response) => {
-  const cycleWindow = req.query.cycleWindow ? Number(req.query.cycleWindow) : 20;
-  const minChanges = req.query.minChanges ? Number(req.query.minChanges) : 3;
-  const mode = req.query.mode as LeagueHistoryMode | undefined;
-  const result = await detectYoYoCandidates(cycleWindow, minChanges, mode);
   res.json(result);
 });
 

@@ -2,12 +2,15 @@
 
 **Project**: Armoured Souls
 **Document Type**: Product Requirements Document (PRD)
-**Version**: v1.11
-**Last Updated**: October 23, 2026
+**Version**: v1.14
+**Last Updated**: October 30, 2026
 **Status**: ✅ Implemented
 **Owner**: Robert Teunissen
 
 **Revision History**:
+- v1.14 (Oct 30, 2026): `admin/analysis/` also serves the Weapons page (`weaponAnalysisService`, shared `analysisDataset`); `getWeaponAnalytics` (`GET /api/admin/weapons/analytics`) removed.
+- v1.13 (Oct 30, 2026): `admin/tournaments/` serves the redesigned Tournaments page; the admin tournament management routes were removed.
+- v1.12 (Oct 29, 2026): `admin/league-health/` replaces `admin/adminLeagueHealthService` (League Health redesign); the admin-only `getHistoryByCycleRange`, `getAggregates` and `detectYoYoCandidates` left `league/leagueHistoryService` with the League History page.
 - v1.11 (Oct 23, 2026): `practice-arena/practiceArenaUsageService` replaces the in-memory `practiceArenaMetrics` (admin Practice Arena redesign).
 - v1.10 (Oct 23, 2026): Season Control redesign: `season/adminSeasonRolloverRunService`, `season/adminSeasonStateService`, `season/seasonRolloverHistoryService`, `season/rolloverProgress` (stage progress of `seasonRolloverService`).
 - v1.9 (Oct 23, 2026): Persistent scheduler run history (`cycle/schedulerRunStore`, `schedulerMissedRuns`, `schedulerHistoryService`), background manual runs and `admin/adminBulkCycleRunService` (Cycle Controls redesign).
@@ -92,14 +95,16 @@ Admin panel operations — stats dashboards, cycle execution, battle viewer, HP 
 | `adminBattleActivityService` | Battles per mode: last cycle, season, walkovers, queued, draw/kill/duration rates (`GET /api/admin/dashboard/battle-activity`, 60 s cache per filter) |
 | `adminQueuedMatches` | Queued matches per mode, system-wide (scheduled matches + outstanding bracket rows) |
 | `adminPlayerActivityService`, `adminKpiSnapshotService` | Login-based human-player counts; one `admin_kpi_snapshots` row per competitive settlement (non-fatal) for 7-day trends |
-| `adminThresholds` | Shared thresholds: bankruptcy risk, inactivity, settlement overdue, stuck-match grace |
+| `adminThresholds` | Shared thresholds: bankruptcy risk, inactivity, settlement overdue, stuck-match grace, League Health history window and low-movement / unsubscribed shares |
+| `league-health/` (`leagueHealthService`, `leagueHealthData`, `leagueHealthPlan`, `leagueHealthStatus`, `leagueSeasonService`) | Admin League Health (`GET /api/admin/league-health`): every tiered mode's tiers and instances from the rebalance planner on current standings, promotion and demotion flow from the last 5 rebalances in `league_history`, tier status and the grouped Needs attention list; "This season" per mode and stable type (`GET /api/admin/league-health/season`): per-cycle moves, quiet cycles, per-boundary bounce-back. Read-only |
+| `tournaments/` (`tournamentOverviewService`, `tournamentOverview`) | Admin Tournaments (`GET /api/admin/tournaments/overview`): running tournament per type with schedule status and expected finish, this season's sizes and champions. Read-only |
 | `adminCycleService` | Bulk cycle execution (`executeBulkCycles`), snapshot backfill |
 | `season/adminSeasonRolloverRunService` | `POST /api/admin/seasons/rollover`: the admin rollover under the scheduler lock (`seasonRollover`), recorded as a run; `startAdminRollover` runs in the background (202), `runAdminRollover` waits. 409 while a rollover of either trigger is queued or running |
 | `season/adminSeasonStateService` | `GET /api/admin/seasons/state`: season state, configuration, `startedAt`, `nextSettlementAt`, the active rollover with stage progress |
 | `season/seasonRolloverHistoryService` | `GET /api/admin/seasons/history`: completed seasons with their rollover and failed attempts, from `seasonRollover` runs and older `season_rollover` audit rows |
 | `adminBulkCycleRunService` | `POST /api/admin/cycles/bulk`: runs bulk cycles under the scheduler lock and records them in the run history (`bulkCycles`); `startBulkCycles` runs in the background (202), `runBulkCycles` waits. 409 while one is active |
 | `battles/` (`battleListService`, `battleDetailService`, `battleOutcome`, `battlePayoutCheck`, `battleLogAccess`, `battleExportText`) | Admin Battles page: list query (never reads `battle_log`), outcome and "ended by" per mode, payout check against the ledger, combat log access, text / JSON export |
-| `analysis/` (`attributeAnalysisService`, `analysisData`, `comparisons`, `attributeLayers`, `analysisFeatures`, `logisticFit`) | Admin "what wins" analyses (`GET /api/admin/analysis/attributes`, Attributes page): reads `battle_participant_builds` into paired comparisons, rebuilds attribute layers, fits the cluster-robust logistic models; cached per window and layer set. Weapons and Meta will reuse it |
+| `analysis/` (`attributeAnalysisService`, `weaponAnalysisService`, `analysisData`, `analysisDataset`, `analysisEffects`, `comparisons`, `attributeLayers`, `analysisFeatures`, `weaponFeatures`, `weaponCatalogue`, `logisticFit`) | Admin "what wins" analyses: Attributes (`GET /api/admin/analysis/attributes`) and Weapons (`GET /api/admin/analysis/weapons`: weapons, archetypes, matchups, usage per league tier, refinements, coverage, optionally top 10% only). Reads `battle_participant_builds` (with weapon ids and the battle's tier) into paired comparisons once per window for both pages, rebuilds attribute layers, fits the cluster-robust logistic models; results cached per window and layer set / strength. Meta will reuse it |
 | `adminMaintenanceService` | HP recalculation, robot repair (admin-triggered) |
 
 ### automaton/ (Spec #55)

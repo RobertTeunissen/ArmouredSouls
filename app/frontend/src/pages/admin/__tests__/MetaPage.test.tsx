@@ -109,7 +109,7 @@ describe('MetaPage', () => {
 
     const weapons = screen.getByRole('region', { name: 'Weapons' });
     expect(within(weapons).getByText('75.0%')).toBeInTheDocument(); // 150 of 200, offhands included
-    expect(within(weapons).getByRole('link', { name: /Weapon analytics/ })).toHaveAttribute('href', '/admin/weapons');
+    expect(within(weapons).getByRole('link', { name: /Weapons →/ })).toHaveAttribute('href', '/admin/weapons');
   });
 
   it('keeps the filter in the URL, shared with the dashboard', async () => {

@@ -26,12 +26,13 @@ export const RANGE_OPTIONS: ReadonlyArray<{ key: AnalysisRange; label: string }>
   { key: 'season', label: 'This season' },
 ];
 
-const COLUMN_LABELS: Record<AnalysisColumn, string> = { all: 'All modes', duel: '1v1', team: 'Team', multi: 'Multi-robot' };
+/** "Free-for-all" (not "Multi-robot": team modes have several robots too). */
+const COLUMN_LABELS: Record<AnalysisColumn, string> = { all: 'All modes', duel: '1v1', team: 'Team', multi: 'Free-for-all' };
 const COLUMN_DETAILS: Record<AnalysisColumn, string> = {
   all: 'Every mode together',
   duel: 'League and tournament 1v1',
   team: '2v2, 3v3, tag team and team tournaments',
-  multi: 'King of the Hill and Grand Melee, by placement',
+  multi: 'King of the Hill and Grand Melee: every robot for itself, by placement',
 };
 
 export function columnLabel(column: AnalysisColumn): string {

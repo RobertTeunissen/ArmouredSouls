@@ -21,14 +21,12 @@ export {
   classifyChurnRisk,
   getEngagementPlayers,
   getEconomyOverview,
-  getLeagueHealth,
-  getTeamBattleLeagueHealth,
-  getTagTeamLeagueHealth,
-  getWeaponAnalytics,
   getAchievementAnalytics,
   getTuningAdoption,
   getRefinementAdoption,
 } from './adminStatsService';
+
+export { getLeagueHealthOverview } from './league-health';
 
 export {
   repairAllRobotsAdmin,

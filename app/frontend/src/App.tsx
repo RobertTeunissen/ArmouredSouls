@@ -49,7 +49,7 @@ const AdminBattlesPage = React.lazy(() => import('./pages/admin/BattlesPage'));
 const AdminAttributesPage = React.lazy(() => import('./pages/admin/AttributesPage'));
 const AdminMetaPage = React.lazy(() => import('./pages/admin/MetaPage'));
 const AdminLeagueHealthPage = React.lazy(() => import('./pages/admin/LeagueHealthPage'));
-const AdminWeaponAnalyticsPage = React.lazy(() => import('./pages/admin/WeaponAnalyticsPage'));
+const AdminWeaponsPage = React.lazy(() => import('./pages/admin/WeaponsPage'));
 const AdminPlayersPage = React.lazy(() => import('./pages/admin/PlayersPage'));
 const AdminEconomyOverviewPage = React.lazy(() => import('./pages/admin/EconomyOverviewPage'));
 const AdminSecurityPage = React.lazy(() => import('./pages/admin/SecurityPage'));
@@ -60,7 +60,6 @@ const AdminTuningAdoptionPage = React.lazy(() => import('./pages/admin/TuningAdo
 const AdminRefinementAdoptionPage = React.lazy(() => import('./pages/admin/RefinementAdoptionPage'));
 const AdminRepairLogPage = React.lazy(() => import('./pages/admin/RepairLogPage'));
 const AdminAuditLogPage = React.lazy(() => import('./pages/admin/AuditLogPage'));
-const AdminLeagueHistoryPage = React.lazy(() => import('./pages/admin/LeagueHistoryPage'));
 const AdminSubscriptionAnalyticsPage = React.lazy(() => import('./pages/admin/SubscriptionAnalyticsPage'));
 const AdminTournamentsPage = React.lazy(() => import('./pages/admin/TournamentsPage'));
 const AdminSeasonControlPage = React.lazy(() => import('./pages/admin/SeasonControlPage'));
@@ -106,7 +105,7 @@ function AppRoutes() {
         <Route path="robot-stats" element={<Navigate to="/admin/attributes" replace />} />
         <Route path="meta" element={<AdminMetaPage />} />
         <Route path="league-health" element={<AdminLeagueHealthPage />} />
-        <Route path="weapons" element={<AdminWeaponAnalyticsPage />} />
+        <Route path="weapons" element={<AdminWeaponsPage />} />
         <Route path="players" element={<AdminPlayersPage />} />
         <Route path="economy" element={<AdminEconomyOverviewPage />} />
         <Route path="automatons" element={<AdminAutomatonsPage />} />
@@ -118,7 +117,7 @@ function AppRoutes() {
         <Route path="refinement" element={<AdminRefinementAdoptionPage />} />
         <Route path="repair-log" element={<AdminRepairLogPage />} />
         <Route path="audit-log" element={<AdminAuditLogPage />} />
-        <Route path="league-history" element={<AdminLeagueHistoryPage />} />
+        <Route path="league-history" element={<Navigate to="/admin/league-health" replace />} />
         <Route path="subscriptions" element={<AdminSubscriptionAnalyticsPage />} />
         <Route path="tournaments" element={<AdminTournamentsPage />} />
         <Route path="seasons" element={<AdminSeasonControlPage />} />

@@ -26,8 +26,8 @@ All pages manage their own data fetching. The sidebar collapses to icons on narr
 | **Battle Data** | Battles | `/admin/battles` | Find any battle (all 9 modes, stable type, outcome, date, search); admin check with payout check, combat log with formulas, and export |
 | | Attributes | `/admin/attributes` | Which attributes, groups and build profiles win, per mode, from battle-time builds (was Robot Stats) |
 | | Meta | `/admin/meta` | What stables choose: stances, loadouts, yield thresholds, facilities, weapons |
-| | League Health | `/admin/league-health` | Per-league robot counts, ELO averages, instance counts |
-| | Weapons | `/admin/weapons` | Weapon popularity, type breakdown, ownership stats |
+| | League Health | `/admin/league-health` | Every tiered league: tiers, instances, stable mix, and whether promotion and demotion move |
+| | Weapons | `/admin/weapons` | What winning robots fight with: archetype (range × loadout) and weapon effects, matchups, usage per league tier, price vs effect, refinements |
 | **Player Management** | Players | `/admin/players` | Player list with tabs (New Players, Auto-Generated, At-Risk), churn risk, engagement, search, detail slide-over |
 | | Automatons | `/admin/automatons` | Automaton stables: status bar, stables, strategies, editor, catalogue (Spec #55) |
 | | Economy | `/admin/economy` | Credit circulation, balance distribution, facility adoption |
@@ -257,16 +257,84 @@ KotH and Grand Melee logs store every event with its formula breakdown from this
 
 ### League Health (`/admin/league-health`)
 
-Per-league tier breakdown: robot count, average ELO, number of league instances, and per-instance robot counts.
+Is every tiered league working: does promotion and demotion actually move, and can each tier be played? Covers all six tiered modes: 1v1, 2v2, 3v3, Tag Team, King of the Hill and Grand Melee. Read-only.
 
-**API:** `GET /api/admin/league-health`
+**Sections**
+1. **Needs attention**: one line per problem, linking to the tier. Identical problems in the same tier are grouped across modes ("Champion can't open in 2v2, 3v3 and Tag Team"); few demotions and unsubscribed rows are one notice each. The badge counts blocked and warning items, not notices.
+2. **All leagues**: a mode × tier grid with the active count (and the total when some rows are unsubscribed) and the status. A cell opens that mode and tier below. Below 768 px each mode is one strip of short counts; tapping it selects the mode.
+3. **League detail** of one mode (`?mode=`, default 1v1): the rules line, then one row per tier (cards below 768 px): active / total, instances (count · size range), stable mix (human / Automaton / generated, by `users.stable_type`), average ELO, eligible (enough cycles in tier), promotion and demotion, status. `?tier=` expands a tier's instances: size, humans, top LP, the LP at the promotion and demotion lines with their rank, who qualifies now, and a link to the player standings of that instance (`/league-standings?mode=&tier=&instance=`).
+4. **This season** of the selected mode, by stable type (`?stable=`: All / Players / Automatons / Generated, by `users.stable_type`; default All). Replaces the former League History page (`/admin/league-history` redirects here):
+   - **Per-cycle trend**: promotions up, demotions down, on one scale. A cycle in which the mode recorded no moves at all gets a dashed amber marker and is listed with a link to Cycle Controls' run history (on ACC: KotH cycle 86, interrupted by a deploy restart). Quiet cycles are judged over all stables, so a stable filter shows zeros, not markers.
+   - **Season so far**: total promotions and demotions with their ratio, and the last cycle.
+   - **Tier boundaries**: per boundary (Bronze ↔ Silver … Diamond ↔ Champion) promoted, demoted and **back within 10 cycles**: of the promotions at least 10 cycles old, the share demoted back across the same boundary within 10 cycles. Noted (amber, "About 1 in 4 promoted robots is back within 10 cycles") above 20% with at least 20 judged promotions; "not judged yet" when every promotion is too recent. KotH and Grand Melee hardly demote, so their bounce-back stays low; that is not better-judged promotion. This is a balance signal, not an attention item.
+
+**Two kinds of numbers**
+- **Structure (now)**: places, zones and who qualifies come from the rebalancer's own planner (`league-rebalancing-planner.ts`) on the current standings. Each league rebalances right after its event's battles, so a snapshot taken after a rebalance always shows almost nobody qualifying. "Qualify now" is therefore shown only in the instance view, labelled as a snapshot.
+- **Flow (history)**: promotion and demotion cells read "moved in the last rebalance of the places · average", from the mode's last 5 rebalances in `league_history`. A rebalance is observed as a cycle with at least one row for that mode (every rebalance of a populated mode moves someone); KotH can skip a cycle, so its window can span 6 cycles. `league_history` is emptied at season rollover; until a mode has 5 rebalances, flow is "not judged yet".
+
+**Status** (first match wins; thresholds in `services/admin/adminThresholds.ts`)
+| Status | Rule |
+|---|---|
+| Empty | no standings rows |
+| Promotion blocked | the tier above is empty and this tier has fewer promotion places than the 3 an empty tier needs to open, so it never can |
+| Frozen | every instance is below the 10 entities an instance needs for zones |
+| No promotions | the tier has promotion places, but nobody was promoted in the last 5 rebalances |
+| Low promotion | on average fewer than a quarter of the promotion places were filled |
+| OK | otherwise; notices: "N% unsubscribed" at ≥ 5% of the tier's rows, "few demotions" when fewer than a quarter of the demotion places are filled on average |
+
+**Definitions**
+- **Active**: a robot with an active subscription to the event; a team when every member is subscribed. Standings rows survive an unsubscribe, keep their instance seat and count toward the 10% zone sizes.
+- **ELO**: current robot ELO; team modes show the combined team ELO (sum of the members), as the league pages do.
+- **Places**: floor(10%) of each instance with at least 10 entities; zones are fixed places, so a place that doesn't qualify (LP or cycles in tier) stays empty and nobody below moves up into it.
+
+**API:** `GET /api/admin/league-health` (admin-only, no parameters): `{ generatedAt, season, thresholds, modes[], attention[] }`, built by `services/admin/league-health/`. `GET /api/admin/league-health/season?mode=&stable=` (mode one of the six tiered modes, default `league_1v1`; stable `all|human|automaton|generated`, default `all`; anything else is 400): `{ mode, stable, window, noteShare, minSample, firstCycle, lastCycle, judgedThroughCycle, cycles[], quietCycles[], totals, boundaries[] }` from `league_history` (~20–45 ms on ACC). Removed with this redesign (this page and the former League History page were their only callers): `GET /api/admin/team-battle-league-health`, `GET /api/admin/tag-team-league-health`, and `GET /api/admin/league-history`, `/league-history/aggregates`, `/league-history/entity/:entityType/:entityId`, `/league-history/yo-yo`. Player-facing league history (robot and team pages) is unchanged. On ACC (Oct 2026) the standings query takes ~0.4 s for 19k rows and the history query ~70 ms.
+
+### Tournaments (`/admin/tournaments`)
+
+Are the three tournaments (1v1, 2v2, 3v3) on schedule, when do they finish, and who wins them this season? Read-only. One tournament per type runs at a time, one round per daily cycle (jobs at 10:00 / 15:00 / 18:00 UTC by default); the table is emptied at season rollover.
+
+**Sections**
+1. **Now** — one card per type: name, "Round 11 of 12 · Semi-finals" with a segmented round bar, participants, start and expected finish (next run of the type's job plus one day per remaining round), the current round's matches done of total and its job time, and first-round byes (the bracket fills up to the next power of two). Links: **Bracket** (player page `/tournaments/:id`) and **Tournament battles** (Battles filtered to the mode, last 30 days). Without a running tournament the card says the job creates the next one once enough entrants are subscribed.
+2. **This season** — one panel per type: completed, average length in days (= rounds), champions who are players, participants per tournament (oldest first, the running one highlighted), champion stables with their titles, and the last five champions (tournament linked to its bracket, stable to the admin player detail). A deleted champion reads "Deleted".
+3. **Balance note** — when one stable holds more than half of a type's titles (with at least 3 completed tournaments), e.g. "Hit Machine won 7 of 8 1v1 and 10 of 12 2v2 tournaments this season". A note, not an action item.
+
+**Status of a running tournament**
+| Status | Rule |
+|---|---|
+| On schedule | a match finished within the last 26 hours (or the tournament started then) and no match of an earlier round is still pending or scheduled |
+| Not advancing | no progress for more than 26 hours (same margin as settlement) — check the run history in Cycle Controls |
+| Matches left behind | matches of an earlier round never finished |
+| Paused | the season is in its preparation phase; no rounds run |
+
+**API:** `GET /api/admin/tournaments/overview` (admin-only, no parameters): `{ generatedAt, seasonPhase, thresholds, types[] }`, built by `services/admin/tournaments/` (two small queries, ~20–30 ms on ACC). Removed with this redesign (the old page was their only caller; rounds and auto-creation run from the scheduler): `GET /api/admin/tournaments`, `/:id`, `/history`, `/eligible-robots`, `POST /api/admin/tournaments/create`, `/:id/execute-round`.
 
 ### Weapons (`/admin/weapons`)
 
-Weapon popularity ranking, type breakdown, total weapons owned.
+What winning robots fight with, and what that implies: usage shows the meta, effects show whether it pays. Same data, comparisons and engine as [Attributes](#attributes-adminattributes) (battle-time builds, seven days of records before anything is shown). Replaces the old ownership page (owned counts were mostly generated stables' free starter weapons; Meta keeps the owned / equipped totals).
 
-**API:** `GET /api/admin/weapons/analytics`
-**Filter:** Real / Auto / Automatons / All user filter
+**Controls** (kept in the URL: `?range=&column=&strength=&matchups=`):
+- **Battles from:** last 7 days (default), 14 days, 30 days, this season.
+- **Mode:** All modes / 1v1 / Team / Free-for-all (KotH and Grand Melee: every robot for itself, by placement). Picks the column every block shows; no new request.
+- **Strength:** All robots (default) / Top 10%. Top 10% keeps only fights where every robot is in the top 10% of points invested in its mode and window, so the analysis is not dominated by low-investment generated stables. The page states the cut per mode.
+
+**Equally strong.** Every effect is against an opponent with the same points invested (base + tuning over the 23 attributes) and the same stance (offensive / defensive share of the side). Weapon bonuses, refinements and the loadout multiplier are deliberately not in that control: they come with the choice, so a weapon gets the credit for its own bonuses. Which attributes win is the Attributes page's question.
+
+**Blocks** (all for the selected mode):
+- **Archetypes: range × loadout.** Main weapon range band (melee, short, mid, long) × loadout (single, weapon + shield, two-handed, dual wield). Effect = change in win chance (pp at even odds) against an equally strong average robot (usage-weighted), coloured when at least twice its standard error. Each cell also shows the share of all robots and of players' robots that fought with it.
+- **Matchups.** Row's win % against the column at equal strength, from single-robot comparisons (1v1 and Free-for-all pairs; team modes have none). Views: Range bands (default), Loadouts, Top archetypes (the six most used in the mode). Antisymmetric by construction (A vs B + B vs A = 100%).
+- **Usage by league tier.** Share of robots per tier (Bronze … Champion; KotH tiers come from the scheduled match because KotH battle rows store `league_type = 'koth'`), tournaments as their own row. Segments: the five archetypes with the highest share in any tier with at least 20 robots, the rest as Other. From 30% concentration the page notes that many fights there are mirror matches, so the archetype's own win rate in that tier says little; its edge shows in the grid and matchups.
+- **Weapons.** Every catalogue weapon, carried in either slot (a shield is its own row; the same weapon twice counts once): range band, hands, price, share of robots and of players' robots, raw win rate (comparisons where only one side had it; context only, it follows price), and the effect against the average robot with ± 1 SE. Collapsed: the strongest and weakest six; "Show all".
+- **Price vs effect.** One dot per weapon with an estimate; top left = cheap and strong, bottom right = pricey and weak. The two strongest and weakest are labelled.
+- **Refinements and coverage.** Share of robots with any refinement and per tier (Hone, Augment, Sharpen, Forge); the effect of having refined weapons once 100 comparisons differ. Catalogue weapons fought with (all / players' robots) and the list of weapons no player owns right now.
+
+**Method.** Logistic models without intercept on the paired comparisons (as Attributes), cluster-robust standard errors by battle, ridge on the choice features only:
+- weapons: Δ log points invested, Δ offensive / defensive share, Δ share of robots with refined weapons, and per weapon the Δ share of the side's robots carrying it;
+- archetypes: the same controls and per archetype the Δ share of the side;
+- matchups: the same controls and one ±1 feature per pair of categories, on comparisons whose robots differ in category.
+
+A mode needs 300 comparisons for effects; a weapon, archetype or matchup cell needs 100 comparisons where it differs between the sides, else "too few". Effects are associations: robots that pick a weapon often share other choices.
+
+**API:** `GET /api/admin/analysis/weapons?range=7d|14d|30d|season&strength=all|top10` (admin-only, read-only). Answers the collecting state like Attributes, or `{ status: 'ready', window, strength, columns, weapons, archetypes, matchups, tiers, refinements, coverage, notOwnedByPlayers, … }` per mode column. Cached per window and strength until a new build is recorded (at most 10 minutes); shares the loaded window with Attributes. Removed with this redesign (the old page was its only caller): `GET /api/admin/weapons/analytics`.
 
 ### Security (`/admin/security`)
 
@@ -376,16 +444,16 @@ Uploaded image history with user/robot info, moderation event log (rejections, w
 
 ### Attributes (`/admin/attributes`)
 
-Which attributes, attribute groups and build profiles win battles, to plan how the meta should shift next season. Replaces Robot Stats; `/admin/robot-stats` redirects here. Weapons, refinements and loadouts get their own page on the same engine; stance and yield win rates follow on Meta.
+Which attributes, attribute groups and build profiles win battles, to plan how the meta should shift next season. Replaces Robot Stats; `/admin/robot-stats` redirects here. Weapons, refinements and loadouts are on [Weapons](#weapons-adminweapons), on the same engine and loaded window; stance and yield win rates follow on Meta.
 
 **Data.** The battle-time build of every robot that fought (`battle_participant_builds`, written by all seven fought-battle writers), never the robots' current values. Recording started with this release; until there are seven days of records the page shows when the analysis appears. Ranges never reach back before recording started.
 
 **Controls** (kept in the URL: `?range=&column=&off=`):
 - **Battles from:** last 7 days (default), 14 days, 30 days, this season. Late-season shifts show in the shorter ranges.
-- **Sort by:** All modes / 1v1 / Team / Multi-robot. Sorts the heatmap and picks the column of the biggest-effects list, group matrix and profiles.
+- **Sort by:** All modes / 1v1 / Team / Free-for-all. Sorts the heatmap and picks the column of the biggest-effects list, group matrix and profiles.
 - **Layers:** base attributes, then + Tuning, + Weapon bonuses (catalog), + Refinements (Hone/Augment), + Loadout (multiplier). With all four on, the values are exactly the effective attributes the simulator read (parity-tested against `prepareRobotForCombat`). **+ Stance** is not an attribute layer: combat never changes attribute values by stance; it applies stance inside its hit, damage, counter, shield-regen and movement formulas. So the toggle adds stance to the model as its own effect (the share of each side fighting offensive / defensive, balanced as reference), shown per column as "vs balanced: offensive … · defensive …". The shared `STANCE_MODIFIERS` table is for display only and is not used. The catalog bonus is derived from the stored effective value, so it stays right if the catalog changes mid-season. Damage and cooldown refinements (Sharpen) are weapon stats, not attributes.
 
-**Columns.** All modes; 1v1 (league and tournament); Team (2v2, 3v3, tag team, team tournaments; a side is the average of its robots); Multi-robot (KotH and Grand Melee by placement). A column with fewer than 300 comparisons is not analysed.
+**Columns.** All modes; 1v1 (league and tournament); Team (2v2, 3v3, tag team, team tournaments; a side is the average of its robots); Free-for-all (KotH and Grand Melee: every robot for itself, by placement; formerly labelled "Multi-robot", which read as if team modes were excluded from having several robots). A column with fewer than 300 comparisons is not analysed.
 
 **Method.**
 - Every fought battle becomes paired comparisons. Two-sided modes: side 1 against side 2, winner from `winning_side`, then `winner_id`. KotH / Grand Melee: every pair of robots with different placements, the better placement winning; a battle weighs n/2 in total (each robot once), spread over its pairs, and Grand Melee is sampled to 30 pairs per battle. Byes, forfeits, draws and tied placements are left out and counted.

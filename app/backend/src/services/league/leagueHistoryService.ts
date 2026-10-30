@@ -11,7 +11,6 @@
 
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
-import { AppError } from '../../errors';
 
 // --- Types ---
 
@@ -60,31 +59,6 @@ export interface LeagueHistoryRecord {
   entityName?: string;
   /** Owner's stableName (falls back to username). Populated by query helpers. */
   stableName?: string;
-}
-
-export interface LeagueHistoryQueryParams {
-  startCycle: number;
-  endCycle: number;
-  entityType?: EntityType;
-  mode?: LeagueHistoryMode;
-  page?: number;
-  perPage?: number;
-}
-
-export interface AggregateResult {
-  mode: string | null;
-  tier: string;
-  promotions: number;
-  demotions: number;
-}
-
-export interface YoYoCandidate {
-  entityType: EntityType;
-  entityId: number;
-  entityName: string;
-  mode: string | null;
-  changeCount: number;
-  tiersInvolved: string[];
 }
 
 export interface CtrlZResult {
@@ -200,57 +174,6 @@ export async function recordTierChange(params: RecordTierChangeParams): Promise<
 }
 
 /**
- * Query tier changes within a cycle range, with pagination.
- * Validates that startCycle <= endCycle.
- */
-export async function getHistoryByCycleRange(params: LeagueHistoryQueryParams): Promise<{
-  data: LeagueHistoryRecord[];
-  pagination: { page: number; pageSize: number; total: number; totalPages: number };
-}> {
-  const { startCycle, endCycle, entityType, mode, page = 1, perPage = 50 } = params;
-
-  if (startCycle > endCycle) {
-    throw new AppError(
-      'INVALID_CYCLE_RANGE',
-      `Invalid cycle range: startCycle (${startCycle}) must be less than or equal to endCycle (${endCycle})`,
-      400,
-    );
-  }
-
-  const where: Record<string, unknown> = {
-    cycleNumber: { gte: startCycle, lte: endCycle },
-  };
-  if (entityType) {
-    where.entityType = entityType;
-  }
-  if (mode) {
-    where.mode = mode;
-  }
-
-  const [data, total] = await Promise.all([
-    prisma.leagueHistory.findMany({
-      where,
-      orderBy: { cycleNumber: 'desc' },
-      skip: (page - 1) * perPage,
-      take: perPage,
-    }),
-    prisma.leagueHistory.count({ where }),
-  ]);
-
-  const enriched = await enrichWithNames(data as LeagueHistoryRecord[]);
-
-  return {
-    data: enriched,
-    pagination: {
-      page,
-      pageSize: perPage,
-      total,
-      totalPages: Math.ceil(total / perPage),
-    },
-  };
-}
-
-/**
  * Get complete history for a specific entity, ordered by cycle ascending.
  */
 export async function getEntityHistory(
@@ -264,145 +187,6 @@ export async function getEntityHistory(
   });
 
   return enrichWithNames(records as LeagueHistoryRecord[]);
-}
-
-/**
- * Get aggregate promotion/demotion counts grouped by tier for a cycle range.
- * Validates that startCycle <= endCycle.
- * Uses Prisma groupBy to push aggregation to the database.
- */
-export async function getAggregates(
-  startCycle: number,
-  endCycle: number,
-  entityType?: EntityType,
-  mode?: LeagueHistoryMode,
-): Promise<AggregateResult[]> {
-  if (startCycle > endCycle) {
-    throw new AppError(
-      'INVALID_CYCLE_RANGE',
-      `Invalid cycle range: startCycle (${startCycle}) must be less than or equal to endCycle (${endCycle})`,
-      400,
-    );
-  }
-
-  const where: Record<string, unknown> = {
-    cycleNumber: { gte: startCycle, lte: endCycle },
-  };
-  if (entityType) where.entityType = entityType;
-  if (mode) where.mode = mode;
-
-  const grouped = await prisma.leagueHistory.groupBy({
-    by: ['mode', 'destinationTier', 'changeType'],
-    where,
-    _count: { id: true },
-  });
-
-  const resultMap = new Map<string, AggregateResult>();
-  for (const row of grouped) {
-    const key = `${row.mode ?? 'legacy'}:${row.destinationTier}`;
-    const result = resultMap.get(key) ?? {
-      mode: row.mode,
-      tier: row.destinationTier,
-      promotions: 0,
-      demotions: 0,
-    };
-    if (row.changeType === 'promotion') result.promotions = row._count.id;
-    else result.demotions = row._count.id;
-    resultMap.set(key, result);
-  }
-
-  return Array.from(resultMap.values());
-}
-
-/**
- * Identify yo-yo candidates: entities with minChanges or more tier changes
- * within the last cycleWindow cycles from the current cycle.
- */
-export async function detectYoYoCandidates(
-  cycleWindow = 20,
-  minChanges = 3,
-  mode?: LeagueHistoryMode,
-): Promise<YoYoCandidate[]> {
-  const currentCycle = await getCurrentCycleNumber();
-  const startCycle = Math.max(0, currentCycle - cycleWindow);
-
-  const records = await prisma.leagueHistory.findMany({
-    where: {
-      cycleNumber: { gte: startCycle, lte: currentCycle },
-      ...(mode ? { mode } : {}),
-    },
-    select: {
-      entityType: true,
-      entityId: true,
-      mode: true,
-      destinationTier: true,
-      sourceTier: true,
-    },
-  });
-
-  interface EntityModeGroup {
-    entityType: EntityType;
-    entityId: number;
-    mode: string | null;
-    tiers: Set<string>;
-    count: number;
-  }
-
-  const entityGroups = new Map<string, EntityModeGroup>();
-  for (const record of records) {
-    const key = `${record.entityType}:${record.entityId}:${record.mode ?? 'legacy'}`;
-    const group = entityGroups.get(key) ?? {
-      entityType: record.entityType as EntityType,
-      entityId: record.entityId,
-      mode: record.mode,
-      tiers: new Set<string>(),
-      count: 0,
-    };
-    group.count++;
-    group.tiers.add(record.sourceTier);
-    group.tiers.add(record.destinationTier);
-    entityGroups.set(key, group);
-  }
-
-  const candidates = Array.from(entityGroups.values()).filter(
-    group => group.count >= minChanges,
-  );
-  const robotIds = candidates
-    .filter(candidate => candidate.entityType === 'robot')
-    .map(candidate => candidate.entityId);
-  const teamIds = candidates
-    .filter(candidate => candidate.entityType !== 'robot')
-    .map(candidate => candidate.entityId);
-
-  const [robots, teams] = await Promise.all([
-    robotIds.length > 0
-      ? prisma.robot.findMany({
-          where: { id: { in: robotIds } },
-          select: { id: true, name: true },
-        })
-      : Promise.resolve([]),
-    teamIds.length > 0
-      ? prisma.teamBattle.findMany({
-          where: { id: { in: teamIds } },
-          select: { id: true, teamName: true },
-        })
-      : Promise.resolve([]),
-  ]);
-
-  const robotNameMap = new Map(robots.map(robot => [robot.id, robot.name]));
-  const teamNameMap = new Map(teams.map(team => [team.id, team.teamName]));
-
-  return candidates.map(candidate => ({
-    entityType: candidate.entityType,
-    entityId: candidate.entityId,
-    entityName: candidate.entityType === 'robot'
-      ? robotNameMap.get(candidate.entityId) || `Unknown robot #${candidate.entityId}`
-      : teamNameMap.get(candidate.entityId)
-        || `${candidate.entityType === 'tag_team' ? 'Unknown tag team' : 'Unknown team'} #${candidate.entityId}`,
-    mode: candidate.mode,
-    changeCount: candidate.count,
-    tiersInvolved: Array.from(candidate.tiers),
-  }));
 }
 
 /**
