@@ -140,6 +140,7 @@ const DB_DEPENDENT = [
   // Admin Battles page — list, detail, payout check, log and export routes
   'tests/integration/adminBattles.test.ts',
   'tests/integration/adminAttributeAnalysis.test.ts',
+  'tests/integration/adminWeaponAnalysis.test.ts',
   // Issue #342 — achievements vs. account reset and weapon/shield resale
   'tests/integration/accountResetAchievements.test.ts',
   // Achievement unlock serialization (pre-existing duplicate-insert fix)

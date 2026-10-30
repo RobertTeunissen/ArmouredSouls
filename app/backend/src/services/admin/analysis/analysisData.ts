@@ -1,7 +1,8 @@
 /**
  * Reads the battles behind the "what wins" analyses: every battle with a
  * battle-time build record (`battle_participant_builds`) in the window, its
- * participants and their builds. Never touches `battle_log`.
+ * league tier, participants and their builds (weapons included). Never
+ * touches `battle_log`.
  *
  * Reads in pages of battle ids and converts each page to compact layered
  * builds before the next, so memory stays bounded. Long windows are sampled
@@ -64,6 +65,14 @@ interface RawBattle {
   winner_id: number | null;
   winning_side: number | null;
   duration_seconds: number;
+  tier: string | null;
+}
+
+/** League tiers as stored in `league_type`; tournaments become 'tournament', anything else null. */
+const LEAGUE_TIER_VALUES = new Set(['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion', 'tournament']);
+
+export function normaliseTier(value: string | null): string | null {
+  return value !== null && LEAGUE_TIER_VALUES.has(value) ? value : null;
 }
 
 interface RawParticipant {
@@ -82,6 +91,8 @@ interface RawParticipant {
   offhand_refinements: StoredRefinement[] | null;
   loadout_type: string | null;
   stance: string | null;
+  main_weapon_id: number | null;
+  offhand_weapon_id: number | null;
 }
 
 function toParticipant(r: RawParticipant): AnalysisParticipant {
@@ -94,6 +105,8 @@ function toParticipant(r: RawParticipant): AnalysisParticipant {
       offhandRefinements: r.offhand_refinements,
       loadoutType: r.loadout_type,
       stance: r.stance,
+      mainWeaponId: r.main_weapon_id,
+      offhandWeaponId: r.offhand_weapon_id,
     })
     : null;
   return {
@@ -132,14 +145,18 @@ export async function loadComparisons(from: Date | null, rate: number): Promise<
 
     const [battles, participants] = await Promise.all([
       prisma.$queryRaw<RawBattle[]>(Prisma.sql`
-        SELECT id, battle_type, winner_id, winning_side, duration_seconds
-        FROM battles WHERE id = ANY(${battleIds}::int[]) ORDER BY id
+        SELECT b.id, b.battle_type, b.winner_id, b.winning_side, b.duration_seconds,
+               -- KotH battle rows store league_type 'koth'; the tier is on the scheduled match.
+               CASE WHEN b.battle_type = 'koth'
+                    THEN (SELECT sm.league_type FROM scheduled_matches_v2 sm WHERE sm.battle_id = b.id LIMIT 1)
+                    ELSE b.league_type END AS tier
+        FROM battles b WHERE b.id = ANY(${battleIds}::int[]) ORDER BY b.id
       `),
       prisma.$queryRaw<RawParticipant[]>(Prisma.sql`
         SELECT p.battle_id, p.robot_id, p.team, p.placement, p.forfeited, p.destroyed, p.yielded,
                u.stable_type::text AS stable_type,
                pb.base_attributes, pb.tuning, pb.effective_attributes, pb.main_refinements, pb.offhand_refinements,
-               pb.loadout_type, pb.stance
+               pb.loadout_type, pb.stance, pb.main_weapon_id, pb.offhand_weapon_id
         FROM battle_participants p
         LEFT JOIN battle_participant_builds pb ON pb.battle_id = p.battle_id AND pb.robot_id = p.robot_id
         LEFT JOIN robots r ON r.id = p.robot_id
@@ -163,6 +180,7 @@ export async function loadComparisons(from: Date | null, rate: number): Promise<
         winningSide: b.winning_side,
         durationSeconds: b.duration_seconds,
         participants: byBattle.get(b.id) ?? [],
+        tier: normaliseTier(b.tier),
       };
       addBattle(battle, set);
       battlesRead++;

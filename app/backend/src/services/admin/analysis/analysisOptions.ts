@@ -1,6 +1,6 @@
 /**
  * Accepted values and fixed definitions of the admin "what wins" analyses
- * (Attributes page; Weapons later). Dependency-free so route schemas and route
+ * (Attributes and Weapons pages). Dependency-free so route schemas and route
  * tests that mock the services can import them.
  */
 
@@ -81,3 +81,41 @@ export const MIN_RECORDING_DAYS = 7;
 
 /** A column or cell needs at least this many comparisons to be read. */
 export const MIN_COMPARISONS = 300;
+
+// ── Weapons analysis ─────────────────────────────────────────────────
+
+/** All robots, or only fights where every robot is in the top 10% of points invested in its mode. */
+export const ANALYSIS_STRENGTHS = ['all', 'top10'] as const;
+export type AnalysisStrength = (typeof ANALYSIS_STRENGTHS)[number];
+
+/** Share of robots (by points invested, per mode column) that "Top 10%" keeps. */
+export const TOP_STRENGTH_SHARE = 0.1;
+
+/** `weapons.range_band`, closest first. */
+export const RANGE_BANDS = ['melee', 'short', 'mid', 'long'] as const;
+export type RangeBand = (typeof RANGE_BANDS)[number];
+
+/** `battle_participant_builds.loadout_type`. */
+export const LOADOUTS = ['single', 'weapon_shield', 'two_handed', 'dual_wield'] as const;
+export type Loadout = (typeof LOADOUTS)[number];
+
+/** Archetype key: main weapon range band × loadout, e.g. 'melee+weapon_shield'. */
+export type ArchetypeKey = `${RangeBand}+${Loadout}`;
+
+export const ARCHETYPES: readonly ArchetypeKey[] = RANGE_BANDS.flatMap((band) => LOADOUTS.map((loadout) => `${band}+${loadout}` as ArchetypeKey));
+
+/** Matchup grids: by range band, by loadout, or between the most used archetypes. */
+export const MATCHUP_VIEWS = ['bands', 'loadouts', 'archetypes'] as const;
+export type MatchupView = (typeof MATCHUP_VIEWS)[number];
+export const MATCHUP_TOP_ARCHETYPES = 6;
+
+/** Tier rows of the usage bars, lowest first; tournaments have no tier and get their own row. */
+export const USAGE_TIERS = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion', 'tournament'] as const;
+export type UsageTier = (typeof USAGE_TIERS)[number];
+/** Archetypes shown as their own segment in the tier bars (the rest is "Other"). */
+export const TIER_SEGMENTS = 5;
+/** A tier needs this many robots before its shares pick the segments. */
+export const TIER_MIN_ROBOTS = 20;
+
+/** A weapon, archetype or matchup cell needs this many comparisons where it differs between the sides. */
+export const MIN_CELL_COMPARISONS = 100;

@@ -20,7 +20,7 @@ export function WeaponsCard({ weapons, loading, className = '' }: WeaponsCardPro
   return (
     <AdminPanel
       title="Weapons"
-      actions={<Link to="/admin/weapons" className={`text-xs text-primary hover:underline ${ADMIN_FOCUS_RING}`}>Weapon analytics →</Link>}
+      actions={<Link to="/admin/weapons" className={`text-xs text-primary hover:underline ${ADMIN_FOCUS_RING}`}>Weapons →</Link>}
       loading={loading && !weapons}
       skeletonRows={3}
       className={className}

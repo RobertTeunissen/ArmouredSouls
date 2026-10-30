@@ -1,7 +1,8 @@
 /**
  * Admin Analytics & Dashboard Routes
  *
- * System stats, KPIs, engagement, economy, league health, weapon/achievement/tuning analytics.
+ * System stats, KPIs, engagement, economy, league health, achievement/tuning analytics.
+ * (Weapons moved to the "what wins" analyses: GET /api/admin/analysis/weapons.)
  * Mounted at /api/admin/ from the main admin router.
  */
 
@@ -17,7 +18,6 @@ import {
   getDashboardKpis,
   getEngagementPlayers,
   getEconomyOverview,
-  getWeaponAnalytics,
   getAchievementAnalytics,
   getTuningAdoption,
   getRefinementAdoption,
@@ -69,10 +69,6 @@ const engagementPlayersQuerySchema = z.object({
   filter: z.enum(USER_FILTER_TYPES).optional().default('real'),
   page: z.coerce.number().int().positive().optional().default(1),
   limit: z.coerce.number().int().positive().max(100).optional().default(50),
-});
-
-const weaponAnalyticsQuerySchema = z.object({
-  filter: z.enum(USER_FILTER_TYPES).optional().default('real'),
 });
 
 const achievementAnalyticsQuerySchema = z.object({
@@ -236,17 +232,6 @@ router.get('/league-health', authenticateToken, requireAdmin, validateRequest({}
 router.get('/league-health/season', authenticateToken, requireAdmin, validateRequest({ query: leagueSeasonQuerySchema }), async (req: Request, res: Response) => {
   const query = leagueSeasonQuerySchema.parse(req.query);
   res.json(await getLeagueSeason(query.mode, query.stable));
-});
-
-/**
- * GET /api/admin/weapons/analytics
- * Get weapon analytics data.
- */
-router.get('/weapons/analytics', authenticateToken, requireAdmin, validateRequest({ query: weaponAnalyticsQuerySchema }), async (req: Request, res: Response) => {
-  const filter = (req.query.filter as UserFilterType) || 'real';
-  const userFilter = buildUserFilter(filter);
-  const result = await getWeaponAnalytics(userFilter);
-  res.json(result);
 });
 
 /**

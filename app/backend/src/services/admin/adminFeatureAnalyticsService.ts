@@ -2,54 +2,6 @@ import prisma from '../../lib/prisma';
 import type { Prisma } from '../../../generated/prisma';
 
 /**
- * Get weapon analytics data.
- */
-export async function getWeaponAnalytics(userFilter: Prisma.UserWhereInput = {}) {
-  // Weapon type distribution
-  const weaponTypes = await prisma.weaponInventory.groupBy({
-    by: ['weaponId'],
-    where: { user: userFilter },
-    _count: { id: true },
-  });
-
-  // Get weapon details for the IDs
-  const weaponIds = weaponTypes.map((w) => w.weaponId);
-  const weapons = await prisma.weapon.findMany({
-    where: { id: { in: weaponIds } },
-    select: { id: true, name: true, weaponType: true, cost: true, baseDamage: true },
-  });
-
-  const weaponMap = new Map(weapons.map((w) => [w.id, w]));
-
-  const weaponPopularity = weaponTypes
-    .map((wt) => {
-      const weapon = weaponMap.get(wt.weaponId);
-      return {
-        weaponId: wt.weaponId,
-        name: weapon?.name ?? 'Unknown',
-        type: weapon?.weaponType ?? 'unknown',
-        cost: weapon?.cost ?? 0,
-        baseDamage: weapon?.baseDamage ?? 0,
-        owned: wt._count.id,
-      };
-    })
-    .sort((a, b) => b.owned - a.owned);
-
-  // Type breakdown
-  const typeBreakdown: Record<string, number> = {};
-  for (const wp of weaponPopularity) {
-    typeBreakdown[wp.type] = (typeBreakdown[wp.type] || 0) + wp.owned;
-  }
-
-  return {
-    weapons: weaponPopularity.slice(0, 50),
-    typeBreakdown,
-    totalWeaponsOwned: weaponPopularity.reduce((sum, w) => sum + w.owned, 0),
-    timestamp: new Date().toISOString(),
-  };
-}
-
-/**
  * Get achievement analytics data.
  */
 export async function getAchievementAnalytics(userFilter: Prisma.UserWhereInput = {}) {

@@ -6,7 +6,7 @@ import express, { Request, Response } from 'express';
 import { z } from 'zod';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 import { validateRequest } from '../middleware/schemaValidator';
-import { ANALYSIS_RANGES, getAttributeAnalysis } from '../services/admin/analysis';
+import { ANALYSIS_RANGES, ANALYSIS_STRENGTHS, getAttributeAnalysis, getWeaponAnalysis } from '../services/admin/analysis';
 
 const router = express.Router();
 router.use(authenticateToken);
@@ -24,11 +24,22 @@ const attributeQuerySchema = z.object({
   stance: layerFlag,
 });
 
+const weaponQuerySchema = z.object({
+  range: z.enum(ANALYSIS_RANGES).default('7d'),
+  strength: z.enum(ANALYSIS_STRENGTHS).default('all'),
+});
+
 /** Which attributes, groups and build profiles win, per mode column. */
 router.get('/attributes', validateRequest({ query: attributeQuerySchema }), async (req: Request, res: Response) => {
   // validateRequest replaces req.query with the parsed (transformed) values.
   const { range, ...toggles } = req.query as unknown as z.infer<typeof attributeQuerySchema>;
   res.json(await getAttributeAnalysis({ range, toggles }));
+});
+
+/** Which weapons, archetypes and matchups win, per mode column, for all robots or the top 10%. */
+router.get('/weapons', validateRequest({ query: weaponQuerySchema }), async (req: Request, res: Response) => {
+  const { range, strength } = req.query as unknown as z.infer<typeof weaponQuerySchema>;
+  res.json(await getWeaponAnalysis({ range, strength }));
 });
 
 export default router;

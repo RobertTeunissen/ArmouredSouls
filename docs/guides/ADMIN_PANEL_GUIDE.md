@@ -27,7 +27,7 @@ All pages manage their own data fetching. The sidebar collapses to icons on narr
 | | Attributes | `/admin/attributes` | Which attributes, groups and build profiles win, per mode, from battle-time builds (was Robot Stats) |
 | | Meta | `/admin/meta` | What stables choose: stances, loadouts, yield thresholds, facilities, weapons |
 | | League Health | `/admin/league-health` | Every tiered league: tiers, instances, stable mix, and whether promotion and demotion move |
-| | Weapons | `/admin/weapons` | Weapon popularity, type breakdown, ownership stats |
+| | Weapons | `/admin/weapons` | What winning robots fight with: archetype (range × loadout) and weapon effects, matchups, usage per league tier, price vs effect, refinements |
 | **Player Management** | Players | `/admin/players` | Player list with tabs (New Players, Auto-Generated, At-Risk), churn risk, engagement, search, detail slide-over |
 | | Automatons | `/admin/automatons` | Automaton stables: status bar, stables, strategies, editor, catalogue (Spec #55) |
 | | Economy | `/admin/economy` | Credit circulation, balance distribution, facility adoption |
@@ -310,10 +310,31 @@ Are the three tournaments (1v1, 2v2, 3v3) on schedule, when do they finish, and 
 
 ### Weapons (`/admin/weapons`)
 
-Weapon popularity ranking, type breakdown, total weapons owned.
+What winning robots fight with, and what that implies: usage shows the meta, effects show whether it pays. Same data, comparisons and engine as [Attributes](#attributes-adminattributes) (battle-time builds, seven days of records before anything is shown). Replaces the old ownership page (owned counts were mostly generated stables' free starter weapons; Meta keeps the owned / equipped totals).
 
-**API:** `GET /api/admin/weapons/analytics`
-**Filter:** Real / Auto / Automatons / All user filter
+**Controls** (kept in the URL: `?range=&column=&strength=&matchups=`):
+- **Battles from:** last 7 days (default), 14 days, 30 days, this season.
+- **Mode:** All modes / 1v1 / Team / Free-for-all (KotH and Grand Melee: every robot for itself, by placement). Picks the column every block shows; no new request.
+- **Strength:** All robots (default) / Top 10%. Top 10% keeps only fights where every robot is in the top 10% of points invested in its mode and window, so the analysis is not dominated by low-investment generated stables. The page states the cut per mode.
+
+**Equally strong.** Every effect is against an opponent with the same points invested (base + tuning over the 23 attributes) and the same stance (offensive / defensive share of the side). Weapon bonuses, refinements and the loadout multiplier are deliberately not in that control: they come with the choice, so a weapon gets the credit for its own bonuses. Which attributes win is the Attributes page's question.
+
+**Blocks** (all for the selected mode):
+- **Archetypes: range × loadout.** Main weapon range band (melee, short, mid, long) × loadout (single, weapon + shield, two-handed, dual wield). Effect = change in win chance (pp at even odds) against an equally strong average robot (usage-weighted), coloured when at least twice its standard error. Each cell also shows the share of all robots and of players' robots that fought with it.
+- **Matchups.** Row's win % against the column at equal strength, from single-robot comparisons (1v1 and Free-for-all pairs; team modes have none). Views: Range bands (default), Loadouts, Top archetypes (the six most used in the mode). Antisymmetric by construction (A vs B + B vs A = 100%).
+- **Usage by league tier.** Share of robots per tier (Bronze … Champion; KotH tiers come from the scheduled match because KotH battle rows store `league_type = 'koth'`), tournaments as their own row. Segments: the five archetypes with the highest share in any tier with at least 20 robots, the rest as Other. From 30% concentration the page notes that many fights there are mirror matches, so the archetype's own win rate in that tier says little; its edge shows in the grid and matchups.
+- **Weapons.** Every catalogue weapon, carried in either slot (a shield is its own row; the same weapon twice counts once): range band, hands, price, share of robots and of players' robots, raw win rate (comparisons where only one side had it; context only, it follows price), and the effect against the average robot with ± 1 SE. Collapsed: the strongest and weakest six; "Show all".
+- **Price vs effect.** One dot per weapon with an estimate; top left = cheap and strong, bottom right = pricey and weak. The two strongest and weakest are labelled.
+- **Refinements and coverage.** Share of robots with any refinement and per tier (Hone, Augment, Sharpen, Forge); the effect of having refined weapons once 100 comparisons differ. Catalogue weapons fought with (all / players' robots) and the list of weapons no player owns right now.
+
+**Method.** Logistic models without intercept on the paired comparisons (as Attributes), cluster-robust standard errors by battle, ridge on the choice features only:
+- weapons: Δ log points invested, Δ offensive / defensive share, Δ share of robots with refined weapons, and per weapon the Δ share of the side's robots carrying it;
+- archetypes: the same controls and per archetype the Δ share of the side;
+- matchups: the same controls and one ±1 feature per pair of categories, on comparisons whose robots differ in category.
+
+A mode needs 300 comparisons for effects; a weapon, archetype or matchup cell needs 100 comparisons where it differs between the sides, else "too few". Effects are associations: robots that pick a weapon often share other choices.
+
+**API:** `GET /api/admin/analysis/weapons?range=7d|14d|30d|season&strength=all|top10` (admin-only, read-only). Answers the collecting state like Attributes, or `{ status: 'ready', window, strength, columns, weapons, archetypes, matchups, tiers, refinements, coverage, notOwnedByPlayers, … }` per mode column. Cached per window and strength until a new build is recorded (at most 10 minutes); shares the loaded window with Attributes. Removed with this redesign (the old page was its only caller): `GET /api/admin/weapons/analytics`.
 
 ### Security (`/admin/security`)
 
@@ -423,16 +444,16 @@ Uploaded image history with user/robot info, moderation event log (rejections, w
 
 ### Attributes (`/admin/attributes`)
 
-Which attributes, attribute groups and build profiles win battles, to plan how the meta should shift next season. Replaces Robot Stats; `/admin/robot-stats` redirects here. Weapons, refinements and loadouts get their own page on the same engine; stance and yield win rates follow on Meta.
+Which attributes, attribute groups and build profiles win battles, to plan how the meta should shift next season. Replaces Robot Stats; `/admin/robot-stats` redirects here. Weapons, refinements and loadouts are on [Weapons](#weapons-adminweapons), on the same engine and loaded window; stance and yield win rates follow on Meta.
 
 **Data.** The battle-time build of every robot that fought (`battle_participant_builds`, written by all seven fought-battle writers), never the robots' current values. Recording started with this release; until there are seven days of records the page shows when the analysis appears. Ranges never reach back before recording started.
 
 **Controls** (kept in the URL: `?range=&column=&off=`):
 - **Battles from:** last 7 days (default), 14 days, 30 days, this season. Late-season shifts show in the shorter ranges.
-- **Sort by:** All modes / 1v1 / Team / Multi-robot. Sorts the heatmap and picks the column of the biggest-effects list, group matrix and profiles.
+- **Sort by:** All modes / 1v1 / Team / Free-for-all. Sorts the heatmap and picks the column of the biggest-effects list, group matrix and profiles.
 - **Layers:** base attributes, then + Tuning, + Weapon bonuses (catalog), + Refinements (Hone/Augment), + Loadout (multiplier). With all four on, the values are exactly the effective attributes the simulator read (parity-tested against `prepareRobotForCombat`). **+ Stance** is not an attribute layer: combat never changes attribute values by stance; it applies stance inside its hit, damage, counter, shield-regen and movement formulas. So the toggle adds stance to the model as its own effect (the share of each side fighting offensive / defensive, balanced as reference), shown per column as "vs balanced: offensive … · defensive …". The shared `STANCE_MODIFIERS` table is for display only and is not used. The catalog bonus is derived from the stored effective value, so it stays right if the catalog changes mid-season. Damage and cooldown refinements (Sharpen) are weapon stats, not attributes.
 
-**Columns.** All modes; 1v1 (league and tournament); Team (2v2, 3v3, tag team, team tournaments; a side is the average of its robots); Multi-robot (KotH and Grand Melee by placement). A column with fewer than 300 comparisons is not analysed.
+**Columns.** All modes; 1v1 (league and tournament); Team (2v2, 3v3, tag team, team tournaments; a side is the average of its robots); Free-for-all (KotH and Grand Melee: every robot for itself, by placement; formerly labelled "Multi-robot", which read as if team modes were excluded from having several robots). A column with fewer than 300 comparisons is not analysed.
 
 **Method.**
 - Every fought battle becomes paired comparisons. Two-sided modes: side 1 against side 2, winner from `winning_side`, then `winner_id`. KotH / Grand Melee: every pair of robots with different placements, the better placement winning; a battle weighs n/2 in total (each robot once), spread over its pairs, and Grand Melee is sampled to 30 pairs per battle. Byes, forfeits, draws and tied placements are left out and counted.

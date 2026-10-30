@@ -133,6 +133,9 @@ async function derivatives(
   const { rows, features: d, x, y, w } = m;
   const gradient = new Float64Array(d);
   const hessian = new Float64Array(d * d);
+  // Indicator features (weapons, archetypes) are mostly zero: only the row's
+  // non-zero features enter the Hessian, the same sum with far fewer terms.
+  const nonZero = new Int32Array(d);
   let loss = 0;
   let weight = 0;
   for (let i = 0; i < rows; i++) {
@@ -142,11 +145,19 @@ async function derivatives(
     const wi = w[i];
     const r = wi * (y[i] - p);
     const v = wi * p * (1 - p);
+    let count = 0;
     for (let j = 0; j < d; j++) {
+      if (x[o + j] !== 0) nonZero[count++] = j;
+    }
+    for (let a = 0; a < count; a++) {
+      const j = nonZero[a];
       const xj = x[o + j];
       gradient[j] += r * xj;
       const vx = v * xj;
-      for (let k = 0; k <= j; k++) hessian[j * d + k] += vx * x[o + k];
+      for (let b = 0; b <= a; b++) {
+        const k = nonZero[b];
+        hessian[j * d + k] += vx * x[o + k];
+      }
     }
     const pc = Math.min(Math.max(p, 1e-12), 1 - 1e-12);
     loss -= wi * (y[i] * Math.log(pc) + (1 - y[i]) * Math.log(1 - pc));

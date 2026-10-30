@@ -21,7 +21,6 @@ export {
   classifyChurnRisk,
   getEngagementPlayers,
   getEconomyOverview,
-  getWeaponAnalytics,
   getAchievementAnalytics,
   getTuningAdoption,
   getRefinementAdoption,

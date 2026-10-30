@@ -37,7 +37,15 @@ export interface RawBuild {
   offhandRefinements: StoredRefinement[] | null;
   loadoutType: string;
   stance: string;
+  /** Catalogue `weapons.id` per slot (Weapons analysis); null = empty slot or unknown. */
+  mainWeaponId?: number | null;
+  offhandWeaponId?: number | null;
 }
+
+/** Refinement tiers as bits of `LayeredBuild.refinementTiers`. */
+export const REFINEMENT_TIER_BITS = { hone: 1, augment: 2, sharpen: 4, forge: 8 } as const;
+export type RefinementTier = keyof typeof REFINEMENT_TIER_BITS;
+export const REFINEMENT_TIERS = Object.keys(REFINEMENT_TIER_BITS) as RefinementTier[];
 
 /** Additive layers inside `LayeredBuild.data`, each `ATTRIBUTE_COUNT` long, in `ROBOT_ATTRIBUTES` order. */
 export const LAYER_OFFSET = {
@@ -60,6 +68,14 @@ export interface LayeredBuild {
   loadout: Float64Array;
   /** The stance the robot fought in (an effect of its own, not an attribute layer). */
   stance: CombatStance;
+  /** The loadout as recorded (Weapons archetypes). */
+  loadoutType: string;
+  mainWeaponId: number | null;
+  offhandWeaponId: number | null;
+  /** Bitmask of the refinement tiers on either weapon (`REFINEMENT_TIER_BITS`). */
+  refinementTiers: number;
+  /** Points the stable invested: sum of base + tuning over the 23 attributes. */
+  invested: number;
 }
 
 const loadoutTables = new Map<string, Float64Array>();
@@ -93,12 +109,26 @@ function refinementBonus(refinements: readonly StoredRefinement[] | null, attrib
   return total;
 }
 
+function tierBits(...lists: Array<readonly StoredRefinement[] | null>): number {
+  let bits = 0;
+  for (const list of lists) {
+    for (const r of list ?? []) bits |= REFINEMENT_TIER_BITS[r.tier as RefinementTier] ?? 0;
+  }
+  return bits;
+}
+
+function weaponId(value: number | null | undefined): number | null {
+  return typeof value === 'number' && Number.isInteger(value) && value > 0 ? value : null;
+}
+
 export function layerBuild(raw: RawBuild): LayeredBuild {
   const data = new Float32Array(4 * ATTRIBUTE_COUNT);
   const loadout = loadoutTable(raw.loadoutType);
+  let invested = 0;
   ROBOT_ATTRIBUTES.forEach((attr, k) => {
     const base = num(raw.baseAttributes, attr);
     const tuning = num(raw.tuning, attr);
+    invested += base + tuning;
     const refine = refinementBonus(raw.mainRefinements, attr) + refinementBonus(raw.offhandRefinements, attr);
     const stored = raw.effectiveAttributes?.[attr];
     const effective = typeof stored === 'number' && Number.isFinite(stored) ? stored : (base + tuning + refine) * (1 + loadout[k]);
@@ -107,7 +137,16 @@ export function layerBuild(raw: RawBuild): LayeredBuild {
     data[LAYER_OFFSET.catalog + k] = round2(effective / (1 + loadout[k]) - base - tuning - refine);
     data[LAYER_OFFSET.refinements + k] = refine;
   });
-  return { data, loadout, stance: combatStance(raw.stance) };
+  return {
+    data,
+    loadout,
+    stance: combatStance(raw.stance),
+    loadoutType: raw.loadoutType,
+    mainWeaponId: weaponId(raw.mainWeaponId),
+    offhandWeaponId: weaponId(raw.offhandWeaponId),
+    refinementTiers: tierBits(raw.mainRefinements, raw.offhandRefinements),
+    invested,
+  };
 }
 
 /** One additive layer's value for attribute index `k`. */

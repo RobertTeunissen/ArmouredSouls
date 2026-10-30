@@ -39,6 +39,8 @@ export interface AnalysisBattle {
   winningSide: number | null;
   durationSeconds: number;
   participants: AnalysisParticipant[];
+  /** League tier the battle was fought in ('bronze' … 'champion'), 'tournament', or null. */
+  tier?: string | null;
 }
 
 export type ModeColumn = Exclude<AnalysisColumn, 'all'>;
@@ -58,6 +60,8 @@ export interface Appearance {
   column: ModeColumn;
   build: LayeredBuild;
   human: boolean;
+  /** The battle's league tier, 'tournament', or null. */
+  tier: string | null;
 }
 
 export interface SkipCounts {
@@ -181,6 +185,6 @@ export function addBattle(battle: AnalysisBattle, set: ComparisonSet): void {
   if (!used) return;
   set.battles[column]++;
   for (const p of battle.participants) {
-    if (p.build && !p.forfeited) set.appearances.push({ column, build: p.build, human: p.stableType === 'human' });
+    if (p.build && !p.forfeited) set.appearances.push({ column, build: p.build, human: p.stableType === 'human', tier: battle.tier ?? null });
   }
 }

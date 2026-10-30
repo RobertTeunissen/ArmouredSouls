@@ -12,18 +12,18 @@
 import { ROBOT_ATTRIBUTES } from '../../../shared/utils/robotAttributes';
 import {
   ANALYSIS_COLUMNS,
-  ANALYSIS_RANGE_DAYS,
   ATTRIBUTE_GROUPS,
   ATTRIBUTE_GROUP_OF,
   LAYER_KEYS,
   MIN_COMPARISONS,
-  MIN_RECORDING_DAYS,
   type AnalysisColumn,
   type AnalysisRange,
   type AttributeGroup,
   type LayerToggles,
 } from './analysisOptions';
 import { ATTRIBUTE_COUNT } from './attributeLayers';
+import { clearDatasetCache, fresh, getDataset, getReadiness, remember, type CacheEntry, type Dataset } from './analysisDataset';
+import { INVESTMENT_STEP, PP_PER_LOGIT, blockContrast, estimate, round, unitContrast } from './analysisEffects';
 import {
   GROUP_COUNT,
   GROUP_PAIRS,
@@ -37,8 +37,7 @@ import {
   type ModelKind,
   type ProfileKey,
 } from './analysisFeatures';
-import { combinationVariance, evaluate, fitLogistic, type FitResult } from './logisticFit';
-import { countRecordedBattles, getRecordingBounds, loadComparisons, sampleRate } from './analysisData';
+import { evaluate, fitLogistic, type FitResult } from './logisticFit';
 import type { Comparison, ComparisonSet } from './comparisons';
 import type {
   AnalysisColumnSummary,
@@ -55,21 +54,15 @@ import type {
   ProfileResult,
 } from './analysisTypes';
 
-const DAY_MS = 24 * 3600 * 1000;
-const CACHE_TTL_MS = 10 * 60 * 1000;
 const MAX_RESULTS = 32;
-/** Loaded battles are ~70 MB at the comparison cap, so only the last window is kept. */
-const MAX_DATASETS = 1;
 /** Profiles need this many comparisons in a column before a win rate is shown. */
 export const MIN_PROFILE_COMPARISONS = 50;
 /** Comparisons the layer-fit table trains on at most. */
 const LAYER_FIT_TRAIN_CAP = 60_000;
 
-/** Percentage points of win chance per unit of logit at even odds (slope of the logistic at p = 0.5). */
-const PP_PER_LOGIT = 100 / 4;
 export const SHARE_STEP = 0.05;
 export const PAIR_STEP = 0.1;
-export const INVESTMENT_STEP = Math.log(1.1);
+export { INVESTMENT_STEP };
 
 export interface AttributeAnalysisParams {
   range: AnalysisRange;
@@ -78,44 +71,16 @@ export interface AttributeAnalysisParams {
   now?: Date;
 }
 
-interface Dataset {
-  set: ComparisonSet;
-  from: Date | null;
-  battlesInRange: number;
-  battlesUsed: number;
-  sampled: boolean;
-  createdAt: number;
-}
-
-interface CacheEntry<T> {
-  value: T;
-  createdAt: number;
-}
-
-const datasets = new Map<string, Dataset>();
 const results = new Map<string, CacheEntry<AttributeAnalysisResponse>>();
 const layerFits = new Map<string, CacheEntry<LayerFitSummary | null>>();
 const inFlight = new Map<string, Promise<AttributeAnalysisResponse>>();
 
-/** Forget cached results (tests). */
+/** Forget cached results and the loaded window (tests). */
 export function clearAttributeAnalysisCache(): void {
-  datasets.clear();
+  clearDatasetCache();
   results.clear();
   layerFits.clear();
   inFlight.clear();
-}
-
-function remember<K, V>(map: Map<K, V>, key: K, value: V, max: number): void {
-  map.delete(key);
-  map.set(key, value);
-  while (map.size > max) {
-    const oldest = map.keys().next().value as K;
-    map.delete(oldest);
-  }
-}
-
-function fresh(createdAt: number, now: number): boolean {
-  return now - createdAt < CACHE_TTL_MS;
 }
 
 function togglesKey(toggles: LayerToggles): string {
@@ -130,36 +95,6 @@ function mix(id: number): number {
 }
 
 // ── Effects ──────────────────────────────────────────────────────────
-
-const NO_ESTIMATE: EffectEstimate = { effect: null, se: null, significant: false };
-
-function estimate(fit: FitResult | null, contrast: Float64Array, scale: number, enough: boolean): EffectEstimate {
-  if (!fit || !enough) return NO_ESTIMATE;
-  let value = 0;
-  for (let j = 0; j < contrast.length; j++) value += contrast[j] * fit.beta[j];
-  const se = Math.sqrt(combinationVariance(fit.covariance, contrast.length, contrast)) * scale;
-  const effect = value * scale;
-  if (!Number.isFinite(effect) || !Number.isFinite(se)) return NO_ESTIMATE;
-  return { effect: round(effect, 2), se: round(se, 2), significant: Math.abs(effect) >= 2 * se && se > 0 };
-}
-
-function round(value: number, digits: number): number {
-  const f = 10 ** digits;
-  return Math.round(value * f) / f;
-}
-
-/** Contrast "+1 on member k of a block, −1/(n−1) on the others". */
-function blockContrast(d: number, offset: number, size: number, k: number): Float64Array {
-  const c = new Float64Array(d);
-  for (let j = 0; j < size; j++) c[offset + j] = j === k ? 1 : -1 / (size - 1);
-  return c;
-}
-
-function unitContrast(d: number, index: number): Float64Array {
-  const c = new Float64Array(d);
-  c[index] = 1;
-  return c;
-}
 
 interface ColumnFits {
   column: AnalysisColumn;
@@ -264,22 +199,6 @@ async function buildProfiles(comparisons: readonly Comparison[], set: Comparison
 
 // ── Orchestration ────────────────────────────────────────────────────
 
-async function getDataset(range: AnalysisRange, since: Date, newestId: number, now: Date): Promise<Dataset> {
-  const key = `${range}|${newestId}`;
-  const cached = datasets.get(key);
-  if (cached && fresh(cached.createdAt, now.getTime())) return cached;
-  const start = range === 'season' ? null : new Date(now.getTime() - ANALYSIS_RANGE_DAYS[range] * DAY_MS);
-  const from = start && start > since ? start : null;
-  const counts = await countRecordedBattles(from);
-  let battlesInRange = 0;
-  for (const count of counts.values()) battlesInRange += count;
-  const rate = sampleRate(counts);
-  const { set, battlesRead } = await loadComparisons(from, rate);
-  const dataset: Dataset = { set, from, battlesInRange, battlesUsed: battlesRead, sampled: rate < 1, createdAt: now.getTime() };
-  remember(datasets, key, dataset, MAX_DATASETS);
-  return dataset;
-}
-
 async function getLayerFit(range: AnalysisRange, newestId: number, dataset: Dataset, now: number): Promise<LayerFitSummary | null> {
   const key = `${range}|${newestId}`;
   const cached = layerFits.get(key);
@@ -370,24 +289,15 @@ async function compute(params: AttributeAnalysisParams, since: Date, newestId: n
 
 export async function getAttributeAnalysis(params: AttributeAnalysisParams): Promise<AttributeAnalysisResponse> {
   const now = params.now ?? new Date();
-  const bounds = await getRecordingBounds();
-  if (!bounds.since || now.getTime() - bounds.since.getTime() < MIN_RECORDING_DAYS * DAY_MS) {
-    let battlesRecorded = 0;
-    if (bounds.since) for (const count of (await countRecordedBattles(null)).values()) battlesRecorded += count;
-    return {
-      status: 'collecting',
-      recordingSince: bounds.since ? bounds.since.toISOString() : null,
-      availableFrom: bounds.since ? new Date(bounds.since.getTime() + MIN_RECORDING_DAYS * DAY_MS).toISOString() : null,
-      battlesRecorded,
-    };
-  }
-  const since = bounds.since;
-  const key = `${params.range}|${togglesKey(params.toggles)}|${bounds.newestId}`;
+  const readiness = await getReadiness(now);
+  if (!readiness.ready) return readiness.collecting;
+  const { since, newestId } = readiness;
+  const key = `${params.range}|${togglesKey(params.toggles)}|${newestId}`;
   const cached = results.get(key);
   if (cached && fresh(cached.createdAt, now.getTime())) return cached.value;
   const running = inFlight.get(key);
   if (running) return running;
-  const promise = compute(params, since, bounds.newestId, now)
+  const promise = compute(params, since, newestId, now)
     .then((value) => {
       remember(results, key, { value, createdAt: now.getTime() }, MAX_RESULTS);
       return value;
