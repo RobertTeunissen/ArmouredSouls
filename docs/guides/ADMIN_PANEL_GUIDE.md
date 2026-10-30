@@ -289,6 +289,25 @@ Is every tiered league working: does promotion and demotion actually move, and c
 
 **API:** `GET /api/admin/league-health` (admin-only, no parameters): `{ generatedAt, season, thresholds, modes[], attention[] }`, built by `services/admin/league-health/`. `GET /api/admin/league-health/season?mode=&stable=` (mode one of the six tiered modes, default `league_1v1`; stable `all|human|automaton|generated`, default `all`; anything else is 400): `{ mode, stable, window, noteShare, minSample, firstCycle, lastCycle, judgedThroughCycle, cycles[], quietCycles[], totals, boundaries[] }` from `league_history` (~20–45 ms on ACC). Removed with this redesign (this page and the former League History page were their only callers): `GET /api/admin/team-battle-league-health`, `GET /api/admin/tag-team-league-health`, and `GET /api/admin/league-history`, `/league-history/aggregates`, `/league-history/entity/:entityType/:entityId`, `/league-history/yo-yo`. Player-facing league history (robot and team pages) is unchanged. On ACC (Oct 2026) the standings query takes ~0.4 s for 19k rows and the history query ~70 ms.
 
+### Tournaments (`/admin/tournaments`)
+
+Are the three tournaments (1v1, 2v2, 3v3) on schedule, when do they finish, and who wins them this season? Read-only. One tournament per type runs at a time, one round per daily cycle (jobs at 10:00 / 15:00 / 18:00 UTC by default); the table is emptied at season rollover.
+
+**Sections**
+1. **Now** — one card per type: name, "Round 11 of 12 · Semi-finals" with a segmented round bar, participants, start and expected finish (next run of the type's job plus one day per remaining round), the current round's matches done of total and its job time, and first-round byes (the bracket fills up to the next power of two). Links: **Bracket** (player page `/tournaments/:id`) and **Tournament battles** (Battles filtered to the mode, last 30 days). Without a running tournament the card says the job creates the next one once enough entrants are subscribed.
+2. **This season** — one panel per type: completed, average length in days (= rounds), champions who are players, participants per tournament (oldest first, the running one highlighted), champion stables with their titles, and the last five champions (tournament linked to its bracket, stable to the admin player detail). A deleted champion reads "Deleted".
+3. **Balance note** — when one stable holds more than half of a type's titles (with at least 3 completed tournaments), e.g. "Hit Machine won 7 of 8 1v1 and 10 of 12 2v2 tournaments this season". A note, not an action item.
+
+**Status of a running tournament**
+| Status | Rule |
+|---|---|
+| On schedule | a match finished within the last 26 hours (or the tournament started then) and no match of an earlier round is still pending or scheduled |
+| Not advancing | no progress for more than 26 hours (same margin as settlement) — check the run history in Cycle Controls |
+| Matches left behind | matches of an earlier round never finished |
+| Paused | the season is in its preparation phase; no rounds run |
+
+**API:** `GET /api/admin/tournaments/overview` (admin-only, no parameters): `{ generatedAt, seasonPhase, thresholds, types[] }`, built by `services/admin/tournaments/` (two small queries, ~20–30 ms on ACC). Removed with this redesign (the old page was their only caller; rounds and auto-creation run from the scheduler): `GET /api/admin/tournaments`, `/:id`, `/history`, `/eligible-robots`, `POST /api/admin/tournaments/create`, `/:id/execute-round`.
+
 ### Weapons (`/admin/weapons`)
 
 Weapon popularity ranking, type breakdown, total weapons owned.

@@ -198,11 +198,10 @@ jest.mock('../../services/moderation/adminUploadsHandler', () => ({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   handleAdminCleanup: jest.fn((_req: any, res: any) => res.json({ success: true })),
 }));
-jest.mock('../adminTournaments', () => {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { Router } = require('express');
-  return { __esModule: true, default: Router() };
-});
+const mockGetTournamentOverview = jest.fn();
+jest.mock('../../services/admin/tournaments', () => ({
+  getTournamentOverview: (...args: unknown[]) => mockGetTournamentOverview(...args),
+}));
 
 // ---------------------------------------------------------------------------
 // Imports (after mocks)
@@ -674,6 +673,36 @@ describe('Admin API — New Endpoints Integration Tests', () => {
       },
     );
   });
+  // -----------------------------------------------------------------------
+  // GET /api/admin/tournaments/overview
+  // -----------------------------------------------------------------------
+
+  describe('GET /api/admin/tournaments/overview', () => {
+    it('returns the overview', async () => {
+      mockGetTournamentOverview.mockResolvedValue({ generatedAt: 'x', seasonPhase: 'competitive', types: [] });
+      const res = await request(app).get('/api/admin/tournaments/overview');
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty('types');
+    });
+    it('rejects non-admin users', async () => {
+      mockUser = { userId: 2, username: 'player', role: 'user' };
+      const res = await request(app).get('/api/admin/tournaments/overview');
+      expect(res.status).toBe(403);
+      expect(mockGetTournamentOverview).not.toHaveBeenCalled();
+    });
+    it.each([
+      ['get', '/api/admin/tournaments'],
+      ['get', '/api/admin/tournaments/history'],
+      ['get', '/api/admin/tournaments/eligible-robots'],
+      ['get', '/api/admin/tournaments/5'],
+      ['post', '/api/admin/tournaments/create'],
+      ['post', '/api/admin/tournaments/5/execute-round'],
+    ] as const)('no longer serves %s %s', async (method, path) => {
+      const res = await request(app)[method](path);
+      expect(res.status).toBe(404);
+    });
+  });
+
   // -----------------------------------------------------------------------
   // GET /api/admin/weapons/analytics
   // -----------------------------------------------------------------------

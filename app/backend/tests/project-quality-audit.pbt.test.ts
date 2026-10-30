@@ -165,24 +165,6 @@ describe('Bug Condition Exploration — Project Quality Audit', () => {
   });
 
   /**
-   * **Validates: Requirement 1.8**
-   *
-   * Parse adminTournaments.ts and count route registrations for
-   * '/eligible-robots'; assert exactly 1.
-   */
-  test('adminTournaments.ts should have exactly one /eligible-robots route', () => {
-    const routeFile = readRootFile(
-      'app/backend/src/routes/adminTournaments.ts',
-    );
-
-    // Count occurrences of route registration for '/eligible-robots'
-    const routeRegex = /router\.\w+\(\s*['"]\/eligible-robots['"]/g;
-    const matches = routeFile.match(routeRegex) || [];
-
-    expect(matches.length).toBe(1);
-  });
-
-  /**
    * **Validates: Requirement 1.9**
    *
    * Assert dead code files do NOT exist.

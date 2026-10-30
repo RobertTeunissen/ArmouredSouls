@@ -57,3 +57,16 @@ export const LEAGUE_BOUNCE_MIN_SAMPLE = 20;
  * Those rows keep their instance seat and count toward the 10% zone sizes.
  */
 export const LEAGUE_UNSUBSCRIBED_NOTICE_SHARE = 0.05;
+
+/**
+ * Tournaments: a running tournament whose last progress (last finished match,
+ * or its start) is older than this is "not advancing". One round runs per
+ * daily cycle, so 26 h allows the same 2 h margin as settlement.
+ */
+export const TOURNAMENT_STALLED_AFTER_MS = 26 * 60 * 60 * 1000;
+
+/** Tournaments: note a stable that holds more than this share of a type's titles. */
+export const TOURNAMENT_DOMINANCE_SHARE = 0.5;
+
+/** Completed tournaments of a type needed before the dominance note can show. */
+export const TOURNAMENT_DOMINANCE_MIN_COMPLETED = 3;

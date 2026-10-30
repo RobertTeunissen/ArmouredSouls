@@ -2,8 +2,8 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: v1.13
-**Date**: October 15, 2026
+**Version**: v1.14
+**Date**: October 29, 2026
 **Status**: ✅ Implemented & Verified 
 
 **Revision History**:
@@ -22,6 +22,7 @@ v1.10 (Feb 5, 2026): Critical bug fix - Removed non-existent `stableName` field 
 v1.11 (Feb 10, 2026): Consolidated Version
 v1.12 (Sep 1, 2026): Spec #50 — generated tournament byes remain expected Upcoming Matches until current-round processing; resolved byes appear once in Recent Battles; shared all-mode Bye_Card terminology and durable markers documented.\
 v1.13 (Oct 15, 2026): #536 — battle-time forfeits (solo and team), double forfeit advances the higher seed, and the match failure policy including product decision R1 (an errored unfought match is cancelled and the higher seed advances with no rewards). See User Story 2.6.
+v1.14 (Oct 29, 2026): Admin Tournaments page redesigned; admin management endpoints removed (create, execute-round, list, detail, history, eligible-robots) in favour of the scheduler and a read-only `GET /api/admin/tournaments/overview`. See `docs/guides/ADMIN_PANEL_GUIDE.md` §Tournaments.
 
 ---
 
@@ -538,6 +539,8 @@ export async function executeScheduledBattles(
 ### API Endpoints
 
 #### Tournament Management
+
+Superseded in v1.14: the admin create, execute-round, list and detail endpoints below were removed. Tournament rounds and auto-creation run from the scheduler (Cycle Controls can start a tournament job); the admin page reads `GET /api/admin/tournaments/overview`. Kept for history:
 
 ```
 POST   /api/admin/tournaments/create

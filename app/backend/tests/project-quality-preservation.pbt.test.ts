@@ -172,44 +172,6 @@ describe('Preservation — Existing Behavior Unchanged', () => {
   });
 
   /**
-   * **Validates: Requirement 3.5**
-   *
-   * The first /eligible-robots handler at line ~103 in adminTournaments.ts
-   * has the correct ordering comment and response shape.
-   */
-  test('first /eligible-robots handler has correct comment and response shape', () => {
-    const routeFile = readRootFile(
-      'app/backend/src/routes/adminTournaments.ts',
-    );
-
-    // Verify the ordering comment exists (must be before /:id)
-    expect(routeFile).toContain(
-      'Must be defined before /:id to avoid Express matching "eligible-robots" as an :id param',
-    );
-
-    // Find the first handler block for /eligible-robots
-    const handlerMatch = routeFile.match(
-      /router\.get\('\/eligible-robots'[\s\S]*?res\.json\(\{([\s\S]*?)\}\)/,
-    );
-    expect(handlerMatch).not.toBeNull();
-
-    const responseBody = handlerMatch![1];
-
-    // Verify the response shape contains all expected fields
-    const expectedFields = ['success', 'eligibleRobots', 'count', 'timestamp'];
-
-    fc.assert(
-      fc.property(
-        fc.constantFrom(...expectedFields),
-        (field: string) => {
-          expect(responseBody).toContain(field);
-        },
-      ),
-      { numRuns: expectedFields.length },
-    );
-  });
-
-  /**
    * **Validates: Requirement 3.6**
    *
    * ci.yml frontend-tests job contains lint and build steps.

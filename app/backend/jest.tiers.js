@@ -169,6 +169,7 @@ const DB_DEPENDENT = [
   // Admin dashboard redesign — battle activity SQL, tier filter, activity windows, KPI snapshots
   'tests/integration/adminDashboard.test.ts',
   'tests/integration/adminLeagueHealth.test.ts',
+  'tests/integration/adminTournaments.test.ts',
   // Admin Search Analytics redesign — settled searches, selection tracking, phrases, CSV
   'tests/integration/searchAnalyticsSettled.test.ts',
   // Cycle Controls: scheduler run store, missed/interrupted runs, overview.

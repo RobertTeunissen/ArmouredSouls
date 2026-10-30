@@ -8,7 +8,7 @@ const isRemote = !!process.env.PLAYWRIGHT_BASE_URL;
  * project ignores the same list, so a full run never runs them as the
  * seeded player (who is redirected away from /admin).
  */
-const ADMIN_SPECS = /(admin-automatons|automaton-badge|admin-cycle-controls|admin-season-control|admin-practice-arena|admin-battles|admin-attributes|admin-league-health)\.spec\.ts/;
+const ADMIN_SPECS = /(admin-automatons|automaton-badge|admin-cycle-controls|admin-season-control|admin-practice-arena|admin-battles|admin-attributes|admin-league-health|admin-tournaments)\.spec\.ts/;
 
 export default defineConfig({
   testDir: './tests/e2e',
