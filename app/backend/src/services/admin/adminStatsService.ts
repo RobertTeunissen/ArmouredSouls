@@ -5,6 +5,6 @@
  * Split for maintainability (original was 1872 lines).
  */
 
-export { getWeaponStats, getStanceStats, getLoadoutStats, getYieldThresholdStats, mapRobotAttributes, calculateStats, getSystemStats, getAtRiskUsers, getRecentUserActivity, getRepairAuditLog } from './adminSystemStatsService';
-export { getDashboardKpis, classifyChurnRisk, getEngagementPlayers, getEconomyOverview } from './adminDashboardService';
+export { getWeaponStats, getStanceStats, getLoadoutStats, getYieldThresholdStats, mapRobotAttributes, calculateStats, getSystemStats, getRepairAuditLog } from './adminSystemStatsService';
+export { getDashboardKpis } from './adminDashboardService';
 export { getAchievementAnalytics, getTuningAdoption, getRefinementAdoption } from './adminFeatureAnalyticsService';

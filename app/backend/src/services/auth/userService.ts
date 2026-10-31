@@ -76,6 +76,9 @@ export async function createUser(userData: CreateUserData): Promise<User> {
       // Spec #55 I1: registration creates Human_Stables only (isGenerated
       // keeps its schema default, false).
       stableType: stableTypeForCreation(false),
+      // Registration signs the player in, so it counts as their first login:
+      // the Players page and the dormant purge read activity from this.
+      lastLoginAt: new Date(),
     },
   });
 

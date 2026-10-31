@@ -1,5 +1,7 @@
 # At-Risk Users Feature
 
+> **Superseded (Oct 2026, admin redesign part 5).** `GET /api/admin/users/at-risk` and its audit-log balance reconstruction were removed: it listed every stable type while the dashboard counted human stables, and its runway ignored battle income. Low balances are now the Players page **Low balance** segment (`GET /api/admin/players`), with each stable's balance per cycle read from `financial_ledger` in the detail panel. See `docs/guides/ADMIN_PANEL_GUIDE.md` §Players. The text below is the original design.
+
 ## Overview
 This feature allows admins to identify and monitor users who are at risk of bankruptcy, tracking their financial status over time using the audit log system.
 

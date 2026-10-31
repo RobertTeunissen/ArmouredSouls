@@ -684,7 +684,10 @@ describe('Admin Search Analytics route integration', () => {
                 phase: 'competitive',
                 competitiveCyclesCompleted: 0,
                 preparationCyclesCompleted: 0,
-                startedAt: new Date(),
+                // Before every fixture user registered: the searcher is not a
+                // dormant stable, so the rollover does not delete them (and their
+                // search events) before the purge this test makes fail.
+                startedAt: new Date(0),
               },
             });
             await tx.searchAnalyticsEvent.create({

@@ -12,7 +12,7 @@ import type { ReactNode } from 'react';
 import type { ActivateAllOutcome, LibraryStrategy, ProfileListItem } from '../../../utils/automatonAdminApi';
 import { ActionButton, ConfirmDialog, FOCUS_RING, Notice, ToggleChip } from './ui';
 import { errorText } from './requestErrors';
-import { deriveStablesView, strategyOptions, type StableSort, type StablesFilter } from './stablesView';
+import { NEED_ATTENTION_LABELS, deriveStablesView, strategyOptions, type NeedAttentionCode, type StableSort, type StablesFilter } from './stablesView';
 import { StablesToolbar } from './StablesToolbar';
 import { StablesList } from './StablesList';
 
@@ -25,6 +25,9 @@ export interface StablesTabProps {
   strategyFilter: string | null;
   query: string;
   sort: StableSort | null;
+  /** Need_Attention reason filter (with the attention chip). */
+  reason?: NeedAttentionCode | null;
+  onReasonChange?: (reason: NeedAttentionCode | null) => void;
   onFilterChange: (filter: StablesFilter) => void;
   onStrategyChange: (key: string | null) => void;
   onQueryChange: (query: string) => void;
@@ -42,7 +45,7 @@ const CHIPS: readonly { key: StablesFilter; label: string }[] = [
 ];
 
 export function StablesTab({
-  profiles, strategies, filter, strategyFilter, query, sort,
+  profiles, strategies, filter, strategyFilter, query, sort, reason = null, onReasonChange,
   onFilterChange, onStrategyChange, onQueryChange, onSortChange, onClearFilters, onOpenStable, onActivateAll,
 }: StablesTabProps): ReactNode {
   const [confirming, setConfirming] = useState(false);
@@ -50,8 +53,8 @@ export function StablesTab({
   const [result, setResult] = useState<{ tone: 'success' | 'error'; text: string } | null>(null);
 
   const view = useMemo(
-    () => deriveStablesView(profiles, { filter, strategy: strategyFilter, query, sort }),
-    [profiles, filter, strategyFilter, query, sort],
+    () => deriveStablesView(profiles, { filter, strategy: strategyFilter, query, sort, reason }),
+    [profiles, filter, strategyFilter, query, sort, reason],
   );
   const options = useMemo(() => strategyOptions(profiles, strategies), [profiles, strategies]);
   const strategyLabel = options.find((s) => s.key === strategyFilter)?.displayName ?? strategyFilter;
@@ -85,6 +88,11 @@ export function StablesTab({
               {chip.label} · {view.counts[chip.key]}
             </ToggleChip>
           ))}
+          {filter === 'attention' && reason !== null && onReasonChange && (
+            <button type="button" onClick={() => onReasonChange(null)} className={`min-h-11 px-3 rounded-full text-sm bg-surface-elevated text-white ${FOCUS_RING}`}>
+              Reason: {NEED_ATTENTION_LABELS[reason]} <span aria-hidden="true">✕</span><span className="sr-only">, remove</span>
+            </button>
+          )}
           {strategyFilter !== null && (
             <button type="button" onClick={() => onStrategyChange(null)} className={`min-h-11 px-3 rounded-full text-sm bg-surface-elevated text-white ${FOCUS_RING}`}>
               Strategy: {strategyLabel} <span aria-hidden="true">✕</span><span className="sr-only">, remove</span>

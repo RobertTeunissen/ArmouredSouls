@@ -38,10 +38,12 @@ import {
 } from './seasonArchiveService';
 import {
   deleteGeneratedStables,
+  deleteDormantHumanStables,
   resetCompetitiveAndEconomicState,
   purgeHistory,
   reclaimSpace,
 } from './seasonPurgeService';
+import { seasonStartedAt } from './dormantStables';
 import { RolloverTracker, pendingRolloverSummary } from './rolloverProgress';
 import { markFinished, markRunning, recordQueued, updateRunSummary } from '../cycle/schedulerRunStore';
 import { SEASON_ROLLOVER_JOB_NAME, type RolloverRunSummary } from '../../types/schedulerTypes';
@@ -82,6 +84,8 @@ export interface RolloverResult {
   snapshotRows: number;
   accoladeRows: number;
   generatedStablesDeleted: number;
+  /** Human stables without a login all season (archived, then deleted). */
+  dormantStablesDeleted: number;
   totalRowsPurged: number;
   durations: { archiveMs: number; purgeMs: number; postMs: number; totalMs: number };
 }
@@ -264,6 +268,12 @@ export async function executeSeasonRollover(options: RolloverOptions): Promise<R
     await tracker.start('purge', 'Deleting generated stables');
     const purgeStart = Date.now();
     const generatedStablesDeleted = await deleteGeneratedStables((deleted, total) => tracker?.generatedProgress(deleted, total));
+    // Human stables with no login since this season started. They are in the
+    // archive written above; the accounts go so they stop counting as players.
+    const startedAtOfSeason = await seasonStartedAt(completedSeasonNumber);
+    const dormantStablesDeleted = startedAtOfSeason
+      ? await deleteDormantHumanStables(startedAtOfSeason, (deleted, total) => tracker?.dormantProgress(deleted, total))
+      : 0;
     tracker.setDetail('purge', 'Resetting stables');
     const { rowsDeleted: resetRows } = await resetCompetitiveAndEconomicState();
     tracker.setDetail('purge', 'Purging history');
@@ -280,7 +290,7 @@ export async function executeSeasonRollover(options: RolloverOptions): Promise<R
     tracker.setNewSeason(newSeasonNumber);
     await tracker.finish(
       'purge',
-      `${count(generatedStablesDeleted)} generated stables deleted, ${count(totalRowsPurged)} rows purged`,
+      `${count(generatedStablesDeleted)} generated and ${count(dormantStablesDeleted)} dormant human stables deleted, ${count(totalRowsPurged)} rows purged`,
     );
 
     // ── Stage 4: post (all failures non-fatal) ────────────────────────
@@ -355,12 +365,12 @@ export async function executeSeasonRollover(options: RolloverOptions): Promise<R
     logger.info(
       `[season-rollover] Season ${completedSeasonNumber} complete — ` +
       `archived ${archive.stablesArchived} stables / ${archive.robotsArchived} robots, ` +
-      `deleted ${generatedStablesDeleted} generated stables, purged ${totalRowsPurged} rows. ` +
+      `deleted ${generatedStablesDeleted} generated and ${dormantStablesDeleted} dormant human stables, purged ${totalRowsPurged} rows. ` +
       `Durations: archive ${archiveMs}ms, purge ${purgeMs}ms, post ${postMs}ms, total ${totalMs}ms`,
     );
     await notify(
       `✅ Season ${completedSeasonNumber} rollover complete — ${archive.stablesArchived} stables and ` +
-      `${archive.robotsArchived} robots archived, ${generatedStablesDeleted} generated stables deleted, ` +
+      `${archive.robotsArchived} robots archived, ${generatedStablesDeleted} generated and ${dormantStablesDeleted} dormant human stables deleted, ` +
       `${totalRowsPurged} rows purged in ${Math.round(totalMs / 1000)}s. Season ${newSeasonNumber} is now in preparation.`,
     );
 
@@ -372,6 +382,7 @@ export async function executeSeasonRollover(options: RolloverOptions): Promise<R
       snapshotRows: archive.snapshotRows,
       accoladeRows: archive.accoladeRows,
       generatedStablesDeleted,
+      dormantStablesDeleted,
       totalRowsPurged,
       durations: { archiveMs, purgeMs, postMs, totalMs },
     };
@@ -381,6 +392,7 @@ export async function executeSeasonRollover(options: RolloverOptions): Promise<R
       snapshotRows: result.snapshotRows,
       accoladeRows: result.accoladeRows,
       generatedStablesDeleted: result.generatedStablesDeleted,
+      dormantStablesDeleted: result.dormantStablesDeleted,
       totalRowsPurged: result.totalRowsPurged,
       durations: result.durations,
     });

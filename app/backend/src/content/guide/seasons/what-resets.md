@@ -2,7 +2,7 @@
 title: "What Resets and What Survives"
 description: "The exact list of what a season rollover deletes and what it keeps. Read this before your first season boundary."
 order: 2
-lastUpdated: "2026-07-28"
+lastUpdated: "2026-10-30"
 relatedArticles:
   - seasons/what-is-a-season
   - seasons/reading-your-archive
@@ -35,6 +35,12 @@ Everything you built competitively and economically:
 - **Onboarding state** — you will not be walked through the tutorial again, and the achievement for completing it is re-granted at the start of each season
 - **Your uploaded robot images** — see below
 - **Your season archive** — permanently, for every season you have played
+
+All of this survives as long as you log in at least once during the season.
+
+## Accounts with no login all season are removed
+
+If you do not log in at all during a season, your account is removed when that season ends, together with your stable name and image library. You are welcome back at any time; register again and you start the next season like everyone else, with ₡3,000,000. Logging in once is enough to keep your account.
 
 ## Prestige and achievements reset — deliberately
 

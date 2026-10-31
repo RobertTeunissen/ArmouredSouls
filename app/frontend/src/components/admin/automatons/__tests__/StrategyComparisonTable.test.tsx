@@ -28,14 +28,13 @@ describe('StrategyComparisonTable', () => {
       .toHaveTextContent('Only modes a stable has actually played count; tournaments have no tier.');
   });
 
-  it('shows the win rate vs humans with the number of battles', () => {
-    renderTable();
-    expect(cellTexts(mainRow('Swarm'))[6]).toBe('43% · 61–78–3 (n = 142)');
-    expect(cellTexts(mainRow('Paragon'))[6]).toBe('— (n = 0)');
-    // Mobile cards use the short form.
-    expect(screen.getByText('43% (n = 142)')).toBeInTheDocument();
-    expect(screen.getByText(/with the number of battles \(n\); byes, King of the Hill and Grand Melee are not counted\./)).toBeInTheDocument();
+  it('has no win rate vs humans column (dropped: the per-mode block covers every opponent)', () => {
+    render(<StrategyComparisonTable comparison={COMPARISON} error={null} onOpenStrategy={vi.fn()} />);
+    const table = screen.getAllByRole('table')[0];
+    expect(within(table).queryByRole('columnheader', { name: 'Win rate vs humans' })).toBeNull();
+    expect(screen.queryByText(/Win rate vs humans/)).toBeNull();
   });
+
 
   it('opens a strategy from the main table', () => {
     const { onOpenStrategy } = renderTable();

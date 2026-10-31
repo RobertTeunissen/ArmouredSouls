@@ -233,7 +233,7 @@ The removed System Health and Practice Arena sections below are kept for history
 #### 8. **Bankruptcy Monitor Tab** ✅ COMPLETE
 - **Component**: `BankruptcyMonitorTab.tsx` in `components/admin/`
 - Dedicated tab for monitoring users at risk of bankruptcy
-- Fetches from `GET /api/admin/users/at-risk`
+- Fetches from `GET /api/admin/users/at-risk` (superseded Oct 2026: the Players page Low balance segment, `GET /api/admin/players`)
 - **Always renders** — never hidden behind conditional logic:
   - When `totalAtRisk === 0`: shows green "✓ No users at risk of bankruptcy" confirmation with the bankruptcy threshold displayed
   - When users are at risk: shows full detailed list with balance history, runway days, and robot damage info
@@ -326,7 +326,7 @@ Admin_Automaton_Control for Automaton_Stables. Route under the `/admin` `AdminRo
 - Four sections — Stables, Strategies (Strategy_Comparison, Strategy_Library, Strategy_Builder), Editor, Catalogue — with the `TabLayout` pattern (`components/battle-detail/TabLayout.tsx`): tabs at ≥ 1024 px, stacked sections from 320 px to 1023 px, empty sections hidden, active tab kept in `?tab=`.
 - Editor: Stable card with Backstory (1–400 characters, live count) and the `EventOrderList` (9 numbered events, Move up / Move down buttons with accessible names "Move up: {n} {event label}", first up and last down disabled, focus stays on the pressed button); Teams card; `BuildOrderPanel` with editable targets, bounds, Turn_Preview statuses and expandable attribute plans; `BlueprintEditor` per slot (Weapon_Path per hand limited to weapons that fit the loadout, derived range per stage, Refinement_Plan steps with per-weapon errors, image upload); Cycle history; Activate, New stable, Delete draft stable, Export, Save changes.
 - Stables toolbar (`StablesToolbar`, `StablesList`, pure view model `stablesView.ts`): labelled Strategy select ("All strategies" + display names, `?strategy=`), "Search stables" over stable name, catalogue key and franchise (`?q=`, max 100 characters), "Sort by" (Catalogue order + Stable name, Strategy, Robots, Credits, Prestige, Highest tier, Last cycle) with an Ascending/Descending button (`?sort=key:dir`). From 768 px seven column headers sort (`aria-sort`, 44 px header buttons); nulls sort last, ties by catalogue key. For Highest tier the same tier in any mode is a tie ("Gold · Grand Melee" = "Gold · 1v1 League"), broken by catalogue key ascending in both directions. Filter chips (`ToggleChip`, `aria-pressed`) keep the names `{label} · {count}`, the selected chip shows a check mark and a white border (not colour alone), and the counts follow strategy + search. A `role="status"` line "{n} of {m} stables"; empty states "No stables yet." and "No stables match these filters." with Clear filters (removes `filter`, `strategy`, `q`; keeps `sort`). Tier column "Highest tier (any mode)" shows "{Tier} · {mode}" from played standings only.
-- Strategy_Comparison: "Highest current tier" with the honest-tier footnote; win rate vs humans with its sample size ("43% · 61–78–3 (n = 142)", "— (n = 0)"). `StrategyModePerformance` ("Performance by mode") below the table: six `aria-pressed` mode buttons (`ToggleChip`; the selected mode shows a check mark) in a `Mode` group (local state, default 1v1 League); the Comparison / Library view toggle uses the same `ToggleChip`; head-to-head columns Stables played · Robots/Teams played · W–L–D · Win % · Battles (n); King of the Hill / Grand Melee columns Stables played · Robots played · Matches (n) · 1st places · 1st-place rate · Best placement; a visible "Low sample" pill below 5 stables or 20 battles/matches; footnote on mirror matches, byes and the placement rate. Rules: `PRD_AUTOMATON_STABLES.md` "Highest tier and strategy performance".
+- Strategy_Comparison: "Highest current tier" with the honest-tier footnote; the win rate vs humans was removed in admin redesign part 5 (Oct 2026); see ADMIN_PANEL_GUIDE.md §Automatons for the Economy view. `StrategyModePerformance` ("Performance by mode") below the table: six `aria-pressed` mode buttons (`ToggleChip`; the selected mode shows a check mark) in a `Mode` group (local state, default 1v1 League); the Comparison / Library view toggle uses the same `ToggleChip`; head-to-head columns Stables played · Robots/Teams played · W–L–D · Win % · Battles (n); King of the Hill / Grand Melee columns Stables played · Robots played · Matches (n) · 1st places · 1st-place rate · Best placement; a visible "Low sample" pill below 5 stables or 20 battles/matches; footnote on mirror matches, byes and the placement rate. Rules: `PRD_AUTOMATON_STABLES.md` "Highest tier and strategy performance".
 - Inline validation with the server's per-field issues; the approved error texts (for example "Error: too few blueprints") unchanged.
 - No controls to run a turn, delete an active stable, change balances, or edit live robots, teams, subscriptions or weapons.
 
@@ -853,8 +853,9 @@ GET  /api/admin/battles/:id/export       // ?format=text|json: the whole battle 
 // Robot Analytics
 GET  /api/admin/analysis/attributes      // Attributes analysis (what wins)
 
-// Bankruptcy Monitoring
-GET  /api/admin/users/at-risk            // At-risk users for bankruptcy monitor
+// Players (admin redesign part 5; replaced /users/recent and /users/at-risk)
+GET  /api/admin/players                 // Human stables with activity segments and issues
+GET  /api/admin/economy                 // Ledger credit flows per stable type and window
 
 // Security Monitoring
 GET  /api/admin/security/summary         // Security event summary (severity counts, flagged users)

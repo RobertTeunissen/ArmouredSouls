@@ -17,6 +17,8 @@ import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { deleteRobotBattleReferences } from '../robot/robotReferenceCleanup';
 import type { Prisma } from '../../../generated/prisma';
+import { findDormantHumanStableIds, previewDormantHumanStables, seasonStartedAt } from './dormantStables';
+import { getCurrentSeason } from './seasonService';
 
 /** Starting credits granted at the beginning of a Competitive_Phase. */
 export const STARTING_CREDITS = 3_000_000;
@@ -60,10 +62,38 @@ export async function deleteGeneratedStables(
     orderBy: { id: 'asc' },
   });
 
+  const deleted = await deleteStablesInBatches(generated.map((u) => u.id), onProgress);
+  logger.info(`[season-purge] Deleted ${deleted} generated stables`);
+  return deleted;
+}
+
+/**
+ * Delete the dormant human stables of the ending season (no login since it
+ * started; `dormantStables.ts`). Runs in Stage 3 after the archive is written
+ * and verified, so their season is still on record; the accounts go.
+ */
+export async function deleteDormantHumanStables(
+  startedAt: Date,
+  onProgress?: (deleted: number, total: number) => void | Promise<void>,
+): Promise<number> {
+  const ids = await findDormantHumanStableIds(startedAt);
+  const deleted = await deleteStablesInBatches(ids, onProgress);
+  logger.info(`[season-purge] Deleted ${deleted} dormant human stables (no login since ${startedAt.toISOString()})`);
+  return deleted;
+}
+
+/**
+ * Delete stables and every row they own, `GENERATED_DELETE_BATCH` users per
+ * transaction. Returns the number of users deleted.
+ */
+async function deleteStablesInBatches(
+  userIds: readonly number[],
+  onProgress?: (deleted: number, total: number) => void | Promise<void>,
+): Promise<number> {
   let deleted = 0;
-  await onProgress?.(0, generated.length);
-  for (let i = 0; i < generated.length; i += GENERATED_DELETE_BATCH) {
-    const batch = generated.slice(i, i + GENERATED_DELETE_BATCH).map((u) => u.id);
+  await onProgress?.(0, userIds.length);
+  for (let i = 0; i < userIds.length; i += GENERATED_DELETE_BATCH) {
+    const batch = userIds.slice(i, i + GENERATED_DELETE_BATCH);
 
     await prisma.$transaction(
       async (tx) => {
@@ -105,10 +135,8 @@ export async function deleteGeneratedStables(
     // 5s interactive-transaction timeout is too tight. 30s gives ample headroom.
     { timeout: 30_000 },
     );
-    await onProgress?.(deleted, generated.length);
+    await onProgress?.(deleted, userIds.length);
   }
-
-  logger.info(`[season-purge] Deleted ${deleted} generated stables`);
   return deleted;
 }
 
@@ -324,6 +352,12 @@ export interface RolloverPreview {
   rowsToPurge: Record<string, number>;
   imagesRetained: number;
   imagesDeleted: number;
+  /**
+   * Human stables the rollover deletes: no login since the current season
+   * started (`dormantStables.ts`). Archived first, then deleted. `names` holds
+   * at most the first 50.
+   */
+  dormantHumanStables: { count: number; names: string[] };
 }
 
 /** Read-only report of what a rollover would do. Modifies nothing. */
@@ -377,6 +411,10 @@ export async function previewRollover(): Promise<RolloverPreview> {
     prisma.battleParticipantBuild.count(),
   ]);
 
+  const season = await getCurrentSeason();
+  const startedAt = await seasonStartedAt(season.seasonNumber);
+  const dormantHumanStables = startedAt ? await previewDormantHumanStables(startedAt) : { count: 0, names: [] };
+
   const stablesOf = (type: StableType): number => typeStables[STABLE_TYPES.indexOf(type)] ?? 0;
   const robotsOf = (type: StableType): number => typeRobots[STABLE_TYPES.indexOf(type)] ?? 0;
 
@@ -416,5 +454,6 @@ export async function previewRollover(): Promise<RolloverPreview> {
     // Uploaded images are retained, never deleted, by a rollover.
     imagesRetained: robotsWithImages,
     imagesDeleted: 0,
+    dormantHumanStables,
   };
 }

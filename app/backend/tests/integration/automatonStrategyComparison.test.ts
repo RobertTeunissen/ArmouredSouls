@@ -205,7 +205,6 @@ describe('Strategy_Comparison (Spec #55 task 9.7)', () => {
         prestigeAverage: 5,
         bestTier: null, // its only standings row is an unplayed default
         creditsAverage: 70_000,
-        winRate: { wins: 0, losses: 0, draws: 0, total: 0, percentage: null },
       },
       {
         strategyKey: 'swarm',
@@ -216,7 +215,6 @@ describe('Strategy_Comparison (Spec #55 task 9.7)', () => {
         prestigeAverage: 20,
         bestTier: { tier: 'gold', stables: 2 },
         creditsAverage: 100_000,
-        winRate: { wins: 2, losses: 2, draws: 2, total: 6, percentage: 33.3 },
       },
       {
         strategyKey: null,
@@ -227,7 +225,6 @@ describe('Strategy_Comparison (Spec #55 task 9.7)', () => {
         prestigeAverage: 200,
         bestTier: { tier: 'diamond', stables: 1 },
         creditsAverage: 2_000,
-        winRate: null,
       },
     ]);
     expect(comparison.season).toEqual(expect.objectContaining({ seasonNumber: expect.any(Number), cycle: expect.any(Number), lengthCycles: expect.any(Number) }));
@@ -288,16 +285,14 @@ describe('Strategy_Comparison (Spec #55 task 9.7)', () => {
     expect(modeOf(null, 'koth')).toMatchObject({ matches: 0 });
   });
 
-  it('reads battle results from battles and battle_participants, never battle_log (R11.14)', async () => {
+  it('never reads battle_log (R11.14)', async () => {
     const { statements } = await isolatedComparison();
-    expect(statements.some((sql) => sql.includes('battle_participants'))).toBe(true);
     expect(statements.filter((sql) => sql.includes('battle_log'))).toEqual([]);
   });
 
   it('has no reference row when no Human_Stable owns a robot', async () => {
     const { comparison } = await isolatedComparison({ withoutOwnHumans: true });
     expect(comparison.rows.map((row) => row.strategyKey)).toEqual(['paragon', 'swarm']);
-    expect(comparison.rows.find((row) => row.strategyKey === 'swarm')?.winRate).toEqual({ wins: 0, losses: 0, draws: 0, total: 0, percentage: null });
   });
 
   it('caches the result for 60 seconds', async () => {

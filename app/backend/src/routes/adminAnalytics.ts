@@ -16,8 +16,6 @@ import type { UserFilterType } from '../utils/buildUserFilter';
 import {
   getSystemStats,
   getDashboardKpis,
-  getEngagementPlayers,
-  getEconomyOverview,
   getAchievementAnalytics,
   getTuningAdoption,
   getRefinementAdoption,
@@ -28,6 +26,7 @@ import {
   LEAGUE_SEASON_STABLE_FILTERS,
 } from '../services/admin/league-health';
 import { TIERED_LEAGUE_MODES } from '../services/league/league-rules';
+import { ECONOMY_STABLE_SCOPES, ECONOMY_WINDOWS, getEconomyOverview } from '../services/admin/adminEconomyService';
 import { getDashboardStatus } from '../services/admin/adminDashboardStatusService';
 import { getBattleActivity } from '../services/admin/adminBattleActivityService';
 import {
@@ -65,10 +64,10 @@ const dashboardBattleActivityQuerySchema = z.object({
   fresh: z.enum(['true', 'false']).optional().default('false'),
 });
 
-const engagementPlayersQuerySchema = z.object({
-  filter: z.enum(USER_FILTER_TYPES).optional().default('real'),
-  page: z.coerce.number().int().positive().optional().default(1),
-  limit: z.coerce.number().int().positive().max(100).optional().default(50),
+const economyQuerySchema = z.object({
+  stables: z.enum(ECONOMY_STABLE_SCOPES).optional().default('players'),
+  window: z.enum(ECONOMY_WINDOWS).optional().default('7'),
+  fresh: z.enum(['true', 'false']).optional(),
 });
 
 const achievementAnalyticsQuerySchema = z.object({
@@ -188,29 +187,14 @@ router.get('/dashboard/battle-activity', authenticateToken, requireAdmin, valida
 });
 
 /**
- * GET /api/admin/engagement/players
- * Get player engagement data with churn risk classification.
+ * GET /api/admin/economy
+ * Credit flows (sources and sinks from the ledger), earned vs spent per
+ * cycle, balance bands and the per-stable-type table (Economy page).
  */
-router.get('/engagement/players', authenticateToken, requireAdmin, validateRequest({ query: engagementPlayersQuerySchema }), async (req: Request, res: Response) => {
-  const filter = (req.query.filter as UserFilterType) || 'real';
-  const page = parseInt(req.query.page as string) || 1;
-  const limit = Math.min(parseInt(req.query.limit as string) || 50, 100);
-  const userFilter = buildUserFilter(filter);
-  const result = await getEngagementPlayers(userFilter, page, limit);
-  res.json(result);
+router.get('/economy', authenticateToken, requireAdmin, validateRequest({ query: economyQuerySchema }), async (req: Request, res: Response) => {
+  const query = req.query as unknown as z.infer<typeof economyQuerySchema>;
+  res.json(await getEconomyOverview(query.stables, query.window, { fresh: query.fresh === 'true' }));
 });
-
-/**
- * GET /api/admin/economy/overview
- * Get economy overview metrics.
- */
-router.get('/economy/overview', authenticateToken, requireAdmin, validateRequest({ query: dashboardKpisQuerySchema }), async (req: Request, res: Response) => {
-  const filter = (req.query.filter as UserFilterType) || 'real';
-  const userFilter = buildUserFilter(filter);
-  const result = await getEconomyOverview(userFilter);
-  res.json(result);
-});
-
 /**
  * GET /api/admin/league-health
  * Every tiered league (1v1, 2v2, 3v3, Tag Team, KotH, Grand Melee): tiers,

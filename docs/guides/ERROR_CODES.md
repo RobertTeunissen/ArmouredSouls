@@ -55,6 +55,7 @@ Example with details:
 | `INVALID_TOKEN` | 401 | JWT token is malformed or invalid |
 | `TOKEN_EXPIRED` | 401 | JWT token has expired |
 | `USER_NOT_FOUND` | 404 | User does not exist |
+| `PASSWORD_RESET_NOT_ALLOWED` | 400 | Admin password reset for a generated stable, which has no player (`adminPlayersService.ts`); Automaton accounts answer `AUTOMATON_ACCOUNT_LOCKED` |
 | `USER_ALREADY_EXISTS` | 409 | Username is already taken |
 | `EMAIL_ALREADY_EXISTS` | 409 | Email is already registered |
 | `UNAUTHORIZED` | 401 | Authentication required |

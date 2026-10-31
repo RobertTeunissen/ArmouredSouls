@@ -274,6 +274,8 @@ export interface RolloverPreview {
   rowsToPurge: Record<string, number>;
   imagesRetained: number;
   imagesDeleted: number;
+  /** Human stables with no login this season: archived, then deleted (first 50 names). */
+  dormantHumanStables: { count: number; names: string[] };
 }
 
 /** One rollover attempt in the history (a run, or a legacy audit row). */
@@ -325,6 +327,8 @@ export interface RolloverResult {
   snapshotRows: number;
   accoladeRows: number;
   generatedStablesDeleted: number;
+  /** Absent on rollovers before the dormant purge existed. */
+  dormantStablesDeleted?: number;
   totalRowsPurged: number;
   durations: { archiveMs: number; purgeMs: number; postMs: number; totalMs: number };
 }

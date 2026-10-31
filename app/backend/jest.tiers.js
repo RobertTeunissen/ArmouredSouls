@@ -113,6 +113,10 @@ const HEAVY_TESTS = [
 const DB_DEPENDENT = [
   // Spec #55 — Automaton Stables
   'tests/integration/automatonAccess.test.ts',
+  // Admin redesign part 5 — dormant purge, Players, Economy, Automaton economy
+  'tests/integration/dormantStablesPurge.test.ts',
+  'tests/integration/adminPlayersEconomy.test.ts',
+  'tests/integration/automatonStrategyEconomy.test.ts',
   'tests/integration/automatonPublicExposure.test.ts',
   'tests/integration/automatonRarity.test.ts',
   'tests/integration/automatonStableTypeMigration.test.ts',

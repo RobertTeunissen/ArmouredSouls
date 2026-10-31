@@ -54,12 +54,8 @@ jest.mock('../../src/services/admin/adminAuditLogService', () => ({
 jest.mock('../../src/services/admin/adminStatsService', () => ({
   __esModule: true,
   getSystemStats: jest.fn(),
-  getAtRiskUsers: jest.fn(),
-  getRecentUserActivity: jest.fn(),
   getRepairAuditLog: jest.fn(),
   getDashboardKpis: jest.fn(),
-  getEngagementPlayers: jest.fn(),
-  getEconomyOverview: jest.fn(),
   getAchievementAnalytics: jest.fn(),
   getTuningAdoption: jest.fn(),
   getRefinementAdoption: jest.fn(),

@@ -25,10 +25,12 @@ jest.mock('../seasonArchiveService', () => ({
 jest.mock('../seasonPurgeService', () => ({
   __esModule: true,
   deleteGeneratedStables: jest.fn(),
+  deleteDormantHumanStables: jest.fn(),
   resetCompetitiveAndEconomicState: jest.fn(),
   purgeHistory: jest.fn(),
   reclaimSpace: jest.fn(),
 }));
+jest.mock('../dormantStables', () => ({ __esModule: true, seasonStartedAt: jest.fn() }));
 jest.mock('../../cycle/schedulerRunStore', () => ({
   __esModule: true,
   recordQueued: jest.fn(),
@@ -43,7 +45,8 @@ jest.mock('../../automaton', () => ({ __esModule: true, runTurnStepNonFatal: jes
 
 import { getCurrentSeason, completeSeasonAndOpenNext } from '../seasonService';
 import { writeSeasonArchive, verifyArchive, hasCompleteArchive } from '../seasonArchiveService';
-import { deleteGeneratedStables, resetCompetitiveAndEconomicState, purgeHistory, reclaimSpace } from '../seasonPurgeService';
+import { seasonStartedAt } from '../dormantStables';
+import { deleteGeneratedStables, deleteDormantHumanStables, resetCompetitiveAndEconomicState, purgeHistory, reclaimSpace } from '../seasonPurgeService';
 import { markFinished, markRunning, recordQueued, updateRunSummary } from '../../cycle/schedulerRunStore';
 import { executeSeasonRollover, getActiveRolloverProgress, isRolloverInProgress } from '../seasonRolloverService';
 import type { RolloverRunSummary, SchedulerRunSummary } from '../../../types/schedulerTypes';
@@ -70,6 +73,11 @@ beforeEach(() => {
     await onProgress?.(120, 120);
     return 120;
   });
+  mocked(seasonStartedAt).mockResolvedValue(new Date('2026-08-01T00:00:00Z'));
+  mocked(deleteDormantHumanStables).mockImplementation(async (_startedAt, onProgress) => {
+    await onProgress?.(7, 7);
+    return 7;
+  });
   mocked(resetCompetitiveAndEconomicState).mockResolvedValue({ rowsDeleted: { robots: 900 }, humanStablesReset: 81 });
   mocked(purgeHistory).mockResolvedValue({ battles: 1000 });
   mocked(reclaimSpace).mockResolvedValue(true);
@@ -91,10 +99,11 @@ describe('executeSeasonRollover run recording', () => {
     expect(mocked(markFinished).mock.calls.at(-1)?.[1]).toMatchObject({ status: 'success' });
     const summary = finishedSummary();
     expect(summary.stages.map((stage) => stage.status)).toEqual(['done', 'done', 'done', 'done', 'done']);
-    expect(summary.stages[2].detail).toBe('120 generated stables deleted, 1,900 rows purged');
+    expect(summary.stages[2].detail).toBe('120 generated and 7 dormant human stables deleted, 1,900 rows purged');
     expect(summary.newSeasonNumber).toBe(2);
     expect(summary.generatedStables).toEqual({ deleted: 120, total: 120 });
-    expect(summary.result).toMatchObject({ stablesArchived: 81, robotsArchived: 809, generatedStablesDeleted: 120, totalRowsPurged: 1900 });
+    expect(summary.result).toMatchObject({ stablesArchived: 81, robotsArchived: 809, generatedStablesDeleted: 120, dormantStablesDeleted: 7, totalRowsPurged: 1900 });
+    expect(deleteDormantHumanStables).toHaveBeenCalledWith(new Date('2026-08-01T00:00:00Z'), expect.any(Function));
     expect(result.totalRowsPurged).toBe(1900);
     // Progress was written while it ran, and is visible in memory only while it runs.
     expect(updateRunSummary).toHaveBeenCalledWith(77, expect.objectContaining({ rollover: expect.any(Object) }));

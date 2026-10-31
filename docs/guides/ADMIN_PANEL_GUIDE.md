@@ -155,7 +155,7 @@ Answers: where is the season, when does it roll over, what would a rollover do, 
 Sections, top to bottom:
 
 1. **Season timeline** — season number and phase; cycle (or preparation day) of the length with a progress bar; estimated dates; the configuration (season length, marked "extended" after an Extend, preparation length, countdown, accolade depth, images kept per stable). Competitive: player countdown start, rollover, next season's competitive start. Preparation: competitive start, rollover, balance-change window. Season 0 explains that only a manual rollover closes it.
-2. **Season rollover** — what it does, **Preview rollover** (on demand) and **Roll over Season N…**. The preview splits stables by type: human players and Automatons (archived, then reset) and generated stables (deleted; results stay in the archive), lists retained images, and groups the rows it empties into Battles and summaries / Ledger, audit and snapshots / Standings, tournaments and other, each expanding to per-table counts. While a rollover is queued or running (either trigger) the card shows who or what started it, the elapsed time and the five stages live: Archive, Verify, Purge and reset (with a generated-stables bar), Clean up, Automaton turns.
+2. **Season rollover** — what it does, **Preview rollover** (on demand) and **Roll over Season N…**. The preview splits stables by type: human players and Automatons (archived, then reset) and generated stables (deleted; results stay in the archive), lists the **dormant human stables** it deletes (no login since the season started; archived first, never admins, with the first 50 names), lists retained images, and groups the rows it empties into Battles and summaries / Ledger, audit and snapshots / Standings, tournaments and other, each expanding to per-table counts. While a rollover is queued or running (either trigger) the card shows who or what started it, the elapsed time and the five stages live: Archive, Verify, Purge and reset (with a generated-stables bar), Clean up, Automaton turns.
 3. **Rollover history** — every completed season (dates, cycles, stables archived, generated count) with the rollover that closed it: when, Admin · name or Settlement, duration, what it archived, deleted and emptied, and Details (stage durations). Failed and interrupted attempts fold under the season they tried to close, with the stage they stopped at. Failed attempts on the current season come first.
 4. **Testing tools** (collapsed) — Extend the season (1–365 cycles; shows "100 → 105 cycles · rollover moves to ~15 Nov" before confirming) and Remaining preparation cycles (0 to the configured preparation length, only during a preparation phase).
 
@@ -173,59 +173,46 @@ Sections, top to bottom:
 
 ### Players (`/admin/players`)
 
-Unified player management page combining player listing, engagement monitoring, and at-risk detection.
+Answers: who plays, who dropped off, and who needs help. Human stables only in the list; any stable in the search.
 
-**Tabs** (via `AdminFilterBar` pills):
-- **New Players** — Real (non-test, non-auto) players from recent cycles
-- **Auto-Generated** — Bot accounts created by the bulk cycle runner
-- **At-Risk** — Users near bankruptcy threshold (₡10,000)
+1. **Find any stable**: a player, Automaton or generated stable by `#id`, username, email, stable name or robot name (one query, at most 10 results, each tagged Player / Automaton / Generated). A result opens the detail panel.
+2. **Segment cards**: Active (last activity within 3 days), Inactive (older, but this season) and Dormant (no activity since the current season started; the rollover deletes these) add up to every human stable; Stuck in onboarding and Low balance (below ₡10,000, the dashboard's bankruptcy threshold) are issue filters. Activity is the last login, or the registration for an account that never logged in; registration sets the first login. A card filters the list (`?segment=`), pressing it again clears it. The dashboard's bankruptcy item links to `?segment=low-balance`; the old `?tab=at-risk` link opens the same.
+3. **Human stables**: stable, robots, battles this season (each battle once per stable: summed robot counters minus the shared-side overlap), win %, balance, last login, joined and issues (Stuck in onboarding, No robots, No weapons equipped, No battle-ready robots, No battles yet, Low balance). Search this list (`?q=`), sortable headers (`?sort=key:dir`, default last login, newest first), 25 per page (`?page=`). Below 768 px the rows are cards.
 
-**Controls:**
-- Cycle range dropdown (5 / 10 / 25 / 50 / 100 / All)
-- Churn risk filter dropdown (All / High / Medium / Low) — client-side filter on the loaded data
+**Detail panel** (`?user=<id>`, also from Search Analytics, Practice Arena and Tournaments; the same content wherever it opens): stable type and segment, balance, last login, onboarding, battles this season with win %; **Balance, last 10 cycles** from the financial ledger (balance after each cycle, with the low-balance line, and what it earned, paid in running costs and bought); issues; robots (link to `/robots/:id`, ELO, HP, weapons, loadout, stance, W/L/D, 1v1 League / King of the Hill / Grand Melee tier from `standings`, subscriptions); teams with their 2v2 / 3v3 / Tag Team tiers; facilities; links to the stable's battles, its stable page and, for an Automaton, its Editor. **Password reset** shows for player accounts only (signs the player out everywhere and is logged); the server refuses generated stables (`PASSWORD_RESET_NOT_ALLOWED`) and Automatons (`AUTOMATON_ACCOUNT_LOCKED`).
 
-**Table columns:** Player name, Balance, Robots, Battles, Win %, Last Login, Churn Risk, Issues count
-
-Stable-level Battles and Win % (this table, the detail summary, and `GET /api/admin/engagement/players`) count each battle once per stable, as on the player dashboard: summed robot counters minus the shared-side overlap (`services/auth/stable-battle-overlap.ts`, one batch query per list). Per-robot figures in the detail slide-over are the robot's own counters. Churn risk still reads the summed robot counters as its activity signal.
-
-**List size:** `GET /api/admin/users/recent` lists at most the 500 newest users in range (`RECENT_USER_ACTIVITY_LIMIT`), also on "All" or when no cycle cutoff exists. Generated stables grow to thousands, and every listed user's robots and shared-side overlap are loaded per request. `totalUsers` (the Real Players / Auto-Generated card) still counts every user in range. When the list is capped the page says "Listing the N newest of M …"; sorting, the churn filter and the With Issues count then cover the listed users.
-
-**Search:** Username, stable name, or robot name search across all users
-
-**Detail slide-over** (click any row):
-- Basic info: ID, username, stable, balance, role, join date, onboarding status, last login, churn risk
-- Summary stats: robots, battle ready, win rate, facilities
-- Issues list (if any)
-- Robot details with HP, battle readiness badge, stance, win rate
-- Facility list
-- Password reset form
-
-**API:** `GET /api/admin/users/recent?cycles=N&filter=real|auto|automaton|all`, `GET /api/admin/users/at-risk`, `GET /api/admin/users/search?q=...`, `GET /api/admin/users/:id`, `POST /api/admin/users/:id/reset-password`
-
-A password reset on an Automaton account is refused with `AUTOMATON_ACCOUNT_LOCKED` (409): Automaton accounts cannot log in.
+**API:** `GET /api/admin/players`, `GET /api/admin/users/search?q=...`, `GET /api/admin/users/:id`, `POST /api/admin/users/:id/reset-password`.
 
 ### Automatons (`/admin/automatons`, Spec #55)
 
 Manages Automaton_Stables on any environment. Title "Automaton Stables"; NAV entry "Automatons" under Player Management. Operator procedures (activation, Turn_Step knobs, incidents, export and strategy workflow) are in [AUTOMATON_OPERATIONS_GUIDE.md](AUTOMATON_OPERATIONS_GUIDE.md); product rules in [PRD_AUTOMATON_STABLES.md](../game-systems/PRD_AUTOMATON_STABLES.md).
 
-**Status_Bar** (above every section): Program_Switch with confirmation, last Turn_Step (`Cycle {n}` / `Prep {n}` / `Season start`, time, stables processed, duration), failed-last-cycle count and Needs attention count; both counts link to the Stables section filtered on Needs attention.
+**Status_Bar** (above every section): Program_Switch with confirmation, last Turn_Step (`Cycle {n}` / `Prep {n}` / `Season start`, time, stables processed, duration), failed-last-cycle count and Needs attention count with one chip per reason (Balance negative, Last cycle failed, Nothing bought 14+ cycles; a stable can have several). The counts and chips open the Stables section filtered on Needs attention, a chip on that reason (`?reason=`, shown as a removable "Reason: ..." chip).
 
 **Sections** (`TabLayout`: tabs at ≥ 1024 px, stacked sections below; the active tab is kept in `?tab=`):
 
 - **Stables** — list with status, strategy, robots, credits, prestige, highest tier, last cycle and Needs attention reason. Filter chips All · Active · Draft · Needs attention (`?filter=`); the selected chip shows a check mark. Toolbar: a **Strategy** dropdown (`?strategy=`; also shown as a removable "Strategy: {name}" chip), **Search stables** over stable name, catalogue key and franchise (`?q=`), and **Sort by** (Catalogue order, Stable name, Strategy, Robots, Credits, Prestige, Highest tier, Last cycle) with an Ascending/Descending button (`?sort=key:dir`, e.g. `sort=credits:desc`). From 768 px the column headers sort too; below that the Sort by control is the only sort. Empty values (drafts, never played, no turn) always sort last. Sorting by Highest tier compares the tier only: stables with the same tier in different modes (e.g. "Gold · Grand Melee" and "Gold · 1v1 League") are a tie and stay in catalogue key order (A→Z) in both directions. Chip counts follow the strategy and search, a status line shows "{n} of {m} stables", and **Clear filters** removes status, strategy and search (the sort stays). **Highest tier (any mode)** is the highest league tier one of the stable's robots or teams holds right now (not its peak), with its mode, e.g. "Gold · 3v3 League"; only modes the stable has actually played count, and "—" means never played. **Activate all drafts** with confirmation (prefer activating in batches; see the operations guide).
-- **Strategies** — the **Strategy_Comparison** for the current season (stables, robots average/target, prestige, **highest current tier** with the number of stables at it, credits, **win rate vs humans** with the number of battles, e.g. "43% · 61–78–3 (n = 142)"; a human reference row when humans own robots). Below it, **Performance by mode**: pick one of the six tiered modes (1v1 League, 2v2 League, 3v3 League, Tag Team, King of the Hill, Grand Melee; default 1v1 League); the selected mode shows a check mark. Head-to-head modes show Stables played ("{played} / {stables}"), Robots or Teams played, W–L–D, Win % and Battles (n); King of the Hill and Grand Melee show Stables played, Robots played, Matches (n), 1st places, 1st-place rate and Best placement, because those modes record no losses. A row with fewer than 5 stables or fewer than 20 battles/matches gets a **Low sample** pill. The numbers include Automaton-vs-Automaton battles and mirror matches between stables of the same strategy (which pull the win % toward 50%), and byes count as wins. Then the **Strategy_Library** (strategies, versions, stables per version, **Upgrade** with dry run and confirmation, **New version**, **New strategy**) and the **Strategy_Builder** (numbered Goal list with move up/down, defaults and bounds, inline rule errors, draft preview on a stable and on a fresh stable, **Save draft**, **Export strategy file**).
-- **Editor** — stable picker, **New stable**, **Delete draft stable** (drafts only), **Export**, **Save changes**. Cards: Stable (name, franchise, backstory, strategy, Event_Order with move buttons), Teams (Team_Rule teams with names and Formed / Waits for robot {n}), Build order (numbered Goals with editable targets and Turn_Preview statuses, **Preview next cycle**, per-robot attribute plan), blueprints (`BlueprintEditor`: loadout, stance, yield, Build_Focus, Weapon_Path per hand, Refinement_Plan, **Upload image**, **Add blueprint**, **Delete blueprint**), Cycle history (Turn_Records), **Activate** with confirmation.
-- **Catalogue** — last Catalogue_Sync summary (added, present, images filled, conflicts), **Export this stable** / **Export all**.
+- **Strategies** — the **Strategy_Comparison** for the current season (stables, robots average/target, prestige, **highest current tier** with the number of stables at it, credits; a human reference row when humans own robots). The win rate against human stables was dropped: with few human stables its sample was tiny, and Performance by mode covers every opponent. Below it, **Performance by mode**: pick one of the six tiered modes (1v1 League, 2v2 League, 3v3 League, Tag Team, King of the Hill, Grand Melee; default 1v1 League); the selected mode shows a check mark. Head-to-head modes show Stables played ("{played} / {stables}"), Robots or Teams played, W–L–D, Win % and Battles (n); King of the Hill and Grand Melee show Stables played, Robots played, Matches (n), 1st places, 1st-place rate and Best placement, because those modes record no losses. A row with fewer than 5 stables or fewer than 20 battles/matches gets a **Low sample** pill. The numbers include Automaton-vs-Automaton battles and mirror matches between stables of the same strategy (which pull the win % toward 50%), and byes count as wins. **Economy** (`?view=economy`): per strategy the stables in deficit (balance below ₡0, count and share), median balance, earned and running costs (repairs + operating costs) per stable per cycle over the last 7 closed cycles, divided by the cycles each stable has ledger rows in, and the Goal most stables' latest completed turn ended saving on. Chips per activation day compare a later batch with the first. Red: 30% or more in deficit, or running costs above earnings. Then the **Strategy_Library** (strategies, versions, stables per version, **Upgrade** with dry run and confirmation, **New version**, **New strategy**) and the **Strategy_Builder** (numbered Goal list with move up/down, defaults and bounds, inline rule errors, draft preview on a stable and on a fresh stable, **Save draft**, **Export strategy file**).
+- **Editor** — searchable stable picker (type a name, catalogue key or franchise; ArrowUp/ArrowDown, Enter, Escape), **New stable**, **Delete draft stable** (drafts only), **Export**, **Save changes**. Cards: Stable (name, franchise, backstory, strategy, Event_Order with move buttons), Teams (Team_Rule teams with names and Formed / Waits for robot {n}), Build order (numbered Goals with editable targets and Turn_Preview statuses, **Preview next cycle**, per-robot attribute plan), blueprints (`BlueprintEditor`: loadout, stance, yield, Build_Focus, Weapon_Path per hand, Refinement_Plan, **Upload image**, **Add blueprint**, **Delete blueprint**), **Cashflow · last 10 cycles** (earned, running costs and purchases per cycle from the ledger, with the balance it ended on), Cycle history (Turn_Records), **Activate** with confirmation.
+- **Catalogue** — last Catalogue_Sync summary (added, present, images filled, conflicts), **Export this stable** (searchable picker) / **Export all**.
 
 There are no controls to run a turn, delete an active stable, change a balance or edit live robots, teams, subscriptions or weapons. Every mutation is written to the admin audit log as `automaton.*`.
 
-**API:** `/api/admin/automatons` — `GET /status`, `GET /strategies`, `GET /strategies/comparison`, `POST /strategies/:key/upgrade`, `GET|POST /strategy-drafts`, `GET|PUT|DELETE /strategy-drafts/:id`, `POST /strategy-drafts/:id/preview`, `GET /strategy-drafts/:id/export`, `GET|PUT /program`, `GET /export`, `GET /catalogue/sync-status`, `POST /activate-drafts`, `GET|POST /`, `GET|PATCH|DELETE /:key`, `PUT /:key/strategy`, `POST /:key/blueprints`, `PATCH|DELETE /:key/blueprints/:slot`, `POST /:key/blueprints/:slot/image`, `POST /:key/activate`, `GET /:key/preview`, `GET /:key/turns`. Error codes: [ERROR_CODES.md](ERROR_CODES.md) "Automaton Errors".
+**API:** `/api/admin/automatons` — `GET /status`, `GET /strategies`, `GET /strategies/comparison`, `GET /strategies/economy?activated=YYYY-MM-DD`, `POST /strategies/:key/upgrade`, `GET|POST /strategy-drafts`, `GET|PUT|DELETE /strategy-drafts/:id`, `POST /strategy-drafts/:id/preview`, `GET /strategy-drafts/:id/export`, `GET|PUT /program`, `GET /export`, `GET /catalogue/sync-status`, `POST /activate-drafts`, `GET|POST /`, `GET|PATCH|DELETE /:key`, `PUT /:key/strategy`, `POST /:key/blueprints`, `PATCH|DELETE /:key/blueprints/:slot`, `POST /:key/blueprints/:slot/image`, `POST /:key/activate`, `GET /:key/preview`, `GET /:key/cashflow`, `GET /:key/turns`. The list (`GET /`) serves up to 1,000 profiles per request, so the page loads every stable at once. Error codes: [ERROR_CODES.md](ERROR_CODES.md) "Automaton Errors".
 
 ### Economy (`/admin/economy`)
 
-Credit circulation, average/median balance, bankruptcy risk count, and facility adoption table.
+Answers: where credits come from, where they go, and where they pile up. Toolbar: **Stables** Players (default) / Automatons / Generated / All (`?stables=`) and **Window** 7 (default) / 14 / 30 closed cycles or the season (`?window=`); the cycle in progress is left out. A scope line names both.
 
-**API:** `GET /api/admin/economy/overview`
+- **KPIs**: earned, spent and net in the window (with per-cycle averages: total ÷ cycles), repairs as a share of battle income, and what the stables hold now with the median balance.
+- **Where credits come from / go**: `financial_ledger` by transaction type: battle income (all modes, participation pay included), streaming, merchandising, achievements, weapon sales; attribute upgrades, facility upgrades, repairs, weapon refinement, operating costs, weapons + robots. Legacy types show as Other.
+- **Per cycle**: earned vs spent for at least the last 15 closed cycles.
+- **Balances**: stables per balance band now (below ₡0 up to ₡10M+).
+- **All stable types**: count, earned, spent, net and held for players, Automatons and generated stables side by side in the same window.
+
+Players means the dashboard's Real players filter; Automatons and generated stables by stable type. The ledger holds the current season only. Facility adoption is on Meta, low balances on Players. Cached 60 s; Refresh bypasses the cache.
+
+**API:** `GET /api/admin/economy?stables=players|automatons|generated|all&window=7|14|30|season&fresh=true`
 
 ### Battles (`/admin/battles`)
 
@@ -469,39 +456,17 @@ Which attributes, attribute groups and build profiles win battles, to plan how t
 
 **API:** `GET /api/admin/analysis/attributes?range=7d|14d|30d|season&tuning=&weapons=&refinements=&loadout=&stance=` (layer flags `true`/`false`, default `true`). Admin-only, read-only. Answers `{ status: 'collecting', recordingSince, availableFrom, battlesRecorded }` or the full analysis with `status: 'ready'`.
 
-## Churn Risk Classification
+## Player Activity Segments
 
-The Players page includes a churn risk indicator for each user, combining login recency with battle engagement to flag players who may be leaving the game.
+The Players page and the dashboard read one activity rule (`adminThresholds.ts`): a player's activity is their last login, or their registration when they never logged in (registration counts as the first login). JWTs expire after 24 h without refresh, so the last login is at most a day stale.
 
-### Risk Levels
+| Segment | Rule |
+|---------|------|
+| **Active** | Activity within the last 3 days (`INACTIVE_PLAYER_AFTER_MS`) |
+| **Inactive** | Activity older than 3 days, but on or after the current season's start |
+| **Dormant** | No activity since the current season started; the season rollover deletes these stables (see [PRD_SEASON_SYSTEM.md](../game-systems/PRD_SEASON_SYSTEM.md)) |
 
-| Level | Criteria | Meaning |
-|-------|----------|---------|
-| **High** | Last login > 14 days ago, OR no battles and last login > 3 days ago | Player is likely gone or never engaged |
-| **Medium** | Last login > 7 days ago, OR fewer than 5 total battles | Player is disengaging or hasn't found their footing |
-| **Low** | Recent login and 5+ battles | Player is active and engaged |
-
-### How It Works
-
-The `classifyChurnRisk` function in `adminStatsService.ts` evaluates two signals:
-
-1. **Login recency** — days since `lastLoginAt` (falls back to `createdAt` if the user never logged in after account creation)
-2. **Battle activity** — total battles across all of the user's robots
-
-These two signals catch different churn patterns:
-- A veteran player who stops logging in (high battles, stale login)
-- A new player who registered but never engaged (zero battles, stale login)
-- A player who logs in but doesn't play (recent login, low battles)
-
-### Filtering by Churn Risk
-
-The Players page provides a churn risk filter dropdown alongside the cycle range selector. Options: All / High / Medium / Low. The filter is applied client-side on the already-fetched user list, so switching between risk levels is instant.
-
-### Data Source
-
-Churn risk is computed per-user in the `GET /api/admin/users/recent` endpoint response. Each user object includes:
-- `lastLoginAt` — ISO timestamp of last login, or `null` if never logged in after registration
-- `churnRisk` — `'low'` | `'medium'` | `'high'`
+The three add up to every human stable. The old churn-risk classification (High / Medium / Low with a 5-battle rule) and its filter were removed with the redesign; it disagreed with the dashboard's definitions.
 
 ## User Filter System
 

@@ -1,6 +1,7 @@
 /**
  * Strategies tab (Spec #55, R6.6, R6.9–R6.14, R11.13, PLAYER_FACING_TEXT
- * §6.4–§6.4b, design §17.2, task 10.4): two views, Comparison and Library,
+ * §6.4–§6.4b, design §17.2, task 10.4): three views, Comparison, Economy
+ * (admin redesign part 5) and Library,
  * chosen with `ToggleChip`s (the selected view shows a check mark); the
  * Strategy_Builder opens as a sub-view of the Library.
  */
@@ -18,11 +19,12 @@ import {
 import { ToggleChip } from './ui';
 import { errorText } from './requestErrors';
 import { StrategyComparisonTable } from './StrategyComparisonTable';
+import { StrategyEconomy } from './StrategyEconomy';
 import { StrategyLibrary } from './StrategyLibrary';
 import { StrategyBuilder } from './StrategyBuilder';
 import { StrategyUpgradeDialog } from './StrategyUpgradeDialog';
 
-export type StrategiesView = 'comparison' | 'library';
+export type StrategiesView = 'comparison' | 'economy' | 'library';
 
 export interface StrategiesTabProps {
   view: StrategiesView;
@@ -62,6 +64,7 @@ export function StrategiesTab({ view, draftId, strategies, libraryError, profile
 
   const views: { key: StrategiesView; label: string }[] = [
     { key: 'comparison', label: 'Comparison' },
+    { key: 'economy', label: 'Economy' },
     { key: 'library', label: 'Library' },
   ];
 
@@ -78,6 +81,8 @@ export function StrategiesTab({ view, draftId, strategies, libraryError, profile
       {view === 'comparison' && (
         <StrategyComparisonTable comparison={comparison} error={comparisonError} onOpenStrategy={onOpenStrategy} />
       )}
+
+      {view === 'economy' && <StrategyEconomy onOpenStrategy={onOpenStrategy} />}
 
       {view === 'library' && draftId !== null && (
         <StrategyBuilder draftId={draftId} profiles={profiles} onBack={() => onOpenDraft(null)} onChanged={loadDrafts} />

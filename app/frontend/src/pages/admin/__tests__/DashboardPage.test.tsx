@@ -146,7 +146,7 @@ describe('DashboardPage', () => {
 
     const links = within(panel).getAllByRole('link');
     expect(links.map((link) => link.getAttribute('href'))).toEqual([
-      '/admin/players?tab=at-risk',
+      '/admin/players?segment=low-balance',
       '/admin/security',
       '/admin/automatons?tab=stables&filter=attention',
     ]);

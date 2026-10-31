@@ -7,17 +7,11 @@
  * Active_Automaton, plus a Human_Stable reference row when at least one
  * Human_Stable owns a robot.
  *
- * Battle-mode mapping (confirmed against the orchestrators and the battle
- * history queries): `battles.battle_type` is `league_1v1`, `tournament_1v1`,
- * `league_2v2`, `tournament_2v2`, `league_3v3`, `tournament_3v3` or
- * `tag_team` for the seven head-to-head modes; `koth` and `grand_melee` are
- * excluded. The 1v1 modes store the winning robot in `winner_id` (null on a
- * draw); the team modes store the winning `team` in `winning_side` (null on a
- * draw). A bye stores participants on one side only (the bye robot has no
- * row), so the two-sides rule excludes it.
+ * The win rate against human stables was dropped (admin redesign part 5):
+ * with few human stables its sample was tiny, and the per-mode block answers
+ * "which strategy works" from every opponent.
  *
- * Reads `battles` and `battle_participants` columns only — never
- * `battle_log` — and `standings` for the highest current tier and the
+ * Reads `standings` for the highest current tier and the
  * per-mode block (`modes`, see `strategyModePerformance.ts`). Both standings
  * reads count played rows only (default Bronze rows are ignored). Cached for
  * 60 seconds.
@@ -35,32 +29,9 @@ import { buildModePerformance, readModeAggregates, winPercentage, type ModePerfo
 
 export { winPercentage };
 
-/** The seven head-to-head modes of R11.13, as stored in `battles.battle_type`. */
-export const HEAD_TO_HEAD_BATTLE_TYPES = [
-  'league_1v1',
-  'tournament_1v1',
-  'league_2v2',
-  'tournament_2v2',
-  'league_3v3',
-  'tournament_3v3',
-  'tag_team',
-] as const;
-
-/** Modes whose winner is a robot (`winner_id`); the others use `winning_side`. */
-export const ONE_VS_ONE_BATTLE_TYPES = ['league_1v1', 'tournament_1v1'] as const;
-
 export const COMPARISON_CACHE_TTL_MS = 60_000;
 
 export const HUMAN_REFERENCE_LABEL = 'Human stables (reference)';
-
-export interface WinRate {
-  wins: number;
-  losses: number;
-  draws: number;
-  total: number;
-  /** wins ÷ total × 100, one decimal; null with 0 head-to-head battles. */
-  percentage: number | null;
-}
 
 export interface ComparisonRow {
   /** The strategy key; null on the reference row. */
@@ -73,8 +44,6 @@ export interface ComparisonRow {
   /** The highest current tier any robot or team holds (played rows only), with the number of stables whose own highest equals it. */
   bestTier: { tier: LeagueTier; stables: number } | null;
   creditsAverage: number;
-  /** Null on the reference row. */
-  winRate: WinRate | null;
   /** Six entries in `TIERED_STANDINGS_MODES` order, zero-filled. */
   modes: ModePerformance[];
 }
@@ -129,68 +98,6 @@ export function bestTierOf(tiers: readonly (Pick<HighestTier, 'tier'> | null)[])
 }
 
 // ── Queries ──────────────────────────────────────────────────────────
-
-interface WinRateRow {
-  strategy_key: string;
-  wins: number;
-  losses: number;
-  draws: number;
-}
-
-/**
- * Head-to-head results per strategy (R11.13, R11.14): one aggregate over
- * `battles` ⨝ `battle_participants` ⨝ `robots` ⨝ `users`. A battle counts when
- * it has exactly two sides, one side's owners are all Automatons of one
- * strategy and the other side's owners are all Human_Stables.
- */
-async function readWinRates(db: ComparisonDb): Promise<Map<string, WinRate>> {
-  const modes = Prisma.join([...HEAD_TO_HEAD_BATTLE_TYPES]);
-  const oneVsOne = Prisma.join([...ONE_VS_ONE_BATTLE_TYPES]);
-  const rows = await db.$queryRaw<WinRateRow[]>`
-    WITH "sides" AS (
-      SELECT b."id" AS "battle_id", b."battle_type", b."winner_id", b."winning_side", bp."team",
-             COUNT(*) AS "members",
-             COUNT(*) FILTER (WHERE u."stable_type" = 'human') AS "humans",
-             COUNT(*) FILTER (WHERE u."stable_type" = 'automaton' AND ap."strategy_key" IS NOT NULL) AS "automatons",
-             COUNT(DISTINCT ap."strategy_key") AS "strategies",
-             MIN(ap."strategy_key") AS "strategy_key",
-             BOOL_OR(bp."robot_id" = b."winner_id") AS "holds_winner"
-      FROM "battles" b
-      JOIN "battle_participants" bp ON bp."battle_id" = b."id"
-      JOIN "robots" r ON r."id" = bp."robot_id"
-      JOIN "users" u ON u."id" = r."user_id"
-      LEFT JOIN "automaton_profiles" ap ON ap."user_id" = u."id" AND ap."status" = 'active'
-      WHERE b."battle_type" IN (${modes}) AND bp."robot_id" > 0
-      GROUP BY b."id", bp."team"
-    ),
-    "counted" AS (
-      SELECT s.*, COUNT(*) OVER (PARTITION BY s."battle_id") AS "side_count" FROM "sides" s
-    ),
-    "outcomes" AS (
-      SELECT a."strategy_key",
-             CASE
-               WHEN a."battle_type" IN (${oneVsOne}) THEN
-                 CASE WHEN a."winner_id" IS NULL THEN 'draw' WHEN a."holds_winner" THEN 'win' ELSE 'loss' END
-               ELSE
-                 CASE WHEN a."winning_side" IS NULL THEN 'draw' WHEN a."winning_side" = a."team" THEN 'win' ELSE 'loss' END
-             END AS "outcome"
-      FROM "counted" a
-      JOIN "counted" h ON h."battle_id" = a."battle_id" AND h."team" <> a."team"
-      WHERE a."side_count" = 2
-        AND a."automatons" = a."members" AND a."strategies" = 1
-        AND h."humans" = h."members"
-    )
-    SELECT "strategy_key",
-           COUNT(*) FILTER (WHERE "outcome" = 'win')::int AS "wins",
-           COUNT(*) FILTER (WHERE "outcome" = 'loss')::int AS "losses",
-           COUNT(*) FILTER (WHERE "outcome" = 'draw')::int AS "draws"
-    FROM "outcomes"
-    GROUP BY "strategy_key"`;
-  return new Map(rows.map((row) => {
-    const total = row.wins + row.losses + row.draws;
-    return [row.strategy_key, { wins: row.wins, losses: row.losses, draws: row.draws, total, percentage: winPercentage(row.wins, total) }];
-  }));
-}
 
 interface HumanAggregateRow {
   stables: number;
@@ -255,7 +162,6 @@ async function readHumanReference(db: ComparisonDb): Promise<ComparisonRowBase |
       return tier === undefined ? null : { tier };
     })),
     creditsAverage: round(aggregate.credits, 0),
-    winRate: null,
   };
 }
 
@@ -273,10 +179,7 @@ async function readStrategyRows(registry: StrategyRegistry, db: ComparisonDb): P
     orderBy: { catalogueKey: 'asc' },
   });
   if (profiles.length === 0) return [];
-  const [tiers, winRates] = await Promise.all([
-    bestTiersForUsers(profiles.flatMap((p) => (p.userId === null ? [] : [p.userId])), db),
-    readWinRates(db),
-  ]);
+  const tiers = await bestTiersForUsers(profiles.flatMap((p) => (p.userId === null ? [] : [p.userId])), db);
   const byStrategy = new Map<string, typeof profiles>();
   for (const profile of profiles) {
     const group = byStrategy.get(profile.strategyKey) ?? [];
@@ -302,7 +205,6 @@ async function readStrategyRows(registry: StrategyRegistry, db: ComparisonDb): P
       prestigeAverage: average(group.map((p) => p.user?.prestige ?? 0), 0),
       bestTier: bestTierOf(group.map((p) => (p.userId === null ? null : tiers.get(p.userId) ?? null))),
       creditsAverage: average(group.map((p) => p.user?.currency ?? 0), 0),
-      winRate: winRates.get(strategyKey) ?? { wins: 0, losses: 0, draws: 0, total: 0, percentage: null },
     };
   });
 }

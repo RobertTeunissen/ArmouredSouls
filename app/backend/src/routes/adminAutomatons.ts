@@ -28,7 +28,7 @@ import { validateRequest } from '../middleware/schemaValidator';
 import { handleMulterError } from '../middleware/handleMulterError';
 import { AppError } from '../errors/AppError';
 import { AutomatonError, AutomatonErrorCode } from '../errors/automatonErrors';
-import { paginationQuery, positiveIntParam, safeEnum, stableName } from '../utils/securityValidation';
+import { calendarDate, paginationQuery, positiveIntParam, safeEnum, stableName } from '../utils/securityValidation';
 import { recordAction } from '../services/admin/adminAuditLogService';
 import {
   backstorySchema,
@@ -58,6 +58,7 @@ import {
 import { storeBlueprintImage } from '../services/automaton/automatonImageService';
 import { previewProfileTurn } from '../services/automaton/turnPreview';
 import { getProgramSwitch, setProgramSwitch } from '../services/automaton/programSwitch';
+import { getProfileCashflow, getStrategyEconomy } from '../services/automaton/strategyEconomyService';
 import { getLastCatalogueSyncSummary } from '../services/automaton/catalogueSync';
 import { exportCatalogue } from '../services/automaton/catalogueExport';
 import { getAutomatonStatus } from '../services/automaton/automatonStatus';
@@ -187,7 +188,10 @@ const slotParam = positiveIntParam.pipe(z.number().int().max(MAX_BLUEPRINTS, `Bl
 const slotParams = z.object({ key: catalogueKeySchema, slot: slotParam }).strict();
 const blueprintSlot = z.number().int().min(1).max(MAX_BLUEPRINTS);
 
+/** The Stables tab loads every profile in one request (500 on ACC). */
+const PROFILE_LIST_MAX_LIMIT = 1000;
 const listQuery = paginationQuery.extend({
+  limit: z.coerce.number().int().positive().max(PROFILE_LIST_MAX_LIMIT).default(20),
   status: z.enum(['draft', 'active']).optional(),
   strategy: strategyKeySchema.optional(),
   attention: safeEnum(['true', 'false']).transform((value) => value === 'true').optional(),
@@ -195,6 +199,9 @@ const listQuery = paginationQuery.extend({
 
 // ── Strategy_Library, Strategy_Draft and upgrade schemas (tasks 9.8–9.10) ──
 
+const economyQuery = z.object({
+  activated: calendarDate.optional(),
+}).strict();
 const strategyKeyParams = z.object({ key: strategyKeySchema }).strict();
 const draftParams = z.object({ id: positiveIntParam }).strict();
 
@@ -287,6 +294,10 @@ router.get('/status', validateRequest({}), async (_req: AuthRequest, res: Respon
 
 router.get('/strategies/comparison', validateRequest({}), async (_req: AuthRequest, res: Response) => {
   res.json(await getStrategyComparison());
+});
+router.get('/strategies/economy', validateRequest({ query: economyQuery }), async (req: AuthRequest, res: Response) => {
+  const query = req.query as unknown as z.infer<typeof economyQuery>;
+  res.json(await getStrategyEconomy(query.activated ?? null));
 });
 
 router.get('/strategies', validateRequest({}), async (_req: AuthRequest, res: Response) => {
@@ -506,6 +517,9 @@ router.get('/:key/preview', validateRequest({ params: keyParams }), async (req: 
   res.json(await previewProfileTurn(String(req.params.key)));
 });
 
+router.get('/:key/cashflow', validateRequest({ params: keyParams }), async (req: AuthRequest, res: Response) => {
+  res.json(await getProfileCashflow(String(req.params.key)));
+});
 router.get('/:key/turns', validateRequest({ params: keyParams, query: paginationQuery }), async (req: AuthRequest, res: Response) => {
   const query = req.query as unknown as z.infer<typeof paginationQuery>;
   res.json(await listTurnRecords(String(req.params.key), query.page, query.limit));

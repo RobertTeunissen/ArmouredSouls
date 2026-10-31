@@ -19,6 +19,8 @@ const api = vi.hoisted(() => ({
   listWeapons: vi.fn(),
   getProfile: vi.fn(),
   listTurns: vi.fn(),
+  getStrategyEconomy: vi.fn(),
+  getProfileCashflow: vi.fn(),
 }));
 vi.mock('../../../utils/automatonAdminApi', () => api);
 
@@ -34,6 +36,20 @@ function LocationProbe() {
 function search(): URLSearchParams {
   return new URLSearchParams(screen.getByTestId('location').textContent ?? '');
 }
+
+const ECONOMY = (activated: string | null) => ({
+  window: { fromCycle: 82, toCycle: 88 },
+  batches: [{ date: '2026-10-12', stables: 2 }, { date: '2026-10-27', stables: 1 }],
+  activated,
+  rows: activated === '2026-10-27'
+    ? [{ strategyKey: 'trio', displayName: 'Trio', stables: 1, inDeficit: 0, medianBalance: 50_000, earnedPerCycle: null, runningCostsPerCycle: null, topSavingGoal: null }]
+    : [
+      { strategyKey: 'swarm', displayName: 'Swarm', stables: 2, inDeficit: 1, medianBalance: -12_400, earnedPerCycle: 113_000, runningCostsPerCycle: 119_000, topSavingGoal: { label: 'Robots', target: 7, stables: 2 } },
+      { strategyKey: 'trio', displayName: 'Trio', stables: 1, inDeficit: 0, medianBalance: 126_000, earnedPerCycle: 92_000, runningCostsPerCycle: 27_000, topSavingGoal: null },
+    ],
+  totals: activated === '2026-10-27' ? { stables: 1, inDeficit: 0 } : { stables: 3, inDeficit: 1 },
+  generatedAt: '2026-10-30T12:00:00.000Z',
+});
 
 function renderPage(path = '/admin/automatons') {
   return render(
@@ -58,6 +74,8 @@ describe('AutomatonsPage (task 10.2)', () => {
     api.getStrategyLibrary.mockResolvedValue({ strategies: LIBRARY });
     api.getStrategyComparison.mockResolvedValue(COMPARISON);
     api.listStrategyDrafts.mockResolvedValue({ drafts: [] });
+    api.getStrategyEconomy.mockImplementation(async (activated: string | null) => ECONOMY(activated));
+    api.getProfileCashflow.mockResolvedValue({ points: [], earned: 0, runningCosts: 0, bought: 0, lowBalanceCycles: 0 });
     api.getSyncStatus.mockResolvedValue({ summary: { ranAt: '2026-10-08T14:02:00.000Z', added: [], present: ['a'], filled: [], conflicts: [{ catalogueKey: 'minion-horde', stableName: 'Minion Mayhem', reason: 'stable_name_taken' }] } });
     api.listWeapons.mockResolvedValue([]);
   });
@@ -199,5 +217,65 @@ describe('AutomatonsPage (task 10.2)', () => {
     fireEvent.click(await screen.findByRole('button', { name: '2 stables →' }));
     expect(search().get('filter')).toBe('attention');
     expect(search().has('q')).toBe(false);
+  });
+
+  it('opens Stables filtered on one Need_Attention reason from the status bar, and removes it', async () => {
+    desktop = true;
+    renderPage('/admin/automatons?tab=catalogue');
+    const reasons = await screen.findByRole('list', { name: 'Needs attention by reason' });
+    expect(within(reasons).queryByRole('button', { name: /Last cycle failed/ })).toBeNull();
+    fireEvent.click(within(reasons).getByRole('button', { name: 'Balance negative · 1' }));
+    expect(search().get('filter')).toBe('attention');
+    expect(search().get('reason')).toBe('balance_negative');
+    expect(await screen.findByRole('button', { name: /^Reason: Balance negative/ })).toBeInTheDocument();
+    expect(screen.getAllByText('Decepticon Armada').length).toBeGreaterThan(0);
+
+    fireEvent.click(within(screen.getByRole('list', { name: 'Needs attention by reason' })).getByRole('button', { name: 'Nothing bought 14+ cycles · 1' }));
+    expect(search().get('reason')).toBe('nothing_bought');
+    expect(await screen.findByText('No stables match these filters.')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /^Reason: Nothing bought/ }));
+    expect(search().has('reason')).toBe(false);
+    expect(await screen.findByText('1 of 3 stables')).toBeInTheDocument();
+  });
+
+  it('shows the Economy view per strategy, filters it by activation batch and opens a strategy', async () => {
+    desktop = true;
+    renderPage('/admin/automatons?tab=strategies&view=economy');
+    expect(await screen.findByRole('heading', { name: 'Economy by strategy' })).toBeInTheDocument();
+    expect(await screen.findByText('1 of 3 stables in deficit')).toBeInTheDocument();
+    const table = screen.getAllByRole('table', { name: 'Economy per strategy' })[0];
+    const swarm = within(table).getByRole('button', { name: 'Swarm' }).closest('tr') as HTMLElement;
+    expect(within(swarm).getByText('1 · 50%')).toHaveClass('text-red-300');
+    expect(within(swarm).getByText('−₡12,400')).toBeInTheDocument();
+    expect(within(swarm).getByText('₡119,000')).toHaveClass('text-red-300');
+    expect(within(swarm).getByText('Robot 7 · 2 of 2')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Activated 27 Oct · 1' }));
+    await waitFor(() => expect(api.getStrategyEconomy).toHaveBeenLastCalledWith('2026-10-27'));
+    expect(await screen.findByText('0 of 1 stables in deficit')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'All stables' }));
+    await waitFor(() => expect(api.getStrategyEconomy).toHaveBeenLastCalledWith(null));
+
+    fireEvent.click((await screen.findAllByRole('button', { name: 'Swarm' }))[0]);
+    expect(search().get('tab')).toBe('stables');
+    expect(search().get('strategy')).toBe('swarm');
+  });
+
+  it('picks the stable to edit from a searchable list', async () => {
+    desktop = true;
+    api.getProfile.mockReturnValue(new Promise(() => undefined));
+    api.listWeapons.mockResolvedValue({ weapons: [] });
+    api.listTurns.mockResolvedValue({ items: [], total: 0, page: 1, limit: 20 });
+    renderPage('/admin/automatons?tab=editor');
+    const picker = await screen.findByRole('combobox', { name: 'Editing' });
+    fireEvent.focus(picker);
+    fireEvent.change(picker, { target: { value: 'decep' } });
+    const options = screen.getAllByRole('option');
+    expect(options).toHaveLength(1);
+    expect(options[0]).toHaveTextContent('Decepticon Armada (Active)');
+    fireEvent.keyDown(picker, { key: 'ArrowDown' });
+    fireEvent.keyDown(picker, { key: 'Enter' });
+    expect(search().get('stable')).toBe('decepticon-armada');
   });
 });

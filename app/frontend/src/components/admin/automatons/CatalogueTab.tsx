@@ -12,7 +12,8 @@ import {
   type CatalogueSyncSummary,
   type ProfileListItem,
 } from '../../../utils/automatonAdminApi';
-import { ActionButton, Field, INPUT_CLASS, Notice } from './ui';
+import { ActionButton, Field, Notice } from './ui';
+import { StablePicker } from './StablePicker';
 import { errorText } from './requestErrors';
 import { formatDateTime } from './automatonText';
 
@@ -76,9 +77,7 @@ export function CatalogueTab({ profiles, selectedKey }: CatalogueTabProps): Reac
         <div className="md:w-80">
           <Field label="Stable">
             {(props) => (
-              <select {...props} className={INPUT_CLASS} value={exportKey} onChange={(e) => setChosen(e.target.value)}>
-                {profiles.map((p) => <option key={p.catalogueKey} value={p.catalogueKey}>{p.stableName}</option>)}
-              </select>
+              <StablePicker {...props} profiles={profiles} selectedKey={exportKey || null} onSelect={setChosen} />
             )}
           </Field>
         </div>

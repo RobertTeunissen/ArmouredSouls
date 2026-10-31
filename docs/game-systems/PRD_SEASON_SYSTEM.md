@@ -61,6 +61,15 @@ The classification column defaults to `false` deliberately: a misclassified bot 
 
 Since Spec #55 the classification is explicit in `users.stable_type` (`human`, `generated`, `automaton`) with the invariant `is_generated = true` ⇔ `stable_type = generated`. `deleteGeneratedStables` additionally excludes `stable_type = automaton`.
 
+### Dormant human stables
+
+A human stable with **no login during the whole ending season** is deleted at rollover, after the archive is written and verified (so its season stays on record), with the same batched delete as generated stables. It is otherwise a returning player's account that would re-enter every season with ₡3,000,000 and count as a player in every overview.
+
+- Rule (`season/dormantStables.ts`): `buildUserFilter('real')`, `is_generated = false`, `stable_type = human`, `role <> 'admin'`, and the last activity before the ending season's `started_at`. Last activity is `last_login_at`, or `created_at` when the account never logged in; registration sets `last_login_at`, so a player who signs up during a season is never dormant in it.
+- Admin accounts, Automatons and system/test accounts are never deleted this way.
+- Season Control's preview lists the count and the first 50 names; the run summary and the rollover history report `dormantStablesDeleted`.
+- Players are told in the guide article "What Resets and What Survives"; they can register again.
+
 ### Automaton stables (Spec #55)
 
 Active_Automatons are `is_generated = false`, so every stage treats them as Human_Stables: they are archived, counted by verify, and reset by the Human_Reset_Contract (₡3,000,000, prestige 0, robots and facilities deleted). Their persistent definition lives outside the reset scope: `automaton_profiles`, `automaton_robot_blueprints`, `automaton_strategy_drafts`, `automaton_program_settings` and uploaded images in `uploads/automatons/` are never touched by a rollover. `automaton_turns` is purged with the history tables. Preserved-state achievements are re-awarded to Automatons like humans, because Activation sets `hasCompletedOnboarding = true`.
@@ -81,9 +90,9 @@ Stage 1 ARCHIVE  — write stable/robot archives, standings snapshot, accolades.
 Stage 2 VERIFY   — one stable archive per Human_Stable, robot archive count
                    equals Human_Stable robot count. Counts humans only.
                    Failure aborts with all operational data intact.
-Stage 3 PURGE    — delete generated stables (50 per transaction), reset
-                   competitive/economic state, purge history, reset counter,
-                   open the next season in preparation.
+Stage 3 PURGE    — delete generated stables and dormant human stables (50
+                   per transaction), reset competitive/economic state, purge
+                   history, reset counter, open the next season in preparation.
 Stage 4 POST     — orphan sweep, VACUUM, preserved-state achievement
                    re-award. All non-fatal.
 Stage 5 AUTOMATON — `season_open` Turn_Step (Spec #55): every

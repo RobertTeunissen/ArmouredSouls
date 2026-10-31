@@ -134,6 +134,8 @@ describe('userService', () => {
           stableName: 'Iron Forge',
           // Spec #55 R1.3: registration writes Stable_Type explicitly.
           stableType: 'human',
+          // Registration signs the player in: it counts as their first login.
+          lastLoginAt: expect.any(Date),
         },
       });
     });

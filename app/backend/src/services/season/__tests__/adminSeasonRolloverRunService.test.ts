@@ -40,7 +40,7 @@ import { getQueuedAdminRollover, isRolloverActive, runAdminRollover, startAdminR
 const execute = executeSeasonRollover as jest.MockedFunction<typeof executeSeasonRollover>;
 const RESULT = {
   completedSeasonNumber: 1, newSeasonNumber: 2, stablesArchived: 81, robotsArchived: 809, snapshotRows: 0, accoladeRows: 0,
-  generatedStablesDeleted: 120, totalRowsPurged: 5, durations: { archiveMs: 1, purgeMs: 1, postMs: 1, totalMs: 3 },
+  generatedStablesDeleted: 120, dormantStablesDeleted: 0, totalRowsPurged: 5, durations: { archiveMs: 1, purgeMs: 1, postMs: 1, totalMs: 3 },
 };
 
 const flush = (): Promise<void> => new Promise((resolve) => setImmediate(resolve));

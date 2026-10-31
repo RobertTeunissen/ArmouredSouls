@@ -373,68 +373,45 @@ describe('GET /api/admin/users/search', () => {
     mockPrismaUser.findMany.mockResolvedValue([]);
   });
 
-  it('should return users matching a partial username', async () => {
-    const matchedUser = { id: 10, username: 'player1', email: 'p1@example.com', stableName: 'Iron Fist' };
-
-    // q is not numeric → idResults = []
-    // username search returns match, email search returns empty
-    mockPrismaUser.findMany
-      .mockResolvedValueOnce([matchedUser])  // username search
-      .mockResolvedValueOnce([]);            // email search
-
+  it('searches username, email, stable name and robot name in one query and returns the stable kind', async () => {
+    mockPrismaUser.findMany.mockResolvedValueOnce([
+      { id: 10, username: 'player1', stableName: 'Iron Fist', stableType: 'human', isGenerated: false },
+      { id: 11, username: 't55amt_x', stableName: 'Clone Legion', stableType: 'automaton', isGenerated: false },
+    ]);
     const res = await request(server)
       .get('/api/admin/users/search?q=play')
       .set('Authorization', `Bearer ${adminToken()}`);
-
     expect(res.status).toBe(200);
-    expect(res.body.users).toHaveLength(1);
-    expect(res.body.users[0]).toEqual(matchedUser);
+    expect(res.body.users).toEqual([
+      { id: 10, username: 'player1', stableName: 'Iron Fist', stableKind: 'human' },
+      { id: 11, username: 't55amt_x', stableName: 'Clone Legion', stableKind: 'automaton' },
+    ]);
+    const where = mockPrismaUser.findMany.mock.calls[0][0].where;
+    expect(where.OR).toEqual([
+      { username: { contains: 'play', mode: 'insensitive' } },
+      { email: { contains: 'play', mode: 'insensitive' } },
+      { stableName: { contains: 'play', mode: 'insensitive' } },
+      { robots: { some: { name: { contains: 'play', mode: 'insensitive' } } } },
+    ]);
   });
 
-  it('should return users matching a partial email', async () => {
-    const matchedUser = { id: 20, username: 'warrior', email: 'warrior@test.com', stableName: 'Steel Forge' };
-
-    // q is not numeric → idResults = []
-    // username search returns empty, email search returns match
-    mockPrismaUser.findMany
-      .mockResolvedValueOnce([])             // username search
-      .mockResolvedValueOnce([matchedUser]); // email search
-
-    const res = await request(server)
-      .get('/api/admin/users/search?q=warrior@')
-      .set('Authorization', `Bearer ${adminToken()}`);
-
-    expect(res.status).toBe(200);
-    expect(res.body.users).toHaveLength(1);
-    expect(res.body.users[0]).toEqual(matchedUser);
-  });
-
-  it('should return user matching an exact numeric user ID', async () => {
-    const matchedUser = { id: 42, username: 'target', email: 'target@example.com', stableName: 'Bolt Arena' };
-
-    // q is numeric → idResults search, then username search, then email search
-    mockPrismaUser.findMany
-      .mockResolvedValueOnce([matchedUser])  // id search
-      .mockResolvedValueOnce([])             // username search
-      .mockResolvedValueOnce([]);            // email search
-
-    const res = await request(server)
-      .get('/api/admin/users/search?q=42')
-      .set('Authorization', `Bearer ${adminToken()}`);
-
-    expect(res.status).toBe(200);
-    expect(res.body.users).toHaveLength(1);
-    expect(res.body.users[0]).toEqual(matchedUser);
+  it('also matches an exact user id for a numeric query or #id', async () => {
+    mockPrismaUser.findMany.mockResolvedValue([{ id: 42, username: 'target', stableName: 'Bolt Arena', stableType: 'human', isGenerated: false }]);
+    for (const q of ['42', '%2342']) {
+      const res = await request(server)
+        .get(`/api/admin/users/search?q=${q}`)
+        .set('Authorization', `Bearer ${adminToken()}`);
+      expect(res.status).toBe(200);
+      expect(res.body.users[0]).toMatchObject({ id: 42, stableKind: 'human' });
+      expect(mockPrismaUser.findMany.mock.calls.at(-1)[0].where.OR[0]).toEqual({ id: 42 });
+    }
   });
 
   it('should return empty array when no users match', async () => {
-    // All searches return empty
     mockPrismaUser.findMany.mockResolvedValue([]);
-
     const res = await request(server)
       .get('/api/admin/users/search?q=nonexistent')
       .set('Authorization', `Bearer ${adminToken()}`);
-
     expect(res.status).toBe(200);
     expect(res.body.users).toEqual([]);
   });
@@ -457,25 +434,17 @@ describe('GET /api/admin/users/search', () => {
     expect(res.status).toBe(400);
   });
 
-  it('should return only safe fields (no passwordHash or tokenVersion)', async () => {
-    const safeUser = { id: 5, username: 'safe_user', email: 'safe@example.com', stableName: 'Safe Stable' };
-
-    mockPrismaUser.findMany
-      .mockResolvedValueOnce([safeUser])  // username search
-      .mockResolvedValueOnce([]);         // email search
-
+  it('should return only safe fields (no email, passwordHash or tokenVersion)', async () => {
+    mockPrismaUser.findMany.mockResolvedValueOnce([
+      { id: 5, username: 'safe_user', email: 'safe@example.com', stableName: 'Safe Stable', passwordHash: 'x', tokenVersion: 3, stableType: 'human', isGenerated: false },
+    ]);
     const res = await request(server)
       .get('/api/admin/users/search?q=safe')
       .set('Authorization', `Bearer ${adminToken()}`);
-
     expect(res.status).toBe(200);
-    expect(res.body.users).toHaveLength(1);
-
-    const returnedUser = res.body.users[0];
-    expect(Object.keys(returnedUser).sort()).toEqual(['email', 'id', 'stableName', 'username']);
-    expect(returnedUser).not.toHaveProperty('passwordHash');
-    expect(returnedUser).not.toHaveProperty('tokenVersion');
+    expect(Object.keys(res.body.users[0]).sort()).toEqual(['id', 'stableKind', 'stableName', 'username']);
   });
+
 });
 
 
@@ -691,12 +660,12 @@ describe('Admin Password Reset Routes — Property-Based Tests', () => {
    * **Property 7: Search result field safety**
    *
    * For any search result, the object contains only `id`, `username`,
-   * `email`, `stableName`.
+   * `stableName` and `stableKind`.
    *
    * **Validates: Requirements 10.3**
    */
   test('Property 7: search results contain only safe fields', async () => {
-    const allowedFields = ['id', 'username', 'email', 'stableName'];
+    const allowedFields = ['id', 'stableKind', 'stableName', 'username'];
 
     await fc.assert(
       fc.asyncProperty(

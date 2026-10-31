@@ -117,6 +117,8 @@ export interface AutomatonStatusBar {
   lastStep: LastTurnStep | null;
   failedCount: number;
   needAttentionCount: number;
+  /** Active Automatons per Need_Attention reason (a stable can have several). */
+  needAttentionByReason: Record<NeedAttentionReason['code'], number>;
 }
 
 export interface ProgramSwitchChange {
@@ -182,10 +184,10 @@ export function listProfiles(query: ProfileListQuery = {}): Promise<ProfileListP
   return api.get<ProfileListPage>(BASE, { params });
 }
 
-/** Largest page the list endpoint serves (`paginationQuery`). */
-export const PROFILE_PAGE_LIMIT = 100;
+/** Largest page the list endpoint serves (`PROFILE_LIST_MAX_LIMIT`): one request for 500 stables. */
+export const PROFILE_PAGE_LIMIT = 1000;
 
-/** Every profile, fetched page by page. */
+/** Every profile; a second page only past the limit. */
 export async function listAllProfiles(): Promise<ProfileListItem[]> {
   const items: ProfileListItem[] = [];
   for (let page = 1; ; page++) {
@@ -453,14 +455,6 @@ export function exportCatalogue(keys: string[] = []): Promise<CatalogueExportDoc
 
 // ── Strategies ───────────────────────────────────────────────────────
 
-export interface WinRate {
-  wins: number;
-  losses: number;
-  draws: number;
-  total: number;
-  percentage: number | null;
-}
-
 export interface ComparisonRow {
   strategyKey: string | null;
   displayName: string;
@@ -470,7 +464,6 @@ export interface ComparisonRow {
   prestigeAverage: number;
   bestTier: { tier: LeagueTier; stables: number } | null;
   creditsAverage: number;
-  winRate: WinRate | null;
   /** Six entries in `TIERED_STANDINGS_MODES` order, zero-filled. */
   modes: ModePerformance[];
 }
@@ -506,6 +499,48 @@ export interface StrategyComparison {
 
 export function getStrategyComparison(): Promise<StrategyComparison> {
   return api.get<StrategyComparison>(`${BASE}/strategies/comparison`);
+}
+
+/** Strategies → Economy (backend `strategyEconomyService.ts`). */
+export interface StrategyEconomyRow {
+  strategyKey: string;
+  displayName: string;
+  stables: number;
+  inDeficit: number;
+  medianBalance: number;
+  earnedPerCycle: number | null;
+  runningCostsPerCycle: number | null;
+  topSavingGoal: { label: string; target: number | null; stables: number } | null;
+}
+export interface StrategyEconomy {
+  window: { fromCycle: number; toCycle: number };
+  batches: { date: string; stables: number }[];
+  activated: string | null;
+  rows: StrategyEconomyRow[];
+  totals: { stables: number; inDeficit: number };
+  generatedAt: string;
+}
+export function getStrategyEconomy(activated: string | null): Promise<StrategyEconomy> {
+  return api.get<StrategyEconomy>(`${BASE}/strategies/economy`, activated ? { params: { activated } } : undefined);
+}
+
+/** The Editor's Cashflow card (backend `stableCashflow.ts`). */
+export interface ProfileCashflowCycle {
+  cycle: number;
+  balance: number;
+  earned: number;
+  runningCosts: number;
+  bought: number;
+}
+export interface ProfileCashflow {
+  points: ProfileCashflowCycle[];
+  earned: number;
+  runningCosts: number;
+  bought: number;
+  lowBalanceCycles: number;
+}
+export function getProfileCashflow(catalogueKey: string): Promise<ProfileCashflow> {
+  return api.get<ProfileCashflow>(`${BASE}/${encodeURIComponent(catalogueKey)}/cashflow`);
 }
 
 export interface LibraryVersion {

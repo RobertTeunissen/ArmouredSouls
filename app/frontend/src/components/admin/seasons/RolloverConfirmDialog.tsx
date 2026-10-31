@@ -56,6 +56,9 @@ export function RolloverConfirmDialog({ seasonNumber, stale = false, preview, bu
           <>
             <li>Archives {plural(preview.breakdown.human.stables + preview.breakdown.automaton.stables, 'stable')}, then resets them.</li>
             <li>Deletes {plural(preview.breakdown.generated.stables, 'generated stable')} and {plural(preview.breakdown.generated.robots, 'robot')}.</li>
+            {preview.dormantHumanStables.count > 0 && (
+              <li>Deletes {plural(preview.dormantHumanStables.count, 'human stable')} with no login this season.</li>
+            )}
             <li>Empties {plural(rows ?? 0, 'row')} of season history.</li>
           </>
         ) : (

@@ -92,6 +92,12 @@ export class RolloverTracker {
     this.stage(name).detail = detail;
   }
 
+  /** Dormant human stables deleted so far; written with the batch that completes them. */
+  async dormantProgress(deleted: number, total: number): Promise<void> {
+    this.stage('purge').detail = `Dormant human stables ${deleted.toLocaleString('en-US')} of ${total.toLocaleString('en-US')}`;
+    if (deleted === total) await this.write();
+  }
+
   /** Generated stables deleted so far; written at most every few seconds. */
   async generatedProgress(deleted: number, total: number): Promise<void> {
     this.state.generatedStables = { deleted, total };

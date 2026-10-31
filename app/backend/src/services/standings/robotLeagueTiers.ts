@@ -5,7 +5,7 @@
  * carried no `currentLeague` column since Spec #40. Three services were still
  * selecting it — `getRobotAttributeStats`, the admin user-detail query, and the
  * engagement-players query — so `GET /api/admin/stats/robots`,
- * `GET /api/admin/users/:id` and `GET /api/admin/engagement/players` answered 500 on
+ * `GET /api/admin/users/:id` and the former `GET /api/admin/engagement/players` answered 500 on
  * every request. None of them was covered by a gating tier.
  *
  * The lookup itself was already written out twice by hand (`economyCalculations.ts`
