@@ -313,7 +313,8 @@ describe('Automaton multi-season simulation (Spec #55 task 12.2)', () => {
     // At least this run's stables (another heavy suite may have left its own on the shared heavy database).
     expect(strategyRows.reduce((sum, row) => sum + row.stables, 0)).toBeGreaterThanOrEqual(POPULATION.length);
     expect(body.rows.some((row) => row.reference && row.stables >= HUMAN_STABLES)).toBe(true);
-    for (const row of strategyRows) expect(row.winRate?.total ?? 0).toBeGreaterThan(0);
+    // Every strategy row carries its per-mode block (the comparison no longer reads battles).
+    for (const row of strategyRows) expect(row.modes).toHaveLength(6);
     comparisons.push({ label, ms, bulk });
     logger.info(
       `[automaton-heavy] ${label}: comparison ${ms} ms over ${bulk.battles} battles / ${bulk.participants} participants `

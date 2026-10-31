@@ -1,37 +1,32 @@
 /**
- * Admin player lists count each battle once per stable.
+ * The Players page counts each battle once per stable.
  *
- * `getEngagementPlayers` (Engagement tab) and `getRecentUserActivity` (Recent
- * Users) summed the per-robot counters per stable, so a team battle counted
- * once per member. They now subtract the shared-side overlap, read for the
- * whole list in one query, exactly as the player dashboard does.
+ * Summing the per-robot counters per stable counts a team battle once per
+ * member, so `getPlayersOverview` subtracts the shared-side overlap, read for
+ * the whole list in one query, exactly as the player dashboard does.
  */
 
 const mockUserFindMany = jest.fn();
-const mockUserCount = jest.fn();
 const mockQueryRaw = jest.fn();
-const mockCycleMetadataFindUnique = jest.fn();
 
 jest.mock('../../../lib/prisma', () => ({
   __esModule: true,
   default: {
-    user: {
-      findMany: (...args: unknown[]) => mockUserFindMany(...args),
-      count: (...args: unknown[]) => mockUserCount(...args),
-    },
-    cycleMetadata: { findUnique: (...args: unknown[]) => mockCycleMetadataFindUnique(...args) },
-    cycleSnapshot: { findUnique: jest.fn().mockResolvedValue(null) },
+    user: { findMany: (...args: unknown[]) => mockUserFindMany(...args) },
     $queryRaw: (...args: unknown[]) => mockQueryRaw(...args),
   },
 }));
 
-jest.mock('../../standings/robotLeagueTiers', () => ({
-  getRobotLeagueTiers: jest.fn().mockResolvedValue(new Map()),
-  tierOf: () => 'bronze',
+jest.mock('../../season/seasonService', () => ({
+  getCurrentSeason: jest.fn().mockResolvedValue({ seasonNumber: 1 }),
 }));
 
-import { getEngagementPlayers } from '../adminDashboardService';
-import { RECENT_USER_ACTIVITY_LIMIT, getRecentUserActivity } from '../adminSystemStatsService';
+jest.mock('../../season/dormantStables', () => ({
+  ...jest.requireActual('../../season/dormantStables'),
+  seasonStartedAt: jest.fn().mockResolvedValue(new Date('2026-08-01T00:00:00Z')),
+}));
+
+import { getPlayersOverview } from '../adminPlayersService';
 import {
   robotCountersFrom,
   sharedSidesFrom,
@@ -45,7 +40,7 @@ function p(robotId: number, team: number) {
   return { robotId, userId: OWNER[robotId], team };
 }
 
-/** Serve the battles to both services: users with derived counters, and the overlap SQL. */
+/** Serve the battles: users with derived counters, and the overlap SQL. */
 function serve(battles: FixtureBattle[]): void {
   const counters = robotCountersFrom(battles);
   const users = [1, 2].map((userId) => ({
@@ -53,62 +48,36 @@ function serve(battles: FixtureBattle[]): void {
     username: `stable${userId}`,
     stableName: null,
     currency: 100_000,
-    role: 'user',
     hasCompletedOnboarding: true,
     onboardingSkipped: false,
     onboardingStep: 9,
-    onboardingStrategy: null,
     lastLoginAt: new Date(),
     createdAt: new Date(),
-    facilities: [],
     robots: Object.keys(OWNER)
       .map(Number)
       .filter((robotId) => OWNER[robotId] === userId)
-      .map((robotId) => ({
-        id: robotId,
-        name: `R${robotId}`,
-        currentHP: 100,
-        maxHP: 100,
-        elo: 1200,
-        battleReadiness: 100,
-        mainWeaponId: 1,
-        offhandWeaponId: null,
-        loadoutType: 'single',
-        stance: 'balanced',
-        createdAt: new Date(),
-        ...(counters.get(robotId) ?? { totalBattles: 0, wins: 0, losses: 0, draws: 0 }),
-      })),
+      .map((robotId) => {
+        const c = counters.get(robotId) ?? { totalBattles: 0, wins: 0 };
+        return { battleReadiness: 100, mainWeaponId: 1, totalBattles: c.totalBattles, wins: c.wins };
+      }),
   }));
   mockUserFindMany.mockResolvedValue(users);
-  mockUserCount.mockResolvedValue(users.length);
   mockQueryRaw.mockImplementation((_strings: TemplateStringsArray, userIds: number[]) =>
     Promise.resolve(sharedSidesFrom(battles, userIds)),
   );
 }
 
-async function engagementTotals(): Promise<Record<number, { totalBattles: number; totalWins: number; winRate: number }>> {
-  const { players } = await getEngagementPlayers({}, 1, 50);
-  return Object.fromEntries(players.map((pl) => [pl.userId, { totalBattles: pl.totalBattles, totalWins: pl.totalWins, winRate: pl.winRate }]));
-}
-
-async function recentUserTotals(): Promise<Record<number, { totalBattles: number; totalWins: number; winRate: number }>> {
-  const { users } = await getRecentUserActivity(5, 'all');
-  return Object.fromEntries(users.map((u) => [u.userId, {
-    totalBattles: u.summary.totalBattles,
-    totalWins: u.summary.totalWins,
-    winRate: u.summary.winRate,
-  }]));
+async function playerTotals(): Promise<Record<number, { totalBattles: number; totalWins: number; winRate: number }>> {
+  const { players } = await getPlayersOverview();
+  return Object.fromEntries(players.map((pl) => [pl.userId, { totalBattles: pl.battles, totalWins: pl.wins, winRate: pl.winRate ?? 0 }]));
 }
 
 beforeEach(() => {
   jest.clearAllMocks();
-  mockCycleMetadataFindUnique.mockResolvedValue({ totalCycles: 10, lastCycleAt: new Date() });
 });
 
-describe.each([
-  ['getEngagementPlayers', engagementTotals],
-  ['getRecentUserActivity', recentUserTotals],
-])('%s stable totals', (_name, totals) => {
+describe('getPlayersOverview stable totals', () => {
+  const totals = playerTotals;
   it('counts a tag-team battle between two stable pairs once for each stable (was 2)', async () => {
     // Stable 1's pair (11 active, 12 reserve) beat stable 2's pair (21, 22).
     serve([{ id: 1, battleType: 'tag_team', winnerId: 11, winningSide: 1, participants: [p(11, 1), p(12, 1), p(21, 2), p(22, 2)] }]);
@@ -160,51 +129,10 @@ describe.each([
   });
 });
 
-it('reads the overlap for the whole page in one query', async () => {
+it('reads the overlap for the whole list in one query', async () => {
   serve([]);
-  await getEngagementPlayers({}, 1, 50);
+  await getPlayersOverview();
 
   expect(mockQueryRaw).toHaveBeenCalledTimes(1);
   expect(mockQueryRaw.mock.calls[0][1]).toEqual([1, 2]);
-});
-
-describe('getRecentUserActivity is bounded', () => {
-  it('lists at most RECENT_USER_ACTIVITY_LIMIT newest users', async () => {
-    serve([]);
-    await getRecentUserActivity(200, 'all');
-
-    expect(RECENT_USER_ACTIVITY_LIMIT).toBe(500);
-    expect(mockUserFindMany).toHaveBeenCalledWith(expect.objectContaining({
-      take: RECENT_USER_ACTIVITY_LIMIT,
-      orderBy: { createdAt: 'desc' },
-    }));
-  });
-
-  it('caps the list even without a cycle cutoff (no cycle metadata)', async () => {
-    serve([]);
-    mockCycleMetadataFindUnique.mockResolvedValue(null);
-    const result = await getRecentUserActivity(10, 'all');
-
-    expect(result.cutoffDate).toBeNull();
-    expect(mockUserFindMany).toHaveBeenCalledWith(expect.objectContaining({ take: RECENT_USER_ACTIVITY_LIMIT }));
-  });
-
-  it('reads the overlap once, for the listed users only', async () => {
-    serve([]);
-    await getRecentUserActivity(200, 'all');
-
-    expect(mockQueryRaw).toHaveBeenCalledTimes(1);
-    expect(mockQueryRaw.mock.calls[0][1]).toEqual([1, 2]);
-  });
-
-  it('keeps totalUsers as every user in range when the list is capped', async () => {
-    serve([]);
-    mockUserCount.mockResolvedValue(1_234);
-    const result = await getRecentUserActivity(200, 'all');
-
-    expect(result.users).toHaveLength(2);
-    expect(result.totalUsers).toBe(1_234);
-    // Count and list share one where clause.
-    expect(mockUserCount.mock.calls[0][0]).toEqual({ where: mockUserFindMany.mock.calls[0][0].where });
-  });
 });

@@ -30,7 +30,6 @@ import type {
   UpgradeConfirmation,
   UpgradeWarningEntry,
   WeaponStage,
-  WinRate,
 } from '../../../utils/automatonAdminApi';
 
 // ── Labels ───────────────────────────────────────────────────────────
@@ -188,17 +187,6 @@ export function formatDateTime(iso: string): string {
   return `${day}, ${time}`;
 }
 
-/**
- * Win rate vs humans with its sample size: "43% · 61–78–3 (n = 142)", short
- * "43% (n = 142)", "— (n = 0)" without battles, "—" when there is no figure.
- */
-export function winRateVsHumansText(rate: WinRate | null, short = false): string {
-  if (!rate) return '—';
-  const n = `(n = ${rate.total})`;
-  if (rate.total === 0 || rate.percentage === null) return `— ${n}`;
-  const percent = `${formatNumber(rate.percentage)}%`;
-  return short ? `${percent} ${n}` : `${percent} · ${rate.wins}–${rate.losses}–${rate.draws} ${n}`;
-}
 
 export function formatSeconds(ms: number | null): string {
   return ms === null ? '—' : `${Math.max(0, Math.round(ms / 1000))} s`;
@@ -462,4 +450,12 @@ export function upgradeResultText(result: UpgradeConfirmation): string {
   const done = `Upgraded ${result.upgraded.length} stables to v${result.toVersion}.`;
   if (result.rejected.length === 0) return done;
   return `${done} Not upgraded: ${result.rejected.map((r) => `${r.stableName} (${r.reason})`).join(' · ')}`;
+}
+
+const BATCH_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+/** "Activated 27 Oct" from `2026-10-27`. */
+export function batchLabel(date: string): string {
+  const [, month, day] = date.split('-').map(Number);
+  return `Activated ${day} ${BATCH_MONTHS[month - 1] ?? ''}`.trim();
 }

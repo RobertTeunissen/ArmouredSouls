@@ -151,7 +151,7 @@ const SEVERITY_ORDER: Readonly<Record<AttentionSeverity, number>> = { error: 0, 
 const plural = (count: number, one: string, many: string): string => (count === 1 ? one : many);
 
 function bankruptcyItem(fact: DashboardStatus['attention']['bankruptcyRisk']): AttentionItem {
-  const base = { key: 'bankruptcy' as const, href: '/admin/players?tab=at-risk', destination: 'Players' };
+  const base = { key: 'bankruptcy' as const, href: '/admin/players?segment=low-balance', destination: 'Players' };
   if (fact === null) {
     return { ...base, severity: 'unavailable', count: null, title: 'Bankruptcy risk unavailable', detail: 'Could not be read' };
   }

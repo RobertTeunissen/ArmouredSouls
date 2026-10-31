@@ -34,6 +34,8 @@ import {
 import { ActionButton, Card, ConfirmDialog, Dialog, Field, INPUT_CLASS, Notice } from './ui';
 import { errorText, issueMessages } from './requestErrors';
 import { StableCard } from './StableCard';
+import { StablePicker } from './StablePicker';
+import { CashflowCard } from './CashflowCard';
 import { BuildOrderPanel } from './BuildOrderPanel';
 import { targetError } from './automatonText';
 import { TeamsCard } from './TeamsCard';
@@ -347,17 +349,13 @@ export function EditorTab({ profiles, strategies, selectedKey, onSelect, onChang
 
   const visibleItems = showAll ? items : items.slice(0, COLLAPSED_BLUEPRINTS);
   const hiddenCount = items.length - visibleItems.length;
-  const statusLabel = (p: { status: string }): string => (p.status === 'active' ? 'Active' : 'Draft');
 
   const header = (
     <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
       <div className="min-w-0 lg:w-96">
         <Field label="Editing">
           {(props) => (
-            <select {...props} className={INPUT_CLASS} value={selectedKey ?? ''} onChange={(e) => onSelect(e.target.value || null)}>
-              <option value="">—</option>
-              {profiles.map((p) => <option key={p.catalogueKey} value={p.catalogueKey}>{p.stableName} ({statusLabel(p)})</option>)}
-            </select>
+            <StablePicker {...props} profiles={profiles} selectedKey={selectedKey} onSelect={onSelect} showStatus />
           )}
         </Field>
       </div>
@@ -465,6 +463,7 @@ export function EditorTab({ profiles, strategies, selectedKey, onSelect, onChang
           </div>
           <div className="space-y-4 min-w-0">
             <TurnPreviewPanel stableName={detail.stableName} preview={preview} error={previewError} loading={previewing} />
+            <CashflowCard catalogueKey={detail.catalogueKey} active={detail.status === 'active'} />
             <TurnHistoryTable records={turns} />
           </div>
         </div>

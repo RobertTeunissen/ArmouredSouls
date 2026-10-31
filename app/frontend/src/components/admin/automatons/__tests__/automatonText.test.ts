@@ -18,7 +18,6 @@ import {
   turnStepLabel,
   upgradeResultText,
   upgradeWarningText,
-  winRateVsHumansText,
 } from '../automatonText';
 import { LIBRARY, PROFILES, WEAPON_MAP, listItem, turnPreview } from './fixtures';
 
@@ -79,14 +78,7 @@ describe('automatonText (approved admin text, PLAYER_FACING_TEXT §6)', () => {
       .toEqual(['1st', '2nd', '3rd', '4th', '10th', '11th', '12th', '13th', '21st', '22nd', '23rd', '101st', '111th', '112th']);
   });
 
-  it('writes the win rate vs humans with its sample size', () => {
-    const rate = { wins: 61, losses: 78, draws: 3, total: 142, percentage: 43 };
-    expect(winRateVsHumansText(rate)).toBe('43% · 61–78–3 (n = 142)');
-    expect(winRateVsHumansText(rate, true)).toBe('43% (n = 142)');
-    expect(winRateVsHumansText({ wins: 0, losses: 0, draws: 0, total: 0, percentage: null })).toBe('— (n = 0)');
-    expect(winRateVsHumansText({ wins: 0, losses: 0, draws: 0, total: 0, percentage: null }, true)).toBe('— (n = 0)');
-    expect(winRateVsHumansText(null)).toBe('—');
-  });
+
 
   it('writes the build order status details', () => {
     const preview = turnPreview();

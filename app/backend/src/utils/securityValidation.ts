@@ -42,6 +42,11 @@ export const safeSlug = z
   .regex(/^[a-zA-Z0-9_-]+$/, 'Invalid slug format');
 
 /** Positive integer ID (coerced from string or number input). */
+/** A calendar date `YYYY-MM-DD` (UTC day), e.g. an activation day filter. */
+export const calendarDate = z
+  .string()
+  .regex(/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/, 'Must be a date (YYYY-MM-DD)');
+
 export const positiveInt = z.coerce.number().int().positive();
 
 /**

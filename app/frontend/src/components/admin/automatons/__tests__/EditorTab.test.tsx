@@ -9,6 +9,7 @@ import { LIBRARY, PROFILES, WEAPONS, WEAPON_MAP, blueprint, detail, turnPreview 
 const api = vi.hoisted(() => ({
   getProfile: vi.fn(),
   listTurns: vi.fn(),
+  getProfileCashflow: vi.fn(),
   listWeapons: vi.fn(),
   previewTurn: vi.fn(),
   updateBlueprint: vi.fn(),
@@ -147,6 +148,7 @@ describe('EditorTab (task 10.3)', () => {
     vi.clearAllMocks();
     api.getProfile.mockResolvedValue(detail());
     api.listTurns.mockResolvedValue({ items: [], total: 0, page: 1, limit: 20 });
+    api.getProfileCashflow.mockResolvedValue({ points: [], earned: 0, runningCosts: 0, bought: 0, lowBalanceCycles: 0 });
     api.listWeapons.mockResolvedValue(WEAPONS);
     api.previewTurn.mockResolvedValue(turnPreview());
   });

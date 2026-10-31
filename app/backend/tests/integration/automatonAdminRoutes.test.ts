@@ -53,6 +53,7 @@ const HAMMER_2 = { ...HAMMER, robotName: 'Rt Hammer Two' };
 const ROUTE_TABLE: [string, string][] = [
   ['GET', '/status'],
   ['GET', '/strategies/comparison'],
+  ['GET', '/strategies/economy'],
   ['GET', '/strategies'],
   ['POST', '/strategies/:key/upgrade'],
   ['GET', '/strategy-drafts'],
@@ -79,6 +80,7 @@ const ROUTE_TABLE: [string, string][] = [
   ['POST', '/:key/blueprints/:slot/image'],
   ['POST', '/:key/activate'],
   ['GET', '/:key/preview'],
+  ['GET', '/:key/cashflow'],
   ['GET', '/:key/turns'],
 ];
 

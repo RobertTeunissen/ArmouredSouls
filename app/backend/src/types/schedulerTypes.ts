@@ -47,6 +47,8 @@ export interface RolloverRunSummary {
     snapshotRows: number;
     accoladeRows: number;
     generatedStablesDeleted: number;
+    /** Human stables without a login all season, deleted. Absent on older rows. */
+    dormantStablesDeleted?: number;
     totalRowsPurged: number;
     durations: { archiveMs: number; purgeMs: number; postMs: number; totalMs: number };
   } | null;

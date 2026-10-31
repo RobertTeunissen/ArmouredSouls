@@ -9,11 +9,13 @@ import type { AutomatonStatusBar as StatusBarData } from '../../../utils/automat
 import { ConfirmDialog, FOCUS_RING, Notice } from './ui';
 import { errorText } from './requestErrors';
 import { formatSeconds, formatShortDateTime } from './automatonText';
+import { NEED_ATTENTION_CODES, NEED_ATTENTION_LABELS, type NeedAttentionCode } from './stablesView';
 
 export interface AutomatonStatusBarProps {
   status: StatusBarData | null;
   onToggle: (turnsEnabled: boolean) => Promise<void>;
-  onShowNeedsAttention: () => void;
+  /** Opens Stables filtered on Needs attention, optionally on one reason. */
+  onShowNeedsAttention: (reason?: NeedAttentionCode | null) => void;
 }
 
 export function AutomatonStatusBar({ status, onToggle, onShowNeedsAttention }: AutomatonStatusBarProps): ReactNode {
@@ -74,7 +76,7 @@ export function AutomatonStatusBar({ status, onToggle, onShowNeedsAttention }: A
           {status.failedCount === 0 ? (
             <p className="text-sm font-semibold text-white">None</p>
           ) : (
-            <button type="button" onClick={onShowNeedsAttention} className={`min-h-11 text-left text-sm font-semibold text-red-300 underline ${FOCUS_RING}`}>
+            <button type="button" onClick={() => onShowNeedsAttention('last_cycle_failed')} className={`min-h-11 text-left text-sm font-semibold text-red-300 underline ${FOCUS_RING}`}>
               {status.failedCount} stables
             </button>
           )}
@@ -84,9 +86,24 @@ export function AutomatonStatusBar({ status, onToggle, onShowNeedsAttention }: A
           {status.needAttentionCount === 0 ? (
             <p className="text-sm font-semibold text-white">All OK</p>
           ) : (
-            <button type="button" onClick={onShowNeedsAttention} className={`min-h-11 text-left text-sm font-semibold text-amber-200 underline ${FOCUS_RING}`}>
-              {status.needAttentionCount} stables →
-            </button>
+            <>
+              <button type="button" onClick={() => onShowNeedsAttention(null)} className={`min-h-11 text-left text-sm font-semibold text-amber-200 underline ${FOCUS_RING}`}>
+                {status.needAttentionCount} stables →
+              </button>
+              <ul className="mt-1 flex flex-wrap gap-1.5" aria-label="Needs attention by reason">
+                {NEED_ATTENTION_CODES.filter((code) => (status.needAttentionByReason?.[code] ?? 0) > 0).map((code) => (
+                  <li key={code}>
+                    <button
+                      type="button"
+                      onClick={() => onShowNeedsAttention(code)}
+                      className={`min-h-11 rounded-full px-3 text-xs ${code === 'nothing_bought' ? 'bg-amber-500/15 text-amber-200' : 'bg-red-500/15 text-red-300'} hover:bg-white/10 ${FOCUS_RING}`}
+                    >
+                      {NEED_ATTENTION_LABELS[code]} · {status.needAttentionByReason[code]}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </>
           )}
         </div>
       </div>

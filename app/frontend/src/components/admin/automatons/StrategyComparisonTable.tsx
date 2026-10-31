@@ -1,15 +1,14 @@
 /**
  * Strategies tab — Comparison (Spec #55, R11.13, R11.14, PLAYER_FACING_TEXT
  * §6.4, design §17.3, task 10.4): per strategy with active stables, averages
- * over its active stables, the highest current tier and the win rate against
- * humans with its sample size, with the human reference row. Clicking a
- * strategy opens the Stables tab filtered on it. A table from 768 px, one
+ * over its active stables and the highest current tier, with the human
+ * reference row. Clicking a strategy opens the Stables tab filtered on it. A table from 768 px, one
  * card per strategy below. "Performance by mode" follows the table.
  */
 import type { ReactNode } from 'react';
 import type { ComparisonRow, StrategyComparison } from '../../../utils/automatonAdminApi';
 import { FOCUS_RING } from './ui';
-import { formatCredits, formatNumber, tierLabel, winRateVsHumansText } from './automatonText';
+import { formatCredits, formatNumber, tierLabel } from './automatonText';
 import { StrategyModePerformance } from './StrategyModePerformance';
 
 export interface StrategyComparisonTableProps {
@@ -52,7 +51,7 @@ export function StrategyComparisonTable({ comparison, error, onOpenStrategy }: S
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-secondary border-b border-white/10">
-                  {['Strategy', 'Stables', 'Robots (avg / target)', 'Prestige (avg)', 'Highest current tier', 'Credits (avg)', 'Win rate vs humans'].map((h) => (
+                  {['Strategy', 'Stables', 'Robots (avg / target)', 'Prestige (avg)', 'Highest current tier', 'Credits (avg)'].map((h) => (
                     <th key={h} scope="col" className="py-2 pr-3 font-medium">{h}</th>
                   ))}
                 </tr>
@@ -66,7 +65,6 @@ export function StrategyComparisonTable({ comparison, error, onOpenStrategy }: S
                     <td className="py-2 pr-3">{formatNumber(Math.round(row.prestigeAverage))}</td>
                     <td className="py-2 pr-3">{bestTierText(row)}</td>
                     <td className="py-2 pr-3 whitespace-nowrap">{formatCredits(row.creditsAverage)}</td>
-                    <td className="py-2 pr-3">{row.reference ? '—' : winRateVsHumansText(row.winRate)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -81,7 +79,6 @@ export function StrategyComparisonTable({ comparison, error, onOpenStrategy }: S
                   <div className="flex justify-between gap-2"><dt className="text-secondary">Prestige (avg)</dt><dd>{formatNumber(Math.round(row.prestigeAverage))}</dd></div>
                   <div className="flex justify-between gap-2"><dt className="text-secondary">Highest current tier</dt><dd>{bestTierText(row)}</dd></div>
                   <div className="flex justify-between gap-2"><dt className="text-secondary">Credits (avg)</dt><dd>{formatCredits(row.creditsAverage)}</dd></div>
-                  <div className="flex justify-between gap-2"><dt className="text-secondary">Win rate vs humans</dt><dd className="text-right">{row.reference ? '—' : winRateVsHumansText(row.winRate, true)}</dd></div>
                 </dl>
               </li>
             ))}
@@ -89,7 +86,7 @@ export function StrategyComparisonTable({ comparison, error, onOpenStrategy }: S
         </>
       )}
       <p className="text-xs text-secondary">
-        Highest current tier: the highest league tier any robot or team of the strategy holds right now (not the season&apos;s peak), with the number of stables at that tier. Only modes a stable has actually played count; tournaments have no tier. Win rate vs humans: wins ÷ all head-to-head battles against humans this season (1v1, 2v2 and 3v3 leagues and tournaments, Tag Team), with the number of battles (n); byes, King of the Hill and Grand Melee are not counted.
+        Highest current tier: the highest league tier any robot or team of the strategy holds right now (not the season&apos;s peak), with the number of stables at that tier. Only modes a stable has actually played count; tournaments have no tier. How each strategy does per mode is in Performance by mode below; its economy is in the Economy view.
       </p>
       {rows.length > 0 && <StrategyModePerformance rows={rows} />}
     </div>

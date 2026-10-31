@@ -40,8 +40,10 @@ const battlesQuerySchema = paginationQuery.extend({
   battleType: z.string().optional(),
 });
 
-const recentUsersQuerySchema = z.object({
-  cycles: z.coerce.number().int().positive().max(200).optional().default(10),
+const economyQuerySchema = z.object({
+  stables: z.enum(['players', 'automatons', 'generated', 'all']).optional().default('players'),
+  window: z.enum(['7', '14', '30', 'season']).optional().default('7'),
+  fresh: z.enum(['true', 'false']).optional(),
 });
 
 const repairAuditQuerySchema = z.object({
@@ -268,30 +270,21 @@ describe('Admin route validation schemas', () => {
     });
   });
 
-  describe('recentUsersQuerySchema (GET /users/recent)', () => {
-    it('should default cycles to 10', () => {
-      const result = recentUsersQuerySchema.safeParse({});
+  describe('economyQuerySchema (GET /economy)', () => {
+    it('defaults to players over 7 cycles', () => {
+      const result = economyQuerySchema.safeParse({});
       expect(result.success).toBe(true);
-      if (result.success) expect(result.data.cycles).toBe(10);
+      if (result.success) expect(result.data).toEqual({ stables: 'players', window: '7' });
     });
-
-    it('should accept valid cycles value', () => {
-      const result = recentUsersQuerySchema.safeParse({ cycles: '50' });
-      expect(result.success).toBe(true);
-      if (result.success) expect(result.data.cycles).toBe(50);
+    it('accepts every stable scope and window', () => {
+      expect(economyQuerySchema.safeParse({ stables: 'automatons', window: 'season' }).success).toBe(true);
+      expect(economyQuerySchema.safeParse({ stables: 'all', window: '30' }).success).toBe(true);
     });
-
-    it('should reject cycles > 200', () => {
-      const result = recentUsersQuerySchema.safeParse({ cycles: '201' });
-      expect(result.success).toBe(false);
-    });
-
-    it('should reject cycles = 0', () => {
-      const result = recentUsersQuerySchema.safeParse({ cycles: '0' });
-      expect(result.success).toBe(false);
+    it('rejects an unknown scope or window', () => {
+      expect(economyQuerySchema.safeParse({ stables: 'bots' }).success).toBe(false);
+      expect(economyQuerySchema.safeParse({ window: '10' }).success).toBe(false);
     });
   });
-
   describe('repairAuditQuerySchema (GET /audit-log/repairs)', () => {
     it('should accept valid pagination and filters', () => {
       const result = repairAuditQuerySchema.safeParse({

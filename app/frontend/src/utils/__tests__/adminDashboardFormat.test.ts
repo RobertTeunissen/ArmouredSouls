@@ -133,7 +133,7 @@ describe('deriveAttentionItems', () => {
       ['cycle', 'ok'],
     ]);
     expect(countOpenItems(items)).toBe(2);
-    expect(items[0]).toMatchObject({ count: 3, title: 'Stables at bankruptcy risk', href: '/admin/players?tab=at-risk' });
+    expect(items[0]).toMatchObject({ count: 3, title: 'Stables at bankruptcy risk', href: '/admin/players?segment=low-balance' });
     expect(items[1]).toMatchObject({ count: 2, detail: '2 warnings' });
   });
 

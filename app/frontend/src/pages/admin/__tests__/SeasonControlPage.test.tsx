@@ -64,6 +64,7 @@ const preview: RolloverPreview = {
   rowsToPurge: { battles: 360_000, financial_ledger: 1_000_000, standings: 4000 },
   imagesRetained: 30,
   imagesDeleted: 0,
+  dormantHumanStables: { count: 3, names: ['Old Stable', 'Gone Stable', 'Quiet Stable'] },
 };
 
 const emptyHistory: SeasonRolloverHistory = { seasons: [], currentSeasonAttempts: [] };
@@ -134,6 +135,10 @@ describe('SeasonControlPage', () => {
     expect(await screen.findByText('Human players')).toBeInTheDocument();
     expect(screen.getByText('Automatons')).toBeInTheDocument();
     expect(screen.getByText('Deleted; their results stay in the archive')).toBeInTheDocument();
+    // Human stables with no login this season are deleted, with their names.
+    const dormant = screen.getByTestId('rollover-dormant');
+    expect(within(dormant).getByText(/3 deleted: no login this season/)).toBeInTheDocument();
+    expect(within(dormant).getByText('Old Stable, Gone Stable, Quiet Stable')).toBeInTheDocument();
     expect(screen.getByText('Battles and summaries')).toBeInTheDocument();
     expect(screen.getByText('Ledger, audit and snapshots')).toBeInTheDocument();
     expect(screen.getByText('1,000,000 rows')).toBeInTheDocument();

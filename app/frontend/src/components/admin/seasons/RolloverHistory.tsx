@@ -56,7 +56,8 @@ function RolloverLine({ attempt, now }: { attempt: RolloverAttempt; now: Date })
       {result && (
         <p className="mt-0.5 text-xs text-secondary">
           {formatCount(result.stablesArchived)} stables and {formatCount(result.robotsArchived)} robots archived ·{' '}
-          {formatCount(result.generatedStablesDeleted)} generated stables deleted · {formatCount(result.totalRowsPurged)} rows emptied
+          {formatCount(result.generatedStablesDeleted)} generated stables deleted ·{' '}
+          {result.dormantStablesDeleted !== undefined ? `${formatCount(result.dormantStablesDeleted)} dormant human stables deleted · ` : ''} {formatCount(result.totalRowsPurged)} rows emptied
         </p>
       )}
       {(attempt.stages || result) && (

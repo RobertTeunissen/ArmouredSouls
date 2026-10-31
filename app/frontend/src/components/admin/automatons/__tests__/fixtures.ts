@@ -25,6 +25,7 @@ export function statusBar(overrides: Partial<AutomatonStatusBar> = {}): Automato
     lastStep: { seasonNumber: 3, trigger: 'settlement', slot: 42, label: 'Cycle 42', finishedAt: '2026-10-08T00:01:00.000Z', processed: 11, durationMs: 38_000 },
     failedCount: 0,
     needAttentionCount: 2,
+    needAttentionByReason: { balance_negative: 1, last_cycle_failed: 0, nothing_bought: 1 },
     ...overrides,
   };
 }
@@ -194,7 +195,6 @@ export const COMPARISON: StrategyComparison = {
     {
       strategyKey: 'swarm', displayName: 'Swarm', reference: false, stables: 2, robots: { average: 3.5, targetAverage: 11 },
       prestigeAverage: 910, bestTier: { tier: 'silver', stables: 2 }, creditsAverage: 296_000,
-      winRate: { wins: 61, losses: 78, draws: 3, total: 142, percentage: 43 },
       modes: modes({
         league_1v1: { stablesPlayed: 2, entitiesPlayed: 5, wins: 40, losses: 38, draws: 2, matches: 80, winPercentage: 50, lowSample: true },
         koth: { stablesPlayed: 2, entitiesPlayed: 4, wins: 3, matches: 30, winPercentage: 10, bestPlacement: 1, lowSample: true },
@@ -202,12 +202,12 @@ export const COMPARISON: StrategyComparison = {
     },
     {
       strategyKey: 'paragon', displayName: 'Paragon', reference: false, stables: 1, robots: { average: 1, targetAverage: 1 },
-      prestigeAverage: 4105, bestTier: null, creditsAverage: 88_700, winRate: { wins: 0, losses: 0, draws: 0, total: 0, percentage: null },
+      prestigeAverage: 4105, bestTier: null, creditsAverage: 88_700,
       modes: modes(),
     },
     {
       strategyKey: null, displayName: 'Human stables', reference: true, stables: 9, robots: { average: 2.7, targetAverage: null },
-      prestigeAverage: 2260, bestTier: { tier: 'gold', stables: 3 }, creditsAverage: 514_000, winRate: null,
+      prestigeAverage: 2260, bestTier: { tier: 'gold', stables: 3 }, creditsAverage: 514_000,
       modes: modes({
         league_1v1: { stablesPlayed: 9, entitiesPlayed: 24, wins: 120, losses: 80, draws: 0, matches: 200, winPercentage: 60, lowSample: false },
       }),

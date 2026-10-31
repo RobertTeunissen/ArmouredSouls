@@ -18,26 +18,14 @@ import { securityMonitor } from '../services/security/securityMonitor';
 import { SecuritySeverity } from '../services/security/securityLogger';
 import { resetPassword } from '../services/auth/passwordResetService';
 import { validatePassword } from '../utils/validation';
-import { USER_FILTER_TYPES } from '../utils/buildUserFilter';
-import {
-  getAtRiskUsers,
-  getRecentUserActivity,
-  getRepairAuditLog,
-} from '../services/admin/adminStatsService';
+import { getRepairAuditLog } from '../services/admin/adminStatsService';
+import { assertHumanStable, getPlayerDetail, getPlayersOverview, searchStables } from '../services/admin/adminPlayersService';
 import { recordAction as recordAuditAction, getEntries as getAuditEntries } from '../services/admin/adminAuditLogService';
 import { handleAdminUploads, handleAdminCleanup } from '../services/moderation/adminUploadsHandler';
-import prisma from '../lib/prisma';
-import { getRobotLeagueTiers, tierOf } from '../services/standings/robotLeagueTiers';
-import { BANKRUPTCY_RISK_THRESHOLD } from '../services/admin/adminThresholds';
 
 const router = express.Router();
 
 // --- Zod schemas ---
-
-const recentUsersQuerySchema = z.object({
-  cycles: z.coerce.number().int().positive().max(200).optional().default(10),
-  filter: z.enum(USER_FILTER_TYPES).optional().default('real'),
-});
 
 const repairAuditQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
@@ -129,172 +117,29 @@ const resetPasswordLimiter = rateLimit({
 // --- Routes ---
 
 /**
- * GET /api/admin/users/at-risk
- * Get list of users at risk of bankruptcy with financial history
+ * GET /api/admin/players
+ * Every human stable with its activity segment (Active / Inactive / Dormant)
+ * and issues, plus the segment counts (Players page).
  */
-router.get('/users/at-risk', authenticateToken, requireAdmin, validateRequest({}), async (req: Request, res: Response) => {
-  try {
-    const result = await getAtRiskUsers(BANKRUPTCY_RISK_THRESHOLD);
-    res.json(result);
-  } catch (error) {
-    logger.error('[Admin] At-risk users error:', error);
-    res.status(500).json({
-      error: 'Failed to retrieve at-risk users',
-    });
-  }
-});
-
-/**
- * GET /api/admin/users/recent
- * Get users registered in the last X cycles, with their robots and activity status.
- * Query params:
- *   - cycles: number of recent cycles to look back (default: 10)
- *   - filter: 'real' | 'auto' | 'automaton' | 'all' (default: 'real')
- */
-router.get('/users/recent', authenticateToken, requireAdmin, validateRequest({ query: recentUsersQuerySchema }), async (req: Request, res: Response) => {
-  const cyclesBack = Math.min(Math.max(1, parseInt(req.query.cycles as string) || 10), 200);
-  const filter = (req.query.filter as string) || 'real';
-  const result = await getRecentUserActivity(cyclesBack, filter);
-  res.json(result);
+router.get('/players', authenticateToken, requireAdmin, validateRequest({}), async (_req: Request, res: Response) => {
+  res.json(await getPlayersOverview());
 });
 
 /**
  * GET /api/admin/users/search
- * Search for users by username, email, or user ID.
- * Returns at most 10 results with only safe fields.
+ * Find any stable (player, Automaton or generated) by #id, username, email,
+ * stable name or robot name. At most 10 results with safe fields only.
  */
 router.get('/users/search', authenticateToken, requireAdmin, validateRequest({ query: userSearchQuerySchema }), async (req: Request, res: Response) => {
-  const q = (req.query.q as string).trim();
-
-  const safeSelect = { id: true, username: true, email: true, stableName: true } as const;
-
-  // Search by exact user ID if query is numeric
-  const idResults = /^\d+$/.test(q)
-    ? await prisma.user.findMany({
-        where: { id: Number(q) },
-        select: safeSelect,
-        take: 10,
-      })
-    : [];
-
-  // Search by username (partial, case-insensitive)
-  const usernameResults = await prisma.user.findMany({
-    where: { username: { contains: q, mode: 'insensitive' } },
-    select: safeSelect,
-    take: 10,
-  });
-
-  // Search by email (partial, case-insensitive)
-  const emailResults = await prisma.user.findMany({
-    where: { email: { contains: q, mode: 'insensitive' } },
-    select: safeSelect,
-    take: 10,
-  });
-
-  // Search by stable name (partial, case-insensitive)
-  const stableNameResults = await prisma.user.findMany({
-    where: { stableName: { contains: q, mode: 'insensitive' } },
-    select: safeSelect,
-    take: 10,
-  });
-
-  // Search by robot name (partial, case-insensitive) — return the owning user
-  const robotResults = await prisma.robot.findMany({
-    where: { name: { contains: q, mode: 'insensitive' } },
-    select: { user: { select: safeSelect } },
-    take: 10,
-  });
-
-  // Deduplicate by user ID and limit to 10
-  const seen = new Set<number>();
-  const users: typeof idResults = [];
-  for (const user of [...idResults, ...usernameResults, ...emailResults, ...stableNameResults, ...robotResults.map(r => r.user)]) {
-    if (!seen.has(user.id)) {
-      seen.add(user.id);
-      users.push(user);
-      if (users.length >= 10) break;
-    }
-  }
-
-  res.json({ users });
+  res.json({ users: await searchStables(req.query.q as string) });
 });
 
 /**
  * GET /api/admin/users/:id
- * Get detailed user info for the admin player detail panel.
+ * Everything the stable detail panel shows, for any stable type.
  */
 router.get('/users/:id', authenticateToken, requireAdmin, validateRequest({ params: resetPasswordParamsSchema }), async (req: Request, res: Response) => {
-  const userId = Number(req.params.id);
-
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: {
-      id: true,
-      username: true,
-      email: true,
-      stableName: true,
-      currency: true,
-      role: true,
-      createdAt: true,
-      hasCompletedOnboarding: true,
-      onboardingStep: true,
-      robots: {
-        where: {},
-        select: {
-          id: true,
-          name: true,
-          elo: true,
-          wins: true,
-          losses: true,
-          draws: true,
-          mainWeapon: { select: { weapon: { select: { name: true } } } },
-        },
-      },
-      facilities: {
-        where: { level: { gt: 0 } },
-        select: {
-          facilityType: true,
-          level: true,
-        },
-      },
-    },
-  });
-
-  if (!user) {
-    throw new AppError('USER_NOT_FOUND', 'User not found', 404);
-  }
-
-  // Enrich robots with league tier from standings table (source of truth since Spec #40)
-  const leagueMap = await getRobotLeagueTiers(user.robots.map(r => r.id));
-
-  res.json({
-    id: user.id,
-    username: user.username,
-    email: user.email,
-    stableName: user.stableName,
-    currency: user.currency,
-    role: user.role,
-    createdAt: user.createdAt.toISOString(),
-    onboarding: {
-      completed: user.hasCompletedOnboarding,
-      currentStep: user.onboardingStep,
-    },
-    robots: user.robots.map((r) => ({
-      id: r.id,
-      name: r.name,
-      elo: r.elo,
-      league: tierOf(leagueMap, r.id),
-      wins: r.wins,
-      losses: r.losses,
-      draws: r.draws,
-      equippedWeapon: r.mainWeapon?.weapon?.name ?? null,
-    })),
-    facilities: user.facilities.map((f) => ({
-      type: f.facilityType,
-      level: f.level,
-      passiveIncome: 0,
-    })),
-  });
+  res.json(await getPlayerDetail(Number(req.params.id)));
 });
 
 /**
@@ -307,6 +152,9 @@ router.post('/users/:id/reset-password', authenticateToken, requireAdmin, resetP
   const targetUserId = Number(req.params.id);
   const { password } = req.body;
   const initiatorId = authReq.user!.userId;
+
+  // Automatons and generated stables never log in.
+  await assertHumanStable(targetUserId);
 
   // Validate password strength before delegating to service
   const validation = validatePassword(password);

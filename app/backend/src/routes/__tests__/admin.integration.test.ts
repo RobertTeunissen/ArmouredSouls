@@ -3,14 +3,15 @@
  *
  * Tests the 10 new endpoints added by the Admin Portal Redesign spec:
  * - GET /api/admin/dashboard/kpis
- * - GET /api/admin/engagement/players
- * - GET /api/admin/economy/overview
+ * - GET /api/admin/players
+ * - GET /api/admin/economy
  * - GET /api/admin/league-health
  * - GET /api/admin/achievements/analytics
  * - GET /api/admin/tuning/adoption
  * - GET /api/admin/audit-log
  * - POST /api/admin/audit-log
- * - GET /api/admin/users/search (with robot name)
+ * - GET /api/admin/users/search, GET /api/admin/users/:id
+ * - POST /api/admin/users/:id/reset-password (human stables only)
  *
  * Mocks auth middleware, service layer, and external dependencies
  * to isolate route handler logic.
@@ -23,7 +24,10 @@
 // ---------------------------------------------------------------------------
 
 const mockGetDashboardKpis = jest.fn();
-const mockGetEngagementPlayers = jest.fn();
+const mockGetPlayersOverview = jest.fn();
+const mockGetPlayerDetail = jest.fn();
+const mockSearchStables = jest.fn();
+const mockAssertHumanStable = jest.fn();
 const mockGetEconomyOverview = jest.fn();
 const mockGetLeagueHealthOverview = jest.fn();
 const mockGetLeagueSeason = jest.fn();
@@ -35,15 +39,24 @@ const mockRecordAuditAction = jest.fn();
 
 jest.mock('../../services/admin/adminStatsService', () => ({
   getSystemStats: jest.fn(),
-  getAtRiskUsers: jest.fn(),
-  getRecentUserActivity: jest.fn(),
   getRepairAuditLog: jest.fn(),
   getDashboardKpis: (...args: unknown[]) => mockGetDashboardKpis(...args),
-  getEngagementPlayers: (...args: unknown[]) => mockGetEngagementPlayers(...args),
-  getEconomyOverview: (...args: unknown[]) => mockGetEconomyOverview(...args),
   getAchievementAnalytics: (...args: unknown[]) => mockGetAchievementAnalytics(...args),
   getTuningAdoption: (...args: unknown[]) => mockGetTuningAdoption(...args),
   getRefinementAdoption: (...args: unknown[]) => mockGetRefinementAdoption(...args),
+}));
+
+jest.mock('../../services/admin/adminPlayersService', () => ({
+  getPlayersOverview: (...args: unknown[]) => mockGetPlayersOverview(...args),
+  getPlayerDetail: (...args: unknown[]) => mockGetPlayerDetail(...args),
+  searchStables: (...args: unknown[]) => mockSearchStables(...args),
+  assertHumanStable: (...args: unknown[]) => mockAssertHumanStable(...args),
+}));
+
+jest.mock('../../services/admin/adminEconomyService', () => ({
+  ECONOMY_STABLE_SCOPES: ['players', 'automatons', 'generated', 'all'],
+  ECONOMY_WINDOWS: ['7', '14', '30', 'season'],
+  getEconomyOverview: (...args: unknown[]) => mockGetEconomyOverview(...args),
 }));
 
 jest.mock('../../services/admin/league-health', () => ({
@@ -123,24 +136,7 @@ jest.mock('../../services/security/securityMonitor', () => ({
   SecuritySeverity: { INFO: 'info', WARNING: 'warning', CRITICAL: 'critical' },
 }));
 
-// Mock prisma for user search endpoint.
-//
-// `users/search` looks robots up on `prisma.robot` directly rather than through a
-// `robots: { some: ... }` relation filter on User, so the robot delegate has to be
-// present or the whole handler 500s on `prisma.robot.findMany` being undefined.
-const mockPrismaUserFindMany = jest.fn().mockResolvedValue([]);
-const mockPrismaRobotFindMany = jest.fn().mockResolvedValue([]);
-jest.mock('../../lib/prisma', () => ({
-  __esModule: true,
-  default: {
-    user: {
-      findMany: (...args: unknown[]) => mockPrismaUserFindMany(...args),
-    },
-    robot: {
-      findMany: (...args: unknown[]) => mockPrismaRobotFindMany(...args),
-    },
-  },
-}));
+jest.mock('../../lib/prisma', () => ({ __esModule: true, default: {} }));
 
 // Mock other services used by admin routes that we don't test here
 jest.mock('../../services/league/leagueBattleOrchestrator', () => ({
@@ -206,6 +202,7 @@ jest.mock('../../services/admin/tournaments', () => ({
 
 import request from 'supertest';
 
+import { AppError } from '../../errors';
 import { buildUserFilter } from '../../utils/buildUserFilter';
 import express from 'express';
 import adminRouter from '../admin';
@@ -272,36 +269,20 @@ const sampleBattleActivity = {
   timestamp: '2026-10-22T14:02:31.000Z',
 };
 
-const sampleEngagement = {
-  players: [
-    {
-      userId: 1,
-      username: 'player1',
-      stableName: 'Stable One',
-      lastLoginAt: '2026-04-20T12:00:00.000Z',
-      daysSinceLogin: 3,
-      churnRisk: 'medium',
-      activityIndicators: {
-        checkedMatches: true,
-        investedFacilities: false,
-        boughtWeapons: true,
-        upgradedAttributes: false,
-      },
-    },
-  ],
-  total: 1,
-  page: 1,
-  pageSize: 25,
-  totalPages: 1,
+const samplePlayers = {
+  seasonNumber: 1,
+  seasonStartedAt: '2026-08-01T00:00:00.000Z',
+  thresholds: { lowBalance: 10000, inactiveAfterDays: 3 },
+  counts: { all: 1, active: 1, inactive: 0, dormant: 0, onboardingStuck: 0, lowBalance: 0 },
+  players: [{ userId: 1, username: 'player1', stableName: 'Stable One', robots: 2, battles: 10, wins: 6, winRate: 60, currency: 50000, lastLoginAt: '2026-10-30T10:00:00.000Z', createdAt: '2026-03-28T00:00:00.000Z', segment: 'active', issues: [] }],
+  timestamp: '2026-10-30T12:00:00.000Z',
 };
 
 const sampleEconomy = {
-  totalCreditsInCirculation: 5000000,
-  inflationRate: 2.5,
-  averagePlayerIncome: 15000,
-  averagePlayerCosts: 12000,
-  weaponPurchaseTrend: [{ cycle: 99, purchases: 10 }],
-  creditTrend: [{ cycle: 99, totalCredits: 4900000 }],
+  scope: { stables: 'players', window: '7', fromCycle: 82, toCycle: 88, cycles: 7 },
+  kpis: { earned: 315, spent: 267, net: 48, earnedPerCycle: 45, spentPerCycle: 38, repairsShareOfBattleIncome: 18.4, heldNow: 401, medianBalance: 3, stables: 87 },
+  sources: [], sinks: [], perCycle: [], balanceBands: [], byStableType: [],
+  timestamp: '2026-10-30T12:00:00.000Z',
 };
 
 const sampleLeagueHealth = {
@@ -520,75 +501,60 @@ describe('Admin API — New Endpoints Integration Tests', () => {
   });
 
   // -----------------------------------------------------------------------
-  // GET /api/admin/engagement/players
+  // GET /api/admin/players
   // -----------------------------------------------------------------------
 
-  describe('GET /api/admin/engagement/players', () => {
-    it('should return engagement data with correct response shape', async () => {
-      mockGetEngagementPlayers.mockResolvedValue(sampleEngagement);
+  describe('GET /api/admin/players', () => {
+    it('returns the human stables with segment counts', async () => {
+      mockGetPlayersOverview.mockResolvedValue(samplePlayers);
 
-      const res = await request(app).get('/api/admin/engagement/players');
+      const res = await request(app).get('/api/admin/players');
 
       expect(res.status).toBe(200);
-      expect(res.body).toHaveProperty('players');
-      expect(res.body).toHaveProperty('total');
-      expect(Array.isArray(res.body.players)).toBe(true);
+      expect(res.body.counts).toEqual(samplePlayers.counts);
+      expect(res.body.players[0]).toMatchObject({ userId: 1, segment: 'active' });
     });
 
-    // The endpoint takes `filter`, `page` and `limit`. There is no `pageSize`,
-    // `sortBy` or `sortOrder`, and the service signature is (userFilter, page, limit).
-    // The previous assertion described a sort-capable endpoint that does not exist.
-    it('should pass the built user filter, page and limit to the service', async () => {
-      mockGetEngagementPlayers.mockResolvedValue(sampleEngagement);
-
-      await request(app).get('/api/admin/engagement/players?page=2&limit=10&filter=all');
-
-      expect(mockGetEngagementPlayers).toHaveBeenCalledWith(buildUserFilter('all'), 2, 10);
-    });
-
-    // Replaces a test that asserted 400 for an unknown `sortBy`. That parameter has
-    // never been declared on the schema, so Zod's .strip() drops it and the request
-    // correctly succeeds — it was asserting validation of something absent. This
-    // covers a bound the schema does declare instead.
-    it('should reject a limit above the declared maximum', async () => {
-      const res = await request(app).get('/api/admin/engagement/players?limit=500');
-
-      expect(res.status).toBe(400);
-      expect(res.body.code).toBe('VALIDATION_ERROR');
-    });
-
-    it('should reject invalid filter values', async () => {
-      const res = await request(app).get(
-        '/api/admin/engagement/players?filter=bogus'
-      );
-
-      expect(res.status).toBe(400);
-      expect(res.body.code).toBe('VALIDATION_ERROR');
+    it('is admin-only', async () => {
+      mockUser = { userId: 2, username: 'player', role: 'user' };
+      const res = await request(app).get('/api/admin/players');
+      expect(res.status).toBe(403);
+      expect(mockGetPlayersOverview).not.toHaveBeenCalled();
     });
   });
 
   // -----------------------------------------------------------------------
-  // GET /api/admin/economy/overview
+  // GET /api/admin/economy
   // -----------------------------------------------------------------------
 
-  describe('GET /api/admin/economy/overview', () => {
-    it('should return economy overview with correct response shape', async () => {
+  describe('GET /api/admin/economy', () => {
+    it('defaults to players over 7 cycles', async () => {
       mockGetEconomyOverview.mockResolvedValue(sampleEconomy);
 
-      const res = await request(app).get('/api/admin/economy/overview');
+      const res = await request(app).get('/api/admin/economy');
 
       expect(res.status).toBe(200);
-      expect(res.body).toHaveProperty('totalCreditsInCirculation');
-      expect(res.body).toHaveProperty('inflationRate');
-      expect(res.body).toHaveProperty('averagePlayerIncome');
-      expect(res.body).toHaveProperty('averagePlayerCosts');
+      expect(res.body.kpis.earned).toBe(315);
+      expect(mockGetEconomyOverview).toHaveBeenCalledWith('players', '7', { fresh: false });
     });
 
-    it('should propagate service errors as 500', async () => {
+    it('passes the stable scope, window and fresh flag', async () => {
+      mockGetEconomyOverview.mockResolvedValue(sampleEconomy);
+
+      await request(app).get('/api/admin/economy?stables=automatons&window=season&fresh=true');
+
+      expect(mockGetEconomyOverview).toHaveBeenCalledWith('automatons', 'season', { fresh: true });
+    });
+
+    it('rejects an unknown scope or window', async () => {
+      expect((await request(app).get('/api/admin/economy?stables=bots')).status).toBe(400);
+      expect((await request(app).get('/api/admin/economy?window=10')).status).toBe(400);
+      expect(mockGetEconomyOverview).not.toHaveBeenCalled();
+    });
+
+    it('propagates service errors as 500', async () => {
       mockGetEconomyOverview.mockRejectedValue(new Error('DB error'));
-
-      const res = await request(app).get('/api/admin/economy/overview');
-
+      const res = await request(app).get('/api/admin/economy');
       expect(res.status).toBe(500);
     });
   });
@@ -962,70 +928,47 @@ describe('Admin API — New Endpoints Integration Tests', () => {
   });
 
   // -----------------------------------------------------------------------
-  // GET /api/admin/users/search (with robot name)
+  // Stable search, detail panel and password reset
   // -----------------------------------------------------------------------
 
   describe('GET /api/admin/users/search', () => {
-    const sampleUsers = [
-      { id: 1, username: 'player1', email: 'p1@test.com', stableName: 'Stable One' },
-    ];
-
-    it('should return search results with correct response shape', async () => {
-      mockPrismaUserFindMany.mockResolvedValue(sampleUsers);
-
-      const res = await request(app).get('/api/admin/users/search?q=player');
-
-      expect(res.status).toBe(200);
-      expect(res.body).toHaveProperty('users');
-      expect(Array.isArray(res.body.users)).toBe(true);
-    });
-
-    it('should search by robot name and return the owning user', async () => {
-      mockPrismaUserFindMany.mockResolvedValue(sampleUsers);
-      mockPrismaRobotFindMany.mockResolvedValue([{ user: sampleUsers[0] }]);
+    it('returns the matching stables of any type', async () => {
+      mockSearchStables.mockResolvedValue([{ id: 1, username: 'player1', stableName: 'Stable One', stableKind: 'human' }]);
 
       const res = await request(app).get('/api/admin/users/search?q=Ultron');
 
       expect(res.status).toBe(200);
-      // Robots are queried on their own delegate, selecting the owning user. The
-      // previous assertion looked for a `robots: { some: { name } }` relation filter
-      // on a User query, which is not how this is implemented.
-      const robotCall = mockPrismaRobotFindMany.mock.calls.find(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (call: any) => call[0]?.where?.name,
-      );
-      expect(robotCall).toBeDefined();
+      expect(res.body.users).toHaveLength(1);
+      expect(mockSearchStables).toHaveBeenCalledWith('Ultron');
     });
 
-    it('should reject missing q parameter', async () => {
-      const res = await request(app).get('/api/admin/users/search');
-
-      expect(res.status).toBe(400);
-      expect(res.body.code).toBe('VALIDATION_ERROR');
+    it('rejects a missing or too long q', async () => {
+      expect((await request(app).get('/api/admin/users/search')).status).toBe(400);
+      expect((await request(app).get(`/api/admin/users/search?q=${'a'.repeat(51)}`)).status).toBe(400);
     });
+  });
 
-    it('should reject q parameter exceeding max length (50)', async () => {
-      const longQuery = 'a'.repeat(51);
-      const res = await request(app).get(`/api/admin/users/search?q=${longQuery}`);
-
-      expect(res.status).toBe(400);
-      expect(res.body.code).toBe('VALIDATION_ERROR');
-    });
-
-    it('should deduplicate results by user ID', async () => {
-      const duplicateUser = { id: 1, username: 'player1', email: 'p1@test.com', stableName: 'Stable One' };
-      // Return the same user from multiple search paths
-      mockPrismaUserFindMany.mockResolvedValue([duplicateUser]);
-
-      const res = await request(app).get('/api/admin/users/search?q=player1');
-
+  describe('GET /api/admin/users/:id', () => {
+    it('returns the stable detail', async () => {
+      mockGetPlayerDetail.mockResolvedValue({ id: 7, username: 'p7', stableKind: 'human' });
+      const res = await request(app).get('/api/admin/users/7');
       expect(res.status).toBe(200);
-      // Even though the same user is returned from multiple queries,
-      // the endpoint deduplicates by ID
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const userIds = res.body.users.map((u: any) => u.id);
-      const uniqueIds = new Set(userIds);
-      expect(userIds.length).toBe(uniqueIds.size);
+      expect(mockGetPlayerDetail).toHaveBeenCalledWith(7);
+    });
+
+    it('rejects a non-numeric id', async () => {
+      expect((await request(app).get('/api/admin/users/abc')).status).toBe(400);
+    });
+  });
+
+  describe('POST /api/admin/users/:id/reset-password', () => {
+    it('refuses a stable that is not a player account', async () => {
+      mockAssertHumanStable.mockRejectedValue(new AppError('PASSWORD_RESET_NOT_ALLOWED', 'Only player accounts can have their password reset', 400));
+
+      const res = await request(app).post('/api/admin/users/9/reset-password').send({ password: 'Valid1234' });
+
+      expect(res.status).toBe(400);
+      expect(res.body.code).toBe('PASSWORD_RESET_NOT_ALLOWED');
     });
   });
 });

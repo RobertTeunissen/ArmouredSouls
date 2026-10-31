@@ -16,7 +16,7 @@
 import prisma from '../../lib/prisma';
 import type { AutomatonTurnTrigger } from '../../../generated/prisma';
 import { getProgramSwitch } from './programSwitch';
-import { loadActiveNeedAttention } from './needAttention';
+import { loadActiveNeedAttention, type NeedAttentionCode } from './needAttention';
 
 export interface LastTurnStep {
   seasonNumber: number;
@@ -40,6 +40,8 @@ export interface AutomatonStatusBar {
   failedCount: number;
   /** Active_Automatons with at least one Need_Attention reason. */
   needAttentionCount: number;
+  /** Active_Automatons per Need_Attention reason (a stable can have several). */
+  needAttentionByReason: Record<NeedAttentionCode, number>;
 }
 
 /** The Turn_Trigger label with its Turn_Slot (PLAYER_FACING_TEXT §6.2). */
@@ -84,8 +86,10 @@ export async function getAutomatonStatus(): Promise<AutomatonStatusBar> {
   const [program, lastStep, attention] = await Promise.all([getProgramSwitch(), readLastTurnStep(), loadActiveNeedAttention()]);
   let failedCount = 0;
   let needAttentionCount = 0;
+  const needAttentionByReason: Record<NeedAttentionCode, number> = { balance_negative: 0, last_cycle_failed: 0, nothing_bought: 0 };
   for (const reasons of attention.values()) {
     if (reasons.length > 0) needAttentionCount++;
+    for (const reason of reasons) needAttentionByReason[reason.code]++;
     if (reasons.some((r) => r.code === 'last_cycle_failed')) failedCount++;
   }
   return {
@@ -93,5 +97,6 @@ export async function getAutomatonStatus(): Promise<AutomatonStatusBar> {
     lastStep,
     failedCount,
     needAttentionCount,
+    needAttentionByReason,
   };
 }

@@ -24,7 +24,7 @@ import {
 } from '../../utils/automatonAdminApi';
 import { AutomatonStatusBar } from '../../components/admin/automatons/AutomatonStatusBar';
 import { StablesTab, type StablesFilter } from '../../components/admin/automatons/StablesTab';
-import { parseStableSort, serializeStableSort } from '../../components/admin/automatons/stablesView';
+import { NEED_ATTENTION_CODES, parseStableSort, serializeStableSort, type NeedAttentionCode } from '../../components/admin/automatons/stablesView';
 import { StrategiesTab, type StrategiesView } from '../../components/admin/automatons/StrategiesTab';
 import { EditorTab } from '../../components/admin/automatons/EditorTab';
 import { CatalogueTab } from '../../components/admin/automatons/CatalogueTab';
@@ -54,9 +54,11 @@ export default function AutomatonsPage(): ReactNode {
   const filter: StablesFilter = FILTERS.includes(params.get('filter') as StablesFilter) ? (params.get('filter') as StablesFilter) : 'all';
   const strategyFilter = params.get('strategy');
   const query = params.get('q') ?? '';
+  const reason = NEED_ATTENTION_CODES.find((code) => code === params.get('reason')) ?? null;
   const sortParam = params.get('sort');
   const sort = useMemo(() => parseStableSort(sortParam), [sortParam]);
-  const strategiesView: StrategiesView = params.get('view') === 'library' ? 'library' : 'comparison';
+  const viewParam = params.get('view');
+  const strategiesView: StrategiesView = viewParam === 'library' || viewParam === 'economy' ? viewParam : 'comparison';
   const draftParam = Number(params.get('draft'));
   const draftId = Number.isInteger(draftParam) && draftParam > 0 ? draftParam : null;
   const selectedKey = params.get('stable');
@@ -98,7 +100,7 @@ export default function AutomatonsPage(): ReactNode {
     setStatus(await getStatus());
   };
 
-  const showNeedsAttention = (): void => update({ tab: 'stables', filter: 'attention', strategy: null, q: null });
+  const showNeedsAttention = (code: NeedAttentionCode | null = null): void => update({ tab: 'stables', filter: 'attention', reason: code, strategy: null, q: null });
   const openStable = (key: string | null): void => update({ tab: 'editor', stable: key });
 
   const onTabKey = (event: KeyboardEvent<HTMLButtonElement>, index: number): void => {
@@ -119,11 +121,13 @@ export default function AutomatonsPage(): ReactNode {
         strategyFilter={strategyFilter}
         query={query}
         sort={sort}
-        onFilterChange={(f) => update({ filter: f === 'all' ? null : f })}
+        reason={reason}
+        onReasonChange={(code) => update({ reason: code })}
+        onFilterChange={(f) => update({ filter: f === 'all' ? null : f, reason: null })}
         onStrategyChange={(key) => update({ strategy: key })}
         onQueryChange={(q) => update({ q: q === '' ? null : q })}
         onSortChange={(s) => update({ sort: s === null ? null : serializeStableSort(s) })}
-        onClearFilters={() => update({ filter: null, strategy: null, q: null })}
+        onClearFilters={() => update({ filter: null, strategy: null, q: null, reason: null })}
         onOpenStable={(key) => openStable(key)}
         onActivateAll={async () => {
           const { outcomes } = await activateAllDrafts();

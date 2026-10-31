@@ -371,6 +371,23 @@ export interface ProfileListPage {
 }
 
 /** Profiles with progress, ordered by Catalogue_Key (R11.2). */
+/**
+ * Each profile's most recent Turn_Record. One DISTINCT ON read of the ids on
+ * the `(profile_id, started_at)` index, then the rows: a nested `take: 1`
+ * include would load every turn of the season for every listed profile.
+ */
+async function readLatestTurns(profileIds: readonly number[]): Promise<Map<number, TurnRow>> {
+  if (profileIds.length === 0) return new Map();
+  const latest = await prisma.$queryRaw<{ id: number }[]>`
+    SELECT DISTINCT ON ("profile_id") "id"
+    FROM "automaton_turns"
+    WHERE "profile_id" IN (${Prisma.join([...profileIds])})
+    ORDER BY "profile_id", "started_at" DESC, "id" DESC`;
+  if (latest.length === 0) return new Map();
+  const turns = await prisma.automatonTurn.findMany({ where: { id: { in: latest.map((row) => row.id) } } });
+  return new Map(turns.map((turn) => [turn.profileId, turn]));
+}
+
 export async function listProfiles(query: ProfileListQuery, deps: ProfileServiceDeps = {}): Promise<ProfileListPage> {
   const registry = registryOf(deps);
   const filters: Prisma.AutomatonProfileWhereInput = {
@@ -396,13 +413,13 @@ export async function listProfiles(query: ProfileListQuery, deps: ProfileService
       include: {
         user: { select: { id: true, stableName: true, currency: true, prestige: true, _count: { select: { robots: true } } } },
         _count: { select: { blueprints: true } },
-        turns: { orderBy: { startedAt: 'desc' }, take: 1 },
       },
     }),
   ]);
   const userIds = rows.flatMap((row) => (row.userId === null ? [] : [row.userId]));
-  const [tiers, attentionByProfile] = await Promise.all([
+  const [tiers, latestTurns, attentionByProfile] = await Promise.all([
     bestTiersForUsers(userIds),
+    readLatestTurns(rows.map((row) => row.id)),
     loadNeedAttention(rows.flatMap((row) => (row.status === 'active' ? [{ profileId: row.id, balance: row.user?.currency ?? null }] : []))),
   ]);
   const items = rows.map((row): ProfileListItem => {
@@ -424,7 +441,7 @@ export async function listProfiles(query: ProfileListQuery, deps: ProfileService
       prestige: row.user?.prestige ?? null,
       bestTier: best?.tier ?? null,
       bestTierMode: best?.mode ?? null,
-      lastTurn: row.turns[0] ? turnSummary(row.turns[0], strategy, params) : null,
+      lastTurn: latestTurns.has(row.id) ? turnSummary(latestTurns.get(row.id) as TurnRow, strategy, params) : null,
       activatedAt: row.activatedAt?.toISOString() ?? null,
       needAttention: attentionByProfile.get(row.id) ?? [],
     };

@@ -13,7 +13,15 @@
  *   tier the catalogue key decides, ascending in both directions.
  */
 import { compareHighestTier, type HighestTier } from '@shared/utils/automatonStandingsTier';
-import type { LibraryStrategy, ProfileListItem } from '../../../utils/automatonAdminApi';
+import type { LibraryStrategy, NeedAttentionReason, ProfileListItem } from '../../../utils/automatonAdminApi';
+
+export type NeedAttentionCode = NeedAttentionReason['code'];
+export const NEED_ATTENTION_CODES: readonly NeedAttentionCode[] = ['balance_negative', 'last_cycle_failed', 'nothing_bought'];
+export const NEED_ATTENTION_LABELS: Readonly<Record<NeedAttentionCode, string>> = {
+  balance_negative: 'Balance negative',
+  last_cycle_failed: 'Last cycle failed',
+  nothing_bought: 'Nothing bought 14+ cycles',
+};
 
 export type StablesFilter = 'all' | 'active' | 'draft' | 'attention';
 export type StableSortKey = 'name' | 'strategy' | 'robots' | 'credits' | 'prestige' | 'tier' | 'lastCycle';
@@ -34,6 +42,8 @@ export interface StablesViewInput {
   strategy: string | null;
   query: string;
   sort: StableSort | null;
+  /** With the attention filter: only stables with this reason. */
+  reason?: NeedAttentionCode | null;
 }
 
 export interface StablesView {
@@ -174,6 +184,9 @@ export function deriveStablesView(profiles: readonly ProfileListItem[] | null, i
     draft: scoped.filter((p) => matchesFilter(p, 'draft')).length,
     attention: scoped.filter((p) => matchesFilter(p, 'attention')).length,
   };
-  const rows = scoped.filter((p) => matchesFilter(p, input.filter)).sort((a, b) => compareRows(a, b, input.sort));
+  const reason = input.filter === 'attention' ? input.reason ?? null : null;
+  const rows = scoped
+    .filter((p) => matchesFilter(p, input.filter) && (reason === null || p.needAttention.some((r) => r.code === reason)))
+    .sort((a, b) => compareRows(a, b, input.sort));
   return { rows, counts, total: all.length };
 }

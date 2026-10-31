@@ -1,132 +1,141 @@
 /**
- * Unit Tests for EconomyOverviewPage
- *
- * Tests credit circulation displays, inflation rate renders, trend data shows.
- *
- * _Requirements: 14.2, 14.3, 14.4_
+ * EconomyOverviewPage: the stable-type and window toggles (in the URL), the
+ * KPIs, flows, per-cycle chart, balance bands, the per-type table, Refresh
+ * and the error state.
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import EconomyOverviewPage from '../EconomyOverviewPage';
-
-/* ------------------------------------------------------------------ */
-/*  Mocks                                                              */
-/* ------------------------------------------------------------------ */
+import type { EconomyOverview, EconomyStableScope, EconomyWindow } from '../../../utils/adminEconomyApi';
 
 const mockGet = vi.fn();
 vi.mock('../../../utils/apiClient', () => ({
   default: { get: (...args: unknown[]) => mockGet(...args) },
 }));
 
-const mockEconomyData = {
-  totalCreditsInCirculation: 5000000,
-  averageBalance: 15000,
-  medianBalance: 12000,
-  usersAtBankruptcyRisk: 3,
-  totalUsers: 50,
-  facilities: [
-    {
-      type: 'repair_bay',
-      owners: 30,
-      avgLevel: 2,
-      maxLevel: 5,
-      levelDistribution: [
-        { level: 1, count: 10 },
-        { level: 2, count: 12 },
-        { level: 3, count: 8 },
-      ],
+function overview(stables: EconomyStableScope, window: EconomyWindow): EconomyOverview {
+  const players = stables === 'players';
+  return {
+    scope: { stables, window, fromCycle: window === 'season' ? 1 : 82, toCycle: 88, cycles: window === 'season' ? 88 : 7 },
+    kpis: {
+      earned: players ? 315_000_000 : 371_000_000,
+      spent: players ? 267_000_000 : 1_230_000_000,
+      net: players ? 48_000_000 : -859_000_000,
+      earnedPerCycle: 45_000_000, spentPerCycle: 38_000_000,
+      repairsShareOfBattleIncome: players ? 18.4 : null,
+      heldNow: 401_000_000, medianBalance: 3_100_000, stables: 87,
     },
-    {
-      type: 'training_ground',
-      owners: 20,
-      avgLevel: 1,
-      maxLevel: 3,
-      levelDistribution: [
-        { level: 1, count: 15 },
-        { level: 2, count: 5 },
-      ],
-    },
-  ],
-  timestamp: '2026-04-20T12:00:00Z',
-};
+    sources: [
+      { key: 'battle_income', label: 'Battle income', amount: 267_000_000 },
+      { key: 'streaming_revenue', label: 'Streaming', amount: 24_000_000 },
+    ],
+    sinks: [
+      { key: 'attribute_upgrade', label: 'Attribute upgrades', amount: 143_000_000 },
+      { key: 'repair_cost', label: 'Repairs', amount: 49_000_000 },
+    ],
+    perCycle: [{ cycle: 87, earned: 33_000_000, spent: 35_000_000 }, { cycle: 88, earned: 45_000_000, spent: 35_000_000 }],
+    balanceBands: [
+      { label: 'below ₡0', count: 1, negative: true },
+      { label: '₡3–5M', count: 62, negative: false },
+    ],
+    byStableType: [
+      { stables: 'players', count: 87, earned: 315_000_000, spent: 267_000_000, net: 48_000_000, heldNow: 401_000_000 },
+      { stables: 'automatons', count: 500, earned: 371_000_000, spent: 1_230_000_000, net: -859_000_000, heldNow: 32_000_000 },
+      { stables: 'generated', count: 3903, earned: 2_730_000_000, spent: 1_280_000_000, net: 1_450_000_000, heldNow: 6_120_000_000 },
+    ],
+    timestamp: '2026-10-30T12:00:00.000Z',
+  };
+}
 
-/* ------------------------------------------------------------------ */
-/*  Tests                                                              */
-/* ------------------------------------------------------------------ */
+beforeEach(() => {
+  mockGet.mockReset();
+  mockGet.mockImplementation(async (_url: string, config: { params: { stables: EconomyStableScope; window: EconomyWindow } }) => ({
+    data: overview(config.params.stables, config.params.window),
+  }));
+});
+
+function LocationProbe(): React.ReactElement {
+  const location = useLocation();
+  return <output data-testid="location">{location.search}</output>;
+}
+
+const search = (): URLSearchParams => new URLSearchParams(screen.getByTestId('location').textContent ?? '');
+
+function renderPage(path = '/admin/economy') {
+  return render(
+    <MemoryRouter initialEntries={[path]}>
+      <Routes>
+        <Route path="/admin/economy" element={<><EconomyOverviewPage /><LocationProbe /></>} />
+      </Routes>
+    </MemoryRouter>,
+  );
+}
 
 describe('EconomyOverviewPage', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    mockGet.mockResolvedValue({ data: mockEconomyData });
+  it('defaults to players over 7 cycles and shows every block', async () => {
+    renderPage();
+    expect(await screen.findByText('₡315M', { selector: 'dd' })).toBeInTheDocument();
+    expect(mockGet).toHaveBeenCalledWith('/api/admin/economy', expect.objectContaining({ params: { stables: 'players', window: '7' } }));
+    expect(screen.getByText(/^Scope:/)).toHaveTextContent('Scope: human stables, ledger cycles 82–88 (7 closed cycles');
+    expect(screen.getByText('+₡48.0M', { selector: 'dd' })).toBeInTheDocument();
+    expect(screen.getByText('18.4%')).toBeInTheDocument();
+    expect(screen.getByText('median ₡3.10M · 87 stables')).toBeInTheDocument();
+    expect(within(screen.getByRole('list', { name: 'Income by source' })).getByText('Battle income')).toBeInTheDocument();
+    expect(within(screen.getByRole('list', { name: 'Spending by sink' })).getByText('Attribute upgrades')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: /cycle 87 earned ₡33.0M, spent ₡35.0M; cycle 88 earned ₡45.0M/ })).toBeInTheDocument();
+    expect(within(screen.getByRole('list', { name: 'Stables per balance band' })).getByText('62')).toBeInTheDocument();
+    const table = screen.getByRole('table', { name: /per stable type/ });
+    expect(within(table).getByText('−₡859M')).toHaveClass('text-error');
+    expect(within(table).getByText('₡6.12B')).toBeInTheDocument();
+    expect(screen.queryByText(/Facility Popularity/i)).toBeNull();
   });
 
-  const renderPage = () =>
-    render(
-      <MemoryRouter>
-        <EconomyOverviewPage />
-      </MemoryRouter>,
-    );
-
-  it('should render the page header', () => {
+  it('switches stable type and window, keeping both in the URL', async () => {
+    const user = userEvent.setup();
     renderPage();
-    expect(screen.getByText('Economy Overview')).toBeInTheDocument();
+    await screen.findByText('₡315M', { selector: 'dd' });
+    await user.click(screen.getByRole('button', { name: 'Automatons' }));
+    expect(search().get('stables')).toBe('automatons');
+    await waitFor(() => expect(mockGet).toHaveBeenLastCalledWith('/api/admin/economy', expect.objectContaining({ params: { stables: 'automatons', window: '7' } })));
+    expect(await screen.findByText('₡371M', { selector: 'dd' })).toBeInTheDocument();
+    expect(screen.getByText('−₡859M', { selector: 'dd' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Automatons' })).toHaveAttribute('aria-pressed', 'true');
+
+    await user.click(screen.getByRole('button', { name: 'Season' }));
+    expect(search().get('window')).toBe('season');
+    await waitFor(() => expect(mockGet).toHaveBeenLastCalledWith('/api/admin/economy', expect.objectContaining({ params: { stables: 'automatons', window: 'season' } })));
+    expect(await screen.findByText(/ledger cycles 1–88/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Players' }));
+    await user.click(screen.getByRole('button', { name: '7 cycles' }));
+    expect(search().has('stables')).toBe(false);
+    expect(search().has('window')).toBe(false);
   });
 
-  it('should display credits in circulation', async () => {
-    renderPage();
-    await waitFor(() => {
-      expect(screen.getByText('Credits in Circulation')).toBeInTheDocument();
-      const creditElements = screen.getAllByText('₡5.0M');
-      expect(creditElements.length).toBeGreaterThanOrEqual(1);
-    });
+  it('reads the toggles from a deep link', async () => {
+    renderPage('/admin/economy?stables=all&window=30');
+    await waitFor(() => expect(mockGet).toHaveBeenCalledWith('/api/admin/economy', expect.objectContaining({ params: { stables: 'all', window: '30' } })));
+    expect(await screen.findByRole('button', { name: 'All' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: '30 cycles' })).toHaveAttribute('aria-pressed', 'true');
   });
 
-  it('should display average balance', async () => {
+  it('refreshes past the cache', async () => {
+    const user = userEvent.setup();
     renderPage();
-    await waitFor(() => {
-      expect(screen.getByText('Average Balance')).toBeInTheDocument();
-      expect(screen.getByText('₡15.0K')).toBeInTheDocument();
-    });
+    await screen.findByText('₡315M', { selector: 'dd' });
+    await user.click(screen.getByRole('button', { name: /Refresh/ }));
+    await waitFor(() => expect(mockGet).toHaveBeenLastCalledWith('/api/admin/economy', expect.objectContaining({ params: { stables: 'players', window: '7', fresh: 'true' } })));
   });
 
-  it('should display median balance', async () => {
+  it('shows an error with Retry', async () => {
+    const user = userEvent.setup();
+    mockGet.mockRejectedValueOnce(new Error('boom'));
     renderPage();
-    await waitFor(() => {
-      expect(screen.getByText('Median Balance')).toBeInTheDocument();
-      expect(screen.getByText('₡12.0K')).toBeInTheDocument();
-    });
-  });
-
-  it('should display bankruptcy risk', async () => {
-    renderPage();
-    await waitFor(() => {
-      expect(screen.getByText('Bankruptcy Risk')).toBeInTheDocument();
-      expect(screen.getByText('3 (6.0%)')).toBeInTheDocument();
-    });
-  });
-
-  it('should display facility popularity section', async () => {
-    renderPage();
-    await waitFor(() => {
-      expect(screen.getByText('Facility Popularity')).toBeInTheDocument();
-      expect(screen.getByText('Repair Bay')).toBeInTheDocument();
-      expect(screen.getByText('Training Ground')).toBeInTheDocument();
-    });
-  });
-
-  it('should fetch from the economy overview endpoint', async () => {
-    renderPage();
-    await waitFor(() => {
-      expect(mockGet).toHaveBeenCalledWith('/api/admin/economy/overview');
-    });
-  });
-
-  it('should display error state when API fails', async () => {
-    mockGet.mockRejectedValue({ response: { data: { error: 'Economy service down' } } });
-    renderPage();
-    await waitFor(() => {
-      expect(screen.getByText('Economy service down')).toBeInTheDocument();
-    });
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Could not load the economy.');
+    await user.click(within(alert).getByRole('button', { name: 'Retry' }));
+    expect(await screen.findByText('₡315M', { selector: 'dd' })).toBeInTheDocument();
   });
 });

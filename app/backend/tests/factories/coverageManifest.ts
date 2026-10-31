@@ -1171,10 +1171,10 @@ export const COVERAGE_MANIFEST: CoverageManifest = {
     },
     {
       id: 'admin-economy-overview',
-      route: '/api/admin/economy/overview',
-      currentSource: { file: 'app/backend/src/routes/adminAnalytics.ts', symbol: 'GET /economy/overview' },
-      purpose: 'economy KPI and financial compatibility reporting',
-      preserves: ['filter query', 'existing KPI response fields'],
+      route: '/api/admin/economy',
+      currentSource: { file: 'app/backend/src/routes/adminAnalytics.ts', symbol: 'GET /economy' },
+      purpose: 'ledger-based credit flows and balances per stable type (Economy page)',
+      preserves: ['stables and window query', 'sources and sinks from financial_ledger', 'balance bands'],
       targetTestTiers: ['unit', 'integration'],
     },
     {

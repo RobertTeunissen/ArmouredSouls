@@ -299,7 +299,7 @@ The financial capture change preserves existing admin contracts while adding gen
 - `/api/admin/audit-log/repairs` remains scoped to subtype-bearing `robot_repair` records and keeps `repairType`, `creditsCharged`, and manual-discount fields available.
 - `/api/admin/daily-finances/process` remains available. Its response continues to include `summary.totalCostsDeducted`, `usersProcessed`, and `timestamp`; mutation delegates to `Settlement_Service` or the endpoint is a non-mutating preview.
 - `/api/admin/cycles/bulk` preserves `includeDailyFinances`, `settlement.finances`, `totalPassiveIncome`, `totalOperatingCosts`, `usersProcessed`, and `skipped` while delegating settlement mutation.
-- `/api/admin/economy/overview` preserves the response fields and filters consumed by `EconomyOverviewPage`.
+- `/api/admin/economy` (replaced `/api/admin/economy/overview` in admin redesign part 5) reads credit flows from `financial_ledger` by transaction type and stable type; see ADMIN_PANEL_GUIDE.md §Economy.
 
 `CycleControlsPage`, `RepairLogPage`, `AuditLogPage`, and `EconomyOverviewPage` require no redesign. Generic financial audit rows are visible through the existing audit route; the repair route remains a repair-domain view rather than a generic ledger view.
 

@@ -1,239 +1,145 @@
 /**
- * EconomyOverviewPage — Credits in circulation, balance stats, bankruptcy risk,
- * facility popularity with per-level breakdown.
+ * EconomyOverviewPage — where credits come from, where they go, and where
+ * they pile up (`/admin/economy`).
  *
- * Fetches from GET /api/admin/economy/overview.
+ * A toolbar picks the stable type (Players by default, Automatons, Generated,
+ * All) and the window (7 / 14 / 30 closed cycles, or the season); both live in
+ * the URL (`stables`, `window`). Blocks: KPIs, sources and sinks from the
+ * financial ledger, earned vs spent per cycle, balance bands and the
+ * per-stable-type table. Facility adoption is on Meta, bankruptcy risk on
+ * Players (Low balance).
+ * Data: `GET /api/admin/economy`.
  *
- * Requirements: 14.1, 14.2, 14.3, 14.4
+ * Definitions: docs/guides/ADMIN_PANEL_GUIDE.md §Economy.
  */
-import { useState, useEffect, useCallback } from 'react';
-import {
-  AdminPageHeader,
-  AdminStatCard,
-} from '../../components/admin/shared';
-import { api } from '../../utils/api';
+import { useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { ADMIN_FOCUS_RING, AdminPageHeader, PanelError, PanelSkeleton } from '../../components/admin/shared';
+import { ToggleChip } from '../../components/admin/automatons/ui';
+import { EconomyBalances, EconomyByStableType, EconomyFlows, EconomyKpis, EconomyPerCycle } from '../../components/admin/economy/EconomyBlocks';
+import { SCOPE_LABELS, scopeNoun } from '../../utils/adminEconomyFormat';
 import { ApiError } from '../../utils/ApiError';
+import { isAbortError } from '../../utils/abort';
+import { getEconomyOverview, type EconomyOverview, type EconomyStableScope, type EconomyWindow } from '../../utils/adminEconomyApi';
+import { formatUtcTime } from '../../utils/adminDashboardFormat';
 
-/* ------------------------------------------------------------------ */
-/*  Types (matches backend getEconomyOverview response)                */
-/* ------------------------------------------------------------------ */
+const SCOPES: readonly EconomyStableScope[] = ['players', 'automatons', 'generated', 'all'];
+const WINDOWS: readonly { key: EconomyWindow; label: string }[] = [
+  { key: '7', label: '7 cycles' },
+  { key: '14', label: '14 cycles' },
+  { key: '30', label: '30 cycles' },
+  { key: 'season', label: 'Season' },
+];
 
-interface LevelCount {
-  level: number;
-  count: number;
+function readScope(value: string | null): EconomyStableScope {
+  return SCOPES.find((s) => s === value) ?? 'players';
 }
 
-interface FacilityEntry {
-  type: string;
-  owners: number;
-  avgLevel: number;
-  maxLevel: number;
-  levelDistribution: LevelCount[];
-  [key: string]: unknown;
+function readWindow(value: string | null): EconomyWindow {
+  return WINDOWS.find((w) => w.key === value)?.key ?? '7';
 }
 
-interface EconomyOverview {
-  totalCreditsInCirculation: number;
-  averageBalance: number;
-  medianBalance: number;
-  usersAtBankruptcyRisk: number;
-  totalUsers: number;
-  facilities: FacilityEntry[];
-  timestamp: string;
-}
-
-/* ------------------------------------------------------------------ */
-/*  Helpers                                                            */
-/* ------------------------------------------------------------------ */
-
-function formatCredits(value: number): string {
-  if (value >= 1_000_000) return `₡${(value / 1_000_000).toFixed(1)}M`;
-  if (value >= 1_000) return `₡${(value / 1_000).toFixed(1)}K`;
-  return `₡${value.toLocaleString()}`;
-}
-
-function formatFacilityName(type: string): string {
-  return type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-}
-
-/* ------------------------------------------------------------------ */
-/*  Level distribution bar                                             */
-/* ------------------------------------------------------------------ */
-
-function LevelBar({ distribution, owners }: { distribution: LevelCount[]; owners: number }) {
-  if (distribution.length === 0) return <span className="text-secondary">—</span>;
-  const maxCount = Math.max(...distribution.map(d => d.count));
-
+function ChipGroup<T extends string>({ label, options, value, onChange }: { label: string; options: readonly { key: T; label: string }[]; value: T; onChange: (value: T) => void }): ReactNode {
   return (
-    <div className="flex items-end gap-px h-6">
-      {distribution.map(({ level, count }) => (
-        <div
-          key={level}
-          className="bg-primary/70 hover:bg-primary rounded-t transition-colors relative group min-w-[8px]"
-          style={{ height: `${Math.max(15, (count / maxCount) * 100)}%`, flex: 1 }}
-          title={`Level ${level}: ${count} player${count !== 1 ? 's' : ''} (${Math.round((count / owners) * 100)}%)`}
-        >
-          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block bg-surface-elevated text-white text-xs px-2 py-1 rounded whitespace-nowrap z-10 border border-white/10">
-            Lv.{level}: {count} ({Math.round((count / owners) * 100)}%)
-          </div>
-        </div>
+    <div className="flex flex-wrap items-center gap-2" role="group" aria-label={label}>
+      <span className="text-xs text-secondary" aria-hidden="true">{label}</span>
+      {options.map((option) => (
+        <ToggleChip key={option.key} pressed={value === option.key} onClick={() => onChange(option.key)} className="px-3">
+          {option.label}
+        </ToggleChip>
       ))}
     </div>
   );
 }
 
-/* ------------------------------------------------------------------ */
-/*  Component                                                          */
-/* ------------------------------------------------------------------ */
-
-function EconomyOverviewPage() {
+function EconomyOverviewPage(): React.ReactElement {
+  const [params, setParams] = useSearchParams();
+  const stables = readScope(params.get('stables'));
+  const cycleWindow = readWindow(params.get('window'));
   const [data, setData] = useState<EconomyOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [expandedFacility, setExpandedFacility] = useState<string | null>(null);
-
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await api.get<EconomyOverview>('/api/admin/economy/overview');
-      setData(data);
-    } catch (err: unknown) {
-      const msg = (err instanceof ApiError && err.message) || 'Failed to load economy data';
-      setError(msg);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const [refresh, setRefresh] = useState(0);
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    const controller = new AbortController();
+    setLoading(true);
+    setError(null);
+    getEconomyOverview(stables, cycleWindow, { fresh: refresh > 0, signal: controller.signal })
+      .then((overview) => {
+        if (controller.signal.aborted) return;
+        setData(overview);
+        setLoading(false);
+      })
+      .catch((err: unknown) => {
+        if (controller.signal.aborted || isAbortError(err, controller.signal)) return;
+        setError((err instanceof ApiError && err.message) || 'Could not load the economy.');
+        setLoading(false);
+      });
+    return () => controller.abort();
+  }, [stables, cycleWindow, refresh]);
 
-  const bankruptcyPct = data && data.totalUsers > 0
-    ? ((data.usersAtBankruptcyRisk / data.totalUsers) * 100).toFixed(1)
-    : '0';
+  const set = (name: 'stables' | 'window', value: string, fallback: string): void => {
+    setParams((current) => {
+      const next = new URLSearchParams(current);
+      if (value === fallback) next.delete(name);
+      else next.set(name, value);
+      return next;
+    }, { replace: true });
+  };
+
+  const shown = data && data.scope.stables === stables && data.scope.window === cycleWindow ? data : null;
 
   return (
     <div data-testid="economy-overview-page" className="space-y-6">
       <AdminPageHeader
-        title="Economy Overview"
-        subtitle="Credit circulation, balance distribution, and facility adoption"
-        actions={
-          <button
-            type="button"
-            onClick={fetchData}
-            disabled={loading}
-            className="px-3 py-1.5 text-sm bg-surface-elevated text-secondary hover:text-white rounded transition-colors"
-          >
-            {loading ? 'Loading...' : '↻ Refresh'}
-          </button>
-        }
-      />
-
-      {error && (
-        <div className="bg-red-900/50 border border-red-700 text-red-200 px-4 py-3 rounded text-sm flex justify-between items-center">
-          <span>{error}</span>
-          <button onClick={fetchData} className="px-3 py-1 bg-red-500/20 text-red-400 rounded hover:bg-red-500/30 transition-colors text-sm">
-            Retry
-          </button>
-        </div>
-      )}
-
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <AdminStatCard
-          label="Credits in Circulation"
-          value={loading ? '...' : formatCredits(data?.totalCreditsInCirculation ?? 0)}
-          color="primary"
-          icon={<span>💰</span>}
-        />
-        <AdminStatCard
-          label="Average Balance"
-          value={loading ? '...' : formatCredits(data?.averageBalance ?? 0)}
-          color="info"
-          icon={<span>📊</span>}
-        />
-        <AdminStatCard
-          label="Median Balance"
-          value={loading ? '...' : formatCredits(data?.medianBalance ?? 0)}
-          color="info"
-          icon={<span>📈</span>}
-        />
-        <AdminStatCard
-          label="Bankruptcy Risk"
-          value={loading ? '...' : `${data?.usersAtBankruptcyRisk ?? 0} (${bankruptcyPct}%)`}
-          color={data && data.usersAtBankruptcyRisk > 0 ? 'error' : 'success'}
-          icon={<span>⚠️</span>}
-        />
-      </div>
-
-      {/* Facility Popularity */}
-      <div className="bg-surface rounded-lg p-6">
-        <h3 className="text-lg font-semibold mb-1">Facility Popularity</h3>
-        <p className="text-sm text-secondary mb-4">Click a row to see the level distribution. Hover the bars for details.</p>
-
-        {loading ? (
-          <div className="text-center py-8 text-secondary">Loading...</div>
-        ) : !data || data.facilities.length === 0 ? (
-          <div className="text-center py-8 text-secondary">No facility data available</div>
-        ) : (
-          <div className="space-y-0 divide-y divide-white/5">
-            {/* Header */}
-            <div className="grid grid-cols-12 gap-2 px-4 py-2 text-xs font-semibold text-secondary">
-              <div className="col-span-3">Facility</div>
-              <div className="col-span-1 text-right">Owners</div>
-              <div className="col-span-1 text-right">Avg Lv</div>
-              <div className="col-span-1 text-right">Max Lv</div>
-              <div className="col-span-6">Level Distribution</div>
-            </div>
-
-            {data.facilities.map((facility) => {
-              const isExpanded = expandedFacility === facility.type;
-              return (
-                <div key={facility.type}>
-                  <button
-                    type="button"
-                    onClick={() => setExpandedFacility(isExpanded ? null : facility.type)}
-                    className="w-full grid grid-cols-12 gap-2 px-4 py-3 text-sm hover:bg-white/5 transition-colors items-center text-left"
-                  >
-                    <div className="col-span-3 font-medium">{formatFacilityName(facility.type)}</div>
-                    <div className="col-span-1 text-right">{facility.owners}</div>
-                    <div className="col-span-1 text-right">{facility.avgLevel}</div>
-                    <div className="col-span-1 text-right">{facility.maxLevel}</div>
-                    <div className="col-span-6">
-                      <LevelBar distribution={facility.levelDistribution} owners={facility.owners} />
-                    </div>
-                  </button>
-
-                  {/* Expanded level detail */}
-                  {isExpanded && (
-                    <div className="px-4 pb-4 pt-1">
-                      <div className="bg-surface-elevated rounded-lg p-4">
-                        <h4 className="text-sm font-semibold text-secondary mb-3">
-                          {formatFacilityName(facility.type)} — Level Breakdown
-                        </h4>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
-                          {facility.levelDistribution.map(({ level, count }) => {
-                            const pct = facility.owners > 0 ? Math.round((count / facility.owners) * 100) : 0;
-                            return (
-                              <div key={level} className="bg-surface rounded p-2 text-center">
-                                <p className="text-xs text-secondary">Level {level}</p>
-                                <p className="text-lg font-bold">{count}</p>
-                                <p className="text-xs text-tertiary">{pct}% of owners</p>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+        title="Economy"
+        subtitle="Where credits come from, where they go, and where they pile up"
+        actions={(
+          <div className="flex items-center gap-3">
+            <span className="whitespace-nowrap text-xs text-secondary" aria-live="polite">
+              {loading && data ? 'Refreshing…' : data ? `Last updated ${formatUtcTime(data.timestamp, true)}` : ''}
+            </span>
+            <button
+              type="button"
+              onClick={() => setRefresh((r) => r + 1)}
+              disabled={loading}
+              className={`min-h-11 whitespace-nowrap rounded-md border border-white/10 bg-surface-elevated px-3 text-sm text-white hover:bg-white/10 disabled:opacity-60 ${ADMIN_FOCUS_RING}`}
+            >
+              <span aria-hidden="true">↻ </span>Refresh
+            </button>
           </div>
         )}
+      />
+
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+        <ChipGroup label="Stables" options={SCOPES.map((key) => ({ key, label: SCOPE_LABELS[key] }))} value={stables} onChange={(v) => set('stables', v, 'players')} />
+        <ChipGroup label="Window" options={WINDOWS} value={cycleWindow} onChange={(v) => set('window', v, '7')} />
       </div>
+
+      {error && <div className="rounded-lg border border-white/10 bg-surface"><PanelError message={error} onRetry={() => setRefresh((r) => r + 1)} /></div>}
+      {!shown && loading && <div className="rounded-lg border border-white/10 bg-surface"><PanelSkeleton rows={8} /></div>}
+
+      {shown && (
+        <>
+          <p className="text-xs text-secondary" role="status">
+            {shown.scope.cycles === 0
+              ? `Scope: ${scopeNoun(shown.scope.stables)}. No closed cycle yet this season, so there are no flows; balances are as of now.`
+              : `Scope: ${scopeNoun(shown.scope.stables)}, ledger cycles ${shown.scope.fromCycle}–${shown.scope.toCycle} (${shown.scope.cycles} closed cycles; the cycle in progress is left out). Per cycle = window total ÷ ${shown.scope.cycles}.`}
+          </p>
+          <EconomyKpis data={shown} />
+          <EconomyFlows data={shown} />
+          <EconomyPerCycle data={shown} />
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <EconomyBalances data={shown} />
+            <EconomyByStableType data={shown} />
+          </div>
+          <p className="text-xs text-secondary">
+            Flows come from the financial ledger, which holds the current season only. Facility adoption is on Meta; stables below the low-balance threshold are on Players.
+          </p>
+        </>
+      )}
     </div>
   );
 }
