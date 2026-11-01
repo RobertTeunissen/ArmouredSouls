@@ -215,7 +215,6 @@ router.post('/', authenticateToken, validateRequest({ body: createRobotBodySchem
 
     await trackSpending(userId, 'robots', ROBOT_CREATION_COST);
     securityMonitor.trackRobotCreation(userId, { sourceIp: req.ip || undefined, endpoint: req.originalUrl });
-    securityMonitor.trackSpending(userId, ROBOT_CREATION_COST, { sourceIp: req.ip || undefined, endpoint: req.originalUrl });
   } catch (logError) {
     logger.error('Failed to log robot creation event:', logError);
   }
@@ -611,7 +610,6 @@ router.post('/:id/upgrades', authenticateToken, validateRequest({ params: robotI
     logger.info(`[AttributeUpgrade] User ${userId} | Robot ${robotId} | Attributes: ${result.upgradeOperations.length} | Total Cost: ₡${result.totalCost.toLocaleString()} | Balance: ₡${result.user.currency.toLocaleString()}`);
 
     await trackSpending(userId, 'attributes', result.totalCost);
-    securityMonitor.trackSpending(userId, result.totalCost, { sourceIp: req.ip || undefined, endpoint: req.originalUrl });
 
     for (const op of result.upgradeOperations) {
       await eventLogger.logAttributeUpgrade(currentCycle, robotId, op.attribute, op.fromLevel, op.toLevel, op.cost, userId);

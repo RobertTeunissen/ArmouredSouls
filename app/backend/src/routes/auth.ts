@@ -24,6 +24,7 @@ import { AppError } from '../errors/AppError';
 import { validateRequest } from '../middleware/schemaValidator';
 import { stableName as stableNameSchema } from '../utils/securityValidation';
 import prisma from '../lib/prisma';
+import { securityMonitor } from '../services/security/securityMonitor';
 
 const router = express.Router();
 
@@ -235,18 +236,25 @@ router.post('/login', validateRequest({ body: loginBodySchema }), async (req: Re
 
   // Security: use the same generic "Invalid credentials" message for both
   // "user not found" and "wrong password" to prevent user enumeration attacks.
+  // Every failure is a `failed_login` security signal with the matched account
+  // (if any) and the source IP. The submitted name and password are never kept.
+  const loginContext = { sourceIp: req.ip || undefined, endpoint: req.originalUrl };
+
   if (!user) {
+    securityMonitor.logFailedLogin('unknown_account', undefined, loginContext);
     throw new AuthError(AuthErrorCode.INVALID_CREDENTIALS, 'Invalid credentials', 401);
   }
 
   // Spec #55 R2.9: Automaton_Stables cannot log in. Same generic response as an
   // unknown user, decided before the password is compared.
   if (user.stableType === 'automaton') {
+    securityMonitor.logFailedLogin('automaton', user.id, loginContext);
     throw new AuthError(AuthErrorCode.INVALID_CREDENTIALS, 'Invalid credentials', 401);
   }
 
   const validPassword = await bcrypt.compare(password, user.passwordHash);
   if (!validPassword) {
+    securityMonitor.logFailedLogin('wrong_password', user.id, loginContext);
     throw new AuthError(AuthErrorCode.INVALID_CREDENTIALS, 'Invalid credentials', 401);
   }
 

@@ -34,4 +34,13 @@ export { handleImagePreview, handleImageConfirm } from './imageUploadHandlers';
 
 export { cleanupSeasonOrphans } from './imageLibraryService';
 
-export { handleAdminUploads, handleAdminCleanup } from './adminUploadsHandler';
+export { syncUploadedImages, recordUpload } from './uploadedImageService';
+
+export {
+  getImagesOverview,
+  listImagesInUse,
+  getImageDetail,
+  removeImage,
+  previewCleanup,
+  runCleanup,
+} from './adminImagesService';

@@ -13,6 +13,8 @@ export interface PendingUploadEntry {
   acknowledgedRobotLikeness: boolean;
   moderationScores?: Record<string, number>;
   robotLikenessScore?: number;
+  /** False when the image failed the robot-likeness check (then saved only with the player's override). */
+  robotLikely?: boolean;
   createdAt: number;
 }
 

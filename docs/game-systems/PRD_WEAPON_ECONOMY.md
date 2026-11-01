@@ -344,7 +344,7 @@ Refinements bond to the specific `WeaponInventory` row. Swap the weapon to anoth
 - `app/backend/prisma/migrations/20260523063604_add_weapon_refinement/` — additive migration (CREATE TABLE only).
 - `app/shared/utils/weaponRefinement.ts` — formula module: `calculateRefinementCost`, `applyRefinementsToWeapon`, validators, `calculateRankPrefix`, `formatWeaponDisplayName`.
 - `app/shared/utils/robotAttributes.ts` — canonical 23-attribute constant extracted to a shared module.
-- `app/backend/src/routes/weaponInventory.ts` — `POST /:id/refine` (full validator chain, two-tier locking, `securityMonitor.trackSpending`, audit log + achievement check) and `PATCH /:id/custom-name` (Zod-validated name editor).
+- `app/backend/src/routes/weaponInventory.ts` — `POST /:id/refine` (full validator chain, two-tier locking, audit log + achievement check) and `PATCH /:id/custom-name` (Zod-validated name editor).
 - `app/backend/src/utils/robotCalculations.ts` — `prepareRobotForCombat` folds refinements into each weapon's effective stats before computing robot attributes.
 - `app/backend/src/services/battle/combatSimulator.ts` — `getWeaponInfo` returns rank-prefixed display name + customName; `CombatEvent.customName` field added.
 - `app/backend/src/config/achievements.ts` — 5 new achievements (E22–E26) + 5 trigger types.

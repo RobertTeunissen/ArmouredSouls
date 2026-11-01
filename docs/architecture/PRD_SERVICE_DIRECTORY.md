@@ -324,8 +324,10 @@ Security monitoring and logging.
 
 | Service | Purpose |
 |---------|---------|
-| `securityMonitor` | Singleton — tracks rate limit violations, auth failures, spending anomalies |
+| `securityMonitor` | Singleton — detects signals: failed logins, rate-limit hits, ownership violations, race-condition and robot-creation bursts, malformed requests without a login |
 | `securityLogger` | Dedicated security log file writer |
+| `securityEventStore` | Persists signals to `security_events` (fire-and-forget) |
+| `securityOverviewService` | Admin Security overview per window (`GET /api/admin/security/overview`), the dashboard security item, 90-day pruning |
 
 ### matchmaking/
 Shared matchmaking utilities consumed by all league matchmakers and tag team.

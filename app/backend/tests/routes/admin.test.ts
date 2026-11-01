@@ -171,12 +171,6 @@ jest.mock('../../src/services/cycle/cycleScheduler', () => ({
 }));
 
 
-jest.mock('../../src/services/moderation/adminUploadsHandler', () => ({
-  __esModule: true,
-  handleAdminUploads: jest.fn(),
-  handleAdminCleanup: jest.fn(),
-}));
-
 jest.mock('../../src/services/league/leagueHistoryService', () => ({
   __esModule: true,
   LEAGUE_HISTORY_MODES: [

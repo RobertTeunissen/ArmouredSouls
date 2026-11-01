@@ -162,9 +162,7 @@ router.post('/upgrade', authenticateToken, validateRequest({ body: upgradeBodySc
     const requestKey = getIdempotencyKey(req.headers);
 
     // Spec #55 task 2.1: the purchase itself lives in facilityUpgradeService.
-    const result = await upgradeFacility(userId, facilityType, requestKey, {
-      spendingMonitor: { sourceIp: req.ip || undefined, endpoint: req.originalUrl },
-    });
+    const result = await upgradeFacility(userId, facilityType, requestKey);
 
     if (result.replayed) {
       res.json({ ...result.response, achievementUnlocks: [], replayed: true });

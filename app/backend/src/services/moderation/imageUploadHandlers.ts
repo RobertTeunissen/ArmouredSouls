@@ -19,6 +19,7 @@ import { contentModerationService } from './contentModerationService';
 import { imageProcessingService } from './imageProcessingService';
 import { pendingUploadCache } from './pendingUploadCache';
 import { fileStorageService } from './fileStorageService';
+import { recordUpload } from './uploadedImageService';
 import { SecuritySeverity } from '../security/securityLogger';
 import logger from '../../config/logger';
 
@@ -89,6 +90,11 @@ export async function handleImagePreview(req: AuthRequest, res: Response): Promi
 
   // 4a: Moderation unavailable → fail-closed
   if (moderation.reason === 'moderation_unavailable') {
+    // Counted on the admin Image Uploads page ("Refused: filter offline").
+    await eventLogger.logEvent(0, 'image_moderation_unavailable' as never, {
+      robotId,
+      timestamp: new Date().toISOString(),
+    }, { userId });
     res.status(503).json({
       error: 'Image moderation service unavailable',
       code: 'MODERATION_UNAVAILABLE',
@@ -164,6 +170,7 @@ export async function handleImagePreview(req: AuthRequest, res: Response): Promi
     acknowledgedRobotLikeness: acknowledgeRobotLikeness,
     moderationScores: moderation.scores as unknown as Record<string, number>,
     robotLikenessScore: moderation.robotLikenessScore,
+    robotLikely: moderation.robotLikely,
     createdAt: Date.now(),
   });
 
@@ -223,7 +230,18 @@ export async function handleImageConfirm(req: AuthRequest, res: Response): Promi
     data: { imageUrl },
   });
 
-  // Step 7: Audit log success (include moderation scores for admin visibility, NOT in client response)
+  // Step 7a: Inventory row for the admin Image Uploads page, with the
+  // moderation scores kept for good (the audit log may be pruned).
+  await recordUpload({
+    imageUrl,
+    userId,
+    fileSize: pending.processedBuffer.length,
+    moderationScores: pending.moderationScores,
+    robotLikenessScore: pending.robotLikenessScore,
+    uploadedAnyway: pending.acknowledgedRobotLikeness && pending.robotLikely === false,
+  });
+
+  // Step 7b: Audit log success (include moderation scores for admin visibility, NOT in client response)
   await eventLogger.logEvent(0, 'image_upload_success' as never, {
     robotId,
     imageUrl,

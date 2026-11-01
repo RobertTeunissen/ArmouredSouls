@@ -1048,6 +1048,57 @@ model SchedulerJobRun {
   @@map("scheduler_job_runs")
 }
 
+// Security signals for the admin Security page (one row per signal). The
+// in-memory sliding windows of securityMonitor decide when a burst fires; this
+// table is the record that survives a deploy. Kept SECURITY_EVENT_RETENTION_DAYS
+// (90) by a nightly job. Admin page views and routine purchases are not signals.
+model SecurityEvent {
+  id         BigInt   @id @default(autoincrement())
+  occurredAt DateTime @default(now()) @map("occurred_at")
+  /// SecuritySignal in src/types/securityTypes.ts: failed_login | rate_limit |
+  /// ownership_violation | race_condition_burst | robot_creation_burst | malformed_request
+  signal     String   @db.VarChar(30)
+  /// The acting player, or the account a failed login targeted. No FK: the
+  /// stable may be deleted while its signals are still in the window.
+  userId     Int?     @map("user_id")
+  sourceIp   String?  @map("source_ip") @db.VarChar(64)
+  /// Request path without the query string.
+  endpoint   String?  @db.VarChar(200)
+  /// Small signal-specific facts (SecurityEventDetails); never submitted values.
+  details    Json     @default("{}")
+
+  @@index([occurredAt])
+  @@index([signal, occurredAt])
+  @@index([userId, occurredAt])
+  @@index([sourceIp, occurredAt])
+  @@map("security_events")
+}
+
+// Inventory of player uploads under uploads/user-robots/ (admin Image Uploads
+// page). Written on upload confirm with the moderation scores, removed when
+// the file is deleted, and reconciled with the disk at startup and after every
+// orphan sweep. Files that predate the table are backfilled without scores.
+model UploadedImage {
+  id                 Int      @id @default(autoincrement())
+  /// `/uploads/user-robots/{userId}/{uuid}.webp`, as stored in robots.image_url.
+  imageUrl           String   @unique @map("image_url") @db.VarChar(255)
+  /// Owner, from the path. No FK: account removal deletes the files and rows itself.
+  userId             Int      @map("user_id")
+  uploadedAt         DateTime @map("uploaded_at")
+  /// Size of the stored WebP in bytes.
+  fileSize           Int      @map("file_size")
+  /// nsfwjs class scores at upload (ModerationScores); null for backfilled files.
+  moderationScores   Json?    @map("moderation_scores")
+  robotLikenessScore Float?   @map("robot_likeness_score")
+  /// The player confirmed "upload anyway" after the "doesn't look like a robot" warning.
+  uploadedAnyway     Boolean  @default(false) @map("uploaded_anyway")
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  @@index([uploadedAt])
+  @@index([userId])
+  @@map("uploaded_images")
+}
+
 model LeagueHistory {
   id                  Int      @id @default(autoincrement())
   entityType          String   @map("entity_type") @db.VarChar(20) // "robot", "tag_team", or "team_battle"

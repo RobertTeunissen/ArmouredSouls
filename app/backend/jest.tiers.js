@@ -116,6 +116,8 @@ const DB_DEPENDENT = [
   // Admin redesign part 5 — dormant purge, Players, Economy, Automaton economy
   'tests/integration/dormantStablesPurge.test.ts',
   'tests/integration/adminPlayersEconomy.test.ts',
+  // Admin redesign part 6 — Security & Moderation
+  'tests/integration/adminSecurityModeration.test.ts',
   'tests/integration/automatonStrategyEconomy.test.ts',
   'tests/integration/automatonPublicExposure.test.ts',
   'tests/integration/automatonRarity.test.ts',

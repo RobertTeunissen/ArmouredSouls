@@ -15,6 +15,7 @@
 - v1.3 - Added onboarding tracking fields to User model (7 new columns for tutorial system) and ResetLog table for account reset tracking
 - v1.4 - Added King of the Hill (KotH) tables: ScheduledKothMatch, ScheduledKothMatchParticipant. Extended Robot model with 8 KotH cumulative stat fields. Added KotH relation on Battle model.
 - v2.1 - Added AdminKpiSnapshot (`admin_kpi_snapshots`) for admin dashboard trends.
+- v2.2 - Added SecurityEvent (`security_events`) and UploadedImage (`uploaded_images`) for the admin Security & Moderation pages.
 - v2.0 - Full schema audit against Prisma schema. Added BattleParticipant, AuditLog, CycleSnapshot, TagTeam, ScheduledTagTeamMatch models. Updated Battle model (removed per-robot columns migrated to BattleParticipant, added tag team fields). Updated User model (removed stale stats fields, added email and profile fields). Renamed ScheduledMatch → ScheduledLeagueMatch, TournamentMatch → ScheduledTournamentMatch. Fixed HP/Shield formulas. Added Weapon.rangeBand, Robot.imageUrl.
 
 ---
@@ -896,6 +897,13 @@ model AdminKpiSnapshot {
 ```
 
 Not truncated at Season_Rollover. The global cycle counter restarts at 0 every season, which is why the key includes the season and lookups go by `created_at` (the row between 8 days and 7 days − 1 h old).
+
+### `security_events` and `uploaded_images` (2026-11-01)
+
+Admin Security & Moderation pages (migration `20261101120000_security_events_uploaded_images`). Neither has a foreign key to `users`: a signal outlives a deleted stable for its 90 days, and account removal deletes the upload rows itself.
+
+- `security_events`: one row per security signal (`signal` is a `SECURITY_SIGNALS` value from `src/types/securityTypes.ts`), `user_id` (the acting player, or the account a failed login targeted), `source_ip`, `endpoint` (path without query string), `details` jsonb (`SecurityEventDetails`, never submitted values), `occurred_at`. Indexed by time, signal, user and IP. Deleted after 90 days by `securityEventRetentionService` (01:50 UTC); not truncated at Season_Rollover.
+- `uploaded_images`: one row per file under `uploads/user-robots/` (`image_url` unique, owner `user_id`, `uploaded_at`, `file_size`), with `moderation_scores` jsonb (`ModerationScores`), `robot_likeness_score` and `uploaded_anyway` from the upload. Files older than the table were backfilled from the disk without scores. Kept in step with the disk by `uploadedImageService`.
 
 ### SearchAnalyticsEvent selection columns (2026-10-22)
 

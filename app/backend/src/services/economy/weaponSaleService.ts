@@ -229,8 +229,7 @@ export async function sellWeapon(
   }
 
   // Non-blocking audit log + structured log.
-  // Note: does NOT call securityMonitor.trackSpending — resale is income,
-  // not spending; audit_log is the canonical tracking surface.
+  // audit_log is the canonical tracking surface for resale income.
   try {
     const cycleMetadata = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
     const currentCycle = (cycleMetadata?.totalCycles || 0) + 1;

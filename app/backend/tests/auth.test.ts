@@ -141,6 +141,24 @@ describe('Authentication Endpoints', () => {
       expect(response.body).toHaveProperty('error');
     });
 
+    it('should record a failed login as a security signal without the submitted values', async () => {
+      const startedAt = new Date();
+      await request(app).post('/api/auth/login').send({ username: testUser.username, password: 'wrongpassword' });
+
+      // Written fire-and-forget; give the insert a moment.
+      const until = Date.now() + 3000;
+      let rows = await prisma.securityEvent.findMany({ where: { signal: 'failed_login', userId: testUser.id } });
+      while (rows.length === 0 && Date.now() < until) {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        rows = await prisma.securityEvent.findMany({ where: { signal: 'failed_login', userId: testUser.id } });
+      }
+      expect(rows).toHaveLength(1);
+      expect(rows[0]).toMatchObject({ endpoint: '/api/auth/login', details: { reason: 'wrong_password' } });
+      expect(rows[0].sourceIp).toBeTruthy();
+      expect(JSON.stringify(rows.map(({ id: _id, ...rest }) => rest))).not.toContain('wrongpassword');
+      await prisma.securityEvent.deleteMany({ where: { userId: testUser.id, occurredAt: { gte: startedAt } } });
+    });
+
     it('should return 400 for missing credentials', async () => {
       const response = await request(app)
         .post('/api/auth/login')

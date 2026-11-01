@@ -50,7 +50,7 @@ const statusFixture = (attention: Partial<DashboardStatus['attention']> = {}): D
   queuedMatches: 180,
   attention: {
     bankruptcyRisk: { count: 3, threshold: 10000 },
-    security: { activeAlerts: 1, critical: 1 },
+    security: { signals: 9, alerts: 1 },
     automatons: { needAttention: 5, failed: 0 },
     cycleHealth: { settlementOverdue: false, failedJobs: [], stuckMatches: 0 },
     ...attention,
@@ -147,7 +147,7 @@ describe('DashboardPage', () => {
     const links = within(panel).getAllByRole('link');
     expect(links.map((link) => link.getAttribute('href'))).toEqual([
       '/admin/players?segment=low-balance',
-      '/admin/security',
+      '/admin/security?window=24h',
       '/admin/automatons?tab=stables&filter=attention',
     ]);
     expect(within(panel).getByText('Last cycle healthy')).toBeInTheDocument();
@@ -158,7 +158,7 @@ describe('DashboardPage', () => {
     routeApi({
       status: () => Promise.resolve(statusFixture({
         bankruptcyRisk: { count: 0, threshold: 10000 },
-        security: { activeAlerts: 0, critical: 0 },
+        security: { signals: 0, alerts: 0 },
         automatons: { needAttention: 0, failed: 0 },
       })),
     });

@@ -185,12 +185,6 @@ jest.mock('../../services/auth/passwordResetService', () => ({
 jest.mock('../../utils/validation', () => ({
   validatePassword: jest.fn().mockReturnValue({ valid: true }),
 }));
-jest.mock('../../services/moderation/adminUploadsHandler', () => ({
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  handleAdminUploads: jest.fn((_req: any, res: any) => res.json([])),
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  handleAdminCleanup: jest.fn((_req: any, res: any) => res.json({ success: true })),
-}));
 const mockGetTournamentOverview = jest.fn();
 jest.mock('../../services/admin/tournaments', () => ({
   getTournamentOverview: (...args: unknown[]) => mockGetTournamentOverview(...args),
@@ -253,7 +247,7 @@ const sampleStatus = {
   queuedMatches: 180,
   attention: {
     bankruptcyRisk: { count: 3, threshold: 10000 },
-    security: { activeAlerts: 1, critical: 1 },
+    security: { signals: 3, alerts: 1 },
     automatons: { needAttention: 5, failed: 0 },
     cycleHealth: { settlementOverdue: false, failedJobs: [], stuckMatches: 0 },
   },

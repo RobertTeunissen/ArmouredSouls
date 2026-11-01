@@ -169,24 +169,25 @@ function bankruptcyItem(fact: DashboardStatus['attention']['bankruptcyRisk']): A
 }
 
 function securityItem(fact: DashboardStatus['attention']['security']): AttentionItem {
-  const base = { key: 'security' as const, href: '/admin/security', destination: 'Security' };
+  const base = { key: 'security' as const, href: '/admin/security?window=24h', destination: 'Security' };
   if (fact === null) {
     return { ...base, severity: 'unavailable', count: null, title: 'Security status unavailable', detail: 'Could not be read' };
   }
-  if (fact.activeAlerts === 0) {
-    return { ...base, severity: 'ok', count: null, title: 'No active security alerts', detail: 'No recent warning or critical events' };
+  if (fact.alerts === 0) {
+    return {
+      ...base,
+      severity: 'ok',
+      count: null,
+      title: 'No security bursts or violations',
+      detail: fact.signals === 0 ? 'No signals in the last 24 hours' : `${formatCount(fact.signals)} ${plural(fact.signals, 'signal', 'signals')} in the last 24 hours, none worth a look`,
+    };
   }
-  const warnings = fact.activeAlerts - fact.critical;
-  const parts = [
-    fact.critical > 0 ? `${fact.critical} critical` : null,
-    warnings > 0 ? `${warnings} ${plural(warnings, 'warning', 'warnings')}` : null,
-  ].filter((part): part is string => part !== null);
   return {
     ...base,
-    severity: fact.critical > 0 ? 'error' : 'warning',
-    count: fact.activeAlerts,
-    title: plural(fact.activeAlerts, 'Active security alert', 'Active security alerts'),
-    detail: parts.join(' · '),
+    severity: 'warning',
+    count: fact.alerts,
+    title: plural(fact.alerts, 'Security burst or violation', 'Security bursts or violations'),
+    detail: 'Last 24 hours: failed-login bursts, ownership violations, race-condition or robot-creation bursts',
   };
 }
 

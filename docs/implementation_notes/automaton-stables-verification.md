@@ -79,7 +79,7 @@ Behaviour details chosen where the spec was silent:
 - **Draft creation does not run the R3.7 blueprint check.** Reason: a new draft has no blueprints yet and R3.7 does not list creation; activation (R2.3) and strategy assignment enforce it.
 - **Draft preview is refused while the draft breaks a builder rule.** Reason: an invalid Build_Order cannot be interpreted safely.
 - **Strategy startup check with the database down** checks the files and starts with a warning. Reason: refusing to boot without a DB would change today's boot behaviour; a missing version is still caught at turn time (R6.6).
-- **Automaton purchases are not fed to the per-request spending-anomaly monitor** (`securityMonitor.trackSpending` needs a client request). Event-log rows are written as for human purchases.
+- **Automaton purchases are not fed to a spending-anomaly monitor.** Since November 2026 no purchase is (the rapid-spending signal was removed). Event-log rows are written as for human purchases.
 - **Opening-build tolerance (design §14.1 left it open):** robots, facility levels and the final Saving Goal must match the approved tables exactly; credits within ₡15,000 (0.5% of ₡3,000,000), because the tables' attribute figures are estimates.
 
 Placement and tooling:

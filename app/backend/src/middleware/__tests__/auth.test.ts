@@ -29,7 +29,6 @@ jest.mock('../../services/security/securityMonitor', () => ({
   securityMonitor: {
     setStableName: jest.fn(),
     logAuthorizationFailure: jest.fn(),
-    logAdminAccess: jest.fn(),
     trackRateLimitViolation: jest.fn(),
     recordEvent: jest.fn(),
   },
@@ -198,7 +197,7 @@ describe('requireAdmin — rate limiter and access logging', () => {
     jest.clearAllMocks();
   });
 
-  it('should log admin access on successful role check', () => {
+  it('should not record admin page views as security signals', () => {
     const req = createMockRequest({
       user: { userId: 1, username: 'admin1', role: 'admin' },
       ip: '10.0.0.1',
@@ -210,11 +209,8 @@ describe('requireAdmin — rate limiter and access logging', () => {
 
     requireAdmin(req, res, next);
 
-    expect(securityMonitor.logAdminAccess).toHaveBeenCalledWith(1, {
-      sourceIp: '10.0.0.1',
-      endpoint: '/api/admin/dashboard',
-      method: 'GET',
-    });
+    expect(securityMonitor.logAuthorizationFailure).not.toHaveBeenCalled();
+    expect(next).toHaveBeenCalled();
   });
 
   it('should call the admin rate limiter after role check passes', () => {
@@ -232,7 +228,7 @@ describe('requireAdmin — rate limiter and access logging', () => {
     expect(next).toHaveBeenCalled();
   });
 
-  it('should not call rate limiter or log access for non-admin users', () => {
+  it('should record an ownership violation and skip the rate limiter for non-admin users', () => {
     const req = createMockRequest({
       user: { userId: 2, username: 'player1', role: 'user' },
     } as Partial<AuthRequest>);
@@ -242,7 +238,7 @@ describe('requireAdmin — rate limiter and access logging', () => {
     requireAdmin(req, res, next);
 
     expect(res._status).toBe(403);
-    expect(securityMonitor.logAdminAccess).not.toHaveBeenCalled();
+    expect(securityMonitor.logAuthorizationFailure).toHaveBeenCalledWith(2, 'admin_endpoint', 0, expect.any(Object));
     expect(mockRateLimiter).not.toHaveBeenCalled();
     expect(next).not.toHaveBeenCalled();
   });

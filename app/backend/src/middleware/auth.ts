@@ -109,12 +109,8 @@ export const requireAdmin = (
     return res.status(403).json({ error: 'Admin access required' });
   }
 
-  const sourceIp = req.ip || undefined;
-  const endpoint = req.originalUrl;
-  const method = req.method;
-
-  securityMonitor.logAdminAccess(req.user.userId, { sourceIp, endpoint, method });
-
+  // Admin page views are not security signals; admin actions are audited in
+  // admin_audit_log by the routes that change something.
   adminRateLimiter(req, res, () => {
     next();
   });

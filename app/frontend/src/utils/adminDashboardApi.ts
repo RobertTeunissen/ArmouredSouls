@@ -50,7 +50,8 @@ export interface DashboardStatus {
   queuedMatches: number | null;
   attention: {
     bankruptcyRisk: { count: number; threshold: number } | null;
-    security: { activeAlerts: number; critical: number } | null;
+    /** Last 24 hours: every security signal, and the bursts and violations among them. */
+    security: { signals: number; alerts: number } | null;
     automatons: { needAttention: number; failed: number } | null;
     cycleHealth: DashboardCycleHealth;
   };

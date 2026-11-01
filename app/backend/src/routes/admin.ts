@@ -7,6 +7,7 @@ import usersRoutes from './adminUsers';
 import schedulerRoutes from './adminScheduler';
 import battlesRoutes from './adminBattles';
 import analysisRoutes from './adminAnalysis';
+import moderationRoutes from './adminModeration';
 
 const router = express.Router();
 
@@ -17,6 +18,7 @@ router.use('/analysis', analysisRoutes);
 router.use('/', maintenanceRoutes);
 router.use('/', analyticsRoutes);
 router.use('/', usersRoutes);
+router.use('/', moderationRoutes);
 router.use('/', battleTriggerRoutes);
 router.use('/', schedulerRoutes);
 

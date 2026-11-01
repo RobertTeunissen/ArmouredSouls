@@ -24,6 +24,7 @@ import logger from '../../config/logger';
 import { loadEnvConfig } from '../../config/env';
 import { SeasonError, SeasonErrorCode } from '../../errors';
 import { fileStorageService, type OrphanCleanupResult } from './fileStorageService';
+import { forgetUpload, forgetUploadsOfUser, syncUploadedImages } from './uploadedImageService';
 
 const UPLOAD_URL_PREFIX = '/uploads/user-robots';
 
@@ -253,6 +254,7 @@ export async function deleteImage(
   });
 
   await fileStorageService.deleteImage(relativePath);
+  await forgetUpload(relativePath);
   logger.info(`[image-library] User ${userId} deleted ${relativePath}`);
   return impact;
 }
@@ -262,6 +264,7 @@ export async function deleteAllImagesForUser(userId: number): Promise<void> {
   const userDir = fileStorageService.getAbsolutePath(`${UPLOAD_URL_PREFIX}/${userId}/`);
   try {
     await fs.rm(userDir, { recursive: true, force: true });
+    await forgetUploadsOfUser(userId);
     logger.info(`[image-library] Removed image directory for deleted user ${userId}`);
   } catch (error) {
     logger.error(
@@ -280,31 +283,35 @@ export async function deleteAllImagesForUser(userId: number): Promise<void> {
  * on, so retention would appear to work at rollover and silently fail later.
  */
 export async function cleanupSeasonOrphans(): Promise<OrphanCleanupResult> {
-  const [liveRobots, archivedRobots] = await Promise.all([
-    prisma.robot.findMany({
-      where: { imageUrl: { not: null } },
-      select: { imageUrl: true },
-    }),
-    prisma.robotSeasonArchive.findMany({
-      where: { imageUrl: { not: null } },
-      select: { imageUrl: true },
-    }),
-  ]);
+  const referenced = await referencedUploadPaths();
+  const result = await fileStorageService.cleanupOrphans(referenced);
+  try {
+    await syncUploadedImages();
+  } catch (error) {
+    logger.warn(`[image-library] Inventory sync after the sweep failed: ${error instanceof Error ? error.message : String(error)}`);
+  }
+  return result;
+}
 
+/**
+ * Every upload path that must survive the sweep: live robots, archived
+ * seasons, and every file still inside a live user's directory (retained
+ * Image_Library images — a player who deleted a robot keeps its artwork for
+ * next season). Also used by the admin cleanup preview.
+ */
+export async function referencedUploadPaths(): Promise<Set<string>> {
+  const [liveRobots, archivedRobots, users] = await Promise.all([
+    prisma.robot.findMany({ where: { imageUrl: { not: null } }, select: { imageUrl: true } }),
+    prisma.robotSeasonArchive.findMany({ where: { imageUrl: { not: null } }, select: { imageUrl: true } }),
+    prisma.user.findMany({ select: { id: true } }),
+  ]);
   const referenced = new Set<string>();
   for (const r of liveRobots) if (r.imageUrl) referenced.add(r.imageUrl);
   for (const a of archivedRobots) if (a.imageUrl) referenced.add(a.imageUrl);
-
-  // Retained-but-unused images must survive the sweep too: a player who
-  // deleted a robot keeps its artwork for next season. Include every file
-  // still inside a live user's directory, up to the cap.
-  const users = await prisma.user.findMany({ select: { id: true } });
   for (const user of users) {
-    const images = await listImages(user.id);
-    for (const image of images) referenced.add(image.path);
+    for (const image of await listImages(user.id)) referenced.add(image.path);
   }
-
-  return fileStorageService.cleanupOrphans(referenced);
+  return referenced;
 }
 
 /** Resolve the uploads URL prefix, exported for tests. */

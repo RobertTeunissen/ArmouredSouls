@@ -1,8 +1,8 @@
 /**
  * Admin Users & Security Routes
  *
- * User management, search, password reset, security events, uploads and audit
- * log endpoints. Battle inspection lives in `adminBattles.ts`.
+ * User management, search, password reset and audit log endpoints. Security
+ * and image moderation live in `adminModeration.ts`. Battle inspection lives in `adminBattles.ts`.
  * Mounted at /api/admin/ from the main admin router.
  */
 
@@ -15,13 +15,11 @@ import { positiveIntParam } from '../utils/securityValidation';
 import logger from '../config/logger';
 import { AppError } from '../errors';
 import { securityMonitor } from '../services/security/securityMonitor';
-import { SecuritySeverity } from '../services/security/securityLogger';
 import { resetPassword } from '../services/auth/passwordResetService';
 import { validatePassword } from '../utils/validation';
 import { getRepairAuditLog } from '../services/admin/adminStatsService';
 import { assertHumanStable, getPlayerDetail, getPlayersOverview, searchStables } from '../services/admin/adminPlayersService';
 import { recordAction as recordAuditAction, getEntries as getAuditEntries } from '../services/admin/adminAuditLogService';
-import { handleAdminUploads, handleAdminCleanup } from '../services/moderation/adminUploadsHandler';
 
 const router = express.Router();
 
@@ -43,14 +41,6 @@ const repairAuditQuerySchema = z.object({
   robotName: z.string().max(100).optional(),
 });
 
-const securityEventsQuerySchema = z.object({
-  severity: z.enum(['info', 'warning', 'critical']).optional(),
-  eventType: z.string().optional(),
-  userId: z.coerce.number().int().positive().optional(),
-  since: z.string().optional(),
-  limit: z.coerce.number().int().positive().max(200).default(50),
-});
-
 const userSearchQuerySchema = z.object({
   q: z.string().min(1).max(50),
 });
@@ -61,14 +51,6 @@ const resetPasswordParamsSchema = z.object({
 
 const resetPasswordBodySchema = z.object({
   password: z.string(),
-});
-
-const adminUploadsQuerySchema = z.object({
-  page: z.coerce.number().int().positive().optional().default(1),
-  limit: z.coerce.number().int().positive().max(200).optional().default(50),
-  userId: z.coerce.number().int().positive().optional(),
-  startDate: z.string().optional(),
-  endDate: z.string().optional(),
 });
 
 const auditLogQuerySchema = z.object({
@@ -160,7 +142,7 @@ router.post('/users/:id/reset-password', authenticateToken, requireAdmin, resetP
   const validation = validatePassword(password);
   if (!validation.valid) {
     logger.warn('[Admin] Password reset validation failure', { initiatorId, targetUserId });
-    securityMonitor.logValidationFailure(req.originalUrl, 'weak_password', req.ip || 'unknown');
+    securityMonitor.logValidationFailure(req.originalUrl, 'weak_password', req.ip || 'unknown', true);
     res.status(400).json({ error: validation.error, code: 'VALIDATION_ERROR' });
     return;
   }
@@ -174,44 +156,6 @@ router.post('/users/:id/reset-password', authenticateToken, requireAdmin, resetP
 
   res.json({ success: true, userId: result.userId, username: result.username });
 });
-
-/**
- * GET /api/admin/security/events
- * Query recent security events with optional filters.
- * Query params: severity, eventType, userId, since (ISO date), limit (default 50, max 200)
- */
-router.get('/security/events', authenticateToken, requireAdmin, validateRequest({ query: securityEventsQuerySchema }), async (req: Request, res: Response) => {
-  const events = securityMonitor.getRecentEvents({
-    severity: req.query.severity as SecuritySeverity | undefined,
-    eventType: req.query.eventType as string | undefined,
-    userId: req.query.userId ? parseInt(req.query.userId as string) : undefined,
-    since: req.query.since ? new Date(req.query.since as string) : undefined,
-    limit: Math.min(parseInt(req.query.limit as string) || 50, 200),
-  });
-  res.json({ events, total: events.length });
-});
-
-/**
- * GET /api/admin/security/summary
- * Get a high-level overview: event counts by severity, active alerts, flagged users.
- */
-router.get('/security/summary', authenticateToken, requireAdmin, validateRequest({}), async (_req: Request, res: Response) => {
-  const summary = securityMonitor.getSummary();
-  res.json(summary);
-});
-
-/**
- * GET /api/admin/uploads
- * Paginated list of uploaded images from AuditLog (image_upload_success events).
- * Query params: page, limit, userId, startDate, endDate
- */
-router.get('/uploads', authenticateToken, requireAdmin, validateRequest({ query: adminUploadsQuerySchema }), handleAdminUploads);
-
-/**
- * POST /api/admin/uploads/cleanup
- * Trigger on-demand orphan image cleanup.
- */
-router.post('/uploads/cleanup', authenticateToken, requireAdmin, validateRequest({}), handleAdminCleanup);
 
 /**
  * GET /api/admin/audit-log

@@ -244,7 +244,7 @@ The `Caddyfile` includes a `handle /uploads/*` block that serves uploaded images
 
 ### Backup Considerations
 
-The `uploads/user-robots/` directory is not included in the PostgreSQL backup. Consider adding a separate rsync or tar backup for uploaded images if data durability is critical. Orphaned images are swept by the season rollover (Stage 4), the admin bulk cycle runner and the "Run Orphan Cleanup" button on `/admin/image-uploads`; scheduled cycles do not sweep. All three use `cleanupSeasonOrphans`, which keeps every file a live robot, an archived season or a live user's Image_Library still holds.
+The `uploads/user-robots/` directory is not included in the PostgreSQL backup. Consider adding a separate rsync or tar backup for uploaded images if data durability is critical. Orphaned images are swept by the season rollover (Stage 4), the admin bulk cycle runner and the "Clean up" button under Storage on `/admin/image-uploads` (with a preview first); scheduled cycles do not sweep. All three use `cleanupSeasonOrphans`, which keeps every file a live robot, an archived season or a live user's Image_Library still holds.
 
 ---
 

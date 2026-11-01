@@ -22,7 +22,7 @@ description: "Error contract, AppError hierarchy, error codes, and logging/secur
 - Do not add generic retry/circuit-breaker behavior around financial or non-idempotent mutations. Retries require an explicit idempotency policy.
 
 ## Security logging channel
-The security logger is implemented in `src/services/security/securityLogger.ts`, used by `SecurityMonitor`, and writes structured events to `logs/security.log` rather than the main application log or database. It retains the last 500 events for `GET /api/admin/security/events`.
+The security logger is implemented in `src/services/security/securityLogger.ts`, used by `SecurityMonitor`, and writes structured events to `logs/security.log` rather than the main application log. Security signals are also stored in `security_events` (90 days) through `securityEventStore`, which the admin Security page reads; writes are fire-and-forget.
 
 ```typescript
 interface SecurityEvent {
@@ -36,7 +36,7 @@ interface SecurityEvent {
 }
 ```
 
-Active event types are implementation contracts: `spending`, `rapid_spending`, `conflict`, `race_condition_attempt`, `authorization_failure`, `validation_failure`, `robot_creation`, `automated_robot_creation`, `rate_limit_violation`, `rate_limit_escalation`, `admin_password_reset`, and `admin_password_reset_pattern`. Preserve their names and payload semantics when changing security monitoring.
+Stored signal types (`SECURITY_SIGNALS` in `src/types/securityTypes.ts`) are implementation contracts: `failed_login`, `rate_limit`, `ownership_violation`, `race_condition_burst`, `robot_creation_burst`, and `malformed_request` (no logged-in user). Log-only types: `validation_failure` (logged-in player) and the image moderation outcomes. Preserve their names and payload semantics when changing security monitoring; never store submitted login names or passwords. Admin page views and spending are not security events.
 
 ## Ownership
 - Detailed route validation, ownership, spending locks, rate limits, moderation, and authorization policy are in `backend-security.md` and `docs/architecture/PRD_SECURITY.md`.
