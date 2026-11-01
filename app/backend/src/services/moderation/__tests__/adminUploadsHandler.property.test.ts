@@ -37,8 +37,8 @@ jest.mock('../../../config/logger', () => ({
   },
 }));
 
-jest.mock('../orphanCleanupJob', () => ({
-  runOrphanCleanup: jest.fn(),
+jest.mock('../imageLibraryService', () => ({
+  cleanupSeasonOrphans: jest.fn(),
 }));
 
 import * as fc from 'fast-check';

@@ -32,6 +32,6 @@ export { uploadRateLimiter } from './uploadRateLimiter';
 
 export { handleImagePreview, handleImageConfirm } from './imageUploadHandlers';
 
-export { runOrphanCleanup } from './orphanCleanupJob';
+export { cleanupSeasonOrphans } from './imageLibraryService';
 
 export { handleAdminUploads, handleAdminCleanup } from './adminUploadsHandler';

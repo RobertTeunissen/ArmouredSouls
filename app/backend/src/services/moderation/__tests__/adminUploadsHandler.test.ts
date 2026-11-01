@@ -7,7 +7,7 @@
  * - Filtering by userId
  * - Filtering by date range (startDate, endDate)
  * - Response format matches spec
- * - Cleanup endpoint calls runOrphanCleanup() and returns result
+ * - Cleanup endpoint calls cleanupSeasonOrphans() and returns result
  *
  * _Requirements: 13.1, 13.2, 13.3, 13.4, 13.5, 13.6, 12.4_
  */
@@ -40,12 +40,12 @@ jest.mock('../../../config/logger', () => ({
   },
 }));
 
-jest.mock('../orphanCleanupJob', () => ({
-  runOrphanCleanup: jest.fn(),
+jest.mock('../imageLibraryService', () => ({
+  cleanupSeasonOrphans: jest.fn(),
 }));
 
 import prisma from '../../../lib/prisma';
-import { runOrphanCleanup } from '../orphanCleanupJob';
+import { cleanupSeasonOrphans } from '../imageLibraryService';
 import { handleAdminUploads, handleAdminCleanup } from '../adminUploadsHandler';
 import { AuthRequest } from '../../../middleware/auth';
 
@@ -270,16 +270,16 @@ describe('handleAdminCleanup', () => {
     jest.clearAllMocks();
   });
 
-  it('should call runOrphanCleanup and return the result', async () => {
+  it('should call cleanupSeasonOrphans and return the result', async () => {
     const cleanupResult = { filesDeleted: 3, bytesReclaimed: 15000, errors: [] };
-    (runOrphanCleanup as jest.Mock).mockResolvedValue(cleanupResult);
+    (cleanupSeasonOrphans as jest.Mock).mockResolvedValue(cleanupResult);
 
     const req = mockReq();
     const res = mockRes();
 
     await handleAdminCleanup(req, res);
 
-    expect(runOrphanCleanup).toHaveBeenCalled();
+    expect(cleanupSeasonOrphans).toHaveBeenCalled();
     expect(res.status).toHaveBeenCalledWith(200);
     const body = res.json.mock.calls[0][0];
     expect(body.success).toBe(true);
@@ -294,7 +294,7 @@ describe('handleAdminCleanup', () => {
       bytesReclaimed: 5000,
       errors: ['Failed to delete /uploads/user-robots/1/bad.webp: EPERM'],
     };
-    (runOrphanCleanup as jest.Mock).mockResolvedValue(cleanupResult);
+    (cleanupSeasonOrphans as jest.Mock).mockResolvedValue(cleanupResult);
 
     const req = mockReq();
     const res = mockRes();

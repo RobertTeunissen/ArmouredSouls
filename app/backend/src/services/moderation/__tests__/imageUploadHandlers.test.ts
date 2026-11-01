@@ -282,7 +282,7 @@ describe('handleImagePreview', () => {
 // ─── handleImageConfirm ───
 
 describe('handleImageConfirm', () => {
-  it('should return 200 on happy path: store, update, delete old, remove cache', async () => {
+  it('should return 200 on happy path: store, update, keep old upload, remove cache', async () => {
     const req = makeReq({ body: { confirmationToken: '550e8400-e29b-41d4-a716-446655440000' } });
     const res = makeRes();
     const pending = {
@@ -306,7 +306,13 @@ describe('handleImageConfirm', () => {
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({ success: true, robot: updatedRobot });
     expect(mockStorage.storeImage).toHaveBeenCalledWith(1, pending.processedBuffer);
-    expect(mockStorage.deleteImage).toHaveBeenCalledWith('/uploads/user-robots/1/old.webp');
+    // The replaced upload stays in the Image_Library (Spec #45 R30): another
+    // robot or an archived season may still use it.
+    expect(mockStorage.deleteImage).not.toHaveBeenCalled();
+    expect(mockPrisma.robot.update).toHaveBeenCalledWith({
+      where: { id: 10 },
+      data: { imageUrl: '/uploads/user-robots/1/new.webp' },
+    });
     expect(mockCache.delete).toHaveBeenCalledWith('550e8400-e29b-41d4-a716-446655440000');
     expect(mockEventLogger.logEvent).toHaveBeenCalledTimes(1);
   });

@@ -2,7 +2,7 @@
  * Admin Uploads Handler
  *
  * GET  /api/admin/uploads         — paginated list of uploaded images (from AuditLog)
- * POST /api/admin/uploads/cleanup — trigger on-demand orphan cleanup
+ * POST /api/admin/uploads/cleanup — trigger on-demand orphan cleanup (cleanupSeasonOrphans)
  *
  * @module services/moderation/adminUploadsHandler
  */
@@ -11,7 +11,7 @@ import { Response } from 'express';
 import { AuthRequest } from '../../middleware/auth';
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
-import { runOrphanCleanup } from './orphanCleanupJob';
+import { cleanupSeasonOrphans } from './imageLibraryService';
 
 interface AdminUploadEntry {
   userId: number;
@@ -116,10 +116,13 @@ export async function handleAdminUploads(req: AuthRequest, res: Response): Promi
 /**
  * POST /api/admin/uploads/cleanup
  *
- * Trigger on-demand orphan cleanup and return the result.
+ * Trigger on-demand orphan cleanup and return the result. Uses the same
+ * archive- and Image_Library-aware sweep as the season rollover, so a file is
+ * only deleted when no live robot, no archived season and no live user's
+ * library still holds it.
  */
 export async function handleAdminCleanup(req: AuthRequest, res: Response): Promise<void> {
   logger.info('[Admin] Triggering on-demand orphan image cleanup...');
-  const result = await runOrphanCleanup();
+  const result = await cleanupSeasonOrphans();
   res.status(200).json({ success: true, ...result });
 }

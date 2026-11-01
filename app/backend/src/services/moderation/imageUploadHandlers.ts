@@ -211,10 +211,11 @@ export async function handleImageConfirm(req: AuthRequest, res: Response): Promi
   // Step 4: Store to disk
   const imageUrl = await fileStorageService.storeImage(userId, pending.processedBuffer);
 
-  // Step 5: Delete old custom image if exists
-  if (robot.imageUrl && robot.imageUrl.startsWith('/uploads/')) {
-    await fileStorageService.deleteImage(robot.imageUrl);
-  }
+  // Step 5: The previous custom image is deliberately kept (Spec #45 R30). It
+  // stays in the player's Image_Library, where another robot or an archived
+  // season may still use it; deletion is the player's decision. This path used
+  // to delete it unconditionally, which broke archived seasons and robots that
+  // shared the image.
 
   // Step 6: Update robot record
   const updatedRobot = await prisma.robot.update({
