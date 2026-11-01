@@ -11,6 +11,7 @@ import { summarizeYield } from '../../../utils/adminMetaFormat';
 export interface YieldHistogramProps {
   distribution: ReadonlyArray<{ threshold: number; count: number }> | null;
   loading: boolean;
+  className?: string;
 }
 
 /**
@@ -22,17 +23,19 @@ function showLabel(threshold: number, highest: number): boolean {
   return (threshold <= 20 && threshold % 5 === 0) || threshold === highest;
 }
 
-export function YieldHistogram({ distribution, loading }: YieldHistogramProps): ReactNode {
+export function YieldHistogram({ distribution, loading, className = '' }: YieldHistogramProps): ReactNode {
   const summary = distribution ? summarizeYield(distribution) : null;
   const max = summary ? Math.max(0, ...summary.bars.map((bar) => bar.count)) : 0;
   const highest = summary?.bars.at(-1)?.threshold ?? 0;
 
   return (
     <AdminPanel
+      headingLevel={3}
       title="Yield thresholds"
       actions={summary ? <span className="text-xs text-secondary">{formatCount(summary.total)} robots</span> : undefined}
       loading={loading && !summary}
       skeletonRows={5}
+      className={className}
     >
       {summary && (summary.total === 0 ? (
         <p className="p-5 text-sm text-tertiary">No robots</p>

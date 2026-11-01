@@ -36,6 +36,3 @@ export const setSubscriptionsBodySchema = z.object({
   eventTypes: z.array(eventTypeSchema).max(SUBSCRIBABLE_EVENT_TYPES.length),
 });
 
-export const adminAnalyticsQuerySchema = z.object({
-  days: z.coerce.number().int().min(1).max(90).optional(),
-});

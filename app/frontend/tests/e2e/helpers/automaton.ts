@@ -243,6 +243,8 @@ async function expectRootFits(page: Page, rootSelector: string, rootIndex: numbe
     const offending: HTMLElement[] = [];
     for (const element of Array.from(root.querySelectorAll<HTMLElement>('*'))) {
       if (skip && element.closest(skip)) continue;
+      // Screen-reader-only content is clipped to 1 px; its children's boxes are never painted.
+      if (element.parentElement?.closest('.sr-only')) continue;
       const rect = element.getBoundingClientRect();
       if (rect.width === 0 || rect.height === 0 || rect.right <= limit) continue;
       // Content inside its own horizontal scroller (wide tables) is allowed.

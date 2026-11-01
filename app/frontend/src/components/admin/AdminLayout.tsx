@@ -27,8 +27,6 @@ const PAGE_TITLES: Record<string, string> = {
   '/admin/image-uploads': 'Image Uploads',
   '/admin/changelog': 'Changelog',
   '/admin/achievements': 'Achievements',
-  '/admin/tuning': 'Tuning',
-  '/admin/refinement': 'Refinement',
   '/admin/repair-log': 'Repair Log',
   '/admin/audit-log': 'Audit Log',
   '/admin/tournaments': 'Tournaments',

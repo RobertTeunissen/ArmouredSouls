@@ -281,7 +281,7 @@ Fast one-handed builds lose a small amount of Sharpen value; slow two-handed bui
 
 - `app/shared/utils/weaponRefinement.ts` — the Refinement_Fold, plus the exported `SHARPEN_COOLDOWN_REDUCTION_PER_INSTANCE` and `FORGE_DAMAGE_INCREASE_PER_INSTANCE` constants. Note `app/backend/src/shared/utils` is a committed symlink to `app/shared/utils` (git mode `120000`), so there is one file reachable by two paths.
 - `app/frontend/src/components/weapon-refinement/refinementCopy.ts` — display copy and the trailing-zero-trimming formatter, both derived from the shared constants.
-- `RefinementModal.tsx`, `SlotBar.tsx`, `RefinementHistoryPopover.tsx`, `RefinementAdoptionPage.tsx` — copy.
+- `RefinementModal.tsx`, `SlotBar.tsx`, `RefinementHistoryPopover.tsx`, and the admin Meta page's refinement section (`utils/adminMetaFormat.ts`) — copy.
 - `app/backend/src/content/guide/weapons/refinement.md` — in-game guide, tier table and both worked examples.
 
 ---

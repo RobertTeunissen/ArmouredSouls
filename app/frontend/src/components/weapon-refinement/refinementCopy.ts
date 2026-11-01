@@ -5,7 +5,7 @@
  * into proportional ones. The percentages are derived from the shared formula
  * module rather than retyped, so a future balance pass changes one constant and
  * every surface follows: the refinement modal, the slot bar tooltips, the
- * history popover, and the admin adoption dashboard.
+ * history popover, and the refinement section of the admin Meta page.
  */
 
 import {

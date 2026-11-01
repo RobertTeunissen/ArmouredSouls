@@ -25,7 +25,7 @@ All pages manage their own data fetching. The sidebar collapses to icons on narr
 | | Practice Arena | `/admin/practice-arena` | Practice usage per UTC day, refusals and unavailable time, top practitioners, how it is used |
 | **Battle Data** | Battles | `/admin/battles` | Find any battle (all 9 modes, stable type, outcome, date, search); admin check with payout check, combat log with formulas, and export |
 | | Attributes | `/admin/attributes` | Which attributes, groups and build profiles win, per mode, from battle-time builds (was Robot Stats) |
-| | Meta | `/admin/meta` | What stables choose: stances, loadouts, yield thresholds, facilities, weapons |
+| | Meta | `/admin/meta` | What stables choose: combat settings (stances, loadouts, yield), robot builds (tuning, weapons and refinements), stable investments (event entry, facilities) |
 | | League Health | `/admin/league-health` | Every tiered league: tiers, instances, stable mix, and whether promotion and demotion move |
 | | Weapons | `/admin/weapons` | What winning robots fight with: archetype (range × loadout) and weapon effects, matchups, usage per league tier, price vs effect, refinements |
 | **Player Management** | Players | `/admin/players` | Player list with tabs (New Players, Auto-Generated, At-Risk), churn risk, engagement, search, detail slide-over |
@@ -34,8 +34,7 @@ All pages manage their own data fetching. The sidebar collapses to icons on narr
 | **Security & Moderation** | Security | `/admin/security` | Security signals per window: who triggered them and sources without an account |
 | | Image Uploads | `/admin/image-uploads` | Images in use, moderation outcomes, image removal, storage cleanup |
 | **Content** | Changelog | `/admin/changelog` | Create, edit, publish changelog entries |
-| | Achievements | `/admin/achievements` | Unlock rates, participation stats |
-| | Tuning | `/admin/tuning` | Tuning allocation adoption, attribute ranking |
+| | Achievements | `/admin/achievements` | This season's unlock rates per achievement and tier, for players, Automatons or generated stables |
 | | Search Analytics | `/admin/search-analytics` | Settled searches, no-result rate, results by category, phrase table with CSV export |
 | **Maintenance** | Repair Log | `/admin/repair-log` | Manual vs automatic repairs, savings tracking |
 | | Audit Log | `/admin/audit-log` | Admin action audit trail with filters |
@@ -104,20 +103,24 @@ Below 1280 px the sections stack in one column. Below 768 px the admin sidebar i
 
 ### Meta (`/admin/meta`)
 
-An overview of what stables choose, for the selected stable type. It moved off the Dashboard (where it was the collapsed "Meta snapshot") so the landing page stays short. The toolbar is the Dashboard's: the same filter (`?filter=`, default `real`), "Last updated" and Refresh.
+An overview of what stables choose, for the selected stable type. It moved off the Dashboard (where it was the collapsed "Meta snapshot") so the landing page stays short, and the old Tuning, Refinement and Subscriptions pages were merged into it: `/admin/tuning`, `/admin/refinement` and `/admin/subscriptions` redirect here. The toolbar is the Dashboard's: the same filter (`?filter=`, default `real`), "Last updated" and Refresh (reloads both requests).
 
-Sections (desktop: three cards, then Yield thresholds beside Facilities; they stack below 1280 px and 768 px):
+Three groups, ordered from choices made per battle to long-term investments (desktop: three cards, then two per row; they stack below 1280 px):
 
-| Section | Shows |
-|---|---|
-| Stances / Loadouts | One stacked bar per distribution plus a legend: share and robot count per option, largest first. |
-| Weapons | Owned, Equipped (owned weapons in any robot's main **or** offhand slot, `equippedInventoryItems`) and the equip rate; links to Weapons. |
-| Yield thresholds | One column per threshold in use (labels at 0–20% in steps of 5 and on the highest), the most common value highlighted. Above it: Most common (with its share), Median (the threshold of the middle robot) and Above 20% (robots and share). Exact counts per threshold are in each column's tooltip and in a screen-reader table. |
-| Facilities | Stables owning each facility at level ≥ 1 and their average level (L), most owned first, with a bar relative to the most owned; two columns from 640 px. |
+| Group | Section | Shows |
+|---|---|---|
+| Combat settings | Stances / Loadouts | One stacked bar per distribution plus a legend: share and robot count per option, largest first. |
+| | Yield thresholds | One column per threshold in use (labels at 0–20% in steps of 5 and on the highest), the most common value highlighted. Above it: Most common (with its share), Median (the threshold of the middle robot) and Above 20% (robots and share). Exact counts per threshold are in each column's tooltip and in a screen-reader table. |
+| Robot builds | Tuning | Robots tuned (at least one point) of all robots; pool used = allocated points of the summed pools, where each robot's pool is (its stable's Tuning Bay level + 1) × 10; points per attribute group (Combat, Defence, Chassis, AI, Team, as on Attributes); the top 10 attributes by points with the robots using each, and "Show all" for every tuned attribute. |
+| | Weapons and refinements | Owned, Equipped (owned weapons in any robot's main **or** offhand slot, `equippedInventoryItems`, with the share), weapons refined (share of owned), stables refining (of stables with robots) and lifetime credits spent on refinements; refinements per kind (Hone, Augment, Sharpen, Forge: count, stables, credits, with the kind's effect); the attributes Hone and Augment target most (count and total magnitude); the top 5 spenders, each linking to the Players panel. What a refinement does to winning is on Weapons (linked). |
+| Stable investments | Event entry | Robots entered in at least one event, average events per robot, robots per event (all nine, registry order, share of robots) and robots by number of events entered (0 to all nine). The Booking Office level sets how many events a robot may enter. |
+| | Facilities | Stables owning each facility at level ≥ 1 and their average level (L), most owned first, with a bar relative to the most owned; two columns from 640 px. Tuning Bay and Booking Office ownership are read here (not repeated in their sections). |
 
-All counts are robots (or stables, for Facilities) owned by users in the filter. With All or Auto-generated, generated stables dominate and their choices are randomised, so near-even splits are expected; Real players shows what people pick. Usage share next to win rate is planned as a follow-up.
+All counts are robots (or stables, for Facilities and refinement stables) owned by users in the filter. With All or Auto-generated, generated stables dominate and their choices are randomised, so near-even splits are expected; Real players shows what people pick.
 
-**API:** `GET /api/admin/stats?filter=` (`authenticateToken` + `requireAdmin`), read by its own filter-scoped loader (`hooks/useMetaOverview.ts`): a filter change aborts the previous request, so a late response for another filter is never shown.
+Dropped with the merge: subscribe/unsubscribe per cycle (it only moves at the start of a season) and the per-stable subscription table (each robot's events are in the Players panel).
+
+**API:** `GET /api/admin/stats?filter=` (choices, weapons, facilities) and `GET /api/admin/meta/builds?filter=` (tuning, refinements, event entry; `services/admin/meta/`), both `authenticateToken` + `requireAdmin`, read by their own filter-scoped loaders (`hooks/useMetaOverview.ts`): a filter change aborts the previous request, so a late response for another filter is never shown, and one failing request leaves the other sections in place. Removed: `GET /api/admin/tuning/adoption`, `GET /api/admin/refinement/adoption`, `GET /api/subscriptions/admin/analytics`.
 
 ### Cycle Controls (`/admin/cycles`)
 
@@ -339,24 +342,15 @@ Signals are stored in `security_events` (90 days, nightly retention at 01:50 UTC
 
 ### Achievements (`/admin/achievements`)
 
-Per-achievement unlock count and rate, participation stats, never-unlocked and high-unlock flags.
+Answers "which achievements are too easy or too hard?" for this season. Unlocks are season-scoped: the rollover deletes every `user_achievements` row and re-awards the few whose condition reads preserved state (those show as "before start").
 
-**API:** `GET /api/admin/achievements/analytics`
-**Filter:** Real / Auto / Automatons / All user filter
+- **Stable type** — Players (default), Automatons, Generated (`?stables=`). Player rates are out of the **active players**: human stables that logged in since the season started (not dormant, the rollover's dormant rule). Automatons and generated stables never log in, so every stable of the type counts.
+- **Headline numbers** — achievements in the catalogue (incl. secret), unlocked by someone, never unlocked, and unlocks (per active player).
+- **Unlock rate per achievement, by tier** — one dot per achievement on a 0–100% axis, a bar at the tier median; a screen-reader table gives count, median, lowest and highest rate per tier.
+- **Easier than its tier says** (hard or very hard, unlocked by 80%+) and **Harder than its tier says** (easy or medium, 25% or fewer), up to 6 each. Notes for next season's balance, not alerts.
+- **All achievements** — category filter and sortable columns: achievement, category, tier, unlocked (with rate), median day (day 1 = season start; "before start" for preparation and rollover re-awards) and, for players, All accounts (dormant players included).
 
-### Tuning (`/admin/tuning`)
-
-Tuning allocation adoption rate, total robots with tuning, and attribute ranking showing which attributes players invest tuning points into most.
-
-**API:** `GET /api/admin/tuning/adoption`
-**Filter:** Real / Auto / Automatons / All user filter
-
-### Refinement (`/admin/refinement`)
-
-Weapon Refinement (Spec #34) feature usage. Tracks adoption rate (users who refined ≥1 weapon), per-tier slot counts (Hone / Augment / Sharpen / Forge), most-targeted attributes, total credits spent on refinement, and the top 10 spenders.
-
-**API:** `GET /api/admin/refinement/adoption`
-**Filter:** Real / Auto / Automatons / All user filter
+**API:** `GET /api/admin/achievements/analytics?stables=players|automatons|generated` (`services/admin/achievements/`).
 
 ### Search Analytics (`/admin/search-analytics`)
 

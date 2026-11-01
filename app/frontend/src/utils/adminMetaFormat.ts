@@ -1,7 +1,11 @@
 /**
  * Pure helpers of the admin Meta page: shares of a distribution and the
- * yield-threshold summary. Unit-tested without rendering.
+ * yield-threshold summary, plus the labels of the build sections.
+ * Unit-tested without rendering.
  */
+import { EVENT_LABELS } from '../components/admin/automatons/automatonText';
+import { FORGE_EFFECT_LABEL, SHARPEN_EFFECT_LABEL } from '../components/weapon-refinement/refinementCopy';
+import type { RefinementKind } from './adminMetaApi';
 
 export interface ShareItem {
   label: string;
@@ -35,6 +39,39 @@ export function humanizeKey(raw: string): string {
 
 function percentage(part: number, whole: number): number {
   return whole > 0 ? (part / whole) * 100 : 0;
+}
+
+/** Whole-number percentage of `part` in `whole` ("98%"), "0%" for an empty whole. */
+export function formatPercentOf(part: number, whole: number): string {
+  return `${Math.round(percentage(part, whole))}%`;
+}
+
+const REFINEMENT_KIND_LABELS: Record<RefinementKind, string> = {
+  hone: 'Hone',
+  augment: 'Augment',
+  sharpen: 'Sharpen',
+  forge: 'Forge',
+};
+
+/** What one refinement of the kind does (Sharpen and Forge from the shared constants). */
+const REFINEMENT_KIND_EFFECTS: Record<RefinementKind, string> = {
+  hone: '+1–5 to an attribute the weapon has',
+  augment: '+1–5 to an attribute it lacks',
+  sharpen: SHARPEN_EFFECT_LABEL,
+  forge: FORGE_EFFECT_LABEL,
+};
+
+export function refinementKindLabel(kind: RefinementKind): string {
+  return REFINEMENT_KIND_LABELS[kind];
+}
+
+export function refinementKindEffect(kind: RefinementKind): string {
+  return REFINEMENT_KIND_EFFECTS[kind];
+}
+
+/** Display label of a subscribable event ("King of the Hill"), humanized when unknown. */
+export function eventLabel(eventType: string): string {
+  return EVENT_LABELS[eventType] ?? humanizeKey(eventType);
 }
 
 /** Shares of a distribution, largest first (label order breaks ties). */

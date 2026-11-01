@@ -22,6 +22,7 @@ export function FacilitiesCard({ facilities, loading }: FacilitiesCardProps): Re
 
   return (
     <AdminPanel
+      headingLevel={3}
       title="Facilities"
       actions={<span className="text-xs text-secondary">Stables owning · avg level</span>}
       loading={loading && !rows}

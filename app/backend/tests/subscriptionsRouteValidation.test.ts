@@ -11,7 +11,6 @@ import {
   robotIdParamSchema,
   subscribeBodySchema,
   setSubscriptionsBodySchema,
-  adminAnalyticsQuerySchema,
 } from '../src/routes/schemas/subscriptionSchemas';
 import { SUBSCRIBABLE_EVENT_TYPES } from '../src/services/subscription/eventRegistry';
 
@@ -93,31 +92,6 @@ describe('Subscriptions route validation schemas', () => {
 
     it('should reject a missing eventTypes field', () => {
       expect(setSubscriptionsBodySchema.safeParse({}).success).toBe(false);
-    });
-  });
-
-  describe('adminAnalyticsQuerySchema', () => {
-    it('should accept valid days parameter', () => {
-      const result = adminAnalyticsQuerySchema.safeParse({ days: '30' });
-      expect(result.success).toBe(true);
-      if (result.success) expect(result.data.days).toBe(30);
-    });
-
-    it('should accept omitted days (optional)', () => {
-      const result = adminAnalyticsQuerySchema.safeParse({});
-      expect(result.success).toBe(true);
-    });
-
-    it('should reject days below 1', () => {
-      expect(adminAnalyticsQuerySchema.safeParse({ days: '0' }).success).toBe(false);
-    });
-
-    it('should reject days above 90', () => {
-      expect(adminAnalyticsQuerySchema.safeParse({ days: '91' }).success).toBe(false);
-    });
-
-    it('should reject non-integer days', () => {
-      expect(adminAnalyticsQuerySchema.safeParse({ days: '3.5' }).success).toBe(false);
     });
   });
 });

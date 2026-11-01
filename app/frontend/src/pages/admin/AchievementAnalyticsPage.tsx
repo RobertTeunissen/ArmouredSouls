@@ -1,188 +1,147 @@
 /**
- * AchievementAnalyticsPage — Unlock rates and participation stats.
+ * AchievementAnalyticsPage — "Which achievements are too easy or too hard?"
+ * (`/admin/achievements`).
  *
- * Fetches from GET /api/admin/achievements/analytics with real/auto/all filter.
+ * This season only (a rollover deletes every unlock). Stable type in the URL
+ * as `?stables=` (Players, Automatons, Generated; default Players). Player
+ * rates are out of the players who logged in since the season started, so
+ * dormant accounts do not drag every rate down. Sections: headline numbers,
+ * unlock rate per achievement by tier, two balance notes, and the full table.
+ * Data: `GET /api/admin/achievements/analytics?stables=`.
  *
- * Requirements: 17.1, 17.2, 17.3, 17.4, 17.5
+ * Definitions: docs/guides/ADMIN_PANEL_GUIDE.md §Achievements.
  */
-import { useState, useEffect, useCallback } from 'react';
-import {
-  AdminPageHeader,
-  AdminStatCard,
-  AdminDataTable,
-  AdminFilterBar, REAL_PLAYERS_HELP, type UserFilterType } from '../../components/admin/shared';
-import { api } from '../../utils/api';
+import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { ADMIN_FOCUS_RING, AdminPageHeader, PanelError, PanelSkeleton } from '../../components/admin/shared';
+import { AchievementSummary, AchievementTable, TierNotes, TierStripChart } from '../../components/admin/achievements';
 import { ApiError } from '../../utils/ApiError';
+import { isAbortError } from '../../utils/abort';
+import {
+  ACHIEVEMENT_STABLES,
+  getAchievementAnalytics,
+  type AchievementAnalytics,
+} from '../../utils/adminAchievementsApi';
+import {
+  easierThanTier,
+  harderThanTier,
+  readAchievementStables,
+  stablesLabel,
+  tierStrips,
+  writeAchievementStables,
+} from '../../utils/adminAchievementsFormat';
+import { formatCount, formatUtcTime } from '../../utils/adminDashboardFormat';
+import { dayMonth } from '../../utils/adminImagesFormat';
 
-/* ------------------------------------------------------------------ */
-/*  Types (matches backend getAchievementAnalytics response)           */
-/* ------------------------------------------------------------------ */
-
-interface AchievementEntry {
-  achievementId: string;
-  name: string;
-  description: string;
-  category: string;
-  tier: string;
-  unlockCount: number;
-  unlockRate: number;
-  [key: string]: unknown;
+/** Who the rates are out of, in the page's words. */
+function populationWords(data: AchievementAnalytics): { who: string; scope: string } {
+  if (data.stables === 'players') {
+    const since = data.seasonStartedAt ? ` (logged in since ${dayMonth(data.seasonStartedAt)})` : '';
+    return {
+      who: 'active players',
+      scope: `This season · ${formatCount(data.population)} active ${data.population === 1 ? 'player' : 'players'}${since} of ${formatCount(data.totalStables)} accounts · rates are of active players`,
+    };
+  }
+  const who = data.stables === 'automatons' ? 'Automatons' : 'generated stables';
+  return { who, scope: `This season · ${formatCount(data.population)} ${who} · rates are of all of them` };
 }
 
-interface AchievementAnalyticsData {
-  achievements: AchievementEntry[];
-  totalUnlocks: number;
-  uniquePlayersWithAchievements: number;
-  totalUsers: number;
-  participationRate: number;
-  timestamp: string;
-}
-
-type UserFilter = UserFilterType;
-
-/* ------------------------------------------------------------------ */
-/*  Component                                                          */
-/* ------------------------------------------------------------------ */
-
-function AchievementAnalyticsPage() {
-  const [data, setData] = useState<AchievementAnalyticsData | null>(null);
+function AchievementAnalyticsPage(): React.ReactElement {
+  const [params, setParams] = useSearchParams();
+  const stables = readAchievementStables(params);
+  const [data, setData] = useState<AchievementAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [userFilter, setUserFilter] = useState<UserFilter>('real');
-
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await api.get<AchievementAnalyticsData>(
-        '/api/admin/achievements/analytics',
-        { params: { filter: userFilter } },
-      );
-      setData(data);
-    } catch (err: unknown) {
-      const msg = (err instanceof ApiError && err.message) || 'Failed to load achievement analytics';
-      setError(msg);
-    } finally {
-      setLoading(false);
-    }
-  }, [userFilter]);
+  const [token, setToken] = useState(0);
+  const [fetchedAt, setFetchedAt] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    const controller = new AbortController();
+    setLoading(true);
+    setError(null);
+    getAchievementAnalytics(stables, controller.signal)
+      .then((result) => {
+        if (controller.signal.aborted) return;
+        setData(result);
+        setFetchedAt(new Date().toISOString());
+        setLoading(false);
+      })
+      .catch((err: unknown) => {
+        if (controller.signal.aborted || isAbortError(err, controller.signal)) return;
+        setError((err instanceof ApiError && err.message) || 'Could not load the achievement analytics.');
+        setLoading(false);
+      });
+    return () => controller.abort();
+  }, [stables, token]);
 
-  const handleFilterToggle = (key: string) => {
-    setUserFilter(key as UserFilter);
-  };
-
-  const zeroUnlocks = data?.achievements.filter(a => a.unlockCount === 0).length ?? 0;
-  const highUnlocks = data?.achievements.filter(a => a.unlockRate > 90).length ?? 0;
+  // Never show another stable type's numbers while the new ones load.
+  const current = data && data.stables === stables ? data : null;
+  const derived = useMemo(() => (current ? {
+    strips: tierStrips(current.achievements),
+    easier: easierThanTier(current.achievements),
+    harder: harderThanTier(current.achievements),
+    words: populationWords(current),
+  } : null), [current]);
+  const refreshing = loading && current !== null;
 
   return (
     <div data-testid="achievement-analytics-page" className="space-y-6">
       <AdminPageHeader
-        title="Achievement Analytics"
-        subtitle="Unlock rates and player participation"
-        actions={
-          <button
-            type="button"
-            onClick={fetchData}
-            disabled={loading}
-            className="px-3 py-1.5 text-sm bg-surface-elevated text-secondary hover:text-white rounded transition-colors"
-          >
-            {loading ? 'Loading...' : '↻ Refresh'}
-          </button>
-        }
+        title="Achievements"
+        subtitle="Which achievements are too easy or too hard?"
+        actions={(
+          <div className="flex items-center gap-3">
+            <span className="whitespace-nowrap text-xs text-secondary" aria-live="polite">
+              {refreshing ? 'Refreshing…' : current && fetchedAt ? `Last updated ${formatUtcTime(fetchedAt, true)}` : ''}
+            </span>
+            <button
+              type="button"
+              onClick={() => setToken((t) => t + 1)}
+              disabled={loading}
+              className={`min-h-11 whitespace-nowrap rounded-md border border-white/10 bg-surface-elevated px-3 text-sm text-white hover:bg-white/10 disabled:opacity-60 ${ADMIN_FOCUS_RING}`}
+            >
+              <span aria-hidden="true">↻ </span>Refresh
+            </button>
+          </div>
+        )}
       />
 
-      {error && (
-        <div className="bg-red-900/50 border border-red-700 text-red-200 px-4 py-3 rounded text-sm flex justify-between items-center">
-          <span>{error}</span>
-          <button onClick={fetchData} className="px-3 py-1 bg-red-500/20 text-red-400 rounded hover:bg-red-500/30 transition-colors text-sm">
-            Retry
-          </button>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Stable type">
+          {ACHIEVEMENT_STABLES.map((option) => {
+            const pressed = option === stables;
+            return (
+              <button
+                key={option}
+                type="button"
+                aria-pressed={pressed}
+                onClick={() => setParams((existing) => writeAchievementStables(existing, option), { replace: true })}
+                className={`min-h-11 rounded-full border px-4 text-sm transition-colors motion-reduce:transition-none ${pressed ? 'border-primary bg-primary/15 text-primary' : 'border-white/10 bg-surface-elevated text-white hover:bg-white/10'} ${ADMIN_FOCUS_RING}`}
+              >
+                {stablesLabel(option)}
+              </button>
+            );
+          })}
         </div>
-      )}
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <AdminStatCard
-          label="Total Unlocks"
-          value={data?.totalUnlocks ?? 0}
-          color="primary"
-          icon={<span>🏆</span>}
-        />
-        <AdminStatCard
-          label="Participation"
-          value={data ? `${data.participationRate}%` : '0%'}
-          color="info"
-          icon={<span>📊</span>}
-        />
-        <AdminStatCard
-          label="Never Unlocked"
-          value={zeroUnlocks}
-          color={zeroUnlocks > 0 ? 'warning' : 'success'}
-          icon={<span>🔒</span>}
-        />
-        <AdminStatCard
-          label="High Unlock (>90%)"
-          value={highUnlocks}
-          color={highUnlocks > 0 ? 'warning' : 'success'}
-          icon={<span>🎯</span>}
-        />
+        {derived && <p className="text-xs text-secondary" data-testid="achievement-scope">{derived.words.scope}</p>}
       </div>
 
-      {/* User Filter */}
-      <AdminFilterBar
-        filters={[
-          { key: 'real', label: 'Real Players', active: userFilter === 'real', description: REAL_PLAYERS_HELP },
-          { key: 'auto', label: 'Auto-Generated', active: userFilter === 'auto' },
-          { key: 'automaton', label: 'Automatons', active: userFilter === 'automaton' },
-          { key: 'all', label: 'All', active: userFilter === 'all' },
-        ]}
-        onFilterToggle={handleFilterToggle}
-        onClearAll={() => setUserFilter('real')}
-      />
-
-      {/* Players with achievements */}
-      {data && (
-        <div className="bg-surface rounded-lg p-4 text-sm text-secondary">
-          {data.uniquePlayersWithAchievements} of {data.totalUsers} players have unlocked at least one achievement
+      {error && (
+        <div className="rounded-lg border border-white/10 bg-surface">
+          <PanelError message={error} onRetry={() => setToken((t) => t + 1)} />
         </div>
       )}
 
-      {/* Achievements Table */}
-      <AdminDataTable<AchievementEntry>
-        columns={[
-          { key: 'achievementId', label: 'ID' },
-          { key: 'name', label: 'Name', render: (row) => (
-            <div>
-              <span className="font-medium text-white">{row.name}</span>
-              <span className="block text-xs text-secondary truncate max-w-[300px]">{row.description}</span>
-            </div>
-          )},
-          { key: 'category', label: 'Category', render: (row) => (
-            <span className="capitalize text-secondary">{row.category}</span>
-          )},
-          { key: 'tier', label: 'Tier', render: (row) => (
-            <span className="capitalize">{row.tier}</span>
-          )},
-          { key: 'unlockCount', label: 'Unlocks', align: 'right' },
-          {
-            key: 'unlockRate',
-            label: 'Unlock Rate',
-            align: 'right',
-            render: (row) => {
-              const pct = row.unlockRate;
-              const color = pct === 0 ? 'text-error' : pct > 90 ? 'text-warning' : 'text-white';
-              return <span className={color}>{pct}%</span>;
-            },
-          },
-        ]}
-        data={data?.achievements ?? []}
-        loading={loading}
-        emptyMessage="No achievement analytics data available"
-      />
+      {!current && loading && <div className="rounded-lg border border-white/10 bg-surface"><PanelSkeleton rows={6} /></div>}
+
+      {current && derived && (
+        <>
+          <AchievementSummary data={current} />
+          <TierStripChart strips={derived.strips} population={derived.words.who} />
+          <TierNotes easier={derived.easier} harder={derived.harder} population={current.population} who={derived.words.who} />
+          <AchievementTable rows={current.achievements} who={derived.words.who} showAllAccounts={current.stables === 'players'} />
+        </>
+      )}
     </div>
   );
 }

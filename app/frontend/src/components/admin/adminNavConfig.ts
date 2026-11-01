@@ -60,9 +60,6 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: 'Changelog', path: '/admin/changelog', icon: '📝' },
       { label: 'Achievements', path: '/admin/achievements', icon: '🏅' },
-      { label: 'Tuning', path: '/admin/tuning', icon: '🎛️' },
-      { label: 'Refinement', path: '/admin/refinement', icon: '🔨' },
-      { label: 'Subscriptions', path: '/admin/subscriptions', icon: '📋' },
       { label: 'Search Analytics', path: '/admin/search-analytics', icon: '🔎' },
     ],
   },

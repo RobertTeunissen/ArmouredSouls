@@ -56,11 +56,8 @@ const AdminSecurityPage = React.lazy(() => import('./pages/admin/SecurityPage'))
 const AdminImageUploadsPage = React.lazy(() => import('./pages/admin/ImageUploadsPage'));
 const AdminChangelogPage = React.lazy(() => import('./pages/admin/AdminChangelogPage'));
 const AdminAchievementAnalyticsPage = React.lazy(() => import('./pages/admin/AchievementAnalyticsPage'));
-const AdminTuningAdoptionPage = React.lazy(() => import('./pages/admin/TuningAdoptionPage'));
-const AdminRefinementAdoptionPage = React.lazy(() => import('./pages/admin/RefinementAdoptionPage'));
 const AdminRepairLogPage = React.lazy(() => import('./pages/admin/RepairLogPage'));
 const AdminAuditLogPage = React.lazy(() => import('./pages/admin/AuditLogPage'));
-const AdminSubscriptionAnalyticsPage = React.lazy(() => import('./pages/admin/SubscriptionAnalyticsPage'));
 const AdminTournamentsPage = React.lazy(() => import('./pages/admin/TournamentsPage'));
 const AdminSeasonControlPage = React.lazy(() => import('./pages/admin/SeasonControlPage'));
 const AdminAutomatonsPage = React.lazy(() => import('./pages/admin/AutomatonsPage'));
@@ -113,12 +110,12 @@ function AppRoutes() {
         <Route path="image-uploads" element={<AdminImageUploadsPage />} />
         <Route path="changelog" element={<AdminChangelogPage />} />
         <Route path="achievements" element={<AdminAchievementAnalyticsPage />} />
-        <Route path="tuning" element={<AdminTuningAdoptionPage />} />
-        <Route path="refinement" element={<AdminRefinementAdoptionPage />} />
+        <Route path="tuning" element={<Navigate to="/admin/meta" replace />} />
+        <Route path="refinement" element={<Navigate to="/admin/meta" replace />} />
         <Route path="repair-log" element={<AdminRepairLogPage />} />
         <Route path="audit-log" element={<AdminAuditLogPage />} />
         <Route path="league-history" element={<Navigate to="/admin/league-health" replace />} />
-        <Route path="subscriptions" element={<AdminSubscriptionAnalyticsPage />} />
+        <Route path="subscriptions" element={<Navigate to="/admin/meta" replace />} />
         <Route path="tournaments" element={<AdminTournamentsPage />} />
         <Route path="seasons" element={<AdminSeasonControlPage />} />
         <Route path="*" element={<Navigate to="dashboard" replace />} />

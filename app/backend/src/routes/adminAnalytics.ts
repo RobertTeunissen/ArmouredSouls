@@ -1,7 +1,8 @@
 /**
  * Admin Analytics & Dashboard Routes
  *
- * System stats, KPIs, engagement, economy, league health, achievement/tuning analytics.
+ * System stats, KPIs, engagement, economy, league health, achievements, and the
+ * Meta page's build sections (tuning, refinements, event entry).
  * (Weapons moved to the "what wins" analyses: GET /api/admin/analysis/weapons.)
  * Mounted at /api/admin/ from the main admin router.
  */
@@ -16,10 +17,9 @@ import type { UserFilterType } from '../utils/buildUserFilter';
 import {
   getSystemStats,
   getDashboardKpis,
-  getAchievementAnalytics,
-  getTuningAdoption,
-  getRefinementAdoption,
 } from '../services/admin/adminStatsService';
+import { ACHIEVEMENT_STABLE_SCOPES, getAchievementAnalytics } from '../services/admin/achievements';
+import { getMetaBuilds } from '../services/admin/meta';
 import {
   getLeagueHealthOverview,
   getLeagueSeason,
@@ -71,20 +71,16 @@ const economyQuerySchema = z.object({
 });
 
 const achievementAnalyticsQuerySchema = z.object({
-  filter: z.enum(USER_FILTER_TYPES).optional().default('real'),
+  stables: z.enum(ACHIEVEMENT_STABLE_SCOPES).optional().default('players'),
 });
 
-const tuningAdoptionQuerySchema = z.object({
+const metaBuildsQuerySchema = z.object({
   filter: z.enum(USER_FILTER_TYPES).optional().default('real'),
 });
 
 const leagueSeasonQuerySchema = z.object({
   mode: z.enum(TIERED_LEAGUE_MODES).optional().default('league_1v1'),
   stable: z.enum(LEAGUE_SEASON_STABLE_FILTERS).optional().default('all'),
-});
-
-const refinementAdoptionQuerySchema = z.object({
-  filter: z.enum(USER_FILTER_TYPES).optional().default('real'),
 });
 
 const searchAnalyticsCycleRange = (value: { cycleFrom?: number; cycleTo?: number; lastCycles?: number }, context: z.RefinementCtx): void => {
@@ -220,35 +216,23 @@ router.get('/league-health/season', authenticateToken, requireAdmin, validateReq
 
 /**
  * GET /api/admin/achievements/analytics
- * Get achievement analytics data.
+ * This season's unlocks per achievement for one stable type (`stables`:
+ * players | automatons | generated, default players). Player rates are out of
+ * the players who logged in since the season started. Read-only.
  */
 router.get('/achievements/analytics', authenticateToken, requireAdmin, validateRequest({ query: achievementAnalyticsQuerySchema }), async (req: Request, res: Response) => {
-  const filter = (req.query.filter as UserFilterType) || 'real';
-  const userFilter = buildUserFilter(filter);
-  const result = await getAchievementAnalytics(userFilter);
-  res.json(result);
+  const query = achievementAnalyticsQuerySchema.parse(req.query);
+  res.json(await getAchievementAnalytics(query.stables));
 });
 
 /**
- * GET /api/admin/tuning/adoption
- * Get tuning system adoption metrics.
+ * GET /api/admin/meta/builds
+ * The Tuning, Refinements and Event entry sections of the Meta page for the
+ * selected stable type (`filter`, default real). Read-only.
  */
-router.get('/tuning/adoption', authenticateToken, requireAdmin, validateRequest({ query: tuningAdoptionQuerySchema }), async (req: Request, res: Response) => {
-  const filter = (req.query.filter as UserFilterType) || 'real';
-  const userFilter = buildUserFilter(filter);
-  const result = await getTuningAdoption(userFilter);
-  res.json(result);
-});
-
-/**
- * GET /api/admin/refinement/adoption
- * Get weapon refinement adoption metrics (Spec #34).
- */
-router.get('/refinement/adoption', authenticateToken, requireAdmin, validateRequest({ query: refinementAdoptionQuerySchema }), async (req: Request, res: Response) => {
-  const filter = (req.query.filter as UserFilterType) || 'real';
-  const userFilter = buildUserFilter(filter);
-  const result = await getRefinementAdoption(userFilter);
-  res.json(result);
+router.get('/meta/builds', authenticateToken, requireAdmin, validateRequest({ query: metaBuildsQuerySchema }), async (req: Request, res: Response) => {
+  const query = metaBuildsQuerySchema.parse(req.query);
+  res.json(await getMetaBuilds(buildUserFilter(query.filter)));
 });
 
 router.get('/search-analytics/report', authenticateToken, requireAdmin, validateRequest({ query: searchAnalyticsReportQuerySchema }), async (req: Request, res: Response) => {
