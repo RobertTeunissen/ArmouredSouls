@@ -16,10 +16,10 @@ export {
   getSystemStats,
   getRepairAuditLog,
   getDashboardKpis,
-  getAchievementAnalytics,
-  getTuningAdoption,
-  getRefinementAdoption,
 } from './adminStatsService';
+
+export { getAchievementAnalytics } from './achievements';
+export { getMetaBuilds } from './meta';
 
 export { getLeagueHealthOverview } from './league-health';
 

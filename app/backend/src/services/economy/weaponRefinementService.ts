@@ -445,11 +445,6 @@ export async function refineWeapon(
 
   // ── Post-commit ───────────────────────────────────────────────────
 
-  // Refinement IS spending — purchase tracks it, resale doesn't, refinement does.
-  if (options.spendingMonitor) {
-    securityMonitor.trackSpending(userId, result.cost, options.spendingMonitor);
-  }
-
   // Non-blocking audit log + structured log.
   try {
     const cycleMetadata = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });

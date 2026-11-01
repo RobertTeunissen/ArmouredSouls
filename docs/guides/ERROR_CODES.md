@@ -345,3 +345,11 @@ try {
 | `SEASON_NOT_FOUND` | 404 | No season or stable archive exists for the requested season number. |
 | `IMAGE_LIMIT_REACHED` | 400 | The stable already holds `RETAINED_IMAGES_PER_STABLE` images. Delete one before uploading another. |
 | `IMAGE_NOT_OWNED` | 403 | The image path does not resolve inside the caller's own upload directory. Returned as a generic `Access denied` that does not reveal whether the file exists. |
+
+## ModerationErrorCode (Image Uploads)
+
+`ModerationError` in `app/backend/src/errors/moderationErrors.ts`.
+
+| Code | HTTP | Meaning |
+|---|---|---|
+| `IMAGE_NOT_FOUND` | 404 | No uploaded image with that id: it was removed or never existed (`GET` / `DELETE /api/admin/images/:id`). |

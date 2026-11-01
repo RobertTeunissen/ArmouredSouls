@@ -281,7 +281,7 @@ Fast one-handed builds lose a small amount of Sharpen value; slow two-handed bui
 
 - `app/shared/utils/weaponRefinement.ts` — the Refinement_Fold, plus the exported `SHARPEN_COOLDOWN_REDUCTION_PER_INSTANCE` and `FORGE_DAMAGE_INCREASE_PER_INSTANCE` constants. Note `app/backend/src/shared/utils` is a committed symlink to `app/shared/utils` (git mode `120000`), so there is one file reachable by two paths.
 - `app/frontend/src/components/weapon-refinement/refinementCopy.ts` — display copy and the trailing-zero-trimming formatter, both derived from the shared constants.
-- `RefinementModal.tsx`, `SlotBar.tsx`, `RefinementHistoryPopover.tsx`, `RefinementAdoptionPage.tsx` — copy.
+- `RefinementModal.tsx`, `SlotBar.tsx`, `RefinementHistoryPopover.tsx`, and the admin Meta page's refinement section (`utils/adminMetaFormat.ts`) — copy.
 - `app/backend/src/content/guide/weapons/refinement.md` — in-game guide, tier table and both worked examples.
 
 ---
@@ -344,7 +344,7 @@ Refinements bond to the specific `WeaponInventory` row. Swap the weapon to anoth
 - `app/backend/prisma/migrations/20260523063604_add_weapon_refinement/` — additive migration (CREATE TABLE only).
 - `app/shared/utils/weaponRefinement.ts` — formula module: `calculateRefinementCost`, `applyRefinementsToWeapon`, validators, `calculateRankPrefix`, `formatWeaponDisplayName`.
 - `app/shared/utils/robotAttributes.ts` — canonical 23-attribute constant extracted to a shared module.
-- `app/backend/src/routes/weaponInventory.ts` — `POST /:id/refine` (full validator chain, two-tier locking, `securityMonitor.trackSpending`, audit log + achievement check) and `PATCH /:id/custom-name` (Zod-validated name editor).
+- `app/backend/src/routes/weaponInventory.ts` — `POST /:id/refine` (full validator chain, two-tier locking, audit log + achievement check) and `PATCH /:id/custom-name` (Zod-validated name editor).
 - `app/backend/src/utils/robotCalculations.ts` — `prepareRobotForCombat` folds refinements into each weapon's effective stats before computing robot attributes.
 - `app/backend/src/services/battle/combatSimulator.ts` — `getWeaponInfo` returns rank-prefixed display name + customName; `CombatEvent.customName` field added.
 - `app/backend/src/config/achievements.ts` — 5 new achievements (E22–E26) + 5 trigger types.

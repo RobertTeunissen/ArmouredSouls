@@ -3,17 +3,9 @@
  */
 import type { EconomicServiceOptions } from '../financial/economicRequestReplayService';
 
-/** Request context for spending monitoring; only HTTP callers supply it. */
-export interface SpendingMonitorContext {
-  sourceIp?: string;
-  endpoint?: string;
-}
-
-export interface PurchaseServiceOptions extends EconomicServiceOptions {
-  /**
-   * When present, the spend is reported to `securityMonitor.trackSpending`
-   * exactly as the player route did before the extraction. Automaton turns
-   * omit it: there is no client request to monitor.
-   */
-  spendingMonitor?: SpendingMonitorContext;
-}
+/**
+ * Spending is not a security signal (rapid spending of a player's own credits
+ * was removed in Nov 2026: it only flagged normal shopping), so the purchase
+ * services take the replay options only.
+ */
+export type PurchaseServiceOptions = EconomicServiceOptions;

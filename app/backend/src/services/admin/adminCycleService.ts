@@ -20,7 +20,7 @@ import {
 import { executeSoloTournamentRound } from '../tournament/tournamentBattleOrchestrator';
 import { executeTeamTournamentRound } from '../tournament/teamTournamentBattleOrchestrator';
 import { autoCreateNextTeamTournament } from '../tournament/teamTournamentService';
-import { runOrphanCleanup } from '../moderation/orphanCleanupJob';
+import { cleanupSeasonOrphans } from '../moderation/imageLibraryService';
 import { EventLogger } from '../common/eventLogger';
 import { cycleLogger } from '../../utils/cycleLogger';
 import prisma from '../../lib/prisma';
@@ -1044,7 +1044,8 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
       const orphanStart = Date.now();
       let orphanResult = null;
       try {
-        orphanResult = await runOrphanCleanup();
+        // Archive- and Image_Library-aware: retained images survive the sweep.
+        orphanResult = await cleanupSeasonOrphans();
         await eventLogger.logCycleStepComplete(
           currentCycleNumber,
           'orphan_image_cleanup',

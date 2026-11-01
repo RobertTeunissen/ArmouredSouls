@@ -1,44 +1,40 @@
 /**
  * Security Monitor — Singleton
  *
- * In-memory sliding window monitor that tracks anomalous patterns and writes
- * to the dedicated security logger. Keeps a circular buffer of the last 500
- * events for admin API access.
+ * Detects security signals and records them. In-memory sliding windows decide
+ * when a burst fires (acceptable for the single-process deployment); every
+ * signal is written to `security_events` (the admin Security page reads it,
+ * and it survives deploys) and to the dedicated security log.
  *
- * Sliding windows use in-memory Maps — acceptable for single-server deployment.
+ * Signals: failed logins, rate-limit hits, ownership violations, race-condition
+ * bursts, robot-creation bursts and malformed requests without a logged-in
+ * user. Admin page views and routine purchases are deliberately not recorded:
+ * they made up almost every event of the old in-memory list.
  *
  * @module services/security/securityMonitor
- * @see Requirements 6.6, 7.1, 7.2, 7.3, 7.4, 7.5, 7.6
+ * @see docs/architecture/PRD_SECURITY.md §Logging
  */
 
 import { securityLogger, SecuritySeverity, SecurityEvent } from './securityLogger';
+import { persistSecuritySignal } from './securityEventStore';
+import type { FailedLoginReason, SecurityEventDetails, SecuritySignal } from '../../types';
 
 /** Thresholds */
-const RAPID_SPENDING_AMOUNT = 3_000_000;
-const RAPID_SPENDING_WINDOW_MS = 5 * 60 * 1000;       // 5 minutes
 const CONFLICT_THRESHOLD = 10;
 const CONFLICT_WINDOW_MS = 1 * 60 * 1000;             // 1 minute
 const ROBOT_CREATION_THRESHOLD = 3;
 const ROBOT_CREATION_WINDOW_MS = 10 * 60 * 1000;      // 10 minutes
-const RATE_LIMIT_THRESHOLD = 5;
-const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;          // 1 hour
-const MAX_RECENT_EVENTS = 500;
 
-interface SpendingEntry {
-  amount: number;
-  time: number;
+interface RequestContext {
+  sourceIp?: string;
+  endpoint?: string;
 }
 
 class SecurityMonitor {
-  private spendingWindows = new Map<number, SpendingEntry[]>();
   private conflictWindows = new Map<number, number[]>();
   private robotCreationWindows = new Map<number, number[]>();
-  private rateLimitViolations = new Map<number, number[]>();
 
-  /** Circular buffer of recent security events for admin API access */
-  private recentEvents: SecurityEvent[] = [];
-
-  /** Cache of userId → stableName for enriching events without DB calls on every event */
+  /** Cache of userId → stableName for enriching log lines without DB calls on every event */
   private stableNameCache = new Map<number, string>();
   private static readonly MAX_STABLE_NAME_CACHE_SIZE = 1000;
 
@@ -54,12 +50,6 @@ class SecurityMonitor {
     this.stableNameCache.set(userId, stableName);
   }
 
-  /** Get cached stable name for a user, if available. */
-  private getStableName(userId?: number): string | undefined {
-    if (userId === undefined) return undefined;
-    return this.stableNameCache.get(userId);
-  }
-
   /** Prune timestamps older than `windowMs` from an array, mutating in place. */
   private pruneWindow(timestamps: number[], windowMs: number, now: number): void {
     const cutoff = now - windowMs;
@@ -68,338 +58,122 @@ class SecurityMonitor {
     }
   }
 
-  /** Push an event into the circular buffer and write to the security log. */
-  private recordEvent(event: SecurityEvent): void {
-    // Auto-enrich with stableName if available and not already set
-    if (event.userId !== undefined && !event.stableName) {
-      event.stableName = this.getStableName(event.userId);
-    }
+  /** Append to a per-user sliding window and return its size after pruning. */
+  private slide(windows: Map<number, number[]>, userId: number, windowMs: number): number {
+    const now = Date.now();
+    const timestamps = windows.get(userId) ?? [];
+    this.pruneWindow(timestamps, windowMs, now);
+    timestamps.push(now);
+    windows.set(userId, timestamps);
+    return timestamps.length;
+  }
 
-    if (this.recentEvents.length >= MAX_RECENT_EVENTS) {
-      this.recentEvents.shift();
-    }
-    this.recentEvents.push(event);
-
-    // Fire-and-forget log write — never block the request pipeline
+  /** Write a line to the dedicated security log. Never throws. */
+  private log(event: Omit<SecurityEvent, 'timestamp'>): void {
+    const stableName = event.userId !== undefined ? this.stableNameCache.get(event.userId) : undefined;
     try {
       securityLogger.log(event.severity, event.eventType, {
         ...event,
+        ...(stableName ? { stableName } : {}),
+        timestamp: new Date().toISOString(),
       });
     } catch {
       // Swallow — logging failure must not affect the request
     }
   }
 
-  // ── public API ───────────────────────────────────────────────────────
-
-  /**
-   * Log a generic security event (e.g., moderation events, custom alerts).
-   * Provides a public interface to recordEvent without exposing internals.
-   */
-  logSecurityEvent(severity: SecuritySeverity, eventType: string, userId: number | undefined, details: Record<string, unknown>): void {
-    this.recordEvent({
-      severity,
-      eventType,
+  /** Record a signal: database row (admin page) plus a security log line. */
+  private signal(signal: SecuritySignal, userId: number | undefined, context: RequestContext, details: SecurityEventDetails = {}): void {
+    persistSecuritySignal({ signal, userId, sourceIp: context.sourceIp, endpoint: context.endpoint, details });
+    this.log({
+      severity: SecuritySeverity.WARNING,
+      eventType: signal,
       userId,
-      details,
-      timestamp: new Date().toISOString(),
+      sourceIp: context.sourceIp,
+      endpoint: context.endpoint,
+      details: details as Record<string, unknown>,
     });
   }
 
+  // ── public API ───────────────────────────────────────────────────────
+
   /**
-   * Track a spending event for rapid-spending detection (Req 7.1).
-   * If cumulative spending exceeds 3M in a 5-minute window, emit a critical alert.
+   * A login attempt failed. `targetUserId` is the account the name matched, if
+   * any; the submitted name and password are never recorded.
    */
-  trackSpending(userId: number, amount: number, context?: { sourceIp?: string; endpoint?: string }): void {
-    const now = Date.now();
-    if (!this.spendingWindows.has(userId)) {
-      this.spendingWindows.set(userId, []);
-    }
-    const entries = this.spendingWindows.get(userId)!;
-
-    // Prune old entries
-    const cutoff = now - RAPID_SPENDING_WINDOW_MS;
-    while (entries.length > 0 && entries[0].time < cutoff) {
-      entries.shift();
-    }
-
-    entries.push({ amount, time: now });
-
-    const total = entries.reduce((sum, e) => sum + e.amount, 0);
-
-    // Always log spending as info
-    this.recordEvent({
-      severity: SecuritySeverity.INFO,
-      eventType: 'spending',
-      userId,
-      sourceIp: context?.sourceIp,
-      endpoint: context?.endpoint,
-      details: { amount, windowTotal: total },
-      timestamp: new Date(now).toISOString(),
-    });
-
-    if (total > RAPID_SPENDING_AMOUNT) {
-      this.recordEvent({
-        severity: SecuritySeverity.CRITICAL,
-        eventType: 'rapid_spending',
-        userId,
-        sourceIp: context?.sourceIp,
-        endpoint: context?.endpoint,
-        details: {
-          totalAmount: total,
-          windowMs: RAPID_SPENDING_WINDOW_MS,
-          transactions: entries.map(e => ({ amount: e.amount, time: new Date(e.time).toISOString() })),
-        },
-        timestamp: new Date(now).toISOString(),
-      });
-    }
+  logFailedLogin(reason: FailedLoginReason, targetUserId: number | undefined, context: RequestContext): void {
+    this.signal('failed_login', targetUserId, context, { reason });
   }
 
   /**
    * Track a 409 conflict response for race-condition exploit detection (Req 7.2).
-   * If >10 conflicts in 1 minute, emit a warning alert.
+   * The 11th conflict within 1 minute records one race-condition burst; the
+   * window has to drain below the threshold before another one is recorded.
    */
-  trackConflict(userId: number, context?: { sourceIp?: string; endpoint?: string }): void {
-    const now = Date.now();
-    if (!this.conflictWindows.has(userId)) {
-      this.conflictWindows.set(userId, []);
-    }
-    const timestamps = this.conflictWindows.get(userId)!;
-    this.pruneWindow(timestamps, CONFLICT_WINDOW_MS, now);
-    timestamps.push(now);
-
-    this.recordEvent({
-      severity: SecuritySeverity.INFO,
-      eventType: 'conflict',
-      userId,
-      sourceIp: context?.sourceIp,
-      endpoint: context?.endpoint,
-      details: { windowCount: timestamps.length },
-      timestamp: new Date(now).toISOString(),
-    });
-
-    if (timestamps.length > CONFLICT_THRESHOLD) {
-      this.recordEvent({
-        severity: SecuritySeverity.WARNING,
-        eventType: 'race_condition_attempt',
-        userId,
-        sourceIp: context?.sourceIp,
-        endpoint: context?.endpoint,
-        details: {
-          conflictCount: timestamps.length,
-          windowMs: CONFLICT_WINDOW_MS,
-        },
-        timestamp: new Date(now).toISOString(),
-      });
+  trackConflict(userId: number, context: RequestContext = {}): void {
+    const count = this.slide(this.conflictWindows, userId, CONFLICT_WINDOW_MS);
+    if (count === CONFLICT_THRESHOLD + 1) {
+      this.signal('race_condition_burst', userId, context, { count, windowMs: CONFLICT_WINDOW_MS });
     }
   }
 
   /**
-   * Log a failed authorization attempt (Req 7.3).
+   * Log a failed authorization attempt (Req 7.3): another stable's resource,
+   * or a non-admin on an admin endpoint.
    */
-  logAuthorizationFailure(userId: number, resourceType: string, resourceId: number, context?: { sourceIp?: string; endpoint?: string }): void {
-    this.recordEvent({
-      severity: SecuritySeverity.WARNING,
-      eventType: 'authorization_failure',
-      userId,
-      sourceIp: context?.sourceIp,
-      endpoint: context?.endpoint,
-      details: { resourceType, resourceId },
-      timestamp: new Date().toISOString(),
-    });
+  logAuthorizationFailure(userId: number, resourceType: string, resourceId: number, context: RequestContext = {}): void {
+    this.signal('ownership_violation', userId, context, { resourceType, resourceId });
   }
 
   /**
-   * Log a validation failure (Req 7.4).
+   * Log a schema validation failure (Req 7.4). Only requests without a
+   * logged-in user become a signal: a player's own malformed request is
+   * almost always a UI bug, not an attack. The rest go to the security log.
    */
-  logValidationFailure(endpoint: string, violationType: string, sourceIp: string): void {
-    this.recordEvent({
-      severity: SecuritySeverity.INFO,
-      eventType: 'validation_failure',
-      endpoint,
-      sourceIp,
-      details: { violationType, endpoint, sourceIp },
-      timestamp: new Date().toISOString(),
-    });
+  logValidationFailure(endpoint: string, violationType: string, sourceIp: string, authenticated = false): void {
+    if (authenticated) {
+      this.log({ severity: SecuritySeverity.INFO, eventType: 'validation_failure', endpoint, sourceIp, details: { violationType } });
+      return;
+    }
+    this.signal('malformed_request', undefined, { sourceIp, endpoint }, { violationType });
   }
 
   /**
    * Track robot creation for automation detection (Req 7.5).
-   * If >3 creations in 10 minutes, emit a warning alert.
+   * The 4th creation within 10 minutes records one robot-creation burst.
    */
-  trackRobotCreation(userId: number, context?: { sourceIp?: string; endpoint?: string }): void {
-    const now = Date.now();
-    if (!this.robotCreationWindows.has(userId)) {
-      this.robotCreationWindows.set(userId, []);
-    }
-    const timestamps = this.robotCreationWindows.get(userId)!;
-    this.pruneWindow(timestamps, ROBOT_CREATION_WINDOW_MS, now);
-    timestamps.push(now);
-
-    this.recordEvent({
-      severity: SecuritySeverity.INFO,
-      eventType: 'robot_creation',
-      userId,
-      sourceIp: context?.sourceIp,
-      endpoint: context?.endpoint,
-      details: { windowCount: timestamps.length },
-      timestamp: new Date(now).toISOString(),
-    });
-
-    if (timestamps.length > ROBOT_CREATION_THRESHOLD) {
-      this.recordEvent({
-        severity: SecuritySeverity.WARNING,
-        eventType: 'automated_robot_creation',
-        userId,
-        sourceIp: context?.sourceIp,
-        endpoint: context?.endpoint,
-        details: {
-          creationCount: timestamps.length,
-          windowMs: ROBOT_CREATION_WINDOW_MS,
-        },
-        timestamp: new Date(now).toISOString(),
-      });
+  trackRobotCreation(userId: number, context: RequestContext = {}): void {
+    const count = this.slide(this.robotCreationWindows, userId, ROBOT_CREATION_WINDOW_MS);
+    if (count === ROBOT_CREATION_THRESHOLD + 1) {
+      this.signal('robot_creation_burst', userId, context, { count, windowMs: ROBOT_CREATION_WINDOW_MS });
     }
   }
 
-  /**
-   * Log an admin access event (informational).
-   */
-  logAdminAccess(userId: number, context: { sourceIp?: string; endpoint: string; method: string }): void {
-    this.recordEvent({
-      severity: SecuritySeverity.INFO,
-      eventType: 'admin_access',
-      userId,
-      sourceIp: context.sourceIp,
-      endpoint: context.endpoint,
-      details: { method: context.method },
-      timestamp: new Date().toISOString(),
-    });
+  /** A per-player rate limiter refused a request (Req 6.6). */
+  trackRateLimitViolation(userId: number, endpoint: string, sourceIp?: string): void {
+    this.signal('rate_limit', userId, { endpoint, sourceIp });
+  }
+
+  /** An IP-keyed limiter (login, registration, general API) refused a request before login. */
+  trackAnonymousRateLimit(sourceIp: string, endpoint: string): void {
+    this.signal('rate_limit', undefined, { sourceIp, endpoint });
   }
 
   /**
-   * Track rate limit violations per user (Req 6.6).
-   * If >5 violations in 1 hour, emit a warning alert.
+   * Log a generic security log line that is not a signal (e.g. image
+   * moderation outcomes, which the audit log already records).
    */
-  trackRateLimitViolation(userId: number, endpoint: string): void {
-    const now = Date.now();
-    if (!this.rateLimitViolations.has(userId)) {
-      this.rateLimitViolations.set(userId, []);
-    }
-    const timestamps = this.rateLimitViolations.get(userId)!;
-    this.pruneWindow(timestamps, RATE_LIMIT_WINDOW_MS, now);
-    timestamps.push(now);
-
-    this.recordEvent({
-      severity: SecuritySeverity.INFO,
-      eventType: 'rate_limit_violation',
-      userId,
-      endpoint,
-      details: { endpoint, windowCount: timestamps.length },
-      timestamp: new Date(now).toISOString(),
-    });
-
-    if (timestamps.length > RATE_LIMIT_THRESHOLD) {
-      this.recordEvent({
-        severity: SecuritySeverity.WARNING,
-        eventType: 'rate_limit_escalation',
-        userId,
-        endpoint,
-        details: {
-          violationCount: timestamps.length,
-          windowMs: RATE_LIMIT_WINDOW_MS,
-          endpoint,
-        },
-        timestamp: new Date(now).toISOString(),
-      });
-    }
-  }
-
-  // ── admin API ────────────────────────────────────────────────────────
-
-  /**
-   * Get recent security events for admin dashboard.
-   * Supports filtering by severity, eventType, userId, and time range.
-   * Returns newest events first.
-   */
-  getRecentEvents(filters?: {
-    severity?: SecuritySeverity;
-    eventType?: string;
-    userId?: number;
-    since?: Date;
-    limit?: number;
-  }): SecurityEvent[] {
-    let events = [...this.recentEvents];
-
-    if (filters?.severity) {
-      events = events.filter(e => e.severity === filters.severity);
-    }
-    if (filters?.eventType) {
-      events = events.filter(e => e.eventType === filters.eventType);
-    }
-    if (filters?.userId !== undefined) {
-      events = events.filter(e => e.userId === filters.userId);
-    }
-    if (filters?.since) {
-      const sinceMs = filters.since.getTime();
-      events = events.filter(e => new Date(e.timestamp).getTime() >= sinceMs);
-    }
-
-    // Newest first
-    events.reverse();
-
-    if (filters?.limit && filters.limit > 0) {
-      events = events.slice(0, filters.limit);
-    }
-
-    return events;
-  }
-
-  /**
-   * Get a summary of current security state for admin dashboard.
-   */
-  getSummary(): {
-    totalEvents: number;
-    bySeverity: Record<SecuritySeverity, number>;
-    activeAlerts: number;
-    flaggedUserIds: number[];
-  } {
-    const bySeverity: Record<SecuritySeverity, number> = {
-      [SecuritySeverity.INFO]: 0,
-      [SecuritySeverity.WARNING]: 0,
-      [SecuritySeverity.CRITICAL]: 0,
-    };
-
-    const flaggedUserSet = new Set<number>();
-
-    for (const event of this.recentEvents) {
-      bySeverity[event.severity]++;
-      if (
-        (event.severity === SecuritySeverity.WARNING || event.severity === SecuritySeverity.CRITICAL) &&
-        event.userId !== undefined
-      ) {
-        flaggedUserSet.add(event.userId);
-      }
-    }
-
-    return {
-      totalEvents: this.recentEvents.length,
-      bySeverity,
-      activeAlerts: bySeverity[SecuritySeverity.WARNING] + bySeverity[SecuritySeverity.CRITICAL],
-      flaggedUserIds: Array.from(flaggedUserSet),
-    };
+  logSecurityEvent(severity: SecuritySeverity, eventType: string, userId: number | undefined, details: Record<string, unknown>): void {
+    this.log({ severity, eventType, userId, details });
   }
 
   /**
    * Reset all internal state. Useful for testing.
    */
   _reset(): void {
-    this.spendingWindows.clear();
     this.conflictWindows.clear();
     this.robotCreationWindows.clear();
-    this.rateLimitViolations.clear();
     this.stableNameCache.clear();
-    this.recentEvents = [];
   }
 }
 

@@ -15,7 +15,6 @@ import { EconomyError, EconomyErrorCode } from '../../errors/economyErrors';
 import type { Facility } from '../../../generated/prisma';
 import { eventLogger } from '../common/eventLogger';
 import { trackSpending } from './spendingTracker';
-import { securityMonitor } from '../security/securityMonitor';
 import { applyCreditMutationInTransaction } from '../financial/creditMutationService';
 import { runFinancialWriteTransaction } from '../cycle/financialWriteTransaction';
 import {
@@ -286,10 +285,6 @@ export async function upgradeFacility(
 
     // Track spending for onboarding budget comparison
     await trackSpending(userId, 'facilities', upgradeCost);
-
-    if (options.spendingMonitor) {
-      securityMonitor.trackSpending(userId, upgradeCost, options.spendingMonitor);
-    }
   } catch (logError) {
     logger.error('Failed to log facility transaction event:', logError);
     // Don't fail the request if logging fails

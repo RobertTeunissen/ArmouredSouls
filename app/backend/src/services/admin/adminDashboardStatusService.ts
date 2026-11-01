@@ -17,8 +17,7 @@ import logger from '../../config/logger';
 import { buildUserFilter } from '../../utils/buildUserFilter';
 import { getSchedulerState, type SchedulerState } from '../cycle/cycleScheduler';
 import { getCurrentSeason } from '../season/seasonService';
-import { securityMonitor } from '../security/securityMonitor';
-import { SecuritySeverity } from '../security/securityLogger';
+import { getSecurityAttention } from '../security/securityOverviewService';
 import { getAutomatonStatus } from '../automaton/automatonStatus';
 import { countQueuedMatchesByMode, totalQueued } from './adminQueuedMatches';
 import {
@@ -56,7 +55,8 @@ export interface DashboardStatus {
   queuedMatches: number | null;
   attention: {
     bankruptcyRisk: { count: number; threshold: number } | null;
-    security: { activeAlerts: number; critical: number } | null;
+    /** Last 24 hours: every signal, and the bursts and violations among them. */
+    security: { signals: number; alerts: number } | null;
     automatons: { needAttention: number; failed: number } | null;
     cycleHealth: DashboardCycleHealth;
   };
@@ -152,10 +152,9 @@ export async function getDashboardStatus(now: Date = new Date()): Promise<Dashbo
 
   let security: DashboardStatus['attention']['security'] = null;
   try {
-    const summary = securityMonitor.getSummary();
-    security = { activeAlerts: summary.activeAlerts, critical: summary.bySeverity[SecuritySeverity.CRITICAL] };
+    security = await getSecurityAttention(now);
   } catch (error) {
-    logger.error(`[AdminDashboard] security summary unavailable — ${error instanceof Error ? error.message : String(error)}`);
+    logger.error(`[AdminDashboard] security signals unavailable — ${error instanceof Error ? error.message : String(error)}`);
   }
 
   const lastSettlementAt = latestSettlement(cycleMetadata?.lastCycleAt ?? null, seasonSettlement?.lastSettlementAt ?? null);

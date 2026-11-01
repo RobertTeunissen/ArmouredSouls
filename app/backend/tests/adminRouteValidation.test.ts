@@ -54,13 +54,6 @@ const repairAuditQuerySchema = z.object({
   endDate: z.string().optional(),
 });
 
-const securityEventsQuerySchema = z.object({
-  severity: z.enum(['info', 'warning', 'critical']).optional(),
-  eventType: z.string().optional(),
-  userId: z.coerce.number().int().positive().optional(),
-  since: z.string().optional(),
-  limit: z.coerce.number().int().positive().max(200).default(50),
-});
 
 // --- Test helpers ---
 
@@ -323,45 +316,6 @@ describe('Admin route validation schemas', () => {
 
     it('should reject limit > 100', () => {
       const result = repairAuditQuerySchema.safeParse({ limit: '101' });
-      expect(result.success).toBe(false);
-    });
-  });
-
-  describe('securityEventsQuerySchema (GET /security/events)', () => {
-    it('should accept valid filters', () => {
-      const result = securityEventsQuerySchema.safeParse({
-        severity: 'critical',
-        eventType: 'login_failure',
-        userId: '42',
-        since: '2025-01-01T00:00:00Z',
-        limit: '100',
-      });
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.severity).toBe('critical');
-        expect(result.data.userId).toBe(42);
-        expect(result.data.limit).toBe(100);
-      }
-    });
-
-    it('should reject invalid severity', () => {
-      const result = securityEventsQuerySchema.safeParse({ severity: 'extreme' });
-      expect(result.success).toBe(false);
-    });
-
-    it('should default limit to 50', () => {
-      const result = securityEventsQuerySchema.safeParse({});
-      expect(result.success).toBe(true);
-      if (result.success) expect(result.data.limit).toBe(50);
-    });
-
-    it('should reject limit > 200', () => {
-      const result = securityEventsQuerySchema.safeParse({ limit: '201' });
-      expect(result.success).toBe(false);
-    });
-
-    it('should reject non-numeric userId', () => {
-      const result = securityEventsQuerySchema.safeParse({ userId: 'abc' });
       expect(result.success).toBe(false);
     });
   });

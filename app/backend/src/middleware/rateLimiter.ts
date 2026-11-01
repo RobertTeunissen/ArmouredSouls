@@ -1,16 +1,30 @@
 /**
  * @module middleware/rateLimiter
  *
- * Express rate-limiting middleware factory. Creates two limiters:
+ * Express rate-limiting middleware factory. Creates three IP-keyed limiters:
  *
  * - {@link createGeneralLimiter} — broad limit for general API routes
- * - {@link createAuthLimiter} — stricter limit for authentication endpoints
+ * - {@link createAuthLimiter} — stricter limit for registration
+ * - {@link createLoginLimiter} — tightest limit, for login
  *
- * Both limiters read their configuration from EnvConfig so limits can be
- * tuned per environment via RATE_LIMIT_WINDOW_MS and RATE_LIMIT_MAX_REQUESTS.
+ * All read their configuration from EnvConfig so limits can be tuned per
+ * environment. Every refusal is recorded as a `rate_limit` security signal
+ * (by IP, before login) for the admin Security page.
  */
-import rateLimit from 'express-rate-limit';
+import rateLimit, { type Options } from 'express-rate-limit';
+import type { Request, Response } from 'express';
 import type { EnvConfig } from '../config/env';
+import { securityMonitor } from '../services/security/securityMonitor';
+
+function clientKey(req: Request): string {
+  return req.ip || (req.headers['x-forwarded-for'] as string) || 'unknown';
+}
+
+/** Default express-rate-limit response, plus the security signal. */
+function recordAndRefuse(req: Request, res: Response, _next: unknown, options: Options): void {
+  securityMonitor.trackAnonymousRateLimit(clientKey(req), req.originalUrl);
+  res.status(options.statusCode).send(options.message);
+}
 
 /**
  * Create the general-purpose rate limiter for non-authentication API routes.
@@ -24,8 +38,8 @@ export function createGeneralLimiter(config: EnvConfig) {
     standardHeaders: true,
     legacyHeaders: false,
     validate: false,
-    keyGenerator: (req) =>
-      req.ip || (req.headers['x-forwarded-for'] as string) || 'unknown',
+    keyGenerator: clientKey,
+    handler: recordAndRefuse,
   });
 }
 
@@ -42,8 +56,8 @@ export function createAuthLimiter(config: EnvConfig) {
     standardHeaders: true,
     legacyHeaders: false,
     validate: false,
-    keyGenerator: (req) =>
-      req.ip || (req.headers['x-forwarded-for'] as string) || 'unknown',
+    keyGenerator: clientKey,
+    handler: recordAndRefuse,
   });
 }
 
@@ -59,7 +73,7 @@ export function createLoginLimiter(config: EnvConfig) {
     standardHeaders: true,
     legacyHeaders: false,
     validate: false,
-    keyGenerator: (req) =>
-      req.ip || (req.headers['x-forwarded-for'] as string) || 'unknown',
+    keyGenerator: clientKey,
+    handler: recordAndRefuse,
   });
 }

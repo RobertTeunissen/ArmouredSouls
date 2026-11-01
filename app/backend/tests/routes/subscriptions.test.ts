@@ -2,7 +2,8 @@
  * API route tests for subscription endpoints.
  *
  * Tests Zod validation, auth, ownership 403, cap exceeded 400,
- * lock 409, success responses, and admin analytics authorization.
+ * lock 409 and success responses. The admin analytics route moved to
+ * GET /api/admin/meta/builds (Meta page); this router no longer has it.
  *
  * _Requirements: R10.1, R10.2, R10.3_
  */
@@ -16,12 +17,6 @@ import { errorHandler } from '../../src/middleware/errorHandler';
 // Mock prisma
 const mockPrisma = {
   robot: { count: jest.fn() },
-  subscription: {
-    groupBy: jest.fn(),
-    findMany: jest.fn(),
-  },
-  cycleMetadata: { findFirst: jest.fn() },
-  auditLog: { findMany: jest.fn() },
 };
 jest.mock('../../src/lib/prisma', () => ({
   __esModule: true,
@@ -149,12 +144,6 @@ describe('Subscription Routes', () => {
     it('GET /registry returns 401 without token', async () => {
       mockUser = null;
       const res = await request(app).get('/api/subscriptions/registry');
-      expect(res.status).toBe(401);
-    });
-
-    it('GET /admin/analytics returns 401 without token', async () => {
-      mockUser = null;
-      const res = await request(app).get('/api/subscriptions/admin/analytics');
       expect(res.status).toBe(401);
     });
   });
@@ -506,75 +495,15 @@ describe('Subscription Routes', () => {
     });
   });
 
-  // ── Admin Analytics Tests ────────────────────────────────────────
+  // ── Removed admin analytics ──────────────────────────────────────
 
-  describe('Admin Analytics', () => {
-    it('GET /admin/analytics returns 403 for non-admin user', async () => {
-      mockUser = { userId: 1, username: 'testuser', role: 'user' };
+  describe('Admin analytics', () => {
+    it('is no longer served here (moved to GET /api/admin/meta/builds)', async () => {
+      mockUser = { userId: 1, username: 'admin', role: 'admin' };
 
       const res = await request(app).get('/api/subscriptions/admin/analytics');
 
-      expect(res.status).toBe(403);
-      expect(res.body.error).toBe('Admin access required');
-    });
-
-    it('GET /admin/analytics returns data for admin user', async () => {
-      mockUser = { userId: 1, username: 'admin', role: 'admin' };
-
-      mockPrisma.subscription.groupBy.mockResolvedValue([
-        { eventType: 'league', _count: { id: 42 } },
-        { eventType: 'tournament', _count: { id: 30 } },
-      ]);
-      mockPrisma.cycleMetadata.findFirst.mockResolvedValue({ totalCycles: 60 });
-      mockPrisma.auditLog.findMany.mockResolvedValue([]);
-      mockPrisma.subscription.findMany.mockResolvedValue([]);
-
-      const res = await request(app).get('/api/subscriptions/admin/analytics');
-
-      expect(res.status).toBe(200);
-      expect(res.body.perEvent).toHaveLength(2);
-      expect(res.body.perEvent[0]).toEqual({ eventType: 'league', subscriberCount: 42 });
-      expect(res.body.trends).toBeDefined();
-      expect(res.body.perStable).toBeDefined();
-    });
-
-    it('GET /admin/analytics accepts days query parameter', async () => {
-      mockUser = { userId: 1, username: 'admin', role: 'admin' };
-
-      mockPrisma.subscription.groupBy.mockResolvedValue([]);
-      mockPrisma.cycleMetadata.findFirst.mockResolvedValue({ totalCycles: 60 });
-      mockPrisma.auditLog.findMany.mockResolvedValue([]);
-      mockPrisma.subscription.findMany.mockResolvedValue([]);
-
-      const res = await request(app).get('/api/subscriptions/admin/analytics?days=7');
-
-      expect(res.status).toBe(200);
-      // Verify the audit log query used the correct cycle range
-      expect(mockPrisma.auditLog.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: expect.objectContaining({
-            cycleNumber: { gte: 53 }, // 60 - 7
-          }),
-        }),
-      );
-    });
-
-    it('GET /admin/analytics returns 400 for invalid days parameter', async () => {
-      mockUser = { userId: 1, username: 'admin', role: 'admin' };
-
-      const res = await request(app).get('/api/subscriptions/admin/analytics?days=0');
-
-      expect(res.status).toBe(400);
-      expect(res.body.code).toBe('VALIDATION_ERROR');
-    });
-
-    it('GET /admin/analytics returns 400 for days > 90', async () => {
-      mockUser = { userId: 1, username: 'admin', role: 'admin' };
-
-      const res = await request(app).get('/api/subscriptions/admin/analytics?days=91');
-
-      expect(res.status).toBe(400);
-      expect(res.body.code).toBe('VALIDATION_ERROR');
+      expect(res.status).toBe(404);
     });
   });
 });

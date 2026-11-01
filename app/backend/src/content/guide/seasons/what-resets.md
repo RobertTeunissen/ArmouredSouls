@@ -2,7 +2,7 @@
 title: "What Resets and What Survives"
 description: "The exact list of what a season rollover deletes and what it keeps. Read this before your first season boundary."
 order: 2
-lastUpdated: "2026-10-30"
+lastUpdated: "2026-11-01"
 relatedArticles:
   - seasons/what-is-a-season
   - seasons/reading-your-archive
@@ -55,5 +55,7 @@ The one exception is an achievement whose condition depends on something a seaso
 ## Your uploaded images are kept
 
 If you uploaded custom artwork for a robot, the image file survives the reset even though the robot does not. It stays in your image library, capped at 20 images, and you can apply it to a new robot next season without re-uploading. Your archived seasons keep showing the right artwork too.
+
+Uploading a new image for a robot keeps its previous one in your library as well, so you can switch back later. An image only disappears when you delete it, or when your account is removed.
 
 You can only ever see and use your own uploads. If you want to free up space, you can delete an image yourself — the game tells you first which current robots and which archived seasons use it.

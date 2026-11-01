@@ -24,11 +24,16 @@ export interface ModerationAvailability {
   changedAt: string;
 }
 
-interface ModerationThresholds {
+export interface ModerationThresholds {
   porn: number;
   hentai: number;
   sexy: number;
 }
+
+/** A score at or above any of these blocks the upload (NSFW hard block). */
+export const MODERATION_THRESHOLDS: Readonly<ModerationThresholds> = { porn: 0.3, hentai: 0.3, sexy: 0.5 };
+/** drawing + neutral below this shows the "doesn't look like a robot" warning. */
+export const ROBOT_LIKENESS_THRESHOLD = 0.6;
 
 class ContentModerationService {
   private model: NSFWJS | null = null;
@@ -38,13 +43,9 @@ class ContentModerationService {
   private status: ModerationAvailabilityStatus = 'starting';
   private changedAt = new Date().toISOString();
 
-  private moderationThresholds: ModerationThresholds = {
-    porn: 0.3,
-    hentai: 0.3,
-    sexy: 0.5,
-  };
+  private moderationThresholds: ModerationThresholds = { ...MODERATION_THRESHOLDS };
 
-  private robotLikenessThreshold = 0.6;
+  private robotLikenessThreshold = ROBOT_LIKENESS_THRESHOLD;
 
   /**
    * Loads the model once for all concurrent callers. Failures remain observable so

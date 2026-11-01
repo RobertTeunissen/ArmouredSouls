@@ -89,8 +89,6 @@ beforeEach(() => {
     statsLastFetched: null,
     statsLastFilter: null,
     statsLoading: false,
-    securitySummary: null,
-    securityLastFetched: null,
     ttlMs: 60_000,
   });
 });

@@ -17,6 +17,8 @@ export interface AdminPanelProps {
   /** Rows of placeholder bars while the first load is in flight. */
   skeletonRows?: number;
   className?: string;
+  /** Heading level of the title (default 2; 3 when the page groups panels under its own headings). */
+  headingLevel?: 2 | 3;
   children?: ReactNode;
 }
 
@@ -58,9 +60,11 @@ export function AdminPanel({
   onRetry,
   skeletonRows = 4,
   className = '',
+  headingLevel = 2,
   children,
 }: AdminPanelProps): ReactNode {
   const headingId = useId();
+  const Heading = headingLevel === 3 ? 'h3' : 'h2';
   const showSkeleton = loading && !children;
 
   return (
@@ -70,7 +74,7 @@ export function AdminPanel({
       className={`rounded-lg border border-white/10 bg-surface ${className}`}
     >
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 px-5 py-3.5">
-        <h2 id={headingId} className="text-base font-semibold text-white">{title}</h2>
+        <Heading id={headingId} className="text-base font-semibold text-white">{title}</Heading>
         {actions}
       </div>
       {error && <PanelError message={error} onRetry={onRetry} />}

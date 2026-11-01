@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import fc from 'fast-check';
-import { humanizeKey, summarizeYield, toShares } from '../adminMetaFormat';
+import {
+  eventLabel,
+  formatPercentOf,
+  humanizeKey,
+  refinementKindEffect,
+  refinementKindLabel,
+  summarizeYield,
+  toShares,
+} from '../adminMetaFormat';
 
 describe('humanizeKey', () => {
   it('turns snake_case keys into sentence case', () => {
@@ -70,5 +78,26 @@ describe('summarizeYield', () => {
       expect(atOrBelow * 2).toBeGreaterThanOrEqual(summary.total);
       expect(atOrAbove * 2).toBeGreaterThanOrEqual(summary.total);
     }));
+  });
+});
+
+describe('build section labels', () => {
+  it('formats a whole-number share of a total, zero-safe', () => {
+    expect(formatPercentOf(168, 171)).toBe('98%');
+    expect(formatPercentOf(3670, 3670)).toBe('100%');
+    expect(formatPercentOf(5, 0)).toBe('0%');
+  });
+
+  it('labels refinement kinds with their effect from the shared constants', () => {
+    expect(refinementKindLabel('sharpen')).toBe('Sharpen');
+    expect(refinementKindEffect('sharpen')).toBe('−10% cooldown');
+    expect(refinementKindEffect('forge')).toBe('+8% base damage');
+    expect(refinementKindEffect('hone')).toBe('+1–5 to an attribute the weapon has');
+  });
+
+  it('labels events with the approved names and humanizes unknown ones', () => {
+    expect(eventLabel('koth')).toBe('King of the Hill');
+    expect(eventLabel('tournament_2v2')).toBe('2v2 Tournament');
+    expect(eventLabel('future_mode')).toBe('Future mode');
   });
 });

@@ -68,6 +68,26 @@ describe('Image retention — R30.1, R30.19', () => {
     expect(code).not.toMatch(/\/assets\/robots/);
   });
 
+  it('should not delete the previous upload when a new image is confirmed', () => {
+    const source = read('services/moderation/imageUploadHandlers.ts');
+
+    // The confirm step used to delete the robot's previous upload, even when
+    // another robot or an archived season still used it. The file stays in the
+    // player's Image_Library instead.
+    expect(source).not.toMatch(/deleteImage/);
+  });
+
+  it('should run only the archive-aware sweep from the admin cleanup and the bulk cycle runner', () => {
+    // A live-robots-only sweep deletes every retained Image_Library file that
+    // is not on a current robot. Both on-demand callers must use the same
+    // referenced set as the season rollover.
+    for (const file of ['services/moderation/adminImagesService.ts', 'services/admin/adminCycleService.ts']) {
+      const source = read(file);
+      expect(source).toMatch(/cleanupSeasonOrphans\(\)/);
+      expect(source).not.toMatch(/runOrphanCleanup|orphanCleanupJob/);
+    }
+  });
+
   it('should enforce the retained-image cap at the upload site', () => {
     const source = read('services/moderation/imageUploadHandlers.ts');
 

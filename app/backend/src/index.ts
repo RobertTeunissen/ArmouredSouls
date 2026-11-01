@@ -47,6 +47,8 @@ import { getDiskUsage, getMemoryUsage, checkCriticalModules } from './utils/syst
 import { initDailyHealthReport } from './services/monitoring/dailyHealthReport';
 import { initBattleLogRetention } from './services/retention/battleLogRetentionService';
 import { initAuditLogRetention } from './services/retention/auditLogRetentionService';
+import { initSecurityEventRetention } from './services/retention/securityEventRetentionService';
+import { syncUploadedImages } from './services/moderation/uploadedImageService';
 import { createGeneralLimiter, createAuthLimiter, createLoginLimiter } from './middleware/rateLimiter';
 import { createUserEconomicLimiter } from './middleware/userRateLimiter';
 import { authenticateToken } from './middleware/auth';
@@ -318,5 +320,14 @@ import { runStrategyStartupCheck } from './services/automaton/strategies/registr
     // Initialize audit log retention cron (01:45 UTC daily, opt-in via
     // AUDIT_LOG_RETENTION_DAYS — no-op when unset)
     initAuditLogRetention();
+
+    // Security signals are kept 90 days (01:50 UTC daily)
+    initSecurityEventRetention();
+
+    // Reconcile the uploaded-image inventory with the disk (backfills files
+    // that predate the table). Non-blocking; a failure only affects the admin page.
+    void syncUploadedImages().catch((error: unknown) => {
+      logger.error(`[uploaded-images] Startup sync failed: ${error instanceof Error ? error.message : String(error)}`);
+    });
   });
 })();

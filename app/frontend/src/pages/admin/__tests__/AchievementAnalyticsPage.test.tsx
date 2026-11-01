@@ -1,145 +1,190 @@
 /**
- * Unit Tests for AchievementAnalyticsPage
- *
- * Tests unlock rates display, difficulty flags render, rarity accuracy shows,
- * user filter works.
- *
- * _Requirements: 17.2, 17.3, 17.4, 17.5_
+ * Unit tests for the admin Achievements page (`/admin/achievements`): the
+ * season scope and population line, the stable-type toggle in the URL, the
+ * headline numbers, the tier strip table, the two balance notes, the sortable
+ * and filterable table, refresh, and errors with retry.
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import AchievementAnalyticsPage from '../AchievementAnalyticsPage';
+import type { AchievementAnalytics, AchievementRow } from '../../../utils/adminAchievementsApi';
 
-/* ------------------------------------------------------------------ */
-/*  Mocks                                                              */
-/* ------------------------------------------------------------------ */
+type Config = { params?: Record<string, unknown>; signal?: AbortSignal };
+const mockGet = vi.fn<(url: string, config?: Config) => Promise<{ data: unknown }>>();
 
-const mockGet = vi.fn();
 vi.mock('../../../utils/apiClient', () => ({
-  default: { get: (...args: unknown[]) => mockGet(...args) },
+  default: { get: (url: string, config?: Config) => mockGet(url, config) },
 }));
 
-const mockAchievementData = {
-  achievements: [
-    {
-      achievementId: 'C1',
-      unlockCount: 15,
-      unlockRate: 75,
-    },
-    {
-      achievementId: 'C2',
-      unlockCount: 19,
-      unlockRate: 95,
-    },
-    {
-      achievementId: 'L1',
-      unlockCount: 0,
-      unlockRate: 0,
-    },
-  ],
-  totalUnlocks: 34,
-  uniquePlayersWithAchievements: 15,
-  totalUsers: 20,
-  participationRate: 75,
-  timestamp: '2026-04-20T12:00:00Z',
-};
+const row = (over: Partial<AchievementRow>): AchievementRow => ({
+  achievementId: 'C1', name: 'First win', description: 'Win a battle', category: 'combat', tier: 'easy', hidden: false,
+  unlocked: 0, rate: 0, medianDay: null, unlockedAll: 0, ...over,
+});
 
-/* ------------------------------------------------------------------ */
-/*  Tests                                                              */
-/* ------------------------------------------------------------------ */
+const ROWS: AchievementRow[] = [
+  row({ achievementId: 'E1', name: 'Welcome', category: 'economy', tier: 'easy', unlocked: 26, rate: 100, medianDay: 0, unlockedAll: 68 }),
+  row({ achievementId: 'C6', name: 'Iron Man', category: 'combat', tier: 'hard', unlocked: 24, rate: 92.3, medianDay: 12, unlockedAll: 30 }),
+  row({ achievementId: 'C1', name: 'First win', category: 'combat', tier: 'easy', unlocked: 20, rate: 76.9, medianDay: 2, unlockedAll: 25 }),
+  row({ achievementId: 'L4', name: 'Diamond', category: 'league', tier: 'medium', unlocked: 3, rate: 11.5, medianDay: 40, unlockedAll: 3 }),
+  row({ achievementId: 'S1', name: 'Hidden one', category: 'style', tier: 'secret', hidden: true, unlocked: 1, rate: 3.8, medianDay: 30, unlockedAll: 1 }),
+  row({ achievementId: 'C8', name: 'Hundred wins', category: 'combat', tier: 'very_hard', unlocked: 0, rate: 0, medianDay: null, unlockedAll: 0 }),
+];
+
+const analytics = (over: Partial<AchievementAnalytics> = {}): AchievementAnalytics => ({
+  stables: 'players',
+  seasonNumber: 1,
+  seasonStartedAt: '2026-08-01T00:00:00.000Z',
+  population: 26,
+  totalStables: 87,
+  totalAchievements: 6,
+  unlockedBySomeone: 5,
+  unlocks: 74,
+  achievements: ROWS,
+  ...over,
+});
+
+function LocationProbe() {
+  return <output data-testid="location">{useLocation().search}</output>;
+}
+
+function renderPage(search = '') {
+  return render(
+    <MemoryRouter initialEntries={[`/admin/achievements${search}`]}>
+      <Routes>
+        <Route path="/admin/achievements" element={<><AchievementAnalyticsPage /><LocationProbe /></>} />
+      </Routes>
+    </MemoryRouter>,
+  );
+}
+
+const calls = () => mockGet.mock.calls.filter(([url]) => url === '/api/admin/achievements/analytics');
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  mockGet.mockImplementation((_url, config) => Promise.resolve({
+    data: analytics({ stables: (config?.params?.stables as AchievementAnalytics['stables']) ?? 'players' }),
+  }));
+});
 
 describe('AchievementAnalyticsPage', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    mockGet.mockResolvedValue({ data: mockAchievementData });
-  });
+  it('shows this season for active players by default, with the population behind the rates', async () => {
+    renderPage();
 
-  const renderPage = () =>
-    render(
-      <MemoryRouter>
-        <AchievementAnalyticsPage />
-      </MemoryRouter>,
+    expect(await screen.findByTestId('achievement-scope')).toHaveTextContent(
+      'This season · 26 active players (logged in since 1 Aug) of 87 accounts · rates are of active players',
     );
+    expect(calls()[0]?.[1]?.params).toEqual({ stables: 'players' });
+    expect(screen.getByRole('button', { name: 'Players' })).toHaveAttribute('aria-pressed', 'true');
 
-  it('should render the page header', () => {
-    renderPage();
-    expect(screen.getByText('Achievement Analytics')).toBeInTheDocument();
+    expect(screen.getByText('Achievements', { selector: 'dt' }).nextElementSibling).toHaveTextContent('6');
+    expect(screen.getByText('in the catalogue (incl. 1 secret)')).toBeInTheDocument();
+    expect(screen.getByText('Never unlocked').nextElementSibling).toHaveTextContent('1');
+    expect(screen.getByText('Unlocks', { selector: 'dt' }).nextElementSibling).toHaveTextContent('74');
+    expect(screen.getByText('3 per active player')).toBeInTheDocument();
   });
 
-  it('should display summary stat cards', async () => {
+  it('switches the stable type through the URL and describes the population', async () => {
+    const user = userEvent.setup();
     renderPage();
-    await waitFor(() => {
-      expect(screen.getByText('Total Unlocks')).toBeInTheDocument();
-      expect(screen.getByText('Participation')).toBeInTheDocument();
-      expect(screen.getByText('Never Unlocked')).toBeInTheDocument();
-      expect(screen.getByText('High Unlock (>90%)')).toBeInTheDocument();
-    });
+    await screen.findByTestId('achievement-scope');
+
+    await user.click(screen.getByRole('button', { name: 'Automatons' }));
+    await waitFor(() => expect(calls().at(-1)?.[1]?.params).toEqual({ stables: 'automatons' }));
+    expect(screen.getByTestId('location')).toHaveTextContent('?stables=automatons');
+    expect(await screen.findByText(/rates are of all of them/)).toHaveTextContent('This season · 26 Automatons · rates are of all of them');
+    // All accounts only differs from Unlocked for players.
+    expect(screen.queryByRole('button', { name: /All accounts/ })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Players' }));
+    await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent(/^$/));
   });
 
-  it('should display achievement IDs in the table', async () => {
-    renderPage();
-    await waitFor(() => {
-      expect(screen.getByText('C1')).toBeInTheDocument();
-      expect(screen.getByText('C2')).toBeInTheDocument();
-      expect(screen.getByText('L1')).toBeInTheDocument();
-    });
+  it('opens Generated from a ?stables= link', async () => {
+    renderPage('?stables=generated');
+    expect(await screen.findByTestId('achievement-scope')).toHaveTextContent('This season · 26 generated stables · rates are of all of them');
+    expect(calls()[0]?.[1]?.params).toEqual({ stables: 'generated' });
   });
 
-  it('should display unlock rates as percentages', async () => {
+  it('summarises each tier in an accessible table', async () => {
     renderPage();
-    await waitFor(() => {
-      // 75% appears in both the Participation stat card and the table
-      const seventyFive = screen.getAllByText('75%');
-      expect(seventyFive.length).toBeGreaterThanOrEqual(1);
-      const ninetyFive = screen.getAllByText('95%');
-      expect(ninetyFive.length).toBeGreaterThanOrEqual(1);
-      expect(screen.getByText('0%')).toBeInTheDocument();
-    });
+    const table = await screen.findByRole('table', { name: 'Unlock rate per tier' });
+    const easy = within(table).getByRole('rowheader', { name: 'Easy' }).parentElement!;
+    expect(easy).toHaveTextContent('Easy277%77%100%');
+    const veryHard = within(table).getByRole('rowheader', { name: 'Very hard' }).parentElement!;
+    expect(veryHard).toHaveTextContent('Very hard10%0%0%');
   });
 
-  it('should display unlock counts', async () => {
+  it('notes achievements easier and harder than their tier', async () => {
     renderPage();
-    await waitFor(() => {
-      expect(screen.getByText('15')).toBeInTheDocument();
-      expect(screen.getByText('19')).toBeInTheDocument();
-    });
+    const easier = await screen.findByRole('list', { name: 'Easier than its tier says' });
+    expect(within(easier).getAllByRole('listitem')).toHaveLength(1);
+    expect(within(easier).getByRole('listitem')).toHaveTextContent('HardIron Man C6 · Combat24 of 26 · day 12');
+
+    const harder = screen.getByRole('list', { name: 'Harder than its tier says' });
+    expect(within(harder).getByRole('listitem')).toHaveTextContent('MediumDiamond L4 · League3 of 26 · day 40');
+    expect(screen.getAllByText("Notes, not alerts: input for next season's balance.")).toHaveLength(2);
   });
 
-  it('should display participation info', async () => {
+  it('sorts the table by any column and filters it by category', async () => {
+    const user = userEvent.setup();
     renderPage();
-    await waitFor(() => {
-      expect(screen.getByText(/15 of 20 players have unlocked at least one achievement/)).toBeInTheDocument();
-    });
+    const panel = await screen.findByRole('region', { name: 'All achievements' });
+    const table = within(panel).getByRole('table');
+    const ids = () => within(table).getAllByRole('rowheader').map((cell) => cell.textContent?.match(/[A-Z]\d+/)?.[0]);
+
+    expect(ids()).toEqual(['E1', 'C6', 'C1', 'L4', 'S1', 'C8']);
+    expect(within(table).getByRole('columnheader', { name: /Unlocked/ })).toHaveAttribute('aria-sort', 'descending');
+    expect(within(table).getByRole('rowheader', { name: /Welcome/ }).parentElement).toHaveTextContent('26 (100%)before start68');
+
+    await user.click(within(table).getByRole('button', { name: /Median day/ }));
+    expect(ids()).toEqual(['L4', 'S1', 'C6', 'C1', 'E1', 'C8']); // highest day first, nobody-unlocked last
+    await user.click(within(table).getByRole('button', { name: /Median day/ }));
+    expect(ids()).toEqual(['E1', 'C1', 'C6', 'S1', 'L4', 'C8']);
+    expect(within(table).getByRole('columnheader', { name: /Median day/ })).toHaveAttribute('aria-sort', 'ascending');
+
+    await user.click(within(table).getByRole('button', { name: /Achievement/ }));
+    expect(ids()).toEqual(['L4', 'C1', 'S1', 'C8', 'C6', 'E1']); // Diamond, First win, Hidden one, Hundred wins, Iron Man, Welcome
+
+    await user.click(within(panel).getByRole('button', { name: 'Combat' }));
+    expect(ids()).toEqual(['C1', 'C8', 'C6']);
+    expect(within(panel).getByText('3 of 3 shown')).toBeInTheDocument();
+    expect(within(panel).queryByRole('button', { name: /Show all/ })).not.toBeInTheDocument();
   });
 
-  it('should render user filter chips', () => {
+  it('shows the first 15 rows of the current sort until Show all', async () => {
+    const user = userEvent.setup();
+    const many = Array.from({ length: 20 }, (_, index) => row({ achievementId: `C${index + 1}`, name: `Achievement ${index + 1}`, unlocked: 20 - index, rate: 20 - index }));
+    mockGet.mockImplementation(() => Promise.resolve({ data: analytics({ achievements: many, totalAchievements: 20 }) }));
     renderPage();
-    expect(screen.getByText('Real Players')).toBeInTheDocument();
-    expect(screen.getByText('Auto-Generated')).toBeInTheDocument();
-    expect(screen.getByText('All')).toBeInTheDocument();
+
+    const panel = await screen.findByRole('region', { name: 'All achievements' });
+    const table = within(panel).getByRole('table');
+    expect(within(table).getAllByRole('rowheader')).toHaveLength(15);
+    expect(within(panel).getByText('15 of 20 shown')).toBeInTheDocument();
+
+    await user.click(within(panel).getByRole('button', { name: 'Show all 20 achievements' }));
+    expect(within(table).getAllByRole('rowheader')).toHaveLength(20);
+    expect(within(panel).getByRole('button', { name: 'Show the first 15' })).toHaveAttribute('aria-expanded', 'true');
+
+    // Sorting re-orders the whole list; the collapsed view always shows its top 15.
+    await user.click(within(panel).getByRole('button', { name: 'Show the first 15' }));
+    await user.click(within(table).getByRole('button', { name: /^Unlocked/ }));
+    expect(within(table).getAllByRole('rowheader')[0]).toHaveTextContent('Achievement 20');
   });
 
-  it('should fetch with filter parameter when filter is toggled', async () => {
+  it('shows an error with Retry, and Refresh refetches', async () => {
+    const user = userEvent.setup();
+    mockGet.mockImplementationOnce(() => Promise.reject({ response: { status: 500, data: { error: 'Analytics failed', code: 'INTERNAL' } } }));
     renderPage();
-    await waitFor(() => {
-      expect(mockGet).toHaveBeenCalled();
-    });
 
-    fireEvent.click(screen.getByText('All'));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Analytics failed');
+    await user.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(await screen.findByTestId('achievement-scope')).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
 
-    await waitFor(() => {
-      const lastCall = mockGet.mock.calls[mockGet.mock.calls.length - 1];
-      expect(lastCall[0]).toBe('/api/admin/achievements/analytics');
-      expect(lastCall[1]).toMatchObject({ params: { filter: 'all' } });
-    });
-  });
-
-  it('should display error state when API fails', async () => {
-    mockGet.mockRejectedValue({ response: { data: { error: 'Achievement service error' } } });
-    renderPage();
-    await waitFor(() => {
-      expect(screen.getByText('Achievement service error')).toBeInTheDocument();
-    });
+    await user.click(screen.getByRole('button', { name: /Refresh/ }));
+    await waitFor(() => expect(calls()).toHaveLength(3));
   });
 });

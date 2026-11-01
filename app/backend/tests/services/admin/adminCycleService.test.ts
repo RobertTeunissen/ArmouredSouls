@@ -112,8 +112,8 @@ jest.mock('../../../src/services/tournament/tournamentBattleOrchestrator', () =>
   executeSoloTournamentRound: jest.fn().mockResolvedValue({ matchesExecuted: 0, byesResolved: 0, matchesResumed: 0, matchesCancelled: 0, winners: [], errors: [] }),
 }));
 
-jest.mock('../../../src/services/moderation/orphanCleanupJob', () => ({
-  runOrphanCleanup: jest.fn().mockResolvedValue({ filesDeleted: 0, bytesReclaimed: 0 }),
+jest.mock('../../../src/services/moderation/imageLibraryService', () => ({
+  cleanupSeasonOrphans: jest.fn().mockResolvedValue({ filesDeleted: 0, bytesReclaimed: 0, errors: [] }),
 }));
 
 jest.mock('../../../src/utils/userGeneration', () => ({

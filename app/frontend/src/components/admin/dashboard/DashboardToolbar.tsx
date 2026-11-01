@@ -50,7 +50,7 @@ export function DashboardToolbar({
           type="button"
           onClick={onRefresh}
           disabled={refreshing}
-          className={`min-h-9 whitespace-nowrap rounded-md border border-white/10 bg-surface-elevated px-3 py-1.5 text-sm text-white transition-colors motion-reduce:transition-none hover:bg-white/10 disabled:opacity-60 ${ADMIN_FOCUS_RING}`}
+          className={`min-h-11 whitespace-nowrap rounded-md border border-white/10 bg-surface-elevated px-3 py-1.5 text-sm text-white transition-colors motion-reduce:transition-none hover:bg-white/10 disabled:opacity-60 ${ADMIN_FOCUS_RING}`}
         >
           <span aria-hidden="true">↻ </span>Refresh
         </button>

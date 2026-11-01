@@ -206,9 +206,7 @@ router.post('/purchase', authenticateToken, validateRequest({ body: purchaseBody
   const weaponIdNum = Number(weaponId);
 
   // Spec #55 task 2.2: the purchase itself lives in weaponPurchaseService.
-  const result = await purchaseWeapon(userId, weaponIdNum, requestKey, {
-    spendingMonitor: { sourceIp: req.ip || undefined, endpoint: req.originalUrl },
-  });
+  const result = await purchaseWeapon(userId, weaponIdNum, requestKey);
 
   if (result.replayed) {
     res.status(201).json({ ...result.response, achievementUnlocks: [], replayed: true });
@@ -369,9 +367,6 @@ router.delete(
  *  - (hone/augment) target attribute on/off the weapon → ATTRIBUTE_NOT_/ALREADY_ON_WEAPON
  *  - (hone/augment) per-attribute stack cap (catalog + prior refinements + this one ≤ +10) → ATTRIBUTE_STACK_CAP_EXCEEDED
  *  - User currency < cost → INSUFFICIENT_CREDITS (HTTP 402)
- *
- * Refinement IS spending — `securityMonitor.trackSpending` is called after
- * the transaction commits (resale skips this; purchase calls it).
  */
 router.post(
   '/:id/refine',
@@ -385,9 +380,7 @@ router.post(
     const requestKey = getIdempotencyKey(req.headers);
 
     // Spec #55 task 2.4: the refinement itself lives in weaponRefinementService.
-    const result = await refineWeapon(userId, inventoryId, { tier, magnitude, targetAttribute }, requestKey, {
-      spendingMonitor: { sourceIp: req.ip || undefined, endpoint: req.originalUrl },
-    });
+    const result = await refineWeapon(userId, inventoryId, { tier, magnitude, targetAttribute }, requestKey);
 
     if (result.replayed) {
       res.json({ ...result.response, achievementUnlocks: [], replayed: true });

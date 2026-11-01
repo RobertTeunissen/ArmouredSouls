@@ -7,7 +7,7 @@
  * - GET /api/admin/economy
  * - GET /api/admin/league-health
  * - GET /api/admin/achievements/analytics
- * - GET /api/admin/tuning/adoption
+ * - GET /api/admin/meta/builds
  * - GET /api/admin/audit-log
  * - POST /api/admin/audit-log
  * - GET /api/admin/users/search, GET /api/admin/users/:id
@@ -32,8 +32,7 @@ const mockGetEconomyOverview = jest.fn();
 const mockGetLeagueHealthOverview = jest.fn();
 const mockGetLeagueSeason = jest.fn();
 const mockGetAchievementAnalytics = jest.fn();
-const mockGetTuningAdoption = jest.fn();
-const mockGetRefinementAdoption = jest.fn();
+const mockGetMetaBuilds = jest.fn();
 const mockGetAuditEntries = jest.fn();
 const mockRecordAuditAction = jest.fn();
 
@@ -41,9 +40,15 @@ jest.mock('../../services/admin/adminStatsService', () => ({
   getSystemStats: jest.fn(),
   getRepairAuditLog: jest.fn(),
   getDashboardKpis: (...args: unknown[]) => mockGetDashboardKpis(...args),
+}));
+
+jest.mock('../../services/admin/achievements', () => ({
+  ACHIEVEMENT_STABLE_SCOPES: ['players', 'automatons', 'generated'],
   getAchievementAnalytics: (...args: unknown[]) => mockGetAchievementAnalytics(...args),
-  getTuningAdoption: (...args: unknown[]) => mockGetTuningAdoption(...args),
-  getRefinementAdoption: (...args: unknown[]) => mockGetRefinementAdoption(...args),
+}));
+
+jest.mock('../../services/admin/meta', () => ({
+  getMetaBuilds: (...args: unknown[]) => mockGetMetaBuilds(...args),
 }));
 
 jest.mock('../../services/admin/adminPlayersService', () => ({
@@ -185,12 +190,6 @@ jest.mock('../../services/auth/passwordResetService', () => ({
 jest.mock('../../utils/validation', () => ({
   validatePassword: jest.fn().mockReturnValue({ valid: true }),
 }));
-jest.mock('../../services/moderation/adminUploadsHandler', () => ({
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  handleAdminUploads: jest.fn((_req: any, res: any) => res.json([])),
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  handleAdminCleanup: jest.fn((_req: any, res: any) => res.json({ success: true })),
-}));
 const mockGetTournamentOverview = jest.fn();
 jest.mock('../../services/admin/tournaments', () => ({
   getTournamentOverview: (...args: unknown[]) => mockGetTournamentOverview(...args),
@@ -253,7 +252,7 @@ const sampleStatus = {
   queuedMatches: 180,
   attention: {
     bankruptcyRisk: { count: 3, threshold: 10000 },
-    security: { activeAlerts: 1, critical: 1 },
+    security: { signals: 3, alerts: 1 },
     automatons: { needAttention: 5, failed: 0 },
     cycleHealth: { settlementOverdue: false, failedJobs: [], stuckMatches: 0 },
   },
@@ -293,51 +292,23 @@ const sampleLeagueHealth = {
   attention: [],
 };
 const sampleAchievementAnalytics = {
+  stables: 'players',
+  seasonNumber: 1,
+  seasonStartedAt: '2026-08-01T00:00:00.000Z',
+  population: 26,
+  totalStables: 87,
+  totalAchievements: 1,
+  unlockedBySomeone: 1,
+  unlocks: 20,
   achievements: [
-    {
-      id: 'C1',
-      name: "I'll Be Back",
-      unlockRate: 0.75,
-      totalUnlocks: 15,
-      difficultyFlag: null,
-      rarity: 'common',
-    },
-  ],
-  summary: { total: 1, avgUnlockRate: 0.75, tooHard: 0, tooEasy: 0 },
-};
-
-const sampleTuningAdoption = {
-  aggregate: {
-    totalRobotsWithTuning: 30,
-    percentageEligible: 0.6,
-    averagePoolUtilization: 0.45,
-  },
-  players: [
-    { userId: 1, username: 'player1', robotsWithTuning: 2, totalRobots: 3 },
+    { achievementId: 'C1', name: "I'll Be Back", description: 'Win a battle', category: 'combat', tier: 'easy', hidden: false, unlocked: 20, rate: 76.9, medianDay: 2, unlockedAll: 31 },
   ],
 };
 
-const sampleRefinementAdoption = {
-  usersWithRefinements: 12,
-  totalUsers: 50,
-  adoptionRate: 24.0,
-  totalRefinements: 38,
-  totalRefinedWeapons: 18,
-  totalCreditsSpent: 4_500_000,
-  tierBreakdown: [
-    { tier: 'hone',    refinementCount: 18, uniqueUsers: 10, totalMagnitude: 42 },
-    { tier: 'augment', refinementCount: 8,  uniqueUsers: 6,  totalMagnitude: 16 },
-    { tier: 'sharpen', refinementCount: 7,  uniqueUsers: 5,  totalMagnitude: 7 },
-    { tier: 'forge',   refinementCount: 5,  uniqueUsers: 4,  totalMagnitude: 5 },
-  ],
-  attributeRanking: [
-    { attribute: 'combatPower', refinementCount: 12, uniqueUsers: 8, totalMagnitude: 28 },
-    { attribute: 'attackSpeed', refinementCount: 6,  uniqueUsers: 4, totalMagnitude: 14 },
-  ],
-  topSpenders: [
-    { userId: 1, username: 'player1', totalSpent: 1_200_000, weaponCount: 3 },
-  ],
-  timestamp: '2026-05-23T12:00:00.000Z',
+const sampleMetaBuilds = {
+  tuning: { totalRobots: 2, robotsTuned: 1, poolUsed: 10, poolTotal: 20, byGroup: [], attributes: [] },
+  refinements: { stables: 1, stablesRefining: 0, refinements: 0, weaponsRefined: 0, creditsSpent: 0, perKind: [], targeted: [], topSpenders: [] },
+  eventEntry: { totalRobots: 2, robotsEntered: 1, averageEvents: 0.5, perEvent: [], eventsPerRobot: [] },
 };
 
 const sampleAuditEntries = {
@@ -666,144 +637,82 @@ describe('Admin API — New Endpoints Integration Tests', () => {
   // -----------------------------------------------------------------------
 
   describe('GET /api/admin/achievements/analytics', () => {
-    it('should return achievement analytics with correct response shape', async () => {
+    it('returns the season analytics for players by default', async () => {
       mockGetAchievementAnalytics.mockResolvedValue(sampleAchievementAnalytics);
 
       const res = await request(app).get('/api/admin/achievements/analytics');
 
       expect(res.status).toBe(200);
-      expect(res.body).toHaveProperty('achievements');
-      expect(res.body).toHaveProperty('summary');
-      expect(Array.isArray(res.body.achievements)).toBe(true);
+      expect(res.body).toEqual(sampleAchievementAnalytics);
+      expect(mockGetAchievementAnalytics).toHaveBeenCalledWith('players');
     });
 
-    it('should pass user filter to service', async () => {
+    it('passes the selected stable type to the service', async () => {
       mockGetAchievementAnalytics.mockResolvedValue(sampleAchievementAnalytics);
 
-      await request(app).get('/api/admin/achievements/analytics?filter=all');
+      await request(app).get('/api/admin/achievements/analytics?stables=automatons');
 
-      expect(mockGetAchievementAnalytics).toHaveBeenCalledWith(expect.any(Object));
+      expect(mockGetAchievementAnalytics).toHaveBeenCalledWith('automatons');
     });
 
-    it('should reject invalid filter values', async () => {
-      const res = await request(app).get('/api/admin/achievements/analytics?filter=nope');
+    it('rejects an unknown stable type', async () => {
+      const res = await request(app).get('/api/admin/achievements/analytics?stables=all');
 
       expect(res.status).toBe(400);
       expect(res.body.code).toBe('VALIDATION_ERROR');
-    });
-  });
-
-  // -----------------------------------------------------------------------
-  // GET /api/admin/tuning/adoption
-  // -----------------------------------------------------------------------
-
-  describe('GET /api/admin/tuning/adoption', () => {
-    it('should return tuning adoption data with correct response shape', async () => {
-      mockGetTuningAdoption.mockResolvedValue(sampleTuningAdoption);
-
-      const res = await request(app).get('/api/admin/tuning/adoption');
-
-      expect(res.status).toBe(200);
-      expect(res.body).toHaveProperty('aggregate');
-      expect(res.body).toHaveProperty('players');
+      expect(mockGetAchievementAnalytics).not.toHaveBeenCalled();
     });
 
-    // This endpoint takes the same `filter` as the other analytics routes; there has
-    // never been an `adoptionFilter` parameter. All three assertions here described
-    // one — two on its value reaching the service and one on 400 for an invalid
-    // value, which Zod's .strip() makes impossible. Replaced with the parameter the
-    // route actually declares.
-    it('should pass the built user filter to the service', async () => {
-      mockGetTuningAdoption.mockResolvedValue(sampleTuningAdoption);
-
-      await request(app).get('/api/admin/tuning/adoption?filter=auto');
-
-      expect(mockGetTuningAdoption).toHaveBeenCalledWith(buildUserFilter('auto'));
-    });
-
-    it('should default the filter to real', async () => {
-      mockGetTuningAdoption.mockResolvedValue(sampleTuningAdoption);
-
-      await request(app).get('/api/admin/tuning/adoption');
-
-      expect(mockGetTuningAdoption).toHaveBeenCalledWith(buildUserFilter('real'));
-    });
-
-    it('should reject invalid filter values', async () => {
-      const res = await request(app).get('/api/admin/tuning/adoption?filter=invalid');
-
-      expect(res.status).toBe(400);
-      expect(res.body.code).toBe('VALIDATION_ERROR');
-    });
-  });
-
-  // -----------------------------------------------------------------------
-  // GET /api/admin/refinement/adoption
-  // -----------------------------------------------------------------------
-
-  describe('GET /api/admin/refinement/adoption', () => {
-    it('should return refinement adoption data with correct response shape', async () => {
-      mockGetRefinementAdoption.mockResolvedValue(sampleRefinementAdoption);
-
-      const res = await request(app).get('/api/admin/refinement/adoption');
-
-      expect(res.status).toBe(200);
-      expect(res.body).toHaveProperty('usersWithRefinements');
-      expect(res.body).toHaveProperty('totalUsers');
-      expect(res.body).toHaveProperty('adoptionRate');
-      expect(res.body).toHaveProperty('totalRefinements');
-      expect(res.body).toHaveProperty('totalCreditsSpent');
-      expect(res.body).toHaveProperty('tierBreakdown');
-      expect(res.body).toHaveProperty('attributeRanking');
-      expect(res.body).toHaveProperty('topSpenders');
-      expect(Array.isArray(res.body.tierBreakdown)).toBe(true);
-      expect(res.body.tierBreakdown.length).toBe(4);
-    });
-
-    it('should pass user filter to service when filter=all', async () => {
-      mockGetRefinementAdoption.mockResolvedValue(sampleRefinementAdoption);
-
-      await request(app).get('/api/admin/refinement/adoption?filter=all');
-
-      expect(mockGetRefinementAdoption).toHaveBeenCalled();
-      const arg = mockGetRefinementAdoption.mock.calls[0][0];
-      // 'all' filter → no user constraint
-      expect(arg).toEqual({});
-    });
-
-    it('should pass user filter to service when filter=real (default)', async () => {
-      mockGetRefinementAdoption.mockResolvedValue(sampleRefinementAdoption);
-
-      await request(app).get('/api/admin/refinement/adoption');
-
-      expect(mockGetRefinementAdoption).toHaveBeenCalled();
-      const arg = mockGetRefinementAdoption.mock.calls[0][0];
-      // 'real' filter is the default — must scope to real users only
-      expect(arg).toBeDefined();
-      expect(arg).not.toEqual({});
-    });
-
-    it('should reject invalid filter values', async () => {
-      const res = await request(app).get('/api/admin/refinement/adoption?filter=bogus');
-
-      expect(res.status).toBe(400);
-      expect(res.body.code).toBe('VALIDATION_ERROR');
-    });
-
-    it('should return 401 when no auth token is provided', async () => {
-      mockUser = null;
-
-      const res = await request(app).get('/api/admin/refinement/adoption');
-
-      expect(res.status).toBe(401);
-    });
-
-    it('should return 403 when non-admin user accesses endpoint', async () => {
+    it('is admin-only', async () => {
       mockUser = { userId: 2, username: 'player', role: 'user' };
 
-      const res = await request(app).get('/api/admin/refinement/adoption');
+      const res = await request(app).get('/api/admin/achievements/analytics');
 
       expect(res.status).toBe(403);
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // GET /api/admin/meta/builds
+  // -----------------------------------------------------------------------
+
+  describe('GET /api/admin/meta/builds', () => {
+    it('returns the build sections for real players by default', async () => {
+      mockGetMetaBuilds.mockResolvedValue(sampleMetaBuilds);
+
+      const res = await request(app).get('/api/admin/meta/builds');
+
+      expect(res.status).toBe(200);
+      expect(res.body).toEqual(sampleMetaBuilds);
+      expect(mockGetMetaBuilds).toHaveBeenCalledWith(buildUserFilter('real'));
+    });
+
+    it('passes the built user filter to the service', async () => {
+      mockGetMetaBuilds.mockResolvedValue(sampleMetaBuilds);
+
+      await request(app).get('/api/admin/meta/builds?filter=automaton');
+
+      expect(mockGetMetaBuilds).toHaveBeenCalledWith(buildUserFilter('automaton'));
+    });
+
+    it('rejects an invalid filter', async () => {
+      const res = await request(app).get('/api/admin/meta/builds?filter=bogus');
+
+      expect(res.status).toBe(400);
+      expect(res.body.code).toBe('VALIDATION_ERROR');
+    });
+
+    it('returns 401 without a token and 403 for a non-admin', async () => {
+      mockUser = null;
+      expect((await request(app).get('/api/admin/meta/builds')).status).toBe(401);
+
+      mockUser = { userId: 2, username: 'player', role: 'user' };
+      expect((await request(app).get('/api/admin/meta/builds')).status).toBe(403);
+    });
+
+    it('no longer serves the removed Tuning and Refinement endpoints', async () => {
+      expect((await request(app).get('/api/admin/tuning/adoption')).status).toBe(404);
+      expect((await request(app).get('/api/admin/refinement/adoption')).status).toBe(404);
     });
   });
 

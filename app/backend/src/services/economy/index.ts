@@ -60,4 +60,4 @@ export { sellWeapon } from './weaponSaleService';
 export type { WeaponSaleResult } from './weaponSaleService';
 export { refineWeapon, refinementMagnitudeForStorage } from './weaponRefinementService';
 export type { RefinementRequest, WeaponRefinementResult } from './weaponRefinementService';
-export type { PurchaseServiceOptions, SpendingMonitorContext } from './purchaseOptions';
+export type { PurchaseServiceOptions } from './purchaseOptions';

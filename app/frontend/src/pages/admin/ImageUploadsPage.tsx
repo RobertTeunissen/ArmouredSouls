@@ -1,228 +1,166 @@
 /**
- * ImageUploadsPage — Retains existing ImageUploadsTab functionality with
- * added rejection reasons display.
+ * ImageUploadsPage — "Is every image on a robot acceptable?"
+ * (`/admin/image-uploads`).
  *
- * Requirements: 20.1, 20.2, 25.1, 25.2, 25.3, 25.4
+ * Sections: six cards (in use, saved but unused, uploads this season, NSFW
+ * blocks, uploaded anyway, disk), uploads per week this season, moderation
+ * outcomes of the last 30 days, the images in use (newest first, filter and
+ * search in the URL), the image slide-over (`?image=`) with "Remove image",
+ * and storage (orphan files, missing files, preview and clean up).
+ * Data: `GET /api/admin/images/overview`, `GET /api/admin/images`,
+ * `GET /api/admin/images/:id`, `DELETE /api/admin/images/:id`,
+ * `GET|POST /api/admin/images/cleanup`.
+ *
+ * Definitions: docs/guides/ADMIN_PANEL_GUIDE.md §Image Uploads.
  */
-import { useState, useEffect, useCallback } from 'react';
-import { AdminPageHeader, AdminDataTable } from '../../components/admin/shared';
-import { api } from '../../utils/api';
+import { useCallback, useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { ADMIN_FOCUS_RING, AdminPageHeader, PanelError, PanelSkeleton } from '../../components/admin/shared';
+import { ImageDetailPanel, ImageGrid, ImageStatCards, ModerationSummary, StoragePanel, UploadsPerWeek } from '../../components/admin/images';
+import { ApiError } from '../../utils/ApiError';
+import { isAbortError } from '../../utils/abort';
+import { getImagesInUse, getImagesOverview, type ImagesOverview, type ImagesPage } from '../../utils/adminImagesApi';
+import { readImagesView, writeImagesView, type ImagesViewState } from '../../utils/adminImagesFormat';
+import { formatUtcTime } from '../../utils/adminDashboardFormat';
 
-/* ------------------------------------------------------------------ */
-/*  Types                                                              */
-/* ------------------------------------------------------------------ */
+/** Search is debounced so typing does not fire a request per key. */
+const SEARCH_DEBOUNCE_MS = 300;
 
-interface UploadEntry {
-  userId: number;
-  username: string;
-  robotId: number;
-  robotName: string;
-  imageUrl: string;
-  fileSize: number;
-  uploadDate: string;
-  [key: string]: unknown;
+function errorText(err: unknown, fallback: string): string {
+  return (err instanceof ApiError && err.message) || fallback;
 }
 
-interface UploadsResponse {
-  uploads: UploadEntry[];
-  total: number;
-  page: number;
-  limit: number;
-}
+function ImageUploadsPage(): React.ReactElement {
+  const [params, setParams] = useSearchParams();
+  const view = readImagesView(params);
+  const [overview, setOverview] = useState<ImagesOverview | null>(null);
+  const [overviewError, setOverviewError] = useState<string | null>(null);
+  const [images, setImages] = useState<ImagesPage | null>(null);
+  const [imagesError, setImagesError] = useState<string | null>(null);
+  const [imagesLoading, setImagesLoading] = useState(true);
+  const [searchText, setSearchText] = useState(view.q);
+  const [token, setToken] = useState(0);
+  const [notice, setNotice] = useState<string | null>(null);
 
-interface CleanupResult {
-  success: boolean;
-  filesDeleted: number;
-  bytesReclaimed: number;
-  errors: string[];
-}
+  const update = useCallback((patch: Partial<ImagesViewState>): void => {
+    setParams((current) => writeImagesView(current, patch), { replace: true });
+  }, [setParams]);
 
-interface ModerationEvent {
-  eventType: string;
-  severity: string;
-  userId: number;
-  timestamp: string;
-  details: Record<string, unknown>;
-  [key: string]: unknown;
-}
+  useEffect(() => {
+    const controller = new AbortController();
+    setOverviewError(null);
+    getImagesOverview(controller.signal)
+      .then((data) => { if (!controller.signal.aborted) setOverview(data); })
+      .catch((err: unknown) => {
+        if (controller.signal.aborted || isAbortError(err, controller.signal)) return;
+        setOverviewError(errorText(err, 'Could not load the image overview.'));
+      });
+    return () => controller.abort();
+  }, [token]);
 
-/* ------------------------------------------------------------------ */
-/*  Helpers                                                            */
-/* ------------------------------------------------------------------ */
+  const { filter, q, page } = view;
+  useEffect(() => {
+    const controller = new AbortController();
+    setImagesLoading(true);
+    setImagesError(null);
+    getImagesInUse(filter, q, page, controller.signal)
+      .then((data) => {
+        if (controller.signal.aborted) return;
+        setImages(data);
+        setImagesLoading(false);
+      })
+      .catch((err: unknown) => {
+        if (controller.signal.aborted || isAbortError(err, controller.signal)) return;
+        setImagesError(errorText(err, 'Could not load the images.'));
+        setImagesLoading(false);
+      });
+    return () => controller.abort();
+  }, [filter, q, page, token]);
 
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
+  // Debounce the search box into the URL.
+  useEffect(() => {
+    if (searchText === q) return undefined;
+    const timer = setTimeout(() => update({ q: searchText, page: 1 }), SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [searchText, q, update]);
 
-/* ------------------------------------------------------------------ */
-/*  Component                                                          */
-/* ------------------------------------------------------------------ */
-
-function ImageUploadsPage() {
-  const [uploads, setUploads] = useState<UploadEntry[]>([]);
-  const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
-  const [filterUserId, setFilterUserId] = useState('');
-  const [uploadsLoading, setUploadsLoading] = useState(true);
-  const [uploadsError, setUploadsError] = useState<string | null>(null);
-
-  const [moderationEvents, setModerationEvents] = useState<ModerationEvent[]>([]);
-  const [modEventsLoading, setModEventsLoading] = useState(true);
-
-  const [cleanupRunning, setCleanupRunning] = useState(false);
-  const [cleanupResult, setCleanupResult] = useState<CleanupResult | null>(null);
-
-  const LIMIT = 20;
-
-  const fetchUploads = useCallback(async (p: number = page) => {
-    setUploadsLoading(true);
-    setUploadsError(null);
-    try {
-      const params: Record<string, string | number> = { page: p, limit: LIMIT };
-      if (filterUserId.trim()) params.userId = filterUserId.trim();
-      const data = await api.get<UploadsResponse>('/api/admin/uploads', { params });
-      setUploads(data.uploads);
-      setTotal(data.total);
-    } catch {
-      setUploadsError('Failed to load uploads');
-    } finally {
-      setUploadsLoading(false);
-    }
-  }, [page, filterUserId]);
-
-  const fetchModerationEvents = useCallback(async () => {
-    setModEventsLoading(true);
-    try {
-      const data = await api.get<{ events: ModerationEvent[] }>('/api/admin/security/events', { params: { limit: 50 } });
-      const imageEvents = (data?.events ?? []).filter(
-        (e: ModerationEvent) =>
-          e.eventType === 'image_moderation_rejection' ||
-          e.eventType === 'image_robot_likeness_warning' ||
-          e.eventType === 'image_robot_likeness_override',
-      );
-      setModerationEvents(imageEvents);
-    } catch {
-      // Non-critical
-    } finally {
-      setModEventsLoading(false);
-    }
-  }, []);
-
-  const handleCleanup = async () => {
-    setCleanupRunning(true);
-    setCleanupResult(null);
-    try {
-      const data = await api.post<CleanupResult>('/api/admin/uploads/cleanup');
-      setCleanupResult(data);
-    } catch {
-      setCleanupResult({ success: false, filesDeleted: 0, bytesReclaimed: 0, errors: ['Cleanup request failed'] });
-    } finally {
-      setCleanupRunning(false);
-    }
-  };
-
-  useEffect(() => { fetchUploads(page); }, [page, fetchUploads]);
-  useEffect(() => { fetchModerationEvents(); }, [fetchModerationEvents]);
-
-  const totalPages = Math.ceil(total / LIMIT);
+  const refresh = (): void => setToken((t) => t + 1);
 
   return (
     <div data-testid="image-uploads-page" className="space-y-6">
-      <AdminPageHeader title="Image Uploads" subtitle="Uploaded images, moderation events, and orphan cleanup" />
-
-      {/* Moderation Events with Rejection Reasons */}
-      <div>
-        <h3 className="text-lg font-semibold mb-3">🛡️ Image Moderation Events</h3>
-        {modEventsLoading ? (
-          <div className="text-secondary py-4">Loading moderation events…</div>
-        ) : moderationEvents.length === 0 ? (
-          <div className="bg-surface rounded-lg p-6 text-center text-secondary">No image moderation events recorded yet.</div>
-        ) : (
-          <AdminDataTable<ModerationEvent>
-            columns={[
-              { key: 'timestamp', label: 'Time', render: (row) => new Date(row.timestamp).toLocaleString() },
-              { key: 'eventType', label: 'Event', render: (row) => (
-                <span className={`px-2 py-1 rounded text-xs font-medium ${row.eventType === 'image_moderation_rejection' ? 'bg-red-500/20 text-red-400' : row.eventType === 'image_robot_likeness_warning' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-blue-500/20 text-blue-400'}`}>
-                  {row.eventType.replace('image_', '').replace(/_/g, ' ')}
-                </span>
-              )},
-              { key: 'severity', label: 'Severity', render: (row) => (
-                <span className={`px-2 py-1 rounded text-xs ${row.severity === 'critical' ? 'bg-red-500/20 text-red-400' : row.severity === 'warning' ? 'bg-amber-500/20 text-amber-400' : 'bg-blue-500/20 text-blue-400'}`}>
-                  {row.severity}
-                </span>
-              )},
-              { key: 'userId', label: 'User ID' },
-              { key: 'details', label: 'Rejection Reason', render: (row) => {
-                const details = row.details;
-                if (row.eventType === 'image_moderation_rejection' && details) {
-                  const category = details.category || details.nsfwCategory || 'Unknown';
-                  const confidence = details.confidence || details.score;
-                  return (
-                    <span className="text-red-400 text-xs">
-                      {String(category)}{confidence != null ? ` (${(Number(confidence) * 100).toFixed(1)}%)` : ''}
-                    </span>
-                  );
-                }
-                return <span className="text-secondary text-xs font-mono">{JSON.stringify(details)}</span>;
-              }},
-            ]}
-            data={moderationEvents}
-            emptyMessage="No moderation events"
-          />
-        )}
-      </div>
-
-      {/* Uploaded Images */}
-      <div>
-        <h3 className="text-lg font-semibold mb-3">📤 Uploaded Images</h3>
-        <div className="flex flex-wrap gap-3 mb-4 items-end">
-          <div>
-            <label className="block text-secondary text-xs mb-1">Filter by User ID</label>
-            <input type="text" value={filterUserId} onChange={(e) => setFilterUserId(e.target.value)} placeholder="User ID" className="bg-surface border border-white/10 rounded px-3 py-2 text-white text-sm w-32" />
+      <AdminPageHeader
+        title="Image Uploads"
+        subtitle="Is every image on a robot acceptable?"
+        actions={(
+          <div className="flex items-center gap-3">
+            <span className="whitespace-nowrap text-xs text-secondary" aria-live="polite">
+              {overview ? `Last updated ${formatUtcTime(overview.generatedAt, true)}` : ''}
+            </span>
+            <button
+              type="button"
+              onClick={refresh}
+              className={`min-h-11 whitespace-nowrap rounded-md border border-white/10 bg-surface-elevated px-3 text-sm text-white hover:bg-white/10 ${ADMIN_FOCUS_RING}`}
+            >
+              <span aria-hidden="true">↻ </span>Refresh
+            </button>
           </div>
-          <button onClick={() => { setPage(1); fetchUploads(1); }} className="px-4 py-2 bg-primary hover:bg-blue-700 text-white rounded text-sm font-medium">Search</button>
-          <span className="text-secondary text-sm ml-auto">{total} total uploads</span>
+        )}
+      />
+
+      {notice && (
+        <p role="status" className="flex items-start justify-between gap-3 rounded-lg border border-success/40 bg-success/10 px-4 py-3 text-sm text-white">
+          {notice}
+          <button type="button" onClick={() => setNotice(null)} className={`text-xs text-secondary hover:text-white ${ADMIN_FOCUS_RING}`}>Dismiss</button>
+        </p>
+      )}
+
+      {overviewError && (
+        <div className="rounded-lg border border-white/10 bg-surface">
+          <PanelError message={overviewError} onRetry={refresh} />
         </div>
+      )}
 
-        {uploadsError && <div className="bg-red-900/40 border border-red-600/50 rounded-lg p-3 text-red-300 text-sm mb-4">{uploadsError}</div>}
+      {!overview && !overviewError && <div className="rounded-lg border border-white/10 bg-surface"><PanelSkeleton rows={4} /></div>}
 
-        <AdminDataTable<UploadEntry>
-          columns={[
-            { key: 'imageUrl', label: 'Preview', render: (row) => <img src={row.imageUrl} alt={`Upload by ${row.username}`} className="w-12 h-12 rounded object-cover bg-surface-elevated" onError={(e) => { (e.target as HTMLImageElement).src = ''; }} /> },
-            { key: 'username', label: 'User', render: (row) => <span>{row.username} <span className="text-secondary text-xs">(#{row.userId})</span></span> },
-            { key: 'robotName', label: 'Robot', render: (row) => <span>{row.robotName} <span className="text-secondary text-xs">(#{row.robotId})</span></span> },
-            { key: 'fileSize', label: 'Size', render: (row) => formatBytes(row.fileSize) },
-            { key: 'uploadDate', label: 'Date', render: (row) => new Date(row.uploadDate).toLocaleString() },
-          ]}
-          data={uploads}
-          loading={uploadsLoading}
-          emptyMessage="No uploaded images found"
-          pagination={totalPages > 1 ? { page, totalPages, onPageChange: setPage } : undefined}
-        />
-      </div>
-
-      {/* Orphan Cleanup */}
-      <div className="bg-surface rounded-lg p-6">
-        <h3 className="text-lg font-semibold mb-3">🧹 Orphan Cleanup</h3>
-        <p className="text-secondary text-sm mb-4">Scan uploaded images and delete any files not referenced by a robot.</p>
-        <button onClick={handleCleanup} disabled={cleanupRunning} className="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded font-medium disabled:opacity-50">
-          {cleanupRunning ? 'Running cleanup…' : 'Run Orphan Cleanup'}
-        </button>
-        {cleanupResult && (
-          <div className={`mt-4 rounded-lg p-4 text-sm ${cleanupResult.success ? 'bg-green-900/40 border border-green-600/50 text-green-300' : 'bg-red-900/40 border border-red-600/50 text-red-300'}`}>
-            <p>Files deleted: {cleanupResult.filesDeleted}</p>
-            <p>Space reclaimed: {formatBytes(cleanupResult.bytesReclaimed)}</p>
-            {cleanupResult.errors.length > 0 && (
-              <div className="mt-2">
-                <p className="font-medium">Errors:</p>
-                {cleanupResult.errors.map((err, i) => <p key={i} className="text-xs">{err}</p>)}
-              </div>
-            )}
+      {overview && (
+        <>
+          <ImageStatCards overview={overview} />
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+            <UploadsPerWeek overview={overview} />
+            <ModerationSummary overview={overview} />
           </div>
-        )}
-      </div>
+        </>
+      )}
+
+      {imagesError && (
+        <div className="rounded-lg border border-white/10 bg-surface">
+          <PanelError message={imagesError} onRetry={refresh} />
+        </div>
+      )}
+
+      <ImageGrid
+        data={images}
+        loading={imagesLoading}
+        filter={view.filter}
+        q={searchText}
+        selectedId={view.image}
+        onFilter={(next) => update({ filter: next, page: 1 })}
+        onSearch={setSearchText}
+        onPage={(next) => update({ page: next })}
+        onOpen={(id) => update({ image: id })}
+      />
+
+      {overview && <StoragePanel overview={overview} onCleaned={refresh} />}
+
+      <ImageDetailPanel
+        imageId={view.image}
+        onClose={() => update({ image: null })}
+        onRemoved={(message) => {
+          setNotice(message);
+          update({ image: null });
+          refresh();
+        }}
+      />
     </div>
   );
 }

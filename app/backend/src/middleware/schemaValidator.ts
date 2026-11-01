@@ -96,6 +96,11 @@ function describeIssue(issue: ZodIssue, input: unknown): string {
   return issue.message;
 }
 
+/** True once `authenticateToken` has attached a user to the request. */
+function isAuthenticated(req: Request): boolean {
+  return (req as Request & { user?: unknown }).user !== undefined;
+}
+
 function setValidatedQuery(req: Request, query: unknown): void {
   // Express 5 exposes `req.query` through a read-only accessor. Defining an
   // own property preserves Zod coercion/stripping for downstream handlers
@@ -118,7 +123,7 @@ export function validateRequest(schemas: ValidationSchemas) {
     if (schemas.params) {
       const result = schemas.params.safeParse(req.params);
       if (!result.success) {
-        securityMonitor.logValidationFailure(safeRequestPath(req.originalUrl), 'invalid_params', req.ip || 'unknown');
+        securityMonitor.logValidationFailure(safeRequestPath(req.originalUrl), 'invalid_params', req.ip || 'unknown', isAuthenticated(req));
         throw new AppError('VALIDATION_ERROR', describeIssues(result.error.issues, 'Invalid URL parameters', req.params), 400, {
           fields: result.error.issues.map((i) => ({
             field: i.path.join('.'),
@@ -132,7 +137,7 @@ export function validateRequest(schemas: ValidationSchemas) {
     if (schemas.query) {
       const result = schemas.query.safeParse(req.query);
       if (!result.success) {
-        securityMonitor.logValidationFailure(safeRequestPath(req.originalUrl), 'invalid_query', req.ip || 'unknown');
+        securityMonitor.logValidationFailure(safeRequestPath(req.originalUrl), 'invalid_query', req.ip || 'unknown', isAuthenticated(req));
         throw new AppError('VALIDATION_ERROR', describeIssues(result.error.issues, 'Invalid query parameters', req.query), 400, {
           fields: result.error.issues.map((i) => ({
             field: i.path.join('.'),
@@ -146,7 +151,7 @@ export function validateRequest(schemas: ValidationSchemas) {
     if (schemas.headers) {
       const result = schemas.headers.safeParse(req.headers);
       if (!result.success) {
-        securityMonitor.logValidationFailure(safeRequestPath(req.originalUrl), 'invalid_headers', req.ip || 'unknown');
+        securityMonitor.logValidationFailure(safeRequestPath(req.originalUrl), 'invalid_headers', req.ip || 'unknown', isAuthenticated(req));
         throw new AppError('VALIDATION_ERROR', describeIssues(result.error.issues, 'Invalid request headers', req.headers), 400, {
           fields: result.error.issues.map((i) => ({
             field: i.path.join('.'),
@@ -160,7 +165,7 @@ export function validateRequest(schemas: ValidationSchemas) {
     if (schemas.body) {
       const result = schemas.body.safeParse(req.body);
       if (!result.success) {
-        securityMonitor.logValidationFailure(safeRequestPath(req.originalUrl), 'invalid_body', req.ip || 'unknown');
+        securityMonitor.logValidationFailure(safeRequestPath(req.originalUrl), 'invalid_body', req.ip || 'unknown', isAuthenticated(req));
         throw new AppError('VALIDATION_ERROR', describeIssues(result.error.issues, 'Invalid request body', req.body), 400, {
           fields: result.error.issues.map((i) => ({
             field: i.path.join('.'),

@@ -205,18 +205,20 @@ Tracks and logs security events in real-time:
 
 ### Admin Security Dashboard (Spec 12)
 
-Accessible at `/admin` → Security tab. Shows:
-- Rate limit violation history
-- Authorization failure log
-- Spending tracking
-- Security event timeline
+Accessible at `/admin/security` (redesigned November 2026; details in `docs/guides/ADMIN_PANEL_GUIDE.md` §Security). Per window (24 hours / 7 days / 30 days): which signal types fired, the stables behind them, and failed logins and malformed requests by source IP with failed-login bursts (5+ from one IP within 15 minutes).
 
 ### Logging
 
-- `securityLogger` — Dedicated security log file (`logs/security.log`)
-- `securityMonitor.logAuthorizationFailure()` — Admin access attempts
-- `securityMonitor.trackRateLimitViolation()` — Rate limit hits
-- `securityMonitor.trackSpending()` — Economic transaction tracking
+Security signals are stored in `security_events` (90-day retention, survives deploys) by `securityEventStore.persistSecuritySignal()` and also written to the dedicated security log (`logs/security.log`). Writes are fire-and-forget and never affect the request.
+
+- `securityMonitor.logFailedLogin()` — wrong password, unknown name or Automaton name at login (`failed_login`; the matched account and IP, never the submitted values)
+- `securityMonitor.trackRateLimitViolation()` / `trackAnonymousRateLimit()` — any limiter refusal, per player or by IP (`rate_limit`)
+- `securityMonitor.logAuthorizationFailure()` — another stable's resource or a non-admin on an admin endpoint (`ownership_violation`)
+- `securityMonitor.trackConflict()` — one `race_condition_burst` when a player's 409s reach 11 within a minute
+- `securityMonitor.trackRobotCreation()` — one `robot_creation_burst` at the 4th robot within 10 minutes
+- `securityMonitor.logValidationFailure()` — `malformed_request` only without a logged-in user; a player's own malformed request goes to the security log only
+
+Not recorded: admin page views and spending. Rapid spending (₡3M in 5 minutes) was removed: it equals the starting balance and flagged normal shopping.
 
 ---
 

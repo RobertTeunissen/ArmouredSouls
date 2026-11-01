@@ -15,7 +15,6 @@ import { calculateStorageCapacity, getStorageStatus } from '../../utils/storageC
 import { calculateWeaponWorkshopDiscount, applyDiscount } from '../../shared/utils/discounts';
 import { eventLogger } from '../common/eventLogger';
 import { trackSpending } from './spendingTracker';
-import { securityMonitor } from '../security/securityMonitor';
 import { applyCreditMutationInTransaction } from '../financial/creditMutationService';
 import { runFinancialWriteTransaction } from '../cycle/financialWriteTransaction';
 import {
@@ -214,9 +213,6 @@ export async function purchaseWeapon(
     logger.info(`[Weapon] User ${userId} | Purchased: ${weapon.name} | Cost: ₡${finalCost.toLocaleString()}${discountInfo} | Balance: ₡${previousBalance.toLocaleString()} → ₡${result.currency.toLocaleString()}`);
 
     await trackSpending(userId, 'weapons', finalCost);
-    if (options.spendingMonitor) {
-      securityMonitor.trackSpending(userId, finalCost, options.spendingMonitor);
-    }
   } catch (logError) {
     logger.error('Failed to log weapon purchase event:', logError);
   }

@@ -7,7 +7,7 @@ const mockUserCount = jest.fn();
 const mockScheduledMatchCount = jest.fn();
 const mockGetSchedulerState = jest.fn();
 const mockGetCurrentSeason = jest.fn();
-const mockGetSummary = jest.fn();
+const mockGetSecurityAttention = jest.fn();
 const mockGetAutomatonStatus = jest.fn();
 const mockCountQueued = jest.fn();
 
@@ -30,8 +30,8 @@ jest.mock('../../cycle/cycleScheduler', () => ({
 jest.mock('../../season/seasonService', () => ({
   getCurrentSeason: () => mockGetCurrentSeason(),
 }));
-jest.mock('../../security/securityMonitor', () => ({
-  securityMonitor: { getSummary: () => mockGetSummary() },
+jest.mock('../../security/securityOverviewService', () => ({
+  getSecurityAttention: () => mockGetSecurityAttention(),
 }));
 jest.mock('../../automaton/automatonStatus', () => ({
   getAutomatonStatus: () => mockGetAutomatonStatus(),
@@ -154,7 +154,7 @@ describe('getDashboardStatus', () => {
     mockUserCount.mockResolvedValue(3);
     mockGetAutomatonStatus.mockResolvedValue({ needAttentionCount: 5, failedCount: 1 });
     mockScheduledMatchCount.mockResolvedValue(0);
-    mockGetSummary.mockReturnValue({ activeAlerts: 2, bySeverity: { info: 0, warning: 1, critical: 1 } });
+    mockGetSecurityAttention.mockResolvedValue({ signals: 7, alerts: 2 });
   });
 
   it('composes cycle, season, scheduler, queue and attention facts', async () => {
@@ -169,7 +169,7 @@ describe('getDashboardStatus', () => {
     expect(status.queuedMatches).toBe(102);
     expect(status.attention).toEqual({
       bankruptcyRisk: { count: 3, threshold: 10_000 },
-      security: { activeAlerts: 2, critical: 1 },
+      security: { signals: 7, alerts: 2 },
       automatons: { needAttention: 5, failed: 1 },
       cycleHealth: { settlementOverdue: false, failedJobs: [], stuckMatches: 0 },
     });
@@ -214,7 +214,7 @@ describe('getDashboardStatus', () => {
   it('returns a failing section as null instead of failing the response', async () => {
     mockGetAutomatonStatus.mockRejectedValue(new Error('db down'));
     mockGetCurrentSeason.mockRejectedValue(new Error('db down'));
-    mockGetSummary.mockImplementation(() => { throw new Error('monitor down'); });
+    mockGetSecurityAttention.mockRejectedValue(new Error('db down'));
 
     const status = await getDashboardStatus(NOW);
 

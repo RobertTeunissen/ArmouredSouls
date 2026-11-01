@@ -1,19 +1,22 @@
 /**
- * Data hook of the admin Meta page.
+ * Data hooks of the admin Meta page: the choice distributions
+ * (`useMetaOverview`) and the build sections (`useMetaBuilds`).
  *
- * One request per (filter, reload). A filter change aborts the previous
+ * One request per (filter, reload) each. A filter change aborts the previous
  * request and its late response is ignored, and the data is kept with the
- * filter it was loaded for, so data for another filter is never shown.
+ * filter it was loaded for, so data for another filter is never shown. The
+ * two load independently, so one slow or failing request does not hold up
+ * the other sections.
  */
 import { useCallback, useEffect, useState } from 'react';
 import { ApiError } from '../utils/ApiError';
 import { isAbortError } from '../utils/abort';
-import { getMetaStats } from '../utils/adminMetaApi';
+import { getMetaBuilds, getMetaStats, type MetaBuilds } from '../utils/adminMetaApi';
 import type { UserFilterType } from '../components/admin/shared';
 import type { SystemStats } from '../components/admin/types';
 
-export interface MetaOverview {
-  data: SystemStats | null;
+export interface FilteredLoad<T> {
+  data: T | null;
   loading: boolean;
   error: string | null;
   /** When the current data arrived (ISO), or null. */
@@ -21,14 +24,20 @@ export interface MetaOverview {
   reload: () => void;
 }
 
-interface Loaded {
+export type MetaOverview = FilteredLoad<SystemStats>;
+
+interface Loaded<T> {
   filter: UserFilterType;
-  stats: SystemStats;
+  value: T;
   fetchedAt: string;
 }
 
-export function useMetaOverview(filter: UserFilterType): MetaOverview {
-  const [loaded, setLoaded] = useState<Loaded | null>(null);
+function useFilteredLoad<T>(
+  filter: UserFilterType,
+  load: (filter: UserFilterType, signal: AbortSignal) => Promise<T>,
+  fallbackError: string,
+): FilteredLoad<T> {
+  const [loaded, setLoaded] = useState<Loaded<T> | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [token, setToken] = useState(0);
@@ -37,22 +46,30 @@ export function useMetaOverview(filter: UserFilterType): MetaOverview {
     const controller = new AbortController();
     setLoading(true);
     setError(null);
-    getMetaStats(filter, controller.signal)
-      .then((stats) => {
+    load(filter, controller.signal)
+      .then((value) => {
         if (controller.signal.aborted) return;
-        setLoaded({ filter, stats, fetchedAt: new Date().toISOString() });
+        setLoaded({ filter, value, fetchedAt: new Date().toISOString() });
         setLoading(false);
       })
       .catch((err: unknown) => {
         if (controller.signal.aborted || isAbortError(err, controller.signal)) return;
-        setError((err instanceof ApiError && err.message) || 'Could not load the meta overview.');
+        setError((err instanceof ApiError && err.message) || fallbackError);
         setLoading(false);
       });
     return () => controller.abort();
-  }, [filter, token]);
+  }, [filter, token, load, fallbackError]);
 
   const reload = useCallback(() => setToken((value) => value + 1), []);
   const current = loaded && loaded.filter === filter ? loaded : null;
 
-  return { data: current?.stats ?? null, loading, error, fetchedAt: current?.fetchedAt ?? null, reload };
+  return { data: current?.value ?? null, loading, error, fetchedAt: current?.fetchedAt ?? null, reload };
+}
+
+export function useMetaOverview(filter: UserFilterType): MetaOverview {
+  return useFilteredLoad(filter, getMetaStats, 'Could not load the meta overview.');
+}
+
+export function useMetaBuilds(filter: UserFilterType): FilteredLoad<MetaBuilds> {
+  return useFilteredLoad(filter, getMetaBuilds, 'Could not load tuning, refinements and event entry.');
 }

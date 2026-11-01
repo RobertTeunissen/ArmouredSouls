@@ -26,6 +26,7 @@ export function ShareCard({ title, items, loading }: ShareCardProps): ReactNode 
 
   return (
     <AdminPanel
+      headingLevel={3}
       title={title}
       actions={shares ? <span className="text-xs text-secondary">{formatCount(total)} robots</span> : undefined}
       loading={loading && !shares}

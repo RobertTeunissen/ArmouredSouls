@@ -1,7 +1,8 @@
 /**
  * useAdminStore — Zustand store for shared admin portal state.
  *
- * Caches system stats and the security summary with TTL-based invalidation.
+ * Caches system stats with TTL-based invalidation. The Security page reads
+ * its own data (stored signals per window), so the old security summary is gone.
  * Cycle Controls keeps its own data (persistent run history from the
  * backend), so the scheduler status and the browser-only session log that
  * used to live here are gone.
@@ -10,7 +11,7 @@
  */
 import { create } from 'zustand';
 import { api } from '../utils/api';
-import type { SystemStats, SecuritySummary } from '../components/admin/types';
+import type { SystemStats } from '../components/admin/types';
 
 // ---------------------------------------------------------------------------
 // Store interface
@@ -23,16 +24,11 @@ export interface AdminStoreState {
   statsLastFilter: string | null;
   statsLoading: boolean;
 
-  // Security summary with TTL caching
-  securitySummary: SecuritySummary | null;
-  securityLastFetched: number | null;
-
   // TTL configuration (default 60 seconds)
   ttlMs: number;
 
   // Actions
   fetchStats: (filter?: string, force?: boolean) => Promise<void>;
-  fetchSecuritySummary: (force?: boolean) => Promise<void>;
   clearCache: () => void;
   clear: () => void;
 }
@@ -55,8 +51,6 @@ const initialState = {
   statsLastFetched: null as number | null,
   statsLastFilter: null as string | null,
   statsLoading: false,
-  securitySummary: null as SecuritySummary | null,
-  securityLastFetched: null as number | null,
   ttlMs: 60_000,
 };
 
@@ -92,31 +86,12 @@ export const useAdminStore = create<AdminStoreState>((set, get) => ({
     }
   },
 
-  fetchSecuritySummary: async (force = false) => {
-    const state = get();
-    if (!force && isCacheValid(state.securityLastFetched, state.ttlMs)) {
-      return;
-    }
-
-    try {
-      const summary = await api.get<SecuritySummary>('/api/admin/security/summary');
-      set({
-        securitySummary: summary,
-        securityLastFetched: Date.now(),
-      });
-    } catch {
-      // Let error propagate naturally
-    }
-  },
-
   clearCache: () => {
     set({
       systemStats: null,
       statsLastFetched: null,
       statsLastFilter: null,
       statsLoading: false,
-      securitySummary: null,
-      securityLastFetched: null,
     });
   },
 

@@ -75,8 +75,6 @@ function resetStore(): void {
     statsLastFetched: null,
     statsLastFilter: null,
     statsLoading: false,
-    securitySummary: null,
-    securityLastFetched: null,
     ttlMs: 60_000,
   });
 }
@@ -209,11 +207,6 @@ describe('clearCache', () => {
     await useAdminStore.getState().fetchStats();
     expect(useAdminStore.getState().systemStats).not.toBeNull();
 
-    // Also set security data
-    useAdminStore.setState({
-      securitySummary: { totalEvents: 5, bySeverity: { info: 3, warning: 1, critical: 1 }, activeAlerts: 1, flaggedUserIds: [] },
-      securityLastFetched: Date.now(),
-    });
 
     useAdminStore.getState().clearCache();
 
@@ -222,8 +215,6 @@ describe('clearCache', () => {
     expect(state.statsLastFetched).toBeNull();
     expect(state.statsLastFilter).toBeNull();
     expect(state.statsLoading).toBe(false);
-    expect(state.securitySummary).toBeNull();
-    expect(state.securityLastFetched).toBeNull();
   });
 });
 
@@ -237,10 +228,6 @@ describe('clear', () => {
     mockedApiGet.mockResolvedValue({ data: stats });
 
     await useAdminStore.getState().fetchStats();
-    useAdminStore.setState({
-      securitySummary: { totalEvents: 1, bySeverity: { info: 1, warning: 0, critical: 0 }, activeAlerts: 0, flaggedUserIds: [] },
-      securityLastFetched: Date.now(),
-    });
 
     useAdminStore.getState().clear();
 
@@ -249,8 +236,6 @@ describe('clear', () => {
     expect(state.statsLastFetched).toBeNull();
     expect(state.statsLastFilter).toBeNull();
     expect(state.statsLoading).toBe(false);
-    expect(state.securitySummary).toBeNull();
-    expect(state.securityLastFetched).toBeNull();
   });
 
   it('should remove the retired session log from localStorage', () => {

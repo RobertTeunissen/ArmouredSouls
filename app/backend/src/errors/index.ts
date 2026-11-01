@@ -15,3 +15,4 @@ export * from './seasonErrors';
 export * from './financialErrors';
 export * from './automatonErrors';
 export * from './schedulerErrors';
+export * from './moderationErrors';

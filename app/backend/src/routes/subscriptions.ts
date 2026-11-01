@@ -2,19 +2,19 @@
  * Subscription API Routes
  *
  * Exposes endpoints for managing per-robot event subscriptions,
- * stable-level overview, event registry, and admin analytics.
+ * stable-level overview and event registry. Admin event-entry analytics are
+ * on the Meta page (`GET /api/admin/meta/builds`).
  *
  * @module routes/subscriptions
  */
 
 import express, { Response } from 'express';
-import { authenticateToken, requireAdmin, AuthRequest } from '../middleware/auth';
+import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { validateRequest } from '../middleware/schemaValidator';
 import {
   robotIdParamSchema,
   subscribeBodySchema,
   setSubscriptionsBodySchema,
-  adminAnalyticsQuerySchema,
 } from './schemas/subscriptionSchemas';
 import {
   getSubscriptionsForRobot,
@@ -101,140 +101,6 @@ router.get(
     const robotCount = await prisma.robot.count({ where: { userId: req.user!.userId } });
     const events = getEligibleEvents(robotCount);
     res.json({ events });
-  },
-);
-
-// GET /api/subscriptions/admin/analytics — admin per-event subscriber counts + trends
-router.get(
-  '/admin/analytics',
-  authenticateToken,
-  requireAdmin,
-  validateRequest({ query: adminAnalyticsQuerySchema }),
-  async (req: AuthRequest, res: Response) => {
-    const days = Number(req.query.days) || 30;
-
-    // Per-event subscriber counts
-    const perEvent = await prisma.subscription.groupBy({
-      by: ['eventType'],
-      _count: { id: true },
-    });
-
-    // Trend data from audit logs
-    const cycleMetadata = await prisma.cycleMetadata.findFirst({ where: { id: 1 } });
-    const currentCycle = cycleMetadata?.totalCycles ?? 0;
-    const minCycle = Math.max(0, currentCycle - days);
-
-    const trendLogs = await prisma.auditLog.findMany({
-      where: {
-        eventType: { in: ['subscription_create', 'subscription_remove'] },
-        cycleNumber: { gte: minCycle },
-      },
-      select: {
-        cycleNumber: true,
-        eventType: true,
-        payload: true,
-      },
-      orderBy: { cycleNumber: 'asc' },
-    });
-
-    // Aggregate trends by cycle and event type
-    const trendMap = new Map<number, Record<string, { subscribes: number; unsubscribes: number }>>();
-    for (const log of trendLogs) {
-      const cycle = log.cycleNumber;
-      const payload = log.payload as Record<string, unknown> | null;
-      const subEventType = (payload?.eventType as string) || 'unknown';
-
-      if (!trendMap.has(cycle)) trendMap.set(cycle, {});
-      const cycleData = trendMap.get(cycle)!;
-      if (!cycleData[subEventType]) cycleData[subEventType] = { subscribes: 0, unsubscribes: 0 };
-
-      if (log.eventType === 'subscription_create') {
-        cycleData[subEventType].subscribes++;
-      } else {
-        cycleData[subEventType].unsubscribes++;
-      }
-    }
-
-    const trends: Array<{ cycleNumber: number; eventType: string; subscribes: number; unsubscribes: number }> = [];
-    for (const [cycle, eventData] of trendMap.entries()) {
-      for (const [evType, counts] of Object.entries(eventData)) {
-        trends.push({
-          cycleNumber: cycle,
-          eventType: evType,
-          subscribes: counts.subscribes,
-          unsubscribes: counts.unsubscribes,
-        });
-      }
-    }
-
-    // Per-stable breakdown
-    const perStableRaw = await prisma.subscription.findMany({
-      select: {
-        eventType: true,
-        robot: {
-          select: {
-            userId: true,
-            user: { select: { stableName: true } },
-          },
-        },
-      },
-    });
-
-    const stableMap = new Map<number, { stableId: number; stableName: string; events: Record<string, number> }>();
-    for (const row of perStableRaw) {
-      const stableId = row.robot.userId;
-      if (!stableMap.has(stableId)) {
-        stableMap.set(stableId, {
-          stableId,
-          stableName: row.robot.user?.stableName || `Stable #${stableId}`,
-          events: {},
-        });
-      }
-      const entry = stableMap.get(stableId)!;
-      entry.events[row.eventType] = (entry.events[row.eventType] || 0) + 1;
-    }
-
-    const perStable = Array.from(stableMap.values())
-      .sort((a, b) => {
-        const totalA = Object.values(a.events).reduce((s, v) => s + v, 0);
-        const totalB = Object.values(b.events).reduce((s, v) => s + v, 0);
-        return totalB - totalA;
-      })
-      .slice(0, 50);
-
-    // Flatten per-stable into rows the frontend expects: { stableId, stableName, eventType, robotCount }
-    const stableBreakdown: Array<{ stableId: number; stableName: string; eventType: string; robotCount: number }> = [];
-    for (const entry of perStable) {
-      for (const [evType, count] of Object.entries(entry.events)) {
-        stableBreakdown.push({
-          stableId: entry.stableId,
-          stableName: entry.stableName,
-          eventType: evType,
-          robotCount: count,
-        });
-      }
-    }
-
-    // Totals
-    const totalSubscriptions = perEvent.reduce((sum, e) => sum + e._count.id, 0);
-    const totalRobots = await prisma.robot.count();
-
-    res.json({
-      eventCounts: perEvent.map((e) => ({
-        eventType: e.eventType,
-        subscriberCount: e._count.id,
-      })),
-      trends,
-      stableBreakdown,
-      totalSubscriptions,
-      totalRobots,
-      // Legacy field names for backward compatibility
-      perEvent: perEvent.map((e) => ({
-        eventType: e.eventType,
-        subscriberCount: e._count.id,
-      })),
-      perStable,
-    });
   },
 );
 

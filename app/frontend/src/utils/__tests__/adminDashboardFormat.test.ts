@@ -33,7 +33,7 @@ function status(overrides: Partial<DashboardStatus> = {}, attention: Partial<Das
     ...overrides,
     attention: {
       bankruptcyRisk: { count: 0, threshold: 10000 },
-      security: { activeAlerts: 0, critical: 0 },
+      security: { signals: 0, alerts: 0 },
       automatons: { needAttention: 0, failed: 0 },
       cycleHealth: { settlementOverdue: false, failedJobs: [], stuckMatches: 0 },
       ...attention,
@@ -122,7 +122,7 @@ describe('deriveAttentionItems', () => {
 
   it('sorts errors before warnings before OK items', () => {
     const items = deriveAttentionItems(status({}, {
-      security: { activeAlerts: 2, critical: 0 },
+      security: { signals: 9, alerts: 2 },
       bankruptcyRisk: { count: 3, threshold: 10000 },
     }));
 
@@ -134,12 +134,17 @@ describe('deriveAttentionItems', () => {
     ]);
     expect(countOpenItems(items)).toBe(2);
     expect(items[0]).toMatchObject({ count: 3, title: 'Stables at bankruptcy risk', href: '/admin/players?segment=low-balance' });
-    expect(items[1]).toMatchObject({ count: 2, detail: '2 warnings' });
+    expect(items[1]).toMatchObject({ count: 2, title: 'Security bursts or violations' });
   });
 
-  it('makes security an error when any alert is critical', () => {
-    const [item] = deriveAttentionItems(status({}, { security: { activeAlerts: 3, critical: 1 } }));
-    expect(item).toMatchObject({ key: 'security', severity: 'error', title: 'Active security alerts', detail: '1 critical · 2 warnings' });
+  it('flags security bursts and violations as a warning, linking to the last 24 hours', () => {
+    const [item] = deriveAttentionItems(status({}, { security: { signals: 9, alerts: 3 } }));
+    expect(item).toMatchObject({ key: 'security', severity: 'warning', count: 3, title: 'Security bursts or violations', href: '/admin/security?window=24h' });
+  });
+
+  it('keeps security OK when only ordinary signals fired', () => {
+    const item = deriveAttentionItems(status({}, { security: { signals: 4, alerts: 0 } })).find((i) => i.key === 'security');
+    expect(item).toMatchObject({ key: 'security', severity: 'ok', count: null, detail: '4 signals in the last 24 hours, none worth a look' });
   });
 
   it('makes Automatons an error only when a turn failed', () => {

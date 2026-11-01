@@ -56,9 +56,6 @@ jest.mock('../../src/services/admin/adminStatsService', () => ({
   getSystemStats: jest.fn(),
   getRepairAuditLog: jest.fn(),
   getDashboardKpis: jest.fn(),
-  getAchievementAnalytics: jest.fn(),
-  getTuningAdoption: jest.fn(),
-  getRefinementAdoption: jest.fn(),
 }));
 
 jest.mock('../../src/services/admin/adminMaintenanceService', () => ({
@@ -170,12 +167,6 @@ jest.mock('../../src/services/cycle/cycleScheduler', () => ({
   triggerJob: jest.fn().mockResolvedValue(undefined),
 }));
 
-
-jest.mock('../../src/services/moderation/adminUploadsHandler', () => ({
-  __esModule: true,
-  handleAdminUploads: jest.fn(),
-  handleAdminCleanup: jest.fn(),
-}));
 
 jest.mock('../../src/services/league/leagueHistoryService', () => ({
   __esModule: true,

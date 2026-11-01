@@ -112,6 +112,7 @@ describe('search query redaction in diagnostics and errors', () => {
       '/api/search',
       'invalid_query',
       '127.0.0.1',
+      false,
     );
     expect(JSON.stringify(mockSecurityMonitor.logValidationFailure.mock.calls)).not.toContain('secret phrase');
   });

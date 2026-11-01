@@ -25,17 +25,16 @@ All pages manage their own data fetching. The sidebar collapses to icons on narr
 | | Practice Arena | `/admin/practice-arena` | Practice usage per UTC day, refusals and unavailable time, top practitioners, how it is used |
 | **Battle Data** | Battles | `/admin/battles` | Find any battle (all 9 modes, stable type, outcome, date, search); admin check with payout check, combat log with formulas, and export |
 | | Attributes | `/admin/attributes` | Which attributes, groups and build profiles win, per mode, from battle-time builds (was Robot Stats) |
-| | Meta | `/admin/meta` | What stables choose: stances, loadouts, yield thresholds, facilities, weapons |
+| | Meta | `/admin/meta` | What stables choose: combat settings (stances, loadouts, yield), robot builds (tuning, weapons and refinements), stable investments (event entry, facilities) |
 | | League Health | `/admin/league-health` | Every tiered league: tiers, instances, stable mix, and whether promotion and demotion move |
 | | Weapons | `/admin/weapons` | What winning robots fight with: archetype (range × loadout) and weapon effects, matchups, usage per league tier, price vs effect, refinements |
 | **Player Management** | Players | `/admin/players` | Player list with tabs (New Players, Auto-Generated, At-Risk), churn risk, engagement, search, detail slide-over |
 | | Automatons | `/admin/automatons` | Automaton stables: status bar, stables, strategies, editor, catalogue (Spec #55) |
 | | Economy | `/admin/economy` | Credit circulation, balance distribution, facility adoption |
-| **Security & Moderation** | Security | `/admin/security` | Security events, severity summary, flagged users |
-| | Image Uploads | `/admin/image-uploads` | Upload history, moderation events, orphan cleanup |
+| **Security & Moderation** | Security | `/admin/security` | Security signals per window: who triggered them and sources without an account |
+| | Image Uploads | `/admin/image-uploads` | Images in use, moderation outcomes, image removal, storage cleanup |
 | **Content** | Changelog | `/admin/changelog` | Create, edit, publish changelog entries |
-| | Achievements | `/admin/achievements` | Unlock rates, participation stats |
-| | Tuning | `/admin/tuning` | Tuning allocation adoption, attribute ranking |
+| | Achievements | `/admin/achievements` | This season's unlock rates per achievement and tier, for players, Automatons or generated stables |
 | | Search Analytics | `/admin/search-analytics` | Settled searches, no-result rate, results by category, phrase table with CSV export |
 | **Maintenance** | Repair Log | `/admin/repair-log` | Manual vs automatic repairs, savings tracking |
 | | Audit Log | `/admin/audit-log` | Admin action audit trail with filters |
@@ -91,7 +90,7 @@ Below 1280 px the sections stack in one column. Below 768 px the admin sidebar i
 | Trends on Active / Inactive | Compared with the `admin_kpi_snapshots` row captured about 7 days ago (each competitive settlement writes one). "No comparison yet" until such a row exists. |
 | Battle-ready robots | `currentHP ≥ maxHP` and a main weapon, as a percentage with one decimal. |
 | Bankruptcy risk | Human stables below ₡10,000 (`BANKRUPTCY_RISK_THRESHOLD`). Links to Players → At-Risk (`/admin/players?tab=at-risk`). |
-| Security alerts | Warning + critical events in the security monitor's in-memory buffer; an error if any is critical. |
+| Security | Failed-login bursts, ownership violations and race-condition or robot-creation bursts in the last 24 hours (stored signals); a warning when any, otherwise OK with the number of ordinary signals. Links to `/admin/security?window=24h`. |
 | Automatons need attention | `needAttentionCount` of the Automatons status bar; an error if any turn failed. Links to the Stables tab filtered on attention. |
 | Cycle problems | One item, red if any of: settlement overdue (scheduler active and the last settlement missing or older than 26 h; "last settlement" is the later of `cycle_metadata.last_cycle_at` and the season's `last_settlement_at`, so daily Preparation_Phase settlements count too and a missed one still shows); a scheduler job whose last run failed; matches still `scheduled` more than 2 h after their slot ("left behind"). Otherwise "Last cycle healthy". The scheduler's job states are in memory and reset on every restart or deploy, so the item then reports "k/10 jobs reported since restart"; the overdue and left-behind checks read the database and work across restarts. |
 | Battle activity · Last cycle | Battles created between the ends of the two most recent settlements (`cycle_snapshots.end_time`). "—" until a season has two settlements. |
@@ -104,20 +103,24 @@ Below 1280 px the sections stack in one column. Below 768 px the admin sidebar i
 
 ### Meta (`/admin/meta`)
 
-An overview of what stables choose, for the selected stable type. It moved off the Dashboard (where it was the collapsed "Meta snapshot") so the landing page stays short. The toolbar is the Dashboard's: the same filter (`?filter=`, default `real`), "Last updated" and Refresh.
+An overview of what stables choose, for the selected stable type. It moved off the Dashboard (where it was the collapsed "Meta snapshot") so the landing page stays short, and the old Tuning, Refinement and Subscriptions pages were merged into it: `/admin/tuning`, `/admin/refinement` and `/admin/subscriptions` redirect here. The toolbar is the Dashboard's: the same filter (`?filter=`, default `real`), "Last updated" and Refresh (reloads both requests).
 
-Sections (desktop: three cards, then Yield thresholds beside Facilities; they stack below 1280 px and 768 px):
+Three groups, ordered from choices made per battle to long-term investments (desktop: three cards, then two per row; they stack below 1280 px):
 
-| Section | Shows |
-|---|---|
-| Stances / Loadouts | One stacked bar per distribution plus a legend: share and robot count per option, largest first. |
-| Weapons | Owned, Equipped (owned weapons in any robot's main **or** offhand slot, `equippedInventoryItems`) and the equip rate; links to Weapons. |
-| Yield thresholds | One column per threshold in use (labels at 0–20% in steps of 5 and on the highest), the most common value highlighted. Above it: Most common (with its share), Median (the threshold of the middle robot) and Above 20% (robots and share). Exact counts per threshold are in each column's tooltip and in a screen-reader table. |
-| Facilities | Stables owning each facility at level ≥ 1 and their average level (L), most owned first, with a bar relative to the most owned; two columns from 640 px. |
+| Group | Section | Shows |
+|---|---|---|
+| Combat settings | Stances / Loadouts | One stacked bar per distribution plus a legend: share and robot count per option, largest first. |
+| | Yield thresholds | One column per threshold in use (labels at 0–20% in steps of 5 and on the highest), the most common value highlighted. Above it: Most common (with its share), Median (the threshold of the middle robot) and Above 20% (robots and share). Exact counts per threshold are in each column's tooltip and in a screen-reader table. |
+| Robot builds | Tuning | Robots tuned (at least one point) of all robots; pool used = allocated points of the summed pools, where each robot's pool is (its stable's Tuning Bay level + 1) × 10; points per attribute group (Combat, Defence, Chassis, AI, Team, as on Attributes); the top 10 attributes by points with the robots using each, and "Show all" for every tuned attribute. |
+| | Weapons and refinements | Owned, Equipped (owned weapons in any robot's main **or** offhand slot, `equippedInventoryItems`, with the share), weapons refined (share of owned), stables refining (of stables with robots) and lifetime credits spent on refinements; refinements per kind (Hone, Augment, Sharpen, Forge: count, stables, credits, with the kind's effect); the attributes Hone and Augment target most (count and total magnitude); the top 5 spenders, each linking to the Players panel. What a refinement does to winning is on Weapons (linked). |
+| Stable investments | Event entry | Robots entered in at least one event, average events per robot, robots per event (all nine, registry order, share of robots) and robots by number of events entered (0 to all nine). The Booking Office level sets how many events a robot may enter. |
+| | Facilities | Stables owning each facility at level ≥ 1 and their average level (L), most owned first, with a bar relative to the most owned; two columns from 640 px. Tuning Bay and Booking Office ownership are read here (not repeated in their sections). |
 
-All counts are robots (or stables, for Facilities) owned by users in the filter. With All or Auto-generated, generated stables dominate and their choices are randomised, so near-even splits are expected; Real players shows what people pick. Usage share next to win rate is planned as a follow-up.
+All counts are robots (or stables, for Facilities and refinement stables) owned by users in the filter. With All or Auto-generated, generated stables dominate and their choices are randomised, so near-even splits are expected; Real players shows what people pick.
 
-**API:** `GET /api/admin/stats?filter=` (`authenticateToken` + `requireAdmin`), read by its own filter-scoped loader (`hooks/useMetaOverview.ts`): a filter change aborts the previous request, so a late response for another filter is never shown.
+Dropped with the merge: subscribe/unsubscribe per cycle (it only moves at the start of a season) and the per-stable subscription table (each robot's events are in the Players panel).
+
+**API:** `GET /api/admin/stats?filter=` (choices, weapons, facilities) and `GET /api/admin/meta/builds?filter=` (tuning, refinements, event entry; `services/admin/meta/`), both `authenticateToken` + `requireAdmin`, read by their own filter-scoped loaders (`hooks/useMetaOverview.ts`): a filter change aborts the previous request, so a late response for another filter is never shown, and one failing request leaves the other sections in place. Removed: `GET /api/admin/tuning/adoption`, `GET /api/admin/refinement/adoption`, `GET /api/subscriptions/admin/analytics`.
 
 ### Cycle Controls (`/admin/cycles`)
 
@@ -325,30 +328,29 @@ A mode needs 300 comparisons for effects; a weapon, archetype or matchup cell ne
 
 ### Security (`/admin/security`)
 
-Security event summary (by severity), flagged users, filterable event list with severity/type/user/date filters.
+Answers "is anyone abusing or attacking the game, and who?". The window picker (Last 24 hours / 7 days / 30 days, default 7 days, `?window=24h|7d|30d`) drives every section:
 
-**API:** `GET /api/admin/security/summary`, `GET /api/admin/security/events`
+- **Status line**: which signal types fired in the window, or "No signals" in green. There are no severity levels; a signal fired or it did not.
+- **Signal cards**: failed logins (wrong password, unknown name, or an Automaton name), rate-limit hits (any limiter, per player or by IP before login), ownership violations (another stable's robot, weapon or facility, or a non-admin on an admin endpoint), race-condition bursts (the 11th 409 conflict of one player within a minute), robot-creation bursts (the 4th robot within 10 minutes) and NSFW blocks (from the audit log, linking to Image Uploads). Each card has a per-bucket sparkline and the last time it fired.
+- **Signals per hour/day**: stacked by type, UTC.
+- **Stables with signals**: the stable, chips per signal and last seen. Failed logins count attempts on that account. The name opens the stable's detail panel on Players.
+- **Without an account**: per source IP, failed logins, existing accounts tried, malformed requests (schema validation failures without a logged-in user), rate-limit hits, endpoints and last seen. A **burst** is 5 or more failed logins from one IP within 15 minutes (the login limiter's window).
+
+Signals are stored in `security_events` (90 days, nightly retention at 01:50 UTC) and survive deploys. Not recorded: admin page views, purchases (the old rapid-spending alert flagged normal shopping and was removed), and a logged-in player's malformed requests (usually UI bugs; they go to the security log only). The submitted login name and password are never stored. No Discord alerts. The dashboard's security item counts failed-login bursts, ownership violations and race-condition or robot-creation bursts of the last 24 hours and links to `?window=24h`.
+
+**API:** `GET /api/admin/security/overview?window=24h|7d|30d`. Removed with this redesign: `GET /api/admin/security/events`, `GET /api/admin/security/summary` (they read an in-memory buffer that every deploy wiped and that was mostly the admin's own page views).
 
 ### Achievements (`/admin/achievements`)
 
-Per-achievement unlock count and rate, participation stats, never-unlocked and high-unlock flags.
+Answers "which achievements are too easy or too hard?" for this season. Unlocks are season-scoped: the rollover deletes every `user_achievements` row and re-awards the few whose condition reads preserved state (those show as "before start").
 
-**API:** `GET /api/admin/achievements/analytics`
-**Filter:** Real / Auto / Automatons / All user filter
+- **Stable type** — Players (default), Automatons, Generated (`?stables=`). Player rates are out of the **active players**: human stables that logged in since the season started (not dormant, the rollover's dormant rule). Automatons and generated stables never log in, so every stable of the type counts.
+- **Headline numbers** — achievements in the catalogue (incl. secret), unlocked by someone, never unlocked, and unlocks (per active player).
+- **Unlock rate per achievement, by tier** — one dot per achievement on a 0–100% axis, a bar at the tier median; a screen-reader table gives count, median, lowest and highest rate per tier.
+- **Easier than its tier says** (hard or very hard, unlocked by 80%+) and **Harder than its tier says** (easy or medium, 25% or fewer), up to 6 each. Notes for next season's balance, not alerts.
+- **All achievements** — category filter and sortable columns: achievement, category, tier, unlocked (with rate), median day (day 1 = season start; "before start" for preparation and rollover re-awards) and, for players, All accounts (dormant players included).
 
-### Tuning (`/admin/tuning`)
-
-Tuning allocation adoption rate, total robots with tuning, and attribute ranking showing which attributes players invest tuning points into most.
-
-**API:** `GET /api/admin/tuning/adoption`
-**Filter:** Real / Auto / Automatons / All user filter
-
-### Refinement (`/admin/refinement`)
-
-Weapon Refinement (Spec #34) feature usage. Tracks adoption rate (users who refined ≥1 weapon), per-tier slot counts (Hone / Augment / Sharpen / Forge), most-targeted attributes, total credits spent on refinement, and the top 10 spenders.
-
-**API:** `GET /api/admin/refinement/adoption`
-**Filter:** Real / Auto / Automatons / All user filter
+**API:** `GET /api/admin/achievements/analytics?stables=players|automatons|generated` (`services/admin/achievements/`).
 
 ### Search Analytics (`/admin/search-analytics`)
 
@@ -425,9 +427,17 @@ Create, edit, publish, and delete changelog entries. Supports categories (balanc
 
 ### Image Uploads (`/admin/image-uploads`)
 
-Uploaded image history with user/robot info, moderation event log (rejections, warnings), and orphan file cleanup tool.
+Answers "is every image on a robot acceptable?". Only player uploads (`uploads/user-robots/`) are in scope; generated stables use shared `/assets/robots/` images and Automaton images live in `uploads/automatons/`.
 
-**API:** `GET /api/admin/uploads`, `POST /api/admin/uploads/cleanup`, `GET /api/admin/security/events`
+- **Cards**: images in use (and on how many robots and stables), saved but not in use (retained in players' Image Libraries), uploaded this season (and in its first week), NSFW blocks and "uploaded anyway" overrides of the last 30 days, disk use.
+- **Uploads per week**, this season (from the season's creation, Monday-started UTC weeks), and **Moderation, last 30 days** from the audit log: saved, blocked by the NSFW filter, warned "doesn't look like a robot", then uploaded anyway or gave up, refused because the filter was offline.
+- **Images in use**: every uploaded image on a current robot, newest first, filter All / Uploaded anyway, search on stable or robot name (`?filter=`, `?q=`, `?page=`). There is no review state; the list is small and most uploads happen at the start of a season.
+- **Image slide-over** (`?image=<id>`): full size, owner (links to Players), current robots, archived seasons, library use, and the nsfwjs scores at upload against the block thresholds (porn and hentai 0.30, sexy 0.50) and the robot-likeness check (drawing + neutral ≥ 0.60). Files uploaded before November 2026 have no scores. **Remove image** is for an image that got past the NSFW filter: it needs a reason and a second confirmation naming the robots; its robots and archived seasons fall back to the default frame, the file is deleted, the player is not notified, and the action is written to `admin_audit_logs` (`image_removed`).
+- **Storage**: orphan files (no live robot, archived season or live user's library uses them) and missing files (robot or archive references whose file is gone). **Preview cleanup** lists what would change; **Clean up** runs the same sweep as the season rollover and clears the missing references, audited as `image_cleanup`.
+
+The inventory is `uploaded_images` (written on upload confirm with the moderation scores, removed with the file, reconciled with the disk at startup and after every sweep).
+
+**API:** `GET /api/admin/images/overview`, `GET /api/admin/images?filter=all|anyway&q=&page=`, `GET /api/admin/images/:id`, `DELETE /api/admin/images/:id` (body `{ confirm: true, reason }`), `GET /api/admin/images/cleanup` (preview), `POST /api/admin/images/cleanup`. Removed: `GET /api/admin/uploads`, `POST /api/admin/uploads/cleanup`.
 
 ### Attributes (`/admin/attributes`)
 
