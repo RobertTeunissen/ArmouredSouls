@@ -601,9 +601,11 @@ jobs:
           # Trims old pre-deploy / overflow backup dumps and aborts the deploy
           # with a Discord alert if disk usage is still ≥ 90% afterward. Stops
           # `pnpm install` from hitting ENOSPC and timing out at minute 10 —
-          # see app/scripts/preflight.sh for full rationale.
+          # see app/scripts/preflight.sh for full rationale. ACC makes no
+          # pre-migration dump (see below), so it skips the dump headroom check,
+          # which aborted the 1 Nov 2026 deploy for a dump that never runs.
           script: |
-            bash /opt/armouredsouls/scripts/preflight.sh
+            PREFLIGHT_DUMP_HEADROOM=0 bash /opt/armouredsouls/scripts/preflight.sh
 
       - name: Ensure pnpm is available on VPS
         uses: appleboy/ssh-action@v1
