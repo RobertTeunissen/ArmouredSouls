@@ -1382,6 +1382,50 @@ describe('simulateBattle — spatial refactor', () => {
         const gapDiffs = gaps(forward).map((g, i) => Math.abs(g - gaps(swapped)[i]));
         expect(Math.max(...gapDiffs)).toBeLessThan(1);
       });
+
+      // Battle 582593 (tag team, ACC, Nov 2026): an offensive melee robot (Combat Algorithms 45,
+      // Threat Analysis 37) never got closer than 5.75 units to a defensive mid-range robot
+      // (Combat Algorithms 50) kiting along the wall in 53 s of fighting, although it was faster
+      // (melee commit). The melee robot led the kiter by the 1.5 s Combat Algorithms prediction
+      // of one tick's velocity, so whenever the kiter had stepped towards it the aim point lay
+      // behind the melee robot: both robots reversed direction every tick and the gap flipped
+      // between ~5.8 and ~9.6. Builds as recorded in battle_participant_builds.
+      describe('melee pursuit of a wall-kiting mid-range robot (battle 582593)', () => {
+        /** Nova Caster shape: one-handed, mid range. */
+        const novaCaster = (weaponId: number) => {
+          const inventory = createRangedWeaponInventory(weaponId);
+          return { ...inventory, weapon: { ...inventory.weapon, name: 'Nova Caster', baseDamage: 14, cooldown: 3.5, rangeBand: 'mid' } };
+        };
+        const hitter = (ca: number) => durableRobot({
+          id: 1, name: 'Brawler', stance: 'offensive', mainWeapon: createMeleeWeaponInventory(1), mainWeaponId: 1,
+          servoMotors: new Prisma.Decimal(51), combatAlgorithms: new Prisma.Decimal(ca), threatAnalysis: new Prisma.Decimal(37),
+          evasionThrusters: new Prisma.Decimal(50),
+        });
+        const caster = () => durableRobot({
+          id: 2, name: 'Kiter', stance: 'defensive', mainWeapon: novaCaster(2), mainWeaponId: 2,
+          servoMotors: new Prisma.Decimal(51), combatAlgorithms: new Prisma.Decimal(50), threatAnalysis: new Prisma.Decimal(50),
+          evasionThrusters: new Prisma.Decimal(45),
+        });
+
+        it.each([1, 25, 45, 50])('a Combat Algorithms %i melee robot reaches the kiter and never runs away from it', (ca) => {
+          const t = trajectories([hitter(ca), caster()], false);
+          const brawler = t.get('Brawler')!;
+          const kiter = t.get('Kiter')!;
+          const gaps = brawler.map((b, i) => Math.hypot(b.x - kiter[i].x, b.y - kiter[i].y));
+
+          // Reaches melee reach within 15 s (no hit ever lands, so the commit burst starts by ~13 s)
+          const firstReach = gaps.findIndex(g => g <= 2);
+          expect(firstReach).toBeGreaterThanOrEqual(0);
+          expect(firstReach * 0.1).toBeLessThan(15);
+
+          // Outside reach, every step heads towards the kiter's tick-start position
+          for (let i = 0; i < firstReach; i++) {
+            const step = { x: brawler[i + 1].x - brawler[i].x, y: brawler[i + 1].y - brawler[i].y };
+            const toKiter = { x: kiter[i].x - brawler[i].x, y: kiter[i].y - brawler[i].y };
+            expect(step.x * toKiter.x + step.y * toKiter.y).toBeGreaterThan(0);
+          }
+        });
+      });
     });
 
     describe('patience resets on a landed hit, not on a miss', () => {
