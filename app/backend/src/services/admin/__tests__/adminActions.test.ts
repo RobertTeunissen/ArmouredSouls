@@ -77,6 +77,36 @@ describe('describeAdminAction', () => {
     expect(describeAdminAction('made_up_thing', 'success', null)).toEqual({ area: 'other', title: 'Made up thing', details: '', link: null });
     expect(describeAdminAction('cycles_bulk', 'success', ['not', 'an', 'object']).title).toBe('Ran bulk cycles');
   });
+
+  it.each(['constructor', 'toString', '__proto__', 'hasOwnProperty'])('treats the Object property name %s as an unknown operation', (op) => {
+    expect(areaOf(op)).toBe('other');
+    expect(describeAdminAction(op, 'success', {})).toMatchObject({ area: 'other', link: null });
+    const job = describeAdminAction('scheduler_trigger', 'success', { jobName: op }).title;
+    expect(job).toMatch(/^Ran .+ manually$/);
+    expect(job).not.toMatch(/function|\[native code\]|\[object/);
+    expect(describeAdminAction(`automaton.${op}`, 'success', {}).area).toBe('automatons');
+  });
+
+  it('says a background start was queued, not that it ran', () => {
+    expect(describeAdminAction('scheduler_trigger', 'success', { jobName: 'league', runId: 41, background: true })).toMatchObject({
+      title: 'Started 1v1 League manually', details: 'queued; the outcome is in Run history',
+    });
+    expect(describeAdminAction('cycles_bulk', 'success', { cyclesRequested: 3, runId: 42, background: true })).toMatchObject({
+      title: 'Started 3 bulk cycles', details: 'queued; the outcome is in Run history',
+    });
+    expect(describeAdminAction('cycles_bulk', 'success', { cyclesRequested: 3, cyclesCompleted: 3 })).toMatchObject({ title: 'Ran 3 bulk cycles', details: '3 completed' });
+  });
+
+  it('does not claim every draft was activated when some were rejected', () => {
+    const partial = describeAdminAction('automaton.activate_all', 'success', {
+      activated: ['autobots-ark'],
+      rejected: [{ catalogueKey: 'dalek-empire', code: 'VALIDATION_ERROR' }, { catalogueKey: 'clone-legion', code: 'VALIDATION_ERROR' }],
+    });
+    expect(partial).toMatchObject({ title: 'Activated 1 of 3 Automaton drafts', details: '1 activated · rejected 2: dalek-empire, clone-legion' });
+    const none = describeAdminAction('automaton.activate_all', 'success', { activated: [], rejected: [{ catalogueKey: 'dalek-empire', code: 'X' }] });
+    expect(none.title).toBe('Activated 0 of 1 Automaton drafts');
+    expect(none.details).not.toContain('nothing left');
+  });
 });
 
 describe('getAdminActions', () => {

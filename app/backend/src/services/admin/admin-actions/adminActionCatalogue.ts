@@ -83,9 +83,18 @@ const AUTOMATON_TITLES: Readonly<Record<string, string>> = {
   upload_image: 'Uploaded an Automaton image',
 };
 
+/**
+ * A catalogue entry by own key only. Operation names are stored strings (the
+ * removed audit-log POST accepted any), so `constructor` or `__proto__` must
+ * not resolve to an inherited Object property.
+ */
+function own<T>(record: Readonly<Record<string, T>>, key: string): T | undefined {
+  return Object.hasOwn(record, key) ? record[key] : undefined;
+}
+
 export function areaOf(operationType: string): AdminActionArea {
   if (operationType.startsWith('automaton.')) return 'automatons';
-  return AREA_OF[operationType] ?? 'other';
+  return own(AREA_OF, operationType) ?? 'other';
 }
 
 export interface DescribedAction {
@@ -117,21 +126,27 @@ function listPreview(value: unknown, limit = 3): string | null {
 
 function jobLabel(name: unknown): string {
   const job = text(name);
-  return job ? JOB_LABELS[job] ?? humanize(job) : 'a job';
+  return job ? own(JOB_LABELS, job) ?? humanize(job) : 'a job';
 }
 
+const QUEUED_DETAILS = 'queued; the outcome is in Run history';
+
 function describeCycles(op: string, failed: boolean, s: Summary): Pick<DescribedAction, 'title' | 'details'> {
+  // Background starts are recorded when the run is queued, before it executes: the outcome is in Run history.
+  const queued = !failed && s.background === true;
   if (op === 'scheduler_trigger') {
-    return { title: `${failed ? 'Manual run of' : 'Ran'} ${jobLabel(s.jobName)}${failed ? ' failed' : ' manually'}`, details: text(s.error) ?? '' };
+    if (failed) return { title: `Manual run of ${jobLabel(s.jobName)} failed`, details: text(s.error) ?? '' };
+    return queued
+      ? { title: `Started ${jobLabel(s.jobName)} manually`, details: QUEUED_DETAILS }
+      : { title: `Ran ${jobLabel(s.jobName)} manually`, details: '' };
   }
   if (op === 'cycles_bulk') {
     const requested = num(s.cyclesRequested);
     const completed = num(s.cyclesCompleted);
     const what = requested === null ? 'bulk cycles' : `${count(requested)} bulk ${requested === 1 ? 'cycle' : 'cycles'}`;
-    return {
-      title: failed ? `Bulk run failed` : `Ran ${what}`,
-      details: text(s.error) ?? (completed !== null ? `${count(completed)} completed` : s.background === true ? 'in the background' : ''),
-    };
+    if (failed) return { title: 'Bulk run failed', details: text(s.error) ?? '' };
+    if (queued) return { title: `Started ${what}`, details: QUEUED_DETAILS };
+    return { title: `Ran ${what}`, details: completed !== null ? `${count(completed)} completed` : '' };
   }
   return { title: humanize(op), details: text(s.error) ?? '' };
 }
@@ -159,12 +174,23 @@ function describeSeason(op: string, failed: boolean, s: Summary): Pick<Described
 
 function describeAutomatons(op: string, failed: boolean, s: Summary): Pick<DescribedAction, 'title' | 'details'> {
   const name = op.slice('automaton.'.length);
-  const base = AUTOMATON_TITLES[name] ?? humanize(name);
+  const base = own(AUTOMATON_TITLES, name) ?? humanize(name);
   const key = text(s.catalogueKey);
   const stable = key && key !== 'all' && key !== 'none' && key !== 'invalid' ? key : null;
   if (failed) return { title: `${base}: rejected`, details: [stable, text(s.code)].filter(Boolean).join(' · ') };
   if (name === 'activate_all') {
-    return { title: base, details: listPreview(s.activated) ?? 'nothing left to activate' };
+    // Recorded as success even when drafts were rejected; never claim all were activated then.
+    const activated = Array.isArray(s.activated) ? s.activated.length : 0;
+    const rejectedKeys = Array.isArray(s.rejected)
+      ? s.rejected.map((r) => (r !== null && typeof r === 'object' ? text((r as Summary).catalogueKey) : null)).filter((k): k is string => k !== null)
+      : [];
+    const rejected = Array.isArray(s.rejected) ? s.rejected.length : 0;
+    if (rejected === 0) return { title: base, details: listPreview(s.activated) ?? 'nothing left to activate' };
+    const rejectedPreview = listPreview(rejectedKeys);
+    return {
+      title: `Activated ${count(activated)} of ${count(activated + rejected)} Automaton drafts`,
+      details: [`${count(activated)} activated`, rejectedPreview ? `rejected ${rejectedPreview}` : `${count(rejected)} rejected`].join(' · '),
+    };
   }
   return { title: base, details: stable ?? '' };
 }

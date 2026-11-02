@@ -40,6 +40,11 @@ function AdminActionsPage(): React.ReactElement {
     getAdminActions({ area, result, page }, { signal: controller.signal })
       .then((next) => {
         if (controller.signal.aborted) return;
+        // A page past the end (stale link, fewer actions after a filter) jumps to the last real page and refetches.
+        if (next.total > 0 && page > next.totalPages) {
+          setParams((current) => writeActionsView(current, { page: next.totalPages }), { replace: true });
+          return;
+        }
         setData(next);
         setLoading(false);
       })
@@ -49,7 +54,7 @@ function AdminActionsPage(): React.ReactElement {
         setLoading(false);
       });
     return () => controller.abort();
-  }, [area, result, page, token]);
+  }, [area, result, page, token, setParams]);
 
   const update = (patch: Partial<AdminActionsQuery>): void => {
     setParams((current) => writeActionsView(current, patch), { replace: true });

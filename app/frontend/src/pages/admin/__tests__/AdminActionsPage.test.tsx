@@ -169,6 +169,19 @@ describe('AdminActionsPage', () => {
     expect(search().get('page')).toBe('3');
   });
 
+  it('moves a page past the end to the last real page', async () => {
+    mockGet.mockImplementation(async (_url: string, config: { params: Record<string, string | number> }) => {
+      const requested = Number(config.params.page);
+      // 30 actions = one page; the API answers a later page with an empty slice.
+      return { data: page(requested === 1 ? [ACTIVATED, ROLLOVER, FAILED] : [], { total: 30, totalPages: 1, page: requested }) };
+    });
+    renderPage('/admin/actions?page=2');
+    expect(await screen.findByRole('list', { name: 'Admin actions, newest first' })).toBeInTheDocument();
+    expect(search().has('page')).toBe(false);
+    expect(mockGet).toHaveBeenLastCalledWith('/api/admin/actions', expect.objectContaining({ params: { page: 1, pageSize: 50 } }));
+    expect(screen.queryByText('No admin actions match these filters.')).toBeNull();
+  });
+
   it('says when nothing matches the filters', async () => {
     mockGet.mockResolvedValue({ data: page([], { total: 0 }) });
     renderPage('/admin/actions?area=players');
