@@ -113,6 +113,8 @@ const adminSubPaths = [
   'tuning',
   'image-uploads',
   'changelog',
+  'actions',
+  // Redirects (to /admin/economy and /admin/actions).
   'repair-log',
   'audit-log',
 ];

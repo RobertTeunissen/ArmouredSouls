@@ -53,6 +53,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: 'Security', path: '/admin/security', icon: '🛡️' },
       { label: 'Image Uploads', path: '/admin/image-uploads', icon: '🖼️' },
+      { label: 'Admin actions', path: '/admin/actions', icon: '≡' },
     ],
   },
   {
@@ -61,13 +62,6 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: 'Changelog', path: '/admin/changelog', icon: '📝' },
       { label: 'Achievements', path: '/admin/achievements', icon: '🏅' },
       { label: 'Search Analytics', path: '/admin/search-analytics', icon: '🔎' },
-    ],
-  },
-  {
-    section: 'Maintenance',
-    items: [
-      { label: 'Repair Log', path: '/admin/repair-log', icon: '🔧' },
-      { label: 'Audit Log', path: '/admin/audit-log', icon: '📋' },
     ],
   },
 ];

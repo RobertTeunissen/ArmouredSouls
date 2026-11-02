@@ -30,14 +30,15 @@ All pages manage their own data fetching. The sidebar collapses to icons on narr
 | | Weapons | `/admin/weapons` | What winning robots fight with: archetype (range × loadout) and weapon effects, matchups, usage per league tier, price vs effect, refinements |
 | **Player Management** | Players | `/admin/players` | Player list with tabs (New Players, Auto-Generated, At-Risk), churn risk, engagement, search, detail slide-over |
 | | Automatons | `/admin/automatons` | Automaton stables: status bar, stables, strategies, editor, catalogue (Spec #55) |
-| | Economy | `/admin/economy` | Credit circulation, balance distribution, facility adoption |
+| | Economy | `/admin/economy` | Where credits come from and go, repairs and their discounts, balances, per stable type |
 | **Security & Moderation** | Security | `/admin/security` | Security signals per window: who triggered them and sources without an account |
 | | Image Uploads | `/admin/image-uploads` | Images in use, moderation outcomes, image removal, storage cleanup |
+| | Admin actions | `/admin/actions` | Everything an admin changed, newest first, by area and result (was the Audit Log) |
 | **Content** | Changelog | `/admin/changelog` | Create, edit, publish changelog entries |
 | | Achievements | `/admin/achievements` | This season's unlock rates per achievement and tier, for players, Automatons or generated stables |
 | | Search Analytics | `/admin/search-analytics` | Settled searches, no-result rate, results by category, phrase table with CSV export |
-| **Maintenance** | Repair Log | `/admin/repair-log` | Manual vs automatic repairs, savings tracking |
-| | Audit Log | `/admin/audit-log` | Admin action audit trail with filters |
+
+The Maintenance group is gone (Nov 2026, admin redesign part 8): the Repair Log is the Repairs block on Economy (`/admin/repair-log` redirects there) and the Audit Log is Admin actions (`/admin/audit-log` redirects to `/admin/actions`).
 
 ## UI Patterns
 
@@ -149,7 +150,7 @@ Sections, top to bottom:
 
 Season rollovers are runs too (job **Season rollover**, `seasonRollover`): trigger `manual` from Season Control, `cron` when the settlement rolls the season over. They appear in Run history and in the job filter.
 
-**API:** `GET /api/admin/scheduler/overview`, `GET /api/admin/scheduler/runs?jobName&problemsOnly&days(1–30)&page&limit`, `GET /api/admin/scheduler/runs/:id`, `POST /api/admin/scheduler/runs` `{ jobName }` → 202 `{ run }` (400 unknown job, 409 already active), `POST /api/admin/cycles/bulk` with `background: true` → 202 `{ run }` (without it the call waits and returns the full result, as before; 409 while a bulk run is active). `GET /api/admin/scheduler/status` (in-memory state) and `POST /api/admin/scheduler/trigger/:jobName` (waits for the job) remain for scripts; the page no longer uses them. All require `authenticateToken` + `requireAdmin`; manual and bulk starts write an `admin_audit_logs` row.
+**API:** `GET /api/admin/scheduler/overview`, `GET /api/admin/scheduler/runs?jobName&problemsOnly&days(1–30)&page&limit`, `GET /api/admin/scheduler/runs/:id`, `POST /api/admin/scheduler/runs` `{ jobName }` → 202 `{ run }` (400 unknown job, 409 already active), `POST /api/admin/cycles/bulk` with `background: true` → 202 `{ run }` (without it the call waits and returns the full result, as before; 409 while a bulk run is active). `GET /api/admin/scheduler/status` (in-memory state) remains for scripts. `POST /api/admin/scheduler/trigger/:jobName` was removed in part 8 (nothing called it; `POST /scheduler/runs` replaces it). All require `authenticateToken` + `requireAdmin`; manual and bulk starts write an `admin_audit_logs` row.
 
 ### Season Control (`/admin/seasons`)
 
@@ -209,6 +210,7 @@ Answers: where credits come from, where they go, and where they pile up. Toolbar
 
 - **KPIs**: earned, spent and net in the window (with per-cycle averages: total ÷ cycles), repairs as a share of battle income, and what the stables hold now with the median balance.
 - **Where credits come from / go**: `financial_ledger` by transaction type: battle income (all modes, participation pay included), streaming, merchandising, achievements, weapon sales; attribute upgrades, facility upgrades, repairs, weapon refinement, operating costs, weapons + robots. Legacy types show as Other.
+- **Repairs** (replaced the Repair Log): repairs, paid (and per repair), saved by discounts and, when the scope has players, how many player stables that repaired used Manual Repair. A table splits automatic / manual / total into full price, Repair Bay discount, Manual Repair discount (50%), paid and per repair; beside it every stable type in the same window: repairs, paid, Repair Bay share of the full price ("Bay off") and the share of repairs done by hand. From `financial_ledger` `repair_cost` rows: full price is `metadata.baseQuote`, after the Repair Bay `metadata.quoteBeforeManualDiscount`, paid the amount; rows without a breakdown count at what was paid. One stable's repairs belong in its Players panel, so there is no per-stable list.
 - **Per cycle**: earned vs spent for at least the last 15 closed cycles.
 - **Balances**: stables per balance band now (below ₡0 up to ₡10M+).
 - **All stable types**: count, earned, spent, net and held for players, Automatons and generated stables side by side in the same window.
@@ -407,17 +409,16 @@ Sections, top to bottom:
 
 **API:** `GET /api/admin/practice-arena/overview` (the page). `GET /api/admin/practice-arena/stats` keeps its original shape, now computed from the events: `history` rows carry `date` as a full ISO timestamp (UTC midnight) and the day's `playerIds`; `totalBattlesSinceStart` is this season's battles. Both require `authenticateToken` + `requireAdmin`.
 
-### Repair Log (`/admin/repair-log`)
+### Admin actions (`/admin/actions`)
 
-Manual vs automatic repair events with cost breakdowns, pre-discount costs, and savings tracking. Filterable by repair type and date range.
+Answers "what did an admin change, and did it work?". Under **Security & Moderation**; replaced the Audit Log (`/admin/audit-log` redirects here).
 
-**API:** `GET /api/admin/audit-log/repairs`
+- **Area chips** with counts over every recorded action: Cycles (manual job runs, bulk cycles), Season (rollover, extend, preparation cycles), Automatons, Moderation (image removal, storage clean-up), Players (password resets), Changelog (create, edit, publish, delete); Other only when an unknown operation exists. **All results / Failures**. Both and the page live in the URL (`?area=&result=failure&page=`).
+- **Rows**, newest first, 50 per page: when (UTC), area, a plain title ("Rolled over season 0 → 1", "Rollover of season 0 failed"), one line of details, the admin's stable name, OK / Failed. A row opens the stored details as label / value lines, the operation name and a link to the page the action was taken on (a password reset links to that player's panel).
 
-### Audit Log (`/admin/audit-log`)
+Recorded with `recordAction` into `admin_audit_logs`, which is kept forever (not to be confused with `audit_logs`, the 30-day game event log). Password resets record the player's id, username and stable name, never the password; changelog edits record the entry id, title and the names of the changed fields, never the body text. Rows written by removed endpoints still read well. Titles and details come from `services/admin/admin-actions/adminActionCatalogue.ts`; add new operations there.
 
-Paginated admin action audit trail. Filterable by operation type and date range.
-
-**API:** `GET /api/admin/audit-log`
+**API:** `GET /api/admin/actions?area=cycles|season|automatons|moderation|players|changelog|other&result=all|failure&page&pageSize(≤100)` → `{ entries, total, page, pageSize, totalPages, counts: { all, failures, byArea }, since }`. Removed in part 8: `GET /api/admin/audit-log`, `POST /api/admin/audit-log` (any admin session could write any entry), `GET /api/admin/audit-log/repairs`, and the unused maintenance endpoints `POST /api/admin/repair/all`, `/recalculate-hp`, `/daily-finances/process`, `/snapshots/backfill`, `/scheduler/trigger/:jobName` and the team-battle triggers (`/team-battles/*`, team league and tournament triggers).
 
 ### Changelog (`/admin/changelog`)
 

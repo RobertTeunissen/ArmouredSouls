@@ -198,7 +198,6 @@ const DB_DEPENDENT = [
   'src/services/economy/__tests__/unifiedFacilityROI.integration.test.ts',
   'src/services/economy/__tests__/unifiedFacilityROI.preservation.property.test.ts',
   'src/services/matchmaking/__tests__/deterministicTieBreaking.property.test.ts',
-  'tests/adminRepairAuditLog.test.ts',
   'tests/analyticsApi.test.ts',
   'tests/arenaLayout.test.ts',
   'tests/auth.test.ts',

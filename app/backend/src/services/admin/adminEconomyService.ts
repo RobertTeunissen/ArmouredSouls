@@ -10,6 +10,10 @@
  * Windows count closed cycles: the ledger's cycle in progress is
  * `cycle_metadata.total_cycles + 1` and is left out.
  *
+ * The Repairs block (it replaced the Repair Log page) reads the `repair_cost`
+ * rows' breakdown: `baseQuote` is the full price, `quoteBeforeManualDiscount`
+ * the price after the Repair Bay discount, and the amount what was paid.
+ *
  * @module services/admin/adminEconomyService
  */
 
@@ -34,6 +38,26 @@ export interface EconomyFlow {
   amount: number;
 }
 
+/** Repairs of one kind (or all) in the window. full − repairBayDiscount − manualDiscount = paid. */
+export interface RepairTotals {
+  repairs: number;
+  /** The shared repair formula's quote before any discount. */
+  fullPrice: number;
+  repairBayDiscount: number;
+  manualDiscount: number;
+  paid: number;
+}
+
+export interface EconomyRepairs {
+  automatic: RepairTotals;
+  manual: RepairTotals;
+  total: RepairTotals;
+  /** Player stables in scope that repaired, and that used Manual Repair; null when the scope has no players. */
+  playerStables: { repairing: number; manual: number } | null;
+  /** Every stable type in the same window, whatever the scope. Shares are one-decimal percentages. */
+  byStableType: { stables: StableKind; repairs: number; paid: number; repairBayShare: number | null; manualShare: number | null }[];
+}
+
 export interface EconomyOverview {
   scope: { stables: EconomyStableScope; window: EconomyWindow; fromCycle: number; toCycle: number; cycles: number };
   kpis: {
@@ -53,6 +77,7 @@ export interface EconomyOverview {
   perCycle: { cycle: number; earned: number; spent: number }[];
   balanceBands: { label: string; count: number; negative: boolean }[];
   byStableType: { stables: StableKind; count: number; earned: number; spent: number; net: number; heldNow: number }[];
+  repairs: EconomyRepairs;
   timestamp: string;
 }
 
@@ -94,10 +119,31 @@ interface LedgerGroup {
   spend: number;
 }
 
+export type RepairKind = 'automatic' | 'manual';
+
+export interface RepairGroup {
+  kind: StableKind | 'other';
+  cycle: number;
+  repairType: RepairKind;
+  repairs: number;
+  fullPrice: number;
+  afterRepairBay: number;
+  paid: number;
+}
+
+/** One player stable that repaired in a cycle, by repair type. */
+export interface PlayerRepairRow {
+  userId: number;
+  cycle: number;
+  repairType: RepairKind;
+}
+
 interface Dataset {
   totalCycles: number;
   balances: Record<StableKind | 'all', number[]>;
   groups: LedgerGroup[];
+  repairGroups: RepairGroup[];
+  playerRepairs: PlayerRepairRow[];
 }
 
 let cache: { at: number; data: Dataset } | null = null;
@@ -105,6 +151,22 @@ let cache: { at: number; data: Dataset } | null = null;
 /** Drop the cached dataset (tests). */
 export function invalidateEconomyCache(): void {
   cache = null;
+}
+
+interface RepairGroupRow {
+  kind: string;
+  cycle_number: number;
+  repair_type: string;
+  repairs: number;
+  full_price: unknown;
+  after_bay: unknown;
+  paid: unknown;
+}
+
+interface PlayerRepairDbRow {
+  user_id: number;
+  cycle_number: number;
+  repair_type: string;
 }
 
 interface GroupRow {
@@ -157,10 +219,49 @@ async function loadDataset(): Promise<Dataset> {
       WHERE cycle_number BETWEEN 1 AND ${totalCycles}
       GROUP BY 1, 2, 3`
     : [];
-  const num = (value: bigint | number | null): number => (value === null ? 0 : Number(value));
+  const num = (value: unknown): number => (value === null || value === undefined ? 0 : Number(value));
+  const repairTypeOf = (raw: string): RepairKind => (raw === 'manual' ? 'manual' : 'automatic');
+  // Rows written before the repair breakdown existed have no quotes: their full price is what was paid.
+  const [repairRows, playerRepairRows] = totalCycles > 0
+    ? await Promise.all([
+      prisma.$queryRaw<RepairGroupRow[]>`
+        SELECT
+          CASE
+            WHEN user_id = ANY(${ids.players}::int[]) THEN 'players'
+            WHEN user_id = ANY(${ids.automatons}::int[]) THEN 'automatons'
+            WHEN user_id = ANY(${ids.generated}::int[]) THEN 'generated'
+            ELSE 'other'
+          END AS kind,
+          cycle_number,
+          COALESCE(metadata->>'repairType', 'automatic') AS repair_type,
+          COUNT(*)::int AS repairs,
+          SUM(COALESCE((metadata->>'baseQuote')::numeric, -amount)) AS full_price,
+          SUM(COALESCE((metadata->>'quoteBeforeManualDiscount')::numeric, -amount)) AS after_bay,
+          -SUM(amount) AS paid
+        FROM financial_ledger
+        WHERE transaction_type = 'repair_cost' AND cycle_number BETWEEN 1 AND ${totalCycles}
+        GROUP BY 1, 2, 3`,
+      prisma.$queryRaw<PlayerRepairDbRow[]>`
+        SELECT user_id, cycle_number, COALESCE(metadata->>'repairType', 'automatic') AS repair_type
+        FROM financial_ledger
+        WHERE transaction_type = 'repair_cost' AND cycle_number BETWEEN 1 AND ${totalCycles}
+          AND user_id = ANY(${ids.players}::int[])
+        GROUP BY 1, 2, 3`,
+    ])
+    : [[], []];
   return {
     totalCycles,
     balances,
+    repairGroups: repairRows.map((row) => ({
+      kind: row.kind as RepairGroup['kind'],
+      cycle: row.cycle_number,
+      repairType: repairTypeOf(row.repair_type),
+      repairs: num(row.repairs),
+      fullPrice: num(row.full_price),
+      afterRepairBay: num(row.after_bay),
+      paid: num(row.paid),
+    })),
+    playerRepairs: playerRepairRows.map((row) => ({ userId: row.user_id, cycle: row.cycle_number, repairType: repairTypeOf(row.repair_type) })),
     groups: rows.map((row) => ({
       kind: row.kind as LedgerGroup['kind'],
       transactionType: row.transaction_type,
@@ -196,6 +297,72 @@ export function balanceBands(values: readonly number[]): EconomyOverview['balanc
 
 const sum = (values: readonly number[]): number => values.reduce((total, v) => total + v, 0);
 const percentOneDecimal = (part: number, whole: number): number | null => (whole > 0 ? Math.round((part / whole) * 1000) / 10 : null);
+
+const emptyRepairTotals = (): RepairTotals => ({ repairs: 0, fullPrice: 0, repairBayDiscount: 0, manualDiscount: 0, paid: 0 });
+
+function addRepairs(totals: RepairTotals, group: RepairGroup): void {
+  totals.repairs += group.repairs;
+  totals.fullPrice += group.fullPrice;
+  totals.paid += group.paid;
+  if (group.repairType === 'manual') {
+    totals.repairBayDiscount += group.fullPrice - group.afterRepairBay;
+    totals.manualDiscount += group.afterRepairBay - group.paid;
+  } else {
+    // Automatic repairs have no manual step: whatever the full price exceeds the charge by is the Repair Bay.
+    totals.repairBayDiscount += group.fullPrice - group.paid;
+  }
+}
+
+/**
+ * The Repairs block for one scope and window (pure, exported for tests):
+ * totals per repair type, how many player stables repaired and used Manual
+ * Repair, and every stable type side by side.
+ */
+export function summarizeRepairs(
+  groups: readonly RepairGroup[],
+  playerRepairs: readonly PlayerRepairRow[],
+  stables: EconomyStableScope,
+  fromCycle: number,
+  toCycle: number,
+): EconomyRepairs {
+  const inWindow = (cycle: number): boolean => cycle >= fromCycle && cycle <= toCycle;
+  const windowed = groups.filter((g) => inWindow(g.cycle));
+  const automatic = emptyRepairTotals();
+  const manual = emptyRepairTotals();
+  const total = emptyRepairTotals();
+  for (const group of windowed) {
+    if (stables !== 'all' && group.kind !== stables) continue;
+    addRepairs(group.repairType === 'manual' ? manual : automatic, group);
+    addRepairs(total, group);
+  }
+
+  const players = playerRepairs.filter((row) => inWindow(row.cycle));
+  const playerStables = stables === 'players' || stables === 'all'
+    ? {
+      repairing: new Set(players.map((row) => row.userId)).size,
+      manual: new Set(players.filter((row) => row.repairType === 'manual').map((row) => row.userId)).size,
+    }
+    : null;
+
+  const byStableType = STABLE_KINDS.map((kind) => {
+    const kindTotals = emptyRepairTotals();
+    let manualRepairs = 0;
+    for (const group of windowed) {
+      if (group.kind !== kind) continue;
+      addRepairs(kindTotals, group);
+      if (group.repairType === 'manual') manualRepairs += group.repairs;
+    }
+    return {
+      stables: kind,
+      repairs: kindTotals.repairs,
+      paid: kindTotals.paid,
+      repairBayShare: percentOneDecimal(kindTotals.repairBayDiscount, kindTotals.fullPrice),
+      manualShare: percentOneDecimal(manualRepairs, kindTotals.repairs),
+    };
+  });
+
+  return { automatic, manual, total, playerStables, byStableType };
+}
 
 /** First closed cycle of a window that ends at `totalCycles`. */
 export function windowStart(window: EconomyWindow, totalCycles: number): number {
@@ -263,6 +430,7 @@ export async function getEconomyOverview(
       const kindSpent = sum(rows.map((g) => g.spend));
       return { stables: kind, count: data.balances[kind].length, earned: kindEarned, spent: kindSpent, net: kindEarned - kindSpent, heldNow: sum(data.balances[kind]) };
     }),
+    repairs: summarizeRepairs(data.repairGroups, data.playerRepairs, stables, fromCycle, totalCycles),
     timestamp: new Date().toISOString(),
   };
 }

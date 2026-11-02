@@ -126,7 +126,7 @@ The Armoured Souls matchmaking system is a **fully implemented** turn-based mult
    - POST /api/admin/matchmaking/run
    - POST /api/admin/battles/run
    - POST /api/admin/leagues/rebalance
-   - POST /api/admin/repair/all
+   - POST /api/admin/repair/all (removed in Nov 2026, admin redesign part 8)
    - POST /api/admin/cycles/bulk (1-100 cycles)
    - GET /api/admin/stats
    - Files: `routes/admin.ts`, `scripts/testAdminAPI.js`
@@ -1832,6 +1832,8 @@ TOKEN=$(curl -s -X POST http://localhost:3001/api/auth/login \
 ```
 
 **Step 3: Optional - Repair All Robots**
+
+> Removed in Nov 2026 (admin redesign part 8): `POST /api/admin/repair/all` no longer exists; robots are repaired by the cycle (automatic repair) or by players (Manual Repair).
 ```bash
 curl -X POST http://localhost:3001/api/admin/repair/all \
   -H "Authorization: Bearer $TOKEN" \
@@ -2045,6 +2047,8 @@ Response:
 ```
 
 #### Auto-Repair All Robots
+
+> Removed in Nov 2026 (admin redesign part 8): `POST /api/admin/repair/all` no longer exists; robots are repaired by the cycle (automatic repair) or by players (Manual Repair).
 ```http
 POST /api/admin/repair/all
 Authorization: Bearer <admin-jwt>

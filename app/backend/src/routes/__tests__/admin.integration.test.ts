@@ -8,8 +8,7 @@
  * - GET /api/admin/league-health
  * - GET /api/admin/achievements/analytics
  * - GET /api/admin/meta/builds
- * - GET /api/admin/audit-log
- * - POST /api/admin/audit-log
+ * - GET /api/admin/actions (replaced GET/POST /audit-log and /audit-log/repairs)
  * - GET /api/admin/users/search, GET /api/admin/users/:id
  * - POST /api/admin/users/:id/reset-password (human stables only)
  *
@@ -33,12 +32,12 @@ const mockGetLeagueHealthOverview = jest.fn();
 const mockGetLeagueSeason = jest.fn();
 const mockGetAchievementAnalytics = jest.fn();
 const mockGetMetaBuilds = jest.fn();
-const mockGetAuditEntries = jest.fn();
+const mockGetAdminActions = jest.fn();
 const mockRecordAuditAction = jest.fn();
+const mockResetPassword = jest.fn();
 
 jest.mock('../../services/admin/adminStatsService', () => ({
   getSystemStats: jest.fn(),
-  getRepairAuditLog: jest.fn(),
   getDashboardKpis: (...args: unknown[]) => mockGetDashboardKpis(...args),
 }));
 
@@ -82,7 +81,12 @@ jest.mock('../../services/admin/adminBattleActivityService', () => ({
 
 jest.mock('../../services/admin/adminAuditLogService', () => ({
   recordAction: (...args: unknown[]) => mockRecordAuditAction(...args),
-  getEntries: (...args: unknown[]) => mockGetAuditEntries(...args),
+}));
+
+jest.mock('../../services/admin/admin-actions', () => ({
+  ADMIN_ACTION_AREAS: ['cycles', 'season', 'automatons', 'moderation', 'players', 'changelog', 'other'],
+  ADMIN_ACTION_RESULTS: ['all', 'failure'],
+  getAdminActions: (...args: unknown[]) => mockGetAdminActions(...args),
 }));
 
 // Mock auth middleware — admin user by default
@@ -162,9 +166,6 @@ jest.mock('../../services/tag-team/tagTeamMatchmakingService', () => ({
 jest.mock('../../services/tag-team/tagTeamBattleOrchestrator', () => ({
   executeScheduledTagTeamBattles: jest.fn(),
 }));
-jest.mock('../../utils/economyCalculations', () => ({
-  processAllDailyFinances: jest.fn(),
-}));
 jest.mock('../../services/cycle/cycleScheduler', () => ({
   getSchedulerState: jest.fn().mockReturnValue({ active: false }),
 }));
@@ -176,16 +177,11 @@ jest.mock('../../services/admin/battles', () => ({
   exportBattleText: jest.fn(),
   exportBattleJson: jest.fn(),
 }));
-jest.mock('../../services/admin/adminMaintenanceService', () => ({
-  repairAllRobotsAdmin: jest.fn(),
-  recalculateAllRobotHP: jest.fn(),
-}));
 jest.mock('../../services/admin/adminCycleService', () => ({
   executeBulkCycles: jest.fn(),
-  backfillCycleSnapshots: jest.fn(),
 }));
 jest.mock('../../services/auth/passwordResetService', () => ({
-  resetPassword: jest.fn(),
+  resetPassword: (...args: unknown[]) => mockResetPassword(...args),
 }));
 jest.mock('../../utils/validation', () => ({
   validatePassword: jest.fn().mockReturnValue({ valid: true }),
@@ -311,21 +307,17 @@ const sampleMetaBuilds = {
   eventEntry: { totalRobots: 2, robotsEntered: 1, averageEvents: 0.5, perEvent: [], eventsPerRobot: [] },
 };
 
-const sampleAuditEntries = {
+const sampleAdminActions = {
   entries: [
     {
-      id: 1,
-      adminUserId: 1,
-      operationType: 'matchmaking_run',
-      operationResult: 'success',
-      resultSummary: { matchesCreated: 10 },
-      createdAt: new Date('2026-04-20T12:00:00.000Z'),
+      id: 30, createdAt: '2026-10-27T21:16:20.898Z', operationType: 'automaton.activate_all', result: 'success', area: 'automatons',
+      title: 'Activated all Automaton drafts', details: 'nothing left to activate', link: '/admin/automatons',
+      admin: { userId: 1, name: 'Administrator' }, summary: { outcome: 'completed', activated: [] },
     },
   ],
-  total: 1,
-  page: 1,
-  pageSize: 25,
-  totalPages: 1,
+  total: 1, page: 1, pageSize: 50, totalPages: 1,
+  counts: { all: 30, failures: 9, byArea: { cycles: 14, season: 12, automatons: 4, moderation: 0, players: 0, changelog: 0, other: 0 } },
+  since: '2026-05-16T08:19:39.391Z',
 };
 
 // ---------------------------------------------------------------------------
@@ -717,122 +709,47 @@ describe('Admin API — New Endpoints Integration Tests', () => {
   });
 
   // -----------------------------------------------------------------------
-  // GET /api/admin/audit-log
+  // GET /api/admin/actions
   // -----------------------------------------------------------------------
 
-  describe('GET /api/admin/audit-log', () => {
-    it('should return paginated audit log entries', async () => {
-      mockGetAuditEntries.mockResolvedValue(sampleAuditEntries);
+  describe('GET /api/admin/actions', () => {
+    it('returns the Admin actions page with defaults', async () => {
+      mockGetAdminActions.mockResolvedValue(sampleAdminActions);
 
-      const res = await request(app).get('/api/admin/audit-log');
+      const res = await request(app).get('/api/admin/actions');
 
       expect(res.status).toBe(200);
-      expect(res.body).toHaveProperty('entries');
-      expect(res.body).toHaveProperty('total');
-      expect(res.body).toHaveProperty('page');
-      expect(res.body).toHaveProperty('totalPages');
-      expect(Array.isArray(res.body.entries)).toBe(true);
+      expect(res.body).toEqual(sampleAdminActions);
+      expect(mockGetAdminActions).toHaveBeenCalledWith({ result: 'all', page: 1, pageSize: 50 });
     });
 
-    it('should pass pagination and filter parameters', async () => {
-      mockGetAuditEntries.mockResolvedValue(sampleAuditEntries);
+    it('passes the area, result and page filters', async () => {
+      mockGetAdminActions.mockResolvedValue(sampleAdminActions);
 
-      await request(app).get(
-        '/api/admin/audit-log?page=2&pageSize=10&operationType=matchmaking_run'
-      );
+      await request(app).get('/api/admin/actions?area=season&result=failure&page=2&pageSize=10');
 
-      expect(mockGetAuditEntries).toHaveBeenCalledWith(
-        expect.objectContaining({
-          page: 2,
-          pageSize: 10,
-          operationType: 'matchmaking_run',
-        }),
-      );
+      expect(mockGetAdminActions).toHaveBeenCalledWith({ area: 'season', result: 'failure', page: 2, pageSize: 10 });
     });
 
-    it('should reject pageSize exceeding max (100)', async () => {
-      const res = await request(app).get('/api/admin/audit-log?pageSize=200');
-
-      expect(res.status).toBe(400);
-      expect(res.body.code).toBe('VALIDATION_ERROR');
-    });
-  });
-
-  // -----------------------------------------------------------------------
-  // POST /api/admin/audit-log
-  // -----------------------------------------------------------------------
-
-  describe('POST /api/admin/audit-log', () => {
-    // 200, not 201. The route has always answered 200 with `{ success: true }`, no
-    // caller reads the status beyond ok, and nothing documents 201 — that was an
-    // intent the implementation never had.
-    it('should record an audit action and return 200', async () => {
-      const res = await request(app)
-        .post('/api/admin/audit-log')
-        .send({
-          operationType: 'manual_test',
-          operationResult: 'success',
-          resultSummary: { detail: 'test entry' },
-        });
-
-      expect(res.status).toBe(200);
-      expect(res.body).toEqual({ success: true });
-      expect(mockRecordAuditAction).toHaveBeenCalledWith(
-        1,
-        'manual_test',
-        'success',
-        { detail: 'test entry' },
-      );
+    it('rejects an unknown area, result or a page size over 100', async () => {
+      for (const query of ['area=nope', 'result=success', 'pageSize=200']) {
+        const res = await request(app).get(`/api/admin/actions?${query}`);
+        expect(res.status).toBe(400);
+        expect(res.body.code).toBe('VALIDATION_ERROR');
+      }
     });
 
-    it('should reject missing operationType', async () => {
-      const res = await request(app)
-        .post('/api/admin/audit-log')
-        .send({
-          operationResult: 'success',
-          resultSummary: {},
-        });
-
-      expect(res.status).toBe(400);
-      expect(res.body.code).toBe('VALIDATION_ERROR');
+    it('no longer serves the old audit-log routes, including the forgeable POST', async () => {
+      expect((await request(app).get('/api/admin/audit-log')).status).toBe(404);
+      expect((await request(app).get('/api/admin/audit-log/repairs')).status).toBe(404);
+      const forged = await request(app).post('/api/admin/audit-log').send({ operationType: 'x', operationResult: 'success', resultSummary: {} });
+      expect(forged.status).toBe(404);
+      expect(mockRecordAuditAction).not.toHaveBeenCalled();
     });
 
-    it('should reject invalid operationResult', async () => {
-      const res = await request(app)
-        .post('/api/admin/audit-log')
-        .send({
-          operationType: 'test',
-          operationResult: 'maybe',
-          resultSummary: {},
-        });
-
-      expect(res.status).toBe(400);
-      expect(res.body.code).toBe('VALIDATION_ERROR');
-    });
-
-    it('should reject missing resultSummary', async () => {
-      const res = await request(app)
-        .post('/api/admin/audit-log')
-        .send({
-          operationType: 'test',
-          operationResult: 'success',
-        });
-
-      expect(res.status).toBe(400);
-      expect(res.body.code).toBe('VALIDATION_ERROR');
-    });
-
-    it('should reject empty operationType', async () => {
-      const res = await request(app)
-        .post('/api/admin/audit-log')
-        .send({
-          operationType: '',
-          operationResult: 'success',
-          resultSummary: {},
-        });
-
-      expect(res.status).toBe(400);
-      expect(res.body.code).toBe('VALIDATION_ERROR');
+    it('is admin-only', async () => {
+      mockUser = { userId: 2, username: 'player', role: 'user' };
+      expect((await request(app).get('/api/admin/actions')).status).toBe(403);
     });
   });
 
@@ -878,6 +795,18 @@ describe('Admin API — New Endpoints Integration Tests', () => {
 
       expect(res.status).toBe(400);
       expect(res.body.code).toBe('PASSWORD_RESET_NOT_ALLOWED');
+      expect(mockRecordAuditAction).not.toHaveBeenCalled();
+    });
+
+    it('records the reset as an admin action: who and which stable, never the password', async () => {
+      mockAssertHumanStable.mockResolvedValue(undefined);
+      mockResetPassword.mockResolvedValue({ userId: 9, username: 'player_b', stableName: 'Stable B' });
+
+      const res = await request(app).post('/api/admin/users/9/reset-password').send({ password: 'Valid1234' });
+
+      expect(res.status).toBe(200);
+      expect(mockRecordAuditAction).toHaveBeenCalledWith(1, 'password_reset', 'success', { targetUserId: 9, username: 'player_b', stableName: 'Stable B' });
+      expect(JSON.stringify(mockRecordAuditAction.mock.calls)).not.toContain('Valid1234');
     });
   });
 });

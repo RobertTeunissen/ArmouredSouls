@@ -66,6 +66,7 @@ describe('PasswordResetService', () => {
   const defaultUser = {
     id: 42,
     username: 'player1',
+    stableName: 'Rust Bucket Racing',
     tokenVersion: 3,
   };
 
@@ -89,13 +90,14 @@ describe('PasswordResetService', () => {
     it('should update passwordHash and increment tokenVersion by 1', async () => {
       const result = await resetPassword(42, 'NewPass123', defaultInitiator);
 
-      expect(result).toEqual({ userId: 42, username: 'player1' });
+      // stableName is returned for the admin action record (never the password).
+      expect(result).toEqual({ userId: 42, username: 'player1', stableName: 'Rust Bucket Racing' });
 
       // Verify user lookup
       expect(mockFindUnique).toHaveBeenCalledWith({
         where: { id: 42 },
         // Spec #55 R2.11: stableType is read inside the transaction.
-        select: { id: true, username: true, tokenVersion: true, stableType: true },
+        select: { id: true, username: true, stableName: true, tokenVersion: true, stableType: true },
       });
 
       // Verify hash was generated

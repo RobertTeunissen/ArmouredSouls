@@ -11,8 +11,8 @@
  * both recorded figures came out low — 80% of the truth at a 20% discount, and a
  * tenth of it at the old 90% cap. (Season 2 #525 made the discount 6% per level,
  * so the cases below use 30% at Level 5 and the 60% Level 10 maximum.) Credits deducted were always correct;
- * only the audit record was wrong, and that record is what `/admin/repair-log`,
- * the per-cycle snapshot totals and the Income Dashboard all read.
+ * only the audit record was wrong, and that record is what the (since retired)
+ * admin Repair Log, the per-cycle snapshot totals and the Income Dashboard read.
  *
  * Criterion 8 requires every expected value here to come from the Repair_Quote and
  * the manual discount ALONE — never from the logged payload or the handler under

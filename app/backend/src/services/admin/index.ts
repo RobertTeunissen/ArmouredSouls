@@ -14,35 +14,20 @@ export {
   mapRobotAttributes,
   calculateStats,
   getSystemStats,
-  getRepairAuditLog,
   getDashboardKpis,
 } from './adminStatsService';
 
 export { getAchievementAnalytics } from './achievements';
 export { getMetaBuilds } from './meta';
+export { getAdminActions } from './admin-actions';
 
 export { getLeagueHealthOverview } from './league-health';
 
 export {
-  repairAllRobotsAdmin,
-  recalculateAllRobotHP,
-  type AdminRepairResult,
-  type AdminRecalculateHPResult,
-} from './adminMaintenanceService';
-
-export {
   executeBulkCycles,
-  backfillCycleSnapshots,
   type BulkCycleOptions,
   type BulkCycleResult,
   type CycleResult,
-  type BackfillSnapshotsResult,
 } from './adminCycleService';
 
-export {
-  recordAction as recordAuditAction,
-  getEntries as getAuditEntries,
-  type GetEntriesParams,
-  type AuditLogEntry,
-  type GetEntriesResult,
-} from './adminAuditLogService';
+export { recordAction as recordAuditAction } from './adminAuditLogService';

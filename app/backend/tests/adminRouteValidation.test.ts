@@ -24,10 +24,6 @@ const scheduledForBodySchema = z.object({
   scheduledFor: z.string().optional(),
 });
 
-const repairAllBodySchema = z.object({
-  deductCosts: z.boolean().optional().default(false),
-});
-
 const bulkCyclesBodySchema = z.object({
   cycles: z.number().int().positive().max(100).optional().default(1),
   generateUsersPerCycle: z.boolean().optional().default(false),
@@ -45,15 +41,6 @@ const economyQuerySchema = z.object({
   window: z.enum(['7', '14', '30', 'season']).optional().default('7'),
   fresh: z.enum(['true', 'false']).optional(),
 });
-
-const repairAuditQuerySchema = z.object({
-  page: z.coerce.number().int().positive().default(1),
-  limit: z.coerce.number().int().positive().max(100).default(25),
-  repairType: z.enum(['manual', 'automatic']).optional(),
-  startDate: z.string().optional(),
-  endDate: z.string().optional(),
-});
-
 
 // --- Test helpers ---
 
@@ -135,34 +122,6 @@ describe('Admin route validation schemas', () => {
       expect(req.body).toEqual({ scheduledFor: '2025-01-01' });
       expect(req.body.isAdmin).toBeUndefined();
       expect(req.body.role).toBeUndefined();
-    });
-  });
-
-  describe('repairAllBodySchema (POST /repair/all)', () => {
-    it('should default deductCosts to false', () => {
-      const result = repairAllBodySchema.safeParse({});
-      expect(result.success).toBe(true);
-      if (result.success) expect(result.data.deductCosts).toBe(false);
-    });
-
-    it('should accept deductCosts as true', () => {
-      const result = repairAllBodySchema.safeParse({ deductCosts: true });
-      expect(result.success).toBe(true);
-      if (result.success) expect(result.data.deductCosts).toBe(true);
-    });
-
-    it('should reject non-boolean deductCosts', () => {
-      const result = repairAllBodySchema.safeParse({ deductCosts: 'yes' });
-      expect(result.success).toBe(false);
-    });
-
-    it('should strip unexpected fields', () => {
-      const middleware = validateRequest({ body: repairAllBodySchema });
-      const req = mockReq({ body: { deductCosts: true, currency: 99999 } });
-      const next = jest.fn();
-      middleware(req, mockRes(), next);
-      expect(next).toHaveBeenCalled();
-      expect(req.body.currency).toBeUndefined();
     });
   });
 
@@ -278,48 +237,6 @@ describe('Admin route validation schemas', () => {
       expect(economyQuerySchema.safeParse({ window: '10' }).success).toBe(false);
     });
   });
-  describe('repairAuditQuerySchema (GET /audit-log/repairs)', () => {
-    it('should accept valid pagination and filters', () => {
-      const result = repairAuditQuerySchema.safeParse({
-        page: '1',
-        limit: '25',
-        repairType: 'manual',
-        startDate: '2025-01-01',
-        endDate: '2025-12-31',
-      });
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.repairType).toBe('manual');
-        expect(result.data.page).toBe(1);
-        expect(result.data.limit).toBe(25);
-      }
-    });
-
-    it('should reject invalid repairType', () => {
-      const result = repairAuditQuerySchema.safeParse({ repairType: 'invalid' });
-      expect(result.success).toBe(false);
-    });
-
-    it('should accept repairType = automatic', () => {
-      const result = repairAuditQuerySchema.safeParse({ repairType: 'automatic' });
-      expect(result.success).toBe(true);
-    });
-
-    it('should default page to 1 and limit to 25', () => {
-      const result = repairAuditQuerySchema.safeParse({});
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.page).toBe(1);
-        expect(result.data.limit).toBe(25);
-      }
-    });
-
-    it('should reject limit > 100', () => {
-      const result = repairAuditQuerySchema.safeParse({ limit: '101' });
-      expect(result.success).toBe(false);
-    });
-  });
-
   describe('Empty schema validation (no-input endpoints)', () => {
     it('should call next() for empty body with validateRequest({})', () => {
       const middleware = validateRequest({});

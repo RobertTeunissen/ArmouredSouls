@@ -16,7 +16,6 @@ jest.mock('../../src/services/cycle/cycleScheduler', () => ({
   __esModule: true,
   startManualRun: (...args: unknown[]) => mockStartManualRun(...args),
   getSchedulerState: jest.fn(() => ({ active: true, runningJob: null, queue: [], jobs: [] })),
-  triggerJob: jest.fn(),
 }));
 
 const mockOverview = jest.fn();
@@ -44,7 +43,6 @@ jest.mock('../../src/services/admin/adminAuditLogService', () => ({
   recordAction: (...args: unknown[]) => mockRecordAction(...args),
 }));
 
-jest.mock('../../src/services/admin/adminMaintenanceService', () => ({ __esModule: true, repairAllRobotsAdmin: jest.fn(), recalculateAllRobotHP: jest.fn() }));
 const mockPracticeOverview = jest.fn();
 const mockPracticeStats = jest.fn();
 jest.mock('../../src/services/practice-arena/practiceArenaUsageService', () => ({
@@ -52,8 +50,6 @@ jest.mock('../../src/services/practice-arena/practiceArenaUsageService', () => (
   getPracticeArenaOverview: () => mockPracticeOverview(),
   getLegacyPracticeArenaStats: () => mockPracticeStats(),
 }));
-jest.mock('../../src/services/admin/adminCycleService', () => ({ __esModule: true, backfillCycleSnapshots: jest.fn() }));
-jest.mock('../../src/utils/economyCalculations', () => ({ __esModule: true, processAllDailyFinances: jest.fn() }));
 jest.mock('../../src/config/logger', () => ({ __esModule: true, default: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() } }));
 jest.mock('../../src/services/security/securityMonitor', () => ({
   securityMonitor: { logValidationFailure: jest.fn(), logAuthorizationFailure: jest.fn(), logAdminAccess: jest.fn(), trackRateLimitViolation: jest.fn() },
@@ -236,6 +232,15 @@ describe('POST /api/admin/cycles/bulk', () => {
     const res = await request(baseUrl).post('/api/admin/cycles/bulk').send({ cycles: 1 });
     expect(res.status).toBe(500);
     expect(res.body).toEqual({ error: 'Failed to run bulk cycles' });
+  });
+});
+
+describe('removed maintenance triggers', () => {
+  it('no longer serves the one-off triggers (Cycle Controls uses /scheduler/runs)', async () => {
+    mockUser = { userId: 1, username: 'admin', role: 'admin' };
+    const paths = ['/api/admin/scheduler/trigger/league', '/api/admin/repair/all', '/api/admin/recalculate-hp', '/api/admin/daily-finances/process', '/api/admin/snapshots/backfill'];
+    const statuses = await Promise.all(paths.map(async (path) => [path, (await request(baseUrl).post(path).send({})).status]));
+    expect(statuses).toEqual(paths.map((path) => [path, 404]));
   });
 });
 

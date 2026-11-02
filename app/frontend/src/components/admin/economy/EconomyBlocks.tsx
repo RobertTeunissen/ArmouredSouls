@@ -1,11 +1,12 @@
 /**
  * Blocks of the admin Economy page: KPI cards, flow bars (where credits come
- * from / where they go), earned vs spent per cycle, balance bands and the
- * per-stable-type table.
+ * from / where they go), repairs, earned vs spent per cycle, balance bands
+ * and the per-stable-type table.
  */
 import type { ReactNode } from 'react';
 import { AdminPanel } from '../shared';
-import type { EconomyFlow, EconomyOverview, EconomyStableKind } from '../../../utils/adminEconomyApi';
+import { MANUAL_REPAIR_DISCOUNT } from '@shared/utils/repairCost';
+import type { EconomyFlow, EconomyOverview, EconomyStableKind, RepairTotals } from '../../../utils/adminEconomyApi';
 import { SCOPE_LABELS, scopeNoun } from '../../../utils/adminEconomyFormat';
 import { compactCreditsText } from '../../../utils/adminPlayersFormat';
 
@@ -151,6 +152,113 @@ export function EconomyByStableType({ data }: { data: EconomyOverview }): ReactN
           </tbody>
         </table>
         <p className="mt-3 text-xs text-secondary">Generated stables buy nothing; their balances are deleted at rollover. Automatons building up right after activation spend far more than they earn.</p>
+      </div>
+    </AdminPanel>
+  );
+}
+
+const off = (value: number): string => (value > 0 ? compactCreditsText(-value) : '₡0');
+/** Average paid per repair; one decimal in the thousands (₡23.3k) so repair types stay comparable. */
+function perRepair(totals: RepairTotals): string {
+  if (totals.repairs === 0) return '—';
+  const average = totals.paid / totals.repairs;
+  return average >= 10_000 && average < 1_000_000 ? `₡${(average / 1_000).toFixed(1)}k` : compactCreditsText(Math.round(average));
+}
+const wholePercent = (share: number | null): string => (share === null ? '—' : `${Math.round(share)}%`);
+const MANUAL_PERCENT = Math.round(MANUAL_REPAIR_DISCOUNT * 100);
+
+/**
+ * What repairs cost the stables in scope and which discounts applied (full
+ * price, Repair Bay, Manual Repair, paid), split automatic / manual, and every
+ * stable type side by side. Replaced the Repair Log page.
+ */
+export function EconomyRepairs({ data }: { data: EconomyOverview }): ReactNode {
+  const { automatic, manual, total, playerStables, byStableType } = data.repairs;
+  const saved = total.repairBayDiscount + total.manualDiscount;
+  const savedShare = total.fullPrice > 0 ? Math.round((saved / total.fullPrice) * 100) : null;
+  const stats = [
+    { label: `repairs (${automatic.repairs.toLocaleString('en-US')} automatic · ${manual.repairs.toLocaleString('en-US')} manual)`, value: total.repairs.toLocaleString('en-US') },
+    { label: total.repairs > 0 ? `paid · ${perRepair(total)} per repair` : 'paid', value: compactCreditsText(total.paid) },
+    { label: `saved by discounts${savedShare === null ? '' : ` (${savedShare}% of the full price)`}`, value: compactCreditsText(saved) },
+    ...(playerStables
+      ? [{ label: `${data.scope.stables === 'players' ? 'stables' : 'player stables'} used Manual Repair`, value: `${playerStables.manual.toLocaleString('en-US')} of ${playerStables.repairing.toLocaleString('en-US')}` }]
+      : []),
+  ];
+  const rows: { label: string; totals: RepairTotals; isTotal?: boolean; manualColumn: boolean }[] = [
+    { label: 'Automatic', totals: automatic, manualColumn: false },
+    { label: 'Manual', totals: manual, manualColumn: true },
+    { label: 'Total', totals: total, isTotal: true, manualColumn: true },
+  ];
+  const kinds = KIND_ORDER.flatMap((kind) => byStableType.filter((r) => r.stables === kind));
+  return (
+    <AdminPanel title="Repairs" actions={<span className="text-xs text-secondary">What repairs cost and which discounts apply · same stables and window</span>}>
+      <div className="space-y-5 p-5">
+        <dl className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {stats.map((stat) => (
+            <div key={stat.label} className="flex min-w-0 flex-col-reverse">
+              <dt className="text-xs text-secondary">{stat.label}</dt>
+              <dd className="text-2xl font-bold tabular-nums text-white">{stat.value}</dd>
+            </div>
+          ))}
+        </dl>
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
+          <div className="min-w-0">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[34rem] text-sm">
+                <caption className="sr-only">Repairs by type: full price, discounts and what was paid</caption>
+                <thead className="text-xs text-secondary">
+                  <tr>
+                    <th scope="col" className="py-1 pr-3 text-left font-medium"><span className="sr-only">Repair type</span></th>
+                    {['Repairs', 'Full price', 'Repair Bay', `Manual (${MANUAL_PERCENT}%)`, 'Paid', 'Per repair'].map((h) => <th key={h} scope="col" className="py-1 pl-3 text-right font-medium">{h}</th>)}
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map(({ label, totals, isTotal, manualColumn }) => (
+                    <tr key={label} className={`border-t border-white/5 ${isTotal ? 'font-semibold' : ''}`}>
+                      <th scope="row" className={`py-2 pr-3 text-left text-white ${isTotal ? 'font-semibold' : 'font-normal'}`}>{label}</th>
+                      <td className="py-2 pl-3 text-right tabular-nums text-white">{totals.repairs.toLocaleString('en-US')}</td>
+                      <td className="py-2 pl-3 text-right tabular-nums text-white">{compactCreditsText(totals.fullPrice)}</td>
+                      <td className="py-2 pl-3 text-right tabular-nums text-white">{off(totals.repairBayDiscount)}</td>
+                      <td className="py-2 pl-3 text-right tabular-nums text-white">{manualColumn ? off(totals.manualDiscount) : '—'}</td>
+                      <td className="py-2 pl-3 text-right tabular-nums text-white">{compactCreditsText(totals.paid)}</td>
+                      <td className="py-2 pl-3 text-right tabular-nums text-white">{perRepair(totals)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="mt-3 text-xs text-secondary">
+              Full price is the shared repair formula before discounts. The Repair Bay takes a share off by facility level; Manual Repair takes {MANUAL_PERCENT}% off what is left, and only players repair by hand.
+              From the financial ledger; older repairs without a price breakdown count at what was paid. One stable&apos;s repairs are in its Players panel.
+            </p>
+          </div>
+          <div className="min-w-0 xl:border-l xl:border-white/10 xl:pl-6">
+            <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-secondary">All stable types · same window</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <caption className="sr-only">Repairs of each stable type in this window</caption>
+                <thead className="text-xs text-secondary">
+                  <tr>
+                    <th scope="col" className="py-1 pr-3 text-left font-medium">Stables</th>
+                    {['Repairs', 'Paid', 'Bay off', 'Manual'].map((h) => <th key={h} scope="col" className="py-1 pl-3 text-right font-medium">{h}</th>)}
+                  </tr>
+                </thead>
+                <tbody>
+                  {kinds.map((row) => (
+                    <tr key={row.stables} className={`border-t border-white/5 ${data.scope.stables === row.stables ? 'bg-surface-elevated' : ''}`}>
+                      <th scope="row" className="py-2 pr-3 text-left font-normal text-white">{SCOPE_LABELS[row.stables]}</th>
+                      <td className="py-2 pl-3 text-right tabular-nums text-white">{row.repairs.toLocaleString('en-US')}</td>
+                      <td className="py-2 pl-3 text-right tabular-nums text-white">{compactCreditsText(row.paid)}</td>
+                      <td className="py-2 pl-3 text-right tabular-nums text-white">{wholePercent(row.repairBayShare)}</td>
+                      <td className="py-2 pl-3 text-right tabular-nums text-white">{wholePercent(row.manualShare)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="mt-3 text-xs text-secondary">Bay off is the Repair Bay share of the full price. Manual is the share of repairs done by hand.</p>
+          </div>
+        </div>
       </div>
     </AdminPanel>
   );

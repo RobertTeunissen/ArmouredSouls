@@ -76,39 +76,3 @@ export interface SystemStats {
     mostCommonCount: number;
   };
 }
-
-/** Repair log event from the admin audit-log repairs endpoint */
-export interface RepairLogEvent {
-  userId: number;
-  stableName: string;
-  robotId: number;
-  robotName: string;
-  repairType: 'manual' | 'automatic';
-  /** Credits actually deducted. Renamed from `cost` by Spec #48 Requirement 17. */
-  creditsCharged: number;
-  /**
-   * The same repair priced before the manual discount and after the Repair Bay
-   * discount. Null on an automatic repair, which applies no manual discount.
-   * Renamed from `preDiscountCost`.
-   */
-  creditsBeforeManualDiscount: number | null;
-  manualRepairDiscount: number | null;
-  eventTimestamp: string;
-}
-
-/** Response shape for GET /api/admin/audit-log/repairs */
-export interface RepairLogResponse {
-  events: RepairLogEvent[];
-  summary: {
-    totalManualRepairs: number;
-    totalAutomaticRepairs: number;
-    totalSavings: number;
-  };
-  pagination: {
-    page: number;
-    limit: number;
-    totalEvents: number;
-    totalPages: number;
-    hasMore: boolean;
-  };
-}

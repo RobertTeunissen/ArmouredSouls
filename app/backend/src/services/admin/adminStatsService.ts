@@ -5,5 +5,5 @@
  * Split for maintainability (original was 1872 lines).
  */
 
-export { getWeaponStats, getStanceStats, getLoadoutStats, getYieldThresholdStats, mapRobotAttributes, calculateStats, getSystemStats, getRepairAuditLog } from './adminSystemStatsService';
+export { getWeaponStats, getStanceStats, getLoadoutStats, getYieldThresholdStats, mapRobotAttributes, calculateStats, getSystemStats } from './adminSystemStatsService';
 export { getDashboardKpis } from './adminDashboardService';

@@ -60,11 +60,9 @@ The AST check originally discovered 22 direct `data: { currency: ... }` assignme
 | `currency-attribute-upgrade` | `app/backend/src/services/robot/robotUpgradeService.ts` — `executeUpgradeTransaction` | decrement | `Credit_Mutation_Service` | `attribute_upgrade` | durable upgrade + user + robot + ordered attributes; pair plus robot update | Unit, Integration, Heavy |
 | `currency-manual-repair` | `app/backend/src/services/robot/robotRepairService.ts` — `repairAllRobots` | decrement | `Credit_Mutation_Service` | `repair_cost` with `repairType: 'manual'` | operation + robot; pair, `robot_repair`, and `lifetimeRepairCreditsPaid` | Unit, Integration, Heavy |
 | `currency-automatic-repair` | `app/backend/src/services/economy/repairService.ts` — `repairRobots` | decrement | `Credit_Mutation_Service` | `repair_cost` with `repairType: 'automatic'` | operation + robot; pair, `robot_repair`, and lifetime total | Unit, Integration, Heavy |
-| `currency-admin-repair` | `app/backend/src/services/admin/adminMaintenanceService.ts` — `repairAllRobotsAdmin` | decrement | `Credit_Mutation_Service` | `repair_cost` with `repairType: 'automatic'` when charged | admin operation + robot; pair and `robot_repair` | Unit, Integration, Heavy |
 | `currency-scheduled-passive-income` | `app/backend/src/services/cycle/cycleScheduler.ts` — `executeSettlement` | increment | `Settlement_Service` | `passive_income` | stable + cycle + component; pair, `passive_income`, and cycle snapshot data | Unit, Integration, Heavy |
 | `currency-scheduled-operating-costs` | `app/backend/src/services/cycle/cycleScheduler.ts` — `executeSettlement` | decrement | `Settlement_Service` | `operating_costs` | stable + cycle + component; pair, `operating_costs`, and cycle snapshot data | Unit, Integration, Heavy |
 | `currency-admin-bulk-settlement` | `app/backend/src/services/admin/adminCycleService.ts` — `executeBulkCycles` | increment of net change | `Settlement_Service` | separate `passive_income` and `operating_costs` | stable + cycle + component; no net `settlement_adjustment` row | Unit, Integration, Heavy |
-| `currency-legacy-daily-finances` | `app/backend/src/utils/economyCalculations.ts` — `processDailyFinances` | decrement | `Settlement_Service` | `operating_costs` | stable + cycle + component; pair plus compatibility summary | Unit, Integration, Heavy |
 | `currency-generated-stable-opening-balance` | `app/backend/src/utils/userGeneration.ts` — `generateBattleReadyUsers` | set | `Opening_Balance_Boundary` | no taxonomy value | generated user creation identity; `User` and generated domain rows | Unit, Integration, Heavy |
 | `lifecycle-account-reset` | `app/backend/src/services/common/resetService.ts` — `performAccountReset` | set | `Opening_Balance_Boundary` | no taxonomy value | reset identity; `resetLog`, deleted live rows, and reset User state | Unit, Integration |
 | `lifecycle-season-rollover-reset` | `app/backend/src/services/season/seasonPurgeService.ts` — `resetCompetitiveAndEconomicState` | set | `Opening_Balance_Boundary` | no taxonomy value | season rollover/purge identity; archives, purged rows, and reset human stables | Unit, Integration, Heavy |
@@ -152,13 +150,12 @@ The final `streaming_revenue` identity is battle/match + robot + component. It r
 
 ## Repairs and the canonical `Repair_Spend` source
 
-The three repair boundaries are:
+The two repair boundaries are:
 
-- `Manual_Repair`: `app/backend/src/services/robot/robotRepairService.ts` — `repairAllRobots`;
-- `Automatic_Repair`: `app/backend/src/services/economy/repairService.ts` — `repairRobots` and `repairRobotsForEvent`; and
-- charged admin maintenance: `app/backend/src/services/admin/adminMaintenanceService.ts` — `repairAllRobotsAdmin`.
+- `Manual_Repair`: `app/backend/src/services/robot/robotRepairService.ts` — `repairAllRobots`; and
+- `Automatic_Repair`: `app/backend/src/services/economy/repairService.ts` — `repairRobots` and `repairRobotsForEvent`.
 
-All three target `repair_cost` with mandatory `repairType: 'manual' | 'automatic'`. The arithmetic remains solely in `app/shared/utils/repairCost.ts`: `calculateRepairQuote`, `applyManualRepairDiscount`, and `calculateRepairBayDiscountPercent`. Manual batches quote, discount, round, and identify each robot before summing.
+The charged admin maintenance repair (`adminMaintenanceService.repairAllRobotsAdmin`, `POST /api/admin/repair/all`) was removed in Nov 2026 (admin redesign part 8); nothing called it. Both target `repair_cost` with mandatory `repairType: 'manual' | 'automatic'`. The arithmetic remains solely in `app/shared/utils/repairCost.ts`: `calculateRepairQuote`, `applyManualRepairDiscount`, and `calculateRepairBayDiscountPercent`. Manual batches quote, discount, round, and identify each robot before summing.
 
 The reporting `Canonical_Source` is `audit_logs`/`AuditLog` rows with:
 
@@ -168,7 +165,7 @@ payload.creditsCharged
 payload.repairType
 ```
 
-Readers include `cycleProgressService.ts`, the admin repair-log path, and robot/stable analytics. Repair spend is never read from `battle_complete` payloads, `robots.repairQuoteCredits` (the cached forward-looking quote), or a subtype-losing `financial_ledger` sum. Each repaired robot has one repair financial pair and one subtype-bearing `robot_repair` domain record. An automatic repair for a byed robot remains a normal event-scope repair, separate from the bye reward.
+Readers include `cycleProgressService.ts` and robot/stable analytics. The admin Economy page's Repairs block (which replaced the Repair Log in Nov 2026) reads `financial_ledger` `repair_cost` rows instead, using the quote breakdown in `metadata` (`baseQuote`, `quoteBeforeManualDiscount`) and `repairType`. Repair spend is never read from `battle_complete` payloads, `robots.repairQuoteCredits` (the cached forward-looking quote), or a subtype-losing `financial_ledger` sum. Each repaired robot has one repair financial pair and one subtype-bearing `robot_repair` domain record. An automatic repair for a byed robot remains a normal event-scope repair, separate from the bye reward.
 
 ## Settlement implementation sources (historical migration inventory)
 
@@ -178,8 +175,8 @@ The table preserves the pre-migration entry points and their implemented unified
 |---|---|---|
 | `app/backend/src/services/cycle/cycleScheduler.ts` — `executeSettlement` | Separate direct passive-income and operating-cost balance updates with domain events and cycle data | `Settlement_Service`, one `passive_income` pair and one `operating_costs` pair per stable/cycle, including zero components |
 | `app/backend/src/services/admin/adminCycleService.ts` — `executeBulkCycles` | Calculated passive income and costs, then applied one net `User.currency` mutation | `Settlement_Service`, separate `passive_income` and `operating_costs` components; no net `settlement_adjustment` row |
-| `app/backend/src/utils/economyCalculations.ts` — `processDailyFinances` / `processAllDailyFinances` | Legacy per-user operating-cost debit and batch wrapper | `Settlement_Service` delegation or non-mutating preview |
-| `app/backend/src/routes/adminMaintenance.ts` — `POST /daily-finances/process` | Admin compatibility route invoked the legacy batch path | Delegates while preserving `summary.totalCostsDeducted`, `usersProcessed`, and `timestamp` |
+| `app/backend/src/utils/economyCalculations.ts` — `processDailyFinances` / `processAllDailyFinances` | Legacy per-user operating-cost debit and batch wrapper | Delegated to `Settlement_Service`; removed in Nov 2026 (admin redesign part 8) |
+| `app/backend/src/routes/adminMaintenance.ts` — `POST /daily-finances/process` | Admin compatibility route invoked the legacy batch path | Delegated while preserving its response; removed in Nov 2026 (admin redesign part 8) |
 
 Settlement identity is stable user + cycle + component (`passive_income` or `operating_costs`). The persisted breakdown records Merchandising Hub level, prestige, roster capacity/normalization, facility/roster cost components, and rounding. Streaming Studio battle revenue remains `streaming_revenue`, not passive settlement income. Scheduler and admin paths share the zero-valued component policy and cannot pay or charge twice on rerun.
 
@@ -209,12 +206,12 @@ Season rollover retains only the documented archive tables and permitted account
 
 The following routes remain part of the baseline and must retain their current response/filter contracts while later services are introduced:
 
-- `app/backend/src/routes/adminMaintenance.ts`: `POST /repair/all`, `POST /recalculate-hp`, `POST /daily-finances/process`, `POST /cycles/bulk`, `GET /scheduler/status`, and `POST /scheduler/trigger/:jobName`;
-- `app/backend/src/routes/adminUsers.ts`: `GET/POST /audit-log` and `GET /audit-log/repairs`;
-- `app/backend/src/routes/adminAnalytics.ts`: `GET /economy/overview`; and
+- `app/backend/src/routes/adminMaintenance.ts`: `POST /cycles/bulk` and `GET /scheduler/status`;
+- `app/backend/src/routes/adminUsers.ts`: `GET /actions` (Admin actions);
+- `app/backend/src/routes/adminAnalytics.ts`: `GET /economy` (Economy page, including the Repairs block); and
 - `app/backend/src/routes/adminSeasons.ts`: `GET /rollover-preview` and `POST /rollover`.
 
-`/api/admin/audit-log` can query `financial_transaction` rows without breaking existing fields and filters. `/api/admin/audit-log/repairs` remains focused on subtype-bearing `robot_repair` rows and `creditsCharged`. `/api/admin/economy/overview` remains compatible with the existing admin economy page. The bulk-cycle response retains `includeDailyFinances`, `settlement.finances`, `totalPassiveIncome`, `totalOperatingCosts`, `usersProcessed`, and `skipped`.
+Removed in Nov 2026 (admin redesign part 8; unused, or replaced by a page above): `POST /repair/all`, `POST /recalculate-hp`, `POST /daily-finances/process`, `POST /snapshots/backfill`, `POST /scheduler/trigger/:jobName`, `GET`/`POST /audit-log` and `GET /audit-log/repairs`. The bulk-cycle response retains `includeDailyFinances`, `settlement.finances`, `totalPassiveIncome`, `totalOperatingCosts`, `usersProcessed`, and `skipped`.
 
 ## Test-tier baseline
 
@@ -237,9 +234,9 @@ This baseline does not add or redesign `Income_Dashboard`, `Cycle_Summary`, or a
 - `app/frontend/src/pages/FinancialReportPage.tsx`;
 - `app/frontend/src/pages/CycleSummaryPage.tsx`;
 - `app/frontend/src/pages/admin/CycleControlsPage.tsx`;
-- `app/frontend/src/pages/admin/RepairLogPage.tsx`;
+- `app/frontend/src/pages/admin/RepairLogPage.tsx` (retired Nov 2026; repairs are the Economy page's Repairs block);
 - `app/frontend/src/pages/admin/EconomyOverviewPage.tsx`;
-- `app/frontend/src/pages/admin/AuditLogPage.tsx`; and
+- `app/frontend/src/pages/admin/AuditLogPage.tsx` (retired Nov 2026; replaced by `AdminActionsPage.tsx`); and
 - `app/frontend/src/utils/financialApi.ts`.
 
 `app/frontend/tests/e2e/financial-flow.spec.ts` remains an existing regression test. The later `Financial_Page_Follow_On` may consume corrected records, but it is not part of this capture baseline.

@@ -5,9 +5,10 @@
  * A toolbar picks the stable type (Players by default, Automatons, Generated,
  * All) and the window (7 / 14 / 30 closed cycles, or the season); both live in
  * the URL (`stables`, `window`). Blocks: KPIs, sources and sinks from the
- * financial ledger, earned vs spent per cycle, balance bands and the
- * per-stable-type table. Facility adoption is on Meta, bankruptcy risk on
- * Players (Low balance).
+ * financial ledger, repairs (full price, discounts, paid; replaced the Repair
+ * Log, `/admin/repair-log` redirects here), earned vs spent per cycle,
+ * balance bands and the per-stable-type table. Facility adoption is on Meta,
+ * bankruptcy risk on Players (Low balance).
  * Data: `GET /api/admin/economy`.
  *
  * Definitions: docs/guides/ADMIN_PANEL_GUIDE.md §Economy.
@@ -17,7 +18,7 @@ import type { ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ADMIN_FOCUS_RING, AdminPageHeader, PanelError, PanelSkeleton } from '../../components/admin/shared';
 import { ToggleChip } from '../../components/admin/automatons/ui';
-import { EconomyBalances, EconomyByStableType, EconomyFlows, EconomyKpis, EconomyPerCycle } from '../../components/admin/economy/EconomyBlocks';
+import { EconomyBalances, EconomyByStableType, EconomyFlows, EconomyKpis, EconomyPerCycle, EconomyRepairs } from '../../components/admin/economy/EconomyBlocks';
 import { SCOPE_LABELS, scopeNoun } from '../../utils/adminEconomyFormat';
 import { ApiError } from '../../utils/ApiError';
 import { isAbortError } from '../../utils/abort';
@@ -130,6 +131,7 @@ function EconomyOverviewPage(): React.ReactElement {
           </p>
           <EconomyKpis data={shown} />
           <EconomyFlows data={shown} />
+          <EconomyRepairs data={shown} />
           <EconomyPerCycle data={shown} />
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <EconomyBalances data={shown} />

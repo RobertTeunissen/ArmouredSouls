@@ -32,7 +32,27 @@ export interface EconomyOverview {
   perCycle: { cycle: number; earned: number; spent: number }[];
   balanceBands: { label: string; count: number; negative: boolean }[];
   byStableType: { stables: EconomyStableKind; count: number; earned: number; spent: number; net: number; heldNow: number }[];
+  repairs: EconomyRepairs;
   timestamp: string;
+}
+
+/** Repairs of one kind (or all) in the window. fullPrice − repairBayDiscount − manualDiscount = paid. */
+export interface RepairTotals {
+  repairs: number;
+  fullPrice: number;
+  repairBayDiscount: number;
+  manualDiscount: number;
+  paid: number;
+}
+
+export interface EconomyRepairs {
+  automatic: RepairTotals;
+  manual: RepairTotals;
+  total: RepairTotals;
+  /** Player stables in scope that repaired, and that used Manual Repair; null when the scope has no players. */
+  playerStables: { repairing: number; manual: number } | null;
+  /** Every stable type in the same window. Shares are one-decimal percentages. */
+  byStableType: { stables: EconomyStableKind; repairs: number; paid: number; repairBayShare: number | null; manualShare: number | null }[];
 }
 
 export const getEconomyOverview = (

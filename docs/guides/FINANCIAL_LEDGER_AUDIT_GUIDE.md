@@ -295,13 +295,11 @@ No report should substitute a battle payload, cached quote, current formula, or 
 
 The financial capture change preserves existing admin contracts while adding generic visibility for the new audit event:
 
-- `/api/admin/audit-log` continues to expose its existing filters and response shape and can query `financial_transaction` rows.
-- `/api/admin/audit-log/repairs` remains scoped to subtype-bearing `robot_repair` records and keeps `repairType`, `creditsCharged`, and manual-discount fields available.
-- `/api/admin/daily-finances/process` remains available. Its response continues to include `summary.totalCostsDeducted`, `usersProcessed`, and `timestamp`; mutation delegates to `Settlement_Service` or the endpoint is a non-mutating preview.
+- `/api/admin/audit-log`, `/api/admin/audit-log/repairs` and `/api/admin/daily-finances/process` were removed in Nov 2026 (admin redesign part 8). Recorded admin actions are on `/api/admin/actions`; repair spend with its Repair Bay and Manual Repair discounts is the Repairs block of `/api/admin/economy`, read from `financial_ledger` `repair_cost` rows (`metadata.baseQuote`, `metadata.quoteBeforeManualDiscount`, `repairType`).
 - `/api/admin/cycles/bulk` preserves `includeDailyFinances`, `settlement.finances`, `totalPassiveIncome`, `totalOperatingCosts`, `usersProcessed`, and `skipped` while delegating settlement mutation.
 - `/api/admin/economy` (replaced `/api/admin/economy/overview` in admin redesign part 5) reads credit flows from `financial_ledger` by transaction type and stable type; see ADMIN_PANEL_GUIDE.md §Economy.
 
-`CycleControlsPage`, `RepairLogPage`, `AuditLogPage`, and `EconomyOverviewPage` require no redesign. Generic financial audit rows are visible through the existing audit route; the repair route remains a repair-domain view rather than a generic ledger view.
+`CycleControlsPage` and `EconomyOverviewPage` required no redesign for the capture change. `RepairLogPage` and `AuditLogPage` were retired in Nov 2026 (admin redesign part 8): repairs are the Economy page's Repairs block, admin actions the `AdminActionsPage`.
 
 ## 11. Deployment behavior and reconciliation
 

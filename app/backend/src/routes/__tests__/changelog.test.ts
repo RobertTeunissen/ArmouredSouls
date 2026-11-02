@@ -30,6 +30,11 @@ jest.mock('../../services/changelog', () => ({
   processAndStore: mockProcessAndStore,
 }));
 
+const mockRecordAdminAction = jest.fn();
+jest.mock('../../services/admin/adminAuditLogService', () => ({
+  recordAction: (...args: unknown[]) => mockRecordAdminAction(...args),
+}));
+
 jest.mock('../../config/logger', () => ({
   __esModule: true,
   default: {
@@ -313,6 +318,7 @@ describe('Changelog Routes', () => {
       expect(res.status).toBe(200);
       expect(res.body.status).toBe('published');
       expect(res.body.publishDate).toBe(publishDate);
+      expect(mockRecordAdminAction).toHaveBeenCalledWith(ADMIN_USER_ID, 'changelog_publish', 'success', expect.objectContaining({ entryId: expect.any(Number) }));
       expect(mockChangelogService.publish).toHaveBeenCalledWith(1);
     });
   });
@@ -366,6 +372,7 @@ describe('Changelog Routes', () => {
         .send(VALID_ENTRY);
       expect(res.status).toBe(201);
       expect(mockChangelogService.create).toHaveBeenCalled();
+      expect(mockRecordAdminAction).toHaveBeenCalledWith(ADMIN_USER_ID, 'changelog_create', 'success', { entryId: 1, title: 'New Feature', status: 'draft' });
     });
 
     it('PUT /api/changelog/admin/:id updates entry', async () => {
@@ -375,6 +382,8 @@ describe('Changelog Routes', () => {
         .send({ title: 'Updated Title' });
       expect(res.status).toBe(200);
       expect(mockChangelogService.update).toHaveBeenCalledWith(1, { title: 'Updated Title' });
+      // Field names only, never the text.
+      expect(mockRecordAdminAction).toHaveBeenCalledWith(ADMIN_USER_ID, 'changelog_update', 'success', { entryId: 1, title: 'New Feature', fields: ['title'] });
     });
 
     it('DELETE /api/changelog/admin/:id deletes entry', async () => {
@@ -383,6 +392,7 @@ describe('Changelog Routes', () => {
         .set('Authorization', `Bearer ${adminToken()}`);
       expect(res.status).toBe(204);
       expect(mockChangelogService.delete).toHaveBeenCalledWith(1);
+      expect(mockRecordAdminAction).toHaveBeenCalledWith(ADMIN_USER_ID, 'changelog_delete', 'success', { entryId: 1 });
     });
   });
 

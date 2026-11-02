@@ -346,6 +346,8 @@ This table does not define identified paired-capture financial accounting source
 
 ### Backfill Capability
 
+> Removed in Nov 2026 (admin redesign part 8): nothing called this endpoint.
+
 Snapshot regeneration is a derived-projection repair only:
 
 ```
@@ -403,6 +405,8 @@ Authorization: Bearer <admin-token>
 Executes the full KotH cycle on demand (repair → battles → matchmaking).
 
 ### Admin: Backfill Snapshots
+
+> Removed in Nov 2026 (admin redesign part 8): nothing called this endpoint.
 
 ```
 POST /api/admin/snapshots/backfill

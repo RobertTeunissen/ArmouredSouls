@@ -1,6 +1,5 @@
 import express from 'express';
 import tournamentRoutes from './adminTournaments';
-import battleTriggerRoutes from './adminBattleTriggers';
 import maintenanceRoutes from './adminMaintenance';
 import analyticsRoutes from './adminAnalytics';
 import usersRoutes from './adminUsers';
@@ -19,7 +18,6 @@ router.use('/', maintenanceRoutes);
 router.use('/', analyticsRoutes);
 router.use('/', usersRoutes);
 router.use('/', moderationRoutes);
-router.use('/', battleTriggerRoutes);
 router.use('/', schedulerRoutes);
 
 export default router;

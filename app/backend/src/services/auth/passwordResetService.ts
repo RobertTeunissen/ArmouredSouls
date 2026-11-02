@@ -57,6 +57,8 @@ export interface ResetResult {
   userId: number;
   /** The target user's username. */
   username: string;
+  /** The target user's stable name (for the admin action record). */
+  stableName: string | null;
 }
 
 /**
@@ -88,7 +90,7 @@ export async function resetPassword(
     // 1. Look up the target user
     const user = await tx.user.findUnique({
       where: { id: targetUserId },
-      select: { id: true, username: true, tokenVersion: true, stableType: true },
+      select: { id: true, username: true, stableName: true, tokenVersion: true, stableType: true },
     });
 
     if (!user) {
@@ -149,6 +151,7 @@ export async function resetPassword(
     return {
       userId: user.id,
       username: user.username,
+      stableName: user.stableName,
     };
   });
 }

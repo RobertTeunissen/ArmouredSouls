@@ -2,12 +2,13 @@
 
 **Project**: Armoured Souls
 **Document Type**: Product Requirements Document (PRD)
-**Version**: v1.15
-**Last Updated**: November 1, 2026
+**Version**: v1.16
+**Last Updated**: November 2, 2026
 **Status**: ✅ Implemented
 **Owner**: Robert Teunissen
 
 **Revision History**:
+- v1.16 (Nov 2, 2026): `admin/admin-actions/` (`adminActionsService`, `adminActionCatalogue`) serves the Admin actions page; `adminAuditLogService` keeps only `recordAction` (`getEntries` removed with `GET`/`POST /api/admin/audit-log`). `adminEconomyService` gained the Repairs block (`summarizeRepairs`); `getRepairAuditLog` removed. `adminMaintenanceService` (`repairAllRobotsAdmin`, `recalculateAllRobotHP`), `backfillCycleSnapshots`, the legacy `processDailyFinances` / `processAllDailyFinances` and `routes/adminBattleTriggers.ts` removed with their unused endpoints.
 - v1.15 (Nov 1, 2026): `admin/meta/` (Meta page build sections: tuning, refinements, event entry) and `admin/achievements/` (season-scoped achievement analytics) replace `admin/adminFeatureAnalyticsService` (`getTuningAdoption`, `getRefinementAdoption`, `getAchievementAnalytics`); the admin analytics route left `routes/subscriptions.ts`.
 - v1.14 (Oct 30, 2026): `admin/analysis/` also serves the Weapons page (`weaponAnalysisService`, shared `analysisDataset`); `getWeaponAnalytics` (`GET /api/admin/weapons/analytics`) removed.
 - v1.13 (Oct 30, 2026): `admin/tournaments/` serves the redesigned Tournaments page; the admin tournament management routes were removed.
@@ -108,7 +109,7 @@ Admin panel operations — stats dashboards, cycle execution, battle viewer, HP 
 | `adminBulkCycleRunService` | `POST /api/admin/cycles/bulk`: runs bulk cycles under the scheduler lock and records them in the run history (`bulkCycles`); `startBulkCycles` runs in the background (202), `runBulkCycles` waits. 409 while one is active |
 | `battles/` (`battleListService`, `battleDetailService`, `battleOutcome`, `battlePayoutCheck`, `battleLogAccess`, `battleExportText`) | Admin Battles page: list query (never reads `battle_log`), outcome and "ended by" per mode, payout check against the ledger, combat log access, text / JSON export |
 | `analysis/` (`attributeAnalysisService`, `weaponAnalysisService`, `analysisData`, `analysisDataset`, `analysisEffects`, `comparisons`, `attributeLayers`, `analysisFeatures`, `weaponFeatures`, `weaponCatalogue`, `logisticFit`) | Admin "what wins" analyses: Attributes (`GET /api/admin/analysis/attributes`) and Weapons (`GET /api/admin/analysis/weapons`: weapons, archetypes, matchups, usage per league tier, refinements, coverage, optionally top 10% only). Reads `battle_participant_builds` (with weapon ids and the battle's tier) into paired comparisons once per window for both pages, rebuilds attribute layers, fits the cluster-robust logistic models; results cached per window and layer set / strength. Meta will reuse it |
-| `adminMaintenanceService` | HP recalculation, robot repair (admin-triggered) |
+| `admin-actions/` (`adminActionsService`, `adminActionCatalogue`) | Admin actions page (`GET /api/admin/actions`): `admin_audit_logs` newest first, by area and result, with plain titles, details, the admin's name and the page link. Add new `recordAction` operations to the catalogue |
 
 ### automaton/ (Spec #55)
 Automaton_Stables: computer-run stables that play by human rules. Public API in `index.ts`; product rules in `docs/game-systems/PRD_AUTOMATON_STABLES.md`. The module never writes `User.currency` and never references Manual_Repair; every charge goes through the domain services below and `Credit_Mutation_Service`.

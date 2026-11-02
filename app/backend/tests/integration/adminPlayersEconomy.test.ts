@@ -175,6 +175,38 @@ describe('Economy overview', () => {
     expect(season.kpis.earned - after.kpis.earned).toBeGreaterThanOrEqual(7_777);
   });
 
+  it('reads the Repairs block from the repair_cost breakdowns', async () => {
+    const before = await getEconomyOverview('players', '7', { fresh: true });
+    const repair = (userId: number, repairType: 'manual' | 'automatic', baseQuote: number, afterBay: number, paid: number) =>
+      prisma.financialLedger.create({
+        data: {
+          userId, cycleNumber: CYCLE, transactionType: 'repair_cost', amount: -paid, balanceAfter: 0, description: `${TAG} test row`,
+          metadata: { repairType, baseQuote, quoteBeforeManualDiscount: afterBay, finalAmount: -paid },
+        },
+      });
+    await repair(lowPlayer, 'manual', 1_000, 800, 400);
+    await repair(lowPlayer, 'automatic', 600, 500, 500);
+    await repair(automaton, 'automatic', 300, 300, 300);
+    // A row written before the breakdown existed: its full price is what was paid.
+    await ledger(player, CYCLE, 'repair_cost', -70, 1);
+
+    const after = await getEconomyOverview('players', '7', { fresh: true });
+    const delta = (key: 'automatic' | 'manual' | 'total', field: 'repairs' | 'fullPrice' | 'repairBayDiscount' | 'manualDiscount' | 'paid'): number =>
+      after.repairs[key][field] - before.repairs[key][field];
+
+    expect([delta('manual', 'repairs'), delta('manual', 'fullPrice'), delta('manual', 'repairBayDiscount'), delta('manual', 'manualDiscount'), delta('manual', 'paid')])
+      .toEqual([1, 1_000, 200, 400, 400]);
+    expect([delta('automatic', 'repairs'), delta('automatic', 'fullPrice'), delta('automatic', 'repairBayDiscount'), delta('automatic', 'paid')])
+      .toEqual([2, 670, 100, 570]);
+    expect(after.repairs.playerStables).not.toBeNull();
+    expect(after.repairs.playerStables!.manual).toBeGreaterThanOrEqual(1);
+
+    const automatons = after.repairs.byStableType.find((row) => row.stables === 'automatons');
+    const automatonsBefore = before.repairs.byStableType.find((row) => row.stables === 'automatons');
+    expect(automatons!.repairs - automatonsBefore!.repairs).toBe(1);
+    expect(automatons!.paid - automatonsBefore!.paid).toBe(300);
+  });
+
   it('counts balances per stable type', async () => {
     const overview = await getEconomyOverview('players', '7', { fresh: true });
     const players = overview.byStableType.find((r) => r.stables === 'players');

@@ -202,7 +202,7 @@ A `Bye_Event` is resolved before absent-side loading or simulation. It writes on
 
 ### Settlement, administration, and lifecycle
 
-`Settlement_Service` is the sole mutating settlement path for the scheduler, admin bulk cycle, and supported daily-finance trigger. For each applicable stable and cycle it writes exactly one `passive_income` pair and one `operating_costs` pair, including zero-valued components with unchanged `balanceAfter`. Existing domain `passive_income`, `operating_costs`, snapshot, and response records remain compatible while identified paired financial rows provide the accounting source. `/api/admin/audit-log` can query `financial_transaction`; `/api/admin/audit-log/repairs` remains focused on `robot_repair`; `/api/admin/economy/overview`, `/api/admin/daily-finances/process`, and `/api/admin/cycles/bulk` retain their existing response contracts while delegating internally.
+`Settlement_Service` is the sole mutating settlement path for the scheduler and the admin bulk cycle (the legacy daily-finance trigger was removed in Nov 2026). For each applicable stable and cycle it writes exactly one `passive_income` pair and one `operating_costs` pair, including zero-valued components with unchanged `balanceAfter`. Existing domain `passive_income`, `operating_costs`, snapshot, and response records remain compatible while identified paired financial rows provide the accounting source. `/api/admin/cycles/bulk` retains its response contract while delegating internally. `/api/admin/audit-log`, `/api/admin/audit-log/repairs` and `/api/admin/daily-finances/process` were removed in Nov 2026 (admin redesign part 8); admin actions are on `/api/admin/actions` and repair spend with its discounts is the Repairs block of `/api/admin/economy`.
 
 Booking Office subscribe/unsubscribe operations are free and create only their existing subscription/domain records. Account creation, reset, season rollover, and explicit balance purge are `Opening_Balance_Boundary` operations, not financial income, expense, settlement, or adjustment events.
 
@@ -542,6 +542,8 @@ Snapshot aggregation may retain combat/display metrics from `battle_complete` an
 ```
 
 **Snapshot backfill capability (not financial reconstruction):**
+
+> Removed in Nov 2026 (admin redesign part 8): nothing called this endpoint.
 ```typescript
 // Rebuild a derived snapshot from surviving AuditLog domain events.
 POST /api/admin/snapshots/backfill
