@@ -262,6 +262,25 @@ fresh
 run preflight.sh DF_PCENT=92
 check "still aborts the deploy when the disk stays at or above the hard limit" '[ "$STATUS" -ne 0 ] && grep -q "Deploy ABORTED" <<< "$OUT"'
 
+# Dump headroom: a 2 MB backup needs ~3 MB free; 1 MB is not enough. The size
+# probe uses GNU `find -printf` (the servers), which BSD find (macOS) lacks.
+if find /dev/null -maxdepth 0 -printf '' 2>/dev/null; then
+  fresh
+  head -c 2097152 /dev/zero > "${BK}/backups/daily/big.sql.zst"
+  run preflight.sh DF_AVAIL_KB=1024
+  check "aborts when there is no room for the pre-migration dump (PRD default)" \
+    '[ "$STATUS" -ne 0 ] && grep -q "not enough for the pre-migration pg_dump" <<< "$OUT"'
+else
+  echo "  - skipped: no room for the pre-migration dump (needs GNU find -printf)"
+fi
+
+# ACC makes no pre-migration dump, so it skips that check (1 Nov 2026 deploy).
+fresh
+head -c 2097152 /dev/zero > "${BK}/backups/daily/big.sql.zst"
+run preflight.sh DF_AVAIL_KB=1024 PREFLIGHT_DUMP_HEADROOM=0
+check "skips the dump headroom check with PREFLIGHT_DUMP_HEADROOM=0 and passes" \
+  '[ "$STATUS" -eq 0 ] && grep -q "Dump headroom check skipped" <<< "$OUT" && grep -q "Pre-flight check passed" <<< "$OUT"'
+
 # ── Backup lock (overlapping cron backup and deploy) ────────────────
 
 echo "backup lock"

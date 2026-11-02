@@ -33,6 +33,9 @@ set -euo pipefail
 # - CYCLE_LOGS_RETAIN: how many per-cycle CSV logs to keep (default: 30)
 # - CYCLE_LOGS_DIR:    location of cycleLogger.ts output (default: /opt/armouredsouls/backend/cycle_logs)
 # - DISK_HARD_LIMIT:   abort deploy if disk ≥ this percent post-cleanup (default: 90)
+# - PREFLIGHT_DUMP_HEADROOM: 1 (default) reserves room for the pre-migration
+#   dump (step 6); 0 skips that check. ACC sets 0: it makes no pre-migration
+#   dump (MAINTENANCE.md, "Backups"), so the check only blocked its deploys.
 # ============================================================================
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -147,6 +150,8 @@ fi
 # at exactly 89% on a 45GB disk there's ~5GB free, which a 4.5GB dump consumes
 # entirely. Estimate the incoming dump from the largest existing backup and
 # require 1.5x that much free space (dumps grow between deploys).
+# Hosts without a pre-migration dump (ACC) skip this step.
+PREFLIGHT_DUMP_HEADROOM="${PREFLIGHT_DUMP_HEADROOM:-1}"
 BACKUP_HEADROOM_FACTOR="${BACKUP_HEADROOM_FACTOR:-150}"  # percent
 # `find` exits non-zero when BACKUP_DIR does not exist, and under `set -o pipefail`
 # that failure propagates out of the whole pipeline and aborts the deploy before
@@ -160,7 +165,9 @@ LARGEST_BACKUP_KB=$(
 )
 LARGEST_BACKUP_KB="${LARGEST_BACKUP_KB:-0}"
 
-if [ "${LARGEST_BACKUP_KB}" -gt 0 ]; then
+if [ "${PREFLIGHT_DUMP_HEADROOM}" = "0" ]; then
+  log "Dump headroom check skipped (PREFLIGHT_DUMP_HEADROOM=0: this host makes no pre-migration dump)"
+elif [ "${LARGEST_BACKUP_KB}" -gt 0 ]; then
   REQUIRED_KB=$((LARGEST_BACKUP_KB * BACKUP_HEADROOM_FACTOR / 100))
   AVAIL_KB=$(df -Pk / | awk 'NR==2 {print $4}')
   REQUIRED_MB=$((REQUIRED_KB / 1024))
