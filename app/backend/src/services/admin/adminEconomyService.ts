@@ -5,7 +5,10 @@
  * Flows come from `financial_ledger` (every current-economy credit mutation;
  * the ledger is season-scoped, purged at rollover), balances from
  * `users.currency`. One season-wide dataset is read per minute and every
- * stable-type / window view is sliced from it in memory.
+ * stable-type / window view is sliced from it in memory. The ledger is summed
+ * per closed cycle and stored (`economyCycleRollups.ts`): rescanning the whole
+ * season took longer than the statement timeout on ACC. Until the cycles a
+ * window needs are stored the page answers `status: 'preparing'` with progress.
  *
  * Windows count closed cycles: the ledger's cycle in progress is
  * `cycle_metadata.total_cycles + 1` and is left out.
@@ -19,6 +22,8 @@
 
 import prisma from '../../lib/prisma';
 import { buildUserFilter } from '../../utils/buildUserFilter';
+import { getCurrentSeason } from '../season/seasonService';
+import { loadCycleTotals } from './economyCycleRollups';
 
 export const ECONOMY_STABLE_SCOPES = ['players', 'automatons', 'generated', 'all'] as const;
 export type EconomyStableScope = (typeof ECONOMY_STABLE_SCOPES)[number];
@@ -59,6 +64,7 @@ export interface EconomyRepairs {
 }
 
 export interface EconomyOverview {
+  status: 'ready';
   scope: { stables: EconomyStableScope; window: EconomyWindow; fromCycle: number; toCycle: number; cycles: number };
   kpis: {
     earned: number;
@@ -80,6 +86,18 @@ export interface EconomyOverview {
   repairs: EconomyRepairs;
   timestamp: string;
 }
+
+/** The cycles this window needs are still being summed (first visit after a deploy). */
+export interface EconomyPreparing {
+  status: 'preparing';
+  scope: EconomyOverview['scope'];
+  /** Cycles of the window and chart summed so far, and how many they need. */
+  cyclesReady: number;
+  cyclesNeeded: number;
+  timestamp: string;
+}
+
+export type EconomyResponse = EconomyOverview | EconomyPreparing;
 
 /** Ledger transaction types that bring credits in, with their labels, in display order. */
 const SOURCE_LABELS: ReadonlyArray<readonly [string, string]> = [
@@ -140,6 +158,10 @@ export interface PlayerRepairRow {
 
 interface Dataset {
   totalCycles: number;
+  /** Every cycle from here to `totalCycles` is summed; earlier ones may still be missing. */
+  completeFrom: number;
+  /** Cycles present (summed), for progress. */
+  present: Set<number>;
   balances: Record<StableKind | 'all', number[]>;
   groups: LedgerGroup[];
   repairGroups: RepairGroup[];
@@ -153,35 +175,12 @@ export function invalidateEconomyCache(): void {
   cache = null;
 }
 
-interface RepairGroupRow {
-  kind: string;
-  cycle_number: number;
-  repair_type: string;
-  repairs: number;
-  full_price: unknown;
-  after_bay: unknown;
-  paid: unknown;
-}
-
-interface PlayerRepairDbRow {
-  user_id: number;
-  cycle_number: number;
-  repair_type: string;
-}
-
-interface GroupRow {
-  kind: string;
-  transaction_type: string;
-  cycle_number: number;
-  income: bigint | number | null;
-  spend: bigint | number | null;
-}
-
 async function loadDataset(): Promise<Dataset> {
-  const [meta, users, players] = await Promise.all([
+  const [meta, users, players, season] = await Promise.all([
     prisma.cycleMetadata.findUnique({ where: { id: 1 }, select: { totalCycles: true } }),
     prisma.user.findMany({ select: { id: true, currency: true, stableType: true, isGenerated: true } }),
     prisma.user.findMany({ where: buildUserFilter('real'), select: { id: true } }),
+    getCurrentSeason(),
   ]);
   const totalCycles = meta?.totalCycles ?? 0;
   const playerIds = new Set(players.map((u) => u.id));
@@ -192,90 +191,39 @@ async function loadDataset(): Promise<Dataset> {
   };
 
   const balances: Dataset['balances'] = { players: [], automatons: [], generated: [], all: [] };
-  const ids: Record<StableKind, number[]> = { players: [], automatons: [], generated: [] };
   for (const user of users) {
     const kind = kindOf(user);
     balances.all.push(user.currency);
-    if (kind !== 'other') {
-      balances[kind].push(user.currency);
-      ids[kind].push(user.id);
-    }
+    if (kind !== 'other') balances[kind].push(user.currency);
   }
 
-  const rows = totalCycles > 0
-    ? await prisma.$queryRaw<GroupRow[]>`
-      SELECT
-        CASE
-          WHEN user_id = ANY(${ids.players}::int[]) THEN 'players'
-          WHEN user_id = ANY(${ids.automatons}::int[]) THEN 'automatons'
-          WHEN user_id = ANY(${ids.generated}::int[]) THEN 'generated'
-          ELSE 'other'
-        END AS kind,
-        transaction_type,
-        cycle_number,
-        SUM(amount) FILTER (WHERE amount > 0) AS income,
-        -SUM(amount) FILTER (WHERE amount < 0) AS spend
-      FROM financial_ledger
-      WHERE cycle_number BETWEEN 1 AND ${totalCycles}
-      GROUP BY 1, 2, 3`
-    : [];
-  const num = (value: unknown): number => (value === null || value === undefined ? 0 : Number(value));
-  const repairTypeOf = (raw: string): RepairKind => (raw === 'manual' ? 'manual' : 'automatic');
-  // Rows written before the repair breakdown existed have no quotes: their full price is what was paid.
-  const [repairRows, playerRepairRows] = totalCycles > 0
-    ? await Promise.all([
-      prisma.$queryRaw<RepairGroupRow[]>`
-        SELECT
-          CASE
-            WHEN user_id = ANY(${ids.players}::int[]) THEN 'players'
-            WHEN user_id = ANY(${ids.automatons}::int[]) THEN 'automatons'
-            WHEN user_id = ANY(${ids.generated}::int[]) THEN 'generated'
-            ELSE 'other'
-          END AS kind,
-          cycle_number,
-          COALESCE(metadata->>'repairType', 'automatic') AS repair_type,
-          COUNT(*)::int AS repairs,
-          SUM(COALESCE((metadata->>'baseQuote')::numeric, -amount)) AS full_price,
-          SUM(COALESCE((metadata->>'quoteBeforeManualDiscount')::numeric, -amount)) AS after_bay,
-          -SUM(amount) AS paid
-        FROM financial_ledger
-        WHERE transaction_type = 'repair_cost' AND cycle_number BETWEEN 1 AND ${totalCycles}
-        GROUP BY 1, 2, 3`,
-      prisma.$queryRaw<PlayerRepairDbRow[]>`
-        SELECT user_id, cycle_number, COALESCE(metadata->>'repairType', 'automatic') AS repair_type
-        FROM financial_ledger
-        WHERE transaction_type = 'repair_cost' AND cycle_number BETWEEN 1 AND ${totalCycles}
-          AND user_id = ANY(${ids.players}::int[])
-        GROUP BY 1, 2, 3`,
-    ])
-    : [[], []];
-  return {
-    totalCycles,
-    balances,
-    repairGroups: repairRows.map((row) => ({
-      kind: row.kind as RepairGroup['kind'],
-      cycle: row.cycle_number,
-      repairType: repairTypeOf(row.repair_type),
-      repairs: num(row.repairs),
-      fullPrice: num(row.full_price),
-      afterRepairBay: num(row.after_bay),
-      paid: num(row.paid),
-    })),
-    playerRepairs: playerRepairRows.map((row) => ({ userId: row.user_id, cycle: row.cycle_number, repairType: repairTypeOf(row.repair_type) })),
-    groups: rows.map((row) => ({
-      kind: row.kind as LedgerGroup['kind'],
-      transactionType: row.transaction_type,
-      cycle: row.cycle_number,
-      income: num(row.income),
-      spend: num(row.spend),
-    })),
-  };
+  const { cycles, completeFrom } = await loadCycleTotals(season.seasonNumber, totalCycles, [...playerIds]);
+  const groups: LedgerGroup[] = [];
+  const repairGroups: RepairGroup[] = [];
+  const playerRepairs: PlayerRepairRow[] = [];
+  for (const { cycle, flows, repairs } of cycles) {
+    for (const flow of flows) groups.push({ kind: flow.kind, transactionType: flow.transactionType, cycle, income: flow.income, spend: flow.spend });
+    for (const repair of repairs) {
+      repairGroups.push({
+        kind: repair.kind,
+        cycle,
+        repairType: repair.repairType,
+        repairs: repair.repairs,
+        fullPrice: repair.fullPrice,
+        afterRepairBay: repair.afterRepairBay,
+        paid: repair.paid,
+      });
+      for (const userId of repair.stableIds) playerRepairs.push({ userId, cycle, repairType: repair.repairType });
+    }
+  }
+  return { totalCycles, completeFrom, present: new Set(cycles.map((c) => c.cycle)), balances, groups, repairGroups, playerRepairs };
 }
 
 async function dataset(fresh: boolean): Promise<Dataset> {
   if (!fresh && cache && Date.now() - cache.at < CACHE_TTL_MS) return cache.data;
   const data = await loadDataset();
-  cache = { at: Date.now(), data };
+  // An incomplete dataset (cycles still being summed) is not cached, so the next request picks up progress.
+  cache = data.completeFrom <= 1 ? { at: Date.now(), data } : null;
   return data;
 }
 
@@ -375,11 +323,21 @@ export async function getEconomyOverview(
   stables: EconomyStableScope,
   window: EconomyWindow,
   options: { fresh?: boolean } = {},
-): Promise<EconomyOverview> {
+): Promise<EconomyResponse> {
   const data = await dataset(options.fresh === true);
   const { totalCycles } = data;
   const fromCycle = windowStart(window, totalCycles);
   const cycles = totalCycles >= fromCycle && totalCycles > 0 ? totalCycles - fromCycle + 1 : 0;
+  const chartFrom = Math.max(1, Math.min(fromCycle, totalCycles - ECONOMY_CHART_MIN_CYCLES + 1));
+  const scope = { stables, window, fromCycle, toCycle: totalCycles, cycles };
+
+  const neededFrom = Math.min(fromCycle, chartFrom);
+  if (totalCycles > 0 && data.completeFrom > neededFrom) {
+    let cyclesReady = 0;
+    for (let cycle = neededFrom; cycle <= totalCycles; cycle += 1) if (data.present.has(cycle)) cyclesReady += 1;
+    return { status: 'preparing', scope, cyclesReady, cyclesNeeded: totalCycles - neededFrom + 1, timestamp: new Date().toISOString() };
+  }
+
   const inScope = (g: LedgerGroup): boolean => stables === 'all' || g.kind === stables;
   const inWindow = (g: LedgerGroup): boolean => g.cycle >= fromCycle && g.cycle <= totalCycles;
   const scoped = data.groups.filter((g) => inScope(g) && inWindow(g));
@@ -396,7 +354,6 @@ export async function getEconomyOverview(
   const otherSpend = spent - sum(sinks.map((s) => s.amount));
   if (otherSpend > 0) sinks.push({ key: 'other', label: 'Other', amount: otherSpend });
 
-  const chartFrom = Math.max(1, Math.min(fromCycle, totalCycles - ECONOMY_CHART_MIN_CYCLES + 1));
   const perCycle: EconomyOverview['perCycle'] = [];
   for (let cycle = chartFrom; cycle <= totalCycles; cycle += 1) {
     const rows = data.groups.filter((g) => inScope(g) && g.cycle === cycle);
@@ -408,7 +365,8 @@ export async function getEconomyOverview(
   const battleIncome = incomeOf(['battle_income']);
 
   return {
-    scope: { stables, window, fromCycle, toCycle: totalCycles, cycles },
+    status: 'ready',
+    scope,
     kpis: {
       earned,
       spent,

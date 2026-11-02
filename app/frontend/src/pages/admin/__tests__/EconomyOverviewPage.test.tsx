@@ -8,7 +8,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
-import EconomyOverviewPage from '../EconomyOverviewPage';
+import EconomyOverviewPage, { PREPARING_RETRY_MS } from '../EconomyOverviewPage';
 import type { EconomyOverview, EconomyStableScope, EconomyWindow } from '../../../utils/adminEconomyApi';
 
 const mockGet = vi.fn();
@@ -19,6 +19,7 @@ vi.mock('../../../utils/apiClient', () => ({
 function overview(stables: EconomyStableScope, window: EconomyWindow): EconomyOverview {
   const players = stables === 'players';
   return {
+    status: 'ready',
     scope: { stables, window, fromCycle: window === 'season' ? 1 : 82, toCycle: 88, cycles: window === 'season' ? 88 : 7 },
     kpis: {
       earned: players ? 315_000_000 : 371_000_000,
@@ -171,6 +172,32 @@ describe('EconomyOverviewPage', () => {
     await screen.findByText('₡315M', { selector: 'dd' });
     await user.click(screen.getByRole('button', { name: /Refresh/ }));
     await waitFor(() => expect(mockGet).toHaveBeenLastCalledWith('/api/admin/economy', expect.objectContaining({ params: { stables: 'players', window: '7', fresh: 'true' } })));
+  });
+
+  it('shows progress while the ledger cycles are summed, then the page', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      mockGet.mockResolvedValueOnce({
+        data: {
+          status: 'preparing',
+          scope: { stables: 'players', window: '7', fromCycle: 82, toCycle: 88, cycles: 7 },
+          cyclesReady: 6,
+          cyclesNeeded: 15,
+          timestamp: '2026-10-30T12:00:00.000Z',
+        },
+      });
+      renderPage();
+      const status = await screen.findByText('Preparing the economy figures');
+      expect(status.closest('[role="status"]')).toHaveTextContent('6 of 15 cycles this view needs are ready');
+      expect(screen.queryByRole('region', { name: 'Repairs' })).toBeNull();
+      expect(mockGet).toHaveBeenCalledTimes(1);
+      await vi.advanceTimersByTimeAsync(PREPARING_RETRY_MS);
+      expect(await screen.findByText('₡315M', { selector: 'dd' })).toBeInTheDocument();
+      expect(mockGet).toHaveBeenCalledTimes(2);
+      expect(screen.queryByText('Preparing the economy figures')).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('shows an error with Retry', async () => {

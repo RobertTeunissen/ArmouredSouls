@@ -1002,6 +1002,23 @@ model AdminKpiSnapshot {
   @@map("admin_kpi_snapshots")
 }
 
+// The admin Economy page's totals of one closed ledger cycle (flows per stable
+// type and transaction type, repairs with their discounts). A closed cycle never
+// changes, so it is summed once instead of rescanning the whole season's
+// `financial_ledger` (36–42 s on ACC, past the 30 s statement timeout). JSON
+// shapes: `src/types/economyRollupTypes.ts`. Rows of earlier seasons are
+// deleted when the current season's rows are written.
+model EconomyCycleRollup {
+  seasonNumber Int      @map("season_number")
+  cycleNumber  Int      @map("cycle_number")
+  flows        Json
+  repairs      Json
+  computedAt   DateTime @default(now()) @map("computed_at")
+
+  @@id([seasonNumber, cycleNumber])
+  @@map("economy_cycle_rollups")
+}
+
 // One row per backend start, with a heartbeat while it runs. The gap between a
 // process's last heartbeat and the next start is downtime (usually a deploy),
 // which is how Cycle Controls explains a missed or interrupted run. Never

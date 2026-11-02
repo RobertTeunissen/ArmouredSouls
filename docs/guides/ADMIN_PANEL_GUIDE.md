@@ -217,7 +217,9 @@ Answers: where credits come from, where they go, and where they pile up. Toolbar
 
 Players means the dashboard's Real players filter; Automatons and generated stables by stable type. The ledger holds the current season only. Facility adoption is on Meta, low balances on Players. Cached 60 s; Refresh bypasses the cache.
 
-**API:** `GET /api/admin/economy?stables=players|automatons|generated|all&window=7|14|30|season&fresh=true`
+Each closed ledger cycle is summed once into `economy_cycle_rollups` (one cycle takes 1–2 s on ACC; the whole season took 36–42 s and hit the 30 s statement timeout); the newest closed cycle is summed on every load. After a deploy the missing cycles are summed in the background, newest first (about 2 s each, ~3 min for a full season on ACC). Until the cycles a view needs (its window and the 15-cycle chart) are ready, the page shows "Preparing the economy figures" with progress and asks again every 5 s; the 7-cycle view is ready after about 30 s. A closed cycle's stored totals never change; if ledger rows of a closed cycle are ever edited by hand, delete the table's rows to have them summed again.
+
+**API:** `GET /api/admin/economy?stables=players|automatons|generated|all&window=7|14|30|season&fresh=true` → `{ status: 'ready', … }`, or `{ status: 'preparing', scope, cyclesReady, cyclesNeeded, timestamp }` while cycles are summed.
 
 ### Battles (`/admin/battles`)
 

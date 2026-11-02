@@ -15,6 +15,7 @@ export interface EconomyFlow {
 }
 
 export interface EconomyOverview {
+  status: 'ready';
   scope: { stables: EconomyStableScope; window: EconomyWindow; fromCycle: number; toCycle: number; cycles: number };
   kpis: {
     earned: number;
@@ -55,12 +56,23 @@ export interface EconomyRepairs {
   byStableType: { stables: EconomyStableKind; repairs: number; paid: number; repairBayShare: number | null; manualShare: number | null }[];
 }
 
+/** First visit after a deploy: the ledger cycles this window needs are still being summed. */
+export interface EconomyPreparing {
+  status: 'preparing';
+  scope: EconomyOverview['scope'];
+  cyclesReady: number;
+  cyclesNeeded: number;
+  timestamp: string;
+}
+
+export type EconomyResponse = EconomyOverview | EconomyPreparing;
+
 export const getEconomyOverview = (
   stables: EconomyStableScope,
   window: EconomyWindow,
   options: { fresh?: boolean; signal?: AbortSignal } = {},
-): Promise<EconomyOverview> =>
-  api.get<EconomyOverview>('/api/admin/economy', {
+): Promise<EconomyResponse> =>
+  api.get<EconomyResponse>('/api/admin/economy', {
     params: { stables, window, ...(options.fresh ? { fresh: 'true' } : {}) },
     signal: options.signal,
   });

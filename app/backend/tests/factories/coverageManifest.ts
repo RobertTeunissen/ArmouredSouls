@@ -1079,7 +1079,7 @@ export const COVERAGE_MANIFEST: CoverageManifest = {
       route: '/api/admin/economy',
       currentSource: { file: 'app/backend/src/routes/adminAnalytics.ts', symbol: 'GET /economy' },
       purpose: 'ledger-based credit flows and balances per stable type (Economy page)',
-      preserves: ['stables and window query', 'sources and sinks from financial_ledger', 'balance bands', 'repairs block from repair_cost breakdowns (replaced the Repair Log)'],
+      preserves: ['stables and window query', 'sources and sinks from financial_ledger', 'balance bands', 'repairs block from repair_cost breakdowns (replaced the Repair Log)', 'closed cycles summed once into economy_cycle_rollups'],
       targetTestTiers: ['unit', 'integration'],
     },
     {
