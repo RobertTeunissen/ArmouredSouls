@@ -1003,8 +1003,8 @@ Pursuit target (#520 movement fix, movementAI.ts):
     intent target = target.position + target.velocity × tick (0.1 s)   // projected end-of-tick position
     → the robot moves at its full effective speed; it does not stop at the 1-unit standoff point
   Else (within reach, or a melee mirror): standoff point RANGE_BAND_MIDPOINTS[range] from the target (unchanged)
-  Deviation, the 1.5 s Combat Algorithms prediction (off within 4 units and in melee mirrors, #467),
-  avoidance/flank bias and stance bias then apply as before.
+  Deviation, avoidance/flank bias and stance bias then apply as before. The 1.5 s Combat Algorithms
+  prediction never applies to a melee-role robot (see Prediction below), so pursuit is not led further.
   Gap change per second = kiterSpeed − meleeSpeed (balanced stance; K = kiter Servo, M = melee Servo):
     pursuit 1.15× vs kiting 1.10×: 0.22·K − 0.23·M − 0.35
       equal Servo S: the chaser closes 0.35 + 0.01·S u/s (0.45 at 10, 0.60 at 25, 0.85 at 50)
@@ -1088,7 +1088,23 @@ Ranged disengage:
   Melee hits taken during the delay, the burst or the cooldown are ignored → at most one escape per engagement.
 ```
 
-Prediction (#351/#467) and the mutual-melee final approach are unchanged.
+The mutual-melee final approach is unchanged.
+
+Prediction (#351, `calculateMovementIntent` in movementAI.ts):
+
+```
+Ranged-role robot:
+  predictedPos = target.position + target.velocity × 1.5 s
+  intent target = lerp(intent target, standoff point from predictedPos, (combatAlgorithms − 1) / 49)
+Melee-role robot: no prediction at any distance
+  • final approach / within reach: leading pulls it around the opponent, out of the ≤ 2 radius
+  • melee mirror (#467): both robots lead each other's tangential velocity and circle at ~8 units
+  • pursuit of a ranged target (Nov 2026, battle 582593): pursuit already aims at the end-of-tick
+    position; 1.5 s of one tick's velocity (~20 units at 14 u/s) overshoots the gap. Against a wall
+    kiter that switches between kiting and closing in at its midpoint, the aim point lay behind the
+    chaser on every other tick: both robots reversed every tick, the gap flipped ~5.8 ↔ ~9.6 and a
+    CA 45 melee robot in melee commit never got within reach in 53 s.
+```
 
 ### Wall_Slide
 

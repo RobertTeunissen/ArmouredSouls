@@ -562,23 +562,58 @@ describe('movementAI property tests', () => {
       );
     });
 
-    it('should still lead a moving ranged opponent', () => {
-      const robot = chaser();
-      const rangedOpponent = makeState({
+    /**
+     * Battle 582593: pursuit of a ranged opponent aims at its end-of-tick position only.
+     * The 1.5 s Combat Algorithms lead used to be blended on top; with a kiter that had
+     * just stepped towards the chaser it put the aim point behind the chaser, which then
+     * ran away from its target on every other tick.
+     */
+    describe('melee pursuit of a ranged opponent (battle 582593)', () => {
+      const rangedOpponent = (position: Position, velocity: Position) => makeState({
         robot: {
           loadoutType: 'single',
           stance: 'balanced',
-          mainWeapon: { weapon: makeWeapon({ weaponType: 'ballistic', rangeBand: 'mid' }) } as any,
+          mainWeapon: { weapon: makeWeapon({ weaponType: 'energy', rangeBand: 'mid' }) } as any,
           offhandWeapon: null,
         } as any,
-        position: { x: 0, y: 8 },
-        velocity: { x: 12, y: 0 },
+        position,
+        velocity,
       });
 
-      const intent = calculateMovementIntent(robot, [rangedOpponent], makeArena(16), SIMULATION_TICK);
+      it('should aim at the end-of-tick position, not a 1.5 s lead', () => {
+        const robot = chaser();
+        const opponent = rangedOpponent({ x: 0, y: 8 }, { x: 12, y: 0 });
 
-      expect(intent.preferredRange).toBe('melee');
-      expect(headingErrorDeg(robot.position, intent.targetPosition, rangedOpponent.position)).toBeGreaterThan(20);
+        const intent = calculateMovementIntent(robot, [opponent], makeArena(16), SIMULATION_TICK);
+        const endOfTick = { x: 12 * SIMULATION_TICK, y: 8 };
+
+        expect(intent.preferredRange).toBe('melee');
+        expect(headingErrorDeg(robot.position, intent.targetPosition, endOfTick)).toBeLessThan(2);
+      });
+
+      it('should never aim away from a ranged opponent outside reach, whatever its velocity', () => {
+        fc.assert(
+          fc.property(
+            fc.double({ min: 4.5, max: 14, noNaN: true, noDefaultInfinity: true }),
+            fc.double({ min: 0, max: 25, noNaN: true, noDefaultInfinity: true }),
+            fc.double({ min: -Math.PI, max: Math.PI, noNaN: true, noDefaultInfinity: true }),
+            (distance, speed, heading) => {
+              const robot = chaser();
+              const opponent = rangedOpponent(
+                { x: 0, y: distance },
+                { x: speed * Math.cos(heading), y: speed * Math.sin(heading) },
+              );
+
+              const intent = calculateMovementIntent(robot, [opponent], makeArena(16), SIMULATION_TICK);
+
+              // The opponent moves at most 2.5 units per tick, so the end-of-tick aim stays
+              // within ~34° of the opponent's current position at 4.5 units.
+              expect(headingErrorDeg(robot.position, intent.targetPosition, opponent.position)).toBeLessThan(40);
+            },
+          ),
+          { numRuns: 300 },
+        );
+      });
     });
   });
 });

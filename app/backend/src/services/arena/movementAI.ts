@@ -330,8 +330,9 @@ export function calculateMovementIntent(
   // within one step whenever the gap is small, so the pursuer used to stop
   // short every tick and a kiter faster than 1 unit per tick stayed out of
   // reach. Aiming at the projected position closes at full effective speed;
-  // the gap then shrinks by exactly the speed difference. Within reach the
-  // standoff applies again. Melee mirrors keep the standoff (#467).
+  // the gap then shrinks by exactly the speed difference (no Combat Algorithms
+  // prediction on top, see below). Within reach the standoff applies again.
+  // Melee mirrors keep the standoff (#467).
   const isPursuing = isMeleeOutOfRange && !targetPrefersMelee;
   let targetPos = isPursuing
     ? {
@@ -384,20 +385,21 @@ export function calculateMovementIntent(
   };
 
   // Movement prediction — linear weight from 0 at CA=1 to 1.0 at CA=50.
-  // Do not predict a melee target during the final approach: prediction follows
-  // tangential velocity and can pull a melee robot around the opponent instead
-  // of into the ≤2-unit attack radius, recreating the orbital deadlock this
-  // module's final-approach taper is intended to prevent.
-  // This also applies while already in melee range: prediction must not move a
-  // robot back out of the radius it can currently attack from.
-  // In a melee mirror match prediction is off at every distance (#467): each
-  // robot leads the other's tangential velocity, so two melee robots can circle
-  // at ~8 units for the whole battle and draw on the time limit without ever
-  // entering the final approach. Against a ranged target prediction stays on,
-  // because there it helps cut off a retreating opponent.
-  const predictionWeight = isMelee && (currentDistToTarget <= 4 || targetPrefersMelee)
-    ? 0
-    : (ca - 1) / 49;
+  // Melee-role robots never predict:
+  // - Final approach and within reach: prediction follows tangential velocity and
+  //   can pull a melee robot around the opponent instead of into the ≤2-unit
+  //   attack radius (orbital deadlock), or back out of the radius it attacks from.
+  // - Melee mirror (#467): each robot leads the other's tangential velocity, so two
+  //   melee robots can circle at ~8 units for the whole battle.
+  // - Pursuit of a ranged target (battle 582593): pursuit already aims at the
+  //   target's end-of-tick position. Leading it by 1.5 s of one tick's velocity
+  //   (~20 units at speed 14) overshoots the gap, so when the kiter had just
+  //   stepped towards the chaser the aim point lay behind the chaser. A wall
+  //   kiter that alternates between kiting and closing in at its midpoint then
+  //   locks both robots into a two-tick back-and-forth that the melee robot never
+  //   escapes, however fast it is.
+  // Ranged robots keep the prediction.
+  const predictionWeight = isMelee ? 0 : (ca - 1) / 49;
   if (predictionWeight > 0) {
     const predictedPos: Position = {
       x: target.position.x + target.velocity.x * PREDICTION_LOOK_AHEAD,
