@@ -8,6 +8,7 @@
  * rebalances right after its battles, so a snapshot alone always looks empty.
  */
 import { api } from './api';
+import type { StableScope } from './adminStableScope';
 
 export type LeagueHealthMode = 'league_1v1' | 'league_2v2' | 'league_3v3' | 'tag_team' | 'koth' | 'grand_melee';
 export type LeagueHealthEntityType = 'robot' | 'team';
@@ -129,6 +130,7 @@ export function getLeagueHealth(signal?: AbortSignal): Promise<LeagueHealthOverv
 /*  This season (GET /api/admin/league-health/season)                  */
 /* ------------------------------------------------------------------ */
 
+/** The backend's split of league history by `users.stable_type` (echoed in the response). */
 export type LeagueSeasonStableFilter = 'all' | 'human' | 'automaton' | 'generated';
 
 export interface SeasonCycleMoves {
@@ -167,8 +169,8 @@ export interface LeagueSeasonOverview {
 
 export function getLeagueSeason(
   mode: LeagueHealthMode,
-  stable: LeagueSeasonStableFilter,
+  stables: StableScope,
   signal?: AbortSignal,
 ): Promise<LeagueSeasonOverview> {
-  return api.get<LeagueSeasonOverview>('/api/admin/league-health/season', { params: { mode, stable }, signal });
+  return api.get<LeagueSeasonOverview>('/api/admin/league-health/season', { params: { mode, stables }, signal });
 }

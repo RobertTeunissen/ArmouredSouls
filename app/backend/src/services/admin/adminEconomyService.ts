@@ -5,16 +5,25 @@
  * Flows come from `financial_ledger` (every current-economy credit mutation;
  * the ledger is season-scoped, purged at rollover), balances from
  * `users.currency`. One season-wide dataset is read per minute and every
- * stable-type / window view is sliced from it in memory.
+ * stable-type / window view is sliced from it in memory. The ledger is summed
+ * per closed cycle and stored (`economyCycleRollups.ts`): rescanning the whole
+ * season took longer than the statement timeout on ACC. Until the cycles a
+ * window needs are stored the page answers `status: 'preparing'` with progress.
  *
  * Windows count closed cycles: the ledger's cycle in progress is
  * `cycle_metadata.total_cycles + 1` and is left out.
+ *
+ * The Repairs block (it replaced the Repair Log page) reads the `repair_cost`
+ * rows' breakdown: `baseQuote` is the full price, `quoteBeforeManualDiscount`
+ * the price after the Repair Bay discount, and the amount what was paid.
  *
  * @module services/admin/adminEconomyService
  */
 
 import prisma from '../../lib/prisma';
 import { buildUserFilter } from '../../utils/buildUserFilter';
+import { getCurrentSeason } from '../season/seasonService';
+import { loadCycleTotals } from './economyCycleRollups';
 
 export const ECONOMY_STABLE_SCOPES = ['players', 'automatons', 'generated', 'all'] as const;
 export type EconomyStableScope = (typeof ECONOMY_STABLE_SCOPES)[number];
@@ -34,7 +43,28 @@ export interface EconomyFlow {
   amount: number;
 }
 
+/** Repairs of one kind (or all) in the window. full − repairBayDiscount − manualDiscount = paid. */
+export interface RepairTotals {
+  repairs: number;
+  /** The shared repair formula's quote before any discount. */
+  fullPrice: number;
+  repairBayDiscount: number;
+  manualDiscount: number;
+  paid: number;
+}
+
+export interface EconomyRepairs {
+  automatic: RepairTotals;
+  manual: RepairTotals;
+  total: RepairTotals;
+  /** Player stables in scope that repaired, and that used Manual Repair; null when the scope has no players. */
+  playerStables: { repairing: number; manual: number } | null;
+  /** Every stable type in the same window, whatever the scope. Shares are one-decimal percentages. */
+  byStableType: { stables: StableKind; repairs: number; paid: number; repairBayShare: number | null; manualShare: number | null }[];
+}
+
 export interface EconomyOverview {
+  status: 'ready';
   scope: { stables: EconomyStableScope; window: EconomyWindow; fromCycle: number; toCycle: number; cycles: number };
   kpis: {
     earned: number;
@@ -53,8 +83,21 @@ export interface EconomyOverview {
   perCycle: { cycle: number; earned: number; spent: number }[];
   balanceBands: { label: string; count: number; negative: boolean }[];
   byStableType: { stables: StableKind; count: number; earned: number; spent: number; net: number; heldNow: number }[];
+  repairs: EconomyRepairs;
   timestamp: string;
 }
+
+/** The cycles this window needs are still being summed (first visit after a deploy). */
+export interface EconomyPreparing {
+  status: 'preparing';
+  scope: EconomyOverview['scope'];
+  /** Cycles of the window and chart summed so far, and how many they need. */
+  cyclesReady: number;
+  cyclesNeeded: number;
+  timestamp: string;
+}
+
+export type EconomyResponse = EconomyOverview | EconomyPreparing;
 
 /** Ledger transaction types that bring credits in, with their labels, in display order. */
 const SOURCE_LABELS: ReadonlyArray<readonly [string, string]> = [
@@ -94,10 +137,35 @@ interface LedgerGroup {
   spend: number;
 }
 
+export type RepairKind = 'automatic' | 'manual';
+
+export interface RepairGroup {
+  kind: StableKind | 'other';
+  cycle: number;
+  repairType: RepairKind;
+  repairs: number;
+  fullPrice: number;
+  afterRepairBay: number;
+  paid: number;
+}
+
+/** One player stable that repaired in a cycle, by repair type. */
+export interface PlayerRepairRow {
+  userId: number;
+  cycle: number;
+  repairType: RepairKind;
+}
+
 interface Dataset {
   totalCycles: number;
+  /** Every cycle from here to `totalCycles` is summed; earlier ones may still be missing. */
+  completeFrom: number;
+  /** Cycles present (summed), for progress. */
+  present: Set<number>;
   balances: Record<StableKind | 'all', number[]>;
   groups: LedgerGroup[];
+  repairGroups: RepairGroup[];
+  playerRepairs: PlayerRepairRow[];
 }
 
 let cache: { at: number; data: Dataset } | null = null;
@@ -107,19 +175,12 @@ export function invalidateEconomyCache(): void {
   cache = null;
 }
 
-interface GroupRow {
-  kind: string;
-  transaction_type: string;
-  cycle_number: number;
-  income: bigint | number | null;
-  spend: bigint | number | null;
-}
-
 async function loadDataset(): Promise<Dataset> {
-  const [meta, users, players] = await Promise.all([
+  const [meta, users, players, season] = await Promise.all([
     prisma.cycleMetadata.findUnique({ where: { id: 1 }, select: { totalCycles: true } }),
     prisma.user.findMany({ select: { id: true, currency: true, stableType: true, isGenerated: true } }),
     prisma.user.findMany({ where: buildUserFilter('real'), select: { id: true } }),
+    getCurrentSeason(),
   ]);
   const totalCycles = meta?.totalCycles ?? 0;
   const playerIds = new Set(players.map((u) => u.id));
@@ -130,51 +191,39 @@ async function loadDataset(): Promise<Dataset> {
   };
 
   const balances: Dataset['balances'] = { players: [], automatons: [], generated: [], all: [] };
-  const ids: Record<StableKind, number[]> = { players: [], automatons: [], generated: [] };
   for (const user of users) {
     const kind = kindOf(user);
     balances.all.push(user.currency);
-    if (kind !== 'other') {
-      balances[kind].push(user.currency);
-      ids[kind].push(user.id);
-    }
+    if (kind !== 'other') balances[kind].push(user.currency);
   }
 
-  const rows = totalCycles > 0
-    ? await prisma.$queryRaw<GroupRow[]>`
-      SELECT
-        CASE
-          WHEN user_id = ANY(${ids.players}::int[]) THEN 'players'
-          WHEN user_id = ANY(${ids.automatons}::int[]) THEN 'automatons'
-          WHEN user_id = ANY(${ids.generated}::int[]) THEN 'generated'
-          ELSE 'other'
-        END AS kind,
-        transaction_type,
-        cycle_number,
-        SUM(amount) FILTER (WHERE amount > 0) AS income,
-        -SUM(amount) FILTER (WHERE amount < 0) AS spend
-      FROM financial_ledger
-      WHERE cycle_number BETWEEN 1 AND ${totalCycles}
-      GROUP BY 1, 2, 3`
-    : [];
-  const num = (value: bigint | number | null): number => (value === null ? 0 : Number(value));
-  return {
-    totalCycles,
-    balances,
-    groups: rows.map((row) => ({
-      kind: row.kind as LedgerGroup['kind'],
-      transactionType: row.transaction_type,
-      cycle: row.cycle_number,
-      income: num(row.income),
-      spend: num(row.spend),
-    })),
-  };
+  const { cycles, completeFrom } = await loadCycleTotals(season.seasonNumber, totalCycles, [...playerIds]);
+  const groups: LedgerGroup[] = [];
+  const repairGroups: RepairGroup[] = [];
+  const playerRepairs: PlayerRepairRow[] = [];
+  for (const { cycle, flows, repairs } of cycles) {
+    for (const flow of flows) groups.push({ kind: flow.kind, transactionType: flow.transactionType, cycle, income: flow.income, spend: flow.spend });
+    for (const repair of repairs) {
+      repairGroups.push({
+        kind: repair.kind,
+        cycle,
+        repairType: repair.repairType,
+        repairs: repair.repairs,
+        fullPrice: repair.fullPrice,
+        afterRepairBay: repair.afterRepairBay,
+        paid: repair.paid,
+      });
+      for (const userId of repair.stableIds) playerRepairs.push({ userId, cycle, repairType: repair.repairType });
+    }
+  }
+  return { totalCycles, completeFrom, present: new Set(cycles.map((c) => c.cycle)), balances, groups, repairGroups, playerRepairs };
 }
 
 async function dataset(fresh: boolean): Promise<Dataset> {
   if (!fresh && cache && Date.now() - cache.at < CACHE_TTL_MS) return cache.data;
   const data = await loadDataset();
-  cache = { at: Date.now(), data };
+  // An incomplete dataset (cycles still being summed) is not cached, so the next request picks up progress.
+  cache = data.completeFrom <= 1 ? { at: Date.now(), data } : null;
   return data;
 }
 
@@ -197,6 +246,72 @@ export function balanceBands(values: readonly number[]): EconomyOverview['balanc
 const sum = (values: readonly number[]): number => values.reduce((total, v) => total + v, 0);
 const percentOneDecimal = (part: number, whole: number): number | null => (whole > 0 ? Math.round((part / whole) * 1000) / 10 : null);
 
+const emptyRepairTotals = (): RepairTotals => ({ repairs: 0, fullPrice: 0, repairBayDiscount: 0, manualDiscount: 0, paid: 0 });
+
+function addRepairs(totals: RepairTotals, group: RepairGroup): void {
+  totals.repairs += group.repairs;
+  totals.fullPrice += group.fullPrice;
+  totals.paid += group.paid;
+  if (group.repairType === 'manual') {
+    totals.repairBayDiscount += group.fullPrice - group.afterRepairBay;
+    totals.manualDiscount += group.afterRepairBay - group.paid;
+  } else {
+    // Automatic repairs have no manual step: whatever the full price exceeds the charge by is the Repair Bay.
+    totals.repairBayDiscount += group.fullPrice - group.paid;
+  }
+}
+
+/**
+ * The Repairs block for one scope and window (pure, exported for tests):
+ * totals per repair type, how many player stables repaired and used Manual
+ * Repair, and every stable type side by side.
+ */
+export function summarizeRepairs(
+  groups: readonly RepairGroup[],
+  playerRepairs: readonly PlayerRepairRow[],
+  stables: EconomyStableScope,
+  fromCycle: number,
+  toCycle: number,
+): EconomyRepairs {
+  const inWindow = (cycle: number): boolean => cycle >= fromCycle && cycle <= toCycle;
+  const windowed = groups.filter((g) => inWindow(g.cycle));
+  const automatic = emptyRepairTotals();
+  const manual = emptyRepairTotals();
+  const total = emptyRepairTotals();
+  for (const group of windowed) {
+    if (stables !== 'all' && group.kind !== stables) continue;
+    addRepairs(group.repairType === 'manual' ? manual : automatic, group);
+    addRepairs(total, group);
+  }
+
+  const players = playerRepairs.filter((row) => inWindow(row.cycle));
+  const playerStables = stables === 'players' || stables === 'all'
+    ? {
+      repairing: new Set(players.map((row) => row.userId)).size,
+      manual: new Set(players.filter((row) => row.repairType === 'manual').map((row) => row.userId)).size,
+    }
+    : null;
+
+  const byStableType = STABLE_KINDS.map((kind) => {
+    const kindTotals = emptyRepairTotals();
+    let manualRepairs = 0;
+    for (const group of windowed) {
+      if (group.kind !== kind) continue;
+      addRepairs(kindTotals, group);
+      if (group.repairType === 'manual') manualRepairs += group.repairs;
+    }
+    return {
+      stables: kind,
+      repairs: kindTotals.repairs,
+      paid: kindTotals.paid,
+      repairBayShare: percentOneDecimal(kindTotals.repairBayDiscount, kindTotals.fullPrice),
+      manualShare: percentOneDecimal(manualRepairs, kindTotals.repairs),
+    };
+  });
+
+  return { automatic, manual, total, playerStables, byStableType };
+}
+
 /** First closed cycle of a window that ends at `totalCycles`. */
 export function windowStart(window: EconomyWindow, totalCycles: number): number {
   if (window === 'season') return Math.min(1, totalCycles);
@@ -208,11 +323,21 @@ export async function getEconomyOverview(
   stables: EconomyStableScope,
   window: EconomyWindow,
   options: { fresh?: boolean } = {},
-): Promise<EconomyOverview> {
+): Promise<EconomyResponse> {
   const data = await dataset(options.fresh === true);
   const { totalCycles } = data;
   const fromCycle = windowStart(window, totalCycles);
   const cycles = totalCycles >= fromCycle && totalCycles > 0 ? totalCycles - fromCycle + 1 : 0;
+  const chartFrom = Math.max(1, Math.min(fromCycle, totalCycles - ECONOMY_CHART_MIN_CYCLES + 1));
+  const scope = { stables, window, fromCycle, toCycle: totalCycles, cycles };
+
+  const neededFrom = Math.min(fromCycle, chartFrom);
+  if (totalCycles > 0 && data.completeFrom > neededFrom) {
+    let cyclesReady = 0;
+    for (let cycle = neededFrom; cycle <= totalCycles; cycle += 1) if (data.present.has(cycle)) cyclesReady += 1;
+    return { status: 'preparing', scope, cyclesReady, cyclesNeeded: totalCycles - neededFrom + 1, timestamp: new Date().toISOString() };
+  }
+
   const inScope = (g: LedgerGroup): boolean => stables === 'all' || g.kind === stables;
   const inWindow = (g: LedgerGroup): boolean => g.cycle >= fromCycle && g.cycle <= totalCycles;
   const scoped = data.groups.filter((g) => inScope(g) && inWindow(g));
@@ -229,7 +354,6 @@ export async function getEconomyOverview(
   const otherSpend = spent - sum(sinks.map((s) => s.amount));
   if (otherSpend > 0) sinks.push({ key: 'other', label: 'Other', amount: otherSpend });
 
-  const chartFrom = Math.max(1, Math.min(fromCycle, totalCycles - ECONOMY_CHART_MIN_CYCLES + 1));
   const perCycle: EconomyOverview['perCycle'] = [];
   for (let cycle = chartFrom; cycle <= totalCycles; cycle += 1) {
     const rows = data.groups.filter((g) => inScope(g) && g.cycle === cycle);
@@ -241,7 +365,8 @@ export async function getEconomyOverview(
   const battleIncome = incomeOf(['battle_income']);
 
   return {
-    scope: { stables, window, fromCycle, toCycle: totalCycles, cycles },
+    status: 'ready',
+    scope,
     kpis: {
       earned,
       spent,
@@ -263,6 +388,7 @@ export async function getEconomyOverview(
       const kindSpent = sum(rows.map((g) => g.spend));
       return { stables: kind, count: data.balances[kind].length, earned: kindEarned, spent: kindSpent, net: kindEarned - kindSpent, heldNow: sum(data.balances[kind]) };
     }),
+    repairs: summarizeRepairs(data.repairGroups, data.playerRepairs, stables, fromCycle, totalCycles),
     timestamp: new Date().toISOString(),
   };
 }

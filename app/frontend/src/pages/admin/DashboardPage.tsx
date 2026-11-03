@@ -5,7 +5,7 @@
  * Sections: status strip (cycle, settlement, scheduler, queue), KPI cards,
  * "Needs attention" and battle activity per mode. The status strip and
  * "Needs attention" are system-wide; the filter (kept in the URL as
- * `?filter=`) applies to robots and battles. What stables choose (stances,
+ * `?stables=`) applies to robots and battles. What stables choose (stances,
  * loadouts, yield thresholds, facilities, weapons) is on the Meta page.
  * The page title comes from AdminLayout's header.
  *
@@ -13,8 +13,7 @@
  */
 import { useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import type { UserFilterType } from '../../components/admin/shared';
-import { DEFAULT_DASHBOARD_FILTER, readDashboardFilter } from '../../utils/adminDashboardFormat';
+import { readStableScope, STABLE_SCOPES, writeStableScope, type StableScope } from '../../utils/adminStableScope';
 import {
   BattleActivityTable,
   DashboardToolbar,
@@ -26,16 +25,11 @@ import { useAdminDashboard } from '../../hooks/useAdminDashboard';
 
 function AdminDashboardPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const filter = readDashboardFilter(searchParams.get('filter'));
+  const filter = readStableScope(searchParams, STABLE_SCOPES, 'players');
   const { status, kpis, activity, lastUpdated, refresh } = useAdminDashboard(filter);
 
-  const changeFilter = useCallback((next: UserFilterType): void => {
-    setSearchParams((params) => {
-      const updated = new URLSearchParams(params);
-      if (next === DEFAULT_DASHBOARD_FILTER) updated.delete('filter');
-      else updated.set('filter', next);
-      return updated;
-    }, { replace: true });
+  const changeFilter = useCallback((next: StableScope): void => {
+    setSearchParams((params) => writeStableScope(params, next, 'players'), { replace: true });
   }, [setSearchParams]);
 
   const refreshing = (status.loading && status.data !== null)

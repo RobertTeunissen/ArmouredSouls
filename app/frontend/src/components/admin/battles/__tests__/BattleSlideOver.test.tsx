@@ -37,6 +37,7 @@ function renderPanel(battleId: number | null = 531203): void {
       <Routes>
         <Route path="/admin/battles" element={<BattleSlideOver battleId={battleId} onClose={onClose} />} />
         <Route path="/battle/:id" element={<p>Player report page</p>} />
+        <Route path="/admin/players" element={<p>Players page</p>} />
       </Routes>
     </MemoryRouter>,
   );
@@ -64,6 +65,20 @@ describe('BattleSlideOver content', () => {
     expect(within(participants).getByText('Destroyed at 1m 40.0s')).toBeInTheDocument();
     expect(within(participants).getByText('−9')).toBeInTheDocument();
     expect(within(participants).getByText('+9')).toBeInTheDocument();
+  });
+
+  it('links each stable to its Players panel, from the sides and the payout check', async () => {
+    const user = userEvent.setup();
+    renderPanel();
+    const participants = await screen.findByRole('table', { name: 'Participants of battle #531203' });
+    const toPlayers = (root: HTMLElement): HTMLElement[] => within(root).getAllByRole('link').filter((a) => a.getAttribute('href')?.startsWith('/admin/players'));
+    const sideLinks = toPlayers(participants);
+    expect(sideLinks.length).toBeGreaterThan(0);
+    for (const link of sideLinks) expect(link.getAttribute('href')).toMatch(/^\/admin\/players\?user=\d+$/);
+    const payoutLink = toPlayers(screen.getByRole('table', { name: 'Payout check per stable' }))[0];
+    expect(payoutLink.getAttribute('href')).toMatch(/^\/admin\/players\?user=\d+$/);
+    await user.click(payoutLink);
+    expect(await screen.findByText('Players page')).toBeInTheDocument();
   });
 
   it('flags a payout mismatch with the gap', async () => {

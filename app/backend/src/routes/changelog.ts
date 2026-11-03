@@ -8,6 +8,7 @@ import { changelogService, processAndStore } from '../services/changelog';
 import { ChangelogError, ChangelogErrorCode } from '../errors/changelogErrors';
 import { fileValidationService } from '../services/moderation/fileValidationService';
 import { handleMulterError } from '../middleware/handleMulterError';
+import { recordAction as recordAdminAction } from '../services/admin/adminAuditLogService';
 
 const router = express.Router();
 
@@ -94,6 +95,7 @@ router.post('/admin', authenticateToken, requireAdmin, validateRequest({ body: c
     ...req.body,
     createdBy: req.user!.userId,
   });
+  recordAdminAction(req.user!.userId, 'changelog_create', 'success', { entryId: entry.id, title: entry.title, status: entry.status });
   res.status(201).json(entry);
 });
 
@@ -101,6 +103,8 @@ router.post('/admin', authenticateToken, requireAdmin, validateRequest({ body: c
 router.put('/admin/:id', authenticateToken, requireAdmin, validateRequest({ params: entryIdParamsSchema, body: updateEntrySchema }), async (req: AuthRequest, res: Response) => {
   const id = Number(req.params.id);
   const entry = await changelogService.update(id, req.body);
+  // Field names only, never the body text.
+  recordAdminAction(req.user!.userId, 'changelog_update', 'success', { entryId: entry.id, title: entry.title, fields: Object.keys(req.body as object) });
   res.json(entry);
 });
 
@@ -108,6 +112,7 @@ router.put('/admin/:id', authenticateToken, requireAdmin, validateRequest({ para
 router.delete('/admin/:id', authenticateToken, requireAdmin, validateRequest({ params: entryIdParamsSchema }), async (req: AuthRequest, res: Response) => {
   const id = Number(req.params.id);
   await changelogService.delete(id);
+  recordAdminAction(req.user!.userId, 'changelog_delete', 'success', { entryId: id });
   res.status(204).send();
 });
 
@@ -115,6 +120,7 @@ router.delete('/admin/:id', authenticateToken, requireAdmin, validateRequest({ p
 router.post('/admin/:id/publish', authenticateToken, requireAdmin, validateRequest({ params: entryIdParamsSchema }), async (req: AuthRequest, res: Response) => {
   const id = Number(req.params.id);
   const entry = await changelogService.publish(id);
+  recordAdminAction(req.user!.userId, 'changelog_publish', 'success', { entryId: entry.id, title: entry.title });
   res.json(entry);
 });
 

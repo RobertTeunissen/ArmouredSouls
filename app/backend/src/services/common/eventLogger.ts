@@ -588,8 +588,9 @@ export class EventLogger {
    * falls back to the old names for rows written before this change.
    *
    * `repairType`, `manualRepairDiscount` and `discountPercent` are deliberately NOT
-   * renamed: the `payload.repairType` JSON path filter behind
-   * `GET /api/admin/audit-log/repairs` must keep matching pre- and post-rename rows.
+   * renamed: the `payload.repairType` JSON path join in the Finance Center's
+   * robot deployment query (`robotDeploymentQueryService`) must keep matching
+   * pre- and post-rename rows.
    *
    * Parameter names changed to say what the two figures mean; parameter ORDER did
    * not, so existing call sites need no positional rework.

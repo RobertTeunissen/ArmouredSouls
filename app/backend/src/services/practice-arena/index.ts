@@ -28,7 +28,6 @@ export {
   recordPracticeRequest,
   classifyRequest,
   getPracticeArenaOverview,
-  getLegacyPracticeArenaStats,
   type PracticeOutcome,
   type PracticeMatchup,
   type PracticeArenaOverview,

@@ -149,8 +149,8 @@ describe('Property 32: New writes carry the renamed keys only', () => {
   });
 
   it('repairType and manualRepairDiscount are deliberately NOT renamed', () => {
-    // Criterion 5: the `payload.repairType` JSON path filter behind
-    // GET /api/admin/audit-log/repairs must keep matching pre- and post-rename rows.
+    // Criterion 5: the `payload.repairType` JSON path join in the Finance Center's
+    // robot deployment query must keep matching pre- and post-rename rows.
     const source = codeOnly('services/common/eventLogger.ts');
     expect(source).toMatch(/payload\.repairType\s*=/);
     expect(source).toMatch(/payload\.manualRepairDiscount\s*=/);

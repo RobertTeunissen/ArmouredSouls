@@ -3,8 +3,9 @@
  *
  * Deliberately in its own module rather than in `cycleScheduler.ts`. Two things
  * need this tuple and they have very different weights: the scheduler itself,
- * which imports the whole orchestrator graph, and the admin trigger endpoint,
- * which only wants to validate a path parameter with `z.enum`.
+ * which imports the whole orchestrator graph, and the admin manual-run endpoint
+ * (`POST /api/admin/scheduler/runs`), which only wants to validate a job name
+ * with `z.enum`.
  *
  * Because it lived in `cycleScheduler.ts`, any test that mocked the scheduler to
  * avoid loading that graph also erased the tuple — and `z.enum(undefined)` throws

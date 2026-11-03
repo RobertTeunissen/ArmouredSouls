@@ -5,14 +5,14 @@
  *   bye), the draw rule for team battles (`winning_side`), kills (`destroyed`)
  *   and the owner filter. Scoped to this file's fixture users so other rows in
  *   the shared database do not affect the counts.
- * - `/api/admin/stats` League 1v1 tier counts respect the user filter.
+ * - The Meta page's choice sections (`/api/admin/meta/choices`) respect the stable filter.
  * - Human-player activity windows (last login, never logged in).
  * - KPI snapshots: upsert per (season, cycle), lookup by time across a
  *   simulated rollover where the cycle number repeats.
  */
 import prisma from '../../src/lib/prisma';
 import { aggregateBattles } from '../../src/services/admin/adminBattleActivityService';
-import { getSystemStats } from '../../src/services/admin/adminSystemStatsService';
+import { getMetaChoices } from '../../src/services/admin/meta';
 import { buildHumanActivityWhere } from '../../src/services/admin/adminPlayerActivityService';
 import { findPreviousKpiSnapshot, recordKpiSnapshot } from '../../src/services/admin/adminKpiSnapshotService';
 import { createTestRobot } from '../testHelpers';
@@ -182,19 +182,19 @@ describe('Admin dashboard queries (database)', () => {
     });
   });
 
-  describe('getSystemStats', () => {
-    it('restricts League 1v1 tier counts to the filtered users', async () => {
-      const humanOnly = await getSystemStats({ id: { in: [humanId] } });
-      const tiers = Object.fromEntries(humanOnly.robots.byTier.map((tier) => [tier.league, tier.count]));
-
-      expect(tiers).toEqual({ silver: 1, bronze: 1 });
-      expect(humanOnly.robots.total).toBe(2);
+  describe('getMetaChoices', () => {
+    it('counts only the robots of the filtered stables', async () => {
+      const humanOnly = await getMetaChoices({ id: { in: [humanId] } });
+      expect(humanOnly.stances.reduce((sum, s) => sum + s.count, 0)).toBe(2);
+      expect(humanOnly.loadouts.reduce((sum, l) => sum + l.count, 0)).toBe(2);
+      expect(humanOnly.yieldThresholds.distribution.reduce((sum, y) => sum + y.count, 0)).toBe(2);
     });
 
-    it('returns no tiers when the filter matches nobody', async () => {
-      const nobody = await getSystemStats({ id: { in: [-1] } });
-      expect(nobody.robots.byTier).toEqual([]);
-      expect(nobody.finances.totalUsers).toBe(0);
+    it('is empty when the filter matches nobody', async () => {
+      const nobody = await getMetaChoices({ id: { in: [-1] } });
+      expect(nobody.stances).toEqual([]);
+      expect(nobody.weapons).toEqual({ totalBought: 0, equipped: 0, equippedInventoryItems: 0 });
+      expect(nobody.facilities).toEqual({ summary: [], totalPurchases: 0, mostPopular: 'None' });
     });
   });
 

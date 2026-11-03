@@ -8,6 +8,7 @@ import type {
   TournamentType,
   TournamentTypeOverview,
 } from './adminTournamentsApi';
+import { formatCount, formatPartShare as formatShare } from './adminFormat';
 
 const TYPE_LABELS: Readonly<Record<TournamentType, string>> = { robot: '1v1', team_2v2: '2v2', team_3v3: '3v3' };
 const BATTLE_MODES: Readonly<Record<TournamentType, string>> = {
@@ -27,9 +28,7 @@ export function participantNoun(type: TournamentType, count = 2): string {
   return count === 1 ? 'team' : 'teams';
 }
 
-export function formatCount(value: number): string {
-  return value.toLocaleString('en-US');
-}
+export { formatCount };
 
 /** "Oct 19" (UTC) from an ISO timestamp or a YYYY-MM-DD date. */
 export function shortDate(value: string | null): string {
@@ -38,13 +37,7 @@ export function shortDate(value: string | null): string {
   return `${MONTHS[date.getUTCMonth()]} ${date.getUTCDate()}`;
 }
 
-/** "46%", "<1%" for a non-zero share below 1%. */
-export function formatShare(part: number, whole: number): string {
-  if (whole <= 0) return '0%';
-  const percent = (part / whole) * 100;
-  if (percent > 0 && percent < 1) return '<1%';
-  return `${Math.round(percent)}%`;
-}
+export { formatShare };
 
 /** Player tournament page with the bracket. */
 export function bracketHref(tournamentId: number): string {

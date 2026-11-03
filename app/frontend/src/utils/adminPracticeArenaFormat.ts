@@ -4,6 +4,7 @@
  */
 import type { PracticeDayStats, PracticeMatchup } from './adminPracticeArenaApi';
 import { formatDuration } from './adminCycleFormat';
+import { formatCount } from './adminFormat';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -46,7 +47,4 @@ export function refusedCaption(day: Pick<PracticeDayStats, 'rateLimited' | 'cycl
   return `${day.rateLimited} rate limit · ${day.cycleBusy} during a job`;
 }
 
-/** "1,234". */
-export function formatCount(value: number): string {
-  return value.toLocaleString('en-US');
-}
+export { formatCount };

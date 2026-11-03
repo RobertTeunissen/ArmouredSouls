@@ -9,18 +9,12 @@
  */
 import prisma from '../../../lib/prisma';
 import { ACHIEVEMENTS, type AchievementDefinition } from '../../../config/achievements';
-import { buildUserFilter, type UserFilterType } from '../../../utils/buildUserFilter';
+import { buildStableScopeFilter } from '../../../utils/stableScope';
 import { getCurrentSeason } from '../../season/seasonService';
 import { isDormant, seasonStartedAt } from '../../season/dormantStables';
 import type { AchievementAnalytics, AchievementAnalyticsRow, AchievementStableScope } from './achievementAnalyticsTypes';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-
-const FILTER_OF: Readonly<Record<AchievementStableScope, UserFilterType>> = {
-  players: 'real',
-  automatons: 'automaton',
-  generated: 'auto',
-};
 
 export interface AchievementStable {
   id: number;
@@ -107,7 +101,7 @@ export function summarizeAchievements(input: {
 }
 
 export async function getAchievementAnalytics(stables: AchievementStableScope): Promise<AchievementAnalytics> {
-  const userFilter = buildUserFilter(FILTER_OF[stables]);
+  const userFilter = buildStableScopeFilter(stables);
   const season = await getCurrentSeason();
   const [startedAt, users, unlocks] = await Promise.all([
     seasonStartedAt(season.seasonNumber),

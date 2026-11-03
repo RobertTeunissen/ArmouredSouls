@@ -20,6 +20,7 @@ import { getCurrentSeason } from '../season/seasonService';
 import { getSecurityAttention } from '../security/securityOverviewService';
 import { getAutomatonStatus } from '../automaton/automatonStatus';
 import { countQueuedMatchesByMode, totalQueued } from './adminQueuedMatches';
+import { getRequestFailures } from './system';
 import {
   BANKRUPTCY_RISK_THRESHOLD,
   SETTLEMENT_OVERDUE_AFTER_MS,
@@ -58,6 +59,8 @@ export interface DashboardStatus {
     /** Last 24 hours: every signal, and the bursts and violations among them. */
     security: { signals: number; alerts: number } | null;
     automatons: { needAttention: number; failed: number } | null;
+    /** Server errors (5xx) of the last 24 hours, from the System page's request counts. */
+    requests: { failures24h: number; topRoute: string | null; topCode: string | null } | null;
     cycleHealth: DashboardCycleHealth;
   };
   timestamp: string;
@@ -136,7 +139,7 @@ export async function getDashboardStatus(now: Date = new Date()): Promise<Dashbo
   const scheduler = summarizeScheduler(schedulerState, processStartedAt);
   const settlementJob = (schedulerState.jobs ?? []).find((job) => job.name === SETTLEMENT_JOB);
 
-  const [cycleMetadata, seasonSettlement, season, queuedByMode, bankruptcyCount, automatonStatus, stuckMatches] = await Promise.all([
+  const [cycleMetadata, seasonSettlement, season, queuedByMode, bankruptcyCount, automatonStatus, stuckMatches, requests] = await Promise.all([
     prisma.cycleMetadata.findUnique({ where: { id: 1 }, select: { totalCycles: true, lastCycleAt: true } }),
     prisma.season.findFirst({ orderBy: { seasonNumber: 'desc' }, select: { lastSettlementAt: true } }),
     settle('season', () => getCurrentSeason()),
@@ -148,6 +151,7 @@ export async function getDashboardStatus(now: Date = new Date()): Promise<Dashbo
     prisma.scheduledMatch.count({
       where: { status: 'scheduled', scheduledFor: { lt: new Date(now.getTime() - STUCK_MATCH_GRACE_MS) } },
     }),
+    settle('request failures', () => getRequestFailures(now)),
   ]);
 
   let security: DashboardStatus['attention']['security'] = null;
@@ -174,6 +178,7 @@ export async function getDashboardStatus(now: Date = new Date()): Promise<Dashbo
       automatons: automatonStatus
         ? { needAttention: automatonStatus.needAttentionCount, failed: automatonStatus.failedCount }
         : null,
+      requests,
       cycleHealth: computeCycleHealth({
         schedulerActive: scheduler.active,
         lastSettlementAt,

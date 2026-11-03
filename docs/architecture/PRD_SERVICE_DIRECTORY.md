@@ -2,12 +2,15 @@
 
 **Project**: Armoured Souls
 **Document Type**: Product Requirements Document (PRD)
-**Version**: v1.15
-**Last Updated**: November 1, 2026
+**Version**: v1.18
+**Last Updated**: November 2, 2026
 **Status**: ✅ Implemented
 **Owner**: Robert Teunissen
 
 **Revision History**:
+- v1.18 (Nov 2, 2026): `admin/system/` (`GET /api/admin/system/overview`, `getRequestFailures` for the Dashboard); `monitoring/requestMetrics` counts failed (5xx) and slow (2 s or longer) requests per hour and route into `request_metrics`, fed by `requestLogger` and the error code `errorHandler` sets; `monitoring/backupStatus` (`getLatestBackup`) is the one backup reader of the daily health report and the System page, and recognises `.sql.zst` (the report looked only for `.dump` / `.sql.gz` and reported no backup once nightly dumps moved to zstd on 28 Oct 2026).
+- v1.17 (Nov 2, 2026): `admin/meta/metaChoicesService` (`GET /api/admin/meta/choices`) replaces `admin/adminSystemStatsService` and the `adminStatsService` barrel (`getSystemStats` and `GET /api/admin/stats` removed); `utils/stableScope.ts` (`buildStableScopeFilter`) is the portal's one stable-type filter; `getLegacyPracticeArenaStats` removed with `GET /api/admin/practice-arena/stats`.
+- v1.16 (Nov 2, 2026): `admin/admin-actions/` (`adminActionsService`, `adminActionCatalogue`) serves the Admin actions page; `adminAuditLogService` keeps only `recordAction` (`getEntries` removed with `GET`/`POST /api/admin/audit-log`). `adminEconomyService` gained the Repairs block (`summarizeRepairs`) and reads per-cycle totals from `economyCycleRollups` (`economy_cycle_rollups`) instead of scanning the season's ledger; `getRepairAuditLog` removed. `adminMaintenanceService` (`repairAllRobotsAdmin`, `recalculateAllRobotHP`), `backfillCycleSnapshots`, the legacy `processDailyFinances` / `processAllDailyFinances` and `routes/adminBattleTriggers.ts` removed with their unused endpoints.
 - v1.15 (Nov 1, 2026): `admin/meta/` (Meta page build sections: tuning, refinements, event entry) and `admin/achievements/` (season-scoped achievement analytics) replace `admin/adminFeatureAnalyticsService` (`getTuningAdoption`, `getRefinementAdoption`, `getAchievementAnalytics`); the admin analytics route left `routes/subscriptions.ts`.
 - v1.14 (Oct 30, 2026): `admin/analysis/` also serves the Weapons page (`weaponAnalysisService`, shared `analysisDataset`); `getWeaponAnalytics` (`GET /api/admin/weapons/analytics`) removed.
 - v1.13 (Oct 30, 2026): `admin/tournaments/` serves the redesigned Tournaments page; the admin tournament management routes were removed.
@@ -63,7 +66,7 @@ The backend currently contains **38 domain directories** under `app/backend/src/
 | `matchmaking` | Shared matchmaking utilities |
 | `migration` | Data migration and compatibility operations |
 | `moderation` | Image moderation and storage |
-| `monitoring` | Health reporting and operations |
+| `monitoring` | Health reporting and operations: daily health report, `backupStatus` (newest nightly backup), `requestMetrics` (failed and slow requests per hour and route for the admin System page) |
 | `notifications` | Operational notification dispatch |
 | `onboarding` | New-player onboarding |
 | `practice-arena` | Offline practice battles |
@@ -90,15 +93,15 @@ Admin panel operations — stats dashboards, cycle execution, battle viewer, HP 
 
 | Service | Purpose |
 |---------|---------|
-| `adminStatsService` | Dashboard statistics (robot stats, facility stats, economy stats, at-risk users) |
 | `adminDashboardService` | Dashboard KPIs (`GET /api/admin/dashboard/kpis`): human-player activity with trends, battle-ready robots; engagement and economy overview |
 | `adminDashboardStatusService` | Dashboard status strip and "Needs attention" facts (`GET /api/admin/dashboard/status`); pure `computeCycleHealth` / `summarizeScheduler`. Read-only, sends no alerts |
 | `adminBattleActivityService` | Battles per mode: last cycle, season, walkovers, queued, draw/kill/duration rates (`GET /api/admin/dashboard/battle-activity`, 60 s cache per filter) |
 | `adminQueuedMatches` | Queued matches per mode, system-wide (scheduled matches + outstanding bracket rows) |
+| `adminEconomyService`, `economyCycleRollups` | Economy page (`GET /api/admin/economy`): flows, Repairs block, balances per stable type. Closed ledger cycles are summed once into `economy_cycle_rollups` (background fill, newest first; `status: 'preparing'` until a view's cycles are ready), the newest closed cycle live |
 | `adminPlayerActivityService`, `adminKpiSnapshotService` | Login-based human-player counts; one `admin_kpi_snapshots` row per competitive settlement (non-fatal) for 7-day trends |
 | `adminThresholds` | Shared thresholds: bankruptcy risk, inactivity, settlement overdue, stuck-match grace, League Health history window and low-movement / unsubscribed shares |
 | `league-health/` (`leagueHealthService`, `leagueHealthData`, `leagueHealthPlan`, `leagueHealthStatus`, `leagueSeasonService`) | Admin League Health (`GET /api/admin/league-health`): every tiered mode's tiers and instances from the rebalance planner on current standings, promotion and demotion flow from the last 5 rebalances in `league_history`, tier status and the grouped Needs attention list; "This season" per mode and stable type (`GET /api/admin/league-health/season`): per-cycle moves, quiet cycles, per-boundary bounce-back. Read-only |
-| `meta/` (`metaBuildsService`) | Admin Meta page build sections (`GET /api/admin/meta/builds?filter=`): tuning (robots tuned, pool used, points per group and attribute), refinements (per kind, targeted attributes, top spenders) and event entry (robots per event, events per robot) for one stable type. Read-only |
+| `meta/` (`metaChoicesService`, `metaBuildsService`) | Admin Meta page per stable type (`?stables=`): choices (`GET /api/admin/meta/choices`: stances, loadouts, yield, weapons, facilities) and build sections (`GET /api/admin/meta/builds`): tuning (robots tuned, pool used, points per group and attribute), refinements (per kind, targeted attributes, top spenders) and event entry (robots per event, events per robot) for one stable type. Read-only |
 | `achievements/` (`achievementAnalyticsService`) | Admin Achievements (`GET /api/admin/achievements/analytics?stables=`): this season's unlocks per achievement for players (rate out of players not dormant this season), Automatons or generated stables, median unlock day, all-accounts count. Read-only |
 | `tournaments/` (`tournamentOverviewService`, `tournamentOverview`) | Admin Tournaments (`GET /api/admin/tournaments/overview`): running tournament per type with schedule status and expected finish, this season's sizes and champions. Read-only |
 | `adminCycleService` | Bulk cycle execution (`executeBulkCycles`), snapshot backfill |
@@ -108,7 +111,8 @@ Admin panel operations — stats dashboards, cycle execution, battle viewer, HP 
 | `adminBulkCycleRunService` | `POST /api/admin/cycles/bulk`: runs bulk cycles under the scheduler lock and records them in the run history (`bulkCycles`); `startBulkCycles` runs in the background (202), `runBulkCycles` waits. 409 while one is active |
 | `battles/` (`battleListService`, `battleDetailService`, `battleOutcome`, `battlePayoutCheck`, `battleLogAccess`, `battleExportText`) | Admin Battles page: list query (never reads `battle_log`), outcome and "ended by" per mode, payout check against the ledger, combat log access, text / JSON export |
 | `analysis/` (`attributeAnalysisService`, `weaponAnalysisService`, `analysisData`, `analysisDataset`, `analysisEffects`, `comparisons`, `attributeLayers`, `analysisFeatures`, `weaponFeatures`, `weaponCatalogue`, `logisticFit`) | Admin "what wins" analyses: Attributes (`GET /api/admin/analysis/attributes`) and Weapons (`GET /api/admin/analysis/weapons`: weapons, archetypes, matchups, usage per league tier, refinements, coverage, optionally top 10% only). Reads `battle_participant_builds` (with weapon ids and the battle's tier) into paired comparisons once per window for both pages, rebuilds attribute layers, fits the cluster-robust logistic models; results cached per window and layer set / strength. Meta will reuse it |
-| `adminMaintenanceService` | HP recalculation, robot repair (admin-triggered) |
+| `system/` (`systemOverviewService`, `systemRules`) | Admin System page (`GET /api/admin/system/overview`): disk, memory, database and largest tables, newest backup, backend starts as Deploy / Restart (`scheduler_processes`), failing and slow requests (`request_metrics`), scheduler job durations and lock time per day (`scheduler_job_runs`). `getRequestFailures` feeds the Dashboard's Failed requests item. Read-only, sends no alerts |
+| `admin-actions/` (`adminActionsService`, `adminActionCatalogue`) | Admin actions page (`GET /api/admin/actions`): `admin_audit_logs` newest first, by area and result, with plain titles, details, the admin's name and the page link. Add new `recordAction` operations to the catalogue |
 
 ### automaton/ (Spec #55)
 Automaton_Stables: computer-run stables that play by human rules. Public API in `index.ts`; product rules in `docs/game-systems/PRD_AUTOMATON_STABLES.md`. The module never writes `User.currency` and never references Manual_Repair; every charge goes through the domain services below and `Credit_Mutation_Service`.

@@ -6,7 +6,7 @@
 import { useId } from 'react';
 import type { ReactNode } from 'react';
 import { ADMIN_FOCUS_RING } from '../shared';
-import { BattlesPagination } from '../battles/BattlesTable';
+import { AdminPagination } from '../shared';
 import type { ImagesFilter, ImagesPage } from '../../../utils/adminImagesApi';
 import { dayMonth, ownerLabel, robotsText } from '../../../utils/adminImagesFormat';
 import { formatCount } from '../../../utils/adminDashboardFormat';
@@ -102,7 +102,7 @@ export function ImageGrid({ data, loading, filter, q, selectedId, onFilter, onSe
           </ul>
           {data.total > data.pageSize && (
             <div className="border-t border-white/10 px-5 py-3">
-              <BattlesPagination page={data.page} totalPages={totalPages} total={data.total} pageSize={data.pageSize} loading={loading} noun="images" onPage={onPage} />
+              <AdminPagination page={data.page} totalPages={totalPages} total={data.total} pageSize={data.pageSize} loading={loading} noun="images" onPage={onPage} />
             </div>
           )}
         </>

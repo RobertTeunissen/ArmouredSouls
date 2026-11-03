@@ -10,17 +10,17 @@ The portal uses a **sidebar + page** architecture:
 
 - **`AdminLayout.tsx`** — Fixed sidebar with grouped navigation, header bar with page title, error boundary, and `<Outlet>` for page content
 - **Pages** — Each page is a lazy-loaded standalone component in `pages/admin/`
-- **Shared components** — Reusable UI in `components/admin/shared/`: `AdminPageHeader`, `AdminStatCard`, `AdminDataTable`, `AdminFilterBar`, `AdminSlideOver`, `AdminEmptyState`
-- **Shared types** — `components/admin/types.ts` contains shared interfaces
-- **Store** — `stores/adminStore.ts` (Zustand) manages scheduler status, session log, and cached stats
+- **Shared components** — Reusable UI in `components/admin/shared/`: `AdminPageHeader`, `AdminPanel` (section shell with loading and error states), `StableScopeToggle`, `ToggleChip`, `AdminPagination`, `AdminFilterBar`, `AdminStatCard`, `AdminSlideOver`
+- **Types and formatting** — each page has a typed API module (`utils/admin*Api.ts`, mirroring its backend service) and a format module (`utils/admin*Format.ts`); shared number formatting is `utils/adminFormat.ts`
 
-All pages manage their own data fetching. The sidebar collapses to icons on narrow screens (`w-16` → `md:w-60`).
+All pages manage their own data fetching (no shared admin store). The sidebar shows labels only, grouped under section headings (`components/admin/adminNavConfig.ts`, shared with the drawer). Below 768 px the sidebar is replaced by a hamburger menu and a navigation drawer.
 
 ## Navigation Structure
 
 | Section | Page | Route | Description |
 |---------|------|-------|-------------|
 | **Overview** | Dashboard | `/admin/dashboard` | Status strip, needs attention, player KPIs, battle activity per mode |
+| | System | `/admin/system` | Server health: disk, memory, database, backup, backend starts, failing and slow requests, scheduler job durations, largest tables |
 | **Game Operations** | Cycle Controls | `/admin/cycles` | Running job, daily schedule with Run buttons, persistent run history (restarts, missed and interrupted runs), bulk cycle runner |
 | | Practice Arena | `/admin/practice-arena` | Practice usage per UTC day, refusals and unavailable time, top practitioners, how it is used |
 | **Battle Data** | Battles | `/admin/battles` | Find any battle (all 9 modes, stable type, outcome, date, search); admin check with payout check, combat log with formulas, and export |
@@ -28,37 +28,35 @@ All pages manage their own data fetching. The sidebar collapses to icons on narr
 | | Meta | `/admin/meta` | What stables choose: combat settings (stances, loadouts, yield), robot builds (tuning, weapons and refinements), stable investments (event entry, facilities) |
 | | League Health | `/admin/league-health` | Every tiered league: tiers, instances, stable mix, and whether promotion and demotion move |
 | | Weapons | `/admin/weapons` | What winning robots fight with: archetype (range × loadout) and weapon effects, matchups, usage per league tier, price vs effect, refinements |
-| **Player Management** | Players | `/admin/players` | Player list with tabs (New Players, Auto-Generated, At-Risk), churn risk, engagement, search, detail slide-over |
+| **Player Management** | Players | `/admin/players` | Human stables with segment cards (Active, Inactive, Dormant, Stuck in onboarding, Low balance), search over every stable type, detail panel |
 | | Automatons | `/admin/automatons` | Automaton stables: status bar, stables, strategies, editor, catalogue (Spec #55) |
-| | Economy | `/admin/economy` | Credit circulation, balance distribution, facility adoption |
+| | Economy | `/admin/economy` | Where credits come from and go, repairs and their discounts, balances, per stable type |
 | **Security & Moderation** | Security | `/admin/security` | Security signals per window: who triggered them and sources without an account |
 | | Image Uploads | `/admin/image-uploads` | Images in use, moderation outcomes, image removal, storage cleanup |
+| | Admin actions | `/admin/actions` | Everything an admin changed, newest first, by area and result (was the Audit Log) |
 | **Content** | Changelog | `/admin/changelog` | Create, edit, publish changelog entries |
 | | Achievements | `/admin/achievements` | This season's unlock rates per achievement and tier, for players, Automatons or generated stables |
 | | Search Analytics | `/admin/search-analytics` | Settled searches, no-result rate, results by category, phrase table with CSV export |
-| **Maintenance** | Repair Log | `/admin/repair-log` | Manual vs automatic repairs, savings tracking |
-| | Audit Log | `/admin/audit-log` | Admin action audit trail with filters |
+
+The Maintenance group is gone (Nov 2026, admin redesign part 8): the Repair Log is the Repairs block on Economy (`/admin/repair-log` redirects there) and the Audit Log is Admin actions (`/admin/audit-log` redirects to `/admin/actions`).
 
 ## UI Patterns
 
-### Filter Style
+### Stable-type filter
 
-All pages use the `AdminFilterBar` component for filter controls — pill-shaped toggle buttons with a consistent look. This includes:
-- Tab-like navigation within pages (e.g., Players: New Players / Auto-Generated / At-Risk)
-- Data type filters (e.g., Battles: All / Draws / Byes / Forfeits / Time limit)
-- User type filters (e.g., Achievements: Real Players / Auto-Generated / All)
+Pages that split by stable type use one filter, `StableScopeToggle`, kept in the URL as `?stables=`: **Players** (human stables without system and test accounts), **Automatons**, **Generated** (every generated bot stable, including the seeded `test_user_*` stables) and **All**. Backend: `utils/stableScope.ts` (`buildStableScopeFilter`). Used by Dashboard, Meta, Economy, Achievements (no All) and League Health's "This season" (default All). Dashboard and Meta used `?filter=real|auto|automaton|all` before (where `test_user_*` stables showed only under All); old links still read correctly. Battles keeps its own "battle has a robot of this type" filter (`?stable=`).
 
-### Stat Cards
+### Other controls
 
-`AdminStatCard` provides KPI display with label, value, color coding, optional trend indicator, and icon. Used at the top of most pages for summary metrics.
+- `ToggleChip` — pressed-state chip (check mark and border, never colour alone) for single-choice filters: window, area, result.
+- `AdminFilterBar` — pill or segmented filter groups (Battles, Search Analytics).
+- `AdminPagination` — Previous / Next with "Showing a–b of N"; the buttons are named "Previous page of {rows}" / "Next page of {rows}".
+- `AdminSlideOver` — right-side panel for detail views (player detail, battle detail, image detail) without leaving the page.
+- `AdminPanel` — section shell with heading, header actions, skeleton and error with Retry.
 
-### Data Tables
+### Links between pages
 
-`AdminDataTable` provides sortable, paginated tables with custom column renderers, row click handlers, and empty state messages.
-
-### Slide-Overs
-
-`AdminSlideOver` provides a right-side panel for detail views (player detail, battle detail) without leaving the current page.
+A stable's name in a battle's admin check (sides, placements, payout check) opens its detail panel on Players (`/admin/players?user=`), which serves every stable type. The detail panel links to the stable's battles on Battles, its player page and, for an Automaton, the Editor. Admin actions link to the page each action was taken on.
 
 ## Page Details
 
@@ -68,7 +66,7 @@ The landing page answers "is the game healthy, and does anything need me?". It i
 
 Sections, top to bottom:
 
-1. **Toolbar** — the user filter (Real players / Auto-generated / Automatons / All, kept in the URL as `?filter=`, default `real`), "Last updated" and Refresh. Refresh refetches every section and bypasses the battle-activity cache.
+1. **Toolbar** — the stable-type filter (Players / Automatons / Generated / All, `?stables=`, default Players; see [Stable-type filter](#stable-type-filter)), "Last updated" and Refresh. Refresh refetches every section and bypasses the battle-activity cache.
 2. **Status strip** (system-wide) — Cycle and Season (with a "(preparation)" marker), Last cycle (settlement time and age), Next cycle (next `settlement` cron run), Scheduler, Queued matches.
 3. **KPI cards** — Active players (7 days), New players (7 days), Inactive players (3+ days), Battle-ready robots.
 4. **Needs attention** (system-wide) — open items first, each linking to the page that resolves it; OK items collapse to a muted ✓ line.
@@ -92,6 +90,7 @@ Below 1280 px the sections stack in one column. Below 768 px the admin sidebar i
 | Bankruptcy risk | Human stables below ₡10,000 (`BANKRUPTCY_RISK_THRESHOLD`). Links to Players → At-Risk (`/admin/players?tab=at-risk`). |
 | Security | Failed-login bursts, ownership violations and race-condition or robot-creation bursts in the last 24 hours (stored signals); a warning when any, otherwise OK with the number of ordinary signals. Links to `/admin/security?window=24h`. |
 | Automatons need attention | `needAttentionCount` of the Automatons status bar; an error if any turn failed. Links to the Stables tab filtered on attention. |
+| Failed requests | Only listed when a request failed with a server error (5xx) in the last 24 hours: "N requests failed in the last 24 h", red, naming the route and error code with the most. Links to [System](#system-adminsystem). Counted per hour, so "24 h" can include up to one hour more. No item when nothing failed or the counts could not be read. |
 | Cycle problems | One item, red if any of: settlement overdue (scheduler active and the last settlement missing or older than 26 h; "last settlement" is the later of `cycle_metadata.last_cycle_at` and the season's `last_settlement_at`, so daily Preparation_Phase settlements count too and a missed one still shows); a scheduler job whose last run failed; matches still `scheduled` more than 2 h after their slot ("left behind"). Otherwise "Last cycle healthy". The scheduler's job states are in memory and reset on every restart or deploy, so the item then reports "k/10 jobs reported since restart"; the overdue and left-behind checks read the database and work across restarts. |
 | Battle activity · Last cycle | Battles created between the ends of the two most recent settlements (`cycle_snapshots.end_time`). "—" until a season has two settlements. |
 | Battle activity · Season | Every row in `battles` (truncated at Season_Rollover). Counts include battles with at least one participant robot owned by a filtered user. |
@@ -99,11 +98,48 @@ Below 1280 px the sections stack in one column. Below 768 px the admin sidebar i
 | Battle activity · Queued | System-wide: `scheduled_matches_v2` rows still `scheduled`, plus outstanding bracket rows of active tournaments that already have a participant. |
 | Draw % / Kill % / Avg time | Over fought battles. Draw = `winner_id IS NULL AND winning_side IS NULL` (team battles record their result in `winning_side`); n/a for KotH and Grand Melee. Kill = at least one participant `destroyed`. |
 
-**API:** `GET /api/admin/dashboard/status` (no filter), `GET /api/admin/dashboard/kpis?filter=`, `GET /api/admin/dashboard/battle-activity?filter=&fresh=` (cached 60 s per filter; `fresh=true` bypasses). All require `authenticateToken` + `requireAdmin`. `kpis.activeUsersLast7d` is deprecated (it counted robots updated by battles); use `humanPlayers.active7d`.
+**API:** `GET /api/admin/dashboard/status` (no filter; `attention.requests` is `{ failures24h, topRoute, topCode }` or null), `GET /api/admin/dashboard/kpis?stables=`, `GET /api/admin/dashboard/battle-activity?stables=&fresh=` (cached 60 s per stable type; `fresh=true` bypasses). All require `authenticateToken` + `requireAdmin`. `kpis.activeUsersLast7d` is deprecated (it counted robots updated by battles); use `humanPlayers.active7d`.
+
+### System (`/admin/system`)
+
+Answers "is the server healthy, and is anything failing?". Status only: alerts stay with their single emitters (disk-monitor.sh, backup.sh, the deploy workflow and the daily health report in Discord). Read-only; refreshes every 60 s and on Refresh. All times UTC.
+
+Sections, top to bottom:
+
+1. **Status cards** — Disk, Database, Memory, Last backup, Backend, Failing requests. The left border carries the tone, the caption says it in words.
+2. **Failing requests** — server errors (5xx) per route and error code over the last 7 UTC days: page, count, kind, last time and a per-day strip.
+3. **Slow requests** — routes that took 2 s or longer in the last 7 days: count, average and slowest.
+4. **Backend starts** — the last 7 days, newest first, each marked Deploy or Restart.
+5. **Scheduler jobs** — per job over the last 8 UTC days: last run, median, slowest (amber when over 1.5× the median, with its day and any interrupted or failed runs) and the last 8 runs as a strip (grey: failed or interrupted). Below: **Lock held per day**, the time any job held the scheduler lock (Practice Arena refuses battles meanwhile).
+6. **Largest tables** — the six biggest tables on disk with their row estimate, and the database total.
+
+Below 768 px the tables become lists.
+
+**Definitions**
+
+| Number | Definition |
+|---|---|
+| Disk | Usage of the root filesystem (`df`), with the disk monitor's thresholds: amber from 80%, red from 90%. |
+| Database | `pg_database_size`; largest table by `pg_total_relation_size` (data, indexes and TOAST). |
+| Memory | `MemAvailable` from `/proc/meminfo` (memory the kernel can hand out without swapping, page cache included), of `MemTotal`, and swap in use. Amber below 15% available. Locally (macOS) the OS free memory, without swap. |
+| Last backup | Newest file in `/opt/armouredsouls/backups/daily` (`.sql.zst`, or the older `.sql.gz` / `.dump`): time, size and age. Amber when older than 26 h, red when none is found (or the directory is missing on ACC/production); "—" on a local machine. |
+| Backend | Uptime of this backend process and its start time. |
+| Failing requests | Server errors (status 500 or higher) since the start of the hour 24 hours ago. 4xx answers (bad links, probes, invalid input) are not counted. |
+| Error kind | The error code `errorHandler` answered with: `STATEMENT_TIMEOUT` (Postgres cancelled the query at the 30 s statement timeout), `INTERNAL_ERROR` (any other unexpected error), the code of a 5xx `AppError`, or `HTTP_<status>` when a 5xx left without passing `errorHandler`. |
+| Page | The admin page the route serves (`/api/admin/economy/...` → Economy), or the API area for player routes (`/api/robots/...` → Robots). |
+| Slow request | Any request, failed or not, that took 2 s or longer (`SLOW_REQUEST_MS`). Counts are summed per hour, so the page shows average and slowest, not a median. |
+| Deploy / Restart | A start is a Deploy when its deploy tag differs from the start before it. PM2 keeps the environment of the last deploy, so a crash restart or host reboot repeats the tag and is a Restart; starts before deploy tags existed are Restarts too. |
+| Median (jobs) | Median duration of successful runs in the window; slowest is over all finished runs. |
+
+**Recording.** Request counts live in `request_metrics`: one row per UTC hour, kind (`error` / `slow`), method, route pattern and error code. The route is the Express route pattern (`/api/admin/users/:id`), never the raw URL, so ids and query strings are not stored; requests that matched no route (404s, probes) are left out. `requestLogger` reports every finished request; counts are summed in memory and written once a minute (one upsert per bucket, at most 500 buckets per minute), and rows older than 30 days are deleted hourly. A restart loses at most the last minute. Before the first row the request sections say "Nothing recorded yet". Backend starts come from `scheduler_processes`, job runs from `scheduler_job_runs`.
+
+**Deploy tag.** The deploy workflow sets `DEPLOY_TAG=deploy-{acc|prd}-YYYYMMDD-HHMMSS` (UTC), passes it to PM2 (`reconcile-pm2-backend.sh`, `--update-env`) and uses the same value for the git tag, so Backend starts and Cycle Controls show which release started.
+
+**API:** `GET /api/admin/system/overview` (`services/admin/system/`), `authenticateToken` + `requireAdmin`. The Dashboard's Failed requests item reads the same counts (`getRequestFailures`).
 
 ### Meta (`/admin/meta`)
 
-An overview of what stables choose, for the selected stable type. It moved off the Dashboard (where it was the collapsed "Meta snapshot") so the landing page stays short, and the old Tuning, Refinement and Subscriptions pages were merged into it: `/admin/tuning`, `/admin/refinement` and `/admin/subscriptions` redirect here. The toolbar is the Dashboard's: the same filter (`?filter=`, default `real`), "Last updated" and Refresh (reloads both requests).
+An overview of what stables choose, for the selected stable type. It moved off the Dashboard (where it was the collapsed "Meta snapshot") so the landing page stays short, and the old Tuning, Refinement and Subscriptions pages were merged into it: `/admin/tuning`, `/admin/refinement` and `/admin/subscriptions` redirect here. The toolbar is the Dashboard's: the same filter (`?stables=`, default Players), "Last updated" and Refresh (reloads both requests).
 
 Three groups, ordered from choices made per battle to long-term investments (desktop: three cards, then two per row; they stack below 1280 px):
 
@@ -116,11 +152,11 @@ Three groups, ordered from choices made per battle to long-term investments (des
 | Stable investments | Event entry | Robots entered in at least one event, average events per robot, robots per event (all nine, registry order, share of robots) and robots by number of events entered (0 to all nine). The Booking Office level sets how many events a robot may enter. |
 | | Facilities | Stables owning each facility at level ≥ 1 and their average level (L), most owned first, with a bar relative to the most owned; two columns from 640 px. Tuning Bay and Booking Office ownership are read here (not repeated in their sections). |
 
-All counts are robots (or stables, for Facilities and refinement stables) owned by users in the filter. With All or Auto-generated, generated stables dominate and their choices are randomised, so near-even splits are expected; Real players shows what people pick.
+All counts are robots (or stables, for Facilities and refinement stables) owned by users in the filter. With All or Generated, generated stables dominate and their choices are randomised, so near-even splits are expected; Players shows what people pick.
 
 Dropped with the merge: subscribe/unsubscribe per cycle (it only moves at the start of a season) and the per-stable subscription table (each robot's events are in the Players panel).
 
-**API:** `GET /api/admin/stats?filter=` (choices, weapons, facilities) and `GET /api/admin/meta/builds?filter=` (tuning, refinements, event entry; `services/admin/meta/`), both `authenticateToken` + `requireAdmin`, read by their own filter-scoped loaders (`hooks/useMetaOverview.ts`): a filter change aborts the previous request, so a late response for another filter is never shown, and one failing request leaves the other sections in place. Removed: `GET /api/admin/tuning/adoption`, `GET /api/admin/refinement/adoption`, `GET /api/subscriptions/admin/analytics`.
+**API:** `GET /api/admin/meta/choices?stables=` (stances, loadouts, yield, weapons, facilities; replaced `GET /api/admin/stats`, which also counted every battle of the season, 4.1 s on ACC, for figures no page showed) and `GET /api/admin/meta/builds?stables=` (tuning, refinements, event entry), both in `services/admin/meta/`, both `authenticateToken` + `requireAdmin`, read by their own filter-scoped loaders (`hooks/useMetaOverview.ts`): a filter change aborts the previous request, so a late response for another filter is never shown, and one failing request leaves the other sections in place. Removed: `GET /api/admin/tuning/adoption`, `GET /api/admin/refinement/adoption`, `GET /api/subscriptions/admin/analytics`.
 
 ### Cycle Controls (`/admin/cycles`)
 
@@ -149,7 +185,7 @@ Sections, top to bottom:
 
 Season rollovers are runs too (job **Season rollover**, `seasonRollover`): trigger `manual` from Season Control, `cron` when the settlement rolls the season over. They appear in Run history and in the job filter.
 
-**API:** `GET /api/admin/scheduler/overview`, `GET /api/admin/scheduler/runs?jobName&problemsOnly&days(1–30)&page&limit`, `GET /api/admin/scheduler/runs/:id`, `POST /api/admin/scheduler/runs` `{ jobName }` → 202 `{ run }` (400 unknown job, 409 already active), `POST /api/admin/cycles/bulk` with `background: true` → 202 `{ run }` (without it the call waits and returns the full result, as before; 409 while a bulk run is active). `GET /api/admin/scheduler/status` (in-memory state) and `POST /api/admin/scheduler/trigger/:jobName` (waits for the job) remain for scripts; the page no longer uses them. All require `authenticateToken` + `requireAdmin`; manual and bulk starts write an `admin_audit_logs` row.
+**API:** `GET /api/admin/scheduler/overview`, `GET /api/admin/scheduler/runs?jobName&problemsOnly&days(1–30)&page&limit`, `GET /api/admin/scheduler/runs/:id`, `POST /api/admin/scheduler/runs` `{ jobName }` → 202 `{ run }` (400 unknown job, 409 already active), `POST /api/admin/cycles/bulk` with `background: true` → 202 `{ run }` (without it the call waits and returns the full result, as before; 409 while a bulk run is active). Removed because nothing called them: `POST /api/admin/scheduler/trigger/:jobName` (part 8; `POST /scheduler/runs` replaces it) and `GET /api/admin/scheduler/status` (in-memory state; the overview and run history replace it). All require `authenticateToken` + `requireAdmin`; manual and bulk starts write an `admin_audit_logs` row.
 
 ### Season Control (`/admin/seasons`)
 
@@ -209,13 +245,16 @@ Answers: where credits come from, where they go, and where they pile up. Toolbar
 
 - **KPIs**: earned, spent and net in the window (with per-cycle averages: total ÷ cycles), repairs as a share of battle income, and what the stables hold now with the median balance.
 - **Where credits come from / go**: `financial_ledger` by transaction type: battle income (all modes, participation pay included), streaming, merchandising, achievements, weapon sales; attribute upgrades, facility upgrades, repairs, weapon refinement, operating costs, weapons + robots. Legacy types show as Other.
+- **Repairs** (replaced the Repair Log): repairs, paid (and per repair), saved by discounts and, when the scope has players, how many player stables that repaired used Manual Repair. A table splits automatic / manual / total into full price, Repair Bay discount, Manual Repair discount (50%), paid and per repair; beside it every stable type in the same window: repairs, paid, Repair Bay share of the full price ("Bay off") and the share of repairs done by hand. From `financial_ledger` `repair_cost` rows: full price is `metadata.baseQuote`, after the Repair Bay `metadata.quoteBeforeManualDiscount`, paid the amount; rows without a breakdown count at what was paid. One stable's repairs belong in its Players panel, so there is no per-stable list.
 - **Per cycle**: earned vs spent for at least the last 15 closed cycles.
 - **Balances**: stables per balance band now (below ₡0 up to ₡10M+).
 - **All stable types**: count, earned, spent, net and held for players, Automatons and generated stables side by side in the same window.
 
-Players means the dashboard's Real players filter; Automatons and generated stables by stable type. The ledger holds the current season only. Facility adoption is on Meta, low balances on Players. Cached 60 s; Refresh bypasses the cache.
+Players, Automatons and Generated follow the portal's [stable-type filter](#stable-type-filter). The ledger holds the current season only. Facility adoption is on Meta, low balances on Players. Cached 60 s; Refresh bypasses the cache.
 
-**API:** `GET /api/admin/economy?stables=players|automatons|generated|all&window=7|14|30|season&fresh=true`
+Each closed ledger cycle is summed once into `economy_cycle_rollups` (one cycle takes 1–2 s on ACC; the whole season took 36–42 s and hit the 30 s statement timeout); the newest closed cycle is summed on every load. After a deploy the missing cycles are summed in the background, newest first (about 2 s each, ~3 min for a full season on ACC). Until the cycles a view needs (its window and the 15-cycle chart) are ready, the page shows "Preparing the economy figures" with progress and asks again every 5 s; the 7-cycle view is ready after about 30 s. A closed cycle's stored totals never change; if ledger rows of a closed cycle are ever edited by hand, delete the table's rows to have them summed again.
+
+**API:** `GET /api/admin/economy?stables=players|automatons|generated|all&window=7|14|30|season&fresh=true` → `{ status: 'ready', … }`, or `{ status: 'preparing', scope, cyclesReady, cyclesNeeded, timestamp }` while cycles are summed.
 
 ### Battles (`/admin/battles`)
 
@@ -253,7 +292,7 @@ Is every tiered league working: does promotion and demotion actually move, and c
 1. **Needs attention**: one line per problem, linking to the tier. Identical problems in the same tier are grouped across modes ("Champion can't open in 2v2, 3v3 and Tag Team"); few demotions and unsubscribed rows are one notice each. The badge counts blocked and warning items, not notices.
 2. **All leagues**: a mode × tier grid with the active count (and the total when some rows are unsubscribed) and the status. A cell opens that mode and tier below. Below 768 px each mode is one strip of short counts; tapping it selects the mode.
 3. **League detail** of one mode (`?mode=`, default 1v1): the rules line, then one row per tier (cards below 768 px): active / total, instances (count · size range), stable mix (human / Automaton / generated, by `users.stable_type`), average ELO, eligible (enough cycles in tier), promotion and demotion, status. `?tier=` expands a tier's instances: size, humans, top LP, the LP at the promotion and demotion lines with their rank, who qualifies now, and a link to the player standings of that instance (`/league-standings?mode=&tier=&instance=`).
-4. **This season** of the selected mode, by stable type (`?stable=`: All / Players / Automatons / Generated, by `users.stable_type`; default All). Replaces the former League History page (`/admin/league-history` redirects here):
+4. **This season** of the selected mode, by stable type (`?stables=`: All / Players / Automatons / Generated, by `users.stable_type`; default All). Replaces the former League History page (`/admin/league-history` redirects here):
    - **Per-cycle trend**: promotions up, demotions down, on one scale. A cycle in which the mode recorded no moves at all gets a dashed amber marker and is listed with a link to Cycle Controls' run history (on ACC: KotH cycle 86, interrupted by a deploy restart). Quiet cycles are judged over all stables, so a stable filter shows zeros, not markers.
    - **Season so far**: total promotions and demotions with their ratio, and the last cycle.
    - **Tier boundaries**: per boundary (Bronze ↔ Silver … Diamond ↔ Champion) promoted, demoted and **back within 10 cycles**: of the promotions at least 10 cycles old, the share demoted back across the same boundary within 10 cycles. Noted (amber, "About 1 in 4 promoted robots is back within 10 cycles") above 20% with at least 20 judged promotions; "not judged yet" when every promotion is too recent. KotH and Grand Melee hardly demote, so their bounce-back stays low; that is not better-judged promotion. This is a balance signal, not an attention item.
@@ -405,19 +444,18 @@ Sections, top to bottom:
 | "—" in a day row | Before recording started this season (the later of the switch to per-request recording and the season start): no data, not zero. |
 | This season | Sum of `users.total_practice_battles` (reset at rollover), so it covers the whole season, including battles from before recording started. |
 
-**API:** `GET /api/admin/practice-arena/overview` (the page). `GET /api/admin/practice-arena/stats` keeps its original shape, now computed from the events: `history` rows carry `date` as a full ISO timestamp (UTC midnight) and the day's `playerIds`; `totalBattlesSinceStart` is this season's battles. Both require `authenticateToken` + `requireAdmin`.
+**API:** `GET /api/admin/practice-arena/overview` (`authenticateToken` + `requireAdmin`). `GET /api/admin/practice-arena/stats` (the pre-redesign shape) was removed: nothing called it.
 
-### Repair Log (`/admin/repair-log`)
+### Admin actions (`/admin/actions`)
 
-Manual vs automatic repair events with cost breakdowns, pre-discount costs, and savings tracking. Filterable by repair type and date range.
+Answers "what did an admin change, and did it work?". Under **Security & Moderation**; replaced the Audit Log (`/admin/audit-log` redirects here).
 
-**API:** `GET /api/admin/audit-log/repairs`
+- **Area chips** with counts over every recorded action: Cycles (manual job runs, bulk cycles), Season (rollover, extend, preparation cycles), Automatons, Moderation (image removal, storage clean-up), Players (password resets), Changelog (create, edit, publish, delete); Other only when an unknown operation exists. **All results / Failures**. Both and the page live in the URL (`?area=&result=failure&page=`).
+- **Rows**, newest first, 50 per page: when (UTC), area, a plain title ("Rolled over season 0 → 1", "Rollover of season 0 failed"), one line of details, the admin's stable name, OK / Failed. Background job and bulk starts are recorded when queued, so they read "Started …" (OK means it was queued; the outcome is in Cycle Controls' Run history). "Activate all drafts" with rejections reads "Activated 1 of 3 Automaton drafts" with the rejected stables. A page number past the end jumps to the last page. A row opens the stored details as label / value lines, the operation name and a link to the page the action was taken on (a password reset links to that player's panel).
 
-### Audit Log (`/admin/audit-log`)
+Recorded with `recordAction` into `admin_audit_logs`, which is kept forever (not to be confused with `audit_logs`, the 30-day game event log). Password resets record the player's id, username and stable name, never the password; changelog edits record the entry id, title and the names of the changed fields, never the body text. Rows written by removed endpoints still read well. Titles and details come from `services/admin/admin-actions/adminActionCatalogue.ts`; add new operations there.
 
-Paginated admin action audit trail. Filterable by operation type and date range.
-
-**API:** `GET /api/admin/audit-log`
+**API:** `GET /api/admin/actions?area=cycles|season|automatons|moderation|players|changelog|other&result=all|failure&page&pageSize(≤100)` → `{ entries, total, page, pageSize, totalPages, counts: { all, failures, byArea }, since }`. Removed in part 8: `GET /api/admin/audit-log`, `POST /api/admin/audit-log` (any admin session could write any entry), `GET /api/admin/audit-log/repairs`, and the unused maintenance endpoints `POST /api/admin/repair/all`, `/recalculate-hp`, `/daily-finances/process`, `/snapshots/backfill`, `/scheduler/trigger/:jobName` and the team-battle triggers (`/team-battles/*`, team league and tournament triggers).
 
 ### Changelog (`/admin/changelog`)
 
@@ -480,16 +518,7 @@ The three add up to every human stable. The old churn-risk classification (High 
 
 ## User Filter System
 
-Many admin pages support filtering data by user type to separate real player activity from auto-generated bot noise:
-
-| Filter | What it shows |
-|--------|---------------|
-| **Real** (default) | Human players only: excludes `auto_wimpbot_*`, `auto_averagebot_*`, `auto_expertbot_*`, `test_user_*`, `bye_robot_user` and Automaton stables (`stableType = automaton`) |
-| **Auto** | Only auto-generated bot accounts (`auto_*` prefixes) |
-| **Automatons** | Only Automaton stables (`stableType = automaton`, Spec #55) |
-| **All** | Everything including test and system accounts |
-
-The filter is implemented by `buildUserFilter()` in `src/utils/buildUserFilter.ts` which returns a Prisma `UserWhereInput` clause. The accepted values are `USER_FILTER_TYPES` (`all`, `real`, `auto`, `automaton`), used by every admin `filter` query parameter; the Real Players chip explains "Human players only. Excludes auto-generated bots and Automatons."
+The admin pages split by stable type with the [stable-type filter](#stable-type-filter) (`?stables=`, `utils/stableScope.ts`). Under it, Players is `buildUserFilter('real')` from `src/utils/buildUserFilter.ts`: human stables without `auto_*bot_*`, `test_user_*`, `archetype_*`, `attr_*` and `bye_robot_user` accounts. The same rule decides who counts as a human player for activity, dormant-stable purges and low balances; `buildUserFilter` itself is unchanged.
 
 ## Daily Cycle System
 

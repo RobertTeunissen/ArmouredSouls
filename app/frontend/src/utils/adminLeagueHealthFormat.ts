@@ -12,9 +12,9 @@ import type {
   LeagueHealthModeSummary,
   LeagueHealthTier,
   LeagueSeasonOverview,
-  LeagueSeasonStableFilter,
   SeasonBoundary,
 } from './adminLeagueHealthApi';
+import { formatCount, formatPartShare as formatShare } from './adminFormat';
 
 export const LEAGUE_HEALTH_MODES: readonly LeagueHealthMode[] = [
   'league_1v1', 'league_2v2', 'league_3v3', 'tag_team', 'koth', 'grand_melee',
@@ -95,10 +95,7 @@ export function standingsHref(mode: LeagueHealthMode, tier: string, instance?: s
   return `/league-standings?${params.toString()}`;
 }
 
-/** Integer with thousands separators ("2,744"). */
-export function formatCount(value: number): string {
-  return value.toLocaleString('en-US');
-}
+export { formatCount };
 
 /** Short count for tight cells ("2.7k", "576"). */
 export function formatShortCount(value: number): string {
@@ -107,13 +104,7 @@ export function formatShortCount(value: number): string {
   return `${thousands >= 10 ? Math.round(thousands) : Math.floor(thousands * 10) / 10}k`;
 }
 
-/** Whole percent ("8%"); under 1% but above 0 reads "<1%". */
-export function formatShare(part: number, whole: number): string {
-  if (whole <= 0) return '0%';
-  const percent = (part / whole) * 100;
-  if (percent > 0 && percent < 1) return '<1%';
-  return `${Math.round(percent)}%`;
-}
+export { formatShare };
 
 export function entityNoun(entityType: 'robot' | 'team', count: number): string {
   if (entityType === 'team') return count === 1 ? 'team' : 'teams';
@@ -372,18 +363,6 @@ export function seasonLabel(season: { number: number; phase: string; cycle: numb
 /* ------------------------------------------------------------------ */
 /*  This season                                                        */
 /* ------------------------------------------------------------------ */
-
-export const SEASON_STABLE_FILTERS: ReadonlyArray<{ key: LeagueSeasonStableFilter; label: string; description?: string }> = [
-  { key: 'all', label: 'All' },
-  { key: 'human', label: 'Players', description: 'Moves of robots and teams from human players\u2019 stables.' },
-  { key: 'automaton', label: 'Automatons', description: 'Moves of robots and teams from Automaton stables.' },
-  { key: 'generated', label: 'Generated', description: 'Moves of robots and teams from generated (bot) stables.' },
-];
-
-/** The stable type in `?stable=`, or All. */
-export function readSeasonStable(value: string | null): LeagueSeasonStableFilter {
-  return SEASON_STABLE_FILTERS.some((option) => option.key === value) ? value as LeagueSeasonStableFilter : 'all';
-}
 
 /** "Bronze ↔ Silver". */
 export function boundaryLabel(boundary: Pick<SeasonBoundary, 'lower' | 'upper'>): string {

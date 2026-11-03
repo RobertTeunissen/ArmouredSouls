@@ -5,24 +5,30 @@
  * A toolbar picks the stable type (Players by default, Automatons, Generated,
  * All) and the window (7 / 14 / 30 closed cycles, or the season); both live in
  * the URL (`stables`, `window`). Blocks: KPIs, sources and sinks from the
- * financial ledger, earned vs spent per cycle, balance bands and the
- * per-stable-type table. Facility adoption is on Meta, bankruptcy risk on
- * Players (Low balance).
- * Data: `GET /api/admin/economy`.
+ * financial ledger, repairs (full price, discounts, paid; replaced the Repair
+ * Log, `/admin/repair-log` redirects here), earned vs spent per cycle,
+ * balance bands and the per-stable-type table. Facility adoption is on Meta,
+ * bankruptcy risk on Players (Low balance).
+ * Data: `GET /api/admin/economy`. The first visit after a deploy can answer
+ * `preparing` while the ledger cycles are summed once; the page shows progress
+ * and asks again every few seconds.
  *
  * Definitions: docs/guides/ADMIN_PANEL_GUIDE.md §Economy.
  */
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { ADMIN_FOCUS_RING, AdminPageHeader, PanelError, PanelSkeleton } from '../../components/admin/shared';
-import { ToggleChip } from '../../components/admin/automatons/ui';
-import { EconomyBalances, EconomyByStableType, EconomyFlows, EconomyKpis, EconomyPerCycle } from '../../components/admin/economy/EconomyBlocks';
-import { SCOPE_LABELS, scopeNoun } from '../../utils/adminEconomyFormat';
+import { ADMIN_FOCUS_RING, AdminPageHeader, PanelError, PanelSkeleton, StableScopeToggle, ToggleChip } from '../../components/admin/shared';
+import { EconomyBalances, EconomyByStableType, EconomyFlows, EconomyKpis, EconomyPerCycle, EconomyRepairs } from '../../components/admin/economy/EconomyBlocks';
+import { scopeNoun } from '../../utils/adminEconomyFormat';
+import { readStableScope, writeStableScope } from '../../utils/adminStableScope';
 import { ApiError } from '../../utils/ApiError';
 import { isAbortError } from '../../utils/abort';
-import { getEconomyOverview, type EconomyOverview, type EconomyStableScope, type EconomyWindow } from '../../utils/adminEconomyApi';
+import { getEconomyOverview, type EconomyPreparing, type EconomyResponse, type EconomyStableScope, type EconomyWindow } from '../../utils/adminEconomyApi';
 import { formatUtcTime } from '../../utils/adminDashboardFormat';
+
+/** While the backend sums ledger cycles, ask again this often. */
+export const PREPARING_RETRY_MS = 5_000;
 
 const SCOPES: readonly EconomyStableScope[] = ['players', 'automatons', 'generated', 'all'];
 const WINDOWS: readonly { key: EconomyWindow; label: string }[] = [
@@ -31,10 +37,6 @@ const WINDOWS: readonly { key: EconomyWindow; label: string }[] = [
   { key: '30', label: '30 cycles' },
   { key: 'season', label: 'Season' },
 ];
-
-function readScope(value: string | null): EconomyStableScope {
-  return SCOPES.find((s) => s === value) ?? 'players';
-}
 
 function readWindow(value: string | null): EconomyWindow {
   return WINDOWS.find((w) => w.key === value)?.key ?? '7';
@@ -55,9 +57,9 @@ function ChipGroup<T extends string>({ label, options, value, onChange }: { labe
 
 function EconomyOverviewPage(): React.ReactElement {
   const [params, setParams] = useSearchParams();
-  const stables = readScope(params.get('stables'));
+  const stables = readStableScope(params, SCOPES, 'players');
   const cycleWindow = readWindow(params.get('window'));
-  const [data, setData] = useState<EconomyOverview | null>(null);
+  const [data, setData] = useState<EconomyResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refresh, setRefresh] = useState(0);
@@ -80,7 +82,15 @@ function EconomyOverviewPage(): React.ReactElement {
     return () => controller.abort();
   }, [stables, cycleWindow, refresh]);
 
-  const set = (name: 'stables' | 'window', value: string, fallback: string): void => {
+  // Preparing: ask again until the cycles are summed (the request itself is cheap then).
+  const preparing = data?.status === 'preparing' ? data : null;
+  useEffect(() => {
+    if (!preparing) return undefined;
+    const timer = setTimeout(() => setRefresh((r) => r + 1), PREPARING_RETRY_MS);
+    return () => clearTimeout(timer);
+  }, [preparing]);
+
+  const set = (name: 'window', value: string, fallback: string): void => {
     setParams((current) => {
       const next = new URLSearchParams(current);
       if (value === fallback) next.delete(name);
@@ -89,7 +99,9 @@ function EconomyOverviewPage(): React.ReactElement {
     }, { replace: true });
   };
 
-  const shown = data && data.scope.stables === stables && data.scope.window === cycleWindow ? data : null;
+  const current = data && data.scope.stables === stables && data.scope.window === cycleWindow ? data : null;
+  const shown = current?.status === 'ready' ? current : null;
+  const pending: EconomyPreparing | null = current?.status === 'preparing' ? current : null;
 
   return (
     <div data-testid="economy-overview-page" className="space-y-6">
@@ -114,12 +126,23 @@ function EconomyOverviewPage(): React.ReactElement {
       />
 
       <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-        <ChipGroup label="Stables" options={SCOPES.map((key) => ({ key, label: SCOPE_LABELS[key] }))} value={stables} onChange={(v) => set('stables', v, 'players')} />
+        <StableScopeToggle value={stables} onChange={(v) => setParams((current) => writeStableScope(current, v, 'players'), { replace: true })} />
         <ChipGroup label="Window" options={WINDOWS} value={cycleWindow} onChange={(v) => set('window', v, '7')} />
       </div>
 
       {error && <div className="rounded-lg border border-white/10 bg-surface"><PanelError message={error} onRetry={() => setRefresh((r) => r + 1)} /></div>}
-      {!shown && loading && <div className="rounded-lg border border-white/10 bg-surface"><PanelSkeleton rows={8} /></div>}
+      {pending && (
+        <div role="status" className="rounded-lg border border-white/10 bg-surface p-5 text-sm text-white">
+          <p className="font-medium">Preparing the economy figures</p>
+          <p className="mt-1 text-secondary">
+            Each ledger cycle is summed once after an update; {pending.cyclesReady.toLocaleString('en-US')} of {pending.cyclesNeeded.toLocaleString('en-US')} cycles this view needs are ready. The page updates on its own.
+          </p>
+          <div className="mt-3 h-2 overflow-hidden rounded bg-surface-elevated" aria-hidden="true">
+            <div className="h-full rounded bg-primary motion-safe:transition-[width]" style={{ width: `${pending.cyclesNeeded > 0 ? Math.round((pending.cyclesReady / pending.cyclesNeeded) * 100) : 0}%` }} />
+          </div>
+        </div>
+      )}
+      {!shown && !pending && loading && <div className="rounded-lg border border-white/10 bg-surface"><PanelSkeleton rows={8} /></div>}
 
       {shown && (
         <>
@@ -130,6 +153,7 @@ function EconomyOverviewPage(): React.ReactElement {
           </p>
           <EconomyKpis data={shown} />
           <EconomyFlows data={shown} />
+          <EconomyRepairs data={shown} />
           <EconomyPerCycle data={shown} />
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <EconomyBalances data={shown} />

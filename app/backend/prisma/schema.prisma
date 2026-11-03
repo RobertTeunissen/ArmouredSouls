@@ -1002,6 +1002,47 @@ model AdminKpiSnapshot {
   @@map("admin_kpi_snapshots")
 }
 
+// The admin Economy page's totals of one closed ledger cycle (flows per stable
+// type and transaction type, repairs with their discounts). A closed cycle never
+// changes, so it is summed once instead of rescanning the whole season's
+// `financial_ledger` (36–42 s on ACC, past the 30 s statement timeout). JSON
+// shapes: `src/types/economyRollupTypes.ts`. Rows of earlier seasons are
+// deleted when the current season's rows are written.
+model EconomyCycleRollup {
+  seasonNumber Int      @map("season_number")
+  cycleNumber  Int      @map("cycle_number")
+  flows        Json
+  repairs      Json
+  computedAt   DateTime @default(now()) @map("computed_at")
+
+  @@id([seasonNumber, cycleNumber])
+  @@map("economy_cycle_rollups")
+}
+
+// Failed (5xx) and slow (over 2 s) API requests per UTC hour, route pattern
+// and error code, for the admin System page. Successful requests are only
+// logged at debug level, so this is the only record of request timing.
+// Written in batches by `services/monitoring/requestMetrics.ts`; rows older
+// than 30 days are deleted. Not truncated at Season_Rollover.
+model RequestMetric {
+  id      Int      @id @default(autoincrement())
+  hour    DateTime
+  /// `error` (status 500 or higher) or `slow` (2 s or longer).
+  kind    String   @db.VarChar(8)
+  method  String   @db.VarChar(8)
+  /// Express route pattern, e.g. `/api/admin/users/:id` (never the raw URL).
+  route   String   @db.VarChar(160)
+  /// Error code (`STATEMENT_TIMEOUT`, `INTERNAL_ERROR`, an AppError code or `HTTP_5xx`); empty for `slow`.
+  code    String   @db.VarChar(40)
+  count   Int
+  totalMs BigInt   @map("total_ms")
+  maxMs   Int      @map("max_ms")
+  lastAt  DateTime @map("last_at")
+
+  @@unique([hour, kind, method, route, code])
+  @@map("request_metrics")
+}
+
 // One row per backend start, with a heartbeat while it runs. The gap between a
 // process's last heartbeat and the next start is downtime (usually a deploy),
 // which is how Cycle Controls explains a missed or interrupted run. Never

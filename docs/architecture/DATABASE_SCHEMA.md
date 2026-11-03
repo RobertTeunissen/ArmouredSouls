@@ -2,9 +2,9 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Last Updated**: October 25, 2026 (`battle_participant_builds`, battle-time builds)
+**Last Updated**: November 2, 2026 (`request_metrics`)
 **Status**: Current Implementation  
-**Version**: v2.0
+**Version**: v2.4
 
 ---
 
@@ -15,6 +15,8 @@
 - v1.3 - Added onboarding tracking fields to User model (7 new columns for tutorial system) and ResetLog table for account reset tracking
 - v1.4 - Added King of the Hill (KotH) tables: ScheduledKothMatch, ScheduledKothMatchParticipant. Extended Robot model with 8 KotH cumulative stat fields. Added KotH relation on Battle model.
 - v2.1 - Added AdminKpiSnapshot (`admin_kpi_snapshots`) for admin dashboard trends.
+- v2.3 - Added EconomyCycleRollup (`economy_cycle_rollups`): per-cycle totals for the admin Economy page.
+- v2.4 - Added RequestMetric (`request_metrics`): failed and slow API requests per hour and route for the admin System page.
 - v2.2 - Added SecurityEvent (`security_events`) and UploadedImage (`uploaded_images`) for the admin Security & Moderation pages.
 - v2.0 - Full schema audit against Prisma schema. Added BattleParticipant, AuditLog, CycleSnapshot, TagTeam, ScheduledTagTeamMatch models. Updated Battle model (removed per-robot columns migrated to BattleParticipant, added tag team fields). Updated User model (removed stale stats fields, added email and profile fields). Renamed ScheduledMatch → ScheduledLeagueMatch, TournamentMatch → ScheduledTournamentMatch. Fixed HP/Shield formulas. Added Weapon.rangeBand, Robot.imageUrl.
 
@@ -897,6 +899,43 @@ model AdminKpiSnapshot {
 ```
 
 Not truncated at Season_Rollover. The global cycle counter restarts at 0 every season, which is why the key includes the season and lookups go by `created_at` (the row between 8 days and 7 days − 1 h old).
+
+### EconomyCycleRollup (`economy_cycle_rollups`)
+
+One closed ledger cycle's totals for the admin Economy page, so the page never rescans the whole season's `financial_ledger` (36–42 s on ACC, past the 30 s statement timeout). `flows` holds credits in and out per stable kind and transaction type, `repairs` the repair counts and quote breakdown per stable kind and repair type with the player stables that repaired (JSON shapes in `src/types/economyRollupTypes.ts`). Written by `services/admin/economyCycleRollups.ts` for cycles `1..totalCycles − 1` (the newest closed cycle is summed live), newest first in the background. Rows of earlier seasons are deleted when the current season's are written, so the table holds at most one season (~100 rows).
+
+```prisma
+model EconomyCycleRollup {
+  seasonNumber Int      @map("season_number")
+  cycleNumber  Int      @map("cycle_number")
+  flows        Json
+  repairs      Json
+  computedAt   DateTime @default(now()) @map("computed_at")
+  @@id([seasonNumber, cycleNumber])
+  @@map("economy_cycle_rollups")
+}
+```
+
+### RequestMetric (`request_metrics`)
+
+Failed (status 500 or higher, `kind = 'error'`) and slow (2 s or longer, `kind = 'slow'`) API requests, summed per UTC hour, method, Express route pattern and error code, for the admin System page and its Dashboard item (migration `20261102200000_request_metrics`). `route` is the pattern (`/api/admin/users/:id`), never the raw URL, so ids and query strings are not stored; `code` is the `errorHandler` code (`STATEMENT_TIMEOUT`, `INTERNAL_ERROR`, a 5xx AppError code or `HTTP_<status>`) and empty for slow rows. Written by `services/monitoring/requestMetrics.ts` once a minute with an upsert that adds to the hour's row; rows older than 30 days are deleted hourly. Not season-scoped. No foreign keys.
+
+```prisma
+model RequestMetric {
+  id      Int      @id @default(autoincrement())
+  hour    DateTime
+  kind    String   @db.VarChar(8)
+  method  String   @db.VarChar(8)
+  route   String   @db.VarChar(160)
+  code    String   @db.VarChar(40)
+  count   Int
+  totalMs BigInt   @map("total_ms")
+  maxMs   Int      @map("max_ms")
+  lastAt  DateTime @map("last_at")
+  @@unique([hour, kind, method, route, code])
+  @@map("request_metrics")
+}
+```
 
 ### `security_events` and `uploaded_images` (2026-11-01)
 

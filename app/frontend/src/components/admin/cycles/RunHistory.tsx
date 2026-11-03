@@ -23,8 +23,7 @@ import {
   runResultText,
   triggerLabel,
 } from '../../../utils/adminCycleFormat';
-import { AdminPanel, ADMIN_FOCUS_RING } from '../shared';
-import { SearchAnalyticsPagination } from '../search-analytics/SearchAnalyticsPagination';
+import { AdminPagination, AdminPanel, ADMIN_FOCUS_RING } from '../shared';
 import { RunStatus } from './RunStatus';
 
 export interface RunHistoryProps {
@@ -192,14 +191,16 @@ export function RunHistory({ page, loading, error, query, now, onQueryChange, on
           </>
         ))}
         {page && (
-          <SearchAnalyticsPagination
+          <AdminPagination
             page={page.page}
             total={page.total}
-            limit={page.limit}
+            pageSize={page.limit}
             loading={loading}
-            onPageChange={(next) => onQueryChange({ page: next })}
-            itemLabel="entries"
+            onPage={(next) => onQueryChange({ page: next })}
+            noun="entries"
             label="Run history pagination"
+            hideSinglePage
+            className="border-t border-white/5 px-4 py-3"
           />
         )}
       </AdminPanel>

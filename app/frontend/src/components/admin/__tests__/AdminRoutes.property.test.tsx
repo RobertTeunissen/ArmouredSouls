@@ -96,6 +96,7 @@ const nonAdminUserArb = fc.record({
 /** Admin sub-paths that exist in the real route config */
 const adminSubPaths = [
   'dashboard',
+  'system',
   'cycles',
   'cycles/history',
   'practice-arena',
@@ -113,6 +114,8 @@ const adminSubPaths = [
   'tuning',
   'image-uploads',
   'changelog',
+  'actions',
+  // Redirects (to /admin/economy and /admin/actions).
   'repair-log',
   'audit-log',
 ];

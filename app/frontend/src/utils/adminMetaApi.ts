@@ -1,16 +1,14 @@
 /**
  * Typed API of the admin Meta page (`/admin/meta`).
  *
- * The page reads the choice distributions of `GET /api/admin/stats`
- * (`app/backend/src/services/admin/adminSystemStatsService.ts`) and the build
+ * The page reads the choice sections of `GET /api/admin/meta/choices`
+ * (`app/backend/src/services/admin/meta/metaChoicesService.ts`) and the build
  * sections of `GET /api/admin/meta/builds`
- * (`app/backend/src/services/admin/meta/metaBuildsService.ts`). It does not
- * use the shared `adminStore.fetchStats()` slot: that commits every response,
- * so a slow response for an old filter could overwrite a newer one.
+ * (`app/backend/src/services/admin/meta/metaBuildsService.ts`), both per
+ * stable type (`stables`).
  */
 import { api } from './api';
-import type { UserFilterType } from '../components/admin/shared';
-import type { SystemStats } from '../components/admin/types';
+import type { StableScope } from './adminStableScope';
 
 export type AttributeGroup = 'combat' | 'defence' | 'chassis' | 'ai' | 'team';
 export type RefinementKind = 'hone' | 'augment' | 'sharpen' | 'forge';
@@ -50,10 +48,35 @@ export interface MetaBuilds {
   eventEntry: MetaEventEntry;
 }
 
-export function getMetaStats(filter: UserFilterType, signal?: AbortSignal): Promise<SystemStats> {
-  return api.get<SystemStats>('/api/admin/stats', { params: { filter }, signal });
+/** Stances, loadouts, yield thresholds, weapon totals and facility ownership. */
+export interface MetaChoices {
+  weapons: {
+    totalBought: number;
+    /** Robots with a main weapon (ignores offhands). */
+    equipped: number;
+    /** Owned weapons sitting in any robot's main or offhand slot. */
+    equippedInventoryItems: number;
+  };
+  stances: Array<{ stance: string; count: number }>;
+  loadouts: Array<{ type: string; count: number }>;
+  yieldThresholds: {
+    distribution: Array<{ threshold: number; count: number }>;
+    mostCommon: number;
+    mostCommonCount: number;
+  };
+  facilities: {
+    /** `purchaseCount` = stables owning the facility at level 1 or higher. */
+    summary: Array<{ type: string; purchaseCount: number; avgLevel: number }>;
+    totalPurchases: number;
+    mostPopular: string;
+  };
+  timestamp: string;
 }
 
-export function getMetaBuilds(filter: UserFilterType, signal?: AbortSignal): Promise<MetaBuilds> {
-  return api.get<MetaBuilds>('/api/admin/meta/builds', { params: { filter }, signal });
+export function getMetaChoices(stables: StableScope, signal?: AbortSignal): Promise<MetaChoices> {
+  return api.get<MetaChoices>('/api/admin/meta/choices', { params: { stables }, signal });
+}
+
+export function getMetaBuilds(stables: StableScope, signal?: AbortSignal): Promise<MetaBuilds> {
+  return api.get<MetaBuilds>('/api/admin/meta/builds', { params: { stables }, signal });
 }

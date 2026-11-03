@@ -182,6 +182,8 @@ const DB_DEPENDENT = [
   // Cycle Controls: scheduler run store, missed/interrupted runs, overview.
   'tests/integration/schedulerRunHistory.test.ts',
   'tests/integration/practiceArenaUsage.test.ts',
+  // System page: request metrics flush/prune, overview, Dashboard request failures.
+  'tests/integration/adminSystem.test.ts',
   // Spec #55 — Domain_Service_Extraction (task group 2)
   'src/services/economy/__tests__/facilityUpgradeService.test.ts',
   'src/services/economy/__tests__/weaponPurchaseService.test.ts',
@@ -198,7 +200,6 @@ const DB_DEPENDENT = [
   'src/services/economy/__tests__/unifiedFacilityROI.integration.test.ts',
   'src/services/economy/__tests__/unifiedFacilityROI.preservation.property.test.ts',
   'src/services/matchmaking/__tests__/deterministicTieBreaking.property.test.ts',
-  'tests/adminRepairAuditLog.test.ts',
   'tests/analyticsApi.test.ts',
   'tests/arenaLayout.test.ts',
   'tests/auth.test.ts',

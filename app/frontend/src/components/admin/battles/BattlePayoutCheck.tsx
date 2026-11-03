@@ -5,6 +5,7 @@
 import { useState } from 'react';
 import { ADMIN_FOCUS_RING } from '../shared';
 import { StableTag } from './BattleBadges';
+import { StableLink } from './StableLink';
 import type { PayoutCheck, PlacementPayoutComponent, StablePayoutCheck } from './types';
 import { formatCredits, formatNumber } from '../../../utils/adminBattlesFormat';
 
@@ -132,7 +133,7 @@ export function BattlePayoutCheck({ payout }: { payout: PayoutCheck }): React.Re
                   <tr>
                     <td className="py-2 pl-4 pr-2">
                       <span className="flex flex-wrap items-center gap-2">
-                        {s.stable.name}
+                        <StableLink stable={s.stable} className="text-white" />
                         <StableTag kind={s.stable.stableType} />
                       </span>
                       {s.inputs && (

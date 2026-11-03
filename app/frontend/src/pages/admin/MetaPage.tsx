@@ -6,7 +6,7 @@
  *
  * Moved off the Dashboard so the landing page stays short; the old Tuning,
  * Refinement and Subscriptions pages were merged in and redirect here. The
- * filter (`?filter=`, default Real players) is shared with the Dashboard.
+ * filter (`?stables=`, default Players) is shared with the Dashboard.
  * Tier distributions are on League Health; what wins is on Attributes and
  * Weapons.
  *
@@ -15,12 +15,11 @@
 import { useCallback } from 'react';
 import type { ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import type { UserFilterType } from '../../components/admin/shared';
 import { PanelError } from '../../components/admin/shared';
 import { DashboardToolbar } from '../../components/admin/dashboard';
 import { EventEntryCard, FacilitiesCard, ShareCard, TuningCard, WeaponsCard, YieldHistogram } from '../../components/admin/meta';
 import { useMetaBuilds, useMetaOverview } from '../../hooks/useMetaOverview';
-import { DEFAULT_DASHBOARD_FILTER, readDashboardFilter } from '../../utils/adminDashboardFormat';
+import { readStableScope, STABLE_SCOPES, writeStableScope, type StableScope } from '../../utils/adminStableScope';
 import { humanizeKey } from '../../utils/adminMetaFormat';
 
 function MetaGroup({ id, title, note, children }: { id: string; title: string; note: string; children: ReactNode }): ReactNode {
@@ -37,18 +36,13 @@ function MetaGroup({ id, title, note, children }: { id: string; title: string; n
 
 function MetaPage(): React.ReactElement {
   const [searchParams, setSearchParams] = useSearchParams();
-  const filter = readDashboardFilter(searchParams.get('filter'));
+  const filter = readStableScope(searchParams, STABLE_SCOPES, 'players');
   const overview = useMetaOverview(filter);
   const builds = useMetaBuilds(filter);
   const { data } = overview;
 
-  const changeFilter = useCallback((next: UserFilterType): void => {
-    setSearchParams((params) => {
-      const updated = new URLSearchParams(params);
-      if (next === DEFAULT_DASHBOARD_FILTER) updated.delete('filter');
-      else updated.set('filter', next);
-      return updated;
-    }, { replace: true });
+  const changeFilter = useCallback((next: StableScope): void => {
+    setSearchParams((params) => writeStableScope(params, next, 'players'), { replace: true });
   }, [setSearchParams]);
 
   const { reload: reloadOverview } = overview;

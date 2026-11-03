@@ -20,7 +20,7 @@ import {
   type DashboardKpis,
   type DashboardStatus,
 } from '../utils/adminDashboardApi';
-import type { UserFilterType } from '../components/admin/shared';
+import type { StableScope } from '../utils/adminStableScope';
 
 export interface DashboardSection<T> {
   data: T | null;
@@ -49,7 +49,7 @@ function newest(...timestamps: Array<string | undefined>): string | null {
   return values.reduce((a, b) => (new Date(a).getTime() >= new Date(b).getTime() ? a : b));
 }
 
-export function useAdminDashboard(filter: UserFilterType): AdminDashboardData {
+export function useAdminDashboard(filter: StableScope): AdminDashboardData {
   const [status, setStatus] = useState<DashboardSection<DashboardStatus>>(EMPTY);
   const [kpis, setKpis] = useState<DashboardSection<DashboardKpis>>(EMPTY);
   const [activity, setActivity] = useState<DashboardSection<BattleActivity>>(EMPTY);
@@ -71,7 +71,7 @@ export function useAdminDashboard(filter: UserFilterType): AdminDashboardData {
     }
   }, []);
 
-  const loadFiltered = useCallback(async (current: UserFilterType, fresh: boolean): Promise<void> => {
+  const loadFiltered = useCallback(async (current: StableScope, fresh: boolean): Promise<void> => {
     filteredController.current?.abort();
     const controller = new AbortController();
     filteredController.current = controller;

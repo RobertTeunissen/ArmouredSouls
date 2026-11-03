@@ -1,13 +1,14 @@
 /**
  * EconomyOverviewPage: the stable-type and window toggles (in the URL), the
- * KPIs, flows, per-cycle chart, balance bands, the per-type table, Refresh
- * and the error state.
+ * KPIs, flows, the Repairs block, per-cycle chart, balance bands, the
+ * per-type table, Refresh and the error state. Repair figures are ACC's
+ * players, cycles 86–92.
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
-import EconomyOverviewPage from '../EconomyOverviewPage';
+import EconomyOverviewPage, { PREPARING_RETRY_MS } from '../EconomyOverviewPage';
 import type { EconomyOverview, EconomyStableScope, EconomyWindow } from '../../../utils/adminEconomyApi';
 
 const mockGet = vi.fn();
@@ -18,6 +19,7 @@ vi.mock('../../../utils/apiClient', () => ({
 function overview(stables: EconomyStableScope, window: EconomyWindow): EconomyOverview {
   const players = stables === 'players';
   return {
+    status: 'ready',
     scope: { stables, window, fromCycle: window === 'season' ? 1 : 82, toCycle: 88, cycles: window === 'season' ? 88 : 7 },
     kpis: {
       earned: players ? 315_000_000 : 371_000_000,
@@ -45,6 +47,17 @@ function overview(stables: EconomyStableScope, window: EconomyWindow): EconomyOv
       { stables: 'automatons', count: 500, earned: 371_000_000, spent: 1_230_000_000, net: -859_000_000, heldNow: 32_000_000 },
       { stables: 'generated', count: 3903, earned: 2_730_000_000, spent: 1_280_000_000, net: 1_450_000_000, heldNow: 6_120_000_000 },
     ],
+    repairs: {
+      automatic: { repairs: 1544, fullPrice: 65_800_000, repairBayDiscount: 28_400_000, manualDiscount: 0, paid: 37_400_000 },
+      manual: { repairs: 377, fullPrice: 27_900_000, repairBayDiscount: 13_300_000, manualDiscount: 7_300_000, paid: 7_300_000 },
+      total: { repairs: 1921, fullPrice: 93_700_000, repairBayDiscount: 41_700_000, manualDiscount: 7_300_000, paid: 44_700_000 },
+      playerStables: players ? { repairing: 25, manual: 14 } : null,
+      byStableType: [
+        { stables: 'players', repairs: 1921, paid: 44_700_000, repairBayShare: 44.5, manualShare: 19.6 },
+        { stables: 'automatons', repairs: 17_965, paid: 183_700_000, repairBayShare: 7.2, manualShare: 0 },
+        { stables: 'generated', repairs: 109_029, paid: 1_030_000_000, repairBayShare: 0, manualShare: 0 },
+      ],
+    },
     timestamp: '2026-10-30T12:00:00.000Z',
   };
 }
@@ -92,6 +105,38 @@ describe('EconomyOverviewPage', () => {
     expect(screen.queryByText(/Facility Popularity/i)).toBeNull();
   });
 
+  it('shows repairs: totals, discounts per repair type and every stable type', async () => {
+    renderPage();
+    const block = await screen.findByRole('region', { name: 'Repairs' });
+    expect(within(block).getByText('1,921', { selector: 'dd' })).toBeInTheDocument();
+    expect(within(block).getByText('repairs (1,544 automatic · 377 manual)')).toBeInTheDocument();
+    expect(within(block).getByText('paid · ₡23.3k per repair')).toBeInTheDocument();
+    expect(within(block).getByText('saved by discounts (52% of the full price)')).toBeInTheDocument();
+    expect(within(block).getByText('14 of 25', { selector: 'dd' })).toBeInTheDocument();
+    expect(within(block).getByText('stables used Manual Repair')).toBeInTheDocument();
+
+    const byType = within(block).getByRole('table', { name: /discounts and what was paid/ });
+    expect(within(byType).getByRole('columnheader', { name: 'Manual (50%)' })).toBeInTheDocument();
+    const automatic = within(byType).getByRole('row', { name: /^Automatic/ });
+    expect(within(automatic).getByText('−₡28.4M')).toBeInTheDocument();
+    expect(within(automatic).getByText('—')).toBeInTheDocument();
+    const manual = within(byType).getByRole('row', { name: /^Manual/ });
+    expect(within(manual).getByText('−₡7.30M')).toBeInTheDocument();
+    expect(within(manual).getByText('₡19.4k')).toBeInTheDocument();
+
+    const kinds = within(block).getByRole('table', { name: /Repairs of each stable type/ });
+    const automatons = within(kinds).getByRole('row', { name: /^Automatons/ });
+    expect(within(automatons).getByText('17,965')).toBeInTheDocument();
+    expect(within(automatons).getByText('7%')).toBeInTheDocument();
+    expect(within(within(kinds).getByRole('row', { name: /^Players/ })).getByText('20%')).toBeInTheDocument();
+  });
+
+  it('leaves out the Manual Repair count when the scope has no players', async () => {
+    renderPage('/admin/economy?stables=automatons');
+    const block = await screen.findByRole('region', { name: 'Repairs' });
+    expect(within(block).queryByText(/used Manual Repair/)).toBeNull();
+  });
+
   it('switches stable type and window, keeping both in the URL', async () => {
     const user = userEvent.setup();
     renderPage();
@@ -127,6 +172,32 @@ describe('EconomyOverviewPage', () => {
     await screen.findByText('₡315M', { selector: 'dd' });
     await user.click(screen.getByRole('button', { name: /Refresh/ }));
     await waitFor(() => expect(mockGet).toHaveBeenLastCalledWith('/api/admin/economy', expect.objectContaining({ params: { stables: 'players', window: '7', fresh: 'true' } })));
+  });
+
+  it('shows progress while the ledger cycles are summed, then the page', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      mockGet.mockResolvedValueOnce({
+        data: {
+          status: 'preparing',
+          scope: { stables: 'players', window: '7', fromCycle: 82, toCycle: 88, cycles: 7 },
+          cyclesReady: 6,
+          cyclesNeeded: 15,
+          timestamp: '2026-10-30T12:00:00.000Z',
+        },
+      });
+      renderPage();
+      const status = await screen.findByText('Preparing the economy figures');
+      expect(status.closest('[role="status"]')).toHaveTextContent('6 of 15 cycles this view needs are ready');
+      expect(screen.queryByRole('region', { name: 'Repairs' })).toBeNull();
+      expect(mockGet).toHaveBeenCalledTimes(1);
+      await vi.advanceTimersByTimeAsync(PREPARING_RETRY_MS);
+      expect(await screen.findByText('₡315M', { selector: 'dd' })).toBeInTheDocument();
+      expect(mockGet).toHaveBeenCalledTimes(2);
+      expect(screen.queryByText('Preparing the economy figures')).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('shows an error with Retry', async () => {

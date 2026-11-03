@@ -160,35 +160,3 @@ export function BattlesTable({ battles, selectedId, onOpen }: BattlesTableProps)
     </>
   );
 }
-
-export interface BattlesPaginationProps {
-  page: number;
-  totalPages: number;
-  total: number;
-  pageSize: number;
-  loading: boolean;
-  onPage: (page: number) => void;
-  /** Plural noun of the rows ("battles"). */
-  noun?: string;
-}
-
-export function BattlesPagination({ page, totalPages, total, pageSize, loading, onPage, noun = 'battles' }: BattlesPaginationProps): React.ReactElement {
-  const first = total === 0 ? 0 : (page - 1) * pageSize + 1;
-  const last = Math.min(total, page * pageSize);
-  const button = `min-h-11 rounded-md px-4 text-sm disabled:cursor-default disabled:text-tertiary ${ADMIN_FOCUS_RING}`;
-  return (
-    <nav aria-label={`${noun.charAt(0).toUpperCase()}${noun.slice(1)} pages`} className="flex flex-wrap items-center justify-between gap-3">
-      <p className="text-xs text-secondary">
-        Showing {first.toLocaleString('en-US')}–{last.toLocaleString('en-US')} of {total.toLocaleString('en-US')} {noun}
-      </p>
-      <div className="flex gap-2">
-        <button type="button" className={`${button} bg-surface text-white`} disabled={page <= 1 || loading} onClick={() => onPage(page - 1)}>
-          Previous
-        </button>
-        <button type="button" className={`${button} bg-surface-elevated text-white`} disabled={page >= totalPages || loading} onClick={() => onPage(page + 1)}>
-          Next
-        </button>
-      </div>
-    </nav>
-  );
-}

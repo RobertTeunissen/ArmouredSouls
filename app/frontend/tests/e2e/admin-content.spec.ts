@@ -30,13 +30,13 @@ test.describe('Admin Content', () => {
 
   test('serves the new endpoints and removes the merged ones', async ({ request }) => {
     const headers = { Authorization: `Bearer ${await adminToken(request)}` };
-    for (const path of ['/api/admin/meta/builds?filter=all', '/api/admin/achievements/analytics?stables=generated']) {
+    for (const path of ['/api/admin/meta/choices?stables=all', '/api/admin/meta/builds?stables=all', '/api/admin/achievements/analytics?stables=generated']) {
       expect((await request.get(`${API_URL}${path}`, { headers })).status(), path).toBe(200);
     }
-    for (const path of ['/api/admin/tuning/adoption', '/api/admin/refinement/adoption', '/api/subscriptions/admin/analytics']) {
+    for (const path of ['/api/admin/stats', '/api/admin/tuning/adoption', '/api/admin/refinement/adoption', '/api/subscriptions/admin/analytics']) {
       expect((await request.get(`${API_URL}${path}`, { headers })).status(), path).toBe(404);
     }
-    const builds = await (await request.get(`${API_URL}/api/admin/meta/builds?filter=all`, { headers })).json();
+    const builds = await (await request.get(`${API_URL}/api/admin/meta/builds?stables=all`, { headers })).json();
     expect(builds.tuning.attributes).toHaveLength(23);
     expect(builds.eventEntry.perEvent).toHaveLength(9);
     expect(builds.refinements.perKind.map((kind: { kind: string }) => kind.kind)).toEqual(['hone', 'augment', 'sharpen', 'forge']);
@@ -52,7 +52,7 @@ test.describe('Admin Content', () => {
 
   test('Meta: three groups with the build sections, on the shared filter', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
-    await gotoAuthed(page, '/admin/meta?filter=all');
+    await gotoAuthed(page, '/admin/meta?stables=all');
     await expect(page.locator(META)).toBeVisible();
     for (const group of ['Combat settings', 'Robot builds', 'Stable investments']) {
       await expect(page.getByRole('region', { name: group })).toBeVisible();
@@ -69,10 +69,10 @@ test.describe('Admin Content', () => {
     }
     if (SHOTS) await page.screenshot({ path: `${SHOTS}/e2e-meta-desktop.png`, fullPage: true });
 
-    const reloaded = page.waitForResponse((r) => r.url().includes('/api/admin/meta/builds?filter=auto') && r.status() === 200);
-    await page.getByRole('button', { name: /Auto-generated/ }).click();
+    const reloaded = page.waitForResponse((r) => r.url().includes('/api/admin/meta/builds?stables=generated') && r.status() === 200);
+    await page.getByRole('button', { name: 'Generated', exact: true }).click();
     await reloaded;
-    await expect(page).toHaveURL(/filter=auto/);
+    await expect(page).toHaveURL(/stables=generated/);
   });
 
   test('Achievements: season scope, stable-type toggle and a sortable table', async ({ page }) => {

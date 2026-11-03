@@ -1,7 +1,7 @@
 /**
  * Admin Users & Security Routes
  *
- * User management, search, password reset and audit log endpoints. Security
+ * User management, search, password reset and the Admin actions list. Security
  * and image moderation live in `adminModeration.ts`. Battle inspection lives in `adminBattles.ts`.
  * Mounted at /api/admin/ from the main admin router.
  */
@@ -13,33 +13,16 @@ import { authenticateToken, requireAdmin, AuthRequest } from '../middleware/auth
 import { validateRequest } from '../middleware/schemaValidator';
 import { positiveIntParam } from '../utils/securityValidation';
 import logger from '../config/logger';
-import { AppError } from '../errors';
 import { securityMonitor } from '../services/security/securityMonitor';
 import { resetPassword } from '../services/auth/passwordResetService';
 import { validatePassword } from '../utils/validation';
-import { getRepairAuditLog } from '../services/admin/adminStatsService';
 import { assertHumanStable, getPlayerDetail, getPlayersOverview, searchStables } from '../services/admin/adminPlayersService';
-import { recordAction as recordAuditAction, getEntries as getAuditEntries } from '../services/admin/adminAuditLogService';
+import { recordAction as recordAuditAction } from '../services/admin/adminAuditLogService';
+import { ADMIN_ACTION_AREAS, ADMIN_ACTION_RESULTS, getAdminActions } from '../services/admin/admin-actions';
 
 const router = express.Router();
 
 // --- Zod schemas ---
-
-const repairAuditQuerySchema = z.object({
-  page: z.coerce.number().int().positive().default(1),
-  limit: z.coerce.number().int().positive().max(100).default(25),
-  // The message is user-facing: `validateRequest` builds the response's `error` from
-  // the failing issues, and this schema rejects before the handler's own check below,
-  // so Zod's default ('Invalid option: expected one of "manual"|"automatic"') is what
-  // an operator would otherwise read.
-  repairType: z
-    .enum(['manual', 'automatic'], { message: "repairType must be 'manual' or 'automatic'" })
-    .optional(),
-  startDate: z.string().optional(),
-  endDate: z.string().optional(),
-  stableName: z.string().max(100).optional(),
-  robotName: z.string().max(100).optional(),
-});
 
 const userSearchQuerySchema = z.object({
   q: z.string().min(1).max(50),
@@ -53,18 +36,11 @@ const resetPasswordBodySchema = z.object({
   password: z.string(),
 });
 
-const auditLogQuerySchema = z.object({
-  page: z.coerce.number().int().positive().optional().default(1),
-  pageSize: z.coerce.number().int().positive().max(100).optional().default(25),
-  operationType: z.string().max(100).optional(),
-  startDate: z.string().optional(),
-  endDate: z.string().optional(),
-});
-
-const auditLogBodySchema = z.object({
-  operationType: z.string().min(1).max(100),
-  operationResult: z.enum(['success', 'failure']),
-  resultSummary: z.record(z.string(), z.unknown()),
+const adminActionsQuerySchema = z.object({
+  area: z.enum(ADMIN_ACTION_AREAS).optional(),
+  result: z.enum(ADMIN_ACTION_RESULTS).optional().default('all'),
+  page: z.coerce.number().int().positive().max(10_000).optional().default(1),
+  pageSize: z.coerce.number().int().positive().max(100).optional().default(50),
 });
 
 // --- Rate limiter ---
@@ -153,58 +129,26 @@ router.post('/users/:id/reset-password', authenticateToken, requireAdmin, resetP
   });
 
   logger.info('[Admin] Password reset successful', { initiatorId, targetUserId: result.userId });
+  // Who and which stable, never the password.
+  recordAuditAction(initiatorId, 'password_reset', 'success', {
+    targetUserId: result.userId,
+    username: result.username,
+    stableName: result.stableName,
+  });
 
   res.json({ success: true, userId: result.userId, username: result.username });
 });
 
 /**
- * GET /api/admin/audit-log
- * Get paginated admin audit log entries.
+ * GET /api/admin/actions
+ * The Admin actions page: recorded admin actions newest first, filterable by
+ * area (`area`) and result (`result=failure`), with plain descriptions, the
+ * admin's name and counts per area. Replaced GET/POST /audit-log and
+ * GET /audit-log/repairs (repairs are on the Economy page).
  */
-router.get('/audit-log', authenticateToken, requireAdmin, validateRequest({ query: auditLogQuerySchema }), async (req: Request, res: Response) => {
-  const page = parseInt(req.query.page as string) || 1;
-  const pageSize = Math.min(parseInt(req.query.pageSize as string) || 25, 100);
-  const operationType = req.query.operationType as string | undefined;
-  const startDate = req.query.startDate ? new Date(req.query.startDate as string) : undefined;
-  const endDate = req.query.endDate ? new Date(req.query.endDate as string) : undefined;
-
-  const result = await getAuditEntries({ page, pageSize, operationType, startDate, endDate });
-  res.json(result);
-});
-
-/**
- * POST /api/admin/audit-log
- * Manually record an admin audit log entry.
- */
-router.post('/audit-log', authenticateToken, requireAdmin, validateRequest({ body: auditLogBodySchema }), async (req: Request, res: Response) => {
-  const authReq = req as AuthRequest;
-  const { operationType, operationResult, resultSummary } = req.body;
-  recordAuditAction(authReq.user!.userId, operationType, operationResult, resultSummary);
-  res.json({ success: true });
-});
-
-
-/**
- * GET /api/admin/audit-log/repairs
- * Get paginated repair audit log events with optional filtering by repairType and date range.
- * Returns events, summary stats, and pagination.
- */
-router.get('/audit-log/repairs', authenticateToken, requireAdmin, validateRequest({ query: repairAuditQuerySchema }), async (req: Request, res: Response) => {
-  const repairType = req.query.repairType as string | undefined;
-  const startDate = req.query.startDate as string | undefined;
-  const endDate = req.query.endDate as string | undefined;
-  const stableName = req.query.stableName as string | undefined;
-  const robotName = req.query.robotName as string | undefined;
-  const page = Math.max(1, parseInt(req.query.page as string) || 1);
-  const limit = Math.min(Math.max(1, parseInt(req.query.limit as string) || 25), 100);
-
-  // Validate repairType if provided
-  if (repairType && repairType !== 'manual' && repairType !== 'automatic') {
-    throw new AppError('INVALID_REPAIR_TYPE', "Invalid repairType. Must be 'manual' or 'automatic'", 400);
-  }
-
-  const result = await getRepairAuditLog({ repairType, startDate, endDate, stableName, robotName, page, limit });
-  res.json(result);
+router.get('/actions', authenticateToken, requireAdmin, validateRequest({ query: adminActionsQuerySchema }), async (req: Request, res: Response) => {
+  const query = adminActionsQuerySchema.parse(req.query);
+  res.json(await getAdminActions(query));
 });
 
 export default router;

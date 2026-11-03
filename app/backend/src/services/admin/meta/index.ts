@@ -1,3 +1,4 @@
-/** The robot-build sections of the admin Meta page (`GET /api/admin/meta/builds`). */
+/** The admin Meta page: choices (`GET /api/admin/meta/choices`) and robot builds (`GET /api/admin/meta/builds`). */
 export { getMetaBuilds, summarizeTuning, summarizeRefinements, summarizeEventEntry } from './metaBuildsService';
+export { getMetaChoices } from './metaChoicesService';
 export type * from './metaBuildsTypes';

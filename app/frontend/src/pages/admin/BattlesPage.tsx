@@ -9,7 +9,8 @@
  */
 import { useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { BattleSlideOver, BattlesFilters, BattlesPagination, BattlesTable } from '../../components/admin/battles';
+import { BattleSlideOver, BattlesFilters, BattlesTable } from '../../components/admin/battles';
+import { AdminPagination } from '../../components/admin/shared';
 import type { BattleFilters } from '../../components/admin/battles';
 import { ADMIN_FOCUS_RING, PanelError, PanelSkeleton } from '../../components/admin/shared';
 import { useBattleList } from '../../hooks/useAdminBattles';
@@ -90,13 +91,14 @@ function AdminBattlesPage(): React.ReactElement {
         </div>
       )}
       {data && data.pagination.total > 0 && (
-        <BattlesPagination
+        <AdminPagination
           page={filters.page}
           totalPages={data.pagination.totalPages}
           total={data.pagination.total}
           pageSize={BATTLES_PAGE_SIZE}
           loading={list.loading}
           onPage={(page) => setFilters({ page })}
+          noun="battles"
         />
       )}
 

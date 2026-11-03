@@ -26,15 +26,12 @@ export function AdminNavList({ onNavigate }: { onNavigate?: () => void }): React
                     to={item.path}
                     end={item.path === '/admin/cycles'}
                     onClick={onNavigate}
-                    className={`flex items-center gap-3 px-4 py-2 text-sm transition-colors motion-reduce:transition-none ${ADMIN_FOCUS_RING}
+                    className={`flex min-h-10 items-center px-4 py-2 text-sm transition-colors motion-reduce:transition-none ${ADMIN_FOCUS_RING}
                       ${active
                         ? 'bg-primary/15 text-primary border-r-2 border-primary'
                         : 'text-secondary hover:text-white hover:bg-white/5'
                       }`}
                   >
-                    <span className="text-base shrink-0" aria-hidden="true">
-                      {item.icon}
-                    </span>
                     <span className="truncate">{item.label}</span>
                   </NavLink>
                 </li>

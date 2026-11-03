@@ -27,11 +27,11 @@ const NAVIGATION_SECTIONS = [
   'Player Management',
   'Security & Moderation',
   'Content',
-  'Maintenance',
 ];
 
 const NAVIGATION_ITEMS = [
   { label: 'Dashboard', path: '/admin/dashboard' },
+  { label: 'System', path: '/admin/system' },
   { label: 'Cycle Controls', path: '/admin/cycles' },
   { label: 'Season Control', path: '/admin/seasons' },
   { label: 'Practice Arena', path: '/admin/practice-arena' },
@@ -46,11 +46,10 @@ const NAVIGATION_ITEMS = [
   { label: 'Automatons', path: '/admin/automatons' },
   { label: 'Security', path: '/admin/security' },
   { label: 'Image Uploads', path: '/admin/image-uploads' },
+  { label: 'Admin actions', path: '/admin/actions' },
   { label: 'Changelog', path: '/admin/changelog' },
   { label: 'Achievements', path: '/admin/achievements' },
   { label: 'Search Analytics', path: '/admin/search-analytics' },
-  { label: 'Repair Log', path: '/admin/repair-log' },
-  { label: 'Audit Log', path: '/admin/audit-log' },
 ];
 
 // ----------------------------------------------------------------
@@ -76,10 +75,11 @@ describe('AdminLayout', () => {
   /**
    * Requirement 1.2: The Sidebar SHALL group navigation links into the
    * following sections: Overview, Game Operations, Battle Data, Player
-   * Management, Security & Moderation, Content, and Maintenance.
+   * Management, Security & Moderation and Content (part 8 retired the
+   * Maintenance group: Admin actions moved under Security & Moderation).
    */
   describe('Sidebar navigation sections', () => {
-    it('should render all 7 navigation section headings', () => {
+    it('should render all 6 navigation section headings', () => {
       renderLayout();
 
       const sidebar = screen.getByRole('complementary', { name: /admin sidebar navigation/i });
@@ -108,8 +108,18 @@ describe('AdminLayout', () => {
       const links = within(sidebar).getAllByRole('link');
 
       // Nav items in the sidebar (Overview 1 + Game Ops 3 + Battle Data 6 + Player Mgmt 3
-      // + Security 2 + Content 5 + Maintenance 2)
+      // + Security & Moderation 3 + Content 3)
       expect(links.length).toBe(NAVIGATION_ITEMS.length);
+    });
+
+    it('lists Admin actions under Security & Moderation and has no Maintenance group', () => {
+      renderLayout();
+
+      const sidebar = screen.getByRole('complementary', { name: /admin sidebar navigation/i });
+      expect(within(sidebar).queryByText('Maintenance')).not.toBeInTheDocument();
+      expect(within(sidebar).queryByRole('link', { name: /repair log|audit log/i })).not.toBeInTheDocument();
+      const order = within(sidebar).getAllByRole('link').map((l) => l.getAttribute('href'));
+      expect(order.indexOf('/admin/actions')).toBe(order.indexOf('/admin/image-uploads') + 1);
     });
   });
 
@@ -151,7 +161,7 @@ describe('AdminLayout', () => {
         { path: '/admin/players', title: 'Players' },
         { path: '/admin/economy', title: 'Economy' },
         { path: '/admin/automatons', title: 'Automaton Stables' },
-        { path: '/admin/audit-log', title: 'Audit Log' },
+        { path: '/admin/actions', title: 'Admin actions' },
       ];
 
       for (const { path, title } of routeTitlePairs) {
@@ -240,6 +250,15 @@ describe('AdminLayout', () => {
         expect(within(sidebar).getByText(section)).not.toHaveClass('hidden');
       }
       expect(within(sidebar).getByText('Dashboard')).not.toHaveClass('hidden');
+    });
+
+    it('should show labels only: each link holds just its label, no icon', () => {
+      renderLayout();
+
+      const sidebar = screen.getByRole('complementary', { name: /admin sidebar navigation/i });
+      const links = within(sidebar).getAllByRole('link');
+      expect(links.map((link) => link.textContent)).toEqual(NAVIGATION_ITEMS.map((item) => item.label));
+      for (const link of links) expect(link.querySelector('[aria-hidden="true"]')).toBeNull();
     });
 
     it('should offset the main content by the sidebar width from md only', () => {

@@ -20,6 +20,8 @@
 - v3.2 - Added Security tab (9th tab) consuming backend security monitoring APIs from spec 11. Displays security event summary with severity counts, flagged users, filterable events table with expandable detail rows.
 - v3.3 (Oct 10, 2026) - Added the Automatons page (`/admin/automatons`) and the Automatons user filter (Spec #55).
 - v3.10 (Oct 25, 2026) - Redesigned Battle Logs as **Battles** (`/admin/battles`): one list query without the combat log (the old page loaded every row's `battle_log`, 100 kB–1 MB each, and skipped battles when paging "All Types"), all 9 modes, a stable-type filter including Automatons, outcome and date filters, search by robot / stable / `#id`, correct winners in team modes (`winning_side`), and an admin check per battle: payout check against the ledger, combat log with per-hit formulas, "Copy for analysis" text export and JSON download. KotH and Grand Melee logs now keep formula breakdowns; the player battle report no longer sends them. The sections below describing the Battle Logs tab and its API are superseded; definitions are in `docs/guides/ADMIN_PANEL_GUIDE.md` §Battles.
+- v3.18 (Nov 2, 2026) - Portal-wide clean-up after the page-by-page redesign. One stable-type filter, Players / Automatons / Generated / All (`?stables=`), on Dashboard, Meta, Economy, Achievements and League Health's "This season"; Dashboard and Meta used `?filter=real|auto|automaton|all`, where the seeded `test_user_*` stables showed only under All (old links still work). Meta's choice sections moved to `GET /api/admin/meta/choices` (`GET /api/admin/stats` also counted every battle of the season, 4.1 s on ACC, for figures no page showed). A stable's name in a battle's admin check opens its Players panel. Removed unused code: `AdminDataTable`, `AdminEmptyState`, the admin Zustand store, `GET /api/admin/scheduler/status`, `GET /api/admin/practice-arena/stats`; one shared pagination component and toggle chip. The Economy page now sums closed ledger cycles once (`economy_cycle_rollups`), so it loads on ACC again. New **System** page (`/admin/system`, under Overview; `GET /api/admin/system/overview`): disk, database, memory, last backup, backend uptime, failing (5xx) and slow (2 s or longer) requests per route from the new `request_metrics` table (per hour, kept 30 days), backend starts as Deploy or Restart, scheduler job durations with the lock time per day, and the largest tables. The Dashboard gets a Failed requests item, shown only when a request failed in the last 24 hours. The deploy workflow now sets `DEPLOY_TAG`. The sidebar shows labels only (no icons). See `docs/guides/ADMIN_PANEL_GUIDE.md` §System.
+- v3.17 (Nov 2, 2026) - **Maintenance** group retired. The Repair Log (`/admin/repair-log`, now a redirect) became a **Repairs** block on Economy: on Economy's stable-type and window controls, totals for automatic, manual and all repairs split into full price, Repair Bay discount, Manual Repair discount and paid, how many player stables used Manual Repair, and every stable type side by side, from `financial_ledger` (the old page read the 30-day `audit_logs`, listed one row per repair and was dominated by generated stables). The Audit Log became **Admin actions** (`/admin/actions`, under Security & Moderation; `/admin/audit-log` redirects): area and Failures filters that match the recorded operations, plain titles and details instead of raw JSON, the admin's name instead of "User 2", expandable details with a link to the page. Newly recorded: player password resets (never the password) and changelog create / edit / publish / delete. Removed: `GET`/`POST /api/admin/audit-log` (the POST let any admin session write any entry), `GET /api/admin/audit-log/repairs`, and the unused `POST /api/admin/repair/all`, `/recalculate-hp`, `/daily-finances/process`, `/snapshots/backfill`, `/scheduler/trigger/:jobName` and team-battle triggers. `GET /api/admin/actions` added. See `docs/guides/ADMIN_PANEL_GUIDE.md` §Economy and §Admin actions.
 - v3.16 (Nov 1, 2026) - **Content** group redesign. The Tuning, Refinement and Subscriptions pages were merged into **Meta** (`/admin/tuning`, `/admin/refinement`, `/admin/subscriptions` redirect there; the sidebar lost three items). Meta is grouped as Combat settings (stances, loadouts, yield thresholds), Robot builds (Tuning; Weapons and refinements) and Stable investments (Event entry; Facilities), all on the shared stable-type filter (subscriptions had none). Dropped: subscribe/unsubscribe per cycle and the per-stable subscription table. **Achievements** is season-scoped with a Players / Automatons / Generated toggle, rates out of players active this season, a per-tier unlock-rate strip, "easier / harder than its tier" notes and a sortable table with the median unlock day. `GET /api/admin/meta/builds` added; `GET /api/admin/tuning/adoption`, `/refinement/adoption` and `/api/subscriptions/admin/analytics` removed; `GET /api/admin/achievements/analytics` now takes `stables` instead of `filter`. Changelog is unchanged (a revamp is planned separately). See `docs/guides/ADMIN_PANEL_GUIDE.md` §Meta and §Achievements.
 - v3.15 (Nov 1, 2026) - Redesigned **Security** (`/admin/security`) and **Image Uploads** (`/admin/image-uploads`). Security: signals stored in `security_events` (90 days, survives deploys) instead of a 500-event memory buffer that was mostly admin page views; failed logins recorded; rapid spending and severity levels removed; per-window cards, chart, stables with signals, and sources without an account with failed-login bursts. Image Uploads: `uploaded_images` inventory with moderation scores, images in use newest first, a slide-over with scores and Remove image, moderation outcomes, storage with a cleanup preview (orphans and missing files). `GET /api/admin/security/overview` and `/api/admin/images*` added; `/security/events`, `/security/summary`, `/uploads`, `/uploads/cleanup` removed. See `docs/guides/ADMIN_PANEL_GUIDE.md` §Security and §Image Uploads.
 - v3.14 (Oct 30, 2026) - Redesigned **Weapons** (`/admin/weapons`) on the Attributes engine: effects of archetypes (main weapon range band × loadout) and of every weapon against an equally strong robot, matchups (range bands, loadouts, top archetypes), usage per league tier, price vs effect, refinements and catalogue coverage, for all robots or the top 10% by points invested. The ownership page (counts dominated by generated stables' free starter weapons) and `GET /api/admin/weapons/analytics` were removed; `GET /api/admin/analysis/weapons` added. The Attributes and Weapons mode column "Multi-robot" is now "Free-for-all". See `docs/guides/ADMIN_PANEL_GUIDE.md` §Weapons.
@@ -116,7 +118,7 @@ The removed System Health and Practice Arena sections below are kept for history
 - Tooltips provide context for each metric
 - Color-coded sections for easy visual parsing
 - **Practice Arena Section** ✅ NEW:
-  - Fetches from `GET /api/admin/practice-arena/stats`
+  - Fetches from `GET /api/admin/practice-arena/stats` (removed Nov 2026; the page uses `/practice-arena/overview`)
   - Displays current stats: battles today, unique players today, rate limit hits today, total battles since server start
   - Displays historical trend: daily usage from the `history` array (last 7-30 days)
   - Follows existing stat section pattern (grid layout, color-coded)
@@ -352,13 +354,10 @@ Every interactive element is at least 44 × 44 px (narrow number inputs keep `mi
 
 All admin endpoints are implemented and operational:
 
-1. **POST /api/admin/matchmaking/run** - Trigger matchmaking
-2. **POST /api/admin/battles/run** - Execute scheduled battles
-3. **POST /api/admin/leagues/rebalance** - Rebalance leagues
-4. **POST /api/admin/repair/all** - Auto-repair all robots
-5. **POST /api/admin/daily-finances/process** - Process daily finances
+> The step triggers that used to lead this list (matchmaking, battles, rebalance, repair all, daily finances) no longer exist; jobs run through `POST /api/admin/scheduler/runs` (v3.7) and `POST /api/admin/cycles/bulk`. The last of them were removed in v3.17.
+
 6. **POST /api/admin/cycles/bulk** - Run bulk cycles with options
-7. **GET /api/admin/stats** - Get system statistics
+7. **GET /api/admin/stats** - Get system statistics (removed in v3.18; Meta reads `GET /api/admin/meta/choices`)
 8. **GET /api/admin/battles** - Get paginated battle list with filtering (superseded by v3.10; current parameters in ADMIN_PANEL_GUIDE §Battles)
    - Query params: `page`, `limit`, `search` (robot name), `leagueType`, `battleType` (all/league/tournament/**tagteam**)
    - When `battleType=tagteam`: queries `TagTeamMatch` joined with `Battle` and `TagTeam` (with robot relations)
@@ -840,13 +839,11 @@ All admin endpoints require authentication and admin role:
 
 ```typescript
 // System Management
-GET  /api/admin/stats                    // System statistics
-POST /api/admin/matchmaking/run          // Trigger matchmaking
-POST /api/admin/battles/run              // Execute battles
-POST /api/admin/leagues/rebalance        // Rebalance leagues
-POST /api/admin/repair/all               // Auto-repair robots
-POST /api/admin/daily-finances/process   // Process finances
+GET  /api/admin/meta/choices             // Meta choices (replaced /stats in v3.18)
+POST /api/admin/scheduler/runs           // Run one job in the background
 POST /api/admin/cycles/bulk              // Run bulk cycles
+GET  /api/admin/actions                  // Admin actions (v3.17; replaced /audit-log)
+GET  /api/admin/system/overview          // System page (v3.18): server health, failing and slow requests, job durations
 
 // Battle Analysis
 GET  /api/admin/battles                  // List battles (mode, stable, outcome, range, q)
@@ -866,7 +863,7 @@ GET  /api/admin/security/summary         // Security event summary (severity cou
 GET  /api/admin/security/events          // Recent security events (filterable by severity, eventType, userId, since, limit)
 
 // Practice Arena Metrics
-GET  /api/admin/practice-arena/stats     // Practice arena usage stats (battles today, unique players, rate limit hits, historical trend)
+GET  /api/admin/practice-arena/overview  // (replaced /stats, removed v3.18) Practice arena usage stats (battles today, unique players, rate limit hits, historical trend)
 
 // System Health (integrated into Dashboard)
 GET  /api/analytics/performance          // Cycle performance metrics

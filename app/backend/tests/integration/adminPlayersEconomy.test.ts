@@ -4,12 +4,14 @@
  * the password-reset guard, and the ledger flows per stable type.
  *
  * Economy totals are database-wide, so the economy tests compare the result
- * before and after this suite's own ledger rows.
+ * before and after this suite's own ledger rows. Closed cycles are summed once
+ * into `economy_cycle_rollups`; the newest closed cycle (`CYCLE`) is live.
  */
 
 import prisma from '../../src/lib/prisma';
 import { assertHumanStable, getPlayerDetail, getPlayersOverview, searchStables } from '../../src/services/admin/adminPlayersService';
-import { getEconomyOverview, invalidateEconomyCache } from '../../src/services/admin/adminEconomyService';
+import { getEconomyOverview, invalidateEconomyCache, type EconomyOverview, type EconomyStableScope, type EconomyWindow } from '../../src/services/admin/adminEconomyService';
+import { clearEconomyRollups, loadCycleTotals, waitForEconomyRollups } from '../../src/services/admin/economyCycleRollups';
 import { getCurrentSeason, invalidateSeasonCache } from '../../src/services/season/seasonService';
 
 const TAG = `apeit${Date.now() % 1_000_000}`;
@@ -35,6 +37,17 @@ async function user(name: string, data: Partial<{ stableType: 'human' | 'automat
   });
   createdUsers.push(row.id);
   return row.id;
+}
+
+/** The Economy overview once every cycle it needs is summed. */
+async function economy(stables: EconomyStableScope, window: EconomyWindow): Promise<EconomyOverview> {
+  let result = await getEconomyOverview(stables, window, { fresh: true });
+  if (result.status === 'preparing') {
+    await waitForEconomyRollups();
+    result = await getEconomyOverview(stables, window, { fresh: true });
+  }
+  if (result.status !== 'ready') throw new Error('economy still preparing');
+  return result;
 }
 
 async function ledger(userId: number, cycleNumber: number, transactionType: string, amount: number, balanceAfter: number): Promise<void> {
@@ -78,6 +91,7 @@ afterAll(async () => {
   else await prisma.cycleMetadata.update({ where: { id: 1 }, data: { totalCycles: originalCycles } });
   if (season) await prisma.season.update({ where: { seasonNumber: season.seasonNumber }, data: { startedAt: season.startedAt } });
   invalidateSeasonCache();
+  await clearEconomyRollups();
   invalidateEconomyCache();
 });
 
@@ -144,8 +158,8 @@ describe('Password reset guard', () => {
 
 describe('Economy overview', () => {
   it('adds the suite\'s ledger rows to the right scope, window and flow', async () => {
-    const before = await getEconomyOverview('players', '7', { fresh: true });
-    const beforeAutomatons = await getEconomyOverview('automatons', '7', { fresh: true });
+    const before = await economy('players', '7');
+    const beforeAutomatons = await economy('automatons', '7');
 
     await ledger(lowPlayer, CYCLE, 'battle_income', 1_000, 5_000);
     await ledger(lowPlayer, CYCLE, 'repair_cost', -250, 4_750);
@@ -153,8 +167,8 @@ describe('Economy overview', () => {
     await ledger(lowPlayer, CYCLE - 10, 'battle_income', 7_777, 0); // outside the 7-cycle window
     await ledger(automaton, CYCLE, 'passive_income', 300, 500_300);
 
-    const after = await getEconomyOverview('players', '7', { fresh: true });
-    const afterAutomatons = await getEconomyOverview('automatons', '7', { fresh: true });
+    const after = await economy('players', '7');
+    const afterAutomatons = await economy('automatons', '7');
 
     expect(after.scope).toMatchObject({ fromCycle: CYCLE - 6, toCycle: CYCLE, cycles: 7 });
     expect(after.kpis.earned - before.kpis.earned).toBe(1_000);
@@ -170,13 +184,78 @@ describe('Economy overview', () => {
     expect(lastCycle(after).earned - lastCycle(before).earned).toBe(1_000);
     expect(after.perCycle.length).toBeGreaterThanOrEqual(15);
 
-    const season = await getEconomyOverview('players', 'season', { fresh: true });
+    // Cycle CYCLE − 10 was already summed and stored by the calls above; a closed cycle never changes in
+    // production, so the hand-written row only shows once the stored totals are cleared.
+    const stale = await economy('players', 'season');
+    await clearEconomyRollups();
+    const season = await economy('players', 'season');
+    expect(season.kpis.earned - stale.kpis.earned).toBe(7_777);
     expect(season.scope.fromCycle).toBe(1);
     expect(season.kpis.earned - after.kpis.earned).toBeGreaterThanOrEqual(7_777);
   });
 
+  it('reads the Repairs block from the repair_cost breakdowns', async () => {
+    const before = await economy('players', '7');
+    const repair = (userId: number, repairType: 'manual' | 'automatic', baseQuote: number, afterBay: number, paid: number) =>
+      prisma.financialLedger.create({
+        data: {
+          userId, cycleNumber: CYCLE, transactionType: 'repair_cost', amount: -paid, balanceAfter: 0, description: `${TAG} test row`,
+          metadata: { repairType, baseQuote, quoteBeforeManualDiscount: afterBay, finalAmount: -paid },
+        },
+      });
+    await repair(lowPlayer, 'manual', 1_000, 800, 400);
+    await repair(lowPlayer, 'automatic', 600, 500, 500);
+    await repair(automaton, 'automatic', 300, 300, 300);
+    // A row written before the breakdown existed: its full price is what was paid.
+    await ledger(player, CYCLE, 'repair_cost', -70, 1);
+
+    const after = await economy('players', '7');
+    const delta = (key: 'automatic' | 'manual' | 'total', field: 'repairs' | 'fullPrice' | 'repairBayDiscount' | 'manualDiscount' | 'paid'): number =>
+      after.repairs[key][field] - before.repairs[key][field];
+
+    expect([delta('manual', 'repairs'), delta('manual', 'fullPrice'), delta('manual', 'repairBayDiscount'), delta('manual', 'manualDiscount'), delta('manual', 'paid')])
+      .toEqual([1, 1_000, 200, 400, 400]);
+    expect([delta('automatic', 'repairs'), delta('automatic', 'fullPrice'), delta('automatic', 'repairBayDiscount'), delta('automatic', 'paid')])
+      .toEqual([2, 670, 100, 570]);
+    expect(after.repairs.playerStables).not.toBeNull();
+    expect(after.repairs.playerStables!.manual).toBeGreaterThanOrEqual(1);
+
+    const automatons = after.repairs.byStableType.find((row) => row.stables === 'automatons');
+    const automatonsBefore = before.repairs.byStableType.find((row) => row.stables === 'automatons');
+    expect(automatons!.repairs - automatonsBefore!.repairs).toBe(1);
+    expect(automatons!.paid - automatonsBefore!.paid).toBe(300);
+  });
+
+  it('stores closed cycles once, sums the newest live, and reports progress while summing', async () => {
+    const { seasonNumber } = await getCurrentSeason();
+    await clearEconomyRollups();
+    await prisma.economyCycleRollup.create({ data: { seasonNumber: seasonNumber + 99, cycleNumber: 1, flows: [], repairs: [] } });
+
+    const first = await loadCycleTotals(seasonNumber, CYCLE, [lowPlayer], 0);
+    expect(first.completeFrom).toBeGreaterThan(1);
+    expect(first.cycles.at(-1)?.cycle).toBe(CYCLE);
+    await waitForEconomyRollups();
+
+    const stored = await prisma.economyCycleRollup.findMany({ where: { seasonNumber }, select: { cycleNumber: true } });
+    expect(stored.map((r) => r.cycleNumber).sort((a, b) => a - b)).toEqual(Array.from({ length: CYCLE - 1 }, (_, i) => i + 1));
+    expect(await prisma.economyCycleRollup.count({ where: { seasonNumber: seasonNumber + 99 } })).toBe(0);
+
+    const second = await loadCycleTotals(seasonNumber, CYCLE, [lowPlayer], 0);
+    expect(second.completeFrom).toBe(1);
+    const flowOf = (cycles: typeof second.cycles, cycle: number): number => cycles.find((c) => c.cycle === cycle)?.flows
+      .filter((f) => f.kind === 'players' && f.transactionType === 'battle_income').reduce((sum, f) => sum + f.income, 0) ?? 0;
+    const closedBefore = flowOf(second.cycles, CYCLE - 1);
+    const liveBefore = flowOf(second.cycles, CYCLE);
+    await ledger(lowPlayer, CYCLE - 1, 'battle_income', 50, 0);
+    await ledger(lowPlayer, CYCLE, 'battle_income', 60, 0);
+    const third = await loadCycleTotals(seasonNumber, CYCLE, [lowPlayer], 0);
+    expect(flowOf(third.cycles, CYCLE - 1)).toBe(closedBefore); // stored, not rescanned
+    expect(flowOf(third.cycles, CYCLE) - liveBefore).toBe(60); // live
+    await clearEconomyRollups();
+  });
+
   it('counts balances per stable type', async () => {
-    const overview = await getEconomyOverview('players', '7', { fresh: true });
+    const overview = await economy('players', '7');
     const players = overview.byStableType.find((r) => r.stables === 'players');
     expect(players?.count).toBe(overview.kpis.stables);
     expect(players?.heldNow).toBe(overview.kpis.heldNow);

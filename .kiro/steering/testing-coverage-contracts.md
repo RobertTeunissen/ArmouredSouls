@@ -9,7 +9,7 @@ description: "Mandatory test coverage contracts for financial capture, Finance C
 Tier rules and blocking commands are in `testing-strategy.md`.
 
 ## Financial capture and Finance Center coverage
-Financial capture and reporting are critical paths, not advisory suites. The `Coverage_Manifest` must cover every current-economy writer and positive prestige source, including all nine battle modes, `Bye_Event`, streaming, achievements, robot creation, attributes, facilities, weapons, manual/automatic/admin repairs, both settlement entry points, legacy admin daily-finance, free subscriptions, prestige, and lifecycle boundaries.
+Financial capture and reporting are critical paths, not advisory suites. The `Coverage_Manifest` must cover every current-economy writer and positive prestige source, including all nine battle modes, `Bye_Event`, streaming, achievements, robot creation, attributes, facilities, weapons, manual and automatic repairs, both settlement entry points (scheduled and admin bulk cycle), free subscriptions, prestige, and lifecycle boundaries.
 
 Required financial coverage:
 - **Unit:** closed `Transaction_Taxonomy`, typed `Financial_Breakdown`, identity construction/conflicts, reward aggregation, battle row fan-out, prestige fields, per-robot repair arithmetic, zero-valued settlement components, subscription exclusion, manifest, and direct-writer checks.
@@ -21,7 +21,7 @@ Required Finance Center replacement coverage:
 - **Integration:** serialized cutover/races, blocked-writer next-cycle resolution, one `asOf` view, zero settlement rows, completed boundaries, API auth/validation/ownership, cache isolation, repair links, deterministic pagination, payload safety, and query-growth budgets.
 - **Frontend/E2E:** provenance and preparation labels, URL periods, current-inclusive history, sale/purchase headings, five robot metrics, pagination, keyboard/focus/responsive behavior, `/income` migration and redirects, navigation/lazy loading, active points, and no required-viewport overflow.
 - Feature-specific thresholds and file disposition live in `docs/implementation_notes/finance-center-reporting-contract.md`.
-- Retirement is replacement-gated: retain formula/property, repair-log, admin contract, guide, battle-result, reconciliation/security, and route-migration coverage until replacements are green.
+- Retirement is replacement-gated: retain formula/property, admin Economy repairs, admin contract, guide, battle-result, reconciliation/security, and route-migration coverage until replacements are green.
 
 ## Automaton coverage (Spec #55)
 - **Unit:** `strategyConformance.property.test.ts` and `strategyScenario.test.ts` iterate every file in `src/config/automaton-strategies/`, so a new Strategy_Definition_File needs no new test; `{key}.v1.fixture.test.ts` pins the six approved v1 files. Catalogue tests (`catalogueSchema`, `automatonCatalogueCoverage`, `catalogueImages`) cover every repository Catalogue_Entry and Repository_Image.

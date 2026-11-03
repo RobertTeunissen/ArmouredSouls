@@ -4,12 +4,12 @@
  *
  * Pure calculation functions live in `./economyFormulas.ts` (no Prisma dependency).
  * This file re-exports them for backward compatibility and contains the
- * Prisma-dependent service functions (financial reports, daily processing).
+ * Prisma-dependent service functions (financial reports). Settlement itself
+ * is `services/financial/settlementService.ts`.
  */
 
 import prisma from '../lib/prisma';
 import { getRobotLeagueTiers, tierOf } from '../services/standings/robotLeagueTiers';
-import { settlementService } from '../services/financial/settlementService';
 
 // Re-export all pure calculation functions for backward compatibility
 export {
@@ -273,50 +273,6 @@ export interface DailyFinancialSummary {
   balanceChange: number;
   isBankrupt: boolean;
   canAffordCosts: boolean;
-}
-
-/**
- * Process daily financial obligations for one stable through Settlement_Service.
- *
- * This compatibility wrapper retains the historical response shape while making
- * the shared settlement implementation the only balance-mutating path.
- */
-export async function processDailyFinances(userId: number): Promise<DailyFinancialSummary> {
-  const cycleNumber = await settlementService.getCurrentSettlementCycleNumber();
-  const result = await settlementService.settleCycle({
-    cycleNumber,
-    includeAdmins: true,
-    userIds: [userId],
-  });
-  const summary = result.summaries[0];
-  if (!summary) {
-    throw new Error(`User ${userId} not found`);
-  }
-  return summary;
-}
-
-/**
- * Process daily finances for all non-admin users through Settlement_Service.
- * The legacy aggregate shape is retained for the admin endpoint contract.
- */
-export async function processAllDailyFinances(): Promise<{
-  usersProcessed: number;
-  totalCostsDeducted: number;
-  bankruptUsers: number;
-  summaries: DailyFinancialSummary[];
-}> {
-  const cycleNumber = await settlementService.getCurrentSettlementCycleNumber();
-  const result = await settlementService.settleCycle({
-    cycleNumber,
-    includeAdmins: false,
-  });
-
-  return {
-    usersProcessed: result.usersProcessed,
-    totalCostsDeducted: result.totalOperatingCosts,
-    bankruptUsers: result.bankruptUsers,
-    summaries: result.summaries,
-  };
 }
 
 // ==================== PER-ROBOT FINANCIAL BREAKDOWN ====================

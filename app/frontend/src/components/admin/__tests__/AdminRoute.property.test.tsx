@@ -70,6 +70,8 @@ const VALID_ADMIN_ROUTES = [
   'tuning',
   'image-uploads',
   'changelog',
+  'actions',
+  // Redirects (to /admin/economy and /admin/actions).
   'repair-log',
   'audit-log',
 ];

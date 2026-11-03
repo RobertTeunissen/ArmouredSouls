@@ -44,7 +44,7 @@
 - ✅ `GET /api/finances/operating-costs` - Detailed cost breakdown
 - ✅ `GET /api/finances/revenue-streams` - Income sources
 - ✅ `GET /api/finances/projections` - Forecasts & recommendations
-- ✅ **NEW**: `POST /api/admin/daily-finances/process` - Process daily operating costs for all users
+- ✅ **NEW**: `POST /api/admin/daily-finances/process` - Process daily operating costs for all users (removed in Nov 2026, admin redesign part 8)
 
 **Battle Rewards:**
 - ✅ League-based rewards: Bronze (₡7.5K) → Champion (₡225K)
@@ -75,8 +75,8 @@
    - Repair cost formulas
    - Financial health indicators
    - Daily financial processing functions:
-     - `processDailyFinances(userId)` - Process single user
-     - `processAllDailyFinances()` - Batch process all users
+     - `processDailyFinances(userId)` - Process single user (removed in Nov 2026, admin redesign part 8)
+     - `processAllDailyFinances()` - Batch process all users (removed in Nov 2026, admin redesign part 8)
      - Deducts operating costs, detects bankruptcy
 
 2. `app/backend/src/routes/finances.ts` (165 lines)
@@ -96,7 +96,7 @@
      - Breaks down winner/loser rewards separately
 
 4. `app/backend/src/routes/admin.ts` (enhanced)
-   - `POST /api/admin/daily-finances/process` endpoint
+   - `POST /api/admin/daily-finances/process` endpoint (removed in Nov 2026, admin redesign part 8)
    - Integrated financial processing into bulk cycles
    - Shows costs deducted, users processed, bankruptcies
 
@@ -165,11 +165,11 @@ Automated daily financial processing that:
 - Provides detailed financial summaries
 
 **New Functions:**
-- `processDailyFinances(userId)` - Process one user
-- `processAllDailyFinances()` - Process all users
+- `processDailyFinances(userId)` - Process one user (removed in Nov 2026, admin redesign part 8)
+- `processAllDailyFinances()` - Process all users (removed in Nov 2026, admin redesign part 8)
 
 **New Endpoint:**
-- `POST /api/admin/daily-finances/process` - Trigger daily processing
+- `POST /api/admin/daily-finances/process` - Trigger daily processing (removed in Nov 2026, admin redesign part 8)
 
 **Integration:**
 Integrated into bulk cycle flow for testing:
@@ -232,6 +232,8 @@ Cycle 3:
 This section provides curl command examples and expected responses for the economy system's key API endpoints.
 
 #### Process Daily Finances
+
+> Removed in Nov 2026 (admin redesign part 8): settlement runs through the scheduler (`POST /api/admin/scheduler/runs` with `settlement`) or the bulk cycle runner.
 
 Trigger daily financial processing for all users (admin endpoint).
 
@@ -1156,7 +1158,7 @@ the two audit figures written for a manual repair (`creditsCharged` and
 Bay discount applied a second time, so every manual row recorded a fraction of what the
 player actually paid: 80% of the truth at a 20% Repair Bay discount, a tenth of it at
 the 90% cap. The credits deducted and the per-robot lifetime total were always correct;
-only the audit figures were wrong, and they are what `/admin/repair-log`,
+only the audit figures were wrong, and they are what the admin Repair Log (retired Nov 2026),
 Cycle Repair Spend and the Income Dashboard read. Spec #48 fixed the write path and
 **deliberately did not backfill**: a pre-fix row cannot be repaired from its own
 contents, because that needs the Repair Bay level and active robot count as they stood

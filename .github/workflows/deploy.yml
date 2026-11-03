@@ -480,6 +480,11 @@ jobs:
           fetch-depth: 0
           fetch-tags: true
 
+      # One tag per deploy: the backend records it on its process row (admin
+      # System page, Cycle Controls) and the git tag below uses the same name.
+      - name: Choose deploy tag
+        run: echo "DEPLOY_TAG=deploy-acc-$(date -u +%Y%m%d-%H%M%S)" >> "$GITHUB_ENV"
+
       - name: Setup SSH key
         run: |
           mkdir -p ~/.ssh
@@ -739,7 +744,7 @@ jobs:
             # Reconcile PM2's saved process entry with the live OS process.
             # This starts cleanly when PM2 retained a stale/dead process id and
             # persists the result for daemon/host restarts.
-            bash /opt/armouredsouls/scripts/reconcile-pm2-backend.sh acceptance
+            DEPLOY_TAG='${{ env.DEPLOY_TAG }}' bash /opt/armouredsouls/scripts/reconcile-pm2-backend.sh acceptance
 
       - name: Health check (30s deadline)
         uses: appleboy/ssh-action@v1
@@ -830,7 +835,7 @@ jobs:
       - name: Create deploy tag
         continue-on-error: true
         run: |
-          TAG="deploy-acc-$(date +%Y%m%d-%H%M%S)"
+          TAG="$DEPLOY_TAG"
           git tag "$TAG"
           git push origin "$TAG"
           echo "Created deploy tag: $TAG"
@@ -864,6 +869,11 @@ jobs:
         with:
           fetch-depth: 0
           fetch-tags: true
+
+      # One tag per deploy: the backend records it on its process row (admin
+      # System page, Cycle Controls) and the git tag below uses the same name.
+      - name: Choose deploy tag
+        run: echo "DEPLOY_TAG=deploy-prd-$(date -u +%Y%m%d-%H%M%S)" >> "$GITHUB_ENV"
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
@@ -1093,7 +1103,7 @@ jobs:
           username: ${{ secrets.PRD_VPS_USER }}
           key: ${{ secrets.PRD_SSH_KEY }}
           script: |
-            bash /opt/armouredsouls/scripts/reconcile-pm2-backend.sh production
+            DEPLOY_TAG='${{ env.DEPLOY_TAG }}' bash /opt/armouredsouls/scripts/reconcile-pm2-backend.sh production
 
       - name: Health check (30s deadline)
         uses: appleboy/ssh-action@v1
@@ -1121,7 +1131,7 @@ jobs:
       - name: Create deploy tag
         continue-on-error: true
         run: |
-          TAG="deploy-prd-$(date +%Y%m%d-%H%M%S)"
+          TAG="$DEPLOY_TAG"
           git tag "$TAG"
           git push origin "$TAG"
           echo "Created deploy tag: $TAG"

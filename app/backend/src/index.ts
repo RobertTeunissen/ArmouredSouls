@@ -37,6 +37,7 @@ import {
   resumeInterruptedSettlement,
 } from './services/cycle/cycleScheduler';
 import { startProcess as startSchedulerProcess } from './services/cycle/schedulerRunStore';
+import { startRequestMetrics } from './services/monitoring/requestMetrics';
 import { registerSubscribableEvent } from './services/subscription/eventRegistry';
 import {
   contentModerationService,
@@ -323,6 +324,9 @@ import { runStrategyStartupCheck } from './services/automaton/strategies/registr
 
     // Security signals are kept 90 days (01:50 UTC daily)
     initSecurityEventRetention();
+
+    // Failed and slow requests for the admin System page (written once a minute)
+    startRequestMetrics();
 
     // Reconcile the uploaded-image inventory with the disk (backfills files
     // that predate the table). Non-blocking; a failure only affects the admin page.

@@ -42,6 +42,7 @@ const RobotSetupWizardPage = React.lazy(() => import('./pages/RobotSetupWizardPa
 
 // Lazy-loaded admin pages
 const AdminDashboardPage = React.lazy(() => import('./pages/admin/DashboardPage'));
+const AdminSystemPage = React.lazy(() => import('./pages/admin/SystemPage'));
 const AdminSearchAnalyticsPage = React.lazy(() => import('./pages/admin/SearchAnalyticsPage'));
 const AdminCycleControlsPage = React.lazy(() => import('./pages/admin/CycleControlsPage'));
 const AdminPracticeArenaPage = React.lazy(() => import('./pages/admin/PracticeArenaPage'));
@@ -56,8 +57,7 @@ const AdminSecurityPage = React.lazy(() => import('./pages/admin/SecurityPage'))
 const AdminImageUploadsPage = React.lazy(() => import('./pages/admin/ImageUploadsPage'));
 const AdminChangelogPage = React.lazy(() => import('./pages/admin/AdminChangelogPage'));
 const AdminAchievementAnalyticsPage = React.lazy(() => import('./pages/admin/AchievementAnalyticsPage'));
-const AdminRepairLogPage = React.lazy(() => import('./pages/admin/RepairLogPage'));
-const AdminAuditLogPage = React.lazy(() => import('./pages/admin/AuditLogPage'));
+const AdminActionsPage = React.lazy(() => import('./pages/admin/AdminActionsPage'));
 const AdminTournamentsPage = React.lazy(() => import('./pages/admin/TournamentsPage'));
 const AdminSeasonControlPage = React.lazy(() => import('./pages/admin/SeasonControlPage'));
 const AdminAutomatonsPage = React.lazy(() => import('./pages/admin/AutomatonsPage'));
@@ -94,6 +94,7 @@ function AppRoutes() {
       <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<AdminDashboardPage />} />
+        <Route path="system" element={<AdminSystemPage />} />
         <Route path="search-analytics" element={<AdminSearchAnalyticsPage />} />
         <Route path="cycles" element={<AdminCycleControlsPage />} />
         <Route path="practice-arena" element={<AdminPracticeArenaPage />} />
@@ -112,8 +113,9 @@ function AppRoutes() {
         <Route path="achievements" element={<AdminAchievementAnalyticsPage />} />
         <Route path="tuning" element={<Navigate to="/admin/meta" replace />} />
         <Route path="refinement" element={<Navigate to="/admin/meta" replace />} />
-        <Route path="repair-log" element={<AdminRepairLogPage />} />
-        <Route path="audit-log" element={<AdminAuditLogPage />} />
+        <Route path="actions" element={<AdminActionsPage />} />
+        <Route path="audit-log" element={<Navigate to="/admin/actions" replace />} />
+        <Route path="repair-log" element={<Navigate to="/admin/economy" replace />} />
         <Route path="league-history" element={<Navigate to="/admin/league-health" replace />} />
         <Route path="subscriptions" element={<Navigate to="/admin/meta" replace />} />
         <Route path="tournaments" element={<AdminTournamentsPage />} />

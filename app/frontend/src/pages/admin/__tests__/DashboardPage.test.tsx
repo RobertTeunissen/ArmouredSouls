@@ -196,15 +196,15 @@ describe('DashboardPage', () => {
     expect(seasonHeader).toHaveClass('hidden', 'md:table-cell');
   });
 
-  it('defaults to the real filter, takes the filter from the URL and ignores unknown values', async () => {
+  it('defaults to players, takes the stable type from the URL (old ?filter= links too) and ignores unknown values', async () => {
     const { unmount } = renderPage('?filter=automaton');
-    await waitFor(() => expect(callsTo('/api/admin/dashboard/kpis')[0]?.[1]?.params).toEqual({ filter: 'automaton' }));
+    await waitFor(() => expect(callsTo('/api/admin/dashboard/kpis')[0]?.[1]?.params).toEqual({ stables: 'automatons' }));
     unmount();
 
     mockGet.mockClear();
     renderPage('?filter=bogus');
-    await waitFor(() => expect(callsTo('/api/admin/dashboard/kpis')[0]?.[1]?.params).toEqual({ filter: 'real' }));
-    expect(callsTo('/api/admin/dashboard/battle-activity')[0]?.[1]?.params).toEqual({ filter: 'real', fresh: 'false' });
+    await waitFor(() => expect(callsTo('/api/admin/dashboard/kpis')[0]?.[1]?.params).toEqual({ stables: 'players' }));
+    expect(callsTo('/api/admin/dashboard/battle-activity')[0]?.[1]?.params).toEqual({ stables: 'players', fresh: 'false' });
   });
 
   it('refetches filtered sections on a filter change, updates the URL, and leaves the status alone', async () => {
@@ -213,27 +213,27 @@ describe('DashboardPage', () => {
     await screen.findByText('38');
     expect(callsTo('/api/admin/dashboard/status')).toHaveLength(1);
 
-    await user.click(screen.getByRole('button', { name: /Auto-generated/ }));
+    await user.click(screen.getByRole('button', { name: 'Generated' }));
 
-    await waitFor(() => expect(callsTo('/api/admin/dashboard/kpis').at(-1)?.[1]?.params).toEqual({ filter: 'auto' }));
-    expect(callsTo('/api/admin/dashboard/battle-activity').at(-1)?.[1]?.params).toEqual({ filter: 'auto', fresh: 'false' });
+    await waitFor(() => expect(callsTo('/api/admin/dashboard/kpis').at(-1)?.[1]?.params).toEqual({ stables: 'generated' }));
+    expect(callsTo('/api/admin/dashboard/battle-activity').at(-1)?.[1]?.params).toEqual({ stables: 'generated', fresh: 'false' });
     expect(callsTo('/api/admin/dashboard/status')).toHaveLength(1);
-    expect(screen.getByTestId('location')).toHaveTextContent('?filter=auto');
-    expect(screen.getByRole('button', { name: /Auto-generated/ })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByTestId('location')).toHaveTextContent('?stables=generated');
+    expect(screen.getByRole('button', { name: 'Generated' })).toHaveAttribute('aria-pressed', 'true');
   });
 
   it('never lets a slow response for the previous filter overwrite the current one', async () => {
     const user = userEvent.setup();
     let resolveReal: (value: DashboardKpis) => void = () => undefined;
     routeApi({
-      kpis: (config) => (config?.params?.filter === 'real'
+      kpis: (config) => (config?.params?.stables === 'players'
         ? new Promise<DashboardKpis>((resolve) => { resolveReal = resolve; })
         : Promise.resolve(kpis({}, 11))),
     });
     renderPage();
     await screen.findByRole('region', { name: 'System status' });
 
-    await user.click(screen.getByRole('button', { name: /Auto-generated/ }));
+    await user.click(screen.getByRole('button', { name: 'Generated' }));
     expect(await screen.findByText('11')).toBeInTheDocument();
 
     resolveReal(kpis({}, 99));
@@ -262,7 +262,7 @@ describe('DashboardPage', () => {
 
     await waitFor(() => expect(callsTo('/api/admin/dashboard/status')).toHaveLength(2));
     expect(callsTo('/api/admin/dashboard/kpis')).toHaveLength(2);
-    expect(callsTo('/api/admin/dashboard/battle-activity').at(-1)?.[1]?.params).toEqual({ filter: 'real', fresh: 'true' });
+    expect(callsTo('/api/admin/dashboard/battle-activity').at(-1)?.[1]?.params).toEqual({ stables: 'players', fresh: 'true' });
   });
 
   it('no longer shows the meta snapshot or loads system stats (it moved to the Meta page)', async () => {
@@ -271,6 +271,6 @@ describe('DashboardPage', () => {
 
     expect(screen.queryByRole('button', { name: /Meta snapshot/ })).not.toBeInTheDocument();
     expect(screen.getByText('Filter applies to robots and battles')).toBeInTheDocument();
-    expect(callsTo('/api/admin/stats')).toHaveLength(0);
+    expect(callsTo('/api/admin/meta/choices')).toHaveLength(0);
   });
 });

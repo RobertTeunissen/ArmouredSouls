@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import logger from '../config/logger';
 import { safeRequestPath } from '../utils/safeRequestPath';
+import { recordRequest, routePattern } from '../services/monitoring/requestMetrics';
 
 const SENSITIVE_PATTERNS = [
   /password/i,
@@ -47,6 +48,14 @@ export function requestLogger(req: Request, res: Response, next: NextFunction): 
       path: safeRequestPath(req.originalUrl),
       statusCode: status,
       responseTime,
+    });
+    // Server errors and slow requests feed the admin System page (status only).
+    recordRequest({
+      method: req.method,
+      route: routePattern(req),
+      statusCode: status,
+      durationMs: responseTime,
+      errorCode: typeof res.locals?.errorCode === 'string' ? res.locals.errorCode : null,
     });
   });
 

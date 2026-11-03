@@ -29,6 +29,11 @@ jest.mock('../../services/changelog', () => ({
   processAndStore: mockProcessAndStore,
 }));
 
+const mockRecordAdminAction = jest.fn();
+jest.mock('../../services/admin/adminAuditLogService', () => ({
+  recordAction: (...args: unknown[]) => mockRecordAdminAction(...args),
+}));
+
 jest.mock('../../config/logger', () => ({
   __esModule: true,
   default: {

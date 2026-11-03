@@ -6,7 +6,7 @@
  */
 import { useId, useState } from 'react';
 import type { ReactNode } from 'react';
-import { AdminPanel, ADMIN_FOCUS_RING } from '../shared';
+import { AdminPagination, AdminPanel, ADMIN_FOCUS_RING } from '../shared';
 import type {
   AdminSearchAnalyticsPhrasePage,
   AdminSearchAnalyticsPhraseRow,
@@ -14,7 +14,6 @@ import type {
 } from '../../../utils/adminSearchAnalyticsApi';
 import { formatCount } from '../../../utils/adminDashboardFormat';
 import { CATEGORY_LABELS, CATEGORY_SINGULAR, type PhraseTab } from '../../../utils/adminSearchAnalyticsFormat';
-import { SearchAnalyticsPagination } from './SearchAnalyticsPagination';
 
 export interface PhraseTableProps {
   page: AdminSearchAnalyticsPhrasePage | null;
@@ -188,14 +187,16 @@ export function PhraseTable({
               </table>
             </div>
           )}
-          <SearchAnalyticsPagination
+          <AdminPagination
             page={page.page}
             total={page.total}
-            limit={page.limit}
+            pageSize={page.limit}
             loading={loading}
-            onPageChange={onPageChange}
-            itemLabel="phrases"
+            onPage={onPageChange}
+            noun="phrases"
             label="Phrase table pagination"
+            hideSinglePage
+            className="border-t border-white/5 px-4 py-3"
           />
         </>
       )}

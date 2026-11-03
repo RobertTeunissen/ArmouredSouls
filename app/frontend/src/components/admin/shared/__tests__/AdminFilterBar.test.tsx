@@ -9,7 +9,9 @@
 
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { AdminFilterBar, REAL_PLAYERS_HELP, type FilterChip } from '../AdminFilterBar';
+import { AdminFilterBar, type FilterChip } from '../AdminFilterBar';
+
+const REAL_PLAYERS_HELP = 'Human players only. Excludes auto-generated bots and Automatons.';
 
 const filters: FilterChip[] = [
   { key: 'league', label: 'League', active: true },

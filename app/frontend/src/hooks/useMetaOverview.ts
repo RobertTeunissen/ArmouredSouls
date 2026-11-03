@@ -11,9 +11,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ApiError } from '../utils/ApiError';
 import { isAbortError } from '../utils/abort';
-import { getMetaBuilds, getMetaStats, type MetaBuilds } from '../utils/adminMetaApi';
-import type { UserFilterType } from '../components/admin/shared';
-import type { SystemStats } from '../components/admin/types';
+import { getMetaBuilds, getMetaChoices, type MetaBuilds, type MetaChoices } from '../utils/adminMetaApi';
+import type { StableScope } from '../utils/adminStableScope';
 
 export interface FilteredLoad<T> {
   data: T | null;
@@ -24,17 +23,17 @@ export interface FilteredLoad<T> {
   reload: () => void;
 }
 
-export type MetaOverview = FilteredLoad<SystemStats>;
+export type MetaOverview = FilteredLoad<MetaChoices>;
 
 interface Loaded<T> {
-  filter: UserFilterType;
+  filter: StableScope;
   value: T;
   fetchedAt: string;
 }
 
 function useFilteredLoad<T>(
-  filter: UserFilterType,
-  load: (filter: UserFilterType, signal: AbortSignal) => Promise<T>,
+  filter: StableScope,
+  load: (filter: StableScope, signal: AbortSignal) => Promise<T>,
   fallbackError: string,
 ): FilteredLoad<T> {
   const [loaded, setLoaded] = useState<Loaded<T> | null>(null);
@@ -66,10 +65,10 @@ function useFilteredLoad<T>(
   return { data: current?.value ?? null, loading, error, fetchedAt: current?.fetchedAt ?? null, reload };
 }
 
-export function useMetaOverview(filter: UserFilterType): MetaOverview {
-  return useFilteredLoad(filter, getMetaStats, 'Could not load the meta overview.');
+export function useMetaOverview(filter: StableScope): MetaOverview {
+  return useFilteredLoad(filter, getMetaChoices, 'Could not load the meta overview.');
 }
 
-export function useMetaBuilds(filter: UserFilterType): FilteredLoad<MetaBuilds> {
+export function useMetaBuilds(filter: StableScope): FilteredLoad<MetaBuilds> {
   return useFilteredLoad(filter, getMetaBuilds, 'Could not load tuning, refinements and event entry.');
 }

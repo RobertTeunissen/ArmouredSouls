@@ -11,6 +11,7 @@ const log = createLogger('AdminLayout');
 /** Map route paths to human-readable page titles for the header bar. */
 const PAGE_TITLES: Record<string, string> = {
   '/admin/dashboard': 'Dashboard',
+  '/admin/system': 'System',
   '/admin/search-analytics': 'Search Analytics',
   '/admin/cycles': 'Cycle Controls',
   '/admin/seasons': 'Season Control',
@@ -27,8 +28,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/admin/image-uploads': 'Image Uploads',
   '/admin/changelog': 'Changelog',
   '/admin/achievements': 'Achievements',
-  '/admin/repair-log': 'Repair Log',
-  '/admin/audit-log': 'Audit Log',
+  '/admin/actions': 'Admin actions',
   '/admin/tournaments': 'Tournaments',
 };
 

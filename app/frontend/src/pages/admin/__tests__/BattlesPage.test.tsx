@@ -202,12 +202,12 @@ describe('BattlesPage buttons', () => {
     const user = userEvent.setup();
     renderPage();
     await screen.findByText('1,284 battles');
-    expect(screen.getByRole('button', { name: 'Previous' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Previous page of battles' })).toBeDisabled();
     expect(screen.getByText('Showing 1–25 of 1,284 battles')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Next page of battles' }));
     await waitFor(() => expect(currentSearch).toBe('?page=2'));
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Previous' })).toBeEnabled());
-    await user.click(screen.getByRole('button', { name: 'Previous' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Previous page of battles' })).toBeEnabled());
+    await user.click(screen.getByRole('button', { name: 'Previous page of battles' }));
     await waitFor(() => expect(currentSearch).toBe(''));
   });
 

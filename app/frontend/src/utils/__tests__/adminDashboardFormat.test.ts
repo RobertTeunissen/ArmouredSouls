@@ -14,7 +14,6 @@ import {
   formatUtcTime,
   jobLabel,
   modeLabel,
-  readDashboardFilter,
   TIME,
 } from '../adminDashboardFormat';
 import type { DashboardStatus } from '../adminDashboardApi';
@@ -36,6 +35,7 @@ function status(overrides: Partial<DashboardStatus> = {}, attention: Partial<Das
       security: { signals: 0, alerts: 0 },
       automatons: { needAttention: 0, failed: 0 },
       cycleHealth: { settlementOverdue: false, failedJobs: [], stuckMatches: 0 },
+      requests: { failures24h: 0, topRoute: null, topCode: null },
       ...attention,
     },
     timestamp: NOW.toISOString(),
@@ -51,11 +51,6 @@ describe('labels and filter', () => {
     expect(jobLabel('newJob')).toBe('New Job');
   });
 
-  it('reads the URL filter and falls back to real', () => {
-    expect(readDashboardFilter('automaton')).toBe('automaton');
-    expect(readDashboardFilter(null)).toBe('real');
-    expect(readDashboardFilter('bogus')).toBe('real');
-  });
 });
 
 describe('time formatting', () => {
@@ -180,6 +175,32 @@ describe('deriveAttentionItems', () => {
 
     expect(items.find((item) => item.key === 'cycle')?.detail)
       .toBe('3/10 jobs reported since restart at 09:30 UTC · 0 matches left behind');
+  });
+
+  it('adds a failed-requests item linking to System only when a request failed in the last 24 h', () => {
+    const quiet = deriveAttentionItems(status());
+    const unreadable = deriveAttentionItems(status({}, { requests: null }));
+    const failing = deriveAttentionItems(status({}, {
+      requests: { failures24h: 7, topRoute: 'GET /api/admin/economy/overview', topCode: 'STATEMENT_TIMEOUT' },
+    }));
+
+    expect(quiet.some((item) => item.key === 'requests')).toBe(false);
+    expect(unreadable.some((item) => item.key === 'requests')).toBe(false);
+    expect(failing[0]).toEqual({
+      key: 'requests',
+      severity: 'error',
+      count: 7,
+      title: '7 requests failed in the last 24 h',
+      detail: 'Most: GET /api/admin/economy/overview (statement timeout)',
+      href: '/admin/system',
+      destination: 'System',
+    });
+    expect(countOpenItems(failing)).toBe(1);
+  });
+
+  it('words a single failed request in the singular', () => {
+    const item = deriveAttentionItems(status({}, { requests: { failures24h: 1, topRoute: 'POST /api/robots', topCode: 'HTTP_502' } }))[0];
+    expect(item).toMatchObject({ title: '1 request failed in the last 24 h', detail: 'Most: POST /api/robots (HTTP 502)' });
   });
 
   it('marks unreadable sections as unavailable, after open items', () => {

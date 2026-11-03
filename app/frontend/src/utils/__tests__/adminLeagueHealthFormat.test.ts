@@ -8,7 +8,6 @@ import {
   bounceNote,
   bounceShareText,
   boundaryLabel,
-  readSeasonStable,
   seasonRangeText,
   seasonTotalsText,
   demotionText,
@@ -158,11 +157,6 @@ describe('this season texts', () => {
   const s = season();
   const [bronze, , gold, platinum, diamond] = s.boundaries;
 
-  it('reads the stable type from the URL', () => {
-    expect(readSeasonStable('human')).toBe('human');
-    expect(readSeasonStable('bots')).toBe('all');
-    expect(readSeasonStable(null)).toBe('all');
-  });
 
   it('labels boundaries, shares and fractions', () => {
     expect(boundaryLabel(bronze)).toBe('Bronze ↔ Silver');

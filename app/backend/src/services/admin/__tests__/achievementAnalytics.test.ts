@@ -15,7 +15,7 @@ jest.mock('../../season/dormantStables', () => ({
 }));
 
 import type { AchievementDefinition } from '../../../config/achievements';
-import { buildUserFilter } from '../../../utils/buildUserFilter';
+import { buildStableScopeFilter } from '../../../utils/stableScope';
 import { getAchievementAnalytics, seasonDay, summarizeAchievements } from '../achievements';
 
 const START = new Date('2026-08-01T00:00:00Z');
@@ -96,15 +96,11 @@ describe('getAchievementAnalytics', () => {
     mockPrisma.userAchievement.findMany.mockResolvedValue(unlocks);
   });
 
-  it.each([
-    ['players', 'real'],
-    ['automatons', 'automaton'],
-    ['generated', 'auto'],
-  ] as const)('scopes the queries for %s to the %s user filter', async (stables, filter) => {
+  it.each(['players', 'automatons', 'generated'] as const)('scopes the queries for %s to the shared stable-type filter', async (stables) => {
     const result = await getAchievementAnalytics(stables);
 
-    expect(mockPrisma.user.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: buildUserFilter(filter) }));
-    expect(mockPrisma.userAchievement.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: { user: buildUserFilter(filter) } }));
+    expect(mockPrisma.user.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: buildStableScopeFilter(stables) }));
+    expect(mockPrisma.userAchievement.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: { user: buildStableScopeFilter(stables) } }));
     expect(result.stables).toBe(stables);
     expect(result.seasonStartedAt).toBe(START.toISOString());
   });

@@ -10,6 +10,7 @@ const mockGetCurrentSeason = jest.fn();
 const mockGetSecurityAttention = jest.fn();
 const mockGetAutomatonStatus = jest.fn();
 const mockCountQueued = jest.fn();
+const mockGetRequestFailures = jest.fn();
 
 jest.mock('../../../lib/prisma', () => ({
   __esModule: true,
@@ -35,6 +36,9 @@ jest.mock('../../security/securityOverviewService', () => ({
 }));
 jest.mock('../../automaton/automatonStatus', () => ({
   getAutomatonStatus: () => mockGetAutomatonStatus(),
+}));
+jest.mock('../system', () => ({
+  getRequestFailures: () => mockGetRequestFailures(),
 }));
 jest.mock('../adminQueuedMatches', () => ({
   countQueuedMatchesByMode: () => mockCountQueued(),
@@ -155,6 +159,7 @@ describe('getDashboardStatus', () => {
     mockGetAutomatonStatus.mockResolvedValue({ needAttentionCount: 5, failedCount: 1 });
     mockScheduledMatchCount.mockResolvedValue(0);
     mockGetSecurityAttention.mockResolvedValue({ signals: 7, alerts: 2 });
+    mockGetRequestFailures.mockResolvedValue({ failures24h: 4, topRoute: 'GET /api/admin/economy/overview', topCode: 'STATEMENT_TIMEOUT' });
   });
 
   it('composes cycle, season, scheduler, queue and attention facts', async () => {
@@ -172,6 +177,7 @@ describe('getDashboardStatus', () => {
       security: { signals: 7, alerts: 2 },
       automatons: { needAttention: 5, failed: 1 },
       cycleHealth: { settlementOverdue: false, failedJobs: [], stuckMatches: 0 },
+      requests: { failures24h: 4, topRoute: 'GET /api/admin/economy/overview', topCode: 'STATEMENT_TIMEOUT' },
     });
     expect(status.timestamp).toBe(NOW.toISOString());
   });
@@ -215,11 +221,13 @@ describe('getDashboardStatus', () => {
     mockGetAutomatonStatus.mockRejectedValue(new Error('db down'));
     mockGetCurrentSeason.mockRejectedValue(new Error('db down'));
     mockGetSecurityAttention.mockRejectedValue(new Error('db down'));
+    mockGetRequestFailures.mockRejectedValue(new Error('db down'));
 
     const status = await getDashboardStatus(NOW);
 
     expect(status.attention.automatons).toBeNull();
     expect(status.attention.security).toBeNull();
+    expect(status.attention.requests).toBeNull();
     expect(status.season).toBeNull();
     expect(status.attention.bankruptcyRisk).toEqual({ count: 3, threshold: 10_000 });
   });
