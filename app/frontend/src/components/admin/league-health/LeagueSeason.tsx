@@ -4,11 +4,11 @@
  * `GET /api/admin/league-health/season` (league history, this season).
  */
 import type { ReactNode } from 'react';
-import { AdminFilterBar, PanelError, PanelSkeleton } from '../shared';
+import { PanelError, PanelSkeleton, StableScopeToggle } from '../shared';
 import { useLeagueSeason } from '../../../hooks/useLeagueSeason';
-import type { LeagueHealthMode, LeagueSeasonStableFilter } from '../../../utils/adminLeagueHealthApi';
+import type { LeagueHealthMode } from '../../../utils/adminLeagueHealthApi';
+import type { StableScope } from '../../../utils/adminStableScope';
 import {
-  SEASON_STABLE_FILTERS,
   formatCount,
   modeLabel,
   seasonRangeText,
@@ -20,13 +20,12 @@ import { TierBoundaries } from './TierBoundaries';
 export interface LeagueSeasonProps {
   mode: LeagueHealthMode;
   entityType: 'robot' | 'team';
-  stable: LeagueSeasonStableFilter;
-  onStableChange: (stable: LeagueSeasonStableFilter) => void;
+  stable: StableScope;
+  onStableChange: (stable: StableScope) => void;
   /** Changes when the page's Refresh is used. */
   reloadToken: number;
 }
 
-const SHORT_LABELS: Partial<Record<LeagueSeasonStableFilter, string>> = { generated: 'Bots' };
 
 export function LeagueSeason({ mode, entityType, stable, onStableChange, reloadToken }: LeagueSeasonProps): ReactNode {
   const { data, loading, error } = useLeagueSeason(mode, stable, reloadToken);
@@ -43,16 +42,7 @@ export function LeagueSeason({ mode, entityType, stable, onStableChange, reloadT
             Promotions and demotions per cycle, from league history{range ? ` · ${range}` : ''}
           </p>
         </div>
-        <AdminFilterBar
-          variant="segmented"
-          groupLabel="Stable type"
-          filters={SEASON_STABLE_FILTERS.map((option) => ({
-            ...option,
-            shortLabel: SHORT_LABELS[option.key],
-            active: option.key === stable,
-          }))}
-          onFilterToggle={(key) => onStableChange(key as LeagueSeasonStableFilter)}
-        />
+        <StableScopeToggle value={stable} onChange={onStableChange} label="Stable type" />
       </div>
 
       {error && <PanelError message={error} />}

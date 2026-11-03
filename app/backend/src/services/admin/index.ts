@@ -6,19 +6,10 @@ export {
   exportBattleJson,
 } from './battles';
 
-export {
-  getWeaponStats,
-  getStanceStats,
-  getLoadoutStats,
-  getYieldThresholdStats,
-  mapRobotAttributes,
-  calculateStats,
-  getSystemStats,
-  getDashboardKpis,
-} from './adminStatsService';
+export { getDashboardKpis } from './adminDashboardService';
 
 export { getAchievementAnalytics } from './achievements';
-export { getMetaBuilds } from './meta';
+export { getMetaBuilds, getMetaChoices } from './meta';
 export { getAdminActions } from './admin-actions';
 
 export { getLeagueHealthOverview } from './league-health';

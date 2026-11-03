@@ -7,7 +7,7 @@
  * - GET /api/admin/economy
  * - GET /api/admin/league-health
  * - GET /api/admin/achievements/analytics
- * - GET /api/admin/meta/builds
+ * - GET /api/admin/meta/choices, GET /api/admin/meta/builds (replaced GET /api/admin/stats)
  * - GET /api/admin/actions (replaced GET/POST /audit-log and /audit-log/repairs)
  * - GET /api/admin/users/search, GET /api/admin/users/:id
  * - POST /api/admin/users/:id/reset-password (human stables only)
@@ -32,12 +32,12 @@ const mockGetLeagueHealthOverview = jest.fn();
 const mockGetLeagueSeason = jest.fn();
 const mockGetAchievementAnalytics = jest.fn();
 const mockGetMetaBuilds = jest.fn();
+const mockGetMetaChoices = jest.fn();
 const mockGetAdminActions = jest.fn();
 const mockRecordAuditAction = jest.fn();
 const mockResetPassword = jest.fn();
 
-jest.mock('../../services/admin/adminStatsService', () => ({
-  getSystemStats: jest.fn(),
+jest.mock('../../services/admin/adminDashboardService', () => ({
   getDashboardKpis: (...args: unknown[]) => mockGetDashboardKpis(...args),
 }));
 
@@ -48,6 +48,7 @@ jest.mock('../../services/admin/achievements', () => ({
 
 jest.mock('../../services/admin/meta', () => ({
   getMetaBuilds: (...args: unknown[]) => mockGetMetaBuilds(...args),
+  getMetaChoices: (...args: unknown[]) => mockGetMetaChoices(...args),
 }));
 
 jest.mock('../../services/admin/adminPlayersService', () => ({
@@ -66,7 +67,6 @@ jest.mock('../../services/admin/adminEconomyService', () => ({
 jest.mock('../../services/admin/league-health', () => ({
   getLeagueHealthOverview: (...args: unknown[]) => mockGetLeagueHealthOverview(...args),
   getLeagueSeason: (...args: unknown[]) => mockGetLeagueSeason(...args),
-  LEAGUE_SEASON_STABLE_FILTERS: ['all', 'human', 'automaton', 'generated'],
 }));
 const mockGetDashboardStatus = jest.fn();
 const mockGetBattleActivity = jest.fn();
@@ -77,6 +77,12 @@ jest.mock('../../services/admin/adminDashboardStatusService', () => ({
 
 jest.mock('../../services/admin/adminBattleActivityService', () => ({
   getBattleActivity: (...args: unknown[]) => mockGetBattleActivity(...args),
+}));
+
+const mockGetSystemOverview = jest.fn();
+jest.mock('../../services/admin/system', () => ({
+  getSystemOverview: (...args: unknown[]) => mockGetSystemOverview(...args),
+  getRequestFailures: jest.fn(),
 }));
 
 jest.mock('../../services/admin/adminAuditLogService', () => ({
@@ -198,7 +204,7 @@ jest.mock('../../services/admin/tournaments', () => ({
 import request from 'supertest';
 
 import { AppError } from '../../errors';
-import { buildUserFilter } from '../../utils/buildUserFilter';
+import { buildStableScopeFilter } from '../../utils/stableScope';
 import express from 'express';
 import adminRouter from '../admin';
 import { errorHandler } from '../../middleware/errorHandler';
@@ -369,39 +375,37 @@ describe('Admin API — New Endpoints Integration Tests', () => {
       expect(res.body.robots.battleReadyPercentage).toBe(86.1);
     });
 
-    // The route resolves `?filter=` into a Prisma.UserWhereInput via buildUserFilter
-    // and passes only that. It used to hand the service the filter *name* plus an
-    // options object, which is what these two assertions still described.
-    // buildUserFilter is imported rather than re-encoded so the expectation cannot
-    // drift from the helper.
-    it('should pass the built user filter for filter=auto', async () => {
+    // The route resolves `?stables=` into a Prisma.UserWhereInput via
+    // buildStableScopeFilter (imported, so the expectation cannot drift from it).
+    it('should pass the built filter for stables=generated (every generated stable, by stable type)', async () => {
       mockGetDashboardKpis.mockResolvedValue(sampleKpis);
 
-      await request(app).get('/api/admin/dashboard/kpis?filter=auto');
+      await request(app).get('/api/admin/dashboard/kpis?stables=generated');
 
-      expect(mockGetDashboardKpis).toHaveBeenCalledWith(buildUserFilter('auto'));
+      expect(mockGetDashboardKpis).toHaveBeenCalledWith(buildStableScopeFilter('generated'));
+      expect(buildStableScopeFilter('generated')).toEqual({ stableType: 'generated' });
     });
 
-    it('should default the filter to real', async () => {
+    it('should default to players', async () => {
       mockGetDashboardKpis.mockResolvedValue(sampleKpis);
 
       await request(app).get('/api/admin/dashboard/kpis');
 
-      expect(mockGetDashboardKpis).toHaveBeenCalledWith(buildUserFilter('real'));
+      expect(mockGetDashboardKpis).toHaveBeenCalledWith(buildStableScopeFilter('players'));
     });
 
-    // Spec #55 R1.6: `automaton` is an accepted filter value.
-    it('should accept filter=automaton and pass the built user filter', async () => {
+    it('should accept stables=automatons and pass the built filter', async () => {
       mockGetDashboardKpis.mockResolvedValue(sampleKpis);
 
-      const res = await request(app).get('/api/admin/dashboard/kpis?filter=automaton');
+      const res = await request(app).get('/api/admin/dashboard/kpis?stables=automatons');
 
       expect(res.status).toBe(200);
-      expect(mockGetDashboardKpis).toHaveBeenCalledWith(buildUserFilter('automaton'));
+      expect(mockGetDashboardKpis).toHaveBeenCalledWith({ stableType: 'automaton' });
     });
 
-    it('should reject invalid filter values via Zod validation', async () => {
-      const res = await request(app).get('/api/admin/dashboard/kpis?filter=invalid');
+    it('should reject invalid and old-style values via Zod validation', async () => {
+      expect((await request(app).get('/api/admin/dashboard/kpis?stables=real')).status).toBe(400);
+      const res = await request(app).get('/api/admin/dashboard/kpis?stables=invalid');
 
       expect(res.status).toBe(400);
       expect(res.body.code).toBe('VALIDATION_ERROR');
@@ -433,26 +437,51 @@ describe('Admin API — New Endpoints Integration Tests', () => {
   });
 
   // -----------------------------------------------------------------------
+  // GET /api/admin/system/overview
+  // -----------------------------------------------------------------------
+
+  describe('GET /api/admin/system/overview', () => {
+    it('should return the System page facts', async () => {
+      const overview = { generatedAt: '2026-11-02T18:00:00.000Z', requests: { failures24h: 0 } };
+      mockGetSystemOverview.mockResolvedValue(overview);
+
+      const res = await request(app).get('/api/admin/system/overview');
+
+      expect(res.status).toBe(200);
+      expect(res.body).toEqual(overview);
+    });
+
+    it('should return 401 without a token and 403 for a non-admin', async () => {
+      mockUser = null;
+      expect((await request(app).get('/api/admin/system/overview')).status).toBe(401);
+
+      mockUser = { userId: 2, username: 'player', role: 'user' };
+      expect((await request(app).get('/api/admin/system/overview')).status).toBe(403);
+      expect(mockGetSystemOverview).not.toHaveBeenCalled();
+    });
+  });
+
+  // -----------------------------------------------------------------------
   // GET /api/admin/dashboard/battle-activity
   // -----------------------------------------------------------------------
 
   describe('GET /api/admin/dashboard/battle-activity', () => {
-    it('should default to the real filter and the cache', async () => {
+    it('should default to players and the cache', async () => {
       mockGetBattleActivity.mockResolvedValue(sampleBattleActivity);
 
       const res = await request(app).get('/api/admin/dashboard/battle-activity');
 
       expect(res.status).toBe(200);
       expect(res.body).toEqual(sampleBattleActivity);
-      expect(mockGetBattleActivity).toHaveBeenCalledWith('real', { fresh: false });
+      expect(mockGetBattleActivity).toHaveBeenCalledWith('players', { fresh: false });
     });
 
-    it('should pass filter and fresh through', async () => {
+    it('should pass stables and fresh through', async () => {
       mockGetBattleActivity.mockResolvedValue(sampleBattleActivity);
 
-      await request(app).get('/api/admin/dashboard/battle-activity?filter=automaton&fresh=true');
+      await request(app).get('/api/admin/dashboard/battle-activity?stables=automatons&fresh=true');
 
-      expect(mockGetBattleActivity).toHaveBeenCalledWith('automaton', { fresh: true });
+      expect(mockGetBattleActivity).toHaveBeenCalledWith('automatons', { fresh: true });
     });
 
     it('should reject an invalid fresh value', async () => {
@@ -553,11 +582,11 @@ describe('Admin API — New Endpoints Integration Tests', () => {
     });
     it('passes the mode and stable type through', async () => {
       mockGetLeagueSeason.mockResolvedValue({ mode: 'koth', stable: 'human', cycles: [] });
-      const res = await request(app).get('/api/admin/league-health/season?mode=koth&stable=human');
+      const res = await request(app).get('/api/admin/league-health/season?mode=koth&stables=players');
       expect(res.status).toBe(200);
       expect(mockGetLeagueSeason).toHaveBeenCalledWith('koth', 'human');
     });
-    it.each(['mode=tournament_1v1', 'stable=bots', 'mode=x'])('rejects an unknown %s with 400', async (query) => {
+    it.each(['mode=tournament_1v1', 'stables=bots', 'stables=human', 'mode=x'])('rejects an unknown %s with 400', async (query) => {
       const res = await request(app).get(`/api/admin/league-health/season?${query}`);
       expect(res.status).toBe(400);
       expect(mockGetLeagueSeason).not.toHaveBeenCalled();
@@ -669,26 +698,36 @@ describe('Admin API — New Endpoints Integration Tests', () => {
   // -----------------------------------------------------------------------
 
   describe('GET /api/admin/meta/builds', () => {
-    it('returns the build sections for real players by default', async () => {
+    it('returns the build sections for players by default', async () => {
       mockGetMetaBuilds.mockResolvedValue(sampleMetaBuilds);
 
       const res = await request(app).get('/api/admin/meta/builds');
 
       expect(res.status).toBe(200);
       expect(res.body).toEqual(sampleMetaBuilds);
-      expect(mockGetMetaBuilds).toHaveBeenCalledWith(buildUserFilter('real'));
+      expect(mockGetMetaBuilds).toHaveBeenCalledWith(buildStableScopeFilter('players'));
     });
 
-    it('passes the built user filter to the service', async () => {
+    it('passes the built filter to the service', async () => {
       mockGetMetaBuilds.mockResolvedValue(sampleMetaBuilds);
 
-      await request(app).get('/api/admin/meta/builds?filter=automaton');
+      await request(app).get('/api/admin/meta/builds?stables=automatons');
 
-      expect(mockGetMetaBuilds).toHaveBeenCalledWith(buildUserFilter('automaton'));
+      expect(mockGetMetaBuilds).toHaveBeenCalledWith(buildStableScopeFilter('automatons'));
     });
 
-    it('rejects an invalid filter', async () => {
-      const res = await request(app).get('/api/admin/meta/builds?filter=bogus');
+    it('serves the choice sections on /meta/choices; /stats is gone', async () => {
+      mockGetMetaChoices.mockResolvedValue({ stances: [] });
+
+      const res = await request(app).get('/api/admin/meta/choices?stables=generated');
+
+      expect(res.status).toBe(200);
+      expect(mockGetMetaChoices).toHaveBeenCalledWith({ stableType: 'generated' });
+      expect((await request(app).get('/api/admin/stats')).status).toBe(404);
+    });
+
+    it('rejects an invalid stable type', async () => {
+      const res = await request(app).get('/api/admin/meta/builds?stables=bogus');
 
       expect(res.status).toBe(400);
       expect(res.body.code).toBe('VALIDATION_ERROR');

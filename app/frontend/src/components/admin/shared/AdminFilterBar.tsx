@@ -11,16 +11,6 @@ export interface FilterChip {
   description?: string;
 }
 
-/**
- * The user-type filter of the analytics pages (`?filter=` on the admin
- * endpoints). `real` is human players only: it excludes auto-generated bots
- * and Automatons (Spec #55, R1.6).
- */
-export type UserFilterType = 'all' | 'real' | 'auto' | 'automaton';
-
-/** Approved help text of the "Real Players" chip (Spec #55, PLAYER_FACING_TEXT §6.8). */
-export const REAL_PLAYERS_HELP = 'Human players only. Excludes auto-generated bots and Automatons.';
-
 export interface AdminFilterBarProps {
   filters: FilterChip[];
   onFilterToggle: (key: string) => void;

@@ -3,25 +3,19 @@
  * stable-type filter, what it applies to, freshness and Refresh.
  */
 import type { ReactNode } from 'react';
-import { AdminFilterBar, ADMIN_FOCUS_RING, REAL_PLAYERS_HELP, type UserFilterType } from '../shared';
+import { ADMIN_FOCUS_RING, StableScopeToggle } from '../shared';
+import type { StableScope } from '../../../utils/adminStableScope';
 import { formatUtcTime } from '../../../utils/adminDashboardFormat';
 
 export interface DashboardToolbarProps {
-  filter: UserFilterType;
-  onFilterChange: (filter: UserFilterType) => void;
+  filter: StableScope;
+  onFilterChange: (filter: StableScope) => void;
   /** What the filter applies to on this page, shown next to it. */
   scopeNote: string;
   lastUpdated: string | null;
   refreshing: boolean;
   onRefresh: () => void;
 }
-
-const FILTERS: ReadonlyArray<{ key: UserFilterType; label: string; shortLabel?: string; description?: string }> = [
-  { key: 'real', label: 'Real players', shortLabel: 'Real', description: REAL_PLAYERS_HELP },
-  { key: 'auto', label: 'Auto-generated', shortLabel: 'Generated' },
-  { key: 'automaton', label: 'Automatons' },
-  { key: 'all', label: 'All' },
-];
 
 export function DashboardToolbar({
   filter,
@@ -33,16 +27,12 @@ export function DashboardToolbar({
 }: DashboardToolbarProps): ReactNode {
   return (
     <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-      <AdminFilterBar
-        variant="segmented"
-        groupLabel="Stable type filter"
-        filters={FILTERS.map((option) => ({ ...option, active: option.key === filter }))}
-        onFilterToggle={(key) => onFilterChange(key as UserFilterType)}
-      >
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <StableScopeToggle value={filter} onChange={onFilterChange} />
         <span className="text-xs text-tertiary">{scopeNote}</span>
-      </AdminFilterBar>
+      </div>
 
-      <div className="flex items-center justify-between gap-3 xl:justify-end xl:mb-4">
+      <div className="flex items-center justify-between gap-3 xl:justify-end">
         <span className="text-xs text-secondary whitespace-nowrap" aria-live="polite">
           {refreshing ? 'Refreshing…' : lastUpdated ? `Last updated ${formatUtcTime(lastUpdated, true)}` : 'Not loaded yet'}
         </span>

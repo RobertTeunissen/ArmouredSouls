@@ -16,7 +16,7 @@ import { useCallback, useEffect, useId, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ADMIN_FOCUS_RING, AdminPageHeader, PanelError, PanelSkeleton } from '../../components/admin/shared';
 import { PlayerDetailPanel, PlayerSegmentCards, PlayersTable, StableSearch } from '../../components/admin/players';
-import { BattlesPagination } from '../../components/admin/battles/BattlesTable';
+import { AdminPagination } from '../../components/admin/shared';
 import { ApiError } from '../../utils/ApiError';
 import { isAbortError } from '../../utils/abort';
 import { getPlayersOverview, type PlayersOverview } from '../../utils/adminPlayersApi';
@@ -141,7 +141,7 @@ function PlayersPage(): React.ReactElement {
                 <PlayersTable rows={pageRows} sort={view.sort} now={now} onSort={(sort) => update({ sort, page: 1 })} onOpen={(userId) => update({ user: userId })} />
                 {rows.length > PLAYERS_PAGE_SIZE && (
                   <div className="border-t border-white/10 px-5 py-3">
-                    <BattlesPagination page={page} totalPages={totalPages} total={rows.length} pageSize={PLAYERS_PAGE_SIZE} loading={false} noun="stables" onPage={(next) => update({ page: next })} />
+                    <AdminPagination page={page} totalPages={totalPages} total={rows.length} pageSize={PLAYERS_PAGE_SIZE} loading={false} noun="stables" onPage={(next) => update({ page: next })} />
                   </div>
                 )}
               </>

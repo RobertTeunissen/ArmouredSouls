@@ -13,7 +13,7 @@
  */
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { ADMIN_FOCUS_RING, AdminPageHeader, PanelError, PanelSkeleton } from '../../components/admin/shared';
+import { ADMIN_FOCUS_RING, AdminPageHeader, PanelError, PanelSkeleton, StableScopeToggle } from '../../components/admin/shared';
 import { AchievementSummary, AchievementTable, TierNotes, TierStripChart } from '../../components/admin/achievements';
 import { ApiError } from '../../utils/ApiError';
 import { isAbortError } from '../../utils/abort';
@@ -26,7 +26,6 @@ import {
   easierThanTier,
   harderThanTier,
   readAchievementStables,
-  stablesLabel,
   tierStrips,
   writeAchievementStables,
 } from '../../utils/adminAchievementsFormat';
@@ -107,22 +106,12 @@ function AchievementAnalyticsPage(): React.ReactElement {
       />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap gap-2" role="group" aria-label="Stable type">
-          {ACHIEVEMENT_STABLES.map((option) => {
-            const pressed = option === stables;
-            return (
-              <button
-                key={option}
-                type="button"
-                aria-pressed={pressed}
-                onClick={() => setParams((existing) => writeAchievementStables(existing, option), { replace: true })}
-                className={`min-h-11 rounded-full border px-4 text-sm transition-colors motion-reduce:transition-none ${pressed ? 'border-primary bg-primary/15 text-primary' : 'border-white/10 bg-surface-elevated text-white hover:bg-white/10'} ${ADMIN_FOCUS_RING}`}
-              >
-                {stablesLabel(option)}
-              </button>
-            );
-          })}
-        </div>
+        <StableScopeToggle
+          value={stables}
+          options={ACHIEVEMENT_STABLES}
+          label="Stable type"
+          onChange={(option) => setParams((existing) => writeAchievementStables(existing, option), { replace: true })}
+        />
         {derived && <p className="text-xs text-secondary" data-testid="achievement-scope">{derived.words.scope}</p>}
       </div>
 

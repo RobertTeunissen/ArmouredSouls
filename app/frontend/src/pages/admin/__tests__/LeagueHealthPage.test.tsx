@@ -57,7 +57,7 @@ describe('LeagueHealthPage', () => {
     await screen.findByTestId('league-health-attention');
     await screen.findByTestId('season-totals');
     expect(overviewCalls()).toBe(1);
-    expect(seasonCalls()).toEqual([{ mode: 'league_1v1', stable: 'all' }]);
+    expect(seasonCalls()).toEqual([{ mode: 'league_1v1', stables: 'all' }]);
     expect(screen.getByText(/Season 1 · cycle 88 of 100/)).toBeInTheDocument();
     expect(screen.getByText('Last updated 17:30:00 UTC')).toBeInTheDocument();
   });
@@ -226,18 +226,18 @@ describe('LeagueHealthPage', () => {
     expect(location()).toBe('/admin/cycles');
   });
 
-  it('filters this season by stable type through the URL', async () => {
+  it('filters this season by stable type through the URL (?stables=)', async () => {
     const user = userEvent.setup();
     renderPage('?mode=league_2v2');
     const block = await screen.findByTestId('league-season');
     await within(block).findByTestId('season-totals');
     const group = within(block).getByRole('group', { name: 'Stable type' });
     await user.click(within(group).getByRole('button', { name: 'Players' }));
-    expect(location()).toBe('/admin/league-health?mode=league_2v2&stable=human');
-    await waitFor(() => expect(seasonCalls()).toContainEqual({ mode: 'league_2v2', stable: 'human' }));
+    expect(location()).toBe('/admin/league-health?mode=league_2v2&stables=players');
+    await waitFor(() => expect(seasonCalls()).toContainEqual({ mode: 'league_2v2', stables: 'players' }));
     expect(within(group).getByRole('button', { name: 'Players' })).toHaveAttribute('aria-pressed', 'true');
     await user.click(within(group).getByRole('button', { name: 'Generated' }));
-    expect(location()).toBe('/admin/league-health?mode=league_2v2&stable=generated');
+    expect(location()).toBe('/admin/league-health?mode=league_2v2&stables=generated');
     await user.click(within(group).getByRole('button', { name: 'All' }));
     expect(location()).toBe('/admin/league-health?mode=league_2v2');
     expect(within(block).getByTestId('season-boundary-bronze')).toHaveTextContent('About 1 in 4 promoted teams is back within 10 cycles');
@@ -245,10 +245,10 @@ describe('LeagueHealthPage', () => {
 
   it('loads this season for the mode of the selected tab', async () => {
     const user = userEvent.setup();
-    renderPage('?stable=automaton');
+    renderPage('?stables=automatons');
     await screen.findByTestId('season-totals');
     await user.click(screen.getByRole('button', { name: 'Grand Melee' }));
-    await waitFor(() => expect(seasonCalls()).toContainEqual({ mode: 'grand_melee', stable: 'automaton' }));
+    await waitFor(() => expect(seasonCalls()).toContainEqual({ mode: 'grand_melee', stables: 'automatons' }));
     expect(await screen.findByRole('heading', { name: 'This season · Grand Melee' })).toBeInTheDocument();
     expect(screen.getByText(/KotH and Grand Melee hardly demote at all/)).toBeInTheDocument();
   });

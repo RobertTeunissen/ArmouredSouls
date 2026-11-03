@@ -256,6 +256,8 @@ The admin Practice Arena page (`authenticateToken` + `requireAdmin`): the last 3
 
 ### `GET /api/admin/practice-arena/stats`
 
+> Removed in Nov 2026: nothing called it. The admin page reads `GET /api/admin/practice-arena/overview` (see `docs/guides/ADMIN_PANEL_GUIDE.md` §Practice Arena).
+
 The original shape, now computed from `practice_arena_events`. `totalBattlesSinceStart` is this season's battles (it used to count since the last restart); `history` lists the recorded UTC days, newest first, with `date` as a full ISO timestamp and the day's distinct battle `playerIds`, as before.
 
 ```json

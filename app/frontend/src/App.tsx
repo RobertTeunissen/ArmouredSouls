@@ -42,6 +42,7 @@ const RobotSetupWizardPage = React.lazy(() => import('./pages/RobotSetupWizardPa
 
 // Lazy-loaded admin pages
 const AdminDashboardPage = React.lazy(() => import('./pages/admin/DashboardPage'));
+const AdminSystemPage = React.lazy(() => import('./pages/admin/SystemPage'));
 const AdminSearchAnalyticsPage = React.lazy(() => import('./pages/admin/SearchAnalyticsPage'));
 const AdminCycleControlsPage = React.lazy(() => import('./pages/admin/CycleControlsPage'));
 const AdminPracticeArenaPage = React.lazy(() => import('./pages/admin/PracticeArenaPage'));
@@ -93,6 +94,7 @@ function AppRoutes() {
       <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<AdminDashboardPage />} />
+        <Route path="system" element={<AdminSystemPage />} />
         <Route path="search-analytics" element={<AdminSearchAnalyticsPage />} />
         <Route path="cycles" element={<AdminCycleControlsPage />} />
         <Route path="practice-arena" element={<AdminPracticeArenaPage />} />

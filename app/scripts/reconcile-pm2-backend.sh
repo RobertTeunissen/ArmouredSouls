@@ -13,6 +13,14 @@ fi
 
 cd "$APP_ROOT"
 
+# The deploy workflow passes DEPLOY_TAG; `--update-env` hands it to the
+# backend, which records it on its process row. A plain restart keeps the
+# previous value, so the admin pages count only the first start per tag as a deploy.
+if [[ -n "${DEPLOY_TAG:-}" ]]; then
+  export DEPLOY_TAG
+  echo "Deploy tag: $DEPLOY_TAG"
+fi
+
 PM2_PID="$(pm2 pid "$APP_NAME" 2>/dev/null || true)"
 if [[ "$PM2_PID" =~ ^[1-9][0-9]*$ ]] && kill -0 "$PM2_PID" 2>/dev/null; then
   echo "Reloading $APP_NAME (PID $PM2_PID) in $TARGET_ENV"

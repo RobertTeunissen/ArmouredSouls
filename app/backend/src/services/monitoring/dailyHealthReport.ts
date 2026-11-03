@@ -16,6 +16,7 @@ import prisma from '../../lib/prisma';
 import { getDiskUsage, getMemoryUsage, checkCriticalModules } from '../../utils/systemHealth';
 import { sendMonitoringAlert } from '../../utils/monitoringWebhook';
 import { getSchedulerState } from '../cycle/cycleScheduler';
+import { getLatestBackup, type BackupStatus } from './backupStatus';
 
 const DEFAULT_SCHEDULE = '0 8 * * *'; // 08:00 UTC daily
 const PM2_LOG_PATH = '/var/log/armouredsouls/backend-out.log';
@@ -64,50 +65,18 @@ function checkLoggingHealth(): { status: 'active' | 'stale' | 'unknown'; lastWri
   }
 }
 
-type BackupStatus = 'ok' | 'stale' | 'missing' | 'not_applicable';
-
 /**
- * Check the most recent database backup file.
- * Returns age and status. Every status except `ok` and `not_applicable`
- * (a local machine without the backup directory) makes the report Degraded:
- * on a deployed host, no backup is at least as bad as an old one.
+ * The newest daily backup's status and age (shared reader, which also knows
+ * the `.sql.zst` backups). Every status except `ok` and `not_applicable` (a
+ * local machine without the backup directory) makes the report Degraded.
  */
 function checkBackupHealth(): { status: BackupStatus; lastBackupAgo: string } {
-  const BACKUP_DIR = '/opt/armouredsouls/backups/daily';
-  const STALE_THRESHOLD_MS = 26 * 60 * 60 * 1000; // 26 hours (daily backup with margin)
-
-  try {
-    const files = fs.readdirSync(BACKUP_DIR)
-      .filter(f => f.endsWith('.dump') || f.endsWith('.sql.gz'))
-      .map(f => ({ name: f, mtime: fs.statSync(`${BACKUP_DIR}/${f}`).mtime.getTime() }))
-      .sort((a, b) => b.mtime - a.mtime);
-
-    if (files.length === 0) {
-      return { status: 'missing', lastBackupAgo: 'none found' };
-    }
-
-    const ageMs = Date.now() - files[0].mtime;
-    const hoursAgo = Math.round(ageMs / (60 * 60 * 1000));
-
-    if (ageMs > STALE_THRESHOLD_MS) {
-      return { status: 'stale', lastBackupAgo: `${hoursAgo}h ago` };
-    }
-
-    return { status: 'ok', lastBackupAgo: `${hoursAgo}h ago` };
-  } catch (err) {
-    // No backup directory: expected on a local machine, a failure on a deployed
-    // host (backup.sh creates it on its first run).
-    const isENOENT = err instanceof Error && 'code' in err && (err as NodeJS.ErrnoException).code === 'ENOENT';
-    if (isENOENT) {
-      const { nodeEnv } = getConfig();
-      const deployed = nodeEnv === 'acceptance' || nodeEnv === 'production';
-      return deployed
-        ? { status: 'missing', lastBackupAgo: 'backup directory not found' }
-        : { status: 'not_applicable', lastBackupAgo: 'N/A (dev)' };
-    }
-    logger.warn('[health-report] Backup health check failed', { error: err instanceof Error ? err.message : String(err) });
-    return { status: 'missing', lastBackupAgo: 'error checking backups' };
+  const backup = getLatestBackup();
+  if (!backup.at) {
+    return { status: backup.status, lastBackupAgo: backup.status === 'not_applicable' ? 'N/A (dev)' : backup.note ?? 'none found' };
   }
+  const hoursAgo = Math.round((Date.now() - backup.at.getTime()) / (60 * 60 * 1000));
+  return { status: backup.status, lastBackupAgo: `${hoursAgo}h ago` };
 }
 
 /**

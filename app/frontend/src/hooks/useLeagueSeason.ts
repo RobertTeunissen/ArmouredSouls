@@ -6,12 +6,12 @@
  */
 import { useEffect, useState } from 'react';
 import { ApiError } from '../utils/ApiError';
+import type { StableScope } from '../utils/adminStableScope';
 import { isAbortError } from '../utils/abort';
 import {
   getLeagueSeason,
   type LeagueHealthMode,
   type LeagueSeasonOverview,
-  type LeagueSeasonStableFilter,
 } from '../utils/adminLeagueHealthApi';
 
 export interface LeagueSeasonState {
@@ -26,7 +26,7 @@ interface Loaded {
 }
 
 /** `reloadToken` changes when the page's Refresh is used. */
-export function useLeagueSeason(mode: LeagueHealthMode, stable: LeagueSeasonStableFilter, reloadToken: number): LeagueSeasonState {
+export function useLeagueSeason(mode: LeagueHealthMode, stable: StableScope, reloadToken: number): LeagueSeasonState {
   const key = `${mode}:${stable}`;
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const [loading, setLoading] = useState(true);

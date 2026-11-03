@@ -5,10 +5,9 @@
 import { useId, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { ADMIN_FOCUS_RING } from '../shared';
+import { ADMIN_FOCUS_RING, AdminPagination } from '../shared';
 import type { AdminSearchAnalyticsPlayerAnalysis } from '../../../utils/adminSearchAnalyticsApi';
 import { formatCount } from '../../../utils/adminDashboardFormat';
-import { SearchAnalyticsPagination } from './SearchAnalyticsPagination';
 
 export interface SearchersPanelProps {
   analysis: AdminSearchAnalyticsPlayerAnalysis | null;
@@ -68,12 +67,16 @@ export function SearchersPanel({ analysis, loading, onPageChange }: SearchersPan
           </div>
         )}
         {analysis && (
-          <SearchAnalyticsPagination
+          <AdminPagination
             page={analysis.page}
             total={analysis.total}
-            limit={analysis.limit}
+            pageSize={analysis.limit}
             loading={loading}
-            onPageChange={onPageChange}
+            onPage={onPageChange}
+            noun="players"
+            label="Player analysis pagination"
+            hideSinglePage
+            className="border-t border-white/5 px-4 py-3"
           />
         )}
       </div>

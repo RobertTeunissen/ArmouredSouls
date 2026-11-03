@@ -31,6 +31,7 @@ const NAVIGATION_SECTIONS = [
 
 const NAVIGATION_ITEMS = [
   { label: 'Dashboard', path: '/admin/dashboard' },
+  { label: 'System', path: '/admin/system' },
   { label: 'Cycle Controls', path: '/admin/cycles' },
   { label: 'Season Control', path: '/admin/seasons' },
   { label: 'Practice Arena', path: '/admin/practice-arena' },
@@ -249,6 +250,15 @@ describe('AdminLayout', () => {
         expect(within(sidebar).getByText(section)).not.toHaveClass('hidden');
       }
       expect(within(sidebar).getByText('Dashboard')).not.toHaveClass('hidden');
+    });
+
+    it('should show labels only: each link holds just its label, no icon', () => {
+      renderLayout();
+
+      const sidebar = screen.getByRole('complementary', { name: /admin sidebar navigation/i });
+      const links = within(sidebar).getAllByRole('link');
+      expect(links.map((link) => link.textContent)).toEqual(NAVIGATION_ITEMS.map((item) => item.label));
+      for (const link of links) expect(link.querySelector('[aria-hidden="true"]')).toBeNull();
     });
 
     it('should offset the main content by the sidebar width from md only', () => {

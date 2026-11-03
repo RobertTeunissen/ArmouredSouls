@@ -11,7 +11,6 @@
  */
 import prisma from '../../src/lib/prisma';
 import {
-  getLegacyPracticeArenaStats,
   getPracticeArenaOverview,
   recordPracticeRequest,
 } from '../../src/services/practice-arena/practiceArenaUsageService';
@@ -93,15 +92,5 @@ describe('getPracticeArenaOverview', () => {
       overridesRequests: 3,
     });
 
-    const legacy = await getLegacyPracticeArenaStats(now);
-    expect(legacy.current).toEqual({ totalBattlesSinceStart: overview.season.battles, battlesToday: 7, rateLimitHitsToday: 1, uniquePlayersToday: 2 });
-    // The original contract: full ISO date and the day's distinct battle players.
-    expect(legacy.history[0]).toEqual({
-      date: `${todayRow.date}T00:00:00.000Z`,
-      totalBattles: 7,
-      uniquePlayers: 2,
-      rateLimitHits: 1,
-      playerIds: [first, second].sort((a, b) => a - b),
-    });
   });
 });

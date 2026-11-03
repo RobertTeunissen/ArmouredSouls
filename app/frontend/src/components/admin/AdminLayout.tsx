@@ -11,6 +11,7 @@ const log = createLogger('AdminLayout');
 /** Map route paths to human-readable page titles for the header bar. */
 const PAGE_TITLES: Record<string, string> = {
   '/admin/dashboard': 'Dashboard',
+  '/admin/system': 'System',
   '/admin/search-analytics': 'Search Analytics',
   '/admin/cycles': 'Cycle Controls',
   '/admin/seasons': 'Season Control',

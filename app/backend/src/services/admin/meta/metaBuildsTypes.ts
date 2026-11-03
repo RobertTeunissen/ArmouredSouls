@@ -60,3 +60,28 @@ export interface MetaBuilds {
   refinements: MetaRefinements;
   eventEntry: MetaEventEntry;
 }
+
+/** The choice sections of the Meta page (`GET /api/admin/meta/choices`). */
+export interface MetaChoices {
+  weapons: {
+    totalBought: number;
+    /** Robots with a main weapon (ignores offhands). */
+    equipped: number;
+    /** Owned weapons sitting in any robot's main or offhand slot. */
+    equippedInventoryItems: number;
+  };
+  stances: Array<{ stance: string; count: number }>;
+  loadouts: Array<{ type: string; count: number }>;
+  yieldThresholds: {
+    distribution: Array<{ threshold: number; count: number }>;
+    mostCommon: number;
+    mostCommonCount: number;
+  };
+  facilities: {
+    /** `purchaseCount` = stables owning the facility at level 1 or higher. */
+    summary: Array<{ type: string; purchaseCount: number; avgLevel: number }>;
+    totalPurchases: number;
+    mostPopular: string;
+  };
+  timestamp: string;
+}

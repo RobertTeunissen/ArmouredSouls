@@ -44,7 +44,7 @@ describe('Spec 53 Coverage_Manifest baseline', () => {
     expect(COVERAGE_MANIFEST.settlementEntryPoints).toHaveLength(2);
     expect(COVERAGE_MANIFEST.subscriptionBoundary.eventTypes).toEqual(BATTLE_MODES);
     expect(COVERAGE_MANIFEST.lifecycleBoundaries).toHaveLength(5);
-    expect(COVERAGE_MANIFEST.adminCompatibilitySurfaces).toHaveLength(6);
+    expect(COVERAGE_MANIFEST.adminCompatibilitySurfaces).toHaveLength(5);
     expect(COVERAGE_MANIFEST.testTiers.map((tier) => tier.tier)).toEqual([
       'unit',
       'integration',

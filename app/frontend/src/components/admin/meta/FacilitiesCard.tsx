@@ -5,12 +5,12 @@
  */
 import type { CSSProperties, ReactNode } from 'react';
 import { AdminPanel } from '../shared';
-import type { SystemStats } from '../types';
+import type { MetaChoices } from '../../../utils/adminMetaApi';
 import { formatCount, formatDecimal } from '../../../utils/adminDashboardFormat';
 import { humanizeKey } from '../../../utils/adminMetaFormat';
 
 export interface FacilitiesCardProps {
-  facilities: SystemStats['facilities'] | null;
+  facilities: MetaChoices['facilities'] | null;
   loading: boolean;
 }
 

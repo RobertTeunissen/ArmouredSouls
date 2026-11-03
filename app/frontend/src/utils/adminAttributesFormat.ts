@@ -14,6 +14,7 @@ import {
   type LayerStep,
   type LayerToggles,
 } from '../components/admin/attributes/types';
+import { formatCount } from './adminFormat';
 
 export const ALL_LAYERS_ON: LayerToggles = { tuning: true, weapons: true, refinements: true, loadout: true, stance: true };
 
@@ -123,9 +124,7 @@ export function formatShare(share: number | null, digits = 1): string {
   return share === null ? '—' : `${(share * 100).toFixed(digits)}%`;
 }
 
-export function formatCount(value: number): string {
-  return value.toLocaleString('en-US');
-}
+export { formatCount };
 
 export type EffectTone = 'strong-up' | 'up' | 'weak-up' | 'strong-down' | 'down' | 'weak-down' | 'neutral' | 'none';
 

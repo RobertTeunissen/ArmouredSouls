@@ -326,7 +326,7 @@ describe('CycleControlsPage — run history', () => {
     });
     const user = setupUser();
     render(<CycleControlsPage />);
-    await screen.findByText('1–25 of 60 entries');
+    await screen.findByText('Showing 1–25 of 60 entries');
 
     await user.click(screen.getByRole('button', { name: 'Next page of entries' }));
     await waitFor(() => expect(getCalls('/api/admin/scheduler/runs').at(-1)?.[1]?.params).toMatchObject({ page: 2 }));

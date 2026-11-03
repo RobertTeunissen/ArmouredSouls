@@ -8,7 +8,7 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { AdminPanel, ADMIN_FOCUS_RING, PanelError } from '../shared';
-import type { SystemStats } from '../types';
+import type { MetaChoices } from '../../../utils/adminMetaApi';
 import type { MetaRefinements } from '../../../utils/adminMetaApi';
 import { attributeLabel } from '../../../utils/adminAttributesFormat';
 import { formatCount } from '../../../utils/adminDashboardFormat';
@@ -17,7 +17,7 @@ import { formatPercentOf, refinementKindEffect, refinementKindLabel } from '../.
 import { MetaStat, SectionLabel } from './metaParts';
 
 export interface WeaponsCardProps {
-  weapons: SystemStats['weapons'] | null;
+  weapons: MetaChoices['weapons'] | null;
   refinements: MetaRefinements | null;
   loading: boolean;
   refinementsLoading: boolean;

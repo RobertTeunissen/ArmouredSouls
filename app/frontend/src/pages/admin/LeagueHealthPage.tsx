@@ -17,14 +17,14 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { LeagueGrid, LeagueHealthAttention, LeagueModeTabs, LeagueSeason, TierTable } from '../../components/admin/league-health';
 import { ADMIN_FOCUS_RING, PanelError, PanelSkeleton } from '../../components/admin/shared';
 import { useLeagueHealth } from '../../hooks/useLeagueHealth';
-import type { LeagueHealthMode, LeagueSeasonStableFilter } from '../../utils/adminLeagueHealthApi';
+import type { LeagueHealthMode } from '../../utils/adminLeagueHealthApi';
+import { readStableScope, STABLE_SCOPES, writeStableScope, type StableScope } from '../../utils/adminStableScope';
 import { formatUtcTime } from '../../utils/adminDashboardFormat';
 import {
   DEFAULT_LEAGUE_HEALTH_MODE,
   modeLabel,
   readLeagueHealthMode,
   readLeagueHealthTier,
-  readSeasonStable,
   rulesSummary,
   seasonLabel,
   standingsHref,
@@ -40,7 +40,7 @@ function LeagueHealthPage(): React.ReactElement {
   const [searchParams, setSearchParams] = useSearchParams();
   const mode = readLeagueHealthMode(searchParams.get('mode'));
   const expandedTier = readLeagueHealthTier(searchParams.get('tier'));
-  const stable = readSeasonStable(searchParams.get('stable'));
+  const stable = readStableScope(searchParams, STABLE_SCOPES, 'all');
   const { data, loading, error, reload, reloadToken } = useLeagueHealth();
   const detailRef = useRef<HTMLElement>(null);
   const refreshing = loading && data !== null;
@@ -64,13 +64,8 @@ function LeagueHealthPage(): React.ReactElement {
     if (scroll) scrollToDetail();
   }, [setSearchParams, scrollToDetail]);
 
-  const changeStable = useCallback((next: LeagueSeasonStableFilter): void => {
-    setSearchParams((params) => {
-      const updated = new URLSearchParams(params);
-      if (next === 'all') updated.delete('stable');
-      else updated.set('stable', next);
-      return updated;
-    }, { replace: true });
+  const changeStable = useCallback((next: StableScope): void => {
+    setSearchParams((params) => writeStableScope(params, next, 'all'), { replace: true });
   }, [setSearchParams]);
 
   const toggleTier = useCallback((tier: string): void => {

@@ -128,7 +128,7 @@ The Armoured Souls matchmaking system is a **fully implemented** turn-based mult
    - POST /api/admin/leagues/rebalance
    - POST /api/admin/repair/all (removed in Nov 2026, admin redesign part 8)
    - POST /api/admin/cycles/bulk (1-100 cycles)
-   - GET /api/admin/stats
+   - GET /api/admin/stats (removed Nov 2026)
    - Files: `routes/admin.ts`, `scripts/testAdminAPI.js`
 
 7. **Public APIs** 
@@ -2111,7 +2111,7 @@ Response:
 
 #### Get System Statistics
 ```http
-GET /api/admin/stats
+GET /api/admin/stats   # removed Nov 2026 (admin redesign part 9)
 Authorization: Bearer <admin-jwt>
 
 Response:

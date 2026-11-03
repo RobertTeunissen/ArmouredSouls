@@ -44,11 +44,9 @@ jest.mock('../../src/services/admin/adminAuditLogService', () => ({
 }));
 
 const mockPracticeOverview = jest.fn();
-const mockPracticeStats = jest.fn();
 jest.mock('../../src/services/practice-arena/practiceArenaUsageService', () => ({
   __esModule: true,
   getPracticeArenaOverview: () => mockPracticeOverview(),
-  getLegacyPracticeArenaStats: () => mockPracticeStats(),
 }));
 jest.mock('../../src/config/logger', () => ({ __esModule: true, default: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() } }));
 jest.mock('../../src/services/security/securityMonitor', () => ({
@@ -235,34 +233,35 @@ describe('POST /api/admin/cycles/bulk', () => {
   });
 });
 
-describe('removed maintenance triggers', () => {
+describe('removed maintenance endpoints', () => {
   it('no longer serves the one-off triggers (Cycle Controls uses /scheduler/runs)', async () => {
     mockUser = { userId: 1, username: 'admin', role: 'admin' };
     const paths = ['/api/admin/scheduler/trigger/league', '/api/admin/repair/all', '/api/admin/recalculate-hp', '/api/admin/daily-finances/process', '/api/admin/snapshots/backfill'];
     const statuses = await Promise.all(paths.map(async (path) => [path, (await request(baseUrl).post(path).send({})).status]));
     expect(statuses).toEqual(paths.map((path) => [path, 404]));
   });
+
+  it('no longer serves GET /scheduler/status or /practice-arena/stats (nothing called them)', async () => {
+    mockUser = { userId: 1, username: 'admin', role: 'admin' };
+    expect((await request(baseUrl).get('/api/admin/scheduler/status')).status).toBe(404);
+    expect((await request(baseUrl).get('/api/admin/practice-arena/stats')).status).toBe(404);
+  });
 });
 
-describe('GET /api/admin/practice-arena/overview and /stats', () => {
-  it('returns the persisted overview and the original stats shape', async () => {
+describe('GET /api/admin/practice-arena/overview', () => {
+  it('returns the persisted overview', async () => {
     mockPracticeOverview.mockResolvedValue({ windowDays: 30, days: [], season: { number: 1, battles: 798, players: 20 } });
-    mockPracticeStats.mockResolvedValue({ current: { totalBattlesSinceStart: 798, battlesToday: 0, rateLimitHitsToday: 0, uniquePlayersToday: 0 }, history: [] });
 
     const overview = await request(baseUrl).get('/api/admin/practice-arena/overview');
     expect(overview.status).toBe(200);
     expect(overview.body).toMatchObject({ windowDays: 30, season: { battles: 798 } });
-
-    const stats = await request(baseUrl).get('/api/admin/practice-arena/stats');
-    expect(stats.status).toBe(200);
-    expect(stats.body.current.totalBattlesSinceStart).toBe(798);
   });
 
   it('requires an admin', async () => {
     mockUser = { userId: 2, username: 'player', role: 'user' };
     expect((await request(baseUrl).get('/api/admin/practice-arena/overview')).status).toBe(403);
     mockUser = null;
-    expect((await request(baseUrl).get('/api/admin/practice-arena/stats')).status).toBe(401);
+    expect((await request(baseUrl).get('/api/admin/practice-arena/overview')).status).toBe(401);
     expect(mockPracticeOverview).not.toHaveBeenCalled();
   });
 });

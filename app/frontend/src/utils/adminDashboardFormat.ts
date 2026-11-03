@@ -6,18 +6,7 @@
  * be unit-tested without rendering.
  */
 import type { DashboardStatus } from './adminDashboardApi';
-import type { UserFilterType } from '../components/admin/shared';
-
-const DASHBOARD_FILTERS: readonly UserFilterType[] = ['real', 'auto', 'automaton', 'all'];
-
-/** The dashboard's default filter: human players. Omitted from the URL. */
-export const DEFAULT_DASHBOARD_FILTER: UserFilterType = 'real';
-
-/** The `?filter=` value, falling back to the default for a missing or unknown value. */
-export function readDashboardFilter(value: string | null): UserFilterType {
-  return DASHBOARD_FILTERS.find((filter) => filter === value) ?? DEFAULT_DASHBOARD_FILTER;
-}
-
+import { errorCodeLabel, formatCount } from './adminFormat';
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
@@ -62,10 +51,7 @@ export function jobLabel(job: string): string {
   return JOB_LABELS[job] ?? humanize(job);
 }
 
-/** Integer with thousands separators ("73,792"). */
-export function formatCount(value: number): string {
-  return value.toLocaleString('en-US');
-}
+export { formatCount };
 
 /** One decimal ("4.2"). */
 export function formatDecimal(value: number): string {
@@ -135,7 +121,7 @@ export function computeTrend(current: number, previous: number | null, intent: T
 export type AttentionSeverity = 'error' | 'warning' | 'unavailable' | 'ok';
 
 export interface AttentionItem {
-  key: 'bankruptcy' | 'security' | 'automatons' | 'cycle';
+  key: 'bankruptcy' | 'security' | 'automatons' | 'cycle' | 'requests';
   severity: AttentionSeverity;
   /** Shown in the badge; null for OK and unavailable items. */
   count: number | null;
@@ -244,13 +230,34 @@ function cycleItem(status: DashboardStatus): AttentionItem {
   return { ...base, severity: 'ok', count: null, title: 'Last cycle healthy', detail: `${jobs} · 0 matches left behind` };
 }
 
+/**
+ * Failed requests: only listed when a request failed with a server error in
+ * the last 24 hours, so a quiet server adds no row (the System page has the
+ * full picture). Null (unreadable) adds no row either.
+ */
+function requestsItem(fact: DashboardStatus['attention']['requests']): AttentionItem | null {
+  if (!fact || fact.failures24h === 0) return null;
+  const where = fact.topRoute ? `Most: ${fact.topRoute}${fact.topCode ? ` (${errorCodeLabel(fact.topCode)})` : ''}` : 'Server errors (5xx)';
+  return {
+    key: 'requests',
+    severity: 'error',
+    count: fact.failures24h,
+    title: `${formatCount(fact.failures24h)} ${plural(fact.failures24h, 'request', 'requests')} failed in the last 24 h`,
+    detail: where,
+    href: '/admin/system',
+    destination: 'System',
+  };
+}
+
 /** The "Needs attention" items, open ones first (errors, then warnings). */
 export function deriveAttentionItems(status: DashboardStatus): AttentionItem[] {
+  const requests = requestsItem(status.attention.requests ?? null);
   const items = [
     bankruptcyItem(status.attention.bankruptcyRisk),
     securityItem(status.attention.security),
     automatonItem(status.attention.automatons),
     cycleItem(status),
+    ...(requests ? [requests] : []),
   ];
   // Array.prototype.sort is stable, so equal severities keep the order above.
   return items.sort((a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity]);

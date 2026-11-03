@@ -198,10 +198,10 @@ describe('PlayersPage', () => {
     renderPage();
     const pages = await screen.findByRole('navigation', { name: 'Stables pages' });
     expect(within(pages).getByText('Showing 1–25 of 30 stables')).toBeInTheDocument();
-    await user.click(within(pages).getByRole('button', { name: 'Next' }));
+    await user.click(within(pages).getByRole('button', { name: 'Next page of stables' }));
     expect(search().get('page')).toBe('2');
     expect(within(screen.getByRole('navigation', { name: 'Stables pages' })).getByText('Showing 26–30 of 30 stables')).toBeInTheDocument();
-    await user.click(within(screen.getByRole('navigation', { name: 'Stables pages' })).getByRole('button', { name: 'Previous' }));
+    await user.click(within(screen.getByRole('navigation', { name: 'Stables pages' })).getByRole('button', { name: 'Previous page of stables' }));
     expect(search().has('page')).toBe(false);
   });
 

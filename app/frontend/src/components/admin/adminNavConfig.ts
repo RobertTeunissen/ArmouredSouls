@@ -1,12 +1,12 @@
 /**
  * Admin portal navigation configuration, shared by the desktop sidebar and the
- * mobile drawer so the two can never list different pages.
+ * mobile drawer so the two can never list different pages. Labels only: the
+ * section headings group the pages, so icons added nothing but noise.
  */
 
 export interface NavItem {
   label: string;
   path: string;
-  icon: string;
 }
 
 export interface NavGroup {
@@ -18,50 +18,51 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     section: 'Overview',
     items: [
-      { label: 'Dashboard', path: '/admin/dashboard', icon: '📊' },
+      { label: 'Dashboard', path: '/admin/dashboard' },
+      { label: 'System', path: '/admin/system' },
     ],
   },
   {
     section: 'Game Operations',
     items: [
-      { label: 'Cycle Controls', path: '/admin/cycles', icon: '⚙️' },
-      { label: 'Season Control', path: '/admin/seasons', icon: '🗓️' },
-      { label: 'Practice Arena', path: '/admin/practice-arena', icon: '🏟️' },
+      { label: 'Cycle Controls', path: '/admin/cycles' },
+      { label: 'Season Control', path: '/admin/seasons' },
+      { label: 'Practice Arena', path: '/admin/practice-arena' },
     ],
   },
   {
     section: 'Battle Data',
     items: [
-      { label: 'Battles', path: '/admin/battles', icon: '⚔️' },
-      { label: 'Attributes', path: '/admin/attributes', icon: '◧' },
-      { label: 'Meta', path: '/admin/meta', icon: '🧭' },
-      { label: 'League Health', path: '/admin/league-health', icon: '🏆' },
-      { label: 'Tournaments', path: '/admin/tournaments', icon: '🎖️' },
-      { label: 'Weapons', path: '/admin/weapons', icon: '🔫' },
+      { label: 'Battles', path: '/admin/battles' },
+      { label: 'Attributes', path: '/admin/attributes' },
+      { label: 'Meta', path: '/admin/meta' },
+      { label: 'League Health', path: '/admin/league-health' },
+      { label: 'Tournaments', path: '/admin/tournaments' },
+      { label: 'Weapons', path: '/admin/weapons' },
     ],
   },
   {
     section: 'Player Management',
     items: [
-      { label: 'Players', path: '/admin/players', icon: '👥' },
-      { label: 'Economy', path: '/admin/economy', icon: '💰' },
-      { label: 'Automatons', path: '/admin/automatons', icon: '🤖' },
+      { label: 'Players', path: '/admin/players' },
+      { label: 'Economy', path: '/admin/economy' },
+      { label: 'Automatons', path: '/admin/automatons' },
     ],
   },
   {
     section: 'Security & Moderation',
     items: [
-      { label: 'Security', path: '/admin/security', icon: '🛡️' },
-      { label: 'Image Uploads', path: '/admin/image-uploads', icon: '🖼️' },
-      { label: 'Admin actions', path: '/admin/actions', icon: '≡' },
+      { label: 'Security', path: '/admin/security' },
+      { label: 'Image Uploads', path: '/admin/image-uploads' },
+      { label: 'Admin actions', path: '/admin/actions' },
     ],
   },
   {
     section: 'Content',
     items: [
-      { label: 'Changelog', path: '/admin/changelog', icon: '📝' },
-      { label: 'Achievements', path: '/admin/achievements', icon: '🏅' },
-      { label: 'Search Analytics', path: '/admin/search-analytics', icon: '🔎' },
+      { label: 'Changelog', path: '/admin/changelog' },
+      { label: 'Achievements', path: '/admin/achievements' },
+      { label: 'Search Analytics', path: '/admin/search-analytics' },
     ],
   },
 ];

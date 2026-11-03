@@ -10,7 +10,7 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import MetaPage from '../MetaPage';
-import type { SystemStats } from '../../../components/admin/types';
+import type { MetaChoices } from '../../../utils/adminMetaApi';
 import type { MetaBuilds } from '../../../utils/adminMetaApi';
 
 type Config = { params?: Record<string, unknown>; signal?: AbortSignal };
@@ -20,7 +20,7 @@ vi.mock('../../../utils/apiClient', () => ({
   default: { get: (url: string, config?: Config) => mockGet(url, config) },
 }));
 
-const stats = (overrides: Partial<SystemStats> = {}): SystemStats => ({
+const stats = (overrides: Partial<MetaChoices> = {}): MetaChoices => ({
   robots: { total: 144, byTier: [], battleReady: 124, battleReadyPercentage: 86.1 },
   matches: { scheduled: 0, completed: 0 },
   battles: { last24Hours: 0, total: 0, draws: 0, drawPercentage: 0, avgDuration: 0, kills: 0, killPercentage: 0 },
@@ -97,12 +97,12 @@ function renderPage(search = '') {
   );
 }
 
-const statsCalls = () => mockGet.mock.calls.filter(([url]) => url === '/api/admin/stats');
+const statsCalls = () => mockGet.mock.calls.filter(([url]) => url === '/api/admin/meta/choices');
 const buildsCalls = () => mockGet.mock.calls.filter(([url]) => url === '/api/admin/meta/builds');
 
-function respond(statsData: SystemStats = stats(), buildsData: MetaBuilds = builds()) {
+function respond(statsData: MetaChoices = stats(), buildsData: MetaBuilds = builds()) {
   mockGet.mockImplementation((url) => {
-    if (url === '/api/admin/stats') return Promise.resolve({ data: statsData });
+    if (url === '/api/admin/meta/choices') return Promise.resolve({ data: statsData });
     if (url === '/api/admin/meta/builds') return Promise.resolve({ data: buildsData });
     return Promise.reject(new Error(`unexpected ${url}`));
   });
@@ -114,11 +114,11 @@ beforeEach(() => {
 });
 
 describe('MetaPage', () => {
-  it('shows stances and loadouts as shares, largest first, for real players by default', async () => {
+  it('shows stances and loadouts as shares, largest first, for players by default', async () => {
     renderPage();
 
     const stances = await screen.findByRole('region', { name: 'Stances' });
-    expect(statsCalls()[0]?.[1]?.params).toEqual({ filter: 'real' });
+    expect(statsCalls()[0]?.[1]?.params).toEqual({ stables: 'players' });
     expect(within(stances).getByText('100 robots')).toBeInTheDocument();
     const items = within(stances).getAllByRole('listitem');
     expect(items[0]).toHaveTextContent('Offensive60.0%60');
@@ -172,7 +172,7 @@ describe('MetaPage', () => {
     renderPage();
 
     const tuning = await screen.findByRole('region', { name: 'Tuning' });
-    expect(buildsCalls()[0]?.[1]?.params).toEqual({ filter: 'real' });
+    expect(buildsCalls()[0]?.[1]?.params).toEqual({ stables: 'players' });
     expect(within(tuning).getByText('robots tuned').nextElementSibling).toHaveTextContent('96 of 98');
     expect(within(tuning).getByText('of the pool used · 3,670 of 3,670 pts').nextElementSibling).toHaveTextContent('100%');
     const groups = within(within(tuning).getByRole('list', { name: 'Tuning points by attribute group' })).getAllByRole('listitem');
@@ -223,7 +223,7 @@ describe('MetaPage', () => {
     const user = userEvent.setup();
     let failBuilds = true;
     mockGet.mockImplementation((url) => {
-      if (url === '/api/admin/stats') return Promise.resolve({ data: stats() });
+      if (url === '/api/admin/meta/choices') return Promise.resolve({ data: stats() });
       if (failBuilds) return Promise.reject({ response: { status: 500, data: { error: 'Builds failed', code: 'INTERNAL' } } });
       return Promise.resolve({ data: builds() });
     });
@@ -240,20 +240,20 @@ describe('MetaPage', () => {
     await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
   });
 
-  it('keeps the filter in the URL, shared with the dashboard', async () => {
+  it('keeps the stable type in the URL, shared with the dashboard (old ?filter= links too)', async () => {
     const user = userEvent.setup();
     renderPage('?filter=all');
     await screen.findByRole('region', { name: 'Stances' });
-    expect(statsCalls()[0]?.[1]?.params).toEqual({ filter: 'all' });
+    expect(statsCalls()[0]?.[1]?.params).toEqual({ stables: 'all' });
 
-    expect(buildsCalls()[0]?.[1]?.params).toEqual({ filter: 'all' });
+    expect(buildsCalls()[0]?.[1]?.params).toEqual({ stables: 'all' });
 
     await user.click(screen.getByRole('button', { name: /Automatons/ }));
-    await waitFor(() => expect(statsCalls().at(-1)?.[1]?.params).toEqual({ filter: 'automaton' }));
-    expect(buildsCalls().at(-1)?.[1]?.params).toEqual({ filter: 'automaton' });
-    expect(screen.getByTestId('location')).toHaveTextContent('?filter=automaton');
+    await waitFor(() => expect(statsCalls().at(-1)?.[1]?.params).toEqual({ stables: 'automatons' }));
+    expect(buildsCalls().at(-1)?.[1]?.params).toEqual({ stables: 'automatons' });
+    expect(screen.getByTestId('location')).toHaveTextContent('?stables=automatons');
 
-    await user.click(screen.getByRole('button', { name: /Real players/ }));
+    await user.click(screen.getByRole('button', { name: 'Players' }));
     await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent(/^$/));
   });
 
@@ -282,16 +282,16 @@ describe('MetaPage', () => {
 
   it('keeps the current filter when an old response arrives late', async () => {
     const user = userEvent.setup();
-    let resolveReal: (value: { data: SystemStats }) => void = () => undefined;
+    let resolveReal: (value: { data: MetaChoices }) => void = () => undefined;
     mockGet.mockImplementation((url, config) => {
       if (url === '/api/admin/meta/builds') return Promise.resolve({ data: builds() });
-      return config?.params?.filter === 'real'
+      return config?.params?.stables === 'players'
         ? new Promise((resolve) => { resolveReal = resolve; })
         : Promise.resolve({ data: stats({ stances: [{ stance: 'balanced', count: 9 }] }) });
     });
     renderPage();
 
-    await user.click(screen.getByRole('button', { name: /Auto-generated/ }));
+    await user.click(screen.getByRole('button', { name: 'Generated' }));
     expect(await screen.findByText('Balanced')).toBeInTheDocument();
 
     resolveReal({ data: stats() });

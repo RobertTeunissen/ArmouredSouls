@@ -165,7 +165,7 @@ describe('AdminActionsPage', () => {
     await waitFor(() => expect(mockGet).toHaveBeenCalledWith('/api/admin/actions', expect.objectContaining({ params: { page: 2, pageSize: 50 } })));
     const nav = await screen.findByRole('navigation', { name: 'Actions pages' });
     expect(nav).toHaveTextContent('Showing 51–100 of 120 actions');
-    await user.click(within(nav).getByRole('button', { name: 'Next' }));
+    await user.click(within(nav).getByRole('button', { name: 'Next page of actions' }));
     expect(search().get('page')).toBe('3');
   });
 

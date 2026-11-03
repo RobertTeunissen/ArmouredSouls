@@ -29,22 +29,12 @@ const TIER_LABELS: Record<AchievementTier, string> = {
   secret: 'Secret',
 };
 
-const STABLES_LABELS: Record<AchievementStables, string> = {
-  players: 'Players',
-  automatons: 'Automatons',
-  generated: 'Generated',
-};
-
 export function tierLabel(tier: AchievementTier): string {
   return TIER_LABELS[tier];
 }
 
 export function categoryLabel(category: AchievementCategory): string {
   return category.charAt(0).toUpperCase() + category.slice(1);
-}
-
-export function stablesLabel(stables: AchievementStables): string {
-  return STABLES_LABELS[stables];
 }
 
 /** `?stables=` → a known scope, Players by default. */

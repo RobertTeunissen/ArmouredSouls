@@ -13,16 +13,14 @@
  */
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { ADMIN_FOCUS_RING, AdminPageHeader, PanelError, PanelSkeleton } from '../../components/admin/shared';
-import { ToggleChip } from '../../components/admin/automatons/ui';
-import { BattlesPagination } from '../../components/admin/battles/BattlesTable';
+import { ADMIN_FOCUS_RING, AdminPageHeader, AdminPagination, PanelError, PanelSkeleton, ToggleChip } from '../../components/admin/shared';
 import { AdminActionsList } from '../../components/admin/actions/AdminActionsList';
 import { ApiError } from '../../utils/ApiError';
 import { isAbortError } from '../../utils/abort';
 import { ADMIN_ACTION_AREAS, ADMIN_ACTION_AREA_LABELS, getAdminActions, type AdminActionsPage as ActionsPage, type AdminActionsQuery } from '../../utils/adminActionsApi';
 import { formatActionDate, readActionsView, writeActionsView } from '../../utils/adminActionsFormat';
+import { formatCount as count } from '../../utils/adminFormat';
 
-const count = (value: number): string => value.toLocaleString('en-US');
 
 function AdminActionsPage(): React.ReactElement {
   const [params, setParams] = useSearchParams();
@@ -123,7 +121,7 @@ function AdminActionsPage(): React.ReactElement {
       </section>
 
       {data && data.totalPages > 1 && (
-        <BattlesPagination
+        <AdminPagination
           page={data.page}
           totalPages={data.totalPages}
           total={data.total}

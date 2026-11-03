@@ -8,6 +8,7 @@
  * settlement (automated scheduling off) there are no dates.
  */
 import type { AdminSeasonState, RolloverAttempt, RolloverStageName, SeasonRolloverHistory } from './seasonApi';
+import { formatCount } from './adminFormat';
 
 const DAY_MS = 86_400_000;
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -148,7 +149,4 @@ export function latestAttempt(history: SeasonRolloverHistory): RolloverAttempt |
   return all.reduce<RolloverAttempt | null>((newest, attempt) => (!newest || new Date(attempt.at) > new Date(newest.at) ? attempt : newest), null);
 }
 
-/** "1,234". */
-export function formatCount(value: number): string {
-  return value.toLocaleString('en-US');
-}
+export { formatCount };

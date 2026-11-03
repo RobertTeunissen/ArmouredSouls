@@ -206,7 +206,7 @@ Season rollover retains only the documented archive tables and permitted account
 
 The following routes remain part of the baseline and must retain their current response/filter contracts while later services are introduced:
 
-- `app/backend/src/routes/adminMaintenance.ts`: `POST /cycles/bulk` and `GET /scheduler/status`;
+- `app/backend/src/routes/adminMaintenance.ts`: `POST /cycles/bulk` (`GET /scheduler/status` was removed later in Nov 2026);
 - `app/backend/src/routes/adminUsers.ts`: `GET /actions` (Admin actions);
 - `app/backend/src/routes/adminAnalytics.ts`: `GET /economy` (Economy page, including the Repairs block); and
 - `app/backend/src/routes/adminSeasons.ts`: `GET /rollover-preview` and `POST /rollover`.

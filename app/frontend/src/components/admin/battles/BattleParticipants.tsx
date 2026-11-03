@@ -3,6 +3,7 @@
  * two-sided modes, by placement for KotH and Grand Melee.
  */
 import { StableTag } from './BattleBadges';
+import { StableLink } from './StableLink';
 import type { BattleDetail, BattleParticipantDetail } from './types';
 import { formatCredits, formatEventTime, formatNumber } from '../../../utils/adminBattlesFormat';
 
@@ -28,7 +29,7 @@ function Row({ p, placement }: { p: BattleParticipantDetail; placement: boolean 
         </p>
         <p className={`text-xs ${f.tone}`}>{f.text}</p>
         {placement && p.stable && (
-          <p className="mt-0.5 flex items-center gap-1.5 text-xs text-tertiary"><StableTag kind={p.stable.stableType} />{p.stable.name}</p>
+          <p className="mt-0.5 flex items-center gap-1.5 text-xs text-tertiary"><StableTag kind={p.stable.stableType} /><StableLink stable={p.stable} /></p>
         )}
       </td>
       <td className="px-2 py-2 text-right tabular-nums">{formatNumber(p.finalHP)}{p.maxHP !== null && <span className="text-tertiary"> / {formatNumber(p.maxHP)}</span>}</td>
@@ -84,7 +85,7 @@ export function BattleParticipants({ battle }: { battle: BattleDetail }): React.
                 <th scope="rowgroup" colSpan={8} className="px-4 py-2 text-left text-xs font-normal">
                   <span className="flex flex-wrap items-center gap-2">
                     <span className="font-semibold text-white">Side {group.side.team} · {group.side.label}</span>
-                    {group.side.stable && <span className="text-secondary">{group.side.stable.name}</span>}
+                    {group.side.stable && <StableLink stable={group.side.stable} className="text-secondary" />}
                     {group.side.stable && <StableTag kind={group.side.stable.stableType} />}
                     {group.side.isWinner && <span className="rounded-full bg-success/15 px-2 py-px text-[10px] font-semibold text-success">Won</span>}
                   </span>

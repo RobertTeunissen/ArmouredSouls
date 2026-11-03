@@ -6,4 +6,3 @@ export { SearchTrendChart } from './SearchTrendChart';
 export { CategoryResults } from './CategoryResults';
 export { PhraseTable } from './PhraseTable';
 export { SearchersPanel } from './SearchersPanel';
-export { SearchAnalyticsPagination } from './SearchAnalyticsPagination';

@@ -83,7 +83,7 @@ test.describe('Admin League Health', () => {
 
   test('replaces League History: the old URL redirects and "This season" follows mode and stable type', async ({ page, request }) => {
     const token = await adminToken(request);
-    const response = await request.get(`${API_URL}/api/admin/league-health/season?mode=league_1v1&stable=generated`, {
+    const response = await request.get(`${API_URL}/api/admin/league-health/season?mode=league_1v1&stables=generated`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     expect(response.status()).toBe(200);
@@ -99,10 +99,10 @@ test.describe('Admin League Health', () => {
 
     const block = page.getByTestId('league-season');
     await expect(block.getByRole('heading', { name: 'This season · 1v1 League' })).toBeVisible();
-    const seasonLoaded = page.waitForResponse((r) => r.url().includes('/api/admin/league-health/season') && r.url().includes('stable=human'));
+    const seasonLoaded = page.waitForResponse((r) => r.url().includes('/api/admin/league-health/season') && r.url().includes('stables=players'));
     await block.getByRole('group', { name: 'Stable type' }).getByRole('button', { name: 'Players', exact: true }).click();
     await seasonLoaded;
-    await expect(page).toHaveURL(/\?stable=human$/);
+    await expect(page).toHaveURL(/\?stables=players$/);
     // A freshly seeded database has no rebalances yet, so either outcome is valid.
     await expect(block.getByTestId('season-boundaries').or(block.getByText('No promotions or demotions recorded in this league this season yet.'))).toBeVisible();
 

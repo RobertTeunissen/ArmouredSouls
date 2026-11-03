@@ -62,6 +62,16 @@ function redactSearchDetails(details: unknown, req: Request): unknown {
   return details;
 }
 
+/** A database statement timeout is the one 500 worth naming; everything else is INTERNAL_ERROR. */
+export function serverErrorCode(err: Error): 'STATEMENT_TIMEOUT' | 'INTERNAL_ERROR' {
+  return /statement timeout|\b57014\b/.test(err.message ?? '') ? 'STATEMENT_TIMEOUT' : 'INTERNAL_ERROR';
+}
+
+/** Leave the code for `requestLogger`, which counts server errors for the admin System page. */
+function markErrorCode(res: Response, code: string): void {
+  if (res.locals) res.locals.errorCode = code;
+}
+
 /**
  * Express error-handling middleware that produces consistent JSON error responses.
  *
@@ -84,6 +94,7 @@ export function errorHandler(err: Error, req: Request, res: Response, _next: Nex
 
   // Structured app errors (AppError and all subclasses)
   if (err instanceof AppError) {
+    if (err.statusCode >= 500) markErrorCode(res, err.code);
     logger.warn('App error', { code: err.code, status: err.statusCode, method: req.method, path });
     res.status(err.statusCode).json({
       error: redactSearchText(err.message, req),
@@ -127,6 +138,8 @@ export function errorHandler(err: Error, req: Request, res: Response, _next: Nex
   // Unknown errors - return 500 and hide internals in all environments.
   // Never reflect raw error messages — they may contain unsanitized user input (XSS vector).
   const { nodeEnv } = getConfig();
+  // For the admin System page: a database statement timeout is the one 500 worth naming.
+  markErrorCode(res, serverErrorCode(err));
   const isProduction = nodeEnv === 'production' || nodeEnv === 'acceptance';
   logger.error('Unhandled error', {
     message: isSearchRequest ? '[REDACTED]' : err.message,

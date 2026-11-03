@@ -1059,14 +1059,6 @@ export const COVERAGE_MANIFEST: CoverageManifest = {
       targetTestTiers: ['unit', 'integration', 'heavy'],
     },
     {
-      id: 'admin-scheduler-status',
-      route: '/api/admin/scheduler/status',
-      currentSource: { file: 'app/backend/src/routes/adminMaintenance.ts', symbol: 'GET /scheduler/status' },
-      purpose: 'scheduler state inspection',
-      preserves: ['scheduler state response'],
-      targetTestTiers: ['unit', 'integration'],
-    },
-    {
       id: 'admin-actions',
       route: '/api/admin/actions',
       currentSource: { file: 'app/backend/src/routes/adminUsers.ts', symbol: 'GET /actions' },

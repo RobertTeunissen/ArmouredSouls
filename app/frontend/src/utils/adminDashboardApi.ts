@@ -7,7 +7,7 @@
  * `adminBattleActivityService.ts` (battle activity).
  */
 import { api } from './api';
-import type { UserFilterType } from '../components/admin/shared';
+import type { StableScope } from './adminStableScope';
 
 export interface DashboardHumanPlayers {
   total: number;
@@ -54,6 +54,8 @@ export interface DashboardStatus {
     security: { signals: number; alerts: number } | null;
     automatons: { needAttention: number; failed: number } | null;
     cycleHealth: DashboardCycleHealth;
+    /** Server errors (5xx) of the last 24 hours and the route with the most; null when unreadable. */
+    requests: { failures24h: number; topRoute: string | null; topCode: string | null } | null;
   };
   timestamp: string;
 }
@@ -76,17 +78,17 @@ export interface BattleActivity {
   timestamp: string;
 }
 
-export function getDashboardKpis(filter: UserFilterType, signal?: AbortSignal): Promise<DashboardKpis> {
-  return api.get<DashboardKpis>('/api/admin/dashboard/kpis', { params: { filter }, signal });
+export function getDashboardKpis(filter: StableScope, signal?: AbortSignal): Promise<DashboardKpis> {
+  return api.get<DashboardKpis>('/api/admin/dashboard/kpis', { params: { stables: filter }, signal });
 }
 
 export function getDashboardStatus(signal?: AbortSignal): Promise<DashboardStatus> {
   return api.get<DashboardStatus>('/api/admin/dashboard/status', { signal });
 }
 
-export function getBattleActivity(filter: UserFilterType, fresh: boolean, signal?: AbortSignal): Promise<BattleActivity> {
+export function getBattleActivity(filter: StableScope, fresh: boolean, signal?: AbortSignal): Promise<BattleActivity> {
   return api.get<BattleActivity>('/api/admin/dashboard/battle-activity', {
-    params: { filter, fresh: fresh ? 'true' : 'false' },
+    params: { stables: filter, fresh: fresh ? 'true' : 'false' },
     signal,
   });
 }

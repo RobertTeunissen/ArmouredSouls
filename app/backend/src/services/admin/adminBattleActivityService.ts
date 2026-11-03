@@ -19,7 +19,7 @@
  */
 import prisma from '../../lib/prisma';
 import { Prisma } from '../../../generated/prisma';
-import { buildUserFilter, type UserFilterType } from '../../utils/buildUserFilter';
+import { buildStableScopeFilter, type StableScope } from '../../utils/stableScope';
 import { countQueuedMatchesByMode, DASHBOARD_BATTLE_MODES } from './adminQueuedMatches';
 
 /** Modes where a draw cannot happen (placement modes always have a winner). */
@@ -154,9 +154,9 @@ async function readLastCycleWindow(): Promise<{ cycleNumber: number; from: Date;
 }
 
 /** Ids of the users in the filter, or null for "all" (no restriction). */
-async function resolveFilterUserIds(filter: UserFilterType): Promise<number[] | null> {
-  if (filter === 'all') return null;
-  const users = await prisma.user.findMany({ where: buildUserFilter(filter), select: { id: true } });
+async function resolveFilterUserIds(scope: StableScope): Promise<number[] | null> {
+  if (scope === 'all') return null;
+  const users = await prisma.user.findMany({ where: buildStableScopeFilter(scope), select: { id: true } });
   return users.map((user) => user.id);
 }
 
@@ -227,7 +227,7 @@ export async function aggregateBattles(
   }));
 }
 
-const cache = new Map<UserFilterType, { expiresAt: number; value: BattleActivity }>();
+const cache = new Map<StableScope, { expiresAt: number; value: BattleActivity }>();
 
 /** Drop cached results (tests, and an explicit refresh). */
 export function clearBattleActivityCache(): void {
@@ -236,7 +236,7 @@ export function clearBattleActivityCache(): void {
 
 /** Battle activity per mode for the dashboard filter. Cached for 60 s per filter. */
 export async function getBattleActivity(
-  filter: UserFilterType,
+  filter: StableScope,
   options: { fresh?: boolean; now?: Date } = {},
 ): Promise<BattleActivity> {
   const now = options.now ?? new Date();

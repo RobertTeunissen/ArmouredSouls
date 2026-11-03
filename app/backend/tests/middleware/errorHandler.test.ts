@@ -548,3 +548,23 @@ describe('errorHandler middleware', () => {
     });
   });
 });
+
+describe('errorHandler error codes for the System page', () => {
+  const run = (error: Error): Record<string, unknown> => {
+    const locals: Record<string, unknown> = {};
+    const res = { status: jest.fn().mockReturnValue({ json: jest.fn() }), locals } as unknown as Response;
+    errorHandler(error, { method: 'GET', originalUrl: '/api/admin/economy' } as Request, res, jest.fn());
+    return locals;
+  };
+
+  test('names a database statement timeout', () => {
+    const timeout = new Error('Invalid `prisma.$queryRaw()` invocation: Raw query failed. Code: `57014`. Message: `canceling statement due to statement timeout`');
+    expect(run(timeout).errorCode).toBe('STATEMENT_TIMEOUT');
+  });
+
+  test('marks other unknown errors as INTERNAL_ERROR and 5xx AppErrors by their code', () => {
+    expect(run(new Error('boom')).errorCode).toBe('INTERNAL_ERROR');
+    expect(run(new AppError('SCHEDULER_BUSY', 'busy', 503)).errorCode).toBe('SCHEDULER_BUSY');
+    expect(run(new AppError('NOT_FOUND', 'missing', 404)).errorCode).toBeUndefined();
+  });
+});

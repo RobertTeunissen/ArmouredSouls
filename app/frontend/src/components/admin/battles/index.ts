@@ -1,5 +1,5 @@
 export { BattlesFilters, SEARCH_DEBOUNCE_MS } from './BattlesFilters';
-export { BattlesTable, BattlesPagination } from './BattlesTable';
+export { BattlesTable } from './BattlesTable';
 export { BattleSlideOver } from './BattleSlideOver';
 export { BattleParticipants } from './BattleParticipants';
 export { BattlePayoutCheck } from './BattlePayoutCheck';

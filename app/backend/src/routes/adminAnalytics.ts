@@ -1,8 +1,10 @@
 /**
  * Admin Analytics & Dashboard Routes
  *
- * System stats, KPIs, engagement, economy, league health, achievements, and the
- * Meta page's build sections (tuning, refinements, event entry).
+ * Dashboard KPIs and battle activity, economy, league health, achievements, and
+ * the Meta page (choices; build sections: tuning, refinements, event entry).
+ * Pages that split by stable type take `stables=players|automatons|generated|all`
+ * (`utils/stableScope.ts`).
  * (Weapons moved to the "what wins" analyses: GET /api/admin/analysis/weapons.)
  * Mounted at /api/admin/ from the main admin router.
  */
@@ -11,19 +13,14 @@ import express, { Request, Response } from 'express';
 import { z } from 'zod';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 import { validateRequest } from '../middleware/schemaValidator';
-import logger from '../config/logger';
-import { buildUserFilter, USER_FILTER_TYPES } from '../utils/buildUserFilter';
-import type { UserFilterType } from '../utils/buildUserFilter';
-import {
-  getSystemStats,
-  getDashboardKpis,
-} from '../services/admin/adminStatsService';
+import { buildStableScopeFilter, STABLE_SCOPES } from '../utils/stableScope';
+import { getDashboardKpis } from '../services/admin/adminDashboardService';
 import { ACHIEVEMENT_STABLE_SCOPES, getAchievementAnalytics } from '../services/admin/achievements';
-import { getMetaBuilds } from '../services/admin/meta';
+import { getMetaBuilds, getMetaChoices } from '../services/admin/meta';
 import {
   getLeagueHealthOverview,
   getLeagueSeason,
-  LEAGUE_SEASON_STABLE_FILTERS,
+  type LeagueSeasonStableFilter,
 } from '../services/admin/league-health';
 import { TIERED_LEAGUE_MODES } from '../services/league/league-rules';
 import { ECONOMY_STABLE_SCOPES, ECONOMY_WINDOWS, getEconomyOverview } from '../services/admin/adminEconomyService';
@@ -50,16 +47,12 @@ const router = express.Router();
 
 // --- Zod schemas ---
 
-const statsQuerySchema = z.object({
-  filter: z.enum(USER_FILTER_TYPES).optional().default('real'),
-});
-
-const dashboardKpisQuerySchema = z.object({
-  filter: z.enum(USER_FILTER_TYPES).optional().default('real'),
+const stableScopeQuerySchema = z.object({
+  stables: z.enum(STABLE_SCOPES).optional().default('players'),
 });
 
 const dashboardBattleActivityQuerySchema = z.object({
-  filter: z.enum(USER_FILTER_TYPES).optional().default('real'),
+  stables: z.enum(STABLE_SCOPES).optional().default('players'),
   /** `true` bypasses the 60 s cache (the dashboard's Refresh button). */
   fresh: z.enum(['true', 'false']).optional().default('false'),
 });
@@ -74,13 +67,9 @@ const achievementAnalyticsQuerySchema = z.object({
   stables: z.enum(ACHIEVEMENT_STABLE_SCOPES).optional().default('players'),
 });
 
-const metaBuildsQuerySchema = z.object({
-  filter: z.enum(USER_FILTER_TYPES).optional().default('real'),
-});
-
 const leagueSeasonQuerySchema = z.object({
   mode: z.enum(TIERED_LEAGUE_MODES).optional().default('league_1v1'),
-  stable: z.enum(LEAGUE_SEASON_STABLE_FILTERS).optional().default('all'),
+  stables: z.enum(STABLE_SCOPES).optional().default('all'),
 });
 
 const searchAnalyticsCycleRange = (value: { cycleFrom?: number; cycleTo?: number; lastCycles?: number }, context: z.RefinementCtx): void => {
@@ -133,35 +122,23 @@ const searchAnalyticsPhrasesExportQuerySchema = z.object(searchAnalyticsPhraseFi
   .strict()
   .superRefine(searchAnalyticsCycleRange);
 
-// --- Routes ---
+/** League history splits by `users.stable_type`; Players = human stables. */
+const LEAGUE_SEASON_STABLE_OF: Readonly<Record<(typeof STABLE_SCOPES)[number], LeagueSeasonStableFilter>> = {
+  players: 'human',
+  automatons: 'automaton',
+  generated: 'generated',
+  all: 'all',
+};
 
-/**
- * GET /api/admin/stats
- * Get system statistics
- */
-router.get('/stats', authenticateToken, requireAdmin, validateRequest({ query: statsQuerySchema }), async (req: Request, res: Response) => {
-  try {
-    const filter = (req.query.filter as UserFilterType) || 'real';
-    const userFilter = buildUserFilter(filter);
-    const stats = await getSystemStats(userFilter);
-    res.json(stats);
-  } catch (error) {
-    logger.error('[Admin] Stats error:', error);
-    res.status(500).json({
-      error: 'Failed to retrieve stats',
-    });
-  }
-});
+// --- Routes ---
 
 /**
  * GET /api/admin/dashboard/kpis
  * Get high-level KPI metrics for the admin dashboard.
  */
-router.get('/dashboard/kpis', authenticateToken, requireAdmin, validateRequest({ query: dashboardKpisQuerySchema }), async (req: Request, res: Response) => {
-  const filter = (req.query.filter as UserFilterType) || 'real';
-  const userFilter = buildUserFilter(filter);
-  const kpis = await getDashboardKpis(userFilter);
-  res.json(kpis);
+router.get('/dashboard/kpis', authenticateToken, requireAdmin, validateRequest({ query: stableScopeQuerySchema }), async (req: Request, res: Response) => {
+  const query = stableScopeQuerySchema.parse(req.query);
+  res.json(await getDashboardKpis(buildStableScopeFilter(query.stables)));
 });
 
 /**
@@ -177,9 +154,8 @@ router.get('/dashboard/status', authenticateToken, requireAdmin, validateRequest
  * Battles per mode (last cycle, season, walkovers, queued, rates).
  */
 router.get('/dashboard/battle-activity', authenticateToken, requireAdmin, validateRequest({ query: dashboardBattleActivityQuerySchema }), async (req: Request, res: Response) => {
-  const filter = (req.query.filter as UserFilterType) || 'real';
-  const fresh = req.query.fresh === 'true';
-  res.json(await getBattleActivity(filter, { fresh }));
+  const query = dashboardBattleActivityQuerySchema.parse(req.query);
+  res.json(await getBattleActivity(query.stables, { fresh: query.fresh === 'true' }));
 });
 
 /**
@@ -205,13 +181,13 @@ router.get('/league-health', authenticateToken, requireAdmin, validateRequest({}
 /**
  * GET /api/admin/league-health/season
  * This season's promotions and demotions of one mode (`mode`, default
- * league_1v1) for one stable type (`stable`: all | human | automaton |
- * generated): per cycle, quiet cycles, and per tier boundary with the
+ * league_1v1) for one stable type (`stables`: all (default) | players |
+ * automatons | generated): per cycle, quiet cycles, and per tier boundary with the
  * bounce-back share. Read-only, from `league_history`.
  */
 router.get('/league-health/season', authenticateToken, requireAdmin, validateRequest({ query: leagueSeasonQuerySchema }), async (req: Request, res: Response) => {
   const query = leagueSeasonQuerySchema.parse(req.query);
-  res.json(await getLeagueSeason(query.mode, query.stable));
+  res.json(await getLeagueSeason(query.mode, LEAGUE_SEASON_STABLE_OF[query.stables]));
 });
 
 /**
@@ -226,13 +202,24 @@ router.get('/achievements/analytics', authenticateToken, requireAdmin, validateR
 });
 
 /**
+ * GET /api/admin/meta/choices
+ * The choice sections of the Meta page (stances, loadouts, yield thresholds,
+ * weapon totals, facility ownership) for the selected stable type. Replaced
+ * `GET /api/admin/stats`. Read-only.
+ */
+router.get('/meta/choices', authenticateToken, requireAdmin, validateRequest({ query: stableScopeQuerySchema }), async (req: Request, res: Response) => {
+  const query = stableScopeQuerySchema.parse(req.query);
+  res.json(await getMetaChoices(buildStableScopeFilter(query.stables)));
+});
+
+/**
  * GET /api/admin/meta/builds
  * The Tuning, Refinements and Event entry sections of the Meta page for the
- * selected stable type (`filter`, default real). Read-only.
+ * selected stable type (`stables`, default players). Read-only.
  */
-router.get('/meta/builds', authenticateToken, requireAdmin, validateRequest({ query: metaBuildsQuerySchema }), async (req: Request, res: Response) => {
-  const query = metaBuildsQuerySchema.parse(req.query);
-  res.json(await getMetaBuilds(buildUserFilter(query.filter)));
+router.get('/meta/builds', authenticateToken, requireAdmin, validateRequest({ query: stableScopeQuerySchema }), async (req: Request, res: Response) => {
+  const query = stableScopeQuerySchema.parse(req.query);
+  res.json(await getMetaBuilds(buildStableScopeFilter(query.stables)));
 });
 
 router.get('/search-analytics/report', authenticateToken, requireAdmin, validateRequest({ query: searchAnalyticsReportQuerySchema }), async (req: Request, res: Response) => {

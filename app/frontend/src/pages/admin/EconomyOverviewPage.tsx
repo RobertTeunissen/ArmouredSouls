@@ -18,10 +18,10 @@
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { ADMIN_FOCUS_RING, AdminPageHeader, PanelError, PanelSkeleton } from '../../components/admin/shared';
-import { ToggleChip } from '../../components/admin/automatons/ui';
+import { ADMIN_FOCUS_RING, AdminPageHeader, PanelError, PanelSkeleton, StableScopeToggle, ToggleChip } from '../../components/admin/shared';
 import { EconomyBalances, EconomyByStableType, EconomyFlows, EconomyKpis, EconomyPerCycle, EconomyRepairs } from '../../components/admin/economy/EconomyBlocks';
-import { SCOPE_LABELS, scopeNoun } from '../../utils/adminEconomyFormat';
+import { scopeNoun } from '../../utils/adminEconomyFormat';
+import { readStableScope, writeStableScope } from '../../utils/adminStableScope';
 import { ApiError } from '../../utils/ApiError';
 import { isAbortError } from '../../utils/abort';
 import { getEconomyOverview, type EconomyPreparing, type EconomyResponse, type EconomyStableScope, type EconomyWindow } from '../../utils/adminEconomyApi';
@@ -37,10 +37,6 @@ const WINDOWS: readonly { key: EconomyWindow; label: string }[] = [
   { key: '30', label: '30 cycles' },
   { key: 'season', label: 'Season' },
 ];
-
-function readScope(value: string | null): EconomyStableScope {
-  return SCOPES.find((s) => s === value) ?? 'players';
-}
 
 function readWindow(value: string | null): EconomyWindow {
   return WINDOWS.find((w) => w.key === value)?.key ?? '7';
@@ -61,7 +57,7 @@ function ChipGroup<T extends string>({ label, options, value, onChange }: { labe
 
 function EconomyOverviewPage(): React.ReactElement {
   const [params, setParams] = useSearchParams();
-  const stables = readScope(params.get('stables'));
+  const stables = readStableScope(params, SCOPES, 'players');
   const cycleWindow = readWindow(params.get('window'));
   const [data, setData] = useState<EconomyResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -94,7 +90,7 @@ function EconomyOverviewPage(): React.ReactElement {
     return () => clearTimeout(timer);
   }, [preparing]);
 
-  const set = (name: 'stables' | 'window', value: string, fallback: string): void => {
+  const set = (name: 'window', value: string, fallback: string): void => {
     setParams((current) => {
       const next = new URLSearchParams(current);
       if (value === fallback) next.delete(name);
@@ -130,7 +126,7 @@ function EconomyOverviewPage(): React.ReactElement {
       />
 
       <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-        <ChipGroup label="Stables" options={SCOPES.map((key) => ({ key, label: SCOPE_LABELS[key] }))} value={stables} onChange={(v) => set('stables', v, 'players')} />
+        <StableScopeToggle value={stables} onChange={(v) => setParams((current) => writeStableScope(current, v, 'players'), { replace: true })} />
         <ChipGroup label="Window" options={WINDOWS} value={cycleWindow} onChange={(v) => set('window', v, '7')} />
       </div>
 

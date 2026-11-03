@@ -259,7 +259,7 @@ DAILY_REPORT_SCHEDULE=0 9 * * *
 
 The report includes: uptime, disk usage, memory usage, database connectivity, module integrity, logging health, backups, and last cycle job info.
 
-Memory is informational (no threshold, so no OK/WARNING verdict). Backups make the report Degraded when the newest daily backup is older than 26 hours, when the backup directory holds no backup, when it cannot be read, or, on acceptance and production, when it does not exist. Only a local machine without `/opt/armouredsouls/backups/daily` shows `N/A (dev)` without degrading the report.
+Memory is informational (no threshold, so no OK/WARNING verdict). The backup line reads the newest `*.sql.zst` (or older `*.sql.gz` / `*.dump`) through `services/monitoring/backupStatus.ts`, the same reader as the admin System page. Until Nov 2026 it looked only for `.dump` and `.sql.gz`, so after nightly dumps moved to zstd (28 Oct 2026) the report said `MISSING (none found)` while backups were fine. Backups make the report Degraded when the newest daily backup is older than 26 hours, when the backup directory holds no backup, when it cannot be read, or, on acceptance and production, when it does not exist. Only a local machine without `/opt/armouredsouls/backups/daily` shows `N/A (dev)` without degrading the report.
 
 ### Interpreting the Report
 

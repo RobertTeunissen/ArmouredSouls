@@ -96,6 +96,7 @@ const nonAdminUserArb = fc.record({
 /** Admin sub-paths that exist in the real route config */
 const adminSubPaths = [
   'dashboard',
+  'system',
   'cycles',
   'cycles/history',
   'practice-arena',

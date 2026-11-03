@@ -1,11 +1,13 @@
 /**
  * Admin Operations Routes
  *
- * Bulk cycles, scheduler status and the Practice Arena overview. Manual job
- * runs are `POST /scheduler/runs` (adminScheduler.ts). The legacy one-off
- * maintenance triggers (repair/all, recalculate-hp, daily-finances/process,
- * snapshots/backfill, scheduler/trigger/:jobName) were removed with the
- * Maintenance redesign: nothing called them.
+ * Bulk cycles and the Practice Arena overview. Manual job runs and scheduler
+ * state are on `adminScheduler.ts` (`/scheduler/overview`, `/scheduler/runs`).
+ * Removed because nothing called them: the one-off maintenance triggers
+ * (repair/all, recalculate-hp, daily-finances/process, snapshots/backfill,
+ * scheduler/trigger/:jobName) and later `GET /scheduler/status` (in-memory
+ * state, replaced by the persistent run history) and `GET /practice-arena/stats`
+ * (the pre-redesign shape).
  * Mounted at /api/admin/ from the main admin router.
  */
 
@@ -14,11 +16,10 @@ import { z } from 'zod';
 import { authenticateToken, requireAdmin, AuthRequest } from '../middleware/auth';
 import { validateRequest } from '../middleware/schemaValidator';
 import logger from '../config/logger';
-import { getSchedulerState } from '../services/cycle/cycleScheduler';
 import { recordAction as recordAuditAction } from '../services/admin/adminAuditLogService';
 import { runBulkCycles, startBulkCycles } from '../services/admin/adminBulkCycleRunService';
 import { SchedulerError } from '../errors/schedulerErrors';
-import { getLegacyPracticeArenaStats, getPracticeArenaOverview } from '../services/practice-arena/practiceArenaUsageService';
+import { getPracticeArenaOverview } from '../services/practice-arena/practiceArenaUsageService';
 
 const router = express.Router();
 
@@ -72,30 +73,12 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, validateRequest({ b
 });
 
 /**
- * GET /api/admin/scheduler/status
- * Return the current state of the Cycle Scheduler
- */
-router.get('/scheduler/status', authenticateToken, requireAdmin, validateRequest({}), (_req: Request, res: Response) => {
-  const state = getSchedulerState();
-  res.json(state);
-});
-
-/**
  * GET /api/admin/practice-arena/overview
  * The admin Practice Arena page: UTC days, season totals, top practitioners,
  * usage and unavailable time (persisted, survives restarts).
  */
 router.get('/practice-arena/overview', authenticateToken, requireAdmin, validateRequest({}), async (_req: Request, res: Response) => {
   res.json(await getPracticeArenaOverview());
-});
-
-/**
- * GET /api/admin/practice-arena/stats
- * The original shape (`current` + daily `history`), computed from the
- * persisted events. `totalBattlesSinceStart` is this season's battles.
- */
-router.get('/practice-arena/stats', authenticateToken, requireAdmin, validateRequest({}), async (_req: Request, res: Response) => {
-  res.json(await getLegacyPracticeArenaStats());
 });
 
 export default router;
