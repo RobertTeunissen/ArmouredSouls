@@ -44,6 +44,7 @@ import {
   awardPrestigeToUser,
   awardBattleStreamingRevenue,
 } from '../battle/battlePostCombat';
+import { hasAllocatedTuning, isLowestElo, lowestHpPercent } from '../battle/battleAchievementContext';
 import standingsService from '../standings/standingsService';
 import { CombatMessageGenerator } from '../battle/combatMessageGenerator';
 import { calculateStreamingRevenueBatch } from '../economy/streamingRevenueService';
@@ -672,11 +673,20 @@ async function processKothBattle(
           opponentDamageDealt: 0,
           loadoutType: (p.robot as unknown as { loadoutType?: string }).loadoutType || 'single',
           stance: (p.robot as unknown as { stance?: string }).stance || 'balanced',
-          yieldThreshold: 0,
-          hasTuning: false,
+          yieldThreshold: p.robot.yieldThreshold,
+          hasTuning: hasAllocatedTuning(tuningBonusesMap.get(p.robot.id)),
           hasMainWeapon: p.robot.mainWeaponId !== null,
           battleType: 'koth',
           battleDurationSeconds: simResult.durationSeconds,
+          battleId: battle.id,
+          placement: p.placement,
+          fieldSize: preparedParticipants.length,
+          killsThisBattle: p.kills,
+          lastStanding: p.isWinner && winReason === 'last_standing' && !p.destroyed,
+          // Zone points accrue at 1 per second held uncontested.
+          uncontestedSeconds: p.uncontestedScore,
+          isLowestEloInField: isLowestElo(p.robot.id, preparedParticipants.map(q => q.robot)),
+          minHpPercent: lowestHpPercent(simResult.events, p.robot.name, p.robot.maxHP, p.finalHP),
         });
       }));
     } catch (err) {

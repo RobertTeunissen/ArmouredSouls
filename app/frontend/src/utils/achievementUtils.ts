@@ -12,6 +12,8 @@ export interface AchievementWithProgress {
   rewardCredits: number;
   rewardPrestige: number;
   badgeIconFile: string;
+  /** Recognition only: no credits or prestige (issue #446). */
+  trophy?: boolean;
   hidden: boolean;
   unlocked: boolean;
   unlockedAt: string | null;
@@ -47,6 +49,8 @@ export interface UnlockedAchievement {
   rewardCredits: number;
   rewardPrestige: number;
   badgeIconFile: string;
+  /** Recognition only: no credits or prestige (issue #446). */
+  trophy?: boolean;
   robotId: number | null;
   robotName: string | null;
 }
@@ -57,6 +61,8 @@ export type AchievementSortOption = 'default' | 'rarity_asc' | 'rarity_desc' | '
 export interface AchievementFilters {
   tier: AchievementTier | 'all';
   status: 'all' | 'locked' | 'unlocked';
+  /** `trophies`: only Trophies; `rewards`: only achievements that pay out. */
+  reward?: 'all' | 'trophies' | 'rewards';
 }
 
 // --- Pure utility functions ---
@@ -99,6 +105,8 @@ export function filterAchievements(
     if (filters.tier !== 'all' && a.tier !== filters.tier) return false;
     if (filters.status === 'locked' && a.unlocked) return false;
     if (filters.status === 'unlocked' && !a.unlocked) return false;
+    if (filters.reward === 'trophies' && !a.trophy) return false;
+    if (filters.reward === 'rewards' && a.trophy) return false;
     return true;
   });
 }

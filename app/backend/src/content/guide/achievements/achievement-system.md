@@ -2,7 +2,7 @@
 title: "Achievement System"
 description: "How achievements work — difficulty tiers, credit and prestige rewards, progress tracking, and how milestones are earned through gameplay."
 order: 1
-lastUpdated: "2026-07-28"
+lastUpdated: "2026-11-04"
 relatedArticles:
   - seasons/what-resets
   - achievements/achievement-catalog
@@ -14,29 +14,35 @@ relatedArticles:
 
 ## Overview
 
-**Achievements** are one-time milestones you earn by playing the game. Every achievement awards **Credits** and **Prestige**, plus a collectible hexagonal **badge** that you can display on your stable page. They give you concrete goals to work toward and celebrate your accomplishments along the way.
+**Achievements** are one-time milestones you earn by playing the game. Almost every achievement awards **Credits** and **Prestige**, plus a collectible hexagonal **badge** that you can display on your stable page. A handful are **Trophies**: badge only, no reward (see [Trophies](#trophies)). They give you concrete goals to work toward and celebrate your accomplishments along the way.
 
-Achievements cover everything — winning battles, reaching league tiers, building your stable's economy, hitting prestige and fame thresholds, and pulling off specific combat feats. Some are easy to earn in your first session; others take a full season of dedicated play.
+Achievements cover everything — winning battles, reaching league tiers, building your stable's economy, hitting prestige and fame thresholds, and pulling off specific combat feats. Plenty reward playing and trying things out rather than winning: losing a close fight, surviving a Grand Melee, fighting a draw, or bouncing back after a demotion all count. Some are easy to earn in your first session; others take a full season of dedicated play.
 
 **Achievements are per season.** They reset at each season boundary along with everything else, and each season's unlocked count and list are recorded permanently in your season archive. That makes your collection a scorecard for the season you are playing rather than a lifetime list that stops being interesting once the easy ones are gone — and it means the hard ones are worth chasing again each season.
 
 ```callout-info
-Achievements are purely celebratory. They award Credits and Prestige but never grant combat bonuses, unlock gameplay mechanics, or gate access to features. They're trophies, not power-ups.
+Achievements are purely celebratory. They award Credits and Prestige (Trophies award nothing) but never grant combat bonuses, unlock gameplay mechanics, or gate access to features. They're milestones, not power-ups.
 ```
 
 ## Difficulty Tiers
 
 Every achievement belongs to one of five difficulty tiers. The tier determines the reward amount and the badge border color.
 
-| Tier | Credits | Prestige | Badge Border | When You'll Earn Them |
+| Tier | Credits | Prestige | Badge Border | How Many Players Earn Them |
 |------|---------|----------|-------------|----------------------|
-| 🟢 **Easy** | ₡25,000 | +25 | Green | First week of play |
-| 🔵 **Medium** | ₡50,000 | +50 | Blue | Weeks 2–6 |
-| 🟠 **Hard** | ₡100,000 | +100 | Orange | Months of play |
-| 🔴 **Very Hard** | ₡250,000 | +250 | Red | Multiple seasons |
+| 🟢 **Easy** | ₡25,000 | +25 | Green | Most active players |
+| 🔵 **Medium** | ₡50,000 | +50 | Blue | About half |
+| 🟠 **Hard** | ₡100,000 | +100 | Orange | Roughly one in four |
+| 🔴 **Very Hard** | ₡250,000 | +250 | Red | Only a few each season |
 | ⬛ **Secret** | ₡50,000 | +50 | Purple | Hidden until earned |
 
-The full set of achievements is deliberately **not completable in a single season**. The Very Hard tier alone requires sustained play over multiple seasons. Completionists will always have something to chase.
+Tiers are set from how many active players actually earned each achievement in the previous season, so the label tells you how hard it really is. The full set is deliberately **not completable in a single season**. Completionists will always have something to chase.
+
+### Trophies
+
+A few achievements are **🏆 Trophies**: winning a tournament, reaching Champion league, reaching 1800 ELO, a 15-win league streak, and reaching 25,000 prestige. They reward placing above other players, and the stables that earn them already collect the biggest prizes for it. Paying credits and prestige on top would make it harder for everyone else to catch up, so Trophies pay **nothing** — they're bragging rights. Their badge still shows the tier colour, and the achievements page, unlock toast and battle report mark them with a **Trophy** label instead of a reward.
+
+The credits and prestige go to achievements everyone can earn by playing.
 
 ```callout-tip
 Don't worry about completing everything. Easy achievements give you quick wins early on, while Hard and Very Hard achievements are long-term goals that reward dedication over time.
@@ -59,8 +65,12 @@ Some achievements trigger from non-combat actions:
 - **Facility upgrades** — Owning multiple high-level facilities
 - **Robot creation** — Growing your roster to 3, 5, or 7 robots
 - **Tuning allocation** — Using the Tuning Bay for the first time, maxing out tuning points
-- **League promotions** — Reaching Silver, Gold, Platinum, Diamond, or Champion league
-- **Tournament wins** — Winning your first tournament, winning multiple tournaments
+- **League promotions** — Reaching Silver, Gold, Platinum, Diamond, or Champion league, or climbing back after a demotion
+- **Tournament wins and byes** — Winning tournaments, or getting a bye
+- **Robot images** — Uploading a custom image for a robot
+- **Booking Office** — Changing a robot's event subscriptions
+- **Daily settlement** — Spending on repairs, earning from the Merchandising Hub, and recovering from a low balance are checked after each settlement
+- **Season start** — Returning stables are recognised when a new season opens
 
 ### Prestige & Fame Milestones
 

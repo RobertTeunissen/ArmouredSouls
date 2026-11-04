@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AchievementBadge from './AchievementBadge';
+import AchievementReward from './AchievementReward';
 import type { UnlockedAchievement } from '../utils/achievementUtils';
 
 interface AchievementToastProps {
@@ -39,8 +40,13 @@ export default function AchievementToast({ achievement, onDismiss }: Achievement
       <div className="flex-1 min-w-0">
         <p className="text-sm font-bold text-white truncate">🏆 {achievement.name}</p>
         <p className="text-xs text-secondary truncate">{achievement.description}</p>
-        <p className="text-xs text-success">
-          +₡{achievement.rewardCredits.toLocaleString()} +{achievement.rewardPrestige} prestige
+        <p className="text-xs">
+          <AchievementReward
+            rewardCredits={achievement.rewardCredits}
+            rewardPrestige={achievement.rewardPrestige}
+            trophy={achievement.trophy}
+            variant="gain"
+          />
         </p>
       </div>
     </div>

@@ -7,12 +7,16 @@
  * true in the new season, but nothing ever re-evaluates it, so the achievement
  * becomes permanently unreachable for a returning player (issue #419).
  *
- * `onboarding` is the only such trigger today. `hasCompletedOnboarding` is
+ * `onboarding` was the first such trigger. `hasCompletedOnboarding` is
  * preserved — a returning player is deliberately never walked through the
  * tutorial again — while the trigger's only event fires from the onboarding
  * completion route. Every other one-time trigger reads a counter the rollover
  * zeroes (`totalPracticeBattles`, the three championship counters), so those are
  * re-earnable by playing.
+ *
+ * `previous_season_veteran` (P12, Season 2) reads `stable_season_archives`,
+ * which the rollover writes and keeps. It has no player action at all, so the
+ * `season_started` replay below is its only event.
  *
  * The rollover replays the events below in Stage 4, which re-awards the
  * achievement along with its credits and prestige, exactly as if the player had
@@ -34,10 +38,10 @@ import { achievementService } from './achievementService';
  * reachable from an event there, or the achievement stays unreachable. A test
  * asserts the two line up.
  */
-export const PRESERVED_STATE_TRIGGERS: readonly AchievementTriggerType[] = ['onboarding'];
+export const PRESERVED_STATE_TRIGGERS: readonly AchievementTriggerType[] = ['onboarding', 'previous_season_veteran'];
 
 /** Events replayed after a rollover to re-award the achievements above. */
-export const PRESERVED_STATE_EVENTS: readonly AchievementEventType[] = ['onboarding_complete'];
+export const PRESERVED_STATE_EVENTS: readonly AchievementEventType[] = ['onboarding_complete', 'season_started'];
 
 export interface ReawardResult {
   stablesChecked: number;

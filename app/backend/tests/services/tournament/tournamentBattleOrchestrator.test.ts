@@ -139,6 +139,8 @@ describe('processTournamentBattle persisted-battle finalization', () => {
     mockCheckAndAwardAchievements.mockResolvedValue([]);
     mockDidRobotLosePreviousBattle.mockResolvedValue(false);
     mockScheduledMatchUpdate.mockResolvedValue({});
+    // Only the winner has tuning points allocated.
+    mockGetTuningBonusesBatch.mockResolvedValue(new Map([[2001, { combatPower: 4 }], [2002, {}]]));
   });
 
   it('should finalize the existing battle without simulating or replaying combat stats', async () => {
@@ -160,6 +162,14 @@ describe('processTournamentBattle persisted-battle finalization', () => {
     expect(mockAwardStreamingRevenue).toHaveBeenCalledTimes(2);
     expect(mockLogBattleAuditEvent).toHaveBeenCalledTimes(2);
     expect(mockCheckAndAwardAchievements).toHaveBeenCalledTimes(2);
+    // The resume reads tuning again instead of reporting every robot as
+    // untuned, which unlocked C17 "There Is No Spoon" on any tournament win.
+    expect(mockCheckAndAwardAchievements).toHaveBeenCalledWith(
+      robot1.userId, 2001, expect.objectContaining({ won: true, hasTuning: true }),
+    );
+    expect(mockCheckAndAwardAchievements).toHaveBeenCalledWith(
+      robot2.userId, 2002, expect.objectContaining({ won: false, hasTuning: false }),
+    );
     expect(mockScheduledMatchUpdate).toHaveBeenCalledWith({
       where: { id: 77 },
       data: {

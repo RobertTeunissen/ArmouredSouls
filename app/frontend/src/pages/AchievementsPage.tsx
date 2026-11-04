@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import AchievementBadge from '../components/AchievementBadge';
+import AchievementReward from '../components/AchievementReward';
 import { api } from '../utils/api';
 import {
   getTierColor,
@@ -31,6 +32,12 @@ const STATUS_OPTIONS: Array<{ value: 'all' | 'locked' | 'unlocked'; label: strin
   { value: 'unlocked', label: 'Unlocked' },
 ];
 
+const REWARD_OPTIONS: Array<{ value: NonNullable<AchievementFilters['reward']>; label: string }> = [
+  { value: 'all', label: 'All Rewards' },
+  { value: 'rewards', label: 'Credits & Prestige' },
+  { value: 'trophies', label: 'Trophies Only' },
+];
+
 const SORT_OPTIONS: Array<{ value: AchievementSortOption; label: string }> = [
   { value: 'default', label: 'Default' },
   { value: 'date_newest', label: 'Recently Unlocked' },
@@ -47,7 +54,7 @@ function AchievementsPage() {
   const [data, setData] = useState<AchievementsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filters, setFilters] = useState<AchievementFilters>({ tier: 'all', status: 'all' });
+  const [filters, setFilters] = useState<AchievementFilters>({ tier: 'all', status: 'all', reward: 'all' });
   const [sortOption, setSortOption] = useState<AchievementSortOption>('default');
 
   useEffect(() => {
@@ -143,6 +150,17 @@ function AchievementsPage() {
             className="bg-surface border border-white/10 rounded px-3 py-2 text-sm text-white"
           >
             {STATUS_OPTIONS.map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+
+          <select
+            value={filters.reward ?? 'all'}
+            onChange={e => setFilters(prev => ({ ...prev, reward: e.target.value as AchievementFilters['reward'] }))}
+            aria-label="Filter by reward"
+            className="bg-surface border border-white/10 rounded px-3 py-2 text-sm text-white"
+          >
+            {REWARD_OPTIONS.map(opt => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>
             ))}
           </select>
@@ -311,9 +329,13 @@ function AchievementCard({
         {/* Reward, unlock date, and rarity — always in the same row */}
         {!isSecret && (
           <div className="flex flex-wrap items-center gap-3 mt-2 text-xs">
-            <span className={achievement.unlocked ? 'text-success' : 'text-secondary'}>
-              ₡{achievement.rewardCredits.toLocaleString()} + {achievement.rewardPrestige} prestige
-            </span>
+            <AchievementReward
+              rewardCredits={achievement.rewardCredits}
+              rewardPrestige={achievement.rewardPrestige}
+              trophy={achievement.trophy}
+              variant="listing"
+              unlocked={achievement.unlocked}
+            />
             {achievement.unlocked && achievement.unlockedAt && (
               <span className="text-secondary">
                 Unlocked {new Date(achievement.unlockedAt).toLocaleDateString()}

@@ -15,6 +15,15 @@ import type {
   AchievementRarityCache,
 } from './achievementTypes';
 import { resolveTeamModeWins, emptyTeamModeWins } from './teamModeWins';
+import { getAllModesBattleCounts } from '../robot/all-modes-battle-count';
+import {
+  getRobotOutcomeCounts,
+  getStarterWeaponWins,
+  getAttributeUpgradeSpend,
+  getRepairSpend,
+  getMerchandisingIncome,
+  countLoadoutTypesWithWin,
+} from './historyTriggers';
 import {
   auditCounterSinceSql,
   buildAuditCounterWhere,
@@ -22,6 +31,26 @@ import {
 } from './achievementCounterWindow';
 
 // ─── Progress Computation ───────────────────────────────────────────
+
+/** Progress inputs for the Season 2 numeric achievements. */
+export interface SeasonTwoProgressData {
+  /** Per robot: yields, destructions and 1v1 starter-weapon wins. */
+  robotHistory: Map<number, { yielded: number; destroyed: number; starterWeaponWins: number }>;
+  attributeUpgradeSpend: number;
+  repairSpend: number;
+  merchandisingIncome: number;
+  loadoutTypesWithWin: number;
+  unlockedCount: number;
+}
+
+export const EMPTY_SEASON_TWO_PROGRESS: SeasonTwoProgressData = {
+  robotHistory: new Map(),
+  attributeUpgradeSpend: 0,
+  repairSpend: 0,
+  merchandisingIncome: 0,
+  loadoutTypesWithWin: 0,
+  unlockedCount: 0,
+};
 
 /**
  * Compute progress for a single numeric achievement.
@@ -49,6 +78,7 @@ export function computeProgress(
   weaponsSoldCredits: number,
   weaponsRefinedCount: number,
   weaponsRefinedCreditsSpent: number,
+  seasonTwo: SeasonTwoProgressData = EMPTY_SEASON_TWO_PROGRESS,
 ): AchievementWithProgress['progress'] {
   const target = achievement.triggerThreshold!;
   const label = achievement.progressLabel ?? '';
@@ -71,6 +101,7 @@ export function computeProgress(
   switch (achievement.triggerType) {
     case 'wins': { const r = bestRobotFor('wins'); return { current: r.current, target, label, bestRobotName: r.bestRobotName }; }
     case 'losses': { const r = bestRobotFor('losses'); return { current: r.current, target, label, bestRobotName: r.bestRobotName }; }
+    // Season 2 (D7): `totalBattles` here is the all-modes count (see getPlayerAchievements).
     case 'battles': { const r = bestRobotFor('totalBattles'); return { current: r.current, target, label, bestRobotName: r.bestRobotName }; }
     case 'kills': { const r = bestRobotFor('kills'); return { current: r.current, target, label, bestRobotName: r.bestRobotName }; }
     case 'elo': { const r = bestRobotFor('elo'); return { current: r.current, target, label, bestRobotName: r.bestRobotName }; }
@@ -130,8 +161,54 @@ export function computeProgress(
     }
     case 'survival_streak': return null;
     case 'yield_forced': return null;
+
+    // ── Season 2 ──
+    case 'times_yielded':
+    case 'times_destroyed':
+    case 'starter_weapon_wins': {
+      const field = achievement.triggerType === 'times_yielded' ? 'yielded'
+        : achievement.triggerType === 'times_destroyed' ? 'destroyed' : 'starterWeaponWins';
+      let current = 0;
+      let bestRobotName: string | undefined;
+      for (const robot of robots) {
+        const value = seasonTwo.robotHistory.get(robot.id)?.[field] ?? 0;
+        if (value > current) { current = value; bestRobotName = robot.name; }
+      }
+      return { current, target, label, bestRobotName };
+    }
+    case 'attribute_upgrade_spend': return { current: seasonTwo.attributeUpgradeSpend, target, label };
+    case 'repair_spend': return { current: seasonTwo.repairSpend, target, label };
+    case 'merchandising_income': return { current: seasonTwo.merchandisingIncome, target, label };
+    case 'all_loadout_wins': return { current: seasonTwo.loadoutTypesWithWin, target, label };
+    case 'achievement_count': return { current: seasonTwo.unlockedCount, target, label };
     default: return null;
   }
+}
+
+/** Load the Season 2 progress inputs in parallel. */
+async function loadSeasonTwoProgress(
+  userId: number,
+  robotIds: number[],
+  unlockedCount: number,
+): Promise<SeasonTwoProgressData> {
+  const [outcomes, starterWins, attributeUpgradeSpend, repairSpend, merchandisingIncome, loadoutTypesWithWin] =
+    await Promise.all([
+      getRobotOutcomeCounts(robotIds),
+      getStarterWeaponWins(robotIds),
+      getAttributeUpgradeSpend(userId),
+      getRepairSpend(userId),
+      getMerchandisingIncome(userId),
+      countLoadoutTypesWithWin(userId),
+    ]);
+  const robotHistory = new Map<number, { yielded: number; destroyed: number; starterWeaponWins: number }>();
+  for (const id of robotIds) {
+    robotHistory.set(id, {
+      yielded: outcomes.get(id)?.yielded ?? 0,
+      destroyed: outcomes.get(id)?.destroyed ?? 0,
+      starterWeaponWins: starterWins.get(id) ?? 0,
+    });
+  }
+  return { robotHistory, attributeUpgradeSpend, repairSpend, merchandisingIncome, loadoutTypesWithWin, unlockedCount };
 }
 
 // ─── Player Achievement Catalog ─────────────────────────────────────
@@ -216,6 +293,9 @@ export async function getPlayerAchievements(
     standingsByRobot.set(s.entityId, arr);
   }
 
+  // Season 2 (D7): C3 progress uses the all-modes battle count, like its unlock.
+  const allModesBattles = await getAllModesBattleCounts(robots);
+
   // Merge robot base data with standings-derived per-mode counters
   const robotsWithStandings = robots.map(r => {
     const standings = standingsByRobot.get(r.id) ?? [];
@@ -225,6 +305,7 @@ export async function getPlayerAchievements(
 
     return {
       ...r,
+      totalBattles: allModesBattles.get(r.id) ?? r.totalBattles,
       kothWins: kothStanding?.wins ?? 0,
       totalTagTeamWins: teamWins.tag_team,
       totalLeague2v2Wins: teamWins.league_2v2,
@@ -282,6 +363,7 @@ export async function getPlayerAchievements(
   const unlockMap = new Map(
     unlocks.map((u) => [u.achievementId, { robotId: u.robotId, robotName: u.robot?.name ?? null, unlockedAt: u.unlockedAt.toISOString() }]),
   );
+  const seasonTwoProgress = await loadSeasonTwoProgress(userId, robotIds, unlocks.length);
 
   const lifetimeEarnings = earningsResult._sum.credits ?? 0;
   const streamingRevenue = streamingResult._sum.streamingRevenue ?? 0;
@@ -319,7 +401,8 @@ export async function getPlayerAchievements(
         id: achievement.id, name: '???', description: '???',
         category: achievement.category, tier: achievement.tier,
         rewardCredits: achievement.rewardCredits, rewardPrestige: achievement.rewardPrestige,
-        badgeIconFile: achievement.badgeIconFile, hidden: true, unlocked: false,
+        badgeIconFile: achievement.badgeIconFile, trophy: achievement.trophy === true,
+        hidden: true, unlocked: false,
         unlockedAt: null, robotId: null, robotName: null, progress: null,
         isPinned: pinnedIds.has(achievement.id),
       });
@@ -332,6 +415,7 @@ export async function getPlayerAchievements(
         achievement, user, robotsWithStandings, weaponCount, robotCount, facilityCounts,
         tuningByRobot, lifetimeEarnings, streamingRevenue,
         weaponsSoldCount, weaponsSoldCredits, weaponsRefinedCount, weaponsRefinedCreditsSpent,
+        seasonTwoProgress,
       );
     }
 
@@ -339,7 +423,8 @@ export async function getPlayerAchievements(
       id: achievement.id, name: achievement.name, description: achievement.description,
       category: achievement.category, tier: achievement.tier,
       rewardCredits: achievement.rewardCredits, rewardPrestige: achievement.rewardPrestige,
-      badgeIconFile: achievement.badgeIconFile, hidden: achievement.hidden,
+      badgeIconFile: achievement.badgeIconFile, trophy: achievement.trophy === true,
+      hidden: achievement.hidden,
       unlocked: isUnlocked, unlockedAt: unlock?.unlockedAt ?? null,
       robotId: unlock?.robotId ?? null, robotName: unlock?.robotName ?? null,
       progress, isPinned: pinnedIds.has(achievement.id),

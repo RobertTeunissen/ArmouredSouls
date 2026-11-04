@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import AchievementBadge from '../components/AchievementBadge';
+import AchievementReward from '../components/AchievementReward';
 import {
   getBattleLog,
   formatDateTime,
@@ -324,8 +325,13 @@ function BattleDetailContent({ battleLog: rawBattleLog, userId }: { battleLog: B
                 <AchievementBadge tier={unlock.tier} badgeIconFile={unlock.badgeIconFile} size={48} />
                 <div>
                   <p className="text-sm font-bold text-white">{unlock.name}</p>
-                  <p className="text-xs text-success">
-                    +₡{unlock.rewardCredits.toLocaleString()} +{unlock.rewardPrestige} prestige
+                  <p className="text-xs">
+                    <AchievementReward
+                      rewardCredits={unlock.rewardCredits}
+                      rewardPrestige={unlock.rewardPrestige}
+                      trophy={unlock.trophy}
+                      variant="gain"
+                    />
                   </p>
                 </div>
               </div>

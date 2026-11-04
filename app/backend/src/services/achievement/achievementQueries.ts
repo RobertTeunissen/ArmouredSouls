@@ -45,6 +45,7 @@ export async function getRecentUnlocks(
       id: definition.id, name: definition.name, description: definition.description,
       tier: definition.tier, rewardCredits: definition.rewardCredits,
       rewardPrestige: definition.rewardPrestige, badgeIconFile: definition.badgeIconFile,
+      trophy: definition.trophy === true,
       robotId: record.robotId, robotName: record.robot?.name ?? null,
       unlockedAt: record.unlockedAt.toISOString(),
     });

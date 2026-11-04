@@ -10,6 +10,7 @@ import { checkSchedulingReadiness } from '../analytics/matchmakingService';
 import { TournamentError, TournamentErrorCode } from '../../errors/tournamentErrors';
 import { ParticipantType } from './tournamentParticipantResolver';
 import { resolveByeEvent } from '../battle/byeResolutionService';
+import { achievementService } from '../achievement';
 import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
 
 // Tournament configuration constants
@@ -942,6 +943,13 @@ export async function completeByeMatch(
         completedAt: new Date(),
       },
     });
+
+    // L35 "Free Real Estate". Non-critical: the bye is already resolved.
+    try {
+      await achievementService.checkAndAward(stableUserId, null, { type: 'tournament_bye', data: { tournamentId: tournament.id } });
+    } catch (achievementError) {
+      logger.error(`[Tournament] Bye achievement check failed for match ${match.id}: ${achievementError}`);
+    }
     return true;
   } catch (err) {
     // Keep the scheduling row pending when resolution fails so the round can be retried.

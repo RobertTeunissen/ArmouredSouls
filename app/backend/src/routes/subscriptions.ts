@@ -24,9 +24,24 @@ import {
   getStableOverview,
 } from '../services/subscription/subscriptionService';
 import { getEligibleEvents } from '../services/subscription/rosterEligibilityFilter';
+import { achievementService, type UnlockedAchievement } from '../services/achievement';
+import logger from '../config/logger';
 import prisma from '../lib/prisma';
 
 const router = express.Router();
+
+/**
+ * E35 "Ain't Nobody Got Time for That" after a subscription change. A failed
+ * check never fails the change itself, which has already been saved.
+ */
+async function checkSubscriptionAchievements(userId: number, robotId: number): Promise<UnlockedAchievement[]> {
+  try {
+    return await achievementService.checkAndAward(userId, robotId, { type: 'subscription_changed', data: { robotId } });
+  } catch (error) {
+    logger.error(`Achievement check failed after subscription change for robot ${robotId}: ${error}`);
+    return [];
+  }
+}
 
 // --- Routes ---
 
@@ -51,7 +66,8 @@ router.post(
     const robotId = Number(req.params.robotId);
     const { eventType } = req.body;
     const result = await subscribeRobot(robotId, eventType, req.user!.userId);
-    res.json({ success: true, message: `Subscribed to ${eventType}.`, ...result });
+    const achievementUnlocks = await checkSubscriptionAchievements(req.user!.userId, robotId);
+    res.json({ success: true, message: `Subscribed to ${eventType}.`, ...result, achievementUnlocks });
   },
 );
 
@@ -77,7 +93,8 @@ router.put(
     const robotId = Number(req.params.robotId);
     const { eventTypes } = req.body;
     const result = await setSubscriptionsForRobot(robotId, eventTypes, req.user!.userId);
-    res.json({ success: true, ...result });
+    const achievementUnlocks = await checkSubscriptionAchievements(req.user!.userId, robotId);
+    res.json({ success: true, ...result, achievementUnlocks });
   },
 );
 

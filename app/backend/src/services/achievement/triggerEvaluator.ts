@@ -10,6 +10,25 @@ import type { AchievementDefinition } from '../../config/achievements';
 import { STARTER_WEAPON_NAMES } from '../../config/starterWeapons';
 import type { AchievementEvent } from './achievementTypes';
 import { resolveTeamModeWins, type TeamModeWins } from './teamModeWins';
+import { getAllModesBattleCount } from '../robot/all-modes-battle-count';
+import {
+  isOneVsOne,
+  countRobotOutcomes,
+  checkLosingStreakBroken,
+  checkRevengeWin,
+  checkHigherTierOpponent,
+  checkSameChassis,
+  getStarterWeaponWins,
+  checkDemotionRepromotion,
+  getAttributeUpgradeSpend,
+  getMerchandisingIncome,
+  hasDippedBelow,
+  getRepairSpend,
+  countLoadoutTypesWithWin,
+  hasRobotOnEveryEvent,
+  hasBattleStreamingRevenue,
+  hasPreviousSeason,
+} from './historyTriggers';
 import {
   auditCounterSinceSql,
   buildAuditCounterWhere,
@@ -269,7 +288,7 @@ export async function checkStanceWins(
 export async function checkAllModesWin(userId: number): Promise<boolean> {
   const robots = await prisma.robot.findMany({
     where: { userId },
-    select: { id: true, wins: true },
+    select: { id: true, wins: true, grandMeleeWins: true },
   });
 
   const robotIds = robots.map(r => r.id);
@@ -299,7 +318,10 @@ export async function checkAllModesWin(userId: number): Promise<boolean> {
   const totalChampionships = (user?.championshipTitles1v1 ?? 0) + (user?.championshipTitles2v2 ?? 0) + (user?.championshipTitles3v3 ?? 0);
   const hasTournamentWin = totalChampionships >= 1;
 
-  return hasLeagueWin && hasKothWin && hasTagTeamWin && hasTournamentWin;
+  // Season 2: Grand Melee joined the required modes.
+  const hasGrandMeleeWin = robots.some(r => r.grandMeleeWins > 0);
+
+  return hasLeagueWin && hasKothWin && hasTagTeamWin && hasTournamentWin && hasGrandMeleeWin;
 }
 
 export async function checkTuningAllocated(userId: number): Promise<boolean> {
@@ -478,13 +500,16 @@ export async function checkSurvivalStreak(
   if (!robotId || threshold === undefined) return false;
   const robot = await prisma.robot.findUnique({
     where: { id: robotId },
-    select: { totalBattles: true },
+    select: { id: true, totalBattles: true },
   });
   if (!robot) return false;
-  const destroyedCount = await prisma.battleParticipant.count({
-    where: { robotId, destroyed: true },
-  });
-  return (robot.totalBattles - destroyedCount) >= threshold;
+  // Season 2 (D7): battles in every mode. `battle_participants.destroyed` covers
+  // KotH and Grand Melee too, so both sides of the subtraction count the same modes.
+  const [allModesBattles, destroyedCount] = await Promise.all([
+    getAllModesBattleCount(robot),
+    prisma.battleParticipant.count({ where: { robotId, destroyed: true } }),
+  ]);
+  return (allModesBattles - destroyedCount) >= threshold;
 }
 
 // ─── Main Trigger Evaluation ────────────────────────────────────────
@@ -512,7 +537,8 @@ export async function evaluateTrigger(
     case 'losses':
       return checkRobotStatCached(cachedRobot, 'losses', triggerThreshold);
     case 'battles':
-      return checkRobotStatCached(cachedRobot, 'totalBattles', triggerThreshold);
+      // Season 2 (D7): every mode, including KotH and Grand Melee.
+      return checkRobotStatCached(cachedRobot, 'allModesBattles', triggerThreshold);
     case 'kills':
       return checkRobotStatCached(cachedRobot, 'kills', triggerThreshold);
     case 'elo':
@@ -669,8 +695,8 @@ export async function evaluateTrigger(
       return checkWeaponsSoldCount(userId, triggerThreshold);
     case 'weapons_sold_credits':
       return checkWeaponsSoldCredits(userId, triggerThreshold);
-    case 'weapon_sold_at_max_workshop':
-      return Number(data.workshopLevel) === 10;
+    case 'weapon_sold_at_workshop_level':
+      return Number(data.workshopLevel) >= Number(triggerMeta?.minWorkshopLevel ?? 10);
 
     // ── Weapon Refinement Triggers (DB queries) ──────────────
     case 'weapons_refined_count':
@@ -726,6 +752,168 @@ export async function evaluateTrigger(
       return checkStreamingRevenue(userId, triggerThreshold);
     case 'survival_streak':
       return checkSurvivalStreak(robotId, triggerThreshold);
+
+    default:
+      return evaluateSeasonTwoTrigger(achievement, userId, robotId, data, cachedRobot, cachedUser);
+  }
+}
+
+// ─── Season 2 triggers (ACHIEVEMENTS_SEASON_2_REVAMP.md §4) ─────────
+
+/**
+ * Battle-context and history triggers added for Season 2. Cheap context checks
+ * run before any query, so a battle that can't qualify costs nothing.
+ */
+async function evaluateSeasonTwoTrigger(
+  achievement: AchievementDefinition,
+  userId: number,
+  robotId: number | null,
+  data: Record<string, unknown>,
+  cachedRobot: Record<string, unknown> | null,
+  cachedUser: Record<string, unknown> | null,
+): Promise<boolean> {
+  const { triggerType, triggerThreshold, triggerMeta } = achievement;
+  const won = Boolean(data.won);
+  const lost = !won && data.isDraw !== true;
+  const battleType = String(data.battleType ?? '');
+  const oneVsOne = isOneVsOne(battleType);
+  const opponentRobotId = Number(data.opponentRobotId ?? 0);
+
+  switch (triggerType) {
+    // ── Battle context ─────────────────────────────────────────
+    case 'reserve_rescue_win':
+      return won && Boolean(data.taggedIn) && data.partnerDestroyed === true;
+
+    case 'moral_victory':
+      return oneVsOne && lost && Number(data.damageDealt) > Number(data.opponentDamageDealt);
+
+    case 'close_loss': {
+      const maxPercent = Number(triggerMeta?.maxOpponentHpPercent ?? 10);
+      return oneVsOne && lost && data.opponentFinalHpPercent !== undefined &&
+        Number(data.opponentFinalHpPercent) < maxPercent;
+    }
+
+    case 'draw':
+      return data.isDraw === true;
+
+    case 'long_battle_win':
+      return oneVsOne && won && Number(data.battleDurationSeconds) >= Number(triggerMeta?.minSeconds ?? 100);
+
+    case 'max_yield_win':
+      return won && Number(data.yieldThreshold) >= Number(triggerMeta?.minYieldThreshold ?? 50);
+
+    case 'tournament_match_win':
+      return won && battleType.startsWith('tournament_');
+
+    case 'tournament_semifinal': {
+      const round = Number(data.tournamentRound ?? 0);
+      const maxRounds = Number(data.tournamentMaxRounds ?? 0);
+      return battleType.startsWith('tournament_') && maxRounds >= 2 && round >= maxRounds - 1;
+    }
+
+    case 'tournament_final_loss': {
+      const round = Number(data.tournamentRound ?? 0);
+      const maxRounds = Number(data.tournamentMaxRounds ?? 0);
+      return battleType.startsWith('tournament_') && !won && maxRounds > 0 && round === maxRounds;
+    }
+
+    case 'grand_melee_first_out':
+      return battleType === 'grand_melee' && data.destroyed === true &&
+        Number(data.fieldSize ?? 0) > 1 && Number(data.placement ?? 0) === Number(data.fieldSize);
+
+    case 'grand_melee_survived':
+      return battleType === 'grand_melee' && data.destroyed === false;
+
+    case 'kills_in_battle': {
+      const mode = triggerMeta?.battleType ? String(triggerMeta.battleType) : null;
+      return (mode === null || battleType === mode) &&
+        Number(data.killsThisBattle ?? 0) >= Number(triggerMeta?.minKills ?? 3);
+    }
+
+    case 'koth_last_standing':
+      return battleType === 'koth' && data.lastStanding === true;
+
+    case 'koth_uncontested':
+      return battleType === 'koth' && Number(data.uncontestedSeconds ?? 0) >= Number(triggerMeta?.minSeconds ?? 30);
+
+    case 'team_all_survived_win':
+      return won && Number(data.teamSize ?? 0) === Number(triggerMeta?.teamSize ?? 3) && data.teamAllSurvived === true;
+
+    case 'underdog_placement_win':
+      return (battleType === 'koth' || battleType === 'grand_melee') &&
+        Number(data.placement ?? 0) === 1 && data.isLowestEloInField === true;
+
+    // ── Battle context + history ───────────────────────────────
+    case 'times_yielded':
+      if (!robotId || data.yielded !== true) return false;
+      return (await countRobotOutcomes(robotId, 'yielded')) >= (triggerThreshold ?? Infinity);
+
+    case 'times_destroyed':
+      // Only a battle that destroyed this robot can move the count.
+      if (!robotId || Number(data.finalHpPercent) !== 0) return false;
+      return (await countRobotOutcomes(robotId, 'destroyed')) >= (triggerThreshold ?? Infinity);
+
+    case 'losing_streak_broken':
+      if (!robotId || !oneVsOne || !won) return false;
+      return checkLosingStreakBroken(robotId, Number(triggerMeta?.minLosses ?? 5));
+
+    case 'revenge_win':
+      if (!robotId || !oneVsOne || !won || !opponentRobotId || !data.battleId) return false;
+      return checkRevengeWin(robotId, opponentRobotId, Number(data.battleId));
+
+    case 'higher_tier_win':
+      if (!oneVsOne || !won || !opponentRobotId || !cachedRobot) return false;
+      return checkHigherTierOpponent(String(cachedRobot.currentLeague ?? ''), opponentRobotId);
+
+    case 'mirror_match_win':
+      if (!oneVsOne || !won || !opponentRobotId || !cachedRobot) return false;
+      return checkSameChassis(cachedRobot.frameId, opponentRobotId);
+
+    case 'starter_weapon_wins':
+      if (!robotId || !oneVsOne || !won) return false;
+      return ((await getStarterWeaponWins([robotId])).get(robotId) ?? 0) >= (triggerThreshold ?? Infinity);
+
+    case 'demotion_repromotion':
+      if (!robotId) return false;
+      return checkDemotionRepromotion(robotId);
+
+    case 'all_loadout_wins':
+      if (data.won === false) return false;
+      return (await countLoadoutTypesWithWin(userId)) >= (triggerThreshold ?? 4);
+
+    case 'battle_streaming_revenue':
+      if (!robotId) return false;
+      return hasBattleStreamingRevenue(robotId, triggerThreshold ?? Infinity);
+
+    // ── Stable history ─────────────────────────────────────────
+    case 'attribute_upgrade_spend':
+      return (await getAttributeUpgradeSpend(userId)) >= (triggerThreshold ?? Infinity);
+
+    case 'merchandising_income':
+      return (await getMerchandisingIncome(userId)) >= (triggerThreshold ?? Infinity);
+
+    case 'repair_spend':
+      return (await getRepairSpend(userId)) >= (triggerThreshold ?? Infinity);
+
+    case 'balance_recovery': {
+      const high = Number(triggerMeta?.highBalance ?? 1_000_000);
+      if (Number(cachedUser?.currency ?? 0) <= high) return false;
+      return hasDippedBelow(userId, Number(triggerMeta?.lowBalance ?? 100_000));
+    }
+
+    case 'all_event_subscriptions':
+      return hasRobotOnEveryEvent(userId);
+
+    case 'previous_season_veteran':
+      return hasPreviousSeason(userId);
+
+    case 'achievement_count':
+      return (await prisma.userAchievement.count({ where: { userId } })) >= (triggerThreshold ?? Infinity);
+
+    // ── Event-only triggers: the event itself is the condition ──
+    case 'robot_image_uploaded':
+    case 'tournament_bye':
+      return true;
 
     default:
       return false;

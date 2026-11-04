@@ -2,7 +2,7 @@
 title: "Tips & Strategy"
 description: "Efficient paths to earning achievements — quick wins for new players, mid-game targets, and long-term goals for completionists."
 order: 4
-lastUpdated: "2026-04-23"
+lastUpdated: "2026-11-04"
 relatedArticles:
   - achievements/achievement-system
   - achievements/achievement-catalog
@@ -32,7 +32,7 @@ You can realistically earn 8–12 Easy achievements in your first session. That'
 
 ## Weeks 2–6 — Building Momentum
 
-Once you're past the basics, these Medium achievements become your next targets:
+Once you're past the basics, these become your next targets:
 
 ### Combat Milestones
 - **"By Your Command"** (25 wins) and **"Hasta La Vista, Baby"** (25 destroys) — Focus battles on one robot to accumulate stats faster.
@@ -50,37 +50,48 @@ Once you're past the basics, these Medium achievements become your next targets:
 - **"15 Minutes of Fame"** (100 fame on a robot) — Your most-active robot will hit Known tier within a few weeks.
 - **"Influencer"** (₡100K streaming revenue) — Comes naturally once you have a Streaming Studio and robots with decent fame.
 
-## Months 2+ — The Hard Tier
+## Months 2+ — Longer Goals
 
-Hard achievements require sustained commitment. Here's how to approach them:
+These take sustained commitment. Here's how to approach them:
 
 ### Win Streaks
 **"Resistance Is Futile"** (10 consecutive league wins) requires a strong robot in a league where you're competitive. Don't chase this in a league where you're evenly matched — promote a dominant robot and let the streak build naturally.
 
 ### Multi-Mode Wins
-**"Autobots, Roll Out!"** requires a win in league, KotH, tag team, AND tournament. Make sure you're entering all battle modes, not just league.
+**"Autobots, Roll Out!"** requires a win in league, KotH, tag team, tournament AND Grand Melee. Make sure you're entering all battle modes, not just league.
 
 ### Economic Achievements
 - **"Show Me the Money"** (₡5M balance) — This requires saving, not just earning. Time it around a period where you're not making big purchases.
 - **"The Architect"** (3 facilities at level 3+) — Plan your facility upgrades around prestige gates. Check [Facility Progression](/guide/facilities/facility-progression) for the requirements.
 
-### ELO Climbing
-**"Over 9000!"** (1600 ELO) requires a well-built robot in Platinum or Diamond league. Focus on optimizing one robot's build rather than spreading upgrades across many.
+### Tournaments Without Winning Them
+You don't need to win a tournament to earn from it. **"Round One… Fight!"** pays for any tournament match you win, **"The Final Countdown"** for reaching a semi-final, and **"I've Got a Bad Feeling About This"** for losing the final.
 
 ```callout-warning
 Don't sacrifice your economy chasing Hard achievements. A stable that goes bankrupt trying to own 5 robots simultaneously ("Robot Army") is worse off than one that grows steadily. Achievements reward patience.
 ```
 
+## Losing Well
+
+A lot of achievements reward the battles that don't go your way, so a rough patch still pays:
+
+- **"Moral Victory"** — Lose a 1v1 battle but deal more damage than your opponent.
+- **"Not Like This"** — Lose a 1v1 battle with your opponent below 10% HP.
+- **"Run Away!"** and **"Oh My God, They Killed Kenny!"** — Yield 10 times, or get destroyed 25 times, on one robot.
+- **"Eye of the Tiger"** — Win after five straight 1v1 losses.
+- **"Return of the Jedi"** — Get demoted, then fight your way back up.
+- **"Back to the Future"** — Recover from a balance below ₡100,000 to above ₡1,000,000.
+
 ## Long-Term Goals — Very Hard
 
-These are multi-season commitments. Don't stress about them — they're meant to be aspirational.
+These are the rare ones. Don't stress about them — they're meant to be aspirational.
 
-- **"I, Robot"** (100 wins on one robot) — Keep your best robot active and winning. This takes months.
-- **"We Are the Champions"** (Champion league) — The pinnacle of competitive play. Requires a fully optimized robot.
-- **"Thunderdome"** (3 tournament wins) — Tournament wins are rare. Enter every tournament you can.
-- **"Legendary"** (25,000 prestige) — This is a marathon, not a sprint. Play consistently across seasons.
-- **"Mythical Proportions"** (5,000 fame on a robot) — Requires hundreds of wins on a single robot in upper leagues.
-- **"Megacorp"** (5 facilities at level 3+) — Major economic investment. Plan your facility roadmap early.
+- **"Shrewd Negotiator"** and **"Arms Dealer"** — Weapon resale. Selling isn't for every strategy, but the prestige bump is worth it.
+- **"Identity Forged"** — Refine a starter weapon all the way to Legendary.
+
+## Trophies — Bragging Rights
+
+Trophies pay no credits or prestige, but they're the rarest badges to pin on your stable: winning tournaments ("There Can Be Only One", "Thunderdome" and the 2v2/3v3 tournament wins), **"We Are the Champions"** (Champion league), **"The Chosen One"** (1800 ELO), **"Look What They Need to Mimic a Fraction of Our Power"** (15 league wins in a row) and **"Legendary"** (25,000 prestige).
 
 ## Secret Achievement Hints
 
@@ -101,7 +112,7 @@ Secret achievements are worth ₡50,000 and +50 prestige each. They're fun surpr
 2. **Check the achievements page regularly** to see what you're close to earning. A progress bar at 45/50 is worth a few extra battles to push over the line.
 3. **Pin your rarest achievements** to your stable showcase. Epic and Legendary rarity badges make your stable stand out.
 4. **Don't ignore practice arena** — "Wax On, Wax Off" (25 practice battles) is free credits and prestige with no risk.
-5. **Achievement rewards compound** — The credits and prestige from achievements fund further upgrades, which help you earn more achievements. It's a virtuous cycle.
+5. **Try things out** — Many achievements reward exploring: a custom robot image, every loadout type, a 0% or 50% yield threshold, every Booking Office event. The credits help most early in the season.
 
 ## What's Next?
 

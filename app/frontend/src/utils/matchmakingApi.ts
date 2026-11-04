@@ -705,6 +705,8 @@ export interface BattleLogResponse {
     rewardCredits: number;
     rewardPrestige: number;
     badgeIconFile: string;
+    /** Recognition only: no credits or prestige (issue #446). */
+    trophy?: boolean;
   }>;
 }
 

@@ -32,6 +32,7 @@ import {
   didRobotLosePreviousBattle,
   type UnlockedAchievement,
 } from '../battle/battlePostCombat';
+import { hasAllocatedTuning, hpPercentOf, lowestHpPercent } from '../battle/battleAchievementContext';
 import { TournamentError, TournamentErrorCode } from '../../errors/tournamentErrors';
 import { prepareRobotForCombat } from '../../utils/robotCalculations';
 import { getTuningBonusesBatch } from '../tuning-pool';
@@ -341,10 +342,17 @@ export async function processTournamentBattle(
         loadoutType: robot1.loadoutType || 'single',
         stance: robot1.stance || 'balanced',
         yieldThreshold: robot1.yieldThreshold,
-        hasTuning: false,
+        hasTuning: hasAllocatedTuning(tuningMap.get(robot1.id)),
         hasMainWeapon: robot1.mainWeaponId !== null,
         battleType: 'tournament_1v1',
         battleDurationSeconds: combatResult.durationSeconds,
+        battleId: battle.id,
+        isDraw: false,
+        opponentRobotId: robot2.id,
+        opponentFinalHpPercent: hpPercentOf(robot2Participant.finalHP, robot2.maxHP),
+        minHpPercent: lowestHpPercent(combatResult.events, robot1.name, robot1.maxHP, robot1Participant.finalHP),
+        tournamentRound: tournamentMatch.round,
+        tournamentMaxRounds: tournament.maxRounds,
       }),
       checkAndAwardAchievements(robot2.userId, robot2.id, {
         won: robot2IsWinner,
@@ -362,10 +370,17 @@ export async function processTournamentBattle(
         loadoutType: robot2.loadoutType || 'single',
         stance: robot2.stance || 'balanced',
         yieldThreshold: robot2.yieldThreshold,
-        hasTuning: false,
+        hasTuning: hasAllocatedTuning(tuningMap.get(robot2.id)),
         hasMainWeapon: robot2.mainWeaponId !== null,
         battleType: 'tournament_1v1',
         battleDurationSeconds: combatResult.durationSeconds,
+        battleId: battle.id,
+        isDraw: false,
+        opponentRobotId: robot1.id,
+        opponentFinalHpPercent: hpPercentOf(robot1Participant.finalHP, robot1.maxHP),
+        minHpPercent: lowestHpPercent(combatResult.events, robot2.name, robot2.maxHP, robot2Participant.finalHP),
+        tournamentRound: tournamentMatch.round,
+        tournamentMaxRounds: tournament.maxRounds,
       }),
     ]);
     achievementUnlocks = [...unlocks1, ...unlocks2];
@@ -892,6 +907,18 @@ async function resumeTournamentBattleFinalization(
   // single earns no loadout-specific achievement credit on a resume.
   const battleLoadout = (robot: RobotWithWeapons): string =>
     (evaluateCombatEntry(robot).loadoutFallback ? 'single' : robot.loadoutType) || 'single';
+  // The battle-time tuning map and combat events are gone on a resume; read the
+  // allocations and the bracket size again. C19 falls back to final HP.
+  const [tuningMap, bracket] = await Promise.all([
+    getTuningBonusesBatch([robot1.id, robot2.id]),
+    prisma.tournament.findUnique({ where: { id: tournamentMatch.tournamentId }, select: { maxRounds: true } }),
+  ]);
+  const resumeTournamentContext = {
+    battleId: battle.id,
+    isDraw: false,
+    tournamentRound: tournamentMatch.round,
+    tournamentMaxRounds: bracket?.maxRounds,
+  };
   const [unlocks1, unlocks2] = await Promise.all([
     checkAndAwardAchievements(robot1.userId, robot1.id, {
       won: robot1IsWinner,
@@ -909,10 +936,13 @@ async function resumeTournamentBattleFinalization(
       loadoutType: battleLoadout(robot1),
       stance: robot1.stance || 'balanced',
       yieldThreshold: robot1.yieldThreshold,
-      hasTuning: false,
+      hasTuning: hasAllocatedTuning(tuningMap.get(robot1.id)),
       hasMainWeapon: robot1.mainWeaponId !== null,
       battleType: 'tournament_1v1',
       battleDurationSeconds: battle.durationSeconds,
+      ...resumeTournamentContext,
+      opponentRobotId: robot2.id,
+      opponentFinalHpPercent: hpPercentOf(robot2Participant.finalHP, robot2.maxHP),
     }),
     checkAndAwardAchievements(robot2.userId, robot2.id, {
       won: robot2IsWinner,
@@ -930,10 +960,13 @@ async function resumeTournamentBattleFinalization(
       loadoutType: battleLoadout(robot2),
       stance: robot2.stance || 'balanced',
       yieldThreshold: robot2.yieldThreshold,
-      hasTuning: false,
+      hasTuning: hasAllocatedTuning(tuningMap.get(robot2.id)),
       hasMainWeapon: robot2.mainWeaponId !== null,
       battleType: 'tournament_1v1',
       battleDurationSeconds: battle.durationSeconds,
+      ...resumeTournamentContext,
+      opponentRobotId: robot1.id,
+      opponentFinalHpPercent: hpPercentOf(robot1Participant.finalHP, robot1.maxHP),
     }),
   ]);
 

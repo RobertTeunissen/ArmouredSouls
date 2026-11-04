@@ -42,6 +42,7 @@ import {
   didRobotLosePreviousBattle,
   updateRobotCombatStats,
 } from '../battle/battlePostCombat';
+import { hasAllocatedTuning, hpPercentOf, lowestHpPercent } from '../battle/battleAchievementContext';
 import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
 import { handleMatchFailure } from '../battle/matchFailurePolicy';
 import { runFinancialWriteTransaction } from '../cycle/financialWriteTransaction';
@@ -903,53 +904,51 @@ async function executeSingleTeamBattle(
     }
   }
 
-  // Check and award achievements for all participating robots
-  for (const robot of team1Robots) {
-    const prevLost = await didRobotLosePreviousBattle(robot.id, battle.id);
-    await checkAndAwardAchievements(match.team1.stableId, robot.id, {
-      won: team1Won,
-      destroyed: (battleResult.participants.find(p => p.robotId === robot.id)?.finalHP ?? 0) === 0,
-      finalHpPercent: 0,
-      eloChange: 0,
-      opponentElo: 0,
-      yielded: false,
-      opponentYielded: false,
-      previousBattleLost: prevLost,
-      damageDealt: battleResult.participants.find(p => p.robotId === robot.id)?.damageDealt ?? 0,
-      opponentDamageDealt: 0,
-      loadoutType: 'single',
-      stance: 'balanced',
-      yieldThreshold: 0,
-      hasTuning: false,
-      hasMainWeapon: true,
-      battleType,
-      battleDurationSeconds: battleResult.durationSeconds,
-    });
-  }
-
-  if (match.team2) {
-    for (const robot of team2Robots) {
+  // Check and award achievements for all participating robots. Each robot's
+  // context comes from its own build and result: placeholder values here once
+  // made every team win count as a 0%-yield, untuned, near-death win.
+  const awardTeamAchievements = async (
+    robots: RobotWithWeapons[],
+    stableId: number,
+    won: boolean,
+  ): Promise<void> => {
+    const teamAllSurvived = robots.every(
+      (robot) => (battleResult.participants.find(p => p.robotId === robot.id)?.finalHP ?? 0) > 0,
+    );
+    for (const robot of robots) {
+      const participant = battleResult.participants.find(p => p.robotId === robot.id);
+      const finalHP = participant?.finalHP ?? 0;
       const prevLost = await didRobotLosePreviousBattle(robot.id, battle.id);
-      await checkAndAwardAchievements(match.team2.stableId, robot.id, {
-        won: team2Won,
-        destroyed: (battleResult.participants.find(p => p.robotId === robot.id)?.finalHP ?? 0) === 0,
-        finalHpPercent: 0,
+      await checkAndAwardAchievements(stableId, robot.id, {
+        won,
+        destroyed: finalHP === 0,
+        finalHpPercent: hpPercentOf(finalHP, robot.maxHP),
         eloChange: 0,
         opponentElo: 0,
         yielded: false,
         opponentYielded: false,
         previousBattleLost: prevLost,
-        damageDealt: battleResult.participants.find(p => p.robotId === robot.id)?.damageDealt ?? 0,
+        damageDealt: participant?.damageDealt ?? 0,
         opponentDamageDealt: 0,
-        loadoutType: 'single',
-        stance: 'balanced',
-        yieldThreshold: 0,
-        hasTuning: false,
-        hasMainWeapon: true,
+        loadoutType: robot.loadoutType || 'single',
+        stance: robot.stance || 'balanced',
+        yieldThreshold: robot.yieldThreshold,
+        hasTuning: hasAllocatedTuning(tuningMap.get(robot.id)),
+        hasMainWeapon: robot.mainWeaponId !== null,
         battleType,
         battleDurationSeconds: battleResult.durationSeconds,
+        battleId: battle.id,
+        isDraw,
+        teamSize,
+        teamAllSurvived,
+        minHpPercent: lowestHpPercent(battleResult.detailedCombatEvents, robot.name, robot.maxHP, finalHP),
       });
     }
+  };
+
+  await awardTeamAchievements(team1Robots, match.team1.stableId, team1Won);
+  if (match.team2) {
+    await awardTeamAchievements(team2Robots, match.team2.stableId, team2Won);
   }
 
   // R11.1: Structured log line per match
