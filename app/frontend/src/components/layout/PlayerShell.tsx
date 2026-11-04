@@ -105,6 +105,8 @@ function PlayerShell(): ReactElement {
           <Outlet />
         </Suspense>
       </AppErrorBoundary>
+      {/* Room for the fixed mobile tab bar, so it never covers the end of a page. */}
+      <div className="h-16 lg:hidden" aria-hidden="true" data-testid="mobile-tab-bar-spacer" />
     </>
   );
 }

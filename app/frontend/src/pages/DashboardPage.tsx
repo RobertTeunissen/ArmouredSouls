@@ -4,7 +4,8 @@ import { useMemo } from 'react';
 import { getNextPrestigeThreshold, getUnlockedFacilityLevel } from '../../../shared/utils/prestigeGates';
 import UpcomingMatches from '../components/UpcomingMatches';
 import SeasonPhaseCard from '../components/season/SeasonPhaseCard';
-import { useSeasonStore, selectSeason, selectShouldShowCountdown } from '../stores/seasonStore';
+import { SeasonCountdownNotice } from '../components/season/SeasonCountdownBanner';
+import { useSeasonStore, selectSeason } from '../stores/seasonStore';
 import RecentBattles from '../components/RecentBattles';
 import { OverviewRow, type OverviewRowData } from '../components/dashboard';
 import RobotDashboardCard from '../components/RobotDashboardCard';
@@ -34,8 +35,6 @@ function DashboardPage() {
   const robots = useRobotStore(state => state.robots);
   const subscriptionOverview = useSubscriptionStore(state => state.overview);
   const season = useSeasonStore(selectSeason);
-  const showSeasonCountdown = useSeasonStore(selectShouldShowCountdown(5));
-  const dismissSeasonBanner = useSeasonStore(state => state.dismissBanner);
   const isPreparing = season?.phase === 'preparation';
 
   const {
@@ -159,16 +158,8 @@ function DashboardPage() {
           {/* League tier changes and tournament champions (events — celebratory first) */}
           {eventNotifications.map(n => renderNotification(n))}
 
-          {/* Season ending soon */}
-          {showSeasonCountdown && season && (
-            <DashboardNotification
-              variant="warning"
-              icon="⏳"
-              message={`Season ${season.seasonNumber} ends in ${season.remainingCompetitiveCycles} cycle${season.remainingCompetitiveCycles === 1 ? '' : 's'}`}
-              detail="All progress will be archived and reset. Spend credits and finalize builds now."
-              onDismiss={dismissSeasonBanner}
-            />
-          )}
+          {/* Season ending soon: the site-wide countdown, shown here instead of below the navigation */}
+          <SeasonCountdownNotice userId={user.id} />
 
           {/* Prestige unlock — only once the player has crossed a new gate */}
           {prestigeNotification &&
