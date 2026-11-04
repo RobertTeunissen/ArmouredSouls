@@ -75,6 +75,9 @@
 
 body {
   margin: 0;
+  /* The site background behind every page, so a gap between sections (or
+     overscroll) never shows the browser's white. */
+  background-color: var(--color-background);
   color: #e6edf3;
   /* Same list as `--font-sans` above, so the two cannot drift. */
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;

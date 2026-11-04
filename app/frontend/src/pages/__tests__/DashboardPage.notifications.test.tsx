@@ -135,6 +135,7 @@ vi.mock('../../stores/seasonStore', () => ({
   },
   selectSeason: (s: any) => s.season,
   selectShouldShowCountdown: () => () => false,
+  SEASON_COUNTDOWN_CYCLES: 7,
 }));
 
 // Mutable per test: the readiness ladder reads booked matches from the overview.

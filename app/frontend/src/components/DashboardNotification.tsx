@@ -2,7 +2,8 @@
  * DashboardNotification — Unified alert banner for the dashboard notification area.
  *
  * All dashboard notifications use this component to ensure consistent styling,
- * layout, and interaction patterns.
+ * layout, and interaction patterns. The site-wide season countdown uses it too,
+ * so every warning a player sees looks the same.
  *
  * Variants:
  *  - success: green accent (promotions, positive events)
@@ -23,6 +24,8 @@ export interface DashboardNotificationProps {
   actionLabel?: string;
   onAction?: () => void;
   onDismiss?: () => void;
+  /** Accessible name of the dismiss button, when "Dismiss notification" is too vague. */
+  dismissLabel?: string;
 }
 
 const VARIANT_STYLES: Record<NotificationVariant, { container: string; text: string; button: string }> = {
@@ -56,6 +59,7 @@ function DashboardNotification({
   actionLabel,
   onAction,
   onDismiss,
+  dismissLabel = 'Dismiss notification',
 }: DashboardNotificationProps): React.JSX.Element {
   const styles = VARIANT_STYLES[variant];
 
@@ -68,7 +72,7 @@ function DashboardNotification({
         <div className="min-w-0">
           <span className={`font-semibold ${styles.text}`}>{message}</span>
           {detail && (
-            <span className={`block text-sm ${styles.text} opacity-80 mt-0.5`}>{detail}</span>
+            <p className={`text-sm ${styles.text} opacity-80 mt-0.5`}>{detail}</p>
           )}
         </div>
       </div>
@@ -85,7 +89,7 @@ function DashboardNotification({
           <button
             onClick={onDismiss}
             className="p-2 rounded hover:bg-white/10 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center text-secondary hover:text-white"
-            aria-label="Dismiss notification"
+            aria-label={dismissLabel}
           >
             ✕
           </button>

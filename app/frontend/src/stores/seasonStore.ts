@@ -76,8 +76,11 @@ export const useSeasonStore = create<SeasonStoreState>((set, get) => ({
 export const selectSeason = (s: SeasonStoreState): SeasonStateDto | null => s.season;
 export const selectSeasonFailed = (s: SeasonStoreState): boolean => s.failed;
 
+/** Final competitive cycles that show the season countdown. Mirrors the backend `COUNTDOWN_CYCLES` default. */
+export const SEASON_COUNTDOWN_CYCLES = 7;
+
 /** Whether the countdown banner should show right now. */
-export function selectShouldShowCountdown(countdownCycles: number) {
+export function selectShouldShowCountdown(countdownCycles: number = SEASON_COUNTDOWN_CYCLES) {
   return (s: SeasonStoreState): boolean => {
     const season = s.season;
     if (!season || season.phase !== 'competitive' || season.isLegacy) return false;

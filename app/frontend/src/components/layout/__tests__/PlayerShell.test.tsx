@@ -142,6 +142,16 @@ describe('PlayerShell route layout', () => {
     expectSingleSharedShell();
   });
 
+  it('reserves room for the mobile tab bar after the page, not above it', () => {
+    renderShell(<NormalPage />);
+
+    const spacer = screen.getByTestId('mobile-tab-bar-spacer');
+    expect(spacer).toHaveClass('h-16', 'lg:hidden');
+    // After the page content: a spacer above it pushed every mobile page down
+    // and showed as a blank band under the header.
+    expect(screen.getByTestId('normal-page').compareDocumentPosition(spacer) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it('keeps the shared Navigation and SearchPalette available while route content loads', () => {
     renderShell(<LoadingPage />);
 

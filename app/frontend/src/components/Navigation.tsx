@@ -159,7 +159,9 @@ function Navigation({ onOpenSearch }: NavigationProps) {
       <div className="h-14 lg:h-16" />
       <SeasonCountdownBanner userId={user.id} />
       <OnboardingNavBanner />
-      <div className="h-16 lg:hidden" />
+      {/* The spacer for the fixed bottom tab bar lives after the page
+          (PlayerShell). Here it pushed every mobile page down by 64px, a blank
+          band under the header and banners. */}
       <SeasonSummaryModal />
     </>
   );
