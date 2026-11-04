@@ -111,6 +111,7 @@ const HEAVY_TESTS = [
  * checked by `pnpm run test:tiers:verify`.
  */
 const DB_DEPENDENT = [
+  'tests/integration/achievementHistoryTriggers.test.ts',
   // Spec #55 — Automaton Stables
   'tests/integration/automatonAccess.test.ts',
   // Admin redesign part 5 — dormant purge, Players, Economy, Automaton economy

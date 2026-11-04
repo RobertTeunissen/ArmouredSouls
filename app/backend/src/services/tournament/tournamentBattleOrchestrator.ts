@@ -42,7 +42,7 @@ import { applyLoadoutFallbacks, evaluateCombatEntry, evaluateMatchEntry, type Ma
 import { resolveForfeitEvent } from '../battle/forfeitResolutionService';
 import { BYE_BATTLE_DURATION_SECONDS } from '../battle/byeResolutionService';
 import { completeByeMatch, getCurrentRoundMatches, resolveHigherSeed } from './tournamentService';
-import { recordCombatBuilds } from '../battle/combatBuildRecorder';
+import { recordCombatBuilds, loadBattleTimeMaxHP } from '../battle/combatBuildRecorder';
 
 // Economic constants
 const _REPAIR_COST_PER_HP = 50; // Cost to repair 1 HP
@@ -907,12 +907,18 @@ async function resumeTournamentBattleFinalization(
   // single earns no loadout-specific achievement credit on a resume.
   const battleLoadout = (robot: RobotWithWeapons): string =>
     (evaluateCombatEntry(robot).loadoutFallback ? 'single' : robot.loadoutType) || 'single';
-  // The battle-time tuning map and combat events are gone on a resume; read the
-  // allocations and the bracket size again. C19 falls back to final HP.
-  const [tuningMap, bracket] = await Promise.all([
+  // The battle-time tuning map, combat events and prepared robots are gone on a
+  // resume; read the allocations, bracket size and battle-time max HP again.
+  // These robots are unprepared (stored maxHP) while final HP is on the combat
+  // scale, so HP percentages use the max HP rebuilt from the recorded build.
+  // C19 falls back to final HP.
+  const [tuningMap, bracket, combatMaxHP] = await Promise.all([
     getTuningBonusesBatch([robot1.id, robot2.id]),
     prisma.tournament.findUnique({ where: { id: tournamentMatch.tournamentId }, select: { maxRounds: true } }),
+    loadBattleTimeMaxHP(battle.id),
   ]);
+  const maxHP1 = combatMaxHP.get(robot1.id) ?? robot1.maxHP;
+  const maxHP2 = combatMaxHP.get(robot2.id) ?? robot2.maxHP;
   const resumeTournamentContext = {
     battleId: battle.id,
     isDraw: false,
@@ -923,7 +929,7 @@ async function resumeTournamentBattleFinalization(
     checkAndAwardAchievements(robot1.userId, robot1.id, {
       won: robot1IsWinner,
       destroyed: robot2Participant.destroyed,
-      finalHpPercent: robot1.maxHP > 0 ? (robot1Participant.finalHP / robot1.maxHP) * 100 : 0,
+      finalHpPercent: hpPercentOf(robot1Participant.finalHP, maxHP1),
       eloChange: robot1Participant.eloAfter - robot1Participant.eloBefore,
       subjectEloBefore: robot1Participant.eloBefore,
       opponentEloBefore: robot2Participant.eloBefore,
@@ -942,12 +948,12 @@ async function resumeTournamentBattleFinalization(
       battleDurationSeconds: battle.durationSeconds,
       ...resumeTournamentContext,
       opponentRobotId: robot2.id,
-      opponentFinalHpPercent: hpPercentOf(robot2Participant.finalHP, robot2.maxHP),
+      opponentFinalHpPercent: hpPercentOf(robot2Participant.finalHP, maxHP2),
     }),
     checkAndAwardAchievements(robot2.userId, robot2.id, {
       won: robot2IsWinner,
       destroyed: robot1Participant.destroyed,
-      finalHpPercent: robot2.maxHP > 0 ? (robot2Participant.finalHP / robot2.maxHP) * 100 : 0,
+      finalHpPercent: hpPercentOf(robot2Participant.finalHP, maxHP2),
       eloChange: robot2Participant.eloAfter - robot2Participant.eloBefore,
       subjectEloBefore: robot2Participant.eloBefore,
       opponentEloBefore: robot1Participant.eloBefore,
@@ -966,7 +972,7 @@ async function resumeTournamentBattleFinalization(
       battleDurationSeconds: battle.durationSeconds,
       ...resumeTournamentContext,
       opponentRobotId: robot1.id,
-      opponentFinalHpPercent: hpPercentOf(robot1Participant.finalHP, robot1.maxHP),
+      opponentFinalHpPercent: hpPercentOf(robot1Participant.finalHP, maxHP1),
     }),
   ]);
 

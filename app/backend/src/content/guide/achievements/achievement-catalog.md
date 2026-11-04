@@ -192,7 +192,7 @@ Playstyle choices, loadouts and unusual battle outcomes.
 | **"LEEROY JENKINS!"** | 🟢 Easy | Win 10 battles on offensive stance |
 | **"Perfectly Balanced"** | 🔵 Medium | Win 10 battles on balanced stance |
 | **"No Retreat, No Surrender"** | 🟢 Easy | Win a battle with yield threshold set to 0% |
-| **"Dead or Alive, You're Coming With Me"** | 🟢 Easy | Force 10 opponents to yield (cumulative, any robot) |
+| **"Dead or Alive, You're Coming With Me"** | 🟢 Easy | Force 10 opponents to yield in 1v1 battles (cumulative, any robot) |
 | **"Gotta Catch 'Em All"** | 🟠 Hard | Unlock 50 achievements in one season |
 
 ```callout-tip

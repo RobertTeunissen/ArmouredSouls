@@ -443,13 +443,18 @@ export async function checkYieldsForcedCumulative(
   const robotIds = robots.map((r) => r.id);
   if (robotIds.length === 0) return false;
 
+  // 1v1 only: there the yielding robot was the winner's single opponent, and
+  // `winner_id` is a robot. KotH and Grand Melee record yields too (Season 2),
+  // but the placement winner didn't force them; team modes store a team id in
+  // `winner_id`, which could collide with a robot id.
   const result = await prisma.$queryRawUnsafe<[{ count: bigint }]>(
     `SELECT COUNT(*) as count
      FROM battle_participants bp
      JOIN battles b ON bp.battle_id = b.id
      WHERE bp.yielded = true
        AND bp.robot_id != ALL($1::int[])
-       AND b.winner_id = ANY($1::int[])`,
+       AND b.winner_id = ANY($1::int[])
+       AND b.battle_type IN ('league_1v1', 'tournament_1v1')`,
     robotIds,
   );
   return Number(result[0]?.count ?? 0) >= threshold;
@@ -507,7 +512,8 @@ export async function checkSurvivalStreak(
   // KotH and Grand Melee too, so both sides of the subtraction count the same modes.
   const [allModesBattles, destroyedCount] = await Promise.all([
     getAllModesBattleCount(robot),
-    prisma.battleParticipant.count({ where: { robotId, destroyed: true } }),
+    // A yield is a battle survived: only 0-HP destructions count against it.
+    prisma.battleParticipant.count({ where: { robotId, destroyed: true, finalHP: { lte: 0 } } }),
   ]);
   return (allModesBattles - destroyedCount) >= threshold;
 }
@@ -817,12 +823,14 @@ async function evaluateSeasonTwoTrigger(
       return battleType.startsWith('tournament_') && !won && maxRounds > 0 && round === maxRounds;
     }
 
+    // Grand Melee reports a yield separately from a destruction; both are an
+    // elimination.
     case 'grand_melee_first_out':
-      return battleType === 'grand_melee' && data.destroyed === true &&
+      return battleType === 'grand_melee' && (data.destroyed === true || data.yielded === true) &&
         Number(data.fieldSize ?? 0) > 1 && Number(data.placement ?? 0) === Number(data.fieldSize);
 
     case 'grand_melee_survived':
-      return battleType === 'grand_melee' && data.destroyed === false;
+      return battleType === 'grand_melee' && data.destroyed === false && data.yielded !== true;
 
     case 'kills_in_battle': {
       const mode = triggerMeta?.battleType ? String(triggerMeta.battleType) : null;

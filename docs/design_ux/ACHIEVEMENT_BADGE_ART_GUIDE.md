@@ -2,6 +2,8 @@
 
 **Date:** November 4, 2026 · **Related:** [ACHIEVEMENTS_SEASON_2_REVAMP.md](../analysis/ACHIEVEMENTS_SEASON_2_REVAMP.md), [PRD_ACHIEVEMENT_SYSTEM.md](../game-systems/PRD_ACHIEVEMENT_SYSTEM.md)
 
+> **Status:** all badges in Parts 2–4 are delivered. The badges still to fix are in [ACHIEVEMENT_BADGE_ART_FOLLOWUPS.md](ACHIEVEMENT_BADGE_ART_FOLLOWUPS.md).
+
 A brief for generating achievement badges with an image model.
 
 - **Part 1:** the shared style block, which goes into every prompt.

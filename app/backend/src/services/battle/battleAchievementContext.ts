@@ -63,3 +63,35 @@ export function isLowestElo(robotId: number, field: ReadonlyArray<{ id: number; 
   if (!subject || field.length < 2) return false;
   return field.every((robot) => robot.id === robotId || robot.elo > subject.elo);
 }
+
+/**
+ * Names of robots that yielded during the fight.
+ *
+ * The shared simulation loop emits a `yield` event naming the yielding robot
+ * as `defender` (time-limit `yield` events carry no defender and are ignored).
+ * KotH and Grand Melee use that loop too, so this is how placement modes tell a
+ * yield (left the fight with HP) apart from a destruction.
+ */
+export function yieldedRobotNames(events: ReadonlyArray<unknown> | undefined): Set<string> {
+  const names = new Set<string>();
+  for (const event of events ?? []) {
+    if (typeof event !== 'object' || event === null) continue;
+    const { type, defender } = event as { type?: unknown; defender?: unknown };
+    if (type === 'yield' && typeof defender === 'string' && defender.length > 0) names.add(defender);
+  }
+  return names;
+}
+
+/**
+ * KotH: the robot that was left alone on the field when the last-standing
+ * phase began (`last_standing` event `kpiData.survivorId`), or null when the
+ * match never reached that phase or nobody survived it.
+ */
+export function lastStandingSurvivorId(events: ReadonlyArray<unknown> | undefined): number | null {
+  for (const event of events ?? []) {
+    if (typeof event !== 'object' || event === null) continue;
+    const { type, kpiData } = event as { type?: unknown; kpiData?: { survivorId?: unknown } };
+    if (type === 'last_standing' && typeof kpiData?.survivorId === 'number') return kpiData.survivorId;
+  }
+  return null;
+}

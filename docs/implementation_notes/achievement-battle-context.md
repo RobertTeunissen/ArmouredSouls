@@ -28,7 +28,16 @@ ACC evidence (Season 1, cycle 93): 25 human stables held S8 but only 2 human rob
 - Shared pure helpers live in `services/battle/battleAchievementContext.ts` (`hasAllocatedTuning`, `hpPercentOf`). They sit outside `battlePostCombat` so suites that mock that module still run them.
 - Paths without a battle-time tuning map read the allocations again with `getTuningBonusesBatch`: the tag team result updater, the 1v1 tournament resume, and team tournaments (first run and resume, so both evaluate the same facts).
 
+## Review follow-ups (PR #577)
+
+- **Yields are persisted in every mode.** KotH and Grand Melee set `battle_participants.yielded` from the battle's `yield` events (`yieldedRobotNames`). Tag team counts a tag-out with HP left, or a yield event, as a yield (`getTagTeamYields`). Grand Melee rows now split `destroyed` and `yielded`; battle-log placements are unchanged. C23 counts these rows.
+- **S13 counts 1v1 battles only.** `checkYieldsForcedCumulative` reads `league_1v1` and `tournament_1v1`, where the one opponent is the robot that yielded. In multi-robot modes a yield is not forced by one robot.
+- **Destroyed means 0 HP.** C24 and S12 count a row as destroyed only with `finalHP <= 0`.
+- **Ledger counters restart at the latest account reset.** `sumLedger` (E27, E33) and `hasDippedBelow` (E28) only read rows after `getAchievementCounterStart`. The reset keeps the ledger but deletes the unlocks, so older rows would re-award at once.
+- **L39 uses the `last_standing` event.** The winner must be the `survivorId` of that event, not just the match winner.
+- **HP percentages use battle-time max HP.** Final HP is on the combat scale (effective hull integrity). The tag team updater reads max HP from `result.phases`. The 1v1 tournament resume and team tournaments (first run and resume) rebuild it from `battle_participant_builds.effectiveAttributes.hullIntegrity` (`loadBattleTimeMaxHP`), and fall back to the stored max HP when a robot has no build row.
+
 ## Not changed
 
 - Season 1 unlocks stay as awarded. Unlocks reset at the Season 2 rollover anyway.
-- C19 still reads final HP. Nothing records a robot's lowest HP during a fight, so "at <5% HP at any point" behaves as "won with <5% HP left". This is left to the achievement catalogue revamp.
+- The KotH `uncontestedTimes` metadata is still wrong. L40 reads `uncontestedScore` instead.

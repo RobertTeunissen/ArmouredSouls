@@ -1704,7 +1704,7 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
   {
     id: 'S13',
     name: "Dead or Alive, You're Coming With Me",
-    description: 'Force 10 opponents to yield (cumulative, any robot)',
+    description: 'Force 10 opponents to yield in 1v1 battles (cumulative, any robot)',
     reference: 'RoboCop',
     category: 'style',
     tier: 'easy',

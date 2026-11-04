@@ -4,6 +4,7 @@ const mockRobotFindMany = jest.fn();
 const mockScheduledMatchFindMany = jest.fn();
 const mockScheduledMatchUpdate = jest.fn();
 const mockBattleParticipantUpdate = jest.fn();
+const mockParticipantBuildFindMany = jest.fn();
 const mockBattleUpdate = jest.fn();
 const mockSimulateTeamBattle = jest.fn();
 const mockAwardCreditsWithLedger = jest.fn();
@@ -27,6 +28,7 @@ jest.mock('../../../src/lib/prisma', () => ({
       update: (...args: unknown[]) => mockScheduledMatchUpdate(...args),
     },
     battleParticipant: { update: (...args: unknown[]) => mockBattleParticipantUpdate(...args) },
+    battleParticipantBuild: { findMany: (...args: unknown[]) => mockParticipantBuildFindMany(...args) },
     tuningAllocation: { findMany: (...args: unknown[]) => mockTuningAllocationFindMany(...args) },
   },
 }));
@@ -96,6 +98,7 @@ describe('processTeamTournamentBattle persisted-battle finalization', () => {
     mockTuningAllocationFindMany.mockResolvedValue([{ robotId: 102, combatPower: 5 }]);
     mockScheduledMatchUpdate.mockResolvedValue({});
     mockBattleParticipantUpdate.mockResolvedValue({});
+    mockParticipantBuildFindMany.mockResolvedValue([]);
     mockBattleUpdate.mockResolvedValue({});
   });
 

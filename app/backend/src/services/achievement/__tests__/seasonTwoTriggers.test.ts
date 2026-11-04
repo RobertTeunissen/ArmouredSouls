@@ -13,6 +13,7 @@ const mockPrisma = {
   financialLedger: { findFirst: jest.fn(), aggregate: jest.fn() },
   userAchievement: { count: jest.fn() },
   stableSeasonArchive: { count: jest.fn() },
+  resetLog: { findFirst: jest.fn().mockResolvedValue(null) },
   $queryRaw: jest.fn(),
 };
 
@@ -46,6 +47,7 @@ const queried = (): boolean =>
 beforeEach(() => {
   jest.clearAllMocks();
   mockPrisma.standing.findMany.mockResolvedValue([]);
+  mockPrisma.resetLog.findFirst.mockResolvedValue(null);
 });
 
 describe('battle-context triggers (no queries)', () => {
@@ -106,6 +108,9 @@ describe('battle-context triggers (no queries)', () => {
     await expect(battle('L36', { ...gm, destroyed: true, placement: 19 })).resolves.toBe(false);
     await expect(battle('L37', { ...gm, destroyed: false, placement: 4 })).resolves.toBe(true);
     await expect(battle('L37', { ...gm, destroyed: true, placement: 4 })).resolves.toBe(false);
+    // A yield is an elimination: first out, and not a survivor.
+    await expect(battle('L36', { ...gm, destroyed: false, yielded: true, placement: 20 })).resolves.toBe(true);
+    await expect(battle('L37', { ...gm, destroyed: false, yielded: true, placement: 4 })).resolves.toBe(false);
   });
 
   it('L38 Rampage: 3 kills in one Grand Melee, not in KotH', async () => {
@@ -150,7 +155,28 @@ describe('history triggers', () => {
 
     mockPrisma.battleParticipant.count.mockResolvedValue(25);
     await expect(battle('C24', { finalHpPercent: 0 })).resolves.toBe(true);
+    // Only 0-HP destructions count: a Grand Melee yield used to be stored as destroyed.
+    expect(mockPrisma.battleParticipant.count).toHaveBeenLastCalledWith({
+      where: { robotId: 7, destroyed: true, finalHP: { lte: 0 } },
+    });
     await expect(battle('C24', { finalHpPercent: 30 })).resolves.toBe(false);
+  });
+
+  it('E27/E28/E33 count only ledger rows after the latest account reset', async () => {
+    const resetAt = new Date('2026-10-01T00:00:00Z');
+    mockPrisma.resetLog.findFirst.mockResolvedValue({ resetAt });
+    mockPrisma.financialLedger.aggregate.mockResolvedValue({ _sum: { amount: -100 } });
+    mockPrisma.financialLedger.findFirst.mockResolvedValue(null);
+
+    await evaluateTrigger(byId('E27'), 1, null, { type: 'attribute_upgraded', data: {} }, null, null);
+    expect(mockPrisma.financialLedger.aggregate).toHaveBeenCalledWith(expect.objectContaining({
+      where: { userId: 1, createdAt: { gt: resetAt }, transactionType: 'attribute_upgrade' },
+    }));
+
+    await expect(battle('E28', {}, null, { currency: 1_500_000 })).resolves.toBe(false);
+    expect(mockPrisma.financialLedger.findFirst).toHaveBeenCalledWith(expect.objectContaining({
+      where: { userId: 1, createdAt: { gt: resetAt }, balanceAfter: { lt: 100_000 } },
+    }));
   });
 
   it('C25 Eye of the Tiger: a win after 5 straight 1v1 losses', async () => {

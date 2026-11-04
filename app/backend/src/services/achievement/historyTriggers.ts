@@ -15,6 +15,7 @@
 import prisma from '../../lib/prisma';
 import { STARTER_WEAPON_NAMES } from '../../config/starterWeapons';
 import { SUBSCRIBABLE_EVENT_TYPES } from '../subscription/eventRegistry';
+import { getAchievementCounterStart } from './achievementCounterWindow';
 
 /** Battle types where `battles.winner_id` is the winning robot. */
 export const ONE_VS_ONE_BATTLE_TYPES = ['league_1v1', 'tournament_1v1'] as const;
@@ -30,9 +31,18 @@ export function isOneVsOne(battleType: unknown): boolean {
   return (ONE_VS_ONE_BATTLE_TYPES as readonly string[]).includes(String(battleType ?? ''));
 }
 
-/** Times a robot yielded (C23) or was destroyed (C24) this season, in any mode. */
+/**
+ * Times a robot yielded (C23) or was destroyed (C24) this season, in any mode.
+ *
+ * A destruction must also leave 0 HP: Grand Melee rows written before yields
+ * were recorded separately have `destroyed: true` for robots that yielded with
+ * HP left, and those must not count towards C24.
+ */
 export async function countRobotOutcomes(robotId: number, outcome: 'yielded' | 'destroyed'): Promise<number> {
-  return prisma.battleParticipant.count({ where: { robotId, [outcome]: true } });
+  const where = outcome === 'destroyed'
+    ? { robotId, destroyed: true, finalHP: { lte: 0 } }
+    : { robotId, yielded: true };
+  return prisma.battleParticipant.count({ where });
 }
 
 /**
@@ -46,7 +56,7 @@ export async function getRobotOutcomeCounts(
   const rows = await prisma.$queryRaw<Array<{ robot_id: number; yielded: bigint; destroyed: bigint }>>`
     SELECT robot_id,
            COUNT(*) FILTER (WHERE yielded) AS yielded,
-           COUNT(*) FILTER (WHERE destroyed) AS destroyed
+           COUNT(*) FILTER (WHERE destroyed AND final_hp <= 0) AS destroyed
     FROM battle_participants
     WHERE robot_id = ANY(${[...robotIds]}::int[])
     GROUP BY robot_id
@@ -157,10 +167,23 @@ export async function checkDemotionRepromotion(robotId: number): Promise<boolean
   return rows.length > 0;
 }
 
-/** Sum of a ledger transaction type for a user (season-scoped). */
+/**
+ * Ledger filter for one user, limited to rows after the latest account reset.
+ *
+ * The ledger is season-scoped, but an account reset keeps it (the financial
+ * ledger guide requires that) while deleting the unlocks. Without the window,
+ * pre-reset spending, income and low balances would re-unlock E27, E33 and E28
+ * on a fresh account (same rule as the issue #342 audit counters).
+ */
+async function ledgerWhere(userId: number): Promise<{ userId: number; createdAt?: { gt: Date } }> {
+  const since = await getAchievementCounterStart(userId);
+  return since ? { userId, createdAt: { gt: since } } : { userId };
+}
+
+/** Sum of a ledger transaction type for a user (season-scoped, since the latest reset). */
 export async function sumLedger(userId: number, transactionType: string): Promise<number> {
   const result = await prisma.financialLedger.aggregate({
-    where: { userId, transactionType },
+    where: { ...(await ledgerWhere(userId)), transactionType },
     _sum: { amount: true },
   });
   return Number(result._sum.amount ?? 0);
@@ -179,7 +202,7 @@ export async function getMerchandisingIncome(userId: number): Promise<number> {
 /** E28: the balance was once below `lowBalance` (the current balance is checked by the caller). */
 export async function hasDippedBelow(userId: number, lowBalance: number): Promise<boolean> {
   const low = await prisma.financialLedger.findFirst({
-    where: { userId, balanceAfter: { lt: lowBalance } },
+    where: { ...(await ledgerWhere(userId)), balanceAfter: { lt: lowBalance } },
     select: { id: true },
   });
   return low !== null;

@@ -14,6 +14,7 @@ import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import type { Prisma } from '../../../generated/prisma';
 import { getCombatBuild } from '../../utils/robotCalculations';
+import { maxHPFromHullIntegrity } from '../../shared/utils/robotStats';
 import type { CombatBuildSnapshot } from '../../types/combatBuildTypes';
 
 type Db = typeof prisma | Prisma.TransactionClient;
@@ -63,4 +64,27 @@ export async function recordCombatBuilds(
     logger.error(`[CombatBuild] Could not record builds for battle ${battleId}: ${error instanceof Error ? error.message : String(error)}`);
     return 0;
   }
+}
+
+/**
+ * Battle-time max HP per robot, rebuilt from the recorded build.
+ *
+ * Final HP is stored on the combat scale (`maxHPFromHullIntegrity` of the
+ * effective hull integrity, which includes tuning and weapon bonuses). A path
+ * that only has the stored robot row — a checkpoint resume, or an updater that
+ * reloads robots — must use this to turn final HP into a percentage, or HP
+ * achievements read a different scale than the fight. Robots without a build
+ * row are absent from the map; callers fall back to the stored max HP.
+ */
+export async function loadBattleTimeMaxHP(battleId: number, db: Db = prisma): Promise<Map<number, number>> {
+  const result = new Map<number, number>();
+  const builds = await db.battleParticipantBuild.findMany({
+    where: { battleId },
+    select: { robotId: true, effectiveAttributes: true },
+  });
+  for (const build of builds) {
+    const hullIntegrity = Number((build.effectiveAttributes as Record<string, unknown> | null)?.hullIntegrity);
+    if (Number.isFinite(hullIntegrity)) result.set(build.robotId, maxHPFromHullIntegrity(hullIntegrity));
+  }
+  return result;
 }

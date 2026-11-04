@@ -1,4 +1,11 @@
-import { hasAllocatedTuning, hpPercentOf, lowestHpPercent, isLowestElo } from '../battleAchievementContext';
+import {
+  hasAllocatedTuning,
+  hpPercentOf,
+  lowestHpPercent,
+  isLowestElo,
+  yieldedRobotNames,
+  lastStandingSurvivorId,
+} from '../battleAchievementContext';
 
 describe('battleAchievementContext', () => {
   describe('hasAllocatedTuning', () => {
@@ -60,5 +67,38 @@ describe('isLowestElo', () => {
   it('is false on a tie or a field of one', () => {
     expect(isLowestElo(1, [...field, { id: 4, elo: 1100 }])).toBe(false);
     expect(isLowestElo(1, [{ id: 1, elo: 1000 }])).toBe(false);
+  });
+});
+
+describe('yieldedRobotNames', () => {
+  it('collects the robots named by yield events', () => {
+    const events = [
+      { type: 'attack', attacker: 'Alpha', defender: 'Beta' },
+      { type: 'yield', defender: 'Beta' },
+      { type: 'destroyed', attacker: 'Alpha', defender: 'Gamma' },
+      { type: 'yield', defender: 'Delta' },
+    ];
+    expect([...yieldedRobotNames(events)].sort()).toEqual(['Beta', 'Delta']);
+  });
+
+  it('ignores time-limit yield events, which name no robot', () => {
+    expect(yieldedRobotNames([{ type: 'yield', message: 'Time limit reached - Draw!' }]).size).toBe(0);
+    expect(yieldedRobotNames(undefined).size).toBe(0);
+  });
+});
+
+describe('lastStandingSurvivorId', () => {
+  it('reads the survivor from the last_standing event', () => {
+    const events = [
+      { type: 'score_tick' },
+      { type: 'last_standing', kpiData: { survivorId: 42, countdown: 10 } },
+      { type: 'match_end', kpiData: { winnerId: 7 } },
+    ];
+    expect(lastStandingSurvivorId(events)).toBe(42);
+  });
+
+  it('is null when the phase never started or nobody survived it', () => {
+    expect(lastStandingSurvivorId([{ type: 'match_end' }])).toBeNull();
+    expect(lastStandingSurvivorId([{ type: 'last_standing', kpiData: {} }])).toBeNull();
   });
 });

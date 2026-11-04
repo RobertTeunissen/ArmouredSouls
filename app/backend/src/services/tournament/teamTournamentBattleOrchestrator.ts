@@ -57,7 +57,7 @@ import {
 } from '../battle/combatReadiness';
 import { resolveForfeitEvent, type ForfeitSide } from '../battle/forfeitResolutionService';
 import { BYE_BATTLE_DURATION_SECONDS } from '../battle/byeResolutionService';
-import { recordCombatBuilds } from '../battle/combatBuildRecorder';
+import { recordCombatBuilds, loadBattleTimeMaxHP } from '../battle/combatBuildRecorder';
 
 // ─── Team Tournament Prestige (Stepped Curve) ────────────────────────────────
 
@@ -679,9 +679,14 @@ async function awardTeamTournamentBattleAchievements(
   const teamSize = battleType === 'tournament_3v3' ? 3 : 2;
   const teamAllSurvived = (team: 1 | 2): boolean =>
     participants.filter((participant) => participant.team === team).every((participant) => participant.finalHP > 0);
-  // Tuning is read here rather than taken from the battle-time map, so the
-  // first run and a checkpoint resume evaluate the same facts.
-  const tuningMap = await getTuningBonusesBatch(participants.map((participant) => participant.robotId));
+  // Tuning and max HP are read here rather than taken from the battle-time
+  // robots, so the first run and a checkpoint resume evaluate the same facts:
+  // a resume loads unprepared robots whose maxHP is the stored value, while
+  // final HP is on the combat scale recorded in the battle build.
+  const [tuningMap, combatMaxHP] = await Promise.all([
+    getTuningBonusesBatch(participants.map((participant) => participant.robotId)),
+    loadBattleTimeMaxHP(battleId),
+  ]);
   const robotsById = new Map(robots.map((robot) => [robot.id, robot]));
   const team1OpponentElo = participants
     .filter((participant) => participant.team === 2)
@@ -705,7 +710,7 @@ async function awardTeamTournamentBattleAchievements(
     await checkAndAwardAchievements(stableId, participant.robotId, {
       won: winningSide === participant.team,
       destroyed: participant.finalHP === 0,
-      finalHpPercent: hpPercentOf(participant.finalHP, robot.maxHP),
+      finalHpPercent: hpPercentOf(participant.finalHP, combatMaxHP.get(participant.robotId) ?? robot.maxHP),
       eloChange: participant.eloAfter - participant.eloBefore,
       opponentElo: participant.team === 1 ? team1OpponentElo : team2OpponentElo,
       yielded: false,
