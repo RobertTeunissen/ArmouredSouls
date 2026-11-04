@@ -85,6 +85,11 @@ jobs:
         working-directory: ./app/backend
         run: pnpm run test:tiers:verify
 
+      # PM2 6 passes only env keys the ecosystem file declares, so DEPLOY_TAG
+      # must be declared there or deploys record no tag (ACC, 3 Nov 2026).
+      - name: Ecosystem config passes DEPLOY_TAG
+        run: bash app/scripts/__tests__/ecosystem-deploy-tag.test.sh
+
       - name: Run unit tests
         working-directory: ./app/backend
         env:
