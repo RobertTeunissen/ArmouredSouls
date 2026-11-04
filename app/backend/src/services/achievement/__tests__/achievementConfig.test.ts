@@ -42,14 +42,42 @@ describe('Achievement Config', () => {
       }
     });
 
-    it('should match TIER_REWARDS for non-secret tier rewards', () => {
+    it('should match TIER_REWARDS for non-secret tier rewards, except Trophies', () => {
       for (const a of ACHIEVEMENTS) {
-        if (a.tier !== 'secret') {
+        if (a.tier !== 'secret' && !a.trophy) {
           const expected = TIER_REWARDS[a.tier];
           expect(a.rewardCredits).toBe(expected.credits);
           expect(a.rewardPrestige).toBe(expected.prestige);
         }
       }
+    });
+
+    it('pays nothing for Trophies (issue #446)', () => {
+      const trophies = ACHIEVEMENTS.filter((a) => a.trophy);
+      expect(trophies.map((a) => a.id).sort()).toEqual(
+        ['C13', 'L10', 'L11', 'L14', 'L22', 'L23', 'L24', 'L25', 'L5', 'P4'],
+      );
+      for (const a of trophies) {
+        expect(a.rewardCredits).toBe(0);
+        expect(a.rewardPrestige).toBe(0);
+        expect(a.tier).not.toBe('secret');
+      }
+    });
+
+    it('has a badge file named after every achievement ID', () => {
+      for (const a of ACHIEVEMENTS) {
+        expect(a.badgeIconFile).toBe(`achievement-${a.id.toLowerCase()}`);
+      }
+    });
+
+    it('applies the Season 2 re-tiering (D3) to a sample of moved achievements', () => {
+      const tierOf = (id: string): string | undefined => getAchievementById(id)?.tier;
+      expect(tierOf('C6')).toBe('easy');
+      expect(tierOf('S8')).toBe('easy');
+      expect(tierOf('C8')).toBe('medium');
+      expect(tierOf('E6')).toBe('hard');
+      expect(tierOf('E19')).toBe('very_hard');
+      expect(tierOf('L22')).toBe('very_hard');
     });
 
     it('should have valid scope for every entry', () => {

@@ -365,6 +365,27 @@ describe('AchievementService.checkAndAward', () => {
   });
 });
 
+// ─── Tests: Trophies (issue #446) ────────────────────────────────────
+
+describe('AchievementService.checkAndAward — Trophies', () => {
+  it('unlocks a Trophy without a credit mutation or prestige award', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue({
+      championshipTitles: 1, championshipTitles2v2: 0, championshipTitles3v3: 0, prestige: 0, currency: 0,
+    });
+
+    const result = await achievementService.checkAndAward(1, null, { type: 'tournament_complete', data: {} });
+
+    const l10 = result.find((a) => a.id === 'L10');
+    expect(l10).toEqual(expect.objectContaining({ trophy: true, rewardCredits: 0, rewardPrestige: 0 }));
+    expect(createdAchievementIds()).toContain('L10');
+    const l10Writes = (mock: jest.Mock): unknown[] => mock.mock.calls.filter(
+      (c: unknown[]) => (c[1] as { auditContext?: { achievementId?: string } }).auditContext?.achievementId === 'L10',
+    );
+    expect(l10Writes(mockApplyCreditMutationInTransaction)).toHaveLength(0);
+    expect(l10Writes(mockApplyPrestigeAwardInTransaction)).toHaveLength(0);
+  });
+});
+
 // ─── Tests: per-user serialization ───────────────────────────────────
 
 interface Deferred<T> {

@@ -4,6 +4,7 @@ const mockRobotFindMany = jest.fn();
 const mockScheduledMatchFindMany = jest.fn();
 const mockScheduledMatchUpdate = jest.fn();
 const mockBattleParticipantUpdate = jest.fn();
+const mockParticipantBuildFindMany = jest.fn();
 const mockBattleUpdate = jest.fn();
 const mockSimulateTeamBattle = jest.fn();
 const mockAwardCreditsWithLedger = jest.fn();
@@ -11,6 +12,7 @@ const mockAwardStreamingRevenue = jest.fn();
 const mockAwardPrestigeToUser = jest.fn();
 const mockCheckAndAwardAchievements = jest.fn();
 const mockDidRobotLosePreviousBattle = jest.fn();
+const mockTuningAllocationFindMany = jest.fn();
 
 jest.mock('../../../src/lib/prisma', () => ({
   __esModule: true,
@@ -26,6 +28,8 @@ jest.mock('../../../src/lib/prisma', () => ({
       update: (...args: unknown[]) => mockScheduledMatchUpdate(...args),
     },
     battleParticipant: { update: (...args: unknown[]) => mockBattleParticipantUpdate(...args) },
+    battleParticipantBuild: { findMany: (...args: unknown[]) => mockParticipantBuildFindMany(...args) },
+    tuningAllocation: { findMany: (...args: unknown[]) => mockTuningAllocationFindMany(...args) },
   },
 }));
 
@@ -56,7 +60,7 @@ import { processTeamTournamentBattle } from '../../../src/services/tournament/te
 
 const team1Robots = [
   { id: 101, name: 'A', userId: 11110, elo: 1500, maxHP: 1000, currentHP: 800, mainWeaponId: 1, loadoutType: 'single', stance: 'balanced', yieldThreshold: 0 },
-  { id: 102, name: 'B', userId: 11110, elo: 1490, maxHP: 1000, currentHP: 700, mainWeaponId: 2, loadoutType: 'single', stance: 'balanced', yieldThreshold: 0 },
+  { id: 102, name: 'B', userId: 11110, elo: 1490, maxHP: 1000, currentHP: 700, mainWeaponId: 2, loadoutType: 'dual_wield', stance: 'offensive', yieldThreshold: 15 },
 ];
 const team2Robots = [
   { id: 201, name: 'C', userId: 11110, elo: 1480, maxHP: 1000, currentHP: 0, mainWeaponId: 3, loadoutType: 'single', stance: 'balanced', yieldThreshold: 0 },
@@ -90,8 +94,11 @@ describe('processTeamTournamentBattle persisted-battle finalization', () => {
     mockAwardStreamingRevenue.mockResolvedValue({ totalRevenue: 500 });
     mockCheckAndAwardAchievements.mockResolvedValue([]);
     mockDidRobotLosePreviousBattle.mockResolvedValue(false);
+    // Only robot 102 has tuning points allocated.
+    mockTuningAllocationFindMany.mockResolvedValue([{ robotId: 102, combatPower: 5 }]);
     mockScheduledMatchUpdate.mockResolvedValue({});
     mockBattleParticipantUpdate.mockResolvedValue({});
+    mockParticipantBuildFindMany.mockResolvedValue([]);
     mockBattleUpdate.mockResolvedValue({});
   });
 
@@ -119,15 +126,32 @@ describe('processTeamTournamentBattle persisted-battle finalization', () => {
     expect(mockAwardCreditsWithLedger).toHaveBeenCalledTimes(4);
     expect(mockAwardCreditsWithLedger.mock.calls.map((call) => call[5])).toEqual([101, 102, 201, 202]);
     expect(mockCheckAndAwardAchievements).toHaveBeenCalledTimes(4);
+    // Each robot's own yield, tuning, loadout and HP reach the triggers. These
+    // were placeholders (yield 0, no tuning, 0% HP), which unlocked S8, C17,
+    // C10 and C19 on every team tournament win.
     expect(mockCheckAndAwardAchievements.mock.calls).toEqual(expect.arrayContaining([
       [11110, 101, expect.objectContaining({
         won: true,
-        finalHpPercent: 0,
+        finalHpPercent: 80,
         eloChange: 16,
         opponentElo: 2950,
         loadoutType: 'single',
         stance: 'balanced',
+        yieldThreshold: 0,
+        hasTuning: false,
         hasMainWeapon: true,
+      })],
+      [11110, 102, expect.objectContaining({
+        won: true,
+        finalHpPercent: 70,
+        loadoutType: 'dual_wield',
+        stance: 'offensive',
+        yieldThreshold: 15,
+        hasTuning: true,
+      })],
+      [11110, 201, expect.objectContaining({
+        won: false,
+        finalHpPercent: 0,
       })],
     ]));
     expect(mockScheduledMatchUpdate).toHaveBeenCalledWith({

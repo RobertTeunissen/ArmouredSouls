@@ -1,6 +1,7 @@
 const mockBattleFindUnique = jest.fn();
 const mockRobotFindUnique = jest.fn();
 const mockParticipantFindUnique = jest.fn();
+const mockParticipantBuildFindMany = jest.fn();
 const mockScheduledMatchUpdate = jest.fn();
 const mockSimulateBattle = jest.fn();
 const mockAwardCreditsWithLedger = jest.fn();
@@ -20,6 +21,7 @@ jest.mock('../../../src/lib/prisma', () => ({
     battle: { findUnique: (...args: unknown[]) => mockBattleFindUnique(...args) },
     robot: { findUnique: (...args: unknown[]) => mockRobotFindUnique(...args) },
     battleParticipant: { findUnique: (...args: unknown[]) => mockParticipantFindUnique(...args) },
+    battleParticipantBuild: { findMany: (...args: unknown[]) => mockParticipantBuildFindMany(...args) },
     scheduledTournamentMatch: { update: (...args: unknown[]) => mockScheduledMatchUpdate(...args) },
   },
 }));
@@ -139,6 +141,9 @@ describe('processTournamentBattle persisted-battle finalization', () => {
     mockCheckAndAwardAchievements.mockResolvedValue([]);
     mockDidRobotLosePreviousBattle.mockResolvedValue(false);
     mockScheduledMatchUpdate.mockResolvedValue({});
+    mockParticipantBuildFindMany.mockResolvedValue([]);
+    // Only the winner has tuning points allocated.
+    mockGetTuningBonusesBatch.mockResolvedValue(new Map([[2001, { combatPower: 4 }], [2002, {}]]));
   });
 
   it('should finalize the existing battle without simulating or replaying combat stats', async () => {
@@ -160,6 +165,14 @@ describe('processTournamentBattle persisted-battle finalization', () => {
     expect(mockAwardStreamingRevenue).toHaveBeenCalledTimes(2);
     expect(mockLogBattleAuditEvent).toHaveBeenCalledTimes(2);
     expect(mockCheckAndAwardAchievements).toHaveBeenCalledTimes(2);
+    // The resume reads tuning again instead of reporting every robot as
+    // untuned, which unlocked C17 "There Is No Spoon" on any tournament win.
+    expect(mockCheckAndAwardAchievements).toHaveBeenCalledWith(
+      robot1.userId, 2001, expect.objectContaining({ won: true, hasTuning: true }),
+    );
+    expect(mockCheckAndAwardAchievements).toHaveBeenCalledWith(
+      robot2.userId, 2002, expect.objectContaining({ won: false, hasTuning: false }),
+    );
     expect(mockScheduledMatchUpdate).toHaveBeenCalledWith({
       where: { id: 77 },
       data: {
@@ -174,6 +187,37 @@ describe('processTournamentBattle persisted-battle finalization', () => {
       isForfeit: false,
       achievementUnlocks: [],
     });
+  });
+
+  // The resumed robots are unprepared (stored maxHP 1000) while final HP is on
+  // the combat scale, so HP percentages use the max HP rebuilt from the
+  // recorded build: 50 + 90 × 5 = 500 → 250 / 500 = 50%, not 25%.
+  it('uses the battle-time max HP from the recorded build for HP percentages', async () => {
+    mockParticipantBuildFindMany.mockResolvedValue([
+      { robotId: 2001, effectiveAttributes: { hullIntegrity: 90 } },
+    ]);
+    const match = {
+      id: 77,
+      tournamentId: 9,
+      participant1Id: 2001,
+      participant2Id: 2002,
+      battleId: 390777,
+      status: 'scheduled',
+      isByeMatch: false,
+    } as unknown as ScheduledTournamentMatch;
+
+    await processTournamentBattle(match);
+
+    expect(mockParticipantBuildFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { battleId: 390777 } }),
+    );
+    expect(mockCheckAndAwardAchievements).toHaveBeenCalledWith(
+      robot1.userId, 2001, expect.objectContaining({ finalHpPercent: 50 }),
+    );
+    // Robot 2002 has no build row and falls back to its stored max HP.
+    expect(mockCheckAndAwardAchievements).toHaveBeenCalledWith(
+      robot1.userId, 2002, expect.objectContaining({ finalHpPercent: 0, opponentFinalHpPercent: 50 }),
+    );
   });
 });
 

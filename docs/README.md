@@ -41,7 +41,7 @@ docs/
 │   ├── PRD_ROBOT_ATTRIBUTES.md     23 attributes, categories, caps
 │   ├── PRD_PRESTIGE_AND_FAME.md    Progression and reputation
 │   ├── PRD_CYCLE_SYSTEM.md         Daily cycle schedule and processing
-│   ├── PRD_ACHIEVEMENT_SYSTEM.md   77-achievement progression layer
+│   ├── PRD_ACHIEVEMENT_SYSTEM.md   135-achievement progression layer (incl. Trophies)
 │   ├── PRD_ONBOARDING_SYSTEM.md    New player flow
 │   ├── PRD_AUTO_USER_GENERATION.md Auto-generated opponents
 │   ├── PRD_AUTOMATON_STABLES.md    Automaton stables: computer-run stables that play by human rules

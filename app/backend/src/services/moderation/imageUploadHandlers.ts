@@ -21,6 +21,7 @@ import { pendingUploadCache } from './pendingUploadCache';
 import { fileStorageService } from './fileStorageService';
 import { recordUpload } from './uploadedImageService';
 import { SecuritySeverity } from '../security/securityLogger';
+import { achievementService, type UnlockedAchievement } from '../achievement';
 import logger from '../../config/logger';
 
 /**
@@ -255,5 +256,17 @@ export async function handleImageConfirm(req: AuthRequest, res: Response): Promi
   // Step 8: Remove from cache
   pendingUploadCache.delete(confirmationToken);
 
-  res.status(200).json({ success: true, robot: updatedRobot });
+  // Step 9: E32 "Ready for My Close-Up". An achievement failure must never fail
+  // the upload, which has already been stored.
+  let achievementUnlocks: UnlockedAchievement[] = [];
+  try {
+    achievementUnlocks = await achievementService.checkAndAward(userId, robotId, {
+      type: 'robot_image_uploaded',
+      data: { robotId },
+    });
+  } catch (error) {
+    logger.error(`Achievement check failed after image upload for robot ${robotId}: ${error}`);
+  }
+
+  res.status(200).json({ success: true, robot: updatedRobot, achievementUnlocks });
 }

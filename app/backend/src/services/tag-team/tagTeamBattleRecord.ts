@@ -6,6 +6,7 @@ import { CombatMessageGenerator } from '../battle/combatMessageGenerator';
 import { computeBattleSummary } from '../battle/battleSummaryComputer';
 import { TagTeamWithRobots, TagTeamBattleResult } from './tagTeamTypes';
 import { recordCombatBuilds } from '../battle/combatBuildRecorder';
+import { yieldedRobotNames } from '../battle/battleAchievementContext';
 
 /** Minimal shape of a scheduled tag-team match as passed from the orchestrator. */
 interface TagTeamMatchInput {
@@ -19,6 +20,39 @@ interface TagTeamMatchInput {
 /**
  * Create a battle record for a tag team match
  */
+/** Which of the four tag team robots yielded. */
+export interface TagTeamYields {
+  team1Active: boolean;
+  team1Reserve: boolean;
+  team2Active: boolean;
+  team2Reserve: boolean;
+}
+
+/**
+ * Which robots yielded in a tag team battle.
+ *
+ * An active robot tags out either by yielding (HP left) or by being destroyed
+ * (0 HP), so a tag-out with HP left is a yield; a destruction-triggered tag-out
+ * is not. Any robot can also yield outright, which the simulator reports as a
+ * `yield` event naming it.
+ */
+export function getTagTeamYields(
+  result: Pick<TagTeamBattleResult,
+    'battleLog' | 'team1TagOutTime' | 'team2TagOutTime' |
+    'team1ActiveFinalHP' | 'team1ReserveFinalHP' | 'team2ActiveFinalHP' | 'team2ReserveFinalHP'>,
+  names: { team1Active: string; team1Reserve: string; team2Active: string; team2Reserve: string },
+): TagTeamYields {
+  const yielded = yieldedRobotNames(result.battleLog);
+  const active = (tagOutTime: number | undefined, finalHP: number, name: string): boolean =>
+    finalHP > 0 && (tagOutTime != null || yielded.has(name));
+  return {
+    team1Active: active(result.team1TagOutTime, result.team1ActiveFinalHP, names.team1Active),
+    team1Reserve: result.team1ReserveFinalHP > 0 && yielded.has(names.team1Reserve),
+    team2Active: active(result.team2TagOutTime, result.team2ActiveFinalHP, names.team2Active),
+    team2Reserve: result.team2ReserveFinalHP > 0 && yielded.has(names.team2Reserve),
+  };
+}
+
 export async function createTagTeamBattleRecord(
   match: TagTeamMatchInput,
   team1: TagTeamWithRobots,
@@ -68,6 +102,12 @@ export async function createTagTeamBattleRecord(
   // Create BattleParticipant records for real robots only
   // Note: Credits, prestige, and fame will be updated later in updateTagTeamStats
   // Skip bye robots (negative IDs) — they don't exist in the robots table (same pattern as teamBattleOrchestrator)
+  const yields = getTagTeamYields(result, {
+    team1Active: team1.activeRobot.name,
+    team1Reserve: team1.reserveRobot.name,
+    team2Active: team2.activeRobot.name,
+    team2Reserve: team2.reserveRobot.name,
+  });
   const participantRows = [
     // Team 1 Active
     {
@@ -83,7 +123,7 @@ export async function createTagTeamBattleRecord(
       fameAwarded: 0, // Will be updated later
       damageDealt: result.team1ActiveDamageDealt || 0,
       finalHP: result.team1ActiveFinalHP,
-      yielded: false,
+      yielded: yields.team1Active,
       destroyed: result.team1ActiveFinalHP === 0,
       tagOutTimeMs: result.team1TagOutTime != null ? BigInt(Math.round(result.team1TagOutTime * 1000)) : null,
     },
@@ -101,7 +141,7 @@ export async function createTagTeamBattleRecord(
       fameAwarded: 0, // Will be updated later
       damageDealt: result.team1ReserveDamageDealt || 0,
       finalHP: result.team1ReserveFinalHP,
-      yielded: false,
+      yielded: yields.team1Reserve,
       destroyed: result.team1ReserveFinalHP === 0,
       tagOutTimeMs: null,
     },
@@ -119,7 +159,7 @@ export async function createTagTeamBattleRecord(
       fameAwarded: 0, // Will be updated later
       damageDealt: result.team2ActiveDamageDealt || 0,
       finalHP: result.team2ActiveFinalHP,
-      yielded: false,
+      yielded: yields.team2Active,
       destroyed: result.team2ActiveFinalHP === 0,
       tagOutTimeMs: result.team2TagOutTime != null ? BigInt(Math.round(result.team2TagOutTime * 1000)) : null,
     },
@@ -137,7 +177,7 @@ export async function createTagTeamBattleRecord(
       fameAwarded: 0, // Will be updated later
       damageDealt: result.team2ReserveDamageDealt || 0,
       finalHP: result.team2ReserveFinalHP,
-      yielded: false,
+      yielded: yields.team2Reserve,
       destroyed: result.team2ReserveFinalHP === 0,
       tagOutTimeMs: null,
     },

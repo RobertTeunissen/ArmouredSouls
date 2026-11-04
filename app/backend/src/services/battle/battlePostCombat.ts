@@ -646,6 +646,9 @@ export async function didRobotLosePreviousBattle(robotId: number, currentBattleI
  * Check and award achievements after a battle completes.
  *
  * Wraps achievementService.checkAndAward() with battle-specific event data.
+ * Every field must describe the battle that was fought: placeholder values
+ * satisfy the matching triggers and hand out achievements nobody earned. Build
+ * them with the helpers in `battleAchievementContext`.
  * Achievement failures MUST NOT block battle processing — wrapped in try-catch.
  * Concurrent calls for one stable are serialized by `achievementService`, so
  * orchestrators may call this for all participants in parallel.
@@ -690,7 +693,34 @@ export async function checkAndAwardAchievements(
     battleDurationSeconds: number;
     taggedIn?: boolean;
     soloCarry?: boolean;
+    /** Lowest HP % the robot reached during the fight (C19). Falls back to finalHpPercent. */
     minHpPercent?: number;
+    // ── Season 2 achievement context (optional: only modes where it is known) ──
+    /** The persisted battle, for triggers that compare with earlier battles. */
+    battleId?: number;
+    isDraw?: boolean;
+    /** 1v1 modes: the opponent robot. */
+    opponentRobotId?: number;
+    /** 1v1 modes: the opponent's HP left, as % of its max HP. */
+    opponentFinalHpPercent?: number;
+    /** Placement modes: robots this robot destroyed in this battle. */
+    killsThisBattle?: number;
+    /** Placement modes: number of robots that fought. */
+    fieldSize?: number;
+    /** KotH: won as the last robot standing. */
+    lastStanding?: boolean;
+    /** KotH: seconds this robot held the zone uncontested. */
+    uncontestedSeconds?: number;
+    /** Placement modes: this robot had the lowest pre-battle ELO in the field. */
+    isLowestEloInField?: boolean;
+    /** Team modes: robots per side, and whether all of this robot's team survived. */
+    teamSize?: number;
+    teamAllSurvived?: boolean;
+    /** Tag team reserve: the active partner was destroyed before the tag-in. */
+    partnerDestroyed?: boolean;
+    /** Tournaments: round of this match and the bracket's final round. */
+    tournamentRound?: number;
+    tournamentMaxRounds?: number;
   },
 ): Promise<UnlockedAchievement[]> {
   try {

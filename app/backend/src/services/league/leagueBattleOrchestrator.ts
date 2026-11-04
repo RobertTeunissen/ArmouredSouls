@@ -28,6 +28,7 @@ import {
   didRobotLosePreviousBattle,
   type UnlockedAchievement,
 } from '../battle/battlePostCombat';
+import { hasAllocatedTuning, hpPercentOf, lowestHpPercent } from '../battle/battleAchievementContext';
 import { BattleError, BattleErrorCode } from '../../errors/battleErrors';
 import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
 import { handleMatchFailure } from '../battle/matchFailurePolicy';
@@ -937,10 +938,15 @@ export async function processBattle(scheduledMatch: ScheduledLeagueMatchData): P
         loadoutType: robot1.loadoutType || 'single',
         stance: robot1.stance || 'balanced',
         yieldThreshold: robot1.yieldThreshold,
-        hasTuning: Object.values(tuningMap.get(robot1.id) ?? {}).some(v => v !== undefined && v > 0),
+        hasTuning: hasAllocatedTuning(tuningMap.get(robot1.id)),
         hasMainWeapon: robot1.mainWeaponId !== null,
         battleType: 'league_1v1',
         battleDurationSeconds: result.durationSeconds,
+        battleId: battle.id,
+        isDraw: result.isDraw,
+        opponentRobotId: robot2.id,
+        opponentFinalHpPercent: hpPercentOf(robot2Participant.finalHP, robot2.maxHP),
+        minHpPercent: lowestHpPercent(result.combatEvents, robot1.name, robot1.maxHP, robot1Participant.finalHP),
       }),
       checkAndAwardAchievements(robot2.userId, robot2.id, {
         won: robot2IsWinner,
@@ -958,10 +964,15 @@ export async function processBattle(scheduledMatch: ScheduledLeagueMatchData): P
         loadoutType: robot2.loadoutType || 'single',
         stance: robot2.stance || 'balanced',
         yieldThreshold: robot2.yieldThreshold,
-        hasTuning: Object.values(tuningMap.get(robot2.id) ?? {}).some(v => v !== undefined && v > 0),
+        hasTuning: hasAllocatedTuning(tuningMap.get(robot2.id)),
         hasMainWeapon: robot2.mainWeaponId !== null,
         battleType: 'league_1v1',
         battleDurationSeconds: result.durationSeconds,
+        battleId: battle.id,
+        isDraw: result.isDraw,
+        opponentRobotId: robot1.id,
+        opponentFinalHpPercent: hpPercentOf(robot1Participant.finalHP, robot1.maxHP),
+        minHpPercent: lowestHpPercent(result.combatEvents, robot2.name, robot2.maxHP, robot2Participant.finalHP),
       }),
     ]);
     const achievementUnlocks = [...unlocks1, ...unlocks2];

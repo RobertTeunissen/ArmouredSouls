@@ -20,6 +20,7 @@ import {
   awardPrestigeToUser,
   awardBattleStreamingRevenue,
 } from '../battle/battlePostCombat';
+import { hasAllocatedTuning, isLowestElo, lowestHpPercent, yieldedRobotNames } from '../battle/battleAchievementContext';
 import standingsService from '../standings/standingsService';
 import { calculateStreamingRevenueBatch } from '../economy/streamingRevenueService';
 import { runFinancialWriteTransaction } from '../cycle/financialWriteTransaction';
@@ -58,7 +59,10 @@ interface PreparedParticipant {
   kills: number;
   damageDealt: number;
   finalHP: number;
+  /** Destroyed at 0 HP. A yield is recorded in `yielded` instead. */
   destroyed: boolean;
+  /** Left the fight by yielding (HP above 0). */
+  yielded: boolean;
   isWinner: boolean;
   tier: string;
   rewards: { credits: number; prestige: number; fame: number; lpDelta: number };
@@ -379,9 +383,14 @@ async function processGrandMeleeBattle(
   });
   const tierByRobot = new Map(robotStandings.map(s => [s.entityId, s.tier]));
 
-  // 8. Prepare all participant data for batched operations
+  // 8. Prepare all participant data for batched operations.
+  // Placements count any elimination as `destroyed` (that ordering is kept for
+  // the battle log); participant rows split it into destroyed and yielded,
+  // read from the combat events.
+  const yieldedNames = yieldedRobotNames(simResult.events);
   const preparedParticipants: PreparedParticipant[] = placements.map(p => {
     const robot = ready.find(r => r.id === p.robotId)!;
+    const yielded = p.destroyed && p.finalHP > 0 && yieldedNames.has(robot.name);
     const isWinner = robot.id === winnerId;
     const hpPercent = robot.maxHP > 0 ? (p.finalHP / robot.maxHP) * 100 : 0;
     const robotTier = tierByRobot.get(robot.id) ?? 'bronze';
@@ -397,7 +406,8 @@ async function processGrandMeleeBattle(
       kills: p.kills,
       damageDealt: p.damageDealt,
       finalHP: p.finalHP,
-      destroyed: p.destroyed,
+      destroyed: p.destroyed && !yielded,
+      yielded,
       isWinner,
       tier: robotTier,
       rewards,
@@ -458,7 +468,7 @@ async function processGrandMeleeBattle(
         fameAwarded: p.rewards.fame,
         damageDealt: p.damageDealt,
         finalHP: p.finalHP,
-        yielded: false,
+        yielded: p.yielded,
         destroyed: p.destroyed,
       })),
       ...forfeited.map(f => ({
@@ -668,18 +678,25 @@ async function processGrandMeleeBattle(
           subjectEloBefore: p.robot.elo,
           opponentEloBefore: p.robot.elo,
           opponentElo: 0,
-          yielded: false,
+          yielded: p.yielded,
           opponentYielded: false,
           previousBattleLost: prevLost,
           damageDealt: p.damageDealt,
           opponentDamageDealt: 0,
           loadoutType: (p.robot as unknown as { loadoutType?: string }).loadoutType || 'single',
           stance: (p.robot as unknown as { stance?: string }).stance || 'balanced',
-          yieldThreshold: 0,
-          hasTuning: false,
+          yieldThreshold: p.robot.yieldThreshold,
+          hasTuning: hasAllocatedTuning(tuningBonusesMap.get(p.robot.id)),
           hasMainWeapon: p.robot.mainWeaponId !== null,
           battleType: 'grand_melee',
           battleDurationSeconds: simResult.durationSeconds,
+          battleId: battle.id,
+          // Placements run survivors first, then eliminated robots latest-out
+          // first, so the last placement among fighters went out first.
+          fieldSize: preparedParticipants.length,
+          killsThisBattle: p.kills,
+          isLowestEloInField: isLowestElo(p.robot.id, preparedParticipants.map(q => q.robot)),
+          minHpPercent: lowestHpPercent(simResult.events, p.robot.name, p.robot.maxHP, p.finalHP),
         });
       }));
     } catch (err) {
@@ -700,7 +717,7 @@ async function processGrandMeleeBattle(
             isDraw: false,
             damageDealt: p.damageDealt,
             finalHP: p.finalHP,
-            yielded: false,
+            yielded: p.yielded,
             destroyed: p.destroyed,
             credits: p.rewards.credits,
             prestige: p.rewards.prestige,

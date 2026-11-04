@@ -366,20 +366,27 @@ export async function executeSettlement(): Promise<JobContext> {
   await prisma.standing.updateMany({ where: {}, data: { cyclesInTier: { increment: 1 } } });
   logger.info(`Daily Settlement: Cycle ${closingCycle} closed with ${endOfCycleUserCount} balances captured`);
 
-  // Check for bankrupt users after closure. Achievement failures remain isolated
-  // from the completed financial evidence and resolve to the newly active cycle.
+  // Settlement achievements after closure: bankruptcy (E17), and since Season 2
+  // repair spend, merchandising income, balance recovery and the unlock count.
+  // Human and Automaton stables are checked every settlement; Generated stables
+  // only when bankrupt, as before (they are deleted at rollover). Achievement
+  // failures remain isolated from the completed financial evidence and resolve
+  // to the newly active cycle.
   try {
     const { achievementService } = await import('../achievement');
-    const bankruptUsers = await prisma.user.findMany({ where: { currency: { lt: 0 } }, select: { id: true } });
-    for (const user of bankruptUsers) {
+    const settlementUsers = await prisma.user.findMany({
+      where: { OR: [{ currency: { lt: 0 } }, { stableType: { not: 'generated' } }] },
+      select: { id: true, currency: true },
+    });
+    for (const user of settlementUsers) {
       try {
-        await achievementService.checkAndAward(user.id, null, { type: 'daily_finances', data: { bankrupt: true } });
+        await achievementService.checkAndAward(user.id, null, { type: 'daily_finances', data: { bankrupt: user.currency < 0 } });
       } catch (error) {
-        logger.error(`[Settlement] Achievement check failed for bankrupt user ${user.id}: ${error}`);
+        logger.error(`[Settlement] Achievement check failed for user ${user.id}: ${error}`);
       }
     }
   } catch (error) {
-    logger.error(`[Settlement] Bankrupt achievement check failed: ${error}`);
+    logger.error(`[Settlement] Settlement achievement check failed: ${error}`);
   }
 
   // (Step 6, the Practice Arena counter flush, is gone: usage is recorded per

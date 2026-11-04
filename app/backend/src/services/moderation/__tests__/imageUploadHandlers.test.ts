@@ -59,6 +59,11 @@ jest.mock('../fileStorageService', () => ({
   },
 }));
 
+const mockCheckAndAward = jest.fn();
+jest.mock('../../achievement', () => ({
+  achievementService: { checkAndAward: (...args: unknown[]) => mockCheckAndAward(...args) },
+}));
+
 import { handleImagePreview, handleImageConfirm } from '../imageUploadHandlers';
 import prisma from '../../../lib/prisma';
 import { eventLogger } from '../../common/eventLogger';
@@ -112,6 +117,7 @@ function safeScores(overrides: Record<string, unknown> = {}) {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockCheckAndAward.mockResolvedValue([]);
 });
 
 // ─── handleImagePreview ───
@@ -304,7 +310,9 @@ describe('handleImageConfirm', () => {
     await handleImageConfirm(req, res);
 
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith({ success: true, robot: updatedRobot });
+    expect(res.json).toHaveBeenCalledWith({ success: true, robot: updatedRobot, achievementUnlocks: [] });
+    // E32 "Ready for My Close-Up" is checked once the image is stored.
+    expect(mockCheckAndAward).toHaveBeenCalledWith(1, 10, { type: 'robot_image_uploaded', data: { robotId: 10 } });
     expect(mockStorage.storeImage).toHaveBeenCalledWith(1, pending.processedBuffer);
     // The replaced upload stays in the Image_Library (Spec #45 R30): another
     // robot or an archived season may still use it.
@@ -315,6 +323,24 @@ describe('handleImageConfirm', () => {
     });
     expect(mockCache.delete).toHaveBeenCalledWith('550e8400-e29b-41d4-a716-446655440000');
     expect(mockEventLogger.logEvent).toHaveBeenCalledTimes(1);
+  });
+
+  it('still confirms the upload when the achievement check fails', async () => {
+    const req = makeReq({ body: { confirmationToken: '550e8400-e29b-41d4-a716-446655440000' } });
+    const res = makeRes();
+    (mockPrisma.robot.findUnique as jest.Mock).mockResolvedValue({ id: 10, userId: 1, imageUrl: null });
+    mockCache.retrieve.mockReturnValue({
+      processedBuffer: Buffer.from('processed'), userId: 1, robotId: 10, originalFileSize: 1024,
+      originalDimensions: { width: 256, height: 256 }, acknowledgedRobotLikeness: false, createdAt: Date.now(),
+    });
+    mockStorage.storeImage.mockResolvedValue('/uploads/user-robots/1/new.webp');
+    (mockPrisma.robot.update as jest.Mock).mockResolvedValue({ id: 10, userId: 1, imageUrl: '/uploads/user-robots/1/new.webp' });
+    mockCheckAndAward.mockRejectedValueOnce(new Error('achievement db down'));
+
+    await handleImageConfirm(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ success: true, achievementUnlocks: [] }));
   });
 
   it('should not delete old image if it is a preset path', async () => {

@@ -2,7 +2,7 @@
 title: "Badges & Showcase"
 description: "How achievement badges work, the hexagonal badge design, locked and unlocked states, and how to pin your favourite achievements to your stable page."
 order: 3
-lastUpdated: "2026-04-23"
+lastUpdated: "2026-11-04"
 relatedArticles:
   - achievements/achievement-system
   - achievements/achievement-catalog
@@ -29,6 +29,8 @@ The badge's border ring matches its difficulty tier:
 | 🟠 Hard | Orange |
 | 🔴 Very Hard | Red |
 | ⬛ Secret | Purple |
+
+**🏆 Trophies** use the same colours: the border shows how hard the Trophy was, and a Trophy label replaces the reward. They make strong showcase picks, because few stables earn them.
 
 ### Locked vs Unlocked
 

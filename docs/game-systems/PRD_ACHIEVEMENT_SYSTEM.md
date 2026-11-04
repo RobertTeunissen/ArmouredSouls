@@ -1,6 +1,6 @@
 # Product Requirements Document: Achievement & Milestone System
 
-**Last Updated**: October 19, 2026 (Account reset and achievement counters, issue #342)
+**Last Updated**: November 4, 2026 (Battle context placeholders fixed in team and placement modes)
 **Status**: ✅ Implemented (Spec #27)
 **Owner**: Robert Teunissen
 **Epic**: Achievement System (Backlog #8) + Game Loop 4 Audit (Backlog #6)
@@ -94,128 +94,187 @@ Per the [Prestige & Fame Design Exploration](../analysis/PRESTIGE_FAME_DESIGN_EX
 | 🟠 **Hard** | ₡100,000 | +100 | Orange/Amber (`#d29922`) | Months of play. Bragging rights. |
 | 🔴 **Very Hard** | ₡250,000 | +250 | Red (`#f85149`) | Multi-season grind. Legendary status. |
 | ⬛ **Secret** | ₡50,000 (default) | +50 (default) | Purple (`#a371f7`) | Hidden until earned. Surprise moments. |
+| 🏆 **Trophy** (any tier) | ₡0 | 0 | The tier's colour | Recognition only, for placing above other players (issue #446). |
 
 The tier distribution is maintained in the achievement config file. The full set is designed to be uncompletable within a single season.
+
+**Season 2 rules (November 2026).** Tiers follow the observed Season 1 unlock rate among active players: easy 75%+, medium 40–75%, hard 15–40%, very hard under 15%. Achievements that pay you for already being ahead (tournament wins, Champion league, 1800 ELO, a 15-win streak, 25,000 prestige) are **Trophies**: config flag `trophy: true`, rewards `TROPHY_REWARDS` (₡0, 0 prestige), no ledger row and no prestige award on unlock. The UI shows a Trophy chip instead of a reward line (`components/AchievementReward.tsx`).
 
 ---
 
 ## Achievement Catalog
 
-### 🤖 Combat — Robot-Level
+The Season 2 catalogue: 135 achievements, 10 of them Trophies (🏆, badge only: no credits or prestige). Generated from `app/backend/src/config/achievements.ts`, which is authoritative. The Season 2 changes and the Season 1 data behind them are in [ACHIEVEMENTS_SEASON_2_REVAMP.md](../analysis/ACHIEVEMENTS_SEASON_2_REVAMP.md); badge subjects are in [ACHIEVEMENT_BADGE_ART_GUIDE.md](../design_ux/ACHIEVEMENT_BADGE_ART_GUIDE.md).
 
-Triggered by individual robot performance. The achievement is earned by the player *through* a specific robot.
+### 🤖 Combat
 
-| ID | Name | Reference | Tier | Trigger Condition | Badge Icon Concept |
+Triggered by individual robot performance. Robot-scoped achievements are earned by the player *through* a specific robot.
+
+| ID | Name | Reference | Tier | Scope | Condition |
 |---|---|---|---|---|---|
-| C1 | **"I'll Be Back"** | Terminator | 🟢 Easy | Win your first battle | Robotic hand giving thumbs-up |
-| C2 | **"Danger, Will Robinson!"** | Lost in Space | 🟢 Easy | Lose your first battle | Robot with flailing arms |
-| C3 | **"Bite My Shiny Metal Badge"** | Bender, Futurama | 🟢 Easy | Complete 10 battles on one robot | Shiny metallic badge/medal |
-| C4 | **"By Your Command"** | Cylons, BSG | 🔵 Medium | Win 25 battles on one robot | Single red scanning eye |
-| C5 | **"Hasta La Vista, Baby"** | Terminator 2 | 🔵 Medium | Destroy an opponent (0 HP) 25 times on one robot | Sunglasses on a skull |
-| C6 | **"I Am Iron Man"** | Iron Man / Marvel | 🟠 Hard | Win 50 battles on one robot | Iron Man-style helmet silhouette |
-| C7 | **"Exterminate!"** | Daleks, Doctor Who | 🟠 Hard | Destroy opponents 50 times on one robot | Dalek dome silhouette |
-| C8 | **"I, Robot"** | Asimov / movie | 🔴 Very Hard | Win 100 battles on one robot | Open book with robot eye |
-| C9 | **"Flawless Victory"** | Mortal Kombat | 🟢 Easy | Win a battle with 100% HP (perfect victory) | Glowing shield with checkmark |
-| C10 | **"It's Just a Flesh Wound"** | Monty Python (Black Knight) | 🔵 Medium | Win a battle with <10% HP remaining | Armless knight silhouette |
-| C11 | **"Never Tell Me the Odds"** | Han Solo, Star Wars | 🟠 Hard | Win against an opponent 150+ ELO above you (league or tournament only) | Dice showing double sixes |
-| C12 | **"Resistance Is Futile"** | Borg, Star Trek | 🟠 Hard | Win 10 consecutive league battles (via battle history) | Borg cube silhouette |
-| C13 | **"Look What They Need to Mimic a Fraction of Our Power"** | Omni-Man, Invincible | 🔴 Very Hard | Win 15 consecutive league battles | Floating figure looking down |
-| C14 | **"Do You Yield?"** | General combat trope | 🟢 Easy | Force an opponent to yield for the first time | White flag icon |
-| C15 | **"I Didn't Hear No Bell"** | Rocky / meme | 🟢 Easy | Win a battle after losing the previous battle on the same robot | Boxing bell with crack |
-| C16 | **"Wax On, Wax Off"** | Karate Kid | 🟢 Easy | Fight 25 practice arena battles | Wax-on hand motion circle |
-| C17 | **"There Is No Spoon"** | The Matrix | ⬛ Secret | Win a battle while having 0 tuning points allocated | Bent spoon |
-| C18 | **"Autobots, Roll Out!"** | Optimus Prime, Transformers | 🟠 Hard | Win at least one battle in each mode: league, KotH, tag team, and tournament | Truck transforming silhouette |
-| C19 | **"Peace Through Tyranny"** | Megatron, Transformers | ⬛ Secret | Win a battle after being at <5% HP at any point during the fight | Cannon arm silhouette |
+| C1 | **"I'll Be Back"** | Terminator | 🟢 Easy | Robot | Win your first battle |
+| C2 | **"Danger, Will Robinson!"** | Lost in Space | 🟢 Easy | Robot | Lose your first battle |
+| C3 | **"Bite My Shiny Metal Badge"** | Bender, Futurama | 🟢 Easy | Robot | Complete 10 battles on one robot (any mode) |
+| C4 | **"By Your Command"** | Cylons, BSG | 🟢 Easy | Robot | Win 25 battles on one robot |
+| C5 | **"Hasta La Vista, Baby"** | Terminator 2 | 🟢 Easy | Robot | Destroy an opponent (0 HP) 25 times on one robot |
+| C6 | **"I Am Iron Man"** | Iron Man / Marvel | 🟢 Easy | Robot | Win 50 battles on one robot |
+| C7 | **"Exterminate!"** | Daleks, Doctor Who | 🟢 Easy | Robot | Destroy opponents 50 times on one robot |
+| C8 | **"I, Robot"** | Asimov / movie | 🔵 Medium | Robot | Win 100 battles on one robot |
+| C9 | **"Flawless Victory"** | Mortal Kombat | 🟢 Easy | Robot | Win a battle with 100% HP (perfect victory) |
+| C10 | **"It's Just a Flesh Wound"** | Monty Python | 🔵 Medium | Robot | Win a battle with <10% HP remaining |
+| C11 | **"Never Tell Me the Odds"** | Han Solo, Star Wars | 🔵 Medium | Robot | Win against an opponent 150+ ELO above you (league or tournament only) |
+| C12 | **"Resistance Is Futile"** | Borg, Star Trek | 🟠 Hard | Robot | Win 10 consecutive league battles |
+| C13 | **"Look What They Need to Mimic a Fraction of Our Power"** | Omni-Man, Invincible | 🟠 Hard 🏆 | Robot | Win 15 consecutive league battles |
+| C14 | **"Do You Yield?"** | General combat trope | 🟢 Easy | Robot | Force an opponent to yield for the first time |
+| C15 | **"I Didn't Hear No Bell"** | Rocky / meme | 🟢 Easy | Robot | Win a battle after losing the previous battle on the same robot |
+| C16 | **"Wax On, Wax Off"** | Karate Kid | 🟢 Easy | Stable | Fight 25 practice arena battles |
+| C17 | **"There Is No Spoon"** | The Matrix | ⬛ Secret | Robot | Win a battle while having 0 tuning points allocated |
+| C18 | **"Autobots, Roll Out!"** | Optimus Prime, Transformers | 🟠 Hard | Stable | Win at least one battle in each category: any league (1v1/2v2/3v3), tag team, any tournament, KotH, and Grand Melee |
+| C19 | **"Peace Through Tyranny"** | Megatron, Transformers | ⬛ Secret | Robot | Win a battle after being at <5% HP at any point during the fight |
+| C20 | **"Moral Victory"** | Idiom | 🟢 Easy | Robot | Lose a 1v1 battle but deal more damage than your opponent |
+| C21 | **"Not Like This"** | The Matrix | 🟢 Easy | Robot | Lose a 1v1 battle while your opponent is below 10% HP |
+| C22 | **"Shall We Play a Game?"** | WarGames | 🟢 Easy | Robot | Fight a battle that ends in a draw |
+| C23 | **"Run Away!"** | Monty Python and the Holy Grail | 🟢 Easy | Robot | Yield 10 times on one robot |
+| C24 | **"Oh My God, They Killed Kenny!"** | South Park | 🟢 Easy | Robot | Have one robot destroyed 25 times |
+| C25 | **"Eye of the Tiger"** | Rocky III | 🔵 Medium | Robot | Win a 1v1 battle after losing your previous 5 1v1 battles on the same robot |
+| C26 | **"Revenge of the Fallen"** | Transformers | 🔵 Medium | Robot | Beat a robot in a 1v1 battle that beat you the last time you met |
+| C27 | **"Judge Me by My Size, Do You?"** | Star Wars (Yoda) | 🔵 Medium | Robot | Beat a robot from a higher league tier in a 1v1 battle |
+| C28 | **"The Neverending Story"** | The NeverEnding Story | 🟠 Hard | Robot | Win a 1v1 battle that lasts 100 seconds or more |
+| C29 | **"This Is My Boomstick"** | Army of Darkness | 🟠 Hard | Robot | Win 25 1v1 battles with a starter weapon as main weapon |
+| C30 | **"Run, Forrest, Run!"** | Forrest Gump | 🟢 Easy | Robot | Win a battle with the yield threshold at 50% (the maximum) |
 
-### 🏆 League & Competition — Robot-Level
+### 🏆 League & Competition
 
-Triggered by league progression, tournament results, and competitive milestones.
+League progression, tournaments, team modes, KotH and Grand Melee.
 
-| ID | Name | Reference | Tier | Trigger Condition | Badge Icon Concept |
+| ID | Name | Reference | Tier | Scope | Condition |
 |---|---|---|---|---|---|
-| L1 | **"Silver Surfer"** | Marvel Comics | 🟢 Easy | Reach Silver league | Surfboard silhouette, silver |
-| L2 | **"Heart of Gold"** | Hitchhiker's Guide | 🔵 Medium | Reach Gold league | Heart shape, gold metallic |
-| L3 | **"Heavy Metal"** | Music / material | 🔵 Medium | Reach Platinum league | Guitar pick, platinum sheen |
-| L4 | **"Shine On You Crazy Diamond"** | Pink Floyd | 🟠 Hard | Reach Diamond league | Prism with light refraction |
-| L5 | **"We Are the Champions"** | Queen | 🔴 Very Hard | Reach Champion league | Crown with musical notes |
-| L6 | **"King of the Hill"** | TV show / game mode | 🟢 Easy | Win your first KotH match (1st place) | Hill with flag on top |
-| L7 | **"Lord of the Hill"** | Expanded KotH reference | 🔵 Medium | Win 10 KotH matches (1st place) | Hill with crown on flag |
-| L8 | **"WALL-E and EVE"** | WALL-E, Pixar | 🟢 Easy | Win your first Tag Team battle | Two robots holding hands |
-| L9 | **"The Megazord"** | Power Rangers | 🟠 Hard | Win 25 Tag Team battles | Combined robot silhouette |
-| L10 | **"There Can Be Only One"** | Highlander | 🔵 Medium | Win a tournament | Sword with lightning |
-| L11 | **"Thunderdome"** | Mad Max | 🔴 Very Hard | Win 3 tournaments | Dome arena silhouette |
-| L12 | **"ELO-quent"** | Pun on ELO + eloquent | 🔵 Medium | Reach 1400 ELO on any robot | Speech bubble with "1400" |
-| L13 | **"Over 9000!"** | Dragon Ball Z (adapted) | 🟠 Hard | Reach 1600 ELO on any robot | Scouter device cracking |
-| L14 | **"The Chosen One"** | The Matrix / trope | 🔴 Very Hard | Reach 1800 ELO on any robot | Glowing figure silhouette |
-| L15 | **"Tag, You're It!"** | Playground game | 🟢 Easy | Win a tag team battle where the reserve robot tagged in | Hand reaching out to tag |
-| L16 | **"Dynamic Duo"** | Batman & Robin | 🔴 Very Hard | Win 40 tag team battles | Two silhouettes back-to-back |
-| L17 | **"I Work Alone"** | Batman / lone wolf trope | 🔵 Medium | Win a tag team battle where your active robot destroyed both opponents without tagging out | Single figure with crossed arms |
+| L1 | **"Silver Surfer"** | Marvel Comics | 🟢 Easy | Robot | Reach Silver league |
+| L2 | **"Heart of Gold"** | Hitchhiker's Guide | 🟢 Easy | Robot | Reach Gold league |
+| L3 | **"Heavy Metal"** | Music / material | 🟢 Easy | Robot | Reach Platinum league |
+| L4 | **"Shine On You Crazy Diamond"** | Pink Floyd | 🟢 Easy | Robot | Reach Diamond league |
+| L5 | **"We Are the Champions"** | Queen | 🟠 Hard 🏆 | Robot | Reach Champion league |
+| L6 | **"King of the Hill"** | TV show / game mode | 🟢 Easy | Robot | Win your first KotH match (1st place) |
+| L7 | **"Lord of the Hill"** | Expanded KotH reference | 🟢 Easy | Robot | Win 10 KotH matches (1st place) |
+| L8 | **"WALL-E and EVE"** | WALL-E, Pixar | 🔵 Medium | Robot | Win your first Tag Team battle |
+| L9 | **"The Megazord"** | Power Rangers | 🔵 Medium | Robot | Win 25 Tag Team battles |
+| L18 | **"Daft Punk"** | Daft Punk | 🔵 Medium | Robot | Win your first 2v2 League battle |
+| L19 | **"Twins!"** | The Matrix Reloaded | 🔵 Medium | Robot | Win 25 2v2 League battles |
+| L20 | **"Three Laws Safe"** | Asimov, I Robot | 🔵 Medium | Robot | Win your first 3v3 League battle |
+| L21 | **"Voltron"** | Voltron | 🔵 Medium | Robot | Win 25 3v3 League battles |
+| L22 | **"R2-D2 & C-3PO"** | Star Wars | 🔴 Very Hard 🏆 | Stable | Win a 2v2 Tournament |
+| L23 | **"Jaeger Pilots"** | Pacific Rim | 🔴 Very Hard 🏆 | Stable | Win 3 different 2v2 Tournaments |
+| L24 | **"Triforce"** | Legend of Zelda | 🔴 Very Hard 🏆 | Stable | Win a 3v3 Tournament |
+| L25 | **"Devastator"** | Transformers | 🔴 Very Hard 🏆 | Stable | Win 3 different 3v3 Tournaments |
+| L10 | **"There Can Be Only One"** | Highlander | 🟠 Hard 🏆 | Stable | Win a tournament |
+| L11 | **"Thunderdome"** | Mad Max | 🔴 Very Hard 🏆 | Stable | Win 3 tournaments |
+| L12 | **"ELO-quent"** | Pun on ELO + eloquent | 🟢 Easy | Robot | Reach 1400 ELO on any robot |
+| L13 | **"Over 9000!"** | Dragon Ball Z | 🔵 Medium | Robot | Reach 1600 ELO on any robot |
+| L14 | **"The Chosen One"** | The Matrix / trope | 🟠 Hard 🏆 | Robot | Reach 1800 ELO on any robot |
+| L15 | **"Tag, You're It!"** | Playground game | 🔵 Medium | Robot | Win a tag team battle where the reserve robot tagged in |
+| L16 | **"Dynamic Duo"** | Batman & Robin | 🔵 Medium | Robot | Win 40 tag team battles |
+| L17 | **"I Work Alone"** | Batman / lone wolf trope | 🔵 Medium | Robot | Win a tag team battle where your active robot destroyed both opponents without tagging out |
+| L26 | **"Real Steel"** | Real Steel movie | 🟢 Easy | Stable | Win your first Grand Melee (1st place) |
+| L27 | **"The Hunger Bots"** | Hunger Games parody | 🔵 Medium | Stable | Win 5 Grand Melee matches |
+| L28 | **"Omega Supreme"** | Transformers (Autobot guardian) | 🟠 Hard | Stable | Win 20 Grand Melee matches |
+| L29 | **"Cockroach Protocol"** | Survival AI concept | 🔵 Medium | Stable | Finish in the top 3 in 10 Grand Melee matches |
+| L30 | **"Untouchable"** | Dominance/invincibility | 🟢 Easy | Stable | Win a Grand Melee with more than 75% HP remaining |
+| L31 | **"Return of the Jedi"** | Star Wars | 🔵 Medium | Robot | Get demoted in 1v1 league, then promoted back to that tier |
+| L32 | **"Round One… Fight!"** | Mortal Kombat | 🟢 Easy | Robot | Win a tournament match |
+| L33 | **"The Final Countdown"** | Europe | 🔵 Medium | Robot | Fight in a tournament semi-final |
+| L34 | **"I've Got a Bad Feeling About This"** | Star Wars | 🔵 Medium | Robot | Lose a tournament final |
+| L35 | **"Free Real Estate"** | Meme | ⬛ Secret | Stable | Get a bye in a tournament round |
+| L36 | **"Red Shirt"** | Star Trek | ⬛ Secret | Robot | Be the first robot eliminated in a Grand Melee |
+| L37 | **"Stayin' Alive"** | Bee Gees | 🟢 Easy | Robot | Survive to the final bell of a Grand Melee |
+| L38 | **"Rampage"** | Rampage | 🟠 Hard | Robot | Destroy 3 robots in one Grand Melee |
+| L39 | **"The Last Starfighter"** | The Last Starfighter | 🔵 Medium | Robot | Win a KotH match as the last robot standing |
+| L40 | **"This Is Sparta!"** | 300 | 🔵 Medium | Robot | Hold the KotH zone uncontested for 30 seconds or more in one match |
+| L41 | **"Ohana"** | Lilo & Stitch | 🔵 Medium | Robot | Win a 3v3 battle with all three of your robots still standing |
 
-### 💰 Economy & Stable — User-Level
+### 💰 Economy & Stable
 
-Triggered by stable-wide economic activity, facility ownership, and roster management.
+Stable-wide economic activity, facilities, weapons and roster management.
 
-| ID | Name | Reference | Tier | Trigger Condition | Badge Icon Concept |
+| ID | Name | Reference | Tier | Scope | Condition |
 |---|---|---|---|---|---|
-| E1 | **"Hello World"** | Programming | 🟢 Easy | Complete onboarding | Terminal cursor blinking |
-| E2 | **"The Odds Are 725 to 1"** | C-3PO, Star Wars | 🟢 Easy | Earn ₡100,000 total from battles | Golden protocol droid silhouette |
-| E3 | **"Show Me the Money"** | Jerry Maguire | 🟠 Hard | Accumulate ₡5,000,000 in your balance at once | Money bag with dollar sign |
-| E4 | **"Scrooge McDuck"** | DuckTales | 🟠 Hard | Earn ₡25,000,000 lifetime from all sources | Duck diving into coins |
-| E5 | **"Buy the Dip"** | Finance meme | 🟢 Easy | Purchase your first weapon | Shopping cart with weapon |
-| E6 | **"Arsenal"** | Military / football club | 🔵 Medium | Own 10 weapons simultaneously | Weapon rack, full |
-| E7 | **"Mall Cop"** | Paul Blart / pun | 🟢 Easy | Buy your first shield | Shield with badge |
-| E8 | **"Pimp My Bot"** | Pimp My Ride | 🟢 Easy | Upgrade any robot attribute for the first time | Wrench with sparkle |
-| E9 | **"Fully Operational"** | Death Star, Star Wars | 🟠 Hard | Reach an effective stat of 50 on any attribute on a robot (computed via `calculateEffectiveStatsWithStance`: base + weapon bonuses + tuning + loadout + stance) | Attribute bar at 100% |
-| E10 | **"The Architect"** | The Matrix | 🟠 Hard | Own 3 facilities at level 3+ | Blueprint with buildings |
-| E11 | **"Megacorp"** | Sci-fi trope | 🔴 Very Hard | Own 5 facilities at level 3+ | Corporate tower skyline |
-| E12 | **"Skynet Is Online"** | Terminator | 🔵 Medium | Own 3 robots simultaneously | Network of connected nodes |
-| E13 | **"Robot Army"** | General sci-fi | 🟠 Hard | Own 5 robots simultaneously | Army formation silhouette |
-| E14 | **"Rise of the Machines"** | Terminator 3 | 🔴 Very Hard | Own 7 robots simultaneously | Robots marching in formation |
-| E15 | **"Fine-Tuned Machine"** | Common phrase / Tuning Bay | 🟢 Easy | Allocate tuning points on any robot for the first time | Tuning dial/knob |
-| E16 | **"Overclocked"** | PC gaming term | 🔵 Medium | Allocate 50+ tuning points on a single robot (requires Tuning Bay facility) | CPU chip with flames |
-| E17 | **"Bankrupt!"** | Monopoly / economy | ⬛ Secret | Have your balance drop below ₡0 from daily operating costs | Broken piggy bank |
-| E18 | **"Pawn Star"** | Pawn Stars TV show | 🟢 Easy | Sell your first weapon (Spec #33) | Pawn shop sign |
-| E19 | **"Shrewd Negotiator"** | Business / negotiation trope | 🔵 Medium | Earn ₡500,000 lifetime from weapon resales | Handshake / dollar sign |
-| E20 | **"Arms Dealer"** | Arms dealer trope | 🟠 Hard | Sell 10 weapons | Suitcase full of weapons |
-| E21 | **"Buy High, Sell Higher"** | Trader meme | 🟠 Hard | Sell a weapon at Workshop Level 10 (full credit recovery) | Stock chart with arrow up |
+| E1 | **"Hello World"** | Programming | 🟢 Easy | Stable | Complete onboarding |
+| E2 | **"The Odds Are 725 to 1"** | C-3PO, Star Wars | 🟢 Easy | Stable | Earn ₡100,000 total from battles |
+| E3 | **"Show Me the Money"** | Jerry Maguire | 🔵 Medium | Stable | Accumulate ₡5,000,000 in your balance at once |
+| E4 | **"Scrooge McDuck"** | DuckTales | 🔵 Medium | Stable | Earn ₡25,000,000 lifetime from all sources |
+| E5 | **"Buy the Dip"** | Finance meme | 🟢 Easy | Stable | Purchase your first weapon |
+| E6 | **"Arsenal"** | Military / football club | 🟠 Hard | Stable | Own 10 weapons simultaneously |
+| E7 | **"Mall Cop"** | Paul Blart / pun | 🔵 Medium | Stable | Buy your first shield |
+| E8 | **"Pimp My Bot"** | Pimp My Ride | 🟢 Easy | Stable | Upgrade any robot attribute for the first time |
+| E9 | **"Fully Operational"** | Death Star, Star Wars | 🔵 Medium | Stable | Reach an effective stat of 50 on any attribute on a robot |
+| E10 | **"The Architect"** | The Matrix | 🟢 Easy | Stable | Own 3 facilities at level 3+ |
+| E11 | **"Megacorp"** | Sci-fi trope | 🟢 Easy | Stable | Own 5 facilities at level 3+ |
+| E12 | **"Skynet Is Online"** | Terminator | 🔵 Medium | Stable | Own 3 robots simultaneously |
+| E13 | **"Robot Army"** | General sci-fi | 🟠 Hard | Stable | Own 5 robots simultaneously |
+| E14 | **"Rise of the Machines"** | Terminator 3 | 🟠 Hard | Stable | Own 7 robots simultaneously |
+| E15 | **"Fine-Tuned Machine"** | Common phrase / Tuning Bay | 🟢 Easy | Stable | Allocate tuning points on any robot for the first time |
+| E16 | **"Overclocked"** | PC gaming term | 🟠 Hard | Stable | Allocate 50+ tuning points on a single robot |
+| E17 | **"Bankrupt!"** | Monopoly / economy | ⬛ Secret | Stable | Have your balance drop below ₡0 from daily operating costs |
+| E18 | **"Pawn Star"** | Pawn Stars TV show | 🔵 Medium | Stable | Sell your first weapon |
+| E19 | **"Shrewd Negotiator"** | Business / negotiation trope | 🔴 Very Hard | Stable | Earn ₡500,000 lifetime from weapon resales |
+| E20 | **"Arms Dealer"** | Arms dealer trope | 🔴 Very Hard | Stable | Sell 10 weapons |
+| E21 | **"Buy High, Sell Higher"** | Trader meme | 🟠 Hard | Stable | Sell a weapon with Weapons Workshop level 5 or higher (50%+ resale) |
+| E22 | **"First Refinement"** | Weapon Refinement | 🔵 Medium | Stable | Refine your first weapon |
+| E23 | **"Master Craftsman"** | Crafting trope | 🟠 Hard | Stable | Spend ₡1,000,000 lifetime on weapon refinements |
+| E24 | **"Legendary Smith"** | Smithing trope | 🟠 Hard | Stable | Own a Legendary weapon (5 refinements) |
+| E25 | **"Identity Forged"** | Identity build | 🔴 Very Hard | Stable | Refine a starter weapon (Practice Sword, Practice Blaster, Training Rifle, or Training Beam) to Legendary status |
+| E26 | **"Forge Master"** | Forge / DPS build | 🟠 Hard | Stable | Own a weapon with all four DPS slots filled (2 Sharpen + 2 Forge) |
+| E27 | **"Better, Stronger, Faster"** | The Six Million Dollar Man | 🟢 Easy | Stable | Spend ₡6,000,000 on attribute upgrades |
+| E28 | **"Back to the Future"** | Back to the Future | 🟢 Easy | Stable | Recover from a balance below ₡100,000 to above ₡1,000,000 |
+| E29 | **"SimCity"** | SimCity | 🟠 Hard | Stable | Own every facility type at level 1 or higher |
+| E30 | **"To Infinity and Beyond"** | Toy Story | 🟠 Hard | Stable | Upgrade any facility to level 10 |
+| E31 | **"MacGyver"** | MacGyver | 🔵 Medium | Stable | Spend ₡10,000,000 on repairs |
+| E32 | **"Ready for My Close-Up"** | Sunset Boulevard | 🟢 Easy | Stable | Upload a custom image for a robot |
+| E33 | **"Merchandising!"** | Spaceballs | 🟢 Easy | Stable | Earn ₡500,000 from the Merchandising Hub |
+| E34 | **"More Than Meets the Eye"** | Transformers | 🔵 Medium | Stable | Win battles with all four loadout types (any robots) |
+| E35 | **"Ain't Nobody Got Time for That"** | Meme | 🟠 Hard | Stable | Subscribe one robot to every Booking Office event type at once |
 
-### 🌟 Prestige & Fame — Mixed Level
+### 🌟 Prestige & Fame
 
-Triggered by prestige thresholds (user-level) and fame thresholds (robot-level). These are the achievements that directly fix Loop 4.
+Prestige thresholds (stable), fame thresholds (robot) and streaming.
 
-| ID | Name | Reference | Tier | Trigger Condition | Scope | Badge Icon Concept |
-|---|---|---|---|---|---|---|
-| P1 | **"Established"** | Prestige rank title | 🔵 Medium | Reach 1,000 prestige | User | Star with "Est." ribbon |
-| P2 | **"Veteran"** | Prestige rank title | 🟠 Hard | Reach 5,000 prestige | User | Chevron stripes |
-| P3 | **"Elite"** | Prestige rank title | 🔴 Very Hard | Reach 10,000 prestige | User | Eagle emblem |
-| P4 | **"Legendary"** | Prestige rank title | 🔴 Very Hard | Reach 25,000 prestige | User | Dragon silhouette |
-| P5 | **"15 Minutes of Fame"** | Andy Warhol quote | 🟢 Easy | Robot reaches 100 fame (Known tier) | Robot | Clock showing 0:15 |
-| P6 | **"Famous Last Words"** | Common phrase | 🔵 Medium | Robot reaches 500 fame (Famous tier) | Robot | Microphone with stars |
-| P7 | **"Legendary Status"** | Fame tier | 🟠 Hard | Robot reaches 2,500 fame (Legendary tier) | Robot | Star on Walk of Fame |
-| P8 | **"Mythical Proportions"** | Fame tier | 🔴 Very Hard | Robot reaches 5,000 fame (Mythical tier) | Robot | Greek column with laurel |
-| P9 | **"Influencer"** | Modern culture | 🟢 Easy | Earn ₡100,000 total streaming revenue across all robots | User | Camera/phone with hearts |
-| P10 | **"Content Creator"** | Modern culture | 🟠 Hard | Earn ₡1,000,000 total streaming revenue | User | Play button with crown |
-
-### 🎲 Style & Quirky — Robot-Level
-
-Triggered by specific playstyle choices, loadout configurations, and unusual battle outcomes.
-
-| ID | Name | Reference | Tier | Trigger Condition | Badge Icon Concept |
+| ID | Name | Reference | Tier | Scope | Condition |
 |---|---|---|---|---|---|
-| S1 | **"Bleep Bloop"** | Robot stereotype | 🟢 Easy | Equip a robot with an energy weapon | Lightning bolt |
-| S2 | **"Get to the Choppa"** | Predator / Arnold | 🟢 Easy | Equip a robot with a ballistic weapon | Bullet casing |
-| S3 | **"Sword Art Online"** | Anime series | 🟢 Easy | Equip a robot with a melee weapon | Crossed swords |
-| S4 | **"Dual Wielding Intensifies"** | Gaming meme | 🔵 Medium | Win 10 battles with dual-wield loadout | Two crossed pistols |
-| S5 | **"Turtle Mode Activated"** | Gaming strategy | 🔵 Medium | Win 10 battles on defensive stance | Turtle shell |
-| S6 | **"LEEROY JENKINS!"** | WoW meme | 🔵 Medium | Win 10 battles on offensive stance | Charging figure, mouth open |
-| S7 | **"Perfectly Balanced"** | Thanos, Avengers | 🔵 Medium | Win 10 battles on balanced stance | Scales in equilibrium |
-| S8 | **"No Retreat, No Surrender"** | Movie title / phrase | 🟠 Hard | Win a battle with yield threshold set to 0% | Spartan helmet |
-| S9 | **"Glass Cannon"** | RPG archetype | ⬛ Secret | Deal 500+ damage in a battle but finish with <5% HP | Cracked cannon |
-| S10 | **"Overkill"** | Gaming term | ⬛ Secret | Win a battle in under 5 seconds | Explosion with stopwatch |
-| S11 | **"R2-D2 Would Be Proud"** | Star Wars | ⬛ Secret | Win a tag team battle as the reserve robot (tagged in to save the day) | Astromech droid silhouette |
-| S12 | **"Johnny 5 Is Alive!"** | Short Circuit | ⬛ Secret | Have a robot survive 50 battles (totalBattles minus times destroyed ≥ 50) | Lightning bolt + heart |
-| S13 | **"Dead or Alive, You're Coming With Me"** | RoboCop | 🔵 Medium | Force 10 opponents to yield (cumulative, any robot) | Visor silhouette |
-| S14 | **"Brain the Size of a Planet"** | Marvin, Hitchhiker's Guide | ⬛ Secret | Lose 10 battles in a row on a single robot | Depressed robot silhouette |
+| P1 | **"Established"** | Prestige rank title | 🟢 Easy | Stable | Reach 1,000 prestige |
+| P2 | **"Veteran"** | Prestige rank title | 🟢 Easy | Stable | Reach 5,000 prestige |
+| P3 | **"Elite"** | Prestige rank title | 🔵 Medium | Stable | Reach 10,000 prestige |
+| P4 | **"Legendary"** | Prestige rank title | 🟠 Hard 🏆 | Stable | Reach 25,000 prestige |
+| P5 | **"15 Minutes of Fame"** | Andy Warhol quote | 🟢 Easy | Robot | Robot reaches 100 fame |
+| P6 | **"Famous Last Words"** | Common phrase | 🟢 Easy | Robot | Robot reaches 500 fame |
+| P7 | **"Legendary Status"** | Fame tier | 🟢 Easy | Robot | Robot reaches 2,500 fame |
+| P8 | **"Mythical Proportions"** | Fame tier | 🔵 Medium | Robot | Robot reaches 5,000 fame |
+| P9 | **"Influencer"** | Modern culture | 🟢 Easy | Stable | Earn ₡100,000 total streaming revenue |
+| P10 | **"Content Creator"** | Modern culture | 🟢 Easy | Stable | Earn ₡1,000,000 total streaming revenue |
+| P11 | **"Going Viral"** | Internet culture | 🔵 Medium | Robot | Earn ₡20,000 streaming revenue from one battle |
+| P12 | **"Veteran of the Clone Wars"** | Star Wars | 🟢 Easy | Stable | Your stable competed in a previous season |
+
+### 🎲 Style & Quirky
+
+Playstyle choices, loadouts and unusual battle outcomes.
+
+| ID | Name | Reference | Tier | Scope | Condition |
+|---|---|---|---|---|---|
+| S1 | **"Bleep Bloop"** | Robot stereotype | 🟢 Easy | Robot | Equip a robot with an energy weapon |
+| S2 | **"Get to the Choppa"** | Predator / Arnold | 🔵 Medium | Robot | Equip a robot with a ballistic weapon |
+| S3 | **"Sword Art Online"** | Anime series | 🟢 Easy | Robot | Equip a robot with a melee weapon |
+| S4 | **"Dual Wielding Intensifies"** | Gaming meme | 🟠 Hard | Robot | Win 10 battles with dual-wield loadout |
+| S5 | **"Turtle Mode Activated"** | Gaming strategy | 🟢 Easy | Robot | Win 10 battles on defensive stance |
+| S6 | **"LEEROY JENKINS!"** | WoW meme | 🟢 Easy | Robot | Win 10 battles on offensive stance |
+| S7 | **"Perfectly Balanced"** | Thanos, Avengers | 🔵 Medium | Robot | Win 10 battles on balanced stance |
+| S8 | **"No Retreat, No Surrender"** | Movie title / phrase | 🟢 Easy | Robot | Win a battle with yield threshold set to 0% |
+| S9 | **"Glass Cannon"** | RPG archetype | ⬛ Secret | Robot | Deal 500+ damage in a battle but finish with <5% HP |
+| S10 | **"Overkill"** | Gaming term | ⬛ Secret | Robot | Win a battle in under 5 seconds |
+| S11 | **"R2-D2 Would Be Proud"** | Star Wars | ⬛ Secret | Robot | Win a tag team battle as the reserve robot after your partner was destroyed |
+| S12 | **"Johnny 5 Is Alive!"** | Short Circuit | ⬛ Secret | Robot | Have a robot survive 50 battles in any mode (battles fought minus times destroyed) |
+| S13 | **"Dead or Alive, You're Coming With Me"** | RoboCop | 🟢 Easy | Stable | Force 10 opponents to yield in 1v1 battles (cumulative, any robot) |
+| S14 | **"Brain the Size of a Planet"** | Marvin, Hitchhiker's Guide | ⬛ Secret | Robot | Lose 10 battles in a row on a single robot |
+| S15 | **"Nobody Expects the Spanish Inquisition"** | Monty Python | ⬛ Secret | Robot | Win a KotH match or Grand Melee as the lowest-rated robot in the field |
+| S16 | **"Mirror, Mirror"** | Star Trek | ⬛ Secret | Robot | Beat a robot with the same chassis in a 1v1 battle |
+| S17 | **"Gotta Catch 'Em All"** | Pokémon | 🟠 Hard | Stable | Unlock 50 achievements in one season |
 
 ---
 
@@ -278,6 +337,8 @@ Border ring and tier pip use the design system's semantic colors:
 - On unlock moment: 300ms scale-in animation (0.95 → 1.0, ease-out) — respects `prefers-reduced-motion`
 
 ### Icon Style Guide
+
+> **Superseded for new art (November 2026).** The shipped badges are rendered metal, not flat. New and replacement badges follow [ACHIEVEMENT_BADGE_ART_GUIDE.md](../design_ux/ACHIEVEMENT_BADGE_ART_GUIDE.md), which also lists the badge subject for every achievement. The original guidance below is kept for history.
 
 - **Flat design**, not 3D or photorealistic
 - **Metallic palette**: use the design system's dark industrial colors as base
@@ -713,6 +774,10 @@ Fixed by `services/achievement/teamModeWins.ts`, which resolves robot → `TeamB
 
 All three registration points now include the triggers, and `updateRobotCombatStats()` owns the counters via an optional `placement` option. Those increments sit **outside** the `if (!opts.skipBattleCounters)` guard: the Grand Melee orchestrator passes `skipBattleCounters: true` to stay out of the Career_Battle_Counters, where a "win" is undefined for placements 2 through 20 and would corrupt the win-rate denominator — not to opt out of its own mode counters.
 
+### Battle context must describe the battle fought (November 2026)
+
+The `battle_complete` context every orchestrator passes must carry the robot's real yield threshold, tuning allocation, final HP percentage, loadout and stance. Team, tag team, team tournament, KotH, Grand Melee and 1v1 tournament orchestrators passed placeholders (yield 0, no tuning, 0% HP), which unlocked S8 and C17 on any win in those modes and C10/C19 on team and tag wins. Fixed before Season 2; Season 1 unlocks were left as awarded. Build the context with `services/battle/battleAchievementContext.ts`. Details: [achievement-battle-context.md](../implementation_notes/achievement-battle-context.md).
+
 ### Threshold reachability
 
 At one match per mode per cycle across a 100-cycle season, with continuous subscription to the mode:
@@ -869,7 +934,7 @@ Achievement rewards (credits and prestige) are also season-scoped, since both re
 ## Account Reset (issue #342)
 **A reset is a fresh start for achievements.** `performAccountReset` deletes the stable's `user_achievements` rows and zeroes `prestige`, championship titles, `pinnedAchievements` and `totalPracticeBattles` in the same transaction that sets credits to the ₡3,000,000 opening balance. No reversal ledger rows are written; the pre-reset `achievement_reward` pairs and `prestige_change` audit rows stay as history.
 **Each achievement can be earned again once per reset.** The unique `(userId, achievementId)` key still allows only one unlock at a time, and a new unlock gets a new financial event id. Repeated resets cannot farm rewards: every reset wipes the credits and prestige earned since the last one. Reset stays available after onboarding, so the onboarding achievement (E1) and the robot-count achievement (E12) follow the same rule.
-**History-based counters restart at the latest reset.** Weapon sale achievements (E18–E20) and the refinement count achievement (E22) count `audit_logs` rows, which the reset keeps. They, and their progress bars, count only events after the user's latest `reset_logs.reset_at` (`services/achievement/achievementCounterWindow.ts`). Season rollover truncates `audit_logs`, so it needs no window. E23 (refinement credits spent) reads `weapon_refinements`, which the reset deletes with the inventory.
+**History-based counters restart at the latest reset.** Weapon sale achievements (E18–E20) and the refinement count achievement (E22) count `audit_logs` rows, which the reset keeps. They, and their progress bars, count only events after the user's latest `reset_logs.reset_at` (`services/achievement/achievementCounterWindow.ts`). Season rollover truncates `audit_logs`, so it needs no window. E23 (refinement credits spent) reads `weapon_refinements`, which the reset deletes with the inventory. The ledger-based counters (E27 upgrade spend, E28 low balance, E33 Merchandising Hub income) read `financial_ledger`, which the reset also keeps, so they use the same window.
 **Weapons and shields cannot be farmed.** Milestone purchase achievements (E5–E7, S1–S3) stay earned after the item is sold. Resale pays `pricePaid × (workshop level × 10)%`, never more than was paid, so a buy/sell loop always loses credits, and each sale achievement unlocks once. Robots cannot be sold, so robot-count achievements have no sell path.
 
 ## Automaton Stables (Spec #55)

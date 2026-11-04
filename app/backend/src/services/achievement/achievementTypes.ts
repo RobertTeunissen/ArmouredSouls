@@ -22,7 +22,14 @@ export type AchievementEventType =
   | 'onboarding_complete'
   | 'practice_battle'
   | 'tournament_complete'
-  | 'daily_finances';
+  | 'daily_finances'
+  // ── Season 2 ──
+  | 'robot_image_uploaded'
+  | 'subscription_changed'
+  | 'tournament_bye'
+  | 'season_started'
+  /** Fired by the service itself after any unlock, for count-of-unlocks triggers. */
+  | 'achievement_unlocked';
 
 export interface AchievementEvent {
   type: AchievementEventType;
@@ -37,6 +44,8 @@ export interface UnlockedAchievement {
   rewardCredits: number;
   rewardPrestige: number;
   badgeIconFile: string;
+  /** Recognition only: no credits or prestige (issue #446). */
+  trophy: boolean;
   robotId: number | null;
   robotName: string | null;
 }
@@ -52,6 +61,8 @@ export interface AchievementWithProgress {
   rewardCredits: number;
   rewardPrestige: number;
   badgeIconFile: string;
+  /** Recognition only: no credits or prestige (issue #446). */
+  trophy: boolean;
   hidden: boolean;
   unlocked: boolean;
   unlockedAt: string | null;
@@ -140,10 +151,19 @@ export const EVENT_TRIGGER_MAP: Record<AchievementEventType, AchievementTriggerT
     // them as candidates and all five achievements were unreachable. Spec #44
     // tasks 10.1/10.2 covered this registration and were left unchecked.
     'grand_melee_wins', 'grand_melee_top3', 'grand_melee_win_high_hp',
+    // Season 2 (ACHIEVEMENTS_SEASON_2_REVAMP.md §4)
+    'reserve_rescue_win', 'moral_victory', 'close_loss', 'draw',
+    'times_yielded', 'times_destroyed', 'losing_streak_broken', 'revenge_win',
+    'higher_tier_win', 'long_battle_win', 'starter_weapon_wins', 'max_yield_win',
+    'tournament_match_win', 'tournament_semifinal', 'tournament_final_loss',
+    'grand_melee_first_out', 'grand_melee_survived', 'kills_in_battle',
+    'koth_last_standing', 'koth_uncontested', 'team_all_survived_win',
+    'underdog_placement_win', 'mirror_match_win', 'all_loadout_wins',
+    'battle_streaming_revenue', 'balance_recovery', 'demotion_repromotion',
   ],
-  league_promotion: ['league_promotion'],
+  league_promotion: ['league_promotion', 'demotion_repromotion'],
   weapon_purchased: ['weapon_count', 'weapon_type'],
-  weapon_sold: ['weapons_sold_count', 'weapons_sold_credits', 'weapon_sold_at_max_workshop'],
+  weapon_sold: ['weapons_sold_count', 'weapons_sold_credits', 'weapon_sold_at_workshop_level'],
   weapon_refined: [
     'weapons_refined_count',
     'weapons_refined_credits_spent',
@@ -152,7 +172,7 @@ export const EVENT_TRIGGER_MAP: Record<AchievementEventType, AchievementTriggerT
     'owns_max_dps_weapon',
   ],
   weapon_equipped: ['weapon_type', 'effective_stat'],
-  attribute_upgraded: ['attribute_upgraded', 'effective_stat'],
+  attribute_upgraded: ['attribute_upgraded', 'effective_stat', 'attribute_upgrade_spend'],
   facility_upgraded: ['facility_count'],
   robot_created: ['robot_count'],
   tuning_allocated: ['tuning_allocated', 'tuning_full', 'effective_stat'],
@@ -160,5 +180,11 @@ export const EVENT_TRIGGER_MAP: Record<AchievementEventType, AchievementTriggerT
   onboarding_complete: ['onboarding'],
   practice_battle: ['practice_battles'],
   tournament_complete: ['tournament_wins', 'tournament_2v2_wins', 'tournament_3v3_wins'],
-  daily_finances: ['bankrupt'],
+  // Season 2: settlement is where repairs and merchandising income land.
+  daily_finances: ['bankrupt', 'repair_spend', 'merchandising_income', 'balance_recovery', 'achievement_count'],
+  robot_image_uploaded: ['robot_image_uploaded'],
+  subscription_changed: ['all_event_subscriptions'],
+  tournament_bye: ['tournament_bye'],
+  season_started: ['previous_season_veteran'],
+  achievement_unlocked: ['achievement_count'],
 };

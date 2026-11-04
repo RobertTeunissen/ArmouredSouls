@@ -70,8 +70,11 @@ describe('Achievement Config Properties', () => {
           // (d) hidden === (tier === 'secret')
           expect(achievement.hidden).toBe(achievement.tier === 'secret');
 
-          // (e) non-secret rewards match TIER_REWARDS
-          if (achievement.tier !== 'secret') {
+          // (e) non-secret rewards match TIER_REWARDS; Trophies pay nothing (issue #446)
+          if (achievement.trophy) {
+            expect(achievement.rewardCredits).toBe(0);
+            expect(achievement.rewardPrestige).toBe(0);
+          } else if (achievement.tier !== 'secret') {
             const expected = TIER_REWARDS[achievement.tier];
             expect(achievement.rewardCredits).toBe(expected.credits);
             expect(achievement.rewardPrestige).toBe(expected.prestige);

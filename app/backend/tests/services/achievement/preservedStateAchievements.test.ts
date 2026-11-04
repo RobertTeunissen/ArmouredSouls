@@ -46,9 +46,14 @@ describe('reawardPreservedStateAchievements', () => {
 
     await reawardPreservedStateAchievements();
 
-    expect(mockCheckAndAward).toHaveBeenCalledTimes(2);
+    // Two stables × two replayed events (onboarding, and P12's season_started).
+    expect(mockCheckAndAward).toHaveBeenCalledTimes(4);
     expect(mockCheckAndAward).toHaveBeenCalledWith(4, null, {
       type: 'onboarding_complete',
+      data: {},
+    });
+    expect(mockCheckAndAward).toHaveBeenCalledWith(4, null, {
+      type: 'season_started',
       data: {},
     });
     expect(mockCheckAndAward).toHaveBeenCalledWith(9, null, {

@@ -17,6 +17,9 @@ import {
   didRobotLosePreviousBattle,
   updateRobotCombatStats,
 } from '../battle/battlePostCombat';
+import { hasAllocatedTuning, hpPercentOf, lowestHpPercent } from '../battle/battleAchievementContext';
+import { getTuningBonusesBatch } from '../tuning-pool';
+import { getTagTeamYields } from './tagTeamBattleRecord';
 import { TagTeamError, TagTeamErrorCode } from '../../errors/tagTeamErrors';
 import { countKillsByRobot } from '../../shared/utils/battleStatistics';
 import { TagTeamBattleResult } from './tagTeamTypes';
@@ -40,6 +43,16 @@ interface TagTeamMatchWithTeams {
   teamBattleLeagueId: string;
   team1: (TeamBattle & { members: Array<{ robot: Robot; slotIndex: number; robotId: number }> }) | null;
   team2: (TeamBattle & { members: Array<{ robot: Robot; slotIndex: number; robotId: number }> }) | null;
+}
+
+/** Battle-time max HP per robot name, from the simulation phases. */
+export function battleTimeMaxHP(phases: TagTeamBattleResult['phases']): Map<string, number> {
+  const result = new Map<string, number>();
+  for (const phase of phases ?? []) {
+    result.set(phase.robot1Name, phase.robot1MaxHP);
+    result.set(phase.robot2Name, phase.robot2MaxHP);
+  }
+  return result;
 }
 
 export async function updateTagTeamBattleResults(
@@ -436,13 +449,19 @@ export async function updateTagTeamBattleResults(
     const auditTeam1PrestigePerRobot = Math.floor(team1Prestige / 2);
     const auditTeam2PrestigePerRobot = Math.floor(team2Prestige / 2);
     
+    const yields = getTagTeamYields(result, {
+      team1Active: team1.activeRobot.name,
+      team1Reserve: team1.reserveRobot.name,
+      team2Active: team2.activeRobot.name,
+      team2Reserve: team2.reserveRobot.name,
+    });
     const tagTeamAuditRobots = [
       // Team 1 Active
       {
-        robotId: team1.activeRobotId, userId: team1.activeRobot.userId,
+        robotId: team1.activeRobotId, userId: team1.activeRobot.userId, robot: team1.activeRobot,
         isWinner: team1Won, isDraw,
         damageDealt: result.team1ActiveDamageDealt, finalHP: result.team1ActiveFinalHP,
-        yielded: result.team1TagOutTime !== undefined, destroyed: result.team1ActiveFinalHP === 0,
+        yielded: yields.team1Active, destroyed: result.team1ActiveFinalHP === 0,
         credits: team1ActiveShare.credits, prestige: auditTeam1PrestigePerRobot, fame: team1ActiveFame,
         eloBefore: team1.activeRobot.elo, eloAfter: team1.activeRobot.elo,
         streamingRevenue: team1ActiveStreaming?.totalRevenue ?? 0,
@@ -451,10 +470,10 @@ export async function updateTagTeamBattleResults(
       },
       // Team 1 Reserve
       {
-        robotId: team1.reserveRobotId, userId: team1.reserveRobot.userId,
+        robotId: team1.reserveRobotId, userId: team1.reserveRobot.userId, robot: team1.reserveRobot,
         isWinner: team1Won, isDraw,
         damageDealt: result.team1ReserveDamageDealt, finalHP: result.team1ReserveFinalHP,
-        yielded: false, destroyed: result.team1ReserveFinalHP === 0 && result.team1TagOutTime !== undefined,
+        yielded: yields.team1Reserve, destroyed: result.team1ReserveFinalHP === 0 && result.team1TagOutTime !== undefined,
         credits: team1ReserveShare.credits, prestige: auditTeam1PrestigePerRobot, fame: team1ReserveFame,
         eloBefore: team1.reserveRobot.elo, eloAfter: team1.reserveRobot.elo,
         streamingRevenue: team1ReserveStreaming?.totalRevenue ?? 0,
@@ -463,10 +482,10 @@ export async function updateTagTeamBattleResults(
       },
       // Team 2 Active
       {
-        robotId: team2.activeRobotId, userId: team2.activeRobot.userId,
+        robotId: team2.activeRobotId, userId: team2.activeRobot.userId, robot: team2.activeRobot,
         isWinner: team2Won, isDraw,
         damageDealt: result.team2ActiveDamageDealt, finalHP: result.team2ActiveFinalHP,
-        yielded: result.team2TagOutTime !== undefined, destroyed: result.team2ActiveFinalHP === 0,
+        yielded: yields.team2Active, destroyed: result.team2ActiveFinalHP === 0,
         credits: team2ActiveShare.credits, prestige: auditTeam2PrestigePerRobot, fame: team2ActiveFame,
         eloBefore: team2.activeRobot.elo, eloAfter: team2.activeRobot.elo,
         streamingRevenue: team2ActiveStreaming?.totalRevenue ?? 0,
@@ -475,10 +494,10 @@ export async function updateTagTeamBattleResults(
       },
       // Team 2 Reserve
       {
-        robotId: team2.reserveRobotId, userId: team2.reserveRobot.userId,
+        robotId: team2.reserveRobotId, userId: team2.reserveRobot.userId, robot: team2.reserveRobot,
         isWinner: team2Won, isDraw,
         damageDealt: result.team2ReserveDamageDealt, finalHP: result.team2ReserveFinalHP,
-        yielded: false, destroyed: result.team2ReserveFinalHP === 0 && result.team2TagOutTime !== undefined,
+        yielded: yields.team2Reserve, destroyed: result.team2ReserveFinalHP === 0 && result.team2TagOutTime !== undefined,
         credits: team2ReserveShare.credits, prestige: auditTeam2PrestigePerRobot, fame: team2ReserveFame,
         eloBefore: team2.reserveRobot.elo, eloAfter: team2.reserveRobot.elo,
         streamingRevenue: team2ReserveStreaming?.totalRevenue ?? 0,
@@ -517,7 +536,14 @@ export async function updateTagTeamBattleResults(
       `(one per robot, rewards split 50/50 per team)`
     );
 
-    // Check and award achievements for all 4 robots
+    // Check and award achievements for all 4 robots. The scheduler's tuning
+    // map is not passed here, so read the allocations again (one query).
+    const tuningMap = await getTuningBonusesBatch(tagTeamAuditRobots.map(r => r.robotId));
+    // These robot rows were loaded for the match, not prepared for combat, so
+    // their maxHP is the stored value. Final HP is on the combat scale; the
+    // phases record each robot's battle-time max HP.
+    const combatMaxHP = battleTimeMaxHP(result.phases);
+    const maxHPOf = (robot: Robot): number => combatMaxHP.get(robot.name) ?? robot.maxHP;
     for (const r of tagTeamAuditRobots) {
       const prevLost = await didRobotLosePreviousBattle(r.robotId, battle.id);
 
@@ -530,7 +556,7 @@ export async function updateTagTeamBattleResults(
       await checkAndAwardAchievements(r.userId, r.robotId, {
         won: r.isWinner,
         destroyed: r.destroyed,
-        finalHpPercent: 0,
+        finalHpPercent: hpPercentOf(r.finalHP, maxHPOf(r.robot)),
         eloChange: 0,
         opponentElo: 0,
         yielded: r.yielded,
@@ -538,15 +564,23 @@ export async function updateTagTeamBattleResults(
         previousBattleLost: prevLost,
         damageDealt: r.damageDealt,
         opponentDamageDealt: 0,
-        loadoutType: 'single',
-        stance: 'balanced',
-        yieldThreshold: 0,
-        hasTuning: false,
-        hasMainWeapon: true,
+        loadoutType: battleLoadout(r.robot),
+        stance: r.robot.stance || 'balanced',
+        yieldThreshold: r.robot.yieldThreshold,
+        hasTuning: hasAllocatedTuning(tuningMap.get(r.robotId)),
+        hasMainWeapon: r.robot.mainWeaponId !== null,
         battleType: 'tag_team',
         battleDurationSeconds: battle.durationSeconds,
         taggedIn: r.extras.wasTaggedIn === true,
         soloCarry: isSoloCarry,
+        battleId: battle.id,
+        isDraw,
+        // S11: the reserve "saves the day" only if its active partner was
+        // destroyed (final HP 0 at tag-out), not when the partner yielded.
+        partnerDestroyed: r.extras.role === 'reserve' && (
+          r.robotId === team1.reserveRobotId ? result.team1ActiveFinalHP === 0 : result.team2ActiveFinalHP === 0
+        ),
+        minHpPercent: lowestHpPercent(result.battleLog, r.robot.name, maxHPOf(r.robot), r.finalHP),
       });
     }
   }

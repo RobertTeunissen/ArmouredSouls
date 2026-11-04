@@ -357,7 +357,7 @@ describe('Achievement Team Battle: league_3v3_wins trigger', () => {
 // ─── Tests: C18 updated logic — requires all 4 categories (R16.5) ───
 
 describe('Achievement Team Battle: C18 "Autobots, Roll Out!" updated logic', () => {
-  it('should award C18 when user has wins in all 4 categories (league via 2v2, tag team, tournament, KotH)', async () => {
+  it('should award C18 when user has wins in all 5 categories (league via 2v2, tag team, tournament, KotH, Grand Melee)', async () => {
     // Pre-unlock all achievements except C18
     const allExceptC18 = ACHIEVEMENTS
       .filter((a) => a.id !== 'C18')
@@ -389,6 +389,7 @@ describe('Achievement Team Battle: C18 "Autobots, Roll Out!" updated logic', () 
       {
         id: 1,
         wins: 0,
+        grandMeleeWins: 1,
       },
     ]);
 
@@ -441,6 +442,7 @@ describe('Achievement Team Battle: C18 "Autobots, Roll Out!" updated logic', () 
       {
         id: 1,
         wins: 0,
+        grandMeleeWins: 1,
       },
     ]);
 
@@ -489,6 +491,7 @@ describe('Achievement Team Battle: C18 "Autobots, Roll Out!" updated logic', () 
       {
         id: 1,
         wins: 1,
+        grandMeleeWins: 1,
       },
     ]);
 
@@ -507,6 +510,35 @@ describe('Achievement Team Battle: C18 "Autobots, Roll Out!" updated logic', () 
 
     const c18 = result.find((a) => a.id === 'C18');
     expect(c18).toBeDefined();
+  });
+
+  it('should NOT award C18 when missing Grand Melee wins (Season 2)', async () => {
+    const allExceptC18 = ACHIEVEMENTS
+      .filter((a) => a.id !== 'C18')
+      .map((a) => ({ achievementId: a.id }));
+    mockPrisma.userAchievement.findMany.mockResolvedValueOnce(allExceptC18);
+    seedTeamModeWins(
+      [{ teamId: 50, teamSize: 2, mode: 'tag_team', wins: 2 }],
+      [{ entityId: 1, mode: 'koth', wins: 1 }],
+    );
+
+    mockPrisma.robot.findUnique.mockResolvedValue({
+      wins: 1, losses: 0, totalBattles: 10, kills: 0, elo: 1200, fame: 0, name: 'TestBot',
+    });
+    // Every other category is met; no robot has a Grand Melee win.
+    mockPrisma.robot.findMany.mockResolvedValue([{ id: 1, wins: 1, grandMeleeWins: 0 }]);
+    mockPrisma.user.findUnique.mockResolvedValue({
+      championshipTitles: 1, championshipTitles1v1: 1, championshipTitles2v2: 0, championshipTitles3v3: 0,
+      prestige: 0,
+      currency: 0,
+    });
+
+    const result = await achievementService.checkAndAward(1, 1, {
+      type: 'battle_complete',
+      data: { won: true, battleType: 'league_1v1' },
+    });
+
+    expect(result.find((a) => a.id === 'C18')).toBeUndefined();
   });
 
   it('should NOT award C18 when missing KotH wins', async () => {
@@ -533,6 +565,7 @@ describe('Achievement Team Battle: C18 "Autobots, Roll Out!" updated logic', () 
       {
         id: 1,
         wins: 1,
+        grandMeleeWins: 1,
       },
     ]);
 
@@ -577,6 +610,7 @@ describe('Achievement Team Battle: C18 "Autobots, Roll Out!" updated logic', () 
       {
         id: 1,
         wins: 1,
+        grandMeleeWins: 1,
       },
     ]);
 
@@ -624,6 +658,7 @@ describe('Achievement Team Battle: C18 "Autobots, Roll Out!" updated logic', () 
       {
         id: 1,
         wins: 1,
+        grandMeleeWins: 1,
       },
     ]);
 
@@ -668,6 +703,7 @@ describe('Achievement Team Battle: C18 "Autobots, Roll Out!" updated logic', () 
       {
         id: 1,
         wins: 0,
+        grandMeleeWins: 1,
       },
     ]);
 
@@ -771,7 +807,7 @@ describe('Achievement Team Battle: config validation', () => {
     expect(l18!.name).toBe('Daft Punk');
     expect(l18!.triggerType).toBe('league_2v2_wins');
     expect(l18!.triggerThreshold).toBe(1);
-    expect(l18!.tier).toBe('easy');
+    expect(l18!.tier).toBe('medium');
     expect(l18!.scope).toBe('robot');
     expect(l18!.category).toBe('league');
   });
@@ -782,7 +818,7 @@ describe('Achievement Team Battle: config validation', () => {
     expect(l19!.name).toBe('Twins!');
     expect(l19!.triggerType).toBe('league_2v2_wins');
     expect(l19!.triggerThreshold).toBe(25);
-    expect(l19!.tier).toBe('hard');
+    expect(l19!.tier).toBe('medium');
     expect(l19!.scope).toBe('robot');
   });
 
@@ -792,7 +828,7 @@ describe('Achievement Team Battle: config validation', () => {
     expect(l20!.name).toBe('Three Laws Safe');
     expect(l20!.triggerType).toBe('league_3v3_wins');
     expect(l20!.triggerThreshold).toBe(1);
-    expect(l20!.tier).toBe('easy');
+    expect(l20!.tier).toBe('medium');
     expect(l20!.scope).toBe('robot');
   });
 
@@ -802,17 +838,18 @@ describe('Achievement Team Battle: config validation', () => {
     expect(l21!.name).toBe('Voltron');
     expect(l21!.triggerType).toBe('league_3v3_wins');
     expect(l21!.triggerThreshold).toBe(25);
-    expect(l21!.tier).toBe('hard');
+    expect(l21!.tier).toBe('medium');
     expect(l21!.scope).toBe('robot');
   });
 
-  it('should have C18 description mentioning all 4 categories', () => {
+  it('should have C18 description mentioning all 5 categories', () => {
     const c18 = ACHIEVEMENTS.find((a) => a.id === 'C18');
     expect(c18).toBeDefined();
     expect(c18!.description).toContain('league');
     expect(c18!.description).toContain('tag team');
     expect(c18!.description).toContain('tournament');
     expect(c18!.description).toContain('KotH');
+    expect(c18!.description).toContain('Grand Melee');
   });
 
   it('should include league_2v2_wins and league_3v3_wins in AchievementTriggerType', () => {

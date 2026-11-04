@@ -20,6 +20,7 @@ import { resolveRobotIdsForEvent } from '../../src/services/economy/repairScope'
 import { resolveOutstandingEventsForRobot } from '../../src/services/scheduling/eventScheduleScope';
 import { useFinancialCaptureTestEnvironment } from '../financialCaptureTestHelper';
 import { readBattleLogFixture } from '../helpers/battleLogFixture';
+import { getAchievementById } from '../../src/config/achievements';
 
 useFinancialCaptureTestEnvironment();
 
@@ -330,7 +331,14 @@ describe('IT-F: bracket advancement, the both-slots-empty case, and the shared h
     expect(after!.battleId).not.toBeNull();
 
     // And the bye now pays what a loss pays for that round.
-    const expected = calculateTournamentParticipationReward(16, 1, 4);
+    // The stable's first bye also unlocks L35 "Free Real Estate" (Season 2),
+    // which pays its own secret-tier reward on top of the round loss reward.
+    const freeRealEstate = getAchievementById('L35')!;
+    const unlock = await prisma.userAchievement.findUnique({
+      where: { userId_achievementId: { userId: user.id, achievementId: 'L35' } },
+    });
+    expect(unlock).not.toBeNull();
+    const expected = calculateTournamentParticipationReward(16, 1, 4) + freeRealEstate.rewardCredits;
     const currencyAfter = (await prisma.user.findUnique({ where: { id: user.id } }))!.currency;
     expect(currencyAfter - currencyBefore).toBe(expected);
   });

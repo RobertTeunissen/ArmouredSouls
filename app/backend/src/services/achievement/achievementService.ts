@@ -37,6 +37,7 @@ import {
 
 import { evaluateTrigger } from './triggerEvaluator';
 import { resolveTeamModeWinsForRobot, emptyTeamModeWins } from './teamModeWins';
+import { combineAllModesBattleCount, PLACEMENT_COUNTED_MODES } from '../robot/all-modes-battle-count';
 import { getPlayerAchievements as _getPlayerAchievements } from './achievementCatalog';
 import {
   getRecentUnlocks as _getRecentUnlocks,
@@ -115,6 +116,7 @@ class AchievementService implements IAchievementService {
     userId: number,
     robotId: number | null,
     event: AchievementEvent,
+    knownUnlockedIds?: ReadonlySet<string>,
   ): Promise<UnlockedAchievement[]> {
     try {
       const triggerTypes = EVENT_TRIGGER_MAP[event.type];
@@ -124,12 +126,11 @@ class AchievementService implements IAchievementService {
       const candidates = triggerTypes.flatMap((t) => getAchievementsByTriggerType(t));
       if (candidates.length === 0) return [];
 
-      // Read existing unlocks (single query)
-      const existingUnlocks = await prisma.userAchievement.findMany({
+      // Read existing unlocks (single query), unless the caller already has them
+      const unlockedIds = new Set(knownUnlockedIds ?? (await prisma.userAchievement.findMany({
         where: { userId },
         select: { achievementId: true },
-      });
-      const unlockedIds = new Set(existingUnlocks.map((u) => u.achievementId));
+      })).map((u) => u.achievementId));
 
       // Filter out already-unlocked
       const unevaluated = candidates.filter((a) => !unlockedIds.has(a.id));
@@ -141,7 +142,7 @@ class AchievementService implements IAchievementService {
         prisma.user.findUnique({ where: { id: userId } }),
         robotId ? prisma.standing.findMany({
           where: { entityType: 'robot', entityId: robotId },
-          select: { mode: true, tier: true, wins: true, currentWinStreak: true, currentLoseStreak: true },
+          select: { mode: true, tier: true, wins: true, totalMatches: true, currentWinStreak: true, currentLoseStreak: true },
         }) : Promise.resolve([]),
         // Spec #46 R8 Cause A: the three team modes only ever write
         // `entityType: 'team'` standings keyed by TeamBattle.id, so reading them
@@ -152,9 +153,14 @@ class AchievementService implements IAchievementService {
 
       // Enrich robot with standings-derived per-mode counters
       const leagueTier = robotStandings.find(s => s.mode === 'league_1v1')?.tier ?? 'bronze';
+      const placementMatches = robotStandings
+        .filter(s => (PLACEMENT_COUNTED_MODES as readonly string[]).includes(s.mode))
+        .reduce((sum, s) => sum + (s.totalMatches ?? 0), 0);
       const cachedRobot = rawRobot ? {
         ...rawRobot,
         currentLeague: leagueTier,
+        // Season 2 (D7): C3 counts battles in every mode (#532's all-modes count).
+        allModesBattles: combineAllModesBattleCount(rawRobot.totalBattles, placementMatches),
         kothWins: robotStandings.find(s => s.mode === 'koth')?.wins ?? 0,
         totalTagTeamWins: teamWins.tag_team,
         totalLeague2v2Wins: teamWins.league_2v2,
@@ -167,9 +173,17 @@ class AchievementService implements IAchievementService {
       const newlyUnlocked: UnlockedAchievement[] = [];
 
       for (const achievement of unevaluated) {
-        const conditionMet = await evaluateTrigger(
-          achievement, userId, robotId, event, cachedRobot, cachedUser,
-        );
+        // One failing condition query must not cost the player every other
+        // unlock from the same event, so each candidate is evaluated on its own.
+        let conditionMet = false;
+        try {
+          conditionMet = await evaluateTrigger(
+            achievement, userId, robotId, event, cachedRobot, cachedUser,
+          );
+        } catch (evaluationError) {
+          logger.error(`Achievement ${achievement.id} evaluation failed for user ${userId}: ${evaluationError}`);
+          continue;
+        }
 
         if (conditionMet) {
           const effectiveRobotId = achievement.scope === 'robot' ? robotId : null;
@@ -180,8 +194,9 @@ class AchievementService implements IAchievementService {
                 data: { userId, achievementId: achievement.id, robotId: effectiveRobotId },
               });
 
+              // Trophies pay nothing (issue #446): no ledger row, no prestige.
               const financialEventId = buildAchievementRewardEventId(unlock.id, userId);
-              await applyCreditMutationInTransaction(tx, {
+              if (achievement.rewardCredits > 0) await applyCreditMutationInTransaction(tx, {
                 cycleNumber: financialCycleNumber,
                 userId,
                 robotId: effectiveRobotId ?? undefined,
@@ -268,6 +283,7 @@ class AchievementService implements IAchievementService {
               rewardCredits: achievement.rewardCredits,
               rewardPrestige: achievement.rewardPrestige,
               badgeIconFile: achievement.badgeIconFile,
+              trophy: achievement.trophy === true,
               robotId: effectiveRobotId,
               robotName,
             });
@@ -277,6 +293,14 @@ class AchievementService implements IAchievementService {
             logger.error(`Failed to award achievement ${achievement.id} to user ${userId}: ${insertError}`);
           }
         }
+      }
+
+      // Count-of-unlocks achievements (S17) react to unlocks from any event.
+      // Already inside this user's queue, so call the evaluation directly.
+      if (newlyUnlocked.length > 0 && event.type !== 'achievement_unlocked') {
+        const nowUnlocked = new Set([...unlockedIds, ...newlyUnlocked.map((a) => a.id)]);
+        const followUp = await this.evaluateAndAward(userId, null, { type: 'achievement_unlocked', data: {} }, nowUnlocked);
+        newlyUnlocked.push(...followUp);
       }
 
       return newlyUnlocked;

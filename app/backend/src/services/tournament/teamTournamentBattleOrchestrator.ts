@@ -46,6 +46,7 @@ import {
   didRobotLosePreviousBattle,
   updateRobotCombatStats,
 } from '../battle/battlePostCombat';
+import { hasAllocatedTuning, hpPercentOf } from '../battle/battleAchievementContext';
 import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
 import { completeByeMatch, resolveHigherSeed } from './tournamentService';
 import { recoverTournamentMatch } from '../battle/matchFailurePolicy';
@@ -56,7 +57,7 @@ import {
 } from '../battle/combatReadiness';
 import { resolveForfeitEvent, type ForfeitSide } from '../battle/forfeitResolutionService';
 import { BYE_BATTLE_DURATION_SECONDS } from '../battle/byeResolutionService';
-import { recordCombatBuilds } from '../battle/combatBuildRecorder';
+import { recordCombatBuilds, loadBattleTimeMaxHP } from '../battle/combatBuildRecorder';
 
 // ─── Team Tournament Prestige (Stepped Curve) ────────────────────────────────
 
@@ -503,6 +504,8 @@ export async function processTeamTournamentBattle(
       eloAfter: participant.eloAfter,
     })),
     battle.durationSeconds,
+    [...team1Robots, ...team2Robots],
+    { round: match.round, maxRounds: tournament.maxRounds },
   );
 
   await prisma.scheduledTournamentMatch.update({
@@ -631,6 +634,8 @@ async function resumeTeamTournamentBattleFinalization(
       eloAfter: participant.eloAfter,
     })),
     battle.durationSeconds,
+    [...team1Robots, ...team2Robots],
+    { round: match.round, maxRounds: tournament.maxRounds },
   );
 
   await prisma.scheduledTournamentMatch.update({
@@ -668,7 +673,21 @@ async function awardTeamTournamentBattleAchievements(
   team2: { stableId: number },
   participants: TeamTournamentAchievementParticipant[],
   battleDurationSeconds: number,
+  robots: RobotWithWeapons[],
+  bracket: { round: number; maxRounds: number },
 ): Promise<void> {
+  const teamSize = battleType === 'tournament_3v3' ? 3 : 2;
+  const teamAllSurvived = (team: 1 | 2): boolean =>
+    participants.filter((participant) => participant.team === team).every((participant) => participant.finalHP > 0);
+  // Tuning and max HP are read here rather than taken from the battle-time
+  // robots, so the first run and a checkpoint resume evaluate the same facts:
+  // a resume loads unprepared robots whose maxHP is the stored value, while
+  // final HP is on the combat scale recorded in the battle build.
+  const [tuningMap, combatMaxHP] = await Promise.all([
+    getTuningBonusesBatch(participants.map((participant) => participant.robotId)),
+    loadBattleTimeMaxHP(battleId),
+  ]);
+  const robotsById = new Map(robots.map((robot) => [robot.id, robot]));
   const team1OpponentElo = participants
     .filter((participant) => participant.team === 2)
     .reduce((sum, participant) => sum + participant.eloBefore, 0);
@@ -678,11 +697,20 @@ async function awardTeamTournamentBattleAchievements(
 
   await Promise.all(participants.map(async (participant) => {
     const stableId = participant.team === 1 ? team1.stableId : team2.stableId;
+    const robot = robotsById.get(participant.robotId);
+    if (!robot) {
+      // Without the robot its yield, HP and tuning are unknown, and guessing
+      // them is what handed out unearned achievements before.
+      logger.warn(
+        `[TeamTournament] Skipped achievements for robot ${participant.robotId} in battle #${battleId}: robot not loaded`,
+      );
+      return;
+    }
     const previousBattleLost = await didRobotLosePreviousBattle(participant.robotId, battleId);
     await checkAndAwardAchievements(stableId, participant.robotId, {
       won: winningSide === participant.team,
       destroyed: participant.finalHP === 0,
-      finalHpPercent: 0,
+      finalHpPercent: hpPercentOf(participant.finalHP, combatMaxHP.get(participant.robotId) ?? robot.maxHP),
       eloChange: participant.eloAfter - participant.eloBefore,
       opponentElo: participant.team === 1 ? team1OpponentElo : team2OpponentElo,
       yielded: false,
@@ -690,11 +718,17 @@ async function awardTeamTournamentBattleAchievements(
       previousBattleLost,
       damageDealt: participant.damageDealt,
       opponentDamageDealt: 0,
-      loadoutType: 'single',
-      stance: 'balanced',
-      yieldThreshold: 0,
-      hasTuning: false,
-      hasMainWeapon: true,
+      loadoutType: robot.loadoutType || 'single',
+      stance: robot.stance || 'balanced',
+      yieldThreshold: robot.yieldThreshold,
+      hasTuning: hasAllocatedTuning(tuningMap.get(participant.robotId)),
+      hasMainWeapon: robot.mainWeaponId !== null,
+      battleId,
+      isDraw: false,
+      teamSize,
+      teamAllSurvived: teamAllSurvived(participant.team),
+      tournamentRound: bracket.round,
+      tournamentMaxRounds: bracket.maxRounds,
       battleType,
       battleDurationSeconds,
     });

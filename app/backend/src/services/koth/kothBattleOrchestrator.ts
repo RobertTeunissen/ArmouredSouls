@@ -44,6 +44,13 @@ import {
   awardPrestigeToUser,
   awardBattleStreamingRevenue,
 } from '../battle/battlePostCombat';
+import {
+  hasAllocatedTuning,
+  isLowestElo,
+  lowestHpPercent,
+  lastStandingSurvivorId,
+  yieldedRobotNames,
+} from '../battle/battleAchievementContext';
 import standingsService from '../standings/standingsService';
 import { CombatMessageGenerator } from '../battle/combatMessageGenerator';
 import { calculateStreamingRevenueBatch } from '../economy/streamingRevenueService';
@@ -75,6 +82,8 @@ interface PreparedParticipant {
   damageDealt: number;
   finalHP: number;
   destroyed: boolean;
+  /** Left the match by yielding (HP above 0). */
+  yielded: boolean;
   isWinner: boolean;
   tier: string;
   rewards: { credits: number; prestige: number; fame: number; zoneDominanceBonus: boolean };
@@ -423,7 +432,10 @@ async function processKothBattle(
   });
   const tierByRobot = new Map(robotStandings.map(s => [s.entityId, s.tier]));
 
-  // 9. Prepare all participant data for batched operations
+  // 9. Prepare all participant data for batched operations.
+  // A yield ends a robot's match with HP left (`destroyed` stays false), so it
+  // is read from the combat events and recorded on the participant row.
+  const yieldedNames = yieldedRobotNames(simResult.events);
   const preparedParticipants: PreparedParticipant[] = enrichedPlacements.map(p => {
     const robot = ready.find(r => r.id === p.robotId)!;
     const isWinner = robot.id === winnerId;
@@ -443,6 +455,7 @@ async function processKothBattle(
       damageDealt: p.damageDealt,
       finalHP: p.finalHP,
       destroyed: p.destroyed,
+      yielded: !p.destroyed && yieldedNames.has(robot.name),
       isWinner,
       tier: robotTier,
       rewards,
@@ -467,7 +480,7 @@ async function processKothBattle(
         fameAwarded: p.rewards.fame,
         damageDealt: p.damageDealt,
         finalHP: p.finalHP,
-        yielded: false,
+        yielded: p.yielded,
         destroyed: p.destroyed,
       })),
       ...forfeited.map(f => ({
@@ -665,18 +678,31 @@ async function processKothBattle(
           finalHpPercent: p.robot.maxHP > 0 ? (p.finalHP / p.robot.maxHP) * 100 : 0,
           eloChange: 0,
           opponentElo: 0,
-          yielded: false,
+          yielded: p.yielded,
           opponentYielded: false,
           previousBattleLost: prevLost,
           damageDealt: p.damageDealt,
           opponentDamageDealt: 0,
           loadoutType: (p.robot as unknown as { loadoutType?: string }).loadoutType || 'single',
           stance: (p.robot as unknown as { stance?: string }).stance || 'balanced',
-          yieldThreshold: 0,
-          hasTuning: false,
+          yieldThreshold: p.robot.yieldThreshold,
+          hasTuning: hasAllocatedTuning(tuningBonusesMap.get(p.robot.id)),
           hasMainWeapon: p.robot.mainWeaponId !== null,
           battleType: 'koth',
           battleDurationSeconds: simResult.durationSeconds,
+          battleId: battle.id,
+          placement: p.placement,
+          fieldSize: preparedParticipants.length,
+          killsThisBattle: p.kills,
+          // L39: the robot left alone when the last-standing phase began, and
+          // the winner. Not inferred from the end reason: a yielded robot can
+          // still win on score, and a sole survivor can win on the score
+          // threshold before the countdown runs out.
+          lastStanding: p.isWinner && lastStandingSurvivorId(simResult.events) === p.robot.id,
+          // Zone points accrue at 1 per second held uncontested.
+          uncontestedSeconds: p.uncontestedScore,
+          isLowestEloInField: isLowestElo(p.robot.id, preparedParticipants.map(q => q.robot)),
+          minHpPercent: lowestHpPercent(simResult.events, p.robot.name, p.robot.maxHP, p.finalHP),
         });
       }));
     } catch (err) {
@@ -699,7 +725,7 @@ async function processKothBattle(
             isDraw: false,
             damageDealt: p.damageDealt,
             finalHP: p.finalHP,
-            yielded: false,
+            yielded: p.yielded,
             destroyed: p.destroyed,
             credits: p.rewards.credits,
             prestige: p.rewards.prestige,
