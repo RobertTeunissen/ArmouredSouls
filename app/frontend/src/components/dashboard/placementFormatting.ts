@@ -2,21 +2,37 @@
  * Placement helpers for the Todays_Battles_Tile — Spec #48 Requirement 5.
  *
  * Kept out of the component file so that file exports components only (the
- * `react-refresh/only-export-components` rule), and so these two pure functions can
+ * `react-refresh/only-export-components` rule), and so these pure functions can
  * be property-tested without rendering anything.
  */
 
+/** The two placement-resolved modes. */
+export type PlacementMode = 'koth' | 'grand_melee';
+
+/** Highest finishing position that earns prestige, per mode (#576: Grand Melee pays the top 10). */
+const PRESTIGE_PLACES: Readonly<Record<PlacementMode, number>> = {
+  koth: 3,
+  grand_melee: 10,
+};
+
+/** Highest finishing position that earns LP and fame, in both modes. */
+const REWARDED_PLACES = 10;
+
 /**
- * Which reward band a Placement_Mode finish falls in.
+ * Which reward band a Placement_Mode finish falls in, at EVERY field size.
  *
- * Requirement 5 criteria 6 and 7. The same bands apply to `koth` and `grand_melee`
- * and to EVERY field size: prestige to the top 3, LP and fame to the top 10, nothing
- * beyond. A 4th of 6 in KotH and a 4th of 20 in Grand Melee are both 'lp-and-fame'.
+ * KotH: prestige to the top 3, LP and fame to the top 10. Grand Melee: prestige,
+ * LP and fame to the top 10 (#576). Nothing beyond 10th in either mode.
  */
-export function placementReward(position: number): 'prestige' | 'lp-and-fame' | 'none' {
-  if (position <= 3) return 'prestige';
-  if (position <= 10) return 'lp-and-fame';
+export function placementReward(position: number, mode: PlacementMode): 'prestige' | 'lp-and-fame' | 'none' {
+  if (position <= PRESTIGE_PLACES[mode]) return 'prestige';
+  if (position <= REWARDED_PLACES) return 'lp-and-fame';
   return 'none';
+}
+
+/** Whether a finish earns any placement reward; the same top 10 in both modes. */
+export function earnsPlacementReward(position: number): boolean {
+  return position <= REWARDED_PLACES;
 }
 
 /** `1st`, `2nd`, `3rd`, `4th`, `11th`, `21st`… */

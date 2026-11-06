@@ -7,7 +7,7 @@ import { screen, render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import * as fc from 'fast-check';
 import { OverviewRow } from '../OverviewRow';
-import { placementReward, ordinal } from '../placementFormatting';
+import { placementReward, earnsPlacementReward, ordinal } from '../placementFormatting';
 import type { OverviewRowData } from '../types';
 import type { CycleProgressSummary } from '../../../utils/dashboardApi';
 
@@ -385,11 +385,16 @@ describe('Property 13: placement reward banding is total and field-size independ
   it('bands every position, with the same bands at every field size', () => {
     fc.assert(
       fc.property(fc.integer({ min: 1, max: 200 }), (position) => {
-        const band = placementReward(position);
-        expect(['prestige', 'lp-and-fame', 'none']).toContain(band);
-        if (position <= 3) expect(band).toBe('prestige');
-        else if (position <= 10) expect(band).toBe('lp-and-fame');
-        else expect(band).toBe('none');
+        // KotH: prestige to the top 3, LP and fame to the top 10.
+        const koth = placementReward(position, 'koth');
+        if (position <= 3) expect(koth).toBe('prestige');
+        else if (position <= 10) expect(koth).toBe('lp-and-fame');
+        else expect(koth).toBe('none');
+        // Grand Melee: prestige, LP and fame to the top 10 (#576).
+        const melee = placementReward(position, 'grand_melee');
+        expect(melee).toBe(position <= 10 ? 'prestige' : 'none');
+        // The tile's trophy marks any rewarded finish, the same top 10 in both modes.
+        expect(earnsPlacementReward(position)).toBe(position <= 10);
       }),
       { numRuns: 200 },
     );

@@ -16,7 +16,7 @@ import {
   DashboardTileNote,
 } from './DashboardTile';
 import type { OverviewRowData } from './types';
-import { placementReward, ordinal } from './placementFormatting';
+import { earnsPlacementReward, ordinal } from './placementFormatting';
 
 /** How many upcoming Battle_Slot times are shown before the `+N more` indicator. */
 const SLOTS_SHOWN = 2;
@@ -139,7 +139,7 @@ export function TodaysBattlesTile({
       {bestPlacement !== null ? (
         <DashboardTileStat
           label={`Placement events (${placementBattles})`}
-          value={`${placementReward(bestPlacement.position) !== 'none' ? '🏆 ' : ''}best ${ordinal(
+          value={`${earnsPlacementReward(bestPlacement.position) ? '🏆 ' : ''}best ${ordinal(
             bestPlacement.position,
           )} of ${bestPlacement.fieldSize}`}
             signMeaning="no-meaning"
