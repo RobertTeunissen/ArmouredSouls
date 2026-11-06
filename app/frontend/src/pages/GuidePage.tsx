@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import {
   GuideSection,
   GuideArticle,
@@ -155,14 +155,14 @@ function GuidePage(): React.ReactElement {
           <h1 className="text-3xl font-bold text-white mb-6">{currentSection.title}</h1>
           <div className="space-y-3">
             {currentSection.articles.map((art) => (
-              <button
+              <Link
                 key={art.slug}
-                onClick={() => navigate(`/guide/${sectionSlug}/${art.slug}`)}
-                className="w-full text-left p-4 rounded-lg border border-white/10 bg-surface-elevated hover:border-primary/50 hover:bg-primary/5 transition-all"
+                to={`/guide/${sectionSlug}/${art.slug}`}
+                className="block w-full text-left p-4 rounded-lg border border-white/10 bg-surface-elevated hover:border-primary/50 hover:bg-primary/5 transition-all"
               >
                 <h3 className="text-white font-medium">{art.title}</h3>
                 <p className="text-sm text-secondary mt-1">{art.description}</p>
-              </button>
+              </Link>
             ))}
           </div>
         </div>
@@ -182,12 +182,12 @@ function GuidePage(): React.ReactElement {
           <div className="text-center py-20">
             <h2 className="text-2xl font-bold text-white mb-2">Article not found</h2>
             <p className="text-secondary mb-6">The article you're looking for doesn't exist or has been moved.</p>
-            <button
-              onClick={() => navigate('/guide')}
-              className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+            <Link
+              to="/guide"
+              className="inline-block px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
             >
               Back to Guide
-            </button>
+            </Link>
           </div>
         );
       case 'server-error':

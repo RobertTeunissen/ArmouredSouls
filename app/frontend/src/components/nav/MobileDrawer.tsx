@@ -1,4 +1,3 @@
-import { useNavigate } from 'react-router-dom';
 import CloseIcon from '../../assets/icons/close.svg?react';
 import { DrawerMenuItem } from './DrawerMenuItem';
 import { allPages, implementedPages } from './types';
@@ -33,14 +32,7 @@ export interface MobileDrawerProps {
 }
 
 export function MobileDrawer({ isOpen, onClose, isActive, userRobots, isAdmin, onLogout }: MobileDrawerProps): React.ReactElement | null {
-  const navigate = useNavigate();
-
   if (!isOpen) return null;
-
-  const navTo = (path: string): void => {
-    navigate(path);
-    onClose();
-  };
 
   return (
     <>
@@ -74,7 +66,8 @@ export function MobileDrawer({ isOpen, onClose, isActive, userRobots, isAdmin, o
           <DrawerSection emoji="🤖" title="Robots">
             <DrawerMenuItem
               label={allPages.robots.items[0].label}
-              onClick={() => navTo(allPages.robots.items[0].path)}
+              to={allPages.robots.items[0].path}
+              onNavigate={onClose}
               isActive={isActive(allPages.robots.items[0].path)}
               disabled={!implementedPages.has(allPages.robots.items[0].path)}
             />
@@ -82,7 +75,8 @@ export function MobileDrawer({ isOpen, onClose, isActive, userRobots, isAdmin, o
               <DrawerMenuItem
                 key={robot.id}
                 label={robot.name}
-                onClick={() => navTo(`/robots/${robot.id}`)}
+                to={`/robots/${robot.id}`}
+                onNavigate={onClose}
                 isActive={isActive(`/robots/${robot.id}`)}
                 indent={true}
               />
@@ -91,7 +85,8 @@ export function MobileDrawer({ isOpen, onClose, isActive, userRobots, isAdmin, o
               <DrawerMenuItem
                 key={item.path}
                 label={item.label}
-                onClick={() => navTo(item.path)}
+                to={item.path}
+                onNavigate={onClose}
                 isActive={isActive(item.path)}
                 disabled={!implementedPages.has(item.path)}
               />
@@ -108,7 +103,8 @@ export function MobileDrawer({ isOpen, onClose, isActive, userRobots, isAdmin, o
                 <DrawerMenuItem
                   key={item.path}
                   label={item.label}
-                  onClick={() => navTo(item.path)}
+                  to={item.path}
+                  onNavigate={onClose}
                   isActive={isActive(item.path)}
                   disabled={!implementedPages.has(item.path)}
                 />
@@ -122,7 +118,8 @@ export function MobileDrawer({ isOpen, onClose, isActive, userRobots, isAdmin, o
               <DrawerMenuItem
                 key={item.path}
                 label={item.label}
-                onClick={() => navTo(item.path)}
+                to={item.path}
+                onNavigate={onClose}
                 isActive={isActive(item.path)}
                 disabled={!implementedPages.has(item.path)}
               />
@@ -135,7 +132,8 @@ export function MobileDrawer({ isOpen, onClose, isActive, userRobots, isAdmin, o
               <DrawerMenuItem
                 key={item.path}
                 label={item.label}
-                onClick={() => navTo(item.path)}
+                to={item.path}
+                onNavigate={onClose}
                 isActive={isActive(item.path)}
                 disabled={!implementedPages.has(item.path)}
               />
@@ -150,19 +148,22 @@ export function MobileDrawer({ isOpen, onClose, isActive, userRobots, isAdmin, o
             <nav className="space-y-1">
               <DrawerMenuItem
                 label="📖 Game Guide"
-                onClick={() => navTo('/guide')}
+                to="/guide"
+                onNavigate={onClose}
                 isActive={isActive('/guide')}
               />
               <DrawerMenuItem
                 label="Settings"
-                onClick={() => navTo('/settings')}
+                to="/settings"
+                onNavigate={onClose}
                 isActive={isActive('/settings')}
                 disabled={true}
               />
               {isAdmin && (
                 <DrawerMenuItem
                   label="⚡ Admin Panel"
-                  onClick={() => navTo('/admin')}
+                  to="/admin"
+                  onNavigate={onClose}
                   isActive={isActive('/admin')}
                 />
               )}

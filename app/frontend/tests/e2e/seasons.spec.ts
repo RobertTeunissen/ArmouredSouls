@@ -39,7 +39,7 @@ test.describe('Season Archive page', () => {
     // items only while open — so hover the trigger before asserting the link.
     await page.getByRole('button', { name: /^Social/ }).hover();
 
-    const seasonItem = page.getByRole('button', { name: /Season Archive/i });
+    const seasonItem = page.getByRole('link', { name: /Season Archive/i });
     await expect(seasonItem).toBeVisible({ timeout: 10000 });
 
     // And it actually navigates to the archive.

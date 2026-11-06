@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { implementedPages } from './types';
 
 export interface DropdownMenuProps {
@@ -12,7 +12,6 @@ export interface DropdownMenuProps {
 export function DropdownMenu({ label, items, isActive, checkActive }: DropdownMenuProps): React.ReactElement {
   const [isOpen, setIsOpen] = useState(false);
   const [closeTimer, setCloseTimer] = useState<NodeJS.Timeout | null>(null);
-  const navigate = useNavigate();
 
   const handleMouseEnter = (): void => {
     if (closeTimer) {
@@ -66,30 +65,39 @@ export function DropdownMenu({ label, items, isActive, checkActive }: DropdownMe
             const disabled = !isPageImplemented(item.path);
             const active = checkActive(item.path);
             
+            const itemClasses = `
+              block w-full px-4 py-2 text-left transition-colors text-sm
+              ${item.indent ? 'pl-8' : ''}
+              ${disabled
+                ? 'text-tertiary cursor-not-allowed opacity-60'
+                : active
+                  ? 'text-primary bg-primary/10'
+                  : 'text-primary hover:bg-primary/5'
+              }
+            `;
+
+            if (disabled) {
+              return (
+                <button key={item.path} type="button" disabled className={itemClasses}>
+                  {item.label}
+                </button>
+              );
+            }
+
+            // Real anchor so Ctrl/Cmd-click and middle-click open a new tab (#573).
             return (
-              <button
+              <Link
                 key={item.path}
+                to={item.path}
                 onClick={() => {
-                  if (!disabled) {
-                    navigate(item.path);
-                    setIsOpen(false);
-                    if (closeTimer) clearTimeout(closeTimer);
-                  }
+                  setIsOpen(false);
+                  if (closeTimer) clearTimeout(closeTimer);
                 }}
-                disabled={disabled}
-                className={`
-                  w-full px-4 py-2 text-left transition-colors text-sm
-                  ${item.indent ? 'pl-8' : ''}
-                  ${disabled
-                    ? 'text-tertiary cursor-not-allowed opacity-60'
-                    : active
-                      ? 'text-primary bg-primary/10'
-                      : 'text-primary hover:bg-primary/5'
-                  }
-                `}
+                className={itemClasses}
+                aria-current={active ? 'page' : undefined}
               >
                 {item.label}
-              </button>
+              </Link>
             );
           })}
         </div>
