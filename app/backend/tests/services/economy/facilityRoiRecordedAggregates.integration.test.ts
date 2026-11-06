@@ -510,20 +510,6 @@ describe('(a) aggregate path equals the previous row-loading path', () => {
     },
   );
 
-  it('the earliest-activity fallback equals the pre-#550 JS path for every facility type (#550)', async () => {
-    let found = 0;
-    for (const label of ['varied', 'small', 'other'] as const) {
-      for (const facilityType of ACTIVITY_FACILITY_TYPES) {
-        const expected = await referenceEarliestActivity(state.users[label], facilityType);
-        expect(await findEarliestSnapshotCycleWithActivity(state.users[label], facilityType)).toBe(expected);
-        if (expected !== null) found += 1;
-      }
-    }
-    // Only meaningful when the fixture falls inside the oldest 100 snapshots of
-    // the shared test database; otherwise both paths agree on null.
-    process.stdout.write(`earliest-activity fallback: ${found} non-null comparisons\n`);
-  });
-
   it.each(['varied', 'empty', 'small', 'large'] as const)(
     'ROI totals for the %s stable equal the reference in both service paths',
     async (label) => {
@@ -651,5 +637,107 @@ describe('(c) access paths', () => {
       'cycle_snapshots_cycle_number_key',
       'financial_ledger_user_id_cycle_number_idx',
     ]);
+  });
+});
+
+/**
+ * The purchase-cycle fallback reads the oldest 100 snapshots of the whole
+ * table. A controlled window: 100 snapshots below every existing cycle number
+ * are, by construction, exactly the oldest 100, whatever the shared database
+ * already holds. One more snapshot above the window carries activity that must
+ * be ignored.
+ */
+describe('(d) earliest-activity fallback over a controlled oldest-100 window (#550)', () => {
+  const WINDOW = 100;
+  let windowStart = 0;
+  const snapshotIds: number[] = [];
+  /** Window index of the first activity per facility type for the `early` stable. */
+  const EARLY_INDEX: Record<SnapshotActivityFacilityType, number> = {
+    merchandising_hub: 3,
+    repair_bay: 4, // legacy `totalRepairCosts` key only
+    streaming_studio: 5,
+    training_facility: 7, // index 6 has activity only in a later duplicate entry, which must be ignored
+    weapons_workshop: 8,
+  };
+
+  const zeroMetric = (userId: number): Record<string, unknown> => ({ ...stableMetric(userId) });
+
+  function windowMetrics(index: number, early: number, late: number): Prisma.InputJsonValue {
+    if (index === 1) {
+      // Not an array: skipped even though it names the stable with activity.
+      return json({ userId: early, merchandisingIncome: 9_999 });
+    }
+    const earlyMetric = zeroMetric(early);
+    const extra: Array<Record<string, unknown>> = [];
+    if (index === 0) {
+      // A string userId never matches; the real entry has no activity.
+      return json([{ userId: String(early), merchandisingIncome: 1, streamingIncome: 1, attributeUpgrades: 1, weaponPurchases: 1, cycleRepairCreditsPaid: 1 }, earlyMetric, zeroMetric(late)]);
+    }
+    if (index === EARLY_INDEX.merchandising_hub) earlyMetric.merchandisingIncome = 100;
+    if (index === EARLY_INDEX.repair_bay) {
+      delete earlyMetric.cycleRepairCreditsPaid;
+      earlyMetric.totalRepairCosts = 50;
+    }
+    if (index === EARLY_INDEX.streaming_studio) earlyMetric.streamingIncome = 10;
+    if (index === 6) extra.push({ ...zeroMetric(early), attributeUpgrades: 999 });
+    if (index === EARLY_INDEX.training_facility) earlyMetric.attributeUpgrades = 70;
+    if (index === EARLY_INDEX.weapons_workshop) earlyMetric.weaponPurchases = 20;
+    return json([earlyMetric, ...extra, zeroMetric(late)]);
+  }
+
+  beforeAll(async () => {
+    const existing = await prisma.cycleSnapshot.aggregate({ _min: { cycleNumber: true } });
+    windowStart = (existing._min.cycleNumber ?? 1) - WINDOW;
+    const early = state.users.small;
+    const late = state.users.other;
+    const created = await prisma.cycleSnapshot.createManyAndReturn({
+      data: [
+        ...Array.from({ length: WINDOW }, (_, index) => ({
+          cycleNumber: windowStart + index,
+          triggerType: 'manual',
+          startTime: new Date(Date.UTC(1999, 0, 1) + index * 86_400_000),
+          endTime: new Date(Date.UTC(1999, 0, 1) + index * 86_400_000 + 1_000),
+          durationMs: 1_000,
+          stableMetrics: windowMetrics(index, early, late),
+          robotMetrics: json([]),
+          stepDurations: json([]),
+        })),
+        // Above every other snapshot: outside the oldest-100 window.
+        {
+          cycleNumber: state.toCycle + 1,
+          triggerType: 'manual',
+          startTime: new Date(Date.UTC(2099, 11, 1)),
+          endTime: new Date(Date.UTC(2099, 11, 1) + 1_000),
+          durationMs: 1_000,
+          stableMetrics: json([{ ...stableMetric(late), merchandisingIncome: 500, streamingIncome: 500, cycleRepairCreditsPaid: 500, attributeUpgrades: 500, weaponPurchases: 500 }]),
+          robotMetrics: json([]),
+          stepDurations: json([]),
+        },
+      ],
+      select: { id: true },
+    });
+    snapshotIds.push(...created.map((snapshot) => snapshot.id));
+  }, 60_000);
+
+  afterAll(async () => {
+    if (snapshotIds.length > 0) await prisma.cycleSnapshot.deleteMany({ where: { id: { in: snapshotIds } } });
+  });
+
+  it.each(ACTIVITY_FACILITY_TYPES)('%s: finds the first active cycle in the window', async (facilityType) => {
+    const expected = windowStart + EARLY_INDEX[facilityType];
+    expect(await findEarliestSnapshotCycleWithActivity(state.users.small, facilityType)).toBe(expected);
+    // Same answer as the pre-#550 JS path.
+    expect(await referenceEarliestActivity(state.users.small, facilityType)).toBe(expected);
+  });
+
+  it.each(ACTIVITY_FACILITY_TYPES)('%s: ignores activity outside the oldest 100 snapshots', async (facilityType) => {
+    expect(await findEarliestSnapshotCycleWithActivity(state.users.other, facilityType)).toBeNull();
+    expect(await referenceEarliestActivity(state.users.other, facilityType)).toBeNull();
+  });
+
+  it('returns null for a stable with no entry in the window', async () => {
+    for (const facilityType of ACTIVITY_FACILITY_TYPES) {
+      expect(await findEarliestSnapshotCycleWithActivity(state.users.large, facilityType)).toBeNull();
+    }
   });
 });
