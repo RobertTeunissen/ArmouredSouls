@@ -15,7 +15,7 @@ The authoritative weapon catalog and pricing formula lives in [PRD_WEAPON_ECONOM
 - `TRAINING_FACILITY_REBALANCE.md` — Training facility economics and academy caps
 - `COMBAT_TRAINING_ACADEMY_COST_REDUCTION.md` — Academy upgrade cost reduction
 - `KOTH_BYE_TIER_FIX.md` — Season 2: KotH byes paid at the robot's tier instead of the Bronze floor (#536, R6); no coefficient changed
-- `PRESTIGE_MODE_ALIGNMENT.md` — Season 2: Tag Team prestige equal to 2v2 League (1.6× removed) and Grand Melee prestige to the top 10 (#576), with the rejected alternatives
+- `PRESTIGE_MODE_ALIGNMENT.md` — Season 2: Tag Team prestige equal to 2v2 League (1.6× removed), Grand Melee prestige to the top 10, and one tournament prestige table for every format, once per stable (#576), with the rejected alternatives
 
 ### Season 2 package
 - `SEASON_2_BALANCE_PACKAGE.md` — Season 2: Hydraulic Systems / Logic Cores (#519), engagement cycle and movement fix (#520), shields, loadout passives, signed-sum weapon pricing and 5%/level Workshop discount (#521), Refinement Lab and 4-4-4-2 facility categories, KotH zone radius 7 (#522), no Grand Melee change (#523); includes the player announcement; round 2: disengage after 2.5 s, pursuit 1.15

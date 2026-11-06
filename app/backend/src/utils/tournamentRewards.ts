@@ -8,9 +8,22 @@
 
 // Base reward amounts (not league-dependent)
 const BASE_CREDIT_REWARD = 20000; // Base credits for tournament win (reduced from 50000)
-const BASE_PRESTIGE_REWARD = 15; // Base prestige for tournament win (reduced from 30)
 const BASE_FAME_REWARD = 10; // Base fame for tournament win (reduced from 20)
-const CHAMPIONSHIP_PRESTIGE_BONUS = 500; // Bonus for winning finals
+
+/**
+ * Prestige for winning a tournament round, indexed by how many rounds remain
+ * after it: 0 = the final, 1 = semi-final, 2 = quarter-final, 3 = round of 16,
+ * 4 = round of 32, 5 = round of 64, 6 = round of 128 (#576).
+ *
+ * One table for 1v1, 2v2 and 3v3 tournaments, paid once per winning stable
+ * (team), independent of bracket size and team size. Each round pays about
+ * 0.6× the next, so there is no championship cliff; rounds before the round of
+ * 128 pay {@link TOURNAMENT_EARLY_ROUND_PRESTIGE}.
+ */
+export const TOURNAMENT_ROUND_PRESTIGE: readonly number[] = [250, 150, 90, 55, 35, 20, 10];
+
+/** Prestige for a round win earlier than the round of 128. */
+export const TOURNAMENT_EARLY_ROUND_PRESTIGE = 5;
 const PARTICIPATION_PERCENTAGE = 0.30; // Loser gets 30% of winner reward
 
 /**
@@ -100,27 +113,13 @@ export function calculateTournamentWinReward(
 }
 
 /**
- * Calculate tournament prestige award
- * Formula: BASE × roundProgressMultiplier × tournamentSizeMultiplier
- * Finals add +500 championship bonus
+ * Prestige for winning round `currentRound` of a `maxRounds`-round tournament,
+ * from {@link TOURNAMENT_ROUND_PRESTIGE} by rounds remaining. The same for every
+ * tournament format; the caller awards it once to the winning stable.
  */
-export function calculateTournamentPrestige(
-  totalParticipants: number,
-  currentRound: number,
-  maxRounds: number
-): number {
-  const sizeMultiplier = calculateTournamentSizeMultiplier(totalParticipants);
-  const progressMultiplier = calculateRoundProgressMultiplier(currentRound, maxRounds);
-  
-  let prestige = BASE_PRESTIGE_REWARD * progressMultiplier * sizeMultiplier;
-  
-  // Championship bonus for finals
-  const isFinals = currentRound === maxRounds;
-  if (isFinals) {
-    prestige += CHAMPIONSHIP_PRESTIGE_BONUS;
-  }
-  
-  return Math.round(prestige);
+export function calculateTournamentPrestige(currentRound: number, maxRounds: number): number {
+  const roundsRemaining = Math.max(0, maxRounds - currentRound);
+  return TOURNAMENT_ROUND_PRESTIGE[roundsRemaining] ?? TOURNAMENT_EARLY_ROUND_PRESTIGE;
 }
 
 /**
@@ -190,11 +189,7 @@ export async function calculateTournamentBattleRewards(
     currentRound,
     maxRounds
   );
-  const winnerPrestige = calculateTournamentPrestige(
-    totalParticipants,
-    currentRound,
-    maxRounds
-  );
+  const winnerPrestige = calculateTournamentPrestige(currentRound, maxRounds);
   const winnerFame = calculateTournamentFame(
     totalParticipants,
     robotsRemaining,
@@ -261,9 +256,6 @@ export function getTournamentRewardBreakdown(
   // Prestige breakdown
   if (rewards.winnerPrestige > 0) {
     breakdown.push(`   Prestige: +${rewards.winnerPrestige} (${winnerRobotName})`);
-    if (rewards.isFinals) {
-      breakdown.push(`      • Championship Bonus: +${CHAMPIONSHIP_PRESTIGE_BONUS}`);
-    }
   }
   
   // Fame breakdown

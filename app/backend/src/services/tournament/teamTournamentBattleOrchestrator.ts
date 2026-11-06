@@ -36,6 +36,7 @@ import {
   calculateTournamentWinReward,
   calculateTournamentParticipationReward,
   calculateTournamentFame,
+  calculateTournamentPrestige,
 } from '../../utils/tournamentRewards';
 import { applyTeamCreditPoolFactor } from '../../utils/economyFormulas';
 import {
@@ -58,17 +59,6 @@ import {
 import { resolveForfeitEvent, type ForfeitSide } from '../battle/forfeitResolutionService';
 import { BYE_BATTLE_DURATION_SECONDS } from '../battle/byeResolutionService';
 import { recordCombatBuilds, loadBattleTimeMaxHP } from '../battle/combatBuildRecorder';
-
-// ─── Team Tournament Prestige (Stepped Curve) ────────────────────────────────
-
-/**
- * Stepped prestige curve for team tournament wins.
- * Index = round number (1-based). Capped at 60 for rounds 5+.
- */
-const TOURNAMENT_PRESTIGE_STEPPED = [0, 20, 30, 40, 50, 60]; // Index 0 unused
-
-/** Championship bonus prestige for winning the final round */
-const TOURNAMENT_CHAMPIONSHIP_BONUS = 150;
 
 /**
  * Owner credit pools for one team tournament battle (#527).
@@ -96,23 +86,16 @@ export function calculateTeamTournamentCreditPools(
 }
 
 /**
- * Calculate prestige for a team tournament match winner using the stepped curve.
- *
- * Formula:
- * - R1=20, R2=30, R3=40, R4=50, R5+=60 (capped at 60)
- * - Championship bonus: +150 for winning the final round
- * - Losers earn ZERO prestige (handled by caller)
+ * Prestige for a team tournament match winner: the shared tournament round
+ * table, the same as a 1v1 tournament round (#576). Awarded once to the
+ * winning team's stable, never × team size. Losers earn zero (handled by caller).
  *
  * @param currentRound - The current round number (1-based)
  * @param maxRounds - Total rounds in the tournament
- * @returns Prestige amount for the winning team's robots
+ * @returns Prestige for the winning stable
  */
 export function calculateTeamTournamentPrestige(currentRound: number, maxRounds: number): number {
-  const basePrestige = currentRound <= 5
-    ? (TOURNAMENT_PRESTIGE_STEPPED[currentRound] ?? 60)
-    : 60; // Capped at 60 for rounds 5+
-  const isFinals = currentRound === maxRounds;
-  return basePrestige + (isFinals ? TOURNAMENT_CHAMPIONSHIP_BONUS : 0);
+  return calculateTournamentPrestige(currentRound, maxRounds);
 }
 
 // ─── Public Interfaces ───────────────────────────────────────────────────────
@@ -1178,7 +1161,7 @@ async function resolveTeamTournamentForfeit(
  *
  * Credits: owner pools from `calculateTeamTournamentCreditPools` (round win /
  *   participation reward × teamSize × 0.75, #527), split per robot
- * Prestige: Stepped curve (R1=20, R2=30, R3=40, R4=50, R5+=60) + 150 championship bonus (winner only)
+ * Prestige: shared tournament round table, once per winning stable (#576; winner only)
  * Fame: calculateTournamentFame with team HP sums (winner only)
  * Streaming: awardStreamingRevenueForParticipant per robot with teamSize
  * ELO: Already applied before this function is called
@@ -1297,10 +1280,12 @@ async function distributeTeamTournamentRewards(
     );
   }
 
-  // ─── Prestige (Stepped Curve — winner only) ────────────────────────
+  // ─── Prestige (winner only, once per team) ─────────────────────────
+  // One award to the winning stable, like a team league win (#576). Before it
+  // was × teamSize, so a 3v3 round paid three times a 1v1 or team league win.
   const winnerPrestige = calculateTeamTournamentPrestige(currentRound, maxRounds);
   // Losers earn ZERO prestige
-  await awardPrestigeToUser(winnerOwnerId, winnerPrestige * teamSize, cycleNumber, {
+  await awardPrestigeToUser(winnerOwnerId, winnerPrestige, cycleNumber, {
     source: 'battle',
     mode: tournamentMode,
     battleId,
@@ -1326,14 +1311,18 @@ async function distributeTeamTournamentRewards(
   }
 
   // ─── Update BattleParticipant records with correct reward amounts ──
-  // Per-robot credits come from the share arrays, so they sum exactly to the
-  // owner total rather than each carrying the whole amount.
+  // Per-robot credits and prestige come from share arrays, so they sum exactly
+  // to the stable's award rather than each robot carrying the whole amount.
+  const winnerPrestigeShares = distributeTeamCredits(
+    winnerPrestige,
+    winnerRobots.map(robot => ({ robotId: robot.id })),
+  );
   for (const robot of winnerRobots) {
     await prisma.battleParticipant.update({
       where: { battleId_robotId: { battleId, robotId: robot.id } },
       data: {
         credits: winnerShares.find(s => s.robotId === robot.id)?.credits ?? 0,
-        prestigeAwarded: winnerPrestige,
+        prestigeAwarded: winnerPrestigeShares.find(s => s.robotId === robot.id)?.credits ?? 0,
         fameAwarded: winnerFame,
       },
     });

@@ -51,9 +51,9 @@ A single Champion-tier win earns as much Prestige as 15 Bronze-tier wins. Promot
 
 ### Tournament Performance
 
-Tournaments award Prestige for each battle won, scaling with tournament size and round progression. The deeper you go, the more Prestige each win earns. Winning the finals awards a massive **+500 championship Prestige bonus** on top of the normal amount.
+Tournaments award Prestige for each round won, from 5 in the early rounds up to **250 for winning the final**. The same table applies to 1v1, 2v2 and 3v3 tournaments, and a team win pays its stable once. A winning run through a 128-robot bracket earns 610 Prestige.
 
-Tournament Prestige provides major "jumps" in your progression — a single championship run can be worth more than dozens of regular league battles. See [Tournament Rewards](/guide/tournaments/rewards) for the full breakdown.
+Tournament Prestige comes in jumps at the end of a deep run: the semi-final and final together pay 400, as much as dozens of lower-tier league wins. See [Tournament Rewards](/guide/tournaments/rewards) for the full breakdown.
 
 ### Milestone Achievements
 

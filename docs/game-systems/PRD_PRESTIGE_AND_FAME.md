@@ -8,7 +8,7 @@
 ---
 
 ## Version History
-- v2.3 (November 6, 2026) — #576: Tag Team prestige uses the standard league table once per team win, the same as 2v2/3v3 League (the 1.6× multiplier is removed). Grand Melee prestige extends from the top 3 to the top 10 (20/10/5/4/3/3/2/2/1/1 base).
+- v2.3 (November 6, 2026) — #576: Tag Team prestige uses the standard league table once per team win, the same as 2v2/3v3 League (the 1.6× multiplier is removed). Grand Melee prestige extends from the top 3 to the top 10 (20/10/5/4/3/3/2/2/1/1 base). Tournaments share one prestige table by rounds remaining, once per winning stable (the +500 final bonus, the team stepped curve and × team size are removed).
 - v2.2 (October 17, 2026) — Season 2 economy (#524): streaming formula v2 (additive battle and Fame audience, Streaming Studio +50% per level); Merchandising Hub base ₡25,000 per level (prestige-per-slot multiplier unchanged).
 - v2.1 (September 8, 2026) — Added Spec #54 Finance Center reporting boundaries, corrected merchandising to Prestige per roster capacity, and defined the completed-cycle milestone forecast. Clarified that Prestige resets at Season Rollover.
 - v2.0 (April 2, 2026) — Consolidated with `PRD_FAME_SYSTEM.md` (deleted). Full audit against codebase. Corrected prestige bonus tiers to match actual code (+10%/+20%/+30%/+40%/+50%, not +5%/+10%/+15%/+20%). Marked prestige gates as ✅ implemented (they are enforced in facility routes). Removed ~800 lines of aspirational content (milestone tables, API endpoints, UI mockups, implementation phases) that aren't built. Added KotH prestige/fame section. Updated file paths for service consolidation.
@@ -46,7 +46,7 @@ Prestige is awarded to the winning player's User record. No prestige for draws, 
 
 2v2 League, 3v3 League and Tag Team use the same table, awarded to the stable once per team win (Tag Team paid 1.6× until #576).
 
-Tournament battles use the same league-based prestige values, calculated via `tournamentRewards.ts`.
+Tournament round wins use one table for 1v1, 2v2 and 3v3, by rounds remaining (#576), paid once to the winning stable: final 250, semi-final 150, quarter-final 90, round of 16 55, round of 32 35, round of 64 20, round of 128 10, earlier rounds 5 (`TOURNAMENT_ROUND_PRESTIGE` in `utils/tournamentRewards.ts`). A 128-entrant winning run earns 610.
 
 #### King of the Hill
 
@@ -256,7 +256,7 @@ All paths relative to `app/backend/src/`.
 | File | Responsibility |
 |---|---|
 | `services/league/leagueBattleOrchestrator.ts` | `calculatePrestigeForBattle()`, `calculateFameForBattle()`, `_getFameTier()` |
-| `services/tournament/tournamentBattleOrchestrator.ts` | Tournament prestige/fame via `tournamentRewards.ts` |
+| `services/tournament/tournamentBattleOrchestrator.ts`, `services/tournament/teamTournamentBattleOrchestrator.ts` | Tournament prestige (`TOURNAMENT_ROUND_PRESTIGE`, shared by all formats) and fame via `utils/tournamentRewards.ts` |
 | `services/tag-team/tagTeamBattleOrchestrator.ts` | Tag team prestige/fame (same league-based values) |
 | `services/koth/kothBattleOrchestrator.ts` | `calculateKothRewards()` — placement-based prestige/fame |
 | `services/battle/battlePostCombat.ts` | `awardPrestigeToUser()`, `awardFameToRobot()`, `logBattleAuditEvent()` |

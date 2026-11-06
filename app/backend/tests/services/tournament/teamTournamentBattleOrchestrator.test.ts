@@ -10,6 +10,7 @@
  */
 
 import { resolveDraw, DrawResolution, calculateTeamTournamentPrestige } from '../../../src/services/tournament/teamTournamentBattleOrchestrator';
+import { calculateTournamentPrestige } from '../../../src/utils/tournamentRewards';
 import { TeamBattleResult } from '../../../src/types/teamBattleLogTypes';
 
 /**
@@ -196,72 +197,23 @@ describe('resolveDraw - Team Tournament Draw Tiebreaking (R4.4)', () => {
 });
 
 
-describe('calculateTeamTournamentPrestige - Stepped Curve (R6.7)', () => {
-  describe('base prestige per round', () => {
-    it('should return 20 for round 1', () => {
-      expect(calculateTeamTournamentPrestige(1, 4)).toBe(20);
-    });
-
-    it('should return 30 for round 2', () => {
-      expect(calculateTeamTournamentPrestige(2, 4)).toBe(30);
-    });
-
-    it('should return 40 for round 3', () => {
-      expect(calculateTeamTournamentPrestige(3, 4)).toBe(40);
-    });
-
-    it('should return 50 for round 4 (non-finals)', () => {
-      expect(calculateTeamTournamentPrestige(4, 5)).toBe(50);
-    });
-
-    it('should return 60 for round 5 (capped)', () => {
-      expect(calculateTeamTournamentPrestige(5, 6)).toBe(60);
-    });
-
-    it('should return 60 for round 6+ (capped at 60)', () => {
-      expect(calculateTeamTournamentPrestige(6, 7)).toBe(60);
-      expect(calculateTeamTournamentPrestige(10, 11)).toBe(60);
-    });
+describe('calculateTeamTournamentPrestige — shared tournament round table (#576)', () => {
+  it('pays exactly what a 1v1 tournament round pays, for every round and bracket', () => {
+    for (let maxRounds = 1; maxRounds <= 12; maxRounds += 1) {
+      for (let round = 1; round <= maxRounds; round += 1) {
+        expect(calculateTeamTournamentPrestige(round, maxRounds)).toBe(calculateTournamentPrestige(round, maxRounds));
+      }
+    }
   });
 
-  describe('championship bonus for finals', () => {
-    it('should add +150 when currentRound equals maxRounds (finals)', () => {
-      // R3 finals in a 3-round tournament: 40 + 150 = 190
-      expect(calculateTeamTournamentPrestige(3, 3)).toBe(40 + 150);
-    });
-
-    it('should add +150 for R4 finals in a 4-round tournament', () => {
-      // R4 finals: 50 + 150 = 200
-      expect(calculateTeamTournamentPrestige(4, 4)).toBe(50 + 150);
-    });
-
-    it('should add +150 for R5 finals in a 5-round tournament', () => {
-      // R5 finals: 60 + 150 = 210
-      expect(calculateTeamTournamentPrestige(5, 5)).toBe(60 + 150);
-    });
-
-    it('should add +150 for R6+ finals (capped base + bonus)', () => {
-      // R6 finals: 60 + 150 = 210
-      expect(calculateTeamTournamentPrestige(6, 6)).toBe(60 + 150);
-    });
+  it('pays 250 for the final and 150 for the semi-final, with no team-size factor', () => {
+    expect(calculateTeamTournamentPrestige(4, 4)).toBe(250);
+    expect(calculateTeamTournamentPrestige(3, 4)).toBe(150);
+    expect(calculateTeamTournamentPrestige(1, 4)).toBe(55); // round of 16
   });
 
-  describe('cumulative prestige for tournament champions', () => {
-    it('should total 240 for 8-team (3-round) champion: 20+30+40+150', () => {
-      const total = calculateTeamTournamentPrestige(1, 3)
-        + calculateTeamTournamentPrestige(2, 3)
-        + calculateTeamTournamentPrestige(3, 3);
-      expect(total).toBe(20 + 30 + (40 + 150));
-      expect(total).toBe(240);
-    });
-
-    it('should total 290 for 16-team (4-round) champion: 20+30+40+50+150', () => {
-      const total = calculateTeamTournamentPrestige(1, 4)
-        + calculateTeamTournamentPrestige(2, 4)
-        + calculateTeamTournamentPrestige(3, 4)
-        + calculateTeamTournamentPrestige(4, 4);
-      expect(total).toBe(20 + 30 + 40 + (50 + 150));
-      expect(total).toBe(290);
-    });
+  it('totals 545 for a 16-team (4-round) champion: 55 + 90 + 150 + 250', () => {
+    const total = [1, 2, 3, 4].reduce((sum, round) => sum + calculateTeamTournamentPrestige(round, 4), 0);
+    expect(total).toBe(545);
   });
 });
