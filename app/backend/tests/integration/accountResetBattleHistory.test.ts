@@ -12,6 +12,12 @@
  * summaries and every other stable's participant rows stay, so an opponent's
  * record against the reset robot survives.
  *
+ * #549: the player battle log and the admin Battles list keep the recorded
+ * winner of team, KotH and Grand Melee battles after one side's robots are
+ * gone (team modes store the winning TEAM id in `winner_id`; placement modes
+ * write every robot as team 1), and only show "Unknown" for a winner whose own
+ * participant row was deleted.
+ *
  * This suite only creates and deletes its own rows (no truncation), so it lives
  * in the DB_DEPENDENT tier.
  */
@@ -189,9 +195,10 @@ describe('Issue #294 — account reset with battle history', () => {
         { robotId: o1, team: 2, eloAfter: 1185 },
       ],
     });
-    // (b) 2v2 league: R1+R2 vs O1+O2, team 2 wins.
+    // (b) 2v2 league: R1+R2 vs O1+O2, team 2 wins. As in production, winner_id
+    // holds the winning TEAM id, not a robot id.
     battleIds.b = await createBattle({
-      battleType: 'league_2v2', winnerId: null, winningSide: 2, robotNames,
+      battleType: 'league_2v2', winnerId: oTeamId, winningSide: 2, robotNames,
       participants: [
         { robotId: r1, team: 1, role: 'team_member' },
         { robotId: r2, team: 1, role: 'team_member' },
@@ -407,6 +414,47 @@ describe('Issue #294 — account reset with battle history', () => {
     expect(recordA?.sides.some((s) => s.isWinner)).toBe(false);
     const detailA = await getAdminBattleDetail(battleIds.a);
     expect(detailA.participants.map((p) => p.robotId)).toEqual([o1]);
+  });
+
+  it('team, KotH and Grand Melee battles keep their recorded winner (#549)', async () => {
+    // Player battle log.
+    const logB = await getBattleLog(battleIds.b) as { winner: unknown; participants: unknown[] } | null;
+    expect(logB?.winner).toBe('robot2'); // winning_side 2, never the team id read as a robot
+    expect(logB?.participants).toHaveLength(2);
+    const logC = await getBattleLog(battleIds.c) as { winner: unknown; kothParticipants: Array<{ robotId: number }> } | null;
+    expect(logC?.winner).toBe('robot1'); // O1, placement 1, still present
+    expect(logC?.kothParticipants.map((k) => k.robotId)).toEqual([o1, o3]);
+    const logD = await getBattleLog(battleIds.d) as { winner: unknown } | null;
+    // The winner R1 was deleted: no winner is shown and the runner-up is not crowned.
+    expect(logD?.winner).toBeNull();
+
+    // Admin Battles list.
+    const list = await getAdminBattleList({
+      page: 1, limit: 50, mode: 'all', stable: 'all', outcome: 'all', range: 'season', q: SUFFIX,
+    });
+    const rowOf = (id: number) => {
+      const row = list.battles.find((b) => b.id === id);
+      expect(row).toBeDefined();
+      return row!;
+    };
+
+    const rowB = rowOf(battleIds.b);
+    expect(rowB.result).toBe('win');
+    expect(rowB.sides.map((s) => ({ label: s.label, robotCount: s.robotCount, isWinner: s.isWinner }))).toEqual([
+      { label: 'Unknown', robotCount: 0, isWinner: false },
+      { label: `${robotNames[o1]} + ${robotNames[o2]}`, robotCount: 2, isWinner: true },
+    ]);
+
+    const rowC = rowOf(battleIds.c);
+    expect(rowC.result).toBe('win');
+    expect(rowC.sides).toHaveLength(1);
+    expect(rowC.sides[0]).toMatchObject({ label: robotNames[o1], isWinner: true });
+    expect(rowC.field?.others).toBe(1);
+
+    const rowD = rowOf(battleIds.d);
+    expect(rowD.result).toBe('win');
+    expect(rowD.sides).toEqual([{ team: 1, label: 'Unknown', robotCount: 1, stable: null, isWinner: true }]);
+    expect(rowD.field?.others).toBe(2);
   });
 
   it('a second reset with no robots left also succeeds', async () => {
