@@ -442,7 +442,10 @@ describe('Issue #294 — account reset with battle history', () => {
     expect(rowB.result).toBe('win');
     expect(rowB.sides.map((s) => ({ label: s.label, robotCount: s.robotCount, isWinner: s.isWinner }))).toEqual([
       { label: 'Unknown', robotCount: 0, isWinner: false },
-      { label: `${robotNames[o1]} + ${robotNames[o2]}`, robotCount: 2, isWinner: true },
+      // An unnamed side lists its robots by robot id (`loadBattleFacts` orders
+      // participants by team, then robot id). The robots are created in
+      // parallel, so O1's id is not necessarily below O2's.
+      { label: [o1, o2].sort((x, y) => x - y).map((id) => robotNames[id]).join(' + '), robotCount: 2, isWinner: true },
     ]);
 
     const rowC = rowOf(battleIds.c);
