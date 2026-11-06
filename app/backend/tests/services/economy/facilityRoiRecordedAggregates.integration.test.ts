@@ -1,6 +1,8 @@
 /**
  * #542 — Facility ROI reads recorded Streaming Studio and Repair Bay returns
  * through database aggregates instead of loading every row.
+ * #550 — the stable's `cycle_snapshots.stable_metrics` totals and the
+ * purchase-cycle fallback are aggregated in the database as well.
  *
  * Against real PostgreSQL this suite asserts:
  *  (a) the aggregates, `calculateFacilityROI` and `calculateAllEconomicROIs`
@@ -11,6 +13,11 @@
  *      ledger metadata or repair payloads row by row, and the aggregates
  *      return at most one row per distinct stored key;
  *  (c) the indexes the aggregate predicates rely on exist.
+ *
+ * The snapshot fixture (#550) carries per-cycle merchandising, attribute and
+ * weapon figures plus a non-array `stable_metrics` row, duplicate entries for
+ * one stable (the first wins), a string `userId` that must not match, null and
+ * missing fields, and both repair-spend key generations.
  */
 import { performance } from 'node:perf_hooks';
 import { Prisma } from '../../../generated/prisma';
@@ -27,6 +34,13 @@ import {
   aggregateStudioStreamingByMultiplier,
 } from '../../../src/services/economy/recorded-facility-returns-queries';
 import { unifiedFacilityROIService } from '../../../src/services/economy/unifiedFacilityROIService';
+import {
+  aggregateStableSnapshotTotals,
+  findEarliestSnapshotCycleWithActivity,
+  type SnapshotActivityFacilityType,
+  type StableSnapshotTotals,
+} from '../../../src/services/economy/snapshot-stable-metric-queries';
+import { readCycleRepairSpend } from '../../../src/services/economy/repairPayloadKeys';
 import type { StableMetric } from '../../../src/types';
 
 const CYCLE_COUNT = 100;
@@ -37,6 +51,17 @@ const LATENCY_CEILING_MS = 2_000;
 const LEDGER_CHUNK = 5_000;
 
 const STUDIO_MULTIPLIERS = [1, 1.5, 2, 3.5] as const;
+const ACTIVITY_FACILITY_TYPES: readonly SnapshotActivityFacilityType[] = [
+  'merchandising_hub',
+  'streaming_studio',
+  'repair_bay',
+  'training_facility',
+  'weapons_workshop',
+];
+/** Snapshot cycle indexes with deliberately odd shapes (#550). */
+const NON_ARRAY_SNAPSHOT_INDEX = 13;
+const NULL_FIELDS_SNAPSHOT_INDEX = 17;
+const STRING_USER_ID_SNAPSHOT_INDEX = 21;
 const REPAIR_DISCOUNTS = [0, 6, 36, 48, 90] as const;
 
 type StableLabel = 'varied' | 'empty' | 'small' | 'large' | 'other';
@@ -75,20 +100,23 @@ function json(value: unknown): Prisma.InputJsonValue {
   return value as Prisma.InputJsonValue;
 }
 
-function stableMetric(userId: number): StableMetric {
+function stableMetric(userId: number, index = 0): StableMetric {
+  // Activity starts a few cycles in, so the purchase-cycle fallback has a
+  // non-trivial earliest cycle; odd values exercise exact summing.
+  const active = index >= 3;
   return {
     userId,
     battlesParticipated: 1,
     totalCreditsEarned: 0,
     totalPrestigeEarned: 0,
-    cycleRepairCreditsPaid: 0,
-    merchandisingIncome: 0,
-    streamingIncome: 0,
+    cycleRepairCreditsPaid: active && index % 2 === 0 ? 1_000 + index : 0,
+    merchandisingIncome: active ? 1_111 + index * 37 + (userId % 7) : 0,
+    streamingIncome: index >= 5 ? 300 + index : 0,
     operatingCosts: 0,
-    weaponPurchases: 0,
+    weaponPurchases: index >= 7 && index % 3 === 0 ? 2_500 + index * 11 : 0,
     facilityPurchases: 0,
     robotPurchases: 0,
-    attributeUpgrades: 0,
+    attributeUpgrades: index >= 4 && index % 4 === 0 ? 7_777 + index : 0,
     totalPurchases: 0,
     achievementRewards: 0,
     netProfit: 0,
@@ -252,9 +280,8 @@ async function persistFixture(): Promise<void> {
       });
     });
   }
-  // Every stable except `other` has a snapshot entry in every cycle, so all
-  // ROI calls take the snapshot (recorded-history) path.
-  const metrics = (['varied', 'empty', 'small', 'large'] as const).map((label) => stableMetric(state.users[label]));
+  // Every stable except `other` has a snapshot entry in (almost) every cycle,
+  // so all ROI calls take the snapshot (recorded-history) path.
   const snapshots = await prisma.cycleSnapshot.createManyAndReturn({
     data: Array.from({ length: CYCLE_COUNT }, (_, index) => ({
       cycleNumber: cycleAt(index),
@@ -262,13 +289,87 @@ async function persistFixture(): Promise<void> {
       startTime: new Date(Date.UTC(2099, 0, 1) + index * 86_400_000),
       endTime: new Date(Date.UTC(2099, 0, 1) + index * 86_400_000 + 1_000),
       durationMs: 1_000,
-      stableMetrics: json(metrics),
+      stableMetrics: snapshotStableMetrics(index),
       robotMetrics: json([]),
       stepDurations: json([]),
     })),
     select: { id: true },
   });
   state.snapshotIds = snapshots.map((snapshot) => snapshot.id);
+}
+
+/** The `stable_metrics` JSON for fixture cycle `index`, with the odd shapes (#550). */
+function snapshotStableMetrics(index: number): Prisma.InputJsonValue {
+  if (index === NON_ARRAY_SNAPSHOT_INDEX) {
+    return json({ note: 'not an array', userId: state.users.varied, merchandisingIncome: 123_456 });
+  }
+  const metrics: Array<Record<string, unknown>> = (['varied', 'empty', 'small', 'large'] as const).map((label) => ({
+    ...stableMetric(state.users[label], index),
+  }));
+  const varied = metrics[0];
+  if (index === NULL_FIELDS_SNAPSHOT_INDEX) {
+    varied.merchandisingIncome = null;
+    delete varied.attributeUpgrades;
+  }
+  if (index % 2 === 1 && index > 3) {
+    // Pre-rename repair-spend key only.
+    delete varied.cycleRepairCreditsPaid;
+    varied.totalRepairCosts = 900 + index;
+  }
+  if (index % 10 === 0) {
+    // A later duplicate entry for the same stable is ignored (first match wins).
+    metrics.push({ ...stableMetric(state.users.varied, index), merchandisingIncome: 999_999, weaponPurchases: 999_999 });
+  }
+  if (index === STRING_USER_ID_SNAPSHOT_INDEX) {
+    // `userId` as a string never matches the numeric id.
+    metrics.unshift({ userId: String(state.users.varied), merchandisingIncome: 888_888 });
+  }
+  return json(metrics);
+}
+
+/** The pre-#550 path: load the window's snapshots and pick the stable's entry in JS. */
+async function referenceSnapshotTotals(userId: number, fromCycle: number, toCycle: number): Promise<StableSnapshotTotals> {
+  const snapshots = await prisma.cycleSnapshot.findMany({
+    where: { cycleNumber: { gte: fromCycle, lte: toCycle } },
+    select: { cycleNumber: true, stableMetrics: true },
+  });
+  const userMetrics: StableMetric[] = [];
+  for (const snapshot of snapshots) {
+    const metrics = snapshot.stableMetrics as unknown as StableMetric[];
+    if (Array.isArray(metrics)) {
+      const userMetric = metrics.find((m) => m.userId === userId);
+      if (userMetric) userMetrics.push(userMetric);
+    }
+  }
+  return {
+    snapshotCount: userMetrics.length,
+    merchandisingIncome: userMetrics.reduce((sum, m) => sum + (m.merchandisingIncome || 0), 0),
+    attributeUpgrades: userMetrics.reduce((sum, m) => sum + (m.attributeUpgrades || 0), 0),
+    weaponPurchases: userMetrics.reduce((sum, m) => sum + (m.weaponPurchases || 0), 0),
+  };
+}
+
+/** The pre-#550 purchase-cycle fallback: first 100 snapshots, first active one in JS. */
+async function referenceEarliestActivity(userId: number, facilityType: SnapshotActivityFacilityType): Promise<number | null> {
+  const snapshots = await prisma.cycleSnapshot.findMany({
+    select: { cycleNumber: true, stableMetrics: true },
+    orderBy: { cycleNumber: 'asc' },
+    take: 100,
+  });
+  for (const snapshot of snapshots) {
+    const metrics = snapshot.stableMetrics as unknown as StableMetric[];
+    if (!Array.isArray(metrics)) continue;
+    const metric = metrics.find((m) => m.userId === userId);
+    if (!metric) continue;
+    const active =
+      facilityType === 'merchandising_hub' ? metric.merchandisingIncome > 0
+        : facilityType === 'streaming_studio' ? metric.streamingIncome > 0
+          : facilityType === 'repair_bay' ? readCycleRepairSpend(metric as unknown as Record<string, unknown>) > 0
+            : facilityType === 'training_facility' ? metric.attributeUpgrades > 0
+              : metric.weaponPurchases > 0;
+    if (active) return snapshot.cycleNumber;
+  }
+  return null;
 }
 
 /** The pre-#542 path: load every row with the old query, sum per row. */
@@ -299,6 +400,21 @@ async function captureStatements<T>(operation: () => Promise<T>): Promise<{ resu
   } finally {
     stop();
   }
+}
+
+/**
+ * Statements that read `cycle_snapshots` rows into the application: anything
+ * touching the table that is not one of the #550 aggregates (a COUNT/SUM over
+ * the window, or the LIMIT 1 earliest-activity lookup).
+ */
+function rowWiseSnapshotReads(statements: readonly string[]): string[] {
+  return statements.filter((sql) => {
+    if (!sql.includes('"cycle_snapshots"')) return false;
+    if (/COUNT\(\*\)/i.test(sql) && /SUM\(/i.test(sql)) return false;
+    // Literal LIMIT 1 only: a Prisma findMany/findFirst ends in `LIMIT $n OFFSET $m`.
+    if (/LIMIT\s+1\s*$/i.test(sql.trim())) return false;
+    return true;
+  });
 }
 
 /** Statements that touch the recorded-history tables must be aggregates or single-row lookups. */
@@ -367,6 +483,47 @@ describe('(a) aggregate path equals the previous row-loading path', () => {
     );
   });
 
+  it.each(['varied', 'empty', 'small', 'large', 'other'] as const)(
+    'snapshot totals for the %s stable equal the pre-#550 JS path (#550)',
+    async (label) => {
+      const userId = state.users[label];
+      const windows: Array<[number, number]> = [
+        [state.fromCycle, state.toCycle],
+        [state.variedPurchaseCycle, state.toCycle],
+        [state.fromCycle + NON_ARRAY_SNAPSHOT_INDEX, state.fromCycle + STRING_USER_ID_SNAPSHOT_INDEX],
+        [1, state.toCycle],
+      ];
+      for (const [from, to] of windows) {
+        expect(await aggregateStableSnapshotTotals(userId, from, to)).toEqual(await referenceSnapshotTotals(userId, from, to));
+      }
+      const full = await aggregateStableSnapshotTotals(userId, state.fromCycle, state.toCycle);
+      if (label === 'other') {
+        // No snapshot entries at all: the service would use the estimate.
+        expect(full.snapshotCount).toBe(0);
+      } else {
+        // The non-array snapshot is skipped.
+        expect(full.snapshotCount).toBe(CYCLE_COUNT - 1);
+        expect(full.merchandisingIncome).toBeGreaterThan(0);
+        expect(full.attributeUpgrades).toBeGreaterThan(0);
+        expect(full.weaponPurchases).toBeGreaterThan(0);
+      }
+    },
+  );
+
+  it('the earliest-activity fallback equals the pre-#550 JS path for every facility type (#550)', async () => {
+    let found = 0;
+    for (const label of ['varied', 'small', 'other'] as const) {
+      for (const facilityType of ACTIVITY_FACILITY_TYPES) {
+        const expected = await referenceEarliestActivity(state.users[label], facilityType);
+        expect(await findEarliestSnapshotCycleWithActivity(state.users[label], facilityType)).toBe(expected);
+        if (expected !== null) found += 1;
+      }
+    }
+    // Only meaningful when the fixture falls inside the oldest 100 snapshots of
+    // the shared test database; otherwise both paths agree on null.
+    process.stdout.write(`earliest-activity fallback: ${found} non-null comparisons\n`);
+  });
+
   it.each(['varied', 'empty', 'small', 'large'] as const)(
     'ROI totals for the %s stable equal the reference in both service paths',
     async (label) => {
@@ -408,6 +565,10 @@ describe('(b) bounded statements and row volume', () => {
     expect(large.statements.length).toBe(small.statements.length);
     expect(rowWiseHistoryReads(small.statements)).toEqual([]);
     expect(rowWiseHistoryReads(large.statements)).toEqual([]);
+    // Snapshot rows are never loaded; one snapshot aggregate per facility (#550).
+    expect(rowWiseSnapshotReads(small.statements)).toEqual([]);
+    expect(rowWiseSnapshotReads(large.statements)).toEqual([]);
+    expect(large.statements.filter((sql) => sql.includes('"cycle_snapshots"'))).toHaveLength(2);
     // One aggregate per recorded-history facility.
     expect(large.statements.filter((sql) => /GROUP BY/i.test(sql) && sql.includes('"financial_ledger"'))).toHaveLength(1);
     expect(large.statements.filter((sql) => /GROUP BY/i.test(sql) && sql.includes('"audit_logs"'))).toHaveLength(1);
@@ -424,7 +585,28 @@ describe('(b) bounded statements and row volume', () => {
       );
       expect(largeSingle.statements.length).toBe(smallSingle.statements.length);
       expect(rowWiseHistoryReads(largeSingle.statements)).toEqual([]);
+      expect(rowWiseSnapshotReads(largeSingle.statements)).toEqual([]);
     }
+  });
+
+  it('reads the same cycle_snapshots statements for a 60-cycle and a 100-cycle ownership window (#550)', async () => {
+    const shortWindow = await captureStatements(() => unifiedFacilityROIService.calculateAllEconomicROIs(state.users.varied));
+    const longWindow = await captureStatements(() => unifiedFacilityROIService.calculateAllEconomicROIs(state.users.small));
+    const snapshotStatements = (statements: string[]): string[] =>
+      statements.filter((sql) => sql.includes('"cycle_snapshots"'));
+    expect(snapshotStatements(longWindow.statements)).toHaveLength(snapshotStatements(shortWindow.statements).length);
+    expect(longWindow.statements.length).toBe(shortWindow.statements.length);
+    expect(rowWiseSnapshotReads(shortWindow.statements)).toEqual([]);
+    expect(rowWiseSnapshotReads(longWindow.statements)).toEqual([]);
+  });
+
+  it('runs the earliest-activity fallback as one bounded statement (#550)', async () => {
+    const { result, statements } = await captureStatements(() =>
+      findEarliestSnapshotCycleWithActivity(state.users.small, 'merchandising_hub'),
+    );
+    expect(statements).toHaveLength(1);
+    expect(rowWiseSnapshotReads(statements)).toEqual([]);
+    expect(result === null || Number.isInteger(result)).toBe(true);
   });
 
   it('returns at most one aggregate row per distinct stored key', async () => {
@@ -458,10 +640,15 @@ describe('(c) access paths', () => {
   it('keeps the indexes the aggregate predicates use', async () => {
     const rows = await prisma.$queryRaw<Array<{ indexname: string }>>(Prisma.sql`
       SELECT indexname FROM pg_indexes
-      WHERE indexname IN ('financial_ledger_user_id_cycle_number_idx', 'audit_logs_user_id_idx')
+      WHERE indexname IN (
+        'financial_ledger_user_id_cycle_number_idx',
+        'audit_logs_user_id_idx',
+        'cycle_snapshots_cycle_number_key'
+      )
     `);
     expect(rows.map((row) => row.indexname).sort()).toEqual([
       'audit_logs_user_id_idx',
+      'cycle_snapshots_cycle_number_key',
       'financial_ledger_user_id_cycle_number_idx',
     ]);
   });

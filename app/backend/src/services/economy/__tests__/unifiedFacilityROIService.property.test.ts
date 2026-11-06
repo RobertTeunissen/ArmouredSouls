@@ -58,14 +58,20 @@ jest.mock('../../../lib/prisma', () => ({
   },
 }));
 
-// Recorded streaming/repair returns are DB aggregates (#542).
+// Recorded streaming/repair returns are DB aggregates (#542), and so are the
+// stable's snapshot metrics (#550).
 jest.mock('../recorded-facility-returns-queries');
+jest.mock('../snapshot-stable-metric-queries');
 
 import prisma from '../../../lib/prisma';
 import {
   aggregateRepairChargedByDiscount,
   aggregateStudioStreamingByMultiplier,
 } from '../recorded-facility-returns-queries';
+import {
+  aggregateStableSnapshotTotals,
+  findEarliestSnapshotCycleWithActivity,
+} from '../snapshot-stable-metric-queries';
 
 const mockedPrisma = prisma as jest.Mocked<typeof prisma>;
 
@@ -89,6 +95,14 @@ describe('UnifiedFacilityROIService - Property-Based Tests', () => {
     (aggregateStudioStreamingByMultiplier as jest.Mock).mockResolvedValue([
       { studioMultiplier: 1.5, amountSum: 3000 },
     ]);
+    // No snapshot history unless a property supplies it (#550).
+    (aggregateStableSnapshotTotals as jest.Mock).mockResolvedValue({
+      snapshotCount: 0,
+      merchandisingIncome: 0,
+      attributeUpgrades: 0,
+      weaponPurchases: 0,
+    });
+    (findEarliestSnapshotCycleWithActivity as jest.Mock).mockResolvedValue(null);
   });
 
   describe('Property: totalInvestment always equals sum of config costs', () => {
@@ -124,19 +138,13 @@ describe('UnifiedFacilityROIService - Property-Based Tests', () => {
               cycleNumber: 1,
             });
 
-            (mockedPrisma.cycleSnapshot.findMany as jest.Mock).mockResolvedValue([
-              {
-                cycleNumber: 1,
-                stableMetrics: [{
-                  userId: 1,
-                  merchandisingIncome: 5000,
-                  streamingIncome: 3000,
-                  totalRepairCosts: 2000,
-                  attributeUpgrades: 1000,
-                  weaponPurchases: 500,
-                }],
-              },
-            ]);
+            // One snapshot with an entry for the stable in the window.
+            (aggregateStableSnapshotTotals as jest.Mock).mockResolvedValue({
+              snapshotCount: 1,
+              merchandisingIncome: 5000,
+              attributeUpgrades: 1000,
+              weaponPurchases: 500,
+            });
 
             const result = await service.calculateFacilityROI(1, facilityType);
 

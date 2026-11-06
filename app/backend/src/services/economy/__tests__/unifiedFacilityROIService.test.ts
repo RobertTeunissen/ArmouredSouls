@@ -39,12 +39,22 @@ jest.mock('../../../lib/prisma', () => ({
 // Recorded streaming/repair returns are DB aggregates (#542); their SQL is
 // covered against PostgreSQL in facilityRoiRecordedAggregates.integration.test.ts.
 jest.mock('../recorded-facility-returns-queries');
+// Snapshot metrics are DB aggregates too (#550); their SQL is covered in the
+// same integration suite. Here they are replaced by an in-memory reference of
+// the replaced JS (first entry per snapshot for the stable, window-filtered).
+jest.mock('../snapshot-stable-metric-queries');
 
 import prisma from '../../../lib/prisma';
 import {
   aggregateRepairChargedByDiscount,
   aggregateStudioStreamingByMultiplier,
 } from '../recorded-facility-returns-queries';
+import {
+  aggregateStableSnapshotTotals,
+  findEarliestSnapshotCycleWithActivity,
+  type SnapshotActivityFacilityType,
+} from '../snapshot-stable-metric-queries';
+import { readCycleRepairSpend } from '../repairPayloadKeys';
 
 const mockedPrisma = prisma as jest.Mocked<typeof prisma>;
 const mockedStreamingAggregate = aggregateStudioStreamingByMultiplier as jest.MockedFunction<
@@ -53,6 +63,60 @@ const mockedStreamingAggregate = aggregateStudioStreamingByMultiplier as jest.Mo
 const mockedRepairAggregate = aggregateRepairChargedByDiscount as jest.MockedFunction<
   typeof aggregateRepairChargedByDiscount
 >;
+const mockedSnapshotTotals = aggregateStableSnapshotTotals as jest.MockedFunction<
+  typeof aggregateStableSnapshotTotals
+>;
+const mockedEarliestActivity = findEarliestSnapshotCycleWithActivity as jest.MockedFunction<
+  typeof findEarliestSnapshotCycleWithActivity
+>;
+
+interface SnapshotFixture {
+  cycleNumber: number;
+  stableMetrics: Array<Record<string, unknown>>;
+}
+
+function firstMetricFor(snapshot: SnapshotFixture, userId: number): Record<string, unknown> | undefined {
+  return snapshot.stableMetrics.find((m) => m.userId === userId);
+}
+
+function numberField(metric: Record<string, unknown>, key: string): number {
+  const value = metric[key];
+  return typeof value === 'number' ? value : 0;
+}
+
+function hasActivity(facilityType: SnapshotActivityFacilityType, metric: Record<string, unknown>): boolean {
+  switch (facilityType) {
+    case 'merchandising_hub': return numberField(metric, 'merchandisingIncome') > 0;
+    case 'streaming_studio': return numberField(metric, 'streamingIncome') > 0;
+    case 'repair_bay': return readCycleRepairSpend(metric) > 0;
+    case 'training_facility': return numberField(metric, 'attributeUpgrades') > 0;
+    case 'weapons_workshop': return numberField(metric, 'weaponPurchases') > 0;
+  }
+}
+
+/** Serve the snapshot aggregates from fixtures, with the pre-#550 JS semantics. */
+function mockSnapshots(snapshots: SnapshotFixture[]): void {
+  mockedSnapshotTotals.mockImplementation(async (userId, fromCycle, toCycle) => {
+    const metrics = snapshots
+      .filter((s) => s.cycleNumber >= fromCycle && s.cycleNumber <= toCycle)
+      .map((s) => firstMetricFor(s, userId))
+      .filter((m): m is Record<string, unknown> => m !== undefined);
+    return {
+      snapshotCount: metrics.length,
+      merchandisingIncome: metrics.reduce((sum, m) => sum + numberField(m, 'merchandisingIncome'), 0),
+      attributeUpgrades: metrics.reduce((sum, m) => sum + numberField(m, 'attributeUpgrades'), 0),
+      weaponPurchases: metrics.reduce((sum, m) => sum + numberField(m, 'weaponPurchases'), 0),
+    };
+  });
+  mockedEarliestActivity.mockImplementation(async (userId, facilityType) => {
+    const oldest = [...snapshots].sort((a, b) => a.cycleNumber - b.cycleNumber).slice(0, 100);
+    for (const snapshot of oldest) {
+      const metric = firstMetricFor(snapshot, userId);
+      if (metric && hasActivity(facilityType, metric)) return snapshot.cycleNumber;
+    }
+    return null;
+  });
+}
 
 describe('UnifiedFacilityROIService', () => {
   let service: UnifiedFacilityROIService;
@@ -63,6 +127,12 @@ describe('UnifiedFacilityROIService', () => {
     // No recorded streaming awards or repairs unless a test supplies them.
     mockedStreamingAggregate.mockResolvedValue([]);
     mockedRepairAggregate.mockResolvedValue([]);
+    mockSnapshots([]);
+  });
+
+  afterEach(() => {
+    // Snapshot rows are never loaded into the service (#550).
+    expect(mockedPrisma.cycleSnapshot.findMany).not.toHaveBeenCalled();
   });
 
   describe('calculateFacilityROI - snapshot-based calculation', () => {
@@ -88,7 +158,7 @@ describe('UnifiedFacilityROIService', () => {
         cycleNumber: 10,
       });
 
-      (mockedPrisma.cycleSnapshot.findMany as jest.Mock).mockResolvedValue(
+      mockSnapshots(
         snapshotMetrics.map((m, i) => ({
           cycleNumber: 10 + i,
           stableMetrics: [m],
@@ -109,6 +179,9 @@ describe('UnifiedFacilityROIService', () => {
       expect(result!.currentLevel).toBe(3);
       expect(result!.totalReturns).toBe(30000); // 15000 * 2
       expect(result!.dataSource).toBe('snapshot');
+      // Summed in the database over the ownership window [10, 50] (#550).
+      expect(mockedSnapshotTotals).toHaveBeenCalledTimes(1);
+      expect(mockedSnapshotTotals).toHaveBeenCalledWith(1, 10, 50);
     });
 
     it('should calculate streaming_studio returns from the studio share of recorded awards', async () => {
@@ -235,7 +308,7 @@ describe('UnifiedFacilityROIService', () => {
       });
 
       // No snapshots
-      (mockedPrisma.cycleSnapshot.findMany as jest.Mock).mockResolvedValue([]);
+      mockSnapshots([]);
 
       // For merchandising fallback, user prestige is needed
       (mockedPrisma.user.findUnique as jest.Mock).mockResolvedValue({
@@ -267,7 +340,7 @@ describe('UnifiedFacilityROIService', () => {
       (mockedPrisma.auditLog.findFirst as jest.Mock).mockResolvedValue(null);
 
       // No snapshots
-      (mockedPrisma.cycleSnapshot.findMany as jest.Mock).mockResolvedValue([]);
+      mockSnapshots([]);
 
       // For repair bay fallback, robot count is needed
       (mockedPrisma.robot.findMany as jest.Mock).mockResolvedValue([
@@ -299,7 +372,7 @@ describe('UnifiedFacilityROIService', () => {
         lastCycleAt: new Date(),
       });
       (mockedPrisma.auditLog.findFirst as jest.Mock).mockResolvedValue({ cycleNumber: 21 });
-      (mockedPrisma.cycleSnapshot.findMany as jest.Mock).mockResolvedValue([]);
+      mockSnapshots([]);
 
       const result = await service.calculateFacilityROI(1, 'streaming_studio');
 
@@ -325,7 +398,7 @@ describe('UnifiedFacilityROIService', () => {
         lastCycleAt: new Date(),
       });
       (mockedPrisma.auditLog.findFirst as jest.Mock).mockResolvedValue({ cycleNumber: 21 });
-      (mockedPrisma.cycleSnapshot.findMany as jest.Mock).mockResolvedValue([]);
+      mockSnapshots([]);
 
       const result = await service.calculateFacilityROI(1, 'training_facility');
 
@@ -355,7 +428,7 @@ describe('UnifiedFacilityROIService', () => {
         lastCycleAt: new Date(),
       });
       (mockedPrisma.auditLog.findFirst as jest.Mock).mockResolvedValue({ cycleNumber: 5 });
-      (mockedPrisma.cycleSnapshot.findMany as jest.Mock).mockResolvedValue([
+      mockSnapshots([
         {
           cycleNumber: 5,
           stableMetrics: [{ userId: 1, merchandisingIncome: 0, streamingIncome: 0, attributeUpgrades: 55000, weaponPurchases: 0 }],
@@ -389,7 +462,7 @@ describe('UnifiedFacilityROIService', () => {
         cycleNumber: 20,
       });
 
-      (mockedPrisma.cycleSnapshot.findMany as jest.Mock).mockResolvedValue([
+      mockSnapshots([
         {
           cycleNumber: 20,
           stableMetrics: [{ userId: 1, merchandisingIncome: 5000, streamingIncome: 0, totalRepairCosts: 0, attributeUpgrades: 0, weaponPurchases: 0 }],
@@ -420,29 +493,17 @@ describe('UnifiedFacilityROIService', () => {
       // No audit event
       (mockedPrisma.auditLog.findFirst as jest.Mock).mockResolvedValue(null);
 
-      // First call for determinePurchaseCycle (findEarliestSnapshotWithActivity)
-      // Second call for getting user metrics
-      (mockedPrisma.cycleSnapshot.findMany as jest.Mock)
-        .mockResolvedValueOnce([
-          {
-            cycleNumber: 15,
-            stableMetrics: [{ userId: 1, merchandisingIncome: 5000, streamingIncome: 0, totalRepairCosts: 0, attributeUpgrades: 0, weaponPurchases: 0 }],
-          },
-          {
-            cycleNumber: 20,
-            stableMetrics: [{ userId: 1, merchandisingIncome: 5000, streamingIncome: 0, totalRepairCosts: 0, attributeUpgrades: 0, weaponPurchases: 0 }],
-          },
-        ])
-        .mockResolvedValueOnce([
-          {
-            cycleNumber: 15,
-            stableMetrics: [{ userId: 1, merchandisingIncome: 5000, streamingIncome: 0, totalRepairCosts: 0, attributeUpgrades: 0, weaponPurchases: 0 }],
-          },
-          {
-            cycleNumber: 20,
-            stableMetrics: [{ userId: 1, merchandisingIncome: 5000, streamingIncome: 0, totalRepairCosts: 0, attributeUpgrades: 0, weaponPurchases: 0 }],
-          },
-        ]);
+      // Served to both the purchase-cycle fallback and the window totals
+      mockSnapshots([
+        {
+          cycleNumber: 15,
+          stableMetrics: [{ userId: 1, merchandisingIncome: 5000, streamingIncome: 0, totalRepairCosts: 0, attributeUpgrades: 0, weaponPurchases: 0 }],
+        },
+        {
+          cycleNumber: 20,
+          stableMetrics: [{ userId: 1, merchandisingIncome: 5000, streamingIncome: 0, totalRepairCosts: 0, attributeUpgrades: 0, weaponPurchases: 0 }],
+        },
+      ]);
 
       const result = await service.calculateFacilityROI(1, 'merchandising_hub');
 
@@ -468,7 +529,7 @@ describe('UnifiedFacilityROIService', () => {
       (mockedPrisma.auditLog.findFirst as jest.Mock).mockResolvedValue(null);
 
       // No snapshots at all
-      (mockedPrisma.cycleSnapshot.findMany as jest.Mock).mockResolvedValue([]);
+      mockSnapshots([]);
 
       // For merchandising fallback
       (mockedPrisma.user.findUnique as jest.Mock).mockResolvedValue({
@@ -511,7 +572,7 @@ describe('UnifiedFacilityROIService', () => {
         stableMetrics: [{ userId: 1, merchandisingIncome: 15000, streamingIncome: 0, totalRepairCosts: 0, attributeUpgrades: 0, weaponPurchases: 0 }],
       }));
 
-      (mockedPrisma.cycleSnapshot.findMany as jest.Mock).mockResolvedValue(snapshots);
+      mockSnapshots(snapshots);
 
       const result = await service.calculateFacilityROI(1, 'merchandising_hub');
 
@@ -546,7 +607,7 @@ describe('UnifiedFacilityROIService', () => {
         stableMetrics: [{ userId: 1, merchandisingIncome: 15000, streamingIncome: 0, totalRepairCosts: 0, attributeUpgrades: 0, weaponPurchases: 0 }],
       }));
 
-      (mockedPrisma.cycleSnapshot.findMany as jest.Mock).mockResolvedValue(snapshots);
+      mockSnapshots(snapshots);
 
       const result = await service.calculateFacilityROI(1, 'merchandising_hub');
 
@@ -615,7 +676,7 @@ describe('UnifiedFacilityROIService', () => {
         cycleNumber: 5,
       });
 
-      (mockedPrisma.cycleSnapshot.findMany as jest.Mock).mockResolvedValue([
+      mockSnapshots([
         {
           cycleNumber: 5,
           stableMetrics: [{ userId: 1, merchandisingIncome: 10000, streamingIncome: 3000, totalRepairCosts: 0, attributeUpgrades: 0, weaponPurchases: 0 }],
@@ -641,6 +702,10 @@ describe('UnifiedFacilityROIService', () => {
       expect(mockedStreamingAggregate).toHaveBeenCalledTimes(1);
       expect(mockedStreamingAggregate).toHaveBeenCalledWith(1, 5, 20);
       expect(mockedRepairAggregate).not.toHaveBeenCalled();
+      // One snapshot aggregate per facility, each over its own window (#550).
+      expect(mockedSnapshotTotals).toHaveBeenCalledTimes(2);
+      expect(mockedSnapshotTotals).toHaveBeenNthCalledWith(1, 1, 5, 20);
+      expect(mockedSnapshotTotals).toHaveBeenNthCalledWith(2, 1, 5, 20);
     });
   });
 
@@ -655,7 +720,7 @@ describe('UnifiedFacilityROIService', () => {
         lastCycleAt: new Date(),
       });
       (mockedPrisma.auditLog.findFirst as jest.Mock).mockResolvedValue({ cycleNumber: 5 });
-      (mockedPrisma.cycleSnapshot.findMany as jest.Mock).mockResolvedValue([
+      mockSnapshots([
         {
           cycleNumber: 5,
           stableMetrics: [{ userId: 1, merchandisingIncome: 0, streamingIncome: 0, cycleRepairCreditsPaid: 9000, attributeUpgrades: 0, weaponPurchases: 0 }],
@@ -739,7 +804,7 @@ describe('UnifiedFacilityROIService', () => {
         cycleNumber: 1,
       });
 
-      (mockedPrisma.cycleSnapshot.findMany as jest.Mock).mockResolvedValue([
+      mockSnapshots([
         {
           cycleNumber: 1,
           stableMetrics: [{ userId: 1, merchandisingIncome: 25000, streamingIncome: 0, totalRepairCosts: 0, attributeUpgrades: 0, weaponPurchases: 0 }],
