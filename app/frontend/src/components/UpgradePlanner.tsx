@@ -4,6 +4,7 @@ import ConfirmationModal from './ConfirmationModal';
 import { getCapForLevel } from '../../../shared/utils/academyCaps';
 import { calculateBaseCost, calculateDiscountedUpgradeCost } from '../../../shared/utils/upgradeCosts';
 import { calculateTrainingFacilityDiscount } from '../../../shared/utils/discounts';
+import { ROBOT_ATTRIBUTE_DESCRIPTIONS } from '../utils/robotAttributeDescriptions';
 import type { RobotAttributeKey, RobotWithAttributes } from '../types/robot';
 import { createLogger } from '../utils/logger';
 
@@ -474,6 +475,7 @@ function UpgradePlanner({
                         attributeKey={key}
                         label={label}
                         icon={icon}
+                        description={ROBOT_ATTRIBUTE_DESCRIPTIONS[key]}
                         currentLevel={currentLevel}
                         plannedLevel={plannedLevel}
                         cost={cost}
