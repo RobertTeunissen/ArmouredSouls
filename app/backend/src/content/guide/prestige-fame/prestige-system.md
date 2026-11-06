@@ -2,7 +2,7 @@
 title: "Prestige System"
 description: "How Prestige works as your stable's reputation score within a season — earning rates by league tier, facility unlock gates, income multiplier benefits, and why it resets at each season boundary."
 order: 1
-lastUpdated: "2026-03-11"
+lastUpdated: "2026-11-06"
 relatedArticles:
   - seasons/what-resets
   - prestige-fame/prestige-ranks
@@ -40,6 +40,8 @@ Your primary source of Prestige. Every time one of your robots wins a league bat
 | Platinum | +30 |
 | Diamond | +50 |
 | Champion | +75 |
+
+Team league wins (2v2, 3v3 and Tag Team) use the same table, once per team win, not once per robot.
 
 Only victories earn Prestige. Draws and losses award nothing. This means climbing to higher leagues is doubly rewarding — you earn more per win and face tougher competition that pushes you to improve.
 

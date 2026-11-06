@@ -250,7 +250,7 @@ Each orchestrator handles a different match type but follows the same core patte
 | Tag-out mechanics | When active robot yields or is destroyed, reserve robot tags in |
 | Bye handling | Creates a synthetic bye-team with 2 robots (combined ELO 2000) |
 | Draw handling | Allowed |
-| Rewards | 2× credit multiplier, 1.6× prestige multiplier vs standard 1v1 |
+| Rewards | Team credit pool (solo reward × 2 × 0.75); prestige from the standard league table once per team win, the same as 2v2 League (#576, was 1.6×) |
 | Audit event type | `battle_complete` (4 events, one per robot) |
 | Cycle step | Independent scheduling |
 

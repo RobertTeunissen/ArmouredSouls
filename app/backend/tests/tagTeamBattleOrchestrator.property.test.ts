@@ -854,12 +854,12 @@ describe('Tag Team Battle Orchestrator - Property Tests', () => {
   describe('Property 27: Prestige Award Calculation', () => {
     /**
      * **Validates: Requirements 10.1-10.6**
-     * For any tag team victory, the prestige awarded should be 1.6x the standard individual
-     * match prestige for that tier.
+     * For any tag team victory, the prestige awarded equals the standard league
+     * prestige for that tier — the same as a 2v2 League win (#576, was 1.6×).
      */
 
 
-    test('tag team prestige is 1.6x standard prestige', () => {
+    test('tag team prestige equals standard league prestige', () => {
       fc.assert(
         fc.property(
           fc.constantFrom('bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'),
@@ -874,7 +874,7 @@ describe('Tag Team Battle Orchestrator - Property Tests', () => {
             };
 
             const tagTeamPrestige = calculateTagTeamPrestige(league, true, false);
-            const expectedPrestige = Math.round(standardPrestige[league] * 1.6);
+            const expectedPrestige = standardPrestige[league];
 
             expect(tagTeamPrestige).toBe(expectedPrestige);
           }
@@ -911,12 +911,12 @@ describe('Tag Team Battle Orchestrator - Property Tests', () => {
 
     test('prestige values match specification', () => {
       const expectedPrestige: Record<string, number> = {
-        bronze: 8,    // 5 * 1.6
-        silver: 16,   // 10 * 1.6
-        gold: 32,     // 20 * 1.6
-        platinum: 48, // 30 * 1.6
-        diamond: 80,  // 50 * 1.6
-        champion: 120, // 75 * 1.6
+        bronze: 5,
+        silver: 10,
+        gold: 20,
+        platinum: 30,
+        diamond: 50,
+        champion: 75,
       };
 
       Object.entries(expectedPrestige).forEach(([league, expected]) => {

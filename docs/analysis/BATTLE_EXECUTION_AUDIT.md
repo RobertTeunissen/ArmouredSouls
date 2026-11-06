@@ -319,7 +319,7 @@ processTournamentBattle() → simulateBattle(r1, r2, true)
 | Credits | League base × 2 (TAG_TEAM_REWARD_MULTIPLIER) | Participation × 2 | Participation × 2 |
 | ELO | K=32 on combined team ELO, split to individual robots | Same | Draw formula |
 | League Points | +3 (tag team league) | -1 (min 0) | +1 |
-| Prestige | Base × 1.6 (TAG_TEAM_PRESTIGE_MULTIPLIER), split between team members | 0 | 0 |
+| Prestige | Standard league table once per team win, same as 2v2 League (#576; was × 1.6) | 0 | 0 |
 | Fame | Base by league tier, split between team members | 0 | 0 |
 | Streaming Revenue | Per-team calculation | Per-team calculation | — |
 

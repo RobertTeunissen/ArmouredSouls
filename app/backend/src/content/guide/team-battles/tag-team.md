@@ -2,7 +2,7 @@
 title: "Tag Team Battles"
 description: "How Tag Team combat works — phased 1v1 battles with tag-in mechanics, Active/Reserve roles, rewards, LP, and how it differs from simultaneous 2v2 League."
 order: 2
-lastUpdated: "2026-10-17"
+lastUpdated: "2026-11-06"
 relatedArticles:
   - team-battles/overview
   - facilities/booking-office
@@ -85,7 +85,7 @@ Each tag team earns one **team credit pool**: the solo reward × 2 robots × 0.7
 | Champion | ₡405,000 (₡202,500) | ₡67,500 (₡33,750) |
 
 ```callout-info
-Season 2 reduced team credit pools by 25%: tag team pools were 2× a solo reward. Prestige (1.6×), fame, LP, ELO and streaming are unchanged.
+Season 2 reduced team credit pools by 25%: tag team pools were 2× a solo reward. Fame, LP, ELO and streaming are unchanged.
 ```
 
 ### LP Changes
@@ -96,7 +96,11 @@ Season 2 reduced team credit pools by 25%: tag team pools were 2× a solo reward
 
 ### Prestige
 
-Tag Team prestige is **1.6× standard** individual match prestige. Only winners earn prestige.
+A Tag Team win earns your stable the same Prestige as a 2v2 League win in the same tier (+5 in Bronze up to +75 in Champion), once per team win. Only winners earn prestige.
+
+```callout-info
+Tag Team used to pay 1.6× that amount, more than a 2v2 League win for the same two robots. It now pays the same.
+```
 
 ### Fame & Streaming
 

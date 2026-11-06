@@ -1,6 +1,6 @@
 # Product Requirements Document: Prestige and Fame System
 
-**Last Updated**: October 17, 2026
+**Last Updated**: November 6, 2026
 **Status**: ✅ Implemented core earning/benefits and Finance Center forecast; release and verification evidence tracked separately
 **Owner**: Robert Teunissen  
 **Epic**: Economy System — Reputation
@@ -8,6 +8,7 @@
 ---
 
 ## Version History
+- v2.3 (November 6, 2026) — #576: Tag Team prestige uses the standard league table once per team win, the same as 2v2/3v3 League (the 1.6× multiplier is removed).
 - v2.2 (October 17, 2026) — Season 2 economy (#524): streaming formula v2 (additive battle and Fame audience, Streaming Studio +50% per level); Merchandising Hub base ₡25,000 per level (prestige-per-slot multiplier unchanged).
 - v2.1 (September 8, 2026) — Added Spec #54 Finance Center reporting boundaries, corrected merchandising to Prestige per roster capacity, and defined the completed-cycle milestone forecast. Clarified that Prestige resets at Season Rollover.
 - v2.0 (April 2, 2026) — Consolidated with `PRD_FAME_SYSTEM.md` (deleted). Full audit against codebase. Corrected prestige bonus tiers to match actual code (+10%/+20%/+30%/+40%/+50%, not +5%/+10%/+15%/+20%). Marked prestige gates as ✅ implemented (they are enforced in facility routes). Removed ~800 lines of aspirational content (milestone tables, API endpoints, UI mockups, implementation phases) that aren't built. Added KotH prestige/fame section. Updated file paths for service consolidation.
@@ -42,6 +43,8 @@ Prestige is awarded to the winning player's User record. No prestige for draws, 
 | Platinum | +30 |
 | Diamond | +50 |
 | Champion | +75 |
+
+2v2 League, 3v3 League and Tag Team use the same table, awarded to the stable once per team win (Tag Team paid 1.6× until #576).
 
 Tournament battles use the same league-based prestige values, calculated via `tournamentRewards.ts`.
 
