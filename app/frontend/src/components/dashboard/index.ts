@@ -3,7 +3,8 @@
 export { OverviewRow } from './OverviewRow';
 export { PrestigeTile } from './PrestigeTile';
 export { TodaysBattlesTile } from './TodaysBattlesTile';
-export { placementReward, ordinal } from './placementFormatting';
+export { placementReward, earnsPlacementReward, ordinal } from './placementFormatting';
+export type { PlacementMode } from './placementFormatting';
 export { CreditsTile } from './CreditsTile';
 export {
   DashboardTile,

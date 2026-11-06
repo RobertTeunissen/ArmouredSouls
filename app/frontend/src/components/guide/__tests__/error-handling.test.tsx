@@ -61,7 +61,7 @@ describe('GuidePage — Error Handling', () => {
       expect(screen.getByText('Article not found')).toBeInTheDocument();
     });
 
-    expect(screen.getByRole('button', { name: /back to guide/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /back to guide/i })).toHaveAttribute('href', '/guide');
   });
 
   it('should display "Something went wrong" with retry button on 500 error', async () => {

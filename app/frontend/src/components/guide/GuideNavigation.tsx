@@ -27,26 +27,33 @@ function SectionItem({ section, isCurrentSection, currentArticleSlug }: SectionI
 
   return (
     <div className="mb-1">
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+      {/* Link and expand toggle are siblings: an anchor nested in a button is
+          invalid HTML and some browsers swallow Ctrl/Cmd-click on it (#573). */}
+      <div
+        className={`w-full flex items-center justify-between rounded-md text-sm font-medium transition-colors ${
           isCurrentSection
             ? 'text-primary bg-primary/10'
             : 'text-secondary hover:text-white hover:bg-white/5'
         }`}
-        aria-expanded={expanded}
       >
         <Link
           to={`/guide/${section.slug}`}
-          className="flex-1 text-left"
-          onClick={(e) => e.stopPropagation()}
+          className="flex-1 text-left pl-3 py-2"
         >
           {section.title}
         </Link>
-        <span className={`ml-2 transition-transform text-xs ${expanded ? 'rotate-90' : ''}`}>
-          ▶
-        </span>
-      </button>
+        <button
+          type="button"
+          onClick={() => setExpanded(!expanded)}
+          className="px-3 py-2"
+          aria-expanded={expanded}
+          aria-label={`${expanded ? 'Collapse' : 'Expand'} ${section.title}`}
+        >
+          <span className={`inline-block transition-transform text-xs ${expanded ? 'rotate-90' : ''}`} aria-hidden="true">
+            ▶
+          </span>
+        </button>
+      </div>
 
       {expanded && section.articles.length > 0 && (
         <div className="ml-3 mt-1 space-y-0.5 border-l border-white/10 pl-3">

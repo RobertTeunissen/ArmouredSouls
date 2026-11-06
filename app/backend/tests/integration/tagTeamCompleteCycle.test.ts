@@ -20,6 +20,7 @@ import { createTagTeamFixture, clearTagTeamCompetition } from '../helpers/tagTea
 import * as robotCalculations from '../../src/utils/robotCalculations';
 import { calculateCombatEffectiveStat } from '../../src/shared/utils/robotStats';
 import { readBattleLogFixture } from '../helpers/battleLogFixture';
+import { PRESTIGE_BY_LEAGUE } from '../../src/utils/battleMath';
 
 describe('Tag Team Complete Cycle Integration Test', () => {
   let testUserIds: number[] = [];
@@ -278,6 +279,17 @@ describe('Tag Team Complete Cycle Integration Test', () => {
       expect(participants.some(p => p.team === 1 && p.role === 'reserve')).toBe(true);
       expect(participants.some(p => p.team === 2 && p.role === 'active')).toBe(true);
       expect(participants.some(p => p.team === 2 && p.role === 'reserve')).toBe(true);
+
+      // The two robots' prestige records split the stable's one award exactly,
+      // also for odd awards (Bronze 5 → 3 + 2), and the losing side records none.
+      if (battle.winningSide === 1 || battle.winningSide === 2) {
+        const award = PRESTIGE_BY_LEAGUE[battle.leagueType];
+        const winners = participants.filter(p => p.team === battle.winningSide);
+        const losers = participants.filter(p => p.team !== battle.winningSide);
+        expect(winners.reduce((sum, p) => sum + p.prestigeAwarded, 0)).toBe(award);
+        expect(Math.max(...winners.map(p => p.prestigeAwarded)) - Math.min(...winners.map(p => p.prestigeAwarded))).toBeLessThanOrEqual(1);
+        expect(losers.every(p => p.prestigeAwarded === 0)).toBe(true);
+      }
     }
 
     // Verify ELO changes for all robots

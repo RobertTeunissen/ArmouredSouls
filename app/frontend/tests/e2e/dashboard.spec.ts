@@ -43,8 +43,8 @@ test.describe('Dashboard Page', () => {
   });
 
   test('should display navigation menu', async ({ page }) => {
-    // Check the Dashboard nav button is present
-    await expect(page.getByRole('button', { name: 'Dashboard', exact: true })).toBeVisible();
+    // Check the Dashboard nav link is present (a real anchor, #573)
+    await expect(page.getByRole('link', { name: 'Dashboard', exact: true })).toBeVisible();
 
     // Check dropdown menu buttons exist (rendered as "{label} ▾")
     await expect(page.getByRole('button', { name: 'Robots ▾' })).toBeVisible();

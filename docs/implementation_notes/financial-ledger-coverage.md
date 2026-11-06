@@ -89,7 +89,7 @@ Prestige is progression, not currency. The current positive source inventory has
 | 1v1 tournament | `app/backend/src/services/tournament/tournamentBattleOrchestrator.ts` — `processTournamentBattle` and `updateRobotStatsForTournament` consuming participant prestige | one stable-level `prestige_change` row after aggregate calculation |
 | 2v2/3v3 league | `app/backend/src/services/team-battle/teamBattleRewardService.ts` — `calculateTeamBattlePrestige`, consumed by `executeSingleTeamBattle` | one stable-level row per positive stable award, before participant rounding |
 | Tag Team | `app/backend/src/services/tag-team/tagTeamRewards.ts` — `calculateTagTeamPrestige`, consumed by `updateTagTeamBattleResults` | one stable-level row per positive team award |
-| 2v2/3v3 tournaments | `app/backend/src/services/tournament/teamTournamentBattleOrchestrator.ts` — `calculateTeamTournamentPrestige` | one stable-level row with round/team-size source facts |
+| 2v2/3v3 tournaments | `app/backend/src/services/tournament/teamTournamentBattleOrchestrator.ts` — `calculateTeamTournamentPrestige` (the shared `calculateTournamentPrestige` table, once per team, #576) | one stable-level row with round/team-size source facts |
 | KotH | `app/backend/src/services/koth/kothBattleOrchestrator.ts` — `calculateKothRewards` | one stable-level row from the placement reward aggregate |
 | Grand Melee | `app/backend/src/services/grand-melee/grandMeleeRewards.ts` — `calculateGrandMeleeRewards` | one stable-level row from the placement reward aggregate |
 | Shared battle strategy | `app/backend/src/services/battle/battleStrategy.ts` — `BattleStrategy.calculateRewards` and `BattleProcessor.process` `reward?.prestige` path | one stable-level row when the strategy produces a positive award |

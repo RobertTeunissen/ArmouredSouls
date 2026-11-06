@@ -35,7 +35,8 @@ describe('Finance Center player navigation', () => {
       </MemoryRouter>,
     );
     await user.hover(screen.getByRole('button', { name: /Stable/ }));
-    const item = await screen.findByRole('button', { name: 'Finance Center' });
+    const item = await screen.findByRole('link', { name: 'Finance Center' });
+    expect(item).toHaveAttribute('href', '/income');
     expect(item.className).toContain('bg-primary/10');
     await user.click(item);
     expect(screen.getByText('/income')).toBeInTheDocument();
@@ -50,7 +51,8 @@ describe('Finance Center player navigation', () => {
         <LocationDisplay />
       </MemoryRouter>,
     );
-    const item = screen.getByRole('button', { name: 'Finance Center' });
+    const item = screen.getByRole('link', { name: 'Finance Center' });
+    expect(item).toHaveAttribute('href', '/income');
     expect(item.className).toContain('bg-primary/10');
     await user.click(item);
     expect(onClose).toHaveBeenCalledTimes(1);

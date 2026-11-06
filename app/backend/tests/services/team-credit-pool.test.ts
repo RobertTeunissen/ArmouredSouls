@@ -27,7 +27,6 @@ import {
   getParticipationReward,
 } from '../../src/utils/economyFormulas';
 import { calculateTagTeamRewards, calculateTagTeamPrestige } from '../../src/services/tag-team/tagTeamRewards';
-import { TAG_TEAM_PRESTIGE_MULTIPLIER } from '../../src/services/tag-team/tagTeamTypes';
 import {
   calculateTeamBattleReward,
   calculateTeamBattleFame,
@@ -86,9 +85,12 @@ describe('tag team pools: 1.5× a solo reward (was 2×)', () => {
     expect(calculateTagTeamRewards(tier, false, true)).toBe(lossOrDraw);
   });
 
-  it('leaves tag team prestige on its own 1.6× multiplier', () => {
-    expect(TAG_TEAM_PRESTIGE_MULTIPLIER).toBe(1.6);
-    expect(calculateTagTeamPrestige('gold', true, false)).toBe(32); // 20 × 1.6
+  it('pays tag team prestige from the same league table as a 2v2 League win (#576)', () => {
+    for (const tier of Object.keys(PRESTIGE_BY_LEAGUE)) {
+      expect(calculateTagTeamPrestige(tier, true, false)).toBe(PRESTIGE_BY_LEAGUE[tier]);
+      expect(calculateTagTeamPrestige(tier, true, false)).toBe(calculateTeamBattlePrestige(tier, true, false));
+    }
+    expect(calculateTagTeamPrestige('gold', true, false)).toBe(20); // was 32 (20 × 1.6)
   });
 });
 

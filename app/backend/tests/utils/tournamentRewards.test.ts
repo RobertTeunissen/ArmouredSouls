@@ -14,6 +14,8 @@ import {
   calculateTournamentWinReward,
   calculateTournamentParticipationReward,
   calculateTournamentPrestige,
+  TOURNAMENT_ROUND_PRESTIGE,
+  TOURNAMENT_EARLY_ROUND_PRESTIGE,
   calculateTournamentFame,
   calculateTournamentBattleRewards,
   getTournamentRewardBreakdown,
@@ -114,18 +116,38 @@ describe('calculateTournamentParticipationReward', () => {
   });
 });
 
-describe('calculateTournamentPrestige', () => {
-  it('should add championship bonus for finals', () => {
-    const semiFinals = calculateTournamentPrestige(50, 3, 4);
-    const finals = calculateTournamentPrestige(50, 4, 4);
-    // Finals has +500 championship bonus
-    expect(finals - semiFinals).toBeGreaterThanOrEqual(400);
+describe('calculateTournamentPrestige (#576: one round table for every format)', () => {
+  it('pays by rounds remaining: final 250, semi 150, quarter 90, R16 55, R32 35, R64 20, R128 10', () => {
+    const maxRounds = 7; // 128 entrants
+    const byRound = Array.from({ length: maxRounds }, (_, i) => calculateTournamentPrestige(i + 1, maxRounds));
+    expect(byRound).toEqual([10, 20, 35, 55, 90, 150, 250]);
+    expect(byRound.reduce((sum, p) => sum + p, 0)).toBe(610);
   });
 
-  it('should increase with round progression', () => {
-    const round1 = calculateTournamentPrestige(50, 1, 4);
-    const round3 = calculateTournamentPrestige(50, 3, 4);
-    expect(round3).toBeGreaterThan(round1);
+  it('pays 5 for any round before the round of 128', () => {
+    const maxRounds = 12; // 3,160 entrants
+    const byRound = Array.from({ length: maxRounds }, (_, i) => calculateTournamentPrestige(i + 1, maxRounds));
+    expect(byRound).toEqual([5, 5, 5, 5, 5, 10, 20, 35, 55, 90, 150, 250]);
+    expect(byRound.reduce((sum, p) => sum + p, 0)).toBe(635);
+  });
+
+  it('pays the final the same whatever the bracket size, with no cliff before it', () => {
+    for (const maxRounds of [1, 3, 7, 12, 17]) {
+      expect(calculateTournamentPrestige(maxRounds, maxRounds)).toBe(250);
+      if (maxRounds > 1) expect(calculateTournamentPrestige(maxRounds - 1, maxRounds)).toBe(150);
+    }
+    expect(TOURNAMENT_ROUND_PRESTIGE).toEqual([250, 150, 90, 55, 35, 20, 10]);
+    expect(TOURNAMENT_EARLY_ROUND_PRESTIGE).toBe(5);
+  });
+
+  it('never decreases as the tournament progresses', () => {
+    for (let maxRounds = 1; maxRounds <= 17; maxRounds += 1) {
+      for (let round = 2; round <= maxRounds; round += 1) {
+        expect(calculateTournamentPrestige(round, maxRounds)).toBeGreaterThanOrEqual(
+          calculateTournamentPrestige(round - 1, maxRounds),
+        );
+      }
+    }
   });
 });
 
@@ -201,7 +223,7 @@ describe('getTournamentRewardBreakdown', () => {
     const rewards = {
       winnerReward: 30000,
       loserReward: 9000,
-      winnerPrestige: 525,
+      winnerPrestige: 250,
       loserPrestige: 0,
       winnerFame: 20,
       loserFame: 0,

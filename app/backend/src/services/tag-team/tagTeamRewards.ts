@@ -1,8 +1,8 @@
 import { Robot } from '../../../generated/prisma';
 import { getLeagueWinReward, getParticipationReward } from '../../utils/economyCalculations';
 import { applyTeamCreditPoolFactor } from '../../utils/economyFormulas';
-import { calculateELOChange } from '../../utils/battleMath';
-import { TAG_TEAM_REWARD_MULTIPLIER, TAG_TEAM_PRESTIGE_MULTIPLIER } from './tagTeamTypes';
+import { calculateELOChange, PRESTIGE_BY_LEAGUE } from '../../utils/battleMath';
+import { TAG_TEAM_REWARD_MULTIPLIER } from './tagTeamTypes';
 
 /**
  * Calculate the credit pool for one tag team in a tag team battle.
@@ -74,8 +74,9 @@ export function calculateTagTeamLeaguePoints(isWinner: boolean, isDraw: boolean)
 }
 
 /**
- * Calculate prestige award for tag team battle
- * Requirements 10.1-10.6: 1.6x standard individual match prestige
+ * Calculate prestige award for tag team battle: the shared league table, once
+ * per team win, the same as a 2v2 League win (#576; the old 1.6× multiplier
+ * paid a two-robot Tag Team win more than a two-robot 2v2 League win).
  */
 export function calculateTagTeamPrestige(
   league: string,
@@ -86,18 +87,7 @@ export function calculateTagTeamPrestige(
     return 0; // No prestige for draws or losses
   }
 
-  // Standard individual match prestige by league
-  const standardPrestige: Record<string, number> = {
-    bronze: 5,
-    silver: 10,
-    gold: 20,
-    platinum: 30,
-    diamond: 50,
-    champion: 75,
-  };
-
-  const basePrestige = standardPrestige[league] || 0;
-  return Math.round(basePrestige * TAG_TEAM_PRESTIGE_MULTIPLIER);
+  return PRESTIGE_BY_LEAGUE[league.toLowerCase()] ?? 0;
 }
 
 /**

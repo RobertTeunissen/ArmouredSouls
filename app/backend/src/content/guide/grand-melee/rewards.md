@@ -2,7 +2,7 @@
 title: "Rewards"
 description: "Credits, Fame, and Prestige rewards for Grand Melee placements."
 order: 4
-lastUpdated: "2026-08-27"
+lastUpdated: "2026-11-06"
 relatedArticles:
   - grand-melee/scoring-and-placement
   - grand-melee/strategy
@@ -23,7 +23,11 @@ Robots finishing 11th–20th do not earn Fame from that battle.
 
 ## Prestige
 
-**Top 3 finishers** earn Prestige. The winner receives the largest Prestige award, with 2nd and 3rd receiving progressively smaller amounts.
+**Top 10 finishers** earn Prestige, the same places that earn Fame and LP. Prestige is **tier-scaled**. The winner receives by far the largest award, and the amounts fall off steeply after 3rd.
+
+```callout-info
+Until November 2026 only the top 3 earned Prestige. With fields of 16–20 robots that paid about one robot in six; places 4–10 now earn a smaller share as well.
+```
 
 ### Winner's Bonus
 
@@ -34,8 +38,8 @@ The 1st place finisher receives a **+50% Prestige bonus** if they end the battle
 | Placement | Credits | Fame | Prestige |
 |-----------|---------|------|----------|
 | 1st | 2.5× base × top multiplier | ✅ Tier-scaled | ✅ + 50% HP bonus if >50% HP |
-| 2nd–3rd | 2.5× base × placement multiplier | ✅ Tier-scaled | ✅ |
-| 4th–10th | 2.5× base × placement multiplier | ✅ Tier-scaled | — |
+| 2nd–3rd | 2.5× base × placement multiplier | ✅ Tier-scaled | ✅ Tier-scaled |
+| 4th–10th | 2.5× base × placement multiplier | ✅ Tier-scaled | ✅ Tier-scaled (small) |
 | 11th–20th | 2.5× base × low multiplier (floor) | — | — |
 
 ## Last-Place Floor

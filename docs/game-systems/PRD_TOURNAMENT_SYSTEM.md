@@ -2,8 +2,8 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: v1.14
-**Date**: October 29, 2026
+**Version**: v1.15
+**Date**: November 6, 2026
 **Status**: ✅ Implemented & Verified 
 
 **Revision History**:
@@ -23,6 +23,7 @@ v1.11 (Feb 10, 2026): Consolidated Version
 v1.12 (Sep 1, 2026): Spec #50 — generated tournament byes remain expected Upcoming Matches until current-round processing; resolved byes appear once in Recent Battles; shared all-mode Bye_Card terminology and durable markers documented.\
 v1.13 (Oct 15, 2026): #536 — battle-time forfeits (solo and team), double forfeit advances the higher seed, and the match failure policy including product decision R1 (an errored unfought match is cancelled and the higher seed advances with no rewards). See User Story 2.6.
 v1.14 (Oct 29, 2026): Admin Tournaments page redesigned; admin management endpoints removed (create, execute-round, list, detail, history, eligible-robots) in favour of the scheduler and a read-only `GET /api/admin/tournaments/overview`. See `docs/guides/ADMIN_PANEL_GUIDE.md` §Tournaments.
+v1.15 (Nov 6, 2026): #576 — one prestige table for 1v1, 2v2 and 3v3 tournaments, by rounds remaining (final 250, semi 150, quarter 90, R16 55, R32 35, R64 20, R128 10, earlier 5), once per winning stable; the +500 championship bonus, the bracket-size factor on prestige, the team stepped curve and its × team size are removed.
 
 ---
 
@@ -285,8 +286,8 @@ The continuous tournament model ensures:
     - `roundProgressMultiplier = currentRound / maxRounds`
     - Example: 100 robots, round 3/4 → multiplier = 1.5 × 0.75 = 1.125 → ₡22,500
     - Scales appropriately even for 100,000+ participant tournaments (₡28k for round 8/17)
-  - **Prestige Formula**: `basePrestige × (currentRound / maxRounds) × tournamentSizeMultiplier`
-    - `basePrestige = 15`
+  - **Prestige**: `TOURNAMENT_ROUND_PRESTIGE` by rounds remaining after the won round (final 250, semi 150, quarter 90, R16 55, R32 35, R64 20, R128 10, earlier rounds 5), the same for every tournament format and paid once per winning stable (#576)
+    - Previously `15 × (currentRound / maxRounds) × tournamentSizeMultiplier`, +500 in the final
   - **Fame Formula**: `baseFame × (robotsRemaining / totalParticipants)^-0.5 × performanceBonus`
     - `baseFame = 10`
     - More exclusive as fewer robots remain
@@ -518,7 +519,7 @@ export function calculateRoundProgressMultiplier(currentRound: number, maxRounds
 export function calculateExclusivityMultiplier(robotsRemaining: number, totalParticipants: number): number
 export function calculateTournamentWinReward(totalParticipants: number, currentRound: number, maxRounds: number): number
 export function calculateTournamentParticipationReward(totalParticipants: number, currentRound: number, maxRounds: number): number
-export function calculateTournamentPrestige(totalParticipants: number, currentRound: number, maxRounds: number): number
+export function calculateTournamentPrestige(currentRound: number, maxRounds: number): number
 export function calculateTournamentFame(totalParticipants: number, robotsRemaining: number, winnerFinalHP: number, winnerMaxHP: number): number
 export async function calculateTournamentBattleRewards(...): Promise<TournamentRewards>
 ```
@@ -625,15 +626,13 @@ const loserCredits = Math.round(winnerCredits * PARTICIPATION_PERCENTAGE);
 #### Prestige Awards
 
 ```typescript
-const BASE_PRESTIGE_REWARD = 15;
-const CHAMPIONSHIP_PRESTIGE_BONUS = 500;
+// #576: one table for 1v1, 2v2 and 3v3, indexed by rounds remaining (0 = final)
+const TOURNAMENT_ROUND_PRESTIGE = [250, 150, 90, 55, 35, 20, 10];
+const TOURNAMENT_EARLY_ROUND_PRESTIGE = 5;
 
-let prestige = Math.round(BASE_PRESTIGE_REWARD * progressMultiplier * sizeMultiplier);
-
-// Championship bonus for finals winner only
-if (currentRound === maxRounds) {
-  prestige += CHAMPIONSHIP_PRESTIGE_BONUS;
-}
+const roundsRemaining = Math.max(0, maxRounds - currentRound);
+const prestige = TOURNAMENT_ROUND_PRESTIGE[roundsRemaining] ?? TOURNAMENT_EARLY_ROUND_PRESTIGE;
+// Team tournaments award this once to the winning stable (no × team size).
 ```
 
 #### Fame Awards (Exclusivity-Based)
@@ -952,7 +951,7 @@ Round 5 - Finals (1 match):
 |-----------------|-------------|---------------------------------------------------|
 | Win Credits     | 20000 × (1 + log10(10) × 0.5) × (3/4) | ₡22,500 |
 | Loss Credits    | winReward × 0.30 (participation) | ₡6,750 |
-| Prestige (Win)  | 15 × (3/4) × (1 + log10(10) × 0.5) | +17 prestige |
+| Prestige (Win)  | semi-final (1 round remaining) | +150 prestige |
 | Fame (Win)      | 10 × (25/100)^-0.5 × perfBonus | +20 fame |
 | Championship    | N/A (Finals only) | +1 Title (Finals) |
 | Streaming Income | Same formula as league battles | Per-robot streaming revenue |
@@ -961,27 +960,27 @@ Round 5 - Finals (1 match):
 - **Small Tournament** (15 robots, Round 2/4):
   - Win Credits: ₡20,000 × 1.09 × 0.5 = ₡10,880
   - Loss Credits: ₡10,880 × 0.30 = ₡3,264
-  - Prestige: 15 × 0.5 × 1.09 = +8
+  - Prestige: quarter-final (2 rounds remaining) = +90
   
 - **Medium Tournament** (100 robots, Round 3/4):
   - Win Credits: ₡20,000 × 1.5 × 0.75 = ₡22,500
   - Loss Credits: ₡22,500 × 0.30 = ₡6,750
-  - Prestige: 15 × 0.75 × 1.5 = +17
+  - Prestige: semi-final (1 round remaining) = +150
   
 - **Large Tournament** (1000 robots, Round 5/10):
   - Win Credits: ₡20,000 × 2.0 × 0.5 = ₡20,000
   - Loss Credits: ₡20,000 × 0.30 = ₡6,000
-  - Prestige: 15 × 0.5 × 2.0 = +15
+  - Prestige: round of 64 (5 rounds remaining) = +20
   
 - **Massive Tournament** (100,000 robots, Round 8/17):
   - Win Credits: ₡20,000 × 3.0 × 0.47 = ₡28,235
   - Loss Credits: ₡28,235 × 0.30 = ₡8,471
-  - Prestige: 15 × 0.47 × 3.0 = +21
+  - Prestige: 9 rounds remaining (earlier than the round of 128) = +5
 
 **Comparison to League Battles:**
 - Gold League: ~₡30,000 winner, ~₡9,000 loser
-- Tournament Finals (100 robots): ₡30,000 winner, ₡9,000 loser + 500 prestige
-- Tournaments reward slightly more than leagues with prestige bonuses 
+- Tournament Finals (100 robots): ₡30,000 winner, ₡9,000 loser + 250 prestige
+- Tournaments reward slightly more than leagues, and much more prestige in the last rounds 
 
 ---
 

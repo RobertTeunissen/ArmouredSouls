@@ -380,8 +380,16 @@ export async function updateTagTeamBattleResults(
     team2Rewards,
     [{ robotId: team2.activeRobotId }, { robotId: team2.reserveRobotId }],
   );
-  const team1PrestigePerRobot = Math.floor(team1Prestige / 2);
-  const team2PrestigePerRobot = Math.floor(team2Prestige / 2);
+  // Prestige is one stable award per team win; the per-robot records split it
+  // with the same remainder rule so they sum to the award (5 → 3 + 2, not 2 + 2).
+  const [team1ActivePrestige, team1ReservePrestige] = distributeTeamCredits(
+    team1Prestige,
+    [{ robotId: team1.activeRobotId }, { robotId: team1.reserveRobotId }],
+  );
+  const [team2ActivePrestige, team2ReservePrestige] = distributeTeamCredits(
+    team2Prestige,
+    [{ robotId: team2.activeRobotId }, { robotId: team2.reserveRobotId }],
+  );
   
   // Update each robot individually since eloAfter and fameAwarded differ per robot
   await prisma.battleParticipant.updateMany({
@@ -392,7 +400,7 @@ export async function updateTagTeamBattleResults(
     data: {
       credits: team1ActiveShare.credits,
       eloAfter: team1.activeRobot.elo + eloChanges.team1Change,
-      prestigeAwarded: team1PrestigePerRobot,
+      prestigeAwarded: team1ActivePrestige.credits,
       fameAwarded: team1ActiveFame,
     },
   });
@@ -405,7 +413,7 @@ export async function updateTagTeamBattleResults(
     data: {
       credits: team1ReserveShare.credits,
       eloAfter: team1.reserveRobot.elo + eloChanges.team1Change,
-      prestigeAwarded: team1PrestigePerRobot,
+      prestigeAwarded: team1ReservePrestige.credits,
       fameAwarded: team1ReserveFame,
     },
   });
@@ -418,7 +426,7 @@ export async function updateTagTeamBattleResults(
     data: {
       credits: team2ActiveShare.credits,
       eloAfter: team2.activeRobot.elo + eloChanges.team2Change,
-      prestigeAwarded: team2PrestigePerRobot,
+      prestigeAwarded: team2ActivePrestige.credits,
       fameAwarded: team2ActiveFame,
     },
   });
@@ -431,7 +439,7 @@ export async function updateTagTeamBattleResults(
     data: {
       credits: team2ReserveShare.credits,
       eloAfter: team2.reserveRobot.elo + eloChanges.team2Change,
-      prestigeAwarded: team2PrestigePerRobot,
+      prestigeAwarded: team2ReservePrestige.credits,
       fameAwarded: team2ReserveFame,
     },
   });
@@ -445,9 +453,7 @@ export async function updateTagTeamBattleResults(
   });
 
   if (battle) {
-    // Reuse credits splits calculated above; streaming revenue comes from per-robot calcs
-    const auditTeam1PrestigePerRobot = Math.floor(team1Prestige / 2);
-    const auditTeam2PrestigePerRobot = Math.floor(team2Prestige / 2);
+    // Reuse the credit and prestige shares calculated above; streaming revenue comes from per-robot calcs
     
     const yields = getTagTeamYields(result, {
       team1Active: team1.activeRobot.name,
@@ -462,7 +468,7 @@ export async function updateTagTeamBattleResults(
         isWinner: team1Won, isDraw,
         damageDealt: result.team1ActiveDamageDealt, finalHP: result.team1ActiveFinalHP,
         yielded: yields.team1Active, destroyed: result.team1ActiveFinalHP === 0,
-        credits: team1ActiveShare.credits, prestige: auditTeam1PrestigePerRobot, fame: team1ActiveFame,
+        credits: team1ActiveShare.credits, prestige: team1ActivePrestige.credits, fame: team1ActiveFame,
         eloBefore: team1.activeRobot.elo, eloAfter: team1.activeRobot.elo,
         streamingRevenue: team1ActiveStreaming?.totalRevenue ?? 0,
         extras: { isTagTeam: true, role: 'active', opponentTeam: team2.id, partnerRobotId: team1.reserveRobotId,
@@ -474,7 +480,7 @@ export async function updateTagTeamBattleResults(
         isWinner: team1Won, isDraw,
         damageDealt: result.team1ReserveDamageDealt, finalHP: result.team1ReserveFinalHP,
         yielded: yields.team1Reserve, destroyed: result.team1ReserveFinalHP === 0 && result.team1TagOutTime !== undefined,
-        credits: team1ReserveShare.credits, prestige: auditTeam1PrestigePerRobot, fame: team1ReserveFame,
+        credits: team1ReserveShare.credits, prestige: team1ReservePrestige.credits, fame: team1ReserveFame,
         eloBefore: team1.reserveRobot.elo, eloAfter: team1.reserveRobot.elo,
         streamingRevenue: team1ReserveStreaming?.totalRevenue ?? 0,
         extras: { isTagTeam: true, role: 'reserve', opponentTeam: team2.id, partnerRobotId: team1.activeRobotId,
@@ -486,7 +492,7 @@ export async function updateTagTeamBattleResults(
         isWinner: team2Won, isDraw,
         damageDealt: result.team2ActiveDamageDealt, finalHP: result.team2ActiveFinalHP,
         yielded: yields.team2Active, destroyed: result.team2ActiveFinalHP === 0,
-        credits: team2ActiveShare.credits, prestige: auditTeam2PrestigePerRobot, fame: team2ActiveFame,
+        credits: team2ActiveShare.credits, prestige: team2ActivePrestige.credits, fame: team2ActiveFame,
         eloBefore: team2.activeRobot.elo, eloAfter: team2.activeRobot.elo,
         streamingRevenue: team2ActiveStreaming?.totalRevenue ?? 0,
         extras: { isTagTeam: true, role: 'active', opponentTeam: team1.id, partnerRobotId: team2.reserveRobotId,
@@ -498,7 +504,7 @@ export async function updateTagTeamBattleResults(
         isWinner: team2Won, isDraw,
         damageDealt: result.team2ReserveDamageDealt, finalHP: result.team2ReserveFinalHP,
         yielded: yields.team2Reserve, destroyed: result.team2ReserveFinalHP === 0 && result.team2TagOutTime !== undefined,
-        credits: team2ReserveShare.credits, prestige: auditTeam2PrestigePerRobot, fame: team2ReserveFame,
+        credits: team2ReserveShare.credits, prestige: team2ReservePrestige.credits, fame: team2ReserveFame,
         eloBefore: team2.reserveRobot.elo, eloAfter: team2.reserveRobot.elo,
         streamingRevenue: team2ReserveStreaming?.totalRevenue ?? 0,
         extras: { isTagTeam: true, role: 'reserve', opponentTeam: team1.id, partnerRobotId: team2.activeRobotId,

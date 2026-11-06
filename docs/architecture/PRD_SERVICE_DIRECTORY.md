@@ -2,12 +2,13 @@
 
 **Project**: Armoured Souls
 **Document Type**: Product Requirements Document (PRD)
-**Version**: v1.18
-**Last Updated**: November 2, 2026
+**Version**: v1.19
+**Last Updated**: November 6, 2026
 **Status**: ✅ Implemented
 **Owner**: Robert Teunissen
 
 **Revision History**:
+- v1.19 (Nov 6, 2026): `economy/snapshot-stable-metric-queries` aggregates the stable's `cycle_snapshots.stable_metrics` totals and the purchase-cycle fallback for `unifiedFacilityROIService` in the database (#550).
 - v1.18 (Nov 2, 2026): `admin/system/` (`GET /api/admin/system/overview`, `getRequestFailures` for the Dashboard); `monitoring/requestMetrics` counts failed (5xx) and slow (2 s or longer) requests per hour and route into `request_metrics`, fed by `requestLogger` and the error code `errorHandler` sets; `monitoring/backupStatus` (`getLatestBackup`) is the one backup reader of the daily health report and the System page, and recognises `.sql.zst` (the report looked only for `.dump` / `.sql.gz` and reported no backup once nightly dumps moved to zstd on 28 Oct 2026).
 - v1.17 (Nov 2, 2026): `admin/meta/metaChoicesService` (`GET /api/admin/meta/choices`) replaces `admin/adminSystemStatsService` and the `adminStatsService` barrel (`getSystemStats` and `GET /api/admin/stats` removed); `utils/stableScope.ts` (`buildStableScopeFilter`) is the portal's one stable-type filter; `getLegacyPracticeArenaStats` removed with `GET /api/admin/practice-arena/stats`.
 - v1.16 (Nov 2, 2026): `admin/admin-actions/` (`adminActionsService`, `adminActionCatalogue`) serves the Admin actions page; `adminAuditLogService` keeps only `recordAction` (`getEntries` removed with `GET`/`POST /api/admin/audit-log`). `adminEconomyService` gained the Repairs block (`summarizeRepairs`) and reads per-cycle totals from `economyCycleRollups` (`economy_cycle_rollups`) instead of scanning the season's ledger; `getRepairAuditLog` removed. `adminMaintenanceService` (`repairAllRobotsAdmin`, `recalculateAllRobotHP`), `backfillCycleSnapshots`, the legacy `processDailyFinances` / `processAllDailyFinances` and `routes/adminBattleTriggers.ts` removed with their unused endpoints.
@@ -243,6 +244,7 @@ Financial systems — repair costs, streaming revenue, facility ROI.
 | `roiCalculatorService` | Facility ROI projections (break-even cycles, net daily benefit) |
 | `unifiedFacilityROIService` | Owned economic facility ROI (investment, returns, operating costs, payoff) from snapshots and recorded facts |
 | `recorded-facility-returns` / `recorded-facility-returns-queries` | Recorded Streaming Studio and Repair Bay returns: pure per-key formulas and the DB aggregates (SUM per stored `studioMultiplier` / `discountPercent`, #542) that feed them |
+| `snapshot-stable-metric-queries` | DB aggregates over the stable's `cycle_snapshots.stable_metrics` entries for facility ROI: window totals (merchandising, attribute upgrades, weapon purchases, entry count) and the earliest-activity purchase-cycle fallback (#550) |
 | `facilityRecommendationService` | AI-driven facility upgrade recommendations based on spending patterns |
 | `spendingTracker` | Tracks spending by category for onboarding budget display |
 | `facilityUpgradeService` | `upgradeFacility`, `getFacilityUpgradeRequirement` (extracted from `routes/facility.ts`, Spec #55) |

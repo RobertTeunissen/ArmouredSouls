@@ -1608,7 +1608,7 @@ Loser/Draw pool             = round(Winner pool × 0.20)
 Per-robot share             = distributeTeamCredits(pool, robots)  // equal split, remainder to the first robots
 ```
 
-So a 2v2 winner pool is 1.5× a solo win and a 3v3 pool 2.25× (were 2× and 3×); the shares sum exactly to the pool. Fame and prestige are not split — each robot earns the full tier-appropriate amount. Tag team uses the same factor: `round(solo reward × 2 × 0.75)`. The factor is `TEAM_CREDIT_POOL_FACTOR` / `applyTeamCreditPoolFactor()` in `app/backend/src/utils/economyFormulas.ts`; it does not touch streaming (divided by team size separately), fame, prestige, ELO/LP or standings.
+So a 2v2 winner pool is 1.5× a solo win and a 3v3 pool 2.25× (were 2× and 3×); the shares sum exactly to the pool. Fame is not split — each robot earns the full tier-appropriate amount. Prestige goes to the stable once per team win from the standard league table (the same for 2v2, 3v3 and Tag Team, #576). Tag team uses the same factor: `round(solo reward × 2 × 0.75)`. The factor is `TEAM_CREDIT_POOL_FACTOR` / `applyTeamCreditPoolFactor()` in `app/backend/src/utils/economyFormulas.ts`; it does not touch streaming (divided by team size separately), fame, prestige, ELO/LP or standings.
 
 **A bye is not a win, and uses a different formula (Spec #49).** When a team receives a walkover there is no fought battle, so the win reward does not apply:
 

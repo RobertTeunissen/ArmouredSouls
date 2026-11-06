@@ -1,14 +1,15 @@
 # Product Requirements Document: Battle Data Architecture
 
-**Last Updated**: October 19, 2026
+**Last Updated**: November 6, 2026
 **Status**: ✅ Implemented  
 **Owner**: Robert Teunissen  
 **Epic**: Battle System — Data Architecture  
-**Version**: 3.3
+**Version**: 3.7
 
 ---
 
 ## Version History
+- v3.7 (November 6, 2026) — #549: "Battle Model" lists the current columns and how `winnerId` / `winningSide` encode the winner per battle shape (team modes store the winning team id; placement modes write every robot as team 1).
 - v3.6 (October 28, 2026) — "Combat Log Storage": logs are stored zstd-compressed in `battle_log_zst` with a `battle_log_meta` descriptor, through `battleLogCodec.ts`; the jsonb `battle_log` is a read-only fallback until its last log expires.
 - v3.5 (October 25, 2026) — Added "Battle-Time Builds" (`battle_participant_builds`).
 - v3.4 (October 25, 2026) — Added "Combat Log Storage": KotH and Grand Melee logs keep formula breakdowns (`battleLog.storage` marker), the player battle log no longer sends them, and the admin Battles page reads them.
@@ -210,19 +211,24 @@ Formula breakdowns are admin-only: `/api/matches/battles/:id/log` strips `formul
 
 ## Battle Model (Current State)
 
-The Battle table retains core battle metadata. Some legacy per-robot columns were removed (see Migration History), but it still contains robot references, tag team fields, and ELO tracking for backward compatibility.
+The Battle table holds battle-level metadata only. Every combatant, its side and its per-robot results are in `battle_participants` (see below); the legacy robot, tag-team and ELO columns on Battle are gone.
 
 Key fields on Battle:
-- `robot1Id`, `robot2Id` — combatant references (still present)
-- `winnerId` — winner's robot ID (null for draws; team ID for tag team)
-- `battleType` — `"league"`, `"tournament"`, `"tag_team"`, `"koth"`
-- `leagueType` — tier name (e.g., `"bronze"`, `"silver"`)
+- `battleType` — one of `league_1v1`, `league_2v2`, `league_3v3`, `tag_team`, `koth`, `grand_melee`, `tournament_1v1`, `tournament_2v2`, `tournament_3v3`
+- `leagueType` — tier name (`bronze` … `champion`) for league modes, tag team and Grand Melee; `tournament` for tournament battles; `koth` for KotH (its tier is on `scheduled_matches_v2.league_type`)
+- `winnerId` and `winningSide` — the winner; what they hold depends on the battle shape:
+
+| Shape | Modes | `winnerId` | `winningSide` | Draw |
+|---|---|---|---|---|
+| Duel | `league_1v1`, `tournament_1v1` | winning robot id | null | both null |
+| Team | `league_2v2`, `league_3v3`, `tag_team`, `tournament_2v2`, `tournament_3v3` | winning **team** id (never compare it with participant robot ids) | 1 or 2 | both null |
+| Placement | `koth`, `grand_melee` | winning robot id; every participant has `team = 1` and a `placement` | null | `winnerId` null |
+
+  Readers resolve the side from `winningSide` first, then from the winner robot's `team` (`resolveSideOutcome` in `services/dashboard/cycleProgressService.ts`; `classifyBattleOutcome` in `services/admin/battles/battleOutcome.ts` for the admin Battles page). A winner whose participant row was deleted stays a win and is shown as `Unknown`; placement readers never fall back to the best remaining placement.
 - `battleLogZst` / `battleLogMeta` — zstd-compressed combat event log and its descriptor (see "Combat Log Storage"); `legacyBattleLog` for logs written before 28 Oct 2026
 - `durationSeconds` — battle length
 - `winnerReward`, `loserReward` — aggregate credit awards
-- Tag team fields: `team1ActiveRobotId`, `team1ReserveRobotId`, etc.
-- Tag team per-robot stats: `team1ActiveDamageDealt`, `team1ActiveFameAwarded`, etc.
-- ELO tracking: `robot1ELOBefore`, `robot1ELOAfter`, `robot2ELOBefore`, `robot2ELOAfter`, `eloChange`
+- `tournamentId`, `tournamentRound`, `leagueInstanceId` — bracket and league-instance context
 
 For the complete Battle schema, see [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md).
 

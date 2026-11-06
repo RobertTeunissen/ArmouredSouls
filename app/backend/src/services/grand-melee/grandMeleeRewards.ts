@@ -49,9 +49,16 @@ const BASE_FAME: Record<number, number> = {
   6: 2, 7: 2, 8: 2, 9: 1, 10: 1,
 };
 
-/** Base prestige for top 3 only (tier-scaled). 0 for positions 4+ */
-const BASE_PRESTIGE: Record<number, number> = {
-  1: 20, 2: 10, 3: 5,
+/**
+ * Base prestige by placement (tier-scaled). 0 for positions 11+.
+ *
+ * Paid to the top 10, like credits, fame and LP (#576): fields average ~18
+ * robots, so the old top-3 band paid about one robot in six, against half the
+ * field in KotH. Places 4–10 follow the fame curve's shape.
+ */
+export const GRAND_MELEE_BASE_PRESTIGE: Readonly<Record<number, number>> = {
+  1: 20, 2: 10, 3: 5, 4: 4, 5: 3,
+  6: 3, 7: 2, 8: 2, 9: 1, 10: 1,
 };
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -95,8 +102,8 @@ export function calculateGrandMeleeRewards(
   // Fame: tier-scaled, 0 for 11+
   const fame = Math.floor((BASE_FAME[placement] ?? 0) * tierFactor);
 
-  // Prestige: top 3 only, tier-scaled, +50% for winner with >50% HP (R3.4)
-  let prestige = Math.floor((BASE_PRESTIGE[placement] ?? 0) * tierFactor);
+  // Prestige: top 10, tier-scaled, +50% for winner with >50% HP (R3.4)
+  let prestige = Math.floor((GRAND_MELEE_BASE_PRESTIGE[placement] ?? 0) * tierFactor);
   if (placement === 1 && winnerHPPercent !== undefined && winnerHPPercent > 50) {
     prestige = Math.floor(prestige * 1.5);
   }

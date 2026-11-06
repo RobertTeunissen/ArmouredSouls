@@ -2,7 +2,7 @@
 title: "Tournament Rewards"
 description: "What you earn from tournament competition — credits, prestige, fame, championship titles, and how tournament size, round progression, and bye timing affect rewards."
 order: 3
-lastUpdated: "2026-09-01"
+lastUpdated: "2026-11-06"
 relatedArticles:
   - seasons/what-resets
   - tournaments/tournament-format
@@ -20,7 +20,7 @@ A bye is different from a fought round: it is a no-simulation walkover. A genera
 
 The reward structure is designed to make every fought round meaningful. Even a first-round loss earns something, and a bye protects the robot from an early elimination while still paying its defined bye credit reward after processing.
 
-Tournament rewards are independent of your robot's league tier. Instead, they scale based on two factors: how many robots entered the tournament, and how far you've progressed through the bracket.
+Tournament rewards are independent of your robot's league tier. Credits scale with how many robots entered and how far you've progressed through the bracket. Prestige depends only on how close to the final the round you won is.
 
 ## Reward Types
 
@@ -32,7 +32,20 @@ Cash rewards for each tournament battle won. These start from a base of ₡20,00
 
 ### Prestige
 
-[Prestige](/guide/prestige-fame/prestige-ranks) is your stable's long-term reputation score. Tournament wins earn prestige that scales with tournament size and round progression. Winning the finals awards a massive +500 championship prestige bonus on top of the normal amount. Bye events award no prestige.
+[Prestige](/guide/prestige-fame/prestige-ranks) is your stable's long-term reputation score. Each round you win earns your stable prestige, counted back from the final. The same table applies to 1v1, 2v2 and 3v3 tournaments, whatever the bracket size, and a team win pays its stable once:
+
+| Round won | Prestige (winning stable) |
+|-----------|---------------------------|
+| Final | 250 |
+| Semi-final | 150 |
+| Quarter-final | 90 |
+| Round of 16 | 55 |
+| Round of 32 | 35 |
+| Round of 64 | 20 |
+| Round of 128 | 10 |
+| Any earlier round | 5 |
+
+A winning run through a 128-robot bracket (7 rounds) earns 610 prestige. Bye events award no prestige.
 
 ### Fame
 
@@ -67,11 +80,11 @@ Larger tournaments mean tougher competition and bigger rewards. The size multipl
 
 | Participants | Size Multiplier |
 |-------------|----------------|
-| ~130 | 1.06× |
-| ~250 | 1.20× |
-| ~500 | 1.43× |
-| ~1,000 | 1.50× |
-| ~10,000 | 2.00× |
+| ~130 | 1.56× |
+| ~250 | 1.70× |
+| ~500 | 1.85× |
+| ~1,000 | 2.00× |
+| ~10,000 | 2.50× |
 | ~100,000 | 3.00× |
 
 ### Round Progression Multiplier
@@ -98,23 +111,23 @@ Credits for a tournament win are calculated as:
 
 **₡20,000 × size multiplier × round progression multiplier**
 
-For example, in a 128-robot tournament (size multiplier ~1.06×):
+For example, in a 128-robot tournament (size multiplier ~1.55×):
 
 | Round | Calculation | Credits Earned |
 |-------|-----------|---------------|
-| Round 1 | ₡20,000 × 1.06 × 0.14 | ₡2,971 |
-| Round 4 | ₡20,000 × 1.06 × 0.57 | ₡12,114 |
-| Round 7 (Final) | ₡20,000 × 1.06 × 1.00 | ₡21,200 |
+| Round 1 | ₡20,000 × 1.55 × 0.14 | ₡4,439 |
+| Round 4 | ₡20,000 × 1.55 × 0.57 | ₡17,756 |
+| Round 7 (Final) | ₡20,000 × 1.55 × 1.00 | ₡31,072 |
 
-A full championship run through all 7 rounds would earn roughly **₡63,000** in credits — plus prestige, fame, and the championship title.
+A full championship run through all 7 rounds would earn roughly **₡124,000** in credits — plus 610 prestige, fame, and the championship title.
 
-In a much larger tournament with 1,000 participants (10 rounds, size multiplier 1.50×):
+In a much larger tournament with 1,000 participants (10 rounds, size multiplier 2.00×):
 
 | Round | Calculation | Credits Earned |
 |-------|-----------|---------------|
-| Round 1 | ₡20,000 × 1.50 × 0.10 | ₡3,000 |
-| Round 5 | ₡20,000 × 1.50 × 0.50 | ₡15,000 |
-| Round 10 (Final) | ₡20,000 × 1.50 × 1.00 | ₡30,000 |
+| Round 1 | ₡20,000 × 2.00 × 0.10 | ₡4,000 |
+| Round 5 | ₡20,000 × 2.00 × 0.50 | ₡20,000 |
+| Round 10 (Final) | ₡20,000 × 2.00 × 1.00 | ₡40,000 |
 
 ```callout-warning
 A bye pays the same credits a loss pays for that round. Before the round is processed, Upcoming Matches shows an expected amount rather than a zero or an already-paid result. After processing, Recent Battles shows the awarded amount. If you receive a first-round bye and then win your next Match, you advance safely and earn the progression reward for that later round, plus the loss-equivalent credits for the bye round.
@@ -122,15 +135,18 @@ A bye pays the same credits a loss pays for that round. Before the round is proc
 
 ## Championship Rewards
 
-Winning the final earns everything a normal round win provides (with the full 1.0× progression multiplier), plus:
+Winning the final earns everything a normal round win provides, at its highest: the full 1.0× credit progression multiplier and the final's 250 prestige. It also earns:
 
-- A **+500 prestige championship bonus** on top of the normal prestige award
 - A **championship title** attached to your robot's record for the season
 
 The championship title includes the tournament identifier, the date, and your robot's name and stable. Championship titles are the most visible mark of tournament success and cannot be earned through any other means.
 
 ```callout-tip
-The +500 prestige championship bonus is massive compared to normal prestige gains. A single tournament win can be worth more prestige than dozens of league Battles. This makes deep tournament runs one of the fastest paths to higher prestige ranks.
+Tournament prestige rises steeply in the last rounds: the semi-final and final together pay 400. Early rounds pay little, so the prestige of a tournament is in going deep, not in entering.
+```
+
+```callout-info
+Until November 2026 the final carried a +500 championship bonus on top of a small round award, and team tournaments used their own curve multiplied by team size. All tournaments now share one table, and the final is the largest step of a smooth curve.
 ```
 
 ## ELO Impact
@@ -150,7 +166,7 @@ Losing a tournament Battle still earns a participation reward — **30% of what 
 This means there's no downside to entering tournaments. Even a first-round loss earns something, and the potential upside of a deep run far outweighs the modest participation reward. A bye is not a loss, but its defined credit floor is intentionally the same as the loss reward for that round.
 
 ```callout-tip
-Always enter tournaments when eligible. The worst case is a first-round loss with a small participation reward or a bye with its loss-equivalent credit reward. The best case is a championship run with scaled rewards, a +500 prestige bonus, fame, and a title. The risk-reward ratio heavily favors participation.
+Always enter tournaments when eligible. The worst case is a first-round loss with a small participation reward or a bye with its loss-equivalent credit reward. The best case is a championship run with scaled credits, 250 prestige for the final alone, fame, and a title. The risk-reward ratio heavily favors participation.
 ```
 
 ## Fame and Exclusivity

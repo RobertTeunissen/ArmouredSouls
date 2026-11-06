@@ -53,8 +53,15 @@ describe('GuideNavigation', () => {
   it('should highlight the current section', () => {
     renderNav({ currentSectionSlug: 'combat' });
 
-    const combatButton = screen.getByText('Combat').closest('button');
-    expect(combatButton?.className).toContain('text-primary');
+    const combatRow = screen.getByRole('link', { name: 'Combat' }).parentElement;
+    expect(combatRow?.className).toContain('text-primary');
+  });
+
+  it('does not nest the section link inside a button (#573)', () => {
+    renderNav();
+
+    const combatLink = screen.getByRole('link', { name: 'Combat' });
+    expect(combatLink.closest('button')).toBeNull();
   });
 
   it('should highlight the current article with aria-current', () => {
@@ -76,10 +83,12 @@ describe('GuideNavigation', () => {
     renderNav();
 
     // Both sections are collapsed initially — find the Combat section's expand button
-    const combatButton = screen.getByText('Combat').closest('a')!.closest('button')!;
+    const combatButton = screen.getByRole('button', { name: 'Expand Combat' });
+    expect(combatButton).toHaveAttribute('aria-expanded', 'false');
     await user.click(combatButton);
 
     expect(screen.getByText('Battle Flow')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Collapse Combat' })).toHaveAttribute('aria-expanded', 'true');
   });
 
   it('should render the mobile drawer when isOpen is true', () => {

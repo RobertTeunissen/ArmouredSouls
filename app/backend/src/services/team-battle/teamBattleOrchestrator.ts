@@ -580,6 +580,10 @@ async function executeSingleTeamBattle(
     const fame = calculateTeamBattleFame(match.teamBattleLeague);
     const team1Prestige = calculateTeamBattlePrestige(match.teamBattleLeague, team1Won, isDraw);
     const team2Prestige = calculateTeamBattlePrestige(match.teamBattleLeague, team2Won, isDraw);
+    // The per-robot prestige records split the one stable award with the credit
+    // remainder rule, so they sum to it (5 over 2 robots → 3 + 2, not 2 + 2).
+    const team1PrestigeShares = distributeTeamCredits(team1Prestige, team1Robots.map(r => ({ robotId: r.id })));
+    const team2PrestigeShares = distributeTeamCredits(team2Prestige, team2Robots.map(r => ({ robotId: r.id })));
 
     // Award stable-level prestige through the same transaction; it is not a credit row.
     await awardPrestigeToUser(match.team1.stableId, team1Prestige, financialCycleNumber, {
@@ -635,7 +639,7 @@ async function executeSingleTeamBattle(
         data: {
           credits: robotCredits?.credits ?? 0,
           eloAfter: robot.elo + eloChanges.team1Change,
-          prestigeAwarded: Math.floor(team1Prestige / teamSize),
+          prestigeAwarded: team1PrestigeShares.find(p => p.robotId === robot.id)?.credits ?? 0,
           fameAwarded: team1Won ? fame : 0,
         },
       });
@@ -650,7 +654,7 @@ async function executeSingleTeamBattle(
           data: {
             credits: robotCredits?.credits ?? 0,
             eloAfter: robot.elo + eloChanges.team2Change,
-            prestigeAwarded: Math.floor(team2Prestige / teamSize),
+            prestigeAwarded: team2PrestigeShares.find(p => p.robotId === robot.id)?.credits ?? 0,
             fameAwarded: team2Won ? fame : 0,
           },
         });
@@ -792,6 +796,9 @@ async function executeSingleTeamBattle(
   // R9.7: Include team_size, outcome, opponent team name, and Team_LP delta in notification extras
   const team1Prestige = calculateTeamBattlePrestige(match.teamBattleLeague, team1Won, isDraw);
   const team2Prestige = calculateTeamBattlePrestige(match.teamBattleLeague, team2Won, isDraw);
+  // Same split as the participant rows, so audit events sum to the stable award.
+  const team1PrestigeShares = distributeTeamCredits(team1Prestige, team1Robots.map(r => ({ robotId: r.id })));
+  const team2PrestigeShares = distributeTeamCredits(team2Prestige, team2Robots.map(r => ({ robotId: r.id })));
   const fame = calculateTeamBattleFame(match.teamBattleLeague);
   const team1Credits = distributeTeamCredits(
     calculateTeamBattleReward(match.teamBattleLeague, teamSize, team1Won, isDraw),
@@ -823,7 +830,7 @@ async function executeSingleTeamBattle(
           yielded: false,
           destroyed: (participant?.finalHP ?? 0) === 0,
           credits: robotCredits?.credits ?? 0,
-          prestige: Math.floor(team1Prestige / teamSize),
+          prestige: team1PrestigeShares.find(p => p.robotId === robot.id)?.credits ?? 0,
           fame: team1Won ? fame : 0,
           eloBefore: robot.elo,
           eloAfter: robot.elo + eloChanges.team1Change,
@@ -871,7 +878,7 @@ async function executeSingleTeamBattle(
             yielded: false,
             destroyed: (participant?.finalHP ?? 0) === 0,
             credits: robotCredits?.credits ?? 0,
-            prestige: Math.floor(team2Prestige / teamSize),
+            prestige: team2PrestigeShares.find(p => p.robotId === robot.id)?.credits ?? 0,
             fame: team2Won ? fame : 0,
             eloBefore: robot.elo,
             eloAfter: robot.elo + eloChanges.team2Change,

@@ -32,7 +32,8 @@ export const REPAIR_CHARGED_KEY = 'creditsCharged' as const;
 export const REPAIR_PRE_DISCOUNT_KEY = 'creditsBeforeManualDiscount' as const;
 
 /** Pre-rename keys, retained only for the read fallback. */
-const LEGACY_CYCLE_REPAIR_SPEND_KEY = 'totalRepairCosts';
+/** Exported for the SQL mirror of `readCycleRepairSpend` (snapshot-stable-metric-queries.ts, #550). */
+export const LEGACY_CYCLE_REPAIR_SPEND_KEY = 'totalRepairCosts';
 const LEGACY_REPAIR_CHARGED_KEY = 'cost';
 const LEGACY_REPAIR_PRE_DISCOUNT_KEY = 'preDiscountCost';
 

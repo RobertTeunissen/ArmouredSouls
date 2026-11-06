@@ -2,7 +2,7 @@
 title: "Team Battles Overview"
 description: "How 2v2 and 3v3 League Team Battles work — team registration, simultaneous combat, coordination effects, matchmaking, rewards, and daily schedule."
 order: 1
-lastUpdated: "2026-10-17"
+lastUpdated: "2026-11-06"
 relatedArticles:
   - facilities/booking-office
   - leagues/matchmaking
@@ -170,7 +170,7 @@ Season 2 reduced team credit pools by 25%: a 2v2 pool was 2× a solo reward and 
 
 Additionally, each robot earns:
 - **Fame** — Full fame for the tier (no splitting)
-- **Prestige** — Full prestige for wins (no splitting)
+- **Prestige** — your stable earns the tier's Prestige once per team win (the same table as a 1v1 League win)
 - **Streaming revenue** — Per-robot streaming income
 - **ELO** — Same delta applied equally to all team members
 

@@ -442,6 +442,7 @@ Example:
 - Left: `Attribute Name: Base (Bonus) = Effective`
 - Right: `[Upgrade ₡XXk]` button
 - Hover tooltip shows full breakdown and discount details
+- Attribute explanation (#572): hovering, focusing or tapping an attribute's icon and name in the Upgrade Planner shows a short description of what the attribute does. Copy lives in `app/frontend/src/utils/robotAttributeDescriptions.ts` and follows the guide article `robots/attributes-overview.md`; update both together when an attribute's behaviour changes
 - Disabled state: "Max Level" or "Upgrade Academy" or "Not Enough Credits"
 - Color coding: bonus in green, effective in white
 

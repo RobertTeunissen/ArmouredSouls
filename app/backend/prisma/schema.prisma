@@ -567,8 +567,8 @@ model BattleParticipant {
 
 model Battle {
   id               Int     @id @default(autoincrement())
-  winnerId         Int?    @map("winner_id") // Winner's robot ID (null if draw)
-  battleType       String  @map("battle_type") @db.VarChar(20) // "league", "tournament", "tag_team"
+  winnerId         Int?    @map("winner_id") // Winner: robot id (1v1, KotH, Grand Melee) or winning TEAM id (team modes); null if draw
+  battleType       String  @map("battle_type") @db.VarChar(20) // league_1v1/2v2/3v3, tag_team, koth, grand_melee, tournament_1v1/2v2/3v3
   leagueType       String  @map("league_type") @db.VarChar(20) // "bronze", "silver", "gold", etc.
   leagueInstanceId String? @map("league_instance_id") @db.VarChar(20) // "gold_1", "bronze_2", etc. — instance at time of battle
 

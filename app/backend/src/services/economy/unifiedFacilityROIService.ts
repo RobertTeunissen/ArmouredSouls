@@ -1,7 +1,5 @@
 import prisma from '../../lib/prisma';
 import { getFacilityConfig } from '../../config/facilities';
-import { StableMetric } from '../../types/snapshotTypes';
-import { readCycleRepairSpend } from './repairPayloadKeys';
 import { calculateRepairBayDiscountPercent } from '../../shared/utils/repairCost';
 import {
   calculateTrainingFacilityDiscount,
@@ -18,6 +16,11 @@ import {
   aggregateRepairChargedByDiscount,
   aggregateStudioStreamingByMultiplier,
 } from './recorded-facility-returns-queries';
+import {
+  aggregateStableSnapshotTotals,
+  findEarliestSnapshotCycleWithActivity,
+  type StableSnapshotTotals,
+} from './snapshot-stable-metric-queries';
 import {
   calculateFacilityOperatingCost,
   calculateMerchandisingIncome,
@@ -66,6 +69,8 @@ export class UnifiedFacilityROIService {
    * Calculate ROI for a specific economic facility owned by a user.
    * NEVER returns null for owned economic facilities — always returns data.
    * Uses CycleSnapshot.stableMetrics as primary data source with formula-based fallback.
+   * The stable's snapshot metrics are summed in the database over the ownership
+   * window (#550), so the read does not grow with history.
    */
   async calculateFacilityROI(
     userId: number,
@@ -112,38 +117,18 @@ export class UnifiedFacilityROIService {
     const currentCycle = currentCycleMetadata?.totalCycles || 1;
     const cyclesSincePurchase = Math.max(1, currentCycle - purchaseCycle + 1);
 
-    // Get cycle snapshots for the ownership period
-    const snapshots = await prisma.cycleSnapshot.findMany({
-      where: {
-        cycleNumber: { gte: purchaseCycle, lte: currentCycle },
-      },
-      select: {
-        cycleNumber: true,
-        stableMetrics: true,
-      },
-    });
-
-    // Extract user's metrics from snapshots
-    const userMetrics: StableMetric[] = [];
-    for (const snapshot of snapshots) {
-      const metrics = (snapshot.stableMetrics as unknown as StableMetric[]);
-      if (Array.isArray(metrics)) {
-        const userMetric = metrics.find((m) => m.userId === userId);
-        if (userMetric) {
-          userMetrics.push(userMetric);
-        }
-      }
-    }
+    // The stable's snapshot totals for the ownership period (#550)
+    const snapshotTotals = await aggregateStableSnapshotTotals(userId, purchaseCycle, currentCycle);
 
     let totalReturns: number;
     let dataSource: 'snapshot' | 'estimate';
 
-    if (userMetrics.length > 0) {
+    if (snapshotTotals.snapshotCount > 0) {
       // Primary path: calculate from snapshot data
       totalReturns = await this.calculateReturnsFromSnapshots(
         facilityType as EconomicFacilityType,
         level,
-        userMetrics,
+        snapshotTotals,
         userId,
         purchaseCycle,
         currentCycle
@@ -200,7 +185,9 @@ export class UnifiedFacilityROIService {
   /**
    * Calculate ROI for all economic facilities owned by a user.
    * Returns data for every owned economic facility (level > 0).
-   * Fetches shared data (cycle metadata, snapshots) once and reuses across facilities.
+   * Fetches shared data (cycle metadata, roster capacity) once and reuses it
+   * across facilities. Snapshot metrics are aggregated in the database per
+   * facility over its own ownership window (#550).
    */
   async calculateAllEconomicROIs(userId: number): Promise<AllEconomicROIsResult> {
     const facilities = await prisma.facility.findMany({
@@ -224,27 +211,9 @@ export class UnifiedFacilityROIService {
     });
     const currentCycle = currentCycleMetadata?.totalCycles || 1;
 
-    // Fetch all snapshots for the user (from cycle 1 to current — covers all facilities)
-    const allSnapshots = await prisma.cycleSnapshot.findMany({
-      where: { cycleNumber: { gte: 1, lte: currentCycle } },
-      select: { cycleNumber: true, stableMetrics: true },
-    });
-
-    // Pre-extract user metrics from all snapshots once
-    const userMetricsByCycle = new Map<number, StableMetric>();
-    for (const snapshot of allSnapshots) {
-      const metrics = snapshot.stableMetrics as unknown as StableMetric[];
-      if (Array.isArray(metrics)) {
-        const userMetric = metrics.find((m) => m.userId === userId);
-        if (userMetric) {
-          userMetricsByCycle.set(snapshot.cycleNumber, userMetric);
-        }
-      }
-    }
-
-    // Recorded streaming awards and repairs are not prefetched: the Streaming
-    // Studio and Repair Bay each run one DB aggregate over their own ownership
-    // window (#542), so row volume does not grow with history.
+    // Snapshot metrics, recorded streaming awards and repairs are not
+    // prefetched: each facility runs DB aggregates over its own ownership
+    // window (#542, #550), so row volume does not grow with history.
 
     // Purchased Roster_Capacity, needed for the Training Facility discount
     // (Spec #46 R11, #526); fetched once, only when that facility is owned.
@@ -260,7 +229,6 @@ export class UnifiedFacilityROIService {
         facility.facilityType,
         facility.level,
         currentCycle,
-        userMetricsByCycle,
         rosterCapacity
       );
       if (roi) {
@@ -296,7 +264,6 @@ export class UnifiedFacilityROIService {
     facilityType: string,
     level: number,
     currentCycle: number,
-    userMetricsByCycle: Map<number, StableMetric>,
     rosterCapacity: number
   ): Promise<UnifiedFacilityROI | null> {
     if (!this.isEconomicFacility(facilityType)) return null;
@@ -312,23 +279,17 @@ export class UnifiedFacilityROIService {
     const purchaseCycle = await this.determinePurchaseCycle(userId, facilityType);
     const cyclesSincePurchase = Math.max(1, currentCycle - purchaseCycle + 1);
 
-    // Extract user metrics for the ownership period from pre-fetched data
-    const userMetrics: StableMetric[] = [];
-    for (let cycle = purchaseCycle; cycle <= currentCycle; cycle++) {
-      const metric = userMetricsByCycle.get(cycle);
-      if (metric) {
-        userMetrics.push(metric);
-      }
-    }
+    // The stable's snapshot totals for the ownership period (#550)
+    const snapshotTotals = await aggregateStableSnapshotTotals(userId, purchaseCycle, currentCycle);
 
     let totalReturns: number;
     let dataSource: 'snapshot' | 'estimate';
 
-    if (userMetrics.length > 0) {
+    if (snapshotTotals.snapshotCount > 0) {
       totalReturns = await this.calculateReturnsFromSharedSnapshots(
         facilityType as EconomicFacilityType,
         level,
-        userMetrics,
+        snapshotTotals,
         userId,
         purchaseCycle,
         currentCycle,
@@ -383,7 +344,7 @@ export class UnifiedFacilityROIService {
   private async calculateReturnsFromSharedSnapshots(
     facilityType: EconomicFacilityType,
     level: number,
-    userMetrics: StableMetric[],
+    snapshotTotals: StableSnapshotTotals,
     userId: number,
     purchaseCycle: number,
     currentCycle: number,
@@ -391,15 +352,15 @@ export class UnifiedFacilityROIService {
   ): Promise<number> {
     switch (facilityType) {
       case 'merchandising_hub':
-        return userMetrics.reduce((sum, m) => sum + (m.merchandisingIncome || 0), 0);
+        return snapshotTotals.merchandisingIncome;
       case 'streaming_studio':
         return this.calculateStudioStreamingReturns(userId, purchaseCycle, currentCycle);
       case 'repair_bay':
         return this.calculateRepairBaySavings(userId, purchaseCycle, currentCycle);
       case 'training_facility':
-        return this.calculateTrainingFacilitySavings(level, userMetrics, rosterCapacity);
+        return this.calculateTrainingFacilitySavings(level, snapshotTotals, rosterCapacity);
       case 'weapons_workshop':
-        return this.calculateWeaponsWorkshopSavings(level, userMetrics);
+        return this.calculateWeaponsWorkshopSavings(level, snapshotTotals);
       default:
         return 0;
     }
@@ -577,10 +538,10 @@ export class UnifiedFacilityROIService {
     }
 
     // Try 2: Find earliest snapshot with activity for this facility type
-    const earliestSnapshot = await this.findEarliestSnapshotWithActivity(
-      userId,
-      facilityType
-    );
+    // (among the oldest 100 snapshots, filtered in the database, #550)
+    const earliestSnapshot = this.isEconomicFacility(facilityType)
+      ? await findEarliestSnapshotCycleWithActivity(userId, facilityType)
+      : null;
 
     if (earliestSnapshot) {
       return earliestSnapshot;
@@ -588,59 +549,6 @@ export class UnifiedFacilityROIService {
 
     // Final fallback: cycle 1
     return 1;
-  }
-
-  /**
-   * Find the earliest cycle snapshot where the user has non-zero activity
-   * relevant to the given facility type.
-   */
-  private async findEarliestSnapshotWithActivity(
-    userId: number,
-    facilityType: string
-  ): Promise<number | null> {
-    const snapshots = await prisma.cycleSnapshot.findMany({
-      select: { cycleNumber: true, stableMetrics: true },
-      orderBy: { cycleNumber: 'asc' },
-      take: 100, // Limit to avoid scanning entire history
-    });
-
-    for (const snapshot of snapshots) {
-      const metrics = snapshot.stableMetrics as unknown as StableMetric[];
-      if (!Array.isArray(metrics)) continue;
-
-      const userMetric = metrics.find((m) => m.userId === userId);
-      if (!userMetric) continue;
-
-      const hasActivity = this.hasActivityForFacility(facilityType, userMetric);
-      if (hasActivity) {
-        return snapshot.cycleNumber;
-      }
-    }
-
-    return null;
-  }
-
-  /**
-   * Check if a StableMetric shows activity relevant to a facility type.
-   */
-  private hasActivityForFacility(
-    facilityType: string,
-    metric: StableMetric
-  ): boolean {
-    switch (facilityType) {
-      case 'merchandising_hub':
-        return metric.merchandisingIncome > 0;
-      case 'streaming_studio':
-        return metric.streamingIncome > 0;
-      case 'repair_bay':
-        return readCycleRepairSpend(metric as unknown as Record<string, unknown>) > 0;
-      case 'training_facility':
-        return metric.attributeUpgrades > 0;
-      case 'weapons_workshop':
-        return metric.weaponPurchases > 0;
-      default:
-        return false;
-    }
   }
 
   /**
@@ -674,14 +582,14 @@ export class UnifiedFacilityROIService {
   private async calculateReturnsFromSnapshots(
     facilityType: EconomicFacilityType,
     level: number,
-    userMetrics: StableMetric[],
+    snapshotTotals: StableSnapshotTotals,
     userId: number,
     purchaseCycle: number,
     currentCycle: number
   ): Promise<number> {
     switch (facilityType) {
       case 'merchandising_hub':
-        return userMetrics.reduce((sum, m) => sum + (m.merchandisingIncome || 0), 0);
+        return snapshotTotals.merchandisingIncome;
 
       case 'streaming_studio':
         return this.calculateStudioStreamingReturns(userId, purchaseCycle, currentCycle);
@@ -692,12 +600,12 @@ export class UnifiedFacilityROIService {
       case 'training_facility':
         return this.calculateTrainingFacilitySavings(
           level,
-          userMetrics,
+          snapshotTotals,
           await this.fetchRosterCapacity(userId)
         );
 
       case 'weapons_workshop':
-        return this.calculateWeaponsWorkshopSavings(level, userMetrics);
+        return this.calculateWeaponsWorkshopSavings(level, snapshotTotals);
 
       default:
         return 0;
@@ -747,13 +655,10 @@ export class UnifiedFacilityROIService {
    */
   private calculateTrainingFacilitySavings(
     level: number,
-    userMetrics: StableMetric[],
+    snapshotTotals: StableSnapshotTotals,
     rosterCapacity: number
   ): number {
-    const totalUpgradeCosts = userMetrics.reduce(
-      (sum, m) => sum + (m.attributeUpgrades || 0),
-      0
-    );
+    const totalUpgradeCosts = snapshotTotals.attributeUpgrades;
 
     const discountPercent = calculateTrainingFacilityDiscount(level, rosterCapacity);
     if (discountPercent >= 100) return 0;
@@ -769,12 +674,9 @@ export class UnifiedFacilityROIService {
    */
   private calculateWeaponsWorkshopSavings(
     level: number,
-    userMetrics: StableMetric[]
+    snapshotTotals: StableSnapshotTotals
   ): number {
-    const totalWeaponCosts = userMetrics.reduce(
-      (sum, m) => sum + (m.weaponPurchases || 0),
-      0
-    );
+    const totalWeaponCosts = snapshotTotals.weaponPurchases;
 
     const discountPercent = calculateWeaponWorkshopDiscount(level);
     if (discountPercent >= 100) return 0;

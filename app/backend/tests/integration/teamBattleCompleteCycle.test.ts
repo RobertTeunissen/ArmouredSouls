@@ -26,6 +26,7 @@ import { executeScheduledTeamBattles } from '../../src/services/team-battle/team
 import { rebalanceTeamBattleLeagues } from '../../src/services/team-battle/teamBattleAdapter';
 import { battlesForRobots, scheduledMatchesForTeams } from '../cleanupHelper';
 import { useFinancialCaptureTestEnvironment } from '../financialCaptureTestHelper';
+import { PRESTIGE_BY_LEAGUE } from '../../src/utils/battleMath';
 
 useFinancialCaptureTestEnvironment();
 
@@ -332,6 +333,17 @@ describe('Team Battle Complete Cycle Integration Test', () => {
       const team2Participants = battle.participants.filter(p => p.team === 2);
       expect(team1Participants.length).toBe(2);
       expect(team2Participants.length).toBe(2);
+
+      // The robots' prestige records split the stable's one award exactly,
+      // also for odd awards (Bronze 5 → 3 + 2), and the losing side records none.
+      if (battle.winningSide === 1 || battle.winningSide === 2) {
+        const award = PRESTIGE_BY_LEAGUE[battle.leagueType];
+        const winners = battle.participants.filter(p => p.team === battle.winningSide);
+        const losers = battle.participants.filter(p => p.team !== battle.winningSide);
+        expect(winners.reduce((sum, p) => sum + p.prestigeAwarded, 0)).toBe(award);
+        expect(Math.max(...winners.map(p => p.prestigeAwarded)) - Math.min(...winners.map(p => p.prestigeAwarded))).toBeLessThanOrEqual(1);
+        expect(losers.every(p => p.prestigeAwarded === 0)).toBe(true);
+      }
     }
 
     // ─── Step 6: Verify reward distribution ──────────────────────────────────

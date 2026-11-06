@@ -2,7 +2,7 @@
 title: "Team Tournaments (2v2 & 3v3)"
 description: "How team tournaments work in Armoured Souls — 2v2 and 3v3 single-elimination brackets with daily round cadence, team eligibility, and championship rewards."
 order: 5
-lastUpdated: "2026-10-17"
+lastUpdated: "2026-11-06"
 relatedArticles:
   - tournaments/tournament-format
   - tournaments/eligibility
@@ -104,17 +104,24 @@ So a 2v2 winner pool is 1.5× the 1v1 round reward and a 3v3 winner pool 2.25× 
 
 ### Prestige (Per Round Won)
 
-Prestige uses a stepped curve — deeper rounds earn more:
+Team tournaments pay the same prestige per round as 1v1 tournaments, counted back from the final. The winning team's stable earns it **once**: the team size does not multiply it.
 
-| Round | Prestige (winner) | Prestige (loser) |
-|-------|-------------------|------------------|
-| Round 1 | 20 | 0 |
-| Round 2 | 30 | 0 |
-| Round 3 | 40 | 0 |
-| Round 4 | 50 | 0 |
-| Round 5+ | 60 (capped) | 0 |
+| Round won | Prestige (winning stable) |
+|-----------|---------------------------|
+| Final | 250 |
+| Semi-final | 150 |
+| Quarter-final | 90 |
+| Round of 16 | 55 |
+| Round of 32 | 35 |
+| Round of 64 | 20 |
+| Round of 128 | 10 |
+| Any earlier round | 5 |
 
-Winning the final awards an additional **+150 championship prestige bonus**. Losers earn zero prestige — it's exclusively a reward for winning.
+Losers earn zero prestige — it's exclusively a reward for winning.
+
+```callout-info
+Until November 2026 team tournaments used their own stepped curve (20 to 60, +150 for the final) multiplied by team size, so a 3v3 round paid three times a 1v1 round. All tournaments now share one table.
+```
 
 ### Championship Title
 
