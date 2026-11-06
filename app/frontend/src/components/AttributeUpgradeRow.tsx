@@ -1,4 +1,4 @@
-import { useId, type KeyboardEvent, type ReactNode } from 'react';
+import { useEffect, useId, useState, type ReactNode } from 'react';
 
 interface AttributeUpgradeRowProps {
   attributeKey: string;
@@ -30,39 +30,61 @@ interface AttributeInfoProps {
 /**
  * Wraps the attribute icon + name. When a description is given, the block is
  * focusable and reveals the description on hover, keyboard focus or tap.
- * The tooltip stays in the DOM so `aria-describedby` works for screen readers;
- * Escape dismisses it by blurring the trigger.
+ * The tooltip stays in the DOM so `aria-describedby` works for screen readers.
+ *
+ * Escape dismisses a visible tooltip, whether it was opened by hover or focus,
+ * without moving keyboard focus (WCAG 1.4.13). It stays dismissed until the
+ * pointer has left and the block has lost focus.
  */
 function AttributeInfo({ ariaLabel, description, className = '', children }: AttributeInfoProps) {
   const tooltipId = useId();
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
+  const visible = (hovered || focused) && !dismissed;
+
+  // A new hover or focus after leaving both re-arms the tooltip.
+  useEffect(() => {
+    if (!hovered && !focused) setDismissed(false);
+  }, [hovered, focused]);
+
+  // Listen at the document so Escape also reaches a hover-only tooltip, whose
+  // trigger has no focus to receive the keydown.
+  useEffect(() => {
+    if (!visible) return undefined;
+    const handleKeyDown = (event: globalThis.KeyboardEvent): void => {
+      if (event.key === 'Escape') setDismissed(true);
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [visible]);
 
   if (!description) {
     return <div className={className}>{children}</div>;
   }
 
-  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
-    if (event.key === 'Escape') event.currentTarget.blur();
-  };
-
   return (
     <div
-      className={`group relative cursor-help rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${className}`}
+      className={`relative cursor-help rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${className}`}
       tabIndex={0}
       role="group"
       aria-label={ariaLabel}
       aria-describedby={tooltipId}
-      onKeyDown={handleKeyDown}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
     >
       {children}
       <div
         id={tooltipId}
         role="tooltip"
-        className="
-          invisible opacity-0 group-hover:visible group-hover:opacity-100
-          group-focus:visible group-focus:opacity-100
+        data-state={visible ? 'open' : 'closed'}
+        className={`
+          ${visible ? 'visible opacity-100' : 'invisible opacity-0'}
           absolute left-0 top-full z-30 pt-1 w-64 max-w-[80vw]
           transition-opacity duration-150 motion-reduce:transition-none
-        "
+        `}
       >
         <div className="bg-surface-elevated border border-white/10 rounded-lg shadow-lg px-3 py-2 text-xs leading-relaxed text-secondary">
           {description}

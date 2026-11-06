@@ -1,5 +1,5 @@
 import { describe, test, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { act, render, screen, fireEvent } from '@testing-library/react';
 import AttributeUpgradeRow from '../AttributeUpgradeRow';
 import { ROBOT_ATTRIBUTE_DESCRIPTIONS } from '../../utils/robotAttributeDescriptions';
 
@@ -32,13 +32,50 @@ describe('AttributeUpgradeRow attribute tooltip', () => {
     expect(screen.getByRole('tooltip', { hidden: true })).toHaveTextContent(description);
   });
 
-  test('Escape blurs the trigger to dismiss the tooltip', () => {
+  const tooltipState = (): string | null => screen.getByRole('tooltip', { hidden: true }).getAttribute('data-state');
+
+  test('opens on hover and Escape dismisses it while the pointer stays over the attribute', () => {
     render(<AttributeUpgradeRow {...baseProps} description="Some description" />);
     const trigger = screen.getByRole('group', { name: /Penetration/ });
-    trigger.focus();
-    expect(trigger).toHaveFocus();
+    expect(tooltipState()).toBe('closed');
+
+    fireEvent.mouseEnter(trigger);
+    expect(tooltipState()).toBe('open');
+    expect(screen.getByRole('tooltip', { hidden: true })).toHaveClass('visible');
+
+    // Hover only: nothing is focused, so the keydown arrives at the document.
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(tooltipState()).toBe('closed');
+    expect(screen.getByRole('tooltip', { hidden: true })).toHaveClass('invisible');
+
+    // Leaving and re-entering re-arms it.
+    fireEvent.mouseLeave(trigger);
+    fireEvent.mouseEnter(trigger);
+    expect(tooltipState()).toBe('open');
+  });
+
+  test('opens on focus and Escape dismisses it without moving focus', () => {
+    render(<AttributeUpgradeRow {...baseProps} description="Some description" />);
+    const trigger = screen.getByRole('group', { name: /Penetration/ });
+
+    act(() => trigger.focus());
+    expect(tooltipState()).toBe('open');
     fireEvent.keyDown(trigger, { key: 'Escape' });
-    expect(trigger).not.toHaveFocus();
+    expect(tooltipState()).toBe('closed');
+    expect(trigger).toHaveFocus();
+
+    // Blurring and focusing again re-arms it.
+    act(() => trigger.blur());
+    act(() => trigger.focus());
+    expect(tooltipState()).toBe('open');
+  });
+
+  test('other keys leave the tooltip open', () => {
+    render(<AttributeUpgradeRow {...baseProps} description="Some description" />);
+    const trigger = screen.getByRole('group', { name: /Penetration/ });
+    fireEvent.mouseEnter(trigger);
+    fireEvent.keyDown(document, { key: 'Enter' });
+    expect(tooltipState()).toBe('open');
   });
 
   test('renders no tooltip or extra tab stop without a description', () => {
