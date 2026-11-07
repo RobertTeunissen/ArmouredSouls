@@ -41,9 +41,15 @@ export const implementedPages = new Set([
   '/achievements',
 ]);
 
-/** Pages reachable from the navigation, including per-player pages (`/robots/:id`, `/stables/:id`). */
+/**
+ * Pages reachable from the navigation, including per-player pages (`/robots/:id`,
+ * `/stables/:id`) and the owner's robot Workshop (`/robots/:id/prepare`, #504),
+ * which the Robots menu links each of the player's robots to.
+ */
 export function isNavPageImplemented(path: string): boolean {
-  return /^\/(robots|stables)\/\d+$/.test(path) || implementedPages.has(path);
+  return /^\/(robots|stables)\/\d+$/.test(path)
+    || /^\/robots\/\d+\/prepare$/.test(path)
+    || implementedPages.has(path);
 }
 
 /** The player's own public stable page: the first item of the Stable menu. */
