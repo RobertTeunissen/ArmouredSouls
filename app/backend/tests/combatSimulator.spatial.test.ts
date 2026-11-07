@@ -1426,6 +1426,65 @@ describe('simulateBattle — spatial refactor', () => {
           }
         });
       });
+
+      /** Ticks on which the robot→robot vector reverses: the two robots swapped places. */
+      const placeSwaps = (t: Map<string, Array<{ x: number; y: number }>>, a: string, b: string): number => {
+        const rel = t.get(a)!.map((p, i) => ({ x: t.get(b)![i].x - p.x, y: t.get(b)![i].y - p.y }));
+        return rel.filter((r, i) => i > 0 && r.x * rel[i - 1].x + r.y * rel[i - 1].y < 0).length;
+      };
+
+      // Battle 615735 (tournament 1v1, ACC, Nov 2026): an offensive melee robot (servo 51,
+      // Combat Algorithms 45, Threat Analysis 45) and a balanced dual long-range robot (servo 75,
+      // Combat Algorithms 55, Threat Analysis 25) swapped places on every tick from 33 s to the
+      // end. Inside its preferred distance the ranged robot still led the melee robot by 1.5 s
+      // of its velocity; right after they crossed that velocity pointed away from it, so the aim
+      // point lay ~25 units past the melee robot and the kiter ran through it. The gap locked at
+      // half their combined step (~2.4), just outside melee reach. Builds as recorded in
+      // battle_participant_builds.
+      describe('a ranged robot backing off never runs through its opponent (battle 615735)', () => {
+        const dualLongRange = (id: number) => durableRobot({
+          id, name: 'Kiter', stance: 'balanced', loadoutType: 'dual_wield',
+          mainWeapon: createLongRangeInventory(id * 10), mainWeaponId: id * 10,
+          offhandWeapon: createLongRangeInventory(id * 10 + 1), offhandWeaponId: id * 10 + 1,
+          servoMotors: new Prisma.Decimal(75), combatAlgorithms: new Prisma.Decimal(55), threatAnalysis: new Prisma.Decimal(25),
+        });
+
+        it('the melee chaser and the long-range kiter do not leapfrog', () => {
+          const chaser = durableRobot({
+            id: 1, name: 'Brawler', stance: 'offensive', mainWeapon: createMeleeWeaponInventory(1), mainWeaponId: 1,
+            servoMotors: new Prisma.Decimal(51), combatAlgorithms: new Prisma.Decimal(45), threatAnalysis: new Prisma.Decimal(45),
+          });
+          const t = trajectories([chaser, dualLongRange(2)], false);
+
+          expect(t.get('Brawler')!.length).toBeGreaterThan(300);
+          // Before the fix: 165 swaps in these 40 s
+          expect(placeSwaps(t, 'Brawler', 'Kiter')).toBeLessThan(10);
+        });
+
+        it('a mid-range and a long-range robot, both at high Combat Algorithms, keep their distance', () => {
+          // Both robots predicting inside their preferred distance fed each other's zigzag
+          // (each one's velocity flips every tick, and the 1.5 s lead multiplies it ~15×): the
+          // pair closed to within a few units and swapped places 31 times in these 40 s.
+          const midRange = durableRobot({
+            id: 1, name: 'Brawler', stance: 'offensive',
+            mainWeapon: { ...createRangedWeaponInventory(1), weapon: { ...createRangedWeaponInventory(1).weapon, rangeBand: 'mid' } },
+            mainWeaponId: 1,
+            servoMotors: new Prisma.Decimal(35), combatAlgorithms: new Prisma.Decimal(50), threatAnalysis: new Prisma.Decimal(30),
+          });
+          const longRange = durableRobot({
+            id: 2, name: 'Kiter', mainWeapon: createLongRangeInventory(2), mainWeaponId: 2,
+            servoMotors: new Prisma.Decimal(35), combatAlgorithms: new Prisma.Decimal(50), threatAnalysis: new Prisma.Decimal(30),
+          });
+          const t = trajectories([midRange, longRange], false);
+          const brawler = t.get('Brawler')!;
+          const kiter = t.get('Kiter')!;
+          const gaps = brawler.map((b, i) => Math.hypot(b.x - kiter[i].x, b.y - kiter[i].y));
+
+          expect(placeSwaps(t, 'Brawler', 'Kiter')).toBe(0);
+          // After the opening approach (5 s) the pair stays well apart
+          expect(Math.min(...gaps.slice(50))).toBeGreaterThan(5);
+        });
+      });
     });
 
     describe('patience resets on a landed hit, not on a miss', () => {

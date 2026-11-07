@@ -161,6 +161,21 @@ describe('RobotWorkshopPage', () => {
     expect(screen.getByRole('button', { name: 'Previous robot: DommeAap' })).toBeInTheDocument();
   });
 
+  it('starts the next robot with a fresh Workshop instead of carrying the plan over', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    renderAt();
+    await screen.findByText(/80 \/ 80 used/);
+    fireEvent.click(within(screen.getByTestId('build-row-logicCores')).getByRole('button', { name: 'Increase Logic Cores level' }));
+    expect(screen.getByRole('region', { name: 'Plan summary' })).toHaveTextContent('₡16,500');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Next robot: DikkeAap' }));
+
+    // Remounted for robot 14452: tuning is fetched again and the old plan is gone.
+    await waitFor(() => expect(api.fetchTuningAllocation).toHaveBeenCalledTimes(2));
+    expect(screen.getByRole('region', { name: 'Plan summary' })).not.toHaveTextContent('₡16,500');
+    expect(screen.getByRole('button', { name: 'Next robot ▶' })).toBeEnabled();
+  });
+
   it('repairs all damaged robots after confirming', async () => {
     renderAt();
     fireEvent.click(screen.getByRole('button', { name: /Repair all damaged/ }));

@@ -76,9 +76,14 @@ describe('Security signals', () => {
   });
 
   it('summarises signals per type, per stable and per source, with failed-login bursts', async () => {
-    const before = await getSecurityOverview('7d');
-    const attentionBefore = await getSecurityAttention();
-    const base = Date.now() - 2 * 60 * 60 * 1000;
+    // The stables table lists the 50 stables with the most recent signals. Other suites (and
+    // earlier runs on a dev database) record signals at real time, so with 50+ such stables in
+    // the last two hours the player dropped off the list. This test's signals sit three hours
+    // ahead and every read uses that `now`, so they are always the most recent.
+    const now = new Date(Date.now() + 3 * 60 * 60 * 1000);
+    const before = await getSecurityOverview('7d', now);
+    const attentionBefore = await getSecurityAttention(now);
+    const base = now.getTime() - 2 * 60 * 60 * 1000;
     // Six failed logins on the player's account from one IP inside 10 minutes: a burst.
     await prisma.securityEvent.createMany({
       data: Array.from({ length: 6 }, (_, i) => ({
@@ -97,7 +102,7 @@ describe('Security signals', () => {
     });
     auditIds.push(audit.id);
 
-    const after = await getSecurityOverview('7d');
+    const after = await getSecurityOverview('7d', now);
     const total = (o: typeof after, s: string): number => o.signals.find((x) => x.signal === s)?.total ?? 0;
     expect(total(after, 'failed_login') - total(before, 'failed_login')).toBe(6);
     expect(total(after, 'ownership_violation') - total(before, 'ownership_violation')).toBe(1);
@@ -115,11 +120,11 @@ describe('Security signals', () => {
     expect(quiet).toMatchObject({ failedLogins: 0, malformedRequests: 1, rateLimitHits: 1, burst: null });
 
     // Dashboard: the burst and the ownership violation are worth a look.
-    const attentionAfter = await getSecurityAttention();
+    const attentionAfter = await getSecurityAttention(now);
     expect(attentionAfter.alerts - attentionBefore.alerts).toBe(2);
     expect(attentionAfter.signals - attentionBefore.signals).toBe(8);
 
-    const hourly = await getSecurityOverview('24h');
+    const hourly = await getSecurityOverview('24h', now);
     expect(hourly.bucket).toBe('hour');
     expect(hourly.buckets).toHaveLength(24);
   });

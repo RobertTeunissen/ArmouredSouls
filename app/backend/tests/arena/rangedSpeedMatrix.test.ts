@@ -11,7 +11,11 @@
  * (calculateMovementIntent + applyMovement) and the real speed model; the
  * long-range kiter flees straight along +x at its engine speed. A chase ends
  * when the gap reaches the kiter's midpoint (≥ 16, the kiter keeps its
- * distance) or the pursuer's midpoint (≤ 4.5, the pursuer holds it).
+ * distance) or comes within HOLD_MARGIN of the pursuer's midpoint (≤ 5, the
+ * pursuer holds it). Since battle 615735 the pursuer's Combat Algorithms
+ * prediction tapers out over the last 2 units before its 4.5 midpoint, so a
+ * faster pursuer settles just outside 4.5 (~4.6) instead of crossing it; the
+ * per-tick gap rate is therefore checked only while the gap is beyond that taper.
  *
  * Rates (balanced stance, base speed 7 + 0.2 × Servo): the gap opens at
  * 0.35 + 0.22 × kiter Servo − 0.21 × pursuer Servo u/s. At equal Servo 25 the
@@ -28,6 +32,10 @@ const PURSUER_MIDPOINT = RANGE_BAND_MIDPOINTS.short; // 4.5
 const KITER_MIDPOINT = RANGE_BAND_MIDPOINTS.long; // 16
 const START_GAP = 10;
 const MAX_TICKS = 3000;
+/** The pursuer holds the kiter once the gap is within this margin of the pursuer's midpoint */
+const HOLD_MARGIN = 0.5;
+/** Prediction taper beyond the pursuer's midpoint (PREDICTION_TAPER_DISTANCE in movementAI.ts) */
+const PREDICTION_TAPER = 2;
 
 function makeState(name: string, servo: number, weapon: Record<string, unknown>, x: number): RobotCombatState {
   return {
@@ -118,9 +126,11 @@ function chase(pursuerServo: number, kiterServo: number, maxTicks = MAX_TICKS): 
     kiter.position = kiterNext;
 
     const nextGap = Math.hypot(kiter.position.x - pursuer.position.x, kiter.position.y - pursuer.position.y);
-    maxGapError = Math.max(maxGapError, Math.abs((nextGap - gap) - (kiterSpeed - pursuerSpeed) * SIMULATION_TICK));
+    if (gap >= PURSUER_MIDPOINT + PREDICTION_TAPER) {
+      maxGapError = Math.max(maxGapError, Math.abs((nextGap - gap) - (kiterSpeed - pursuerSpeed) * SIMULATION_TICK));
+    }
     gap = nextGap;
-    if (gap <= PURSUER_MIDPOINT) return { outcome: 'held', ticks: tick, pursuerSpeed, kiterSpeed, maxGapError, finalGap: gap };
+    if (gap <= PURSUER_MIDPOINT + HOLD_MARGIN) return { outcome: 'held', ticks: tick, pursuerSpeed, kiterSpeed, maxGapError, finalGap: gap };
     if (gap >= KITER_MIDPOINT) return { outcome: 'kept_distance', ticks: tick, pursuerSpeed, kiterSpeed, maxGapError, finalGap: gap };
   }
   return { outcome: 'open', ticks: maxTicks, pursuerSpeed, kiterSpeed, maxGapError, finalGap: gap };

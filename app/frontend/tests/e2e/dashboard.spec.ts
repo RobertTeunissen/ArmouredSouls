@@ -52,6 +52,21 @@ test.describe('Dashboard Page', () => {
     await expect(page.getByRole('button', { name: 'Stable ▾' })).toBeVisible();
   });
 
+  test('links each of the player\'s robots in the Robots menu to its Workshop', async ({ page }) => {
+    // #504 moved owner robot links to /robots/:id/prepare; the dropdown used to render them
+    // as disabled buttons because that path was not on the navigation's page list.
+    await page.getByRole('button', { name: 'Robots ▾' }).hover();
+    const menu = page.getByRole('button', { name: 'Robots ▾' }).locator('..');
+    const robotLinks = menu.locator('a[href$="/prepare"]');
+    await expect(robotLinks.first()).toBeVisible();
+    await expect(menu.locator('button[disabled]')).toHaveCount(0);
+
+    const href = await robotLinks.first().getAttribute('href');
+    expect(href).toMatch(/^\/robots\/\d+\/prepare$/);
+    await robotLinks.first().click();
+    await expect(page).toHaveURL(new RegExp(`${href}$`));
+  });
+
   test('should display robots section with robot cards', async ({ page }) => {
     // The seeded test_user_001 has robots — assert "My Robots" heading is visible
     await expect(page.getByRole('heading', { name: 'My Robots' })).toBeVisible();

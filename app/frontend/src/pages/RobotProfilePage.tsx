@@ -22,7 +22,7 @@ function RobotProfilePage() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const { robot, loading, isOwner, allModesBattleCount, battleReadiness } = useRobotDetail();
-  const { profile, failed } = useRobotProfile(robot?.id);
+  const { profile, failed, reload } = useRobotProfile(robot?.id);
 
   const summary = useMemo(() => (profile ? tierSummary(liveModeCells(profile.standings)) : null), [profile]);
   const form = useMemo(() => (profile && robot ? formItems(profile.form, robot.id) : null), [profile, robot]);
@@ -76,8 +76,8 @@ function RobotProfilePage() {
           form={form ?? []}
         />
 
-        <SeasonModeCards standings={profile?.standings ?? null} failed={failed} />
-        <FormSection robotId={robot.id} form={form} isOwner={isOwner} battleReadiness={battleReadiness} />
+        <SeasonModeCards standings={profile?.standings ?? null} failed={failed} onRetry={reload} />
+        <FormSection robotId={robot.id} form={form} failed={failed} onRetry={reload} isOwner={isOwner} battleReadiness={battleReadiness} />
         <HistorySection robotId={robot.id} standings={profile?.standings ?? null} />
         <AchievementsSection achievements={profile?.achievements ?? []} />
       </div>

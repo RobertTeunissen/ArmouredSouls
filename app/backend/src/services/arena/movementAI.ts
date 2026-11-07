@@ -65,6 +65,12 @@ const DEVIATION_MIN = 5;
 /** Prediction look-ahead time in seconds */
 const PREDICTION_LOOK_AHEAD = 1.5;
 
+/**
+ * Distance beyond its engagement midpoint (grid units) over which a ranged robot's
+ * prediction weight ramps from 0 to full; inside the midpoint it does not predict (battle 615735)
+ */
+const PREDICTION_TAPER_DISTANCE = 2;
+
 /** Movement modes that take the wall-aware kiting path near the wall (Season 2 round 3) */
 const KITING_MODES: ReadonlySet<MovementMode> = new Set<MovementMode>(['kiting', 'ranged_kiting', 'ranged_disengage']);
 
@@ -398,8 +404,21 @@ export function calculateMovementIntent(
   //   kiter that alternates between kiting and closing in at its midpoint then
   //   locks both robots into a two-tick back-and-forth that the melee robot never
   //   escapes, however fast it is.
-  // Ranged robots keep the prediction.
-  const predictionWeight = isMelee ? 0 : (ca - 1) / 49;
+  // Ranged robots predict only while they are farther than their preferred
+  // distance (battle 615735). Inside it the robot backs off to its range point;
+  // leading the opponent there by 1.5 s (~37 units at 24 u/s) could put the aim
+  // point past the opponent. Right after two fast robots crossed, each one's
+  // velocity points away from the other, so a high-CA kiter aimed beyond the
+  // chaser, ran through it, and both swapped places on every tick with the gap
+  // locked at half their combined step (~2.4, just outside melee reach).
+  // The weight tapers in over PREDICTION_TAPER_DISTANCE beyond the midpoint
+  // instead of switching on at it: a hard switch made a short-range robot
+  // following a wall kiter turn sharply every time the gap crossed 4.5 units.
+  // The weight is capped at 1: effective Combat Algorithms above 50 used to
+  // extrapolate beyond the predicted point.
+  const predictionTaper = Math.min(1, Math.max(0,
+    (currentDistToTarget - RANGE_BAND_MIDPOINTS[preferredRange]) / PREDICTION_TAPER_DISTANCE));
+  const predictionWeight = isMelee ? 0 : Math.min(1, (ca - 1) / 49) * predictionTaper;
   if (predictionWeight > 0) {
     const predictedPos: Position = {
       x: target.position.x + target.velocity.x * PREDICTION_LOOK_AHEAD,

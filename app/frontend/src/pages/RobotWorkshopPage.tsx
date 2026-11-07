@@ -7,7 +7,7 @@
  * going back to the robots list; repairs sit in the header.
  */
 import { useEffect, useMemo, useState } from 'react';
-import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import BattleConfigTab from '../components/BattleConfigTab';
 import ConfirmationModal from '../components/ConfirmationModal';
 import RobotImageSelector from '../components/RobotImageSelector';
@@ -36,7 +36,7 @@ function manualRepairCost(robot: { currentHP: number; maxHP: number }, repairBay
   return applyManualRepairDiscount(calculateRepairQuote({ robot }, repairBayLevel));
 }
 
-function RobotWorkshopPage() {
+function RobotWorkshop() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const section: WorkshopSection = params.get('section') === 'loadout' ? 'loadout' : 'build';
@@ -295,6 +295,19 @@ function RobotWorkshopPage() {
       {detail.toast && <Toast message={detail.toast.message} type={detail.toast.type} onClose={() => detail.setToast(null)} />}
     </div>
   );
+}
+
+/**
+ * One Workshop instance per robot. Switching robots changes only the route
+ * param, which would keep the mounted page (plan, tuning, the loaded robot)
+ * while the next robot loads, so upgrades and tuning could reach different
+ * robots. Keying on the id remounts it: the new robot starts from "Loading"
+ * with empty state, and a save still in flight finishes for the robot it
+ * was started for.
+ */
+function RobotWorkshopPage() {
+  const { id } = useParams();
+  return <RobotWorkshop key={id} />;
 }
 
 export default RobotWorkshopPage;

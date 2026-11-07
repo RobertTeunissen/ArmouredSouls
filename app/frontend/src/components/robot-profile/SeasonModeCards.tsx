@@ -2,11 +2,13 @@ import { isPlacementMode } from '@shared/utils/automatonStandingsTier';
 import { getTierColor, getTierName } from '../../utils/tierHelpers';
 import { MODE_LONG_LABELS, ROSTER_MODES } from '../../utils/stableViewFormat';
 import { successRate } from '../../utils/robotProfileFormat';
+import { LoadError } from './LoadError';
 import type { ProfileStanding } from './useRobotProfile';
 
 interface SeasonModeCardsProps {
   standings: readonly ProfileStanding[] | null;
   failed: boolean;
+  onRetry?: () => void;
 }
 
 function instanceLabel(id: string | undefined): string {
@@ -16,7 +18,7 @@ function instanceLabel(id: string | undefined): string {
 }
 
 /** One card per mode played this season: tier, rank in its league, LP, record. */
-export function SeasonModeCards({ standings, failed }: SeasonModeCardsProps) {
+export function SeasonModeCards({ standings, failed, onRetry }: SeasonModeCardsProps) {
   const played = new Set((standings ?? []).map((s) => s.mode));
   const notEntered = ROSTER_MODES.filter((m) => !played.has(m)).map((m) => MODE_LONG_LABELS[m]);
 
@@ -30,7 +32,11 @@ export function SeasonModeCards({ standings, failed }: SeasonModeCardsProps) {
           </span>
         )}
       </div>
-      {failed && <p className="rounded-lg bg-surface p-4 text-sm text-error" role="alert">Could not load this season&apos;s standings.</p>}
+      {failed && (
+        <div className="rounded-lg bg-surface px-4 pb-4 pt-1">
+          <LoadError message="Could not load this season's standings." onRetry={onRetry} />
+        </div>
+      )}
       {!failed && standings === null && <p className="rounded-lg bg-surface p-4 text-sm text-secondary">Loading…</p>}
       {standings && standings.length === 0 && (
         <p className="rounded-lg bg-surface p-4 text-sm text-secondary">No league or event matches played yet this season.</p>

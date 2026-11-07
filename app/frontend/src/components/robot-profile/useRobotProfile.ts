@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { api } from '../../utils/api';
 import { createLogger } from '../../utils/logger';
 import type { PublicRobotStanding, RecentResult } from '../stable-view/types';
@@ -36,10 +36,20 @@ export interface RobotProfileData {
   accolades: ProfileAccolade[];
 }
 
-/** The public profile sections; null while loading or when the request failed. */
-export function useRobotProfile(robotId: number | undefined): { profile: RobotProfileData | null; failed: boolean } {
+export interface RobotProfileState {
+  /** Null while loading or when the request failed. */
+  profile: RobotProfileData | null;
+  failed: boolean;
+  /** Requests the profile again (after a failure). */
+  reload: () => void;
+}
+
+/** The public profile sections for one robot. */
+export function useRobotProfile(robotId: number | undefined): RobotProfileState {
   const [profile, setProfile] = useState<RobotProfileData | null>(null);
   const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+  const reload = useCallback(() => setAttempt((n) => n + 1), []);
 
   useEffect(() => {
     if (!robotId) return undefined;
@@ -53,7 +63,7 @@ export function useRobotProfile(robotId: number | undefined): { profile: RobotPr
         if (!cancelled) setFailed(true);
       });
     return () => { cancelled = true; };
-  }, [robotId]);
+  }, [robotId, attempt]);
 
-  return { profile, failed };
+  return { profile, failed, reload };
 }
