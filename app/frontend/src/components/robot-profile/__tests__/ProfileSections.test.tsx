@@ -3,7 +3,7 @@
  * Form (recent matches link to the battle; ELO chart) sections (#504).
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
 const robotApi = vi.hoisted(() => ({
@@ -23,6 +23,7 @@ vi.mock('recharts', () => ({
 
 import { HistorySection } from '../HistorySection';
 import { FormSection } from '../FormSection';
+import { SeasonModeCards } from '../SeasonModeCards';
 import { useSeasonStore } from '../../../stores/seasonStore';
 
 beforeEach(() => {
@@ -73,5 +74,31 @@ describe('FormSection', () => {
     expect(screen.queryByRole('link', { name: /Battle history/ })).toBeNull();
     expect(screen.getByTestId('upcoming')).toBeInTheDocument();
     expect(await screen.findByRole('img', { name: 'ELO from 1904 to 1922 over the last 2 cycles' })).toBeInTheDocument();
+  });
+
+  it('shows an error with Retry, not a permanent loader, when the profile failed', () => {
+    const onRetry = vi.fn();
+    render(
+      <MemoryRouter>
+        <FormSection robotId={5} isOwner={false} form={null} failed onRetry={onRetry} />
+      </MemoryRouter>,
+    );
+    expect(screen.getByText('Could not load recent matches.')).toBeInTheDocument();
+    // The ELO chart has its own loader; the recent-matches card must not.
+    const card = screen.getByRole('heading', { name: 'Recent matches' }).parentElement?.parentElement as HTMLElement;
+    expect(card).not.toHaveTextContent('Loading…');
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(onRetry).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('SeasonModeCards', () => {
+  it('offers Retry when the standings failed to load', () => {
+    const onRetry = vi.fn();
+    render(<SeasonModeCards standings={null} failed onRetry={onRetry} />);
+    expect(screen.getByRole('alert')).toHaveTextContent("Could not load this season's standings.");
+    expect(screen.queryByText('Loading…')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(onRetry).toHaveBeenCalledTimes(1);
   });
 });

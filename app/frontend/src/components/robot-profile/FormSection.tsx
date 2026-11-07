@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import UpcomingMatches from '../UpcomingMatches';
+import { LoadError } from './LoadError';
 import { api } from '../../utils/api';
 import { getTierName } from '../../utils/tierHelpers';
 import { battleTypeLabel } from '../../utils/stableViewFormat';
@@ -10,7 +11,11 @@ import type { BattleReadiness } from '../../utils/robot-battle-readiness';
 
 interface FormSectionProps {
   robotId: number;
+  /** Null while the profile loads, or when it failed (see `failed`). */
   form: readonly FormItem[] | null;
+  /** The profile request failed: show an error with Retry, not a loader. */
+  failed?: boolean;
+  onRetry?: () => void;
   isOwner: boolean;
   battleReadiness?: BattleReadiness;
 }
@@ -68,7 +73,7 @@ function EloChart({ robotId }: { robotId: number }) {
 }
 
 /** ELO trend, recent matches and what is scheduled next. */
-export function FormSection({ robotId, form, isOwner, battleReadiness }: FormSectionProps) {
+export function FormSection({ robotId, form, failed = false, onRetry, isOwner, battleReadiness }: FormSectionProps) {
   const recent = (form ?? []).slice(0, 6);
   return (
     <section aria-labelledby="form-heading">
@@ -80,7 +85,9 @@ export function FormSection({ robotId, form, isOwner, battleReadiness }: FormSec
             <h3 className="text-sm font-semibold">Recent matches</h3>
             {isOwner && <Link to="/battle-history" className="text-xs text-primary hover:underline">Battle history →</Link>}
           </div>
-          {form === null ? (
+          {failed ? (
+            <LoadError message="Could not load recent matches." onRetry={onRetry} />
+          ) : form === null ? (
             <p className="mt-3 text-sm text-secondary">Loading…</p>
           ) : recent.length === 0 ? (
             <p className="mt-3 text-sm text-secondary">No battles yet this season.</p>

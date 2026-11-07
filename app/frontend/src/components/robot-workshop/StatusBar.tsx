@@ -39,7 +39,8 @@ export function StatusBar({ credits, upgradeCost, tuningUsed, tuningPool, tuning
           >
             Discard
           </button>
-          {hasChanges ? (
+          {/* Keep "Saving…" up for the whole save: the plan clears before the tuning write finishes. */}
+          {hasChanges || saving ? (
             <button
               type="button"
               onClick={onSave}
@@ -52,7 +53,7 @@ export function StatusBar({ credits, upgradeCost, tuningUsed, tuningPool, tuning
             <button
               type="button"
               onClick={onNext}
-              disabled={!hasNext}
+              disabled={!hasNext || saving}
               className="min-h-[44px] flex-[2] rounded-lg bg-surface-elevated px-5 text-sm text-white hover:bg-white/10 disabled:opacity-40 sm:flex-none"
             >
               Next robot ▶
