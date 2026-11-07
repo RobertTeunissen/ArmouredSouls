@@ -89,59 +89,34 @@ test.describe('Financial Flow', () => {
     }
   });
 
-  test('upgrading a robot attribute on the upgrades tab increases attribute level and decreases credit balance', async ({ page }) => {
-    // Req 7.3 — upgrade a robot attribute via the upgrades tab
-    // Navigate to the robots list to find the user's robot
+  test('upgrading a robot attribute in the Workshop increases its level and decreases the credit balance', async ({ page }) => {
+    // Req 7.3 — upgrade a robot attribute in the Workshop's Build table (#504)
     await navigateToProtectedPage(page, '/robots');
-
-    // Wait for robots to load
     await expect(page.getByRole('heading', { name: /My Robots/i })).toBeVisible({ timeout: 10000 });
 
-    // Click on the first robot card link (contains "View Details →")
     const viewDetailsLink = page.getByText('View Details →').first();
-    const hasRobots = await viewDetailsLink.isVisible().catch(() => false);
-    if (!hasRobots) {
+    if (!(await viewDetailsLink.isVisible().catch(() => false))) {
       test.skip(true, 'No robots available for test_user_001');
       return;
     }
     await viewDetailsLink.click();
+    await page.waitForURL(/\/robots\/\d+\/prepare/);
+    await expect(page.getByRole('tab', { name: 'build' })).toHaveAttribute('aria-selected', 'true');
 
-    // Wait for robot detail page to load
-    await page.waitForLoadState('networkidle');
-
-    // Navigate to the Upgrades tab
-    const upgradesTab = page.getByRole('tab', { name: /Upgrades/i });
-    await expect(upgradesTab).toBeVisible({ timeout: 10000 });
-    await upgradesTab.click();
-
-    // Wait for the Upgrade Planner to render
-    await expect(page.getByText(/Upgrade Planner/i)).toBeVisible({ timeout: 10000 });
-
-    // Find the first attribute increment button that is enabled
-    const incrementButton = page.getByRole('button', { name: /^Increase /i }).first();
-    const canUpgrade = await incrementButton.isEnabled().catch(() => false);
-    if (!canUpgrade) {
+    const incrementButton = page.getByRole('button', { name: /^Increase .* level$/ }).first();
+    if (!(await incrementButton.isEnabled().catch(() => false))) {
       test.skip(true, 'No upgradeable attributes available');
       return;
     }
-
-    // Click increment to plan an upgrade
+    const bar = page.getByRole('region', { name: 'Plan summary' });
+    const creditsBefore = await bar.getByText(/^₡[\d,]+$/).first().textContent();
     await incrementButton.click();
 
-    // The "Commit Upgrades" button should now be enabled
-    const commitButton = page.getByRole('button', { name: /Commit Upgrades/i });
-    await expect(commitButton).toBeEnabled({ timeout: 5000 });
-
-    // Click commit to apply the upgrade
-    await commitButton.click();
-
-    // A confirmation modal should appear — click Confirm
-    const confirmButton = page.getByRole('button', { name: /Confirm/i });
-    await expect(confirmButton).toBeVisible({ timeout: 5000 });
-    await confirmButton.click();
-
-    // Wait for the upgrade to complete — look for success toast or page refresh
-    await page.waitForLoadState('networkidle');
+    // The plan is priced in the status bar; Save commits it
+    await expect(bar.getByText('Upgrades')).toBeVisible();
+    await page.getByRole('button', { name: /^Save/ }).click();
+    await expect(page.getByText(/saved\./)).toBeVisible({ timeout: 10000 });
+    await expect(bar.getByText(/^₡[\d,]+$/).first()).not.toHaveText(creditsBefore ?? '', { timeout: 10000 });
   });
 
   // Finance Center report, history, robot, redirect, responsive, and accessibility

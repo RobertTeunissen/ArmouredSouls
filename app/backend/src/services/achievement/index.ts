@@ -7,6 +7,7 @@ export {
   type AchievementsResponse,
   type AchievementWithProgress,
   type PinnedAchievement,
+  type ShowcaseAchievement,
   type StableAchievementData,
   type AchievementRarityCache,
   type IAchievementService,

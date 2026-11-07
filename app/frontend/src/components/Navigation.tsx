@@ -13,10 +13,11 @@ import SeasonCountdownBanner from './season/SeasonCountdownBanner';
 import SeasonSummaryModal from './season/SeasonSummaryModal';
 import { useSeasonStore } from '../stores/seasonStore';
 import { NavLink, DropdownMenu, MobileTab, MobileDrawer } from './nav';
-import { allPages } from './nav';
+import { allPages, stableNavItems } from './nav';
 import type { UserRobot } from './nav';
 import { useRobotStore } from '../stores';
 import SearchTrigger from './search/SearchTrigger';
+import { workshopPath } from '../utils/robotRoutes';
 
 export interface NavigationProps {
   onOpenSearch?: () => void;
@@ -55,8 +56,12 @@ function Navigation({ onOpenSearch }: NavigationProps) {
     if (path === '/dashboard' || path === '/') {
       return currentPath === '/' || currentPath === '/dashboard';
     }
+    // Exact match: /stables/7 must not light up on /stables/70 or another player's stable.
+    if (path.startsWith('/stables/')) return currentPath === path;
     return currentPath.startsWith(path);
   };
+
+  const stableItems = stableNavItems(user.id);
 
   const isCategoryActive = (items: Array<{ path: string; label: string }>) =>
     items.some(item => isActive(item.path));
@@ -83,14 +88,14 @@ function Navigation({ onOpenSearch }: NavigationProps) {
                 label={allPages.robots.label}
                 items={[
                   allPages.robots.items[0],
-                  ...userRobots.map(robot => ({ path: `/robots/${robot.id}`, label: robot.name, indent: true })),
+                  ...userRobots.map(robot => ({ path: workshopPath(robot.id), label: robot.name, indent: true })),
                   ...allPages.robots.items.slice(1),
                 ]}
                 isActive={isCategoryActive(allPages.robots.items)}
                 checkActive={isActive}
               />
               <DropdownMenu label={allPages.battle.label} items={allPages.battle.items} isActive={isCategoryActive(allPages.battle.items)} checkActive={isActive} />
-              <DropdownMenu label={allPages.stable.label} items={allPages.stable.items} isActive={isCategoryActive(allPages.stable.items)} checkActive={isActive} />
+              <DropdownMenu label={allPages.stable.label} items={stableItems} isActive={isCategoryActive(stableItems)} checkActive={isActive} />
               <DropdownMenu label={allPages.social.label} items={allPages.social.items} isActive={isCategoryActive(allPages.social.items)} checkActive={isActive} />
 
               <NavLink to="/guide" isActive={isActive('/guide')}>📖 Guide</NavLink>
@@ -153,6 +158,7 @@ function Navigation({ onOpenSearch }: NavigationProps) {
           userRobots={userRobots}
           isAdmin={user.role === 'admin'}
           onLogout={handleLogout}
+          userId={user.id}
         />
       </div>
 

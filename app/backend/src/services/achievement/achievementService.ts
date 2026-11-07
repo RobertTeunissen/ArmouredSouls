@@ -55,6 +55,7 @@ export {
   type AchievementsResponse,
   type AchievementWithProgress,
   type PinnedAchievement,
+  type ShowcaseAchievement,
   type StableAchievementData,
   type AchievementRarityCache,
   type IAchievementService,
@@ -325,7 +326,7 @@ class AchievementService implements IAchievementService {
   }
 
   async getStableAchievements(userId: number): Promise<StableAchievementData> {
-    return _getStableAchievements(userId);
+    return _getStableAchievements(userId, this.rarityCache);
   }
 
   async refreshRarityCache(): Promise<void> {

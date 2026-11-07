@@ -2,7 +2,7 @@
 title: "Tips & Strategy"
 description: "Efficient paths to earning achievements — quick wins for new players, mid-game targets, and long-term goals for completionists."
 order: 4
-lastUpdated: "2026-11-04"
+lastUpdated: "2026-11-06"
 relatedArticles:
   - achievements/achievement-system
   - achievements/achievement-catalog
@@ -110,7 +110,7 @@ Secret achievements are worth ₡50,000 and +50 prestige each. They're fun surpr
 
 1. **Focus on one robot at a time** for combat achievements. Spreading battles across many robots slows progress on win-count and kill-count milestones.
 2. **Check the achievements page regularly** to see what you're close to earning. A progress bar at 45/50 is worth a few extra battles to push over the line.
-3. **Pin your rarest achievements** to your stable showcase. Epic and Legendary rarity badges make your stable stand out.
+3. **Let your trophy cabinet work for you.** Your stable page shows your rarest achievements automatically; pin a badge only when you want a specific one on display.
 4. **Don't ignore practice arena** — "Wax On, Wax Off" (25 practice battles) is free credits and prestige with no risk.
 5. **Try things out** — Many achievements reward exploring: a custom robot image, every loadout type, a 0% or 50% yield threshold, every Booking Office event. The credits help most early in the season.
 

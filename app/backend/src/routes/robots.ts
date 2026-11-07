@@ -29,7 +29,7 @@ import {
   getPerformanceContext,
   invalidateUserRobotsCache,
 } from '../services/robot/robotQueryService';
-import { getRobotRankings } from '../services/robot/robotRankingService';
+import { getRobotProfile } from '../services/robot/robot-profile-service';
 import { executeUpgradeTransaction } from '../services/robot/robotUpgradeService';
 import {
   equipMainWeapon,
@@ -255,6 +255,15 @@ router.get('/:id', authenticateToken, validateRequest({ params: robotIdParamsSch
   res.json(robot.userId === userId ? robot : sanitizeRobotForPublic(robot));
 });
 
+// Public robot profile (#504): per-mode standings with rank, form, achievements, accolades.
+router.get('/:id/profile', authenticateToken, validateRequest({ params: robotIdParamsSchema }), async (req: AuthRequest, res: Response) => {
+  const profile = await getRobotProfile(Number(req.params.id));
+  if (!profile) {
+    throw new RobotError(RobotErrorCode.ROBOT_NOT_FOUND, 'Robot not found', 404);
+  }
+  res.json(profile);
+});
+
 // Equip main weapon
 router.put('/:id/equip-main-weapon', authenticateToken, validateRequest({ params: robotIdParamsSchema, body: equipWeaponBodySchema }), async (req: AuthRequest, res: Response) => {
   const userId = req.user!.userId;
@@ -450,29 +459,6 @@ router.post('/repair-all', authenticateToken, validateRequest({}), async (req: A
   });
 
   invalidateUserRobotsCache(userId);
-});
-
-// Get robot rankings (public — returns only aggregated category sums, percentiles, and ranks; no raw attributes)
-router.get('/:id/rankings', authenticateToken, validateRequest({ params: robotIdParamsSchema }), async (req: AuthRequest, res: Response) => {
-  const robotId = parseInt(String(req.params.id));
-
-  if (isNaN(robotId)) {
-    throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Invalid robot ID', 400);
-  }
-
-  const robot = await prisma.robot.findUnique({ where: { id: robotId } });
-
-  if (!robot) {
-    throw new RobotError(RobotErrorCode.ROBOT_NOT_FOUND, 'Robot not found', 404);
-  }
-
-  const rankings = await getRobotRankings(robotId);
-
-  if (Object.keys(rankings).length === 0) {
-    throw new RobotError(RobotErrorCode.ROBOT_NOT_FOUND, 'Robot scores not found', 404);
-  }
-
-  res.json(rankings);
 });
 
 // Get robot performance by context (leagues, tournaments, tag teams)

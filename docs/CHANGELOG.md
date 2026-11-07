@@ -1,6 +1,6 @@
 # Armoured Souls — Changelog
 
-**Last Updated**: October 17, 2026
+**Last Updated**: November 6, 2026
 
 Development history organized by phase and month. For planned work, see the [BACKLOG.md](BACKLOG.md).
 
@@ -159,7 +159,7 @@ At the August 1, 2026 snapshot, Phase 1 delivered a fully functional game with f
 ---
 
 
-## August–October 2026 — Current Implementation Updates
+## August–November 2026 — Current Implementation Updates
 
 These entries record repository implementation. Acceptance and production release status must be confirmed from deployment records and the live environment; implementation notes deliberately separate those facts.
 
@@ -176,5 +176,6 @@ These entries record repository implementation. Acceptance and production releas
 | Oct 17 | Season 2 balance package round 2 (#520) | Ranged disengage now starts 2.5 s after the first melee hit (guaranteed exchange); melee pursuit 1.10 → 1.15 (kiting stays 1.10); re-measured main / round 1 / round 2. See [SEASON_2_BALANCE_PACKAGE.md](balance_changes/SEASON_2_BALANCE_PACKAGE.md#round-2-adjustments-520) and the [validation report](analysis/NEXT_SEASON_BALANCE_VALIDATION.md#season-2-balance-package-round-2). |
 | Oct 17 | Season 2 balance package round 3 (#538) | Grand Melee threat scoring uses the evaluator's own range multiplier and keeps damage dealt (`max(damage, maxHP × 0.5)`); ranged kiting 1.10× / ranged pursuit 1.05× between ranged robots with different preferred ranges; wall-aware kiting path that fixes the #538 wall-slide dither; short-range Hydraulic Systems 0.01 → 0.005; harness own-band and wall-time metrics. Measured for information only; at invest late short range stays at 74.5% (radius-16 arena geometry), arena size is an open product decision. See [SEASON_2_BALANCE_PACKAGE.md](balance_changes/SEASON_2_BALANCE_PACKAGE.md#round-3-adjustments) and the [validation report](analysis/NEXT_SEASON_BALANCE_VALIDATION.md#season-2-balance-package-round-3). |
 | Oct 17 | Season 2 economy (#524, #525, #526, #527) | Streaming formula v2: battles and Fame add up, Streaming Studio +50% per level (6× at L10, was 11×), no caps; streaming breakdown v2 with an explicit team share and a validator migration; Merchandising Hub ₡25,000 per level (was ₡10,000); Repair Bay 6% per level for every roster size (60% at L10, was up to 90% with large rosters); guide corrected for Repair Bay upkeep; Training Facility discount × 0.75 (67.5% max, was 90%), exact fractional rates, capacity-aware ROI and onboarding text; team credit pools × 0.75 once before the split (tag team/2v2 1.5×, 3v3 2.25× a solo reward), exact shares that sum to the pool. See [SEASON_2_ECONOMY_REBALANCE.md](balance_changes/SEASON_2_ECONOMY_REBALANCE.md) and the [player announcement](balance_changes/SEASON_2_BALANCE_PACKAGE.md#economy). |
+| Nov 6 | Robot Profile and Workshop (#504, backlog #37) | The 8-tab Robot Detail page became a public Robot Profile (`/robots/:id`: season mode cards, form, tier history, achievements; builds hidden from visitors) and an owner-only Workshop (`/robots/:id/prepare`: Build table for upgrades + tuning + effective stats, Loadout, robot switcher, Repair all, Save · next robot). New `GET /api/robots/:id/profile`; `GET /api/robots/:id/rankings` removed. See [PRD_ROBOT_DETAIL_PAGE.md](prd_pages/PRD_ROBOT_DETAIL_PAGE.md). |
 
 The historical Phase 1 summary above reflects the earlier August snapshot. Current stack versions and implementation inventories are maintained in [ARCHITECTURE.md](architecture/ARCHITECTURE.md), the [service directory](architecture/PRD_SERVICE_DIRECTORY.md), and the [documentation index](README.md).

@@ -98,8 +98,20 @@ export interface PinnedAchievement {
   unlockedAt: string;
 }
 
+/**
+ * One badge of the stable page's trophy cabinet: the stable's pins first,
+ * then its rarest other unlocks, so the cabinet is never empty slots.
+ */
+export interface ShowcaseAchievement extends PinnedAchievement {
+  pinned: boolean;
+  /** Human stables holding it (rarity cache); null until the cache has loaded. */
+  holders: number | null;
+}
+
 export interface StableAchievementData {
   pinned: PinnedAchievement[];
+  /** Up to `SHOWCASE_SIZE` badges: pins, then rarest unlocks (hidden ones only when pinned). */
+  showcase: ShowcaseAchievement[];
   totalUnlocked: number;
   totalAvailable: number;
 }

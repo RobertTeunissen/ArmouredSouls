@@ -2,7 +2,7 @@
 title: "Buying & Selling Weapons"
 description: "How weapon purchases and resales work, the Workshop's dual role on both ends of every transaction, and the pricePaid mechanic that prevents resale arbitrage."
 order: 3
-lastUpdated: "2026-10-16"
+lastUpdated: "2026-11-06"
 relatedArticles:
   - weapons/loadout-types
   - facilities/facility-overview
@@ -88,7 +88,7 @@ Two examples:
 
 A weapon currently equipped on any robot — as either a main weapon or offhand — cannot be sold. The Sell button is disabled and the row shows an "Equipped on: {robot}" link.
 
-To sell an equipped weapon: visit the robot's detail page, unequip the weapon, then return to the Weapon Shop's My Inventory tab. The weapon will appear in the Available to Sell section.
+To sell an equipped weapon: open the robot's Workshop, unequip the weapon in the **Loadout** section, then return to the Weapon Shop's My Inventory tab. The weapon will appear in the Available to Sell section.
 
 If a weapon is equipped on multiple robots (rare corner case from offhand sharing), all equipping robots are listed and you must unequip from all of them.
 

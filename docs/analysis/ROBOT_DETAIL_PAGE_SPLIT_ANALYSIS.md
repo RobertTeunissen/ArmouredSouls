@@ -2,7 +2,7 @@
 
 **Source**: Backlog #37  
 **Date**: June 2026  
-**Status**: Analysis complete, ready to spec
+**Status**: Implemented November 2026 (#504). The shipped design differs: the Workshop has two sections (Build, Loadout) instead of accordions, and the Profile hides builds from visitors. Current behaviour: [PRD_ROBOT_DETAIL_PAGE.md](../prd_pages/PRD_ROBOT_DETAIL_PAGE.md).
 
 ---
 

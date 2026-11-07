@@ -9,6 +9,7 @@ import authRoutes from '../src/routes/auth';
 import { errorHandler } from '../src/middleware/errorHandler';
 import { SENSITIVE_ROBOT_FIELDS } from '../src/routes/robots';
 import { battleLogFixture } from './helpers/battleLogFixture';
+import { enterRobotStanding } from './helpers/standings';
 
 dotenv.config();
 
@@ -94,6 +95,9 @@ describe('Stables API - GET /api/stables/:userId', () => {
         });
       }
 
+      if (robotIds.length > 0) {
+        await prisma.standing.deleteMany({ where: { entityType: 'robot', entityId: { in: robotIds } } });
+      }
       await prisma.weaponInventory.deleteMany({ where: { userId: { in: testUserIds } } });
       await prisma.facility.deleteMany({ where: { userId: { in: testUserIds } } });
       await prisma.robot.deleteMany({ where: { userId: { in: testUserIds } } });
@@ -359,6 +363,35 @@ describe('Stables API - GET /api/stables/:userId', () => {
       level: 3,
       maxLevel: 10,
     });
+
+    // Stable page revamp: member since, latest results and the trophy cabinet.
+    expect(user.memberSince).toBe(testUser.createdAt.toISOString());
+    expect(response.body.recentResults).toHaveLength(5);
+    expect(response.body.recentResults[0].entries[0]).toMatchObject({ robotName: `Beta Bot ${suffix}`, outcome: 'loss', placement: null });
+    expect(response.body.achievements.showcase).toEqual([]);
+    expect(response.body.accolades).toEqual([]);
+  });
+
+  // Stable page revamp: the roster's per-mode tiers come from standings.
+  it('returns played standings per robot and leaves unplayed modes out', async () => {
+    const suffix = `${Date.now()}_${Math.random().toString(36).substring(7)}`;
+    const robot = await prisma.robot.create({
+      data: { name: `Tier Bot ${suffix}`, userId: testUser.id, elo: 1500, currentHP: 100, maxHP: 100, currentShield: 10, maxShield: 10 },
+    });
+    await enterRobotStanding(robot.id, 'league_1v1', { tier: 'gold', leaguePoints: 40, wins: 10, losses: 3, draws: 2 });
+    await enterRobotStanding(robot.id, 'grand_melee', { tier: 'platinum', leaguePoints: 600, wins: 4, totalMatches: 20 });
+    // A subscription's placeholder row: Bronze, never played.
+    await enterRobotStanding(robot.id, 'koth', { totalMatches: 0 });
+
+    const response = await request(app)
+      .get(`/api/stables/${testUser.id}`)
+      .set('Authorization', `Bearer ${authToken}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.robots[0].standings).toEqual([
+      { mode: 'league_1v1', tier: 'gold', leaguePoints: 40, wins: 10, losses: 3, draws: 2, totalMatches: null, teamName: null, teamId: null, leagueInstanceId: 'gold_1' },
+      { mode: 'grand_melee', tier: 'platinum', leaguePoints: 600, wins: 4, losses: 0, draws: 0, totalMatches: 20, teamName: null, teamId: null, leagueInstanceId: 'platinum_1' },
+    ]);
   });
 
   // Requirement 8.4: Empty robots array for user with no robots

@@ -41,6 +41,21 @@ export const implementedPages = new Set([
   '/achievements',
 ]);
 
+/** Pages reachable from the navigation, including per-player pages (`/robots/:id`, `/stables/:id`). */
+export function isNavPageImplemented(path: string): boolean {
+  return /^\/(robots|stables)\/\d+$/.test(path) || implementedPages.has(path);
+}
+
+/** The player's own public stable page: the first item of the Stable menu. */
+export function myStableItem(userId: number): NavItem {
+  return { path: `/stables/${userId}`, label: 'My Stable' };
+}
+
+/** Stable menu items for a player, own stable page first. */
+export function stableNavItems(userId: number): NavItem[] {
+  return [myStableItem(userId), ...allPages.stable.items];
+}
+
 export const allPages: Record<string, NavCategory> = {
   robots: {
     label: 'Robots',

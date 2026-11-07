@@ -5,6 +5,7 @@ import { useStableOverview } from '../../hooks/useSubscriptions';
 import ConfirmationModal from '../ConfirmationModal';
 import { ApiError } from '../../utils/ApiError';
 import { getTierName, getTierColor, getTierIcon } from '../../utils/tierHelpers';
+import { workshopPath } from '../../utils/robotRoutes';
 import {
   getMyTeamBattles,
   registerTeamBattle,
@@ -319,7 +320,7 @@ function TeamBattleCard({ team, onDisband, onRename, onSwap, onSwapPositions }: 
           >
             <div
               className="cursor-pointer"
-              onClick={() => navigate(`/robots/${member.robot.id}`)}
+              onClick={() => navigate(workshopPath(member.robot.id))}
             >
               <div className="text-xs text-secondary mb-1">
                 {team.teamSize === 2

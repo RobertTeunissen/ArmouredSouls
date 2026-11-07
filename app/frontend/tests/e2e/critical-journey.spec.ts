@@ -11,7 +11,7 @@ import { registerNewUser } from './helpers/register';
  *   2. Skip onboarding
  *   3. Create robot (verify ₡500,000 deduction)
  *   4. Purchase weapon (verify credit deduction)
- *   5. Equip weapon on battle-config tab (verify battle readiness)
+ *   5. Equip weapon in the Workshop's Loadout section (verify battle readiness)
  *   6. Run practice battle (verify win/loss/draw outcome)
  *   7. Navigate to /battle-history (verify page loads)
  */
@@ -121,20 +121,19 @@ test.describe('Critical User Journey', () => {
     await page.getByRole('button', { name: 'OK' }).click();
 
     // ---------------------------------------------------------------
-    // Step 5: Equip weapon on battle-config tab (Req 8.1, 8.3)
+    // Step 5: Equip weapon in the Workshop's Loadout section (Req 8.1, 8.3)
     // ---------------------------------------------------------------
-    // Navigate to the robot detail page
-    await page.goto(`/robots/${robotId}`);
+    // The owner's preparation page (#504): Build | Loadout
+    await page.goto(`/robots/${robotId}/prepare`);
     await page.waitForLoadState('networkidle');
 
-    // Click the "Battle Config" tab
-    await page.getByRole('tab', { name: /Battle Config/ }).click();
+    await page.getByRole('tab', { name: 'loadout' }).click();
 
     // Wait for the battle config section to load
     await expect(page.getByText('Battle Configuration')).toBeVisible({ timeout: 10000 });
 
     // The main weapon slot should show "No weapon equipped" initially
-    // Click "Equip Weapon" inside the battle-config tab panel (not the eligibility checklist button above)
+    // Click "Equip Weapon" inside the Loadout panel (not the eligibility checklist button above)
     await page.locator('[role="tabpanel"]').getByText('Equip Weapon').first().click();
 
     // The weapon selection modal should appear with "Select Weapon" heading

@@ -2,7 +2,7 @@
 title: "Badges & Showcase"
 description: "How achievement badges work, the hexagonal badge design, locked and unlocked states, and how to pin your favourite achievements to your stable page."
 order: 3
-lastUpdated: "2026-11-04"
+lastUpdated: "2026-11-06"
 relatedArticles:
   - achievements/achievement-system
   - achievements/achievement-catalog
@@ -12,7 +12,7 @@ relatedArticles:
 
 Every achievement has a unique **hexagonal badge** — a collectible icon that represents your accomplishment. Badges are displayed on the achievements page, in toast notifications when you earn them, and in the battle report when a battle triggers an unlock.
 
-You can also **pin up to 6 badges** to your stable page as a public showcase, letting other players see your proudest accomplishments.
+Your stable page shows 6 of your badges in its **trophy cabinet**: your rarest ones automatically, or the ones you **pin** yourself.
 
 ## Badge Design
 
@@ -44,7 +44,9 @@ There's only one image per badge. The locked appearance is achieved through a vi
 
 ## Pinned Showcase
 
-Your stable page has a **showcase section** with 6 badge slots. This is your curated trophy wall — the achievements you're most proud of, visible to anyone who visits your stable.
+Your stable page has a **trophy cabinet** with 6 badge slots, visible to anyone who visits your stable. You never have to fill it yourself: any slot you leave free shows one of your rarest achievements, the ones the fewest players hold. Pin badges to choose them yourself; your pins always come first.
+
+Secret achievements are never picked for you, so the cabinet can't spoil one. You can still pin a secret achievement you've earned.
 
 ### How to Pin
 
@@ -55,30 +57,31 @@ Your stable page has a **showcase section** with 6 badge slots. This is your cur
 
 You can also pin directly from your stable page:
 1. Visit your own stable
-2. Click the **+** button on an empty showcase slot
-3. A picker modal shows all your unlocked achievements
-4. Select one to pin it
+2. Click **Customise** in the trophy cabinet
+3. A picker shows all your unlocked achievements
+4. Select or deselect badges and click **Save**
 
 ### Rules
 
 - **Maximum 6 pins** — Choose wisely. You can swap them anytime.
 - **Only unlocked achievements** — You can't pin an achievement you haven't earned yet.
-- **Unpin anytime** — Click the **×** on a pinned badge on your stable page, or toggle the pin off on the achievements page.
+- **Unpin anytime** — Deselect it under **Customise** on your stable page, or toggle the pin off on the achievements page. Its slot goes back to showing a rare achievement.
 
 ```callout-tip
-Your showcase is the first thing other players see when they visit your stable. Pin your rarest achievements to make an impression — an Epic or Legendary rarity badge says more than a Common one.
+Pinning is optional. Pin when you want to show off something specific, such as a Trophy or the achievement you're proudest of, rather than the rarest ones.
 ```
 
 ### What Visitors See
 
 When another player visits your stable, they see:
 
-- Your 6 pinned badges (or fewer if you haven't filled all slots)
-- Hovering a badge shows the achievement name, description, and when you earned it
-- A summary line: "42/63 Achievements · View all →" (the link goes to your own achievements page, not theirs)
-- **No rarity labels** on the stable showcase — rarity is only shown on the dedicated achievements page
+- Up to 6 badges: your pins, marked **Pinned**, then your rarest other achievements
+- Under each unpinned badge, how many players hold it ("Held by 2 players")
+- Hovering a badge shows when you earned it
+- A summary line such as "106 of 130 achievements"
+- Your best Hall of Records placements from completed seasons, below the badges
 
-Empty slots show a faint hexagonal outline, hinting that there's room for more.
+A stable with no achievements yet shows "No achievements unlocked yet" instead of empty slots.
 
 ## Badges in Battle Reports
 

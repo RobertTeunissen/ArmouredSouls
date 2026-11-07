@@ -379,7 +379,7 @@ describe('DashboardPage - Notifications', () => {
       });
 
       await user.click(screen.getByRole('button', { name: /equip weapon/i }));
-      expect(mockNavigate).toHaveBeenCalledWith('/robots/1');
+      expect(mockNavigate).toHaveBeenCalledWith('/robots/1/prepare?section=loadout');
     });
 
     it('should warn about forfeits when the unarmed robot has booked matches', async () => {
@@ -424,7 +424,7 @@ describe('DashboardPage - Notifications', () => {
       });
       expect(screen.getByText(/^No shield equipped\. It won't be scheduled/)).toBeInTheDocument();
       await user.click(screen.getByRole('button', { name: /fix loadout/i }));
-      expect(mockNavigate).toHaveBeenCalledWith('/robots/2');
+      expect(mockNavigate).toHaveBeenCalledWith('/robots/2/prepare?section=loadout');
     });
   });
 

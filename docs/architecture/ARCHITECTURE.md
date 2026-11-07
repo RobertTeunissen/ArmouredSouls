@@ -273,7 +273,7 @@ Battles run on configurable cron schedules via `node-cron`. The cycle scheduler 
 The frontend route declarations live in `app/frontend/src/App.tsx`. Current player-facing destinations include:
 
 - **Auth and onboarding**: FrontPage, login/registration, OnboardingPage
-- **Core**: DashboardPage, ProfilePage, RobotsPage, RobotDetailPage, CreateRobotPage, RobotSetupWizardPage
+- **Core**: DashboardPage, ProfilePage, RobotsPage, RobotProfilePage (public), RobotWorkshopPage (owner), CreateRobotPage, RobotSetupWizardPage
 - **Battles**: BattleHistoryPage, BattleDetailPage, PracticeArenaPage
 - **Competition**: LeagueStandingsPage, Leaderboards pages, TournamentsPage, TeamBattlesPage, SeasonArchivePage, StableViewPage
 - **Economy and progression**: FacilitiesPage, WeaponShopPage, FinanceCenterPage, BookingOfficePage, AchievementsPage, HallOfRecordsPage

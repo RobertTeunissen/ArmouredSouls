@@ -2,7 +2,7 @@
 title: "Tournament Eligibility"
 description: "What your robot needs to enter a tournament — weapon checks and how the continuous tournament cycle keeps competition flowing."
 order: 2
-lastUpdated: "2026-10-15"
+lastUpdated: "2026-11-06"
 relatedArticles:
   - tournaments/tournament-format
   - tournaments/rewards
@@ -50,7 +50,7 @@ Unequipping a weapon mid-tournament is allowed, but re-arm the robot before its 
 ```
 
 ```callout-tip
-You can check whether your robots are battle-ready in several places: the Dashboard shows notifications for robots with incomplete loadouts, the Robot Detail page displays your current equipment status, and the robot list uses icons to indicate readiness at a glance.
+You can check whether your robots are battle-ready in several places: the Dashboard shows notifications for robots with incomplete loadouts, each robot's Workshop lists what is missing and shows its equipment in the Loadout section, and the robot list uses icons to indicate readiness at a glance.
 ```
 
 ## The Continuous Tournament Cycle

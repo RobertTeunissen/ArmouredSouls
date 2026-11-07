@@ -282,6 +282,7 @@ const DB_DEPENDENT = [
   'tests/seed.property.test.ts',
   'tests/servoStrain.test.ts',
   'tests/stables.test.ts',
+  'tests/robotProfile.test.ts',
   'tests/stanceAndYield.test.ts',
   'tests/stanceAndYieldAPI.test.ts',
   'tests/statsUpdatedBeforeStreamingRevenue.property.test.ts',

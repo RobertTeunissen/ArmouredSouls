@@ -1,7 +1,8 @@
 import CloseIcon from '../../assets/icons/close.svg?react';
 import { DrawerMenuItem } from './DrawerMenuItem';
-import { allPages, implementedPages } from './types';
+import { allPages, implementedPages, isNavPageImplemented, stableNavItems } from './types';
 import type { UserRobot } from './types';
+import { workshopPath } from '../../utils/robotRoutes';
 
 interface DrawerSectionProps {
   emoji: string;
@@ -29,9 +30,11 @@ export interface MobileDrawerProps {
   userRobots: UserRobot[];
   isAdmin: boolean;
   onLogout: () => void;
+  /** Signed-in player: adds "My Stable" (their public stable page) to the Stable section. */
+  userId?: number;
 }
 
-export function MobileDrawer({ isOpen, onClose, isActive, userRobots, isAdmin, onLogout }: MobileDrawerProps): React.ReactElement | null {
+export function MobileDrawer({ isOpen, onClose, isActive, userRobots, isAdmin, onLogout, userId }: MobileDrawerProps): React.ReactElement | null {
   if (!isOpen) return null;
 
   return (
@@ -75,7 +78,7 @@ export function MobileDrawer({ isOpen, onClose, isActive, userRobots, isAdmin, o
               <DrawerMenuItem
                 key={robot.id}
                 label={robot.name}
-                to={`/robots/${robot.id}`}
+                to={workshopPath(robot.id)}
                 onNavigate={onClose}
                 isActive={isActive(`/robots/${robot.id}`)}
                 indent={true}
@@ -114,14 +117,14 @@ export function MobileDrawer({ isOpen, onClose, isActive, userRobots, isAdmin, o
 
           {/* STABLE Section */}
           <DrawerSection emoji="🏰" title="Stable Management">
-            {allPages.stable.items.map(item => (
+            {(userId !== undefined ? stableNavItems(userId) : allPages.stable.items).map(item => (
               <DrawerMenuItem
                 key={item.path}
                 label={item.label}
                 to={item.path}
                 onNavigate={onClose}
                 isActive={isActive(item.path)}
-                disabled={!implementedPages.has(item.path)}
+                disabled={!isNavPageImplemented(item.path)}
               />
             ))}
           </DrawerSection>

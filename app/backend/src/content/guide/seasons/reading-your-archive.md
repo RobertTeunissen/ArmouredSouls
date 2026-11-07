@@ -2,7 +2,7 @@
 title: "Reading Your Season Archive"
 description: "Where your past seasons live, what is recorded, and how to read the standings and records of seasons that have ended."
 order: 4
-lastUpdated: "2026-10-28"
+lastUpdated: "2026-11-06"
 relatedArticles:
   - seasons/what-resets
   - seasons/what-is-a-season
@@ -13,14 +13,15 @@ Nothing you achieved is lost at a reset — it moves. Your season archive is per
 
 ## Your stable page
 
-Your stable page carries a **season history** block: one collapsed row per completed season showing that season's final credits, prestige, win-loss-draw record, win rate, best tier reached, championship titles, and achievement count, along with how many cycles the season ran.
+Your stable page carries a **season history** block. The season in progress is at the top, then one row per completed season with its prestige, championship titles, best tier reached, and how many cycles it ran. The most recent completed season opens automatically.
 
-Expand a row and you get the detail:
+An open season reads like the stable page did at the time:
 
-- **Every robot you fielded**, with its final ELO, fame, and record
-- **Where each robot finished in each mode** — tier, league instance, League Points, and its rank within that instance
-- **Team memberships**, with each team's final standing per mode
-- **Your accolades** — the notable placements your stable earned that season
+- **Headline figures**: prestige earned, final credits, win-loss-draw record, win rate, highest ELO, titles, and achievements
+- **Every robot you fielded**, with its highest tier over every mode and a strip showing its tier in each mode (1v1, 2v2, 3v3, Tag Team, King of the Hill, Grand Melee). Hover or focus a cell for the League Points and rank in that league instance. Team modes show the robot's team standing.
+- **Each robot's best finish**: its highest tier, and its rank there
+- **Teams**, with their members
+- **Hall of Records placements** your stable earned that season, plus its tournament wins
 
 A rank here is your true position in that league instance, counting every competitor including the system-generated stables. If you finished fourth, it says fourth.
 

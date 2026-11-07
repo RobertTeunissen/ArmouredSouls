@@ -1,7 +1,8 @@
 /**
  * Custom hook for Robot Detail page state management and data fetching.
  *
- * Extracted from RobotDetailPage.tsx during hook extraction (Backlog #50).
+ * Shared by the robot profile and the Workshop (#504); extracted from the
+ * old RobotDetailPage during hook extraction (Backlog #50).
  */
 
 import { useState, useEffect, useMemo } from 'react';
@@ -19,7 +20,6 @@ import {
 import type { UpgradePlan } from '../utils/robotApi';
 import { ApiError } from '../utils/ApiError';
 import { useAuth } from '../contexts/AuthContext';
-import type { TabId } from '../components/TabNavigation';
 import type { Facility } from '../components/facilities/types';
 import { getRosterCapacity } from '../../../shared/utils/rosterCapacity';
 import type { RangeBand } from '../utils/weaponRange';
@@ -100,6 +100,8 @@ export interface RobotDetail {
   kills: number;
   lifetimeRepairCreditsPaid: number;
   titles: string | null;
+  /** ISO timestamp the robot was built. */
+  createdAt?: string;
 }
 
 /** Fields `GET /api/robots/:id` returns only to the robot's owner. */
@@ -190,7 +192,7 @@ export interface WeaponDetail {
 
 export function useRobotDetail() {
   const { id } = useParams();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const isOnboarding = searchParams.get('onboarding') === 'true';
 
   const [robot, setRobot] = useState<RobotDetail | null>(null);
@@ -220,18 +222,6 @@ export function useRobotDetail() {
 
   const { user, logout, refreshUser } = useAuth();
   const navigate = useNavigate();
-
-  // Tab state management from URL
-  const tabParam = searchParams.get('tab') as TabId | null;
-  const activeTab: TabId = tabParam || 'overview';
-
-  const handleTabChange = (tab: TabId): void => {
-    const params: Record<string, string> = { tab };
-    if (isOnboarding) {
-      params.onboarding = 'true';
-    }
-    setSearchParams(params);
-  };
 
   useEffect(() => {
     let isFetching = false;
@@ -500,10 +490,6 @@ export function useRobotDetail() {
     leagueRank,
     allModesBattleCount,
 
-    // Tab state
-    activeTab,
-    handleTabChange,
-
     // Image selector
     showImageSelector,
     setShowImageSelector,
@@ -522,6 +508,9 @@ export function useRobotDetail() {
     // Toast
     toast,
     setToast,
+
+    // Refetch the robot, inventory and facilities (after a repair, for example)
+    reload: fetchRobotAndWeapons,
 
     // Ownership & navigation context
     isOwner,

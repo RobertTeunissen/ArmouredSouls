@@ -14,6 +14,7 @@ import RobotImage from './RobotImage';
 import PlacementModesRecordNote from './PlacementModesRecordNote';
 import { getFameTier } from '../utils/fameTiers';
 import { UNRANKED_LABEL } from '../utils/tierHelpers';
+import { workshopPath } from '../utils/robotRoutes';
 
 interface RobotDashboardCardProps {
   robot: {
@@ -48,6 +49,8 @@ interface RobotDashboardCardProps {
 function RobotDashboardCard({ robot, variant = 'owner' }: RobotDashboardCardProps) {
   const navigate = useNavigate();
   const isPublic = variant === 'public';
+  // Owners go to the Workshop, everyone else to the public profile (#504).
+  const robotHref = isPublic ? `/robots/${robot.id}` : workshopPath(robot.id);
 
   // Calculate battle readiness (owner variant only)
   const getBattleReadiness = (): 'ready' | 'needs-repair' | 'no-weapon' => {
@@ -110,13 +113,13 @@ function RobotDashboardCard({ robot, variant = 'owner' }: RobotDashboardCardProp
       "
       role="button"
       tabIndex={0}
-      onClick={() => navigate(`/robots/${robot.id}`)}
+      onClick={() => navigate(robotHref)}
       onKeyDown={(e) => {
         if (e.key === ' ') {
           e.preventDefault();
-          navigate(`/robots/${robot.id}`);
+          navigate(robotHref);
         } else if (e.key === 'Enter') {
-          navigate(`/robots/${robot.id}`);
+          navigate(robotHref);
         }
       }}
     >

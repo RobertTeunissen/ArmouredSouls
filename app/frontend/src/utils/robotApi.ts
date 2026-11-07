@@ -131,11 +131,14 @@ export interface UpgradePlan {
   baseCost?: number;
 }
 
+/** One promotion or demotion (`league_history`, purged at season rollover). */
 export interface LeagueHistoryEntry {
   cycleNumber: number;
   destinationTier: string;
-  changeType: string;
+  changeType: 'promotion' | 'demotion';
   leaguePoints: number;
+  /** Standings mode; null on records older than Spec #44 (all league 1v1). */
+  mode?: string | null;
 }
 
 export interface TuningAllocationState {
@@ -229,13 +232,6 @@ export interface KothStandingData {
 
 export const fetchRobotKothStanding = async (robotId: number): Promise<{ standing: KothStandingData | null }> => {
   return api.get<{ standing: KothStandingData | null }>(`/api/robots/${robotId}/koth-standing`);
-};
-
-/**
- * Fetch statistical rankings for a robot.
- */
-export const fetchRobotRankings = async (robotId: number): Promise<unknown> => {
-  return api.get(`/api/robots/${robotId}/rankings`);
 };
 
 /**

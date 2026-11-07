@@ -8,7 +8,6 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import type { TeamBattle, TeamBattleRobot } from '../../utils/teamBattleApi';
-import type { TeamBattleLeagueHistoryEntry } from '../../utils/robotApi';
 
 vi.mock('../../contexts/AuthContext', () => ({
   useAuth: () => ({ user: { userId: 1, username: 'test_user', role: 'user' }, logout: vi.fn() }),
@@ -52,9 +51,7 @@ vi.mock('../LeagueTimeline', () => ({
 
 import TeamBattleManagementContent from '../team-battles/TeamBattleManagementContent';
 import LeagueStandingsSummary from '../LeagueStandingsSummary';
-import TeamBattleLeagueHistory from '../TeamBattleLeagueHistory';
 import { getMyTeamBattles } from '../../utils/teamBattleApi';
-import { fetchRobotTeamBattleLeagueHistory } from '../../utils/robotApi';
 
 function makeRobot(id: number, name: string): TeamBattleRobot {
   return {
@@ -143,60 +140,5 @@ describe('teams without a standing are shown as Unranked', () => {
     expect(screen.getAllByText('— LP')).toHaveLength(4);
     expect(screen.queryByText('Bronze')).not.toBeInTheDocument();
     expect(screen.queryByText(/null/)).not.toBeInTheDocument();
-  });
-
-  it('robot detail team league history: Unranked instead of a tier', async () => {
-    const entry: TeamBattleLeagueHistoryEntry = {
-      teamId: 1,
-      teamSize: 2,
-      teamName: 'Iron Duo',
-      currentLeague: null,
-      currentLeagueId: null,
-      currentLp: null,
-      history: [],
-      tagTeamHistory: [],
-      tagTeamCurrentLeague: null,
-      tagTeamCurrentLp: null,
-    };
-    vi.mocked(fetchRobotTeamBattleLeagueHistory).mockResolvedValue({ teams: [entry] });
-
-    render(<TeamBattleLeagueHistory robotId={1} />);
-
-    await waitFor(() => {
-      expect(screen.getByTestId('team-league-history')).toBeInTheDocument();
-    });
-
-    expect(screen.getByText('Iron Duo is Unranked in the 2v2 League. No tier changes recorded yet.')).toBeInTheDocument();
-    expect(screen.getByText('Iron Duo is Unranked in the Tag Team League. No tier changes recorded yet.')).toBeInTheDocument();
-    for (const timeline of screen.getAllByTestId('league-timeline')) {
-      expect(timeline).toHaveAttribute('data-current-tier', 'Unranked');
-    }
-    expect(screen.queryByText(/currently in/)).not.toBeInTheDocument();
-    expect(screen.queryByText(/null/)).not.toBeInTheDocument();
-  });
-
-  it('robot detail team league history: still shows the tier when the team is placed', async () => {
-    vi.mocked(fetchRobotTeamBattleLeagueHistory).mockResolvedValue({
-      teams: [{
-        teamId: 1,
-        teamSize: 2,
-        teamName: 'Iron Duo',
-        currentLeague: 'silver',
-        currentLeagueId: 'silver_1',
-        currentLp: 42,
-        history: [],
-        tagTeamHistory: [],
-        tagTeamCurrentLeague: null,
-        tagTeamCurrentLp: null,
-      }],
-    });
-
-    render(<TeamBattleLeagueHistory robotId={1} />);
-
-    await waitFor(() => {
-      expect(screen.getByText('Iron Duo is currently in silver league. No tier changes recorded yet.')).toBeInTheDocument();
-    });
-    expect(screen.getByText('42')).toBeInTheDocument();
-    expect(screen.getByText('Iron Duo is Unranked in the Tag Team League. No tier changes recorded yet.')).toBeInTheDocument();
   });
 });

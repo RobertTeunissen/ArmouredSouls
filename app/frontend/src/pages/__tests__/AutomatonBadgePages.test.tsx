@@ -88,7 +88,7 @@ describe('StableViewPage — Automaton_Badge (R12.3)', () => {
     expect(screen.queryByText(/Transformers/)).toBeNull();
     expect(screen.queryByText(/Cybertron/)).toBeNull();
     expect(screen.queryByText(/strategy/i)).toBeNull();
-    expect(screen.getByText('Prestige:')).toBeInTheDocument();
+    expect(screen.getByText('Prestige')).toBeInTheDocument();
   });
 
   it.each([['human'], ['generated']])('shows no badge for a %s stable', async (stableType) => {

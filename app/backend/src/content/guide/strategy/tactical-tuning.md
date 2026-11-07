@@ -2,7 +2,7 @@
 title: "Tactical Tuning"
 description: "How to allocate tuning points effectively — focused vs spread strategies, adapting for league matchups vs KotH, and using the Practice Arena to test allocations."
 order: 6
-lastUpdated: "2026-04-16"
+lastUpdated: "2026-11-06"
 relatedArticles:
   - facilities/tuning-bay
   - strategy/build-archetypes
@@ -63,7 +63,7 @@ Both robots in your 2v2 team have independent tuning pools. For tag team battles
 
 The Practice Arena is your tuning lab. Before committing to an allocation for a real match:
 
-1. Set your tuning allocation on the **Tuning tab** of your robot's detail page
+1. Set your tuning allocation in the **Build** section of your robot's Workshop (open the robot from your Robots page)
 2. Go to the **Practice Arena** and set up a match against a sparring bot or your own robot
 3. Run the practice battle and review the results
 4. Adjust your tuning and run again until you're satisfied

@@ -7,6 +7,7 @@
 
 import { useNavigate } from 'react-router-dom';
 import type { StepProps } from '../types';
+import { workshopPath } from '../../../utils/robotRoutes';
 
 function AttributeUpgradeStep({ robotId, onComplete, onSkip }: StepProps) {
   const navigate = useNavigate();
@@ -29,7 +30,7 @@ function AttributeUpgradeStep({ robotId, onComplete, onSkip }: StepProps) {
           Higher attributes mean more damage, better defense, and faster attacks.
         </p>
         <button
-          onClick={() => navigate(`/robots/${robotId}?tab=upgrades`)}
+          onClick={() => navigate(workshopPath(robotId))}
           className="bg-primary hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg min-h-[44px] transition-colors"
         >
           Go to Upgrades →

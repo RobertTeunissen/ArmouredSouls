@@ -84,7 +84,6 @@ describe('GET /api/robots/:id/league-history', () => {
   }));
 
   jest.mock('../../services/robot/robotRankingService', () => ({
-    getRobotRankings: jest.fn(),
   }));
 
   jest.mock('../../services/robot/robotUpgradeService', () => ({

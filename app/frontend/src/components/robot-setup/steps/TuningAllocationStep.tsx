@@ -9,6 +9,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../../utils/api';
 import type { StepProps } from '../types';
+import { workshopPath } from '../../../utils/robotRoutes';
 
 interface TuningState {
   poolSize: number;
@@ -125,7 +126,7 @@ function TuningAllocationStep({ robotId, onComplete, onSkip }: StepProps) {
       {/* Action buttons */}
       <div className="flex flex-col sm:flex-row gap-3 pt-2">
         <button
-          onClick={() => navigate(`/robots/${robotId}?tab=tuning`)}
+          onClick={() => navigate(workshopPath(robotId))}
           className="bg-primary hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg min-h-[44px] transition-colors"
         >
           Allocate Now →
