@@ -616,4 +616,57 @@ describe('movementAI property tests', () => {
       });
     });
   });
+
+  /**
+   * Battle 615735: a ranged robot inside its preferred distance led its opponent by 1.5 s of
+   * velocity. Right after two fast robots crossed, that velocity pointed away from it, the aim
+   * point lay past the opponent, and the pair swapped places on every tick.
+   */
+  describe('ranged robot inside its preferred distance (battle 615735)', () => {
+    const MIDPOINTS = { short: 4.5, mid: 9.5, long: 16 } as const;
+
+    it('never aims past its opponent, whatever the opponent does', () => {
+      fc.assert(
+        fc.property(
+          fc.constantFrom('short' as const, 'mid' as const, 'long' as const),
+          fc.constantFrom('melee' as const, 'short' as const, 'mid' as const, 'long' as const),
+          fc.double({ min: 0.05, max: 0.999, noNaN: true, noDefaultInfinity: true }),
+          fc.double({ min: 0, max: 35, noNaN: true, noDefaultInfinity: true }),
+          fc.double({ min: -Math.PI, max: Math.PI, noNaN: true, noDefaultInfinity: true }),
+          fc.integer({ min: 1, max: 100 }),
+          fc.integer({ min: 1, max: 50 }),
+          arbStance(),
+          (band, opponentBand, fraction, speed, heading, ca, ta, stance) => {
+            const gap = MIDPOINTS[band] * fraction;
+            const robot = makeState({
+              robot: {
+                loadoutType: 'single', stance,
+                mainWeapon: { weapon: makeWeapon({ rangeBand: band }) } as any,
+                offhandWeapon: null, threatAnalysis: ta, combatAlgorithms: ca,
+              } as any,
+              position: { x: 0, y: 0 },
+              effectiveMovementSpeed: 25,
+            });
+            const opponent = makeState({
+              robot: {
+                loadoutType: 'single', stance: 'balanced',
+                mainWeapon: { weapon: makeWeapon({ weaponType: opponentBand === 'melee' ? 'melee' : 'energy', rangeBand: opponentBand }) } as any,
+                offhandWeapon: null,
+              } as any,
+              position: { x: 0, y: gap },
+              velocity: { x: speed * Math.cos(heading), y: speed * Math.sin(heading) },
+              facingDirection: (heading * 180) / Math.PI,
+            });
+
+            // Arena radius 100: the robot is far from the wall (no wall-aware kiting path)
+            const intent = calculateMovementIntent(robot, [opponent], makeArena(100), SIMULATION_TICK);
+
+            // Distance covered towards the opponent along the robot→opponent line stays short of it
+            expect(intent.targetPosition.y).toBeLessThan(gap);
+          },
+        ),
+        { numRuns: 500 },
+      );
+    });
+  });
 });

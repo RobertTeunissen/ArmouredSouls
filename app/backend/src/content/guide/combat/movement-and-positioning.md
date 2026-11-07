@@ -2,7 +2,7 @@
 title: "Movement & Positioning"
 description: "How the 2D combat arena works — movement speed, range bands, weapon optimal ranges, backstab and flanking mechanics, and the attributes that control spatial combat."
 order: 2
-lastUpdated: "2026-10-17"
+lastUpdated: "2026-11-07"
 relatedArticles:
   - combat/battle-flow
   - robots/attributes-overview
@@ -169,7 +169,7 @@ This rewards defensive builds that fight with their back to the wall rather than
 
 The **patience timer** tracks how long your robot has gone without **landing a hit**. Misses don't reset it. Its limit gets **shorter** as Combat Algorithms rises: about 15 seconds at the lowest level, down to 10 seconds at level 50.
 
-The patience limit drives the chase: a melee robot that reaches it commits to a faster pursuit, and a ranged robot waits one patience window between escape bursts (see **Chasing and Escaping** above). Combat Algorithms also tightens pathing: the higher it is, the less your robot drifts off its ideal path toward its preferred range.
+The patience limit drives the chase: a melee robot that reaches it commits to a faster pursuit, and a ranged robot waits one patience window between escape bursts (see **Chasing and Escaping** above). Combat Algorithms also tightens pathing: the higher it is, the less your robot drifts off its ideal path toward its preferred range. A ranged robot with higher Combat Algorithms also anticipates where a moving opponent is heading while it closes in to its preferred range. Once it is closer than it wants to be, it simply backs away, whatever its Combat Algorithms.
 
 Reaching the limit never lets a weapon hit beyond its reach, and it does not trigger an attack on its own:
 

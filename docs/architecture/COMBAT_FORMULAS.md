@@ -1095,7 +1095,23 @@ Prediction (#351, `calculateMovementIntent` in movementAI.ts):
 ```
 Ranged-role robot:
   predictedPos = target.position + target.velocity × 1.5 s
-  intent target = lerp(intent target, standoff point from predictedPos, (combatAlgorithms − 1) / 49)
+  taper  = clamp((distance − engagement midpoint) / 2, 0, 1)
+  weight = min(1, (combatAlgorithms − 1) / 49) × taper
+  intent target = lerp(intent target, standoff point from predictedPos, weight)
+Inside its engagement midpoint (backing off) a ranged robot does not predict; the weight ramps
+in over the first 2 units beyond it:
+  • Nov 2026, battle 615735: the 1.5 s lead (~37 units at 24 u/s) put the aim point past the
+    opponent whenever the opponent had just moved away, e.g. right after two fast robots crossed.
+    A CA 55 long-range kiter ran through its melee chaser and both swapped places on every tick
+    for 87 s, the gap locked at half their combined step (~2.4, just outside melee reach). Two
+    high-CA ranged robots fed each other's zigzag the same way (simulator: 82 of 192 ranged-vs-
+    ranged runs leapfrogged).
+  • The taper avoids a hard switch at the midpoint: switching prediction fully on at 4.5 units made
+    a short-range robot following a long-range kiter stop dead each time the gap dipped below 4.5
+    and the gap sawtoothed 4.4 ↔ 5.7. With the taper a faster pursuer settles just outside its
+    midpoint (~4.6) and follows steadily.
+  • The weight is capped at 1: effective Combat Algorithms above 50 used to extrapolate past the
+    predicted point.
 Melee-role robot: no prediction at any distance
   • final approach / within reach: leading pulls it around the opponent, out of the ≤ 2 radius
   • melee mirror (#467): both robots lead each other's tangential velocity and circle at ~8 units
