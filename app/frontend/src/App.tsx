@@ -9,7 +9,8 @@ import DashboardPage from './pages/DashboardPage';
 import FacilitiesPage from './pages/FacilitiesPage';
 import RobotsPage from './pages/RobotsPage';
 import CreateRobotPage from './pages/CreateRobotPage';
-import RobotDetailPage from './pages/RobotDetailPage';
+import RobotProfilePage from './pages/RobotProfilePage';
+import RobotWorkshopPage from './pages/RobotWorkshopPage';
 import WeaponShopPage from './pages/WeaponShopPage';
 import LeagueStandingsPage from './pages/LeagueStandingsPage';
 import TournamentsPage from './pages/TournamentsPage';
@@ -131,7 +132,8 @@ function AppRoutes() {
         <Route path="/robots" element={<RobotsPage />} />
         <Route path="/robots/create" element={<CreateRobotPage />} />
         <Route path="/robots/:id/setup" element={<RobotSetupWizardPage />} />
-        <Route path="/robots/:id" element={<RobotDetailPage />} />
+        <Route path="/robots/:id/prepare" element={<RobotWorkshopPage />} />
+        <Route path="/robots/:id" element={<RobotProfilePage />} />
         <Route path="/weapon-shop" element={<WeaponShopPage />} />
         <Route path="/battle-history" element={<BattleHistoryPage />} />
         <Route path="/battle/:id" element={<BattleDetailPage />} />

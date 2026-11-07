@@ -12,6 +12,7 @@ import {
   getReadinessStatus,
 } from '../hooks/useRobotsList';
 import { UNRANKED_LABEL } from '../utils/tierHelpers';
+import { workshopPath } from '../utils/robotRoutes';
 
 function RobotsPage() {
   const navigate = useNavigate();
@@ -265,7 +266,7 @@ function RobotsPage() {
                           <tr 
                             key={robot.id}
                             className="border-t border-white/10 hover:bg-gray-750 transition-colors cursor-pointer"
-                            onClick={() => navigate(`/robots/${robot.id}${isOnboarding ? '?onboarding=true' : ''}`)}
+                            onClick={() => navigate(workshopPath(robot.id, isOnboarding ? 'loadout' : 'build', isOnboarding))}
                           >
                             {/* Robot Name & Image */}
                             <td className="px-4 py-3">
@@ -373,7 +374,7 @@ function RobotsPage() {
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  navigate(`/robots/${robot.id}${isOnboarding ? '?onboarding=true' : ''}`);
+                                  navigate(workshopPath(robot.id, isOnboarding ? 'loadout' : 'build', isOnboarding));
                                 }}
                                 className="text-sm text-[#58a6ff] hover:text-[#79c0ff] transition-colors"
                               >
@@ -410,7 +411,7 @@ function RobotsPage() {
                     <div
                       key={robot.id}
                       className={`bg-[#252b38] p-6 rounded-lg border-2 border-[#3d444d] hover:border-[#58a6ff] transition-colors cursor-pointer${isOnboarding && displayedRobots.indexOf(robot) === 0 ? ' robot-card-first' : ''}${isOnboarding ? ' onboarding-robot-card' : ''}`}
-                      onClick={() => navigate(`/robots/${robot.id}${isOnboarding ? '?onboarding=true' : ''}`)}
+                      onClick={() => navigate(workshopPath(robot.id, isOnboarding ? 'loadout' : 'build', isOnboarding))}
                     >
                       {/* Robot Portrait */}
                       <div className="flex justify-center mb-4">
@@ -496,7 +497,7 @@ function RobotsPage() {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigate(`/robots/${robot.id}${isOnboarding ? '?onboarding=true' : ''}`);
+                          navigate(workshopPath(robot.id, isOnboarding ? 'loadout' : 'build', isOnboarding));
                         }}
                         className="mt-4 w-full border border-[#58a6ff] text-[#58a6ff] hover:bg-[#58a6ff] hover:bg-opacity-10 px-4 py-2 rounded transition-colors"
                       >

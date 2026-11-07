@@ -17,6 +17,7 @@ import { allPages, stableNavItems } from './nav';
 import type { UserRobot } from './nav';
 import { useRobotStore } from '../stores';
 import SearchTrigger from './search/SearchTrigger';
+import { workshopPath } from '../utils/robotRoutes';
 
 export interface NavigationProps {
   onOpenSearch?: () => void;
@@ -87,7 +88,7 @@ function Navigation({ onOpenSearch }: NavigationProps) {
                 label={allPages.robots.label}
                 items={[
                   allPages.robots.items[0],
-                  ...userRobots.map(robot => ({ path: `/robots/${robot.id}`, label: robot.name, indent: true })),
+                  ...userRobots.map(robot => ({ path: workshopPath(robot.id), label: robot.name, indent: true })),
                   ...allPages.robots.items.slice(1),
                 ]}
                 isActive={isCategoryActive(allPages.robots.items)}

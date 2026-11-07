@@ -16,6 +16,7 @@
  */
 
 import { getOwnerBattleReadiness } from './robot-battle-readiness';
+import { workshopPath } from './robotRoutes';
 
 // ─── Descriptor ──────────────────────────────────────────────────────────────
 
@@ -250,7 +251,7 @@ export function buildRobotReadinessNotifications(input: RobotReadinessInput): No
       icon: '🔧',
       message: `${first.name} will forfeit its booked matches unless re-armed${moreSuffix(forfeitRiskRobots.length)}`,
       detail: `No main weapon equipped. Booked: ${heldSlotsFor(first.id).map(eventLabel).join(', ')}`,
-      action: { label: 'Equip Weapon', to: `/robots/${first.id}` },
+      action: { label: 'Equip Weapon', to: workshopPath(first.id, 'loadout') },
     });
   }
 
@@ -264,7 +265,7 @@ export function buildRobotReadinessNotifications(input: RobotReadinessInput): No
       icon: '🔧',
       message: `${first.name} has no weapon equipped${moreSuffix(noWeaponRobots.length)}`,
       detail: 'Cannot be scheduled for any match without a weapon',
-      action: { label: 'Equip Weapon', to: `/robots/${first.id}` },
+      action: { label: 'Equip Weapon', to: workshopPath(first.id, 'loadout') },
     });
   }
 
@@ -282,7 +283,7 @@ export function buildRobotReadinessNotifications(input: RobotReadinessInput): No
       icon: '⚠️',
       message: `${first.name} is not battle ready${moreSuffix(incompleteLoadouts.length)}`,
       detail: `${readiness?.warnings[0]}. It won't be scheduled, and booked matches are fought with a single weapon`,
-      action: { label: 'Fix Loadout', to: `/robots/${first.id}` },
+      action: { label: 'Fix Loadout', to: workshopPath(first.id, 'loadout') },
     });
   }
 
@@ -348,7 +349,7 @@ export function buildRobotReadinessNotifications(input: RobotReadinessInput): No
       icon: '🎯',
       message: `${first.name} has ${tuning.remaining} unallocated tuning point${tuning.remaining > 1 ? 's' : ''}${moreSuffix(unallocated.length)}`,
       detail: 'Allocate tuning points to boost combat performance',
-      action: { label: 'Allocate Tuning', to: `/robots/${first.id}` },
+      action: { label: 'Allocate Tuning', to: workshopPath(first.id) },
     });
   }
 

@@ -2,7 +2,7 @@
 
 ## Overview
 
-A 7-step guided wizard that activates after robot creation (non-onboarding path) and walks the player through configuring a new robot for battle. Accompanied by a persistent eligibility checklist on the Robot Detail Page that surfaces unmet scheduling gates.
+A 7-step guided wizard that activates after robot creation (non-onboarding path) and walks the player through configuring a new robot for battle. Accompanied by a persistent eligibility checklist in the Robot Workshop that surfaces unmet scheduling gates.
 
 ## Wizard Flow
 
@@ -29,7 +29,7 @@ Every step is skippable. Each step commits immediately via existing API endpoint
 - **Next** — completes current step, advances to next
 - **Skip** — marks step as skipped, advances to next
 - **Back** — shows previous step (does NOT revert committed data)
-- **Skip All** — exits wizard, navigates to Robot Detail Page
+- **Skip All** — exits wizard, navigates to the robot's Workshop (`/robots/:id/prepare`)
 
 ### Persistence
 
@@ -68,9 +68,9 @@ Returns a `SchedulingEligibilityReport`:
 - **Hard gates** block the robot from being scheduled by the matchmaker
 - **Soft gates** are recommendations shown as info-level suggestions
 
-### Eligibility Checklist (Robot Detail Page)
+### Eligibility Checklist (Robot Workshop)
 
-The `RobotEligibilityChecklist` renders above the tab navigation on the Robot Detail Page:
+The `RobotEligibilityChecklist` renders above the Build | Loadout sections of the Robot Workshop (`/robots/:id/prepare`):
 - Shows when any hard gate is unmet (warning banner with action links)
 - Shows soft-gate recommendations when `showRecommendations` is true
 - Hidden when `isFullyConfigured === true`
@@ -92,7 +92,7 @@ The existing onboarding (5-step tutorial for new players) already covers robot c
 
 ## Related Features
 
-- **Backlog #37** (Robot Detail Page Split) — step components are standalone and reusable in the future "Prepare" workspace
+- **Robot Workshop** (#504, backlog #37) — the owner's preparation page; "Skip All" and checklist actions lead there (`docs/prd_pages/PRD_ROBOT_DETAIL_PAGE.md`)
 - **Backlog #61** (this feature's backlog entry) — the original problem statement
 - **Spec #35** (Booking Office) — subscription cap curve affects Event Subscription step
 - **Spec #25** (Tuning Pool) — tuning allocation check in the Tuning step

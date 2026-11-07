@@ -26,6 +26,7 @@ import {
   SlotBar,
 } from '../weapon-refinement';
 import type { WeaponInventoryItem } from './types';
+import { workshopPath } from '../../utils/robotRoutes';
 
 interface InventoryRowProps {
   item: WeaponInventoryItem;
@@ -131,7 +132,7 @@ export function InventoryRow({
             {equippedInfo.robots.map((r, idx) => (
               <span key={`${r.id}-${r.slot}`}>
                 <Link
-                  to={`/robots/${r.id}`}
+                  to={workshopPath(r.id, 'loadout')}
                   className="text-amber-300 hover:underline"
                 >
                   {r.name}

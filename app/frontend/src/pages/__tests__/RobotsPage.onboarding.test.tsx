@@ -332,7 +332,7 @@ describe('RobotsPage - Onboarding Integration', () => {
       const viewDetailsButtons = screen.getAllByText('View Details →');
       await user.click(viewDetailsButtons[0]);
 
-      expect(mockNavigate).toHaveBeenCalledWith('/robots/1?onboarding=true');
+      expect(mockNavigate).toHaveBeenCalledWith('/robots/1/prepare?section=loadout&onboarding=true');
     });
 
     it('should NOT pass onboarding param in normal mode', async () => {
@@ -346,7 +346,7 @@ describe('RobotsPage - Onboarding Integration', () => {
       const viewDetailsButtons = screen.getAllByText('View Details →');
       await user.click(viewDetailsButtons[0]);
 
-      expect(mockNavigate).toHaveBeenCalledWith('/robots/1');
+      expect(mockNavigate).toHaveBeenCalledWith('/robots/1/prepare');
     });
   });
 

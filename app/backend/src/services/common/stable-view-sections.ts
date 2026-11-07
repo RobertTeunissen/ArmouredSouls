@@ -29,6 +29,10 @@ export interface PublicRobotStanding {
   totalMatches: number | null;
   /** Team modes: the team this standing belongs to. */
   teamName: string | null;
+  /** Team modes: the team's id; null for robot standings. */
+  teamId: number | null;
+  /** League instance, e.g. `champion_2`; ranks are computed within it. */
+  leagueInstanceId: string;
 }
 
 export type ResultOutcome = 'win' | 'loss' | 'draw';
@@ -41,6 +45,8 @@ export interface RecentResultEntry {
   outcome: ResultOutcome | null;
   /** KotH and Grand Melee finishing position; null otherwise. */
   placement: number | null;
+  /** ELO after minus ELO before; 0 for modes that do not move ELO. */
+  eloChange: number;
 }
 
 export interface RecentResult {
@@ -67,13 +73,14 @@ export interface StableAccolade {
 export const RECENT_RESULTS_LIMIT = 5;
 export const TOP_ACCOLADES_LIMIT = 5;
 
-/** Participant rows read to find the latest battles; 3v3 battles use 3 per battle. */
-const RECENT_PARTICIPANT_SCAN = RECENT_RESULTS_LIMIT * 6;
+/** Participant rows read per wanted battle; a 3v3 battle has 3 of the stable's robots. */
+const PARTICIPANTS_PER_BATTLE_SCAN = 6;
 
 const HEAD_TO_HEAD_ROBOT_MODES = ['league_1v1', 'tournament_1v1'];
 
 interface StandingRow {
   entityId: number;
+  leagueInstanceId: string;
   mode: string;
   tier: string;
   leaguePoints: number;
@@ -83,7 +90,7 @@ interface StandingRow {
   totalMatches: number | null;
 }
 
-function toPublicStanding(row: StandingRow, teamName: string | null): PublicRobotStanding {
+function toPublicStanding(row: StandingRow, team: { id: number; name: string } | null): PublicRobotStanding {
   return {
     mode: row.mode as TieredStandingsMode,
     tier: row.tier,
@@ -92,7 +99,9 @@ function toPublicStanding(row: StandingRow, teamName: string | null): PublicRobo
     losses: row.losses,
     draws: row.draws,
     totalMatches: isPlacementMode(row.mode) ? row.totalMatches ?? 0 : null,
-    teamName,
+    teamName: team?.name ?? null,
+    teamId: team?.id ?? null,
+    leagueInstanceId: row.leagueInstanceId,
   };
 }
 
@@ -114,7 +123,7 @@ export async function getRobotStandings(robotIds: readonly number[]): Promise<Ma
   if (robotIds.length === 0) return result;
 
   const select = {
-    entityId: true, mode: true, tier: true, leaguePoints: true,
+    entityId: true, mode: true, tier: true, leaguePoints: true, leagueInstanceId: true,
     wins: true, losses: true, draws: true, totalMatches: true,
   } as const;
 
@@ -155,7 +164,7 @@ export async function getRobotStandings(robotIds: readonly number[]): Promise<Ma
   }
   for (const member of memberships) {
     for (const row of teamRowsById.get(member.teamId) ?? []) {
-      add(member.robotId, toPublicStanding(row, member.team.teamName));
+      add(member.robotId, toPublicStanding(row, { id: member.teamId, name: member.team.teamName }));
     }
   }
 
@@ -174,6 +183,8 @@ interface RecentParticipantRow {
   robotId: number;
   team: number;
   placement: number | null;
+  eloBefore?: number;
+  eloAfter?: number;
   battle: {
     battleType: string;
     leagueType: string;
@@ -203,16 +214,19 @@ export function participantOutcome(row: RecentParticipantRow): ResultOutcome | n
 }
 
 /** The stable's latest battles, newest first, one entry per robot that fought. */
-export async function getRecentResults(robots: ReadonlyArray<{ id: number; name: string }>): Promise<RecentResult[]> {
+export async function getRecentResults(
+  robots: ReadonlyArray<{ id: number; name: string }>,
+  limit: number = RECENT_RESULTS_LIMIT,
+): Promise<RecentResult[]> {
   if (robots.length === 0) return [];
   const names = new Map(robots.map((r) => [r.id, r.name]));
 
   const rows: RecentParticipantRow[] = await prisma.battleParticipant.findMany({
     where: { robotId: { in: robots.map((r) => r.id) } },
     orderBy: { battleId: 'desc' },
-    take: RECENT_PARTICIPANT_SCAN,
+    take: limit * PARTICIPANTS_PER_BATTLE_SCAN,
     select: {
-      battleId: true, robotId: true, team: true, placement: true,
+      battleId: true, robotId: true, team: true, placement: true, eloBefore: true, eloAfter: true,
       battle: {
         select: {
           battleType: true, leagueType: true, winnerId: true, winningSide: true,
@@ -226,7 +240,7 @@ export async function getRecentResults(robots: ReadonlyArray<{ id: number; name:
   for (const row of rows) {
     let result = results.find((r) => r.battleId === row.battleId);
     if (!result) {
-      if (results.length === RECENT_RESULTS_LIMIT) break;
+      if (results.length === limit) break;
       result = {
         battleId: row.battleId,
         battleType: row.battle.battleType,
@@ -242,6 +256,7 @@ export async function getRecentResults(robots: ReadonlyArray<{ id: number; name:
       robotName: names.get(row.robotId) ?? '',
       outcome: participantOutcome(row),
       placement: isPlacementMode(row.battle.battleType) ? row.placement : null,
+      eloChange: (row.eloAfter ?? 0) - (row.eloBefore ?? 0),
     });
   }
   for (const result of results) {

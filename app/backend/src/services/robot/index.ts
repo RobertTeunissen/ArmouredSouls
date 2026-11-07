@@ -2,7 +2,6 @@ export { sanitizeRobotForPublic, SENSITIVE_ROBOT_FIELDS } from './robotSanitizer
 export {
   calculateCategorySum,
   calculateRanking,
-  getRobotRankings,
   COMBAT_ATTRIBUTES,
   DEFENSE_ATTRIBUTES,
   CHASSIS_ATTRIBUTES,

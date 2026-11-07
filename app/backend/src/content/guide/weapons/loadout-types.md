@@ -2,7 +2,7 @@
 title: "Loadout Types"
 description: "The four loadout configurations in Armoured Souls — Single, Weapon+Shield, Two-Handed, and Dual-Wield — with their bonuses, penalties, range considerations, and strategic trade-offs."
 order: 2
-lastUpdated: "2026-10-16"
+lastUpdated: "2026-11-06"
 relatedArticles:
   - weapons/dual-wield-mechanics
   - combat/battle-flow
@@ -161,7 +161,7 @@ Not every weapon works with every loadout. Here's the compatibility matrix:
 | Shield weapons (6) | ❌ | ✅ Offhand only | ❌ | ❌ |
 
 ```callout-tip
-You can change your loadout type at any time from the robot detail page. However, if your currently equipped weapons aren't compatible with the new loadout, you'll need to unequip them first. Plan your weapon purchases with your target loadout in mind.
+You can change your loadout type at any time in the **Loadout** section of the robot's Workshop. However, if your currently equipped weapons aren't compatible with the new loadout, you'll need to unequip them first. Plan your weapon purchases with your target loadout in mind.
 ```
 
 ## Weapon Ownership Rules
@@ -171,7 +171,7 @@ A few important rules about how weapons work across your stable:
 - Each weapon you own can only be **equipped on one robot at a time**. If you want two robots using the same weapon type, you need to buy two copies.
 - Every weapon in your inventory takes up a slot in your **Storage Facility**. Upgrading your storage lets you own more weapons. Plan your purchases around your available capacity.
 - You can **swap weapons between robots freely** at any time outside of battle. There's no cost or cooldown — just unequip from one robot and equip on another. This lets you experiment with different loadouts without buying duplicate weapons.
-- Weapons are checked when each battle starts. If a robot has a **booked match**, re-arm it before the match runs or it **forfeits** (an automatic loss with no credits). A robot that's missing only its offhand or shield fights with its main weapon as a Single loadout for that battle. The Robot Detail page asks you to confirm before you unequip a robot with booked matches.
+- Weapons are checked when each battle starts. If a robot has a **booked match**, re-arm it before the match runs or it **forfeits** (an automatic loss with no credits). A robot that's missing only its offhand or shield fights with its main weapon as a Single loadout for that battle. The Workshop asks you to confirm before you unequip a robot with booked matches.
 
 ## How Loadout Bonuses Work
 

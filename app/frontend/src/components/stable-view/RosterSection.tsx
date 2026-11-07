@@ -63,7 +63,7 @@ export function RosterSection({ entries }: RosterSectionProps) {
           Roster <span className="ml-1 text-sm font-normal text-secondary">{entries.length} {entries.length === 1 ? 'robot' : 'robots'}</span>
         </h3>
         {entries.length > 0 && (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {view === 'table' && (
               <label className="flex items-center gap-2 text-xs text-secondary lg:hidden">
                 Sort
@@ -125,7 +125,7 @@ export function RosterSection({ entries }: RosterSectionProps) {
             {rows.map((row, index) => (
               <li
                 key={row.robot.id}
-                className={`${index >= MOBILE_ROW_LIMIT && !showAll ? 'hidden lg:grid' : 'flex'} items-center gap-3 py-2.5 ${ROW_GRID}`}
+                className={`${index >= MOBILE_ROW_LIMIT && !showAll ? 'hidden lg:grid' : 'flex'} flex-wrap items-center gap-x-3 gap-y-2 py-2.5 sm:flex-nowrap ${ROW_GRID}`}
               >
                 <span className="hidden text-sm text-secondary lg:block">{index + 1}</span>
                 <span className="flex min-w-0 flex-1 items-center gap-3">
@@ -141,7 +141,8 @@ export function RosterSection({ entries }: RosterSectionProps) {
                 </span>
                 <span className="hidden text-right text-sm lg:block">{row.robot.elo.toLocaleString()}</span>
                 <span className="hidden lg:block"><TierChip summary={row.summary} /></span>
-                <span className="shrink-0">
+                {/* Phones: the strip gets its own line under the name (indented past the thumbnail) so neither is squeezed. */}
+                <span className="shrink-0 basis-full pl-[3.25rem] sm:basis-auto sm:pl-0">
                   <span className="lg:hidden"><ModeStrip cells={row.cells} showLabels /></span>
                   <span className="hidden lg:block"><ModeStrip cells={row.cells} /></span>
                 </span>

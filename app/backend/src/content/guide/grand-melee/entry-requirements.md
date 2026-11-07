@@ -2,7 +2,7 @@
 title: "Entry Requirements"
 description: "What your robot needs to participate in Grand Melee — subscriptions, weapon readiness, and minimum player thresholds."
 order: 2
-lastUpdated: "2026-10-15"
+lastUpdated: "2026-11-06"
 relatedArticles:
   - grand-melee/basics
   - grand-melee/scoring-and-placement
@@ -13,7 +13,7 @@ relatedArticles:
 
 Grand Melee is a **subscription-gated** event. Your robot must have an active Booking Office subscription for the Grand Melee event to be eligible for matchmaking.
 
-You can manage subscriptions from the Robot Detail page or the Booking Office overview. Subscribing is free — it only uses one of your per-robot subscription slots.
+You can manage subscriptions from the Booking Office overview or a robot's setup page. Subscribing is free — it only uses one of your per-robot subscription slots.
 
 ## Weapon Readiness
 

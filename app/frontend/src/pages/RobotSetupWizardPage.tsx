@@ -7,6 +7,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import RobotSetupWizard from '../components/robot-setup/RobotSetupWizard';
 import { api } from '../utils/api';
+import { workshopPath } from '../utils/robotRoutes';
 
 interface RobotBasicInfo {
   id: number;
@@ -48,11 +49,11 @@ function RobotSetupWizardPage() {
   }, [robotId, navigate]);
 
   const handleComplete = useCallback(() => {
-    navigate(`/robots/${robotId}`, { replace: true });
+    navigate(workshopPath(robotId), { replace: true });
   }, [robotId, navigate]);
 
   const handleSkip = useCallback(() => {
-    navigate(`/robots/${robotId}`, { replace: true });
+    navigate(workshopPath(robotId), { replace: true });
   }, [robotId, navigate]);
 
   if (loading || !robot) {

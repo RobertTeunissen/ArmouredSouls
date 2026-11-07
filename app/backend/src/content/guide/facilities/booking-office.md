@@ -2,7 +2,7 @@
 title: "Booking Office"
 description: "How the Booking Office facility works — event subscriptions, per-robot slot caps, switching between events, and how to manage which battle events your robots participate in."
 order: 7
-lastUpdated: "2026-10-14"
+lastUpdated: "2026-11-06"
 relatedArticles:
   - facilities/facility-overview
   - facilities/facility-progression
@@ -79,7 +79,7 @@ Slots are counted **per robot** — every robot in your Stable gets the same num
 
 You can manage subscriptions in two places:
 
-1. **Robot Detail Page** — each robot has a subscription section showing its current events and available toggles.
+1. **Robot setup** (`/robots/:id/setup`) — the setup wizard's Event Subscription step for one robot. A robot's Workshop links there from its recommendations when the robot has no events yet.
 2. **Booking Office Overview** (`/booking-office`) — a matrix view showing all your robots and all events at once, making it easy to manage your entire roster.
 
 ### Switching is Free

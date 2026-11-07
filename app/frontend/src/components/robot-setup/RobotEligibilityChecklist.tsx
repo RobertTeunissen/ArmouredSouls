@@ -12,6 +12,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../utils/api';
 import type { SchedulingEligibilityReport, SchedulingEligibilityGate } from './types';
+import { workshopPath } from '../../utils/robotRoutes';
 
 interface RobotEligibilityChecklistProps {
   robotId: number;
@@ -19,9 +20,9 @@ interface RobotEligibilityChecklistProps {
 }
 
 const GATE_ACTIONS: Record<string, { label: string; path: (robotId: number) => string }> = {
-  weapon_equipped: { label: 'Equip Weapon', path: (id) => `/robots/${id}?tab=battle-config` },
+  weapon_equipped: { label: 'Equip Weapon', path: (id) => workshopPath(id, 'loadout') },
   event_subscribed: { label: 'Subscribe to Events', path: (id) => `/robots/${id}/setup` },
-  tuning_allocated: { label: 'Allocate Tuning', path: (id) => `/robots/${id}?tab=tuning` },
+  tuning_allocated: { label: 'Allocate Tuning', path: (id) => workshopPath(id) },
 };
 
 function RobotEligibilityChecklist({ robotId, showRecommendations = false }: RobotEligibilityChecklistProps) {
@@ -109,7 +110,7 @@ function GateItem({ gate, robotId, variant }: { gate: SchedulingEligibilityGate;
   const action = GATE_ACTIONS[gate.id];
 
   return (
-    <div className="flex items-center justify-between gap-3 bg-surface rounded-lg p-3">
+    <div className="flex flex-col items-stretch justify-between gap-3 bg-surface rounded-lg p-3 sm:flex-row sm:items-center">
       <div className="flex-1 min-w-0">
         <div className={`font-medium text-sm ${variant === 'warning' ? 'text-warning' : 'text-primary'}`}>
           {gate.label}

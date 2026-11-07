@@ -34,6 +34,9 @@ export interface PublicRobotStanding {
   /** Placement modes: matches entered (`wins` counts first places). */
   totalMatches: number | null;
   teamName: string | null;
+  teamId?: number | null;
+  /** League instance, e.g. `champion_2`. */
+  leagueInstanceId?: string;
 }
 
 export interface PublicRobot {
@@ -102,6 +105,8 @@ export interface RecentResultEntry {
   robotName: string;
   outcome: ResultOutcome | null;
   placement: number | null;
+  /** ELO after minus ELO before. */
+  eloChange?: number;
 }
 
 export interface RecentResult {

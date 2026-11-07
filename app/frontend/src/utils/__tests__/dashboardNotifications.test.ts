@@ -176,7 +176,7 @@ describe('buildRobotReadinessNotifications', () => {
       key: 'readiness-no-weapon',
       variant: 'danger',
       message: 'Unarmed has no weapon equipped',
-      action: { label: 'Equip Weapon', to: '/robots/7' },
+      action: { label: 'Equip Weapon', to: '/robots/7/prepare?section=loadout' },
     });
   });
 
@@ -304,7 +304,7 @@ describe('buildRobotReadinessNotifications', () => {
       icon: '🔧',
       message: 'Unarmed will forfeit its booked matches unless re-armed',
       detail: 'No main weapon equipped. Booked: 1v1 League, King of the Hill',
-      action: { label: 'Equip Weapon', to: '/robots/7' },
+      action: { label: 'Equip Weapon', to: '/robots/7/prepare?section=loadout' },
     });
   });
 
@@ -337,7 +337,7 @@ describe('buildRobotReadinessNotifications', () => {
     expect(result[1]).toMatchObject({
       message: 'Idle has no weapon equipped',
       detail: 'Cannot be scheduled for any match without a weapon',
-      action: { label: 'Equip Weapon', to: '/robots/3' },
+      action: { label: 'Equip Weapon', to: '/robots/3/prepare?section=loadout' },
     });
   });
 
@@ -357,7 +357,7 @@ describe('buildRobotReadinessNotifications', () => {
       icon: '⚠️',
       message: 'Shieldless is not battle ready',
       detail: "No shield equipped. It won't be scheduled, and booked matches are fought with a single weapon",
-      action: { label: 'Fix Loadout', to: '/robots/4' },
+      action: { label: 'Fix Loadout', to: '/robots/4/prepare?section=loadout' },
     });
   });
 

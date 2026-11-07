@@ -55,9 +55,11 @@ interface BattleConfigTabProps {
    * non-empty, unequipping asks for confirmation first. Owner view only.
    */
   heldEvents?: string[];
+  /** The HP / shield / readiness / repair panel; the Workshop shows these in its header. */
+  showStatus?: boolean;
 }
 
-function BattleConfigTab({ robot, weapons, repairBayLevel = 0, onRobotUpdate, onEquipWeapon, onUnequipWeapon, heldEvents = [] }: BattleConfigTabProps) {
+function BattleConfigTab({ robot, weapons, repairBayLevel = 0, onRobotUpdate, onEquipWeapon, onUnequipWeapon, heldEvents = [], showStatus = true }: BattleConfigTabProps) {
   const [showWeaponModal, setShowWeaponModal] = useState(false);
   const [weaponSlotToEquip, setWeaponSlotToEquip] = useState<'main' | 'offhand'>('main');
   // Slot awaiting confirmation because the robot has booked matches.
@@ -127,6 +129,7 @@ function BattleConfigTab({ robot, weapons, repairBayLevel = 0, onRobotUpdate, on
       </h2>
 
       {/* Combat Status Panel - Direction B Aesthetic */}
+      {showStatus && (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 bg-gradient-to-br from-gray-700 to-gray-750 p-5 rounded-lg border border-gray-600 shadow-lg">
         {/* HP Bar with Color Coding */}
         <div className="space-y-2">
@@ -199,6 +202,7 @@ function BattleConfigTab({ robot, weapons, repairBayLevel = 0, onRobotUpdate, on
           </div>
         </div>
       </div>
+      )}
 
       {/* Weapon Loadout Section */}
       <div className="mb-6">

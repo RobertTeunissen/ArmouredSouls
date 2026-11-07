@@ -28,6 +28,7 @@ import {
 interface Row {
   entityType: 'robot' | 'team';
   entityId: number;
+  leagueInstanceId: string;
   mode: string;
   tier: string;
   leaguePoints: number;
@@ -38,6 +39,7 @@ interface Row {
 }
 
 const row = (overrides: Partial<Row> & Pick<Row, 'entityType' | 'entityId' | 'mode'>): Row => ({
+  leagueInstanceId: `${overrides.tier ?? 'bronze'}_1`,
   tier: 'bronze', leaguePoints: 0, wins: 0, losses: 0, draws: 0, totalMatches: null, ...overrides,
 });
 
@@ -78,6 +80,7 @@ describe('getRobotStandings', () => {
     ]);
     expect(standings?.find((s) => s.mode === 'grand_melee')?.totalMatches).toBe(50);
     expect(standings?.find((s) => s.mode === 'league_1v1')?.totalMatches).toBeNull();
+    expect(standings?.find((s) => s.mode === 'league_2v2')).toMatchObject({ teamId: 7, leagueInstanceId: 'diamond_1' });
   });
 
   it('keeps the better team standing when a robot is in two teams of one mode', async () => {
@@ -132,8 +135,8 @@ describe('getRecentResults', () => {
   it('groups robots by battle, newest first, with placements for placement modes', async () => {
     mockParticipantFindMany.mockResolvedValue([
       { battleId: 30, robotId: 2, team: 1, placement: 11, battle: battle({ battleType: 'grand_melee', winnerId: 9, leagueType: 'champion' }) },
-      { battleId: 30, robotId: 1, team: 1, placement: 6, battle: battle({ battleType: 'grand_melee', winnerId: 9, leagueType: 'champion' }) },
-      { battleId: 29, robotId: 1, team: 1, placement: null, battle: battle({ battleType: 'tournament_1v1', winnerId: 1, tournamentId: 4, tournamentRound: 2 }) },
+      { battleId: 30, robotId: 1, team: 1, placement: 6, eloBefore: 1895, eloAfter: 1895, battle: battle({ battleType: 'grand_melee', winnerId: 9, leagueType: 'champion' }) },
+      { battleId: 29, robotId: 1, team: 1, placement: null, eloBefore: 1904, eloAfter: 1922, battle: battle({ battleType: 'tournament_1v1', winnerId: 1, tournamentId: 4, tournamentRound: 2 }) },
     ]);
 
     const results = await getRecentResults([{ id: 1, name: 'GekkeAap' }, { id: 2, name: 'DommeAap' }]);
@@ -141,11 +144,20 @@ describe('getRecentResults', () => {
     expect(results).toHaveLength(2);
     expect(results[0]).toMatchObject({ battleId: 30, battleType: 'grand_melee', tier: 'champion' });
     expect(results[0].entries).toEqual([
-      { robotId: 1, robotName: 'GekkeAap', outcome: null, placement: 6 },
-      { robotId: 2, robotName: 'DommeAap', outcome: null, placement: 11 },
+      { robotId: 1, robotName: 'GekkeAap', outcome: null, placement: 6, eloChange: 0 },
+      { robotId: 2, robotName: 'DommeAap', outcome: null, placement: 11, eloChange: 0 },
     ]);
     expect(results[1]).toMatchObject({ battleId: 29, tier: null, tournamentRound: 2 });
-    expect(results[1].entries[0]).toMatchObject({ outcome: 'win', placement: null });
+    expect(results[1].entries[0]).toMatchObject({ outcome: 'win', placement: null, eloChange: 18 });
+  });
+
+  it('honours a custom limit', async () => {
+    mockParticipantFindMany.mockResolvedValue(
+      Array.from({ length: 12 }, (_, i) => ({ battleId: 100 - i, robotId: 1, team: 1, placement: null, battle: battle({ winnerId: 1 }) })),
+    );
+    const results = await getRecentResults([{ id: 1, name: 'A' }], 10);
+    expect(results).toHaveLength(10);
+    expect(mockParticipantFindMany).toHaveBeenCalledWith(expect.objectContaining({ take: 60 }));
   });
 
   it(`stops at ${RECENT_RESULTS_LIMIT} battles`, async () => {

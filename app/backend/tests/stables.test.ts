@@ -389,8 +389,8 @@ describe('Stables API - GET /api/stables/:userId', () => {
 
     expect(response.status).toBe(200);
     expect(response.body.robots[0].standings).toEqual([
-      { mode: 'league_1v1', tier: 'gold', leaguePoints: 40, wins: 10, losses: 3, draws: 2, totalMatches: null, teamName: null },
-      { mode: 'grand_melee', tier: 'platinum', leaguePoints: 600, wins: 4, losses: 0, draws: 0, totalMatches: 20, teamName: null },
+      { mode: 'league_1v1', tier: 'gold', leaguePoints: 40, wins: 10, losses: 3, draws: 2, totalMatches: null, teamName: null, teamId: null, leagueInstanceId: 'gold_1' },
+      { mode: 'grand_melee', tier: 'platinum', leaguePoints: 600, wins: 4, losses: 0, draws: 0, totalMatches: 20, teamName: null, teamId: null, leagueInstanceId: 'platinum_1' },
     ]);
   });
 

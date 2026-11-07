@@ -2,6 +2,7 @@ import CloseIcon from '../../assets/icons/close.svg?react';
 import { DrawerMenuItem } from './DrawerMenuItem';
 import { allPages, implementedPages, isNavPageImplemented, stableNavItems } from './types';
 import type { UserRobot } from './types';
+import { workshopPath } from '../../utils/robotRoutes';
 
 interface DrawerSectionProps {
   emoji: string;
@@ -77,7 +78,7 @@ export function MobileDrawer({ isOpen, onClose, isActive, userRobots, isAdmin, o
               <DrawerMenuItem
                 key={robot.id}
                 label={robot.name}
-                to={`/robots/${robot.id}`}
+                to={workshopPath(robot.id)}
                 onNavigate={onClose}
                 isActive={isActive(`/robots/${robot.id}`)}
                 indent={true}

@@ -28,6 +28,7 @@ export function RecentResults({ results, isOwner }: RecentResultsProps) {
             <li key={result.battleId}>
               <Link
                 to={`/battle/${result.battleId}`}
+                aria-label={`${context(result)}: ${result.entries.map((e) => `${e.robotName} ${resultLabel(e)}`).join(', ')}`}
                 className="flex min-h-[44px] items-center justify-between gap-3 py-2 text-sm hover:text-primary"
               >
                 <span className="min-w-0">

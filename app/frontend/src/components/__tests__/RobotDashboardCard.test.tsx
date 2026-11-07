@@ -168,7 +168,7 @@ describe('RobotDashboardCard', () => {
       expect(mockNavigate).toHaveBeenCalledWith('/robots/42');
     });
 
-    it('should navigate to /robots/:id when Enter key is pressed', async () => {
+    it('should navigate the owner to the Workshop when Enter key is pressed', async () => {
       const user = userEvent.setup();
       renderCard({ robot: makeRobot({ id: 99 }), variant: 'owner' });
 
@@ -176,7 +176,7 @@ describe('RobotDashboardCard', () => {
       card.focus();
       await user.keyboard('{Enter}');
 
-      expect(mockNavigate).toHaveBeenCalledWith('/robots/99');
+      expect(mockNavigate).toHaveBeenCalledWith('/robots/99/prepare');
     });
   });
 });
