@@ -11,6 +11,7 @@ import { AchievementError, AchievementErrorCode } from '../../errors/achievement
 import type {
   UnlockedAchievement,
   PinnedAchievement,
+  ShowcaseAchievement,
   StableAchievementData,
   AchievementRarityCache,
 } from './achievementTypes';
@@ -104,30 +105,88 @@ export async function updatePinnedAchievements(
 
 // ─── Stable Achievement Data ─────────────────────────────────────────
 
-export async function getStableAchievements(userId: number): Promise<StableAchievementData> {
+/** Badges in the stable page's trophy cabinet. Matches the pin limit. */
+export const SHOWCASE_SIZE = 6;
+
+/** Achievement tiers, easiest first: the rarity tie-break prefers harder tiers. */
+const ACHIEVEMENT_TIER_ORDER: readonly string[] = ['easy', 'medium', 'hard', 'very_hard', 'secret'];
+
+interface UnlockRow {
+  achievementId: string;
+  unlockedAt: Date;
+}
+
+/**
+ * The trophy cabinet: pins in the owner's order, then the rarest other
+ * unlocks. Fewer than 1 in 80 human stables pin anything, so the cabinet
+ * fills itself rather than showing empty slots. Hidden (secret)
+ * achievements are only shown when the owner pinned them, so the
+ * auto-fill never reveals one. Rarity is the human-stable holder count
+ * from the rarity cache; until it has loaded, harder tiers come first.
+ * Ties: harder tier, then the most recent unlock.
+ */
+export function buildShowcase(
+  pinnedIds: readonly string[],
+  unlocks: readonly UnlockRow[],
+  rarityCache: AchievementRarityCache | null,
+): ShowcaseAchievement[] {
+  const unlockedAt = new Map(unlocks.map((u) => [u.achievementId, u.unlockedAt]));
+  const counts = rarityCache && rarityCache.counts.size > 0 ? rarityCache.counts : null;
+  const holders = (id: string): number | null => (counts ? counts.get(id) ?? 0 : null);
+
+  const toEntry = (id: string, pinned: boolean): ShowcaseAchievement | null => {
+    const definition = getAchievementById(id);
+    const at = unlockedAt.get(id);
+    if (!definition || !at) return null;
+    return {
+      id: definition.id, name: definition.name, tier: definition.tier,
+      badgeIconFile: definition.badgeIconFile, unlockedAt: at.toISOString(),
+      pinned, holders: holders(id),
+    };
+  };
+
+  const showcase: ShowcaseAchievement[] = [];
+  for (const id of pinnedIds) {
+    const entry = toEntry(id, true);
+    if (entry && showcase.length < SHOWCASE_SIZE) showcase.push(entry);
+  }
+
+  const pinnedSet = new Set(showcase.map((s) => s.id));
+  const candidates = unlocks
+    .filter((u) => !pinnedSet.has(u.achievementId))
+    .filter((u) => getAchievementById(u.achievementId)?.hidden === false)
+    .map((u) => toEntry(u.achievementId, false))
+    .filter((e): e is ShowcaseAchievement => e !== null)
+    .sort((a, b) =>
+      (a.holders ?? 0) - (b.holders ?? 0)
+      || ACHIEVEMENT_TIER_ORDER.indexOf(b.tier) - ACHIEVEMENT_TIER_ORDER.indexOf(a.tier)
+      || b.unlockedAt.localeCompare(a.unlockedAt));
+
+  return [...showcase, ...candidates.slice(0, SHOWCASE_SIZE - showcase.length)];
+}
+
+export async function getStableAchievements(
+  userId: number,
+  rarityCache: AchievementRarityCache | null = null,
+): Promise<StableAchievementData> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: { pinnedAchievements: true },
   });
 
   if (!user) {
-    return { pinned: [], totalUnlocked: 0, totalAvailable: ACHIEVEMENTS.filter((a) => !a.hidden).length };
+    return { pinned: [], showcase: [], totalUnlocked: 0, totalAvailable: ACHIEVEMENTS.filter((a) => !a.hidden).length };
   }
 
   const pinnedIds = Array.isArray(user.pinnedAchievements)
     ? (user.pinnedAchievements as string[])
     : [];
 
-  const pinnedUnlocks = pinnedIds.length > 0
-    ? await prisma.userAchievement.findMany({
-        where: { userId, achievementId: { in: pinnedIds } },
-        select: { achievementId: true, unlockedAt: true },
-      })
-    : [];
-
-  const unlockMap = new Map(
-    pinnedUnlocks.map((u) => [u.achievementId, u.unlockedAt.toISOString()]),
-  );
+  const unlocks: UnlockRow[] = await prisma.userAchievement.findMany({
+    where: { userId },
+    select: { achievementId: true, unlockedAt: true },
+  });
+  const unlockMap = new Map(unlocks.map((u) => [u.achievementId, u.unlockedAt.toISOString()]));
 
   const pinned: PinnedAchievement[] = [];
   for (const id of pinnedIds) {
@@ -141,14 +200,17 @@ export async function getStableAchievements(userId: number): Promise<StableAchie
     }
   }
 
-  const totalUnlocked = await prisma.userAchievement.count({ where: { userId } });
-  const earnedHiddenCount = await prisma.userAchievement.count({
-    where: { userId, achievementId: { in: ACHIEVEMENTS.filter((a) => a.hidden).map((a) => a.id) } },
-  });
+  const hiddenIds = new Set(ACHIEVEMENTS.filter((a) => a.hidden).map((a) => a.id));
+  const earnedHiddenCount = unlocks.filter((u) => hiddenIds.has(u.achievementId)).length;
   const nonHiddenCount = ACHIEVEMENTS.filter((a) => !a.hidden).length;
   const totalAvailable = nonHiddenCount + earnedHiddenCount;
 
-  return { pinned, totalUnlocked, totalAvailable };
+  return {
+    pinned,
+    showcase: buildShowcase(pinnedIds, unlocks, rarityCache),
+    totalUnlocked: unlocks.length,
+    totalAvailable,
+  };
 }
 
 // ─── Rarity Cache ────────────────────────────────────────────────────

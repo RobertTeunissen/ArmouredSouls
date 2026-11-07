@@ -458,23 +458,17 @@ Only one image per badge is needed. The locked state is pure CSS:
 
 ### 1. Stable Page — Achievement Showcase (Public)
 
-A new section on the stable page (`StableViewPage`), visible to all players visiting any stable. Sits between the "Stable Statistics" and "Robots" sections.
+The **trophy cabinet** on the stable page (`StableViewPage`), visible to all players visiting any stable. Full behaviour: [PRD_STABLE_VIEW_PAGE.md](../prd_pages/PRD_STABLE_VIEW_PAGE.md#trophy-cabinet).
 
-**Pinned Favourites Row**
+- Up to **6 badges**: the owner's pins in their order, then the stable's rarest other unlocks, so the cabinet is never empty slots. Before the stable page revamp (Nov 2026) only 1 of 87 human stables had pinned anything.
+- Rarity is the human-stable holder count from the rarity cache; each auto-filled badge shows "Held by N players", a pinned one shows "Pinned". Hidden achievements are only shown when pinned.
+- Summary line "106 of 130 achievements". The "All achievements →" link is shown on the owner's own page only.
 
-Players select up to **6 favourite achievements** to pin to their stable showcase. These are the badges other players see first — your curated "trophy wall."
+**Own Stable View**
 
-- 6 hexagonal badge slots in a horizontal row
-- Empty slots show a faint hexagonal outline (`border-dashed border-white/20`)
-- Unlocked badges display at 64×64 with tier-colored border
-- Hovering a badge shows a tooltip: achievement name, description, unlock date
-- Below the row: "42/63 Achievements · View all →" link to `/achievements`
+A **Customise** button opens the picker modal (pin, unpin, save; max 6). Free slots keep showing the rarest unlocks.
 
-**Own Stable View (editing mode)**
-
-When viewing your own stable, each pinned slot has a small "×" to unpin and empty slots show a "+" button that opens a picker modal. The picker shows all unlocked achievements as a grid — click one to pin it.
-
-**Data**: The 6 pinned achievement IDs are stored on the User model (see [Data Model](#data-model)). The `GET /api/stables/:userId` endpoint includes the pinned achievements in its response.
+**Data**: The pinned achievement IDs are stored on the User model (see [Data Model](#data-model)). `GET /api/stables/:userId` returns `achievements.pinned` and `achievements.showcase` (built by `buildShowcase` in `achievementQueries.ts`).
 
 ### 2. Dedicated Achievement Page (`/achievements`)
 

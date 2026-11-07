@@ -9,6 +9,7 @@ import prisma from '../../lib/prisma';
 import { getPrestigeRank } from '../../utils/prestigeUtils';
 import { achievementService } from '../achievement';
 import { getAllModesBattleCounts } from '../robot/all-modes-battle-count';
+import { getRecentResults, getRobotStandings, getTopAccolades } from './stable-view-sections';
 
 /** Map facility type slug to a human-readable display name. */
 const FACILITY_DISPLAY_NAMES: Record<string, string> = {
@@ -36,6 +37,7 @@ export async function getStableProfile(userId: number) {
       username: true,
       stableName: true,
       stableType: true,
+      createdAt: true,
       prestige: true,
       championshipTitles: true,
       championshipTitles1v1: true,
@@ -131,14 +133,20 @@ export async function getStableProfile(userId: number) {
     maxLevel: f.maxLevel,
   }));
 
-  const achievements = await achievementService.getStableAchievements(userId);
-
-  // #532: per-robot "Battles" is the all-modes count (totalBattles + KotH + Grand
-  // Melee). Stable-level stats.totalBattles above stays the distinct W/L/D count.
-  const battleCounts = await getAllModesBattleCounts(user.robots);
+  const [achievements, battleCounts, standingsByRobot, recentResults, accolades] = await Promise.all([
+    achievementService.getStableAchievements(userId),
+    // #532: per-robot "Battles" is the all-modes count (totalBattles + KotH + Grand
+    // Melee). Stable-level stats.totalBattles above stays the distinct W/L/D count.
+    getAllModesBattleCounts(user.robots),
+    getRobotStandings(robotIds),
+    getRecentResults(user.robots),
+    getTopAccolades(userId),
+  ]);
   const robots = user.robots.map((robot) => ({
     ...robot,
     allModesBattleCount: battleCounts.get(robot.id) ?? robot.totalBattles,
+    // Played tiered modes this season; team modes via the robot's teams.
+    standings: standingsByRobot.get(robot.id) ?? [],
   }));
 
   return {
@@ -148,6 +156,7 @@ export async function getStableProfile(userId: number) {
       stableName: user.stableName,
       // Spec #55 R1.7: Stable_Type only; no Automaton_Profile field is selected.
       stableType: user.stableType,
+      memberSince: user.createdAt.toISOString(),
       prestige: user.prestige,
       prestigeRank: getPrestigeRank(user.prestige),
       championshipTitles: user.championshipTitles,
@@ -170,5 +179,7 @@ export async function getStableProfile(userId: number) {
       teamBattleWinRate,
     },
     achievements,
+    recentResults,
+    accolades,
   };
 }

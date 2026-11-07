@@ -2,40 +2,31 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: v1.1  
-**Date**: October 16, 2026 (v1.1: Season 2 facility categories, Refinement Lab)  
+**Version**: v2.0  
+**Date**: November 6, 2026 (v2.0: profile revamp; v1.1: Season 2 facility categories, Refinement Lab)  
 **Status**: Implemented ✅
 
 ---
 
 ## Executive Summary
 
-The Stable View Page (`/stables/:userId`) is the first social/scouting feature in Armoured Souls. It allows any authenticated player to view another user's stable — their robots (public performance data), facilities (levels and types), and aggregate statistics (prestige, championship titles, win rate). Sensitive data such as exact attribute levels, battle configuration, equipped weapons, and current combat state remain hidden to preserve competitive strategy.
+The Stable View Page (`/stables/:userId`) is the public profile of a stable. Any authenticated player can open it to see who the stable is, how it is doing this season, its roster, its trophies, its latest results, its facilities and its season history. Sensitive data (attribute levels, battle configuration, equipped weapons, current combat state) stays hidden.
 
-**Key Achievements:**
-- ✅ Public stable viewing for any authenticated user
-- ✅ Robot roster display with public-only data (ELO, league, W/D/L, fame, kills, damage stats)
-- ✅ Facility summary grouped by 4 categories with level progress indicators
-- ✅ Aggregate stable statistics (total battles, wins, losses, draws, win rate, highest ELO, active robots)
-- ✅ Prestige rank title display (Novice → Legendary)
-- ✅ Sensitive robot data stripped via `sanitizeRobotForPublic`
-- ✅ Navigation links from 6+ existing pages (League Standings, Leaderboards, Hall of Records, Tag Team Standings)
-- ✅ Responsive layout (320px and above)
-- ✅ Error states: 404, network error, loading, empty robots
+v2.0 (stable page revamp) replaced the v1 layout, a wall of ten equal stat tiles, a three-column card grid and grouped facility progress bars, with a profile built for stables of any size (the median stable has 2 robots, the largest 11):
+
+- A robot's tier is its **highest tier over every tiered mode**, not league 1v1: robots specialise in 2v2, Grand Melee and so on.
+- The **trophy cabinet fills itself**: fewer than 1 in 80 human stables had pinned an achievement, so nearly every page showed six empty slots.
+- A **season history** that reads like the live page at the time, with the latest completed season open.
 
 ---
 
 ## References
 
 - **Design System**: [docs/design_ux/DESIGN_SYSTEM_QUICK_REFERENCE.md](../design_ux/DESIGN_SYSTEM_QUICK_REFERENCE.md)
-- **Stable System**: [docs/prd_core/STABLE_SYSTEM.md](../prd_core/STABLE_SYSTEM.md)
-- **Prestige & Fame**: [docs/prd_core/PRD_PRESTIGE_AND_FAME.md](../prd_core/PRD_PRESTIGE_AND_FAME.md)
-- **Related Files**:
-  - Frontend Page: `app/frontend/src/pages/StableViewPage.tsx`
-  - Backend Route: `app/backend/src/routes/stables.ts`
-  - Shared Utility: `app/backend/src/utils/prestigeUtils.ts`
-  - Robot Card Component: `app/frontend/src/components/RobotDashboardCard.tsx` (public variant)
-  - Navigation Component: `app/frontend/src/components/OwnerNameLink.tsx`
+- **Stable System**: [docs/game-systems/STABLE_SYSTEM.md](../game-systems/STABLE_SYSTEM.md)
+- **Seasons**: Spec #45 (season archive, `SeasonHistoryBlock`)
+- **Automaton Stables**: [docs/game-systems/PRD_AUTOMATON_STABLES.md](../game-systems/PRD_AUTOMATON_STABLES.md)
+- **Player guide**: `achievements/badges-and-showcase.md`, `seasons/reading-your-archive.md`
 
 ---
 
@@ -48,101 +39,65 @@ The Stable View Page (`/stables/:userId`) is the first social/scouting feature i
 ## Page Layout
 
 ```
-/stables/:userId Page Layout
-
-├── Navigation Bar (global)
-├── Back Button
-│   └── Returns to previous page (browser history)
-├── Stable Header ✅
-│   ├── Stable Name (or username fallback)
-│   ├── Prestige Value + Rank Title (Novice/Established/Veteran/Elite/Champion/Legendary)
-│   └── Championship Titles count
-├── Stable Statistics Section ✅
-│   ├── Total Battles
-│   ├── Total Wins
-│   ├── Total Losses
-│   ├── Total Draws
-│   ├── Win Rate (percentage)
-│   ├── Highest ELO
-│   └── Active Robots count
-├── Robots Section ✅
-│   ├── Grid of RobotDashboardCard (public variant)
-│   │   ├── Robot image, name
-│   │   ├── ELO, league, league points
-│   │   ├── W/D/L record, win rate
-│   │   ├── Fame + fame tier badge
-│   │   ├── Battles (all modes, `allModesBattleCount`), kills
-│   │   ├── Lifetime damage dealt/taken
-│   │   ├── Placement-modes note (only when all-modes count ≠ totalBattles)
-│   │   └── Click navigates to /robots/:robotId
-│   └── Sorted by ELO descending
-├── Facilities Section ✅
-│   ├── Economy group
-│   ├── Hangar & Armory group
-│   ├── Training Academies group
-│   └── Tactical & Advanced group
-│       └── Each facility: name + "Level X/Y" progress
-└── Error/Empty States ✅
-    ├── Loading indicator while fetching
-    ├── "Stable not found" + back link (404)
-    ├── "Failed to load stable. Please try again." + retry button (network error)
-    └── "This stable has no robots yet" (empty robots)
+/stables/:userId
+├── ← Back (browser history)
+├── Header
+│   ├── Stable name (username fallback) + Automaton badge + prestige rank chip
+│   ├── "{username} · Member since {Month YYYY} · Season N, cycle X of Y"
+│   ├── Honours chips: titles per format ("5× 3v3 Tournament champion"), up to two #1 Hall of Records placements
+│   └── Figures: Prestige · Titles · Robots
+├── This season (only when the stable has robots)
+│   ├── Highest tier per robot: segmented bar + legend ("6 Champion · 4 Platinum · 1 Gold")
+│   └── Best tier per mode: one chip per tiered mode ("2v2 · Diamond", "3v3 · –")
+├── Roster (xl: 2/3 width)          ├── Trophy cabinet (xl: 1/3 width)
+│   ├── Table | Cards toggle        │   ├── Up to 6 badges: pins, then rarest unlocks
+│   ├── Sortable rows               │   ├── "Held by N players" / "Pinned"
+│   │   # · robot · ELO ·           │   ├── Best Hall of Records placements (up to 3)
+│   │   highest tier chip ·         │   └── Owner: Customise (pinner) · All achievements →
+│   │   6-mode tier strip ·         └── Recent results
+│   │   fame · kills                    ├── Last 5 battles, each a link to /battle/:id
+│   └── Cards view: RobotDashboardCard      └── Owner: Battle history →
+├── Facilities: built facilities as chips, highest level first ("13 of 14 built · 1 maxed")
+└── Season history (SeasonHistoryBlock)
 ```
 
----
+### Highest tier and the mode strip
 
-## Sections
+- Tiered modes, in display order: League 1v1, League 2v2, League 3v3, Tag Team, King of the Hill, Grand Melee (`TIERED_STANDINGS_MODES` in `app/shared/utils/automatonStandingsTier.ts`). Tournaments have no tier.
+- Team modes use the standing of the robot's team. A robot in two teams of the same mode shows the better one (higher tier, then LP).
+- Only **played** standings count (W + L + D > 0, or any placement match). The Bronze row a subscription creates before a match shows as a dash.
+- The chip shows the highest tier and, when several modes hold it, the count: "Champion ×3". It never names one mode: LP is not comparable across modes (Grand Melee runs to several hundred, 1v1 to about 130), so a tie-break by LP would almost always say Grand Melee.
+- Each strip cell shows the tier initial, coloured with `getTierColor`. Its tooltip and accessible name carry the record and LP: "League 2v2: Diamond, Team Apes · 54–42–1 · 122 LP". KotH and Grand Melee show first places, not a win–loss record: "14 first places in 50 · 718 LP".
+- Sorting: ELO (default, descending), name, highest tier (tier, then mode count; robots that have not played sort last), fame, kills. Ties fall back to ELO, then name.
 
-### Stable Header
+### Trophy cabinet
 
-Displays the target user's identity and prestige information:
-- **Stable name**: Uses `stableName` if set, falls back to `username`
-- **Prestige**: Numeric value with rank title badge
-- **Championship titles**: Count of titles won
+- Up to 6 badges (`SHOWCASE_SIZE`, the pin limit): the owner's pins in their order, then the stable's rarest other unlocks.
+- Rarity is the human-stable holder count from the achievement rarity cache (Automatons excluded, as on the achievements page). Ties: harder achievement tier, then most recent unlock. Until the cache has loaded, harder tiers come first and no holder count is shown.
+- Hidden (secret) achievements are never auto-filled, so the cabinet cannot reveal one; a pinned one is shown.
+- Owner: **Customise** opens the existing pinner modal (pin, unpin, save). There are no hover-only controls.
+- Below the badges: the best Hall of Records placements over all completed seasons (rank first, then newest season), without tournament wins, whose `rank` is a list position rather than a placement.
+- Visitors do not get the "All achievements" link, which only ever opens the viewer's own achievements.
 
-Prestige rank tiers:
-| Prestige Range | Rank Title |
-|---|---|
-| 0–999 | Novice |
-| 1,000–4,999 | Established |
-| 5,000–9,999 | Veteran |
-| 10,000–24,999 | Elite |
-| 25,000–49,999 | Champion |
-| 50,000+ | Legendary |
+### Recent results
 
-### Stable Statistics
+- The stable's last 5 battles, newest first, grouped per battle with every robot of the stable that fought.
+- Outcome rules match the stable W/L/D totals: 1v1 modes by winning robot, team modes by winning side, a null winner is a draw. A team battle with a winner but no recorded side (before Spec #39) shows "—". KotH and Grand Melee show the finishing position ("1st", "6th · 11th").
+- Context line: mode, league tier (none for tournaments), tournament round.
 
-Grid of stat cards showing aggregate performance across all robots:
-- Total Battles, Total Wins, Total Losses, Total Draws
-- Win Rate (percentage, 1 decimal place)
-- Highest ELO across all robots
-- Active Robots count
+### Season history
 
-All stats are computed server-side from robot data.
+`SeasonHistoryBlock` (Spec #45 R14, restructured in v2.0):
 
-### Robots
-
-Grid of `RobotDashboardCard` components using the `"public"` variant:
-- Sorted by ELO rating descending
-- Each card shows: image, name, ELO, league, league points, W/D/L record, win rate, fame, fame tier, battles, kills, lifetime damage dealt, lifetime damage taken
-- **Battles** is the all-modes count (`allModesBattleCount`: `totalBattles` + KotH + Grand Melee matches, #532), falling back to `totalBattles` when the field is absent. The W/D/L record and win rate stay win/loss modes only (`wins / totalBattles`).
-- When `allModesBattleCount` differs from `totalBattles`, the card shows one muted line below the stats: "Record and win rate exclude KotH and Grand Melee, which are placement events." It is the same `PlacementModesRecordNote` component (and wording) the robot detail page uses; hidden when the counts match or the field is absent.
-- Each card omits: HP bar, shield bar, battle readiness badge, weapon details
-- Clicking a card navigates to `/robots/:robotId`
-- Bye Robots are excluded from the response
-
-### Facilities
-
-Facilities are grouped into 4 categories, each showing facility name and "Level X/Y" progress:
-
-| Category | Facility Types |
-|---|---|
-| Economy | repair_bay, training_facility, merchandising_hub, streaming_studio |
-| Hangar & Armory | roster_expansion, storage_facility, weapons_workshop, refinement_lab |
-| Training Academies | combat_training_academy, defense_training_academy, mobility_training_academy, ai_training_academy |
-| Tactical & Advanced | tuning_bay, booking_office |
-
-The facilities section is read-only — no upgrade costs, operating costs, or upgrade buttons are shown.
+- The season in progress first ("Season 1 · In progress · cycle 95 of 100 · archived at rollover"), from the season store.
+- One row per completed season, newest first; the collapsed row shows prestige, titles and best tier. The **latest completed season opens on load**; older seasons load their detail on demand.
+- Expanded detail (`SeasonRowDetail`), laid out like the live page:
+  - Figures: prestige earned, **final credits**, record, win rate, highest ELO, titles, achievements.
+  - Roster by final ELO: highest-tier chip and mode strip (same components as the live roster), and the robot's best finish (highest tier, then best instance rank: "Best finish: #1 Champion 1v1").
+  - Teams with their members.
+  - Hall of Records placements as chips, best rank first; four shown, the rest behind "+N more". Tournament wins listed separately.
+  - Season 0 keeps the "career totals" label and its explanation.
+- Archives keep no match count, so an archived robot standing counts as played when it has a result or LP, and an archived team standing when it has LP or a tier above Bronze.
 
 ---
 
@@ -150,89 +105,88 @@ The facilities section is read-only — no upgrade costs, operating costs, or up
 
 | State | Trigger | UI |
 |---|---|---|
-| Loading | API request in progress | Loading indicator with "Loading stable..." |
-| Not Found (404) | API returns 404 | "Stable not found" message + back link |
-| Network Error | Fetch fails / 5xx | "Failed to load stable. Please try again." + retry button |
-| Empty Robots | API returns `robots: []` | "This stable has no robots yet" in robots section |
+| Loading | API request in progress | "Loading stable..." |
+| Not Found (404) | API returns 404 | "Stable not found" + back link |
+| Network Error | Fetch fails / 5xx | "Failed to load stable. Please try again." + Retry |
+| Empty Robots | `robots: []` | "This stable has no robots yet"; no "This season" section |
+| No achievements | empty showcase | "No achievements unlocked yet." |
+| No battles | `recentResults: []` | "No battles yet this season." |
+| Season detail fails | detail request fails | "Could not load this season. Close and reopen it to try again." |
+
+Saving pins refreshes the page data in the background; a failed refresh keeps the page on screen.
 
 ---
 
 ## Responsive Behavior
 
-| Viewport | Robot Cards | Facilities | Statistics |
-|---|---|---|---|
-| Mobile (< 640px) | Single column | Stacked vertically | Compact reflow, no horizontal scroll |
-| Tablet (640px–1023px) | 2-column grid | Multi-column | Grid layout |
-| Desktop (≥ 1024px) | 3-column grid | Multi-column | Grid layout |
-
-- Minimum supported viewport: 320px
-- Touch-friendly tap targets: minimum 44px
-- No horizontal scrolling at any viewport size
+- Below `xl` the roster, trophy cabinet and recent results stack; from `xl` the roster takes two thirds.
+- Below `lg` the roster is compact rows: thumbnail, name, ELO and tier chip, and the mode strip with mode labels. Rows after the fifth sit behind "Show all N robots"; sorting is a select.
+- Below `lg` facilities collapse behind a Show/Hide toggle.
+- Touch targets are at least 44px; no horizontal scrolling at 320px.
 
 ---
 
 ## Automaton Stables (Spec #55)
 
-An Automaton_Stable's profile page is the same page as any stable's. The only addition is the Automaton_Badge (`AutomatonBadge`, `md`, `compact={false}`) directly after the stable name in the header heading:
+An Automaton_Stable's profile is the same page. The only addition is the Automaton_Badge (`AutomatonBadge`, `md`, `compact={false}`) after the stable name in the heading, kept on the line of the name's last word (`whitespace-nowrap`). Franchise, backstory and strategy are not shown (admin-only; backlog #61). Automatons earn achievements, so their cabinet fills like any other; their unlocks are not counted in rarity.
 
-- Always the full label "Automaton" with the gear icon, at every width (the header has room; no compact form).
-- The badge stays attached to the last word of the stable name (`whitespace-nowrap` around last word + badge), so it never wraps onto a line of its own.
-- Human and Generated_Stables render exactly as before (no badge).
-
-Deliberately **not** shown: the franchise, the backstory and the strategy name. They are admin-only fields of the Automaton_Profile; showing a franchise and backstory for all stables is backlog item #61. The API adds only `user.stableType` to the stable response; no other Automaton field is exposed.
+---
 
 ## API Endpoint
 
 ### `GET /api/stables/:userId`
 
-**Authentication**: Required (JWT via `authenticateToken` middleware)  
-**Validation**: `userId` validated as positive integer via Zod `positiveIntParam`
+**Authentication**: Required (`authenticateToken`). **Validation**: `userId` via Zod `positiveIntParam`. Owner and visitor get the same response.
 
-**Response Shape**:
 ```typescript
 {
   user: {
-    id: number;
-    username: string;
-    stableName: string | null;
-    prestige: number;
-    prestigeRank: string;
-    championshipTitles: number;
+    id; username; stableName | null; stableType;
+    memberSince: string;              // v2.0: ISO account creation time
+    prestige; prestigeRank;
+    championshipTitles; championshipTitles1v1; championshipTitles2v2; championshipTitles3v3;
   };
-  robots: PublicRobot[];       // Sanitized, sorted by ELO desc; each robot also carries
-                               // allModesBattleCount: number (totalBattles + KotH + Grand Melee, #532)
-  facilities: FacilitySummary[];
-  stats: {
-    totalBattles: number;
-    totalWins: number;
-    totalLosses: number;
-    totalDraws: number;
-    winRate: number;
-    highestElo: number;
-    activeRobots: number;
+  robots: Array<PublicRobot & {      // sanitized, ELO descending
+    allModesBattleCount: number;     // #532
+    standings: Array<{               // v2.0: played tiered modes, display order
+      mode; tier; leaguePoints; wins; losses; draws;
+      totalMatches: number | null;   // placement modes only; wins = first places
+      teamName: string | null;       // team modes
+    }>;
+  }>;
+  facilities: Array<{ type; name; level; maxLevel }>;
+  stats: { totalBattles; totalWins; totalLosses; totalDraws; winRate; highestElo; activeRobots;
+           totalTeamBattles; teamBattleWins; teamBattleWinRate };   // kept; no longer displayed
+  achievements: {
+    pinned: PinnedAchievement[];
+    showcase: Array<PinnedAchievement & { pinned: boolean; holders: number | null }>;  // v2.0
+    totalUnlocked; totalAvailable;
   };
+  recentResults: Array<{             // v2.0: last 5 battles
+    battleId; battleType; tier: string | null; tournamentRound: number | null; createdAt;
+    entries: Array<{ robotId; robotName; outcome: 'win' | 'loss' | 'draw' | null; placement: number | null }>;
+  }>;
+  accolades: Array<{                 // v2.0: best 5 Hall of Records placements, all seasons
+    seasonNumber; category; rank; subjectName; value; valueLabel; mode;
+  }>;
 }
 ```
 
-**Error Responses**:
-- `401` — Unauthenticated request
-- `400` — Invalid userId parameter
-- `404` — User not found
-- `500` — Database/server error
+All v2.0 fields are additions; no field was removed or changed.
 
-**Security**: All robots are sanitized via `sanitizeRobotForPublic`, stripping 23 core attributes, battle config (stance, yield threshold, loadout type), combat state (current HP, current shield, damage taken), and equipment IDs.
+**Errors**: `400` invalid userId, `401` unauthenticated, `404` user not found.
+
+**Security**: robots go through `sanitizeRobotForPublic` (attributes, battle configuration, combat state, equipment and Automaton blueprint links stripped). The v2.0 additions are public competitive data already shown on league standings, battle pages and the season archive.
+
+Season history uses `GET /api/seasons/stables/:userId` and `GET /api/seasons/stables/:userId/:seasonNumber` (Spec #45), unchanged.
 
 ---
 
 ## Navigation Integration
 
-The `OwnerNameLink` component renders owner/stable names as clickable links to `/stables/:userId` on the following pages:
-- LeagueStandingsPage — owner column in standings table
-- LeaderboardsPrestigePage — stable name in prestige leaderboard
-- LeaderboardsFamePage — stable name in fame leaderboard
-- LeaderboardsLossesPage — stable name in losses leaderboard
-- HallOfRecordsPage — owner names in record cards
-- TagTeamStandingsPage — owner names in tag team standings
+**My Stable**: the first item of the Stable menu (desktop dropdown and the mobile drawer's Stable section) opens the player's own page, `/stables/{own id}` (`stableNavItems` in `components/nav/types.ts`). It is only highlighted on the player's own stable, not on other stables.
+
+`OwnerNameLink` links owner and stable names to `/stables/:userId` from League Standings, the Prestige, Fame and Losses leaderboards, Hall of Records and Tag Team Standings. Battle reports, the Season Archive, the season countdown notice (`#season-history`) and the admin player panel link here too.
 
 ---
 
@@ -240,32 +194,31 @@ The `OwnerNameLink` component renders owner/stable names as clickable links to `
 
 ### Backend
 ```
-app/backend/src/routes/
-└── stables.ts                 # GET /api/stables/:userId endpoint
-
-app/backend/src/utils/
-└── prestigeUtils.ts           # Shared getPrestigeRank, getFameTier utilities
+app/backend/src/routes/stables.ts                          # GET /api/stables/:userId
+app/backend/src/services/common/stableViewService.ts       # profile, stats, composition
+app/backend/src/services/common/stable-view-sections.ts    # per-robot standings, recent results, top accolades
+app/backend/src/services/achievement/achievementQueries.ts # getStableAchievements, buildShowcase
 ```
 
 ### Frontend
 ```
-app/frontend/src/pages/
-└── StableViewPage.tsx         # Stable view page
-
-app/frontend/src/components/
-├── RobotDashboardCard.tsx     # Extended with variant="public" support
-├── PlacementModesRecordNote.tsx # Shared "Record and win rate exclude…" note (also robot detail page)
-└── OwnerNameLink.tsx          # Reusable owner name link component
+app/frontend/src/pages/StableViewPage.tsx                  # composition only
+app/frontend/src/components/stable-view/                   # StableHeader, SeasonOverview, RosterSection,
+                                                           # TierChip, ModeStrip, TrophyCabinet, RecentResults,
+                                                           # FacilitiesStrip, useStableProfile, types
+app/frontend/src/components/season/SeasonHistoryBlock.tsx  # season list
+app/frontend/src/components/season/SeasonRowDetail.tsx     # expanded season
+app/frontend/src/utils/stableViewFormat.ts                 # pure derivations (tiers, sorting, labels)
 ```
 
 ### Tests
 ```
-app/backend/tests/
-├── stables.test.ts                        # Unit tests for stables endpoint
-├── stableSanitization.property.test.ts    # Property-based tests (Properties 1-6)
-└── prestigeUtils.property.test.ts         # Property 4: prestige rank mapping
-
-app/frontend/src/pages/__tests__/
-├── StableViewPage.test.tsx                # Unit tests for StableViewPage
-└── StableViewPage.property.test.ts        # Property 7: facility category grouping
+app/backend/tests/stables.test.ts                                     # integration: shape, standings, sanitization
+app/backend/src/services/common/__tests__/stableViewSections.test.ts  # standings, outcomes, recent results
+app/backend/src/services/common/__tests__/stableViewBattleCount.test.ts
+app/backend/src/services/achievement/__tests__/stableShowcase.test.ts # cabinet order, hidden, limits
+app/frontend/src/pages/__tests__/StableViewPage.test.tsx
+app/frontend/src/pages/__tests__/AutomatonBadgePages.test.tsx
+app/frontend/src/components/season/__tests__/SeasonHistoryBlock.test.tsx
+app/frontend/src/utils/__tests__/stableViewFormat.test.ts             # incl. property test for highest tier
 ```

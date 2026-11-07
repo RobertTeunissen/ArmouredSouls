@@ -75,7 +75,7 @@ export default function AchievementPinnerModal({
         </div>
 
         <p className="text-sm text-secondary mb-4">
-          Select up to 6 achievements to showcase on your stable page.
+          Pin up to 6 achievements to showcase on your stable page. Slots you leave free show your rarest achievements.
         </p>
 
         <div className="flex-1 overflow-y-auto">

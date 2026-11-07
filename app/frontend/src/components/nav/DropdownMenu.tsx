@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { implementedPages } from './types';
+import { isNavPageImplemented } from './types';
 
 export interface DropdownMenuProps {
   label: string;
@@ -29,13 +29,7 @@ export function DropdownMenu({ label, items, isActive, checkActive }: DropdownMe
     setCloseTimer(timer);
   };
 
-  const isPageImplemented = (path: string): boolean => {
-    // Allow any robot detail page (/robots/:id)
-    if (path.match(/^\/robots\/\d+$/)) {
-      return true;
-    }
-    return implementedPages.has(path);
-  };
+  const isPageImplemented = isNavPageImplemented;
 
   return (
     <div

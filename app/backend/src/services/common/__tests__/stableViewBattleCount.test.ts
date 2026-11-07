@@ -11,6 +11,9 @@ jest.mock('../../../lib/prisma', () => ({
     user: { findUnique: (...args: unknown[]) => mockUserFindUnique(...args) },
     $queryRaw: (...args: unknown[]) => mockQueryRaw(...args),
     standing: { findMany: (...args: unknown[]) => mockStandingFindMany(...args) },
+    teamBattleMember: { findMany: jest.fn().mockResolvedValue([]) },
+    battleParticipant: { findMany: jest.fn().mockResolvedValue([]) },
+    seasonAccolade: { findMany: jest.fn().mockResolvedValue([]) },
   },
 }));
 
@@ -27,6 +30,7 @@ beforeEach(() => {
     username: 'arena04',
     stableName: 'Arena 04',
     stableType: 'human',
+    createdAt: new Date('2026-03-29T08:00:00.000Z'),
     prestige: 0,
     championshipTitles: 0,
     championshipTitles1v1: 0,
