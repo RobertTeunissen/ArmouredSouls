@@ -418,6 +418,38 @@ describe('awardKothPoints', () => {
     expect(updateCall.data.bestWinStreak).toBe(2);
     expect(updateCall.data.currentLoseStreak).toBe(0);
   });
+
+  // Before Nov 2026 the streak survived every other finish, so the best streak
+  // always equalled total wins.
+  it.each([2, 4, 6])('ends the win streak when finishing in place %i, without touching wins or the best streak', async (placement) => {
+    const existing = createStanding({ mode: 'koth', wins: 7, currentWinStreak: 5, bestWinStreak: 6, leaguePoints: 100, totalMatches: 10, totalZoneScore: 80, totalZoneTime: 400, bestPlacement: 1 });
+    givenStanding(existing);
+    (mockPrisma.standing.update as jest.Mock).mockResolvedValue({ ...existing, currentWinStreak: 0 });
+
+    await standingsService.awardKothPoints({
+      robotId: existing.entityId, placement, totalParticipants: 6, zoneScore: 5, zoneTime: 10,
+    });
+
+    const updateCall = (mockPrisma.standing.update as jest.Mock).mock.calls[0][0];
+    expect(updateCall.data.currentWinStreak).toBe(0);
+    expect(updateCall.data).not.toHaveProperty('wins');
+    expect(updateCall.data).not.toHaveProperty('bestWinStreak');
+    expect(updateCall.data).not.toHaveProperty('losses');
+  });
+
+  it('ends the win streak on a forfeit, even when placed first', async () => {
+    const existing = createStanding({ mode: 'koth', wins: 7, currentWinStreak: 5, bestWinStreak: 6, leaguePoints: 100, totalMatches: 10, totalZoneScore: 80, totalZoneTime: 400, bestPlacement: 1 });
+    givenStanding(existing);
+    (mockPrisma.standing.update as jest.Mock).mockResolvedValue({ ...existing, currentWinStreak: 0 });
+
+    await standingsService.awardKothPoints({
+      robotId: existing.entityId, placement: 1, totalParticipants: 1, zoneScore: 0, zoneTime: 0, forfeited: true,
+    });
+
+    const updateCall = (mockPrisma.standing.update as jest.Mock).mock.calls[0][0];
+    expect(updateCall.data.currentWinStreak).toBe(0);
+    expect(updateCall.data).not.toHaveProperty('wins');
+  });
 });
 
 // =============================================================================

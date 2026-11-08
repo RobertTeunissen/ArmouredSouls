@@ -15,7 +15,7 @@
  */
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import {
   listSeasons,
@@ -25,20 +25,24 @@ import {
   type SnapshotEntry,
 } from '../utils/seasonApi';
 import AutomatonBadge from '../components/AutomatonBadge';
+import { SeasonArchiveRecords } from '../components/season/SeasonArchiveRecords';
 import { createLogger } from '../utils/logger';
-import { categoryLabel, modeLabel, rankBadge, formatDate } from '../utils/seasonFormat';
+import { modeLabel, rankBadge, formatDate } from '../utils/seasonFormat';
 
 const log = createLogger('SeasonArchivePage');
 
-type AccoladeEntry = SeasonDetail['accolades'][number];
-
 function SeasonArchivePage() {
   const { user } = useAuth();
+  const [params, setParams] = useSearchParams();
   const [seasons, setSeasons] = useState<SeasonListEntry[] | null>(null);
-  const [selected, setSelected] = useState<number | null>(null);
   const [details, setDetails] = useState<Record<number, SeasonDetail>>({});
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [mineOnly, setMineOnly] = useState(false);
+
+  // The open season and record live in the URL, so a record list can be linked
+  // to: `/seasons?season=2&record=mostKills&mode=...`.
+  const seasonParam = params.get('season');
+  const selected = seasonParam !== null && /^\d+$/.test(seasonParam) ? Number(seasonParam) : null;
 
   /** The player's stable identity as it appears in archived rows. */
   const myName = user ? user.stableName || user.username : null;
@@ -59,41 +63,54 @@ function SeasonArchivePage() {
     };
   }, []);
 
-  const select = useCallback(
-    async (seasonNumber: number): Promise<void> => {
-      if (selected === seasonNumber) {
-        setSelected(null);
-        return;
-      }
-      setSelected(seasonNumber);
-      if (details[seasonNumber]) return;
-
-      setLoadingDetail(true);
+  // Load the open season's detail once (also when the page opens on a link).
+  const hasDetail = selected !== null && details[selected] !== undefined;
+  useEffect(() => {
+    if (selected === null || hasDetail) return;
+    let cancelled = false;
+    setLoadingDetail(true);
+    void (async () => {
       try {
-        const detail = await getSeasonDetail(seasonNumber);
-        setDetails((prev) => ({ ...prev, [seasonNumber]: detail }));
+        const detail = await getSeasonDetail(selected);
+        if (!cancelled) setDetails((prev) => ({ ...prev, [selected]: detail }));
       } catch (error) {
-        log.error(`Failed to load season ${seasonNumber}`, error);
+        log.error(`Failed to load season ${selected}`, error);
       } finally {
-        setLoadingDetail(false);
+        if (!cancelled) setLoadingDetail(false);
       }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [selected, hasDetail]);
+
+  const select = useCallback(
+    (seasonNumber: number): void => {
+      setParams(selected === seasonNumber ? {} : { season: String(seasonNumber) });
     },
-    [selected, details],
+    [selected, setParams],
   );
 
   return (
-    <div className="min-h-screen bg-background text-white pb-24 md:pb-8">
-      <div className="container mx-auto max-w-6xl px-3 py-8 sm:px-4">
-        <h1 className="text-3xl font-bold">Season Archive</h1>
-        <p className="mt-1 text-sm text-secondary">
-          Completed seasons, their final standings, and the records they produced.
-        </p>
+    <div className="min-h-screen bg-background pb-24 text-white lg:pb-8">
+      <div className="container mx-auto max-w-[1400px] px-4 py-8">
+        <header className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-white">Season Archive</h1>
+            <p className="mt-1 text-sm text-secondary">
+              Completed seasons, their final standings, and the records they produced.
+            </p>
+          </div>
+          <Link to="/hall-of-records" className="inline-flex min-h-[44px] items-center text-sm text-primary hover:underline">
+            This season: Hall of Records ›
+          </Link>
+        </header>
 
         {seasons === null && <p className="mt-6 text-secondary">Loading…</p>}
 
         {seasons !== null && seasons.length === 0 && (
           <div
-            className="mt-6 rounded-lg border border-gray-700 bg-surface p-6 text-secondary"
+            className="mt-6 rounded-lg border border-white/10 bg-surface p-6 text-secondary"
             data-testid="season-archive-empty"
           >
             The first season is still in progress. Once it ends, its final standings and records
@@ -110,17 +127,20 @@ function SeasonArchivePage() {
                 isOpen={selected === s.seasonNumber}
                 detail={details[s.seasonNumber]}
                 loading={loadingDetail && selected === s.seasonNumber}
-                onToggle={() => void select(s.seasonNumber)}
+                onToggle={() => select(s.seasonNumber)}
                 myName={myName}
+                viewerId={user?.id ?? null}
                 mineOnly={mineOnly}
                 onMineOnlyChange={setMineOnly}
+                recordKey={selected === s.seasonNumber ? params.get('record') : null}
+                modeKey={selected === s.seasonNumber ? params.get('mode') : null}
               />
             ))}
           </ul>
         )}
 
         {user && (
-          <p className="mt-8 text-xs text-tertiary">
+          <p className="mt-8 text-xs text-secondary">
             Looking for your own stable&apos;s history?{' '}
             <Link to={`/stables/${user.id}`} className="text-primary hover:underline">
               Open your stable page
@@ -144,8 +164,11 @@ interface SeasonCardProps {
   loading: boolean;
   onToggle: () => void;
   myName: string | null;
+  viewerId: number | null;
   mineOnly: boolean;
   onMineOnlyChange: (v: boolean) => void;
+  recordKey: string | null;
+  modeKey: string | null;
 }
 
 function SeasonCard({
@@ -155,11 +178,14 @@ function SeasonCard({
   loading,
   onToggle,
   myName,
+  viewerId,
   mineOnly,
   onMineOnlyChange,
+  recordKey,
+  modeKey,
 }: SeasonCardProps) {
   return (
-    <li className="overflow-hidden rounded-lg border border-gray-700 bg-surface">
+    <li className="overflow-hidden rounded-lg border border-white/10 bg-surface">
       <button
         type="button"
         onClick={onToggle}
@@ -190,14 +216,17 @@ function SeasonCard({
       </button>
 
       {isOpen && (
-        <div className="border-t border-gray-700 p-4">
+        <div className="border-t border-white/10 p-4">
           {loading && !detail && <p className="text-sm text-secondary">Loading season detail…</p>}
           {detail && (
             <SeasonDetailView
               detail={detail}
               myName={myName}
+              viewerId={viewerId}
               mineOnly={mineOnly}
               onMineOnlyChange={onMineOnlyChange}
+              recordKey={recordKey}
+              modeKey={modeKey}
             />
           )}
         </div>
@@ -213,34 +242,19 @@ function SeasonCard({
 interface DetailProps {
   detail: SeasonDetail;
   myName: string | null;
+  viewerId: number | null;
   mineOnly: boolean;
   onMineOnlyChange: (v: boolean) => void;
+  recordKey: string | null;
+  modeKey: string | null;
 }
 
-function SeasonDetailView({ detail, myName, mineOnly, onMineOnlyChange }: DetailProps) {
+function SeasonDetailView({ detail, myName, viewerId, mineOnly, onMineOnlyChange, recordKey, modeKey }: DetailProps) {
   const isMine = useCallback(
     (stableName: string, isGenerated: boolean): boolean =>
       !!myName && !isGenerated && stableName === myName,
     [myName],
   );
-
-  // Group records by (category, mode) so each card holds one coherent ranking.
-  const recordGroups = useMemo(() => {
-    const groups: Array<{ key: string; category: string; mode: string | null; entries: AccoladeEntry[] }> = [];
-    const index = new Map<string, number>();
-    for (const a of detail.accolades) {
-      const key = `${a.category}|${a.mode ?? ''}`;
-      let i = index.get(key);
-      if (i === undefined) {
-        i = groups.length;
-        index.set(key, i);
-        groups.push({ key, category: a.category, mode: a.mode, entries: [] });
-      }
-      groups[i].entries.push(a);
-    }
-    for (const g of groups) g.entries.sort((x, y) => x.rank - y.rank);
-    return groups;
-  }, [detail.accolades]);
 
   const myCount = useMemo(() => {
     if (!myName) return 0;
@@ -255,18 +269,14 @@ function SeasonDetailView({ detail, myName, mineOnly, onMineOnlyChange }: Detail
   const visibleStandings = standingModes
     .map(([mode, rows]) => [mode, mineOnly ? rows.filter((r) => isMine(r.stableName, r.isGeneratedSubject)) : rows] as const)
     .filter(([, rows]) => rows.length > 0);
-  const visibleRecords = recordGroups
-    .map((g) => ({ ...g, entries: mineOnly ? g.entries.filter((e) => isMine(e.stableName, e.isGeneratedSubject)) : g.entries }))
-    .filter((g) => g.entries.length > 0);
-
-  const nothingHere = standingModes.length === 0 && recordGroups.length === 0;
+  const nothingHere = standingModes.length === 0 && detail.accolades.length === 0;
 
   return (
     <div className="space-y-6">
       {/* Toolbar: find-my-stable controls */}
       {myName && !nothingHere && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-surface-elevated px-3 py-2">
-          <span className="text-xs text-tertiary">
+          <span className="text-xs text-secondary">
             {myCount > 0 ? (
               <>
                 <span className="font-semibold text-primary">{myCount}</span> result
@@ -296,10 +306,10 @@ function SeasonDetailView({ detail, myName, mineOnly, onMineOnlyChange }: Detail
       {visibleStandings.length > 0 && (
         <section>
           <h2 className="mb-3 text-xl font-medium text-white">Final Standings</h2>
-          <p className="mb-4 text-xs text-tertiary">Top 100 per league, ranked by League Points.</p>
+          <p className="mb-4 text-xs text-secondary">Top 100 per league, ranked by League Points.</p>
           <div className="space-y-6">
             {visibleStandings.map(([mode, rows]) => (
-              <div key={mode} className="overflow-hidden rounded-lg border border-gray-700">
+              <div key={mode} className="overflow-hidden rounded-lg border border-white/10">
                 <div className="bg-surface-elevated px-4 py-2.5">
                   <h3 className="text-sm font-semibold uppercase tracking-wide text-white">
                     {modeLabel(mode)}
@@ -308,7 +318,7 @@ function SeasonDetailView({ detail, myName, mineOnly, onMineOnlyChange }: Detail
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs">
                     <thead>
-                      <tr className="border-b border-gray-700 bg-surface text-left text-tertiary">
+                      <tr className="border-b border-white/10 bg-surface text-left text-secondary">
                         <th className="w-12 px-3 py-2 text-center">#</th>
                         <th className="px-3 py-2">Name</th>
                         <th className="px-3 py-2">Stable</th>
@@ -334,17 +344,15 @@ function SeasonDetailView({ detail, myName, mineOnly, onMineOnlyChange }: Detail
         </section>
       )}
 
-      {/* Records */}
-      {visibleRecords.length > 0 && (
-        <section>
-          <h2 className="mb-3 text-xl font-medium text-white">Records</h2>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {visibleRecords.map((g) => (
-              <RecordCard key={g.key} group={g} isMine={isMine} />
-            ))}
-          </div>
-        </section>
-      )}
+      {/* Records, in the Hall of Records tiles and top-10 list */}
+      <SeasonArchiveRecords
+        detail={detail}
+        myName={myName}
+        viewerId={viewerId}
+        mineOnly={mineOnly}
+        recordKey={recordKey}
+        modeKey={modeKey}
+      />
 
       {mineOnly && myCount === 0 && !nothingHere && (
         <p className="text-sm text-secondary">
@@ -362,22 +370,23 @@ function SeasonDetailView({ detail, myName, mineOnly, onMineOnlyChange }: Detail
 function StandingRow({ row, mine }: { row: SnapshotEntry; mine: boolean }) {
   return (
     <tr
-      className={`border-b border-gray-700/50 ${
-        mine ? 'bg-primary/10' : 'even:bg-surface-elevated/50'
+      className={`border-b border-white/5 ${
+        mine ? 'border-l-4 border-l-primary bg-primary/10' : 'even:bg-surface-elevated/50'
       }`}
     >
-      <td className="w-12 px-3 py-2 text-center font-bold text-tertiary">
+      <td className="w-12 px-3 py-2 text-center font-bold text-secondary">
         {rankBadge(row.modeRank)}
       </td>
       <td className="px-3 py-2">
         <span className="font-medium text-white">{row.entityName}</span>
+        {/* Same chips as the Hall of Records rows. */}
         {mine && (
-          <span className="ml-2 rounded bg-primary px-1 text-[10px] font-semibold uppercase text-white">
+          <span className="ml-2 rounded bg-primary px-1.5 text-[10px] font-semibold uppercase leading-4 text-background">
             You
           </span>
         )}
         {row.isGeneratedSubject && (
-          <span className="ml-2 rounded bg-surface px-1 text-[10px] uppercase text-tertiary">
+          <span className="ml-2 rounded bg-surface-elevated px-1 text-[10px] uppercase leading-4 text-secondary">
             bot
           </span>
         )}
@@ -394,84 +403,12 @@ function StandingRow({ row, mine }: { row: SnapshotEntry; mine: boolean }) {
           row.stableName
         )}
       </td>
-      <td className="px-3 py-2 capitalize text-tertiary">{row.tier}</td>
+      <td className="px-3 py-2 capitalize text-secondary">{row.tier}</td>
       <td className="px-3 py-2 text-right font-semibold text-primary">{row.leaguePoints}</td>
-      <td className="px-3 py-2 text-right text-tertiary">
+      <td className="px-3 py-2 text-right text-secondary">
         {row.wins}/{row.losses}/{row.draws}
       </td>
     </tr>
-  );
-}
-
-interface RecordGroup {
-  key: string;
-  category: string;
-  mode: string | null;
-  entries: AccoladeEntry[];
-}
-
-function RecordCard({
-  group,
-  isMine,
-}: {
-  group: RecordGroup;
-  isMine: (stableName: string, isGenerated: boolean) => boolean;
-}) {
-  const { icon, label } = categoryLabel(group.category);
-  return (
-    <div className="rounded-lg border border-gray-700 bg-surface-elevated p-4">
-      <div className="mb-3 flex items-baseline gap-2">
-        <span aria-hidden="true">{icon}</span>
-        <h4 className="text-sm font-semibold text-white">{label}</h4>
-        {group.mode && (
-          <span className="rounded bg-surface px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-tertiary">
-            {modeLabel(group.mode)}
-          </span>
-        )}
-      </div>
-      <ol className="space-y-1.5">
-        {group.entries.map((a) => {
-          const mine = isMine(a.stableName, a.isGeneratedSubject);
-          return (
-            <li
-              key={`${a.rank}-${a.subjectName}-${a.valueLabel}`}
-              className={`flex items-center gap-2 rounded px-2 py-1 text-xs ${
-                mine ? 'bg-primary/10 ring-1 ring-primary' : ''
-              }`}
-            >
-              <span className="w-6 shrink-0 text-center font-bold text-tertiary">
-                {rankBadge(a.rank)}
-              </span>
-              {a.subjectStableType === 'automaton' ? (
-                // The names truncate on their own so the badge stays visible
-                // right after them (R12.2); it never sits inside the ellipsis.
-                <span className="flex min-w-0 flex-1 flex-nowrap items-center gap-1.5">
-                  <span className="min-w-0 truncate">
-                    <span className="font-medium text-white">{a.subjectName}</span>
-                    <span className="ml-1.5 text-secondary">{a.stableName}</span>
-                  </span>
-                  <AutomatonBadge stableType={a.subjectStableType} size="sm" className="shrink-0" />
-                </span>
-              ) : (
-                <span className="min-w-0 flex-1 truncate">
-                  <span className="font-medium text-white">{a.subjectName}</span>
-                  <span className="ml-1.5 text-secondary">{a.stableName}</span>
-                  {a.isGeneratedSubject && (
-                    <span className="ml-1.5 rounded bg-surface px-1 text-[10px] uppercase text-tertiary">
-                      system
-                    </span>
-                  )}
-                </span>
-              )}
-              <span className="shrink-0 text-right text-slate-300">
-                {a.value !== 0 ? `${a.value} ` : ''}
-                {a.valueLabel}
-              </span>
-            </li>
-          );
-        })}
-      </ol>
-    </div>
   );
 }
 

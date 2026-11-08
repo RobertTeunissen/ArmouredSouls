@@ -186,7 +186,7 @@ Season history uses `GET /api/seasons/stables/:userId` and `GET /api/seasons/sta
 
 **My Stable**: the first item of the Stable menu (desktop dropdown and the mobile drawer's Stable section) opens the player's own page, `/stables/{own id}` (`stableNavItems` in `components/nav/types.ts`). It is only highlighted on the player's own stable, not on other stables.
 
-`OwnerNameLink` links owner and stable names to `/stables/:userId` from League Standings, the Prestige, Fame and Losses leaderboards, Hall of Records and Tag Team Standings. Battle reports, the Season Archive, the season countdown notice (`#season-history`) and the admin player panel link here too.
+`OwnerNameLink` links owner and stable names to `/stables/:userId` from League Standings, the Prestige, Fame and Destructions leaderboards, Hall of Records and Tag Team Standings. Battle reports, the Season Archive, the season countdown notice (`#season-history`) and the admin player panel link here too.
 
 ---
 

@@ -151,14 +151,70 @@ describe('SeasonArchivePage — finding your own results', () => {
     expect(screen.getAllByText('MyBot').length).toBeGreaterThan(0);
   });
 
-  it('should group records into per-record cards rather than one flat list', async () => {
+  it('shows the records as Hall of Records tiles, one per record', async () => {
     await expandSeason();
-    // Friendly category labels, one card each — not a single flat list.
-    expect(screen.getByText('Most Kills')).toBeInTheDocument();
-    expect(screen.getByText('Highest ELO')).toBeInTheDocument();
-    // The kills card carries its own subject, scoped to that card.
-    const killsCard = screen.getByText('Most Kills').closest('.rounded-lg')!;
-    expect(within(killsCard).getByText('MyBot')).toBeInTheDocument();
-    expect(within(killsCard).getByText(/50/)).toBeInTheDocument();
+    const records = screen.getByTestId('season-archive-records');
+    const kills = within(records).getByTestId('record-tile-mostKills');
+    expect(within(kills).getByText('Most destructions')).toBeInTheDocument();
+    expect(within(kills).getByText('MyBot')).toBeInTheDocument();
+    expect(within(kills).getByText('50')).toBeInTheDocument();
+    // The player's own record links to their stable and shows their place.
+    expect(within(kills).getByRole('link', { name: 'tester' })).toHaveAttribute('href', '/stables/42');
+    expect(within(kills).getByTestId('record-my-place')).toHaveTextContent('You: #1 · MyBot');
+    expect(within(records).getByTestId('record-tile-highestElo')).toHaveTextContent('Botzilla');
+  });
+
+  it('opens a record\u2019s full list in the URL and goes back to the season', async () => {
+    await expandSeason();
+    await userEvent.click(screen.getByRole('link', { name: 'Most destructions: Top 10' }));
+
+    const list = await screen.findByTestId('record-detail');
+    expect(within(list).getByRole('heading', { name: 'Most destructions' })).toBeInTheDocument();
+    expect(within(list).getByTestId('record-detail-row')).toHaveAttribute('data-mine', 'true');
+
+    await userEvent.click(within(list).getByRole('link', { name: '← All records' }));
+    expect(await screen.findByTestId('record-tile-mostKills')).toBeInTheDocument();
+  });
+
+  it('"Show only my stable" keeps only the player\u2019s own record rows, champion wins included', async () => {
+    vi.mocked(seasonApi.getSeasonDetail).mockResolvedValue({
+      ...detail,
+      accolades: [
+        ...detail.accolades,
+        { category: 'highestElo', rank: 2, subjectName: 'MyBot', value: 1500, valueLabel: 'ELO', mode: null, stableName: 'tester', isGeneratedSubject: false },
+        { category: 'tournamentChampion', rank: 1, subjectName: 'MyBot', value: 0, valueLabel: '1v1 Tournament #3', mode: 'tournament_1v1', stableName: 'tester', isGeneratedSubject: false },
+        { category: 'tournamentChampion', rank: 2, subjectName: 'Botzilla', value: 0, valueLabel: '1v1 Tournament #2', mode: 'tournament_1v1', stableName: 'AutoBot', isGeneratedSubject: true },
+      ],
+    });
+    await expandSeason();
+    await userEvent.click(screen.getByLabelText(/Show only my stable/));
+
+    const records = screen.getByTestId('season-archive-records');
+    // The player's #2 is shown at its stored rank, not under the bot's #1.
+    const elo = within(records).getByTestId('record-tile-highestElo');
+    expect(elo).toHaveTextContent('MyBot');
+    expect(elo).not.toHaveTextContent('Botzilla');
+    expect(within(elo).getByTestId('record-my-place')).toHaveTextContent('You: #2 · MyBot');
+    // The champions log stays, with the player's own win only.
+    const champions = within(records).getByTestId('record-tile-tournamentChampions');
+    expect(champions).toHaveTextContent('1v1 Tournament #3');
+    expect(champions).not.toHaveTextContent('1v1 Tournament #2');
+
+    await userEvent.click(within(elo).getByRole('link', { name: 'Highest ELO: Top 10' }));
+    const rows = within(await screen.findByTestId('record-detail')).getAllByTestId('record-detail-row');
+    expect(rows).toHaveLength(1);
+    expect(within(rows[0]).getByLabelText('Rank 2')).toBeInTheDocument();
+    expect(rows[0]).toHaveAttribute('data-mine', 'true');
+  });
+
+  it('opens a season and a record straight from a link', async () => {
+    render(
+      <MemoryRouter initialEntries={['/seasons?season=2&record=highestElo']}>
+        <SeasonArchivePage />
+      </MemoryRouter>,
+    );
+    const list = await screen.findByTestId('record-detail');
+    expect(within(list).getByRole('heading', { name: 'Highest ELO' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Season 2/ })).toHaveAttribute('aria-expanded', 'true');
   });
 });

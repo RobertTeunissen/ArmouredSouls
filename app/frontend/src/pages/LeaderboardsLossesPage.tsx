@@ -78,8 +78,8 @@ function LeaderboardsLossesPage() {
 
         setLeaderboard(data.leaderboard);
       } catch (err) {
-        setError('Failed to load total losses leaderboard');
-        log.error('Total losses leaderboard error', { err });
+        setError('Failed to load the destructions leaderboard');
+        log.error('Destructions leaderboard error', { err });
       } finally {
         setLoading(false);
       }
@@ -100,7 +100,7 @@ function LeaderboardsLossesPage() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-primary mb-2">
-          Total Losses Leaderboard
+          Destructions Leaderboard
         </h1>
         <p className="text-secondary">
           Season ranking of opponents destroyed, in total and split by battle type
@@ -111,11 +111,11 @@ function LeaderboardsLossesPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <div className="text-sm text-secondary">
-              <p className="font-semibold text-primary mb-1">About Total Losses</p>
+              <p className="font-semibold text-primary mb-1">About destructions</p>
               <p>
-                A &quot;total loss&quot; is an opponent written off — reduced to 0 HP. The Total column counts
+                A destruction is an opponent written off — reduced to 0 HP. The Total column counts
                 every one a robot has inflicted this season; the columns beside it split that figure by
-                battle type.
+                battle type. The Hall of Records &quot;Most destructions&quot; record is the top of this list.
               </p>
               <p className="mt-2">
                 Because participation is gated by your Booking Office subscriptions, most robots only
@@ -123,7 +123,7 @@ function LeaderboardsLossesPage() {
                 or by Total for the overall picture.
               </p>
               <p className="mt-2">
-                <span className="font-semibold text-primary">Ratio</span> shows total losses inflicted
+                <span className="font-semibold text-primary">Ratio</span> shows destructions inflicted
                 divided by match losses taken. Higher is better — it means writing off more opponents per
                 defeat.
               </p>

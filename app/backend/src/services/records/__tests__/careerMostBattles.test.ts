@@ -18,8 +18,11 @@ jest.mock('../../../lib/prisma', () => ({
   },
 }));
 
+const mockAllModesCounts = jest.fn();
+
 jest.mock('../../robot/all-modes-battle-count', () => ({
   getTopRobotsByAllModesBattleCount: (...args: unknown[]) => mockTopRobots(...args),
+  getAllModesBattleCounts: (...args: unknown[]) => mockAllModesCounts(...args),
 }));
 
 import { fetchCareerRecords } from '../recordsQueryService';
@@ -40,6 +43,7 @@ const ROBOTS = new Map([
 beforeEach(() => {
   jest.clearAllMocks();
   mockQueryRaw.mockResolvedValue([]);
+  mockAllModesCounts.mockResolvedValue(new Map());
   mockRobotFindMany.mockImplementation(async (args: { where?: { id?: { in: number[] } } }) => {
     const ids = args.where?.id?.in;
     if (!ids) return [];
@@ -85,5 +89,34 @@ describe('fetchCareerRecords().mostBattles', () => {
     ]);
     const { mostBattles } = await fetchCareerRecords();
     expect(mostBattles.map((e) => e.robotId)).toEqual([2, 1]);
+  });
+});
+
+describe('fetchCareerRecords() per-battle figures', () => {
+  // Lifetime damage and destructions count every mode, so dividing by the
+  // win/loss-mode `totalBattles` overstated them (a 373% "kill rate" on ACC).
+  it('divides lifetime damage and destructions by the all-modes battle count', async () => {
+    const killer = { ...robotRow(7, 100, 60), kills: 250, damageDealtLifetime: 50_000 };
+    mockRobotFindMany.mockImplementation(async (args: { where?: { id?: { in: number[] } }; orderBy?: unknown }) => {
+      if (args.where?.id?.in) return [];
+      return [killer];
+    });
+    mockAllModesCounts.mockResolvedValue(new Map([[7, 250]]));
+
+    const { mostKills, mostLifetimeDamage } = await fetchCareerRecords();
+
+    expect(mostKills[0]).toMatchObject({ kills: 250, allModesBattleCount: 250, killsPerBattle: 1 });
+    expect(mostLifetimeDamage[0]).toMatchObject({ damageDealt: 50_000, allModesBattleCount: 250, avgDamagePerBattle: 200 });
+    expect(mostKills[0]).not.toHaveProperty('killRate');
+  });
+
+  it('reports 0 per battle for a robot without battles', async () => {
+    const idle = { ...robotRow(8, 0, 0), kills: 0, damageDealtLifetime: 0 };
+    mockRobotFindMany.mockImplementation(async (args: { where?: { id?: { in: number[] } } }) => (args.where?.id?.in ? [] : [idle]));
+
+    const { mostKills, mostLifetimeDamage } = await fetchCareerRecords();
+
+    expect(mostKills[0].killsPerBattle).toBe(0);
+    expect(mostLifetimeDamage[0].avgDamagePerBattle).toBe(0);
   });
 });

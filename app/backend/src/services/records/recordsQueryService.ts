@@ -2,28 +2,41 @@ import prisma from '../../lib/prisma';
 import { BATTLE_LOG_OMIT } from '../battle/battleLogCodec';
 import type { StableType } from '../../../generated/prisma';
 import { getTopModeKills } from '../battle/modeKillsQueries';
-import { getTopRobotsByAllModesBattleCount } from '../robot/all-modes-battle-count';
+import { getAllModesBattleCounts, getTopRobotsByAllModesBattleCount } from '../robot/all-modes-battle-count';
+
+/** Highest Win Rate only ranks robots with at least this many win/loss-mode battles. */
+export const WIN_RATE_MIN_BATTLES = 50;
+
+/**
+ * Highest Avg Zone Score only ranks robots with at least this many KotH matches,
+ * so one lucky match cannot top the list (the frontend states the same floor).
+ */
+export const KOTH_AVG_ZONE_SCORE_MIN_MATCHES = 10;
 
 // Helper to get display name (stableName or username fallback)
 export const getUserDisplayName = (user: { username: string; stableName?: string | null }): string => {
   return user.stableName || user.username;
 };
 
-// User select for records (includes stableName and, Spec #55, stableType)
+// User select for records (id for the stable link, stableName and, Spec #55, stableType)
 export const userSelect = {
+  id: true,
   username: true,
   stableName: true,
   stableType: true,
 };
 
 interface RecordOwnerUser {
+  id?: number;
   username: string;
   stableName?: string | null;
   stableType: StableType;
 }
 
-/** Display name and Stable_Type of a record holder's stable. */
+/** Display name, id and Stable_Type of a record holder's stable. */
 export interface RecordOwnerDisplay {
+  /** The owning stable's user id (links to `/stables/:id`); null when unknown. */
+  userId: number | null;
   username: string;
   /** Spec #55 decision 42: drives the Automaton_Badge on every Hall of Records record. */
   stableType: StableType | null;
@@ -31,12 +44,10 @@ export interface RecordOwnerDisplay {
 
 /** The owning stable as every record mapping ships it (decision 42). */
 export const getRecordOwner = (user: RecordOwnerUser | null | undefined): RecordOwnerDisplay => (
-  user ? { username: getUserDisplayName(user), stableType: user.stableType } : { username: '', stableType: null }
+  user
+    ? { userId: user.id ?? null, username: getUserDisplayName(user), stableType: user.stableType }
+    : { userId: null, username: '', stableType: null }
 );
-
-const participantInclude = {
-  robot: { include: { user: { select: userSelect } } },
-};
 
 // byeRobotFilter removed — Spec #41 (no persistent Bye Robot)
 const byeRobotFilter = {};
@@ -71,10 +82,13 @@ function mapParticipantDisplay(p: ParticipantWithRobot) {
   return { id: p.robot.id, name: p.robot.name, ...getRecordOwner(p.robot.user) };
 }
 
+/** A robot as a record names it: id, name and owning stable. Never the full robot row. */
+const robotNameSelect = { id: true, name: true, user: { select: userSelect } } as const;
+
 // Standard include for battle queries using participants
 const battleWithParticipantsInclude = {
   participants: {
-    include: { robot: { include: { user: { select: userSelect } } } },
+    include: { robot: { select: robotNameSelect } },
   },
 };
 
@@ -103,17 +117,32 @@ export type DamageRecordMode = typeof DAMAGE_RECORD_MODES[number];
 const SINGLE_OPPONENT_MODES = new Set<string>(['league_1v1', 'tournament_1v1']);
 
 async function fetchMostDamageForMode(battleType: DamageRecordMode) {
+  const namesOpponent = SINGLE_OPPONENT_MODES.has(battleType);
+  // Narrow selects: this used to `include` the whole battle, combat log
+  // (`battle_log_zst`, ~1.6 MB for the Grand Melee top 10 on ACC) and every
+  // participant's full robot row, for six modes on every records build.
   const rows = await prisma.battleParticipant.findMany({
     where: { battle: { battleType } },
-    orderBy: { damageDealt: 'desc' },
+    orderBy: [{ damageDealt: 'desc' }, { id: 'asc' }],
     take: 10,
-    include: {
-      robot: { include: { user: { select: userSelect } } },
-      battle: { include: battleWithParticipantsInclude },
+    select: {
+      robotId: true,
+      damageDealt: true,
+      robot: { select: robotNameSelect },
+      battle: {
+        select: {
+          id: true,
+          durationSeconds: true,
+          createdAt: true,
+          // Only the 1v1 modes (two participants) name an opponent; elsewhere load none.
+          participants: {
+            take: namesOpponent ? 2 : 0,
+            select: { robotId: true, robot: { select: robotNameSelect } },
+          },
+        },
+      },
     },
   });
-
-  const namesOpponent = SINGLE_OPPONENT_MODES.has(battleType);
 
   return rows.map(participant => {
     const opponent = namesOpponent
@@ -157,44 +186,9 @@ export async function fetchCombatRecords() {
     Awaited<ReturnType<typeof fetchMostDamageForMode>>
   >;
 
-  // Narrowest Victory — winners with lowest finalHP (1v1 only)
-  const narrowWinners = await prisma.battleParticipant.findMany({
-    where: {
-      finalHP: { gt: 0 },
-      battle: { winnerId: { not: null }, battleType: { in: ['league_1v1', 'tournament_1v1'] } },
-    },
-    orderBy: { finalHP: 'asc' },
-    take: 50, // Fetch extra to filter for actual winners
-    include: {
-      robot: { include: { user: { select: userSelect } } },
-      battle: {
-        select: { id: true, winnerId: true, durationSeconds: true, createdAt: true,
-          participants: { include: participantInclude } },
-      },
-    },
-  });
-
-  // Filter to only actual winners
-  const narrowestVictories = narrowWinners
-    .filter(p => p.battle.winnerId === p.robotId)
-    .slice(0, 10)
-    .map(p => {
-      const loser = p.battle.participants.find(op => op.robotId !== p.robotId);
-      return {
-        battleId: p.battle.id,
-        remainingHP: p.finalHP,
-        winner: { id: p.robot.id, name: p.robot.name, ...getRecordOwner(p.robot.user) },
-        loser: loser
-          ? { id: loser.robot.id, name: loser.robot.name, ...getRecordOwner(loser.robot.user) }
-          : { id: 0, name: 'Unknown', ...getRecordOwner(null) },
-        date: p.battle.createdAt,
-      };
-    });
-
-  return {
-    mostDamageInBattle,
-    narrowestVictory: narrowestVictories,
-  };
+  // Narrowest Victory removed (Nov 2026): wins at exactly 1 HP are common (94
+  // on ACC), so the whole list read "1 HP remaining" and ranked nothing.
+  return { mostDamageInBattle };
 }
 
 // ─── Upset Records ──────────────────────────────────────────────────
@@ -358,6 +352,7 @@ export async function fetchCareerRecords() {
     total_battles: number;
     elo: number;
     tier: string | null;
+    user_id: number;
     username: string;
     stable_name: string | null;
     stable_type: StableType;
@@ -365,32 +360,41 @@ export async function fetchCareerRecords() {
   const winRateRows = await prisma.$queryRaw<WinRateRow[]>`
     SELECT r.id, r.name, r.wins, r."total_battles", r.elo,
            s."tier",
-           u.username, u."stable_name", u."stable_type"::text AS stable_type
+           u.id AS user_id, u.username, u."stable_name", u."stable_type"::text AS stable_type
     FROM "robots" r
     JOIN "users" u ON u.id = r."user_id"
     LEFT JOIN "standings" s ON s."entity_type" = 'robot' AND s."entity_id" = r.id AND s."mode" = 'league_1v1'
-    WHERE r."total_battles" >= 50
-    ORDER BY (r.wins::float / r."total_battles") DESC
+    WHERE r."total_battles" >= ${WIN_RATE_MIN_BATTLES}
+    ORDER BY (r.wins::float / r."total_battles") DESC, r."total_battles" DESC, r.id ASC
     LIMIT 10
   `;
   const robotsWithWinRate = winRateRows.map(r => ({
     id: r.id, name: r.name, wins: r.wins, totalBattles: r.total_battles,
     elo: r.elo, league: r.tier ?? 'bronze',
     winRate: r.wins / r.total_battles,
-    user: { username: r.username, stableName: r.stable_name, stableType: r.stable_type },
+    user: { id: r.user_id, username: r.username, stableName: r.stable_name, stableType: r.stable_type },
   }));
 
   const mostLifetimeDamageRobots = await prisma.robot.findMany({
-    where: byeRobotFilter, orderBy: { damageDealtLifetime: 'desc' }, take: 10, include: robotUserInclude,
+    where: byeRobotFilter, orderBy: [{ damageDealtLifetime: 'desc' }, { id: 'asc' }], take: 10, include: robotUserInclude,
   });
 
   const highestEloRobots = await prisma.robot.findMany({
-    where: byeRobotFilter, orderBy: { elo: 'desc' }, take: 10, include: robotUserInclude,
+    where: byeRobotFilter, orderBy: [{ elo: 'desc' }, { id: 'asc' }], take: 10, include: robotUserInclude,
   });
 
   const mostKillsRobots = await prisma.robot.findMany({
-    where: byeRobotFilter, orderBy: { kills: 'desc' }, take: 10, include: robotUserInclude,
+    where: byeRobotFilter, orderBy: [{ kills: 'desc' }, { id: 'asc' }], take: 10, include: robotUserInclude,
   });
+
+  // Lifetime damage and destructions cover every mode, so their per-battle
+  // figures divide by the all-modes battle count. `totalBattles` leaves out
+  // KotH and Grand Melee, which overstated both (a 373% "kill rate" on ACC).
+  const allModesCounts = await getAllModesBattleCounts([...mostLifetimeDamageRobots, ...mostKillsRobots]);
+  const perBattle = (value: number, robot: { id: number; totalBattles: number }, digits: number): number => {
+    const battles = allModesCounts.get(robot.id) ?? robot.totalBattles;
+    return battles > 0 ? Number((value / battles).toFixed(digits)) : 0;
+  };
 
   return {
     mostBattles: mostBattlesRows.map(({ robot, allModesBattleCount }) => ({
@@ -411,16 +415,20 @@ export async function fetchCareerRecords() {
     mostLifetimeDamage: mostLifetimeDamageRobots.map(robot => ({
       robotId: robot.id, robotName: robot.name, ...getRecordOwner(robot.user),
       damageDealt: robot.damageDealtLifetime, totalBattles: robot.totalBattles,
-      avgDamagePerBattle: robot.totalBattles > 0 ? Number((robot.damageDealtLifetime / robot.totalBattles).toFixed(0)) : 0,
+      allModesBattleCount: allModesCounts.get(robot.id) ?? robot.totalBattles,
+      avgDamagePerBattle: perBattle(robot.damageDealtLifetime, robot, 0),
     })),
     highestElo: highestEloRobots.map(robot => ({
       robotId: robot.id, robotName: robot.name, ...getRecordOwner(robot.user),
       elo: robot.elo, wins: robot.wins, losses: robot.losses, draws: robot.draws,
     })),
+    // `robots.kills` is the all-mode total (`robot_mode_kills` summed), KotH and
+    // Grand Melee included.
     mostKills: mostKillsRobots.map(robot => ({
       robotId: robot.id, robotName: robot.name, ...getRecordOwner(robot.user),
       kills: robot.kills, totalBattles: robot.totalBattles,
-      killRate: robot.totalBattles > 0 ? Number((robot.kills / robot.totalBattles * 100).toFixed(1)) : 0,
+      allModesBattleCount: allModesCounts.get(robot.id) ?? robot.totalBattles,
+      killsPerBattle: perBattle(robot.kills, robot, 2),
     })),
   };
 }
@@ -431,25 +439,29 @@ export async function fetchEconomicRecords() {
   const robotUserInclude = { user: { select: userSelect } };
 
   const highestFameRobots = await prisma.robot.findMany({
-    where: byeRobotFilter, orderBy: { fame: 'desc' }, take: 10, include: robotUserInclude,
+    where: byeRobotFilter, orderBy: [{ fame: 'desc' }, { id: 'asc' }], take: 10, include: robotUserInclude,
   });
 
+  // Generated bot stables never spend credits, so their balances only grow and
+  // would crowd out the players (4 of the top 10 on ACC, Nov 2026). Automatons
+  // do spend and stay ranked (Spec #55 decision 33).
   const richestStables = await prisma.user.findMany({
-    orderBy: { currency: 'desc' }, take: 10,
+    where: { stableType: { not: 'generated' } },
+    orderBy: [{ currency: 'desc' }, { id: 'asc' }], take: 10,
     select: {
       id: true, username: true, stableName: true, stableType: true, currency: true, prestige: true,
       robots: { where: byeRobotFilter, select: { id: true, name: true } },
     },
   });
 
+  // `mostExpensiveBattle` removed (Nov 2026): it was always an empty list.
   return {
-    mostExpensiveBattle: [],
     highestFame: highestFameRobots.map(robot => ({
       robotId: robot.id, robotName: robot.name, ...getRecordOwner(robot.user),
       fame: robot.fame, elo: robot.elo,
     })),
     richestStables: richestStables.map(stable => ({
-      userId: stable.id, ...getRecordOwner(stable),
+      ...getRecordOwner(stable), userId: stable.id,
       currency: stable.currency, prestige: stable.prestige, robotCount: stable.robots.length,
     })),
   };
@@ -464,21 +476,21 @@ export async function fetchPrestigeRecords() {
   };
 
   const highestPrestigeStables = await prisma.user.findMany({
-    orderBy: { prestige: 'desc' }, take: 10, select: stableSelect,
+    orderBy: [{ prestige: 'desc' }, { id: 'asc' }], take: 10, select: stableSelect,
   });
 
   const mostTitlesStables = await prisma.user.findMany({
     where: { championshipTitles: { gt: 0 } },
-    orderBy: { championshipTitles: 'desc' }, take: 10, select: stableSelect,
+    orderBy: [{ championshipTitles: 'desc' }, { id: 'asc' }], take: 10, select: stableSelect,
   });
 
   return {
     highestPrestige: highestPrestigeStables.map(stable => ({
-      userId: stable.id, ...getRecordOwner(stable),
+      ...getRecordOwner(stable), userId: stable.id,
       prestige: stable.prestige, championshipTitles: stable.championshipTitles, robotCount: stable.robots.length,
     })),
     mostTitles: mostTitlesStables.map(stable => ({
-      userId: stable.id, ...getRecordOwner(stable),
+      ...getRecordOwner(stable), userId: stable.id,
       championshipTitles: stable.championshipTitles, prestige: stable.prestige, robotCount: stable.robots.length,
     })),
   };
@@ -502,6 +514,36 @@ function roundToZonePrecision(value: number): number {
   return Math.round(value * 10) / 10;
 }
 
+/**
+ * KotH robot standings with the highest average zone score per match, best
+ * first, among robots with at least `KOTH_AVG_ZONE_SCORE_MIN_MATCHES` matches.
+ *
+ * Ranked in SQL on the average itself. It used to be ordered by the total zone
+ * score, which made it the same list as Zone Dominator with a different number
+ * printed beside each robot. Ties: more matches first, then the lower robot id.
+ */
+async function fetchTopKothAverageZoneScore(limit: number) {
+  const ranked = await prisma.$queryRaw<Array<{ entity_id: number }>>`
+    SELECT s.entity_id
+    FROM standings s
+    WHERE s.entity_type = 'robot'
+      AND s.mode = 'koth'
+      AND s.total_matches >= ${KOTH_AVG_ZONE_SCORE_MIN_MATCHES}
+    ORDER BY COALESCE(s.total_zone_score, 0) / s.total_matches DESC, s.total_matches DESC, s.entity_id ASC
+    LIMIT ${limit}
+  `;
+  if (ranked.length === 0) return [];
+  const ids = ranked.map((row) => row.entity_id);
+  const rows = await prisma.standing.findMany({
+    where: { entityType: 'robot', mode: 'koth', entityId: { in: ids } },
+  });
+  const byId = new Map(rows.map((row) => [row.entityId, row]));
+  return ids.flatMap((id) => {
+    const row = byId.get(id);
+    return row ? [row] : [];
+  });
+}
+
 export async function fetchKothRecords(): Promise<Record<string, unknown> | undefined> {
   // Query standings for KotH records (source of truth since Spec #40).
   // Destructions are the exception — see getTopModeKills.
@@ -512,14 +554,15 @@ export async function fetchKothRecords(): Promise<Record<string, unknown> | unde
   // joint first and carried no information.
   // Destructions are ranked from the per-mode tally; every other category still
   // ranks on a standings column.
-  const [mostWinsStandings, highestZoneScoreStandings, mostKillsTallies, longestStreakStandings, mostZoneTimeStandings, zoneDominatorStandings] =
+  const robotKoth = { ...kothFilter, entityType: 'robot' };
+  const [mostWinsStandings, highestAvgZoneScoreStandings, mostKillsTallies, longestStreakStandings, mostZoneTimeStandings, zoneDominatorStandings] =
     await Promise.all([
-      prisma.standing.findMany({ where: { ...kothFilter, entityType: 'robot' }, orderBy: { wins: 'desc' }, take: 10 }),
-      prisma.standing.findMany({ where: { ...kothFilter, entityType: 'robot' }, orderBy: { totalZoneScore: 'desc' }, take: 10 }),
+      prisma.standing.findMany({ where: robotKoth, orderBy: [{ wins: 'desc' }, { entityId: 'asc' }], take: 10 }),
+      fetchTopKothAverageZoneScore(10),
       getTopModeKills('koth', 10),
-      prisma.standing.findMany({ where: { ...kothFilter, entityType: 'robot' }, orderBy: { bestWinStreak: 'desc' }, take: 10 }),
-      prisma.standing.findMany({ where: { ...kothFilter, entityType: 'robot' }, orderBy: { totalZoneTime: 'desc' }, take: 10 }),
-      prisma.standing.findMany({ where: { ...kothFilter, entityType: 'robot' }, orderBy: { totalZoneScore: 'desc' }, take: 10 }),
+      prisma.standing.findMany({ where: robotKoth, orderBy: [{ bestWinStreak: 'desc' }, { entityId: 'asc' }], take: 10 }),
+      prisma.standing.findMany({ where: robotKoth, orderBy: [{ totalZoneTime: { sort: 'desc', nulls: 'last' } }, { entityId: 'asc' }], take: 10 }),
+      prisma.standing.findMany({ where: robotKoth, orderBy: [{ totalZoneScore: { sort: 'desc', nulls: 'last' } }, { entityId: 'asc' }], take: 10 }),
     ]);
 
   // Match counts for the destruction leaders, which the tally does not carry.
@@ -534,7 +577,7 @@ export async function fetchKothRecords(): Promise<Record<string, unknown> | unde
   );
 
   // Collect all unique robot IDs across all categories
-  const allStandings = [mostWinsStandings, highestZoneScoreStandings, longestStreakStandings, mostZoneTimeStandings, zoneDominatorStandings];
+  const allStandings = [mostWinsStandings, highestAvgZoneScoreStandings, longestStreakStandings, mostZoneTimeStandings, zoneDominatorStandings];
   const allRobotIds = [...new Set([
     ...allStandings.flat().map(s => s.entityId),
     ...mostKillsTallies.map(k => k.robotId),
@@ -544,7 +587,7 @@ export async function fetchKothRecords(): Promise<Record<string, unknown> | unde
   const robots = allRobotIds.length > 0
     ? await prisma.robot.findMany({
         where: { id: { in: allRobotIds } },
-        include: { user: { select: userSelect } },
+        select: robotNameSelect,
       })
     : [];
   const robotMap = new Map(robots.map(r => [r.id, r]));
@@ -563,7 +606,7 @@ export async function fetchKothRecords(): Promise<Record<string, unknown> | unde
       ...mapStanding(s), kothWins: s.wins, kothMatches: s.totalMatches ?? 0,
       winRate: (s.totalMatches ?? 0) > 0 ? Number((s.wins / (s.totalMatches ?? 1) * 100).toFixed(1)) : 0,
     })),
-    highestAvgZoneScore: highestZoneScoreStandings.map(s => ({
+    highestAvgZoneScore: highestAvgZoneScoreStandings.map(s => ({
       ...mapStanding(s),
       avgZoneScore: (s.totalMatches ?? 0) > 0 ? Number(((s.totalZoneScore ?? 0) / (s.totalMatches ?? 1)).toFixed(1)) : 0,
       kothMatches: s.totalMatches ?? 0,
@@ -578,7 +621,11 @@ export async function fetchKothRecords(): Promise<Record<string, unknown> | unde
         kothMatches: killLeaderMatches.get(k.robotId) ?? 0,
       };
     }),
-    longestWinStreak: longestStreakStandings.map(s => ({ ...mapStanding(s), bestWinStreak: s.bestWinStreak, kothWins: s.wins })),
+    longestWinStreak: longestStreakStandings.map(s => ({
+      ...mapStanding(s), bestWinStreak: s.bestWinStreak, kothWins: s.wins,
+      currentWinStreak: s.currentWinStreak,
+      isActive: s.currentWinStreak > 0 && s.currentWinStreak === s.bestWinStreak,
+    })),
     mostZoneTime: mostZoneTimeStandings.map(s => ({
       ...mapStanding(s),
       totalZoneTime: roundToZonePrecision(s.totalZoneTime ?? 0),
@@ -594,88 +641,43 @@ export async function fetchKothRecords(): Promise<Record<string, unknown> | unde
 
 // ─── Team Battle Records ────────────────────────────────────────────
 
-interface TeamBattleSurvivalRow {
-  battle_id: number;
-  robot_id: number;
-  survival_seconds: number;
-  battle_type: string;
-  created_at: Date;
-  robot_name: string;
-  username: string;
-  stable_name: string | null;
-  stable_type: StableType;
-}
-
 interface TeamBattleDecisiveRow {
   battle_id: number;
+  winning_side: number;
   hp_difference: number;
-  battle_type: string;
   created_at: Date;
 }
 
+/**
+ * Team league records for one team size: only Most Decisive Victory remains.
+ *
+ * Removed in Nov 2026 because they ranked nothing:
+ *   - Fastest Victory: the 3v3 top 10 all read 2 s, 2v2 3–4 s.
+ *   - Longest Survival and Longest Non-Draw Battle: both pile up at the 300 s
+ *     battle limit (252 2v2 survivals of 290 s or more on ACC).
+ *   - Most Damage Dealt: the same query as Most Damage in One Battle for
+ *     `league_2v2` / `league_3v3`, so it was a duplicate list.
+ */
 async function fetchTeamBattleRecordsForSize(battleType: 'league_2v2' | 'league_3v3') {
-  // 1. Fastest victory (lowest durationSeconds for non-draw battles)
-  const fastestVictories = await prisma.battle.findMany({
-    where: { battleType, winnerId: { not: null }, durationSeconds: { gt: 0 } },
-    orderBy: { durationSeconds: 'asc' },
-    take: 10,
-    omit: BATTLE_LOG_OMIT,
-    include: battleWithParticipantsInclude,
-  });
-
-  // 2. Longest survival by a single robot (from battle_summaries — Spec #39;
-  // the combat log is never read here)
-  const survivalRows = await prisma.$queryRaw<TeamBattleSurvivalRow[]>`
-    SELECT
-      b.id AS battle_id,
-      (p.value->>'robotId')::int AS robot_id,
-      (p.value->>'survivalSeconds')::float AS survival_seconds,
-      b.battle_type,
-      b.created_at,
-      r.name AS robot_name,
-      u.username,
-      u.stable_name,
-      u.stable_type::text AS stable_type
-    FROM battles b
-    JOIN battle_summaries bs ON bs.battle_id = b.id,
-      jsonb_array_elements(bs.participants) AS p(value)
-    JOIN robots r ON r.id = (p.value->>'robotId')::int
-    JOIN users u ON u.id = r.user_id
-    WHERE b.battle_type = ${battleType}
-      AND (p.value->>'survivalSeconds')::float > 0
-    ORDER BY survival_seconds DESC
-    LIMIT 10
-  `;
-
-  // 3. Most damage dealt by a single robot (from BattleParticipant table)
-  const mostDamageParticipants = await prisma.battleParticipant.findMany({
-    where: { battle: { battleType } },
-    orderBy: { damageDealt: 'desc' },
-    take: 10,
-    include: {
-      robot: { include: { user: { select: userSelect } } },
-      battle: { select: { id: true, durationSeconds: true, createdAt: true, battleType: true } },
-    },
-  });
-
-  // 4. Most decisive victory (largest HP difference between winning and losing side)
+  // Most decisive victory: HP left on the winning side minus the losing side.
   const decisiveRows = await prisma.$queryRaw<TeamBattleDecisiveRow[]>`
     SELECT
       b.id AS battle_id,
-      ABS(
-        COALESCE((SELECT SUM(bp.final_hp) FROM battle_participants bp WHERE bp.battle_id = b.id AND bp.team = 1), 0) -
-        COALESCE((SELECT SUM(bp.final_hp) FROM battle_participants bp WHERE bp.battle_id = b.id AND bp.team = 2), 0)
-      ) AS hp_difference,
-      b.battle_type,
+      b.winning_side,
+      (
+        COALESCE(SUM(bp.final_hp) FILTER (WHERE bp.team = b.winning_side), 0) -
+        COALESCE(SUM(bp.final_hp) FILTER (WHERE bp.team <> b.winning_side), 0)
+      )::int AS hp_difference,
       b.created_at
     FROM battles b
+    JOIN battle_participants bp ON bp.battle_id = b.id
     WHERE b.battle_type = ${battleType}
-      AND b.winner_id IS NOT NULL
-    ORDER BY hp_difference DESC
+      AND b.winning_side IS NOT NULL
+    GROUP BY b.id
+    ORDER BY hp_difference DESC, b.id ASC
     LIMIT 10
   `;
 
-  // Fetch battle details for decisive victories
   const decisiveBattleIds = decisiveRows.map(r => r.battle_id);
   const decisiveBattles = decisiveBattleIds.length > 0
     ? await prisma.battle.findMany({
@@ -684,67 +686,19 @@ async function fetchTeamBattleRecordsForSize(battleType: 'league_2v2' | 'league_
         include: battleWithParticipantsInclude,
       })
     : [];
-  const decisiveBattleMap = new Map(decisiveBattles.map(b => [b.id, b]));
-
-  // 5. Longest non-draw battle (highest durationSeconds for non-draw battles)
-  const longestBattles = await prisma.battle.findMany({
-    where: { battleType, winnerId: { not: null } },
-    orderBy: { durationSeconds: 'desc' },
-    take: 10,
-    omit: BATTLE_LOG_OMIT,
-    include: battleWithParticipantsInclude,
-  });
-
-  // Map results
-  const mapTeamBattleParticipants = (battle: BattleWithParticipants) => {
-    const team1 = battle.participants.filter(p => p.team === 1);
-    const team2 = battle.participants.filter(p => p.team === 2);
-    return {
-      team1: team1.map(mapParticipantDisplay),
-      team2: team2.map(mapParticipantDisplay),
-    };
-  };
+  const decisiveBattleMap = new Map<number, BattleWithParticipants>(decisiveBattles.map(b => [b.id, b]));
 
   return {
-    fastestVictory: fastestVictories.map(battle => ({
-      battleId: battle.id,
-      durationSeconds: battle.durationSeconds,
-      ...mapTeamBattleParticipants(battle),
-      date: battle.createdAt,
-    })),
-    longestSurvival: survivalRows.map(row => ({
-      battleId: row.battle_id,
-      survivalSeconds: row.survival_seconds,
-      robot: {
-        id: row.robot_id,
-        name: row.robot_name,
-        ...getRecordOwner({ username: row.username, stableName: row.stable_name, stableType: row.stable_type }),
-      },
-      date: row.created_at,
-    })),
-    mostDamageDealt: mostDamageParticipants.map(p => ({
-      battleId: p.battle.id,
-      damageDealt: p.damageDealt,
-      robot: { id: p.robot.id, name: p.robot.name, ...getRecordOwner(p.robot.user) },
-      durationSeconds: p.battle.durationSeconds,
-      date: p.battle.createdAt,
-    })),
     mostDecisiveVictory: decisiveRows.map(row => {
-      const battle = decisiveBattleMap.get(row.battle_id);
-      const teams = battle ? mapTeamBattleParticipants(battle) : { team1: [], team2: [] };
+      const participants = decisiveBattleMap.get(row.battle_id)?.participants ?? [];
       return {
         battleId: row.battle_id,
         hpDifference: Number(row.hp_difference),
-        ...teams,
+        winners: participants.filter(p => p.team === row.winning_side).map(mapParticipantDisplay),
+        losers: participants.filter(p => p.team !== row.winning_side).map(mapParticipantDisplay),
         date: row.created_at,
       };
     }),
-    longestNonDrawBattle: longestBattles.map(battle => ({
-      battleId: battle.id,
-      durationSeconds: battle.durationSeconds,
-      ...mapTeamBattleParticipants(battle),
-      date: battle.createdAt,
-    })),
   };
 }
 
@@ -767,7 +721,11 @@ export interface TournamentChampionEntry {
   tournamentName: string;
   championName: string; // Robot name for 1v1, team name for 2v2/3v3
   memberRobots?: string[]; // Only for team tournaments
+  /** The 1v1 champion robot's id (links to its profile); absent for team champions. */
+  championRobotId?: number;
   ownerStableName: string;
+  /** The owning stable's user id (links to `/stables/:id`); null when unknown. */
+  ownerUserId: number | null;
   /** Spec #55 decision 42: Stable_Type of the owning stable (Automaton_Badge). */
   ownerStableType: StableType | null;
   completedAt: Date;
@@ -783,41 +741,52 @@ async function fetchChampionsByType(participantType: string): Promise<Tournament
 
   if (tournaments.length === 0) return [];
 
-  return Promise.all(tournaments.map(async (t) => {
-    if (participantType === 'robot') {
-      const robot = await prisma.robot.findUnique({
-        where: { id: t.winnerId! },
-        include: { user: { select: userSelect } },
-      });
+  // One query for all winners of this type (was one query per tournament).
+  const winnerIds = [...new Set(tournaments.map((t) => t.winnerId!))];
+  if (participantType === 'robot') {
+    const robots = new Map((await prisma.robot.findMany({
+      where: { id: { in: winnerIds } },
+      select: robotNameSelect,
+    })).map((r) => [r.id, r]));
+    return tournaments.map((t) => {
+      const robot = robots.get(t.winnerId!);
       return {
         tournamentId: t.id,
         tournamentName: t.name,
         championName: robot?.name ?? 'Unknown',
+        ...(robot ? { championRobotId: robot.id } : {}),
         ownerStableName: robot?.user ? getUserDisplayName(robot.user) : 'Unknown',
+        ownerUserId: robot?.user.id ?? null,
         ownerStableType: robot?.user.stableType ?? null,
         completedAt: t.completedAt!,
         participantType,
       };
-    } else {
-      const team = await prisma.teamBattle.findUnique({
-        where: { id: t.winnerId! },
-        include: {
-          members: { include: { robot: { select: { name: true } } }, orderBy: { slotIndex: 'asc' } },
-          stable: { select: userSelect },
-        },
-      });
-      return {
-        tournamentId: t.id,
-        tournamentName: t.name,
-        championName: team?.teamName ?? 'Unknown',
-        memberRobots: team?.members.map(m => m.robot.name) ?? [],
-        ownerStableName: team?.stable ? getUserDisplayName(team.stable) : 'Unknown',
-        ownerStableType: team?.stable.stableType ?? null,
-        completedAt: t.completedAt!,
-        participantType,
-      };
-    }
-  }));
+    });
+  }
+
+  const teams = new Map((await prisma.teamBattle.findMany({
+    where: { id: { in: winnerIds } },
+    select: {
+      id: true,
+      teamName: true,
+      members: { select: { robot: { select: { name: true } } }, orderBy: { slotIndex: 'asc' } },
+      stable: { select: userSelect },
+    },
+  })).map((team) => [team.id, team]));
+  return tournaments.map((t) => {
+    const team = teams.get(t.winnerId!);
+    return {
+      tournamentId: t.id,
+      tournamentName: t.name,
+      championName: team?.teamName ?? 'Unknown',
+      memberRobots: team?.members.map(m => m.robot.name) ?? [],
+      ownerStableName: team?.stable ? getUserDisplayName(team.stable) : 'Unknown',
+      ownerUserId: team?.stable.id ?? null,
+      ownerStableType: team?.stable.stableType ?? null,
+      completedAt: t.completedAt!,
+      participantType,
+    };
+  });
 }
 
 export async function fetchTournamentChampions(): Promise<{
@@ -837,25 +806,20 @@ export async function fetchTournamentChampions(): Promise<{
 // ─── Grand Melee Records ────────────────────────────────────────────
 
 export async function fetchGrandMeleeRecords(): Promise<Record<string, unknown> | undefined> {
-  const grandMeleeFilter = { mode: 'grand_melee' as const, totalMatches: { gt: 0 } };
-
-  const [mostWinsRobots, highestLpStandings, mostKillsTallies] = await Promise.all([
+  // Highest LP removed (Nov 2026): it was the top of the Grand Melee league
+  // standings, which the League Standings page already ranks.
+  const [mostWinsRobots, mostKillsTallies] = await Promise.all([
     prisma.robot.findMany({
       where: { grandMeleeWins: { gt: 0 } },
-      orderBy: { grandMeleeWins: 'desc' },
+      orderBy: [{ grandMeleeWins: 'desc' }, { id: 'asc' }],
       take: 10,
       select: { id: true, name: true, grandMeleeWins: true, user: { select: userSelect } },
-    }),
-    prisma.standing.findMany({
-      where: { ...grandMeleeFilter, entityType: 'robot' },
-      orderBy: { leaguePoints: 'desc' },
-      take: 10,
     }),
     getTopModeKills('grand_melee', 10),
   ]);
 
   // No data at all — return undefined
-  if (mostWinsRobots.length === 0 && highestLpStandings.length === 0 && mostKillsTallies.length === 0) {
+  if (mostWinsRobots.length === 0 && mostKillsTallies.length === 0) {
     return undefined;
   }
 
@@ -870,28 +834,16 @@ export async function fetchGrandMeleeRecords(): Promise<Record<string, unknown> 
     ).map(s => [s.entityId, s.totalMatches ?? 0]),
   );
 
-  // Batch-resolve robot names for standing-based queries
-  const allRobotIds = [...new Set([
-    ...highestLpStandings.map(s => s.entityId),
-    ...mostKillsTallies.map(k => k.robotId),
-  ])];
+  // Batch-resolve the destruction leaders' names
+  const allRobotIds = [...new Set(mostKillsTallies.map(k => k.robotId))];
 
   const robots = allRobotIds.length > 0
     ? await prisma.robot.findMany({
         where: { id: { in: allRobotIds } },
-        include: { user: { select: userSelect } },
+        select: robotNameSelect,
       })
     : [];
   const robotMap = new Map(robots.map(r => [r.id, r]));
-
-  const mapStanding = (s: typeof highestLpStandings[number]) => {
-    const robot = robotMap.get(s.entityId);
-    return {
-      robotId: s.entityId,
-      robotName: robot?.name ?? 'Unknown',
-      ...getRecordOwner(robot?.user),
-    };
-  };
 
   return {
     mostWins: mostWinsRobots.map(r => ({
@@ -899,11 +851,6 @@ export async function fetchGrandMeleeRecords(): Promise<Record<string, unknown> 
       robotName: r.name,
       ...getRecordOwner(r.user),
       grandMeleeWins: r.grandMeleeWins,
-    })),
-    highestLp: highestLpStandings.map(s => ({
-      ...mapStanding(s),
-      leaguePoints: s.leaguePoints,
-      tier: s.tier,
     })),
     mostKillsCareer: mostKillsTallies.map(k => {
       const robot = robotMap.get(k.robotId);

@@ -13,6 +13,7 @@ import leaguesRoutes from './routes/leagues';
 import leaderboardsRoutes from './routes/leaderboards';
 import financesRoutes from './routes/finances';
 import recordsRoutes from './routes/records';
+import { warmHallOfRecords } from './services/records/hallOfRecordsService';
 import tournamentsRoutes from './routes/tournaments';
 import analyticsRoutes from './routes/analytics';
 import onboardingRoutes from './routes/onboarding';
@@ -283,6 +284,10 @@ import { runStrategyStartupCheck } from './services/automaton/strategies/registr
     registerSubscribableEvent({ type: 'tournament_1v1', label: '1v1 Tournament' });
     registerSubscribableEvent({ type: 'tournament_2v2', label: '2v2 Tournament' });
     registerSubscribableEvent({ type: 'tournament_3v3', label: '3v3 Tournament' });
+
+    // Build the Hall of Records ahead of the first visitor (~10 s cold on ACC).
+    // Delayed so it does not compete with start-up work; never throws.
+    setTimeout(() => { void warmHallOfRecords(); }, 5_000).unref();
 
     // Initialize the cycle scheduler after the server is listening
     initScheduler({

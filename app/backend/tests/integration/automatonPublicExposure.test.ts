@@ -230,7 +230,11 @@ describe('Automaton public exposure (Spec #55 R1.7, R2.1)', () => {
       robot1ELOBefore: 0, robot2ELOBefore: TOP,
     })).id;
     await prisma.battle.update({ where: { id: recordBattleIds.teamUpset }, data: { winningSide: 1 } });
-    await enterRobotStanding(robotId, 'koth', { wins: TOP, totalMatches: TOP });
+    // Most Decisive Victory reads the winning side.
+    await prisma.battle.update({ where: { id: recordBattleIds.team }, data: { winningSide: 1 } });
+    // Ten matches: the minimum for Highest Avg Zone Score, which then ranks
+    // this robot first on TOP / 10.
+    await enterRobotStanding(robotId, 'koth', { wins: TOP, totalMatches: 10 });
     await prisma.standing.updateMany({
       where: { entityType: 'robot', entityId: robotId, mode: { in: ['koth', 'league_1v1'] } },
       data: { bestWinStreak: TOP, currentWinStreak: TOP, totalZoneScore: TOP, totalZoneTime: TOP },
@@ -348,9 +352,9 @@ describe('Automaton public exposure (Spec #55 R1.7, R2.1)', () => {
     const damage = byBattle(combat.mostDamageInBattle.league_1v1, recordBattleIds.damage);
     expect(damage?.robot.stableType).toBe('automaton');
     expect(damage?.opponent?.stableType).toBe('human');
-    const narrowest = byBattle(combat.narrowestVictory, recordBattleIds.damage);
-    expect(narrowest?.winner.stableType).toBe('automaton');
-    expect(narrowest?.loser.stableType).toBe('human');
+    // Stable links need the owner's id on every record.
+    expect(damage?.robot.userId).toBe(automatonId);
+    expect(damage?.opponent?.userId).toBe(viewerId);
 
     const upsets = await fetchUpsetRecords();
     const upset = byBattle(upsets.biggestUpset, recordBattleIds.upset);
@@ -361,11 +365,9 @@ describe('Automaton public exposure (Spec #55 R1.7, R2.1)', () => {
     expect(teamUpset?.favorite.robots[0]?.stableType).toBe('human');
 
     const team = (await fetchTeamBattleRecords())['2v2'];
-    expect(byBattle(team.mostDamageDealt, recordBattleIds.team)?.robot.stableType).toBe('automaton');
-    expect(byBattle(team.longestSurvival, recordBattleIds.team)?.robot.stableType).toBe('automaton');
     const decisive = byBattle(team.mostDecisiveVictory, recordBattleIds.team);
-    expect(decisive?.team1[0]?.stableType).toBe('automaton');
-    expect(decisive?.team2[0]?.stableType).toBe('human');
+    expect(decisive?.winners[0]?.stableType).toBe('automaton');
+    expect(decisive?.losers[0]?.stableType).toBe('human');
 
     const koth = (await fetchKothRecords()) as Record<string, Array<{ robotId: number } & Owned>>;
     for (const key of ['mostWins', 'highestAvgZoneScore', 'longestWinStreak', 'mostZoneTime', 'zoneDominator']) {
@@ -382,7 +384,11 @@ describe('Automaton public exposure (Spec #55 R1.7, R2.1)', () => {
     const champions = await fetchTournamentChampions();
     const ours = [...champions.champions1v1, ...champions.champions2v2].filter((c) => tournamentIds.includes(c.tournamentId));
     expect(ours).toHaveLength(2);
-    for (const champion of ours) expect(champion.ownerStableType).toBe('automaton');
+    for (const champion of ours) {
+      expect(champion.ownerStableType).toBe('automaton');
+      expect(champion.ownerUserId).toBe(automatonId);
+    }
+    expect(ours.find((c) => c.participantType === 'robot')?.championRobotId).toBe(robotId);
   });
 
   it('league standings carry the owner stableType', async () => {

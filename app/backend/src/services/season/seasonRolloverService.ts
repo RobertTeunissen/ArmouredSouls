@@ -44,6 +44,7 @@ import {
   reclaimSpace,
 } from './seasonPurgeService';
 import { seasonStartedAt } from './dormantStables';
+import { invalidateHallOfRecords } from '../records/hallOfRecordsService';
 import { RolloverTracker, pendingRolloverSummary } from './rolloverProgress';
 import { markFinished, markRunning, recordQueued, updateRunSummary } from '../cycle/schedulerRunStore';
 import { SEASON_ROLLOVER_JOB_NAME, type RolloverRunSummary } from '../../types/schedulerTypes';
@@ -287,6 +288,9 @@ export async function executeSeasonRollover(options: RolloverOptions): Promise<R
       completedSeasonNumber,
       archive.generatedStableCount,
     );
+    // The cached Hall of Records still holds the purged season (and any build
+    // started during the purge read half-deleted data).
+    invalidateHallOfRecords();
     tracker.setNewSeason(newSeasonNumber);
     await tracker.finish(
       'purge',

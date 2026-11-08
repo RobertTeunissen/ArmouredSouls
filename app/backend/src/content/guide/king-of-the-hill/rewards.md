@@ -2,7 +2,7 @@
 title: "Rewards"
 description: "Credit tiers, fame, prestige, zone dominance bonus, and repair costs."
 order: 7
-lastUpdated: "2026-03-18"
+lastUpdated: "2026-11-08"
 relatedArticles:
   - king-of-the-hill/scoring-and-win-conditions
   - king-of-the-hill/entry-requirements
@@ -46,3 +46,5 @@ Robots damaged in KotH battles need repairs just like any other battle. Factor r
 ## Cumulative Stats
 
 KotH tracks separate cumulative statistics: wins, matches, total zone score, zone time, kills, best placement, and win streaks. These feed into the KotH Standings page and Hall of Records.
+
+A KotH win streak counts first places in a row. Any other finish, or a forfeit, ends it; it does not count as a loss.
