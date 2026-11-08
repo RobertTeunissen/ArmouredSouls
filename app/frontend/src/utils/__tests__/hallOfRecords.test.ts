@@ -134,6 +134,21 @@ describe('findMyPlaces / summariseMyPlaces', () => {
     expect(viewer.best?.row.rank).toBe(2);
   });
 
+  it('counts a record (mode) once when the viewer\'s robots share its top spot', () => {
+    const data = fullRecords();
+    const mine = data.grandMelee.mostWins[2];
+    data.grandMelee.mostWins = [
+      { ...mine, grandMeleeWins: 50 },
+      { ...mine, robotId: 104, robotName: 'TweedeAap', grandMeleeWins: 50 },
+    ];
+    const places = findMyPlaces(buildRecordCatalogue(data), VIEWER.userId);
+    const summary = summariseMyPlaces(places);
+    expect(summary.held.map((p) => `${p.recordKey}/${p.variantKey}`)).toEqual(['meleeWins/all']);
+    // Both rows still count as top-10 places.
+    expect(summary.placeCount).toBe(places.length);
+    expect(places.filter((p) => p.recordKey === 'meleeWins')).toHaveLength(2);
+  });
+
   it('returns nothing without a viewer', () => {
     expect(findMyPlaces(buildRecordCatalogue(fullRecords()), null)).toEqual([]);
     expect(summariseMyPlaces([])).toEqual({ held: [], placeCount: 0, best: null });

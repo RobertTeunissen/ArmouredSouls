@@ -42,7 +42,9 @@ jest.mock('../../../utils/monitoringWebhook', () => ({ __esModule: true, sendMon
 jest.mock('../../moderation/imageLibraryService', () => ({ __esModule: true, cleanupSeasonOrphans: jest.fn(async () => ({ filesDeleted: 0, bytesReclaimed: 0 })) }));
 jest.mock('../../achievement/preservedStateAchievements', () => ({ __esModule: true, reawardPreservedStateAchievements: jest.fn(async () => ({ achievementsAwarded: 0, stablesChecked: 0 })) }));
 jest.mock('../../automaton', () => ({ __esModule: true, runTurnStepNonFatal: jest.fn() }));
+jest.mock('../../records/hallOfRecordsService', () => ({ __esModule: true, invalidateHallOfRecords: jest.fn() }));
 
+import { invalidateHallOfRecords } from '../../records/hallOfRecordsService';
 import { getCurrentSeason, completeSeasonAndOpenNext } from '../seasonService';
 import { writeSeasonArchive, verifyArchive, hasCompleteArchive } from '../seasonArchiveService';
 import { seasonStartedAt } from '../dormantStables';
@@ -105,6 +107,10 @@ describe('executeSeasonRollover run recording', () => {
     expect(summary.result).toMatchObject({ stablesArchived: 81, robotsArchived: 809, generatedStablesDeleted: 120, dormantStablesDeleted: 7, totalRowsPurged: 1900 });
     expect(deleteDormantHumanStables).toHaveBeenCalledWith(new Date('2026-08-01T00:00:00Z'), expect.any(Function));
     expect(result.totalRowsPurged).toBe(1900);
+    // The Hall of Records cache is dropped once the new season is open.
+    expect(invalidateHallOfRecords).toHaveBeenCalledTimes(1);
+    expect(mocked(invalidateHallOfRecords).mock.invocationCallOrder[0])
+      .toBeGreaterThan(mocked(completeSeasonAndOpenNext).mock.invocationCallOrder[0]);
     // Progress was written while it ran, and is visible in memory only while it runs.
     expect(updateRunSummary).toHaveBeenCalledWith(77, expect.objectContaining({ rollover: expect.any(Object) }));
     expect(progressSeen[0]).toMatchObject({ runId: 77, trigger: 'settlement', progress: { stages: expect.arrayContaining([expect.objectContaining({ stage: 'purge', status: 'running' })]) } });
@@ -135,6 +141,7 @@ describe('executeSeasonRollover run recording', () => {
     await expect(executeSeasonRollover({ trigger: 'admin', adminUserId: 5, runId: 12 })).rejects.toMatchObject({ code: 'ARCHIVE_VERIFICATION_FAILED' });
 
     expect(deleteGeneratedStables).not.toHaveBeenCalled();
+    expect(invalidateHallOfRecords).not.toHaveBeenCalled();
     const finished = mocked(markFinished).mock.calls.at(-1)?.[1];
     expect(finished).toMatchObject({ status: 'failed', error: expect.stringContaining('expected 81 stables / 135 robots') });
     const summary = finishedSummary();

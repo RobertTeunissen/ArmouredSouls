@@ -115,7 +115,7 @@ export function RecordTile({ record, detailHref, viewerId, myBest, className = '
     );
   }
 
-  const rows = record.variants[0].rows;
+  const { rows, label: modeLabel } = record.variants[0];
   const top = rows[0];
   const tie = tieNote(rows);
   const detail = [top.detail, tie].filter(Boolean).join(' · ');
@@ -123,6 +123,11 @@ export function RecordTile({ record, detailHref, viewerId, myBest, className = '
   return (
     <article className={base} data-testid={`record-tile-${record.key}`}>
       <TileHeader record={record} detailHref={detailHref} />
+      {/* A per-mode record with one populated mode keeps that mode's label, so
+          it does not read as an all-mode ranking. Unscoped records have none. */}
+      {modeLabel && (
+        <p className="mt-1 text-xs text-secondary" data-testid="record-tile-mode">{modeLabel}</p>
+      )}
       <p className="mt-2 text-2xl font-bold text-warning">
         {top.value}
         {top.running && <span className="ml-2 align-middle text-xs font-normal text-success">● running</span>}

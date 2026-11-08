@@ -506,6 +506,14 @@ export interface MyPlacesSummary {
 }
 
 export function summariseMyPlaces(places: MyPlace[]): MyPlacesSummary {
-  const held = places.filter((place) => place.row.rank === 1);
+  // Two of the viewer's robots tied at #1 hold one record (mode), not two.
+  const seen = new Set<string>();
+  const held = places.filter((place) => {
+    if (place.row.rank !== 1) return false;
+    const key = `${place.recordKey}\u0000${place.variantKey}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
   return { held, placeCount: places.length, best: places[0] ?? null };
 }

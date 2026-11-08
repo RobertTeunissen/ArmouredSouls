@@ -93,6 +93,40 @@ describe('HallOfRecordsPage — board', () => {
     expect(screen.queryByTestId('record-tile-mostTitles')).not.toBeInTheDocument();
   });
 
+  it('keeps the filter toggle on a mine=1 link when the viewer has no places, so it can be cleared', async () => {
+    const data = emptyRecords();
+    data.prestige.mostTitles = fullRecords().prestige.mostTitles; // someone else's record only
+    mockGet.mockResolvedValue(data);
+    const user = userEvent.setup();
+    renderPage('/hall-of-records?mine=1');
+
+    expect(await screen.findByTestId('records-none-mine')).toBeInTheDocument();
+    const toggle = screen.getByRole('button', { name: 'Show only my places' });
+    expect(toggle).toHaveAttribute('aria-pressed', 'true');
+
+    await user.click(toggle);
+
+    expect(screen.getByTestId('location')).not.toHaveTextContent('mine=1');
+    expect(screen.getByTestId('record-tile-mostTitles')).toBeInTheDocument();
+    // Off and without places, the toggle has nothing to offer.
+    expect(screen.queryByRole('button', { name: 'Show only my places' })).not.toBeInTheDocument();
+  });
+
+  it('counts a record once when two of the viewer\'s robots tie for it', async () => {
+    const data = fullRecords();
+    const mine = data.grandMelee.mostWins[2];
+    data.grandMelee.mostWins = [
+      { ...mine, grandMeleeWins: 50 },
+      { ...mine, robotId: 104, robotName: 'TweedeAap', grandMeleeWins: 50 },
+    ];
+    mockGet.mockResolvedValue(data);
+    renderPage();
+
+    const strip = await screen.findByTestId('your-places');
+    expect(within(strip).getByText(/^1 record held · \d+ top-10 places$/)).toBeInTheDocument();
+    expect(within(strip).getAllByRole('listitem')).toHaveLength(1);
+  });
+
   it('links leaderboard-backed records to their leaderboard page', async () => {
     mockGet.mockResolvedValue(fullRecords());
     renderPage();
@@ -148,6 +182,24 @@ describe('HallOfRecordsPage — full list', () => {
 
     expect(screen.getByTestId('location')).toHaveTextContent('mode=grand_melee');
     expect(within(screen.getByTestId('record-detail')).getByText('4,102')).toBeInTheDocument();
+  });
+
+  it('names the mode of a per-mode record that has only one populated mode', async () => {
+    mockGet.mockResolvedValue(fullRecords());
+    renderPage('/hall-of-records?record=mostDecisiveVictory');
+
+    const detail = await screen.findByTestId('record-detail');
+    expect(within(detail).getByTestId('record-detail-mode')).toHaveTextContent('Mode: 3v3 League');
+    // Nothing to switch to: no mode links.
+    expect(within(detail).queryByRole('link', { name: '3v3 League' })).not.toBeInTheDocument();
+  });
+
+  it('shows no mode line for a record that is not split by mode', async () => {
+    mockGet.mockResolvedValue(fullRecords());
+    renderPage('/hall-of-records?record=highestElo');
+
+    const detail = await screen.findByTestId('record-detail');
+    expect(within(detail).queryByTestId('record-detail-mode')).not.toBeInTheDocument();
   });
 
   it('goes back to the board', async () => {

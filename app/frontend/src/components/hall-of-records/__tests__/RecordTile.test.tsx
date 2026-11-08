@@ -94,6 +94,19 @@ describe('RecordTile — per-mode record', () => {
     expect(within(tile).getByRole('link', { name: /Top 10 per mode/ })).toBeInTheDocument();
   });
 
+  it('keeps the mode label when only one mode has a holder', () => {
+    // The fixture has a 3v3 decisive victory and no 2v2 one.
+    renderTile(recordOf('mostDecisiveVictory'));
+    const tile = screen.getByTestId('record-tile-mostDecisiveVictory');
+    expect(within(tile).getByTestId('record-tile-mode')).toHaveTextContent('3v3 League');
+    expect(within(tile).getByRole('link', { name: /Top 10$/ })).toBeInTheDocument();
+  });
+
+  it('shows no mode label for a record that is not split by mode', () => {
+    renderTile(recordOf('highestElo'));
+    expect(screen.queryByTestId('record-tile-mode')).not.toBeInTheDocument();
+  });
+
   it('lists the latest champion per tournament type', () => {
     renderTile(recordOf('tournamentChampions'));
     const tile = screen.getByTestId('record-tile-tournamentChampions');

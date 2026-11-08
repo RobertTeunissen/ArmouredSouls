@@ -108,6 +108,11 @@ export interface ArchiveViewer {
   userId: number | null;
 }
 
+/** Whether an archived row is the viewer's (matched on stable name; bots never are). */
+export function isOwnArchivedRecord(row: ArchivedRecord, viewer: ArchiveViewer): boolean {
+  return viewer.stableName != null && viewer.userId != null && !row.isGeneratedSubject && row.stableName === viewer.stableName;
+}
+
 /**
  * One season's records as Hall of Records definitions, in board order. The
  * viewer's own rows carry the viewer's id, so "You" places and highlights work
@@ -121,7 +126,7 @@ export function archiveRecordCatalogue(records: ArchivedRecord[], viewer: Archiv
     const lists = byRecord.get(row.category) ?? new Map<string, RecordRow[]>();
     byRecord.set(row.category, lists);
     const meta = CATEGORY_META.get(row.category);
-    const mine = viewer.stableName != null && viewer.userId != null && !row.isGeneratedSubject && row.stableName === viewer.stableName;
+    const mine = isOwnArchivedRecord(row, viewer);
     const list = lists.get(variantKey) ?? [];
     lists.set(variantKey, list);
     list.push({

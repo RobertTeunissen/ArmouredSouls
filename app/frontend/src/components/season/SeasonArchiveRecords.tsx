@@ -2,7 +2,7 @@ import { useCallback, useMemo } from 'react';
 import { RecordBoard, RecordDetail, RECORD_GROUPS } from '../hall-of-records';
 import type { RecordDefinition } from '../hall-of-records';
 import { findMyPlaces } from '../../utils/hallOfRecords';
-import { archiveRecordCatalogue } from '../../utils/seasonArchiveRecords';
+import { archiveRecordCatalogue, isOwnArchivedRecord } from '../../utils/seasonArchiveRecords';
 import type { SeasonDetail } from '../../utils/seasonApi';
 
 export interface SeasonArchiveRecordsProps {
@@ -22,12 +22,15 @@ export interface SeasonArchiveRecordsProps {
  * next to the season: `/seasons?season=2&record=mostKills`.
  */
 export function SeasonArchiveRecords({ detail, myName, viewerId, mineOnly, recordKey, modeKey }: SeasonArchiveRecordsProps) {
-  const catalogue = useMemo(
-    () => archiveRecordCatalogue(detail.accolades, { stableName: myName, userId: viewerId }),
-    [detail.accolades, myName, viewerId],
-  );
+  // "Show only my stable" keeps only the viewer's own rows, as it does for the
+  // standings above: the board then shows the viewer's results (champion wins
+  // included) at their stored ranks, not other stables' holders.
+  const catalogue = useMemo(() => {
+    const viewer = { stableName: myName, userId: viewerId };
+    const accolades = mineOnly ? detail.accolades.filter((row) => isOwnArchivedRecord(row, viewer)) : detail.accolades;
+    return archiveRecordCatalogue(accolades, viewer);
+  }, [detail.accolades, myName, viewerId, mineOnly]);
   const places = useMemo(() => findMyPlaces(catalogue, viewerId), [catalogue, viewerId]);
-  const visible = mineOnly ? catalogue.filter((record) => places.some((place) => place.recordKey === record.key)) : catalogue;
 
   const seasonHref = `/seasons?season=${detail.seasonNumber}`;
   const detailHref = useCallback((record: RecordDefinition, variantKey?: string): string => {
@@ -36,7 +39,7 @@ export function SeasonArchiveRecords({ detail, myName, viewerId, mineOnly, recor
     return `/seasons?${params.toString()}`;
   }, [detail.seasonNumber]);
 
-  if (visible.length === 0) return null;
+  if (catalogue.length === 0) return null;
   const open = recordKey ? catalogue.find((record) => record.key === recordKey) : undefined;
 
   return (
@@ -55,7 +58,7 @@ export function SeasonArchiveRecords({ detail, myName, viewerId, mineOnly, recor
         />
       ) : (
         <RecordBoard
-          records={visible}
+          records={catalogue}
           groups={RECORD_GROUPS}
           viewerId={viewerId}
           places={places}

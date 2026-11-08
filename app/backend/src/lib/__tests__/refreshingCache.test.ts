@@ -94,4 +94,40 @@ describe('RefreshingCache', () => {
     pending[1].resolve(3);
     await expect(next).resolves.toBe(3);
   });
+
+  it('never stores a background refresh that started before invalidate', async () => {
+    const { cache, load, pending, advance } = setup();
+    const first = cache.get();
+    pending[0].resolve(1);
+    await first;
+    advance(1000);
+    await cache.get(); // stale: starts background refresh #2 (pre-rollover data)
+
+    cache.invalidate();
+    const next = cache.get(); // must not join refresh #2
+    expect(load).toHaveBeenCalledTimes(3);
+
+    pending[1].resolve(99); // the pre-invalidate refresh lands late
+    await flush();
+    pending[2].resolve(3);
+    await expect(next).resolves.toBe(3);
+    await expect(cache.get()).resolves.toBe(3);
+  });
+
+  it('does not let a discarded load clear the load that replaced it', async () => {
+    const { cache, load, pending } = setup();
+    const first = cache.get();
+    cache.invalidate();
+    const second = cache.get();
+    expect(load).toHaveBeenCalledTimes(2);
+
+    pending[0].resolve(1); // the discarded load settles first
+    await first;
+    const third = cache.get(); // still joins load #2, no third load
+    expect(load).toHaveBeenCalledTimes(2);
+
+    pending[1].resolve(2);
+    await expect(second).resolves.toBe(2);
+    await expect(third).resolves.toBe(2);
+  });
 });

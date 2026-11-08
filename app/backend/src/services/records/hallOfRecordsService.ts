@@ -85,7 +85,12 @@ export async function warmHallOfRecords(): Promise<void> {
   }
 }
 
-/** Test seam: forget the cached payload. */
-export function resetHallOfRecordsCache(): void {
+/**
+ * Forget the cached payload, including a build in flight. The season rollover
+ * calls this once it has purged the old season, so the Hall never serves the
+ * previous season's records (and links to deleted robots and battles) under
+ * the new season's heading; the next visitor waits for a fresh build.
+ */
+export function invalidateHallOfRecords(): void {
   cache.invalidate();
 }

@@ -51,7 +51,8 @@ export function YourPlacesStrip({ stableName, summary, onlyMine, onToggleOnlyMin
           )}
         </div>
       )}
-      {placeCount > 0 && (
+      {/* Stays while the filter is on, so a `mine=1` link without places can be cleared. */}
+      {(placeCount > 0 || onlyMine) && (
         <button
           type="button"
           onClick={onToggleOnlyMine}

@@ -145,6 +145,17 @@ export function RecordDetail({
         </ScrollRow>
       )}
 
+      {/* A per-mode record with one populated mode: nothing to switch to, but
+          the list must still say which mode it ranks. */}
+      {record.variants.length === 1 && variant?.label && (
+        <p className="mt-3 text-sm text-secondary" data-testid="record-detail-mode">
+          Mode:{' '}
+          <span className="inline-flex items-center rounded-lg bg-surface-elevated px-3 py-1 font-medium text-white ring-1 ring-warning">
+            {variant.label}
+          </span>
+        </p>
+      )}
+
       {record.leaderboard && (
         <p className="mt-4 text-sm">
           <Link to={record.leaderboard.href} className="text-primary hover:underline">
