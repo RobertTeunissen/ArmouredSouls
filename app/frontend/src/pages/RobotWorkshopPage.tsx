@@ -138,8 +138,19 @@ function RobotWorkshop() {
       <div className="container mx-auto space-y-5 px-4 py-6 pb-56 sm:pb-44 lg:pb-32">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Link to="/robots" className="inline-flex min-h-[44px] items-center text-primary hover:underline">← Robots</Link>
-          <RobotSwitcher robots={switcherRobots} currentId={robot.id} section={section} confirmLeave={confirmLeave} />
           <Link to={`/robots/${robot.id}`} className="inline-flex min-h-[44px] items-center text-primary hover:underline">Public profile →</Link>
+        </div>
+
+        {/* Pinned under the fixed navigation (h-14 / lg:h-16) so the robot being edited stays in view. */}
+        <div
+          className="sticky top-14 z-20 -mx-4 flex min-h-[52px] items-center border-b border-white/10 bg-background/95 px-4 py-1 backdrop-blur-sm lg:top-16"
+          data-testid="workshop-robot-bar"
+        >
+          {switcherRobots.length > 1 ? (
+            <RobotSwitcher robots={switcherRobots} currentId={robot.id} section={section} confirmLeave={confirmLeave} />
+          ) : (
+            <p className="truncate px-1 text-sm font-semibold">{robot.name}</p>
+          )}
         </div>
 
         {isOnboarding && (
@@ -225,6 +236,7 @@ function RobotWorkshop() {
               stance={ownerRobot.stance}
               onSetLevel={build.setLevel}
               onMaxAttribute={build.maxAttribute}
+              onMaxCategory={build.maxAttributes}
               onTuningChange={build.setTuning}
             />
             <div className="mt-5 space-y-1 border-t border-white/10 pt-4 text-xs text-secondary">
@@ -245,7 +257,8 @@ function RobotWorkshop() {
               heldEvents={heldEvents}
               showStatus={false}
             />
-            <div className="xl:sticky xl:top-20 xl:self-start">
+            {/* Below the navigation (4rem) and the pinned robot bar (52px). */}
+            <div className="xl:sticky xl:top-36 xl:self-start">
               <InBattlePanel
                 values={values}
                 tuning={build.savedTuning}

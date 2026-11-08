@@ -50,6 +50,8 @@ export interface WorkshopBuild {
   saving: boolean;
   setLevel: (key: RobotAttributeKey, level: number) => void;
   maxAttribute: (key: RobotAttributeKey) => void;
+  /** Max a group of attributes (one category) with the credits the rest of the plan leaves. */
+  maxAttributes: (keys: readonly RobotAttributeKey[]) => void;
   maxAll: () => void;
   setTuning: (key: RobotAttributeKey, value: number) => void;
   resetTuning: () => void;
@@ -100,16 +102,21 @@ export function useWorkshopBuild({ robotId, values, academyLevels, costs, credit
     setPlan((p) => setPlannedLevel(p, values, key, level, academyLevels, costs));
   }, [values, academyLevels, costs]);
 
-  const maxAttribute = useCallback((key: RobotAttributeKey) => {
+  // Re-plan `keys` with the credits the rest of the plan leaves, spread round-robin.
+  const maxAttributes = useCallback((keys: readonly RobotAttributeKey[]) => {
     setPlan((p) => {
-      const others = planTotal({ ...p, [key]: undefined });
-      const single = maxAllPlan(values, academyLevels, credits - others, costs, [key]);
       const next = { ...p };
-      if (single[key]) next[key] = single[key];
-      else delete next[key];
+      for (const key of keys) delete next[key];
+      const group = maxAllPlan(values, academyLevels, credits - planTotal(next), costs, keys);
+      for (const key of keys) {
+        const planned = group[key];
+        if (planned) next[key] = planned;
+      }
       return next;
     });
   }, [values, academyLevels, credits, costs]);
+
+  const maxAttribute = useCallback((key: RobotAttributeKey) => maxAttributes([key]), [maxAttributes]);
 
   const maxAll = useCallback(() => {
     setPlan(maxAllPlan(values, academyLevels, credits, costs));
@@ -160,7 +167,7 @@ export function useWorkshopBuild({ robotId, values, academyLevels, costs, credit
 
   return useMemo(() => ({
     plan, tuning, savedTuning, pool, tuningError, upgradeCost, tuningUsed, tuningRemaining, hasChanges, tuningDirty, saving,
-    setLevel, maxAttribute, maxAll, setTuning, resetTuning, discard, save,
+    setLevel, maxAttribute, maxAttributes, maxAll, setTuning, resetTuning, discard, save,
   }), [plan, tuning, savedTuning, pool, tuningError, upgradeCost, tuningUsed, tuningRemaining, hasChanges, tuningDirty, saving,
-    setLevel, maxAttribute, maxAll, setTuning, resetTuning, discard, save]);
+    setLevel, maxAttribute, maxAttributes, maxAll, setTuning, resetTuning, discard, save]);
 }
