@@ -41,6 +41,16 @@ export const safeSlug = z
   .max(100)
   .regex(/^[a-zA-Z0-9_-]+$/, 'Invalid slug format');
 
+/**
+ * A league instance id: tier name and instance number joined by underscores
+ * (`bronze_1`, `champion_12`). Lowercase letters, digits and `_` only, at most
+ * the 30 characters of `standings.league_instance_id`.
+ */
+export const leagueInstanceId = z
+  .string()
+  .max(30, 'Instance must be at most 30 characters')
+  .regex(/^[a-z]+_[a-z0-9_]*[a-z0-9]$/, 'Instance must be a league instance id such as bronze_1');
+
 /** Positive integer ID (coerced from string or number input). */
 /** A calendar date `YYYY-MM-DD` (UTC day), e.g. an activation day filter. */
 export const calendarDate = z

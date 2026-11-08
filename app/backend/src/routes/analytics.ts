@@ -9,7 +9,7 @@
 
 import express, { Request, Response } from 'express';
 import { z } from 'zod';
-import { AuthRequest, authenticateToken } from '../middleware/auth';
+import { AuthRequest, authenticateToken, requireAdmin } from '../middleware/auth';
 import { robotPerformanceService } from '../services/analytics/robotPerformanceService';
 import type { RobotMetric } from '../services/analytics/robotPerformanceService';
 import { getCurrentCycle } from '../services/analytics/cycleAnalyticsService';
@@ -156,7 +156,7 @@ router.get('/robot/:robotId/performance', authenticateToken, validateRequest({ p
 });
 
 /** GET /api/analytics/robot/:robotId/elo */
-router.get('/robot/:robotId/elo', validateRequest({ params: robotIdParamsSchema }), async (req: Request, res: Response) => {
+router.get('/robot/:robotId/elo', authenticateToken, validateRequest({ params: robotIdParamsSchema }), async (req: Request, res: Response) => {
   const robotId = parseInt(String(req.params.robotId));
   if (isNaN(robotId)) throw new AppError('INVALID_ROBOT_ID', 'robotId must be a valid integer', 400);
 
@@ -369,8 +369,8 @@ router.get('/integrity', authenticateToken, validateRequest({ query: cycleRangeQ
   return res.json(reports);
 });
 
-/** GET /api/analytics/logs/summary */
-router.get('/logs/summary', validateRequest({ query: cycleRangeQuerySchema }), async (req: Request, res: Response) => {
+/** GET /api/analytics/logs/summary (admin only, like /performance and /integrity) */
+router.get('/logs/summary', authenticateToken, requireAdmin, validateRequest({ query: cycleRangeQuerySchema }), async (req: Request, res: Response) => {
   const startCycle = parseInt(req.query.startCycle as string) || 1;
   const endCycle = parseInt(req.query.endCycle as string) || 10;
 

@@ -907,123 +907,16 @@ Battle outcomes are displayed in a unified N-column table (`StableRewards` compo
 
 ## 🏆 League Standings Format
 
-### League Standings Table Row
+Built in `app/frontend/src/components/league-standings/` (PRD_LEAGUE_STANDINGS v2.0; design notes in the UX guide, section 11). Reuse these rather than copying markup:
+
+- `LeagueCards`: one card per league, the league picker (`aria-current="page"` on the selected card).
+- `TierChips` / `InstanceChips`: `ScrollRow` chip rows with the player's counts.
+- `StandingsTable`: zone bands (`bg-success/10`, `bg-error/10`), own rows (`bg-primary/10` + inset `--color-primary` bar + "You" chip), record/ELO/status columns from `md`.
+- `StatusChip`: rounded-full chip in the `success` / `error` / `warning` / neutral tone, label from `statusText()` in `utils/leagueStandings.ts`, with a visually hidden explanation.
 
 ```jsx
-<div className={`
-  bg-surface-elevated rounded-lg p-4 mb-2 
-  ${isOwnRobot ? 'border-2 border-primary bg-primary/5' : ''}
-  ${isPromotionZone ? 'border-l-4 border-l-success' : ''}
-  ${isDemotionZone ? 'border-l-4 border-l-error' : ''}
-`}>
-  <div className="flex items-center gap-4">
-    {/* Rank */}
-    <div className="w-12 text-center">
-      {rank <= 3 ? (
-        <span className={`text-2xl ${getRankMedalColor(rank)}`}>
-          {rank === 1 ? '🥇' : rank === 2 ? '🥈' : '🥉'}
-        </span>
-      ) : (
-        <span className="text-xl font-bold text-tertiary">#{rank}</span>
-      )}
-    </div>
-    
-    {/* Robot Portrait */}
-    <img 
-      src={robot.portrait} 
-      alt={robot.name}
-      className="w-16 h-16 rounded border border-primary/30"
-    />
-    
-    {/* Robot Info */}
-    <div className="flex-1">
-      <div className="flex items-center gap-2">
-        <h3 className="font-bold">{robot.name}</h3>
-        {isOwnRobot && (
-          <span className="badge badge-primary text-xs">MY ROBOT</span>
-        )}
-      </div>
-      <p className="text-sm text-secondary">{robot.owner}</p>
-    </div>
-    
-    {/* Stats */}
-    <div className="flex gap-6 text-center">
-      <div>
-        <p className="text-sm text-tertiary">ELO</p>
-        <p className="font-bold text-primary">{robot.elo}</p>
-      </div>
-      <div>
-        <p className="text-sm text-tertiary">LP</p>
-        <p className="font-bold">{robot.leaguePoints}</p>
-      </div>
-      <div>
-        <p className="text-sm text-tertiary">Record</p>
-        <p className="font-medium">{robot.wins}-{robot.losses}</p>
-      </div>
-    </div>
-    
-    {/* Recent Form */}
-    <div className="flex gap-1">
-      {robot.recentForm.map((result, i) => (
-        <span 
-          key={i}
-          className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold
-            ${result === 'W' ? 'bg-success text-black' : 
-              result === 'L' ? 'bg-error text-white' : 
-              'bg-warning text-black'}`}
-        >
-          {result}
-        </span>
-      ))}
-    </div>
-  </div>
-</div>
-```
-
-### League Navigation Tabs
-
-```jsx
-<div className="flex gap-2 mb-6 overflow-x-auto">
-  {leagues.map(league => (
-    <button
-      key={league.id}
-      className={`
-        flex items-center gap-2 px-4 py-2 rounded-lg transition-colors
-        ${activeLeague === league.id 
-          ? 'bg-primary text-white' 
-          : 'bg-surface-elevated hover:bg-surface text-secondary'}
-      `}
-      onClick={() => setActiveLeague(league.id)}
-    >
-      <img src={league.icon} className="w-6 h-6" />
-      <span className="font-medium">{league.name}</span>
-      {hasRobotsInLeague(league.id) && (
-        <span className="badge badge-sm">{getRobotCount(league.id)}</span>
-      )}
-    </button>
-  ))}
-</div>
-```
-
-### Own Robot Highlight Styles
-
-```css
-/* Add to your CSS */
-.own-robot-row {
-  background: linear-gradient(90deg, rgba(88, 166, 255, 0.15) 0%, transparent 100%);
-  border: 2px solid #58a6ff;
-  position: relative;
-}
-
-.own-robot-row::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 4px;
-  background: #58a6ff;
-}
+<StatusChip status={{ kind: 'held_lp', zone: 'promotion', minLP: 125 }} tier="diamond" />
+// → "Needs 125 LP" (warning tone)
 ```
 
 ---

@@ -60,10 +60,18 @@ describe('Leagues Routes', () => {
     await prisma.$disconnect();
   });
 
+  it.each(['/api/leagues/bronze/standings', '/api/leagues/bronze/instances'])(
+    'refuses %s without a login',
+    async (path) => {
+      const response = await request(app).get(path);
+      expect(response.status).toBe(401);
+    },
+  );
+
   describe('GET /api/leagues/:tier/standings', () => {
     it('should get bronze league standings', async () => {
       const response = await request(app)
-        .get('/api/leagues/bronze/standings');
+        .get('/api/leagues/bronze/standings').set("Authorization", `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('data');
@@ -75,7 +83,7 @@ describe('Leagues Routes', () => {
 
     it('should get silver league standings', async () => {
       const response = await request(app)
-        .get('/api/leagues/silver/standings');
+        .get('/api/leagues/silver/standings').set("Authorization", `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('data');
@@ -83,7 +91,7 @@ describe('Leagues Routes', () => {
 
     it('should report the canonical promotion threshold for an empty Silver instance', async () => {
       const response = await request(app)
-        .get('/api/leagues/silver/standings')
+        .get('/api/leagues/silver/standings').set("Authorization", `Bearer ${authToken}`)
         .query({ instance: `silver_empty_${Date.now()}` });
 
       expect(response.status).toBe(200);
@@ -112,7 +120,7 @@ describe('Leagues Routes', () => {
       });
 
       const response = await request(app)
-        .get('/api/leagues/silver/standings')
+        .get('/api/leagues/silver/standings').set("Authorization", `Bearer ${authToken}`)
         .query({ instance: instanceId, perPage: 10 });
 
       const expectedIds = tiedRobots.map((robot) => robot.id).sort((left, right) => left - right);
@@ -124,7 +132,7 @@ describe('Leagues Routes', () => {
 
     it('should return 400 for invalid tier', async () => {
       const response = await request(app)
-        .get('/api/leagues/invalid_tier/standings');
+        .get('/api/leagues/invalid_tier/standings').set("Authorization", `Bearer ${authToken}`);
 
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty('error');
@@ -132,7 +140,7 @@ describe('Leagues Routes', () => {
 
     it('should support pagination', async () => {
       const response = await request(app)
-        .get('/api/leagues/bronze/standings')
+        .get('/api/leagues/bronze/standings').set("Authorization", `Bearer ${authToken}`)
         .query({ page: 1, perPage: 10 });
 
       expect(response.status).toBe(200);
@@ -143,12 +151,96 @@ describe('Leagues Routes', () => {
     });
   });
 
+  describe('query validation', () => {
+    it.each([
+      ['/api/leagues/bronze/standings', { mode: 'foo' }],
+      ['/api/leagues/bronze/standings', { instance: '../bronze_1' }],
+      ['/api/leagues/bronze/standings', { instance: 'Bronze 1' }],
+      ['/api/leagues/bronze/standings', { perPage: 500 }],
+      ['/api/leagues/bronze/standings', { page: 0 }],
+      ['/api/leagues/bronze/instances', { mode: 'foo' }],
+      ['/api/team-battles/leagues/2/bronze/standings', { instance: 'bronze-1;drop' }],
+      ['/api/team-battles/leagues/2/bronze/tag-team-standings', { perPage: 101 }],
+    ])('rejects %s with %o as 400 (it used to answer 500 for an unknown mode)', async (path, query) => {
+      const response = await request(app).get(path).set('Authorization', `Bearer ${authToken}`).query(query);
+      expect(response.status).toBe(400);
+      expect(response.body.code).toBe('VALIDATION_ERROR');
+    });
+
+    it.each(['koth', 'grand_melee', 'league_1v1'])('accepts mode=%s', async (mode) => {
+      const response = await request(app).get('/api/leagues/bronze/standings').set('Authorization', `Bearer ${authToken}`).query({ mode, perPage: 5 });
+      expect(response.status).toBe(200);
+    });
+  });
+
+  describe('row status and my-standings', () => {
+    const stamp = Date.now() % 100000;
+    const instanceId = `gold_my${stamp}`;
+    let robots: Array<{ id: number }> = [];
+
+    beforeAll(async () => {
+      // 12 robots in one Gold instance: 1 promotion and 1 demotion place.
+      // #1 qualifies (80 LP ≥ 75, 6 cycles); #12 has 2 cycles; #2 has 70 LP.
+      robots = await Promise.all(
+        Array.from({ length: 12 }, (_, index) => createTestRobot(testUser.id, `MyStd_${index}_${stamp}`)),
+      );
+      testRobotIds.push(...robots.map((robot) => robot.id));
+      // Platinum must not be empty, or the 3-entity cohort rule holds the promotion.
+      const resident = await createTestRobot(testUser.id, `MyStdPlat_${stamp}`);
+      testRobotIds.push(resident.id);
+      await enterRobotStanding(resident.id, 'league_1v1', { tier: 'platinum', leagueInstanceId: `platinum_my${stamp}` });
+      for (const [index, robot] of robots.entries()) {
+        await enterRobotStanding(robot.id, 'league_1v1', {
+          tier: 'gold',
+          leagueInstanceId: instanceId,
+          leaguePoints: 80 - index * 5,
+          cyclesInTier: index === 11 ? 2 : 6,
+        });
+      }
+    });
+
+    it('gives each standings row its rank and status', async () => {
+      const response = await request(app)
+        .get('/api/leagues/gold/standings').set('Authorization', `Bearer ${authToken}`)
+        .query({ instance: instanceId, perPage: 100 });
+
+      expect(response.status).toBe(200);
+      const rows = response.body.data as Array<{ id: number; rank: number; status: unknown }>;
+      expect(rows.map((row) => row.rank)).toEqual(Array.from({ length: 12 }, (_, i) => i + 1));
+      expect(rows[0].status).toEqual({ kind: 'promotes', zone: 'promotion' });
+      expect(rows[1].status).toBeNull();
+      expect(rows[11].status).toEqual({ kind: 'held_cycles', zone: 'demotion', cyclesToGo: 3 });
+    });
+
+    it('lists the viewer\'s entries with instance place, size and status', async () => {
+      const response = await request(app).get('/api/leagues/my-standings').set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.headers['cache-control']).toContain('private');
+      const mine = (response.body.entries as Array<{ entityId: number; place: number; instanceSize: number; status: unknown; mode: string; minCycles: number }>)
+        .filter((entry) => robots.some((robot) => robot.id === entry.entityId));
+      expect(mine).toHaveLength(12);
+      expect(mine[0]).toMatchObject({ mode: 'league_1v1', place: 1, instanceSize: 12, minCycles: 5, status: { kind: 'promotes' } });
+      expect(mine[11]).toMatchObject({ place: 12, status: { kind: 'held_cycles', cyclesToGo: 3 } });
+    });
+
+    it('lists nothing for a stable without standings', async () => {
+      const other = await createTestUser();
+      testUserIds.push(other.id);
+      const token = jwt.sign({ userId: other.id, username: other.username }, process.env.JWT_SECRET || 'test-secret');
+      const response = await request(app).get('/api/leagues/my-standings').set('Authorization', `Bearer ${token}`);
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ entries: [] });
+    });
+  });
+
   describe('GET /api/team-battles league standings', () => {
     it('should report the canonical promotion threshold for an empty Silver team instance', async () => {
       const response = await request(app)
         .get('/api/team-battles/leagues/2/silver/standings')
         .set('Authorization', `Bearer ${authToken}`)
-        .query({ instance: `silver_empty_team_${Date.now()}` });
+        // At most 30 characters: the length of standings.league_instance_id.
+        .query({ instance: `silver_emptyteam_${Date.now() % 1e9}` });
 
       expect(response.status).toBe(200);
       expect(response.body.zoneMeta).toMatchObject({ minLP: 50, totalEntities: 0 });
@@ -168,7 +260,7 @@ describe('Leagues Routes', () => {
   describe('GET /api/leagues/:tier/instances', () => {
     it('should get bronze league instances', async () => {
       const response = await request(app)
-        .get('/api/leagues/bronze/instances');
+        .get('/api/leagues/bronze/instances').set("Authorization", `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
@@ -183,7 +275,7 @@ describe('Leagues Routes', () => {
 
     it('should return 400 for invalid tier', async () => {
       const response = await request(app)
-        .get('/api/leagues/invalid_tier/instances');
+        .get('/api/leagues/invalid_tier/instances').set("Authorization", `Bearer ${authToken}`);
 
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty('error');

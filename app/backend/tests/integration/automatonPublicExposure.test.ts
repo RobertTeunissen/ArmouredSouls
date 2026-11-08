@@ -310,7 +310,7 @@ describe('Automaton public exposure (Spec #55 R1.7, R2.1)', () => {
   });
 
   it.each(['fame', 'losses'])('%s leaderboard carries stableType', async (board) => {
-    const res = await request(server).get(`/api/leaderboards/${board}?limit=100`);
+    const res = await request(server).get(`/api/leaderboards/${board}?limit=100`).set(...auth());
     expect(res.status).toBe(200);
     const entry = res.body.leaderboard.find((e: { robotId: number }) => e.robotId === robotId);
     expect(entry?.stableType).toBe('automaton');
@@ -318,7 +318,7 @@ describe('Automaton public exposure (Spec #55 R1.7, R2.1)', () => {
   });
 
   it('prestige leaderboard carries stableType', async () => {
-    const res = await request(server).get('/api/leaderboards/prestige?limit=100');
+    const res = await request(server).get('/api/leaderboards/prestige?limit=100').set(...auth());
     expect(res.status).toBe(200);
     const entry = res.body.leaderboard.find((e: { userId: number }) => e.userId === automatonId);
     expect(entry?.stableType).toBe('automaton');
@@ -326,7 +326,7 @@ describe('Automaton public exposure (Spec #55 R1.7, R2.1)', () => {
   });
 
   it('Hall of Records stable entries carry stableType', async () => {
-    const res = await request(server).get('/api/records');
+    const res = await request(server).get('/api/records').set(...auth());
     expect(res.status).toBe(200);
     const find = (list: Array<{ userId: number; stableType?: string }>) => list.find((e) => e.userId === automatonId);
     expect(find(res.body.economic.richestStables)?.stableType).toBe('automaton');
@@ -392,7 +392,7 @@ describe('Automaton public exposure (Spec #55 R1.7, R2.1)', () => {
   });
 
   it('league standings carry the owner stableType', async () => {
-    const res = await request(server).get('/api/leagues/bronze/standings?perPage=100');
+    const res = await request(server).get('/api/leagues/bronze/standings?perPage=100').set(...auth());
     expect(res.status).toBe(200);
     const entry = res.body.data.find((e: { id: number }) => e.id === robotId);
     expect(entry?.user.stableType).toBe('automaton');

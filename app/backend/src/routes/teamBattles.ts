@@ -18,7 +18,7 @@ import express, { Response } from 'express';
 import { z } from 'zod';
 import { AuthRequest, authenticateToken } from '../middleware/auth';
 import { validateRequest } from '../middleware/schemaValidator';
-import { positiveIntParam, safeName } from '../utils/securityValidation';
+import { leagueInstanceId, positiveIntParam, safeName } from '../utils/securityValidation';
 import prisma from '../lib/prisma';
 import type { StandingsMode } from '../../generated/prisma';
 import {
@@ -30,9 +30,8 @@ import {
 } from '../services/team-battle/teamBattleService';
 import { MAX_TEAMS_PER_INSTANCE } from '../services/team-battle/teamBattleAdapter';
 import { getEntityHistory } from '../services/league/leagueHistoryService';
-import { getLeagueTierPreview } from '../services/league/league-rebalancing-preview';
+import { getTeamLeagueStandings } from '../services/league/leagueStandingsService';
 import { HEAD_TO_HEAD_LEAGUE_RULES } from '../services/league/league-rules';
-import { getMinLPForPromotion } from '../services/league/leaguePromotionThresholds';
 
 const router = express.Router();
 
@@ -271,163 +270,75 @@ const standingsParamsSchema = z.object({
   teamSize: z.string().refine((v) => v === '2' || v === '3', { message: 'teamSize must be 2 or 3' }),
 });
 
+const standingsQuerySchema = z.object({
+  instance: leagueInstanceId.optional(),
+  page: z.coerce.number().int().positive().default(1),
+  perPage: z.coerce.number().int().positive().max(100).default(50),
+});
+type StandingsQuery = z.infer<typeof standingsQuerySchema>;
+
+/** Instances of one team-mode tier with their population, in instance-number order. */
+async function listTeamInstances(mode: StandingsMode, tier: string) {
+  const instances = await prisma.standing.groupBy({
+    by: ['leagueInstanceId'],
+    where: { mode, tier },
+    _count: true,
+  });
+  const instanceNumber = (id: string): number => parseInt(id.split('_')[1] ?? '1', 10);
+  return instances
+    .sort((a, b) => instanceNumber(a.leagueInstanceId) - instanceNumber(b.leagueInstanceId))
+    .map((inst) => ({
+      leagueId: inst.leagueInstanceId,
+      leagueTier: tier,
+      currentTeams: inst._count,
+      maxTeams: MAX_TEAMS_PER_INSTANCE,
+    }));
+}
+
 /**
- * GET /api/team-battles/leagues/:teamSize/:tier/standings
- * Get team battle league standings for a specific tier and team size.
- * Query params: page (default 1), perPage (default 50), instance (optional league instance ID)
+ * GET /api/team-battles/leagues/:teamSize/:tier/standings?instance=&page=&perPage=
+ * One tier (or instance) of the 2v2 or 3v3 League, ranked by LP, with each
+ * team's zone and status from the executor's tier plan.
  */
 router.get(
   '/leagues/:teamSize/:tier/standings',
   authenticateToken,
-  validateRequest({ params: standingsParamsSchema }),
+  validateRequest({ params: standingsParamsSchema, query: standingsQuerySchema }),
   async (req: AuthRequest, res: Response) => {
     const tier = String(req.params.tier);
     const teamSize = Number(req.params.teamSize) as 2 | 3;
-    const page = Math.max(1, parseInt(req.query.page as string) || 1);
-    const perPage = Math.min(100, Math.max(1, parseInt(req.query.perPage as string) || 50));
-    const instance = req.query.instance as string | undefined;
+    const { instance, page, perPage } = req.query as unknown as StandingsQuery;
 
-    // Read from unified standings table (Spec #40)
-    const mode = teamSize === 2 ? 'league_2v2' : 'league_3v3';
-    const standingsWhere = {
-      mode: mode as StandingsMode,
-      tier,
-      ...(instance && { leagueInstanceId: instance }),
-    };
-
-    const total = await prisma.standing.count({ where: standingsWhere });
-    const totalPages = Math.ceil(total / perPage);
-
-    const standingRows = await prisma.standing.findMany({
-      where: standingsWhere,
-      orderBy: [{ leaguePoints: 'desc' }, { entityId: 'asc' }],
-      skip: (page - 1) * perPage,
-      take: perPage,
-    });
-
-    // Batch-fetch team data with members
-    const teamIds = standingRows.map(s => s.entityId);
-    const teams = await prisma.teamBattle.findMany({
-      where: { id: { in: teamIds } },
-      include: {
-        stable: { select: { stableName: true, username: true, stableType: true } },
-        members: {
-          include: { robot: { select: { id: true, name: true, elo: true } } },
-          orderBy: { slotIndex: 'asc' },
-        },
-      },
-    });
-    const teamMap = new Map(teams.map(t => [t.id, t]));
-
-    const preview = await getLeagueTierPreview(
-      mode as StandingsMode,
-      tier,
-      HEAD_TO_HEAD_LEAGUE_RULES,
-      instance,
-    );
-    const selectedInstancePlan = instance
-      ? preview.instancePlansById.get(instance)
-      : undefined;
-    const instancePlans = selectedInstancePlan
-      ? [selectedInstancePlan]
-      : instance
-        ? []
-        : preview.plan.instancePlans;
-    const minLP = instancePlans[0]?.minPromotionLP ?? getMinLPForPromotion(tier);
-    const isChampion = tier === HEAD_TO_HEAD_LEAGUE_RULES.tiers[HEAD_TO_HEAD_LEAGUE_RULES.tiers.length - 1];
-    const isBronze = tier === HEAD_TO_HEAD_LEAGUE_RULES.tiers[0];
-    const eligibleCount = instancePlans.reduce((sum, plan) => sum + plan.eligibleEntities, 0);
-    const totalInstances = instancePlans.length;
-    const instancesBelowMinimum = instancePlans.filter((plan) => !plan.hasEnoughEntities).length;
-    const activeInstances = totalInstances - instancesBelowMinimum;
-    const hasEnoughRobots = totalInstances > 0 && instancesBelowMinimum === 0;
-    const smallestInstancePopulation = instancePlans.length > 0
-      ? Math.min(...instancePlans.map((plan) => plan.totalEntities))
-      : 0;
-    const promotionCount = instancePlans.reduce((sum, plan) => sum + plan.promotionSlots, 0);
-    const demotionCount = instancePlans.reduce((sum, plan) => sum + plan.demotionSlots, 0);
-    const promotionTeamIds = preview.effectivePromotionEntityIds;
-    const demotionTeamIds = preview.demotionEntityIds;
-
-    // Batch-check subscription status
-    const eventType = teamSize === 2 ? 'league_2v2' : 'league_3v3';
-    const allMemberRobotIds = teams.flatMap(t => t.members.map(m => m.robot.id));
-    const activeTeamSubs = await prisma.subscription.findMany({
-      where: { robotId: { in: allMemberRobotIds }, eventType, status: 'active' },
-      select: { robotId: true },
-    });
-    const subscribedMemberIds = new Set(activeTeamSubs.map(s => s.robotId));
-
-    const standings = standingRows.map((s, index) => {
-      const team = teamMap.get(s.entityId);
-      const teamELO = team ? team.members.reduce((sum, m) => sum + m.robot.elo, 0) : 0;
-      const rank = (page - 1) * perPage + index + 1;
-      const isSubscribed = team ? team.members.every(m => subscribedMemberIds.has(m.robot.id)) : false;
-      const eligible = s.cyclesInTier >= HEAD_TO_HEAD_LEAGUE_RULES.minCyclesForRebalancing;
-      const zone = promotionTeamIds.has(s.entityId)
-        ? 'promotion' as const
-        : demotionTeamIds.has(s.entityId)
-          ? 'demotion' as const
-          : null;
-      return {
-        rank,
-        teamId: s.entityId,
-        teamName: team?.teamName ?? `Team #${s.entityId}`,
-        stableId: team?.stableId ?? 0,
-        stableName: team?.stable?.stableName || team?.stable?.username || 'Unknown',
-        // Spec #55 R1.7: drives the Automaton_Badge.
-        stableType: team?.stable?.stableType ?? 'human',
-        teamSize,
-        teamLp: s.leaguePoints,
-        teamELO,
-        teamLeague: s.tier,
-        teamLeagueId: s.leagueInstanceId,
-        wins: s.wins,
-        losses: s.losses,
-        draws: s.draws,
-        totalMatches: s.wins + s.losses + s.draws,
-        cyclesInLeague: s.cyclesInTier,
-        isSubscribed,
-        zone,
-        eligible,
-        members: team?.members.map((m) => ({
-          robotId: m.robot.id,
-          robotName: m.robot.name,
-          robotElo: m.robot.elo,
-          slotIndex: m.slotIndex,
-        })) ?? [],
-      };
-    });
+    const result = await getTeamLeagueStandings(teamSize === 2 ? 'league_2v2' : 'league_3v3', { tier, instance, page, perPage });
 
     res.json({
-      standings,
-      pagination: { page, pageSize: perPage, total, totalPages },
+      standings: result.rows.map((row) => ({
+        rank: row.rank,
+        teamId: row.teamId,
+        teamName: row.teamName,
+        stableId: row.stableId,
+        stableName: row.stableName,
+        stableType: row.stableType,
+        teamSize,
+        teamLp: row.leaguePoints,
+        teamELO: row.combinedElo,
+        teamLeague: row.tier,
+        teamLeagueId: row.leagueInstanceId,
+        wins: row.wins,
+        losses: row.losses,
+        draws: row.draws,
+        totalMatches: row.wins + row.losses + row.draws,
+        cyclesInLeague: row.cyclesInTier,
+        isSubscribed: row.isSubscribed,
+        zone: row.zone,
+        eligible: row.eligible,
+        status: row.status,
+        members: row.members,
+      })),
+      pagination: result.pagination,
       tier,
       teamSize,
-      zoneMeta: {
-        minLP,
-        minCycles: HEAD_TO_HEAD_LEAGUE_RULES.minCyclesForRebalancing,
-        hasEnoughRobots,
-        minRobotsRequired: HEAD_TO_HEAD_LEAGUE_RULES.minEntitiesForRebalancing,
-        eligibleCount,
-        isChampion,
-        isBronze,
-        promotionSlots: promotionCount,
-        demotionSlots: demotionCount,
-        promotionCandidates: instancePlans.reduce(
-          (sum, plan) => sum + plan.promotionCandidates.length,
-          0,
-        ),
-        effectivePromotionCandidates: preview.plan.promotionBlockReason
-          ? 0
-          : instancePlans.reduce((sum, plan) => sum + plan.promotionCandidates.length, 0),
-        promotionBlockReason: preview.plan.promotionBlockReason,
-        totalEntities: instancePlans.reduce((sum, plan) => sum + plan.totalEntities, 0),
-        totalInstances,
-        activeInstances,
-        instancesBelowMinimum,
-        smallestInstancePopulation,
-      },
+      zoneMeta: result.zoneMeta,
     });
   },
 );
@@ -443,26 +354,7 @@ router.get(
   async (req: AuthRequest, res: Response) => {
     const tier = String(req.params.tier);
     const teamSize = Number(req.params.teamSize) as 2 | 3;
-    const mode = teamSize === 2 ? 'league_2v2' : 'league_3v3';
-
-    // Read from unified standings table (Spec #40)
-    const instances = await prisma.standing.groupBy({
-      by: ['leagueInstanceId'],
-      where: {
-        mode: mode as StandingsMode,
-        tier,
-      },
-      _count: true,
-    });
-
-    const formatted = instances.map((inst) => ({
-      leagueId: inst.leagueInstanceId,
-      leagueTier: tier,
-      currentTeams: inst._count,
-      maxTeams: MAX_TEAMS_PER_INSTANCE,
-    }));
-
-    res.json(formatted);
+    res.json(await listTeamInstances(teamSize === 2 ? 'league_2v2' : 'league_3v3', tier));
   },
 );
 
@@ -481,182 +373,52 @@ router.get(
   authenticateToken,
   validateRequest({ params: tagTeamTierParamsSchema }),
   async (req: AuthRequest, res: Response) => {
-    const tier = String(req.params.tier);
-
-    // Read from unified standings table (Spec #40)
-    const instances = await prisma.standing.groupBy({
-      by: ['leagueInstanceId'],
-      where: {
-        mode: 'tag_team' as StandingsMode,
-        tier,
-      },
-      _count: true,
-    });
-
-    const formatted = instances.map((inst) => ({
-      leagueId: inst.leagueInstanceId,
-      leagueTier: tier,
-      currentTeams: inst._count,
-      maxTeams: MAX_TEAMS_PER_INSTANCE,
-    }));
-
-    res.json(formatted);
+    res.json(await listTeamInstances('tag_team', String(req.params.tier)));
   },
 );
 
 // ── Tag Team Standings ────────────────────────────────────────────────
 
 /**
- * GET /api/team-battles/leagues/2/:tier/tag-team-standings
- * Get tag team league standings for 2v2 teams in a specific tier.
- * Query params: page (default 1), perPage (default 50, max 100), instance (optional tagTeamLeagueId)
+ * GET /api/team-battles/leagues/2/:tier/tag-team-standings?instance=&page=&perPage=
+ * One tier (or instance) of the Tag Team league, ranked by LP, with each
+ * team's zone and status from the executor's tier plan.
  */
 router.get(
   '/leagues/2/:tier/tag-team-standings',
   authenticateToken,
-  validateRequest({ params: tagTeamTierParamsSchema }),
+  validateRequest({ params: tagTeamTierParamsSchema, query: standingsQuerySchema }),
   async (req: AuthRequest, res: Response) => {
     const tier = String(req.params.tier);
-    const page = Math.max(1, parseInt(req.query.page as string) || 1);
-    const perPage = Math.min(100, Math.max(1, parseInt(req.query.perPage as string) || 50));
-    const instance = req.query.instance as string | undefined;
+    const { instance, page, perPage } = req.query as unknown as StandingsQuery;
 
-    // Read from unified standings table (Spec #40)
-    const standingsWhere = {
-      mode: 'tag_team' as StandingsMode,
-      tier,
-      ...(instance && { leagueInstanceId: instance }),
-    };
-
-    const total = await prisma.standing.count({ where: standingsWhere });
-    const totalPages = Math.ceil(total / perPage);
-
-    const standingRows = await prisma.standing.findMany({
-      where: standingsWhere,
-      orderBy: [{ leaguePoints: 'desc' }, { entityId: 'asc' }],
-      skip: (page - 1) * perPage,
-      take: perPage,
-    });
-
-    // Batch-fetch team data
-    const teamIds = standingRows.map(s => s.entityId);
-    const teams = await prisma.teamBattle.findMany({
-      where: { id: { in: teamIds } },
-      include: {
-        stable: { select: { stableName: true, username: true, stableType: true } },
-        members: {
-          include: { robot: { select: { id: true, name: true, elo: true } } },
-          orderBy: { slotIndex: 'asc' },
-        },
-      },
-    });
-    const teamMap = new Map(teams.map(t => [t.id, t]));
-
-    const preview = await getLeagueTierPreview(
-      'tag_team' as StandingsMode,
-      tier,
-      HEAD_TO_HEAD_LEAGUE_RULES,
-      instance,
-    );
-    const selectedInstancePlan = instance
-      ? preview.instancePlansById.get(instance)
-      : undefined;
-    const instancePlans = selectedInstancePlan
-      ? [selectedInstancePlan]
-      : instance
-        ? []
-        : preview.plan.instancePlans;
-    const minLP = instancePlans[0]?.minPromotionLP ?? getMinLPForPromotion(tier);
-    const isChampion = tier === HEAD_TO_HEAD_LEAGUE_RULES.tiers[HEAD_TO_HEAD_LEAGUE_RULES.tiers.length - 1];
-    const isBronze = tier === HEAD_TO_HEAD_LEAGUE_RULES.tiers[0];
-    const eligibleCount = instancePlans.reduce((sum, plan) => sum + plan.eligibleEntities, 0);
-    const totalInstances = instancePlans.length;
-    const instancesBelowMinimum = instancePlans.filter((plan) => !plan.hasEnoughEntities).length;
-    const activeInstances = totalInstances - instancesBelowMinimum;
-    const hasEnoughRobots = totalInstances > 0 && instancesBelowMinimum === 0;
-    const smallestInstancePopulation = instancePlans.length > 0
-      ? Math.min(...instancePlans.map((plan) => plan.totalEntities))
-      : 0;
-    const promotionCount = instancePlans.reduce((sum, plan) => sum + plan.promotionSlots, 0);
-    const demotionCount = instancePlans.reduce((sum, plan) => sum + plan.demotionSlots, 0);
-    const promotionTeamIds = preview.effectivePromotionEntityIds;
-    const demotionTeamIds = preview.demotionEntityIds;
-
-    // Batch-check tag_team subscription status
-    const allMemberRobotIds = teams.flatMap(t => t.members.map(m => m.robot.id));
-    const activeTagTeamSubs = await prisma.subscription.findMany({
-      where: { robotId: { in: allMemberRobotIds }, eventType: 'tag_team', status: 'active' },
-      select: { robotId: true },
-    });
-    const subscribedMemberIds = new Set(activeTagTeamSubs.map(s => s.robotId));
-
-    const standings = standingRows.map((s, index) => {
-      const team = teamMap.get(s.entityId);
-      const combinedELO = team ? team.members.reduce((sum, m) => sum + m.robot.elo, 0) : 0;
-      const rank = (page - 1) * perPage + index + 1;
-      const isSubscribed = team ? team.members.every(m => subscribedMemberIds.has(m.robot.id)) : false;
-      const eligible = s.cyclesInTier >= HEAD_TO_HEAD_LEAGUE_RULES.minCyclesForRebalancing;
-      const zone = promotionTeamIds.has(s.entityId)
-        ? 'promotion' as const
-        : demotionTeamIds.has(s.entityId)
-          ? 'demotion' as const
-          : null;
-      return {
-        rank,
-        teamId: s.entityId,
-        teamName: team?.teamName ?? `Team #${s.entityId}`,
-        stableId: team?.stableId ?? 0,
-        stableName: team?.stable?.stableName || team?.stable?.username || 'Unknown',
-        // Spec #55 R1.7: drives the Automaton_Badge.
-        stableType: team?.stable?.stableType ?? 'human',
-        tagTeamLp: s.leaguePoints,
-        tagTeamLeague: s.tier,
-        tagTeamLeagueId: s.leagueInstanceId,
-        totalTagTeamWins: s.wins,
-        totalTagTeamLosses: s.losses,
-        totalTagTeamDraws: s.draws,
-        combinedELO,
-        isSubscribed,
-        cyclesInTagTeamLeague: s.cyclesInTier,
-        zone,
-        eligible,
-        members: team?.members.map((m) => ({
-          id: m.robot.id,
-          name: m.robot.name,
-          elo: m.robot.elo,
-          slotIndex: m.slotIndex,
-        })) ?? [],
-      };
-    });
+    const result = await getTeamLeagueStandings('tag_team', { tier, instance, page, perPage });
 
     res.json({
-      standings,
-      pagination: { page, pageSize: perPage, total, totalPages },
+      standings: result.rows.map((row) => ({
+        rank: row.rank,
+        teamId: row.teamId,
+        teamName: row.teamName,
+        stableId: row.stableId,
+        stableName: row.stableName,
+        stableType: row.stableType,
+        tagTeamLp: row.leaguePoints,
+        tagTeamLeague: row.tier,
+        tagTeamLeagueId: row.leagueInstanceId,
+        totalTagTeamWins: row.wins,
+        totalTagTeamLosses: row.losses,
+        totalTagTeamDraws: row.draws,
+        combinedELO: row.combinedElo,
+        isSubscribed: row.isSubscribed,
+        cyclesInTagTeamLeague: row.cyclesInTier,
+        zone: row.zone,
+        eligible: row.eligible,
+        status: row.status,
+        members: row.members.map((m) => ({ id: m.robotId, name: m.robotName, elo: m.robotElo, slotIndex: m.slotIndex })),
+      })),
+      pagination: result.pagination,
       tier,
-      zoneMeta: {
-        minLP,
-        minCycles: HEAD_TO_HEAD_LEAGUE_RULES.minCyclesForRebalancing,
-        hasEnoughRobots,
-        minRobotsRequired: HEAD_TO_HEAD_LEAGUE_RULES.minEntitiesForRebalancing,
-        eligibleCount,
-        isChampion,
-        isBronze,
-        promotionSlots: promotionCount,
-        demotionSlots: demotionCount,
-        promotionCandidates: instancePlans.reduce(
-          (sum, plan) => sum + plan.promotionCandidates.length,
-          0,
-        ),
-        effectivePromotionCandidates: preview.plan.promotionBlockReason
-          ? 0
-          : instancePlans.reduce((sum, plan) => sum + plan.promotionCandidates.length, 0),
-        promotionBlockReason: preview.plan.promotionBlockReason,
-        totalEntities: instancePlans.reduce((sum, plan) => sum + plan.totalEntities, 0),
-        totalInstances,
-        activeInstances,
-        instancesBelowMinimum,
-        smallestInstancePopulation,
-      },
+      zoneMeta: result.zoneMeta,
     });
   },
 );
