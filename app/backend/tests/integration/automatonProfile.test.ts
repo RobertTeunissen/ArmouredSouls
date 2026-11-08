@@ -89,9 +89,22 @@ describe('Admin automaton profile endpoints (Spec #55 tasks 9.1–9.4)', () => {
     return prisma.adminAuditLog.findMany({ where: { adminUserId: adminId }, orderBy: { id: 'asc' } });
   }
 
-  async function auditCount(): Promise<number> {
-    await new Promise((resolve) => setTimeout(resolve, 150));
-    return prisma.adminAuditLog.count({ where: { adminUserId: adminId } });
+  /**
+   * This admin's audit entry count once in-flight writes have landed: polls
+   * until it reaches `atLeast` and holds steady across two reads. recordAction
+   * is fire-and-forget, so a fixed sleep raced it on a loaded CI runner (5
+   * instead of 6 on the Deploy run of #585). Waiting for a steady count also
+   * still catches a duplicate entry that lands just after the first.
+   */
+  async function auditCount(atLeast = 0): Promise<number> {
+    let previous = -1;
+    for (let i = 0; i < 60; i++) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      const count = await prisma.adminAuditLog.count({ where: { adminUserId: adminId } });
+      if (count >= atLeast && count === previous) return count;
+      previous = count;
+    }
+    return previous;
   }
 
   async function createDraft(name: string, strategyKey = 'paragon', extra: Record<string, unknown> = {}): Promise<string> {
@@ -208,7 +221,7 @@ describe('Admin automaton profile endpoints (Spec #55 tasks 9.1–9.4)', () => {
       const res = await api('post', '/').send({ catalogueKey: 'Bad Key!', stableName: 'x' });
       expect(res.status).toBe(400);
       expect(res.body.code).toBe('VALIDATION_ERROR');
-      expect(await auditCount()).toBe(auditBefore + 1);
+      expect(await auditCount(auditBefore + 1)).toBe(auditBefore + 1);
       const [entry] = (await auditEntries(auditBefore + 1)).slice(auditBefore);
       expect(entry).toMatchObject({ operationResult: 'failure', resultSummary: expect.objectContaining({ catalogueKey: 'invalid', code: 'VALIDATION_ERROR' }) });
     });
@@ -456,7 +469,7 @@ describe('Admin automaton profile endpoints (Spec #55 tasks 9.1–9.4)', () => {
           expect.objectContaining({ catalogueKey: good, outcome: 'activated', stableName: stable('all-b') }),
           expect.objectContaining({ catalogueKey: alsoGood, outcome: 'activated' }),
         ]);
-        expect(await auditCount()).toBe(auditBefore + 1);
+        expect(await auditCount(auditBefore + 1)).toBe(auditBefore + 1);
         const [entry] = (await auditEntries(auditBefore + 1)).slice(auditBefore);
         expect(entry).toMatchObject({
           operationType: 'automaton.activate_all',
