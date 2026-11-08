@@ -128,7 +128,7 @@ describe('SeasonArchivePage — Automaton_Badge (R12.2, R12.4)', () => {
     vi.mocked(seasonApi.getSeasonDetail).mockResolvedValue(detail);
   });
 
-  it('shows the sm badge after the Automaton stable name and keeps "bot"/"system" for generated subjects', async () => {
+  it('badges the Automaton stable in standings (sm) and records (tile), and marks generated subjects "bot"', async () => {
     render(
       <MemoryRouter>
         <SeasonArchivePage />
@@ -137,45 +137,35 @@ describe('SeasonArchivePage — Automaton_Badge (R12.2, R12.4)', () => {
     await userEvent.click(await screen.findByRole('button', { name: /Season 2/ }));
     await waitFor(() => expect(screen.getByText('Final Standings')).toBeInTheDocument());
 
-    const badges = screen.getAllByTestId('automaton-badge');
-    expect(badges).toHaveLength(2);
-    for (const badge of badges) {
-      expect(badge).toHaveClass('text-[10px]', 'uppercase');
-      expect(badge).toHaveAttribute('data-compact', 'true');
-    }
-
-    // Standings: badge in the stable cell (not the robot cell), on the name's line.
+    // Standings: the dense sm badge in the stable cell (not the robot cell), on the name's line.
     const automatonRow = screen.getAllByText('RoboCop').map((el) => el.closest('tr')).find((tr) => tr !== null) as HTMLElement;
     const stableCell = within(automatonRow).getByText(/Old Detroit Precinct/).closest('td') as HTMLElement;
-    expect(stableCell).toContainElement(badges[0]);
+    const standingBadge = within(stableCell).getByTestId('automaton-badge');
+    expect(standingBadge).toHaveClass('text-[10px]', 'uppercase', 'shrink-0');
+    expect(standingBadge).toHaveAttribute('data-compact', 'true');
     // The name truncates on its own; the badge follows it in a non-wrapping row.
     const standingName = within(stableCell).getByText('Old Detroit Precinct');
     expect(standingName).toHaveClass('min-w-0', 'truncate');
-    expect(standingName).not.toContainElement(badges[0]);
-    expect(badges[0].parentElement).toHaveClass('flex-nowrap');
-    expect(badges[0].parentElement).not.toHaveClass('truncate');
-    expect(badges[0]).toHaveClass('shrink-0');
+    expect(standingName).not.toContainElement(standingBadge);
+    expect(standingBadge.parentElement).toHaveClass('flex-nowrap');
+    expect(standingBadge.parentElement).not.toHaveClass('truncate');
     expect(within(automatonRow).queryByText('bot')).toBeNull();
 
-    // Generated subjects keep their chips and get no badge.
+    // Generated subjects keep their chip and get no badge.
     const botRow = screen.getAllByText('WimpBot Lone Spark 4').map((el) => el.closest('tr')).find((tr) => tr !== null) as HTMLElement;
     expect(within(botRow).getByText('bot')).toBeInTheDocument();
     expect(within(botRow).queryByTestId('automaton-badge')).toBeNull();
-    expect(screen.getByText('system')).toBeInTheDocument();
 
-    // Records: the Automaton entry carries the badge, the system entry does not.
-    const eloCard = screen.getByText('Highest ELO').closest('.rounded-lg') as HTMLElement;
-    const recordBadge = within(eloCard).getByTestId('automaton-badge');
-    // The badge is not inside the truncating names element, so an ellipsis
-    // never clips it (R12.2).
-    const truncatingNames = within(eloCard).getByText('Old Detroit Precinct').closest('.truncate') as HTMLElement;
-    expect(truncatingNames).not.toBeNull();
-    expect(truncatingNames).toHaveClass('min-w-0');
-    expect(truncatingNames).not.toContainElement(recordBadge);
+    // Records: the Hall of Records tiles (decision 42) — the badge follows the
+    // Automaton stable's name on its line; the generated stable gets the bot chip.
+    const eloTile = screen.getByTestId('record-tile-highestElo');
+    const recordBadge = within(eloTile).getByTestId('automaton-badge');
+    const recordName = within(eloTile).getByText('Old Detroit Precinct');
+    expect(recordName).toHaveClass('min-w-0', 'truncate');
+    expect(recordName).not.toContainElement(recordBadge);
     expect(recordBadge.parentElement).toHaveClass('flex-nowrap');
-    expect(recordBadge.parentElement).toContainElement(truncatingNames);
-    expect(recordBadge).toHaveClass('shrink-0');
-    const killsCard = screen.getByText('Most Kills').closest('.rounded-lg') as HTMLElement;
-    expect(within(killsCard).queryByTestId('automaton-badge')).toBeNull();
+    const killsTile = screen.getByTestId('record-tile-mostKills');
+    expect(within(killsTile).queryByTestId('automaton-badge')).toBeNull();
+    expect(within(killsTile).getByTestId('record-bot-stable')).toHaveTextContent('Rusty Boltsbot');
   });
 });

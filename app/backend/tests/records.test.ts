@@ -43,6 +43,8 @@ describe('Records Routes', () => {
       // Spec #46 R4.1/R4.2: fastestVictory and longestBattle removed
       expect(combatRecords).not.toHaveProperty('fastestVictory');
       expect(combatRecords).not.toHaveProperty('longestBattle');
+      // Nov 2026: removed — most wins at exactly 1 HP, so every entry tied
+      expect(combatRecords).not.toHaveProperty('narrowestVictory');
       expect(combatRecords).toHaveProperty('mostDamageInBattle');
       
       // Verify arrays
@@ -84,10 +86,40 @@ describe('Records Routes', () => {
       const economicRecords = response.body.economic;
       expect(economicRecords).toHaveProperty('highestFame');
       expect(economicRecords).toHaveProperty('richestStables');
+      // Nov 2026: removed — it was always an empty list
+      expect(economicRecords).not.toHaveProperty('mostExpensiveBattle');
       
       // Verify arrays
       expect(Array.isArray(economicRecords.highestFame)).toBe(true);
       expect(Array.isArray(economicRecords.richestStables)).toBe(true);
+    });
+
+    it('never ranks a generated bot stable as richest', async () => {
+      const generated = await prisma.user.create({
+        data: {
+          username: `rich_bot_${Date.now().toString(36)}`, passwordHash: 'x',
+          stableType: 'generated', isGenerated: true, currency: 2_000_000_000,
+        },
+      });
+      try {
+        const records = await (await import('../src/services/records/recordsQueryService')).fetchEconomicRecords();
+        expect(records.richestStables.some((s) => s.userId === generated.id)).toBe(false);
+        expect(records.richestStables.every((s) => s.stableType !== 'generated')).toBe(true);
+      } finally {
+        await prisma.user.delete({ where: { id: generated.id } });
+      }
+    });
+
+    it('keeps only Most Decisive Victory among the team league records', async () => {
+      const response = await request(app).get('/api/records');
+
+      expect(response.status).toBe(200);
+      for (const size of ['2v2', '3v3']) {
+        // Nov 2026: Fastest Victory, Longest Survival and Longest Non-Draw rank
+        // capped or near-identical times; Most Damage Dealt duplicated the
+        // per-mode Most Damage in One Battle.
+        expect(Object.keys(response.body.teamBattle[size])).toEqual(['mostDecisiveVictory']);
+      }
     });
 
     it('should have prestige records section', async () => {
@@ -156,8 +188,7 @@ describe('Records Routes', () => {
       for (const entries of Object.values(combat.mostDamageInBattle)) {
         expect((entries as unknown[]).length).toBeLessThanOrEqual(10);
       }
-      expect(combat.narrowestVictory.length).toBeLessThanOrEqual(10);
-      
+
       expect(upsets.biggestUpset.length).toBeLessThanOrEqual(10);
       expect(upsets.biggestTeamUpset.length).toBeLessThanOrEqual(10);
       

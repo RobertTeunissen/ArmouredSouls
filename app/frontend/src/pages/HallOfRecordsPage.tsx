@@ -1,181 +1,191 @@
-import { useState, useEffect } from 'react';
-import { api } from '../utils/api';
+/**
+ * Hall of Records (`/hall-of-records`, PRD_HALL_OF_RECORDS v2.0).
+ *
+ * The live season's records as a board of tiles, one per record, grouped into
+ * Robots / Single battles / Streaks / KotH & Melee / Stables. A tile opens the
+ * record's top 10 (`?record=`), or its leaderboard page when one exists. Past
+ * seasons' records live in the Season Archive, so this page shows the live
+ * season only.
+ *
+ * URL state: `group` (board filter), `record` + `mode` (full list), `mine=1`
+ * (only records the viewer's stable appears in).
+ */
+import { useCallback, useMemo } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import { createLogger } from '../utils/logger';
+import { useSeasonStore, selectSeason } from '../stores/seasonStore';
 import {
-  CombatRecords,
-  UpsetRecords,
-  CareerRecords,
-  EconomicRecords,
-  PrestigeRecords,
-  KothRecords,
-  TeamBattleRecords,
-  TournamentChampionsRecords,
-  GrandMeleeRecords,
-  WinStreakRecords,
+  RecordBoard,
+  RecordDetail,
+  RecordGroupTabs,
+  YourPlacesStrip,
+  useHallOfRecords,
+  RECORD_GROUPS,
 } from '../components/hall-of-records';
+import type { RecordDefinition, RecordGroupKey } from '../components/hall-of-records';
+import { buildRecordCatalogue, findMyPlaces, summariseMyPlaces } from '../utils/hallOfRecords';
+import type { SeasonState } from '../utils/seasonApi';
 
-const log = createLogger('HallOfRecordsPage');
-import type { RecordsData, CategoryKey } from '../components/hall-of-records';
+function isGroup(value: string | null): value is RecordGroupKey {
+  return value !== null && (RECORD_GROUPS as readonly string[]).includes(value);
+}
+
+function seasonLine(season: SeasonState | null): string {
+  if (!season) return 'This season’s records';
+  const name = season.isLegacy ? 'Season 0' : `Season ${season.seasonNumber}`;
+  if (season.phase === 'competitive') {
+    return `${name} records · cycle ${season.seasonCycle} of ${season.seasonLengthCycles}`;
+  }
+  if (season.phase === 'preparation') return `${name} records · preparation`;
+  return `${name} records`;
+}
 
 function HallOfRecordsPage() {
   const { user } = useAuth();
-  const navigate = useNavigate();
-  const [records, setRecords] = useState<RecordsData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [activeCategory, setActiveCategory] = useState<CategoryKey>('combat');
+  const season = useSeasonStore(selectSeason);
+  const { records, loading, failed, reload } = useHallOfRecords();
+  const [params, setParams] = useSearchParams();
 
-  useEffect(() => {
-    fetchRecords();
-  }, []);
+  const viewerId = user?.id ?? null;
+  const groupParam = params.get('group');
+  const activeGroup = isGroup(groupParam) ? groupParam : null;
+  const recordKey = params.get('record');
+  const onlyMine = params.get('mine') === '1';
 
-  const fetchRecords = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+  const catalogue = useMemo(
+    () => (records ? buildRecordCatalogue(records).filter((record) => record.variants.length > 0) : []),
+    [records],
+  );
+  const places = useMemo(() => findMyPlaces(catalogue, viewerId), [catalogue, viewerId]);
+  const summary = useMemo(() => summariseMyPlaces(places), [places]);
 
-      const data = await api.get<RecordsData>('/api/records');
+  /** Board link for a record: its leaderboard page, or its full list here. */
+  const detailHref = useCallback((record: RecordDefinition, variantKey?: string): string => {
+    if (record.leaderboard) return record.leaderboard.href;
+    const next = new URLSearchParams();
+    if (activeGroup) next.set('group', activeGroup);
+    next.set('record', record.key);
+    if (variantKey) next.set('mode', variantKey);
+    return `/hall-of-records?${next.toString()}`;
+  }, [activeGroup]);
 
-      setRecords(data);
-    } catch (err) {
-      setError('Failed to load Hall of Records');
-      log.error('Records fetch error', { err });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const backHref = activeGroup ? `/hall-of-records?group=${activeGroup}` : '/hall-of-records';
 
-  const formatDuration = (seconds: number) => {
-    if (seconds < 60) {
-      return `${seconds.toFixed(1)}s`;
-    }
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = Math.floor(seconds % 60);
-    return `${minutes}m ${remainingSeconds}s`;
-  };
+  const setFilter = useCallback((changes: { group?: RecordGroupKey | null; mine?: boolean }) => {
+    setParams((current) => {
+      const next = new URLSearchParams(current);
+      next.delete('record');
+      next.delete('mode');
+      if (changes.group !== undefined) {
+        if (changes.group) next.set('group', changes.group);
+        else next.delete('group');
+      }
+      if (changes.mine !== undefined) {
+        if (changes.mine) next.set('mine', '1');
+        else next.delete('mine');
+      }
+      return next;
+    });
+  }, [setParams]);
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  };
+  if (!user) return null;
 
-  const handleBattleClick = (battleId: number) => {
-    navigate(`/battle/${battleId}`);
-  };
-
-  const categories = [
-    { key: 'combat' as CategoryKey, label: 'Combat', icon: '⚔️' },
-    { key: 'upsets' as CategoryKey, label: 'Upsets', icon: '🎯' },
-    { key: 'career' as CategoryKey, label: 'Career', icon: '🏅' },
-    { key: 'winStreaks' as CategoryKey, label: 'Win Streaks', icon: '🔥' },
-    { key: 'economic' as CategoryKey, label: 'Economic', icon: '💰' },
-    { key: 'prestige' as CategoryKey, label: 'Prestige', icon: '👑' },
-    { key: 'koth' as CategoryKey, label: 'King of the Hill', icon: '⛰️' },
-    { key: 'grandMelee' as CategoryKey, label: 'Grand Melee', icon: '💀' },
-    { key: 'teamBattle' as CategoryKey, label: 'Team Battles', icon: '🤝' },
-    { key: 'tournaments' as CategoryKey, label: 'Tournaments', icon: '🏆' },
-  ];
-
-  if (!user) {
-    return null;
-  }
+  const detailRecord = recordKey ? catalogue.find((record) => record.key === recordKey && !record.leaderboard) : undefined;
+  const myRecordKeys = new Set(places.map((place) => place.recordKey));
+  const boardRecords = catalogue.filter((record) =>
+    (!activeGroup || record.group === activeGroup) && (!onlyMine || myRecordKeys.has(record.key)),
+  );
+  const availableGroups = RECORD_GROUPS.filter((group) => catalogue.some((record) => record.group === group));
+  const stableName = user.stableName || user.username;
 
   return (
-    <div className="min-h-screen bg-background text-white pb-24 md:pb-8">
-      <div className="container mx-auto px-4 py-8 max-w-[1800px]">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-warning mb-2">
-            🏆 Hall of Records
-          </h1>
-          <p className="text-secondary text-lg">
-            Legendary achievements and exceptional performances from across the arena
-          </p>
-        </div>
-
-        {/* Category Tabs */}
-        <div className="flex overflow-x-auto mb-8 space-x-2 pb-2">
-          {categories.map((category) => (
-            <button
-              key={category.key}
-              onClick={() => setActiveCategory(category.key)}
-              className={`px-6 py-3 rounded-lg font-medium whitespace-nowrap transition-colors min-h-[44px] ${
-                activeCategory === category.key
-                  ? 'bg-yellow-500 text-gray-900'
-                  : 'bg-surface text-secondary hover:bg-surface-elevated'
-              }`}
-            >
-              <span className="mr-2">{category.icon}</span>
-              {category.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Loading State */}
-        {loading && (
-          <div className="flex justify-center items-center py-20">
-            <div className="text-secondary text-lg">Loading records...</div>
+    <div className="min-h-screen bg-background pb-24 text-white lg:pb-8">
+      <div className="container mx-auto max-w-[1400px] px-4 py-8" data-testid="hall-of-records">
+        <header className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-white">Hall of Records</h1>
+            <p className="mt-1 text-sm text-secondary">
+              {seasonLine(season)} · updated after every cycle
+            </p>
           </div>
+          <Link to="/seasons" className="inline-flex min-h-[44px] items-center text-sm text-primary hover:underline">
+            Past seasons: Season Archive ›
+          </Link>
+        </header>
+
+        {loading && !records && (
+          <p className="py-20 text-center text-secondary" role="status">Loading records…</p>
         )}
 
-        {/* Error State */}
-        {error && (
-          <div className="bg-red-900/20 border border-red-500 rounded-lg p-6 text-center">
-            <p className="text-error">{error}</p>
+        {failed && !records && (
+          <div className="rounded-lg border border-error bg-error/10 p-6 text-center" role="alert">
+            <p className="text-error">Failed to load the Hall of Records.</p>
             <button
-              onClick={fetchRecords}
-              className="mt-4 px-6 py-2 bg-red-600 hover:bg-red-700 rounded-lg min-h-[44px]"
+              type="button"
+              onClick={reload}
+              className="mt-4 min-h-[44px] rounded-lg bg-surface-elevated px-6 text-white hover:bg-surface"
             >
               Retry
             </button>
           </div>
         )}
 
-        {/* Records Content */}
-        {!loading && !error && records && (
-          <div className="space-y-8">
-            {activeCategory === 'combat' && (
-              <CombatRecords records={records} formatDuration={formatDuration} formatDate={formatDate} onBattleClick={handleBattleClick} />
-            )}
-            {activeCategory === 'upsets' && (
-              <UpsetRecords records={records} formatDate={formatDate} onBattleClick={handleBattleClick} />
-            )}
-            {activeCategory === 'career' && (
-              <CareerRecords records={records} />
-            )}
-            {activeCategory === 'winStreaks' && (
-              <WinStreakRecords records={records} />
-            )}
-            {activeCategory === 'economic' && (
-              <EconomicRecords records={records} />
-            )}
-            {activeCategory === 'prestige' && (
-              <PrestigeRecords records={records} />
-            )}
-            {activeCategory === 'koth' && (
-              <KothRecords records={records} formatDuration={formatDuration} />
-            )}
-            {activeCategory === 'grandMelee' && (
-              <GrandMeleeRecords records={records} />
-            )}
-            {activeCategory === 'teamBattle' && (
-              <TeamBattleRecords records={records} formatDuration={formatDuration} formatDate={formatDate} onBattleClick={handleBattleClick} />
-            )}
-            {activeCategory === 'tournaments' && (
-              <TournamentChampionsRecords records={records} formatDate={formatDate} />
+        {records && catalogue.length === 0 && (
+          <div className="rounded-lg border border-white/10 bg-surface p-8 text-center" data-testid="records-empty">
+            <p className="text-white">No records yet this season.</p>
+            <p className="mt-2 text-sm text-secondary">
+              Records appear once the season’s first battles are fought. Last season’s records are in the{' '}
+              <Link to="/seasons" className="text-primary hover:underline">Season Archive</Link>.
+            </p>
+          </div>
+        )}
+
+        {records && catalogue.length > 0 && detailRecord && (
+          <RecordDetail
+            record={detailRecord}
+            siblings={catalogue.filter((record) => record.group === detailRecord.group)}
+            variantKey={params.get('mode')}
+            viewerId={viewerId}
+            backHref={backHref}
+            detailHref={detailHref}
+          />
+        )}
+
+        {records && catalogue.length > 0 && !detailRecord && (
+          <div className="space-y-6">
+            <YourPlacesStrip
+              stableName={stableName}
+              summary={summary}
+              onlyMine={onlyMine}
+              onToggleOnlyMine={() => setFilter({ mine: !onlyMine })}
+            />
+            <RecordGroupTabs
+              active={activeGroup}
+              available={availableGroups}
+              onSelect={(group) => setFilter({ group })}
+            />
+            {boardRecords.length > 0 ? (
+              <RecordBoard
+                records={boardRecords}
+                groups={RECORD_GROUPS}
+                viewerId={viewerId}
+                places={places}
+                detailHref={detailHref}
+                collapseOnMobile={!activeGroup && !onlyMine}
+              />
+            ) : (
+              <p className="py-10 text-center text-secondary" data-testid="records-none-mine">
+                {activeGroup ? 'Your stable has no top-10 place in this group yet.' : 'Your stable has no top-10 place yet.'}
+              </p>
             )}
           </div>
         )}
 
-        {/* Empty State */}
-        {!loading && !error && records && (
-          <div className="mt-8 text-center text-tertiary">
-            <p className="text-sm">
-              Records are updated in real-time. Keep battling to claim your spot in history!
-            </p>
-          </div>
+        {records && catalogue.length > 0 && (
+          <p className="mt-10 text-xs text-secondary">
+            Robot and stable names open their profiles. Records reset when a season ends; each season’s
+            records stay in the Season Archive.
+          </p>
         )}
       </div>
     </div>

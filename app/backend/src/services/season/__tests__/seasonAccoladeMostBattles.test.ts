@@ -34,7 +34,7 @@ jest.mock('../../../config/env', () => ({
 }));
 
 jest.mock('../../records/recordsQueryService', () => ({
-  fetchCombatRecords: jest.fn().mockResolvedValue({ mostDamageInBattle: {}, narrowestVictory: [] }),
+  fetchCombatRecords: jest.fn().mockResolvedValue({ mostDamageInBattle: {} }),
   fetchUpsetRecords: jest.fn().mockResolvedValue({ biggestUpset: [] }),
   fetchCareerRecords: (...args: unknown[]) => mockFetchCareerRecords(...args),
   fetchEconomicRecords: jest.fn().mockResolvedValue({ highestFame: [], richestStables: [] }),

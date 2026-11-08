@@ -133,7 +133,7 @@ describe('LeaderboardsLossesPage', () => {
     render(<LeaderboardsLossesPage />);
 
     await waitFor(() =>
-      expect(screen.getByText('Failed to load total losses leaderboard')).toBeInTheDocument(),
+      expect(screen.getByText('Failed to load the destructions leaderboard')).toBeInTheDocument(),
     );
   });
 });

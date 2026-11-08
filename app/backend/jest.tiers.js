@@ -172,6 +172,8 @@ const DB_DEPENDENT = [
   'tests/integration/refinementLabGrantMigration.test.ts',
   // Season 2 — one-off KotH zone radius backfill migration (#522)
   'tests/integration/kothZoneRadiusBackfillMigration.test.ts',
+  // Hall of Records redesign — one-off KotH win streak rebuild migration
+  'tests/integration/kothWinStreakRebuildMigration.test.ts',
   // #542 — Facility ROI recorded returns via DB aggregates: equivalence + bounded statements
   'tests/services/economy/facilityRoiRecordedAggregates.integration.test.ts',
   // Admin dashboard redesign — battle activity SQL, tier filter, activity windows, KPI snapshots

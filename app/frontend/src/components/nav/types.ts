@@ -96,7 +96,7 @@ export const allPages: Record<string, NavCategory> = {
       { path: '/profile', label: 'My Profile' },
       { path: '/leaderboards/fame', label: 'Fame Leaderboard' },
       { path: '/leaderboards/prestige', label: 'Prestige Leaderboard' },
-      { path: '/leaderboards/losses', label: 'Total Losses Leaderboard' },
+      { path: '/leaderboards/losses', label: 'Destructions Leaderboard' },
       { path: '/hall-of-records', label: 'Hall of Records' },
       { path: '/seasons', label: '📜 Season Archive' },
       { path: '/changelog', label: '📰 What\'s New' },

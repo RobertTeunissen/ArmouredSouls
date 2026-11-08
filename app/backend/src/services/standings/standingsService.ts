@@ -268,7 +268,13 @@ async function awardKothPoints(params: AwardKothPointsParams): Promise<Standing>
     updateData.bestWinStreak = Math.max(current.bestWinStreak, newWinStreak);
     updateData.currentLoseStreak = 0;
   }
-  // Non-1st placements (and forfeits) don't affect streaks
+  // Any other finish (and a forfeit) ends the win streak, as in Grand Melee. It
+  // does not count as a loss: placement modes have no losses. Before Nov 2026
+  // the streak was never reset, so every KotH best streak equalled total wins;
+  // migration 20261108120000_rebuild_koth_win_streaks rebuilt the stored values.
+  else {
+    updateData.currentWinStreak = 0;
+  }
 
   const updated = await prisma.standing.update({
     where: {

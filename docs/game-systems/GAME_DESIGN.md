@@ -221,7 +221,7 @@ The backend tracks 9 granular steps internally; the UI consolidates these into 5
 - League standings by tier
 - Prestige leaderboard (stable-level)
 - Fame leaderboard (robot-level)
-- Losses leaderboard
+- Destructions leaderboard (`/leaderboards/losses`, opponents destroyed)
 - Hall of Records (various career stats, KotH streaks)
 - Tag Team standings
 

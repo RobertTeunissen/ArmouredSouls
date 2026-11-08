@@ -408,9 +408,11 @@ describe('awardKothPoints', () => {
           expect(data.totalMatches).toBe(totalMatches + 1);
           expect(data.totalZoneScore).toBe(10);
           expect(data.totalZoneTime).toBe(5);
-          // A forfeit never counts as a win or a best finish, even in placement 1.
+          // A forfeit never counts as a win or a best finish, even in placement 1,
+          // and it ends a running win streak (as Grand Melee does).
           expect(data.wins).toBeUndefined();
-          expect(data.currentWinStreak).toBeUndefined();
+          expect(data.currentWinStreak).toBe(0);
+          expect(data.bestWinStreak).toBeUndefined();
           expect(data.bestPlacement).toBeUndefined();
         },
       ),

@@ -396,14 +396,15 @@ interface AccoladeRow {
  * Mirrors what a player can brag about while the season is live, read from the
  * same `recordsQueryService` the Hall of Records uses so the two never diverge:
  *
- *   - Combat: most damage per mode, narrowest 1v1 victory, biggest 1v1 upset
+ *   - Combat: most damage per mode, biggest 1v1 upset
  *   - Career (robot, all modes): most battles, highest win rate, most lifetime
  *     damage, highest ELO, most kills
- *   - Economic: richest stables, highest-fame robot
+ *   - Economic: richest stables (generated bot stables not ranked), highest-fame robot
  *   - Prestige (stable): highest prestige, most championship titles
  *   - KotH: most wins, avg zone score, most kills, longest win streak, most
  *     zone time, zone dominator
- *   - Grand Melee: most wins, highest LP, most kills
+ *   - Grand Melee: most wins, most kills (highest LP removed Nov 2026: it is the
+ *     top of the Grand Melee standings, captured as a standing snapshot)
  *   - Tournament champions per type, ranked by titles won that season
  *   - League win streaks per mode (1v1 robot; 2v2 / 3v3 / tag team by team)
  *
@@ -526,7 +527,7 @@ export async function writeAccolades(seasonNumber: number): Promise<number> {
 
   const records = await import('../records/recordsQueryService');
 
-  // ── Combat: most damage per mode, narrowest 1v1 victory, biggest 1v1 upset ──
+  // ── Combat: most damage per mode (Narrowest Victory was removed, Nov 2026) ──
   await capture('combat', async () => {
     const combat = await records.fetchCombatRecords();
     for (const [mode, entries] of Object.entries(combat.mostDamageInBattle ?? {})) {
@@ -539,18 +540,6 @@ export async function writeAccolades(seasonNumber: number): Promise<number> {
         list.map((e) => ({ subjectName: e.robot.name, value: e.damageDealt, owner: robotOwner(e.robot.id) })),
       );
     }
-    // Narrowest victory pools both 1v1 modes, so it carries no single mode tag.
-    pushRanked(
-      'narrowestVictory',
-      null,
-      'HP remaining',
-      'robot',
-      (combat.narrowestVictory ?? []).map((e) => ({
-        subjectName: e.winner.name,
-        value: e.remainingHP,
-        owner: robotOwner(e.winner.id),
-      })),
-    );
   });
 
   await capture('upsets', async () => {
@@ -634,8 +623,6 @@ export async function writeAccolades(seasonNumber: number): Promise<number> {
     type GRow = { robotId: number; robotName: string };
     pushRanked('grandMeleeMostWins', 'grand_melee', 'wins', 'robot',
       list<GRow & { grandMeleeWins: number }>('mostWins').map((e) => ({ subjectName: e.robotName, value: e.grandMeleeWins, owner: robotOwner(e.robotId) })));
-    pushRanked('grandMeleeHighestLp', 'grand_melee', 'LP', 'robot',
-      list<GRow & { leaguePoints: number }>('highestLp').map((e) => ({ subjectName: e.robotName, value: e.leaguePoints, owner: robotOwner(e.robotId) })));
     // Grand Melee kills — per-mode kills from robot_mode_kills.
     pushRanked('grandMeleeMostKills', 'grand_melee', 'kills', 'robot',
       list<GRow & { totalKills: number }>('mostKillsCareer').map((e) => ({ subjectName: e.robotName, value: e.totalKills, owner: robotOwner(e.robotId) })));
