@@ -60,14 +60,17 @@ Owner-only (`app/frontend/src/pages/RobotWorkshopPage.tsx`, `components/robot-wo
 
 ### Top of the page
 
-- **Robot switcher** — previous/next arrows and a dropdown over the stable's robots, keeping the current section. Leaving with unsaved Build changes asks for confirmation.
+- **Robot switcher** — previous/next arrows and a dropdown over the stable's robots, keeping the current section. Leaving with unsaved Build changes asks for confirmation. It sits in a bar pinned under the navigation, so the robot being edited stays visible while scrolling; a one-robot stable shows just the name there.
 - **Header** — image (editable), name, tier chip, ELO and gear summary, condition bar (HP and shield).
 - **Repair** — "Repair all damaged · ₡X" with this robot's price on the second line. Uses the existing `POST /api/robots/repair-all` (manual repair, half the automatic price). There is deliberately no single-robot repair: it would be a new credit writer. Shows "All robots fully repaired" when nothing is damaged.
 - **Eligibility checklist** with recommendations (`RobotEligibilityChecklist`).
 
 ### Build section
 
-One table replaces the Upgrades, Tuning and Stats tabs. Rows are grouped by academy category, each with its cap and academy level; a category whose attributes are all at cap folds to one line ("All 6 at cap 10 · tuned +2 each").
+One table replaces the Upgrades, Tuning and Stats tabs. Rows are grouped by academy category, each with its cap and academy level.
+
+- Every category has **Hide** / **Show**. Hidden, it is one line: "All 6 at cap 10 · tuned +2 each" (plus a link to raise the cap) or "4 of 6 at cap 45 · tuned +5 each · ₡135,000 planned". A category whose attributes are all at cap starts hidden; the others start open. The state resets when switching robots.
+- Categories with room below cap have **Max group**: it re-plans that category's attributes round-robin toward cap with the credits the rest of the plan leaves, and leaves other categories' plans alone.
 
 | Column | Meaning |
 |--------|---------|

@@ -32,6 +32,7 @@ export interface BuildTableProps {
   stance: string;
   onSetLevel: (key: RobotAttributeKey, level: number) => void;
   onMaxAttribute: (key: RobotAttributeKey) => void;
+  onMaxCategory: (keys: readonly RobotAttributeKey[]) => void;
   onTuningChange: (key: RobotAttributeKey, value: number) => void;
 }
 
@@ -62,46 +63,75 @@ export function BuildTable(props: BuildTableProps) {
   );
 }
 
+/**
+ * One academy category. Every category can be hidden to a one-line summary;
+ * a category with all attributes at cap starts hidden. "Max group" plans the
+ * category's attributes toward cap with the credits the rest of the plan leaves.
+ */
 function CategoryBlock({ category, ...props }: BuildTableProps & { category: AttributeCategory }) {
-  const { values, academyLevels, plan, tuning } = props;
+  const { values, academyLevels, plan, tuning, onMaxCategory } = props;
   const cap = categoryCap(category, academyLevels);
   const academyLevel = academyLevels[category.academy] ?? 0;
-  const allAtCap = category.attributes.every(({ key }) => plannedLevelOf(plan, values, key) >= cap && levelOf(values, key) >= cap);
+  const keys = category.attributes.map(({ key }) => key);
+  const atCapCount = keys.filter((key) => levelOf(values, key) >= cap).length;
+  const allAtCap = atCapCount === keys.length;
+  const canMax = keys.some((key) => plannedLevelOf(plan, values, key) < cap);
+  const plannedCost = keys.reduce((sum, key) => sum + (plan[key]?.cost ?? 0), 0);
   const [open, setOpen] = useState(!allAtCap);
-  const tuned = category.attributes.map(({ key }) => tuning[key] ?? 0);
+  const tuned = keys.map((key) => tuning[key] ?? 0);
   const sameTuning = tuned.every((t) => t === tuned[0]);
   const headingId = `cat-${category.id}`;
 
-  if (allAtCap && !open) {
+  const controls = (
+    <span className="ml-auto flex items-center gap-1">
+      {!allAtCap && (
+        <button
+          type="button"
+          onClick={() => onMaxCategory(keys)}
+          disabled={!canMax}
+          className="min-h-[44px] rounded px-2 text-xs font-semibold text-primary hover:underline disabled:opacity-30 lg:min-h-0"
+          aria-label={`Upgrade all ${category.label} as far as credits allow`}
+        >
+          Max group
+        </button>
+      )}
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="min-h-[44px] px-2 text-xs text-primary hover:underline lg:min-h-0"
+        aria-expanded={open}
+        aria-label={`${open ? 'Hide' : 'Show'} ${category.label}`}
+      >
+        {open ? 'Hide' : 'Show'}
+      </button>
+    </span>
+  );
+
+  if (!open) {
     return (
-      <section aria-labelledby={headingId} className="flex flex-wrap items-center justify-between gap-2 rounded-md bg-surface-elevated px-3 py-2.5">
+      <section aria-labelledby={headingId} className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md bg-surface-elevated px-3 py-1.5">
         <h4 id={headingId} className="text-sm font-semibold">
           <span aria-hidden="true">{category.icon} </span>{category.label}
         </h4>
-        <span className="flex-1 text-xs text-secondary sm:pl-3">
-          All {category.attributes.length} at cap {cap}
+        <span className="text-xs text-secondary">
+          {allAtCap ? `All ${keys.length}` : `${atCapCount} of ${keys.length}`} at cap {cap}
           {sameTuning ? (tuned[0] > 0 ? ` · tuned +${formatValue(tuned[0])} each` : ' · not tuned') : ' · tuned'}
-          {' · '}<Link to="/facilities" className="text-primary hover:underline">raise the cap</Link>
+          {plannedCost > 0 && <> · <span className="font-semibold text-white">₡{plannedCost.toLocaleString()} planned</span></>}
+          {allAtCap && <>{' · '}<Link to="/facilities" className="text-primary hover:underline">raise the cap</Link></>}
         </span>
-        <button type="button" onClick={() => setOpen(true)} className="min-h-[44px] px-2 text-xs text-primary hover:underline lg:min-h-0" aria-expanded={false}>
-          Show
-        </button>
+        {controls}
       </section>
     );
   }
 
   return (
     <section aria-labelledby={headingId}>
-      <div className="mb-1.5 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+      <div className="mb-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
         <h4 id={headingId} className="text-sm font-semibold">
           <span aria-hidden="true">{category.icon} </span>{category.label}
         </h4>
         <span className="text-xs text-secondary">cap {cap} · {category.academyLabel} {academyLevel}</span>
-        {allAtCap && (
-          <button type="button" onClick={() => setOpen(false)} className="ml-auto min-h-[44px] px-2 text-xs text-primary hover:underline lg:min-h-0" aria-expanded={true}>
-            Hide
-          </button>
-        )}
+        {controls}
       </div>
       <ul className="space-y-1.5">
         {category.attributes.map((attr) => (

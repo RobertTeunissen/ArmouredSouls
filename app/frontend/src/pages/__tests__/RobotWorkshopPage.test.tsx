@@ -134,6 +134,36 @@ describe('RobotWorkshopPage', () => {
     expect(screen.getByRole('region', { name: 'Plan summary' })).toHaveTextContent('₡757,500');
   });
 
+  it('maxes one category without touching the others', async () => {
+    renderAt();
+    await screen.findByText(/80 \/ 80 used/);
+    fireEvent.click(within(screen.getByTestId('build-row-logicCores')).getByRole('button', { name: 'Increase Logic Cores level' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Upgrade all Combat Systems as far as credits allow' }));
+
+    // Weapon Control and Attack Speed 44 → 45 at ₡67,500 each; the Logic Cores level stays planned.
+    expect(screen.getByTestId('build-row-weaponControl')).toHaveTextContent('₡67,500');
+    expect(screen.getByTestId('build-row-attackSpeed')).toHaveTextContent('₡67,500');
+    expect(screen.getByRole('region', { name: 'Plan summary' })).toHaveTextContent('₡151,500');
+    expect(screen.getByRole('button', { name: 'Upgrade all Combat Systems as far as credits allow' })).toBeDisabled();
+    // A category already at cap has nothing to max.
+    expect(screen.queryByRole('button', { name: 'Upgrade all Defensive Systems as far as credits allow' })).toBeNull();
+  });
+
+  it('hides and shows any category, keeping planned upgrades in the summary', async () => {
+    renderAt();
+    await screen.findByText(/80 \/ 80 used/);
+    fireEvent.click(screen.getByRole('button', { name: 'Upgrade all Combat Systems as far as credits allow' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Hide Combat Systems' }));
+
+    expect(screen.queryByTestId('build-row-combatPower')).toBeNull();
+    const combat = screen.getByRole('heading', { name: /Combat Systems/ }).closest('section') as HTMLElement;
+    expect(combat).toHaveTextContent('4 of 6 at cap 45 · tuned +5 each · ₡135,000 planned');
+
+    fireEvent.click(within(combat).getByRole('button', { name: 'Show Combat Systems' }));
+    expect(screen.getByTestId('build-row-combatPower')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Hide Combat Systems' })).toHaveAttribute('aria-expanded', 'true');
+  });
+
   it('saves upgrades, then tuning, then moves to the next robot', async () => {
     renderAt();
     await screen.findByText(/80 \/ 80 used/);
@@ -153,6 +183,21 @@ describe('RobotWorkshopPage', () => {
     expect(screen.getByTestId('battle-config')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'In battle' })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'loadout' })).toHaveAttribute('aria-selected', 'true');
+  });
+
+  it('pins the robot being edited in a sticky bar', () => {
+    renderAt();
+    const bar = screen.getByTestId('workshop-robot-bar');
+    expect(bar).toHaveClass('sticky');
+    expect(within(bar).getByRole('combobox')).toHaveValue('14451');
+    expect(within(bar).getByRole('option', { name: 'GekkeAap', selected: true })).toBeInTheDocument();
+  });
+
+  it('shows the robot name in the pinned bar when there is nothing to switch to', () => {
+    store.robots = [{ id: 14451, name: 'GekkeAap', currentHP: 0, maxHP: 250, ...ATTRS }];
+    renderAt();
+    expect(screen.getByTestId('workshop-robot-bar')).toHaveTextContent('GekkeAap');
+    expect(screen.queryByRole('navigation', { name: 'Switch robot' })).toBeNull();
   });
 
   it('switches robots with the arrows', () => {
