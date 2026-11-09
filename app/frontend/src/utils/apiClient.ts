@@ -14,11 +14,14 @@ const log = createLogger('apiClient');
  *
  * 1. **Request — JWT injection.** Reads the `token` from `localStorage` and
  *    attaches it as `Authorization: Bearer <token>`.
- * 2. **Response — auth failure handling.** On 401/403 from a non-auth
+ * 2. **Response — auth failure handling.** On a 401 from a non-auth
  *    route, distinguishes "backend says your token is bad" (clear token
  *    and redirect to login) from "a proxy/WAF blocked this request" (keep
  *    the session intact). Auth route 401s are passed through so login
- *    forms can render their own error.
+ *    forms can render their own error. A 403 never ends the session: the
+ *    backend answers a bad or expired token with 401 only, and uses 403 for
+ *    "you may not do this" (not your robot, prestige gate, tier lock, admin
+ *    only), which the calling screen reports itself.
  *
  * Test files are allowed to mock this module via `vi.mock('../apiClient')`
  * so they can intercept the actual axios calls the wrapper makes. Outside
@@ -28,7 +31,7 @@ declare module 'axios' {
   interface AxiosRequestConfig {
     /**
      * Set through `ApiRequestConfig.skipAuthRedirect` for fire-and-forget
-     * telemetry: the response interceptor leaves the session alone on 401/403.
+     * telemetry: the response interceptor leaves the session alone on a 401.
      * Client-side only; never sent to the server.
      */
     skipAuthRedirect?: boolean;
@@ -73,11 +76,14 @@ apiClient.interceptors.response.use(
     }
 
     // Only clear token and redirect on definitive auth failures from our
-    // own backend. Proxy/WAF/DDoS layers (Cloudflare, Caddy, etc.) may
-    // also return 403, but those responses won't contain our JSON error
-    // format. We distinguish "backend says your token is bad" from
-    // "a proxy blocked this request" by checking the response body shape.
-    if ((status === 401 || status === 403) && !isAuthRoute) {
+    // own backend. The backend rejects a missing, invalid, expired or revoked
+    // token with 401 (middleware/auth.ts); its 403s are permission answers
+    // (ownership, prestige gates, tier locks, admin-only) and must not log the
+    // player out. Proxy/WAF/DDoS layers (Cloudflare, Caddy, etc.) may also
+    // return 401, but those responses won't contain our JSON error format, so
+    // the response body shape tells "backend says your token is bad" apart
+    // from "a proxy blocked this request".
+    if (status === 401 && !isAuthRoute) {
       const data = error.response?.data;
       const isBackendAuthError =
         data && typeof data === 'object' && typeof data.error === 'string';
@@ -88,7 +94,7 @@ apiClient.interceptors.response.use(
       } else {
         // Proxy/WAF block — don't destroy the session. The token may
         // still be perfectly valid; the request was just rejected upstream.
-        log.warn('Non-backend 401/403 received (possible proxy/WAF block), keeping session', { status, url });
+        log.warn('Non-backend 401 received (possible proxy/WAF block), keeping session', { status, url });
       }
     }
     return Promise.reject(error);

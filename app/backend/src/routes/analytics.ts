@@ -9,14 +9,13 @@
 
 import express, { Request, Response } from 'express';
 import { z } from 'zod';
-import { AuthRequest, authenticateToken, requireAdmin } from '../middleware/auth';
+import { AuthRequest, authenticateToken } from '../middleware/auth';
 import { robotPerformanceService } from '../services/analytics/robotPerformanceService';
 import type { RobotMetric } from '../services/analytics/robotPerformanceService';
 import { getCurrentCycle } from '../services/analytics/cycleAnalyticsService';
-import { getStableSummary } from '../services/analytics/stableAnalyticsService';
 import { unifiedFacilityROIService } from '../services/economy/unifiedFacilityROIService';
 import { getKothPerformance } from '../services/analytics/kothAnalyticsService';
-import { calculateEloMovingAverage, calculateTrendLine } from '../services/analytics/trendHelpers';
+import { calculateTrendLine } from '../services/analytics/trendHelpers';
 import prisma from '../lib/prisma';
 import {
   AppError,
@@ -24,12 +23,10 @@ import {
   RobotErrorCode,
   AuthError,
   AuthErrorCode,
-  EconomyError,
-  EconomyErrorCode,
   KothError,
   KothErrorCode,
 } from '../errors';
-import { validateRequest } from '../middleware/schemaValidator';
+import { validateRequest, validated } from '../middleware/schemaValidator';
 import { positiveIntParam } from '../utils/securityValidation';
 import { parseCycleRange } from '../utils/cycleRangeParser';
 
@@ -39,10 +36,6 @@ const router = express.Router();
 
 const userIdParamsSchema = z.object({
   userId: positiveIntParam,
-});
-
-const robotIdParamsSchema = z.object({
-  robotId: positiveIntParam,
 });
 
 const robotIdByIdParamsSchema = z.object({
@@ -55,9 +48,12 @@ const robotMetricParamsSchema = z.object({
 });
 
 
-const cycleRangeQuerySchema = z.object({
-  startCycle: z.coerce.number().int().positive().optional(),
-  endCycle: z.coerce.number().int().positive().optional(),
+// The handler still reports a missing cycleRange itself (MISSING_PARAMETER) and
+// parses its "[start,end]" format; flags count only when exactly "true".
+const robotMetricQuerySchema = z.object({
+  cycleRange: z.string().max(40).optional(),
+  includeMovingAverage: z.string().max(10).optional(),
+  includeTrendLine: z.string().max(10).optional(),
 });
 
 // --- Shared validation helpers ---
@@ -76,15 +72,7 @@ async function requireUserExists(userId: number): Promise<void> {
   }
 }
 
-const VALID_PROGRESSION_METRICS = ['elo', 'fame', 'damageDealt', 'damageReceived', 'wins', 'losses', 'creditsEarned'];
 const VALID_METRIC_NAMES = ['elo', 'fame', 'damageDealt', 'damageReceived', 'wins', 'losses', 'draws', 'kills', 'creditsEarned'];
-const VALID_FACILITY_TYPES = [
-  'repair_bay', 'training_facility', 'weapons_workshop', 'refinement_lab', 'streaming_studio',
-  'roster_expansion', 'storage_facility',
-  'booking_office', 'combat_training_academy',
-  'defense_training_academy', 'mobility_training_academy', 'ai_training_academy',
-  'merchandising_hub', 'tuning_bay',
-];
 
 // --- Route handlers ---
 
@@ -94,124 +82,22 @@ router.get('/cycle/current', authenticateToken, validateRequest({}), async (_req
   return res.json(result);
 });
 
-/** GET /api/analytics/stable/:userId/summary */
-router.get('/stable/:userId/summary', authenticateToken, validateRequest({ params: userIdParamsSchema }), async (req: Request, res: Response) => {
-  const authReq = req as AuthRequest;
-  const userId = parseInt(String(req.params.userId));
-  if (isNaN(userId)) throw new AppError('INVALID_USER_ID', 'Invalid userId', 400);
-  if (authReq.user!.userId !== userId && authReq.user!.role !== 'admin') {
-    return res.status(403).json({ error: 'Access denied' });
-  }
-
-  const lastNCyclesParam = req.query.lastNCycles as string;
-  const lastNCycles = lastNCyclesParam ? parseInt(lastNCyclesParam) : 10;
-  if (lastNCyclesParam && (isNaN(lastNCycles) || lastNCycles < 1)) {
-    throw new AppError('INVALID_PARAMETER', 'Invalid lastNCycles parameter', 400);
-  }
-
-  const result = await getStableSummary(userId, lastNCycles);
-  return res.json(result);
-});
-
-/** GET /api/analytics/robot/:robotId/performance */
-router.get('/robot/:robotId/performance', authenticateToken, validateRequest({ params: robotIdParamsSchema }), async (req: Request, res: Response) => {
-  const robotId = parseInt(String(req.params.robotId));
-  if (isNaN(robotId)) throw new AppError('INVALID_ROBOT_ID', 'robotId must be a valid integer', 400);
-
-  const cycleRangeParam = req.query.cycleRange as string;
-  if (!cycleRangeParam) throw new AppError('MISSING_PARAMETER', 'The "cycleRange" query parameter is required (format: [startCycle,endCycle])', 400);
-  const [startCycle, endCycle] = parseCycleRange(cycleRangeParam);
-
-  await requireRobotExists(robotId);
-
-  const includeELOProgression = req.query.includeELOProgression === 'true';
-  const includeMetricProgression = req.query.includeMetricProgression === 'true' || includeELOProgression;
-  const progressionMetric = (req.query.progressionMetric as string || 'elo') as RobotMetric;
-
-  if (!VALID_PROGRESSION_METRICS.includes(progressionMetric)) {
-    throw new AppError('INVALID_METRIC', `progressionMetric must be one of: ${VALID_PROGRESSION_METRICS.join(', ')}`, 400);
-  }
-
-  const summary = await robotPerformanceService.getRobotPerformanceSummary(robotId, [startCycle, endCycle]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const response: Record<string, any> = { ...summary };
-
-  if (includeMetricProgression) {
-    const metricProgression = await robotPerformanceService.getRobotMetricProgression(robotId, progressionMetric, [startCycle, endCycle]);
-    if (progressionMetric === 'elo' && includeELOProgression) {
-      response.eloProgression = {
-        robotId: metricProgression.robotId,
-        cycleRange: metricProgression.cycleRange,
-        dataPoints: metricProgression.dataPoints.map(dp => ({ cycleNumber: dp.cycleNumber, elo: dp.value, change: dp.change })),
-        startElo: metricProgression.startValue,
-        endElo: metricProgression.endValue,
-        totalChange: metricProgression.totalChange,
-        averageChange: metricProgression.averageChange,
-      };
-    }
-    response.metricProgression = metricProgression;
-  }
-
-  return res.json(response);
-});
-
-/** GET /api/analytics/robot/:robotId/elo */
-router.get('/robot/:robotId/elo', authenticateToken, validateRequest({ params: robotIdParamsSchema }), async (req: Request, res: Response) => {
-  const robotId = parseInt(String(req.params.robotId));
-  if (isNaN(robotId)) throw new AppError('INVALID_ROBOT_ID', 'robotId must be a valid integer', 400);
-
-  const cycleRangeParam = req.query.cycleRange as string;
-  if (!cycleRangeParam) throw new AppError('MISSING_PARAMETER', 'The "cycleRange" query parameter is required (format: [startCycle,endCycle])', 400);
-  const [startCycle, endCycle] = parseCycleRange(cycleRangeParam);
-
-  await requireRobotExists(robotId);
-
-  const includeMovingAverage = req.query.includeMovingAverage === 'true';
-  const includeTrendLine = req.query.includeTrendLine === 'true';
-
-  const eloProgression = await robotPerformanceService.getELOProgression(robotId, [startCycle, endCycle]);
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const response: Record<string, any> = {
-    robotId: eloProgression.robotId,
-    cycleRange: eloProgression.cycleRange,
-    dataPoints: eloProgression.dataPoints,
-    startElo: eloProgression.startElo,
-    endElo: eloProgression.endElo,
-    totalChange: eloProgression.totalChange,
-    averageChange: eloProgression.averageChange,
-  };
-
-  if (includeMovingAverage && eloProgression.dataPoints.length > 0) {
-    response.movingAverage = calculateEloMovingAverage(eloProgression.dataPoints);
-  }
-
-  if (includeTrendLine && eloProgression.dataPoints.length > 1) {
-    response.trendLine = calculateTrendLine(
-      eloProgression.dataPoints.map(dp => ({ cycleNumber: dp.cycleNumber, value: dp.elo })),
-    );
-  }
-
-  return res.json(response);
-});
-
 /** GET /api/analytics/robot/:robotId/metric/:metricName */
-router.get('/robot/:robotId/metric/:metricName', authenticateToken, validateRequest({ params: robotMetricParamsSchema }), async (req: Request, res: Response) => {
-  const robotId = parseInt(String(req.params.robotId));
-  const metricName = String(req.params.metricName) as RobotMetric;
-  if (isNaN(robotId)) throw new AppError('INVALID_ROBOT_ID', 'robotId must be a valid integer', 400);
+router.get('/robot/:robotId/metric/:metricName', authenticateToken, ...validated({ params: robotMetricParamsSchema, query: robotMetricQuerySchema }, async (_req: Request, res: Response, { params, query }) => {
+  const robotId = params.robotId;
+  const metricName = params.metricName as RobotMetric;
   if (!VALID_METRIC_NAMES.includes(metricName)) {
     throw new AppError('INVALID_METRIC', `Metric must be one of: ${VALID_METRIC_NAMES.join(', ')}`, 400);
   }
 
-  const cycleRangeParam = req.query.cycleRange as string;
+  const cycleRangeParam = query.cycleRange;
   if (!cycleRangeParam) throw new AppError('MISSING_PARAMETER', 'The "cycleRange" query parameter is required (format: [startCycle,endCycle])', 400);
   const [startCycle, endCycle] = parseCycleRange(cycleRangeParam);
 
   await requireRobotExists(robotId);
 
-  const includeMovingAverage = req.query.includeMovingAverage === 'true';
-  const includeTrendLine = req.query.includeTrendLine === 'true';
+  const includeMovingAverage = query.includeMovingAverage === 'true';
+  const includeTrendLine = query.includeTrendLine === 'true';
 
   const metricProgression = await robotPerformanceService.getRobotMetricProgression(robotId, metricName, [startCycle, endCycle]);
 
@@ -236,7 +122,7 @@ router.get('/robot/:robotId/metric/:metricName', authenticateToken, validateRequ
   }
 
   return res.json(response);
-});
+}));
 
 // Spec #51: three endpoints were removed here — GET /api/analytics/leaderboard,
 // GET /api/analytics/robot/:robotId/stats and POST /api/analytics/stats/refresh.
@@ -252,36 +138,10 @@ router.get('/robot/:robotId/metric/:metricName', authenticateToken, validateRequ
 // ELO and win counts would be a second source of truth for ranking, and
 // .kiro/steering/coding-standards.md makes `standings` the only one.
 
-/** GET /api/analytics/facility/:userId/roi */
-router.get('/facility/:userId/roi', authenticateToken, validateRequest({ params: userIdParamsSchema }), async (req: Request, res: Response) => {
-  const authReq = req as AuthRequest;
-  const userId = parseInt(String(req.params.userId));
-  if (isNaN(userId)) throw new AppError('INVALID_USER_ID', 'userId must be a valid integer', 400);
-  if (authReq.user!.userId !== userId && authReq.user!.role !== 'admin') {
-    return res.status(403).json({ error: 'Access denied' });
-  }
-
-  const facilityType = req.query.facilityType as string;
-  if (!facilityType) throw new AppError('MISSING_PARAMETER', 'The "facilityType" query parameter is required', 400);
-  if (!VALID_FACILITY_TYPES.includes(facilityType)) {
-    throw new EconomyError(EconomyErrorCode.INVALID_FACILITY_TYPE, `facilityType must be one of: ${VALID_FACILITY_TYPES.join(', ')}`, 400);
-  }
-
-  await requireUserExists(userId);
-
-  const roi = await unifiedFacilityROIService.calculateFacilityROI(userId, facilityType);
-  if (!roi) {
-    throw new EconomyError(EconomyErrorCode.FACILITY_NOT_FOUND, 'Facility not owned or not an economic facility', 404);
-  }
-
-  return res.json(roi);
-});
-
 /** GET /api/analytics/facility/:userId/roi/all-economic */
-router.get('/facility/:userId/roi/all-economic', authenticateToken, validateRequest({ params: userIdParamsSchema }), async (req: Request, res: Response) => {
+router.get('/facility/:userId/roi/all-economic', authenticateToken, ...validated({ params: userIdParamsSchema }, async (req: Request, res: Response, { params }) => {
   const authReq = req as AuthRequest;
-  const userId = parseInt(String(req.params.userId));
-  if (isNaN(userId)) throw new AppError('INVALID_USER_ID', 'userId must be a valid integer', 400);
+  const userId = params.userId;
   if (authReq.user!.userId !== userId && authReq.user!.role !== 'admin') {
     return res.status(403).json({ error: 'Access denied' });
   }
@@ -290,28 +150,13 @@ router.get('/facility/:userId/roi/all-economic', authenticateToken, validateRequ
 
   const result = await unifiedFacilityROIService.calculateAllEconomicROIs(userId);
   return res.json(result);
-});
-
-/** GET /api/analytics/facility/:userId/roi/all */
-router.get('/facility/:userId/roi/all', authenticateToken, validateRequest({ params: userIdParamsSchema }), async (req: Request, res: Response) => {
-  const authReq = req as AuthRequest;
-  const userId = parseInt(String(req.params.userId));
-  if (isNaN(userId)) throw new AppError('INVALID_USER_ID', 'userId must be a valid integer', 400);
-  if (authReq.user!.userId !== userId && authReq.user!.role !== 'admin') {
-    return res.status(403).json({ error: 'Access denied' });
-  }
-  await requireUserExists(userId);
-
-  const result = await unifiedFacilityROIService.calculateAllEconomicROIs(userId);
-  return res.json(result);
-});
+}));
 
 /** GET /api/analytics/facility/:userId/recommendations */
-router.get('/facility/:userId/recommendations', authenticateToken, validateRequest({ params: userIdParamsSchema }), async (req: Request, res: Response) => {
+router.get('/facility/:userId/recommendations', authenticateToken, ...validated({ params: userIdParamsSchema }, async (req: Request, res: Response, { params }) => {
   const { facilityRecommendationService } = await import('../services/economy/facilityRecommendationService');
   const authReq = req as AuthRequest;
-  const userId = parseInt(String(req.params.userId));
-  if (isNaN(userId)) throw new AppError('INVALID_USER_ID', 'userId must be a valid number', 400);
+  const userId = params.userId;
   if (authReq.user!.userId !== userId && authReq.user!.role !== 'admin') {
     return res.status(403).json({ error: 'Access denied' });
   }
@@ -320,63 +165,14 @@ router.get('/facility/:userId/recommendations', authenticateToken, validateReque
 
   const recommendations = await facilityRecommendationService.generateRecommendations(userId);
   return res.json(recommendations);
-});
+}));
 
 /** GET /api/analytics/robot/:id/koth-performance */
-router.get('/robot/:id/koth-performance', authenticateToken, validateRequest({ params: robotIdByIdParamsSchema }), async (req: AuthRequest, res: Response) => {
-  const robotId = parseInt(String(req.params.id));
+router.get('/robot/:id/koth-performance', authenticateToken, ...validated({ params: robotIdByIdParamsSchema }, async (req: AuthRequest, res: Response, { params }) => {
+  const robotId = params.id;
   const result = await getKothPerformance(robotId);
   if (!result) throw new KothError(KothErrorCode.KOTH_NOT_FOUND, 'No KotH data for this robot', 404);
   return res.json(result);
-});
-
-/** GET /api/analytics/performance */
-router.get('/performance', authenticateToken, validateRequest({ query: cycleRangeQuerySchema }), async (req: Request, res: Response) => {
-  const authReq = req as AuthRequest;
-  if (authReq.user!.role !== 'admin') {
-    return res.status(403).json({ error: 'Admin access required' });
-  }
-
-  const startCycle = parseInt(req.query.startCycle as string) || 1;
-  const endCycle = parseInt(req.query.endCycle as string) || 10;
-
-  const { CyclePerformanceMonitoringService } = await import('../services/cycle/cyclePerformanceMonitoringService');
-  const perfService = new CyclePerformanceMonitoringService();
-
-  const metrics = [];
-  for (let cycle = startCycle; cycle <= endCycle; cycle++) {
-    const cycleMetrics = await perfService.getCyclePerformanceMetrics(cycle, cycle);
-    if (cycleMetrics) metrics.push(cycleMetrics);
-  }
-
-  return res.json(metrics);
-});
-
-/** GET /api/analytics/integrity */
-router.get('/integrity', authenticateToken, validateRequest({ query: cycleRangeQuerySchema }), async (req: Request, res: Response) => {
-  const authReq = req as AuthRequest;
-  if (authReq.user!.role !== 'admin') {
-    return res.status(403).json({ error: 'Admin access required' });
-  }
-
-  const startCycle = parseInt(req.query.startCycle as string) || 1;
-  const endCycle = parseInt(req.query.endCycle as string) || 10;
-
-  const { DataIntegrityService } = await import('../services/common/dataIntegrityService');
-  const integrityService = new DataIntegrityService();
-
-  const reports = await integrityService.validateCycleRange(startCycle, endCycle);
-  return res.json(reports);
-});
-
-/** GET /api/analytics/logs/summary (admin only, like /performance and /integrity) */
-router.get('/logs/summary', authenticateToken, requireAdmin, validateRequest({ query: cycleRangeQuerySchema }), async (req: Request, res: Response) => {
-  const startCycle = parseInt(req.query.startCycle as string) || 1;
-  const endCycle = parseInt(req.query.endCycle as string) || 10;
-
-  const { queryService } = await import('../services/common/queryService');
-  const stats = await queryService.getEventStatistics([startCycle, endCycle]);
-  return res.json(stats);
-});
+}));
 
 export default router;

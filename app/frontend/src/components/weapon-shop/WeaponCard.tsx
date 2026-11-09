@@ -117,7 +117,8 @@ export function WeaponCard({
       </div>
 
       {/* Weapon Image */}
-      <div className="mb-4 flex justify-center cursor-pointer" onClick={() => onSelectWeapon(weapon)}>
+      {/* The image repeats the title button for pointer users; keyboard users reach the details through the title. */}
+      <div role="presentation" className="mb-4 flex justify-center cursor-pointer" onClick={() => onSelectWeapon(weapon)}>
         <img
           src={getWeaponImagePath(weapon.name)}
           alt={weapon.name}
@@ -130,11 +131,14 @@ export function WeaponCard({
       </div>
 
       <div className="flex justify-between items-start mb-4">
-        <h3
-          className="text-xl font-semibold cursor-pointer hover:text-primary transition-colors"
-          onClick={() => onSelectWeapon(weapon)}
-        >
-          {weapon.name}
+        <h3 className="text-xl font-semibold">
+          <button
+            type="button"
+            className="text-left cursor-pointer hover:text-primary transition-colors"
+            onClick={() => onSelectWeapon(weapon)}
+          >
+            {weapon.name}
+          </button>
         </h3>
         <span className={`text-sm font-semibold uppercase ${getTypeColor(weapon.weaponType)}`}>
           {weapon.weaponType}

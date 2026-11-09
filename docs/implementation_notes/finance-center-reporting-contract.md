@@ -39,15 +39,15 @@ All deployed finance routes authenticate, but their responses are unversioned an
 
 | Endpoint | Current source/behavior | Cutover disposition |
 |---|---|---|
-| `GET /api/finances/daily` | Legacy daily report. Uses rolling battle activity/current calculations and legacy presentation shapes. | Replace as a Finance Center client dependency. |
+| `GET /api/finances/daily` | Legacy daily report. Uses rolling battle activity/current calculations and legacy presentation shapes. | **Removed Nov 2026** (no client called it). |
 | `GET /api/finances/summary` | Current `User.currency`, prestige, and current-state passive/operating calculations. | Not a historical statement source. |
-| `GET /api/finances/operating-costs` | Recalculates costs from current facilities. | Current context only; historical lines use stored settlement facts. |
-| `GET /api/finances/revenue-streams` | Current passive calculation and prestige multiplier context. | Current context only. |
-| `GET /api/finances/projections` | Current-state weekly/monthly extrapolations and recommendations. | Not part of the read-only evidence contract. |
-| `GET /api/finances/per-robot` | Rolling seven-day battles, current repair quotes, synthetic merchandising share, evenly allocated facility cost, profitability ranking; performs a battle query per robot. | Retire as a Finance Center dependency after replacement coverage. |
-| `POST /api/finances/roi-calculator` | Facility ROI calculator. | Outside the Finance Center read contract; removal, if any, is a separate decision. |
-| `GET /api/finances/ledger` | Groups all ledger rows by type/cycle. Optional bounds can be supplied independently; sale proceeds are grouped as ordinary income; pair completeness, ordering, boundaries, repair subtype, season scope, and reconciliation are not checked. | Replace for player reporting with version 1 read models. |
-| `GET /api/analytics/stable/:userId/summary?lastNCycles=N` | Builds completed-cycle income, expense, purchases, balance, and net from `CycleSnapshot.stableMetrics`. | Retire/repurpose only after History replacement. A snapshot is a closing check, not a Finance Statement line source. |
+| `GET /api/finances/operating-costs` | Recalculates costs from current facilities. | **Removed Nov 2026** (no client called it). |
+| `GET /api/finances/revenue-streams` | Current passive calculation and prestige multiplier context. | **Removed Nov 2026** (no client called it). |
+| `GET /api/finances/projections` | Current-state weekly/monthly extrapolations and recommendations. | **Removed Nov 2026** (no client called it). |
+| `GET /api/finances/per-robot` | Rolling seven-day battles, current repair quotes, synthetic merchandising share, evenly allocated facility cost, profitability ranking; performs a battle query per robot. | **Removed Nov 2026** (no client called it). |
+| `POST /api/finances/roi-calculator` | Facility ROI calculator. | **Removed Nov 2026** (no client called it). |
+| `GET /api/finances/ledger` | Groups all ledger rows by type/cycle. Optional bounds can be supplied independently; sale proceeds are grouped as ordinary income; pair completeness, ordering, boundaries, repair subtype, season scope, and reconciliation are not checked. | **Removed Nov 2026** (no client called it). |
+| `GET /api/analytics/stable/:userId/summary?lastNCycles=N` | Builds completed-cycle income, expense, purchases, balance, and net from `CycleSnapshot.stableMetrics`. | **Removed Nov 2026** (no client called it). |
 
 ### 2.3 Pre-cutover writer and serialization inventory
 
@@ -290,7 +290,7 @@ The following named file dispositions satisfy Task 1.5’s documentation require
 |---|---|---|
 | `app/backend/tests/finances.test.ts` | Integration | Adapt for authenticated version-1 endpoints, period/range/version/provenance/itemisation/early-state/security; retire only legacy endpoint assertions. |
 | `app/backend/tests/financesRouteValidation.test.ts` | Unit | Adapt/partly retire duplicated ROI schema checks; add shared period/page schema tests. |
-| `app/backend/tests/financialReportStreamingRevenue.test.ts` | Integration | Replace rolling `BattleParticipant` report aggregation with complete paired robot-attributed record coverage, then retire legacy assertions. |
+| `app/backend/tests/financialReportStreamingRevenue.test.ts` | Integration | **Removed Nov 2026** with `financialReportService` (it only fed the removed legacy finance endpoints). Robot-attributed streaming is covered by the Finance Center robot reports and `streamingBattleCount.test.ts`. |
 | `app/backend/tests/services/streamingRevenueParity.test.ts` | Unit/property/static | Retain formula/property coverage; adapt only legacy presentation-path checks. |
 | `app/backend/tests/cycleSummaryStreamingRevenue.property.test.ts` | Integration/property | Retain unchanged; it covers battle execution summary streaming, not the Finance Center page. |
 | `app/backend/tests/coverageManifest.test.ts` and `tests/factories/coverageManifest.ts` | Static/unit | Adapt stale Income/Cycle Summary surface expectations after replacement coverage. |

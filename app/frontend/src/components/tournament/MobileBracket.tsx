@@ -55,6 +55,8 @@ const MobileBracket: React.FC<MobileBracketProps> = ({
               ? 'bg-primary text-white'
               : 'bg-surface text-secondary hover:text-gray-200'
           }`}
+          type="button"
+          aria-pressed={viewMode === 'myPath'}
           onClick={() => setViewMode('myPath')}
         >
           My Path
@@ -65,6 +67,8 @@ const MobileBracket: React.FC<MobileBracketProps> = ({
               ? 'bg-primary text-white'
               : 'bg-surface text-secondary hover:text-gray-200'
           }`}
+          type="button"
+          aria-pressed={viewMode === 'roundList'}
           onClick={() => setViewMode('roundList')}
         >
           Round List
@@ -246,6 +250,7 @@ const RoundListView: React.FC<RoundListViewProps> = ({
       <div className="flex items-center justify-between bg-surface rounded-lg border border-white/10 px-3 py-2">
         <button
           className="text-secondary hover:text-white disabled:opacity-30 disabled:cursor-not-allowed p-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
+          type="button"
           disabled={selectedRound <= 1}
           onClick={() => setSelectedRound((r) => Math.max(1, r - 1))}
           aria-label="Previous round"
@@ -266,7 +271,9 @@ const RoundListView: React.FC<RoundListViewProps> = ({
         </button>
 
         <button
+          type="button"
           className="flex items-center gap-2 text-sm font-medium min-h-[44px]"
+          aria-expanded={!isCollapsed}
           onClick={() => toggleCollapse(selectedRound)}
         >
           <span
@@ -300,6 +307,7 @@ const RoundListView: React.FC<RoundListViewProps> = ({
 
         <button
           className="text-secondary hover:text-white disabled:opacity-30 disabled:cursor-not-allowed p-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
+          type="button"
           disabled={selectedRound >= maxRounds}
           onClick={() =>
             setSelectedRound((r) => Math.min(maxRounds, r + 1))
@@ -356,8 +364,10 @@ const RoundListView: React.FC<RoundListViewProps> = ({
                   ? 'bg-primary-dark/40'
                   : 'bg-gray-600'
             }`}
+            type="button"
             onClick={() => setSelectedRound(round)}
             aria-label={`Go to ${getRoundLabel(round, maxRounds)}`}
+            aria-current={round === selectedRound ? 'step' : undefined}
           />
         ))}
       </div>

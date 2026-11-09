@@ -103,25 +103,20 @@ This document summarizes the implementation of the Cycle-Based Audit Logging and
 ## API Endpoints
 
 ### Analytics Endpoints
+
+Current (Nov 2026; the stable summary, robot performance, single-facility ROI, cycle performance, integrity and event-statistics endpoints listed here originally were removed as unused):
 - `GET /api/analytics/cycle/current` - Get current cycle number
-- `GET /api/analytics/stable/:userId/summary` - Stable income summary
-- `GET /api/analytics/comparison` - Historical cycle comparison
-- `GET /api/analytics/trends` - Time-series trend data
-- `GET /api/analytics/robot/:robotId/performance` - Robot performance summary
 - `GET /api/analytics/robot/:robotId/metric/:metricName` - Metric progression
-- `GET /api/analytics/facility/:userId/roi` - Facility ROI data
+- `GET /api/analytics/robot/:id/koth-performance` - KotH performance
+- `GET /api/analytics/facility/:userId/roi/all-economic` - ROI of every economic facility
 - `GET /api/analytics/facility/:userId/recommendations` - Investment recommendations
-- `GET /api/analytics/performance` - Cycle performance metrics
-- `GET /api/analytics/integrity` - Data integrity reports
-- `GET /api/analytics/events/stats` - Event log statistics
 
 ## Services Architecture
 
 ### Core Services
 1. **EventLogger**: Event capture and validation
 2. **CycleSnapshotService**: Cycle aggregation
-3. **QueryService**: Event retrieval with filtering
-4. **DataIntegrityService**: Integrity validation
+3. Event retrieval and integrity validation (`QueryService`, `DataIntegrityService`) were removed in Nov 2026: nothing called them once their endpoints were gone.
 
 ### Analytics Services
 1. **ComparisonService**: Historical comparisons

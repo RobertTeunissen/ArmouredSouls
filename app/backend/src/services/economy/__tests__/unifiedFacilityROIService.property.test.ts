@@ -120,13 +120,12 @@ describe('UnifiedFacilityROIService - Property-Based Tests', () => {
               .slice(0, effectiveLevel)
               .reduce((sum, cost) => sum + cost, 0);
 
-            // Setup mocks
-            (mockedPrisma.facility.findUnique as jest.Mock).mockResolvedValue({
-              userId: 1,
-              facilityType,
-              level: effectiveLevel,
-              maxLevel: config.maxLevel,
-            });
+            // Setup mocks: the owned facility, and roster_expansion L0 for the
+            // capacity-dependent discounts.
+            (mockedPrisma.facility.findMany as jest.Mock).mockResolvedValue([
+              { userId: 1, facilityType, level: effectiveLevel, maxLevel: config.maxLevel },
+            ]);
+            (mockedPrisma.facility.findUnique as jest.Mock).mockResolvedValue({ level: 0 });
 
             (mockedPrisma.cycleMetadata.findUnique as jest.Mock).mockResolvedValue({
               id: 1,
@@ -146,10 +145,10 @@ describe('UnifiedFacilityROIService - Property-Based Tests', () => {
               weaponPurchases: 500,
             });
 
-            const result = await service.calculateFacilityROI(1, facilityType);
+            const { facilities } = await service.calculateAllEconomicROIs(1);
 
-            expect(result).not.toBeNull();
-            expect(result!.totalInvestment).toBe(expectedInvestment);
+            expect(facilities).toHaveLength(1);
+            expect(facilities[0].totalInvestment).toBe(expectedInvestment);
           }
         ),
         { numRuns: 50 }
@@ -186,13 +185,19 @@ describe('UnifiedFacilityROIService - Property-Based Tests', () => {
   });
 
   describe('Property: Non-economic facility types are always rejected', () => {
-    it('for random non-economic facility types, the service returns null', async () => {
+    it('for random non-economic facility types, the service reports no ROI for them', async () => {
+      (mockedPrisma.cycleMetadata.findUnique as jest.Mock).mockResolvedValue({ id: 1, totalCycles: 10 });
       await fc.assert(
         fc.asyncProperty(
           fc.constantFrom(...NON_ECONOMIC_FACILITY_TYPES),
-          async (facilityType) => {
-            const result = await service.calculateFacilityROI(1, facilityType);
-            expect(result).toBeNull();
+          fc.integer({ min: 1, max: 10 }),
+          async (facilityType, level) => {
+            // Even if a non-economic row reaches the service, it is dropped.
+            (mockedPrisma.facility.findMany as jest.Mock).mockResolvedValue([
+              { userId: 1, facilityType, level, maxLevel: 10 },
+            ]);
+            const { facilities } = await service.calculateAllEconomicROIs(1);
+            expect(facilities).toEqual([]);
           }
         ),
         { numRuns: 30 }

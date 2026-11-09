@@ -27,6 +27,7 @@ import {
   type NotificationTeam,
 } from '../dashboardNotifications';
 import { getOwnerBattleReadiness } from '../robot-battle-readiness';
+import type { TierChange } from '@shared/types';
 
 // ─── Fixtures ────────────────────────────────────────────────────────────────
 
@@ -444,7 +445,9 @@ describe('buildRobotReadinessNotifications', () => {
 // ─── Events ──────────────────────────────────────────────────────────────────
 
 describe('buildTierChangeNotifications', () => {
-  const base = { id: 1, entityType: 'robot', entityId: 1, entityName: 'Bot' };
+  const base = {
+    id: 1, entityType: 'robot', entityId: 1, entityName: 'Bot', leaguePoints: 0, createdAt: '2026-11-09T00:00:00.000Z',
+  } satisfies Partial<TierChange>;
 
   it('should celebrate a promotion with the mode label', () => {
     const [result] = buildTierChangeNotifications([
@@ -470,7 +473,7 @@ describe('buildTierChangeNotifications', () => {
 
   it('should omit the mode clause when no mode is given', () => {
     const [result] = buildTierChangeNotifications([
-      { ...base, changeType: 'promotion', sourceTier: 'bronze', destinationTier: 'silver' },
+      { ...base, changeType: 'promotion', sourceTier: 'bronze', destinationTier: 'silver', mode: '' },
     ]);
     expect(result.message).toBe('Bot was promoted from bronze to silver!');
   });

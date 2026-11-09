@@ -8,6 +8,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
+import type { TierChange } from '@shared/types';
 
 const mockGetTutorialState = vi.fn();
 vi.mock('../../utils/onboardingApi', () => ({
@@ -319,14 +320,17 @@ describe('useDashboardData', () => {
   });
 
   it('should expose unseen tier changes', async () => {
-    const change = {
+    const change: TierChange = {
       id: 5,
       entityType: 'robot',
       entityId: 1,
       entityName: 'Bot',
-      changeType: 'promotion' as const,
+      changeType: 'promotion',
       sourceTier: 'bronze',
       destinationTier: 'silver',
+      leaguePoints: 0,
+      mode: 'league_1v1',
+      createdAt: '2026-11-09T00:00:00.000Z',
     };
     mockApiGet.mockImplementation((url: string) =>
       url === '/api/leagues/tier-changes/unseen'

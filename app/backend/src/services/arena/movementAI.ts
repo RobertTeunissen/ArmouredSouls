@@ -590,13 +590,14 @@ export function applyMovement(
     return candidate;
   }
 
-  // Robot at the centre, or already outside (no in-arena start): plain clamp (Req 1.7).
-  // A robot clamped onto the wall can sit a rounding error outside it; it counts as on the wall.
+  // Robot at the centre, already outside (no in-arena start), or not moving: plain clamp (Req 1.7).
+  // A robot clamped onto the wall can sit a rounding error outside it; it counts as on the wall,
+  // and with no step there is no boundary intersection to solve (it would divide by zero → NaN).
   const relX = pos.x - arena.center.x;
   const relY = pos.y - arena.center.y;
   const relSq = relX * relX + relY * relY;
   const radiusSq = arena.radius * arena.radius;
-  if (relSq === 0 || relSq > radiusSq * (1 + WALL_EPSILON)) {
+  if (relSq === 0 || dist === 0 || relSq > radiusSq * (1 + WALL_EPSILON)) {
     return clampToArena(candidate, arena);
   }
 

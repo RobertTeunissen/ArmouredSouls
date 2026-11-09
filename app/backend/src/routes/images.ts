@@ -9,7 +9,7 @@
 import { Router, Response } from 'express';
 import { z } from 'zod';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
-import { validateRequest } from '../middleware/schemaValidator';
+import { validateRequest, validated } from '../middleware/schemaValidator';
 import { loadEnvConfig } from '../config/env';
 import {
   listImages,
@@ -53,25 +53,23 @@ router.get(
 router.get(
   '/:filename/impact',
   authenticateToken,
-  validateRequest({ params: filenameParamSchema }),
-  async (req: AuthRequest, res: Response) => {
+  ...validated({ params: filenameParamSchema }, async (req: AuthRequest, res: Response, { params }) => {
     const userId = req.user!.userId;
-    const path = `${uploadUrlPrefix()}/${userId}/${req.params.filename}`;
+    const path = `${uploadUrlPrefix()}/${userId}/${params.filename}`;
     return res.json(await getImpact(userId, path));
-  },
+  }),
 );
 
 /** Delete one of the caller's own images. Requires explicit confirmation. */
 router.delete(
   '/:filename',
   authenticateToken,
-  validateRequest({ params: filenameParamSchema, query: deleteQuerySchema }),
-  async (req: AuthRequest, res: Response) => {
+  ...validated({ params: filenameParamSchema, query: deleteQuerySchema }, async (req: AuthRequest, res: Response, { params, query }) => {
     const userId = req.user!.userId;
-    const path = `${uploadUrlPrefix()}/${userId}/${req.params.filename}`;
-    const impact = await deleteImage(userId, path, req.query.confirm === 'true');
+    const path = `${uploadUrlPrefix()}/${userId}/${params.filename}`;
+    const impact = await deleteImage(userId, path, query.confirm === 'true');
     return res.json(impact);
-  },
+  }),
 );
 
 export default router;

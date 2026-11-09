@@ -12,6 +12,7 @@ import { fetchMyRobots, fetchRobotById, commitUpgrades } from '../../../utils/ro
 import { calculateDiscountedUpgradeCost } from '../../../../../shared/utils/upgradeCosts';
 import { getRosterCapacity } from '../../../../../shared/utils/rosterCapacity';
 import { registerTeamBattle } from '../../../utils/teamBattleApi';
+import { onActivationKey } from '../../../utils/keyboardActivation';
 
 interface Robot { id: number; name: string; imageUrl: string | null; [key: string]: unknown }
 type Focus = 'combat' | 'defense' | 'mobility' | 'ai';
@@ -174,7 +175,7 @@ const Step8 = memo(({ onPrevious: _p }: { onNext?: () => void; onPrevious?: () =
                   {FOCUSES.map(f => {
                     const sel = selections[r.id]?.has(f.id);
                     return (
-                      <div key={f.id} onClick={() => toggle(r.id, f.id)}
+                      <div key={f.id} role="button" tabIndex={0} aria-pressed={!!sel} onClick={() => toggle(r.id, f.id)} onKeyDown={onActivationKey(() => toggle(r.id, f.id))}
                         className={`border rounded-lg p-2 cursor-pointer transition-all duration-150
                           ${sel ? 'border-blue-500 bg-blue-900/30 ring-2 ring-blue-500' : 'border-gray-600 bg-gradient-to-br from-gray-700 to-gray-750 hover:border-gray-500'}`}>
                         {sel && <div className="text-right -mb-1"><span className="bg-primary text-white px-1.5 py-0.5 rounded-full text-[10px] font-bold">✓</span></div>}

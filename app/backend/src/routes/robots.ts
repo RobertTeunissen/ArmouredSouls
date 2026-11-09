@@ -3,14 +3,12 @@ import { z } from 'zod';
 import multer from 'multer';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import prisma from '../lib/prisma';
-import { getModeKills } from '../services/battle/modeKillsQueries';
-import type { StandingsMode } from '../../generated/prisma';
 import { eventLogger } from '../services/common/eventLogger';
 import { trackSpending } from '../services/economy/spendingTracker';
 import logger from '../config/logger';
 import { RobotError, RobotErrorCode } from '../errors/robotErrors';
-import { validateRequest } from '../middleware/schemaValidator';
-import { positiveIntParam } from '../utils/securityValidation';
+import { validateRequest, validated } from '../middleware/schemaValidator';
+import { positiveIntParam, robotImagePath } from '../utils/securityValidation';
 import { getIdempotencyKey, idempotencyHeadersSchema } from '../utils/idempotency';
 import { findCompletedEconomicRequest } from '../services/financial/economicRequestReplayService';
 import { verifyRobotOwnership } from '../middleware/ownership';
@@ -20,16 +18,19 @@ import { handleMulterError } from '../middleware/handleMulterError';
 // Service imports
 import { sanitizeRobotForPublic, SENSITIVE_ROBOT_FIELDS } from '../services/robot/robotSanitizer';
 import {
-  findAllRobots,
   findUserRobots,
   findRobotById,
-  getMatchHistory,
-  getUpcomingScheduledMatches,
-  getUpcomingMatches,
   getPerformanceContext,
   invalidateUserRobotsCache,
 } from '../services/robot/robotQueryService';
 import { getRobotProfile } from '../services/robot/robot-profile-service';
+import {
+  requireRobotRef,
+  updateRobotAppearance,
+  getRobotPlacementStanding,
+  getEventLogCycleNumber,
+  getStableNameForLog,
+} from '../services/robot/robotLookupService';
 import { executeUpgradeTransaction } from '../services/robot/robotUpgradeService';
 import {
   equipMainWeapon,
@@ -51,6 +52,7 @@ import {
   handleImagePreview,
   handleImageConfirm,
 } from '../services/moderation';
+import { assertSelectable } from '../services/moderation/imageLibraryService';
 import { achievementService, type UnlockedAchievement } from '../services/achievement';
 import { getEntityHistory } from '../services/league/leagueHistoryService';
 import { computeSchedulingEligibility } from '../services/robot/robotSchedulingEligibilityService';
@@ -121,7 +123,7 @@ const yieldThresholdBodySchema = z.object({
 });
 
 const appearanceBodySchema = z.object({
-  imageUrl: z.string().min(1).max(200),
+  imageUrl: robotImagePath,
 });
 
 const upgradesBodySchema = z.object({
@@ -155,18 +157,6 @@ router.get(
   },
 );
 
-// Get all robots from all users
-router.get('/all/robots', authenticateToken, validateRequest({}), async (req: AuthRequest, res: Response) => {
-  const userId = req.user!.userId;
-  const robots = await findAllRobots();
-
-  const sanitizedRobots = robots.map(robot =>
-    robot.userId === userId ? robot : sanitizeRobotForPublic(robot)
-  );
-
-  res.json(sanitizedRobots);
-});
-
 // Get all robots for the authenticated user
 router.get('/', authenticateToken, validateRequest({}), async (req: AuthRequest, res: Response) => {
   const userId = req.user!.userId;
@@ -175,9 +165,9 @@ router.get('/', authenticateToken, validateRequest({}), async (req: AuthRequest,
 });
 
 // Create a new robot
-router.post('/', authenticateToken, validateRequest({ body: createRobotBodySchema, headers: idempotencyHeadersSchema }), async (req: AuthRequest, res: Response) => {
+router.post('/', authenticateToken, ...validated({ body: createRobotBodySchema, headers: idempotencyHeadersSchema }, async (req: AuthRequest, res: Response, { body }) => {
   const userId = req.user!.userId;
-  const { name } = req.body;
+  const { name } = body;
   const requestKey = getIdempotencyKey(req.headers);
   const requestFacts = { name: String(name).trim() };
   const replay = await findCompletedEconomicRequest<{ robot: unknown; currency: number; message: string }>(userId, 'robot_creation', requestKey, requestFacts);
@@ -197,19 +187,15 @@ router.post('/', authenticateToken, validateRequest({ body: createRobotBodySchem
 
   // Log robot creation event
   try {
-    const cycleMetadata = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
-    const currentCycle = (cycleMetadata?.totalCycles || 0) + 1;
+    const currentCycle = await getEventLogCycleNumber();
 
     await eventLogger.logRobotPurchase(
       currentCycle, userId, createdRobot.id, name,
       ROBOT_CREATION_COST, user.currency, result.user.currency
     );
 
-    const userForLog = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { stableName: true },
-    });
-    const stableInfo = userForLog?.stableName ? ` (${userForLog.stableName})` : '';
+    const stableName = await getStableNameForLog(userId);
+    const stableInfo = stableName ? ` (${stableName})` : '';
 
     logger.info(`[Robot] | User ${userId}${stableInfo} | Created: "${name}" | Cost: ₡${ROBOT_CREATION_COST.toLocaleString()} | Balance: ₡${user.currency.toLocaleString()} → ₡${result.user.currency.toLocaleString()}`);
 
@@ -235,16 +221,12 @@ router.post('/', authenticateToken, validateRequest({ body: createRobotBodySchem
 
   // Invalidate robot list cache after creation
   invalidateUserRobotsCache(userId);
-});
+}));
 
 // Get a specific robot by ID
-router.get('/:id', authenticateToken, validateRequest({ params: robotIdParamsSchema }), async (req: AuthRequest, res: Response) => {
+router.get('/:id', authenticateToken, ...validated({ params: robotIdParamsSchema }, async (req: AuthRequest, res: Response, { params }) => {
   const userId = req.user!.userId;
-  const robotId = parseInt(String(req.params.id));
-
-  if (isNaN(robotId)) {
-    throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Invalid robot ID', 400);
-  }
+  const robotId = params.id;
 
   const robot = await findRobotById(robotId);
 
@@ -253,24 +235,22 @@ router.get('/:id', authenticateToken, validateRequest({ params: robotIdParamsSch
   }
 
   res.json(robot.userId === userId ? robot : sanitizeRobotForPublic(robot));
-});
+}));
 
 // Public robot profile (#504): per-mode standings with rank, form, achievements, accolades.
-router.get('/:id/profile', authenticateToken, validateRequest({ params: robotIdParamsSchema }), async (req: AuthRequest, res: Response) => {
-  const profile = await getRobotProfile(Number(req.params.id));
+router.get('/:id/profile', authenticateToken, ...validated({ params: robotIdParamsSchema }, async (req: AuthRequest, res: Response, { params }) => {
+  const profile = await getRobotProfile(params.id);
   if (!profile) {
     throw new RobotError(RobotErrorCode.ROBOT_NOT_FOUND, 'Robot not found', 404);
   }
   res.json(profile);
-});
+}));
 
 // Equip main weapon
-router.put('/:id/equip-main-weapon', authenticateToken, validateRequest({ params: robotIdParamsSchema, body: equipWeaponBodySchema }), async (req: AuthRequest, res: Response) => {
+router.put('/:id/equip-main-weapon', authenticateToken, ...validated({ params: robotIdParamsSchema, body: equipWeaponBodySchema }, async (req: AuthRequest, res: Response, { params, body }) => {
   const userId = req.user!.userId;
-  const robotId = parseInt(String(req.params.id));
-  const { weaponInventoryId } = req.body;
-
-  const finalRobot = await equipMainWeapon(userId, robotId, Number(weaponInventoryId));
+  const robotId = params.id;
+  const finalRobot = await equipMainWeapon(userId, robotId, body.weaponInventoryId);
 
   let achievementUnlocks: UnlockedAchievement[] = [];
   try {
@@ -282,15 +262,13 @@ router.put('/:id/equip-main-weapon', authenticateToken, validateRequest({ params
 
   res.json({ robot: finalRobot, message: 'Main weapon equipped successfully', achievementUnlocks });
   invalidateUserRobotsCache(userId);
-});
+}));
 
 // Equip offhand weapon
-router.put('/:id/equip-offhand-weapon', authenticateToken, validateRequest({ params: robotIdParamsSchema, body: equipWeaponBodySchema }), async (req: AuthRequest, res: Response) => {
+router.put('/:id/equip-offhand-weapon', authenticateToken, ...validated({ params: robotIdParamsSchema, body: equipWeaponBodySchema }, async (req: AuthRequest, res: Response, { params, body }) => {
   const userId = req.user!.userId;
-  const robotId = parseInt(String(req.params.id));
-  const { weaponInventoryId } = req.body;
-
-  const finalRobot = await equipOffhandWeapon(userId, robotId, Number(weaponInventoryId));
+  const robotId = params.id;
+  const finalRobot = await equipOffhandWeapon(userId, robotId, body.weaponInventoryId);
 
   let achievementUnlocks: UnlockedAchievement[] = [];
   try {
@@ -302,45 +280,33 @@ router.put('/:id/equip-offhand-weapon', authenticateToken, validateRequest({ par
 
   res.json({ robot: finalRobot, message: 'Offhand weapon equipped successfully', achievementUnlocks });
   invalidateUserRobotsCache(userId);
-});
+}));
 
 // Unequip main weapon
-router.delete('/:id/unequip-main-weapon', authenticateToken, validateRequest({ params: robotIdParamsSchema }), async (req: AuthRequest, res: Response) => {
+router.delete('/:id/unequip-main-weapon', authenticateToken, ...validated({ params: robotIdParamsSchema }, async (req: AuthRequest, res: Response, { params }) => {
   const userId = req.user!.userId;
-  const robotId = parseInt(String(req.params.id));
-
-  if (isNaN(robotId)) {
-    throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Invalid robot ID', 400);
-  }
+  const robotId = params.id;
 
   const finalRobot = await unequipMainWeapon(userId, robotId);
   res.json({ robot: finalRobot, message: 'Main weapon unequipped successfully' });
   invalidateUserRobotsCache(userId);
-});
+}));
 
 // Unequip offhand weapon
-router.delete('/:id/unequip-offhand-weapon', authenticateToken, validateRequest({ params: robotIdParamsSchema }), async (req: AuthRequest, res: Response) => {
+router.delete('/:id/unequip-offhand-weapon', authenticateToken, ...validated({ params: robotIdParamsSchema }, async (req: AuthRequest, res: Response, { params }) => {
   const userId = req.user!.userId;
-  const robotId = parseInt(String(req.params.id));
-
-  if (isNaN(robotId)) {
-    throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Invalid robot ID', 400);
-  }
+  const robotId = params.id;
 
   const finalRobot = await unequipOffhandWeapon(userId, robotId);
   res.json({ robot: finalRobot, message: 'Offhand weapon unequipped successfully' });
   invalidateUserRobotsCache(userId);
-});
+}));
 
 // Change loadout type
-router.put('/:id/loadout-type', authenticateToken, validateRequest({ params: robotIdParamsSchema, body: loadoutTypeBodySchema }), async (req: AuthRequest, res: Response) => {
+router.put('/:id/loadout-type', authenticateToken, ...validated({ params: robotIdParamsSchema, body: loadoutTypeBodySchema }, async (req: AuthRequest, res: Response, { params, body }) => {
   const userId = req.user!.userId;
-  const robotId = parseInt(String(req.params.id));
-  const { loadoutType } = req.body;
-
-  if (isNaN(robotId)) {
-    throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Invalid robot ID', 400);
-  }
+  const robotId = params.id;
+  const { loadoutType } = body;
 
   const validLoadouts = ['single', 'weapon_shield', 'two_handed', 'dual_wield'];
   if (!loadoutType || !validLoadouts.includes(loadoutType)) {
@@ -354,12 +320,12 @@ router.put('/:id/loadout-type', authenticateToken, validateRequest({ params: rob
   const finalRobot = await changeLoadoutType(userId, robotId, loadoutType);
   res.json({ robot: finalRobot, message: `Loadout type changed to ${loadoutType}` });
   invalidateUserRobotsCache(userId);
-});
+}));
 
 // Update robot stance
-router.patch('/:id/stance', authenticateToken, validateRequest({ params: robotIdParamsSchema, body: stanceBodySchema }), async (req: AuthRequest, res: Response) => {
-  const robotId = parseInt(String(req.params.id));
-  const { stance } = req.body;
+router.patch('/:id/stance', authenticateToken, ...validated({ params: robotIdParamsSchema, body: stanceBodySchema }, async (req: AuthRequest, res: Response, { params, body }) => {
+  const robotId = params.id;
+  const { stance } = body;
 
   // Spec #55 task 2.5: normalisation, ownership and the update live in robotSettingsService.
   const { robot: stanceRobot, stance: normalizedStance } = await updateStance(req.user!.userId, robotId, stance);
@@ -373,62 +339,18 @@ router.patch('/:id/stance', authenticateToken, validateRequest({ params: robotId
   } catch { /* achievement failures don't block */ }
 
   res.json({ ...stanceRobot, message: `Stance updated to ${normalizedStance}`, achievementUnlocks });
-});
+}));
 
 // Update robot yield threshold
-router.patch('/:id/yield-threshold', authenticateToken, validateRequest({ params: robotIdParamsSchema, body: yieldThresholdBodySchema }), async (req: AuthRequest, res: Response) => {
-  const robotId = parseInt(String(req.params.id));
-  const { yieldThreshold } = req.body;
+router.patch('/:id/yield-threshold', authenticateToken, ...validated({ params: robotIdParamsSchema, body: yieldThresholdBodySchema }, async (req: AuthRequest, res: Response, { params, body }) => {
+  const robotId = params.id;
+  const { yieldThreshold } = body;
 
   // Spec #55 task 2.5: range checks, ownership and the update live in robotSettingsService.
   const { robot: thresholdRobot, yieldThreshold: threshold } = await updateYieldThreshold(req.user!.userId, robotId, yieldThreshold);
 
   res.json({ ...thresholdRobot, message: `Yield threshold updated to ${threshold}%` });
-});
-
-// Get paginated match history
-router.get('/:id/matches', authenticateToken, validateRequest({ params: robotIdParamsSchema }), async (req: AuthRequest, res: Response) => {
-  const robotId = parseInt(String(req.params.id));
-  const page = Math.max(1, parseInt(req.query.page as string) || 1);
-  const perPage = Math.min(100, Math.max(1, parseInt(req.query.perPage as string) || 20));
-
-  if (isNaN(robotId)) {
-    throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Invalid robot ID', 400);
-  }
-
-  const robot = await prisma.robot.findUnique({
-    where: { id: robotId },
-    select: { id: true, name: true, userId: true },
-  });
-
-  if (!robot) {
-    throw new RobotError(RobotErrorCode.ROBOT_NOT_FOUND, 'Robot not found', 404);
-  }
-
-  const result = await getMatchHistory(robotId, robot.name, page, perPage);
-  res.json(result);
-});
-
-// Get upcoming scheduled matches (simple)
-router.get('/:id/upcoming', authenticateToken, validateRequest({ params: robotIdParamsSchema }), async (req: AuthRequest, res: Response) => {
-  const robotId = parseInt(String(req.params.id));
-
-  if (isNaN(robotId)) {
-    throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Invalid robot ID', 400);
-  }
-
-  const robot = await prisma.robot.findUnique({
-    where: { id: robotId },
-    select: { id: true, name: true, userId: true },
-  });
-
-  if (!robot) {
-    throw new RobotError(RobotErrorCode.ROBOT_NOT_FOUND, 'Robot not found', 404);
-  }
-
-  const result = await getUpcomingScheduledMatches(robotId, robot.name);
-  res.json(result);
-});
+}));
 
 // Repair all robots
 router.post('/repair-all', authenticateToken, validateRequest({}), async (req: AuthRequest, res: Response) => {
@@ -462,46 +384,30 @@ router.post('/repair-all', authenticateToken, validateRequest({}), async (req: A
 });
 
 // Get robot performance by context (leagues, tournaments, tag teams)
-router.get('/:id/performance-context', authenticateToken, validateRequest({ params: robotIdParamsSchema }), async (req: AuthRequest, res: Response) => {
-  const robotId = parseInt(String(req.params.id));
+router.get('/:id/performance-context', authenticateToken, ...validated({ params: robotIdParamsSchema }, async (req: AuthRequest, res: Response, { params }) => {
+  const robotId = params.id;
 
-  if (isNaN(robotId)) {
-    throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Invalid robot ID', 400);
-  }
-
-  const robot = await prisma.robot.findUnique({
-    where: { id: robotId },
-    select: { id: true, name: true },
-  });
-
-  if (!robot) {
-    throw new RobotError(RobotErrorCode.ROBOT_NOT_FOUND, 'Robot not found', 404);
-  }
-
+  await requireRobotRef(robotId);
   const result = await getPerformanceContext(robotId);
   res.json(result);
-});
+}));
 
 // Update robot appearance (imageUrl)
-router.put('/:id/appearance', authenticateToken, validateRequest({ params: robotIdParamsSchema, body: appearanceBodySchema }), async (req: AuthRequest, res: Response) => {
+router.put('/:id/appearance', authenticateToken, ...validated({ params: robotIdParamsSchema, body: appearanceBodySchema }, async (req: AuthRequest, res: Response, { params, body }) => {
   const userId = req.user!.userId;
-  const robotId = parseInt(String(req.params.id));
-  const { imageUrl } = req.body;
-
-  logger.info('Appearance update request:', { userId, robotId, imageUrl });
-
-  if (!imageUrl || typeof imageUrl !== 'string') {
-    logger.info('Invalid imageUrl:', imageUrl);
-    throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Invalid imageUrl', 400);
-  }
-
-  const safeImagePattern = /^\/(?:(?:src\/)?assets\/robots?[\w/-]*|uploads\/user-robots\/\d+\/[0-9a-f-]+)\.webp$/;
-  if (!safeImagePattern.test(imageUrl)) {
-    logger.info('Invalid image path:', imageUrl);
-    throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Invalid image path. Must be a .webp file from presets or uploads.', 400);
-  }
+  const robotId = params.id;
+  // `robotImagePath` (appearanceBodySchema) already allowed only preset and
+  // upload .webp paths.
+  const { imageUrl } = body;
 
   await verifyRobotOwnership(prisma, robotId, userId);
+
+  // An uploaded image must come from the caller's own Image_Library and still
+  // exist (generic 403 otherwise). Until Nov 2026 this check existed but was
+  // never called, so another stable's upload path was accepted.
+  if (imageUrl.startsWith('/uploads/')) {
+    await assertSelectable(userId, imageUrl);
+  }
 
   // Spec #45 R30: the previous upload is deliberately NOT deleted when a robot
   // switches to a preset. Uploaded images belong to the player's Image_Library,
@@ -509,71 +415,31 @@ router.put('/:id/appearance', authenticateToken, validateRequest({ params: robot
   // swapping a robot's appearance must not destroy the artwork. Players delete
   // images explicitly through the Image_Library, which reports what it affects.
 
-  logger.info('Updating robot with imageUrl...');
-  
-  const appearanceRobot = await prisma.robot.update({
-    where: { id: robotId },
-    data: { imageUrl },
-    include: {
-      mainWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
-      offhandWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
-    },
-  });
-
-  logger.info('Robot updated successfully');
+  const appearanceRobot = await updateRobotAppearance(robotId, imageUrl);
+  logger.info('Robot appearance updated', { userId, robotId });
 
   res.json({ success: true, robot: appearanceRobot, message: 'Robot image updated successfully' });
-});
-
-// Get upcoming matches for a robot (with battle readiness)
-router.get('/:id/upcoming-matches', authenticateToken, validateRequest({ params: robotIdParamsSchema }), async (req: AuthRequest, res: Response) => {
-  const userId = req.user!.userId;
-  const robotId = parseInt(String(req.params.id));
-
-  if (isNaN(robotId)) {
-    throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Invalid robot ID', 400);
-  }
-
-  const robot = await prisma.robot.findUnique({
-    where: { id: robotId },
-    include: { mainWeapon: true, offhandWeapon: true },
-  });
-
-  if (!robot) {
-    throw new RobotError(RobotErrorCode.ROBOT_NOT_FOUND, 'Robot not found', 404);
-  }
-
-  if (robot.userId !== userId) {
-    throw new RobotError(RobotErrorCode.ROBOT_NOT_FOUND, 'Robot not found', 404);
-  }
-
-  const result = await getUpcomingMatches(robotId, robot);
-  res.json(result);
-});
+}));
 
 // Get scheduling eligibility report for a robot
-router.get('/:id/scheduling-eligibility', authenticateToken, validateRequest({ params: robotIdParamsSchema }), async (req: AuthRequest, res: Response) => {
-  const robotId = parseInt(String(req.params.id));
+router.get('/:id/scheduling-eligibility', authenticateToken, ...validated({ params: robotIdParamsSchema }, async (req: AuthRequest, res: Response, { params }) => {
+  const robotId = params.id;
   await verifyRobotOwnership(prisma, robotId, req.user!.userId);
   const report = await computeSchedulingEligibility(robotId);
   res.json(report);
-});
+}));
 
 // Bulk upgrade robot attributes (atomic transaction)
-router.post('/:id/upgrades', authenticateToken, validateRequest({ params: robotIdParamsSchema, body: upgradesBodySchema, headers: idempotencyHeadersSchema }), async (req: AuthRequest, res: Response) => {
+router.post('/:id/upgrades', authenticateToken, ...validated({ params: robotIdParamsSchema, body: upgradesBodySchema, headers: idempotencyHeadersSchema }, async (req: AuthRequest, res: Response, { params, body }) => {
   const userId = req.user!.userId;
-  const robotId = parseInt(String(req.params.id));
-  const { upgrades } = req.body;
+  const robotId = params.id;
+  const { upgrades } = body;
   const requestKey = getIdempotencyKey(req.headers);
   const replay = await findCompletedEconomicRequest<{ robot: unknown; currency: number; totalCost: number; upgradeOperations: unknown[] }>(userId, 'attribute_upgrade', requestKey, { robotId, upgrades });
   if (replay) {
     const count = replay.response.upgradeOperations.length;
     res.json({ success: true, robot: replay.response.robot, currency: replay.response.currency, totalCost: replay.response.totalCost, upgradesApplied: count, message: `Successfully upgraded ${count} attribute${count > 1 ? 's' : ''}`, achievementUnlocks: [], replayed: true });
     return;
-  }
-
-  if (isNaN(robotId)) {
-    throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Invalid robot ID', 400);
   }
 
   if (!upgrades || typeof upgrades !== 'object' || Object.keys(upgrades).length === 0) {
@@ -590,8 +456,7 @@ router.post('/:id/upgrades', authenticateToken, validateRequest({ params: robotI
 
   // Log attribute upgrade events
   try {
-    const cycleMetadata = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
-    const currentCycle = (cycleMetadata?.totalCycles || 0) + 1;
+    const currentCycle = await getEventLogCycleNumber();
 
     logger.info(`[AttributeUpgrade] User ${userId} | Robot ${robotId} | Attributes: ${result.upgradeOperations.length} | Total Cost: ₡${result.totalCost.toLocaleString()} | Balance: ₡${result.user.currency.toLocaleString()}`);
 
@@ -621,7 +486,7 @@ router.post('/:id/upgrades', authenticateToken, validateRequest({ params: robotI
       } catch { return []; }
     })(),
   });
-});
+}));
 
 // Upload image preview (Step 1: validate, moderate, process, return base64 preview)
 router.post(
@@ -643,112 +508,22 @@ router.put(
 );
 
 // Get league history for a robot
-router.get('/:id/league-history', authenticateToken, validateRequest({ params: robotIdParamsSchema }), async (req: AuthRequest, res: Response) => {
-  const robotId = parseInt(String(req.params.id));
+router.get('/:id/league-history', authenticateToken, ...validated({ params: robotIdParamsSchema }, async (req: AuthRequest, res: Response, { params }) => {
+  const robotId = params.id;
 
-  if (isNaN(robotId)) {
-    throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Invalid robot ID', 400);
-  }
-
-  const robot = await prisma.robot.findUnique({
-    where: { id: robotId },
-    select: { id: true },
-  });
-
-  if (!robot) {
-    throw new RobotError(RobotErrorCode.ROBOT_NOT_FOUND, 'Robot not found', 404);
-  }
-
+  await requireRobotRef(robotId);
   const data = await getEntityHistory('robot', robotId);
   res.json({ data });
-});
+}));
 
 // Get KotH standing for a robot (current tier, LP, stats)
-router.get('/:id/koth-standing', authenticateToken, validateRequest({ params: robotIdParamsSchema }), async (req: AuthRequest, res: Response) => {
-  const robotId = parseInt(String(req.params.id));
-
-  if (isNaN(robotId)) {
-    throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Invalid robot ID', 400);
-  }
-
-  const robot = await prisma.robot.findUnique({
-    where: { id: robotId },
-    select: { id: true, name: true },
-  });
-
-  if (!robot) {
-    throw new RobotError(RobotErrorCode.ROBOT_NOT_FOUND, 'Robot not found', 404);
-  }
-
-  const [standing, totalKills] = await Promise.all([
-    prisma.standing.findFirst({
-      where: { entityType: 'robot', entityId: robotId, mode: 'koth' as StandingsMode },
-    }),
-    getModeKills(robotId, 'koth'),
-  ]);
-
-  if (!standing) {
-    res.json({ standing: null });
-    return;
-  }
-
-  res.json({
-    standing: {
-      tier: standing.tier,
-      leagueInstanceId: standing.leagueInstanceId,
-      leaguePoints: standing.leaguePoints,
-      wins: standing.wins,
-      totalMatches: standing.totalMatches,
-      totalKills,
-      bestPlacement: standing.bestPlacement,
-      currentWinStreak: standing.currentWinStreak,
-      bestWinStreak: standing.bestWinStreak,
-    },
-  });
-});
+router.get('/:id/koth-standing', authenticateToken, ...validated({ params: robotIdParamsSchema }, async (_req: AuthRequest, res: Response, { params }) => {
+  res.json({ standing: await getRobotPlacementStanding(params.id, 'koth') });
+}));
 
 // Get Grand Melee standing for a robot (current tier, LP, stats)
-router.get('/:id/grand-melee-standing', authenticateToken, validateRequest({ params: robotIdParamsSchema }), async (req: AuthRequest, res: Response) => {
-  const robotId = parseInt(String(req.params.id));
-
-  if (isNaN(robotId)) {
-    throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Invalid robot ID', 400);
-  }
-
-  const robot = await prisma.robot.findUnique({
-    where: { id: robotId },
-    select: { id: true, name: true },
-  });
-
-  if (!robot) {
-    throw new RobotError(RobotErrorCode.ROBOT_NOT_FOUND, 'Robot not found', 404);
-  }
-
-  const [standing, totalKills] = await Promise.all([
-    prisma.standing.findFirst({
-      where: { entityType: 'robot', entityId: robotId, mode: 'grand_melee' as StandingsMode },
-    }),
-    getModeKills(robotId, 'grand_melee'),
-  ]);
-
-  if (!standing) {
-    res.json({ standing: null });
-    return;
-  }
-
-  res.json({
-    standing: {
-      tier: standing.tier,
-      leagueInstanceId: standing.leagueInstanceId,
-      leaguePoints: standing.leaguePoints,
-      wins: standing.wins,
-      totalMatches: standing.totalMatches,
-      totalKills,
-      bestPlacement: standing.bestPlacement,
-      currentWinStreak: standing.currentWinStreak,
-      bestWinStreak: standing.bestWinStreak,
-    },
-  });
-});
+router.get('/:id/grand-melee-standing', authenticateToken, ...validated({ params: robotIdParamsSchema }, async (_req: AuthRequest, res: Response, { params }) => {
+  res.json({ standing: await getRobotPlacementStanding(params.id, 'grand_melee') });
+}));
 
 export default router;

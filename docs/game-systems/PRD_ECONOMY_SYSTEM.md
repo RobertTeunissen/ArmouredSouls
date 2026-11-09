@@ -40,10 +40,7 @@
 
 **API Endpoints:**
 - ✅ `GET /api/finances/summary` - Quick dashboard overview
-- ✅ `GET /api/finances/daily` - Comprehensive financial report
-- ✅ `GET /api/finances/operating-costs` - Detailed cost breakdown
-- ✅ `GET /api/finances/revenue-streams` - Income sources
-- ✅ `GET /api/finances/projections` - Forecasts & recommendations
+- ~~`GET /api/finances/daily`, `/operating-costs`, `/revenue-streams`, `/projections`~~ — Removed in November 2026 as unused (the Finance Center reads `/api/finances/report`, `/history`, `/robots`; the dashboard reads `/summary`)
 - ✅ **NEW**: `POST /api/admin/daily-finances/process` - Process daily operating costs for all users (removed in Nov 2026, admin redesign part 8)
 
 **Battle Rewards:**
@@ -81,10 +78,7 @@
 
 2. `app/backend/src/routes/finances.ts` (165 lines)
    - `GET /api/finances/summary` - Quick overview
-   - `GET /api/finances/daily` - Full report
-   - `GET /api/finances/operating-costs` - Cost breakdown
-   - `GET /api/finances/revenue-streams` - Income sources
-   - `GET /api/finances/projections` - Forecasts
+   - ~~`GET /api/finances/daily`, `/operating-costs`, `/revenue-streams`, `/projections`~~ — Removed in November 2026 as unused (the Finance Center reads `/api/finances/report`, `/history`, `/robots`; the dashboard reads `/summary`)
 
 3. `app/backend/src/services/league/leagueBattleOrchestrator.ts` (enhanced, shared helpers in `battlePostCombat.ts`)
    - League-based battle rewards
@@ -319,213 +313,7 @@ curl -H "Authorization: Bearer <token>" \
 - Computes net passive income (income - costs)
 - Returns prestige multiplier for battle rewards
 
-#### Get Daily Financial Report
-
-Retrieve comprehensive financial report with all details.
-
-**Request:**
-```bash
-curl -H "Authorization: Bearer <token>" \
-  http://localhost:3001/api/finances/daily?battleWinnings=45000
-```
-
-**Query Parameters:**
-- `battleWinnings` (optional): Battle earnings from last 7 days for accurate projections
-
-**Response:**
-```json
-{
-  "currentBalance": 1904000,
-  "prestige": 12000,
-  "prestigeMultiplier": 1.10,
-  "revenueStreams": {
-    "battleWinnings": 45000,
-    "merchandising": {
-      "daily": 32000,
-      "weekly": 224000,
-      "monthly": 960000
-    },
-    "streaming": {
-      "daily": 25000,
-      "weekly": 175000,
-      "monthly": 750000
-    },
-    "totalDaily": 102000,
-    "totalWeekly": 714000,
-    "totalMonthly": 3060000
-  },
-  "operatingCosts": {
-    "total": 29000,
-    "breakdown": [
-      {
-        "facilityType": "MERCHANDISING_HUB",
-        "level": 5,
-        "cost": 5000
-      },
-      {
-        "facilityType": "REPAIR_BAY",
-        "level": 3,
-        "cost": 3000
-      }
-    ]
-  },
-  "netIncome": {
-    "daily": 73000,
-    "weekly": 511000,
-    "monthly": 2190000
-  },
-  "financialHealth": {
-    "status": "Excellent",
-    "profitMargin": 71.6,
-    "daysUntilBankruptcy": null
-  },
-  "projections": {
-    "weekly": 511000,
-    "monthly": 2190000,
-    "balanceIn30Days": 4094000
-  },
-  "recommendations": [
-    "Your stable is highly profitable. Consider upgrading facilities.",
-    "Strong passive income streams. Merchandising and streaming are performing well."
-  ]
-}
-```
-
-**Description:**
-- Complete financial report with all revenue and expense details
-- Revenue streams broken down by source (battles, merchandising, streaming)
-- Operating costs with per-facility breakdown
-- Net income calculations (daily, weekly, monthly)
-- Financial health status with profit margin
-- Bankruptcy projection (days until funds depleted, if applicable)
-- AI-powered recommendations based on financial status
-
-#### Get Operating Costs Breakdown
-
-Retrieve detailed breakdown of all operating costs.
-
-**Request:**
-```bash
-curl -H "Authorization: Bearer <token>" \
-  http://localhost:3001/api/finances/operating-costs
-```
-
-**Response:**
-```json
-{
-  "total": 29000,
-  "breakdown": [
-    {
-      "facilityType": "MERCHANDISING_HUB",
-      "level": 5,
-      "cost": 5000,
-      "description": "Generates passive income from merchandising and streaming"
-    },
-    {
-      "facilityType": "REPAIR_BAY",
-      "level": 3,
-      "cost": 3000,
-      "description": "Reduces repair costs by 15%"
-    },
-    {
-      "facilityType": "TRAINING_FACILITY",
-      "level": 4,
-      "cost": 4000,
-      "description": "Enables robot attribute training"
-    }
-  ]
-}
-```
-
-**Description:**
-- Lists all facilities with their operating costs
-- Shows facility type, level, and daily cost
-- Includes facility descriptions
-- Total daily operating cost sum
-
-#### Get Revenue Streams
-
-Retrieve detailed breakdown of all revenue sources.
-
-**Request:**
-```bash
-curl -H "Authorization: Bearer <token>" \
-  http://localhost:3001/api/finances/revenue-streams
-```
-
-**Response:**
-```json
-{
-  "merchandising": {
-    "daily": 32000,
-    "weekly": 224000,
-    "monthly": 960000,
-    "formula": "base_rate × (1 + prestige/10000)",
-    "prestigeBonus": 1.20
-  },
-  "streaming": {
-    "daily": 25000,
-    "weekly": 175000,
-    "monthly": 750000,
-    "formula": "base_rate × (1 + battles/2000 + fame/10000) × studio_multiplier",
-    "battlesBonus": 1.15,
-    "fameBonus": 1.08
-  },
-  "totalPassiveDaily": 57000,
-  "totalPassiveWeekly": 399000,
-  "totalPassiveMonthly": 1710000
-}
-```
-
-**Description:**
-- Detailed breakdown of passive income sources
-- Shows daily, weekly, and monthly projections
-- Includes formulas used for calculations
-- Shows bonus multipliers from prestige, battles, and fame
-- Total passive income across all sources
-
-#### Get Financial Projections
-
-Retrieve financial forecasts and recommendations.
-
-**Request:**
-```bash
-curl -H "Authorization: Bearer <token>" \
-  http://localhost:3001/api/finances/projections
-```
-
-**Response:**
-```json
-{
-  "weekly": {
-    "revenue": 714000,
-    "costs": 203000,
-    "netIncome": 511000
-  },
-  "monthly": {
-    "revenue": 3060000,
-    "costs": 870000,
-    "netIncome": 2190000
-  },
-  "balanceProjections": {
-    "in7Days": 2415000,
-    "in30Days": 4094000,
-    "in90Days": 10474000
-  },
-  "recommendations": [
-    "Your stable is highly profitable. Consider upgrading facilities.",
-    "Strong passive income streams. Merchandising and streaming are performing well.",
-    "You can afford to expand your roster or upgrade weapons."
-  ]
-}
-```
-
-**Description:**
-- Financial projections for 7, 30, and 90 days
-- Revenue, costs, and net income forecasts
-- Projected balance at future dates
-- AI-powered recommendations based on financial trajectory
-- Helps with strategic planning and investment decisions
+The daily report, operating-costs, revenue-streams and projections endpoints that used to be documented here were removed in November 2026 as unused (the Finance Center reads `/api/finances/report`, `/history`, `/robots`; the dashboard reads `/summary`).
 
 ### ❌ Phase 3: Advanced Features (NOT STARTED)
 - ❌ Historical financial tracking
@@ -640,10 +428,7 @@ This PRD defines the complete economy system for Armoured Souls, covering all co
   - Financial health indicators
 - ✅ **Financial API endpoints** (`app/backend/src/routes/finances.ts`)
   - `GET /api/finances/summary` - Quick dashboard overview
-  - `GET /api/finances/daily` - Comprehensive financial report
-  - `GET /api/finances/operating-costs` - Cost breakdown
-  - `GET /api/finances/revenue-streams` - Income sources
-  - `GET /api/finances/projections` - Forecasts & recommendations
+  - ~~`GET /api/finances/daily`, `/operating-costs`, `/revenue-streams`, `/projections`~~ — Removed in November 2026 as unused (the Finance Center reads `/api/finances/report`, `/history`, `/robots`; the dashboard reads `/summary`)
 - ✅ **Battle reward system** - League-based rewards with prestige multipliers
   - Bronze: ₡7.5K → Champion: ₡225K
   - Prestige multipliers: Smooth scaling up to +50% bonus
@@ -1531,7 +1316,7 @@ Nothing is capped. Before Season 2 (formula version '1') the terms multiplied: `
 
 #### Single source of truth (Spec #46 R10)
 
-The formula above has exactly one implementation: `computeStreamingRevenue(totalBattleCount, fame, studioLevel)` in `app/backend/src/services/economy/streamingRevenueService.ts`. **Every award and display path derives from it**: single and batch award, the daily financial report, the facility advisor (incremental benefit of the next Studio level over the current one) and the facility ROI (the Studio-attributable share `amount × (1 − 1/studioMultiplier)` of each recorded award, summed in the database per stored `studioMultiplier` — see Facility Investment ROI). The team share is applied exactly once, by `applyStreamingTeamShare()`. Do not reimplement or approximate the formula — a projection that disagrees with the award path is a defect. The table below records the pre-Season 2 defects that motivated this rule:
+The formula above has exactly one implementation: `computeStreamingRevenue(totalBattleCount, fame, studioLevel)` in `app/backend/src/services/economy/streamingRevenueService.ts`. **Every award and display path derives from it**: single and batch award, the facility advisor (incremental benefit of the next Studio level over the current one) and the facility ROI (the Studio-attributable share `amount × (1 − 1/studioMultiplier)` of each recorded award, summed in the database per stored `studioMultiplier` — see Facility Investment ROI). The team share is applied exactly once, by `applyStreamingTeamShare()`. Do not reimplement or approximate the formula — a projection that disagrees with the award path is a defect. The table below records the pre-Season 2 defects that motivated this rule:
 
 | Consumer | What it did wrong | Effect |
 |---|---|---|
@@ -1541,7 +1326,7 @@ The formula above has exactly one implementation: `computeStreamingRevenue(total
 | `facilityRecommendationService.ts` | Used `1 + level × 0.1` for the Studio Multiplier | A tenth of the real `1 + level`. An L0 → L1 upgrade doubles streaming revenue but was projected as a 10% gain |
 | `unifiedFacilityROIService.ts` | Used `1000 × (1 + level)` | Dropped the battle and fame multipliers entirely, so a veteran robot's streaming was under-reported by their product |
 
-**Streaming is awarded per robot per battle.** The Financial Report therefore presents the formula per robot, with the roster figure labelled as an aggregate of the individual awards rather than as a single computation. Where a path genuinely cannot supply a per-robot battle count and fame — `unifiedFacilityROIService.ts` estimates without them — the figure is labelled an estimate and treated as a floor rather than presented as an award.
+**Streaming is awarded per robot per battle**, so any figure shown for a roster is the sum of the individual awards, never the formula applied to summed battles and fame (the retired daily financial report did the latter). Where a path genuinely cannot supply a per-robot battle count and fame — `unifiedFacilityROIService.ts` estimates without them — the figure is labelled an estimate and treated as a floor rather than presented as an award.
 
 `tests/services/streamingRevenueParity.test.ts` asserts that no consumer reintroduces a local copy.
 

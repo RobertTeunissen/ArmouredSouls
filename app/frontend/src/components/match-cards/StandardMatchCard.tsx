@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { ScheduledMatch, formatDateTime, getLeagueTierColor, getLeagueTierName } from '../../utils/matchmakingApi';
 import { getModeConfig } from '../../utils/battleModeConfig';
 
@@ -10,7 +10,6 @@ interface StandardMatchCardProps {
 }
 
 function StandardMatchCard({ match, myRobot, opponent, getRoundName }: StandardMatchCardProps) {
-  const navigate = useNavigate();
   const isTournament = match.matchType === 'tournament_1v1';
   const modeConfig = getModeConfig(match.matchType);
 
@@ -46,12 +45,12 @@ function StandardMatchCard({ match, myRobot, opponent, getRoundName }: StandardM
           <div className="font-medium text-xs truncate">
             <span className="text-[#58a6ff]">{myRobot.name}</span>
             <span className="text-[#57606a] mx-1.5">vs</span>
-            <span
-              className="text-[#e6edf3] hover:text-[#58a6ff] cursor-pointer hover:underline transition-colors"
-              onClick={(e) => { e.stopPropagation(); navigate(`/robots/${opponent.id}`); }}
+            <Link
+              to={`/robots/${opponent.id}`}
+              className="text-[#e6edf3] hover:text-[#58a6ff] hover:underline transition-colors"
             >
               {opponent.name}
-            </span>
+            </Link>
           </div>
         </div>
         <div className="flex-shrink-0 w-28 text-xs text-[#8b949e]">
@@ -83,12 +82,12 @@ function StandardMatchCard({ match, myRobot, opponent, getRoundName }: StandardM
           <div className="text-sm font-medium">
             <span className="text-[#58a6ff]">{myRobot.name}</span>
             <span className="text-[#57606a] mx-1.5">vs</span>
-            <span
-              className="text-[#e6edf3] hover:text-[#58a6ff] cursor-pointer hover:underline transition-colors"
-              onClick={(e) => { e.stopPropagation(); navigate(`/robots/${opponent.id}`); }}
+            <Link
+              to={`/robots/${opponent.id}`}
+              className="text-[#e6edf3] hover:text-[#58a6ff] hover:underline transition-colors"
             >
               {opponent.name}
-            </span>
+            </Link>
           </div>
         </div>
         <div className="flex justify-between text-xs">

@@ -78,14 +78,16 @@ export function AdminMobileNav(): ReactNode {
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-50 md:hidden" onKeyDown={onKeyDown}>
+        <div className="fixed inset-0 z-50 md:hidden">
           <div className="absolute inset-0 bg-black/60" aria-hidden="true" onClick={close} data-testid="admin-nav-backdrop" />
+          {/* eslint-disable-next-line jsx-a11y-x/no-noninteractive-element-interactions -- the dialog handles Escape and the focus trap for its contents */}
           <div
             ref={panelRef}
             id={drawerId}
             role="dialog"
             aria-modal="true"
             aria-labelledby={titleId}
+            onKeyDown={onKeyDown}
             className="absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col overflow-y-auto bg-surface-elevated border-r border-white/10 animate-slide-in-left motion-reduce:animate-none"
           >
             <div className="h-14 flex items-center justify-between px-4 border-b border-white/10 shrink-0">

@@ -5,8 +5,8 @@
  * Streaming Studio L5. Under the v1 formula the award path paid ₡9,824 for battle
  * #466957, which only a battle count of 279 (211 + 68) reproduces; v2 (#524) pays
  * ₡4,478 for the same inputs. With 6 Grand Melee matches the count must be 285
- * everywhere (₡4,489): award (single + batch), Finance Center daily breakdown and
- * the facility recommendation estimate.
+ * everywhere (₡4,489): award (single + batch) and the facility recommendation
+ * estimate.
  */
 const mockRobotFindUnique = jest.fn();
 const mockRobotFindMany = jest.fn();
@@ -35,7 +35,6 @@ jest.mock('../../src/lib/prisma', () => ({
 
 jest.mock('../../src/utils/economyCalculations', () => ({
   ...jest.requireActual('../../src/utils/economyCalculations'),
-  generateFinancialReport: jest.fn().mockResolvedValue({ revenue: { streaming: 0 } }),
   calculateDailyPassiveIncome: jest.fn().mockResolvedValue({ merchandising: 0 }),
 }));
 
@@ -43,7 +42,6 @@ import {
   calculateStreamingRevenue,
   calculateStreamingRevenueBatch,
 } from '../../src/services/economy/streamingRevenueService';
-import { getDailyFinancialReport } from '../../src/services/economy/financialReportService';
 import { FacilityRecommendationService } from '../../src/services/economy/facilityRecommendationService';
 
 const USER_ID = 7;
@@ -106,21 +104,6 @@ describe('streaming battle count (#530)', () => {
 });
 
 describe('every streaming caller agrees for the same robot (#532)', () => {
-  it('the Finance Center daily breakdown shows what the award path pays', async () => {
-    serve({ koth: 68, grandMelee: 6 });
-
-    const awarded = await calculateStreamingRevenue(WATTAGE.id, USER_ID, false);
-    const report = await getDailyFinancialReport(USER_ID);
-
-    const perRobot = report.multiplierBreakdown.streaming.perRobot[0];
-    expect(perRobot.battles).toBe(285);
-    expect(perRobot.revenuePerBattle).toBe(awarded?.totalRevenue);
-    expect(perRobot.revenuePerBattle).toBe(4489);
-    // 1 + 285 / 2000 + 1401 / 10000 = 1.2826
-    expect(perRobot.audienceMultiplier).toBeCloseTo(1.2826, 10);
-    expect(report.multiplierBreakdown.streaming.totalBattles).toBe(285);
-  });
-
   it('the facility recommendation estimate uses the same count', async () => {
     serve({ koth: 68, grandMelee: 6 });
 

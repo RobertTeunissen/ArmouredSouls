@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { updateStance } from '../utils/robotApi';
+import { onActivationKey } from '../utils/keyboardActivation';
 
 interface StanceSelectorProps {
   robotId: number;
@@ -96,7 +97,12 @@ function StanceSelector({ robotId, currentStance, onStanceChange }: StanceSelect
                   ? 'border-blue-500 bg-blue-900 bg-opacity-30 ring-2 ring-blue-500 shadow-lg'
                   : 'border-gray-600 bg-gradient-to-br from-gray-700 to-gray-750 hover:border-gray-500 hover:bg-gray-650 hover:shadow-md'
               } ${loading ? 'opacity-50 cursor-wait' : ''}`}
+              role="button"
+              tabIndex={0}
+              aria-pressed={isSelected}
+              aria-disabled={loading}
               onClick={() => !loading && handleStanceChange(stance.id)}
+              onKeyDown={onActivationKey(() => { if (!loading) handleStanceChange(stance.id); })}
             >
               {/* Stance Header with Icon */}
               <div className="flex flex-col items-center gap-2 mb-3">

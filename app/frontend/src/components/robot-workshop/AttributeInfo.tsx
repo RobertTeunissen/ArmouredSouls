@@ -45,6 +45,8 @@ export function AttributeInfo({ ariaLabel, description, className = '', children
   return (
     <div
       className={`relative cursor-help rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${className}`}
+      // Focusable so keyboard users can open the tooltip it describes (aria-describedby).
+      // eslint-disable-next-line jsx-a11y-x/no-noninteractive-tabindex
       tabIndex={0}
       role="group"
       aria-label={ariaLabel}

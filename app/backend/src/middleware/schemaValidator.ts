@@ -11,8 +11,8 @@
  * @see Requirements 1.1, 1.2, 1.3, 1.5, 1.6, 5.6
  */
 
-import { ZodSchema, type ZodIssue } from 'zod';
-import { Request, Response, NextFunction } from 'express';
+import { ZodSchema, type ZodIssue, type z } from 'zod';
+import { Request, Response, NextFunction, type RequestHandler } from 'express';
 import { AppError } from '../errors/AppError';
 import { securityMonitor } from '../services/security/securityMonitor';
 import { safeRequestPath } from '../utils/safeRequestPath';
@@ -178,4 +178,46 @@ export function validateRequest(schemas: ValidationSchemas) {
 
     next();
   };
+}
+
+/** The parsed (coerced, transformed, stripped) value of one schema, or `undefined` without one. */
+type ParsedPart<S> = S extends ZodSchema ? z.output<S> : undefined;
+
+/** What a {@link validated} handler receives: the values `validateRequest` already parsed. */
+export interface ValidatedInput<S extends ValidationSchemas> {
+  params: ParsedPart<S['params']>;
+  query: ParsedPart<S['query']>;
+  body: ParsedPart<S['body']>;
+}
+
+/**
+ * `validateRequest(schemas)` plus a handler that receives the parsed values
+ * with their schema types, so a route never re-parses what Zod already parsed
+ * (`parseInt(String(req.params.id))`, `req.query.page as string`, a second
+ * `isNaN` check). Spread it into the route after the auth middleware:
+ *
+ * ```ts
+ * router.get('/:id', authenticateToken, ...validated(
+ *   { params: robotIdParamsSchema },
+ *   async (req: AuthRequest, res, { params }) => { res.json(await getRobot(params.id)); },
+ * ));
+ * ```
+ *
+ * Express 5 forwards a rejected handler promise to `errorHandler`, so the
+ * handler throws `AppError`s as usual.
+ */
+export function validated<S extends ValidationSchemas, R extends Request = Request>(
+  schemas: S,
+  // `unknown`: handlers may `return res.status(...).json(...)` to stop early.
+  handler: (req: R, res: Response, input: ValidatedInput<S>) => unknown,
+): [RequestHandler, RequestHandler] {
+  const run: RequestHandler = (req, res) => {
+    const input = {
+      params: schemas.params ? req.params : undefined,
+      query: schemas.query ? req.query : undefined,
+      body: schemas.body ? req.body : undefined,
+    } as unknown as ValidatedInput<S>;
+    return handler(req as R, res, input);
+  };
+  return [validateRequest(schemas), run];
 }

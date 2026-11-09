@@ -205,7 +205,7 @@ Robot rows change after a battle (attribute upgrades, tuning, weapon swaps, refi
 - **Keys:** unique `(battle_id, robot_id)`, FK to `battles` (cascade), no FK to robots; deleted robots' rows go with their participant rows (`deleteRobotBattleReferences`). Purged with battles at season rollover.
 - **Readers:** the admin Attributes and Weapons analyses ("what wins").
 
-Formula breakdowns are admin-only: `/api/matches/battles/:id/log` strips `formulaBreakdown`, `rangePenalty` and `attackAngle` (`PLAYER_LOG_HIDDEN_FIELDS` in `matchHistoryService.ts`); the admin Battles routes (`/api/admin/battles/:id/log`, `/export`) serve them. The admin outcome rule (`services/admin/battles/battleOutcome.ts`) reads only permanent data.
+Formula breakdowns are admin-only: `/api/matches/battles/:id/log` strips `formulaBreakdown`, `rangePenalty` and `attackAngle` (`PLAYER_LOG_HIDDEN_FIELDS` in `matchHistoryService.ts`, applied by `battleLogService.ts`); the admin Battles routes (`/api/admin/battles/:id/log`, `/export`) serve them. The admin outcome rule (`services/admin/battles/battleOutcome.ts`) reads only permanent data.
 
 ---
 

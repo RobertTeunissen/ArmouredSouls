@@ -61,7 +61,6 @@ The Practice Arena calls the exact same `simulateBattle(r1, r2)` function from `
 
 The Practice Arena is NOT an orchestrator. It is a synchronous request/response service that:
 - Is not invoked by `cycleScheduler.ts`
-- Does not use `BattleStrategy`/`BattleProcessor` from `battleStrategy.ts`
 - Does not import `battlePostCombat.ts`
 - Has no dependency on `ScheduledMatch`, `ScheduledTagTeamMatch`, `ScheduledKothMatch`, or `ScheduledTournamentMatch`
 - Only imports from the `battle/` domain: `simulateBattle` from `combatSimulator.ts` and `CombatMessageGenerator` from `combatMessageGenerator.ts`

@@ -90,12 +90,14 @@ jobs:
       - name: Ecosystem config passes DEPLOY_TAG
         run: bash app/scripts/__tests__/ecosystem-deploy-tag.test.sh
 
-      - name: Run unit tests
+      # Runs with coverage so the per-directory floors in jest.config.unit.js
+      # are enforced; until Nov 2026 they were defined but never checked.
+      - name: Run unit tests (with coverage thresholds)
         working-directory: ./app/backend
         env:
           NODE_ENV: test
           JWT_SECRET: test-secret-key-for-ci
-        run: pnpm run test:unit
+        run: pnpm run test:unit:coverage
 
   backend-heavy-tests:
     name: Backend Heavy Tests

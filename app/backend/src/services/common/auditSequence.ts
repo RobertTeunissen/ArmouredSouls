@@ -37,12 +37,11 @@
  *
  * WHY NOT A POSTGRES SEQUENCE
  * ---------------------------
- * It is the cheapest fix and it is wrong here. `checkSequenceNumbers` in
- * `services/common/dataIntegrityService.ts` walks each cycle's sequence numbers
- * and reports every gap as a `sequence_number_continuity` integrity issue. A
- * sequence allocates on request and does not return values on rollback, so it
- * produces gaps by design and would make that check fire permanently. The
- * Gapless_Invariant is load-bearing.
+ * It is the cheapest fix and it is wrong here. Each cycle's sequence numbers
+ * run 1..n without gaps (the Gapless_Invariant, asserted in
+ * `tests/auditSequenceConcurrency.test.ts`), so a gap means a dropped audit row.
+ * A sequence allocates on request and does not return values on rollback, so it
+ * produces gaps by design and would hide exactly that.
  *
  * WHY AN ADVISORY LOCK AND NOT AN IN-PROCESS MUTEX
  * -----------------------------------------------

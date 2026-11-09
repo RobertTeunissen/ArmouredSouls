@@ -197,15 +197,6 @@ export async function getCurrentSeason(): Promise<SeasonState> {
   return state;
 }
 
-/**
- * Whether Battle_Event_Jobs may run. False for the whole Preparation_Phase, so
- * no matches are scheduled and no battles are executed while players rebuild.
- */
-export async function isBattleAllowed(): Promise<boolean> {
-  const state = await getCurrentSeason();
-  return state.phase === 'competitive';
-}
-
 // ─── Writes ──────────────────────────────────────────────────────────
 
 /**
@@ -385,12 +376,4 @@ export async function setRemainingPreparationCycles(remaining: number): Promise<
   });
   invalidateSeasonCache();
   return getCurrentSeason();
-}
-
-/** List completed seasons, newest first. */
-export async function listCompletedSeasons() {
-  return prisma.season.findMany({
-    where: { phase: 'completed' },
-    orderBy: { seasonNumber: 'desc' },
-  });
 }

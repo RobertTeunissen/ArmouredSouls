@@ -11,7 +11,14 @@
  */
 import fc from 'fast-check';
 import prisma from '../../../lib/prisma';
-import { unifiedFacilityROIService } from '../unifiedFacilityROIService';
+import { unifiedFacilityROIService, type UnifiedFacilityROI } from '../unifiedFacilityROIService';
+
+/** One facility's ROI through the production entry point, or null when it is not listed. */
+async function roiOf(userId: number, facilityType: string): Promise<UnifiedFacilityROI | null> {
+  const { facilities } = await unifiedFacilityROIService.calculateAllEconomicROIs(userId);
+  return facilities.find((f) => f.facilityType === facilityType) ?? null;
+}
+
 
 const ECONOMIC_FACILITY_TYPES = [
   'merchandising_hub',
@@ -86,7 +93,7 @@ describe('Property 1: Bug Condition - Owned Economic Facilities Return Null/404 
 
           // Property assertion: The ROI calculation should return non-null data
           // with valid fields for any owned economic facility
-          const result = await unifiedFacilityROIService.calculateFacilityROI(user.id, facilityType);
+          const result = await roiOf(user.id, facilityType);
 
           // Expected behavior: result should NOT be null
           expect(result).not.toBeNull();

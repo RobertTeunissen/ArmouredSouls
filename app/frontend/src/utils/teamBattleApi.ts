@@ -69,12 +69,12 @@ export interface TeamBattle {
 /**
  * Fetch all teams for the current user, optionally filtered by team size.
  */
-export async function getMyTeamBattles(teamSize?: 2 | 3): Promise<TeamBattle[]> {
+export async function getMyTeamBattles(teamSize?: 2 | 3, signal?: AbortSignal): Promise<TeamBattle[]> {
   const params: Record<string, unknown> = {};
   if (teamSize) {
     params.teamSize = teamSize;
   }
-  const data = await api.get<{ teams: TeamBattle[] }>('/api/team-battles', { params });
+  const data = await api.get<{ teams: TeamBattle[] }>('/api/team-battles', signal ? { params, signal } : { params });
   return data.teams || [];
 }
 
@@ -127,14 +127,3 @@ export async function disbandTeamBattle(teamId: number): Promise<void> {
 }
 
 // ── Shared Helpers ───────────────────────────────────────────────────
-
-/**
- * Generate a team name from match team data.
- * Used for upcoming/recent matches where we have team info but not full TeamBattle object.
- */
-export function getTeamNameFromMatch(teamId: number, stableName: string | null): string {
-  if (stableName) {
-    return stableName;
-  }
-  return `Team ${teamId}`;
-}

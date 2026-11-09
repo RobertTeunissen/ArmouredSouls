@@ -10,7 +10,7 @@ import express, { Request, Response } from 'express';
 import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
 import { authenticateToken, requireAdmin, AuthRequest } from '../middleware/auth';
-import { validateRequest } from '../middleware/schemaValidator';
+import { validateRequest, validated } from '../middleware/schemaValidator';
 import { positiveIntParam } from '../utils/securityValidation';
 import logger from '../config/logger';
 import { securityMonitor } from '../services/security/securityMonitor';
@@ -88,27 +88,27 @@ router.get('/players', authenticateToken, requireAdmin, validateRequest({}), asy
  * Find any stable (player, Automaton or generated) by #id, username, email,
  * stable name or robot name. At most 10 results with safe fields only.
  */
-router.get('/users/search', authenticateToken, requireAdmin, validateRequest({ query: userSearchQuerySchema }), async (req: Request, res: Response) => {
-  res.json({ users: await searchStables(req.query.q as string) });
-});
+router.get('/users/search', authenticateToken, requireAdmin, ...validated({ query: userSearchQuerySchema }, async (req: Request, res: Response, { query }) => {
+  res.json({ users: await searchStables(query.q as string) });
+}));
 
 /**
  * GET /api/admin/users/:id
  * Everything the stable detail panel shows, for any stable type.
  */
-router.get('/users/:id', authenticateToken, requireAdmin, validateRequest({ params: resetPasswordParamsSchema }), async (req: Request, res: Response) => {
-  res.json(await getPlayerDetail(Number(req.params.id)));
-});
+router.get('/users/:id', authenticateToken, requireAdmin, ...validated({ params: resetPasswordParamsSchema }, async (req: Request, res: Response, { params }) => {
+  res.json(await getPlayerDetail(params.id));
+}));
 
 /**
  * POST /api/admin/users/:id/reset-password
  * Reset a user's password. Admin-only, rate-limited, fully audited.
  * The PasswordResetService handles hashing, session invalidation, and audit logging atomically.
  */
-router.post('/users/:id/reset-password', authenticateToken, requireAdmin, resetPasswordLimiter, validateRequest({ params: resetPasswordParamsSchema, body: resetPasswordBodySchema }), async (req: Request, res: Response) => {
+router.post('/users/:id/reset-password', authenticateToken, requireAdmin, resetPasswordLimiter, ...validated({ params: resetPasswordParamsSchema, body: resetPasswordBodySchema }, async (req: Request, res: Response, { params, body }) => {
   const authReq = req as AuthRequest;
-  const targetUserId = Number(req.params.id);
-  const { password } = req.body;
+  const targetUserId = params.id;
+  const { password } = body;
   const initiatorId = authReq.user!.userId;
 
   // Automatons and generated stables never log in.
@@ -137,7 +137,7 @@ router.post('/users/:id/reset-password', authenticateToken, requireAdmin, resetP
   });
 
   res.json({ success: true, userId: result.userId, username: result.username });
-});
+}));
 
 /**
  * GET /api/admin/actions
@@ -146,9 +146,8 @@ router.post('/users/:id/reset-password', authenticateToken, requireAdmin, resetP
  * admin's name and counts per area. Replaced GET/POST /audit-log and
  * GET /audit-log/repairs (repairs are on the Economy page).
  */
-router.get('/actions', authenticateToken, requireAdmin, validateRequest({ query: adminActionsQuerySchema }), async (req: Request, res: Response) => {
-  const query = adminActionsQuerySchema.parse(req.query);
+router.get('/actions', authenticateToken, requireAdmin, ...validated({ query: adminActionsQuerySchema }, async (req: Request, res: Response, { query }) => {
   res.json(await getAdminActions(query));
-});
+}));
 
 export default router;

@@ -34,6 +34,31 @@ interface WeaponTableProps {
 type SortField = 'name' | 'weaponType' | 'loadoutType' | 'rangeBand' | 'baseDamage' | 'cooldown' | 'dps' | 'cost' | 'attributes';
 type SortDirection = 'asc' | 'desc';
 
+interface SortHeaderProps {
+  field: SortField;
+  label: string;
+  align: 'left' | 'right';
+  sortField: SortField;
+  sortDirection: SortDirection;
+  onSort: (field: SortField) => void;
+}
+
+/** Column header whose button sorts the table; the cell reports the sort order to assistive tech. */
+function SortHeader({ field, label, align, sortField, sortDirection, onSort }: SortHeaderProps) {
+  const active = sortField === field;
+  return (
+    <th
+      className={`px-4 py-3 ${align === 'left' ? 'text-left' : 'text-right'} text-sm font-semibold text-secondary`}
+      aria-sort={active ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+    >
+      <button type="button" className="cursor-pointer hover:text-white" onClick={() => onSort(field)}>
+        {label}
+        {active && <span className="ml-1" aria-hidden="true">{sortDirection === 'asc' ? '↑' : '↓'}</span>}
+      </button>
+    </th>
+  );
+}
+
 const WeaponTable: React.FC<WeaponTableProps> = ({
   weapons,
   onPurchase,
@@ -136,15 +161,6 @@ const WeaponTable: React.FC<WeaponTableProps> = ({
 
   const sortedWeapons = getSortedWeapons();
 
-  const SortIndicator = ({ field }: { field: SortField }) => {
-    if (sortField !== field) return null;
-    return (
-      <span className="ml-1">
-        {sortDirection === 'asc' ? '↑' : '↓'}
-      </span>
-    );
-  };
-
   const formatLoadoutType = (type: string): string => {
     return type.replace(/_/g, ' ').split(' ').map(word => 
       word.charAt(0).toUpperCase() + word.slice(1)
@@ -156,60 +172,15 @@ const WeaponTable: React.FC<WeaponTableProps> = ({
       <table className="w-full border-collapse">
         <thead>
           <tr className="bg-surface border-b border-white/10">
-            <th 
-              className="px-4 py-3 text-left text-sm font-semibold text-secondary cursor-pointer hover:text-white"
-              onClick={() => handleSort('name')}
-            >
-              Name <SortIndicator field="name" />
-            </th>
-            <th 
-              className="px-4 py-3 text-left text-sm font-semibold text-secondary cursor-pointer hover:text-white"
-              onClick={() => handleSort('loadoutType')}
-            >
-              Loadout <SortIndicator field="loadoutType" />
-            </th>
-            <th 
-              className="px-4 py-3 text-left text-sm font-semibold text-secondary cursor-pointer hover:text-white"
-              onClick={() => handleSort('weaponType')}
-            >
-              Type <SortIndicator field="weaponType" />
-            </th>
-            <th 
-              className="px-4 py-3 text-left text-sm font-semibold text-secondary cursor-pointer hover:text-white"
-              onClick={() => handleSort('rangeBand')}
-            >
-              Range <SortIndicator field="rangeBand" />
-            </th>
-            <th 
-              className="px-4 py-3 text-right text-sm font-semibold text-secondary cursor-pointer hover:text-white"
-              onClick={() => handleSort('baseDamage')}
-            >
-              Damage <SortIndicator field="baseDamage" />
-            </th>
-            <th 
-              className="px-4 py-3 text-right text-sm font-semibold text-secondary cursor-pointer hover:text-white"
-              onClick={() => handleSort('cooldown')}
-            >
-              Cooldown <SortIndicator field="cooldown" />
-            </th>
-            <th 
-              className="px-4 py-3 text-right text-sm font-semibold text-secondary cursor-pointer hover:text-white"
-              onClick={() => handleSort('dps')}
-            >
-              DPS <SortIndicator field="dps" />
-            </th>
-            <th 
-              className="px-4 py-3 text-right text-sm font-semibold text-secondary cursor-pointer hover:text-white"
-              onClick={() => handleSort('cost')}
-            >
-              Cost <SortIndicator field="cost" />
-            </th>
-            <th 
-              className="px-4 py-3 text-right text-sm font-semibold text-secondary cursor-pointer hover:text-white"
-              onClick={() => handleSort('attributes')}
-            >
-              Attributes <SortIndicator field="attributes" />
-            </th>
+            <SortHeader field="name" label="Name" align="left" sortField={sortField} sortDirection={sortDirection} onSort={handleSort} />
+            <SortHeader field="loadoutType" label="Loadout" align="left" sortField={sortField} sortDirection={sortDirection} onSort={handleSort} />
+            <SortHeader field="weaponType" label="Type" align="left" sortField={sortField} sortDirection={sortDirection} onSort={handleSort} />
+            <SortHeader field="rangeBand" label="Range" align="left" sortField={sortField} sortDirection={sortDirection} onSort={handleSort} />
+            <SortHeader field="baseDamage" label="Damage" align="right" sortField={sortField} sortDirection={sortDirection} onSort={handleSort} />
+            <SortHeader field="cooldown" label="Cooldown" align="right" sortField={sortField} sortDirection={sortDirection} onSort={handleSort} />
+            <SortHeader field="dps" label="DPS" align="right" sortField={sortField} sortDirection={sortDirection} onSort={handleSort} />
+            <SortHeader field="cost" label="Cost" align="right" sortField={sortField} sortDirection={sortDirection} onSort={handleSort} />
+            <SortHeader field="attributes" label="Attributes" align="right" sortField={sortField} sortDirection={sortDirection} onSort={handleSort} />
             <th className="px-4 py-3 text-center text-sm font-semibold text-secondary">
               Action
             </th>
@@ -234,12 +205,13 @@ const WeaponTable: React.FC<WeaponTableProps> = ({
                   <div className="flex items-center gap-2">
                     {getWeaponTypeIcon(weapon.weaponType)}
                     <div className="flex flex-col">
-                      <span 
-                        className="font-medium cursor-pointer hover:text-primary transition-colors"
+                      <button
+                        type="button"
+                        className="font-medium text-left cursor-pointer hover:text-primary transition-colors"
                         onClick={() => onWeaponClick?.(weapon)}
                       >
                         {weapon.name}
-                      </span>
+                      </button>
                       {ownedWeapons && ownedWeapons.has(weapon.id) && (
                         <span className="text-xs text-success">
                           Own ({ownedWeapons.get(weapon.id)})

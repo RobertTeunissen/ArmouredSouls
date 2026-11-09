@@ -14,6 +14,7 @@ Cross-cutting rules only; domain rules live in conditional steering files.
 
 ## Backend
 - Shared game formulas live only in `app/shared/utils/`; never duplicate them in frontend or backend. `app/backend/src/shared/utils` is a symlink to it: never delete through it or count it twice.
+- API response shapes used by both apps live in `app/shared/types/` (backend symlink `src/shared/types`, frontend `@shared/types`): wire format (dates as ISO strings), `import type` only, no runtime code. Services return them; the frontend imports them instead of redeclaring.
 - Import Prisma from the project-local generated client via the `src/lib/prisma.ts` singleton (Prisma 7 needs the configured driver adapter). Regenerate after schema changes.
 - Thin routes: validate, authorize ownership, call a service, respond. Business logic, helpers, and complex queries go in services.
 - Parameterized Prisma queries, transactions for multi-step mutations, appropriate indexes and pagination.
@@ -22,7 +23,7 @@ Cross-cutting rules only; domain rules live in conditional steering files.
 
 ## API and errors
 - RESTful methods/status codes; error shape `{ error, code, details? }`.
-- Every route validates params/query/body with `validateRequest` + Zod using shared primitives; no inline regex in routes.
+- Every route validates params/query/body with `validateRequest` + Zod using shared primitives; no inline regex in routes. Prefer `...validated(schemas, handler)`, which hands the handler the parsed, typed values; never re-parse `req.params`/`req.query` in a handler.
 - Mutations of user-owned resources verify ownership (inside the transaction when applicable); failures stay a generic `403 Access denied`.
 - Throw domain `AppError` classes with error codes; Express 5 forwards them to `errorHandler`. Routes never reformat errors.
 - Never expose secrets, tokens, passwords, submitted values, or internal details.

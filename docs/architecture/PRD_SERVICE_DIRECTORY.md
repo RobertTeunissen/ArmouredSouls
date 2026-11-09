@@ -2,12 +2,14 @@
 
 **Project**: Armoured Souls
 **Document Type**: Product Requirements Document (PRD)
-**Version**: v1.20
-**Last Updated**: November 8, 2026
+**Version**: v1.22
+**Last Updated**: November 9, 2026
 **Status**: ✅ Implemented
 **Owner**: Robert Teunissen
 
 **Revision History**:
+- v1.22 (Nov 9, 2026): `match/matchHistoryService` split into `upcomingMatchesService`, `matchHistoryService` and `battleLogService` (no behaviour change); `economy/unifiedFacilityROIService` has one ROI path (`calculateAllEconomicROIs`), the unused single-facility `calculateFacilityROI` removed. Also retired as unused: `common/dataIntegrityService` with `common/financialIntegrityDiagnostics` (only reachable through the removed `/api/analytics/integrity`), `economy/financialReportService` with `generateFinancialReport`/`generatePerRobotFinancialReport` (only fed the removed legacy finance endpoints), `standings/robotLeagueTiers`, and the uncalled helpers `calculateFinancialHealth`, `catalogueIssueCode`, `clearTuningAllocation` and `estimateEventSize`.
+- v1.21 (Nov 9, 2026): route clean-up — inline Prisma moved out of the route files into `robot/robotLookupService`, `tournament/tournamentQueryService`, `economy/facilityOverviewService`, `economy/weaponInventoryQueryService`, `auth/profileUpdateService`, `league/tierChangeFeedService` and `team-battle/teamBattleQueryService`; routes read typed input through `validated()` (`middleware/schemaValidator`). Deleted as unused: `battle/battleStrategy` (`BattleStrategy`/`BattleProcessor`, never used by a mode), `cycle/leagueCycleOrchestrator`, and the never-imported barrels of admin, analytics, arena, auth, battle, common, cycle, economy, koth, league, notifications, onboarding, robot and tournament. With the 26 API endpoints no client called (legacy finances, unused analytics, `/auth/logout`, robot matches/upcoming, leaderboard cache, KotH instances, changelog unread count, team league history, weapon availability): `analytics/stableAnalyticsService`, `common/queryService`, `cycle/cyclePerformanceMonitoringService`, and the methods only they used. `economy/financialSummaryService` serves `GET /api/finances/summary`.
 - v1.20 (Nov 8, 2026): `league/` gains `standing-status`, `league-zone-meta`, `leagueStandingsService` and `myStandingsService` (League Standings redesign); `league-rebalancing-preview` exposes the pure `buildLeagueTierPreview`.
 - v1.19 (Nov 6, 2026): `economy/snapshot-stable-metric-queries` aggregates the stable's `cycle_snapshots.stable_metrics` totals and the purchase-cycle fallback for `unifiedFacilityROIService` in the database (#550).
 - v1.18 (Nov 2, 2026): `admin/system/` (`GET /api/admin/system/overview`, `getRequestFailures` for the Dashboard); `monitoring/requestMetrics` counts failed (5xx) and slow (2 s or longer) requests per hour and route into `request_metrics`, fed by `requestLogger` and the error code `errorHandler` sets; `monitoring/backupStatus` (`getLatestBackup`) is the one backup reader of the daily health report and the System page, and recognises `.sql.zst` (the report looked only for `.dump` / `.sql.gz` and reported no backup once nightly dumps moved to zstd on 28 Oct 2026).
@@ -155,7 +157,6 @@ Data aggregation, leaderboards, and reporting. Read-only services that query acr
 | `robotStatsViewService` | Robot stats aggregation for display |
 | `cycleAnalyticsService` | Cycle comparison and trend analysis |
 | `facilityAnalyticsService` | Facility usage and ROI analytics |
-| `stableAnalyticsService` | Per-stable financial analytics |
 | `kothAnalyticsService` | KotH-specific analytics (placements, zone scores) |
 | `onboardingAnalyticsService` | Onboarding funnel metrics and event tracking |
 | `trendHelpers` | Shared trend calculation utilities |
@@ -205,7 +206,6 @@ Core combat engine — the simulator and shared orchestration helpers.
 | `walkoverClaim` | The queued-match claim shared by byes and forfeits (`claimQueuedMatch`, `readClaimedBattleId`): a conditional update on `scheduled_matches_v2` or `tournament_matches` taken before any payment, so a rerun or a concurrent run pays nothing |
 | `forfeitResolutionService` | `resolveForfeitEvent`, the single writer for a two-sided forfeit (league 1v1, 2v2/3v3, tag team, solo and team tournaments): battle row, claim, bye-level `battle_income` for the ready side with the `forfeit:` identity, participants with `forfeited`, zero-event summary, standings, stats and audit. Double forfeit = draw, no credits |
 | `matchFailurePolicy` | `handleMatchFailure`: one per-match failure handler for every orchestrator — makes the queued match terminal with no rewards (unified rows `cancelled`; tournaments: linked fought battle → its winner, nothing fought → higher seed advances, bye → sole participant), logs a structured `error` event and never throws. `recoverTournamentMatch` first gives a linked fought tournament battle one idempotent resume |
-| `battleStrategy` | Strategy pattern interface + `BattleProcessor` for new match types |
 | `combatMessageGenerator` | Converts raw combat events into narrative battle log messages |
 
 ### common/
@@ -214,9 +214,7 @@ Shared infrastructure services used across domains.
 | Service | Purpose |
 |---------|---------|
 | `eventLogger` | AuditLog event creation (battle_complete, passive_income, operating_costs, etc.) |
-| `queryService` | Reusable Prisma query helpers |
-| `dataIntegrityService` | Data consistency checks (balance verification, event count validation) |
-| `eventCompression` | Combat event deduplication and size estimation |
+| `eventCompression` | Combat event deduplication |
 | `guide-service` | In-game guide content loading and caching (Markdown + YAML frontmatter) |
 | `markdown-parser` | Markdown parsing with heading extraction |
 | `resetService` | Account reset logic (delete robots/weapons/facilities, restore credits). Deletes the stable's own battle participant rows via `robotReferenceCleanup`; battles, summaries and opponents' records stay (#294) |
@@ -233,7 +231,6 @@ Automated game loop — the scheduler and analytics snapshot system.
 | `schedulerWindow` | Leaf module: `nextScheduledJobRunAt` from the configured cron schedules (null when the scheduler is off); feeds the Automaton Turn_Step deadline without importing `cycleScheduler` |
 | `cycleSnapshotService` | Aggregates AuditLog events into CycleSnapshot for fast analytics |
 | `cycleCsvExportService` | Exports cycle data to CSV files |
-| `cyclePerformanceMonitoringService` | Detects step duration degradation across cycles |
 
 ### economy/
 Financial systems — repair costs, streaming revenue, facility ROI.
@@ -292,7 +289,9 @@ Match history queries.
 
 | Service | Purpose |
 |---------|---------|
-| `matchHistoryService` | Battle history queries with pagination, filtering, and next-cycle scheduling info |
+| `upcomingMatchesService` | Scheduled league, tournament, team-tournament and bye entries for a stable, with next-cycle scheduling info |
+| `matchHistoryService` | Battle history queries with pagination and filtering; `classifyForfeit`, `PLAYER_LOG_HIDDEN_FIELDS` |
+| `battleLogService` | One battle's detailed log for players (`GET /api/matches/battles/:id/log`) |
 
 ### notifications/
 External notification dispatch.

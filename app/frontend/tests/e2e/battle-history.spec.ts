@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { navigateToProtectedPage } from './helpers/navigate';
 import { registerNewUser } from './helpers/register';
 
@@ -9,7 +9,95 @@ import { registerNewUser } from './helpers/register';
  *
  * Tests using test_user_001 auth state run in the chromium project (default).
  * The empty-state test registers a fresh user who has no battles.
+ *
+ * The seeded E2E database has no battles, so the filter, sort, search and
+ * navigation tests used to skip themselves on every CI run. They now serve a
+ * fixed two-battle history for the signed-in player (everything else on the
+ * page talks to the real backend).
  */
+
+interface FixtureRobot {
+  id: number;
+  name: string;
+  userId: number;
+  user: { username: string };
+}
+
+function fixtureParticipant(robot: FixtureRobot, team: number, eloBefore: number, eloAfter: number, finalHP: number, credits: number) {
+  return {
+    robotId: robot.id,
+    team,
+    role: null,
+    eloBefore,
+    eloAfter,
+    finalHP,
+    credits,
+    streamingRevenue: 0,
+    prestigeAwarded: 0,
+    fameAwarded: 0,
+    damageDealt: 50,
+    placement: null,
+    yielded: false,
+    destroyed: false,
+    robot,
+  };
+}
+
+function fixtureBattle(id: number, createdAt: string, mine: FixtureRobot, rival: FixtureRobot, iWon: boolean) {
+  const myElo = iWon ? [1200, 1212] : [1212, 1204];
+  const rivalElo = iWon ? [1210, 1198] : [1198, 1206];
+  return {
+    id,
+    battleType: 'league_1v1',
+    leagueType: 'bronze',
+    createdAt,
+    winnerId: iWon ? mine.id : rival.id,
+    robot1Id: mine.id,
+    robot2Id: rival.id,
+    robot1: mine,
+    robot2: rival,
+    robot1ELOBefore: myElo[0],
+    robot1ELOAfter: myElo[1],
+    robot2ELOBefore: rivalElo[0],
+    robot2ELOAfter: rivalElo[1],
+    robot1FinalHP: iWon ? 40 : 0,
+    robot2FinalHP: iWon ? 0 : 35,
+    winnerReward: 1000,
+    loserReward: 300,
+    durationSeconds: 42,
+    participants: [
+      fixtureParticipant(mine, 1, myElo[0], myElo[1], iWon ? 40 : 0, iWon ? 1000 : 300),
+      fixtureParticipant(rival, 2, rivalElo[0], rivalElo[1], iWon ? 0 : 35, iWon ? 300 : 1000),
+    ],
+  };
+}
+
+/**
+ * Serve a two-battle history (one win, one loss) owned by the signed-in
+ * player. The player's id comes from the real profile response.
+ */
+async function mockBattleHistory(page: Page): Promise<void> {
+  let userId = 0;
+  await page.route('**/api/user/profile', async (route) => {
+    const response = await route.fetch();
+    const body = await response.json() as { id: number };
+    userId = body.id;
+    await route.fulfill({ response, json: body });
+  });
+  await page.route('**/api/matches/history**', async (route) => {
+    const mine = { id: 900001, name: 'E2E Alpha', userId, user: { username: 'test_user_001' } };
+    const rival = { id: 900002, name: 'E2E Rival', userId: userId + 100000, user: { username: 'e2e_rival' } };
+    await route.fulfill({
+      json: {
+        data: [
+          fixtureBattle(910002, '2026-11-02T12:00:00.000Z', mine, rival, false),
+          fixtureBattle(910001, '2026-11-01T12:00:00.000Z', mine, rival, true),
+        ],
+        pagination: { page: 1, pageSize: 20, total: 2, totalPages: 1 },
+      },
+    });
+  });
+}
 
 test.describe('Battle History Page', () => {
   test('displays battle records with robot names, outcomes, and ELO changes', async ({ page }) => {
@@ -46,45 +134,35 @@ test.describe('Battle History Page', () => {
 
   test('outcome filter filters displayed battles to selected outcome type', async ({ page }) => {
     // Req 4.2 — outcome filter works
+    await mockBattleHistory(page);
     await navigateToProtectedPage(page, '/battle-history');
     await expect(page.getByRole('heading', { name: 'Battle History', level: 1 })).toBeVisible();
     await expect(page.getByText('Loading battles...')).toBeHidden({ timeout: 15000 });
 
-    // Only run filter tests if battles exist
-    const hasBattles = await page.getByText('vs').first().isVisible().catch(() => false);
-    if (!hasBattles) {
-      test.skip();
-      return;
-    }
+    await expect(page.getByText('vs').first()).toBeVisible();
 
     // Select "Wins Only" from the outcome filter dropdown
     // The select has options: "All Outcomes", "Wins Only", "Losses Only", "Draws Only"
     const outcomeSelect = page.locator('select').filter({ hasText: 'All Outcomes' });
     await outcomeSelect.selectOption('win');
 
-    // After filtering, either WIN badges are shown or "No Battles Found" appears
-    const hasWins = await page.getByText('WIN').first().isVisible().catch(() => false);
-    if (hasWins) {
-      // All visible outcome badges should be WIN (no LOSS or DRAW visible)
-      await expect(page.getByText('WIN').first()).toBeVisible();
-    } else {
-      // No wins — the filtered empty state should show
-      await expect(page.getByText('No Battles Found')).toBeVisible();
-    }
+    // The fixture holds one win and one loss: only the win stays.
+    await expect(page.getByText(/^WIN$/).first()).toBeVisible();
+    await expect(page.getByText(/^LOSS$/)).toHaveCount(0);
+
+    await outcomeSelect.selectOption('loss');
+    await expect(page.getByText(/^LOSS$/).first()).toBeVisible();
+    await expect(page.getByText(/^WIN$/)).toHaveCount(0);
   });
 
   test('clicking a battle record navigates to /battle/:id detail page', async ({ page }) => {
     // Req 4.3 — clicking a battle navigates to detail page
+    await mockBattleHistory(page);
     await navigateToProtectedPage(page, '/battle-history');
     await expect(page.getByRole('heading', { name: 'Battle History', level: 1 })).toBeVisible();
     await expect(page.getByText('Loading battles...')).toBeHidden({ timeout: 15000 });
 
-    // Only run if battles exist
-    const hasBattles = await page.getByText('vs').first().isVisible().catch(() => false);
-    if (!hasBattles) {
-      test.skip();
-      return;
-    }
+    await expect(page.getByText('vs').first()).toBeVisible();
 
     // Click the first battle record (CompactBattleCard is a clickable div)
     // Each card contains "vs" text and an arrow "→"
@@ -97,16 +175,12 @@ test.describe('Battle History Page', () => {
 
   test('changing sort order reorders battle records', async ({ page }) => {
     // Req 4.5 — sort order changes the display order
+    await mockBattleHistory(page);
     await navigateToProtectedPage(page, '/battle-history');
     await expect(page.getByRole('heading', { name: 'Battle History', level: 1 })).toBeVisible();
     await expect(page.getByText('Loading battles...')).toBeHidden({ timeout: 15000 });
 
-    // Only run if battles exist
-    const hasBattles = await page.getByText('vs').first().isVisible().catch(() => false);
-    if (!hasBattles) {
-      test.skip();
-      return;
-    }
+    await expect(page.getByText('vs').first()).toBeVisible();
 
     // The sort select has "Sort: Newest First" as default
     const sortSelect = page.locator('select').filter({ hasText: 'Sort: Newest First' });
@@ -124,16 +198,12 @@ test.describe('Battle History Page', () => {
 
   test('search term filters battles by robot/opponent names', async ({ page }) => {
     // Req 4.6 — search filters battles
+    await mockBattleHistory(page);
     await navigateToProtectedPage(page, '/battle-history');
     await expect(page.getByRole('heading', { name: 'Battle History', level: 1 })).toBeVisible();
     await expect(page.getByText('Loading battles...')).toBeHidden({ timeout: 15000 });
 
-    // Only run if battles exist
-    const hasBattles = await page.getByText('vs').first().isVisible().catch(() => false);
-    if (!hasBattles) {
-      test.skip();
-      return;
-    }
+    await expect(page.getByText('vs').first()).toBeVisible();
 
     // Find the search input by placeholder
     const searchInput = page.getByPlaceholder('Search robot or opponent...');

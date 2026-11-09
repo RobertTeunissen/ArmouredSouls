@@ -35,6 +35,8 @@ export function FacilitiesTab({
           <div key={category.id} className="space-y-4">
             {/* Category Header */}
             <button
+              type="button"
+              aria-expanded={!isCollapsed}
               onClick={() => onToggleCategory(category.id)}
               className="w-full bg-surface p-4 rounded-lg border border-white/10 hover:border-gray-600 transition-colors text-left"
             >
@@ -46,7 +48,7 @@ export function FacilitiesTab({
                     <p className="text-sm text-secondary mt-1">{category.description}</p>
                   </div>
                 </div>
-                <span className="text-2xl text-secondary">
+                <span className="text-2xl text-secondary" aria-hidden="true">
                   {isCollapsed ? '▼' : '▲'}
                 </span>
               </div>

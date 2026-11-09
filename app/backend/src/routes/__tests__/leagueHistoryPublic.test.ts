@@ -62,10 +62,7 @@ describe('GET /api/robots/:id/league-history', () => {
     AuthRequest: {},
   }));
 
-  // Mock validateRequest to pass through
-  jest.mock('../../middleware/schemaValidator', () => ({
-    validateRequest: () => (_req: unknown, _res: unknown, next: () => void) => next(),
-  }));
+  // The real validator: the robot routes read their parsed `:id` from `validated()`.
 
   // Mock other robot service dependencies
   jest.mock('../../services/robot/robotSanitizer', () => ({

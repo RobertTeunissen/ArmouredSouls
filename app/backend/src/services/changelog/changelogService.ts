@@ -92,27 +92,6 @@ class ChangelogService {
   }
 
   /**
-   * Get count of unread published entries for a player.
-   */
-  async getUnreadCount(userId: number): Promise<number> {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { lastSeenChangelog: true },
-    });
-
-    if (!user) {
-      return 0;
-    }
-
-    return prisma.changelogEntry.count({
-      where: {
-        status: 'published',
-        publishDate: { gt: user.lastSeenChangelog },
-      },
-    });
-  }
-
-  /**
    * Dismiss changelog — updates the user's lastSeenChangelog to now.
    */
   async dismiss(userId: number): Promise<void> {

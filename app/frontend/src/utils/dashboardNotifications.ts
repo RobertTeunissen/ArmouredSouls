@@ -15,6 +15,7 @@
  * shows one alert per category, highest priority first.
  */
 
+import type { TierChange } from '@shared/types';
 import { getOwnerBattleReadiness } from './robot-battle-readiness';
 import { workshopPath } from './robotRoutes';
 
@@ -82,17 +83,6 @@ export interface NotificationTeam {
   teamName: string;
   teamSize: number;
   members: { robot: { name: string; subscriptions?: { eventType: string }[] } }[];
-}
-
-export interface TierChange {
-  id: number;
-  entityType: string;
-  entityId: number;
-  entityName: string;
-  changeType: 'promotion' | 'demotion';
-  sourceTier: string;
-  destinationTier: string;
-  mode?: string;
 }
 
 export interface RecentTournamentWinner {

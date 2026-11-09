@@ -2,7 +2,9 @@
  * Custom ESLint rule: require-validate-request
  *
  * Ensures every router.get/post/put/delete/patch() call in route files
- * includes a `validateRequest` call in its middleware arguments.
+ * includes a `validateRequest` call in its middleware arguments, or a
+ * `...validated(schemas, handler)` spread (validateRequest plus a handler that
+ * receives the parsed values), which is checked the same way.
  *
  * Additionally, if the route path contains `:params`, the `validateRequest`
  * call must include a `params` key. If the handler accesses `req.body`,
@@ -26,6 +28,10 @@ module.exports = {
     },
   },
   create(context) {
+    // `validated(schemas, handler)` (middleware/schemaValidator.ts) spreads
+    // `validateRequest(schemas)` plus the handler, so it counts the same.
+    const VALIDATION_CALLEES = new Set(['validateRequest', 'validated']);
+
     return {
       CallExpression(node) {
         // Match router.get(), router.post(), router.put(), router.delete(), router.patch()
@@ -72,8 +78,11 @@ module.exports = {
           });
         }
 
-        // Check if the handler function accesses req.body
-        const handlerNode = findHandlerFunction(node.arguments);
+        // Check if the handler function accesses req.body. `validated(schemas, handler)`
+        // carries its handler as its second argument.
+        const handlerNode = validateCallNode.callee.name === 'validated'
+          ? findHandlerFunction(validateCallNode.arguments.slice(1))
+          : findHandlerFunction(node.arguments);
         if (handlerNode && accessesReqBody(handlerNode) && !hasBodyKey) {
           context.report({
             node: validateCallNode,
@@ -104,7 +113,7 @@ module.exports = {
       if (
         node.type === 'CallExpression' &&
         node.callee.type === 'Identifier' &&
-        node.callee.name === 'validateRequest'
+        VALIDATION_CALLEES.has(node.callee.name)
       ) {
         return node;
       }

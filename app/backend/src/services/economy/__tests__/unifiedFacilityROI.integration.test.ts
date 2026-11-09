@@ -10,7 +10,14 @@
  * **Validates: Requirements 4.4**
  */
 import prisma from '../../../lib/prisma';
-import { unifiedFacilityROIService } from '../unifiedFacilityROIService';
+import { unifiedFacilityROIService, type UnifiedFacilityROI } from '../unifiedFacilityROIService';
+
+/** One facility's ROI through the production entry point, or null when it is not listed. */
+async function roiOf(userId: number, facilityType: string): Promise<UnifiedFacilityROI | null> {
+  const { facilities } = await unifiedFacilityROIService.calculateAllEconomicROIs(userId);
+  return facilities.find((f) => f.facilityType === facilityType) ?? null;
+}
+
 
 describe('UnifiedFacilityROIService - Integration Tests', () => {
   let testUserIds: number[] = [];
@@ -151,10 +158,7 @@ describe('UnifiedFacilityROIService - Integration Tests', () => {
       data: { totalCycles: 9002 },
     });
 
-    const result = await unifiedFacilityROIService.calculateFacilityROI(
-      user.id,
-      'merchandising_hub'
-    );
+    const result = await roiOf(user.id, 'merchandising_hub');
 
     expect(result).not.toBeNull();
     expect(result!.facilityType).toBe('merchandising_hub');
@@ -192,10 +196,7 @@ describe('UnifiedFacilityROIService - Integration Tests', () => {
       },
     });
 
-    const result = await unifiedFacilityROIService.calculateFacilityROI(
-      user.id,
-      'streaming_studio'
-    );
+    const result = await roiOf(user.id, 'streaming_studio');
 
     // Should NOT be null — this is the bug fix
     expect(result).not.toBeNull();
@@ -235,41 +236,4 @@ describe('UnifiedFacilityROIService - Integration Tests', () => {
     expect(result.totals.totalInvestment).toBeGreaterThan(0);
   });
 
-  it('should return projected ROI for prospective upgrades', async () => {
-    // Create user
-    const user = await prisma.user.create({
-      data: {
-        username: `inttest_proj_${Date.now()}`,
-        passwordHash: '$2b$10$testhashedpassword000000000000000000000000000000',
-        prestige: 5000,
-        currency: 3000000,
-      },
-    });
-    testUserIds.push(user.id);
-
-    // Create facility at level 1
-    await prisma.facility.create({
-      data: {
-        userId: user.id,
-        facilityType: 'merchandising_hub',
-        level: 1,
-        maxLevel: 10,
-      },
-    });
-
-    const result = await unifiedFacilityROIService.calculateProjectedROI(
-      user.id,
-      'merchandising_hub',
-      3
-    );
-
-    expect(result.currentLevel).toBe(1);
-    expect(result.targetLevel).toBe(3);
-    expect(result.upgradeCost).toBeGreaterThan(0);
-    expect(result.affordable).toBe(true);
-    expect(result.recommendation).toBeTruthy();
-    expect(['excellent', 'good', 'neutral', 'poor', 'not_affordable']).toContain(
-      result.recommendationType
-    );
-  });
 });

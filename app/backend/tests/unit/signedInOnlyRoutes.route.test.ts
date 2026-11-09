@@ -1,9 +1,8 @@
 /**
  * Player data needs a login (Nov 2026): the league standings, leaderboards,
- * Hall of Records and the robot ELO chart answered anonymous requests, and the
- * event-log summary was open while its siblings (/performance, /integrity) were
- * admin-only. These pin every one of them behind `authenticateToken`, and the
- * log summary behind `requireAdmin`.
+ * Hall of Records and the robot ELO chart answered anonymous requests. These pin
+ * every one of them behind `authenticateToken`. (The event-log summary, cache and
+ * old ELO endpoints were removed as unused in Nov 2026.)
  *
  * Only the auth layer runs here: Prisma is mocked, so an unauthenticated
  * request must be refused before any route touches the database.
@@ -31,7 +30,6 @@ jest.mock('../../src/config/logger', () => ({
   default: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
 }));
 
-const JWT_SECRET = 'test-secret-key-for-jwt-signing-1234567890';
 jest.mock('../../src/config/env', () => ({
   getConfig: () => ({ jwtSecret: 'test-secret-key-for-jwt-signing-1234567890' }),
 }));
@@ -63,10 +61,8 @@ const FORMERLY_PUBLIC = [
   '/api/leaderboards/fame',
   '/api/leaderboards/losses',
   '/api/leaderboards/prestige',
-  '/api/leaderboards/cache?category=fame',
   '/api/records',
-  '/api/analytics/robot/1/elo?cycleRange=[1,10]',
-  '/api/analytics/logs/summary?startCycle=1&endCycle=10',
+  '/api/analytics/robot/1/metric/elo?cycleRange=[1,10]',
 ];
 
 let app: express.Express;
@@ -87,18 +83,5 @@ describe('player data needs a login', () => {
     const forged = jwt.sign({ userId: 7, username: 'tester', role: 'admin', tokenVersion: 0 }, 'wrong-secret');
     const res = await request(app).get(path).set('Authorization', `Bearer ${forged}`);
     expect(res.status).toBe(401);
-  });
-});
-
-describe('GET /api/analytics/logs/summary', () => {
-  it('is admin-only, like /performance and /integrity', async () => {
-    mockPrisma.user.findUnique.mockResolvedValue({ tokenVersion: 0, stableName: 'Tester', role: 'user', stableType: 'human' });
-    const playerToken = jwt.sign({ userId: 7, username: 'tester', role: 'user', tokenVersion: 0 }, JWT_SECRET);
-
-    const res = await request(app)
-      .get('/api/analytics/logs/summary?startCycle=1&endCycle=10')
-      .set('Authorization', `Bearer ${playerToken}`);
-
-    expect(res.status).toBe(403);
   });
 });

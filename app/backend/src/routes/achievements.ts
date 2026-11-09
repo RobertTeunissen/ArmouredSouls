@@ -1,7 +1,7 @@
 import { Router, Response } from 'express';
 import { z } from 'zod';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
-import { validateRequest } from '../middleware/schemaValidator';
+import { validateRequest, validated } from '../middleware/schemaValidator';
 import { achievementService } from '../services/achievement';
 
 const router = Router();
@@ -32,27 +32,25 @@ router.get(
 router.get(
   '/recent',
   authenticateToken,
-  validateRequest({ query: recentQuerySchema }),
-  async (req: AuthRequest, res: Response) => {
+  ...validated({ query: recentQuerySchema }, async (req: AuthRequest, res: Response, { query }) => {
     const userId = req.user!.userId;
-    const limit = Number(req.query.limit) || 10;
-    const since = req.query.since ? new Date(req.query.since as string) : undefined;
+    const limit = Number(query.limit) || 10;
+    const since = query.since ? new Date(query.since as string) : undefined;
     const result = await achievementService.getRecentUnlocks(userId, limit, since);
     return res.json(result);
-  },
+  }),
 );
 
 // PUT /api/achievements/pinned — Update pinned achievement IDs
 router.put(
   '/pinned',
   authenticateToken,
-  validateRequest({ body: pinnedBodySchema }),
-  async (req: AuthRequest, res: Response) => {
+  ...validated({ body: pinnedBodySchema }, async (req: AuthRequest, res: Response, { body }) => {
     const userId = req.user!.userId;
-    const { achievementIds } = req.body;
+    const { achievementIds } = body;
     await achievementService.updatePinnedAchievements(userId, achievementIds);
     return res.json({ success: true });
-  },
+  }),
 );
 
 export default router;

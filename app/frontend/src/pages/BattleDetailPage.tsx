@@ -1,7 +1,8 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
+import { useApiQuery } from '../hooks/useApiQuery';
+import { ApiError } from '../utils/ApiError';
 import AchievementBadge from '../components/AchievementBadge';
 import AchievementReward from '../components/AchievementReward';
 import {
@@ -28,42 +29,28 @@ import {
 import { PlaybackUnavailableNotice } from '../components/battle-detail/PlaybackUnavailableNotice';
 import { RobotSelector } from '../components/battle-detail/RobotSelector';
 
+/** The API wrapper rejects with an `ApiError` carrying the HTTP status. */
+function battleLoadErrorMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    if (error.statusCode === 404) return 'Battle not found';
+    if (error.statusCode === 403) return 'Access denied to this battle';
+  }
+  return 'Failed to load battle details';
+}
+
 function BattleDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [battleLog, setBattleLog] = useState<BattleLogResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (id) {
-      fetchBattleLog(parseInt(id));
-    }
-  }, [id]);
-
-  const fetchBattleLog = async (battleId: number) => {
-    try {
-      setLoading(true);
-      const data = await getBattleLog(battleId);
-      setBattleLog(data);
-      setError(null);
-    } catch (err: unknown) {
-      if (axios.isAxiosError(err)) {
-        if (err.response?.status === 404) {
-          setError('Battle not found');
-        } else if (err.response?.status === 403) {
-          setError('Access denied to this battle');
-        } else {
-          setError('Failed to load battle details');
-        }
-      } else {
-        setError('Failed to load battle details');
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+  const battleId = id ? parseInt(id) : NaN;
+  const query = useApiQuery<BattleLogResponse>(
+    (signal) => getBattleLog(battleId, signal),
+    [battleId],
+    { enabled: Number.isFinite(battleId) },
+  );
+  const battleLog = query.data;
+  const loading = query.loading;
+  const error = query.error ? battleLoadErrorMessage(query.error) : null;
 
   if (!user) {
     return null;

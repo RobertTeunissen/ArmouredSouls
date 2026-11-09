@@ -14,7 +14,14 @@
 import fc from 'fast-check';
 import { getFacilityConfig } from '../../../config/facilities';
 import prisma from '../../../lib/prisma';
-import { unifiedFacilityROIService } from '../unifiedFacilityROIService';
+import { unifiedFacilityROIService, type UnifiedFacilityROI } from '../unifiedFacilityROIService';
+
+/** One facility's ROI through the production entry point, or null when it is not listed. */
+async function roiOf(userId: number, facilityType: string): Promise<UnifiedFacilityROI | null> {
+  const { facilities } = await unifiedFacilityROIService.calculateAllEconomicROIs(userId);
+  return facilities.find((f) => f.facilityType === facilityType) ?? null;
+}
+
 
 const ECONOMIC_FACILITY_TYPES = [
   'merchandising_hub',
@@ -56,7 +63,7 @@ describe('Property 2: Preservation - Investment Calculation and Non-ROI Operatio
               .slice(0, effectiveLevel)
               .reduce((sum, cost) => sum + cost, 0);
 
-            // This is the same calculation used in roiCalculatorService.calculateFacilityROI
+            // This is the same calculation used in unifiedFacilityROIService
             // Verify the formula: totalInvestment = sum(config.costs[0..level-1])
             const calculatedInvestment = config.costs
               .slice(0, effectiveLevel)
@@ -133,7 +140,7 @@ describe('Property 2: Preservation - Investment Calculation and Non-ROI Operatio
       await prisma.$disconnect();
     });
 
-    it('for all non-economic facility types, unifiedFacilityROIService.calculateFacilityROI returns null (no meaningful ROI data)', async () => {
+    it('for all non-economic facility types, calculateAllEconomicROIs lists no ROI for them (no meaningful ROI data)', async () => {
       await fc.assert(
         fc.asyncProperty(
           fc.constantFrom(...NON_ECONOMIC_FACILITY_TYPES),
@@ -165,13 +172,9 @@ describe('Property 2: Preservation - Investment Calculation and Non-ROI Operatio
               },
             });
 
-            // The unified service rejects non-economic facility types immediately
-            // (returns null without even checking the database for the facility).
-            // This is the correct behavior — non-economic facilities have no
-            // economic component and should not return ROI data.
-            const result = await unifiedFacilityROIService.calculateFacilityROI(user.id, facilityType);
-
-            // The service returns null because non-economic facilities are filtered out.
+            // Non-economic facilities have no economic component, so the
+            // service never lists ROI data for them.
+            const result = await roiOf(user.id, facilityType);
             expect(result).toBeNull();
           }
         ),

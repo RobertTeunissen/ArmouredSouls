@@ -28,12 +28,6 @@ export const SHARPEN_EFFECT_LABEL = `−${SHARPEN_PCT}% cooldown`;
 /** Forge effect for one filled slot, e.g. `+8% base damage`. */
 export const FORGE_EFFECT_LABEL = `+${FORGE_PCT}% base damage`;
 
-/** Sharpen effect at the instance cap, e.g. `−20%`. */
-export const SHARPEN_CAP_LABEL = `−${SHARPEN_PCT * PROPORTIONAL_TIER_CAP}%`;
-
-/** Forge effect at the instance cap, e.g. `+16%`. */
-export const FORGE_CAP_LABEL = `+${FORGE_PCT * PROPORTIONAL_TIER_CAP}%`;
-
 /**
  * Render a refinement stat with trailing zeros trimmed.
  *

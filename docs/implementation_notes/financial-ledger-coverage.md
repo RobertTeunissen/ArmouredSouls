@@ -55,7 +55,7 @@ The AST check originally discovered 22 direct `data: { currency: ... }` assignme
 | `currency-weapon-purchase` | `app/backend/src/routes/weaponInventory.ts` — `POST /purchase` transaction | decrement | `Credit_Mutation_Service` | `weapon_purchase` | durable purchase operation + user + weapon; pair and existing purchase audit | Unit, Integration, Heavy |
 | `currency-weapon-sale` | `app/backend/src/routes/weaponInventory.ts` — `DELETE /:id` resale transaction | increment | `Credit_Mutation_Service` | `weapon_sale` | durable resale operation + user + inventory; pair and sale audit | Unit, Integration, Heavy |
 | `currency-weapon-refinement` | `app/backend/src/routes/weaponInventory.ts` — `POST /:id/refine` transaction | decrement | `Credit_Mutation_Service` | `weapon_refinement` | durable refinement operation + user + weapon; pair and refinement audit | Unit, Integration, Heavy |
-| `currency-facility-upgrade` | `app/backend/src/routes/facility.ts` — `POST /upgrade` transaction | decrement | `Credit_Mutation_Service` | `facility_upgrade` | durable upgrade + user + facility transition; pair and facility audit | Unit, Integration, Heavy |
+| `currency-facility-upgrade` | `app/backend/src/services/economy/facilityUpgradeService.ts` — `upgradeFacility` transaction (`POST /api/facilities/upgrade`) | decrement | `Credit_Mutation_Service` | `facility_upgrade` | durable upgrade + user + facility transition; pair and facility audit | Unit, Integration, Heavy |
 | `currency-robot-creation` | `app/backend/src/services/robot/robotCreationService.ts` — `createRobotTransaction` | decrement | `Credit_Mutation_Service` | `robot_creation` | durable creation operation + user + robot; pair plus robot row | Unit, Integration, Heavy |
 | `currency-attribute-upgrade` | `app/backend/src/services/robot/robotUpgradeService.ts` — `executeUpgradeTransaction` | decrement | `Credit_Mutation_Service` | `attribute_upgrade` | durable upgrade + user + robot + ordered attributes; pair plus robot update | Unit, Integration, Heavy |
 | `currency-manual-repair` | `app/backend/src/services/robot/robotRepairService.ts` — `repairAllRobots` | decrement | `Credit_Mutation_Service` | `repair_cost` with `repairType: 'manual'` | operation + robot; pair, `robot_repair`, and `lifetimeRepairCreditsPaid` | Unit, Integration, Heavy |
@@ -92,7 +92,6 @@ Prestige is progression, not currency. The current positive source inventory has
 | 2v2/3v3 tournaments | `app/backend/src/services/tournament/teamTournamentBattleOrchestrator.ts` — `calculateTeamTournamentPrestige` (the shared `calculateTournamentPrestige` table, once per team, #576) | one stable-level row with round/team-size source facts |
 | KotH | `app/backend/src/services/koth/kothBattleOrchestrator.ts` — `calculateKothRewards` | one stable-level row from the placement reward aggregate |
 | Grand Melee | `app/backend/src/services/grand-melee/grandMeleeRewards.ts` — `calculateGrandMeleeRewards` | one stable-level row from the placement reward aggregate |
-| Shared battle strategy | `app/backend/src/services/battle/battleStrategy.ts` — `BattleStrategy.calculateRewards` and `BattleProcessor.process` `reward?.prestige` path | one stable-level row when the strategy produces a positive award |
 | Achievements | achievement definitions' `rewardPrestige`, consumed by `app/backend/src/services/achievement/achievementService.ts` — `AchievementService.checkAndAward` | one `prestige_change` row with achievement `sourceEventId` |
 
 Historical pre-migration direct writers were the shared `awardPrestigeToUser` in `battlePostCombat.ts`, the combined `User.update` operations in `processKothBattle`, `processGrandMeleeBattle`, and `AchievementService.checkAndAward`, plus the reset sets in `performAccountReset` and `resetCompetitiveAndEconomicState`. The reset sets are lifecycle boundaries, not positive sources. Bye rewards always carry zero prestige and must not create a positive prestige record.
@@ -276,7 +275,7 @@ A current-economy mutation either commits the balance, `FinancialLedger` row, an
 
 ### Paired financial diagnostic coverage
 
-`financialIntegrityDiagnostics.ts` adds forward-only checks for:
+`financialIntegrityDiagnostics.ts` added forward-only checks for:
 
 - unpaired ledger and financial-audit rows;
 - duplicate identities and conflicting identity facts;
@@ -287,7 +286,7 @@ A current-economy mutation either commits the balance, `FinancialLedger` row, an
 - positive prestige source gaps; and
 - direct currency writers outside the shared service and enumerated lifecycle boundaries.
 
-`dataIntegrityService.ts` runs these checks for identified paired evidence and labels findings accordingly. Legacy null-identity history remains readable without incorrectly presenting it as paired coverage.
+`dataIntegrityService.ts` ran these checks for identified paired evidence. **Removed Nov 2026:** both modules were only reachable through `GET /api/analytics/integrity`, which no client called, so they were retired with it. Pairing stays enforced where it is written: `Credit_Mutation_Service` commits the balance, ledger row and paired audit row together or rolls back, the integration tier covers atomic pairs, duplicates and retries, and `coverageManifest.test.ts` / `directWriterCoverage` fail on a currency writer outside the shared service. Ad-hoc audits use the queries in `docs/guides/FINANCIAL_LEDGER_AUDIT_GUIDE.md`.
 
 ### Scope boundary
 

@@ -66,16 +66,19 @@ Security is enforced at multiple layers: input validation at the API boundary (Z
 
 ### What needs a login
 Every API endpoint requires a valid token, except:
-- `POST /api/auth/register`, `/login` and `/logout` (signing in),
+- `POST /api/auth/register` and `/login` (signing in; logging out only clears the token in the browser, so other devices stay signed in by design — the unused `POST /logout`, which bumped `tokenVersion`, was removed in Nov 2026),
 - `GET /api/health` (deploy checks and uptime monitoring),
 - the uploaded image files, which `<img>` tags fetch without a token.
 
-Until November 2026 the league standings and instances (`/api/leagues/:tier/*`), the leaderboards (`/api/leaderboards/*`), the Hall of Records (`/api/records`), the robot ELO chart (`/api/analytics/robot/:id/elo`) and the event-log summary (`/api/analytics/logs/summary`) answered anonymous requests. They now use `authenticateToken`; the log summary is also admin-only (`requireAdmin`), like `/performance` and `/integrity`. Their responses are `Cache-Control: private`. `tests/unit/signedInOnlyRoutes.route.test.ts` pins this. A new endpoint without `authenticateToken` needs a stated reason in this list.
+Until November 2026 the league standings and instances (`/api/leagues/:tier/*`), the leaderboards (`/api/leaderboards/*`), the Hall of Records (`/api/records`), the robot ELO chart and the event-log summary answered anonymous requests. They now use `authenticateToken` (the ELO chart reads `/api/analytics/robot/:id/metric/elo`; the old `/robot/:id/elo`, the log summary, `/performance` and `/integrity` were removed as unused in Nov 2026). Their responses are `Cache-Control: private`. `tests/unit/signedInOnlyRoutes.route.test.ts` pins this. A new endpoint without `authenticateToken` needs a stated reason in this list.
 
 ### Middleware
 - `authenticateToken` — Validates JWT on every protected route, attaches `user` to request
 - Token version check — Rejects tokens issued before the user's last password change
 - Automaton check (Spec #55) — Rejects any token whose user has `stableType = automaton` through the same 401 path
+
+### 401 vs 403 (client session handling)
+A missing, invalid, expired or revoked token is always `401`. `403` means "signed in, but not allowed": not your resource (`Access denied`), a prestige gate, a Refinement Lab tier lock, or an admin-only route. The frontend client (`app/frontend/src/utils/apiClient.ts`) ends the session and redirects to `/login` only on a backend-shaped `401` from a non-auth route; a `403` is passed to the screen that made the request. Until November 2026 it also logged the player out on any backend `403`, so hitting a prestige gate or opening a robot sold in another tab signed them out.
 
 ### Automaton accounts (Spec #55)
 Automaton_Stables are `users` rows nobody can sign in to:
@@ -110,6 +113,8 @@ Ownership checks run inside transaction boundaries to prevent TOCTOU races. Fail
 
 ### Zod Schema Validation
 Every route handler uses `validateRequest` middleware with Zod schemas. The `custom-routes/require-validate-request` ESLint rule enforces 100% coverage — any route without `validateRequest` fails lint.
+
+`...validated(schemas, handler)` (same module) is `validateRequest(schemas)` plus a handler that receives the parsed values typed by their schemas (`{ params, query, body }`), so a route reads `params.id` as a number instead of re-parsing `req.params.id`. The lint rule treats it like `validateRequest`, including the `params` and `body` key checks. New routes should prefer it; `routes/robots.ts`, `routes/tournaments.ts` and `routes/analytics.ts` use it.
 
 Zod's default `.strip()` mode removes unknown fields, preventing mass-assignment.
 

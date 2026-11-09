@@ -28,7 +28,8 @@ import { Prisma } from '../../generated/prisma';
 import { createTestRobot, createTestUser } from '../testHelpers';
 import { enterRobotStanding, enterTeamStanding } from '../helpers/standings';
 import { performAccountReset } from '../../src/services/common/resetService';
-import { getMatchHistory, getBattleLog } from '../../src/services/match/matchHistoryService';
+import { getMatchHistory } from '../../src/services/match/matchHistoryService';
+import { getBattleLog } from '../../src/services/match/battleLogService';
 import { getAdminBattleList, getAdminBattleDetail } from '../../src/services/admin/battles';
 import { battleLogFixture } from '../helpers/battleLogFixture';
 

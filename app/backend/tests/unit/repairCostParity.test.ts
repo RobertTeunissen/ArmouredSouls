@@ -256,7 +256,7 @@ describe('Repair_Cost_Parity_Test — cases inherited from the deleted shared/ba
 describe('Repair_Cost_Parity_Test — no duplicate Repair Bay formula (#525)', () => {
   const REPO_APP = path.join(__dirname, '../../..');
   const CALLERS = [
-    'backend/src/routes/facility.ts',
+    'backend/src/services/economy/facilityOverviewService.ts',
     'backend/src/services/economy/facilityRecommendationService.ts',
     'backend/src/services/economy/unifiedFacilityROIService.ts',
     'frontend/src/components/YieldThresholdSlider.tsx',

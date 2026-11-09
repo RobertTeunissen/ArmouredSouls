@@ -471,6 +471,7 @@ vi.mock('../../Navigation', () => ({
 
 import TournamentDetailPage from '../../../pages/TournamentDetailPage';
 import { getTournamentDetails } from '../../../utils/tournamentApi';
+import { ApiError } from '../../../utils/ApiError';
 
 const mockGetTournamentDetails = vi.mocked(getTournamentDetails);
 
@@ -509,9 +510,8 @@ describe('TournamentDetailPage', () => {
   });
 
   it('should show "Tournament not found" on 404 response', async () => {
-    mockGetTournamentDetails.mockRejectedValueOnce({
-      response: { status: 404 },
-    });
+    // The API wrapper rejects with an ApiError carrying the HTTP status.
+    mockGetTournamentDetails.mockRejectedValueOnce(new ApiError('Tournament not found', 'NOT_FOUND', 404));
 
     renderDetailPage();
 

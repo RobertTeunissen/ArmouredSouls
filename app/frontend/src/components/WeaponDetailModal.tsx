@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useId } from 'react';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import { ATTRIBUTE_LABELS, calculateDPS as calcDPS } from '../utils/weaponConstants';
 import { getWeaponImagePath } from '../utils/weaponImages';
 import MeleeIcon from '../assets/icons/weapon-types/melee.svg?react';
@@ -42,6 +43,8 @@ const WeaponDetailModal: React.FC<WeaponDetailModalProps> = ({
   discountPercent,
   ownedCount = 0,
 }) => {
+  const titleId = useId();
+  useEscapeKey(onClose);
   const discountedPrice = calculateDiscountedPrice(weapon.cost);
   const canAfford = userCredits >= discountedPrice;
   const canPurchase = canAfford && !isFull && !purchasing;
@@ -67,8 +70,8 @@ const WeaponDetailModal: React.FC<WeaponDetailModalProps> = ({
   const getAttributeBonuses = () => {
     const bonuses: Array<{ label: string; value: number }> = [];
     ATTRIBUTE_LABELS.forEach(({ key, label }) => {
-      const value = weapon[key] as number;
-      if (value !== 0) {
+      const value = weapon[key];
+      if (typeof value === 'number' && value !== 0) {
         bonuses.push({ label, value });
       }
     });
@@ -79,13 +82,18 @@ const WeaponDetailModal: React.FC<WeaponDetailModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-      <div className="bg-surface rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className="bg-surface rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+      >
         {/* Header */}
         <div className="flex justify-between items-start p-6 border-b border-white/10">
           <div className="flex items-center gap-4">
             {getWeaponTypeIcon(weapon.weaponType)}
             <div>
-              <h2 className="text-2xl font-bold">{weapon.name}</h2>
+              <h2 id={titleId} className="text-2xl font-bold">{weapon.name}</h2>
               <div className="flex gap-3 mt-1">
                 <span className="text-sm text-secondary capitalize">{weapon.weaponType}</span>
                 <span className="text-sm text-secondary">•</span>
@@ -98,6 +106,8 @@ const WeaponDetailModal: React.FC<WeaponDetailModalProps> = ({
             </div>
           </div>
           <button
+            type="button"
+            aria-label="Close weapon details"
             onClick={onClose}
             className="text-secondary hover:text-white transition-colors text-2xl leading-none"
           >

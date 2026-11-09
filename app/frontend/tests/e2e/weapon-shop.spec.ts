@@ -311,7 +311,7 @@ test.describe('Weapon Shop Page', () => {
       await expect(page.getByRole('heading', { name: 'Description' })).toBeVisible();
 
       // Close modal by clicking the Close button
-      await page.getByRole('button', { name: 'Close' }).click();
+      await page.getByRole('button', { name: 'Close', exact: true }).click();
 
       // Verify modal is closed
       await expect(page.getByRole('heading', { name: 'Description' })).not.toBeVisible();
@@ -324,11 +324,7 @@ test.describe('Weapon Shop Page', () => {
       const purchaseButton = page.getByRole('button', { name: 'Purchase', exact: true }).first();
       await expect(purchaseButton).toBeVisible();
 
-      // Skip if no purchasable weapon is available (all insufficient credits or storage full)
-      if (!(await purchaseButton.isEnabled())) {
-        test.skip(true, 'No affordable weapon available for test_user_001');
-        return;
-      }
+      await expect(purchaseButton, 'No affordable weapon available for test_user_001').toBeEnabled();
 
       await purchaseButton.click();
 

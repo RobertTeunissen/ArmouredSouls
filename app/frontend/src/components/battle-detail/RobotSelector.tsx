@@ -21,6 +21,8 @@ export function RobotSelector({
         <button
           key={p.robotId}
           type="button"
+          aria-pressed={i === selectedIndex}
+          title={p.robotName}
           onClick={() => onSelect(i)}
           className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors duration-150 ease-out ${
             i === selectedIndex

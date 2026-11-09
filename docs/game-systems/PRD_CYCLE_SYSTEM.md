@@ -415,7 +415,10 @@ Authorization: Bearer <admin-token>
 
 Regenerates all CycleSnapshots from AuditLog.
 
-### Analytics: Cycle Summary
+### Analytics: Cycle Summary (removed)
+
+Removed as unused in Nov 2026; the Finance Center (`/api/finances/report`, `/history`) replaces it.
+
 
 ```
 GET /api/analytics/stable/:userId/summary?lastNCycles=10

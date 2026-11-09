@@ -1,6 +1,6 @@
 import express, { type Response } from 'express';
 import { authenticateToken, type AuthRequest } from '../middleware/auth';
-import { validateRequest } from '../middleware/schemaValidator';
+import { validated } from '../middleware/schemaValidator';
 import { searchQuerySchema } from '../schemas/search';
 import { AppError } from '../errors';
 import {
@@ -26,24 +26,22 @@ const router = express.Router();
 router.post(
   '/selection',
   authenticateToken,
-  validateRequest({ body: searchSelectionBodySchema }),
-  async (req: AuthRequest, res: Response) => {
+  ...validated({ body: searchSelectionBodySchema }, async (req: AuthRequest, res: Response, { body }) => {
     const authenticatedUser = req.user;
     if (!authenticatedUser || !Number.isSafeInteger(authenticatedUser.userId) || authenticatedUser.userId <= 0) {
       throw new AppError('UNAUTHORIZED', 'Authentication required', 401);
     }
-    const { category } = req.body as { category: SearchSelectionCategory };
+    const { category } = body as { category: SearchSelectionCategory };
     await recordSearchSelection(authenticatedUser.userId, category);
     res.status(204).end();
-  },
+  }),
 );
 
 router.get(
   '/',
   authenticateToken,
-  validateRequest({ query: searchQuerySchema }),
-  async (req: AuthRequest, res: Response) => {
-    const rawQuery: unknown = req.query.q;
+  ...validated({ query: searchQuerySchema }, async (req: AuthRequest, res: Response, { query }) => {
+    const rawQuery: unknown = query.q;
     const authenticatedUser = req.user;
     if (typeof rawQuery !== 'string') {
       throw new AppError('VALIDATION_ERROR', 'Search query must be a string', 400);
@@ -84,7 +82,7 @@ router.get(
     // Analytics is response-isolated: no telemetry status, phrase, or context
     // is added to the player response, including on any telemetry failure.
     res.json(response);
-  },
+  }),
 );
 
 export default router;

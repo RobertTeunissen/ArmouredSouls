@@ -137,7 +137,7 @@ The Armoured Souls matchmaking system is a **fully implemented** turn-based mult
    - GET /api/matches/battles/:id/log
    - GET /api/leagues/:tier/standings
    - GET /api/leagues/:tier/instances
-   - GET /api/robots/:id/matches
+   - ~~GET /api/robots/:id/matches~~ (removed as unused in Nov 2026; robot history comes from `/api/matches/history?robotId=`)
    - Files: `routes/matches.ts`, `routes/leagues.ts`
 
 8. **Frontend UI** 
@@ -719,9 +719,7 @@ model Robot {
 - Query params: `page`, `perPage`
 - Response: Array of Robot objects with rank, sorted by league points then ELO
 
-**GET /api/robots/:id/matches**
-- Returns upcoming and recent matches for specific robot
-- Response: Object with `upcoming` and `history` arrays
+**GET /api/robots/:id/matches** — removed as unused in Nov 2026 (use `/api/matches/history?robotId=` and `/api/matches/upcoming?robotId=`)
 
 #### Admin Endpoints (Prototype Phase)
 
@@ -1347,7 +1345,7 @@ See [COMBAT_MESSAGES.md](COMBAT_MESSAGES.md) for 100+ message templates and comp
 - [ ] Implement GET /api/matches/upcoming
 - [ ] Implement GET /api/matches/history (with pagination)
 - [ ] Implement GET /api/leagues/:tier/standings (with instance support)
-- [ ] Implement GET /api/robots/:id/matches
+- [x] ~~Implement GET /api/robots/:id/matches~~ (superseded by `/api/matches/history` and `/api/matches/upcoming`)
 - [ ] Battle readiness endpoints
 - [ ] Add input validation and error handling
 - [ ] Write integration tests for all endpoints

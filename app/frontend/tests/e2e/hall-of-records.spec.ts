@@ -35,21 +35,6 @@ test.describe('Hall of Records — real backend', () => {
     expect(errors).toEqual([]);
   });
 
-  test('opens a record\'s top 10 from the board and comes back', async ({ page }) => {
-    await openBoard(page);
-    const topTen = page.getByRole('link', { name: /: Top 10( per mode)?$/ }).first();
-    test.skip(await topTen.count() === 0, 'the seeded database holds no record with a top-10 view');
-
-    await topTen.click();
-    await expect(page).toHaveURL(/record=/);
-    await expect(page.getByTestId('record-detail')).toBeVisible();
-    await expect(page.getByTestId('record-detail-row').first()).toBeVisible();
-
-    await page.getByRole('link', { name: '← All records' }).click();
-    await expect(page).toHaveURL(/\/hall-of-records$/);
-    await expect(page.getByTestId('record-detail')).toHaveCount(0);
-  });
-
   test('is reachable from the Social menu', async ({ page }) => {
     await gotoAuthed(page, '/dashboard');
     await page.getByRole('button', { name: /^Social/ }).hover();
@@ -79,6 +64,23 @@ test.describe('Hall of Records — board (fixture)', () => {
     await expect(page.getByTestId('record-tile-biggestTeamUpset').getByTestId('automaton-badge')).toBeVisible();
     await expect(page.getByTestId('record-tile-kothZoneTime').getByTestId('record-bot-stable')).toContainText('bot');
     await expect(page.getByTestId('record-tile-tournamentChampions').getByRole('link', { name: /Last 10 per type/ })).toBeVisible();
+  });
+
+  // Runs on the fixture: the seeded database has no battles, so the real board
+  // holds no record with a top 10 and this check would always be skipped.
+  test('opens a record\'s top 10 from the board and comes back', async ({ page }) => {
+    await openBoard(page);
+    const topTen = page.getByRole('link', { name: /: Top 10( per mode)?$/ }).first();
+    await expect(topTen).toBeVisible();
+
+    await topTen.click();
+    await expect(page).toHaveURL(/record=/);
+    await expect(page.getByTestId('record-detail')).toBeVisible();
+    await expect(page.getByTestId('record-detail-row').first()).toBeVisible();
+
+    await page.getByRole('link', { name: '← All records' }).click();
+    await expect(page).toHaveURL(/\/hall-of-records$/);
+    await expect(page.getByTestId('record-detail')).toHaveCount(0);
   });
 
   test('filters by group and by the viewer\'s places through the URL', async ({ page }) => {

@@ -147,8 +147,9 @@ function TeamAssignmentStep({ robotId, onComplete }: StepProps) {
         <div className="bg-surface border border-gray-700 rounded-lg p-4 space-y-3">
           <h4 className="font-semibold text-white text-sm">Create New Team</h4>
           <div>
-            <label className="text-xs text-secondary block mb-1">Team Name</label>
+            <label htmlFor="new-team-name" className="text-xs text-secondary block mb-1">Team Name</label>
             <input
+              id="new-team-name"
               type="text"
               value={newTeamName}
               onChange={(e) => setNewTeamName(e.target.value)}
@@ -158,8 +159,8 @@ function TeamAssignmentStep({ robotId, onComplete }: StepProps) {
             />
           </div>
           <div>
-            <label className="text-xs text-secondary block mb-1">Team Size</label>
-            <div className="flex gap-2">
+            <p id="new-team-size-label" className="text-xs text-secondary block mb-1">Team Size</p>
+            <div className="flex gap-2" role="group" aria-labelledby="new-team-size-label">
               <button
                 onClick={() => setNewTeamSize(2)}
                 className={`flex-1 px-3 py-2 rounded text-sm font-semibold min-h-[44px] transition-colors ${

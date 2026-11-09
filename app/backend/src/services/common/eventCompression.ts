@@ -71,19 +71,3 @@ export function compressEventsForStorage(
   
   return events.map(stripDebugFields);
 }
-
-/**
- * Estimate memory size of a combat event in bytes.
- * Useful for monitoring and debugging memory usage.
- */
-export function estimateEventSize(event: CombatEvent): number {
-  // Rough estimation based on JSON serialization
-  return JSON.stringify(event).length * 2; // UTF-16 chars = 2 bytes each
-}
-
-/**
- * Estimate total memory for an event array.
- */
-export function estimateEventsMemory(events: CombatEvent[]): number {
-  return events.reduce((sum, e) => sum + estimateEventSize(e), 0);
-}

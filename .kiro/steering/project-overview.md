@@ -15,7 +15,7 @@ Browser-based, turn-based robot-combat strategy game with leagues, tournaments, 
 ## Repository map
 - `app/backend` — API, services, game engine, persistence, scheduled cycles.
 - `app/frontend` — player and admin React applications.
-- `app/shared` — shared formulas and game types.
+- `app/shared` — shared formulas (`utils/`) and API contract types (`types/`).
 - `docs/` — `architecture/` (system contracts, security), `game-systems/` (mechanics, balance), `prd_pages/` (page requirements), `guides/` (operations, finance), `implementation_notes/` (implementation and release evidence), plus `balance_changes/` and `design_ux/`.
 
 ## System map

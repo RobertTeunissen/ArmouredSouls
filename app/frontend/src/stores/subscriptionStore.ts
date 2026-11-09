@@ -97,5 +97,3 @@ export const useSubscriptionStore = create<SubscriptionStoreState>((set, get) =>
 // ---------------------------------------------------------------------------
 
 export const selectOverview = (s: SubscriptionStoreState): StableOverview | null => s.overview;
-export const selectOverviewLoading = (s: SubscriptionStoreState): boolean => s.loading;
-export const selectOverviewError = (s: SubscriptionStoreState): string | null => s.error;

@@ -49,12 +49,3 @@ export function timeLimitFor(mode: string, scheduledTimeLimit: number | null = n
   if (mode === 'koth' && scheduledTimeLimit !== null && scheduledTimeLimit > 0) return scheduledTimeLimit;
   return isBattleMode(mode) ? MODE_TIME_LIMIT_SECONDS[mode] : MAX_BATTLE_DURATION;
 }
-
-/**
- * Tag team runs each phase as its own simulation with the 1v1 limit (120 s), and
- * a phase that times out ends the whole battle in a draw before the 300 s outer
- * limit (`tagTeamSimulation.ts`). The engine declares a tag-team draw only on a
- * timeout (outer or phase), when every robot is out, or on exactly equal HP; so
- * a tag-team draw with a robot still standing is classified as a time limit.
- */
-export const TAG_TEAM_PHASE_TIME_LIMIT_SECONDS = MAX_BATTLE_DURATION;

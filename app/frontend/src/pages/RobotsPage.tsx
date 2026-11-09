@@ -408,8 +408,10 @@ function RobotsPage() {
                   );
 
                   return (
+                    // The whole card is a pointer target; "View Details" is the keyboard control.
                     <div
                       key={robot.id}
+                      role="presentation"
                       className={`bg-[#252b38] p-6 rounded-lg border-2 border-[#3d444d] hover:border-[#58a6ff] transition-colors cursor-pointer${isOnboarding && displayedRobots.indexOf(robot) === 0 ? ' robot-card-first' : ''}${isOnboarding ? ' onboarding-robot-card' : ''}`}
                       onClick={() => navigate(workshopPath(robot.id, isOnboarding ? 'loadout' : 'build', isOnboarding))}
                     >

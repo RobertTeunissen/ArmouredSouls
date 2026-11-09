@@ -39,7 +39,6 @@ export {
   blueprintFieldsSchema,
   blueprintRuleIssues,
   buildableBlueprintCount,
-  catalogueIssueCode,
   eventOrderIssues,
   requiredTeamNameCountsFor,
   robotsTargetIssues,

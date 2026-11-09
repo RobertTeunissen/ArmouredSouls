@@ -1,12 +1,12 @@
-import { useEffect, useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getMyTeamBattles, TeamBattle } from '../utils/teamBattleApi';
 import { getLeagueTierColor, getLeagueTierName } from '../utils/matchmakingApi';
 import { useRobotStore } from '../stores';
 import { useStableOverview } from '../hooks/useSubscriptions';
 import { api } from '../utils/api';
-import axios from 'axios';
+import { useApiQuery } from '../hooks/useApiQuery';
+import type { PlacementStandingResponse } from '@shared/types';
 
 interface KothStanding {
   robotId: number;
@@ -67,16 +67,72 @@ function TeamReadinessBadge({ readiness }: { readiness: TeamReadiness }) {
   );
 }
 
+interface RobotRef {
+  id: number;
+  name: string;
+}
+
+interface SummaryData {
+  teams: TeamBattle[];
+  kothStandings: KothStanding[];
+  grandMeleeStandings: GrandMeleeStanding[];
+}
+
+/** One robot's KotH or Grand Melee standing; a robot without one (or a failed read) is left out. */
+async function loadPlacementStanding(
+  robot: RobotRef,
+  mode: 'koth' | 'grand-melee',
+  signal: AbortSignal,
+): Promise<KothStanding | null> {
+  try {
+    const result = await api.get<PlacementStandingResponse>(`/api/robots/${robot.id}/${mode}-standing`, { signal });
+    if (!result.standing) return null;
+    return {
+      robotId: robot.id,
+      robotName: robot.name,
+      tier: result.standing.tier,
+      leaguePoints: result.standing.leaguePoints,
+      wins: result.standing.wins,
+      totalMatches: result.standing.totalMatches ?? 0,
+      bestPlacement: result.standing.bestPlacement,
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function loadSummary(robots: RobotRef[], signal: AbortSignal): Promise<SummaryData> {
+  const [teams, koth, grandMelee] = await Promise.all([
+    getMyTeamBattles(undefined, signal),
+    Promise.all(robots.map((robot) => loadPlacementStanding(robot, 'koth', signal))),
+    Promise.all(robots.map((robot) => loadPlacementStanding(robot, 'grand-melee', signal))),
+  ]);
+  return {
+    teams,
+    kothStandings: koth.filter((r): r is KothStanding => r !== null),
+    grandMeleeStandings: grandMelee.filter((r): r is GrandMeleeStanding => r !== null),
+  };
+}
+
 function LeagueStandingsSummary() {
-  const { logout } = useAuth();
   const navigate = useNavigate();
   const robots = useRobotStore(state => state.robots);
   const { data: stableOverview } = useStableOverview();
-  const [teams, setTeams] = useState<TeamBattle[]>([]);
-  const [kothStandings, setKothStandings] = useState<KothStanding[]>([]);
-  const [grandMeleeStandings, setGrandMeleeStandings] = useState<GrandMeleeStanding[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+
+  // Refetch only when the set of robots (or a name) changes, not on every
+  // robot-store refresh (repairs, HP updates).
+  const robotKey = JSON.stringify(robots.map((robot) => [robot.id, robot.name]));
+  const robotRefs = useMemo<RobotRef[]>(
+    () => (JSON.parse(robotKey) as Array<[number, string]>).map(([id, name]) => ({ id, name })),
+    [robotKey],
+  );
+  // A 401 ends the session in the API client; this panel only reports other failures.
+  const summary = useApiQuery((signal) => loadSummary(robotRefs, signal), [robotRefs]);
+  const teams = summary.data?.teams ?? [];
+  const kothStandings = summary.data?.kothStandings ?? [];
+  const grandMeleeStandings = summary.data?.grandMeleeStandings ?? [];
+  const loading = summary.loading && summary.data === null;
+  const error = summary.error ? 'Failed to load team standings' : null;
 
   // Build per-robot subscription lookup
   const robotSubscriptionMap = new Map<number, string[]>();
@@ -85,87 +141,6 @@ function LeagueStandingsSummary() {
       robotSubscriptionMap.set(robot.robotId, robot.subscriptions.map(s => s.eventType));
     }
   }
-
-  useEffect(() => {
-    fetchTeams();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [robots.length]);
-
-  const fetchTeams = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const token = localStorage.getItem('token');
-      if (!token) {
-        logout();
-        navigate('/login');
-        return;
-      }
-
-      const data = await getMyTeamBattles();
-      setTeams(data);
-
-      // Fetch KotH standings for all robots
-      if (robots.length > 0) {
-        const kothResults = await Promise.all(
-          robots.map(async (robot) => {
-            try {
-              const result = await api.get<{ standing: { tier: string; leaguePoints: number; wins: number; totalMatches: number | null; bestPlacement: number | null } | null }>(`/api/robots/${robot.id}/koth-standing`);
-              if (result.standing) {
-                return {
-                  robotId: robot.id,
-                  robotName: robot.name,
-                  tier: result.standing.tier,
-                  leaguePoints: result.standing.leaguePoints,
-                  wins: result.standing.wins,
-                  totalMatches: result.standing.totalMatches ?? 0,
-                  bestPlacement: result.standing.bestPlacement,
-                };
-              }
-              return null;
-            } catch {
-              return null;
-            }
-          })
-        );
-        setKothStandings(kothResults.filter((r): r is KothStanding => r !== null));
-
-        // Fetch Grand Melee standings for all robots
-        const grandMeleeResults = await Promise.all(
-          robots.map(async (robot) => {
-            try {
-              const result = await api.get<{ standing: { tier: string; leaguePoints: number; wins: number; totalMatches: number | null; bestPlacement: number | null } | null }>(`/api/robots/${robot.id}/grand-melee-standing`);
-              if (result.standing) {
-                return {
-                  robotId: robot.id,
-                  robotName: robot.name,
-                  tier: result.standing.tier,
-                  leaguePoints: result.standing.leaguePoints,
-                  wins: result.standing.wins,
-                  totalMatches: result.standing.totalMatches ?? 0,
-                  bestPlacement: result.standing.bestPlacement,
-                };
-              }
-              return null;
-            } catch {
-              return null;
-            }
-          })
-        );
-        setGrandMeleeStandings(grandMeleeResults.filter((r): r is GrandMeleeStanding => r !== null));
-      }
-    } catch (err: unknown) {
-      if (axios.isAxiosError(err) && err.response?.status === 401) {
-        logout();
-        navigate('/login');
-        return;
-      }
-      setError('Failed to load team standings');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   if (loading) {
     return (

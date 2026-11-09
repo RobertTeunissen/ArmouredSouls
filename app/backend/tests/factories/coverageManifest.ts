@@ -824,16 +824,6 @@ const prestigeSources: readonly PrestigeSourceBoundary[] = [
     notes: 'F1-style placement reward object currently carries prestige beside credits and streaming.',
   },
   {
-    id: 'prestige-source-shared-battle-strategy',
-    currentSource: { file: 'app/backend/src/services/battle/battleStrategy.ts', symbol: 'BattleStrategy.calculateRewards -> BattleProcessor.process' },
-    finalService: 'Prestige_Service',
-    source: 'battle',
-    identityStrategy: 'processed battle id + stable recipient + battle prestige component',
-    pairedOrDomainRecords: ["AuditLog:eventType=prestige_change", 'battle_complete compatibility record', 'User.prestige'],
-    targetTestTiers: ALL_CRITICAL_TIERS,
-    notes: 'Generic strategy reward?.prestige is a separate source boundary even when a concrete strategy supplies the formula.',
-  },
-  {
     id: 'prestige-source-achievements',
     currentSource: { file: 'app/backend/src/services/achievement/achievementService.ts', symbol: 'AchievementService.checkAndAward' },
     finalService: 'Prestige_Service',

@@ -174,10 +174,6 @@ describe('Changelog Routes', () => {
       expect(res.status).toBe(401);
     });
 
-    it('GET /api/changelog/unread/count returns 401 without token', async () => {
-      const res = await request(app).get('/api/changelog/unread/count');
-      expect(res.status).toBe(401);
-    });
   });
 
   // -----------------------------------------------------------------------
@@ -341,14 +337,6 @@ describe('Changelog Routes', () => {
         .get('/api/changelog/unread')
         .set('Authorization', `Bearer ${userToken()}`);
       expect(res.status).toBe(200);
-    });
-
-    it('GET /api/changelog/unread/count returns count', async () => {
-      const res = await request(app)
-        .get('/api/changelog/unread/count')
-        .set('Authorization', `Bearer ${userToken()}`);
-      expect(res.status).toBe(200);
-      expect(res.body).toHaveProperty('count');
     });
 
     it('POST /api/changelog/dismiss returns success', async () => {

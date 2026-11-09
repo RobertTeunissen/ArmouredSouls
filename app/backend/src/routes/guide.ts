@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import guideService from '../services/common/guide-service';
 import { AppError } from '../errors';
-import { validateRequest } from '../middleware/schemaValidator';
+import { validateRequest, validated } from '../middleware/schemaValidator';
 import { safeSlug } from '../utils/securityValidation';
 
 const router = express.Router();
@@ -28,9 +28,9 @@ router.get('/sections', authenticateToken, validateRequest({}), async (req: Auth
  * GET /api/guide/articles/:sectionSlug/:articleSlug
  * Returns a single guide article with full content
  */
-router.get('/articles/:sectionSlug/:articleSlug', authenticateToken, validateRequest({ params: articleParamsSchema }), async (req: AuthRequest, res: Response) => {
-  const sectionSlug = String(req.params.sectionSlug);
-  const articleSlug = String(req.params.articleSlug);
+router.get('/articles/:sectionSlug/:articleSlug', authenticateToken, ...validated({ params: articleParamsSchema }, async (req: AuthRequest, res: Response, { params }) => {
+  const sectionSlug = params.sectionSlug;
+  const articleSlug = params.articleSlug;
 
   // Prevent path traversal — slugs must be simple alphanumeric/hyphen/underscore tokens
   const safeSlugPattern = /^[a-zA-Z0-9_-]+$/;
@@ -45,7 +45,7 @@ router.get('/articles/:sectionSlug/:articleSlug', authenticateToken, validateReq
   }
 
   res.json(article);
-});
+}));
 
 /**
  * GET /api/guide/search-index

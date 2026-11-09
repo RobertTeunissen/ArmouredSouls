@@ -22,6 +22,7 @@ const mockPrisma = {
     findUnique: jest.fn().mockResolvedValue(null),
     update: jest.fn().mockResolvedValue({}),
     findMany: jest.fn().mockResolvedValue([]),
+    count: jest.fn().mockResolvedValue(0),
   },
   robot: {
     findUnique: jest.fn().mockResolvedValue(null),
@@ -650,7 +651,7 @@ describe('AchievementService.refreshRarityCache', () => {
       { achievementId: 'C1', _count: { achievementId: 10 } },
       { achievementId: 'C2', _count: { achievementId: 5 } },
     ]);
-    mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([{ count: BigInt(20) }]);
+    mockPrisma.user.count.mockResolvedValueOnce(20);
 
     await achievementService.refreshRarityCache();
 
@@ -659,5 +660,17 @@ describe('AchievementService.refreshRarityCache', () => {
     expect(rarityData.counts.get('C2')).toBe(5);
     expect(rarityData.totalActivePlayers).toBe(20);
     expect(rarityData.refreshedAt.getTime()).toBeGreaterThan(0);
+  });
+
+  it('classifies stables by stable type, never by username', async () => {
+    await achievementService.refreshRarityCache();
+
+    expect(mockPrisma.userAchievement.groupBy).toHaveBeenLastCalledWith(
+      expect.objectContaining({ where: { user: { stableType: 'human' } } }),
+    );
+    expect(mockPrisma.user.count).toHaveBeenLastCalledWith({
+      where: { stableType: 'human', robots: { some: { totalBattles: { gt: 0 } } } },
+    });
+    expect(mockPrisma.$queryRawUnsafe).not.toHaveBeenCalled();
   });
 });

@@ -30,17 +30,8 @@ test.describe('Financial Flow', () => {
     const firstUpgradeButton = upgradeButtons.first();
 
     // Check if there's an affordable upgrade available
-    const isVisible = await firstUpgradeButton.isVisible().catch(() => false);
-    if (!isVisible) {
-      test.skip(true, 'No upgrade button visible for test_user_001');
-      return;
-    }
-
-    const isEnabled = await firstUpgradeButton.isEnabled().catch(() => false);
-    if (!isEnabled) {
-      test.skip(true, 'No affordable facility upgrade available for test_user_001');
-      return;
-    }
+    await expect(firstUpgradeButton, 'No upgrade button visible for test_user_001').toBeVisible();
+    await expect(firstUpgradeButton, 'No affordable facility upgrade available for test_user_001').toBeEnabled();
 
     // Click upgrade
     await firstUpgradeButton.click();
@@ -95,19 +86,13 @@ test.describe('Financial Flow', () => {
     await expect(page.getByRole('heading', { name: /My Robots/i })).toBeVisible({ timeout: 10000 });
 
     const viewDetailsLink = page.getByText('View Details →').first();
-    if (!(await viewDetailsLink.isVisible().catch(() => false))) {
-      test.skip(true, 'No robots available for test_user_001');
-      return;
-    }
+    await expect(viewDetailsLink, 'No robots available for test_user_001').toBeVisible();
     await viewDetailsLink.click();
     await page.waitForURL(/\/robots\/\d+\/prepare/);
     await expect(page.getByRole('tab', { name: 'build' })).toHaveAttribute('aria-selected', 'true');
 
     const incrementButton = page.getByRole('button', { name: /^Increase .* level$/ }).first();
-    if (!(await incrementButton.isEnabled().catch(() => false))) {
-      test.skip(true, 'No upgradeable attributes available');
-      return;
-    }
+    await expect(incrementButton, 'No upgradeable attributes available').toBeEnabled();
     const bar = page.getByRole('region', { name: 'Plan summary' });
     const creditsBefore = await bar.getByText(/^₡[\d,]+$/).first().textContent();
     await incrementButton.click();

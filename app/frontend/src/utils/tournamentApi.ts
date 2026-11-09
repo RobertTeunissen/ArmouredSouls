@@ -57,20 +57,25 @@ export interface TournamentDetails extends Tournament {
  * List all tournaments (public endpoint for all authenticated users)
  * Supports optional participantType filter.
  */
-export const listTournaments = async (participantType?: ParticipantType): Promise<{ tournaments: Tournament[] }> => {
+export const listTournaments = async (
+  participantType?: ParticipantType,
+  signal?: AbortSignal,
+): Promise<{ tournaments: Tournament[] }> => {
   const params = participantType ? `?participantType=${participantType}` : '';
-  return api.get<{ tournaments: Tournament[] }>(`/api/tournaments${params}`);
+  const url = `/api/tournaments${params}`;
+  return signal ? api.get<{ tournaments: Tournament[] }>(url, { signal }) : api.get<{ tournaments: Tournament[] }>(url);
 };
 
 /**
  * Get tournament details by ID (public endpoint for all authenticated users)
  */
 export const getTournamentDetails = async (
-  tournamentId: number
+  tournamentId: number,
+  signal?: AbortSignal,
 ): Promise<{ tournament: TournamentDetails; seedings: SeedEntry[] }> => {
-  const data = await api.get<{ tournament: Tournament & { matches?: TournamentMatchWithRobots[]; resolvedParticipants?: Record<number, ResolvedParticipant> }; seedings: SeedEntry[] }>(
-    `/api/tournaments/${tournamentId}`
-  );
+  type DetailsResponse = { tournament: Tournament & { matches?: TournamentMatchWithRobots[]; resolvedParticipants?: Record<number, ResolvedParticipant> }; seedings: SeedEntry[] };
+  const url = `/api/tournaments/${tournamentId}`;
+  const data = signal ? await api.get<DetailsResponse>(url, { signal }) : await api.get<DetailsResponse>(url);
 
   // Backend returns tournament and seedings
   const { tournament, seedings = [] } = data;

@@ -1,9 +1,11 @@
-import { useEffect, useState, useCallback, useMemo } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useEffect, useMemo } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { getTournamentDetails, TournamentDetails, SeedEntry, ParticipantType } from '../utils/tournamentApi';
 import { useRobotStore } from '../stores';
 import BracketView from '../components/tournament/BracketView';
+import { useApiQuery } from '../hooks/useApiQuery';
+import { ApiError } from '../utils/ApiError';
 
 /**
  * Tournament Detail Page — displays full tournament info and bracket visualization.
@@ -13,16 +15,29 @@ import BracketView from '../components/tournament/BracketView';
  */
 function TournamentDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { user, token, logout } = useAuth();
-  const navigate = useNavigate();
+  const { user } = useAuth();
 
-  const [tournament, setTournament] = useState<TournamentDetails | null>(null);
-  const [seedings, setSeedings] = useState<SeedEntry[]>([]);
   const storeRobots = useRobotStore(state => state.robots);
   const fetchStoreRobots = useRobotStore(state => state.fetchRobots);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [notFound, setNotFound] = useState(false);
+
+  // A 401 ends the session in the API client; the API wrapper rejects with an
+  // ApiError, so a missing tournament is `statusCode === 404`.
+  const tournamentId = id ? parseInt(id, 10) : NaN;
+  const details = useApiQuery(
+    (signal) => getTournamentDetails(tournamentId, signal),
+    [tournamentId],
+    { enabled: Number.isFinite(tournamentId) },
+  );
+  const tournament: TournamentDetails | null = details.data?.tournament ?? null;
+  const seedings: SeedEntry[] = details.data?.seedings ?? [];
+  const loading = details.loading;
+  const notFound = details.error instanceof ApiError && details.error.statusCode === 404;
+  const error = details.error && !notFound ? 'Failed to load tournament details' : null;
+  const fetchTournament = details.refetch;
+
+  useEffect(() => {
+    fetchStoreRobots();
+  }, [fetchStoreRobots]);
 
   // Derive userParticipantIds based on tournament type
   // For 1v1: user's robot IDs
@@ -46,45 +61,6 @@ function TournamentDetailPage() {
     }
     return teamIds;
   }, [tournament, storeRobots, user]);
-
-  const fetchTournament = useCallback(async () => {
-    if (!id) return;
-
-    const currentToken = token || localStorage.getItem('token');
-    if (!currentToken) {
-      logout();
-      navigate('/login');
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError(null);
-      setNotFound(false);
-
-      const data = await getTournamentDetails(parseInt(id, 10));
-      setTournament(data.tournament);
-      setSeedings(data.seedings);
-    } catch (err: unknown) {
-      const axiosErr = err as { response?: { status?: number } };
-      if (axiosErr.response?.status === 404) {
-        setNotFound(true);
-      } else if (axiosErr.response?.status === 401) {
-        logout();
-        navigate('/login');
-        return;
-      } else {
-        setError('Failed to load tournament details');
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [id, token, logout, navigate]);
-
-  useEffect(() => {
-    fetchTournament();
-    fetchStoreRobots();
-  }, [fetchTournament, fetchStoreRobots]);
 
   if (!user) {
     return <></>;

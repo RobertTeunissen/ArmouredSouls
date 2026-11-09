@@ -124,7 +124,7 @@ The removed System Health and Practice Arena sections below are kept for history
   - Follows existing stat section pattern (grid layout, color-coded)
 - **System Health Section** ✅ INTEGRATED (collapsible `<details>` section):
   - Absorbed from the former standalone System Health tab
-  - Fetches from `/api/analytics/performance`, `/api/analytics/integrity`, `/api/analytics/logs/summary`
+  - Fetched from `/api/analytics/performance`, `/api/analytics/integrity`, `/api/analytics/logs/summary` (no admin page calls them any more; removed as unused in Nov 2026)
   - Cycle performance metrics: average duration, step durations, degradations
   - Data integrity status: valid/invalid cycles, issues
   - Event log statistics: total events, active users/robots, events by type
@@ -866,9 +866,6 @@ GET  /api/admin/security/events          // Recent security events (filterable b
 GET  /api/admin/practice-arena/overview  // (replaced /stats, removed v3.18) Practice arena usage stats (battles today, unique players, rate limit hits, historical trend)
 
 // System Health (integrated into Dashboard)
-GET  /api/analytics/performance          // Cycle performance metrics
-GET  /api/analytics/integrity            // Data integrity status
-GET  /api/analytics/logs/summary         // Event log statistics
 ```
 
 ---

@@ -27,6 +27,7 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import { api } from '../../utils/api';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
 import { ApiError } from '../../utils/ApiError';
 import {
   applyRefinementsToWeapon,
@@ -299,6 +300,8 @@ export function RefinementModal({
   // ── Submission ─────────────────────────────────────────────────────
 
   const [submitting, setSubmitting] = useState(false);
+  // Escape cancels like the backdrop does, except while the request is running.
+  useEscapeKey(onCancel, !submitting);
   const [error, setError] = useState<string | null>(null);
 
   async function handleConfirm() {
@@ -346,16 +349,16 @@ export function RefinementModal({
 
   return (
     <div
+      role="presentation"
       className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
-      onClick={onCancel}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="refinement-modal-title"
+      onClick={(e) => { if (e.target === e.currentTarget) onCancel(); }}
       data-testid="refinement-modal"
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="refinement-modal-title"
         className="bg-surface rounded-lg max-w-2xl w-full p-6 max-h-[92vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
       >
         {/* ── Header ────────────────────────────────────────────────── */}
         <div className="border-b border-secondary/30 pb-4 mb-4">

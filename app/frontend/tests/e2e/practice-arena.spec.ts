@@ -50,10 +50,7 @@ test.describe('Practice Arena', () => {
 
     // Select the first robot in slot 1
     const robotSelected = await selectFirstRobot(page);
-    if (!robotSelected) {
-      test.skip(true, 'No robots visible in the grid — robot data may not have loaded');
-      return;
-    }
+    expect(robotSelected, 'No robots visible in the grid — robot data may not have loaded').toBe(true);
 
     // Click Run Simulation (includes emoji: ⚡ Run Simulation)
     // canRun requires: robot selected + robot has weapon equipped + not running + cycle not offline
@@ -61,12 +58,7 @@ test.describe('Practice Arena', () => {
 
     // Wait briefly for UI to update after robot selection before checking enabled state
     await page.waitForTimeout(1000);
-    const isEnabled = await runButton.isEnabled().catch(() => false);
-    if (!isEnabled) {
-      // Robot may not have a weapon equipped — skip gracefully
-      test.skip(true, 'Run Simulation button is disabled — robot may not have a weapon equipped');
-      return;
-    }
+    await expect(runButton, 'Run Simulation button is disabled — robot may not have a weapon equipped').toBeEnabled();
     await runButton.click();
 
     // Wait for simulation to complete
@@ -86,19 +78,12 @@ test.describe('Practice Arena', () => {
 
     // Select the first robot in slot 1
     const robotSelected = await selectFirstRobot(page);
-    if (!robotSelected) {
-      test.skip(true, 'No robots visible in the grid');
-      return;
-    }
+    expect(robotSelected, 'No robots visible in the grid').toBe(true);
 
     // Check if Run Simulation is enabled before proceeding
     const runButton = page.getByRole('button', { name: /Run Simulation/i });
     await page.waitForTimeout(1000);
-    const isEnabled = await runButton.isEnabled().catch(() => false);
-    if (!isEnabled) {
-      test.skip(true, 'Run Simulation button is disabled — robot may not have a weapon equipped');
-      return;
-    }
+    await expect(runButton, 'Run Simulation button is disabled — robot may not have a weapon equipped').toBeEnabled();
 
     // Set batch count to 3 via the simulation runs select
     const batchSelect = page.getByRole('combobox').filter({ has: page.locator('option[value="1"]') });
@@ -126,19 +111,12 @@ test.describe('Practice Arena', () => {
 
     // Select the first robot in slot 1
     const robotSelected = await selectFirstRobot(page);
-    if (!robotSelected) {
-      test.skip(true, 'No robots visible in the grid');
-      return;
-    }
+    expect(robotSelected, 'No robots visible in the grid').toBe(true);
 
     // Run a single simulation
     const runButton = page.getByRole('button', { name: /Run Simulation/i });
     await page.waitForTimeout(1000);
-    const isEnabled = await runButton.isEnabled().catch(() => false);
-    if (!isEnabled) {
-      test.skip(true, 'Run Simulation button is disabled — robot may not have a weapon equipped');
-      return;
-    }
+    await expect(runButton, 'Run Simulation button is disabled — robot may not have a weapon equipped').toBeEnabled();
     await runButton.click();
 
     // Wait for simulation to complete

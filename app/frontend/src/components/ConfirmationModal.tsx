@@ -69,6 +69,8 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
           <button
             onClick={onCancel}
             disabled={isLoading}
+            // Moving focus into an opened dialog is required, so this autoFocus is deliberate.
+            // eslint-disable-next-line jsx-a11y-x/no-autofocus
             autoFocus
             className="px-4 py-2 rounded-lg bg-surface-elevated text-secondary hover:bg-gray-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >

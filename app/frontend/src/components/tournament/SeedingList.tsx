@@ -92,12 +92,11 @@ function SeedRow({
   const isEliminated = entry.eliminated;
 
   return (
-    <li
-      role="button"
-      tabIndex={0}
+    <li>
+    <button
+      type="button"
       onClick={onClick}
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClick(); }}
-      className={`px-4 py-2 flex items-center gap-2 text-sm cursor-pointer hover:bg-surface-elevated/50 transition-colors ${
+      className={`w-full text-left px-4 py-2 flex items-center gap-2 text-sm cursor-pointer hover:bg-surface-elevated/50 transition-colors ${
         isUserRobot ? 'border-l-2 border-blue-500 bg-blue-900/20' : ''
       } ${isEliminated ? 'opacity-50' : ''}`}
     >
@@ -117,6 +116,7 @@ function SeedRow({
       {isUserRobot && (
         <span className="text-[9px] text-primary font-medium shrink-0">YOU</span>
       )}
+    </button>
     </li>
   );
 }

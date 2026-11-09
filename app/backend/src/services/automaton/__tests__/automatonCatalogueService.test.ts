@@ -9,7 +9,6 @@ import {
   blueprintFieldsSchema,
   blueprintRuleIssues,
   buildableBlueprintCount,
-  catalogueIssueCode,
   compareCatalogueKeys,
   eventOrderIssues,
   requiredTeamNameCountsFor,
@@ -146,14 +145,13 @@ describe('catalogue entry: context rules', () => {
     expect(rulesOf(validEntry({ strategy: { key: 'duo', version: 1, targetOverrides: { 17: 11 } } }))).toEqual(['target_out_of_bounds']);
   });
 
-  it('rejects a robots Goal_Target above the blueprint count with AUTOMATON_BLUEPRINTS_TOO_FEW (R3.7)', () => {
+  it('rejects a robots Goal_Target above the blueprint count (R3.7)', () => {
     const entry = validEntry({ strategy: { key: 'duo', version: 1, targetOverrides: { 13: 3 } } });
     const result = validateCatalogueEntry(entry, context);
     expect(result.ok).toBe(false);
     if (!result.ok) {
       const issue = result.issues.find((i) => i.rule === 'blueprints_too_few');
       expect(issue?.message).toBe('Goal 13 targets 3 robots, but this stable has 2 blueprints. Add blueprints or lower the target.');
-      expect(catalogueIssueCode('blueprints_too_few')).toBe('AUTOMATON_BLUEPRINTS_TOO_FEW');
     }
   });
 
@@ -190,10 +188,9 @@ describe('Team_Names (R3.6)', () => {
     expect(requiredTeamNameCountsFor(duo, 3)).toEqual({ twoVsTwo: 1, threeVsThree: 1 });
   });
 
-  it('rejects too few and too many names with AUTOMATON_TEAM_NAMES_MISMATCH', () => {
+  it('rejects too few and too many team names', () => {
     expect(rulesOf(validEntry({ teamNames: { twoVsTwo: [], threeVsThree: [] } }))).toEqual(['team_names_count']);
     expect(rulesOf(validEntry({ teamNames: { twoVsTwo: ['Test Pair'], threeVsThree: ['Extra Trio'] } }))).toEqual(['team_names_count']);
-    expect(catalogueIssueCode('team_names_count')).toBe('AUTOMATON_TEAM_NAMES_MISMATCH');
   });
 
   it.each([['ab'], ['x'.repeat(33)], ['Bad<Team>'], [' Padded']])('rejects the name %p', (name) => {

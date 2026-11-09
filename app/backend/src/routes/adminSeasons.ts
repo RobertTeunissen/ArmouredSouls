@@ -9,7 +9,7 @@ import express, { Response } from 'express';
 import { z } from 'zod';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { requireAdmin } from '../middleware/auth';
-import { validateRequest } from '../middleware/schemaValidator';
+import { validateRequest, validated } from '../middleware/schemaValidator';
 import { SeasonError, SeasonErrorCode } from '../errors';
 import { recordAction } from '../services/admin/adminAuditLogService';
 import {
@@ -61,10 +61,8 @@ router.get('/history', validateRequest({}), async (_req: AuthRequest, res: Respo
  */
 router.post(
   '/rollover',
-  validateRequest({ body: rolloverBodySchema }),
-  async (req: AuthRequest, res: Response) => {
+  ...validated({ body: rolloverBodySchema }, async (req: AuthRequest, res: Response, { body }) => {
     const adminUserId = req.user!.userId;
-    const body = req.body as z.infer<typeof rolloverBodySchema>;
     const state = await getCurrentSeason();
 
     if (body.seasonNumber !== state.seasonNumber) {
@@ -83,35 +81,33 @@ router.post(
       });
     }
     return res.json(await runAdminRollover(adminUserId, state.seasonNumber));
-  },
+  }),
 );
 
 /** Extend the current Competitive_Phase without changing later seasons. */
 router.post(
   '/extend',
-  validateRequest({ body: extendBodySchema }),
-  async (req: AuthRequest, res: Response) => {
-    const state = await extendCurrentSeason(req.body.additionalCycles);
+  ...validated({ body: extendBodySchema }, async (req: AuthRequest, res: Response, { body }) => {
+    const state = await extendCurrentSeason(body.additionalCycles);
     recordAction(req.user!.userId, 'season_extend', 'success', {
-      additionalCycles: req.body.additionalCycles,
+      additionalCycles: body.additionalCycles,
       resultingState: { ...state },
     });
     return res.json(state);
-  },
+  }),
 );
 
 /** Set how many preparation cycles remain (0 to the configured window) in the current Preparation_Phase. */
 router.post(
   '/preparation-cycles',
-  validateRequest({ body: preparationBodySchema }),
-  async (req: AuthRequest, res: Response) => {
-    const state = await setRemainingPreparationCycles(req.body.remainingCycles);
+  ...validated({ body: preparationBodySchema }, async (req: AuthRequest, res: Response, { body }) => {
+    const state = await setRemainingPreparationCycles(body.remainingCycles);
     recordAction(req.user!.userId, 'season_preparation_cycles', 'success', {
-      remainingCycles: req.body.remainingCycles,
+      remainingCycles: body.remainingCycles,
       resultingState: { ...state },
     });
     return res.json(state);
-  },
+  }),
 );
 
 export default router;

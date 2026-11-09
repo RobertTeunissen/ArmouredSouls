@@ -377,7 +377,6 @@ describe('ChangelogService property tests', () => {
             mockUser = { lastSeenChangelog: lastSeen };
 
             const unread = await changelogService.getUnread(1, 10);
-            const unreadCount = await changelogService.getUnreadCount(1);
 
             // All returned entries must have publishDate > lastSeen
             for (const entry of unread) {
@@ -392,7 +391,6 @@ describe('ChangelogService property tests', () => {
             );
 
             // Count should match (up to limit of 10)
-            expect(unreadCount).toBe(expectedUnread.length);
             expect(unread.length).toBe(Math.min(expectedUnread.length, 10));
 
             // Unread should be sorted by publishDate desc

@@ -32,9 +32,6 @@ import {
   type GoalOutcome,
 } from './goalTypes';
 
-/** Most Refinement_Plan steps a robot can have (5 per weapon, two weapons). */
-export const MAX_REFINE_STEPS = 10;
-
 export type NextRefinement =
   | { kind: 'done' }
   | { kind: 'step'; step: RefinementStep; item: InventoryFacts; existingInstancesOfTier: number };

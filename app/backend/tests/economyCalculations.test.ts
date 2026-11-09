@@ -9,7 +9,6 @@ import {
   calculateBattleWinnings,
   getMerchandisingBaseRate,
   calculateMerchandisingIncome,
-  calculateFinancialHealth,
   getLeagueWinReward,
   getParticipationReward,
 } from '../src/utils/economyCalculations';
@@ -128,37 +127,6 @@ describe('Economy Calculations', () => {
       expect(calculateMerchandisingIncome(1, 50000, 5)).toBe(
         calculateMerchandisingIncome(1, 10000, 1),
       );
-    });
-  });
-
-  describe('Financial Health', () => {
-    it('should return critical for balance < 50K', () => {
-      expect(calculateFinancialHealth(40000, 5000)).toBe('critical');
-      expect(calculateFinancialHealth(0, 0)).toBe('critical');
-    });
-
-    it('should return warning for balance < 100K', () => {
-      expect(calculateFinancialHealth(75000, 5000)).toBe('warning');
-      expect(calculateFinancialHealth(99999, -1000)).toBe('warning');
-    });
-
-    it('should return stable/warning for moderate balance or negative income', () => {
-      // Balance 300K with negative income = warning (balance < 500K and negative income)
-      expect(calculateFinancialHealth(300000, -5000)).toBe('warning');
-      // Balance 400K with zero income = stable (balance between 100K-500K)
-      expect(calculateFinancialHealth(400000, 0)).toBe('stable');
-      // Balance 600K with negative income = stable (balance >= 500K, can sustain losses)
-      expect(calculateFinancialHealth(600000, -5000)).toBe('stable');
-    });
-
-    it('should return good for balance >= 500K with positive income', () => {
-      expect(calculateFinancialHealth(500000, 1000)).toBe('good');
-      expect(calculateFinancialHealth(800000, 5000)).toBe('good');
-    });
-
-    it('should return excellent for balance >= 1M with positive income', () => {
-      expect(calculateFinancialHealth(1000000, 10000)).toBe('excellent');
-      expect(calculateFinancialHealth(5000000, 50000)).toBe('excellent');
     });
   });
 

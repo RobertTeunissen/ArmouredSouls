@@ -11,6 +11,7 @@ import GuideSearch from '../components/guide/GuideSearch';
 import GuideLandingPage from '../components/guide/GuideLandingPage';
 import GuideArticleView from '../components/guide/GuideArticleView';
 import GuideBreadcrumb from '../components/guide/GuideBreadcrumb';
+import { ApiError } from '../utils/ApiError';
 
 type ErrorState = {
   type: 'not-found' | 'server-error' | 'network-error';
@@ -80,7 +81,9 @@ function GuidePage(): React.ReactElement {
         }
       } catch (err: unknown) {
         if (!cancelled) {
-          const status = (err as { response?: { status?: number } })?.response?.status;
+          // `api` rejects with an ApiError (statusCode 0 for a network failure),
+          // never an axios error, so a missing article used to read as "offline".
+          const status = err instanceof ApiError ? err.statusCode : undefined;
           if (status === 404) {
             setError({ type: 'not-found', message: 'Article not found' });
           } else if (status && status >= 500) {
