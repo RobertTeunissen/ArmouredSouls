@@ -832,81 +832,33 @@ This format is used across:
 
 ---
 
-### 11. League Standings (Implemented)
+### 11. League Standings (Implemented, redesigned November 2026)
 
-**Route**: `/league-standings`  
-**Current Implementation**: Rankings, ELO, league tiers, and competition tracking are already implemented.
+**Route**: `/league-standings` · **Requirements**: [PRD_LEAGUE_STANDINGS.md](../prd_pages/PRD_LEAGUE_STANDINGS.md) v2.0
 
 **Logo State**: Direction B (Precision)  
-**Emotional Target**: Competition, aspiration
+**Emotional Target**: Competition, aspiration: "where do my robots stand, and what moves them up?"
 
-#### What Users Should See
-- **Logo**: Direction B in navigation
-- **League Navigation**: Tab-based or dropdown selector for all leagues
-  - **All leagues visible**: Players can view all leagues in the system (Bronze, Silver, Gold, Platinum, Diamond, Master)
-  - Current league highlighted or pre-selected
-  - League tier icons and names clearly displayed
-- **League Standings Table**:
-  - Rank number (with special badges for top 3: Gold, Silver, Bronze medals)
-  - Robot portrait (small thumbnail, 64×64px)
-  - Robot name (clickable link to robot detail page)
-  - Owner stable name
-  - ELO rating
-  - League points (LP)
-  - Win/Loss/Draw record
-  - Recent form indicator (last 5 battles: W/L/D icons)
-- **Zone Indicators**:
-  - Promotion zone (top 10% AND ≥25 league points): Green background highlight
-  - Safe zone (middle 80%): Standard background
-  - Demotion zone (bottom 10%): Red/orange background highlight
-- **Own Robot Highlighting**:
-  - Player's own robots clearly identified with:
-    - Distinct background color (darker or accented)
-    - Border (gold or accent color)
-    - Badge or icon (e.g., star, crown, "MY ROBOT")
-    - Sticky positioning option to keep own robots visible while scrolling
-- **Player Position Summary**:
-  - Sticky header or sidebar showing player's best-ranked robot position
-  - Quick stats: "You have X robots in this league"
-  - Promotion/demotion status for owned robots
-
-#### Visual Elements Required
-- [ ] **Robot Thumbnails** (small, 64×64px)
-- [ ] **Rank Badges** (1st/2nd/3rd special, Gold/Silver/Bronze medals)
-- [ ] **League Tier Icons** (Bronze, Silver, Gold, Platinum, Diamond, Master)
-  - Each league has distinct icon and color scheme
-  - Icons should be 32×32px for navigation tabs
-  - 48×48px for league page headers
-- [ ] **Trophy Icon** (for top players)
-- [ ] **Highlight Styles** (for player's position in list):
-  - Background color: `rgba(88, 166, 255, 0.15)` (primary blue, semi-transparent)
-  - Border: `2px solid #58a6ff` (primary blue)
-  - Optional badge: "MY ROBOT" label or star icon
-- [ ] **Zone Indicators**:
-  - Promotion zone: Green left border (4px) or background tint
-  - Demotion zone: Red/orange left border (4px) or background tint
-- [ ] **Form Indicators**: W/L/D icon sequence (last 5 battles)
-
-#### Image Types & Visual Reinforcement
-1. **Robot Thumbnails**: Visual recognition in list
-2. **Rank Badges**: Competition and hierarchy
-3. **League Icons**: Progression tiers
-4. **Trophy**: Excellence recognition
+#### What users see
+- **League cards** first: one card per league (1v1, 2v2, 3v3, Tag Team, King of the Hill, Grand Melee) with the player's count, best place and one movement line (`text-success` / `text-warning` / `text-error`). The cards are the league picker; the selected card has a `border-primary ring-1 ring-primary`. Six columns from `xl`, a sideways `ScrollRow` below.
+- **Tier chips** (tier emoji, name, the player's count in a `bg-primary/15 text-primary` pill) and **instance chips** (rounded-full; the selected one `bg-primary text-background`). Both are `ScrollRow`s on phones and wrap from `md`.
+- **The page opens on the player's best instance**, not on Bronze.
+- **The list**: one instance on one page. Promotion and demotion places sit under a `bg-success/10` and `bg-error/10` band; the last promotion place ends in a dashed `border-success/60` line. Zones are never shown as coloured rows.
+- **Status chip** on every zone place (rounded-full, border + 10–15 % fill of `success`, `error`, `warning`, or neutral `surface-elevated`): "Promotes", "Demotes", "Needs 125 LP", "2 cycles to go", "Held: Champion is empty". A visually hidden sentence explains it.
+- **Own rows**: `bg-primary/10`, a 4 px inset left bar, the "You" chip, names in `text-primary`; "Not entered" for unsubscribed rows. Generated stables carry the "bot" chip, Automatons the Automaton_Badge.
+- **Phones**: place, name (stable and record underneath, chip below) and LP; record, ELO and status columns from `md`. No robot thumbnails, recent-form icons or sticky rows: the league cards answer "where are my robots" before the list.
 
 #### User Flow & Emotional Journey
-- **Entry**: "Where do I stand?"
+- **Entry**: "Where do my robots stand?" (the league cards)
 - **Feeling**: "I want to climb. I want to compete."
-- **Action**: Compare rankings, set goals
+- **Action**: Open an instance, read each status: what moves, what is held and why
 - **Goal**: Understand competitive position, aspire to improve
 
 #### Design Rationale
-- Leaderboards are **competitive**, not emotional
+- Standings are **competitive**, not emotional
 - Direction B maintains **systematic presentation**
-- Rank badges add **prestige to top positions**
-- Player highlight ensures **personal context**
-- Visual consistency with robot portraits
-
-#### Implementation Priority: **P2** (Post-MVP)
+- Zone bands and one status chip replace coloured row borders, so a row never carries more than one signal
+- Player highlight and the league cards give **personal context**
 
 ---
 

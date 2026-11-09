@@ -1,415 +1,111 @@
 # Product Requirements Document: League Standings Page
 
-**Project**: Armoured Souls  
-**Document Type**: Product Requirements Document (PRD)  
-**Version**: v1.2
-**Date**: October 14, 2026
-**Status**: ✅ Implemented & Verified
+**Project**: Armoured Souls
+**Document Type**: Product Requirements Document (PRD)
+**Version**: v2.0
+**Date**: November 8, 2026
+**Status**: ✅ Implemented
 
 ---
 
 ## Version History
-- v1.2 - Documented who appears in standings: robots and teams enter on their first matchable subscription; robots and teams without a standing show "Unranked" (October 14, 2026)
-- v1.1 - Unified all head-to-head modes behind the canonical fixed-zone planner; added tier-wide effective promotion/demotion display and cohort-hold messaging (September 12, 2026)
 - v1.0 - Initial draft by GitHub Copilot (February 5, 2026)
+- v1.1 - Unified all head-to-head modes behind the canonical fixed-zone planner; added tier-wide effective promotion/demotion display and cohort-hold messaging (September 12, 2026)
+- v1.2 - Documented who appears in standings: robots and teams enter on their first matchable subscription; robots and teams without a standing show "Unranked" (October 14, 2026)
+- v2.0 - Redesign (November 8, 2026): the page opens on the viewer's own robots and teams. League cards per league (`GET /api/leagues/my-standings`), tier and instance chips with the viewer's counts, one instance on one page with promotion and demotion bands, and a status chip per zone place that says whether it moves or why it is held. Rows, zones and statuses come from the executor's tier plan in one backend service for all six leagues. Fixed: an unknown `mode` or malformed `instance` answered 500 (now 400); Champion's legend read "≥ LP"; robot names were not links; a slow response could show another tier's rows; the KotH and Grand Melee tabs fetched one standing per robot. Dropped the Fame column and ELO outside 1v1. Every standings endpoint now needs a login. This document now describes v2.0 only; the v1.x feature notes are in git history.
 
 ---
 
-## Overview
+## References
 
-The League Standings page (`/league-standings`) displays competitive rankings for robots and teams across tiers and instances. It supports 1v1 League, 2v2 League, 3v3 League, and Tag Team with identical promotion/demotion semantics.
+- [PRD_LEAGUE_SYSTEM.md](../game-systems/PRD_LEAGUE_SYSTEM.md): tiers, instances, LP, promotion and demotion rules, "Entering a League"
+- [PRD_MATCHMAKING.md](../game-systems/PRD_MATCHMAKING.md): matches are made within an instance
+- [PRD_AUTOMATON_STABLES.md](../game-systems/PRD_AUTOMATON_STABLES.md): Automaton_Badge on stable names
+- [PRD_SECURITY.md](../architecture/PRD_SECURITY.md): "What needs a login"
+- Player guide: `leagues/league-points` ("LP and Instance Standings"), `leagues/promotion-demotion` (linked as "How leagues work")
 
-### Canonical Zone Display
+## Code map
 
-The API and executor call the same pure planner. For each instance:
-
-1. Create one canonical ranking of the complete instance population by LP descending, then entity ID ascending.
-2. Fix `floor(totalEntities × 10%)` positions from opposite ends: promotion from the start, demotion from the reversed tail.
-3. Apply five-cycle residency and the source-tier LP threshold inside those positions.
-4. Do not backfill an ineligible position from outside its zone.
-
-A selected instance marks the qualifying rows in its fixed zones. A tier-wide view computes each instance independently and combines those effective plans; it does not treat the entire tier as one instance and no longer requires an instance selection to show status.
-
-When promotion would open an empty destination tier, candidates from all source instances are combined. Fewer than three candidates are displayed as held, not as executable promotion candidates. API metadata exposes the raw candidates, effective candidates, total population, total/active instance counts, under-minimum counts, and block reason so the UI cannot disagree with execution. Selected-instance warnings show that instance's population; tier-wide warnings distinguish mixed active/paused instances from a tier where every instance is paused.
-
-Displayed standings use the same LP-descending, entity-ID-ascending canonical ranking from which the planner takes both ends, so tied rows keep the same rank and fixed-zone boundaries in the API and executor.
-
-The labels explicitly state “top/bottom 10% of total instance.” White rows with sufficient residency are not necessarily candidates: position and LP still apply, and no-backfill is intentional.
-
-### Who Appears
-
-A robot or team appears in a mode's standings once it has a standings row, which is created the first time it becomes matchable by subscription (robot subscribed; team complete with every member subscribed) and placed in the least-full Bronze instance. Robot and team creation create no rows. Unsubscribing keeps the row, so an unsubscribed entity stays listed with its tier and LP until the season ends; disbanding a team removes its rows. The full rule is in `docs/game-systems/PRD_LEAGUE_SYSTEM.md` ("Entering a League").
-
-A robot without a `league_1v1` standing is **Unranked**: the robot list, robot detail page and dashboard standings card show "Unranked" instead of a tier, "—" for LP, and no rank. On this page, the 1v1 highlighting of tiers and instances that hold the player's robots skips those robots.
-
-A team without a standing in its 2v2/3v3 League or in Tag Team is **Unranked** in that league in the same way: the team cards (Team Battles page, dashboard standings card) and the robot detail team league history show "Unranked" and "—" for LP. `GET /api/team-battles` and `GET /api/team-battles/robot/:robotId/league-history` return `null` tier, instance and LP for such a team. The team highlighting on this page skips it.
+| Area | Files |
+|---|---|
+| Page | `app/frontend/src/pages/LeagueStandingsPage.tsx` (root `data-testid="league-standings"`) |
+| Components | `app/frontend/src/components/league-standings/` (`LeagueCards`, `TierChips`, `InstanceChips`, `StandingsTable`, `StatusChip`, `StandingsPager`, `StandingsLegend`, `useLeagueStandings`) |
+| View model | `app/frontend/src/utils/leagueStandings.ts` (modes, opening view, card summaries, status and zone wording) |
+| API client | `app/frontend/src/utils/leagueStandingsApi.ts` (normalises robot and team responses to one row shape) |
+| Routes | `app/backend/src/routes/leagues.ts` (`/my-standings`, `/:tier/standings`, `/:tier/instances`), `app/backend/src/routes/teamBattles.ts` (2v2/3v3 and Tag Team standings and instances) |
+| Services | `services/league/leagueStandingsService.ts` (pages), `myStandingsService.ts` (league cards), `standing-status.ts` (status per zone place), `league-zone-meta.ts` (`zoneMeta`), `league-rebalancing-preview.ts` (`buildLeagueTierPreview`, the executor's plan) |
 
 ---
 
-## Features
+## Page
 
-### 1. Collapsible League Instances (Default Collapsed)
+### Layout (top to bottom)
+1. **Header**: "League Standings", the season line ("Season 1 · cycle 97 of 100 · places move at each league's rebalance, after its battles") and "How leagues work ›" (guide).
+2. **League cards** (`LeagueCards`): one card per league (1v1, 2v2, 3v3, Tag Team, King of the Hill, Grand Melee), which is also the league picker. A card with entries says "11 robots in 4 tiers", "Best: #10, Champion 1" (highest tier, then best place) and one movement line, the first that applies: "N promote · N demote", "N held below the LP minimum" (LP or cohort holds), "N in promotion places" (residency), "N in demotion places", "Nobody in a zone". A league without entries says "No robots entered" / "No teams entered", so every league stays reachable. Six columns from `xl`; below that the cards scroll sideways (`ScrollRow`).
+3. **Tier chips** (`TierChips`): the six tiers with the viewer's entry count. A tier links to the viewer's best instance in it, or the whole tier.
+4. **Instance chips** (`InstanceChips`): every instance in number order, "Diamond 1 · 67 · 3 yours", then "All of Diamond · 133" when the tier has more than one.
+5. **Standings** for the selected instance or tier: heading ("Diamond 1" / "All of Diamond"), the zone summary, an optional warning, the table, the pager (whole tier only) and the legend.
 
-**Purpose**: Reduce initial page clutter and improve scalability for systems with many league instances.
+### Opening view
+Without `tier` in the URL the page waits for `my-standings` and replaces the URL with the viewer's best instance in the chosen league (highest tier, then best place). Without entries in that league it opens all of Bronze. A URL with a tier (deep links from battle reports, robot pages and the admin League Health page) is kept as it is.
 
-**Behavior**:
-- League instances section starts **collapsed by default**
-- Click header or +/− button to toggle visibility
-- Smooth transitions with Tailwind classes
-- Instances grid only renders when expanded
+### URL state
+`mode` (`1v1`, `2v2`, `3v3`, `tag_team`, `koth`, `grand_melee`; the old values, so existing links land), `tier`, `instance` (absent = whole tier), `page` (whole tier only).
 
-**Implementation**:
-```typescript
-const [showInstancesList, setShowInstancesList] = useState(false);
+### Table (`StandingsTable`)
+- **One instance** is one page (instances hold at most 100). The top `floor(10%)` places sit under a green "Promotion places · top N" band and end at a dashed line; the bottom places sit under a red "Demotion places · bottom N" band. Instances under 10 entries have no zone places.
+- **Whole tier**: 50 per page with a pager, no bands (zones are counted per instance); status chips still show.
+- **Columns**: Place, robot or team (stable underneath, with the "bot" chip for generated stables and the Automaton_Badge; team members linked to their robots), record (W-D-L, or wins / matches in KotH and Grand Melee), ELO (1v1 only), LP, Status. Below `md` the record moves under the stable name, the chip under the name, and ELO and Status columns are hidden; fixed column widths apply from `md` only.
+- **The viewer's rows**: blue fill and left bar, a "You" chip, robot names link to the Workshop (everyone else's to the public profile). A viewer's robot outside the zone places with fewer cycles than the minimum shows "New in Diamond · 0 of 5 cycles".
+- **Not subscribed**: the row keeps its place, its text is dimmed and it shows "Not entered".
+- While the next page loads the current rows stay (dimmed); a response for a request that is no longer current is dropped.
 
-<div 
-  className="flex items-center justify-between cursor-pointer mb-2"
-  onClick={() => setShowInstancesList(!showInstancesList)}
->
-  <h2>League Instances</h2>
-  <button>{showInstancesList ? '−' : '+'}</button>
-</div>
+### Status chip (`StatusChip`, `standing-status.ts`)
+Only entries in a zone place get one. From the executor's tier plan, per instance:
 
-{showInstancesList && (
-  <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mt-4">
-    {/* Instance cards */}
-  </div>
-)}
-```
+| Chip | When |
+|---|---|
+| Promotes | in a promotion place and in the plan's effective promotions |
+| Demotes | in a demotion place, enough cycles |
+| Needs 125 LP | promotion place, enough cycles, below the tier's LP minimum (Bronze 25 … Diamond 125; none in KotH/Grand Melee) |
+| N cycles to go | zone place, fewer cycles in the tier than the minimum (5; KotH and Grand Melee 10); residency is reported before LP |
+| Held: Champion is empty | qualifies, but promotion would open an empty tier with fewer than 3 qualifiers tier-wide |
 
-**Impact**: Improves initial page load perception and works well with 10, 50, or 500+ instances.
+Places are not backfilled: a held place stays empty, so the chips never move down the list. The legend explains the four common chips.
 
----
-
-### 2. Tier Color Indication in Instances
-
-**Purpose**: Provide immediate visual context for which tier's instances are being displayed.
-
-**Behavior**:
-- Each instance card displays the tier name in the appropriate tier color
-- Colors match the tier tab indicators
-- Consistent with existing tier badge system
-
-**Color Scheme**:
-- **Bronze**: `text-orange-600` (🟤 Orange/Brown)
-- **Silver**: `text-gray-400` (⚪ Light Gray)
-- **Gold**: `text-yellow-500` (🟡 Gold Yellow)
-- **Platinum**: `text-cyan-400` (💠 Cyan)
-- **Diamond**: `text-blue-400` (💎 Light Blue)
-- **Champion**: `text-purple-500` (🟣 Purple)
-
-**Implementation**:
-```typescript
-const tierColorClass = getLeagueTierColor(instance.leagueTier);
-
-<div className={`text-sm ${tierColorClass} font-semibold`}>
-  {buildInstanceDisplayLabel(instance.leagueId)}
-</div>
-```
+### Zone summary and warnings (`zoneSummary`, `zoneWarning`)
+- Instance: "67 robots · top 6 go up to Champion, bottom 6 down to Platinum · moving needs 5 cycles in Diamond; going up also needs 125 LP". Champion omits promotion and the LP minimum; Bronze omits demotion.
+- Whole tier: "603 robots in 7 instances · top 10% of each instance go up to Diamond, bottom 10% down to Gold · …".
+- Warnings: a cohort hold, instances below 10 entries ("nobody moves there yet"), or a single instance below 10.
 
 ---
 
-### 3. Improved Instance Name Formatting
+## API
 
-**Purpose**: Transform technical instance IDs into user-friendly display names.
+All endpoints need a login (`authenticateToken`); query parameters are validated with Zod (`leagueInstanceId` primitive in `utils/securityValidation.ts`); invalid input answers `400 VALIDATION_ERROR`.
 
-**Behavior**:
-- **Before**: "Instance #bronze_1"
-- **After**: "Bronze 1"
-- Capitalizes tier names and separates numbers with space
-- Professional and readable display
+| Endpoint | Query | Returns |
+|---|---|---|
+| `GET /api/leagues/my-standings` | — | `{ entries: [{ mode, entityType, entityId, name, tier, leagueInstanceId, place, instanceSize, leaguePoints, cyclesInTier, minCycles, status }] }`, `Cache-Control: private, no-store` |
+| `GET /api/leagues/:tier/standings` | `mode` (`league_1v1` default, `koth`, `grand_melee`), `instance`, `page`, `perPage` ≤ 100 | `{ data: [robot rows with rank, status], pagination, zoneMeta }` |
+| `GET /api/leagues/:tier/instances` | `mode` | instances in number order |
+| `GET /api/team-battles/leagues/:2|3/:tier/standings` | `instance`, `page`, `perPage` ≤ 100 | `{ standings: [team rows with status], pagination, zoneMeta }` |
+| `GET /api/team-battles/leagues/2/:tier/tag-team-standings` | same | Tag Team rows |
+| `GET /api/team-battles/leagues/:2|3/:tier/instances`, `/leagues/2/:tier/tag-team-instances` | — | instances in number order |
 
-**Implementation**:
-```typescript
-const buildInstanceDisplayLabel = (leagueIdentifier: string) => {
-  const segments = leagueIdentifier.split('_');  // "bronze_1" → ["bronze", "1"]
-  if (segments.length < 2) return leagueIdentifier;
-  
-  const tierLabel = getLeagueTierName(segments[0]);  // "bronze" → "Bronze"
-  const instanceNum = segments[1];                    // "1"
-  return `${tierLabel} ${instanceNum}`;               // "Bronze 1"
-};
-```
+- Rows keep their earlier fields (`zone`, `eligible` and the rest) and add `rank` (robot rows) and `status` (`{ kind, zone, cyclesToGo?, minLP? }` or null).
+- `zoneMeta.minLP` is `null` in Champion (it used to serialise Infinity as null and render "≥ LP").
+- `my-standings` loads the viewer's standings, then every row of the tiers they occupy (planner fields only) and the tier populations, and runs the planner in memory. On ACC (ApenRots, 46 entries in 16 tiers) that is 5,215 rows read in 69 ms.
 
----
+## Who appears
+A robot or team appears in a league's standings once it has a standings row, created the first time it becomes matchable by subscription (robot subscribed; team complete with every member subscribed) and placed in the least-full Bronze instance. Unsubscribing keeps the row ("Not entered"); disbanding a team removes it. Robots and teams without a row are **Unranked** on the robot, team and dashboard cards. Full rule: `PRD_LEAGUE_SYSTEM.md` ("Entering a League").
 
-### 4. Removed HP Column
-
-**Purpose**: Focus the standings table on competition-relevant statistics only.
-
-**Rationale**:
-- HP (Health Points) is combat-specific, not league-ranking-relevant
-- Robot health changes frequently after battles
-- HP belongs in Robot Detail page, not rankings
-- Table now shows only persistent competitive stats: ELO, LP, Fame, W-D-L record, Win Rate
-
-**Implementation**:
-- Removed `<th>` header cell for HP
-- Removed HP percentage calculation from robot rows
-- Table reduced from 9 columns to 8 columns
-
-**Table Structure** (After):
-```
-┌──────┬──────────┬────────┬──────┬──────┬──────┬────────┬─────────┐
-│ Rank │  Robot   │ Owner  │ ELO  │  LP  │ Fame │ W-D-L  │Win Rate │
-├──────┼──────────┼────────┼──────┼──────┼──────┼────────┼─────────┤
-│  #1  │ RoboKing │ player1│ 1500 │ 250  │ 500  │ 10-2-1 │  76.9%  │
-│  #2  │ IronFist │ player2│ 1480 │ 240  │ 480  │ 9-1-2  │  75.0%  │
-│  #3  │ BattleX  │ player3│ 1460 │ 230  │ 460  │ 8-2-2  │  66.7%  │
-└──────┴──────────┴────────┴──────┴──────┴──────┴────────┴─────────┘
-```
+## Automaton stables
+Automaton_Stables appear in every league on the same terms as human stables. The stable name renders through `OwnerNameLink` (inside `RecordStable`), with the Automaton_Badge as the name's direct sibling on one non-wrapping line (`tests/e2e/automaton-badge.spec.ts` at 320, 360, 768 and 1024 px).
 
 ---
 
-## Visual Comparison
-
-### League Instances Section
-
-#### Before:
-```
-┌─────────────────────────────────────────────────────┐
-│ League Instances                                     │
-│ (Click on selected instance to view all)            │
-├─────────────────────────────────────────────────────┤
-│ ┌─────────┬─────────┬─────────┬─────────┬─────────┐ │
-│ │Instance │Instance │Instance │Instance │Instance │ │
-│ │#bronze_1│#bronze_2│#bronze_3│#bronze_4│#bronze_5│ │
-│ │  50/100 │  45/100 │  38/100 │  42/100 │  51/100 │ │
-│ │ robots  │ robots  │ robots  │ robots  │ robots  │ │
-│ └─────────┴─────────┴─────────┴─────────┴─────────┘ │
-│ (continues for all instances - always visible)       │
-└─────────────────────────────────────────────────────┘
-```
-
-#### After (Collapsed):
-```
-┌─────────────────────────────────────────────────────┐
-│ League Instances                    [+]              │
-│ (Click selected to view all)                        │
-└─────────────────────────────────────────────────────┘
-```
-
-#### After (Expanded):
-```
-┌─────────────────────────────────────────────────────┐
-│ League Instances                    [−]              │
-│ (Click selected to view all)                        │
-├─────────────────────────────────────────────────────┤
-│ ┌─────────┬─────────┬─────────┬─────────┬─────────┐ │
-│ │ Bronze 1│ Bronze 2│ Bronze 3│ Bronze 4│ Bronze 5│ │
-│ │ 🟤COLOR │ 🟤COLOR │ 🟤COLOR │ 🟤COLOR │ 🟤COLOR │ │
-│ │  50/100 │  45/100 │  38/100 │  42/100 │  51/100 │ │
-│ │ robots  │ robots  │ robots  │ robots  │ robots  │ │
-│ └─────────┴─────────┴─────────┴─────────┴─────────┘ │
-└─────────────────────────────────────────────────────┘
-```
-
----
-
-## Technical Details
-
-### Files Modified
-- **Frontend**: `app/frontend/src/pages/LeagueStandingsPage.tsx`, `app/frontend/src/utils/matchmakingApi.ts`, and `app/frontend/src/utils/teamBattleApi.ts`
-- **Backend APIs**: `app/backend/src/routes/leagues.ts` and `app/backend/src/routes/teamBattles.ts`
-- **Shared policy/execution**: `app/backend/src/services/league/league-rules.ts`, `league-rebalancing-planner.ts`, `league-rebalancing-preview.ts`, and `leagueEngine.ts`
-- **Mode adapters**: 1v1, 2v2, 3v3, and Tag Team rebalancing services
-
-### Code Changes Summary
-
-**New State Variables**:
-```typescript
-const [showInstancesList, setShowInstancesList] = useState(false);
-```
-
-**New Helper Functions**:
-```typescript
-const buildInstanceDisplayLabel = (leagueIdentifier: string) => {
-  const segments = leagueIdentifier.split('_');
-  if (segments.length < 2) return leagueIdentifier;
-  
-  const tierLabel = getLeagueTierName(segments[0]);
-  const instanceNum = segments[1];
-  return `${tierLabel} ${instanceNum}`;
-};
-```
-
-**Design Patterns Used**:
-- Controlled Component Pattern: State-driven UI with `showInstancesList`
-- Helper Function Pattern: Pure function for instance label transformation
-- Conditional Rendering: Only render instances grid when expanded
-- Consistent Styling: Reuse existing tier color system
-
-### Code Quality
-- ✅ TypeScript strict mode compatible
-- ✅ Follows project's React/Hooks patterns
-- ✅ Uses existing utility functions (`getLeagueTierName`, `getLeagueTierColor`)
-- ✅ Maintains existing functionality (filtering, pagination, highlights)
-- ✅ Additive API metadata; existing standings fields remain compatible
-
-### Accessibility
-- ✅ Keyboard navigable (header and button focusable)
-- ✅ Semantic HTML structure maintained
-- ✅ Screen reader compatible
-- ✅ Touch-friendly on mobile
-- ✅ Button announces "plus" or "minus" state
-- ✅ Table headers clearly labeled
-
-### Responsive Design
-- Grid adapts: 1 column (mobile) → 3 columns (tablet) → 5 columns (desktop)
-- Collapsed by default helps mobile users (less scrolling)
-- Touch targets adequately sized
-
----
-
-## Automaton Stables (Spec #55)
-
-Automaton_Stables appear in every league standing (1v1, KotH, 2v2, 3v3, Tag Team) on the same terms as human stables: same tiers, promotions and demotions, same ranking from `standings`. Matchmaking is unchanged.
-
-**Automaton_Badge in the owner cell.** The owner cell renders through `OwnerNameLink` with the row's `stableType` (the standings responses carry `user.stableType`, and team and tag-team rows the stable's `stableType`). For an Automaton the link is wrapped in a non-wrapping `inline-flex` row (`max-w-full`): the stable name `min-w-0 truncate`, then `AutomatonBadge` (`md`). A long name is shortened with "…" before the badge would move to a line of its own.
-
-- Below 640 px the badge is compact: gear icon only, with "Automaton" kept as `sr-only` text for screen readers.
-- From 640 px (including ≥ 1024 px) it shows the full label.
-- No horizontal overflow from 320 px (Playwright `automaton-badge.spec.ts` at 320, 360, 768 and 1024 px).
-- Human and Generated_Stable rows render exactly as before. The badge is not interactive and adds no touch target.
-
-## User Experience
-
-### Typical User Journey
-
-1. **Page Load**
-   - Sees tier tabs at top (with blue dot indicators for own robots)
-   - League instances section is **collapsed** (saves space)
-   - Main standings table immediately visible
-
-2. **Browsing Instances** (Optional)
-   - Clicks header or + button to expand instances
-   - Sees color-coded, well-formatted instance names
-   - Clicks instance to filter standings to that instance
-   - Instance highlights in yellow when selected
-
-3. **Viewing Rankings**
-   - Focused table shows 8 relevant columns
-   - No HP distraction (belongs in Robot Detail page, not rankings)
-   - Own robots highlighted in blue
-   - Top 3 ranks get medal colors (gold/silver/bronze)
-
-4. **Collapsing Back** (Optional)
-   - Clicks header or − button to collapse instances
-   - More screen space for standings table
-
-### Preserved Functionality
-All existing features remain functional:
-- ✅ Tier tab navigation with user robot indicators
-- ✅ Instance selection/filtering
-- ✅ Pagination for large robot lists
-- ✅ User's own robots highlighted
-- ✅ Rank coloring (gold/silver/bronze medals)
-
----
-
-## Benefits
-
-### User Benefits
-- 🎯 **Faster page load perception** - Less visual clutter on initial load
-- 🎯 **Better scalability** - Works with 5 instances or 500 instances
-- 🎯 **Clearer information** - Tier colors and readable names
-- 🎯 **Focused rankings** - Table shows only competition-relevant data
-- 🎯 **Professional UX** - Matches modern web app standards
-
-### Developer Benefits
-- 🛠️ **Clean code** - Single helper function for label formatting
-- 🛠️ **Consistent styling** - Reuses existing tier color system
-- 🛠️ **Maintainable** - Simple state toggle, no complex logic
-- 🛠️ **Testable** - Pure function for label transformation
-
-### Project Benefits
-- 📈 **Scales well** - Can handle league system growth
-- 📈 **No breaking changes** - All existing functionality preserved
-- 📈 **Performance positive** - Reduced initial render, smaller DOM when collapsed
-
----
-
-## Testing
-
-### Manual Testing Checklist
-- [ ] Verify instances start collapsed on page load
-- [ ] Test expand/collapse toggle functionality
-- [ ] Verify instance names display as "Bronze 1" format
-- [ ] Verify tier colors applied correctly
-- [ ] Confirm HP column removed from table
-- [ ] Test instance selection/filtering still works
-- [ ] Verify pagination functions correctly
-- [ ] Check user robot highlighting
-- [ ] Test on multiple screen sizes
-
-### Browser Testing
-- [ ] Chrome desktop (primary target)
-- [ ] Firefox desktop
-- [ ] Safari desktop
-- [ ] Chrome mobile
-- [ ] Safari iOS
-- [ ] Tablet view (grid columns adjust appropriately)
-
-### Testing Performed
-- ✅ Code syntax validation
-- ✅ TypeScript type checking (with project config)
-- ✅ Git diff review for accuracy
-- ✅ Documentation completeness check
-
----
-
-## Performance Impact
-
-### Positive Impacts
-- ✅ Reduced initial render (collapsed by default)
-- ✅ Smaller DOM tree when collapsed
-- ✅ Removed unnecessary HP calculations in table
-- ✅ No additional API calls
-- ✅ No heavy computations added
-- ✅ Conditional rendering is lightweight
-- ✅ Helper function is pure and fast
-
-### Metrics
-- **Cyclomatic Complexity**: Low (simple conditionals)
-- **Function Length**: All functions < 20 lines
-- **Readability**: High (clear naming, good structure)
-
----
-
-## Deployment
-
-### Prerequisites
-- No database migrations required
-- Deploy backend and frontend together because the UI consumes additive zone metadata
-- No environment variable changes needed
-
-### Deployment Steps
-1. Merge the coordinated backend, frontend, test, and documentation changes
-2. Deploy the backend standings APIs and league executor
-3. Rebuild and deploy the frontend
-
-### Rollback Plan
-- Revert the coordinated league policy, API, and frontend changes together
-- No data migration rollback is needed
-
----
-
-## Future Enhancements
-
-Potential improvements for future iterations (not in current scope):
-1. **Persistent State**: Remember expand/collapse preference in localStorage
-2. **Instance Search**: Filter/search instances for large league systems
-3. **Sort Options**: Sort instances by name, occupancy, or tier
-4. **Analytics**: Track which instances players interact with most
-5. **Animations**: Smooth expand/collapse animations
-6. **Bulk Actions**: "Expand All" / "Collapse All" buttons
-
----
-
-## Related Documentation
-
-- **Navigation**: [NAVIGATION_QUICK_REFERENCE.md](NAVIGATION_QUICK_REFERENCE.md)
-- **Design System**: [design_ux/DESIGN_SYSTEM_AND_UX_GUIDE.md](design_ux/DESIGN_SYSTEM_AND_UX_GUIDE.md)
-- **Module Structure**: [MODULE_STRUCTURE.md](MODULE_STRUCTURE.md)
-
----
+## Tests
+- Backend: `tests/services/league/standing-status.test.ts` (each status, residency before LP, cohort hold, placement rules, paused instances, a property that `promotes`/`demotes` equal the executor plan, `zoneMeta` for Champion and selected instances), `tests/leagues.test.ts` (rank and status on rows, `my-standings` place/size/status, validation 400s, login required), `tests/unit/signedInOnlyRoutes.route.test.ts`.
+- Frontend: `utils/__tests__/leagueStandings.test.ts` (URL params, opening view, card summaries, status and zone wording), `pages/__tests__/LeagueStandingsPage.test.tsx` (opening view, cards, chips, bands, own rows, per-mode columns, request parameters, whole-tier pager, retry, stale responses).
+- Playwright: `tests/e2e/league-standings.spec.ts` (chromium). Against the seeded backend: opens on the player's league, every league card loads, the Battle menu reaches the page. With the league endpoints answered from an ACC-like fixture (`tests/e2e/helpers/leagueStandings.ts`): opening view, bands, chips, own rows and Workshop links, bot chip and Automaton_Badge, league/tier/instance navigation and paging, and at 320 and 390 px no horizontal overflow, 44 px touch targets and the chip rows scrolling.

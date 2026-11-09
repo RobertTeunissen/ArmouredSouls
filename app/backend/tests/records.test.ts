@@ -3,7 +3,9 @@ import prisma from '../src/lib/prisma';
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import jwt from 'jsonwebtoken';
 import recordsRoutes from '../src/routes/records';
+import { createTestUser, deleteTestUser } from './testHelpers';
 
 dotenv.config();
 
@@ -15,18 +17,30 @@ app.use(express.json());
 app.use('/api/records', recordsRoutes);
 
 describe('Records Routes', () => {
+  let userId: number;
+  let authToken: string;
+
   beforeAll(async () => {
     await prisma.$connect();
+    const user = await createTestUser();
+    userId = user.id;
+    authToken = jwt.sign({ userId: user.id, username: user.username }, process.env.JWT_SECRET || 'test-secret');
   });
 
   afterAll(async () => {
+    await deleteTestUser(userId);
     await prisma.$disconnect();
+  });
+
+  it('refuses requests without a login', async () => {
+    const response = await request(app).get('/api/records');
+    expect(response.status).toBe(401);
   });
 
   describe('GET /api/records', () => {
     it('should get all hall of records statistics', async () => {
       const response = await request(app)
-        .get('/api/records');
+        .get('/api/records').set("Authorization", `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toBeDefined();
@@ -34,7 +48,7 @@ describe('Records Routes', () => {
 
     it('should have combat records section', async () => {
       const response = await request(app)
-        .get('/api/records');
+        .get('/api/records').set("Authorization", `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('combat');
@@ -56,7 +70,7 @@ describe('Records Routes', () => {
 
     it('should have career records section', async () => {
       const response = await request(app)
-        .get('/api/records');
+        .get('/api/records').set("Authorization", `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('career');
@@ -78,7 +92,7 @@ describe('Records Routes', () => {
 
     it('should have economic records section', async () => {
       const response = await request(app)
-        .get('/api/records');
+        .get('/api/records').set("Authorization", `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('economic');
@@ -111,7 +125,7 @@ describe('Records Routes', () => {
     });
 
     it('keeps only Most Decisive Victory among the team league records', async () => {
-      const response = await request(app).get('/api/records');
+      const response = await request(app).get('/api/records').set("Authorization", `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       for (const size of ['2v2', '3v3']) {
@@ -124,7 +138,7 @@ describe('Records Routes', () => {
 
     it('should have prestige records section', async () => {
       const response = await request(app)
-        .get('/api/records');
+        .get('/api/records').set("Authorization", `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('prestige');
@@ -138,7 +152,7 @@ describe('Records Routes', () => {
 
     it('should have upsets section', async () => {
       const response = await request(app)
-        .get('/api/records');
+        .get('/api/records').set("Authorization", `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('upsets');
@@ -157,7 +171,7 @@ describe('Records Routes', () => {
 
     it('should handle empty database gracefully', async () => {
       const response = await request(app)
-        .get('/api/records');
+        .get('/api/records').set("Authorization", `Bearer ${authToken}`);
 
       // Should not crash even with minimal data
       expect(response.status).toBe(200);
@@ -166,7 +180,7 @@ describe('Records Routes', () => {
 
     it('should return records with proper structure', async () => {
       const response = await request(app)
-        .get('/api/records');
+        .get('/api/records').set("Authorization", `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       
@@ -178,7 +192,7 @@ describe('Records Routes', () => {
 
     it('should return up to 10 records per category', async () => {
       const response = await request(app)
-        .get('/api/records');
+        .get('/api/records').set("Authorization", `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       

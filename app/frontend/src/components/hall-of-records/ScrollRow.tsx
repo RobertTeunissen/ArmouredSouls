@@ -70,7 +70,10 @@ export function ScrollRow({ children, label, as = 'group', wrapFrom = 'never', c
         role={as}
         aria-label={label}
         onScroll={measure}
-        className={`flex flex-nowrap gap-2 overflow-x-auto pb-1 [scrollbar-width:none] ${WRAP_CLASSES[wrapFrom]}`}
+        // `relative` makes the scroller the containing block of absolutely
+        // positioned descendants (e.g. `sr-only` text inside a chip), so the
+        // overflow clips them instead of widening the page.
+        className={`relative flex flex-nowrap gap-2 overflow-x-auto pb-1 [scrollbar-width:none] ${WRAP_CLASSES[wrapFrom]}`}
       >
         {children}
       </div>

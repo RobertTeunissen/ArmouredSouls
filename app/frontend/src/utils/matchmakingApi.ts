@@ -240,59 +240,6 @@ export interface BattleHistory {
   } | null;
 }
 
-export interface LeagueRobot {
-  id: number;
-  name: string;
-  elo: number;
-  leaguePoints: number;
-  wins: number;
-  draws: number;
-  losses: number;
-  totalBattles: number;
-  currentHP: number;
-  maxHP: number;
-  fame: number;
-  userId: number;
-  cyclesInCurrentLeague: number;
-  eligible: boolean;
-  isSubscribed?: boolean;
-  user: {
-    username: string;
-    stableName: string | null;
-    /** Spec #55: Stable_Type of the owning stable (drives the Automaton_Badge). */
-    stableType?: StableType;
-  };
-  zone: 'promotion' | 'demotion' | null;
-}
-
-export interface ZoneMeta {
-  tier: string;
-  minLP: number;
-  minCycles: number;
-  minRobotsRequired: number;
-  eligibleCount: number;
-  hasEnoughRobots: boolean;
-  promotionSlots: number;
-  demotionSlots: number;
-  promotionCandidates: number;
-  effectivePromotionCandidates: number;
-  promotionBlockReason: 'destination_cohort_too_small' | null;
-  totalEntities: number;
-  totalInstances: number;
-  activeInstances: number;
-  instancesBelowMinimum: number;
-  smallestInstancePopulation: number;
-  isChampion: boolean;
-  isBronze: boolean;
-}
-
-export interface LeagueInstance {
-  leagueId: string;
-  leagueTier: string;
-  currentRobots: number;
-  maxRobots: number;
-}
-
 export interface PaginatedResponse<T> {
   data: T[];
   pagination: {
@@ -301,10 +248,6 @@ export interface PaginatedResponse<T> {
     total: number;
     totalPages: number;
   };
-}
-
-export interface LeagueStandingsResponse extends PaginatedResponse<LeagueRobot> {
-  zoneMeta: ZoneMeta;
 }
 
 // API Functions
@@ -337,29 +280,6 @@ export const getMatchHistory = async (
   }
   
   return api.get<PaginatedResponse<BattleHistory>>('/api/matches/history', { params });
-};
-
-export const getLeagueStandings = async (
-  tier: string,
-  page: number = 1,
-  pageSize: number = 50,
-  instance?: string,
-  mode?: string
-): Promise<LeagueStandingsResponse> => {
-  return api.get<LeagueStandingsResponse>(`/api/leagues/${tier}/standings`, {
-    params: {
-      page,
-      perPage: pageSize,
-      ...(instance && { instance }),
-      ...(mode && { mode }),
-    },
-  });
-};
-
-export const getLeagueInstances = async (tier: string, mode?: string): Promise<LeagueInstance[]> => {
-  return api.get<LeagueInstance[]>(`/api/leagues/${tier}/instances`, {
-    params: { ...(mode && { mode }) },
-  });
 };
 
 // Re-export tier helpers from single source of truth

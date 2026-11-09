@@ -3,7 +3,9 @@ import prisma from '../src/lib/prisma';
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import jwt from 'jsonwebtoken';
 import leaderboardsRoutes from '../src/routes/leaderboards';
+import { createTestUser, deleteTestUser } from './testHelpers';
 
 dotenv.config();
 
@@ -15,18 +17,33 @@ app.use(express.json());
 app.use('/api/leaderboards', leaderboardsRoutes);
 
 describe('Leaderboards Routes', () => {
+  let userId: number;
+  let authToken: string;
+
   beforeAll(async () => {
     await prisma.$connect();
+    const user = await createTestUser();
+    userId = user.id;
+    authToken = jwt.sign({ userId: user.id, username: user.username }, process.env.JWT_SECRET || 'test-secret');
   });
 
   afterAll(async () => {
+    await deleteTestUser(userId);
     await prisma.$disconnect();
   });
+
+  it.each(['/api/leaderboards/fame', '/api/leaderboards/losses', '/api/leaderboards/prestige', '/api/leaderboards/cache?category=fame'])(
+    'refuses %s without a login',
+    async (path) => {
+      const response = await request(app).get(path);
+      expect(response.status).toBe(401);
+    },
+  );
 
   describe('GET /api/leaderboards/fame', () => {
     it('should get fame leaderboard', async () => {
       const response = await request(app)
-        .get('/api/leaderboards/fame');
+        .get('/api/leaderboards/fame').set("Authorization", `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('leaderboard');
@@ -36,7 +53,7 @@ describe('Leaderboards Routes', () => {
 
     it('should support pagination', async () => {
       const response = await request(app)
-        .get('/api/leaderboards/fame')
+        .get('/api/leaderboards/fame').set("Authorization", `Bearer ${authToken}`)
         .query({ page: 1, limit: 10 });
 
       expect(response.status).toBe(200);
@@ -49,8 +66,8 @@ describe('Leaderboards Routes', () => {
     // rather than rejected, and the result matches the unfiltered request.
     it('should ignore a removed league parameter', async () => {
       const [filtered, plain] = await Promise.all([
-        request(app).get('/api/leaderboards/fame').query({ league: 'bronze' }),
-        request(app).get('/api/leaderboards/fame'),
+        request(app).get('/api/leaderboards/fame').set("Authorization", `Bearer ${authToken}`).query({ league: 'bronze' }),
+        request(app).get('/api/leaderboards/fame').set("Authorization", `Bearer ${authToken}`),
       ]);
 
       expect(filtered.status).toBe(200);
@@ -59,8 +76,8 @@ describe('Leaderboards Routes', () => {
 
     it('should ignore a removed minBattles parameter', async () => {
       const [filtered, plain] = await Promise.all([
-        request(app).get('/api/leaderboards/fame').query({ minBattles: 50 }),
-        request(app).get('/api/leaderboards/fame'),
+        request(app).get('/api/leaderboards/fame').set("Authorization", `Bearer ${authToken}`).query({ minBattles: 50 }),
+        request(app).get('/api/leaderboards/fame').set("Authorization", `Bearer ${authToken}`),
       ]);
 
       expect(filtered.status).toBe(200);
@@ -68,7 +85,7 @@ describe('Leaderboards Routes', () => {
     });
 
     it('should not expose a League column or a filters block', async () => {
-      const response = await request(app).get('/api/leaderboards/fame');
+      const response = await request(app).get('/api/leaderboards/fame').set("Authorization", `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).not.toHaveProperty('filters');
@@ -81,7 +98,7 @@ describe('Leaderboards Routes', () => {
   describe('GET /api/leaderboards/losses', () => {
     it('should get losses leaderboard', async () => {
       const response = await request(app)
-        .get('/api/leaderboards/losses');
+        .get('/api/leaderboards/losses').set("Authorization", `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('leaderboard');
@@ -90,7 +107,7 @@ describe('Leaderboards Routes', () => {
 
     it('should support pagination', async () => {
       const response = await request(app)
-        .get('/api/leaderboards/losses')
+        .get('/api/leaderboards/losses').set("Authorization", `Bearer ${authToken}`)
         .query({ page: 1, limit: 10 });
 
       expect(response.status).toBe(200);
@@ -103,8 +120,8 @@ describe('Leaderboards Routes', () => {
     // URL supplying `league` is ignored rather than rejected.
     it('should ignore a removed league parameter', async () => {
       const [filtered, plain] = await Promise.all([
-        request(app).get('/api/leaderboards/losses').query({ league: 'bronze' }),
-        request(app).get('/api/leaderboards/losses'),
+        request(app).get('/api/leaderboards/losses').set("Authorization", `Bearer ${authToken}`).query({ league: 'bronze' }),
+        request(app).get('/api/leaderboards/losses').set("Authorization", `Bearer ${authToken}`),
       ]);
 
       expect(filtered.status).toBe(200);
@@ -112,7 +129,7 @@ describe('Leaderboards Routes', () => {
     });
 
     it('should not expose a League column or a filters block', async () => {
-      const response = await request(app).get('/api/leaderboards/losses');
+      const response = await request(app).get('/api/leaderboards/losses').set("Authorization", `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).not.toHaveProperty('filters');
@@ -129,7 +146,7 @@ describe('Leaderboards Routes', () => {
     ];
 
     it('should report destructions for every battle type on each entry', async () => {
-      const response = await request(app).get('/api/leaderboards/losses');
+      const response = await request(app).get('/api/leaderboards/losses').set("Authorization", `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       for (const entry of response.body.leaderboard) {
@@ -141,7 +158,7 @@ describe('Leaderboards Routes', () => {
     });
 
     it('should default to ranking by the all-type total', async () => {
-      const response = await request(app).get('/api/leaderboards/losses');
+      const response = await request(app).get('/api/leaderboards/losses').set("Authorization", `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body.sortBy).toBe('total');
@@ -152,7 +169,7 @@ describe('Leaderboards Routes', () => {
 
     it.each(KILL_MODES)('should rank by %s when asked', async (mode) => {
       const response = await request(app)
-        .get('/api/leaderboards/losses')
+        .get('/api/leaderboards/losses').set("Authorization", `Bearer ${authToken}`)
         .query({ sortBy: mode });
 
       expect(response.status).toBe(200);
@@ -170,7 +187,7 @@ describe('Leaderboards Routes', () => {
     // VALIDATION_ERROR body shape is covered by the schemaValidator tests.
     it('should reject an unknown sort column', async () => {
       const response = await request(app)
-        .get('/api/leaderboards/losses')
+        .get('/api/leaderboards/losses').set("Authorization", `Bearer ${authToken}`)
         .query({ sortBy: 'kills); DROP TABLE robots; --' });
 
       expect(response.status).toBe(400);
@@ -180,7 +197,7 @@ describe('Leaderboards Routes', () => {
   describe('GET /api/leaderboards/prestige', () => {
     it('should get prestige leaderboard', async () => {
       const response = await request(app)
-        .get('/api/leaderboards/prestige');
+        .get('/api/leaderboards/prestige').set("Authorization", `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('leaderboard');
@@ -190,7 +207,7 @@ describe('Leaderboards Routes', () => {
 
     it('should support pagination', async () => {
       const response = await request(app)
-        .get('/api/leaderboards/prestige')
+        .get('/api/leaderboards/prestige').set("Authorization", `Bearer ${authToken}`)
         .query({ page: 1, limit: 10 });
 
       expect(response.status).toBe(200);
@@ -202,8 +219,8 @@ describe('Leaderboards Routes', () => {
     // from a ranking of stable prestige.
     it('should ignore a removed minRobots parameter', async () => {
       const [filtered, plain] = await Promise.all([
-        request(app).get('/api/leaderboards/prestige').query({ minRobots: 5 }),
-        request(app).get('/api/leaderboards/prestige'),
+        request(app).get('/api/leaderboards/prestige').set("Authorization", `Bearer ${authToken}`).query({ minRobots: 5 }),
+        request(app).get('/api/leaderboards/prestige').set("Authorization", `Bearer ${authToken}`),
       ]);
 
       expect(filtered.status).toBe(200);
@@ -211,7 +228,7 @@ describe('Leaderboards Routes', () => {
     });
 
     it('should not expose the derived bonus fields or a filters block', async () => {
-      const response = await request(app).get('/api/leaderboards/prestige');
+      const response = await request(app).get('/api/leaderboards/prestige').set("Authorization", `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(response.body).not.toHaveProperty('filters');

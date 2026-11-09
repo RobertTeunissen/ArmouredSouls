@@ -2,12 +2,13 @@
 
 **Project**: Armoured Souls
 **Document Type**: Product Requirements Document (PRD)
-**Version**: v1.19
-**Last Updated**: November 6, 2026
+**Version**: v1.20
+**Last Updated**: November 8, 2026
 **Status**: ✅ Implemented
 **Owner**: Robert Teunissen
 
 **Revision History**:
+- v1.20 (Nov 8, 2026): `league/` gains `standing-status`, `league-zone-meta`, `leagueStandingsService` and `myStandingsService` (League Standings redesign); `league-rebalancing-preview` exposes the pure `buildLeagueTierPreview`.
 - v1.19 (Nov 6, 2026): `economy/snapshot-stable-metric-queries` aggregates the stable's `cycle_snapshots.stable_metrics` totals and the purchase-cycle fallback for `unifiedFacilityROIService` in the database (#550).
 - v1.18 (Nov 2, 2026): `admin/system/` (`GET /api/admin/system/overview`, `getRequestFailures` for the Dashboard); `monitoring/requestMetrics` counts failed (5xx) and slow (2 s or longer) requests per hour and route into `request_metrics`, fed by `requestLogger` and the error code `errorHandler` sets; `monitoring/backupStatus` (`getLatestBackup`) is the one backup reader of the daily health report and the System page, and recognises `.sql.zst` (the report looked only for `.dump` / `.sql.gz` and reported no backup once nightly dumps moved to zstd on 28 Oct 2026).
 - v1.17 (Nov 2, 2026): `admin/meta/metaChoicesService` (`GET /api/admin/meta/choices`) replaces `admin/adminSystemStatsService` and the `adminStatsService` barrel (`getSystemStats` and `GET /api/admin/stats` removed); `utils/stableScope.ts` (`buildStableScopeFilter`) is the portal's one stable-type filter; `getLegacyPracticeArenaStats` removed with `GET /api/admin/practice-arena/stats`.
@@ -272,6 +273,11 @@ King of the Hill mode — orchestration and matchmaking.
 | `leagueInstanceService` | League instance management (max 100 robots per instance, assignment, rebalancing); `assignLeagueInstanceWithLock` delegates to `leagueInstancePlacement` |
 | `leagueInstancePlacement` | Prisma-free, transaction-scoped instance picker: `MAX_ENTITIES_PER_INSTANCE` (100), `leagueInstanceLockKey`, `pickLeagueInstanceInTransaction` (mode/tier advisory lock, least-full instance, lowest number on ties, opens a new instance when all are full) |
 | `leagueRebalancingService` | Instance-based promotions/demotions (top/bottom 10%, LP retention) |
+| `league-rebalancing-preview` | Read-only tier plan of the executor: `getLeagueTierPreview` (loads the tier) and the pure `buildLeagueTierPreview` (rows already loaded) |
+| `standing-status` | Status of every zone place from a tier plan: promotes, demotes, or held by LP, residency or the new-tier cohort (League Standings chip) |
+| `league-zone-meta` | The `zoneMeta` block of every standings endpoint (zone sizes, gates, population; `minLP` null in Champion) |
+| `leagueStandingsService` | One page of a tier or instance for all six tiered leagues, with rank, zone and status per row (`/api/leagues/:tier/standings`, team-battle standings routes) |
+| `myStandingsService` | The viewer's robots and teams in every tiered league with instance place and status (`GET /api/leagues/my-standings`); plans every occupied tier from one query |
 
 ### standings/
 Authoritative competitive standings (`standings` table, polymorphic robot/team rows).

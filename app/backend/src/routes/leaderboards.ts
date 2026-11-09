@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import { z } from 'zod';
 import { validateRequest } from '../middleware/schemaValidator';
+import { authenticateToken } from '../middleware/auth';
 import {
   getFameLeaderboard,
   getLossesLeaderboard,
@@ -11,6 +12,9 @@ import {
 import { leaderboardService, type LeaderboardCategory } from '../services/leaderboard/leaderboardService';
 
 const router = express.Router();
+
+// Leaderboards are for signed-in players only.
+router.use(authenticateToken);
 
 // Cache leaderboards for 5 minutes — data only changes after battles/cycles
 const leaderboardCache = new Map<string, { data: unknown; expiresAt: number }>();
@@ -78,7 +82,7 @@ router.get('/fame', validateRequest({ query: fameQuerySchema }), async (req: Req
   // filtered payload to an unfiltered request.
   const cacheKey = `fame:${req.query.page || 1}:${req.query.limit || 100}`;
   const cached = getCachedOrNull(cacheKey);
-  if (cached) { res.set('Cache-Control', 'public, max-age=300'); res.json(cached); return; }
+  if (cached) { res.set('Cache-Control', 'private, max-age=300'); res.json(cached); return; }
 
   const result = await getFameLeaderboard({
     page: parseInt(req.query.page as string) || 1,
@@ -87,7 +91,7 @@ router.get('/fame', validateRequest({ query: fameQuerySchema }), async (req: Req
 
   const response = { ...result, timestamp: new Date().toISOString() };
   setCache(cacheKey, response);
-  res.set('Cache-Control', 'public, max-age=300');
+  res.set('Cache-Control', 'private, max-age=300');
   res.json(response);
 });
 
@@ -100,7 +104,7 @@ router.get('/losses', validateRequest({ query: lossesQuerySchema }), async (req:
   // column does belong in the key — each ordering is a different payload.
   const cacheKey = `losses:${req.query.page || 1}:${req.query.limit || 100}:${req.query.sortBy || 'total'}`;
   const cached = getCachedOrNull(cacheKey);
-  if (cached) { res.set('Cache-Control', 'public, max-age=300'); res.json(cached); return; }
+  if (cached) { res.set('Cache-Control', 'private, max-age=300'); res.json(cached); return; }
 
   const result = await getLossesLeaderboard({
     page: parseInt(req.query.page as string) || 1,
@@ -110,7 +114,7 @@ router.get('/losses', validateRequest({ query: lossesQuerySchema }), async (req:
 
   const response = { ...result, timestamp: new Date().toISOString() };
   setCache(cacheKey, response);
-  res.set('Cache-Control', 'public, max-age=300');
+  res.set('Cache-Control', 'private, max-age=300');
   res.json(response);
 });
 
@@ -120,7 +124,7 @@ router.get('/losses', validateRequest({ query: lossesQuerySchema }), async (req:
 router.get('/prestige', validateRequest({ query: prestigeQuerySchema }), async (req: Request, res: Response) => {
   const cacheKey = `prestige:${req.query.page || 1}:${req.query.limit || 100}`;
   const cached = getCachedOrNull(cacheKey);
-  if (cached) { res.set('Cache-Control', 'public, max-age=300'); res.json(cached); return; }
+  if (cached) { res.set('Cache-Control', 'private, max-age=300'); res.json(cached); return; }
 
   const result = await getPrestigeLeaderboard({
     page: parseInt(req.query.page as string) || 1,
@@ -129,7 +133,7 @@ router.get('/prestige', validateRequest({ query: prestigeQuerySchema }), async (
 
   const response = { ...result, timestamp: new Date().toISOString() };
   setCache(cacheKey, response);
-  res.set('Cache-Control', 'public, max-age=300');
+  res.set('Cache-Control', 'private, max-age=300');
   res.json(response);
 });
 
@@ -152,7 +156,7 @@ router.get('/cache', validateRequest({ query: cacheQuerySchema }), async (req: R
 
   const result = await leaderboardService.getLeaderboard(category, page, limit);
 
-  res.set('Cache-Control', 'public, max-age=300');
+  res.set('Cache-Control', 'private, max-age=300');
   res.json({
     ...result,
     category,

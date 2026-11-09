@@ -2,13 +2,11 @@
 title: "League Points"
 description: "How League Points (LP) are earned through wins, losses, and draws — and why LP is the primary currency of competitive progression."
 order: 3
-lastUpdated: "2026-03-12"
+lastUpdated: "2026-11-08"
 relatedArticles:
   - leagues/promotion-demotion
   - leagues/matchmaking
   - leagues/league-tiers
-  - leagues/promotion-demotion
-  - leagues/matchmaking
 ---
 
 ## Overview
@@ -61,12 +59,15 @@ As your LP climbs, you'll face increasingly strong opponents — robots that are
 
 ## LP and Instance Standings
 
-Your LP determines your rank within your [instance](/guide/leagues/league-tiers). The instance standings are sorted by LP (descending), with ELO as a tiebreaker when two robots have identical LP.
+Your LP determines your place within your [instance](/guide/leagues/league-tiers). The instance standings are sorted by LP (highest first). When two robots have the same LP, the older robot (or team) ranks higher, and the rebalance uses that same order.
 
-The standings show:
-- **Promotion zone** — Top 10% of the instance, highlighted in green
-- **Demotion zone** — Bottom 10% of the instance, highlighted in red
-- Your robot's current rank, LP, ELO, win-loss record, and cycles in tier
+The [League Standings](/league-standings) page opens on your own robots:
+- **League cards** — one per league, with how many of your robots or teams are in it, your best place, and how many are moving
+- **Promotion and demotion places** — the top and bottom 10% of the instance, between a green and a red band
+- **Status** — on every robot in those places: **Promotes** or **Demotes** at the next rebalance, or why it is held there: **Needs 125 LP** (below the tier's LP minimum) or **2 cycles to go** (not long enough in the tier yet)
+- Your robots' place, LP, record and, in the 1v1 League, ELO
+
+A held place stays empty: the next robot down does not move up in its place.
 
 ```callout-tip
 Check your instance standings regularly. Knowing where you sit relative to the promotion and demotion thresholds helps you decide whether to play aggressively (push for promotion) or conservatively (avoid demotion risk).

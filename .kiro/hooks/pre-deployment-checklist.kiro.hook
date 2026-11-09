@@ -8,6 +8,6 @@
   },
   "then": {
     "type": "askAgent",
-    "prompt": "Before pushing to main (which triggers ACC deployment), verify against `git diff main...HEAD --stat` only: 1) Tests for the changed areas pass, 2) No console.log in changed production code, 3) New environment variables documented, 4) New migrations tested, 5) Docs updated. Report a short pass/fail list."
+    "prompt": "Before pushing to main (which triggers ACC deployment), run `git fetch -q origin main` and scope every check to `git diff --name-only origin/main...HEAD` plus uncommitted changes (`git status --short`). If that set is empty, say so and stop. Inspect only those files' changes (`git diff origin/main...HEAD -- <path>`), not the whole repo. Verify: 1) Tests covering the changed areas pass (run them and cite the result), 2) No console.log added in changed production code, 3) New environment variables are documented, 4) New migrations were applied and tested, 5) Affected docs are updated. Report a short list marking each check pass, fail, or unverified with its evidence; never mark pass without evidence."
   }
 }

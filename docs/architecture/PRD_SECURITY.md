@@ -2,15 +2,16 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: v2.0  
-**Last Updated**: October 10, 2026 (Automaton accounts and admin endpoints, Spec #55)  
+**Version**: v2.1  
+**Last Updated**: November 8, 2026 (every player endpoint requires a login)  
 **Status**: ✅ Implemented  
 **Owner**: Robert Teunissen
 
 **Revision History**:
 
 v1.0 (Jan 24, 2026): Initial security strategy (aspirational)  
-v2.0 (Apr 10, 2026): Complete rewrite — documents actual implemented security controls, removes aspirational content (GDPR, mobile security, WAF, VPC), adds Security Playbook from Specs 11/12
+v2.0 (Apr 10, 2026): Complete rewrite — documents actual implemented security controls, removes aspirational content (GDPR, mobile security, WAF, VPC), adds Security Playbook from Specs 11/12  
+v2.1 (Nov 8, 2026): "What needs a login" — closed the last anonymous player endpoints (league standings, leaderboards, Hall of Records, ELO chart, log summary)
 
 ---
 
@@ -62,6 +63,14 @@ Security is enforced at multiple layers: input validation at the API boundary (Z
 - **Salt rounds**: Configurable via `BCRYPT_SALT_ROUNDS` (default: 10, valid: 4–31)
 - **Registration**: Lenient rules (8–128 chars, any characters)
 - **Password change**: Stricter rules (requires uppercase, lowercase, number)
+
+### What needs a login
+Every API endpoint requires a valid token, except:
+- `POST /api/auth/register`, `/login` and `/logout` (signing in),
+- `GET /api/health` (deploy checks and uptime monitoring),
+- the uploaded image files, which `<img>` tags fetch without a token.
+
+Until November 2026 the league standings and instances (`/api/leagues/:tier/*`), the leaderboards (`/api/leaderboards/*`), the Hall of Records (`/api/records`), the robot ELO chart (`/api/analytics/robot/:id/elo`) and the event-log summary (`/api/analytics/logs/summary`) answered anonymous requests. They now use `authenticateToken`; the log summary is also admin-only (`requireAdmin`), like `/performance` and `/integrity`. Their responses are `Cache-Control: private`. `tests/unit/signedInOnlyRoutes.route.test.ts` pins this. A new endpoint without `authenticateToken` needs a stated reason in this list.
 
 ### Middleware
 - `authenticateToken` — Validates JWT on every protected route, attaches `user` to request

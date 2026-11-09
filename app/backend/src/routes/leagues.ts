@@ -1,16 +1,18 @@
 import express, { Request, Response } from 'express';
 import { z } from 'zod';
 import { getInstancesForTier, LeagueTier, LEAGUE_TIERS } from '../services/league/leagueInstanceService';
-import { getLeagueTierPreview } from '../services/league/league-rebalancing-preview';
-import { getLeagueRulesForMode, LeagueRuleSet } from '../services/league/league-rules';
-import { getMinLPForPromotion } from '../services/league/leaguePromotionThresholds';
+import { getRobotLeagueStandings, ROBOT_LEAGUE_MODES } from '../services/league/leagueStandingsService';
+import { getMyStandings } from '../services/league/myStandingsService';
 import prisma from '../lib/prisma';
-import type { Prisma, StandingsMode } from '../../generated/prisma';
 import { LeagueError, LeagueErrorCode } from '../errors';
 import { validateRequest } from '../middleware/schemaValidator';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
+import { leagueInstanceId } from '../utils/securityValidation';
 
 const router = express.Router();
+
+// Every league endpoint is for signed-in players only.
+router.use(authenticateToken);
 
 // --- Zod schemas for league routes ---
 
@@ -18,181 +20,76 @@ const leagueTierParamsSchema = z.object({
   tier: z.string().min(1).max(30),
 });
 
-/**
- * GET /api/leagues/:tier/standings
- * Get league standings for a specific tier and instance.
- * Supports mode=koth to serve KotH standings through the same unified path.
- */
-router.get('/:tier/standings', validateRequest({ params: leagueTierParamsSchema }), async (req: Request, res: Response) => {
-  const tier = req.params.tier as LeagueTier;
-  const instance = req.query.instance as string | undefined;
-  const page = Math.max(1, parseInt(req.query.page as string) || 1);
-  const perPage = Math.min(100, Math.max(1, parseInt(req.query.perPage as string) || 50));
-  const mode = (req.query.mode as string) || 'league_1v1';
-  const subscriptionEvent = mode === 'koth' ? 'koth' : mode === 'grand_melee' ? 'grand_melee' : 'league_1v1';
-  const leagueRules: LeagueRuleSet = getLeagueRulesForMode(mode);
+const robotModeSchema = z.enum(ROBOT_LEAGUE_MODES).default('league_1v1');
 
-  if (!LEAGUE_TIERS.includes(tier)) {
+const standingsQuerySchema = z.object({
+  mode: robotModeSchema,
+  instance: leagueInstanceId.optional(),
+  page: z.coerce.number().int().positive().default(1),
+  perPage: z.coerce.number().int().positive().max(100).default(50),
+});
+type StandingsQuery = z.infer<typeof standingsQuerySchema>;
+
+const instancesQuerySchema = z.object({ mode: robotModeSchema });
+type InstancesQuery = z.infer<typeof instancesQuerySchema>;
+
+function assertTier(tier: string): asserts tier is LeagueTier {
+  if (!(LEAGUE_TIERS as readonly string[]).includes(tier)) {
     throw new LeagueError(LeagueErrorCode.INVALID_LEAGUE_TIER, 'Invalid tier', 400, { validTiers: LEAGUE_TIERS });
   }
+}
 
-  // Query from unified standings table (Spec #40)
-  const standingsWhere: Prisma.StandingWhereInput = {
-    mode: mode as StandingsMode,
-    tier,
-    ...(instance ? { leagueInstanceId: instance } : {}),
-  };
-
-  const total = await prisma.standing.count({ where: standingsWhere });
-
-  const standingRows = await prisma.standing.findMany({
-    where: standingsWhere,
-    orderBy: [
-      { leaguePoints: 'desc' },
-      { entityId: 'asc' },
-    ],
-    skip: (page - 1) * perPage,
-    take: perPage,
-  });
-
-  // Batch-fetch robot data for these standings
-  const robotIds = standingRows.map(s => s.entityId);
-  const robots = await prisma.robot.findMany({
-    where: { id: { in: robotIds } },
-    include: { user: { select: { id: true, username: true, stableName: true, stableType: true } } },
-  });
-  const robotMap = new Map(robots.map(r => [r.id, r]));
-
-  // Batch-check subscription status
-  const activeSubscriptions = await prisma.subscription.findMany({
-    where: { robotId: { in: robotIds }, eventType: subscriptionEvent, status: 'active' },
-    select: { robotId: true },
-  });
-  const subscribedRobotIds = new Set(activeSubscriptions.map(s => s.robotId));
-
-  const preview = await getLeagueTierPreview(
-    mode as StandingsMode,
-    tier,
-    leagueRules,
-    instance,
-  );
-  const selectedInstancePlan = instance
-    ? preview.instancePlansById.get(instance)
-    : undefined;
-  const instancePlans = selectedInstancePlan
-    ? [selectedInstancePlan]
-    : instance
-      ? []
-      : preview.plan.instancePlans;
-  const minLP = leagueRules.promotionMinLPOverride
-    ?? instancePlans[0]?.minPromotionLP
-    ?? getMinLPForPromotion(tier);
-  const eligibleCount = instancePlans.reduce((sum, plan) => sum + plan.eligibleEntities, 0);
-  const totalInstances = instancePlans.length;
-  const instancesBelowMinimum = instancePlans.filter((plan) => !plan.hasEnoughEntities).length;
-  const activeInstances = totalInstances - instancesBelowMinimum;
-  const hasEnoughRobots = totalInstances > 0 && instancesBelowMinimum === 0;
-  const smallestInstancePopulation = instancePlans.length > 0
-    ? Math.min(...instancePlans.map((plan) => plan.totalEntities))
-    : 0;
-  const promotionCount = instancePlans.reduce((sum, plan) => sum + plan.promotionSlots, 0);
-  const demotionCount = instancePlans.reduce((sum, plan) => sum + plan.demotionSlots, 0);
-  const isChampion = tier === leagueRules.tiers[leagueRules.tiers.length - 1];
-  const isBronze = tier === leagueRules.tiers[0];
-  const promotionRobotIds = preview.effectivePromotionEntityIds;
-  const demotionRobotIds = preview.demotionEntityIds;
-
-  const standings = standingRows.map((s) => {
-    const robot = robotMap.get(s.entityId);
-    return {
-      id: s.entityId,
-      name: robot?.name ?? `Robot #${s.entityId}`,
-      elo: robot?.elo ?? 0,
-      leaguePoints: s.leaguePoints,
-      wins: s.wins,
-      draws: s.draws,
-      losses: s.losses,
-      totalBattles: (s.totalMatches ?? null) !== null ? s.totalMatches! : (s.wins + s.losses + s.draws),
-      currentHP: robot?.currentHP ?? 0,
-      maxHP: robot?.maxHP ?? 100,
-      fame: robot?.fame ?? 0,
-      userId: robot?.user?.id ?? 0,
-      cyclesInCurrentLeague: s.cyclesInTier,
-      eligible: s.cyclesInTier >= leagueRules.minCyclesForRebalancing,
-      isSubscribed: subscribedRobotIds.has(s.entityId),
-      user: {
-        username: robot?.user?.username ?? 'Unknown',
-        stableName: robot?.user?.stableName ?? null,
-        // Spec #55 R1.7: drives the Automaton_Badge.
-        stableType: robot?.user?.stableType ?? 'human',
-      },
-      zone: promotionRobotIds.has(s.entityId)
-        ? 'promotion' as const
-        : demotionRobotIds.has(s.entityId)
-          ? 'demotion' as const
-          : null,
-    };
-  });
-
-  res.set('Cache-Control', 'public, max-age=60');
-  res.json({
-    data: standings,
-    pagination: {
-      page,
-      pageSize: perPage,
-      total,
-      totalPages: Math.ceil(total / perPage),
-    },
-    zoneMeta: {
-      tier,
-      minLP,
-      minCycles: leagueRules.minCyclesForRebalancing,
-      minRobotsRequired: leagueRules.minEntitiesForRebalancing,
-      eligibleCount,
-      hasEnoughRobots,
-      promotionSlots: promotionCount,
-      demotionSlots: demotionCount,
-      promotionCandidates: instancePlans.reduce(
-        (sum, plan) => sum + plan.promotionCandidates.length,
-        0,
-      ),
-      effectivePromotionCandidates: preview.plan.promotionBlockReason
-        ? 0
-        : instancePlans.reduce((sum, plan) => sum + plan.promotionCandidates.length, 0),
-      promotionBlockReason: preview.plan.promotionBlockReason,
-      totalEntities: instancePlans.reduce((sum, plan) => sum + plan.totalEntities, 0),
-      totalInstances,
-      activeInstances,
-      instancesBelowMinimum,
-      smallestInstancePopulation,
-      isChampion,
-      isBronze,
-    },
-  });
+/**
+ * GET /api/leagues/my-standings
+ * The signed-in player's robots and teams in every tiered league, with their
+ * instance place and status at the next rebalance (the league cards).
+ */
+router.get('/my-standings', validateRequest({}), async (req: Request, res: Response) => {
+  const userId = (req as AuthRequest).user!.userId;
+  res.set('Cache-Control', 'private, no-store');
+  res.json(await getMyStandings(userId));
 });
 
 /**
- * GET /api/leagues/:tier/instances
- * Get all instances for a tier. Supports mode=koth for KotH instances.
+ * GET /api/leagues/:tier/standings?mode=league_1v1|koth|grand_melee&instance=&page=&perPage=
+ * One tier (or one instance of it) of a robot league, ranked by LP, with each
+ * row's zone and status from the executor's tier plan.
  */
-router.get('/:tier/instances', validateRequest({ params: leagueTierParamsSchema }), async (req: Request, res: Response) => {
-  const tier = req.params.tier as LeagueTier;
-  const mode = (req.query.mode as string) || 'league_1v1';
-  const maxPerInstance = mode === 'koth' ? 100 : 100; // same for now
+router.get(
+  '/:tier/standings',
+  validateRequest({ params: leagueTierParamsSchema, query: standingsQuerySchema }),
+  async (req: Request, res: Response) => {
+    const tier = String(req.params.tier);
+    assertTier(tier);
+    const { mode, instance, page, perPage } = req.query as unknown as StandingsQuery;
 
-  if (!LEAGUE_TIERS.includes(tier)) {
-    throw new LeagueError(LeagueErrorCode.INVALID_LEAGUE_TIER, 'Invalid tier', 400, { validTiers: LEAGUE_TIERS });
-  }
+    const result = await getRobotLeagueStandings(mode, { tier, instance, page, perPage });
+    res.set('Cache-Control', 'private, max-age=60');
+    res.json({ data: result.rows, pagination: result.pagination, zoneMeta: result.zoneMeta });
+  },
+);
 
-  const instances = await getInstancesForTier(tier, { mode, maxPerInstance });
+/**
+ * GET /api/leagues/:tier/instances?mode=league_1v1|koth|grand_melee
+ * Every instance of a tier with its population, in instance-number order.
+ */
+router.get(
+  '/:tier/instances',
+  validateRequest({ params: leagueTierParamsSchema, query: instancesQuerySchema }),
+  async (req: Request, res: Response) => {
+    const tier = String(req.params.tier);
+    assertTier(tier);
+    const { mode } = req.query as unknown as InstancesQuery;
 
-  res.json(instances.map(instance => ({
-    leagueId: instance.leagueId,
-    leagueTier: tier,
-    currentRobots: instance.currentRobots,
-    maxRobots: instance.maxRobots,
-  })));
-});
+    const instances = await getInstancesForTier(tier, { mode, maxPerInstance: 100 });
+    res.json(instances.map((instance) => ({
+      leagueId: instance.leagueId,
+      leagueTier: tier,
+      currentRobots: instance.currentRobots,
+      maxRobots: instance.maxRobots,
+    })));
+  },
+);
 
 /**
  * GET /api/leagues/tier-changes/unseen
