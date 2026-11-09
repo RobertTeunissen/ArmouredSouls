@@ -129,7 +129,7 @@ function LeagueStandingsPage() {
 
         <InstanceChips
           tier={tier}
-          instances={standings.shown?.tier === tier ? standings.instances : []}
+          instances={standings.instances}
           active={instance}
           yours={instanceCounts}
           hrefFor={(i) => standingsHref({ mode, tier, instance: i })}

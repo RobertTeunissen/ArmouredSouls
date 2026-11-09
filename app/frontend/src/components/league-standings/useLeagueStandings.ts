@@ -36,25 +36,34 @@ export function useMyStandings(): MyStandingsState {
 }
 
 export interface StandingsPageState {
+  /**
+   * The rows of the current view (mode, tier and instance). Another page of the
+   * same view keeps the old rows on screen while it loads; a different view
+   * shows nothing until its own rows arrive, so old rows are never labelled
+   * with the new tier or league.
+   */
   data: StandingsPage | null;
+  /** The current mode and tier's instances; empty while another tier's are cached. */
   instances: LeagueInstanceSummary[];
-  /** The request `data` answers; while a newer one loads, the old rows stay. */
+  /** The request `data` answers. */
   shown: StandingsPageRequest | null;
-  /** `data` answers an older request than the current one. */
+  /** `data` is another page of the current view than the one requested. */
   stale: boolean;
   loading: boolean;
   failed: boolean;
   reload: () => void;
 }
 
+const sameView = (a: StandingsPageRequest | null, b: StandingsPageRequest | null): boolean =>
+  a !== null && b !== null && a.mode === b.mode && a.tier === b.tier && a.instance === b.instance;
+
 const sameRequest = (a: StandingsPageRequest | null, b: StandingsPageRequest | null): boolean =>
-  a !== null && b !== null && a.mode === b.mode && a.tier === b.tier && a.instance === b.instance
-  && a.page === b.page && a.perPage === b.perPage;
+  sameView(a, b) && a!.page === b!.page && a!.perPage === b!.perPage;
 
 /**
- * One page of standings plus the tier's instances. A response for a request
- * that is no longer current is dropped, so fast clicking never shows another
- * tier's rows; the previous rows stay on screen while the next page loads.
+ * One page of standings plus the tier's instances. Every new request (or no
+ * request, while the page waits for its opening view) supersedes the previous
+ * one, whose late response is dropped.
  */
 export function useStandingsPage(request: StandingsPageRequest | null): StandingsPageState {
   const [data, setData] = useState<StandingsPage | null>(null);
@@ -67,8 +76,12 @@ export function useStandingsPage(request: StandingsPageRequest | null): Standing
 
   const { mode, tier, instance, page, perPage } = request ?? {};
   useEffect(() => {
-    if (!mode || !tier || !page || !perPage) return;
+    // Advance first: with no request, a response still in flight is stale too.
     const id = ++current.current;
+    if (!mode || !tier || !page || !perPage) {
+      setLoading(false);
+      return;
+    }
     const req: StandingsPageRequest = { mode, tier, instance: instance ?? null, page, perPage };
     setLoading(true);
     setFailed(false);
@@ -91,5 +104,15 @@ export function useStandingsPage(request: StandingsPageRequest | null): Standing
   useEffect(() => () => { current.current += 1; }, []);
 
   const reload = useCallback(() => setAttempt((n) => n + 1), []);
-  return { data, instances, shown, stale: !sameRequest(shown, request), loading, failed, reload };
+  const currentView = sameView(shown, request);
+  const currentTier = shown !== null && request !== null && shown.mode === request.mode && shown.tier === request.tier;
+  return {
+    data: currentView ? data : null,
+    instances: currentTier ? instances : [],
+    shown,
+    stale: currentView && !sameRequest(shown, request),
+    loading,
+    failed,
+    reload,
+  };
 }

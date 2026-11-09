@@ -38,9 +38,19 @@ test.describe('League Standings — real backend', () => {
   });
 
   test('loads every league from its card', async ({ page }) => {
+    // Which standings request belongs to which league card.
+    const isStandingsOf = (mode: string) => (url: URL): boolean => {
+      if (mode === '2v2' || mode === '3v3') return new RegExp(`/api/team-battles/leagues/${mode[0]}/[a-z]+/standings$`).test(url.pathname);
+      if (mode === 'tag_team') return url.pathname.endsWith('/tag-team-standings');
+      const apiMode = mode === '1v1' ? 'league_1v1' : mode;
+      return /^\/api\/leagues\/[a-z]+\/standings$/.test(url.pathname) && url.searchParams.get('mode') === apiMode;
+    };
+
     await openStandings(page, '/league-standings?tier=bronze');
     for (const mode of ['2v2', '3v3', 'tag_team', 'koth', 'grand_melee', '1v1']) {
+      const response = page.waitForResponse((res) => isStandingsOf(mode)(new URL(res.url())));
       await page.getByTestId(`league-card-${mode}`).click();
+      expect((await response).status(), `${mode} standings`).toBe(200);
       // The opening view replaces the card's `?mode=` link with that league's tier (1v1 drops `mode`).
       await expect(page).toHaveURL(mode === '1v1' ? /\/league-standings\?tier=[a-z]+/ : new RegExp(`mode=${mode}&tier=[a-z]+`));
       // Loaded, not the previous league's rows still on screen.

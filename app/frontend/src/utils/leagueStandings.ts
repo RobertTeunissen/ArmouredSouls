@@ -142,7 +142,7 @@ export interface LeagueCardSummary {
   count: number;
   tierCount: number;
   best: MyStandingEntry | null;
-  /** One line about what moves, e.g. "2 promote" or "3 held below the LP minimum". */
+  /** One line about what moves, e.g. "2 promote", "1 held: the tier above is empty" or "3 held below the LP minimum". */
   movement: { text: string; tone: StatusTone } | null;
 }
 
@@ -155,7 +155,9 @@ function movementLine(entries: readonly MyStandingEntry[]): LeagueCardSummary['m
   const count = (pred: (s: StandingStatus) => boolean): number => entries.filter((e) => e.status && pred(e.status)).length;
   const promotes = count((s) => s.kind === 'promotes');
   const demotes = count((s) => s.kind === 'demotes');
-  const heldLp = count((s) => s.kind === 'held_lp' || s.kind === 'held_cohort');
+  const heldLp = count((s) => s.kind === 'held_lp');
+  // Qualifies on LP and cycles; waits for enough qualifiers to open an empty tier.
+  const heldCohort = count((s) => s.kind === 'held_cohort');
   const upPlaces = count((s) => s.kind === 'held_cycles' && s.zone === 'promotion');
   const downPlaces = count((s) => s.kind === 'held_cycles' && s.zone === 'demotion');
 
@@ -165,7 +167,8 @@ function movementLine(entries: readonly MyStandingEntry[]): LeagueCardSummary['m
   if (parts.length > 0) {
     return { text: parts.map((p) => p.text).join(' · '), tone: parts[0].tone };
   }
-  if (heldLp) return { text: `${plural(heldLp, 'held', 'held')} below the LP minimum`, tone: 'warning' };
+  if (heldCohort) return { text: `${heldCohort} held: the tier above is empty`, tone: 'warning' };
+  if (heldLp) return { text: `${heldLp} held below the LP minimum`, tone: 'warning' };
   if (upPlaces) return { text: `${plural(upPlaces, 'in a promotion place', 'in promotion places')}`, tone: 'success' };
   if (downPlaces) return { text: `${plural(downPlaces, 'in a demotion place', 'in demotion places')}`, tone: 'warning' };
   return { text: 'Nobody in a zone', tone: 'neutral' };

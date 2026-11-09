@@ -95,6 +95,15 @@ describe('the viewer\'s entries', () => {
     expect(melee.movement).toEqual({ text: '1 promotes · 1 demotes', tone: 'success' });
     expect(summariseLeagues([entry({ status: null })])[0].movement).toEqual({ text: 'Nobody in a zone', tone: 'neutral' });
   });
+
+  it('describes a cohort hold as an empty tier above, not as an LP shortfall (KotH has no LP gate)', () => {
+    const held = summariseLeagues([
+      entry({ mode: 'koth', minCycles: 10, status: { kind: 'held_cohort', zone: 'promotion' } }),
+      entry({ mode: 'koth', entityId: 2, minCycles: 10, status: { kind: 'held_cohort', zone: 'promotion' } }),
+    ])[0];
+    expect(held.movement).toEqual({ text: '2 held: the tier above is empty', tone: 'warning' });
+    expect(held.movement?.text).not.toMatch(/LP/);
+  });
 });
 
 describe('statusText', () => {
