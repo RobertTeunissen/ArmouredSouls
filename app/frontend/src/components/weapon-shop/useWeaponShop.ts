@@ -53,16 +53,6 @@ export function useWeaponShop() {
     onlyOwnedWeapons: false,
   });
 
-  // Search state (currently unused - search functionality not implemented yet)
-  const [searchQuery] = useState('');
-  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
-
-  // Sort state with localStorage persistence
-  const [sortBy] = useState<string>(() => {
-    const saved = localStorage.getItem('weaponShopSortBy');
-    return saved || 'name-asc';
-  });
-
   // Comparison state
   const [selectedForComparison, setSelectedForComparison] = useState<number[]>([]);
   const [showComparisonModal, setShowComparisonModal] = useState(false);
@@ -79,14 +69,6 @@ export function useWeaponShop() {
     message: '',
     onConfirm: () => {},
   });
-
-  // Debounce search query
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchQuery(searchQuery);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -173,49 +155,10 @@ export function useWeaponShop() {
     setFilters(newFilters);
   };
 
-  // Search weapons by name, description, type
-  const searchWeapons = (weaponList: Weapon[], query: string): Weapon[] => {
-    if (!query.trim()) return weaponList;
-
-    const lowerQuery = query.toLowerCase();
-    return weaponList.filter(weapon =>
-      weapon.name.toLowerCase().includes(lowerQuery) ||
-      weapon.description.toLowerCase().includes(lowerQuery) ||
-      weapon.weaponType.toLowerCase().includes(lowerQuery) ||
-      weapon.loadoutType.toLowerCase().replace('_', ' ').includes(lowerQuery)
-    );
-  };
-
   // Calculate discounted price
   const calculateDiscountedPrice = (basePrice: number): number => {
     const discountPercent = calculateWeaponWorkshopDiscount(weaponWorkshopLevel);
     return applyDiscount(basePrice, discountPercent);
-  };
-
-  // Sort weapons
-  const sortWeapons = (weaponList: Weapon[], sortOption: string): Weapon[] => {
-    const sorted = [...weaponList];
-
-    switch (sortOption) {
-      case 'price-asc':
-        return sorted.sort((a, b) =>
-          calculateDiscountedPrice(a.cost) - calculateDiscountedPrice(b.cost)
-        );
-      case 'price-desc':
-        return sorted.sort((a, b) =>
-          calculateDiscountedPrice(b.cost) - calculateDiscountedPrice(a.cost)
-        );
-      case 'damage-desc':
-        return sorted.sort((a, b) => b.baseDamage - a.baseDamage);
-      case 'name-asc':
-        return sorted.sort((a, b) => a.name.localeCompare(b.name));
-      case 'dps-desc': {
-        const getDPS = (w: Weapon) => w.baseDamage / w.cooldown;
-        return sorted.sort((a, b) => getDPS(b) - getDPS(a));
-      }
-      default:
-        return sorted;
-    }
   };
 
   // Helper function to check if weapon is compatible with a loadout type
@@ -237,13 +180,9 @@ export function useWeaponShop() {
     }
   };
 
-  // Apply search, filters, and sorting
+  // Apply the filters, and the name order for the card view
   const processedWeapons = useMemo(() => {
-    // Step 1: Search
-    let result = searchWeapons(weapons, debouncedSearchQuery);
-
-    // Step 2: Filter
-    result = result.filter(weapon => {
+    const result = weapons.filter(weapon => {
       if (filters.loadoutTypes.length > 0) {
         const isCompatible = filters.loadoutTypes.some(loadoutType =>
           isWeaponCompatibleWithLoadout(weapon, loadoutType)
@@ -278,14 +217,14 @@ export function useWeaponShop() {
       return true;
     });
 
-    // Step 3: Sort (for card view)
+    // The card view lists weapons by name; the table view sorts itself.
     if (viewMode === 'card') {
-      result = sortWeapons(result, sortBy);
+      result.sort((a, b) => a.name.localeCompare(b.name));
     }
 
     return result;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [weapons, debouncedSearchQuery, filters, user, weaponWorkshopLevel, sortBy, viewMode, ownedWeapons]);
+  }, [weapons, filters, user, weaponWorkshopLevel, viewMode, ownedWeapons]);
 
   const handlePurchase = async (weaponId: number, basePrice: number) => {
     if (!user) return;

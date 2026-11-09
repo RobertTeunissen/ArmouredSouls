@@ -13,7 +13,7 @@ Financial capture and reporting are critical paths, not advisory suites. The `Co
 
 Required financial coverage:
 - **Unit:** closed `Transaction_Taxonomy`, typed `Financial_Breakdown`, identity construction/conflicts, reward aggregation, battle row fan-out, prestige fields, per-robot repair arithmetic, zero-valued settlement components, subscription exclusion, manifest, and direct-writer checks.
-- **Integration:** atomic paired writes and rollback, duplicate/conflict behavior, concurrent retries, `withAuditSequence` continuity, all modes plus byes, streaming, repair pairs including automatic repair for byed robots, economic writers, settlement reruns/failure, lifecycle boundaries, diagnostics, and admin compatibility.
+- **Integration:** atomic paired writes and rollback, duplicate/conflict behavior, concurrent retries, `withAuditSequence` continuity, all modes plus byes, streaming, repair pairs including automatic repair for byed robots, economic writers, settlement reruns/failure, lifecycle boundaries, and admin compatibility.
 - **Heavy:** representative scheduler/admin flows through team modes, tag team, tournaments, KotH, Grand Melee, streaming, repairs, settlement, byes, and retry safety.
 
 Required Finance Center replacement coverage:

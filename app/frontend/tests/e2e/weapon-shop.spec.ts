@@ -311,7 +311,7 @@ test.describe('Weapon Shop Page', () => {
       await expect(page.getByRole('heading', { name: 'Description' })).toBeVisible();
 
       // Close modal by clicking the Close button
-      await page.getByRole('button', { name: 'Close' }).click();
+      await page.getByRole('button', { name: 'Close', exact: true }).click();
 
       // Verify modal is closed
       await expect(page.getByRole('heading', { name: 'Description' })).not.toBeVisible();

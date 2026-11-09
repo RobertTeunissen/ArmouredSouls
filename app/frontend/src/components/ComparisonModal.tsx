@@ -1,4 +1,6 @@
+import { useId } from 'react';
 import { getWeaponImagePath } from '../utils/weaponImages';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 
 import meleeIcon from '../assets/icons/weapon-types/melee.svg';
 import ballisticIcon from '../assets/icons/weapon-types/ballistic.svg';
@@ -105,6 +107,8 @@ export default function ComparisonModal({
   storageIsFull,
   purchasingId,
 }: ComparisonModalProps) {
+  const titleId = useId();
+  useEscapeKey(onClose);
   const discount = calculateDiscount(weaponWorkshopLevel);
   
   // Calculate value metrics for all weapons
@@ -130,11 +134,18 @@ export default function ComparisonModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-      <div className="bg-background rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className="bg-background rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto"
+      >
         {/* Header */}
         <div className="sticky top-0 bg-background border-b border-white/10 px-6 py-4 flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-white">Compare Weapons</h2>
+          <h2 id={titleId} className="text-2xl font-bold text-white">Compare Weapons</h2>
           <button
+            type="button"
+            aria-label="Close"
             onClick={onClose}
             className="text-secondary hover:text-white text-2xl leading-none"
           >

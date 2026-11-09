@@ -134,26 +134,6 @@ export function calculateMerchandisingIncome(
   return Math.round(baseRate * prestigeMultiplier);
 }
 
-/**
- * Calculate financial health status based on balance and net income.
- */
-export function calculateFinancialHealth(
-  balance: number,
-  netIncome: number,
-): 'excellent' | 'good' | 'stable' | 'warning' | 'critical' {
-  if (balance < 50000) return 'critical';
-  if (balance < 100000) return 'warning';
-
-  if (netIncome < 0) {
-    if (balance < 500000) return 'warning';
-    return 'stable';
-  }
-
-  if (balance >= 1000000) return 'excellent';
-  if (balance >= 500000) return 'good';
-  return 'stable';
-}
-
 // ==================== LEAGUE REWARDS ====================
 
 /**

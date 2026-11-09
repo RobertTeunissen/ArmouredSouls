@@ -1316,7 +1316,7 @@ Nothing is capped. Before Season 2 (formula version '1') the terms multiplied: `
 
 #### Single source of truth (Spec #46 R10)
 
-The formula above has exactly one implementation: `computeStreamingRevenue(totalBattleCount, fame, studioLevel)` in `app/backend/src/services/economy/streamingRevenueService.ts`. **Every award and display path derives from it**: single and batch award, the daily financial report, the facility advisor (incremental benefit of the next Studio level over the current one) and the facility ROI (the Studio-attributable share `amount × (1 − 1/studioMultiplier)` of each recorded award, summed in the database per stored `studioMultiplier` — see Facility Investment ROI). The team share is applied exactly once, by `applyStreamingTeamShare()`. Do not reimplement or approximate the formula — a projection that disagrees with the award path is a defect. The table below records the pre-Season 2 defects that motivated this rule:
+The formula above has exactly one implementation: `computeStreamingRevenue(totalBattleCount, fame, studioLevel)` in `app/backend/src/services/economy/streamingRevenueService.ts`. **Every award and display path derives from it**: single and batch award, the facility advisor (incremental benefit of the next Studio level over the current one) and the facility ROI (the Studio-attributable share `amount × (1 − 1/studioMultiplier)` of each recorded award, summed in the database per stored `studioMultiplier` — see Facility Investment ROI). The team share is applied exactly once, by `applyStreamingTeamShare()`. Do not reimplement or approximate the formula — a projection that disagrees with the award path is a defect. The table below records the pre-Season 2 defects that motivated this rule:
 
 | Consumer | What it did wrong | Effect |
 |---|---|---|
@@ -1326,7 +1326,7 @@ The formula above has exactly one implementation: `computeStreamingRevenue(total
 | `facilityRecommendationService.ts` | Used `1 + level × 0.1` for the Studio Multiplier | A tenth of the real `1 + level`. An L0 → L1 upgrade doubles streaming revenue but was projected as a 10% gain |
 | `unifiedFacilityROIService.ts` | Used `1000 × (1 + level)` | Dropped the battle and fame multipliers entirely, so a veteran robot's streaming was under-reported by their product |
 
-**Streaming is awarded per robot per battle.** The Financial Report therefore presents the formula per robot, with the roster figure labelled as an aggregate of the individual awards rather than as a single computation. Where a path genuinely cannot supply a per-robot battle count and fame — `unifiedFacilityROIService.ts` estimates without them — the figure is labelled an estimate and treated as a floor rather than presented as an award.
+**Streaming is awarded per robot per battle**, so any figure shown for a roster is the sum of the individual awards, never the formula applied to summed battles and fame (the retired daily financial report did the latter). Where a path genuinely cannot supply a per-robot battle count and fame — `unifiedFacilityROIService.ts` estimates without them — the figure is labelled an estimate and treated as a floor rather than presented as an award.
 
 `tests/services/streamingRevenueParity.test.ts` asserts that no consumer reintroduces a local copy.
 

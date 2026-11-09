@@ -18,7 +18,6 @@
 import prisma from '../src/lib/prisma';
 import { EventLogger, EventType } from '../src/services/common/eventLogger';
 import { withAuditSequence } from '../src/services/common/auditSequence';
-import { DataIntegrityService } from '../src/services/common/dataIntegrityService';
 
 const eventLogger = new EventLogger();
 
@@ -73,8 +72,8 @@ describe('Sequence_Allocator concurrency (Spec #51)', () => {
 
     const sequences = await sequencesFor(CYCLE);
 
-    // Exactly {1..n}: this is what checkSequenceNumbers asserts, and it is why a
-    // Postgres sequence is not an acceptable implementation.
+    // Exactly {1..n}: numbering is gapless per cycle, which is why a Postgres
+    // sequence is not an acceptable implementation.
     expect(sequences).toEqual(Array.from({ length: CONCURRENCY }, (_, i) => i + 1));
   });
 
@@ -89,23 +88,6 @@ describe('Sequence_Allocator concurrency (Spec #51)', () => {
 
     const count = await prisma.auditLog.count({ where: { cycleNumber: CYCLE } });
     expect(count).toBe(CONCURRENCY);
-  });
-
-  it('should report no sequence_number_continuity issue after a concurrent write burst', async () => {
-    await Promise.all(
-      Array.from({ length: 20 }, (_, i) =>
-        eventLogger.logEvent(CYCLE, EventType.CYCLE_STEP_COMPLETE, { index: i }),
-      ),
-    );
-
-    const service = new DataIntegrityService();
-    const report = await service.validateCycleIntegrity(CYCLE);
-
-    // Only the continuity check is under test here. The same report also carries
-    // credit and event-completeness issues for a synthetic cycle, which are
-    // expected and irrelevant to the Gapless_Invariant.
-    expect(report.checksPerformed).toContain('sequence_number_continuity');
-    expect(report.issues.filter((issue) => issue.type === 'sequence_gap')).toEqual([]);
   });
 
   it('should allocate a contiguous block for a batch', async () => {

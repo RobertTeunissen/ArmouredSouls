@@ -204,6 +204,5 @@ export function useFacilities() {
     toggleCategory,
     getCategoryFacilities,
     getFacilityDisplayName,
-    fetchAdvisorData,
   };
 }

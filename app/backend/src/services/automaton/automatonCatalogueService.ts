@@ -210,13 +210,6 @@ export interface CatalogueIssue {
   path: (string | number)[];
 }
 
-/** The error code an issue maps to on the admin endpoints (design §17.1). */
-export function catalogueIssueCode(rule: CatalogueRule): 'AUTOMATON_BLUEPRINTS_TOO_FEW' | 'AUTOMATON_TEAM_NAMES_MISMATCH' | 'AUTOMATON_CATALOGUE_INVALID' {
-  if (rule === 'blueprints_too_few') return 'AUTOMATON_BLUEPRINTS_TOO_FEW';
-  if (rule === 'team_names_count') return 'AUTOMATON_TEAM_NAMES_MISMATCH';
-  return 'AUTOMATON_CATALOGUE_INVALID';
-}
-
 export type WeaponCatalogue = ReadonlyMap<string, Pick<WeaponFacts, 'name' | 'weaponType' | 'handsRequired' | 'rangeBand' | 'bonuses'>>;
 
 const HAND_LABEL: Readonly<Record<Hand, string>> = { main: 'main hand', offhand: 'off hand' };

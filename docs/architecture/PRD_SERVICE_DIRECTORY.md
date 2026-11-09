@@ -8,7 +8,7 @@
 **Owner**: Robert Teunissen
 
 **Revision History**:
-- v1.22 (Nov 9, 2026): `match/matchHistoryService` split into `upcomingMatchesService`, `matchHistoryService` and `battleLogService` (no behaviour change); `economy/unifiedFacilityROIService` has one ROI path (`calculateAllEconomicROIs`), the unused single-facility `calculateFacilityROI` removed.
+- v1.22 (Nov 9, 2026): `match/matchHistoryService` split into `upcomingMatchesService`, `matchHistoryService` and `battleLogService` (no behaviour change); `economy/unifiedFacilityROIService` has one ROI path (`calculateAllEconomicROIs`), the unused single-facility `calculateFacilityROI` removed. Also retired as unused: `common/dataIntegrityService` with `common/financialIntegrityDiagnostics` (only reachable through the removed `/api/analytics/integrity`), `economy/financialReportService` with `generateFinancialReport`/`generatePerRobotFinancialReport` (only fed the removed legacy finance endpoints), `standings/robotLeagueTiers`, and the uncalled helpers `calculateFinancialHealth`, `catalogueIssueCode`, `clearTuningAllocation` and `estimateEventSize`.
 - v1.21 (Nov 9, 2026): route clean-up — inline Prisma moved out of the route files into `robot/robotLookupService`, `tournament/tournamentQueryService`, `economy/facilityOverviewService`, `economy/weaponInventoryQueryService`, `auth/profileUpdateService`, `league/tierChangeFeedService` and `team-battle/teamBattleQueryService`; routes read typed input through `validated()` (`middleware/schemaValidator`). Deleted as unused: `battle/battleStrategy` (`BattleStrategy`/`BattleProcessor`, never used by a mode), `cycle/leagueCycleOrchestrator`, and the never-imported barrels of admin, analytics, arena, auth, battle, common, cycle, economy, koth, league, notifications, onboarding, robot and tournament. With the 26 API endpoints no client called (legacy finances, unused analytics, `/auth/logout`, robot matches/upcoming, leaderboard cache, KotH instances, changelog unread count, team league history, weapon availability): `analytics/stableAnalyticsService`, `common/queryService`, `cycle/cyclePerformanceMonitoringService`, and the methods only they used. `economy/financialSummaryService` serves `GET /api/finances/summary`.
 - v1.20 (Nov 8, 2026): `league/` gains `standing-status`, `league-zone-meta`, `leagueStandingsService` and `myStandingsService` (League Standings redesign); `league-rebalancing-preview` exposes the pure `buildLeagueTierPreview`.
 - v1.19 (Nov 6, 2026): `economy/snapshot-stable-metric-queries` aggregates the stable's `cycle_snapshots.stable_metrics` totals and the purchase-cycle fallback for `unifiedFacilityROIService` in the database (#550).
@@ -214,8 +214,7 @@ Shared infrastructure services used across domains.
 | Service | Purpose |
 |---------|---------|
 | `eventLogger` | AuditLog event creation (battle_complete, passive_income, operating_costs, etc.) |
-| `dataIntegrityService` | Data consistency checks (balance verification, event count validation) |
-| `eventCompression` | Combat event deduplication and size estimation |
+| `eventCompression` | Combat event deduplication |
 | `guide-service` | In-game guide content loading and caching (Markdown + YAML frontmatter) |
 | `markdown-parser` | Markdown parsing with heading extraction |
 | `resetService` | Account reset logic (delete robots/weapons/facilities, restore credits). Deletes the stable's own battle participant rows via `robotReferenceCleanup`; battles, summaries and opponents' records stay (#294) |

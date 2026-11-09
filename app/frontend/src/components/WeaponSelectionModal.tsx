@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import { RangeBand, getWeaponOptimalRange, getRangeBandColor, getRangeBandBgColor, getRangeBandLabel } from '../utils/weaponRange';
 import { onActivationKey } from '../utils/keyboardActivation';
 
@@ -61,6 +62,8 @@ function WeaponSelectionModal({
 }: WeaponSelectionModalProps) {
   const [filter, setFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
+  const titleId = useId();
+  useEscapeKey(onClose, isOpen);
 
   useEffect(() => {
     if (!isOpen) {
@@ -169,12 +172,19 @@ function WeaponSelectionModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-      <div className="bg-surface rounded-lg max-w-4xl w-full max-h-[90vh] flex flex-col">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className="bg-surface rounded-lg max-w-4xl w-full max-h-[90vh] flex flex-col"
+      >
         {/* Header */}
         <div className="p-6 border-b border-white/10">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold">{title}</h2>
+            <h2 id={titleId} className="text-2xl font-bold">{title}</h2>
             <button
+              type="button"
+              aria-label="Close"
               onClick={onClose}
               className="text-secondary hover:text-white text-2xl leading-none"
             >
@@ -187,11 +197,13 @@ function WeaponSelectionModal({
             <input
               type="text"
               placeholder="Search weapons..."
+              aria-label="Search weapons"
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
               className="flex-1 bg-surface-elevated border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-blue-500"
             />
             <select
+              aria-label="Weapon type"
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
               className="bg-surface-elevated border border-gray-600 rounded px-4 py-2 text-white focus:outline-none focus:border-blue-500"

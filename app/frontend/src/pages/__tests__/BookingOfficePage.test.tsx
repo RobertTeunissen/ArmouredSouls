@@ -12,7 +12,6 @@ vi.mock('../../components/Navigation', () => ({
 // Mock the hooks
 vi.mock('../../hooks/useSubscriptions', () => ({
   useStableOverview: vi.fn(),
-  useRobotSubscriptions: vi.fn(),
   saveRobotSubscriptions: vi.fn().mockResolvedValue({
     success: true, added: [], removed: [], heldSlots: [], occupiedCount: 0, cap: 3, level: 0,
   }),
@@ -25,8 +24,6 @@ vi.mock('../../stores/subscriptionStore', () => ({
 }));
 
 const mockRefetch = vi.fn().mockResolvedValue(undefined);
-const mockSubscribe = vi.fn().mockResolvedValue({ success: true, message: 'Subscribed' });
-const mockUnsubscribe = vi.fn().mockResolvedValue({ success: true, message: 'Unsubscribed' });
 
 const defaultOverviewData: useSubscriptionsModule.StableOverview = {
   robots: [
@@ -61,16 +58,6 @@ describe('BookingOfficePage', () => {
       loading: false,
       error: null,
       refetch: mockRefetch,
-    });
-    vi.mocked(useSubscriptionsModule.useRobotSubscriptions).mockReturnValue({
-      data: null,
-      loading: false,
-      error: null,
-      refetch: vi.fn(),
-      subscribe: mockSubscribe,
-      unsubscribe: mockUnsubscribe,
-      saveSubscriptions: vi.fn(),
-      mutating: false,
     });
   });
 

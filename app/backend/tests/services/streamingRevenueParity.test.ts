@@ -230,7 +230,6 @@ describe('applyStreamingTeamShare divides exactly once', () => {
 
 describe('Every consumer delegates to the shared formula (R10.2, R10.3)', () => {
   const SERVICE = src('services/economy/streamingRevenueService.ts');
-  const REPORT = src('services/economy/financialReportService.ts');
   const RECOMMEND = src('services/economy/facilityRecommendationService.ts');
   const ROI = src('services/economy/unifiedFacilityROIService.ts');
 
@@ -241,30 +240,16 @@ describe('Every consumer delegates to the shared formula (R10.2, R10.3)', () => 
   });
 
   it('no consumer keeps the multiplicative v1 product form', () => {
-    for (const source of [SERVICE, REPORT, RECOMMEND, ROI]) {
+    for (const source of [SERVICE, RECOMMEND, ROI]) {
       expect(source).not.toContain('1 + (totalBattleCount /');
       expect(source).not.toContain('1 + (robot.fame / 5000)');
     }
   });
 
-  it('the report, the advisor and the ROI service import computeStreamingRevenue', () => {
-    for (const source of [REPORT, RECOMMEND, ROI]) {
+  it('the advisor and the ROI service import computeStreamingRevenue', () => {
+    for (const source of [RECOMMEND, ROI]) {
       expect(source).toMatch(/import \{[^}]*computeStreamingRevenue[^}]*\} from '\.\/streamingRevenueService'/);
     }
-  });
-
-  it('the financial report no longer uses its own divisors or caps', () => {
-    expect(REPORT).not.toContain('Math.min(1 + (totalBattles / 100)');
-    expect(REPORT).not.toContain('Math.min(1 + (totalFame / 500)');
-  });
-
-  it('the financial report presents streaming per robot', () => {
-    expect(REPORT).toContain('perRobot');
-    expect(REPORT).toContain('revenuePerBattle');
-  });
-
-  it('the financial report labels the roster figure as an aggregate', () => {
-    expect(REPORT).toContain('aggregate');
   });
 
   it('the advisor no longer keeps a stale Merchandising base table', () => {
@@ -289,25 +274,7 @@ describe('Every consumer delegates to the shared formula (R10.2, R10.3)', () => 
   });
 });
 
-describe('Report and award agree for a single-robot stable (R10.8)', () => {
-  it('the per-robot figure the report shows is the figure the award path pays', () => {
-    // Both sides call the same function with the same three inputs, so agreement
-    // is structural rather than coincidental. This asserts the inputs match:
-    // battle count, fame, studio level — nothing summed, nothing capped.
-    fc.assert(
-      fc.property(
-        fc.integer({ min: 0, max: 3000 }),
-        fc.integer({ min: 0, max: 30_000 }),
-        fc.integer({ min: 0, max: 10 }),
-        (battles, fame, level) => {
-          const displayed = computeStreamingRevenue(battles, fame, level).totalRevenue;
-          const awarded = computeStreamingRevenue(battles, fame, level).totalRevenue;
-          expect(displayed).toBe(awarded);
-        },
-      ),
-      { numRuns: 200 },
-    );
-  });
+describe('Streaming is computed per robot (R10.8)', () => {
 
   it('summing a roster before applying the formula misstates the roster awards', () => {
     // Five robots at 200 battles / 1,000 fame each, L2:

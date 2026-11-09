@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect, useMemo } from 'react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { api } from '../utils/api';
 import {
   fetchRobotById,
@@ -23,7 +23,6 @@ import { useAuth } from '../contexts/AuthContext';
 import type { Facility } from '../components/facilities/types';
 import { getRosterCapacity } from '../../../shared/utils/rosterCapacity';
 import type { RangeBand } from '../utils/weaponRange';
-import { getMatchHistory, BattleHistory } from '../utils/matchmakingApi';
 import type { RobotWithAttributes } from '../types/robot';
 import type { StableType } from '../types/stable';
 import { createLogger } from '../utils/logger';
@@ -213,15 +212,12 @@ export function useRobotDetail() {
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [showImageSelector, setShowImageSelector] = useState(false);
-  const [recentBattles, setRecentBattles] = useState<BattleHistory[]>([]);
-  const [leagueRank, setLeagueRank] = useState<{ rank: number; total: number; percentile: number } | null>(null);
   // #532: kept apart from `robot` because equip/upgrade/appearance responses
   // replace `robot` without this field, and those mutations never change it.
   const [allModesBattleCount, setAllModesBattleCount] = useState<number | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
 
-  const { user, logout, refreshUser } = useAuth();
-  const navigate = useNavigate();
+  const { user, refreshUser } = useAuth();
 
   useEffect(() => {
     let isFetching = false;
@@ -273,37 +269,11 @@ export function useRobotDetail() {
       setRobot(robotData as unknown as RobotDetail);
       setAllModesBattleCount(robotData.allModesBattleCount ?? null);
 
-      // Fetch independent data in parallel — these don't depend on each other
-      const [leagueResult, weaponsResult, facilitiesResult, battlesResult] = await Promise.allSettled([
-        // League rank — only for robots with a league_1v1 standing (unranked robots have no tier)
-        robotData.currentLeague
-          ? api.get<{ data?: Array<{ id: number }> } | Array<{ id: number }>>(
-              `/api/leagues/${robotData.currentLeague}/standings`,
-              { params: { instance: robotData.leagueId } },
-            )
-          : Promise.resolve(null),
-        // Weapon inventory
+      // The inventory and facilities do not depend on each other; either may fail alone.
+      const [weaponsResult, facilitiesResult] = await Promise.allSettled([
         api.get<WeaponInventoryItem[]>('/api/weapon-inventory'),
-        // Facilities
         api.get<{ facilities?: Facility[] } | Facility[]>('/api/facilities'),
-        // Recent battles
-        getMatchHistory(1, 10, undefined, parseInt(id!)),
       ]);
-
-      // Process league rank
-      if (leagueResult.status === 'fulfilled') {
-        const leagueData = leagueResult.value ?? [];
-        const standings = Array.isArray(leagueData) ? leagueData : (leagueData.data ?? []);
-        const robotIndex = standings.findIndex((r: { id: number }) => r.id === parseInt(id!));
-        if (robotIndex !== -1) {
-          const rank = robotIndex + 1;
-          const total = standings.length;
-          const percentile = total > 0 ? ((total - rank) / total) * 100 : 0;
-          setLeagueRank({ rank, total, percentile });
-        }
-      } else {
-        log.error('Failed to fetch league rank', { error: leagueResult.reason });
-      }
 
       // Process weapon inventory
       if (weaponsResult.status === 'fulfilled') {
@@ -336,25 +306,11 @@ export function useRobotDetail() {
       } else {
         log.error('Failed to fetch facilities', { err: facilitiesResult.reason });
       }
-
-      // Process recent battles
-      if (battlesResult.status === 'fulfilled') {
-        setRecentBattles(battlesResult.value.data);
-      } else {
-        log.error('Failed to fetch recent battles', { err: battlesResult.reason });
-      }
     } catch (err: unknown) {
-      if (err instanceof ApiError) {
-        if (err.statusCode === 401) {
-          logout();
-          navigate('/login');
-          return;
-        }
-        if (err.statusCode === 404) {
-          setError(`Robot with ID ${id} not found. It may have been deleted or you may not have permission to view it.`);
-          setLoading(false);
-          return;
-        }
+      // A 401 already ended the session in the API client.
+      if (err instanceof ApiError && err.statusCode === 404) {
+        setError(`Robot with ID ${id} not found. It may have been deleted or you may not have permission to view it.`);
+        return;
       }
       setError('Failed to load robot details');
     } finally {
@@ -485,9 +441,7 @@ export function useRobotDetail() {
     academyLevels,
 
     // Battle data
-    recentBattles,
     battleReadiness,
-    leagueRank,
     allModesBattleCount,
 
     // Image selector
@@ -512,10 +466,8 @@ export function useRobotDetail() {
     // Refetch the robot, inventory and facilities (after a repair, for example)
     reload: fetchRobotAndWeapons,
 
-    // Ownership & navigation context
+    // Ownership & onboarding context
     isOwner,
     isOnboarding,
-    navigate,
-    id,
   };
 }

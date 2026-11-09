@@ -290,7 +290,7 @@ The following named file dispositions satisfy Task 1.5’s documentation require
 |---|---|---|
 | `app/backend/tests/finances.test.ts` | Integration | Adapt for authenticated version-1 endpoints, period/range/version/provenance/itemisation/early-state/security; retire only legacy endpoint assertions. |
 | `app/backend/tests/financesRouteValidation.test.ts` | Unit | Adapt/partly retire duplicated ROI schema checks; add shared period/page schema tests. |
-| `app/backend/tests/financialReportStreamingRevenue.test.ts` | Integration | Replace rolling `BattleParticipant` report aggregation with complete paired robot-attributed record coverage, then retire legacy assertions. |
+| `app/backend/tests/financialReportStreamingRevenue.test.ts` | Integration | **Removed Nov 2026** with `financialReportService` (it only fed the removed legacy finance endpoints). Robot-attributed streaming is covered by the Finance Center robot reports and `streamingBattleCount.test.ts`. |
 | `app/backend/tests/services/streamingRevenueParity.test.ts` | Unit/property/static | Retain formula/property coverage; adapt only legacy presentation-path checks. |
 | `app/backend/tests/cycleSummaryStreamingRevenue.property.test.ts` | Integration/property | Retain unchanged; it covers battle execution summary streaming, not the Finance Center page. |
 | `app/backend/tests/coverageManifest.test.ts` and `tests/factories/coverageManifest.ts` | Static/unit | Adapt stale Income/Cycle Summary surface expectations after replacement coverage. |

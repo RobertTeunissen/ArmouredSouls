@@ -436,14 +436,3 @@ export async function getTuningBonusesBatch(robotIds: number[]): Promise<Map<num
   }
   return result;
 }
-
-/**
- * Clear all tuning allocations for a robot.
- *
- * Deletes the allocation row entirely. Used on robot reset or deletion cleanup.
- *
- * @param robotId - The robot to clear tuning allocation for
- */
-export async function clearTuningAllocation(robotId: number): Promise<void> {
-  await prisma.tuningAllocation.deleteMany({ where: { robotId } });
-}

@@ -115,7 +115,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     { label: 'Budget (<₡100K)', min: 0, max: 100000 },
     { label: 'Mid (₡100-250K)', min: 100000, max: 250000 },
     { label: 'Premium (₡250-400K)', min: 250000, max: 400000 },
-    { label: 'Luxury (₡400K+)', min: 400000, max: 999999999 },
+    // Open-ended: the active-filter chip shows it as "₡400K+".
+    { label: 'Luxury (₡400K+)', min: 400000, max: Infinity },
   ];
 
   return (
@@ -177,6 +178,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
           {loadoutTypes.map(type => (
             <button
               key={type.value}
+              aria-pressed={filters.loadoutTypes.includes(type.value)}
               onClick={() => handleLoadoutTypeToggle(type.value)}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                 filters.loadoutTypes.includes(type.value)
@@ -199,6 +201,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
           {weaponTypes.map(type => (
             <button
               key={type.value}
+              aria-pressed={filters.weaponTypes.includes(type.value)}
               onClick={() => handleWeaponTypeToggle(type.value)}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                 filters.weaponTypes.includes(type.value)
@@ -221,6 +224,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
           {rangeBandOptions.map(band => (
             <button
               key={band.value}
+              aria-pressed={filters.rangeBands.includes(band.value)}
               onClick={() => handleRangeBandToggle(band.value)}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                 filters.rangeBands.includes(band.value)
@@ -247,6 +251,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
             return (
               <button
                 key={idx}
+                aria-pressed={isActive}
                 onClick={() => 
                   handlePriceRangeChange(isActive ? null : { min: range.min, max: range.max })
                 }
@@ -270,6 +275,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
         </h3>
         <div className="flex flex-wrap gap-2">
           <button
+            aria-pressed={filters.canAffordOnly}
             onClick={handleCanAffordToggle}
             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
               filters.canAffordOnly
@@ -280,6 +286,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
             Can Afford (₡{userCredits.toLocaleString()})
           </button>
           <button
+            aria-pressed={filters.onlyOwnedWeapons}
             onClick={handleOnlyOwnedToggle}
             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
               filters.onlyOwnedWeapons

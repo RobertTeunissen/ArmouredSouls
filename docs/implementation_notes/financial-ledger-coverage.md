@@ -275,7 +275,7 @@ A current-economy mutation either commits the balance, `FinancialLedger` row, an
 
 ### Paired financial diagnostic coverage
 
-`financialIntegrityDiagnostics.ts` adds forward-only checks for:
+`financialIntegrityDiagnostics.ts` added forward-only checks for:
 
 - unpaired ledger and financial-audit rows;
 - duplicate identities and conflicting identity facts;
@@ -286,7 +286,7 @@ A current-economy mutation either commits the balance, `FinancialLedger` row, an
 - positive prestige source gaps; and
 - direct currency writers outside the shared service and enumerated lifecycle boundaries.
 
-`dataIntegrityService.ts` runs these checks for identified paired evidence and labels findings accordingly. Legacy null-identity history remains readable without incorrectly presenting it as paired coverage.
+`dataIntegrityService.ts` ran these checks for identified paired evidence. **Removed Nov 2026:** both modules were only reachable through `GET /api/analytics/integrity`, which no client called, so they were retired with it. Pairing stays enforced where it is written: `Credit_Mutation_Service` commits the balance, ledger row and paired audit row together or rolls back, the integration tier covers atomic pairs, duplicates and retries, and `coverageManifest.test.ts` / `directWriterCoverage` fail on a currency writer outside the shared service. Ad-hoc audits use the queries in `docs/guides/FINANCIAL_LEDGER_AUDIT_GUIDE.md`.
 
 ### Scope boundary
 

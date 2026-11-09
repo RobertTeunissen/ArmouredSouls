@@ -54,7 +54,6 @@ import {
   getTuningAllocationSummaries,
   setTuningAllocation,
   getTuningBonuses,
-  clearTuningAllocation,
 } from '../../src/services/tuning-pool/tuningPoolService';
 
 // ── Test Helpers ─────────────────────────────────────────────────────
@@ -414,26 +413,6 @@ describe('tuningPoolService', () => {
       await getTuningBonuses(1);
 
       expect(mockVerifyRobotOwnership).not.toHaveBeenCalled();
-    });
-  });
-
-  // ── clearTuningAllocation ────────────────────────────────────────
-
-  describe('clearTuningAllocation', () => {
-    it('should delete the allocation row', async () => {
-      mockPrisma.tuningAllocation.deleteMany.mockResolvedValue({ count: 1 });
-
-      await clearTuningAllocation(1);
-
-      expect(mockPrisma.tuningAllocation.deleteMany).toHaveBeenCalledWith({
-        where: { robotId: 1 },
-      });
-    });
-
-    it('should not throw when no allocation exists', async () => {
-      mockPrisma.tuningAllocation.deleteMany.mockResolvedValue({ count: 0 });
-
-      await expect(clearTuningAllocation(999)).resolves.toBeUndefined();
     });
   });
 

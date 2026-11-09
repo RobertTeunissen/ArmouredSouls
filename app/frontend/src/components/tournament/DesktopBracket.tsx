@@ -81,10 +81,10 @@ const DesktopBracket: React.FC<DesktopBracketProps> = ({
     >
       {/* Zoom controls */}
       <div className="sticky top-0 left-0 z-10 flex items-center gap-2 p-2 bg-background/90 backdrop-blur-sm text-xs text-secondary">
-        <button className="px-2 py-0.5 bg-surface-elevated rounded hover:bg-gray-600" onClick={zp.zoomOut}>−</button>
-        <span>{Math.round(zp.scale * 100)}%</span>
-        <button className="px-2 py-0.5 bg-surface-elevated rounded hover:bg-gray-600" onClick={zp.zoomIn}>+</button>
-        <button className="px-2 py-0.5 bg-surface-elevated rounded hover:bg-gray-600 ml-2" onClick={zp.reset}>Reset</button>
+        <button type="button" aria-label="Zoom out" className="px-2 py-0.5 bg-surface-elevated rounded hover:bg-gray-600" onClick={zp.zoomOut}>−</button>
+        <span aria-live="polite">{Math.round(zp.scale * 100)}%</span>
+        <button type="button" aria-label="Zoom in" className="px-2 py-0.5 bg-surface-elevated rounded hover:bg-gray-600" onClick={zp.zoomIn}>+</button>
+        <button type="button" aria-label="Reset zoom" className="px-2 py-0.5 bg-surface-elevated rounded hover:bg-gray-600 ml-2" onClick={zp.reset}>Reset</button>
         <span className="ml-2 text-tertiary">Ctrl+scroll to zoom · Drag to pan</span>
       </div>
 

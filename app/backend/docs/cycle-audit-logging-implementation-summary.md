@@ -116,8 +116,7 @@ Current (Nov 2026; the stable summary, robot performance, single-facility ROI, c
 ### Core Services
 1. **EventLogger**: Event capture and validation
 2. **CycleSnapshotService**: Cycle aggregation
-3. **QueryService**: Event retrieval with filtering
-4. **DataIntegrityService**: Integrity validation
+3. Event retrieval and integrity validation (`QueryService`, `DataIntegrityService`) were removed in Nov 2026: nothing called them once their endpoints were gone.
 
 ### Analytics Services
 1. **ComparisonService**: Historical comparisons

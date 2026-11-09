@@ -104,6 +104,7 @@ const BracketView: React.FC<BracketViewProps> = ({
         {/* My Participants picker */}
         {userParticipantsInTournament.length > 0 && (
           <select
+            aria-label={isTeamTournament ? 'Highlight my team' : 'Highlight my robot'}
             onChange={handleMyParticipantSelect}
             defaultValue=""
             className="bg-surface border border-white/10 text-sm text-secondary rounded px-3 py-1.5 hover:border-gray-500 focus:border-blue-500 focus:outline-none"
@@ -120,6 +121,7 @@ const BracketView: React.FC<BracketViewProps> = ({
           <div className="flex items-center gap-2 text-sm text-secondary">
             <span>From</span>
             <select
+              aria-label="From round"
               value={startRound}
               onChange={(e) => {
                 const v = parseInt(e.target.value, 10);
@@ -134,6 +136,7 @@ const BracketView: React.FC<BracketViewProps> = ({
             </select>
             <span>to</span>
             <select
+              aria-label="To round"
               value={endRound}
               onChange={(e) => {
                 const v = parseInt(e.target.value, 10);

@@ -48,6 +48,8 @@ function FacilitiesPage() {
           <div className="border-b border-white/10">
             <nav className="-mb-px flex space-x-8">
               <button
+                type="button"
+                aria-pressed={activeTab === 'facilities'}
                 onClick={() => setActiveTab('facilities')}
                 className={`
                   py-4 px-1 border-b-2 font-medium text-sm transition-colors
@@ -60,6 +62,8 @@ function FacilitiesPage() {
                 Facilities & Upgrades
               </button>
               <button
+                type="button"
+                aria-pressed={activeTab === 'investment-overview'}
                 onClick={() => setActiveTab('investment-overview')}
                 className={`
                   py-4 px-1 border-b-2 font-medium text-sm transition-colors
