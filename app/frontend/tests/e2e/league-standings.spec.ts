@@ -41,9 +41,13 @@ test.describe('League Standings — real backend', () => {
     await openStandings(page, '/league-standings?tier=bronze');
     for (const mode of ['2v2', '3v3', 'tag_team', 'koth', 'grand_melee', '1v1']) {
       await page.getByTestId(`league-card-${mode}`).click();
-      await expect(page).toHaveURL(new RegExp(`tier=[a-z]+`));
-      await expect(page.getByTestId('standings-table').or(page.getByTestId('standings-empty')).first()).toBeVisible({ timeout: 15000 });
-      await expect(page.getByRole('alert')).toHaveCount(0);
+      // The opening view replaces the card's `?mode=` link with that league's tier (1v1 drops `mode`).
+      await expect(page).toHaveURL(mode === '1v1' ? /\/league-standings\?tier=[a-z]+/ : new RegExp(`mode=${mode}&tier=[a-z]+`));
+      // Loaded, not the previous league's rows still on screen.
+      await expect(page.locator('section[aria-labelledby="standings-heading"][aria-busy="false"]')).toBeVisible({ timeout: 15000 });
+      await expect(page.getByTestId('standings-table').or(page.getByTestId('standings-empty')).first()).toBeVisible();
+      // Only the page's own error: other alerts (achievement toasts from earlier specs) may be on screen.
+      await expect(page.getByText('Failed to load the standings.')).toHaveCount(0);
     }
   });
 

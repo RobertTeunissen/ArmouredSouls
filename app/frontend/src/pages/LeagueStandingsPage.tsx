@@ -149,7 +149,11 @@ function LeagueStandingsPage() {
         )}
 
         {data && !standings.failed && (
-          <section aria-labelledby="standings-heading" aria-busy={standings.loading} className={standings.stale ? 'opacity-60 transition-opacity' : ''}>
+          <section
+            aria-labelledby="standings-heading"
+            aria-busy={standings.loading || standings.stale}
+            className={standings.stale ? 'opacity-60 transition-opacity' : ''}
+          >
             <h2 id="standings-heading" className="text-2xl font-bold text-white">{heading}</h2>
             <p className="mt-1 text-sm text-secondary" data-testid="zone-summary">{zoneSummary(data.zoneMeta, info, !instance).join(' · ')}</p>
             {warning && <p className="mt-1 text-sm text-warning" data-testid="zone-warning">{warning}</p>}
